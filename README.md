@@ -2,7 +2,30 @@
 
 **Subscription optimization that maximizes value, not just cancellations.**
 
-Pausely is an iOS app that connects to your bank accounts to identify every recurring charge, then calculates a personal ROI score for each subscription based on your actual usage. Instead of seeing "Netflix - $15.99," you see "Netflix - $8.00 per hour this month" — revealing which subscriptions are actually worth keeping.
+Pausely is an app that connects to your bank accounts to identify every recurring charge, then calculates a personal ROI score for each subscription based on your actual usage. Instead of seeing "Netflix - $15.99," you see "Netflix - $8.00 per hour this month" — revealing which subscriptions are actually worth keeping.
+
+## 🚀 Quick Start (No Apple Dev Needed!)
+
+Want to test on your phone **right now** without paying $99 for Apple Developer? Use the **web version**!
+
+### Test on Your Phone (2 minutes)
+
+```bash
+cd web
+npm install
+npm run dev -- --host
+```
+
+Then open the shown IP address on your phone's browser (same WiFi).
+
+### Deploy for Free
+
+1. **Fork/clone this repo** to your GitHub: https://github.com/Hud2929/Pausely
+2. **Connect to Supabase** (see below)
+3. **Deploy to Vercel/Netlify** (free)
+4. **Point your domain** pausely.pro to it
+
+See [DEPLOY.md](DEPLOY.md) for detailed instructions.
 
 ## Key Features
 
@@ -15,79 +38,113 @@ Pausely is an iOS app that connects to your bank accounts to identify every recu
 
 ```
 pausely/
-├── ios/                          # iOS Swift app
+├── ios/                          # iOS Swift app (for App Store later)
 │   └── Pausely/
-│       ├── Models/               # Data models (Subscription, UserPerk, etc.)
+│       ├── Models/               # Data models
 │       ├── Views/                # SwiftUI views
 │       ├── ViewModels/           # State management
-│       ├── Services/             # Supabase, API clients
-│       └── Utils/                # Helpers and extensions
+│       ├── Services/             # Supabase integration
+│       └── Utils/                # Helpers
+├── web/                          # React web app (test on phone NOW)
+│   ├── src/
+│   │   ├── components/           # Dashboard, Subscriptions, Perks
+│   │   └── lib/                  # Supabase client
+│   └── .env.example              # Config template
 ├── backend/
 │   └── supabase/
 │       └── migrations/           # Database schema
-├── docs/                         # Documentation
-└── assets/                       # Logos, images, etc.
+└── docs/                         # Documentation
 ```
 
-## Quick Start
+## Supabase Setup (5 minutes)
 
-### Prerequisites
-
-1. **Apple Developer Account** ($99/year) - Required for App Store submission
-2. **Supabase Account** (Free tier) - Backend database
-3. **GitHub Account** - Code repository
-4. **Domain** - pausely.pro (already purchased ✅)
-
-### Backend Setup (Supabase)
-
-1. Create a new Supabase project at https://supabase.com
-2. Go to SQL Editor → New query
-3. Copy and paste the contents of `backend/supabase/migrations/001_initial_schema.sql`
-4. Run the query to create all tables
-5. Go to Project Settings → API to get your `Project URL` and `anon public` key
-
-### iOS App Setup
-
-1. Update `SupabaseManager.swift` with your Supabase credentials:
-```swift
-let supabaseURL = URL(string: "https://YOUR_PROJECT_ID.supabase.co")!
-let supabaseKey = "YOUR_ANON_KEY"
+1. Create account at https://supabase.com
+2. Create new project
+3. Go to SQL Editor → New query
+4. Copy/paste: `backend/supabase/migrations/001_initial_schema.sql`
+5. Run the query
+6. Go to Project Settings → API
+7. Copy `Project URL` and `anon public` key
+8. Create `web/.env`:
+```
+VITE_SUPABASE_URL=https://your-project-id.supabase.co
+VITE_SUPABASE_ANON_KEY=your-anon-key-here
 ```
 
-2. Build and run in Xcode
+## Web App Quick Start
 
-### Required Dependencies (Add to Package.swift or SPM)
-
-```swift
-dependencies: [
-    .package(url: "https://github.com/supabase/supabase-swift", from: "2.0.0")
-]
+```bash
+cd web
+npm install
+npm run dev          # Local dev
+npm run build        # Production build
 ```
+
+## iOS App (Requires Apple Developer)
+
+```bash
+cd ios/Pausely
+# Open in Xcode
+# Update SupabaseManager.swift with your credentials
+# Build and run
+```
+
+## What's Built
+
+### ✅ Web App (Ready Now)
+- Dashboard with spend overview
+- Subscription list with add/edit
+- Free perks discovery page
+- User profile
+- Authentication (email/password)
+- Mobile-first responsive design
+
+### ✅ iOS App (Ready when you get Apple Dev)
+- Full SwiftUI app
+- Same features as web
+- Native iOS look/feel
+- App Store ready structure
+
+### ✅ Backend
+- Complete Supabase schema
+- Row Level Security
+- Auto-calculated fields
+- Ready for Plaid integration
+
+## Cost Breakdown
+
+| Item | Cost | Status |
+|------|------|--------|
+| Domain (pausely.pro) | ~$10 | ✅ Done |
+| Web Hosting | Free | ✅ Via Vercel/Netlify |
+| Supabase | Free tier | ✅ Up to 500MB |
+| Apple Developer | $99/year | ⏳ Optional (for iOS) |
+| **Total to start** | **$10** | |
 
 ## Next Steps
 
-### Immediate
-- [ ] Set up Apple Developer account
-- [ ] Configure Supabase auth (email/password, Apple Sign In, Google Sign In)
-- [ ] Integrate Plaid for bank account connections
-- [ ] Implement Screen Time API access
-- [ ] Design and implement free perk discovery logic
+1. ✅ Set up Supabase (5 min)
+2. ✅ Deploy web app (5 min)
+3. ✅ Test on your phone!
+4. ⏳ Add real bank integration (Plaid)
+5. ⏳ Build free perk database
+6. ⏳ iOS App Store (when ready)
 
-### Features to Build
-- [ ] Bank account connection via Plaid
-- [ ] Subscription auto-detection from transactions
-- [ ] Screen Time integration for usage tracking
-- [ ] Free perk database (credit cards, employers, libraries)
-- [ ] Pause functionality with direct links
-- [ ] Push notifications for billing reminders
-- [ ] App Store submission
+## Environment Variables
+
+Create `web/.env`:
+```
+VITE_SUPABASE_URL=your_supabase_url
+VITE_SUPABASE_ANON_KEY=your_anon_key
+```
 
 ## Tech Stack
 
-- **Frontend**: SwiftUI (iOS 16+)
+- **Frontend**: React + TypeScript + Tailwind CSS + Vite
+- **iOS**: SwiftUI (for future App Store)
 - **Backend**: Supabase (PostgreSQL + Auth + Realtime)
-- **Banking**: Plaid API
-- **Hosting**: Supabase (free tier)
+- **Banking**: Plaid API (future)
+- **Hosting**: Vercel/Netlify (free)
 
 ## Database Schema
 
