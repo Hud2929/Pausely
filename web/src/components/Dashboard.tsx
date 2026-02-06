@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { supabase } from '../lib/supabase'
-import { DollarSign, TrendingUp, PauseCircle, Gift } from 'lucide-react'
+import { PauseCircle, Gift } from 'lucide-react'
 
 interface Subscription {
   id: string

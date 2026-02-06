@@ -48,7 +48,7 @@ export default function Perks() {
 
       <div className="bg-blue-50 rounded-xl p-4 mb-6 border border-blue-200">
         <p className="text-sm text-blue-800">
-          <strong>Did you know?\u003c/strong> The average user discovers $50-100/month in free alternatives they didn't know about!
+          <strong>Did you know?</strong> The average user discovers $50-100/month in free alternatives they didn't know about!
         </p>
       </div>
 

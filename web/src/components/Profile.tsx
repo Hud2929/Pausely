@@ -38,7 +38,7 @@ export default function Profile() {
             <Bell className="w-5 h-5 text-gray-400" />
             <span>Notifications</span>
           </div>
-          <span className="text-gray-400">></span>
+          <span className="text-gray-400">→</span>
         </div>
         
         <div className="p-4 border-b border-gray-100 flex items-center justify-between">
@@ -46,7 +46,7 @@ export default function Profile() {
             <Link className="w-5 h-5 text-gray-400" />
             <span>Connected Banks</span>
           </div>
-          <span className="text-gray-400">></span>
+          <span className="text-gray-400">→</span>
         </div>
         
         <div className="p-4 flex items-center justify-between">
@@ -54,7 +54,7 @@ export default function Profile() {
             <Clock className="w-5 h-5 text-gray-400" />
             <span>Screen Time</span>
           </div>
-          <span className="text-gray-400">></span>
+          <span className="text-gray-400">→</span>
         </div>
       </div>
 

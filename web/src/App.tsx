@@ -7,9 +7,10 @@ import Profile from './components/Profile'
 import Onboarding from './components/Onboarding'
 import { supabase } from './lib/supabase'
 import { LayoutDashboard, List, Gift, User } from 'lucide-react'
+import type { Session } from '@supabase/supabase-js'
 
 function App() {
-  const [session, setSession] = useState(null)
+  const [session, setSession] = useState<Session | null>(null)
   const [loading, setLoading] = useState(true)
   const [activeTab, setActiveTab] = useState('dashboard')
 
