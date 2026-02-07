@@ -1,90 +1,52 @@
 import { useState, useEffect } from 'react'
 import { Menu, X } from 'lucide-react'
 
+const navLinks = [
+  { name: 'Features', href: '#features' },
+  { name: 'Pricing', href: '#pricing' },
+]
+
 export default function Navigation() {
   const [isScrolled, setIsScrolled] = useState(false)
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
 
   useEffect(() => {
-    const handleScroll = () => {
-      setIsScrolled(window.scrollY > 50)
-    }
+    const handleScroll = () => setIsScrolled(window.scrollY > 50)
     window.addEventListener('scroll', handleScroll, { passive: true })
     return () => window.removeEventListener('scroll', handleScroll)
   }, [])
 
-  const navLinks = [
-    { name: 'Features', href: '#features' },
-    { name: 'How It Works', href: '#how-it-works' },
-    { name: 'Pricing', href: '#pricing' },
-    { name: 'FAQ', href: '#faq' },
-  ]
-
-  const scrollToSection = (href: string) => {
-    const element = document.querySelector(href)
-    if (element) {
-      element.scrollIntoView({ behavior: 'smooth' })
-    }
+  const scrollTo = (href: string) => {
+    document.querySelector(href)?.scrollIntoView({ behavior: 'smooth' })
     setIsMobileMenuOpen(false)
   }
 
   return (
     <>
-      <nav
-        className={`fixed top-0 left-0 right-0 z-50 transition-all duration-500 ${
-          isScrolled ? 'glass py-3' : 'bg-transparent py-5'
-        }`}
-      >
+      <nav className={`fixed top-0 left-0 right-0 z-50 transition-all ${isScrolled ? 'glass py-3' : 'py-5'}`}>
         <div className="container flex items-center justify-between">
-          {/* Logo */}
-          <a
-            href="#"
-            className="text-2xl font-bold tracking-tight text-white"
-            onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
-          >
-            Pausely
-          </a>
+          <a href="#" className="text-xl font-semibold">Pausely</a>
 
-          {/* Desktop Nav */}
-          <div className="hidden md:flex items-center gap-1">
+          <div className="hidden md:flex items-center gap-6">
             {navLinks.map((link) => (
               <button
                 key={link.name}
-                onClick={() => scrollToSection(link.href)}
-                className="nav-link"
+                onClick={() => scrollTo(link.href)}
+                className="text-sm text-white/70 hover:text-white transition-colors"
               >
                 {link.name}
               </button>
             ))}
-          </div>
-
-          {/* CTA Buttons */}
-          <div className="hidden md:flex items-center gap-3">
-            <a
-              href="#get-started"
-              className="btn-secondary text-sm py-2 px-5"
-              onClick={(e) => {
-                e.preventDefault()
-                scrollToSection('#cta')
-              }}
-            >
-              Sign In
-            </a>
-            <a
-              href="#get-started"
-              className="btn-primary text-sm py-2 px-5"
-              onClick={(e) => {
-                e.preventDefault()
-                scrollToSection('#cta')
-              }}
+            <button 
+              onClick={() => scrollTo('#cta')}
+              className="btn-primary text-sm py-2.5 px-5"
             >
               Get Started
-            </a>
+            </button>
           </div>
 
-          {/* Mobile Menu Button */}
           <button
-            className="md:hidden p-2 text-white"
+            className="md:hidden p-2"
             onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
           >
             {isMobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
@@ -93,35 +55,22 @@ export default function Navigation() {
       </nav>
 
       {/* Mobile Menu */}
-      <div
-        className={`fixed inset-0 z-40 bg-black/95 backdrop-blur-xl transition-all duration-300 md:hidden ${
-          isMobileMenuOpen ? 'opacity-100 visible' : 'opacity-0 invisible'
-        }`}
-      >
+      <div className={`fixed inset-0 z-40 bg-black transition-all md:hidden ${
+        isMobileMenuOpen ? 'opacity-100 visible' : 'opacity-0 invisible'
+      }`}>
         <div className="flex flex-col items-center justify-center h-full gap-8">
           {navLinks.map((link) => (
             <button
               key={link.name}
-              onClick={() => scrollToSection(link.href)}
-              className="text-3xl font-semibold text-white hover:text-blue-400 transition-colors"
+              onClick={() => scrollTo(link.href)}
+              className="text-2xl font-medium"
             >
               {link.name}
             </button>
           ))}
-          <div className="flex flex-col gap-4 mt-8">
-            <button
-              onClick={() => scrollToSection('#cta')}
-              className="btn-secondary text-lg px-8 py-4"
-            >
-              Sign In
-            </button>
-            <button
-              onClick={() => scrollToSection('#cta')}
-              className="btn-primary text-lg px-8 py-4"
-            >
-              Get Started
-            </button>
-          </div>
+          <button onClick={() => scrollTo('#cta')} className="btn-primary text-lg px-8 py-4">
+            Get Started
+          </button>
         </div>
       </div>
     </>
