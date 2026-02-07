@@ -44,7 +44,7 @@ export default function CTA({ onGetStarted }: CTAProps) {
         </h2>
 
         <p className="body-large mb-16">
-          Join thousands of users. 14-day free trial, no credit card required.
+          Join thousands of users. 7-day free trial, no credit card required.
         </p>
 
         {!isSuccess ? (

@@ -28,12 +28,12 @@ const PLANS = {
     id: 'pro', 
     name: 'Pro',
     features: [
-      'Unlimited subscriptions',
-      'AI Cancellation Agent',
-      'AI Smart Pausing',
-      'AI Daily Briefing',
-      'Priority support',
-      '7-day free trial'
+      '- Unlimited subscriptions',
+      '- AI Cancellation Agent',
+      '- AI Smart Pausing',
+      '- AI Daily Briefing',
+      '- Priority support',
+      '- 7-day free trial'
     ]
   }
 }
@@ -114,23 +114,23 @@ export default function Pricing({ onGetStarted }: PricingProps) {
           </div>
 
           {/* Pro Plan */}
-          <div className="relative p-8 lg:p-10 rounded-3xl bg-gradient-to-br from-white to-gray-100 text-black">
-            {/* Most Popular Badge - Moved to top right */}
-            <div className="absolute -top-3 right-6">
+          <div className="relative p-8 lg:p-12 rounded-3xl bg-gradient-to-br from-white to-gray-100 text-black">
+            {/* Most Popular Badge - Top right */}
+            <div className="absolute -top-3 right-8">
               <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full bg-gradient-to-r from-yellow-400 to-orange-500 text-white text-xs font-medium">
                 <Crown className="w-3 h-3" />
                 Most Popular
               </span>
             </div>
 
-            <div className="mb-5">
-              <p className="text-sm font-medium mb-1 text-black/50">{PLANS.pro.name}</p>
+            <div className="mb-5 pl-10 pt-2">
+              <p className="text-base font-semibold mb-2 text-black/70">{PLANS.pro.name}</p>
               
               {/* Billing Period Toggle */}
-              <div className="inline-flex items-center gap-2 p-1 rounded-full bg-black/5 mb-3">
+              <div className="inline-flex items-center gap-2 p-1.5 rounded-full bg-black/5 mb-4">
                 <button
                   onClick={() => setBillingPeriod('monthly')}
-                  className={`px-3 py-1.5 rounded-full text-xs font-medium transition-all ${
+                  className={`px-4 py-2 rounded-full text-sm font-medium transition-all ${
                     billingPeriod === 'monthly' 
                       ? 'bg-black text-white' 
                       : 'text-black/60 hover:text-black'
@@ -140,44 +140,46 @@ export default function Pricing({ onGetStarted }: PricingProps) {
                 </button>
                 <button
                   onClick={() => setBillingPeriod('yearly')}
-                  className={`px-3 py-1.5 rounded-full text-xs font-medium transition-all flex items-center gap-1 ${
+                  className={`px-4 py-2 rounded-full text-sm font-medium transition-all flex items-center gap-1.5 ${
                     billingPeriod === 'yearly' 
                       ? 'bg-black text-white' 
                       : 'text-black/60 hover:text-black'
                   }`}
                 >
                   Yearly
-                  <span className="text-[10px] bg-green-500 text-white px-1.5 py-0.5 rounded-full">Save {getYearlySavings()}</span>
+                  <span className="text-xs bg-green-500 text-white px-2 py-0.5 rounded-full">Save {getYearlySavings()}</span>
                 </button>
               </div>
 
               <div className="flex items-baseline gap-2">
-                <span className="text-4xl lg:text-5xl font-bold">{getPrice()}</span>
-                <span className="text-sm text-black/50">/{billingPeriod === 'monthly' ? 'month' : 'year'}</span>
+                <span className="text-5xl lg:text-6xl font-bold">{getPrice()}</span>
+                <span className="text-base text-black/50">/{billingPeriod === 'monthly' ? 'month' : 'year'}</span>
               </div>
               
               {billingPeriod === 'yearly' && (
-                <p className="text-xs text-green-600 mt-1 font-medium">
+                <p className="text-sm text-green-600 mt-2 font-medium">
                   You save {getYearlySavings()} per year
                 </p>
               )}
             </div>
 
-            <ul className="space-y-3 mb-8">
+            <ul className="space-y-4 mb-10 pl-10">
               {PLANS.pro.features.map((feature) => (
                 <li key={feature} className="flex items-start gap-3">
-                  <Check className="w-4 h-4 mt-0.5 text-black/40 flex-shrink-0" />
-                  <span className="text-sm text-black/70">{feature}</span>
+                  <Check className="w-5 h-5 mt-0.5 text-black/40 flex-shrink-0" />
+                  <span className="text-base text-black/70">{feature}</span>
                 </li>
               ))}
             </ul>
 
-            <button
-              onClick={() => handlePlanSelect()}
-              className="w-full py-3 rounded-full font-medium text-sm transition-all bg-black text-white hover:bg-black/80"
-            >
-              Start Free Trial
-            </button>
+            <div className="px-10">
+              <button
+                onClick={() => handlePlanSelect()}
+                className="w-full py-4 rounded-full font-medium text-base transition-all bg-black text-white hover:bg-black/80"
+              >
+                Start Free Trial
+              </button>
+            </div>
           </div>
         </div>
 
