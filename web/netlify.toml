@@ -1,0 +1,16 @@
+[build]
+  publish = "dist"
+
+[context.production]
+  publish = "dist"
+
+# Force HTTPS and enable SSL
+[context.production.environment]
+  NODE_ENV = "production"
+
+[[headers]]
+  for = "/*"
+  [headers.values]
+    Strict-Transport-Security = "max-age=31536000; includeSubDomains; preload"
+    X-Frame-Options = "DENY"
+    X-Content-Type-Options = "nosniff"
