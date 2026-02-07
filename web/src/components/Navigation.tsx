@@ -1,12 +1,17 @@
 import { useState, useEffect } from 'react'
-import { Menu, X } from 'lucide-react'
+import { Menu, X, LayoutDashboard } from 'lucide-react'
+
+interface NavigationProps {
+  onGetStarted: () => void
+  isAuthenticated?: boolean
+}
 
 const navLinks = [
   { name: 'Features', href: '#features' },
   { name: 'Pricing', href: '#pricing' },
 ]
 
-export default function Navigation() {
+export default function Navigation({ onGetStarted, isAuthenticated }: NavigationProps) {
   const [isScrolled, setIsScrolled] = useState(false)
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
 
@@ -38,10 +43,17 @@ export default function Navigation() {
               </button>
             ))}
             <button 
-              onClick={() => scrollTo('#cta')}
-              className="btn-primary text-sm py-2.5 px-5"
+              onClick={onGetStarted}
+              className="btn-primary text-sm py-2.5 px-5 flex items-center gap-2"
             >
-              Get Started
+              {isAuthenticated ? (
+                <>
+                  <LayoutDashboard className="w-4 h-4" />
+                  Dashboard
+                </>
+              ) : (
+                'Get Started'
+              )}
             </button>
           </div>
 
@@ -68,8 +80,21 @@ export default function Navigation() {
               {link.name}
             </button>
           ))}
-          <button onClick={() => scrollTo('#cta')} className="btn-primary text-lg px-8 py-4">
-            Get Started
+          <button 
+            onClick={() => {
+              onGetStarted()
+              setIsMobileMenuOpen(false)
+            }} 
+            className="btn-primary text-lg px-8 py-4 flex items-center gap-2"
+          >
+            {isAuthenticated ? (
+              <>
+                <LayoutDashboard className="w-5 h-5" />
+                Dashboard
+              </>
+            ) : (
+              'Get Started'
+            )}
           </button>
         </div>
       </div>

@@ -1,8 +1,16 @@
 import { ArrowRight } from 'lucide-react'
 
-export default function Hero() {
-  const scrollToCTA = () => {
-    document.querySelector('#cta')?.scrollIntoView({ behavior: 'smooth' })
+interface HeroProps {
+  onGetStarted?: () => void
+}
+
+export default function Hero({ onGetStarted }: HeroProps) {
+  const handleClick = () => {
+    if (onGetStarted) {
+      onGetStarted()
+    } else {
+      document.querySelector('#cta')?.scrollIntoView({ behavior: 'smooth' })
+    }
   }
 
   return (
@@ -27,11 +35,11 @@ export default function Hero() {
 
           {/* CTA */}
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-            <button onClick={scrollToCTA} className="btn-primary">
+            <button onClick={handleClick} className="btn-primary">
               Start Free Trial
               <ArrowRight className="w-5 h-5 ml-2" />
             </button>
-            <button onClick={scrollToCTA} className="btn-secondary">
+            <button onClick={handleClick} className="btn-secondary">
               Learn More
             </button>
           </div>

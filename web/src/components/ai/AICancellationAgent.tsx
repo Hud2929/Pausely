@@ -1,7 +1,6 @@
 import { useState } from 'react'
 import { 
   Bot, 
-  Send, 
   Loader2, 
   CheckCircle2, 
   XCircle, 
@@ -11,7 +10,13 @@ import {
   Copy,
   Check
 } from 'lucide-react'
-import { supabase } from '../../lib/supabase'
+import { createCancellationRequest } from '../../lib/database'
+import type { Subscription } from '../../types/subscription'
+
+interface AICancellationAgentProps {
+  userId: string
+  subscriptions: Subscription[]
+}
 
 interface CancellationRequest {
   id: string
@@ -29,31 +34,15 @@ interface Message {
   type?: 'email' | 'chat' | 'suggestion'
 }
 
-const POPULAR_SERVICES = [
-  'Netflix',
-  'Spotify',
-  'Adobe Creative Cloud',
-  'Disney+',
-  'Hulu',
-  'Amazon Prime',
-  'Xbox Game Pass',
-  'PlayStation Plus',
-  'Apple Music',
-  'YouTube Premium',
-  'DoorDash DashPass',
-  'Uber One',
-  'Gym Membership',
-  'New York Times',
-  'Medium',
-  'LinkedIn Premium',
-]
-
-export default function AICancellationAgent() {
+export default function AICancellationAgent({ userId, subscriptions }: AICancellationAgentProps) {
   const [selectedService, setSelectedService] = useState('')
   const [customService, setCustomService] = useState('')
   const [isProcessing, setIsProcessing] = useState(false)
   const [request, setRequest] = useState<CancellationRequest | null>(null)
   const [copied, setCopied] = useState(false)
+
+  // Get active subscriptions for quick select
+  const activeSubscriptions = subscriptions.filter(s => s.status === 'active')
 
   const generateAICancellation = async () => {
     const service = selectedService || customService
@@ -97,12 +86,24 @@ export default function AICancellationAgent() {
     setRequest(aiRequest)
     setIsProcessing(false)
 
-    // Save to Supabase
-    await supabase.from('cancellation_requests').insert({
-      service_name: service,
-      status: 'drafting',
-      user_id: (await supabase.auth.getUser()).data.user?.id
-    })
+    // Save to database
+    try {
+      const matchingSub = subscriptions.find(s => 
+        s.name.toLowerCase() === service.toLowerCase()
+      )
+      
+      await createCancellationRequest({
+        user_id: userId,
+        subscription_id: matchingSub?.id || null,
+        service_name: service,
+        status: 'drafting',
+        email_content: generateCancellationEmail(service),
+        company_response: null,
+        final_status: null
+      })
+    } catch (err) {
+      console.error('Error saving cancellation request:', err)
+    }
   }
 
   const generateCancellationEmail = (service: string): string => {
@@ -283,23 +284,34 @@ Best regards,
             <div className="bg-white/5 border border-white/10 rounded-3xl p-8 mb-6">
               <h2 className="text-2xl font-semibold mb-6">What do you want to cancel?</h2>
               
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6">
-                {POPULAR_SERVICES.map((service) => (
-                  <button
-                    key={service}
-                    onClick={() => setSelectedService(service)}
-                    className={`p-4 rounded-xl text-sm font-medium transition-all ${
-                      selectedService === service
-                        ? 'bg-purple-500 text-white'
-                        : 'bg-white/5 hover:bg-white/10 text-white/70'
-                    }`}
-                  >
-                    {service}
-                  </button>
-                ))}
-              </div>
+              {/* Active Subscriptions Quick Select */}
+              {activeSubscriptions.length > 0 && (
+                <div className="mb-6">
+                  <p className="text-sm text-white/50 mb-3">Your active subscriptions:</p>
+                  <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+                    {activeSubscriptions.map((sub) => (
+                      <button
+                        key={sub.id}
+                        onClick={() => {
+                          setSelectedService(sub.name)
+                          setCustomService('')
+                        }}
+                        className={`p-4 rounded-xl text-sm font-medium transition-all ${
+                          selectedService === sub.name
+                            ? 'bg-purple-500 text-white'
+                            : 'bg-white/5 hover:bg-white/10 text-white/70'
+                        }`}
+                      >
+                        <span className="block font-semibold">{sub.name}</span>
+                        <span className="text-xs opacity-70">${sub.amount}/{sub.billing_cycle}</span>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
               
               <div className="relative">
+                <p className="text-sm text-white/50 mb-3">Or enter a custom service:</p>
                 <input
                   type="text"
                   value={customService}
@@ -307,7 +319,7 @@ Best regards,
                     setCustomService(e.target.value)
                     setSelectedService('')
                   }}
-                  placeholder="Or type a custom service..."
+                  placeholder="Type service name..."
                   className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-4 text-white placeholder:text-white/40 focus:outline-none focus:border-purple-500/50"
                 />
               </div>
@@ -450,7 +462,6 @@ Best regards,
                     onClick={simulateCompanyResponse}
                     className="flex-1 bg-white/10 hover:bg-white/15 py-3 rounded-xl font-medium transition-colors flex items-center justify-center gap-2"
                   >
-                    <Send className="w-5 h-5" />
                     Simulate Company Response
                   </button>
                 </div>

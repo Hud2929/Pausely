@@ -1,41 +1,73 @@
 import { useState } from 'react'
-import { Check } from 'lucide-react'
+import { Check, Crown } from 'lucide-react'
 
-type Currency = 'USD' | 'CAD'
-
-const plans = [
-  {
+// Plan details defined locally to avoid import issues
+const PLANS = {
+  free: {
+    id: 'free',
     name: 'Free',
-    prices: { USD: 0, CAD: 0 },
+    price: 0,
     features: [
       '2 subscriptions only',
       'Basic insights',
-      'Email reports',
-    ],
-    cta: 'Get Started',
-    popular: false
+      'Email reports'
+    ]
   },
-  {
+  pro: {
+    id: 'pro', 
     name: 'Pro',
-    prices: { USD: 4.99, CAD: 6.83 },
+    price: 4.99,
     features: [
       'Unlimited subscriptions',
       'AI Cancellation Agent',
       'AI Smart Pausing',
       'AI Daily Briefing',
-      'Priority support',
-    ],
-    cta: 'Start Trial',
-    popular: true
+      'Priority support'
+    ]
+  }
+}
+
+interface PricingProps {
+  onGetStarted?: () => void
+}
+
+type Currency = 'USD' | 'CAD'
+
+const DISPLAY_PLANS = [
+  {
+    name: 'Free',
+    prices: { USD: 0, CAD: 0 },
+    features: PLANS.free.features,
+    cta: 'Get Started',
+    popular: false,
+    planId: 'free'
+  },
+  {
+    name: 'Pro',
+    prices: { USD: PLANS.pro.price, CAD: 6.83 },
+    features: PLANS.pro.features,
+    cta: 'Start Free Trial',
+    popular: true,
+    planId: 'pro'
   },
 ]
 
-export default function Pricing() {
+export default function Pricing({ onGetStarted }: PricingProps) {
   const [currency, setCurrency] = useState<Currency>('USD')
 
-  const getPrice = (plan: typeof plans[0]) => {
-    if (plan.prices.USD === 0) return '$0'
-    return `$${plan.prices[currency].toFixed(2)} ${currency}`
+  const getPrice = (plan: typeof DISPLAY_PLANS[0]) => {
+    if (plan.prices.USD === 0) return 'Free'
+    return `$${plan.prices[currency].toFixed(2)}`
+  }
+
+  const handlePlanSelect = (plan: typeof DISPLAY_PLANS[0]) => {
+    if (plan.planId === 'free') {
+      onGetStarted?.()
+    } else {
+      // For Pro, we'll redirect to the checkout when they click
+      // The actual checkout happens after they sign in
+      onGetStarted?.()
+    }
   }
 
   return (
@@ -66,11 +98,20 @@ export default function Pricing() {
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8 lg:gap-12">
-          {plans.map((plan) => (
+          {DISPLAY_PLANS.map((plan) => (
             <div
               key={plan.name}
-              className={`p-8 lg:p-12 rounded-3xl ${plan.popular ? 'bg-white text-black' : 'glass'}`}
+              className={`relative p-8 lg:p-12 rounded-3xl ${plan.popular ? 'bg-gradient-to-br from-white to-gray-100 text-black' : 'glass'}`}
             >
+              {plan.popular && (
+                <div className="absolute -top-4 left-1/2 -translate-x-1/2">
+                  <span className="inline-flex items-center gap-1 px-4 py-1.5 rounded-full bg-gradient-to-r from-yellow-400 to-orange-500 text-white text-sm font-medium">
+                    <Crown className="w-4 h-4" />
+                    Most Popular
+                  </span>
+                </div>
+              )}
+
               <div className="mb-8">
                 <p className={`text-sm font-medium mb-2 ${plan.popular ? 'text-black/50' : 'text-white/50'}`}>
                   {plan.name}
@@ -97,10 +138,12 @@ export default function Pricing() {
               </ul>
 
               <button
+                onClick={() => handlePlanSelect(plan)}
                 className={`w-full py-4 rounded-full font-medium text-base transition-all ${
-                  plan.popular ? 'bg-black text-white hover:bg-black/80' : 'bg-white text-black hover:bg-white/90'
+                  plan.popular 
+                    ? 'bg-black text-white hover:bg-black/80' 
+                    : 'bg-white text-black hover:bg-white/90'
                 }`}
-                onClick={() => document.querySelector('#cta')?.scrollIntoView({ behavior: 'smooth' })}
               >
                 {plan.cta}
               </button>
@@ -108,9 +151,12 @@ export default function Pricing() {
           ))}
         </div>
 
-        <p className="text-center mt-16 text-white/40 text-sm">
-          14-day free trial • Cancel anytime
-        </p>
+        <div className="text-center mt-16 space-y-2">
+          <p className="text-white/40 text-sm">14-day free trial • Cancel anytime • No credit card required</p>
+          <p className="text-white/30 text-xs">
+            Secure payment powered by LemonSqueezy
+          </p>
+        </div>
       </div>
     </section>
   )
