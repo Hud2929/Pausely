@@ -4,7 +4,8 @@ import { Check } from 'lucide-react'
 const plans = [
   {
     name: 'Free',
-    price: '$0',
+    priceMonthly: 0,
+    priceYearly: 0,
     period: 'forever',
     features: [
       '2 bank accounts',
@@ -17,14 +18,15 @@ const plans = [
   },
   {
     name: 'Pro',
-    price: '$4.99',
+    priceMonthly: 4.99,
+    priceYearly: 3.99,
     period: '/month',
     features: [
       'Unlimited accounts',
       'Unlimited subscriptions',
-      'AI-powered insights',
-      'Free perk discovery',
-      'Pause automation',
+      'AI Cancellation Agent',
+      'AI Smart Pausing',
+      'AI Daily Briefing',
       'Priority support',
     ],
     cta: 'Start Trial',
@@ -35,24 +37,27 @@ const plans = [
 export default function Pricing() {
   const [isYearly, setIsYearly] = useState(false)
 
+  const getPrice = (plan: typeof plans[0]) => {
+    if (plan.priceMonthly === 0) return '$0'
+    const price = isYearly ? plan.priceYearly : plan.priceMonthly
+    return `$${price.toFixed(2)}`
+  }
+
   return (
     <section id="pricing" className="section">
       <div className="container max-w-4xl">
-        {/* Header - MORE SPACING */}
+        {/* Header */}
         <div className="text-center mb-24">
           <p className="caption mb-6">Pricing</p>
           <h2 className="headline-medium mb-8">
             Simple pricing.
           </h2>
-          <p className="body-large mb-12">
-            Start free. Upgrade when you're ready.
-          </p>
 
           {/* Toggle */}
           <div className="inline-flex items-center gap-4 p-2 rounded-full glass">
             <button 
               onClick={() => setIsYearly(false)}
-              className={`px-6 py-2.5 rounded-full text-sm font-medium transition-all ${
+              className={`px-6 py-2.5 rounded-full text-sm font-medium transition-all duration-300 ${
                 !isYearly ? 'bg-white text-black' : 'text-white/60 hover:text-white'
               }`}
             >
@@ -60,17 +65,17 @@ export default function Pricing() {
             </button>
             <button 
               onClick={() => setIsYearly(true)}
-              className={`px-6 py-2.5 rounded-full text-sm font-medium transition-all flex items-center gap-2 ${
+              className={`px-6 py-2.5 rounded-full text-sm font-medium transition-all duration-300 flex items-center gap-2 ${
                 isYearly ? 'bg-white text-black' : 'text-white/60 hover:text-white'
               }`}
             >
               Yearly
-              <span className="text-xs bg-green-500/20 text-green-400 px-2 py-1 rounded-full">Save 20%</span>
+              <span className="text-xs bg-green-500/20 text-green-400 px-2 py-1 rounded-full font-semibold">Save 20%</span>
             </button>
           </div>
         </div>
 
-        {/* Plans - MORE SPACING */}
+        {/* Plans */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
           {plans.map((plan) => (
             <div
@@ -87,13 +92,10 @@ export default function Pricing() {
                 </p>
                 <div className="flex items-baseline gap-1">
                   <span className="text-6xl font-bold">
-                    {isYearly && plan.price !== '$0' 
-                      ? `$${(parseFloat(plan.price.replace('$', '')) * 0.8).toFixed(0)}`
-                      : plan.price
-                    }
+                    {getPrice(plan)}
                   </span>
                   <span className={`text-base ${plan.popular ? 'text-black/50' : 'text-white/40'}`}>
-                    {plan.period}
+                    {plan.priceMonthly === 0 ? '' : isYearly ? '/month (billed yearly)' : '/month'}
                   </span>
                 </div>
               </div>
@@ -121,7 +123,6 @@ export default function Pricing() {
           ))}
         </div>
 
-        {/* Trust */}
         <p className="text-center mt-16 text-white/40 text-sm">
           14-day free trial • Cancel anytime
         </p>

@@ -1,5 +1,6 @@
 import Navigation from './components/Navigation'
 import Hero from './components/sections/Hero'
+import AIFeatures from './components/sections/AIFeatures'
 import Features from './components/sections/Features'
 import HowItWorks from './components/sections/HowItWorks'
 import Pricing from './components/sections/Pricing'
@@ -41,6 +42,7 @@ function App() {
       
       <main className="relative z-10">
         <Hero />
+        <AIFeatures />
         <Features />
         <HowItWorks />
         <Pricing />

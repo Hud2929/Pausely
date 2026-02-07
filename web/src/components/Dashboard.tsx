@@ -1,6 +1,8 @@
 import { useState, useEffect } from 'react'
 import { supabase } from '../lib/supabase'
 import AICancellationAgent from './ai/AICancellationAgent'
+import AISmartPausing from './ai/AISmartPausing'
+import AIDailyBriefing from './ai/AIDailyBriefing'
 import { 
   Wallet, 
   TrendingDown, 
@@ -10,13 +12,17 @@ import {
   LogOut,
   ChevronRight,
   Bot,
-  Sparkles
+  PauseCircle,
+  Mail,
+  ArrowLeft
 } from 'lucide-react'
+
+type View = 'dashboard' | 'ai-cancellation' | 'ai-pausing' | 'ai-briefing'
 
 export default function Dashboard() {
   const [monthlySpend] = useState(247)
   const [user, setUser] = useState<any>(null)
-  const [activeView, setActiveView] = useState<'dashboard' | 'ai-cancellation'>('dashboard')
+  const [activeView, setActiveView] = useState<View>('dashboard')
 
   useEffect(() => {
     const getUser = async () => {
@@ -31,7 +37,48 @@ export default function Dashboard() {
   }
 
   if (activeView === 'ai-cancellation') {
-    return <AICancellationAgent />
+    return (
+      <>
+        <button 
+          onClick={() => setActiveView('dashboard')}
+          className="fixed top-4 left-4 z-50 glass px-4 py-2 rounded-full flex items-center gap-2"
+        >
+          <ArrowLeft className="w-4 h-4" />
+          Back
+        </button>
+        <AICancellationAgent />
+      </>
+    )
+  }
+
+  if (activeView === 'ai-pausing') {
+    return (
+      <>
+        <button 
+          onClick={() => setActiveView('dashboard')}
+          className="fixed top-4 left-4 z-50 glass px-4 py-2 rounded-full flex items-center gap-2"
+        >
+          <ArrowLeft className="w-4 h-4" />
+          Back
+        </button>
+        <AISmartPausing />
+      </>
+    )
+  }
+
+  if (activeView === 'ai-briefing') {
+    return (
+      <>
+        <button 
+          onClick={() => setActiveView('dashboard')}
+          className="fixed top-4 left-4 z-50 glass px-4 py-2 rounded-full flex items-center gap-2"
+        >
+          <ArrowLeft className="w-4 h-4" />
+          Back
+        </button>
+        <AIDailyBriefing />
+      </>
+    )
   }
 
   return (
@@ -61,35 +108,60 @@ export default function Dashboard() {
           <p className="text-white/60">Here's your subscription overview</p>
         </div>
 
-        {/* AI Cancellation Agent Card - FEATURED */}
-        <div 
-          onClick={() => setActiveView('ai-cancellation')}
-          className="mb-8 card bg-gradient-to-br from-purple-500/20 to-pink-500/20 border-purple-500/30 cursor-pointer group hover:scale-[1.02] transition-all"
-        >
-          <div className="flex items-start justify-between">
-            <div className="flex-1">
-              <div className="flex items-center gap-2 mb-3">
-                <Sparkles className="w-5 h-5 text-purple-400" />
-                <span className="text-sm font-semibold text-purple-400 uppercase tracking-wider">New AI Feature</span>
+        {/* AI Features Grid */}
+        <div className="mb-10">
+          <h2 className="text-lg font-semibold mb-4 text-white/70">AI Features</h2>
+          
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            {/* AI Cancellation Agent */}
+            <div 
+              onClick={() => setActiveView('ai-cancellation')}
+              className="card bg-gradient-to-br from-purple-500/10 to-pink-500/10 border-purple-500/20 cursor-pointer group"
+            >
+              <div className="flex items-start justify-between mb-4">
+                <div className="w-12 h-12 rounded-2xl bg-purple-500/20 flex items-center justify-center">
+                  <Bot className="w-6 h-6 text-purple-400" />
+                </div>
+                <ChevronRight className="w-5 h-5 text-white/30 group-hover:text-white/60 transition-colors" />
               </div>
-              <h2 className="text-2xl font-bold mb-2">AI Cancellation Agent 🤖</h2>
-              <p className="text-white/70 mb-4 max-w-lg">
-                Our AI drafts cancellation emails, negotiates retention offers, and handles the entire cancellation process for you. No more awkward phone calls.
-              </p>
-              <div className="flex items-center gap-2 text-purple-400 font-medium">
-                <Bot className="w-5 h-5" />
-                <span>Try it now</span>
-                <ChevronRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
-              </div>
+              <h3 className="font-semibold mb-1">Cancellation Agent</h3>
+              <p className="text-sm text-white/50">AI drafts cancellation emails for you</p>
             </div>
-            <div className="hidden md:flex w-20 h-20 rounded-2xl bg-gradient-to-br from-purple-500 to-pink-500 items-center justify-center">
-              <Bot className="w-10 h-10 text-white" />
+
+            {/* AI Smart Pausing */}
+            <div 
+              onClick={() => setActiveView('ai-pausing')}
+              className="card bg-gradient-to-br from-blue-500/10 to-cyan-500/10 border-blue-500/20 cursor-pointer group"
+            >
+              <div className="flex items-start justify-between mb-4">
+                <div className="w-12 h-12 rounded-2xl bg-blue-500/20 flex items-center justify-center">
+                  <PauseCircle className="w-6 h-6 text-blue-400" />
+                </div>
+                <ChevronRight className="w-5 h-5 text-white/30 group-hover:text-white/60 transition-colors" />
+              </div>
+              <h3 className="font-semibold mb-1">Smart Pausing</h3>
+              <p className="text-sm text-white/50">Detect unused subscriptions automatically</p>
+            </div>
+
+            {/* AI Daily Briefing */}
+            <div 
+              onClick={() => setActiveView('ai-briefing')}
+              className="card bg-gradient-to-br from-orange-500/10 to-amber-500/10 border-orange-500/20 cursor-pointer group"
+            >
+              <div className="flex items-start justify-between mb-4">
+                <div className="w-12 h-12 rounded-2xl bg-orange-500/20 flex items-center justify-center">
+                  <Mail className="w-6 h-6 text-orange-400" />
+                </div>
+                <ChevronRight className="w-5 h-5 text-white/30 group-hover:text-white/60 transition-colors" />
+              </div>
+              <h3 className="font-semibold mb-1">Daily Briefing</h3>
+              <p className="text-sm text-white/50">Morning email with personalized insights</p>
             </div>
           </div>
         </div>
 
         {/* Stats Cards */}
-        <div className="grid grid-2 gap-4 mb-8">
+        <div className="grid grid-cols-2 gap-4 mb-8">
           <div className="card">
             <div className="flex items-center gap-3 mb-4">
               <div className="w-12 h-12 rounded-xl bg-blue-500/20 flex items-center justify-center">
