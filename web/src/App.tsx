@@ -7,6 +7,7 @@ import Pricing from './components/sections/Pricing'
 import CTA from './components/sections/CTA'
 import Footer from './components/sections/Footer'
 import Dashboard from './components/Dashboard'
+import AuthPage from './components/AuthPage'
 import './styles/apple-design.css'
 import { useEffect, useState } from 'react'
 import { supabase } from './lib/supabase'
@@ -14,6 +15,7 @@ import { supabase } from './lib/supabase'
 function App() {
   const [session, setSession] = useState<any>(null)
   const [loading, setLoading] = useState(true)
+  const [showAuth, setShowAuth] = useState(false)
 
   useEffect(() => {
     // Get initial session
@@ -22,9 +24,8 @@ function App() {
       setLoading(false)
     })
 
-    // Listen for auth changes (magic link, etc)
+    // Listen for auth changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      console.log('Auth state changed:', _event, session)
       setSession(session)
       setLoading(false)
     })
@@ -44,6 +45,10 @@ function App() {
     return <Dashboard />
   }
 
+  if (showAuth) {
+    return <AuthPage onAuthSuccess={() => setShowAuth(false)} />
+  }
+
   return (
     <div className="bg-black min-h-screen relative overflow-hidden">
       {/* Animated Background */}
@@ -60,7 +65,7 @@ function App() {
         <Features />
         <HowItWorks />
         <Pricing />
-        <CTA />
+        <CTA onGetStarted={() => setShowAuth(true)} />
       </main>
       
       <Footer />

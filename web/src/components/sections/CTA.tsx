@@ -1,16 +1,24 @@
 import { useState } from 'react'
-import { ArrowRight, CheckCircle2 } from 'lucide-react'
+import { ArrowRight, CheckCircle2, Loader2 } from 'lucide-react'
 import { supabase } from '../../lib/supabase'
 
-export default function CTA() {
+interface CTAProps {
+  onGetStarted?: () => void
+}
+
+export default function CTA({ onGetStarted }: CTAProps) {
   const [email, setEmail] = useState('')
   const [isSuccess, setIsSuccess] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    setIsLoading(true)
+    if (onGetStarted) {
+      onGetStarted()
+      return
+    }
     
+    setIsLoading(true)
     const { error } = await supabase.auth.signInWithOtp({ 
       email,
       options: {
@@ -20,7 +28,6 @@ export default function CTA() {
     
     if (error) {
       console.error('Auth error:', error)
-      alert('Error sending magic link: ' + error.message)
     }
     
     setIsLoading(false)
@@ -58,7 +65,7 @@ export default function CTA() {
                 disabled={isLoading}
               >
                 {isLoading ? (
-                  <span className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                  <Loader2 className="w-5 h-5 animate-spin" />
                 ) : (
                   <>
                     Get Started
