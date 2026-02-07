@@ -4,22 +4,22 @@ const steps = [
   {
     number: '01',
     title: 'Connect',
-    description: 'Link your bank accounts securely.',
+    description: 'Link your bank accounts securely with Plaid.',
   },
   {
     number: '02',
     title: 'Discover',
-    description: 'We find all your subscriptions.',
+    description: 'We find all your recurring charges automatically.',
   },
   {
     number: '03',
     title: 'Optimize',
-    description: 'See free perks you already have.',
+    description: 'See free perks you already have access to.',
   },
   {
     number: '04',
     title: 'Save',
-    description: 'Pause or switch to save money.',
+    description: 'Pause or cancel subscriptions with one click.',
   },
 ]
 
@@ -27,50 +27,51 @@ export default function HowItWorks() {
   const [activeStep, setActiveStep] = useState(0)
 
   return (
-    <section id="how-it-works" className="section bg-[#050505]">
-      <div className="container">
-        <div className="max-w-4xl mx-auto">
-          {/* Header */}
-          <div className="text-center mb-20">
-            <p className="caption mb-4">How It Works</p>
-            <h2 className="headline-medium">
-              Four steps to savings.
-            </h2>
-          </div>
+    <section id="how-it-works" className="section">
+      <div className="container max-w-5xl">
+        {/* Header - MORE SPACING */}
+        <div className="text-center mb-28">
+          <p className="caption mb-6">How It Works</p>
+          <h2 className="headline-medium mb-8">
+            Four steps to savings.
+          </h2>
+          <p className="body-large max-w-md mx-auto">
+            Get started in minutes. No credit card required.
+          </p>
+        </div>
 
-          {/* Steps */}
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
-            {steps.map((step, index) => {
-              const isActive = index === activeStep
+        {/* Steps - MORE SPACING */}
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-8">
+          {steps.map((step, index) => {
+            const isActive = index === activeStep
 
-              return (
-                <button
-                  key={index}
-                  onClick={() => setActiveStep(index)}
-                  className={`text-left p-6 rounded-2xl transition-all duration-300 ${
-                    isActive ? 'bg-white/5' : 'hover:bg-white/[0.02]'
-                  }`}
-                >
-                  <span className="text-sm text-white/30 font-medium">{step.number}</span>
-                  <h3 className="text-xl font-semibold mt-2 mb-2">{step.title}</h3>
-                  <p className="text-white/40 text-sm">{step.description}</p>
-                </button>
-              )
-            })}
-          </div>
-
-          {/* Progress */}
-          <div className="mt-12 flex justify-center gap-2">
-            {steps.map((_, index) => (
+            return (
               <button
                 key={index}
                 onClick={() => setActiveStep(index)}
-                className={`h-1 rounded-full transition-all ${
-                  index === activeStep ? 'w-8 bg-white' : 'w-1 bg-white/20'
+                className={`text-left p-8 rounded-3xl transition-all duration-300 ${
+                  isActive ? 'glass' : 'hover:bg-white/[0.02]'
                 }`}
-              />
-            ))}
-          </div>
+              >
+                <span className="text-sm text-white/30 font-semibold tracking-wider">{step.number}</span>
+                <h3 className="text-2xl font-semibold mt-4 mb-4">{step.title}</h3>
+                <p className="text-white/40 leading-relaxed">{step.description}</p>
+              </button>
+            )
+          })}
+        </div>
+
+        {/* Progress Dots */}
+        <div className="mt-20 flex justify-center gap-3">
+          {steps.map((_, index) => (
+            <button
+              key={index}
+              onClick={() => setActiveStep(index)}
+              className={`h-1.5 rounded-full transition-all duration-300 ${
+                index === activeStep ? 'w-10 bg-white' : 'w-1.5 bg-white/20 hover:bg-white/40'
+              }`}
+            />
+          ))}
         </div>
       </div>
     </section>

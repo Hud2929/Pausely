@@ -53,7 +53,7 @@ export default function Features() {
           }
         })
       },
-      { threshold: 0.1 }
+      { threshold: 0.1, rootMargin: '50px' }
     )
 
     const cards = sectionRef.current?.querySelectorAll('.feature-card')
@@ -65,16 +65,19 @@ export default function Features() {
   return (
     <section id="features" ref={sectionRef} className="section">
       <div className="container">
-        {/* Header */}
-        <div className="text-center max-w-2xl mx-auto mb-20">
-          <p className="caption mb-4">Features</p>
-          <h2 className="headline-medium mb-6">
+        {/* Header - MORE SPACING */}
+        <div className="text-center max-w-2xl mx-auto mb-24">
+          <p className="caption mb-6">Features</p>
+          <h2 className="headline-medium mb-8">
             Everything you need.
           </h2>
+          <p className="body-large">
+            Five powerful tools to optimize your subscriptions.
+          </p>
         </div>
 
-        {/* Features Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {/* Features Grid - MORE SPACING */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
           {features.map((feature, index) => {
             const Icon = feature.icon
             const isVisible = visibleCards.has(index)
@@ -83,22 +86,22 @@ export default function Features() {
               <div
                 key={index}
                 data-index={index}
-                className={`feature-card group p-8 rounded-3xl bg-[#0c0c0e] transition-all duration-700 ${
-                  isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'
+                className={`feature-card group p-10 rounded-3xl glass transition-all duration-700 ${
+                  isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-12'
                 }`}
                 style={{ transitionDelay: `${index * 100}ms` }}
               >
                 {/* Icon */}
-                <div className={`w-12 h-12 rounded-2xl ${feature.bgColor} flex items-center justify-center mb-6`}>
-                  <Icon className={`w-6 h-6 ${feature.color}`} />
+                <div className={`w-14 h-14 rounded-2xl ${feature.bgColor} flex items-center justify-center mb-8`}>
+                  <Icon className={`w-7 h-7 ${feature.color}`} />
                 </div>
 
                 {/* Content */}
-                <h3 className="text-xl font-semibold mb-2">{feature.title}</h3>
-                <p className="text-white/50">{feature.description}</p>
+                <h3 className="text-2xl font-semibold mb-3">{feature.title}</h3>
+                <p className="text-white/50 text-lg leading-relaxed mb-8">{feature.description}</p>
 
                 {/* Arrow */}
-                <div className="mt-6 w-10 h-10 rounded-full bg-white/5 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                <div className="w-12 h-12 rounded-full bg-white/5 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all group-hover:bg-white/10">
                   <ArrowUpRight className="w-5 h-5 text-white/70" />
                 </div>
               </div>
