@@ -3,23 +3,23 @@ import { useState } from 'react'
 const steps = [
   {
     number: '01',
-    title: 'Connect',
-    description: 'Link your bank accounts securely with Plaid.',
+    title: 'Add',
+    description: 'Manually add your subscriptions to track them all in one place.',
   },
   {
     number: '02',
-    title: 'Discover',
-    description: 'We find all your recurring charges automatically.',
+    title: 'Analyze',
+    description: 'Our AI analyzes your subscriptions and finds savings opportunities.',
   },
   {
     number: '03',
     title: 'Optimize',
-    description: 'See free perks you already have access to.',
+    description: 'See free perks you already have access to and unused subscriptions.',
   },
   {
     number: '04',
     title: 'Save',
-    description: 'Pause or cancel subscriptions with one click.',
+    description: 'Pause, cancel, or switch to save money with AI assistance.',
   },
 ]
 
@@ -29,7 +29,7 @@ export default function HowItWorks() {
   return (
     <section id="how-it-works" className="section">
       <div className="container max-w-5xl">
-        {/* Header - MORE SPACING */}
+        {/* Header */}
         <div className="text-center mb-28">
           <p className="caption mb-6">How It Works</p>
           <h2 className="headline-medium mb-8">
@@ -40,7 +40,7 @@ export default function HowItWorks() {
           </p>
         </div>
 
-        {/* Steps - MORE SPACING */}
+        {/* Steps */}
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-8">
           {steps.map((step, index) => {
             const isActive = index === activeStep

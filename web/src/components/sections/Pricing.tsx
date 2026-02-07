@@ -1,15 +1,18 @@
 import { useState } from 'react'
 import { Check } from 'lucide-react'
 
+type Currency = 'USD' | 'CAD'
+
 const plans = [
   {
     name: 'Free',
-    priceMonthly: 0,
-    priceYearly: 0,
+    prices: {
+      USD: 0,
+      CAD: 0
+    },
     period: 'forever',
     features: [
-      '2 bank accounts',
-      '10 subscriptions',
+      '2 subscriptions only',
       'Basic insights',
       'Email reports',
     ],
@@ -18,11 +21,12 @@ const plans = [
   },
   {
     name: 'Pro',
-    priceMonthly: 4.99,
-    priceYearly: 3.99,
+    prices: {
+      USD: 4.99,
+      CAD: 6.83
+    },
     period: '/month',
     features: [
-      'Unlimited accounts',
       'Unlimited subscriptions',
       'AI Cancellation Agent',
       'AI Smart Pausing',
@@ -35,12 +39,12 @@ const plans = [
 ]
 
 export default function Pricing() {
-  const [isYearly, setIsYearly] = useState(false)
+  const [currency, setCurrency] = useState<Currency>('USD')
 
   const getPrice = (plan: typeof plans[0]) => {
-    if (plan.priceMonthly === 0) return '$0'
-    const price = isYearly ? plan.priceYearly : plan.priceMonthly
-    return `$${price.toFixed(2)}`
+    if (plan.prices.USD === 0) return '$0'
+    const price = plan.prices[currency]
+    return `$${price.toFixed(2)} ${currency}`
   }
 
   return (
@@ -49,28 +53,27 @@ export default function Pricing() {
         {/* Header */}
         <div className="text-center mb-24">
           <p className="caption mb-6">Pricing</p>
-          <h2 className="headline-medium mb-8">
+          <h2 className="headline-medium mb-12">
             Simple pricing.
           </h2>
 
-          {/* Toggle */}
+          {/* Currency Toggle */}
           <div className="inline-flex items-center gap-4 p-2 rounded-full glass">
             <button 
-              onClick={() => setIsYearly(false)}
+              onClick={() => setCurrency('USD')}
               className={`px-6 py-2.5 rounded-full text-sm font-medium transition-all duration-300 ${
-                !isYearly ? 'bg-white text-black' : 'text-white/60 hover:text-white'
+                currency === 'USD' ? 'bg-white text-black' : 'text-white/60 hover:text-white'
               }`}
             >
-              Monthly
+              USD ($)
             </button>
             <button 
-              onClick={() => setIsYearly(true)}
-              className={`px-6 py-2.5 rounded-full text-sm font-medium transition-all duration-300 flex items-center gap-2 ${
-                isYearly ? 'bg-white text-black' : 'text-white/60 hover:text-white'
+              onClick={() => setCurrency('CAD')}
+              className={`px-6 py-2.5 rounded-full text-sm font-medium transition-all duration-300 ${
+                currency === 'CAD' ? 'bg-white text-black' : 'text-white/60 hover:text-white'
               }`}
             >
-              Yearly
-              <span className="text-xs bg-green-500/20 text-green-400 px-2 py-1 rounded-full font-semibold">Save 20%</span>
+              CAD ($)
             </button>
           </div>
         </div>
@@ -87,7 +90,8 @@ export default function Pricing() {
               }`}
             >
               <div className="mb-10">
-                <p className={`text-sm font-medium mb-3 ${plan.popular ? 'text-black/50' : 'text-white/50'}`}>
+                <p className={`text-sm font-medium mb-3 ${plan.popular ? 'text-black/50' : 'text-white/50'}`}
+                >
                   {plan.name}
                 </p>
                 <div className="flex items-baseline gap-1">
@@ -95,7 +99,7 @@ export default function Pricing() {
                     {getPrice(plan)}
                   </span>
                   <span className={`text-base ${plan.popular ? 'text-black/50' : 'text-white/40'}`}>
-                    {plan.priceMonthly === 0 ? '' : isYearly ? '/month (billed yearly)' : '/month'}
+                    {plan.prices.USD === 0 ? '' : '/month'}
                   </span>
                 </div>
               </div>
@@ -104,7 +108,8 @@ export default function Pricing() {
                 {plan.features.map((feature) => (
                   <li key={feature} className="flex items-center gap-4">
                     <Check className={`w-5 h-5 ${plan.popular ? 'text-black/40' : 'text-white/30'}`} />
-                    <span className={`text-base ${plan.popular ? 'text-black/70' : 'text-white/60'}`}>{feature}</span>
+                    <span className={`text-base ${plan.popular ? 'text-black/70' : 'text-white/60'}`}
+                    >{feature}</span>
                   </li>
                 ))}
               </ul>
@@ -124,7 +129,7 @@ export default function Pricing() {
         </div>
 
         <p className="text-center mt-16 text-white/40 text-sm">
-          14-day free trial • Cancel anytime
+          14-day free trial • Cancel anytime • No credit card required
         </p>
       </div>
     </section>

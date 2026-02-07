@@ -1,39 +1,46 @@
 import { useEffect, useRef, useState } from 'react'
-import { Wallet, Gift, PauseCircle, Shield, Zap, ArrowUpRight } from 'lucide-react'
+import { 
+  Wallet, 
+  Gift, 
+  PauseCircle, 
+  Shield, 
+  Zap, 
+  ArrowUpRight 
+} from 'lucide-react'
 
 const features = [
   {
     icon: Wallet,
     title: 'Track Everything',
-    description: 'Automatically finds all your subscriptions.',
+    description: 'Easily add and manage all your subscriptions in one place.',
     color: 'text-blue-400',
     bgColor: 'bg-blue-400/10',
   },
   {
     icon: Gift,
     title: 'Find Free Perks',
-    description: 'Discover $50-100/month in unused benefits.',
+    description: 'Discover $50-100/month in unused benefits you already have.',
     color: 'text-purple-400',
     bgColor: 'bg-purple-400/10',
   },
   {
     icon: PauseCircle,
     title: 'Pause, Not Cancel',
-    description: 'Keep your data. Resume anytime.',
+    description: 'Keep your data and history. Resume anytime with one click.',
     color: 'text-orange-400',
     bgColor: 'bg-orange-400/10',
   },
   {
     icon: Shield,
-    title: 'Bank-Level Security',
-    description: 'Your data is encrypted and secure.',
+    title: 'Privacy First',
+    description: 'Your data stays private. No bank connections required.',
     color: 'text-green-400',
     bgColor: 'bg-green-400/10',
   },
   {
     icon: Zap,
     title: 'AI Insights',
-    description: 'Smart recommendations just for you.',
+    description: 'Smart recommendations personalized just for you.',
     color: 'text-pink-400',
     bgColor: 'bg-pink-400/10',
   },
@@ -65,7 +72,7 @@ export default function Features() {
   return (
     <section id="features" ref={sectionRef} className="section">
       <div className="container">
-        {/* Header - MORE SPACING */}
+        {/* Header */}
         <div className="text-center max-w-2xl mx-auto mb-24">
           <p className="caption mb-6">Features</p>
           <h2 className="headline-medium mb-8">
@@ -76,7 +83,7 @@ export default function Features() {
           </p>
         </div>
 
-        {/* Features Grid - MORE SPACING */}
+        {/* Features Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
           {features.map((feature, index) => {
             const Icon = feature.icon
