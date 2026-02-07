@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { supabase } from '../lib/supabase'
+import AICancellationAgent from './ai/AICancellationAgent'
 import { 
   Wallet, 
   TrendingDown, 
@@ -7,12 +8,15 @@ import {
   Plus, 
   Settings, 
   LogOut,
-  ChevronRight
+  ChevronRight,
+  Bot,
+  Sparkles
 } from 'lucide-react'
 
 export default function Dashboard() {
   const [monthlySpend] = useState(247)
   const [user, setUser] = useState<any>(null)
+  const [activeView, setActiveView] = useState<'dashboard' | 'ai-cancellation'>('dashboard')
 
   useEffect(() => {
     const getUser = async () => {
@@ -24,6 +28,10 @@ export default function Dashboard() {
 
   const handleSignOut = async () => {
     await supabase.auth.signOut()
+  }
+
+  if (activeView === 'ai-cancellation') {
+    return <AICancellationAgent />
   }
 
   return (
@@ -51,6 +59,33 @@ export default function Dashboard() {
         <div className="mb-8">
           <h1 className="text-3xl font-bold mb-2">Welcome back{user?.email ? `, ${user.email.split('@')[0]}` : ''} 👋</h1>
           <p className="text-white/60">Here's your subscription overview</p>
+        </div>
+
+        {/* AI Cancellation Agent Card - FEATURED */}
+        <div 
+          onClick={() => setActiveView('ai-cancellation')}
+          className="mb-8 card bg-gradient-to-br from-purple-500/20 to-pink-500/20 border-purple-500/30 cursor-pointer group hover:scale-[1.02] transition-all"
+        >
+          <div className="flex items-start justify-between">
+            <div className="flex-1">
+              <div className="flex items-center gap-2 mb-3">
+                <Sparkles className="w-5 h-5 text-purple-400" />
+                <span className="text-sm font-semibold text-purple-400 uppercase tracking-wider">New AI Feature</span>
+              </div>
+              <h2 className="text-2xl font-bold mb-2">AI Cancellation Agent 🤖</h2>
+              <p className="text-white/70 mb-4 max-w-lg">
+                Our AI drafts cancellation emails, negotiates retention offers, and handles the entire cancellation process for you. No more awkward phone calls.
+              </p>
+              <div className="flex items-center gap-2 text-purple-400 font-medium">
+                <Bot className="w-5 h-5" />
+                <span>Try it now</span>
+                <ChevronRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
+              </div>
+            </div>
+            <div className="hidden md:flex w-20 h-20 rounded-2xl bg-gradient-to-br from-purple-500 to-pink-500 items-center justify-center">
+              <Bot className="w-10 h-10 text-white" />
+            </div>
+          </div>
         </div>
 
         {/* Stats Cards */}
