@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { supabase } from '../lib/supabase'
-import { Eye, EyeOff, ArrowRight, Loader2 } from 'lucide-react'
+import { Eye, EyeOff, ArrowRight, Loader2, CheckCircle2 } from 'lucide-react'
 
 interface AuthPageProps {
   onAuthSuccess: () => void
@@ -13,53 +13,99 @@ export default function AuthPage({ onAuthSuccess }: AuthPageProps) {
   const [showPassword, setShowPassword] = useState(false)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
+  const [success, setSuccess] = useState('')
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setLoading(true)
     setError('')
+    setSuccess('')
 
     try {
       if (isLogin) {
-        const { error } = await supabase.auth.signInWithPassword({
+        const { data, error } = await supabase.auth.signInWithPassword({
           email,
           password
         })
-        if (error) throw error
+        if (error) {
+          if (error.message.includes('Invalid login')) {
+            setError('Invalid email or password. Please try again.')
+          } else {
+            setError(error.message)
+          }
+          setLoading(false)
+          return
+        }
+        if (data.user) {
+          onAuthSuccess()
+        }
       } else {
-        const { error } = await supabase.auth.signUp({
+        // Sign up without email confirmation
+        const { data, error } = await supabase.auth.signUp({
           email,
-          password
+          password,
+          options: {
+            data: {
+              email_confirm: true
+            }
+          }
         })
-        if (error) throw error
+        
+        if (error) {
+          if (error.message.includes('rate limit')) {
+            setError('Too many attempts. Please wait a minute and try again.')
+          } else if (error.message.includes('already registered')) {
+            setError('This email is already registered. Please sign in instead.')
+          } else {
+            setError(error.message)
+          }
+          setLoading(false)
+          return
+        }
+        
+        if (data.user) {
+          setSuccess('Account created! Signing you in...')
+          // Auto sign in after signup
+          setTimeout(async () => {
+            const { error: signInError } = await supabase.auth.signInWithPassword({
+              email,
+              password
+            })
+            if (!signInError) {
+              onAuthSuccess()
+            }
+          }, 1500)
+        }
       }
-      onAuthSuccess()
     } catch (err: any) {
-      setError(err.message || 'Authentication failed')
-    } finally {
+      setError('Something went wrong. Please try again.')
       setLoading(false)
     }
   }
 
   return (
     <div className="min-h-screen bg-black flex items-center justify-center p-4 relative overflow-hidden">
-      {/* Background */}
       <div className="animated-bg absolute inset-0" />
       <div className="orb orb-1 absolute" />
       <div className="orb orb-2 absolute" />
 
       <div className="relative z-10 w-full max-w-md">
-        {/* Logo */}
         <div className="text-center mb-12">
           <h1 className="text-4xl font-bold mb-2">Pausely</h1>
           <p className="text-white/50">{isLogin ? 'Welcome back' : 'Create your account'}</p>
         </div>
 
-        {/* Form */}
         <form onSubmit={handleSubmit} className="glass rounded-3xl p-8">
           {error && (
             <div className="mb-6 p-4 rounded-xl bg-red-500/10 border border-red-500/20 text-red-400 text-sm">
               {error}
+            </div>
+          )}
+
+          {success && (
+            <div className="mb-6 p-4 rounded-xl bg-green-500/10 border border-green-500/20 text-green-400 text-sm flex items-center gap-2">
+              <CheckCircle2 className="w-5 h-5" />
+              {success}
             </div>
           )}
 
@@ -83,7 +129,7 @@ export default function AuthPage({ onAuthSuccess }: AuthPageProps) {
                   type={showPassword ? 'text' : 'password'}
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  placeholder="••••••••"
+                  placeholder="Min 6 characters"
                   className="input pr-12"
                   required
                   minLength={6}
@@ -120,6 +166,7 @@ export default function AuthPage({ onAuthSuccess }: AuthPageProps) {
               onClick={() => {
                 setIsLogin(!isLogin)
                 setError('')
+                setSuccess('')
               }}
               className="text-sm text-white/50 hover:text-white transition-colors"
             >
@@ -127,10 +174,6 @@ export default function AuthPage({ onAuthSuccess }: AuthPageProps) {
             </button>
           </div>
         </form>
-
-        <p className="text-center mt-8 text-white/30 text-sm">
-          By continuing, you agree to our Terms and Privacy Policy
-        </p>
       </div>
     </div>
   )
