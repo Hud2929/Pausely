@@ -10,7 +10,12 @@ export default function CTA() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setIsLoading(true)
-    await supabase.auth.signInWithOtp({ email })
+    await supabase.auth.signInWithOtp({ 
+      email,
+      options: {
+        emailRedirectTo: 'https://pausely.pro/dashboard'
+      }
+    })
     setIsLoading(false)
     setIsSuccess(true)
   }
