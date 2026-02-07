@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
-import { Star, Quote } from 'lucide-react'
+import { Star, Quote, ChevronLeft, ChevronRight } from 'lucide-react'
 
 const testimonials = [
   {
@@ -67,7 +67,7 @@ export default function Testimonials() {
     if (scrollRef.current) {
       const { scrollLeft, scrollWidth, clientWidth } = scrollRef.current
       setCanScrollLeft(scrollLeft > 0)
-      setCanScrollRight(scrollLeft < scrollWidth - clientWidth - 10)
+      setCanScrollRight(scrollLeft < scrollWidth - clientWidth - 20)
     }
   }
 
@@ -80,7 +80,7 @@ export default function Testimonials() {
 
   const scroll = (direction: 'left' | 'right') => {
     if (scrollRef.current) {
-      const scrollAmount = 400
+      const scrollAmount = 420
       scrollRef.current.scrollBy({
         left: direction === 'left' ? -scrollAmount : scrollAmount,
         behavior: 'smooth'
@@ -90,10 +90,10 @@ export default function Testimonials() {
 
   return (
     <section className="section-small bg-black overflow-hidden">
-      <div className="container mb-12">
-        <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-6">
-          <div className="max-w-2xl">
-            <p className="caption mb-4">Testimonials</p>
+      <div className="container mb-16">
+        <div className="flex flex-col lg:flex-row lg:items-end lg:justify-between gap-8">
+          <div className="max-w-3xl">
+            <p className="caption mb-6">Testimonials</p>
             <h2 className="headline-medium">
               Loved by{' '}
               <span className="gradient-text">thousands</span>
@@ -101,28 +101,30 @@ export default function Testimonials() {
             </h2>
           </div>
 
-          <div className="flex gap-3">
+          <div className="flex gap-4">
             <button
               onClick={() => scroll('left')}
               disabled={!canScrollLeft}
-              className={`w-12 h-12 rounded-full border flex items-center justify-center transition-all ${
+              className={`w-14 h-14 rounded-full border-2 flex items-center justify-center transition-all ${
                 canScrollLeft 
-                  ? 'border-white/20 hover:bg-white/10' 
+                  ? 'border-white/20 hover:bg-white/10 hover:border-white/30' 
                   : 'border-white/5 opacity-30 cursor-not-allowed'
               }`}
+              aria-label="Scroll left"
             >
-              ←
+              <ChevronLeft className="w-6 h-6" />
             </button>
             <button
               onClick={() => scroll('right')}
               disabled={!canScrollRight}
-              className={`w-12 h-12 rounded-full border flex items-center justify-center transition-all ${
+              className={`w-14 h-14 rounded-full border-2 flex items-center justify-center transition-all ${
                 canScrollRight 
-                  ? 'border-white/20 hover:bg-white/10' 
+                  ? 'border-white/20 hover:bg-white/10 hover:border-white/30' 
                   : 'border-white/5 opacity-30 cursor-not-allowed'
               }`}
+              aria-label="Scroll right"
             >
-              →
+              <ChevronRight className="w-6 h-6" />
             </button>
           </div>
         </div>
@@ -131,46 +133,46 @@ export default function Testimonials() {
       {/* Testimonials Carousel */}
       <div
         ref={scrollRef}
-        className="flex gap-6 overflow-x-auto scrollbar-hide px-6 md:px-12 pb-4"
+        className="flex gap-8 overflow-x-auto scrollbar-hide px-10 lg:px-16 pb-8"
         style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
       >
         {testimonials.map((testimonial, index) => (
           <div
             key={index}
-            className="flex-shrink-0 w-[360px] bg-[#1c1c1e] rounded-3xl p-8 border border-white/5 hover:border-white/10 transition-all"
+            className="flex-shrink-0 w-[400px] bg-[#1c1c1e] rounded-3xl p-10 border border-white/[0.06] hover:border-white/[0.12] transition-all"
           >
             {/* Quote Icon */}
-            <div className="mb-6">
-              <Quote className="w-10 h-10 text-blue-500/30" />
+            <div className="mb-8">
+              <Quote className="w-12 h-12 text-blue-500/20" />
             </div>
 
             {/* Content */}
-            <p className="text-white/80 text-lg leading-relaxed mb-8">
+            <p className="text-white/80 text-lg leading-relaxed mb-10">
               "{testimonial.content}"
             </p>
 
             {/* Rating */}
-            <div className="flex gap-1 mb-6">
+            <div className="flex gap-1.5 mb-8">
               {Array.from({ length: testimonial.rating }).map((_, i) => (
-                <Star key={i} className="w-5 h-5 fill-yellow-400 text-yellow-400" />
+                <Star key={i} className="w-6 h-6 fill-yellow-400 text-yellow-400" />
               ))}
             </div>
 
             {/* Author */}
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <div className="w-12 h-12 rounded-full bg-gradient-to-br from-blue-500 to-purple-500 flex items-center justify-center text-white font-semibold">
+            <div className="flex items-center justify-between pt-6 border-t border-white/5">
+              <div className="flex items-center gap-4">
+                <div className="w-14 h-14 rounded-full bg-gradient-to-br from-blue-500 to-purple-500 flex items-center justify-center text-white font-semibold text-lg">
                   {testimonial.image}
                 </div>
                 <div>
-                  <p className="font-semibold">{testimonial.name}</p>
+                  <p className="font-semibold text-lg">{testimonial.name}</p>
                   <p className="text-sm text-white/50">{testimonial.role} at {testimonial.company}</p>
                 </div>
               </div>
 
-              <div className="text-right">
-                <p className="text-green-400 font-semibold">{testimonial.savings}</p>
-                <p className="text-xs text-white/40">Saved</p>
+              <div className="text-right bg-green-500/10 px-4 py-2 rounded-xl">
+                <p className="text-green-400 font-bold">{testimonial.savings}</p>
+                <p className="text-xs text-green-400/70">Saved</p>
               </div>
             </div>
           </div>
@@ -178,17 +180,17 @@ export default function Testimonials() {
       </div>
 
       {/* Stats */}
-      <div className="container mt-16">
-        <div className="grid grid-4 gap-8 text-center">
+      <div className="container mt-20">
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-8 lg:gap-12 text-center">
           {[
             { value: '10K+', label: 'Active Users' },
             { value: '$2.4M', label: 'Total Saved' },
             { value: '4.9/5', label: 'App Store Rating' },
             { value: '98%', label: 'Retention Rate' }
           ].map((stat, index) => (
-            <div key={index}>
-              <p className="text-4xl font-bold gradient-text mb-2">{stat.value}</p>
-              <p className="text-sm text-white/50">{stat.label}</p>
+            <div key={index} className="p-6">
+              <p className="text-5xl lg:text-6xl font-bold gradient-text mb-3">{stat.value}</p>
+              <p className="text-base text-white/50">{stat.label}</p>
             </div>
           ))}
         </div>
