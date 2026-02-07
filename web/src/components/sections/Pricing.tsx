@@ -1,7 +1,18 @@
 import { useState } from 'react'
 import { Check, Crown } from 'lucide-react'
 
-// Plan details defined locally to avoid import issues
+interface PricingProps {
+  onGetStarted?: () => void
+}
+
+type Currency = 'USD' | 'CAD'
+type BillingPeriod = 'monthly' | 'yearly'
+
+const PRICES = {
+  monthly: { USD: 4.99, CAD: 6.83 },
+  yearly: { USD: 49.99, CAD: 68.50 } // ~17% savings vs monthly
+}
+
 const PLANS = {
   free: {
     id: 'free',
@@ -16,58 +27,35 @@ const PLANS = {
   pro: {
     id: 'pro', 
     name: 'Pro',
-    price: 4.99,
     features: [
       'Unlimited subscriptions',
       'AI Cancellation Agent',
       'AI Smart Pausing',
       'AI Daily Briefing',
-      'Priority support'
+      'Priority support',
+      '7-day free trial'
     ]
   }
 }
 
-interface PricingProps {
-  onGetStarted?: () => void
-}
-
-type Currency = 'USD' | 'CAD'
-
-const DISPLAY_PLANS = [
-  {
-    name: 'Free',
-    prices: { USD: 0, CAD: 0 },
-    features: PLANS.free.features,
-    cta: 'Get Started',
-    popular: false,
-    planId: 'free'
-  },
-  {
-    name: 'Pro',
-    prices: { USD: PLANS.pro.price, CAD: 6.83 },
-    features: PLANS.pro.features,
-    cta: 'Start Free Trial',
-    popular: true,
-    planId: 'pro'
-  },
-]
-
 export default function Pricing({ onGetStarted }: PricingProps) {
   const [currency, setCurrency] = useState<Currency>('USD')
+  const [billingPeriod, setBillingPeriod] = useState<BillingPeriod>('monthly')
 
-  const getPrice = (plan: typeof DISPLAY_PLANS[0]) => {
-    if (plan.prices.USD === 0) return 'Free'
-    return `$${plan.prices[currency].toFixed(2)}`
+  const getPrice = () => {
+    const price = PRICES[billingPeriod][currency]
+    return `$${price.toFixed(2)}`
   }
 
-  const handlePlanSelect = (plan: typeof DISPLAY_PLANS[0]) => {
-    if (plan.planId === 'free') {
-      onGetStarted?.()
-    } else {
-      // For Pro, we'll redirect to the checkout when they click
-      // The actual checkout happens after they sign in
-      onGetStarted?.()
-    }
+  const getYearlySavings = () => {
+    const monthlyTotal = PRICES.monthly[currency] * 12
+    const yearlyTotal = PRICES.yearly[currency]
+    const savings = monthlyTotal - yearlyTotal
+    return `$${savings.toFixed(0)}`
+  }
+
+  const handlePlanSelect = () => {
+    onGetStarted?.()
   }
 
   return (
@@ -77,7 +65,8 @@ export default function Pricing({ onGetStarted }: PricingProps) {
           <p className="caption mb-6">Pricing</p>
           <h2 className="headline-medium mb-12">Simple pricing.</h2>
 
-          <div className="inline-flex items-center gap-4 p-2 rounded-full glass">
+          {/* Currency Toggle */}
+          <div className="inline-flex items-center gap-4 p-2 rounded-full glass mb-8">
             <button 
               onClick={() => setCurrency('USD')}
               className={`px-6 py-2.5 rounded-full text-sm font-medium transition-all ${
@@ -98,64 +87,101 @@ export default function Pricing({ onGetStarted }: PricingProps) {
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8 lg:gap-12">
-          {DISPLAY_PLANS.map((plan) => (
-            <div
-              key={plan.name}
-              className={`relative p-8 lg:p-12 rounded-3xl ${plan.popular ? 'bg-gradient-to-br from-white to-gray-100 text-black' : 'glass'}`}
-            >
-              {plan.popular && (
-                <div className="absolute -top-4 left-1/2 -translate-x-1/2">
-                  <span className="inline-flex items-center gap-1 px-4 py-1.5 rounded-full bg-gradient-to-r from-yellow-400 to-orange-500 text-white text-sm font-medium">
-                    <Crown className="w-4 h-4" />
-                    Most Popular
-                  </span>
-                </div>
-              )}
+          {/* Free Plan */}
+          <div className="p-8 lg:p-12 rounded-3xl glass">
+            <div className="mb-8">
+              <p className="text-sm font-medium mb-2 text-white/50">{PLANS.free.name}</p>
+              <div className="flex items-baseline gap-2">
+                <span className="text-5xl lg:text-6xl font-bold">Free</span>
+              </div>
+            </div>
 
-              <div className="mb-8">
-                <p className={`text-sm font-medium mb-2 ${plan.popular ? 'text-black/50' : 'text-white/50'}`}>
-                  {plan.name}
-                </p>
-                <div className="flex items-baseline gap-2">
-                  <span className="text-5xl lg:text-6xl font-bold">{getPrice(plan)}</span>
-                  {plan.prices.USD !== 0 && (
-                    <span className={`text-base ${plan.popular ? 'text-black/50' : 'text-white/40'}`}>
-                      /month
-                    </span>
-                  )}
-                </div>
+            <ul className="space-y-4 mb-10">
+              {PLANS.free.features.map((feature) => (
+                <li key={feature} className="flex items-start gap-4">
+                  <Check className="w-5 h-5 mt-0.5 text-white/30" />
+                  <span className="text-base leading-relaxed text-white/60">{feature}</span>
+                </li>
+              ))}
+            </ul>
+
+            <button
+              onClick={() => handlePlanSelect()}
+              className="w-full py-4 rounded-full font-medium text-base transition-all bg-white text-black hover:bg-white/90"
+            >
+              Get Started
+            </button>
+          </div>
+
+          {/* Pro Plan */}
+          <div className="relative p-8 lg:p-12 rounded-3xl bg-gradient-to-br from-white to-gray-100 text-black">
+            <div className="absolute -top-4 left-1/2 -translate-x-1/2">
+              <span className="inline-flex items-center gap-1 px-4 py-1.5 rounded-full bg-gradient-to-r from-yellow-400 to-orange-500 text-white text-sm font-medium">
+                <Crown className="w-4 h-4" />
+                Most Popular
+              </span>
+            </div>
+
+            <div className="mb-6">
+              <p className="text-sm font-medium mb-2 text-black/50">{PLANS.pro.name}</p>
+              
+              {/* Billing Period Toggle */}
+              <div className="inline-flex items-center gap-2 p-1 rounded-full bg-black/5 mb-4">
+                <button
+                  onClick={() => setBillingPeriod('monthly')}
+                  className={`px-4 py-1.5 rounded-full text-sm font-medium transition-all ${
+                    billingPeriod === 'monthly' 
+                      ? 'bg-black text-white' 
+                      : 'text-black/60 hover:text-black'
+                  }`}
+                >
+                  Monthly
+                </button>
+                <button
+                  onClick={() => setBillingPeriod('yearly')}
+                  className={`px-4 py-1.5 rounded-full text-sm font-medium transition-all flex items-center gap-1.5 ${
+                    billingPeriod === 'yearly' 
+                      ? 'bg-black text-white' 
+                      : 'text-black/60 hover:text-black'
+                  }`}
+                >
+                  Yearly
+                  <span className="text-xs bg-green-500 text-white px-1.5 py-0.5 rounded-full">Save {getYearlySavings()}</span>
+                </button>
               </div>
 
-              <ul className="space-y-4 mb-10">
-                {plan.features.map((feature) => (
-                  <li key={feature} className="flex items-start gap-4">
-                    <Check className={`w-5 h-5 mt-0.5 ${plan.popular ? 'text-black/40' : 'text-white/30'}`} />
-                    <span className={`text-base leading-relaxed ${plan.popular ? 'text-black/70' : 'text-white/60'}`}>
-                      {feature}
-                    </span>
-                  </li>
-                ))}
-              </ul>
-
-              <button
-                onClick={() => handlePlanSelect(plan)}
-                className={`w-full py-4 rounded-full font-medium text-base transition-all ${
-                  plan.popular 
-                    ? 'bg-black text-white hover:bg-black/80' 
-                    : 'bg-white text-black hover:bg-white/90'
-                }`}
-              >
-                {plan.cta}
-              </button>
+              <div className="flex items-baseline gap-2">
+                <span className="text-5xl lg:text-6xl font-bold">{getPrice()}</span>
+                <span className="text-base text-black/50">/{billingPeriod === 'monthly' ? 'month' : 'year'}</span>
+              </div>
+              
+              {billingPeriod === 'yearly' && (
+                <p className="text-sm text-green-600 mt-2 font-medium">
+                  You save {getYearlySavings()} per year
+                </p>
+              )}
             </div>
-          ))}
+
+            <ul className="space-y-4 mb-10">
+              {PLANS.pro.features.map((feature) => (
+                <li key={feature} className="flex items-start gap-4">
+                  <Check className="w-5 h-5 mt-0.5 text-black/40" />
+                  <span className="text-base leading-relaxed text-black/70">{feature}</span>
+                </li>
+              ))}
+            </ul>
+
+            <button
+              onClick={() => handlePlanSelect()}
+              className="w-full py-4 rounded-full font-medium text-base transition-all bg-black text-white hover:bg-black/80"
+            >
+              Start Free Trial
+            </button>
+          </div>
         </div>
 
         <div className="text-center mt-16 space-y-2">
-          <p className="text-white/40 text-sm">14-day free trial • Cancel anytime • No credit card required</p>
-          <p className="text-white/30 text-xs">
-            Secure payment powered by LemonSqueezy
-          </p>
+          <p className="text-white/40 text-sm">7-day free trial • Cancel anytime • No credit card required</p>
         </div>
       </div>
     </section>
