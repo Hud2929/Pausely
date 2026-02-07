@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { X, Loader2, DollarSign, Calendar, Globe, FileText } from 'lucide-react'
+import { X, DollarSign, Calendar, Tag, ChevronDown, Loader2 } from 'lucide-react'
 import { addSubscription } from '../lib/database'
 import { SUBSCRIPTION_CATEGORIES, POPULAR_SERVICES } from '../types/subscription'
 import type { SubscriptionCategory } from '../types/subscription'
@@ -17,118 +17,81 @@ export default function AddSubscriptionModal({
   onClose, 
   onSuccess 
 }: AddSubscriptionModalProps) {
+  const [step, setStep] = useState(1)
   const [name, setName] = useState('')
   const [amount, setAmount] = useState('')
   const [category, setCategory] = useState<SubscriptionCategory>('other')
   const [billingCycle, setBillingCycle] = useState<'monthly' | 'yearly' | 'weekly'>('monthly')
   const [renewalDate, setRenewalDate] = useState('')
-  const [websiteUrl, setWebsiteUrl] = useState('')
-  const [description, setDescription] = useState('')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
-  const [showPopular, setShowPopular] = useState(true)
 
   const handleClose = () => {
     if (!loading) {
       onClose()
-      // Reset form after close animation
       setTimeout(() => {
+        setStep(1)
         setName('')
         setAmount('')
         setCategory('other')
         setBillingCycle('monthly')
         setRenewalDate('')
-        setWebsiteUrl('')
-        setDescription('')
         setError('')
-        setShowPopular(true)
       }, 300)
     }
   }
 
   const handleSelectPopular = (serviceName: string) => {
     setName(serviceName)
-    setShowPopular(false)
-    
-    // Auto-detect category based on service name
-    const serviceCategories: Record<string, SubscriptionCategory> = {
-      'Netflix': 'streaming',
-      'Disney+': 'streaming',
-      'Hulu': 'streaming',
-      'Spotify': 'music',
-      'Apple Music': 'music',
-      'Xbox Game Pass': 'gaming',
-      'PlayStation Plus': 'gaming',
-      'Adobe Creative Cloud': 'software',
-      'Figma': 'software',
-      'Notion': 'software',
-      'GitHub Pro': 'software',
-      'Peloton': 'fitness',
-      'Gym Membership': 'fitness',
-      'Calm': 'fitness',
-      'Headspace': 'fitness',
-      'New York Times': 'news',
-      'Medium': 'news',
-      'LinkedIn Premium': 'news',
-      'DoorDash DashPass': 'food',
-      'Uber One': 'food'
+    // Auto-categorize based on service name
+    const lowerName = serviceName.toLowerCase()
+    if (lowerName.includes('netflix') || lowerName.includes('hulu') || lowerName.includes('disney')) {
+      setCategory('streaming')
+    } else if (lowerName.includes('spotify') || lowerName.includes('apple music') || lowerName.includes('youtube')) {
+      setCategory('music')
+    } else if (lowerName.includes('gym') || lowerName.includes('fitness') || lowerName.includes('peloton')) {
+      setCategory('fitness')
+    } else if (lowerName.includes('adobe') || lowerName.includes('microsoft') || lowerName.includes('notion') || lowerName.includes('figma') || lowerName.includes('github')) {
+      setCategory('software')
+    } else if (lowerName.includes('xbox') || lowerName.includes('playstation') || lowerName.includes('game')) {
+      setCategory('gaming')
+    } else if (lowerName.includes('doordash') || lowerName.includes('uber')) {
+      setCategory('food')
+    } else {
+      setCategory('other')
     }
-    
-    if (serviceCategories[serviceName]) {
-      setCategory(serviceCategories[serviceName])
-    }
+    setStep(2)
   }
 
-  const validateForm = (): boolean => {
-    if (!name.trim()) {
-      setError('Please enter a subscription name')
-      return false
+  const handleSubmit = async () => {
+    if (!name || !amount || !renewalDate) {
+      setError('Please fill in all required fields')
+      return
     }
-    if (!amount || parseFloat(amount) <= 0) {
-      setError('Please enter a valid amount')
-      return false
-    }
-    if (!category) {
-      setError('Please select a category')
-      return false
-    }
-    return true
-  }
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    
-    if (!validateForm()) return
-    
     setLoading(true)
     setError('')
 
     try {
-      const { data, error: submitError } = await addSubscription({
+      const { error: submitError } = await addSubscription({
         user_id: userId,
         name: name.trim(),
         amount: parseFloat(amount),
         category,
         billing_cycle: billingCycle,
-        renewal_date: renewalDate || null,
-        website_url: websiteUrl || null,
-        description: description || null,
-        logo_url: null,
-        status: 'active'
+        renewal_date: renewalDate,
+        status: 'active',
+        website_url: null,
+        description: null,
+        logo_url: null
       })
 
-      if (submitError) {
-        setError('Failed to add subscription. Please try again.')
-        setLoading(false)
-        return
-      }
+      if (submitError) throw submitError
 
-      if (data) {
-        onSuccess()
-        handleClose()
-      }
-    } catch (err) {
-      setError('An unexpected error occurred. Please try again.')
+      onSuccess()
+      handleClose()
+    } catch (err: any) {
+      setError(err.message || 'Failed to add subscription')
       setLoading(false)
     }
   }
@@ -144,198 +107,173 @@ export default function AddSubscriptionModal({
       />
 
       {/* Modal */}
-      <div className="relative w-full max-w-lg max-h-[90vh] overflow-y-auto bg-[#1a1a2e] rounded-3xl border border-white/10 shadow-2xl">
+      <div className="relative w-full max-w-lg bg-[#0c0c0e] rounded-3xl border border-white/10 overflow-hidden max-h-[90vh] overflow-y-auto">
         {/* Header */}
-        <div className="sticky top-0 bg-[#1a1a2e] border-b border-white/10 px-6 py-4 flex items-center justify-between z-10">
-          <h2 className="text-xl font-semibold text-white">
-            Add Subscription
-          </h2>
+        <div className="sticky top-0 bg-[#0c0c0e] border-b border-white/10 px-6 py-4 flex items-center justify-between z-10">
+          <div>
+            <h2 className="text-xl font-semibold">Add Subscription</h2>
+            <p className="text-sm text-white/50">Step {step} of 2</p>
+          </div>
           <button
             onClick={handleClose}
-            disabled={loading}
-            className="p-2 hover:bg-white/10 rounded-full transition-colors disabled:opacity-50"
+            className="p-2 hover:bg-white/10 rounded-full transition-colors"
           >
-            <X className="w-5 h-5 text-white/60" />
+            <X className="w-5 h-5" />
           </button>
         </div>
 
-        <form onSubmit={handleSubmit} className="p-6 space-y-5">
-          {/* Error Message */}
-          {error && (
-            <div className="p-4 rounded-xl bg-red-500/10 border border-red-500/20 text-red-400 text-sm">
-              {error}
-            </div>
-          )}
+        {/* Error */}
+        {error && (
+          <div className="mx-6 mt-4 p-3 rounded-xl bg-red-500/10 border border-red-500/20 text-red-400 text-sm">
+            {error}
+          </div>
+        )}
 
-          {/* Popular Services */}
-          {showPopular && (
+        {/* Step 1: Choose Service */}
+        {step === 1 && (
+          <div className="p-6 space-y-6">
             <div>
-              <label className="block text-sm font-medium text-white/70 mb-3">
-                Popular Services
-              </label>
-              <div className="grid grid-cols-4 gap-2">
-                {POPULAR_SERVICES.slice(0, 12).map((service) => (
+              <p className="text-sm text-white/70 mb-4">Popular services</p>
+              <div className="grid grid-cols-3 gap-3">
+                {POPULAR_SERVICES.slice(0, 6).map((service) => (
                   <button
                     key={service}
-                    type="button"
                     onClick={() => handleSelectPopular(service)}
-                    className="p-3 rounded-xl bg-white/5 hover:bg-white/10 border border-white/5 hover:border-white/20 transition-all text-xs text-white/80 font-medium text-center"
+                    className="p-4 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 hover:border-white/20 transition-all text-center"
                   >
-                    {service}
+                    <span className="text-sm font-medium">{service}</span>
                   </button>
                 ))}
               </div>
-              <button
-                type="button"
-                onClick={() => setShowPopular(false)}
-                className="mt-3 text-sm text-blue-400 hover:text-blue-300"
-              >
-                Enter custom service →
-              </button>
             </div>
-          )}
 
-          {/* Name */}
-          <div>
-            <label className="block text-sm font-medium text-white/70 mb-2">
-              Service Name *
-            </label>
-            <input
-              type="text"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              placeholder="e.g., Netflix"
-              className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white placeholder:text-white/30 focus:outline-none focus:border-blue-500/50 transition-colors"
-              disabled={loading}
-            />
+            <div className="border-t border-white/10 pt-6">
+              <p className="text-sm text-white/70 mb-4">Or enter custom name</p>
+              <input
+                type="text"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                placeholder="e.g., Netflix, Gym, Spotify"
+                className="input"
+              />
+            </div>
+
+            <button
+              onClick={() => name && setStep(2)}
+              disabled={!name}
+              className="w-full btn-primary disabled:opacity-50"
+            >
+              Continue
+            </button>
           </div>
+        )}
 
-          {/* Amount & Billing Cycle */}
-          <div className="grid grid-cols-2 gap-4">
+        {/* Step 2: Details */}
+        {step === 2 && (
+          <div className="p-6 space-y-6">
+            {/* Amount - Fixed Design */}
             <div>
-              <label className="block text-sm font-medium text-white/70 mb-2">
-                Amount *
-              </label>
+              <label className="block text-sm font-medium text-white/70 mb-3">Amount</label>
               <div className="relative">
-                <DollarSign className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-white/40" />
+                <div className="absolute left-4 top-1/2 -translate-y-1/2 text-white/50">
+                  <DollarSign className="w-5 h-5" />
+                </div>
                 <input
                   type="number"
-                  step="0.01"
-                  min="0"
                   value={amount}
                   onChange={(e) => setAmount(e.target.value)}
-                  placeholder="9.99"
-                  className="w-full bg-white/5 border border-white/10 rounded-xl pl-12 pr-4 py-3 text-white placeholder:text-white/30 focus:outline-none focus:border-blue-500/50 transition-colors"
-                  disabled={loading}
+                  placeholder="0.00"
+                  step="0.01"
+                  min="0"
+                  className="input pl-12 text-lg"
+                  required
                 />
               </div>
             </div>
 
+            {/* Billing Cycle */}
             <div>
-              <label className="block text-sm font-medium text-white/70 mb-2">
-                Billing Cycle
-              </label>
-              <select
-                value={billingCycle}
-                onChange={(e) => setBillingCycle(e.target.value as 'monthly' | 'yearly' | 'weekly')}
-                className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-blue-500/50 transition-colors appearance-none cursor-pointer"
-                disabled={loading}
-              >
-                <option value="monthly" className="bg-[#1a1a2e]">Monthly</option>
-                <option value="yearly" className="bg-[#1a1a2e]">Yearly</option>
-                <option value="weekly" className="bg-[#1a1a2e]">Weekly</option>
-              </select>
+              <label className="block text-sm font-medium text-white/70 mb-3">Billing Cycle</label>
+              <div className="grid grid-cols-3 gap-3">
+                {(['monthly', 'yearly', 'weekly'] as const).map((cycle) => (
+                  <button
+                    key={cycle}
+                    onClick={() => setBillingCycle(cycle)}
+                    className={`p-3 rounded-xl border text-sm font-medium transition-all ${
+                      billingCycle === cycle
+                        ? 'bg-white text-black border-white'
+                        : 'bg-white/5 border-white/10 hover:border-white/30'
+                    }`}
+                  >
+                    {cycle.charAt(0).toUpperCase() + cycle.slice(1)}
+                  </button>
+                ))}
+              </div>
             </div>
-          </div>
 
-          {/* Category */}
-          <div>
-            <label className="block text-sm font-medium text-white/70 mb-2">
-              Category *
-            </label>
-            <div className="grid grid-cols-3 gap-2">
-              {SUBSCRIPTION_CATEGORIES.map((cat) => (
-                <button
-                  key={cat.value}
-                  type="button"
-                  onClick={() => setCategory(cat.value)}
-                  disabled={loading}
-                  className={`p-3 rounded-xl border transition-all text-sm font-medium flex flex-col items-center gap-1 ${
-                    category === cat.value
-                      ? 'bg-blue-500/20 border-blue-500/50 text-blue-400'
-                      : 'bg-white/5 border-white/10 text-white/60 hover:bg-white/10'
-                  }`}
+            {/* Renewal Date */}
+            <div>
+              <label className="block text-sm font-medium text-white/70 mb-3">Next Renewal Date</label>
+              <div className="relative">
+                <div className="absolute left-4 top-1/2 -translate-y-1/2 text-white/50">
+                  <Calendar className="w-5 h-5" />
+                </div>
+                <input
+                  type="date"
+                  value={renewalDate}
+                  onChange={(e) => setRenewalDate(e.target.value)}
+                  className="input pl-12"
+                  required
+                />
+              </div>
+            </div>
+
+            {/* Category Dropdown */}
+            <div>
+              <label className="block text-sm font-medium text-white/70 mb-3">Category</label>
+              <div className="relative">
+                <div className="absolute left-4 top-1/2 -translate-y-1/2 text-white/50">
+                  <Tag className="w-5 h-5" />
+                </div>
+                <select
+                  value={category}
+                  onChange={(e) => setCategory(e.target.value as SubscriptionCategory)}
+                  className="input pl-12 appearance-none cursor-pointer"
                 >
-                  <span className="text-lg">{cat.icon}</span>
-                  <span>{cat.label}</span>
-                </button>
-              ))}
+                  {SUBSCRIPTION_CATEGORIES.map((cat) => (
+                    <option key={cat.value} value={cat.value}>
+                      {cat.label}
+                    </option>
+                  ))}
+                </select>
+                <div className="absolute right-4 top-1/2 -translate-y-1/2 text-white/50 pointer-events-none">
+                  <ChevronDown className="w-5 h-5" />
+                </div>
+              </div>
+            </div>
+
+            {/* Buttons */}
+            <div className="flex gap-3 pt-4">
+              <button
+                onClick={() => setStep(1)}
+                className="flex-1 py-4 rounded-full border border-white/20 text-white font-medium hover:bg-white/5 transition-all"
+              >
+                Back
+              </button>
+              <button
+                onClick={handleSubmit}
+                disabled={loading || !amount || !renewalDate}
+                className="flex-1 btn-primary disabled:opacity-50"
+              >
+                {loading ? (
+                  <Loader2 className="w-5 h-5 animate-spin mx-auto" />
+                ) : (
+                  'Add Subscription'
+                )}
+              </button>
             </div>
           </div>
-
-          {/* Renewal Date */}
-          <div>
-            <label className="block text-sm font-medium text-white/70 mb-2 flex items-center gap-2">
-              <Calendar className="w-4 h-4" />
-              Next Renewal Date
-            </label>
-            <input
-              type="date"
-              value={renewalDate}
-              onChange={(e) => setRenewalDate(e.target.value)}
-              className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-blue-500/50 transition-colors"
-              disabled={loading}
-            />
-          </div>
-
-          {/* Website URL */}
-          <div>
-            <label className="block text-sm font-medium text-white/70 mb-2 flex items-center gap-2">
-              <Globe className="w-4 h-4" />
-              Website URL
-            </label>
-            <input
-              type="url"
-              value={websiteUrl}
-              onChange={(e) => setWebsiteUrl(e.target.value)}
-              placeholder="https://..."
-              className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white placeholder:text-white/30 focus:outline-none focus:border-blue-500/50 transition-colors"
-              disabled={loading}
-            />
-          </div>
-
-          {/* Description */}
-          <div>
-            <label className="block text-sm font-medium text-white/70 mb-2 flex items-center gap-2">
-              <FileText className="w-4 h-4" />
-              Notes (Optional)
-            </label>
-            <textarea
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
-              placeholder="Any notes about this subscription..."
-              rows={3}
-              className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white placeholder:text-white/30 focus:outline-none focus:border-blue-500/50 transition-colors resize-none"
-              disabled={loading}
-            />
-          </div>
-
-          {/* Submit Button */}
-          <button
-            type="submit"
-            disabled={loading}
-            className="w-full bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600 disabled:opacity-50 disabled:cursor-not-allowed text-white font-semibold py-4 rounded-xl flex items-center justify-center gap-2 transition-all"
-          >
-            {loading ? (
-              <>
-                <Loader2 className="w-5 h-5 animate-spin" />
-                Adding...
-              </>
-            ) : (
-              'Add Subscription'
-            )}
-          </button>
-        </form>
+        )}
       </div>
     </div>
   )
