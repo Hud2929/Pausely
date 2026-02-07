@@ -8,6 +8,8 @@ interface PricingProps {
 type Currency = 'USD' | 'CAD'
 type BillingPeriod = 'monthly' | 'yearly'
 
+// Pricing configuration
+
 const PRICES = {
   monthly: { USD: 4.99, CAD: 6.83 },
   yearly: { USD: 49.99, CAD: 68.50 }
