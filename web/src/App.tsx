@@ -1,18 +1,21 @@
 import { useState, useEffect } from 'react'
-import './index.css'
-import Dashboard from './components/Dashboard'
-import Subscriptions from './components/Subscriptions'
-import Perks from './components/Perks'
-import Profile from './components/Profile'
-import Onboarding from './components/Onboarding'
-import { supabase } from './lib/supabase'
-import { LayoutDashboard, List, Gift, User } from 'lucide-react'
 import type { Session } from '@supabase/supabase-js'
+import { supabase } from './lib/supabase'
+import Navigation from './components/Navigation'
+import Hero from './components/sections/Hero'
+import Features from './components/sections/Features'
+import HowItWorks from './components/sections/HowItWorks'
+import Pricing from './components/sections/Pricing'
+import Testimonials from './components/sections/Testimonials'
+import FAQ from './components/sections/FAQ'
+import CTA from './components/sections/CTA'
+import Footer from './components/sections/Footer'
+import Dashboard from './components/Dashboard'
+import './styles/apple-design.css'
 
 function App() {
   const [session, setSession] = useState<Session | null>(null)
   const [loading, setLoading] = useState(true)
-  const [activeTab, setActiveTab] = useState('dashboard')
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
@@ -20,9 +23,7 @@ function App() {
       setLoading(false)
     })
 
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event, session) => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       setSession(session)
     })
 
@@ -31,69 +32,31 @@ function App() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+      <div className="min-h-screen bg-black flex items-center justify-center">
+        <div className="w-12 h-12 border-2 border-white/20 border-t-white rounded-full animate-spin" />
       </div>
     )
   }
 
   if (!session) {
-    return <Onboarding />
+    return (
+      <div className="bg-black min-h-screen">
+        <Navigation />
+        <main>
+          <Hero />
+          <Features />
+          <HowItWorks />
+          <Pricing />
+          <Testimonials />
+          <FAQ />
+          <CTA />
+        </main>
+        <Footer />
+      </div>
+    )
   }
 
-  const renderTab = () => {
-    switch (activeTab) {
-      case 'dashboard':
-        return <Dashboard />
-      case 'subscriptions':
-        return <Subscriptions />
-      case 'perks':
-        return <Perks />
-      case 'profile':
-        return <Profile />
-      default:
-        return <Dashboard />
-    }
-  }
-
-  return (
-    <div className="min-h-screen bg-gray-50">
-      <main className="pb-20">{renderTab()}</main>
-      
-      <nav className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 px-4 py-2">
-        <div className="flex justify-around items-center max-w-md mx-auto">
-          <button
-            onClick={() => setActiveTab('dashboard')}
-            className={`flex flex-col items-center p-2 ${activeTab === 'dashboard' ? 'text-blue-600' : 'text-gray-500'}`}
-          >
-            <LayoutDashboard size={24} />
-            <span className="text-xs mt-1">Dashboard</span>
-          </button>
-          <button
-            onClick={() => setActiveTab('subscriptions')}
-            className={`flex flex-col items-center p-2 ${activeTab === 'subscriptions' ? 'text-blue-600' : 'text-gray-500'}`}
-          >
-            <List size={24} />
-            <span className="text-xs mt-1">Subscriptions</span>
-          </button>
-          <button
-            onClick={() => setActiveTab('perks')}
-            className={`flex flex-col items-center p-2 ${activeTab === 'perks' ? 'text-blue-600' : 'text-gray-500'}`}
-          >
-            <Gift size={24} />
-            <span className="text-xs mt-1">Perks</span>
-          </button>
-          <button
-            onClick={() => setActiveTab('profile')}
-            className={`flex flex-col items-center p-2 ${activeTab === 'profile' ? 'text-blue-600' : 'text-gray-500'}`}
-          >
-            <User size={24} />
-            <span className="text-xs mt-1">Profile</span>
-          </button>
-        </div>
-      </nav>
-    </div>
-  )
+  return <Dashboard />
 }
 
 export default App

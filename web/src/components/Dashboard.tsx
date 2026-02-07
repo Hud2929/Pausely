@@ -1,152 +1,134 @@
 import { useState, useEffect } from 'react'
 import { supabase } from '../lib/supabase'
-import { PauseCircle, Gift } from 'lucide-react'
-
-interface Subscription {
-  id: string
-  name: string
-  amount: number
-  billing_frequency: string
-  status: string
-  cost_per_hour: number | null
-}
+import { 
+  Wallet, 
+  TrendingDown, 
+  Gift, 
+  Plus, 
+  Settings, 
+  LogOut,
+  ChevronRight
+} from 'lucide-react'
 
 export default function Dashboard() {
-  const [subscriptions, setSubscriptions] = useState<Subscription[]>([])
-  const [monthlySpend, setMonthlySpend] = useState(0)
-  const [annualSpend, setAnnualSpend] = useState(0)
-  const [loading, setLoading] = useState(true)
+  const [monthlySpend] = useState(247)
+  const [user, setUser] = useState<any>(null)
 
   useEffect(() => {
-    fetchSubscriptions()
+    const getUser = async () => {
+      const { data: { user } } = await supabase.auth.getUser()
+      setUser(user)
+    }
+    getUser()
   }, [])
 
-  async function fetchSubscriptions() {
-    try {
-      const { data: { user } } = await supabase.auth.getUser()
-      if (!user) return
-
-      const { data, error } = await supabase
-        .from('subscriptions')
-        .select('*')
-        .eq('user_id', user.id)
-        .eq('status', 'active')
-
-      if (error) throw error
-
-      setSubscriptions(data || [])
-      
-      // Calculate totals
-      let monthly = 0
-      let annual = 0
-      
-      data?.forEach((sub: Subscription) => {
-        if (sub.billing_frequency === 'monthly') {
-          monthly += sub.amount
-          annual += sub.amount * 12
-        } else if (sub.billing_frequency === 'yearly') {
-          annual += sub.amount
-          monthly += sub.amount / 12
-        }
-      })
-      
-      setMonthlySpend(monthly)
-      setAnnualSpend(annual)
-    } catch (error) {
-      console.error('Error:', error)
-    } finally {
-      setLoading(false)
-    }
-  }
-
-  // Mock data for demo
-  const hasData = subscriptions.length > 0
-  const displayMonthly = hasData ? monthlySpend : 127.43
-  const displayAnnual = hasData ? annualSpend : 1529.16
-
-  if (loading) {
-    return (
-      <div className="flex justify-center items-center h-screen">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
-      </div>
-    )
+  const handleSignOut = async () => {
+    await supabase.auth.signOut()
   }
 
   return (
-    <div className="max-w-md mx-auto px-4 py-6">
-      <h1 className="text-2xl font-bold mb-6">Pausely</h1>
-      
-      {/* Total Spend Card */}
-      <div className="bg-white rounded-2xl shadow-sm p-6 mb-6">
-        <h2 className="text-gray-500 text-sm font-medium mb-4">Total Subscriptions</h2>
-        <div className="flex gap-8">
-          <div>
-            <p className="text-gray-400 text-xs mb-1">Monthly</p>
-            <p className="text-2xl font-bold">${displayMonthly.toFixed(2)}</p>
-          </div>
-          <div>
-            <p className="text-gray-400 text-xs mb-1">Yearly</p>
-            <p className="text-2xl font-bold">${displayAnnual.toFixed(2)}</p>
-          </div>
-        </div>
-      </div>
-
-      {/* Insights */}
-      <div className="mb-6">
-        <h2 className="text-lg font-semibold mb-3">Insights</h2>
-        <div className="grid grid-cols-2 gap-3">
-          <div className="bg-white rounded-xl p-4 shadow-sm">
-            <PauseCircle className="w-8 h-8 text-orange-500 mb-2" />
-            <p className="font-semibold text-sm">Pause subscriptions</p>
-            <p className="text-xs text-gray-500">Save $50/mo</p>
-          </div>
-          <div className="bg-white rounded-xl p-4 shadow-sm">
-            <Gift className="w-8 h-8 text-green-500 mb-2" />
-            <p className="font-semibold text-sm">3 free perks</p>
-            <p className="text-xs text-gray-500">Not activated</p>
+    <div className="min-h-screen bg-black text-white">
+      {/* Header */}
+      <header className="glass sticky top-0 z-50 border-b border-white/5">
+        <div className="container flex items-center justify-between py-4">
+          <span className="text-xl font-bold">Pausely</span>
+          <div className="flex items-center gap-4">
+            <button className="p-2 hover:bg-white/10 rounded-full transition-colors">
+              <Settings className="w-5 h-5" />
+            </button>
+            <button 
+              onClick={handleSignOut}
+              className="p-2 hover:bg-white/10 rounded-full transition-colors"
+            >
+              <LogOut className="w-5 h-5" />
+            </button>
           </div>
         </div>
-      </div>
+      </header>
 
-      {/* Worst Value */}
-      <div className="mb-6">
-        <h2 className="text-lg font-semibold mb-3">Worst Value</h2>
-        <p className="text-xs text-gray-500 mb-3">These cost the most per hour of use</p>
-        
-        {!hasData ? (
-          <div className="bg-white rounded-xl p-4 shadow-sm text-center">
-            <p className="text-gray-500 text-sm">Add subscriptions to see insights</p>
-          </div>
-        ) : (
-          subscriptions
-            .filter(s => s.cost_per_hour)
-            .sort((a, b) => (b.cost_per_hour || 0) - (a.cost_per_hour || 0))
-            .slice(0, 3)
-            .map(sub => (
-              <div key={sub.id} className="bg-white rounded-xl p-4 shadow-sm mb-3 flex items-center gap-3">
-                <div className="w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center text-lg font-bold">
-                  {sub.name[0]}
-                </div>
-                <div className="flex-1">
-                  <p className="font-semibold">{sub.name}</p>
-                  <p className="text-xs text-red-500">
-                    ${sub.cost_per_hour?.toFixed(2)}/hour
-                  </p>
-                </div>
-                <p className="font-semibold text-gray-600">${sub.amount}</p>
+      <main className="container py-8 pb-24">
+        {/* Welcome */}
+        <div className="mb-8">
+          <h1 className="text-3xl font-bold mb-2">Welcome back{user?.email ? `, ${user.email.split('@')[0]}` : ''} 👋</h1>
+          <p className="text-white/60">Here's your subscription overview</p>
+        </div>
+
+        {/* Stats Cards */}
+        <div className="grid grid-2 gap-4 mb-8">
+          <div className="card">
+            <div className="flex items-center gap-3 mb-4">
+              <div className="w-12 h-12 rounded-xl bg-blue-500/20 flex items-center justify-center">
+                <Wallet className="w-6 h-6 text-blue-400" />
               </div>
-            ))
-        )}
-      </div>
+              <div>
+                <p className="text-sm text-white/60">Monthly Spending</p>
+                <p className="text-2xl font-bold">${monthlySpend}.00</p>
+              </div>
+            </div>
+            <div className="flex items-center gap-2 text-green-400 text-sm">
+              <TrendingDown className="w-4 h-4" />
+              <span>$89 saved this month</span>
+            </div>
+          </div>
 
-      {/* Demo Data Notice */}
-      {!hasData && (
-        <div className="bg-blue-50 rounded-xl p-4 border border-blue-200">
-          <p className="text-sm text-blue-800">
-            <strong>Demo Mode:</strong> Showing sample data. Add your Supabase credentials to see your real subscriptions.
+          <div className="card">
+            <div className="flex items-center gap-3 mb-4">
+              <div className="w-12 h-12 rounded-xl bg-green-500/20 flex items-center justify-center">
+                <Gift className="w-6 h-6 text-green-400" />
+              </div>
+              <div>
+                <p className="text-sm text-white/60">Free Perks Found</p>
+                <p className="text-2xl font-bold">3</p>
+              </div>
+            </div>
+            <div className="text-white/60 text-sm">
+              Potential savings: $42/month
+            </div>
+          </div>
+        </div>
+
+        {/* Subscriptions List */}
+        <div className="mb-6 flex items-center justify-between">
+          <h2 className="text-xl font-semibold">Your Subscriptions</h2>
+          <button className="btn-primary text-sm py-2 px-4">
+            <Plus className="w-4 h-4 mr-2" />
+            Add New
+          </button>
+        </div>
+
+        <div className="space-y-3">
+          {[
+            { name: 'Netflix', amount: 15.99, change: '↓ 40%', color: 'text-red-400', initial: 'N' },
+            { name: 'Spotify', amount: 9.99, change: '↓ 20%', color: 'text-green-400', initial: 'S' },
+            { name: 'Gym Membership', amount: 49.99, change: 'Paused', color: 'text-orange-400', initial: 'G' },
+          ].map((sub, i) => (
+            <div key={i} className="card flex items-center justify-between">
+              <div className="flex items-center gap-4">
+                <div className="w-12 h-12 rounded-xl bg-white/10 flex items-center justify-center text-lg font-semibold">
+                  {sub.initial}
+                </div>
+                <div>
+                  <p className="font-semibold">{sub.name}</p>
+                  <p className={`text-sm ${sub.color}`}>{sub.change}</p>
+                </div>
+              </div>
+              <div className="flex items-center gap-4">
+                <span className="font-semibold">${sub.amount}</span>
+                <ChevronRight className="w-5 h-5 text-white/40" />
+              </div>
+            </div>
+          ))}
+        </div>
+
+        {/* Insights */}
+        <div className="mt-8 card bg-gradient-to-br from-blue-500/10 to-purple-500/10 border-blue-500/20">
+          <h3 className="font-semibold mb-2">💡 AI Insight</h3>
+          <p className="text-white/70 text-sm">
+            You're spending 23% more on streaming services than last month. 
+            Consider pausing Netflix for 2 months since you haven't watched anything in 3 weeks.
           </p>
         </div>
-      )}
+      </main>
     </div>
   )
 }
