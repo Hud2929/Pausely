@@ -9,6 +9,7 @@ import CTA from './components/sections/CTA'
 import Footer from './components/sections/Footer'
 import Dashboard from './components/Dashboard'
 import AuthPage from './components/AuthPage'
+import Chatbot from './components/Chatbot'
 import { getCurrentUser, onAuthStateChange } from './lib/supabase'
 import './styles/apple-design.css'
 
@@ -78,7 +79,12 @@ function App() {
   }
 
   if (showAuth) {
-    return <AuthPage onAuthSuccess={handleAuthSuccess} />
+    return (
+      <>
+        <AuthPage onAuthSuccess={handleAuthSuccess} />
+        <Chatbot />
+      </>
+    )
   }
 
   if (showDashboard) {
@@ -94,6 +100,7 @@ function App() {
           Back to Home
         </button>
         <Dashboard />
+        <Chatbot />
       </div>
     )
   }
@@ -120,6 +127,7 @@ function App() {
       </main>
       
       <Footer />
+      <Chatbot />
     </div>
   )
 }
