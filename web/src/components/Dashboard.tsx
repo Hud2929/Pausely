@@ -1,5 +1,4 @@
-import { useState, useEffect } from 'react'
-import { supabase } from '../lib/supabase'
+import { useState } from 'react'
 import AICancellationAgent from './ai/AICancellationAgent'
 import AISmartPausing from './ai/AISmartPausing'
 import AIDailyBriefing from './ai/AIDailyBriefing'
@@ -21,19 +20,10 @@ type View = 'dashboard' | 'ai-cancellation' | 'ai-pausing' | 'ai-briefing'
 
 export default function Dashboard() {
   const [monthlySpend] = useState(247)
-  const [user, setUser] = useState<any>(null)
   const [activeView, setActiveView] = useState<View>('dashboard')
 
-  useEffect(() => {
-    const getUser = async () => {
-      const { data: { user } } = await supabase.auth.getUser()
-      setUser(user)
-    }
-    getUser()
-  }, [])
-
-  const handleSignOut = async () => {
-    await supabase.auth.signOut()
+  const handleBackToHome = () => {
+    window.location.reload()
   }
 
   if (activeView === 'ai-cancellation') {
@@ -83,7 +73,6 @@ export default function Dashboard() {
 
   return (
     <div className="min-h-screen bg-black text-white">
-      {/* Header */}
       <header className="glass sticky top-0 z-50 border-b border-white/5">
         <div className="container flex items-center justify-between py-4">
           <span className="text-xl font-bold">Pausely</span>
@@ -92,7 +81,7 @@ export default function Dashboard() {
               <Settings className="w-5 h-5" />
             </button>
             <button 
-              onClick={handleSignOut}
+              onClick={handleBackToHome}
               className="p-2 hover:bg-white/10 rounded-full transition-colors"
             >
               <LogOut className="w-5 h-5" />
@@ -102,18 +91,15 @@ export default function Dashboard() {
       </header>
 
       <main className="container py-8 pb-24">
-        {/* Welcome */}
         <div className="mb-8">
-          <h1 className="text-3xl font-bold mb-2">Welcome back{user?.email ? `, ${user.email.split('@')[0]}` : ''} 👋</h1>
+          <h1 className="text-3xl font-bold mb-2">Welcome back 👋</h1>
           <p className="text-white/60">Here's your subscription overview</p>
         </div>
 
-        {/* AI Features Grid */}
         <div className="mb-10">
           <h2 className="text-lg font-semibold mb-4 text-white/70">AI Features</h2>
           
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            {/* AI Cancellation Agent */}
             <div 
               onClick={() => setActiveView('ai-cancellation')}
               className="card bg-gradient-to-br from-purple-500/10 to-pink-500/10 border-purple-500/20 cursor-pointer group"
@@ -128,7 +114,6 @@ export default function Dashboard() {
               <p className="text-sm text-white/50">AI drafts cancellation emails for you</p>
             </div>
 
-            {/* AI Smart Pausing */}
             <div 
               onClick={() => setActiveView('ai-pausing')}
               className="card bg-gradient-to-br from-blue-500/10 to-cyan-500/10 border-blue-500/20 cursor-pointer group"
@@ -143,7 +128,6 @@ export default function Dashboard() {
               <p className="text-sm text-white/50">Detect unused subscriptions automatically</p>
             </div>
 
-            {/* AI Daily Briefing */}
             <div 
               onClick={() => setActiveView('ai-briefing')}
               className="card bg-gradient-to-br from-orange-500/10 to-amber-500/10 border-orange-500/20 cursor-pointer group"
@@ -160,7 +144,6 @@ export default function Dashboard() {
           </div>
         </div>
 
-        {/* Stats Cards */}
         <div className="grid grid-cols-2 gap-4 mb-8">
           <div className="card">
             <div className="flex items-center gap-3 mb-4">
@@ -194,7 +177,6 @@ export default function Dashboard() {
           </div>
         </div>
 
-        {/* Subscriptions List */}
         <div className="mb-6 flex items-center justify-between">
           <h2 className="text-xl font-semibold">Your Subscriptions</h2>
           <button className="btn-primary text-sm py-2 px-4">
@@ -227,7 +209,6 @@ export default function Dashboard() {
           ))}
         </div>
 
-        {/* Insights */}
         <div className="mt-8 card bg-gradient-to-br from-blue-500/10 to-purple-500/10 border-blue-500/20">
           <h3 className="font-semibold mb-2">💡 AI Insight</h3>
           <p className="text-white/70 text-sm">

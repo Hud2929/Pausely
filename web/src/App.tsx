@@ -7,51 +7,18 @@ import Pricing from './components/sections/Pricing'
 import CTA from './components/sections/CTA'
 import Footer from './components/sections/Footer'
 import Dashboard from './components/Dashboard'
-import AuthPage from './components/AuthPage'
 import './styles/apple-design.css'
-import { useEffect, useState } from 'react'
-import { supabase } from './lib/supabase'
+import { useState } from 'react'
 
 function App() {
-  const [session, setSession] = useState<any>(null)
-  const [loading, setLoading] = useState(true)
-  const [showAuth, setShowAuth] = useState(false)
+  const [showDashboard, setShowDashboard] = useState(false)
 
-  useEffect(() => {
-    // Get initial session
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setSession(session)
-      setLoading(false)
-    })
-
-    // Listen for auth changes
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      setSession(session)
-      setLoading(false)
-    })
-
-    return () => subscription.unsubscribe()
-  }, [])
-
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-black flex items-center justify-center">
-        <div className="w-8 h-8 border-2 border-white/20 border-t-white rounded-full animate-spin" />
-      </div>
-    )
-  }
-
-  if (session) {
+  if (showDashboard) {
     return <Dashboard />
-  }
-
-  if (showAuth) {
-    return <AuthPage onAuthSuccess={() => setShowAuth(false)} />
   }
 
   return (
     <div className="bg-black min-h-screen relative overflow-hidden">
-      {/* Animated Background */}
       <div className="animated-bg" />
       <div className="orb orb-1" />
       <div className="orb orb-2" />
@@ -65,7 +32,7 @@ function App() {
         <Features />
         <HowItWorks />
         <Pricing />
-        <CTA onGetStarted={() => setShowAuth(true)} />
+        <CTA onGetStarted={() => setShowDashboard(true)} />
       </main>
       
       <Footer />
