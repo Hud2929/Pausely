@@ -40,8 +40,8 @@ export default function Pricing() {
 
   return (
     <section id="pricing" className="section">
-      <div className="container max-w-4xl">
-        <div className="text-center mb-24">
+      <div className="container max-w-5xl">
+        <div className="text-center mb-20">
           <p className="caption mb-6">Pricing</p>
           <h2 className="headline-medium mb-12">Simple pricing.</h2>
 
@@ -52,7 +52,7 @@ export default function Pricing() {
                 currency === 'USD' ? 'bg-white text-black' : 'text-white/60 hover:text-white'
               }`}
             >
-              USD ($)
+              USD
             </button>
             <button 
               onClick={() => setCurrency('CAD')}
@@ -60,34 +60,36 @@ export default function Pricing() {
                 currency === 'CAD' ? 'bg-white text-black' : 'text-white/60 hover:text-white'
               }`}
             >
-              CAD ($)
+              CAD
             </button>
           </div>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 lg:gap-12">
           {plans.map((plan) => (
             <div
               key={plan.name}
-              className={`p-10 rounded-3xl ${plan.popular ? 'bg-white text-black' : 'glass'}`}
+              className={`p-8 lg:p-12 rounded-3xl ${plan.popular ? 'bg-white text-black' : 'glass'}`}
             >
-              <div className="mb-10">
-                <p className={`text-sm font-medium mb-3 ${plan.popular ? 'text-black/50' : 'text-white/50'}`}>
+              <div className="mb-8">
+                <p className={`text-sm font-medium mb-2 ${plan.popular ? 'text-black/50' : 'text-white/50'}`}>
                   {plan.name}
                 </p>
-                <div className="flex items-baseline gap-1">
-                  <span className="text-6xl font-bold">{getPrice(plan)}</span>
-                  <span className={`text-base ${plan.popular ? 'text-black/50' : 'text-white/40'}`}>
-                    {plan.prices.USD === 0 ? '' : '/month'}
-                  </span>
+                <div className="flex items-baseline gap-2">
+                  <span className="text-5xl lg:text-6xl font-bold">{getPrice(plan)}</span>
+                  {plan.prices.USD !== 0 && (
+                    <span className={`text-base ${plan.popular ? 'text-black/50' : 'text-white/40'}`}>
+                      /month
+                    </span>
+                  )}
                 </div>
               </div>
 
               <ul className="space-y-4 mb-10">
                 {plan.features.map((feature) => (
-                  <li key={feature} className="flex items-center gap-4">
-                    <Check className={`w-5 h-5 ${plan.popular ? 'text-black/40' : 'text-white/30'}`} />
-                    <span className={`text-base ${plan.popular ? 'text-black/70' : 'text-white/60'}`}>
+                  <li key={feature} className="flex items-start gap-4">
+                    <Check className={`w-5 h-5 mt-0.5 ${plan.popular ? 'text-black/40' : 'text-white/30'}`} />
+                    <span className={`text-base leading-relaxed ${plan.popular ? 'text-black/70' : 'text-white/60'}`}>
                       {feature}
                     </span>
                   </li>

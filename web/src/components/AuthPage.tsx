@@ -14,9 +14,19 @@ export default function AuthPage({ onAuthSuccess }: AuthPageProps) {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const [success, setSuccess] = useState('')
+  const [lastAttempt, setLastAttempt] = useState(0)
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+    
+    // Client-side rate limiting - prevent rapid submissions
+    const now = Date.now()
+    if (now - lastAttempt < 2000) {
+      setError('Please wait a moment...')
+      return
+    }
+    setLastAttempt(now)
+    
     setLoading(true)
     setError('')
     setSuccess('')
@@ -29,9 +39,9 @@ export default function AuthPage({ onAuthSuccess }: AuthPageProps) {
         })
         if (error) {
           if (error.message.includes('Invalid login')) {
-            setError('Invalid email or password. Please try again.')
+            setError('Invalid email or password')
           } else {
-            setError(error.message)
+            setError('Please try again')
           }
           setLoading(false)
           return
@@ -40,45 +50,41 @@ export default function AuthPage({ onAuthSuccess }: AuthPageProps) {
           onAuthSuccess()
         }
       } else {
-        // Sign up without email confirmation
         const { data, error } = await supabase.auth.signUp({
           email,
-          password,
-          options: {
-            data: {
-              email_confirm: true
-            }
-          }
+          password
         })
         
         if (error) {
-          if (error.message.includes('rate limit')) {
-            setError('Too many attempts. Please wait a minute and try again.')
+          if (error.message.includes('rate limit') || error.message.includes('over')) {
+            setError('Please wait a few seconds and try again')
           } else if (error.message.includes('already registered')) {
-            setError('This email is already registered. Please sign in instead.')
+            setError('Email already registered. Please sign in')
+            setIsLogin(true)
           } else {
-            setError(error.message)
+            setError('Please try again')
           }
           setLoading(false)
           return
         }
         
         if (data.user) {
-          setSuccess('Account created! Signing you in...')
-          // Auto sign in after signup
-          setTimeout(async () => {
-            const { error: signInError } = await supabase.auth.signInWithPassword({
-              email,
-              password
-            })
-            if (!signInError) {
-              onAuthSuccess()
-            }
-          }, 1500)
+          // Auto sign in after successful signup
+          const { error: signInError } = await supabase.auth.signInWithPassword({
+            email,
+            password
+          })
+          if (!signInError) {
+            onAuthSuccess()
+          } else {
+            setSuccess('Account created! Please sign in')
+            setIsLogin(true)
+            setLoading(false)
+          }
         }
       }
     } catch (err: any) {
-      setError('Something went wrong. Please try again.')
+      setError('Please try again')
       setLoading(false)
     }
   }
