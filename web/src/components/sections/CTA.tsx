@@ -10,12 +10,19 @@ export default function CTA() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setIsLoading(true)
-    await supabase.auth.signInWithOtp({ 
+    
+    const { error } = await supabase.auth.signInWithOtp({ 
       email,
       options: {
-        emailRedirectTo: 'https://pausely.pro/dashboard'
+        emailRedirectTo: 'https://pausely.pro'
       }
     })
+    
+    if (error) {
+      console.error('Auth error:', error)
+      alert('Error sending magic link: ' + error.message)
+    }
+    
     setIsLoading(false)
     setIsSuccess(true)
   }

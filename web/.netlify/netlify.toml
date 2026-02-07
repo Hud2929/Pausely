@@ -1,6 +1,6 @@
 headersOrigin = "config"
+redirectsOrigin = "config"
 plugins = []
-redirects = []
 
 [functions]
 
@@ -14,7 +14,6 @@ base = "/home/hudson/.openclaw/workspace/pausely/web"
 command = "npm run build"
 
 [build.environment]
-NODE_ENV = "production"
 
 [build.processing]
 
@@ -35,3 +34,15 @@ for = "/*"
 Strict-Transport-Security = "max-age=31536000; includeSubDomains; preload"
 X-Frame-Options = "DENY"
 X-Content-Type-Options = "nosniff"
+
+[[redirects]]
+from = "/*"
+to = "/index.html"
+status = 200.0
+force = false
+
+[redirects.query]
+
+[redirects.conditions]
+
+[redirects.headers]
