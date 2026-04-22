@@ -20,7 +20,7 @@ struct NotificationsSettingsView: View {
                     HStack {
                         Button(action: { dismiss() }) {
                             Image(systemName: "arrow.left")
-                                .font(.system(size: 20, weight: .semibold))
+                                .font(.headline.weight(.semibold))
                                 .foregroundColor(CyberColors.cyan)
                                 .accessibilityLabel("Back")
                         }
@@ -28,7 +28,7 @@ struct NotificationsSettingsView: View {
                         Spacer()
                         
                         Text("Notifications")
-                            .font(.system(size: 20, weight: .bold))
+                            .font(.headline.weight(.bold))
                             .foregroundColor(.white)
                         
                         Spacer()
@@ -46,7 +46,7 @@ struct NotificationsSettingsView: View {
                             .shadow(color: CyberColors.cyan.opacity(0.5), radius: 20, x: 0, y: 0)
                         
                         Image(systemName: "bell.badge.fill")
-                            .font(.system(size: 40))
+                            .font(.title)
                             .foregroundColor(CyberColors.cyan)
                     }
                     .padding(.top, 20)
@@ -54,7 +54,7 @@ struct NotificationsSettingsView: View {
                     // Settings List
                     VStack(spacing: 16) {
                         Text("ALERTS")
-                            .font(.system(size: 13, weight: .bold))
+                            .font(.footnote.weight(.bold))
                             .foregroundColor(.white.opacity(0.5))
                             .tracking(2)
                             .frame(maxWidth: .infinity, alignment: .leading)
@@ -96,7 +96,7 @@ struct NotificationsSettingsView: View {
                     
                     VStack(spacing: 16) {
                         Text("INSIGHTS")
-                            .font(.system(size: 13, weight: .bold))
+                            .font(.footnote.weight(.bold))
                             .foregroundColor(.white.opacity(0.5))
                             .tracking(2)
                             .frame(maxWidth: .infinity, alignment: .leading)
@@ -158,17 +158,17 @@ struct NotificationToggleRow: View {
                     .frame(width: 40, height: 40)
                 
                 Image(systemName: icon)
-                    .font(.system(size: 18))
+                    .font(.callout)
                     .foregroundColor(glowColor)
             }
             
             VStack(alignment: .leading, spacing: 3) {
                 Text(title)
-                    .font(.system(size: 16, weight: .semibold))
+                    .font(.callout.weight(.semibold))
                     .foregroundColor(.white)
                 
                 Text(subtitle)
-                    .font(.system(size: 13))
+                    .font(.footnote)
                     .foregroundColor(.white.opacity(0.6))
             }
             

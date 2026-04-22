@@ -10,29 +10,29 @@ import SwiftUI
 // MARK: - Typography Scale
 enum STFont {
     // Display — used for hero numbers (total spend, savings)
-    static let displayLarge  = Font.system(size: 48, weight: .bold, design: .rounded)
-    static let displayMedium = Font.system(size: 36, weight: .bold, design: .rounded)
-    static let displaySmall  = Font.system(size: 28, weight: .bold, design: .rounded)
-    
+    static let displayLarge  = Font.system(.largeTitle, design: .rounded).weight(.bold)
+    static let displayMedium = Font.system(.title, design: .rounded).weight(.bold)
+    static let displaySmall  = Font.system(.title2, design: .rounded).weight(.bold)
+
     // Headlines — section headers
-    static let headlineLarge = Font.system(size: 22, weight: .semibold, design: .default)
-    static let headlineMedium = Font.system(size: 20, weight: .semibold, design: .default)
-    static let headlineSmall = Font.system(size: 17, weight: .semibold, design: .default)
-    
+    static let headlineLarge = Font.title3.weight(.semibold)
+    static let headlineMedium = Font.headline.weight(.semibold)
+    static let headlineSmall = Font.body.weight(.semibold)
+
     // Body
-    static let bodyLarge     = Font.system(size: 17, weight: .regular, design: .default)
-    static let bodyMedium    = Font.system(size: 15, weight: .regular, design: .default)
-    static let bodySmall     = Font.system(size: 13, weight: .regular, design: .default)
-    
+    static let bodyLarge     = Font.body
+    static let bodyMedium    = Font.subheadline
+    static let bodySmall     = Font.footnote
+
     // Labels — metadata, captions
-    static let labelLarge    = Font.system(size: 15, weight: .medium, design: .default)
-    static let labelMedium   = Font.system(size: 13, weight: .medium, design: .default)
-    static let labelSmall    = Font.system(size: 11, weight: .medium, design: .default)
-    
+    static let labelLarge    = Font.subheadline.weight(.medium)
+    static let labelMedium   = Font.footnote.weight(.medium)
+    static let labelSmall    = Font.caption2.weight(.medium)
+
     // Mono — for currency values
-    static let monoLarge     = Font.system(size: 36, weight: .bold, design: .monospaced)
-    static let monoMedium    = Font.system(size: 20, weight: .semibold, design: .monospaced)
-    static let monoSmall     = Font.system(size: 15, weight: .medium, design: .monospaced)
+    static let monoLarge     = Font.system(.title, design: .monospaced).weight(.bold)
+    static let monoMedium    = Font.system(.headline, design: .monospaced).weight(.semibold)
+    static let monoSmall     = Font.system(.subheadline, design: .monospaced).weight(.medium)
 }
 
 // MARK: - Text Style Extensions

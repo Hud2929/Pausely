@@ -181,13 +181,15 @@ struct FuturisticGlassCard<Content: View>: View {
 struct CyberToggle: View {
     @Binding var isOn: Bool
     var glowColor: Color = Color(hex: "6366F1")
+    var onToggle: ((Bool) -> Void)? = nil
 
     var body: some View {
         Toggle("", isOn: $isOn)
             .labelsHidden()
             .tint(glowColor)
-            .onChange(of: isOn) { _, _ in
+            .onChange(of: isOn) { _, newValue in
                 HapticStyle.light.trigger()
+                onToggle?(newValue)
             }
     }
 }

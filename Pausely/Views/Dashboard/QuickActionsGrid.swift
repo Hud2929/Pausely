@@ -12,7 +12,7 @@ struct QuickActionsGrid: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
             Text("Quick Actions")
-                .font(.system(size: 20, weight: .bold, design: .rounded))
+                .font(.system(.title3, design: .rounded).weight(.bold))
                 .foregroundStyle(.primary)
 
             HStack(spacing: 12) {
@@ -90,17 +90,17 @@ struct QuickActionButton: View {
                         .shadow(color: gradient[0].opacity(0.4), radius: 10, x: 0, y: 5)
 
                     Image(systemName: icon)
-                        .font(.system(size: 24, weight: .semibold))
+                        .font(.title3.weight(.semibold))
                         .foregroundStyle(.white)
                 }
 
                 VStack(spacing: 2) {
                     Text(title)
-                        .font(.system(size: 15, weight: .semibold, design: .rounded))
+                        .font(.system(.subheadline, design: .rounded).weight(.semibold))
                         .foregroundStyle(.primary)
 
                     Text(subtitle)
-                        .font(.system(size: 11, weight: .medium, design: .rounded))
+                        .font(.system(.caption2, design: .rounded).weight(.medium))
                         .foregroundStyle(.secondary)
                 }
             }

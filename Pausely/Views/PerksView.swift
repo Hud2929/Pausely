@@ -533,7 +533,7 @@ struct PerkCard: View {
                         .fill(colorFor(perk.color).opacity(0.2))
                         .frame(width: 50, height: 50)
                     Image(systemName: perk.icon)
-                        .font(.system(size: 22))
+                        .font(.title3)
                         .foregroundStyle(colorFor(perk.color))
                 }
                 
@@ -591,10 +591,10 @@ struct ActivePerkCard: View {
                     .fill(colorFor(perk.color).opacity(0.2))
                     .frame(width: 50, height: 50)
                 Image(systemName: perk.icon)
-                    .font(.system(size: 22))
+                    .font(.title3)
                     .foregroundStyle(colorFor(perk.color))
             }
-            
+
             VStack(alignment: .leading, spacing: 4) {
                 Text(perk.title)
                     .font(.subheadline.weight(.semibold))
@@ -676,7 +676,7 @@ struct PerkActionSheet: View {
                                 .fill(colorFor(perk.color).opacity(0.2))
                                 .frame(width: 80, height: 80)
                             Image(systemName: perk.icon)
-                                .font(.system(size: 36))
+                                .font(.title)
                                 .foregroundStyle(colorFor(perk.color))
                         }
                         

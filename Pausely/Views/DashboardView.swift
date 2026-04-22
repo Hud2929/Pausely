@@ -105,12 +105,8 @@ struct DashboardView: View {
                     dashboardSkeletonSection
                         .transition(.opacity)
                 } else if store.subscriptions.isEmpty {
-                    ArtisticEmptyState(
-                        icon: "chart.pie.fill",
-                        title: "Track your first subscription",
-                        message: "Add a subscription to see your spending dashboard, upcoming renewals, and smart insights.",
-                        action: { showingAddOptions = true },
-                        actionTitle: "Add Subscription"
+                    DashboardEmptyState(
+                        onAdd: { showingAddOptions = true }
                     )
                     .padding(.horizontal, 20)
                     .padding(.top, 40)
@@ -335,6 +331,173 @@ struct DashboardEmptyStateView: View {
             action: onAdd,
             actionTitle: "Add Subscription"
         )
+    }
+}
+
+// MARK: - Compelling Dashboard Empty State
+struct DashboardEmptyState: View {
+    let onAdd: () -> Void
+    @State private var animate = false
+
+    var body: some View {
+        VStack(spacing: 32) {
+            // Artistic SF Symbols composition
+            ZStack {
+                // Orbiting circles
+                ForEach(0..<3) { i in
+                    Circle()
+                        .stroke(
+                            LinearGradient(
+                                colors: [
+                                    Color.luxuryPurple.opacity(0.15 - Double(i) * 0.03),
+                                    Color.luxuryGold.opacity(0.1 - Double(i) * 0.02)
+                                ],
+                                startPoint: .topLeading,
+                                endPoint: .bottomTrailing
+                            ),
+                            lineWidth: 1
+                        )
+                        .frame(width: 160 + CGFloat(i * 40), height: 160 + CGFloat(i * 40))
+                        .rotationEffect(.degrees(animate ? 360 : 0))
+                        .animation(
+                            UIAccessibility.isReduceMotionEnabled
+                                ? .none
+                                : .linear(duration: 10 + Double(i) * 5).repeatForever(autoreverses: false),
+                            value: animate
+                        )
+                }
+
+                // Background glow
+                Circle()
+                    .fill(
+                        RadialGradient(
+                            colors: [
+                                Color.luxuryPurple.opacity(0.25),
+                                Color.luxuryPurple.opacity(0.05),
+                                .clear
+                            ],
+                            center: .center,
+                            startRadius: 20,
+                            endRadius: 90
+                        )
+                    )
+                    .frame(width: 180, height: 180)
+                    .scaleEffect(animate ? 1.1 : 0.9)
+                    .animation(
+                        UIAccessibility.isReduceMotionEnabled
+                            ? .none
+                            : .easeInOut(duration: 2).repeatForever(autoreverses: true),
+                        value: animate
+                    )
+
+                // Central icon cluster
+                ZStack {
+                    // Main pie chart icon
+                    Image(systemName: "chart.pie.fill")
+                        .font(.system(.largeTitle, design: .rounded).weight(.semibold))
+                        .foregroundStyle(
+                            LinearGradient(
+                                colors: [Color.luxuryGold, Color.luxuryPurple],
+                                startPoint: .topLeading,
+                                endPoint: .bottomTrailing
+                            )
+                        )
+                        .shadow(color: Color.luxuryGold.opacity(0.4), radius: 20, x: 0, y: 8)
+
+                    // Dollar sign orbiting
+                    Image(systemName: "dollarsign.circle.fill")
+                        .font(.system(.title3, design: .rounded).weight(.semibold))
+                        .foregroundColor(Color.luxuryGold)
+                        .offset(x: animate ? 50 : 42, y: animate ? -30 : -26)
+                        .animation(
+                            UIAccessibility.isReduceMotionEnabled
+                                ? .none
+                                : .easeInOut(duration: 2.5).repeatForever(autoreverses: true),
+                            value: animate
+                        )
+
+                    // Plus circle orbiting
+                    Image(systemName: "plus.circle.fill")
+                        .font(.system(.title3, design: .rounded).weight(.semibold))
+                        .foregroundColor(Color.luxuryPurple)
+                        .offset(x: animate ? -45 : -38, y: animate ? 35 : 30)
+                        .animation(
+                            UIAccessibility.isReduceMotionEnabled
+                                ? .none
+                                : .easeInOut(duration: 2.2).repeatForever(autoreverses: true),
+                            value: animate
+                        )
+                }
+            }
+            .frame(height: 220)
+
+            // Text content
+            VStack(spacing: 12) {
+                Text("Start Tracking Your Subscriptions")
+                    .font(AppTypography.headlineLarge)
+                    .foregroundStyle(.white)
+                    .multilineTextAlignment(.center)
+
+                Text("Add your first subscription to see spending insights")
+                    .font(AppTypography.bodyMedium)
+                    .foregroundStyle(.white.opacity(0.6))
+                    .multilineTextAlignment(.center)
+                    .padding(.horizontal, 24)
+            }
+
+            // CTA Button with glass morphism
+            Button(action: {
+                HapticStyle.medium.trigger()
+                onAdd()
+            }) {
+                HStack(spacing: 10) {
+                    Image(systemName: "plus.circle.fill")
+                        .font(AppTypography.headlineMedium)
+                    Text("Add First Subscription")
+                        .font(AppTypography.headlineSmall)
+                }
+                .foregroundStyle(.white)
+                .frame(maxWidth: .infinity)
+                .frame(height: 56)
+                .background(
+                    ZStack {
+                        RoundedRectangle(cornerRadius: 18, style: .continuous)
+                            .fill(
+                                LinearGradient(
+                                    colors: [Color.luxuryPurple, Color.luxuryPink],
+                                    startPoint: .topLeading,
+                                    endPoint: .bottomTrailing
+                                )
+                            )
+
+                        RoundedRectangle(cornerRadius: 18, style: .continuous)
+                            .stroke(
+                                LinearGradient(
+                                    colors: [.white.opacity(0.5), .white.opacity(0)],
+                                    startPoint: .top,
+                                    endPoint: .center
+                                ),
+                                lineWidth: 1.5
+                            )
+                    }
+                )
+                .shadow(color: Color.luxuryPurple.opacity(0.4), radius: 20, x: 0, y: 10)
+            }
+            .premiumPress(haptic: .medium, scale: 0.96)
+            .padding(.horizontal, 32)
+            .padding(.top, 8)
+        }
+        .padding(.vertical, 40)
+        .glass(intensity: 0.08, tint: .white)
+        .onAppear {
+            guard !UIAccessibility.isReduceMotionEnabled else {
+                animate = true
+                return
+            }
+            withAnimation(.easeOut(duration: 0.5).delay(0.2)) {
+                animate = true
+            }
+        }
     }
 }
 

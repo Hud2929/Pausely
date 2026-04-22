@@ -108,7 +108,7 @@ struct ReferralInputView: View {
                         )
                     
                     Image(systemName: "gift.fill")
-                        .font(.system(size: 50, weight: .light))
+                        .font(.system(.largeTitle, design: .rounded).weight(.light))
                         .foregroundStyle(
                             LinearGradient(
                                 colors: [Color.luxuryGold, .white],
@@ -136,7 +136,7 @@ struct ReferralInputView: View {
                                 .shadow(color: Color.luxuryPink.opacity(0.5), radius: 10)
                             
                             Text("30%")
-                                .font(.system(size: 14, weight: .bold, design: .rounded))
+                                .font(.system(.footnote, design: .rounded).weight(.bold))
                                 .foregroundStyle(.white)
                         }
                         .offset(x: 10, y: 10)
@@ -147,14 +147,14 @@ struct ReferralInputView: View {
                 // Floating elements
                 HStack {
                     Image(systemName: "sparkle")
-                        .font(.system(size: 24))
+                        .font(.title3)
                         .foregroundStyle(Color.luxuryGold)
                         .offset(x: -60, y: -30)
-                    
+
                     Spacer()
-                    
+
                     Image(systemName: "sparkle.fill")
-                        .font(.system(size: 18))
+                        .font(.callout)
                         .foregroundStyle(Color.luxuryPink)
                         .offset(x: 50, y: 20)
                 }
@@ -166,11 +166,11 @@ struct ReferralInputView: View {
             // Text content
             VStack(spacing: 12) {
                 Text("Have a Referral Code?")
-                    .font(.system(size: 32, weight: .bold, design: .rounded))
+                    .font(.system(.largeTitle, design: .rounded).weight(.bold))
                     .foregroundStyle(.white)
-                
+
                 Text("Enter it now to get 30% off Premium and help your friend earn rewards too!")
-                    .font(.system(size: 17, weight: .medium, design: .rounded))
+                    .font(.system(.body, design: .rounded).weight(.medium))
                     .foregroundStyle(.white.opacity(0.7))
                     .multilineTextAlignment(.center)
                     .padding(.horizontal, 16)
@@ -186,12 +186,12 @@ struct ReferralInputView: View {
             VStack(spacing: 8) {
                 HStack(spacing: 12) {
                     Image(systemName: "ticket.fill")
-                        .font(.system(size: 20))
+                        .font(.title3)
                         .foregroundStyle(Color.luxuryGold)
                         .frame(width: 40)
-                    
+
                     TextField("Enter referral code", text: $referralCode)
-                        .font(.system(size: 20, weight: .semibold, design: .rounded))
+                        .font(.system(.title3, design: .rounded).weight(.semibold))
                         .foregroundStyle(.white)
                         .textInputAutocapitalization(.characters)
                         .autocorrectionDisabled()
@@ -219,7 +219,7 @@ struct ReferralInputView: View {
                             .tint(Color.luxuryGold)
                     } else if let isValid = isValid {
                         Image(systemName: isValid ? "checkmark.circle.fill" : "xmark.circle.fill")
-                            .font(.system(size: 24))
+                            .font(.title3)
                             .foregroundStyle(isValid ? Color.luxuryTeal : .red)
                     }
                 }
@@ -244,11 +244,11 @@ struct ReferralInputView: View {
             if let errorMessage = errorMessage {
                 HStack(spacing: 8) {
                     Image(systemName: "exclamationmark.triangle.fill")
-                        .font(.system(size: 14))
+                        .font(.footnote)
                         .foregroundStyle(.orange)
-                    
+
                     Text(errorMessage)
-                        .font(.system(size: 14, weight: .medium, design: .rounded))
+                        .font(.system(.footnote, design: .rounded).weight(.medium))
                         .foregroundStyle(.orange)
                 }
                 .padding(.horizontal, 8)
@@ -257,7 +257,7 @@ struct ReferralInputView: View {
             
             // Helper text
             Text("Codes are case-insensitive and can only be used once")
-                .font(.system(size: 13, weight: .medium, design: .rounded))
+                .font(.system(.footnote, design: .rounded).weight(.medium))
                 .foregroundStyle(.white.opacity(0.5))
                 .multilineTextAlignment(.center)
         }
@@ -275,7 +275,7 @@ struct ReferralInputView: View {
                     }
                     
                     Text("Apply Code")
-                        .font(.system(size: 17, weight: .semibold, design: .rounded))
+                        .font(.system(.body, design: .rounded).weight(.semibold))
                 }
                 .foregroundStyle(.white)
                 .frame(maxWidth: .infinity)
@@ -316,7 +316,7 @@ struct ReferralInputView: View {
                 onSkip()
             }) {
                 Text("I don't have a code")
-                    .font(.system(size: 17, weight: .medium, design: .rounded))
+                    .font(.system(.body, design: .rounded).weight(.medium))
                     .foregroundStyle(.white.opacity(0.6))
             }
             .buttonStyle(PlainButtonStyle())
@@ -398,7 +398,7 @@ struct ReferralCodeAppliedView: View {
                             )
                         
                         Image(systemName: "checkmark")
-                            .font(.system(size: 50, weight: .bold))
+                            .font(.system(.largeTitle, design: .default).weight(.bold))
                             .foregroundStyle(Color.luxuryTeal)
                     }
                     .scaleEffect(scale)
@@ -407,16 +407,16 @@ struct ReferralCodeAppliedView: View {
                 // Text content
                 VStack(spacing: 16) {
                     Text("Code Applied!")
-                        .font(.system(size: 36, weight: .bold, design: .rounded))
+                        .font(.system(.largeTitle, design: .rounded).weight(.bold))
                         .foregroundStyle(.white)
                     
                     VStack(spacing: 8) {
                         Text("Referral code \"\(code)\" has been applied")
-                            .font(.system(size: 17, weight: .medium, design: .rounded))
+                            .font(.system(.body, design: .rounded).weight(.medium))
                             .foregroundStyle(.white.opacity(0.7))
-                        
+
                         Text("You got \(discount) off!")
-                            .font(.system(size: 24, weight: .bold, design: .rounded))
+                            .font(.system(.title2, design: .rounded).weight(.bold))
                             .foregroundStyle(Color.luxuryGold)
                     }
                     .multilineTextAlignment(.center)
@@ -444,7 +444,7 @@ struct ReferralCodeAppliedView: View {
                     onContinue()
                 }) {
                     Text("Continue")
-                        .font(.system(size: 17, weight: .semibold, design: .rounded))
+                        .font(.system(.body, design: .rounded).weight(.semibold))
                         .foregroundStyle(.white)
                         .frame(maxWidth: .infinity)
                         .padding(.vertical, 18)
@@ -496,12 +496,12 @@ struct BenefitPreviewRow: View {
     var body: some View {
         HStack(spacing: 12) {
             Image(systemName: icon)
-                .font(.system(size: 18))
+                .font(.callout)
                 .foregroundStyle(icon == "crown.fill" ? Color.luxuryGold : Color.luxuryTeal)
                 .frame(width: 24)
-            
+
             Text(text)
-                .font(.system(size: 15, weight: .medium, design: .rounded))
+                .font(.system(.subheadline, design: .rounded).weight(.medium))
                 .foregroundStyle(.white)
             
             Spacer()
@@ -537,24 +537,24 @@ struct InlineReferralInput: View {
                             .frame(width: 40, height: 40)
                         
                         Image(systemName: "gift.fill")
-                            .font(.system(size: 18))
+                            .font(.callout)
                             .foregroundStyle(Color.luxuryGold)
                     }
                     
                     VStack(alignment: .leading, spacing: 2) {
                         Text("Have a referral code?")
-                            .font(.system(size: 16, weight: .semibold, design: .rounded))
+                            .font(.system(.callout, design: .rounded).weight(.semibold))
                             .foregroundStyle(.white)
-                        
+
                         Text("Get 30% off Premium")
-                            .font(.system(size: 13, weight: .medium, design: .rounded))
+                            .font(.system(.footnote, design: .rounded).weight(.medium))
                             .foregroundStyle(Color.luxuryGold)
                     }
                     
                     Spacer()
                     
                     Image(systemName: isExpanded ? "chevron.up" : "chevron.down")
-                        .font(.system(size: 14, weight: .semibold))
+                        .font(.footnote.weight(.semibold))
                         .foregroundStyle(.white.opacity(0.5))
                 }
             }
@@ -565,7 +565,7 @@ struct InlineReferralInput: View {
                 VStack(spacing: 12) {
                     HStack(spacing: 12) {
                         TextField("Enter code", text: $code)
-                            .font(.system(size: 16, weight: .medium, design: .rounded))
+                            .font(.system(.callout, design: .rounded).weight(.medium))
                             .foregroundStyle(.white)
                             .textInputAutocapitalization(.characters)
                             .autocorrectionDisabled()
@@ -596,7 +596,7 @@ struct InlineReferralInput: View {
                                     .tint(.white)
                             } else {
                                 Text("Apply")
-                                    .font(.system(size: 15, weight: .semibold, design: .rounded))
+                                    .font(.system(.subheadline, design: .rounded).weight(.semibold))
                                     .foregroundStyle(.white)
                             }
                         }
@@ -610,7 +610,7 @@ struct InlineReferralInput: View {
                     }
 
                     Text("Both you and your friend will receive rewards")
-                        .font(.system(size: 12, weight: .medium, design: .rounded))
+                        .font(.system(.caption, design: .rounded).weight(.medium))
                         .foregroundStyle(.white.opacity(0.5))
                 }
                 .transition(.move(edge: .top).combined(with: .opacity))

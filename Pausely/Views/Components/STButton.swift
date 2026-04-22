@@ -47,7 +47,7 @@ struct STButton: View {
                 } else {
                     if let icon {
                         Image(systemName: icon)
-                            .font(.system(size: 16, weight: .semibold))
+                            .font(.callout.weight(.semibold))
                     }
                     Text(title)
                         .font(STFont.labelLarge)

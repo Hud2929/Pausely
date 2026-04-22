@@ -126,7 +126,7 @@ struct CostPerUseDetailSection: View {
                     VStack(spacing: 6) {
                         // Value label
                         Text(CostPerUseCalculator.formatHours(trendData[index]))
-                            .font(.system(size: 11, weight: .semibold, design: .rounded))
+                            .font(.system(.caption2, design: .rounded).weight(.semibold))
                             .foregroundStyle(.primary)
 
                         // Bar
@@ -145,7 +145,7 @@ struct CostPerUseDetailSection: View {
 
                         // Month label
                         Text(trendLabels[index])
-                            .font(.system(size: 11, weight: .medium, design: .rounded))
+                            .font(.system(.caption2, design: .rounded).weight(.medium))
                             .foregroundStyle(.secondary)
                     }
                     .frame(maxWidth: .infinity)
@@ -165,7 +165,7 @@ struct CostPerUseDetailSection: View {
                     .frame(width: 48, height: 48)
 
                 Image(systemName: "clock.arrow.circlepath")
-                    .font(.system(size: 22, weight: .semibold))
+                    .font(.callout.weight(.semibold))
                     .foregroundStyle(Color.luxuryTeal)
             }
 

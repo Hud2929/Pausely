@@ -205,6 +205,9 @@ struct SubscriptionsListView: View {
                                 }
                             )
                             .transition(.opacity.combined(with: .scale))
+                            .onAppear {
+                                HapticStyle.warning.trigger()
+                            }
                         } else if store.subscriptions.isEmpty && !store.isLoading {
                             ArtisticEmptyState(
                                 icon: "list.bullet.rectangle.fill",
@@ -229,6 +232,23 @@ struct SubscriptionsListView: View {
                                         .listRowEntrance(index: index)
                                 }
                                 .buttonStyle(PlainButtonStyle())
+                                .swipeActions(edge: .trailing, allowsFullSwipe: false) {
+                                    Button(role: .destructive) {
+                                        HapticStyle.heavy.trigger()
+                                        Task {
+                                            do {
+                                                try await store.deleteSubscription(id: subscription.id)
+                                            } catch {
+                                                #if DEBUG
+                                                print("Error deleting subscription: \(error)")
+                                                #endif
+                                            }
+                                        }
+                                    } label: {
+                                        Label("Delete", systemImage: "trash")
+                                    }
+                                    .tint(.red)
+                                }
                             }
                         }
                     }

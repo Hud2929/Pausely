@@ -97,7 +97,7 @@ struct PauseyButlerView: View {
 
                 // Butler icon
                 Image(systemName: "figure.butler")
-                    .font(.system(size: 36))
+                    .font(.title)
                     .foregroundStyle(.white)
             }
             .frame(height: 100)
@@ -105,11 +105,11 @@ struct PauseyButlerView: View {
             // Pausey's message
             VStack(spacing: 8) {
                 Text("Pausey at your service")
-                    .font(.system(size: 14, weight: .medium))
+                    .font(.footnote.weight(.medium))
                     .foregroundStyle(.gray)
 
                 Text("How would you like to handle\n\(subscription.name)?")
-                    .font(.system(size: 20, weight: .semibold, design: .rounded))
+                    .font(.system(.title3, design: .rounded).weight(.semibold))
                     .foregroundStyle(.white)
                     .multilineTextAlignment(.center)
             }
@@ -135,17 +135,17 @@ struct PauseyButlerView: View {
                     .frame(width: 56, height: 56)
 
                 Text(String(subscription.name.prefix(1)))
-                    .font(.system(size: 24, weight: .bold, design: .rounded))
+                    .font(.system(.title2, design: .rounded).weight(.bold))
                     .foregroundStyle(.white)
             }
 
             VStack(alignment: .leading, spacing: 4) {
                 Text(subscription.name)
-                    .font(.system(size: 18, weight: .semibold, design: .rounded))
+                    .font(.system(.subheadline, design: .rounded).weight(.semibold))
                     .foregroundStyle(.white)
 
                 Text(subscription.displayAmount + " / " + subscription.billingFrequency.shortDisplay)
-                    .font(.system(size: 14, weight: .medium))
+                    .font(.footnote.weight(.medium))
                     .foregroundStyle(.gray)
             }
 
@@ -156,7 +156,7 @@ struct PauseyButlerView: View {
                 Image(systemName: cancellationInfo.difficulty.icon)
                     .font(.caption)
                 Text(cancellationInfo.difficulty == .easy ? "Easy" : cancellationInfo.difficulty == .medium ? "Medium" : "Hard")
-                    .font(.system(size: 11, weight: .semibold))
+                    .font(.caption2.weight(.semibold))
             }
             .foregroundStyle(cancellationInfo.difficulty.color)
             .padding(.horizontal, 8)
@@ -187,17 +187,17 @@ struct PauseyButlerView: View {
 
                     VStack(alignment: .leading, spacing: 2) {
                         Text("Cancel Subscription")
-                            .font(.system(size: 17, weight: .semibold))
+                            .font(.body.weight(.semibold))
 
                         Text(cancellationInfo.message)
-                            .font(.system(size: 12))
+                            .font(.caption2)
                             .opacity(0.8)
                     }
 
                     Spacer()
 
                     Image(systemName: "chevron.right")
-                        .font(.system(size: 14, weight: .semibold))
+                        .font(.footnote.weight(.semibold))
                 }
                 .foregroundStyle(.white)
                 .padding(20)
@@ -225,17 +225,17 @@ struct PauseyButlerView: View {
 
                         VStack(alignment: .leading, spacing: 2) {
                             Text("Pause Instead")
-                                .font(.system(size: 17, weight: .semibold))
+                                .font(.body.weight(.semibold))
 
                             Text("Take a break without canceling")
-                                .font(.system(size: 12))
+                                .font(.caption2)
                                 .opacity(0.8)
                         }
 
                         Spacer()
 
                         Image(systemName: "chevron.right")
-                            .font(.system(size: 14, weight: .semibold))
+                            .font(.footnote.weight(.semibold))
                     }
                     .foregroundStyle(.white)
                     .padding(20)
@@ -264,17 +264,17 @@ struct PauseyButlerView: View {
 
                         VStack(alignment: .leading, spacing: 2) {
                             Text("Manage in App Store")
-                                .font(.system(size: 17, weight: .semibold))
+                                .font(.body.weight(.semibold))
 
                             Text("View all your subscriptions")
-                                .font(.system(size: 12))
+                                .font(.caption2)
                                 .opacity(0.8)
                         }
 
                         Spacer()
 
                         Image(systemName: "chevron.right")
-                            .font(.system(size: 14, weight: .semibold))
+                            .font(.footnote.weight(.semibold))
                     }
                     .foregroundStyle(.white)
                     .padding(20)
@@ -296,7 +296,7 @@ struct PauseyButlerView: View {
     private var infoSection: some View {
         VStack(alignment: .leading, spacing: 12) {
             Text("What happens next?")
-                .font(.system(size: 15, weight: .semibold))
+                .font(.subheadline.weight(.semibold))
                 .foregroundStyle(.white)
 
             HStack(alignment: .top, spacing: 12) {
@@ -305,7 +305,7 @@ struct PauseyButlerView: View {
                     .font(.title3)
 
                 Text("I'll open the cancellation page for you. You'll need to confirm the cancellation on the service's website. You'll receive a confirmation email once it's processed.")
-                    .font(.system(size: 13))
+                    .font(.footnote)
                     .foregroundStyle(.gray)
                     .lineSpacing(4)
             }

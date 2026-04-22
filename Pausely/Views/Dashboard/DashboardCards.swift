@@ -16,13 +16,13 @@ struct UpcomingRenewalsCarousel: View {
         VStack(alignment: .leading, spacing: 12) {
             HStack {
                 Text("Upcoming")
-                    .font(.system(size: 20, weight: .bold, design: .rounded))
+                    .font(.system(.title3, design: .rounded).weight(.bold))
                     .foregroundStyle(.primary)
 
                 Spacer()
 
                 Text("\(urgentRenewals.count) this week")
-                    .font(.system(size: 13, weight: .medium, design: .rounded))
+                    .font(.system(.footnote, design: .rounded).weight(.medium))
                     .foregroundStyle(.orange)
             }
             .padding(.horizontal, 20)
@@ -55,7 +55,7 @@ struct RenewalCard: View {
         VStack(alignment: .leading, spacing: 12) {
             HStack {
                 Text("\(subscription.daysUntilRenewal ?? 0)d")
-                    .font(.system(size: 13, weight: .bold, design: .rounded))
+                    .font(.system(.footnote, design: .rounded).weight(.bold))
                     .foregroundStyle(.white)
                     .padding(.horizontal, 10)
                     .padding(.vertical, 4)
@@ -66,13 +66,13 @@ struct RenewalCard: View {
             Spacer()
 
             Text(subscription.name)
-                .font(.system(size: 15, weight: .semibold, design: .rounded))
+                .font(.system(.subheadline, design: .rounded).weight(.semibold))
                 .foregroundStyle(.primary)
                 .lineLimit(1)
 
             let converted = currencyManager.convertToSelected(subscription.amount, from: subscription.currency)
             Text(currencyManager.format(converted))
-                .font(.system(size: 13, weight: .medium, design: .rounded))
+                .font(.system(.footnote, design: .rounded).weight(.medium))
                 .foregroundStyle(.secondary)
         }
         .padding(14)
@@ -90,7 +90,7 @@ struct RecentSubscriptionsCarousel: View {
         VStack(alignment: .leading, spacing: 12) {
             HStack {
                 Text("Recent")
-                    .font(.system(size: 20, weight: .bold, design: .rounded))
+                    .font(.system(.title3, design: .rounded).weight(.bold))
                     .foregroundStyle(.primary)
 
                 Spacer()
@@ -99,7 +99,7 @@ struct RecentSubscriptionsCarousel: View {
                     SubscriptionsListView()
                 } label: {
                     Text("See All")
-                        .font(.system(size: 15, weight: .medium, design: .rounded))
+                        .font(.system(.subheadline, design: .rounded).weight(.medium))
                         .foregroundStyle(Color.luxuryPurple)
                 }
             }
@@ -141,19 +141,19 @@ struct RecentSubCard: View {
                     .frame(width: 56, height: 56)
 
                 Text(String(subscription.name.prefix(1)))
-                    .font(.system(size: 22, weight: .bold, design: .rounded))
+                    .font(.system(.title3, design: .rounded).weight(.bold))
                     .foregroundStyle(.white)
             }
 
             VStack(spacing: 2) {
                 Text(subscription.name)
-                    .font(.system(size: 14, weight: .semibold, design: .rounded))
+                    .font(.system(.footnote, design: .rounded).weight(.semibold))
                     .foregroundStyle(.primary)
                     .lineLimit(1)
 
                 let converted = currencyManager.convertToSelected(subscription.amount, from: subscription.currency)
                 Text(currencyManager.format(converted))
-                    .font(.system(size: 12, weight: .medium, design: .rounded))
+                    .font(.system(.caption, design: .rounded).weight(.medium))
                     .foregroundStyle(.secondary)
             }
         }
@@ -172,17 +172,17 @@ struct EmptySubscriptionsCard: View {
                     .frame(width: 64, height: 64)
 
                 Image(systemName: "plus.circle")
-                    .font(.system(size: 28))
+                    .font(.title.weight(.regular))
                     .foregroundStyle(Color.luxuryPurple)
             }
 
             VStack(spacing: 4) {
                 Text("No subscriptions yet")
-                    .font(.system(size: 17, weight: .semibold, design: .rounded))
+                    .font(.system(.body, design: .rounded).weight(.semibold))
                     .foregroundStyle(.primary)
 
                 Text("Add your first subscription to start tracking")
-                    .font(.system(size: 13, weight: .medium, design: .rounded))
+                    .font(.system(.footnote, design: .rounded).weight(.medium))
                     .foregroundStyle(.secondary)
                     .multilineTextAlignment(.center)
             }
@@ -214,7 +214,7 @@ struct UsageHighlightsSection: View {
         VStack(alignment: .leading, spacing: 12) {
             HStack {
                 Text("Top Usage")
-                    .font(.system(size: 20, weight: .bold, design: .rounded))
+                    .font(.system(.title3, design: .rounded).weight(.bold))
                     .foregroundStyle(.primary)
 
                 Spacer()
@@ -257,14 +257,14 @@ struct UsageHighlightRow: View {
             .frame(width: 60, height: 6)
 
             Text(String(name.prefix(12)))
-                .font(.system(size: 14, weight: .medium, design: .rounded))
+                .font(.system(.footnote, design: .rounded).weight(.medium))
                 .foregroundStyle(.primary)
                 .lineLimit(1)
 
             Spacer()
 
             Text(formatMinutes(minutes))
-                .font(.system(size: 13, weight: .semibold, design: .rounded))
+                .font(.system(.footnote, design: .rounded).weight(.semibold))
                 .foregroundStyle(.secondary)
 
             EstimateBadge(isEstimated: isEstimated)

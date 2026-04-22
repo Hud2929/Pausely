@@ -18,15 +18,15 @@ struct PrivacySettingsView: View {
                 // Header
                 VStack(spacing: 8) {
                     Image(systemName: "shield.lefthalf.filled")
-                        .font(.system(size: 48))
+                        .font(.largeTitle)
                         .foregroundStyle(Color.luxuryTeal)
-                    
+
                     Text("Privacy & Security")
-                        .font(.system(size: 28, weight: .bold, design: .rounded))
+                        .font(.system(.title, design: .rounded).weight(.bold))
                         .foregroundStyle(.white)
-                    
+
                     Text("Control your data and app permissions")
-                        .font(.system(size: 15, weight: .medium, design: .rounded))
+                        .font(.system(.subheadline, design: .rounded).weight(.medium))
                         .foregroundStyle(.white.opacity(0.6))
                         .multilineTextAlignment(.center)
                         .padding(.horizontal, 32)
@@ -41,7 +41,7 @@ struct PrivacySettingsView: View {
                     // Screen Time Permission (Critical for app functionality)
                     VStack(alignment: .leading, spacing: 12) {
                         Text("App Permissions")
-                            .font(.system(size: 13, weight: .semibold, design: .rounded))
+                            .font(.system(.footnote, design: .rounded).weight(.semibold))
                             .foregroundStyle(.white.opacity(0.5))
                             .textCase(.uppercase)
                             .padding(.leading, 4)
@@ -53,17 +53,17 @@ struct PrivacySettingsView: View {
                                     .frame(width: 44, height: 44)
                                 
                                 Image(systemName: screenTimeAuthorized ? "checkmark.shield" : "hourglass")
-                                    .font(.system(size: 20, weight: .semibold))
+                                    .font(.callout.weight(.semibold))
                                     .foregroundStyle(screenTimeAuthorized ? Color.green : Color.orange)
                             }
                             
                             VStack(alignment: .leading, spacing: 2) {
                                 Text("Screen Time Access")
-                                    .font(.system(size: 17, weight: .semibold, design: .rounded))
+                                    .font(.system(.body, design: .rounded).weight(.semibold))
                                     .foregroundStyle(.white)
-                                
+
                                 Text(screenTimeAuthorized ? "Authorized" : "Required for app blocking")
-                                    .font(.system(size: 14, weight: .medium, design: .rounded))
+                                    .font(.system(.footnote, design: .rounded).weight(.medium))
                                     .foregroundStyle(screenTimeAuthorized ? Color.green : Color.orange)
                             }
                             
@@ -71,12 +71,12 @@ struct PrivacySettingsView: View {
                             
                             if screenTimeAuthorized {
                                 Image(systemName: "checkmark.circle.fill")
-                                    .font(.system(size: 24))
+                                    .font(.title3)
                                     .foregroundStyle(Color.green)
                             } else {
                                 Button(action: { requestScreenTimePermission() }) {
                                     Text("Allow")
-                                        .font(.system(size: 14, weight: .semibold, design: .rounded))
+                                        .font(.system(.footnote, design: .rounded).weight(.semibold))
                                         .foregroundStyle(.white)
                                         .padding(.horizontal, 16)
                                         .padding(.vertical, 8)
@@ -95,7 +95,7 @@ struct PrivacySettingsView: View {
                     // Data & Privacy Section
                     VStack(alignment: .leading, spacing: 12) {
                         Text("Data & Privacy")
-                            .font(.system(size: 13, weight: .semibold, design: .rounded))
+                            .font(.system(.footnote, design: .rounded).weight(.semibold))
                             .foregroundStyle(.white.opacity(0.5))
                             .textCase(.uppercase)
                             .padding(.leading, 4)
@@ -108,17 +108,17 @@ struct PrivacySettingsView: View {
                                     .frame(width: 44, height: 44)
                                 
                                 Image(systemName: "chart.bar")
-                                    .font(.system(size: 20, weight: .semibold))
+                                    .font(.callout.weight(.semibold))
                                     .foregroundStyle(.blue)
                             }
                             
                             VStack(alignment: .leading, spacing: 2) {
                                 Text("Analytics")
-                                    .font(.system(size: 17, weight: .semibold, design: .rounded))
+                                    .font(.system(.body, design: .rounded).weight(.semibold))
                                     .foregroundStyle(.white)
-                                
+
                                 Text("Help improve the app")
-                                    .font(.system(size: 14, weight: .medium, design: .rounded))
+                                    .font(.system(.footnote, design: .rounded).weight(.medium))
                                     .foregroundStyle(.white.opacity(0.5))
                             }
                             
@@ -138,17 +138,17 @@ struct PrivacySettingsView: View {
                                     .frame(width: 44, height: 44)
                                 
                                 Image(systemName: "exclamationmark.triangle")
-                                    .font(.system(size: 20, weight: .semibold))
+                                    .font(.callout.weight(.semibold))
                                     .foregroundStyle(.red)
                             }
                             
                             VStack(alignment: .leading, spacing: 2) {
                                 Text("Crash Reporting")
-                                    .font(.system(size: 17, weight: .semibold, design: .rounded))
+                                    .font(.system(.body, design: .rounded).weight(.semibold))
                                     .foregroundStyle(.white)
-                                
+
                                 Text("Automatically send crash logs")
-                                    .font(.system(size: 14, weight: .medium, design: .rounded))
+                                    .font(.system(.footnote, design: .rounded).weight(.medium))
                                     .foregroundStyle(.white.opacity(0.5))
                             }
                             
@@ -165,7 +165,7 @@ struct PrivacySettingsView: View {
                     // Account Security Section
                     VStack(alignment: .leading, spacing: 12) {
                         Text("Account Security")
-                            .font(.system(size: 13, weight: .semibold, design: .rounded))
+                            .font(.system(.footnote, design: .rounded).weight(.semibold))
                             .foregroundStyle(.white.opacity(0.5))
                             .textCase(.uppercase)
                             .padding(.leading, 4)
@@ -187,7 +187,7 @@ struct PrivacySettingsView: View {
                     // Data Management
                     VStack(alignment: .leading, spacing: 12) {
                         Text("Data Management")
-                            .font(.system(size: 13, weight: .semibold, design: .rounded))
+                            .font(.system(.footnote, design: .rounded).weight(.semibold))
                             .foregroundStyle(.white.opacity(0.5))
                             .textCase(.uppercase)
                             .padding(.leading, 4)
@@ -204,24 +204,24 @@ struct PrivacySettingsView: View {
                                         .frame(width: 44, height: 44)
                                     
                                     Image(systemName: "trash")
-                                        .font(.system(size: 20, weight: .semibold))
+                                        .font(.callout.weight(.semibold))
                                         .foregroundStyle(.red)
                                 }
                                 
                                 VStack(alignment: .leading, spacing: 2) {
                                     Text("Delete Account")
-                                        .font(.system(size: 17, weight: .semibold, design: .rounded))
+                                        .font(.system(.body, design: .rounded).weight(.semibold))
                                         .foregroundStyle(.red)
-                                    
+
                                     Text("Permanently delete your account")
-                                        .font(.system(size: 14, weight: .medium, design: .rounded))
+                                        .font(.system(.footnote, design: .rounded).weight(.medium))
                                         .foregroundStyle(.red.opacity(0.6))
                                 }
-                                
+
                                 Spacer()
-                                
+
                                 Image(systemName: "chevron.right")
-                                    .font(.system(size: 14, weight: .semibold))
+                                    .font(.footnote.weight(.semibold))
                                     .foregroundStyle(.white.opacity(0.3))
                             }
                             .padding()
@@ -236,9 +236,9 @@ struct PrivacySettingsView: View {
                         Button(action: { openPrivacyPolicy() }) {
                             HStack(spacing: 12) {
                                 Image(systemName: "doc.text")
-                                    .font(.system(size: 18, weight: .semibold))
+                                    .font(.callout.weight(.semibold))
                                 Text("Privacy Policy")
-                                    .font(.system(size: 17, weight: .semibold, design: .rounded))
+                                    .font(.system(.body, design: .rounded).weight(.semibold))
                             }
                             .foregroundStyle(Color.luxuryTeal)
                             .frame(maxWidth: .infinity)
@@ -249,9 +249,9 @@ struct PrivacySettingsView: View {
                         Button(action: { openTerms() }) {
                             HStack(spacing: 12) {
                                 Image(systemName: "doc.text.magnifyingglass")
-                                    .font(.system(size: 18, weight: .semibold))
+                                    .font(.callout.weight(.semibold))
                                 Text("Terms of Service")
-                                    .font(.system(size: 17, weight: .semibold, design: .rounded))
+                                    .font(.system(.body, design: .rounded).weight(.semibold))
                             }
                             .foregroundStyle(.white.opacity(0.8))
                             .frame(maxWidth: .infinity)
@@ -331,24 +331,24 @@ struct PrivacyRow: View {
                     .frame(width: 44, height: 44)
                 
                 Image(systemName: icon)
-                    .font(.system(size: 20, weight: .semibold))
+                    .font(.callout.weight(.semibold))
                     .foregroundStyle(color)
             }
             
             VStack(alignment: .leading, spacing: 2) {
                 Text(title)
-                    .font(.system(size: 17, weight: .semibold, design: .rounded))
+                    .font(.system(.body, design: .rounded).weight(.semibold))
                     .foregroundStyle(.white)
-                
+
                 Text(subtitle)
-                    .font(.system(size: 14, weight: .medium, design: .rounded))
+                    .font(.system(.footnote, design: .rounded).weight(.medium))
                     .foregroundStyle(.white.opacity(0.5))
             }
             
             Spacer()
             
             Image(systemName: "chevron.right")
-                .font(.system(size: 14, weight: .semibold))
+                .font(.footnote.weight(.semibold))
                 .foregroundStyle(.white.opacity(0.3))
         }
         .padding()
@@ -369,19 +369,19 @@ struct ChangePasswordView: View {
             VStack(spacing: 24) {
                 VStack(spacing: 8) {
                     Image(systemName: "key.fill")
-                        .font(.system(size: 48))
+                        .font(.largeTitle)
                         .foregroundStyle(.purple)
-                    
+
                     Text("Change Password")
-                        .font(.system(size: 28, weight: .bold, design: .rounded))
+                        .font(.system(.title, design: .rounded).weight(.bold))
                         .foregroundStyle(.white)
                 }
                 .padding(.top, 20)
-                
+
                 VStack(spacing: 16) {
                     SecureField("Current Password", text: $currentPassword)
                         .textContentType(.password)
-                        .font(.system(size: 17, weight: .medium, design: .rounded))
+                        .font(.system(.body, design: .rounded).weight(.medium))
                         .padding()
                         .background(
                             RoundedRectangle(cornerRadius: 12)
@@ -392,7 +392,7 @@ struct ChangePasswordView: View {
 
                     SecureField("New Password", text: $newPassword)
                         .textContentType(.newPassword)
-                        .font(.system(size: 17, weight: .medium, design: .rounded))
+                        .font(.system(.body, design: .rounded).weight(.medium))
                         .padding()
                         .background(
                             RoundedRectangle(cornerRadius: 12)
@@ -403,7 +403,7 @@ struct ChangePasswordView: View {
 
                     SecureField("Confirm New Password", text: $confirmPassword)
                         .textContentType(.newPassword)
-                        .font(.system(size: 17, weight: .medium, design: .rounded))
+                        .font(.system(.body, design: .rounded).weight(.medium))
                         .padding()
                         .background(
                             RoundedRectangle(cornerRadius: 12)
@@ -413,14 +413,14 @@ struct ChangePasswordView: View {
                         .submitLabel(.done)
                 }
                 .padding(.horizontal, 20)
-                
+
                 Button(action: { changePassword() }) {
                     if isLoading {
                         ProgressView()
                             .progressViewStyle(CircularProgressViewStyle(tint: .white))
                     } else {
                         Text("Update Password")
-                            .font(.system(size: 17, weight: .semibold, design: .rounded))
+                            .font(.system(.body, design: .rounded).weight(.semibold))
                     }
                 }
                 .foregroundStyle(.white)
@@ -474,15 +474,15 @@ struct TwoFactorView: View {
             VStack(spacing: 24) {
                 VStack(spacing: 8) {
                     Image(systemName: "lock.shield.fill")
-                        .font(.system(size: 48))
+                        .font(.largeTitle)
                         .foregroundStyle(.green)
-                    
+
                     Text("Two-Factor Auth")
-                        .font(.system(size: 28, weight: .bold, design: .rounded))
+                        .font(.system(.title, design: .rounded).weight(.bold))
                         .foregroundStyle(.white)
-                    
+
                     Text("Add an extra layer of security to your account")
-                        .font(.system(size: 15, weight: .medium, design: .rounded))
+                        .font(.system(.subheadline, design: .rounded).weight(.medium))
                         .foregroundStyle(.white.opacity(0.6))
                         .multilineTextAlignment(.center)
                         .padding(.horizontal, 32)
@@ -493,15 +493,15 @@ struct TwoFactorView: View {
                     // Enabled State
                     VStack(spacing: 16) {
                         Image(systemName: "checkmark.shield.fill")
-                            .font(.system(size: 64))
+                            .font(.largeTitle)
                             .foregroundStyle(.green)
-                        
+
                         Text("2FA is Enabled")
-                            .font(.system(size: 22, weight: .bold, design: .rounded))
+                            .font(.system(.title2, design: .rounded).weight(.bold))
                             .foregroundStyle(.white)
-                        
+
                         Text("Your account is protected with two-factor authentication")
-                            .font(.system(size: 15, weight: .medium, design: .rounded))
+                            .font(.system(.subheadline, design: .rounded).weight(.medium))
                             .foregroundStyle(.white.opacity(0.6))
                             .multilineTextAlignment(.center)
                     }
@@ -511,7 +511,7 @@ struct TwoFactorView: View {
                     
                     Button(action: { disable2FA() }) {
                         Text("Disable 2FA")
-                            .font(.system(size: 17, weight: .semibold, design: .rounded))
+                            .font(.system(.body, design: .rounded).weight(.semibold))
                             .foregroundStyle(.red)
                             .frame(maxWidth: .infinity)
                             .padding()
@@ -522,15 +522,15 @@ struct TwoFactorView: View {
                     // Disabled State
                     VStack(spacing: 16) {
                         Image(systemName: "shield")
-                            .font(.system(size: 64))
+                            .font(.largeTitle)
                             .foregroundStyle(.white.opacity(0.3))
-                        
+
                         Text("2FA is Disabled")
-                            .font(.system(size: 22, weight: .bold, design: .rounded))
+                            .font(.system(.title2, design: .rounded).weight(.bold))
                             .foregroundStyle(.white)
-                        
+
                         Text("Enable two-factor authentication to secure your account")
-                            .font(.system(size: 15, weight: .medium, design: .rounded))
+                            .font(.system(.subheadline, design: .rounded).weight(.medium))
                             .foregroundStyle(.white.opacity(0.6))
                             .multilineTextAlignment(.center)
                     }
@@ -540,7 +540,7 @@ struct TwoFactorView: View {
                     
                     Button(action: { showingSetup = true }) {
                         Text("Enable 2FA")
-                            .font(.system(size: 17, weight: .semibold, design: .rounded))
+                            .font(.system(.body, design: .rounded).weight(.semibold))
                             .foregroundStyle(.white)
                             .frame(maxWidth: .infinity)
                             .padding()
@@ -576,25 +576,25 @@ struct TwoFactorSetupView: View {
         NavigationView {
             VStack(spacing: 24) {
                 Text("Scan this QR code with your authenticator app")
-                    .font(.system(size: 17, weight: .medium, design: .rounded))
+                    .font(.system(.body, design: .rounded).weight(.medium))
                     .foregroundStyle(.white)
                     .multilineTextAlignment(.center)
                     .padding(.horizontal, 32)
-                
+
                 // Placeholder QR Code
                 RoundedRectangle(cornerRadius: 12)
                     .fill(.white)
                     .frame(width: 200, height: 200)
                     .overlay(
                         Image(systemName: "qrcode")
-                            .font(.system(size: 100))
+                            .font(.system(.largeTitle, design: .default).weight(.regular))
                             .foregroundStyle(.black)
                     )
-                
+
                 TextField("Enter verification code", text: $verificationCode)
                     .keyboardType(.numberPad)
                     .submitLabel(.done)
-                    .font(.system(size: 17, weight: .medium, design: .rounded))
+                    .font(.system(.body, design: .rounded).weight(.medium))
                     .padding()
                     .background(
                         RoundedRectangle(cornerRadius: 12)
@@ -602,13 +602,13 @@ struct TwoFactorSetupView: View {
                     )
                     .foregroundStyle(.white)
                     .padding(.horizontal, 40)
-                
+
                 Button(action: {
                     isEnabled = true
                     dismiss()
                 }) {
                     Text("Verify & Enable")
-                        .font(.system(size: 17, weight: .semibold, design: .rounded))
+                        .font(.system(.body, design: .rounded).weight(.semibold))
                         .foregroundStyle(.white)
                         .frame(maxWidth: .infinity)
                         .padding()
@@ -646,7 +646,7 @@ struct ActiveSessionsView: View {
                 // Current Device
                 VStack(alignment: .leading, spacing: 12) {
                     Text("Current Device")
-                        .font(.system(size: 13, weight: .semibold, design: .rounded))
+                        .font(.system(.footnote, design: .rounded).weight(.semibold))
                         .foregroundStyle(.white.opacity(0.5))
                         .textCase(.uppercase)
                         .padding(.leading, 4)
@@ -658,7 +658,7 @@ struct ActiveSessionsView: View {
                 // Other Devices
                 VStack(alignment: .leading, spacing: 12) {
                     Text("Other Devices")
-                        .font(.system(size: 13, weight: .semibold, design: .rounded))
+                        .font(.system(.footnote, design: .rounded).weight(.semibold))
                         .foregroundStyle(.white.opacity(0.5))
                         .textCase(.uppercase)
                         .padding(.leading, 4)
@@ -668,7 +668,7 @@ struct ActiveSessionsView: View {
                             .padding()
                     } else if sessions.isEmpty {
                         Text("No other active sessions")
-                            .font(.system(size: 15, weight: .medium, design: .rounded))
+                            .font(.system(.subheadline, design: .rounded).weight(.medium))
                             .foregroundStyle(.white.opacity(0.5))
                             .padding()
                     } else {
@@ -728,19 +728,19 @@ struct SessionRow: View {
                     .frame(width: 44, height: 44)
                 
                 Image(systemName: "iphone")
-                    .font(.system(size: 20, weight: .semibold))
+                    .font(.callout.weight(.semibold))
                     .foregroundStyle(isCurrent ? Color.green : .white.opacity(0.7))
             }
             
             VStack(alignment: .leading, spacing: 2) {
                 HStack {
                     Text(session.deviceName)
-                        .font(.system(size: 17, weight: .semibold, design: .rounded))
+                        .font(.system(.body, design: .rounded).weight(.semibold))
                         .foregroundStyle(.white)
-                    
+
                     if isCurrent {
                         Text("Current")
-                            .font(.system(size: 11, weight: .semibold, design: .rounded))
+                            .font(.system(.caption2, design: .rounded).weight(.semibold))
                             .foregroundStyle(Color.green)
                             .padding(.horizontal, 8)
                             .padding(.vertical, 2)
@@ -752,20 +752,20 @@ struct SessionRow: View {
                 }
                 
                 Text(session.location)
-                    .font(.system(size: 14, weight: .medium, design: .rounded))
+                    .font(.system(.footnote, design: .rounded).weight(.medium))
                     .foregroundStyle(.white.opacity(0.5))
-                
+
                 Text("Active \(timeAgo(session.lastActive))")
-                    .font(.system(size: 12, weight: .medium, design: .rounded))
+                    .font(.system(.caption, design: .rounded).weight(.medium))
                     .foregroundStyle(.white.opacity(0.4))
             }
-            
+
             Spacer()
-            
+
             if !isCurrent {
                 Button(action: { revokeSession() }) {
                     Image(systemName: "xmark.circle.fill")
-                        .font(.system(size: 24))
+                        .font(.title3)
                         .foregroundStyle(.red.opacity(0.7))
                 }
             }

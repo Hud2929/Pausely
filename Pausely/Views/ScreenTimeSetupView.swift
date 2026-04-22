@@ -212,7 +212,7 @@ struct WelcomeStepView: View {
                     .frame(width: 100, height: 100)
 
                 Image(systemName: "clock.badge.checkmark.fill")
-                    .font(.system(size: 50))
+                    .font(.largeTitle)
                     .foregroundColor(.white)
             }
 
@@ -294,7 +294,7 @@ struct AuthorizationStepView: View {
                     .frame(width: 120, height: 120)
 
                 Image(systemName: "checkmark.shield.fill")
-                    .font(.system(size: 50))
+                    .font(.largeTitle)
                     .foregroundColor(.blue)
             }
 
@@ -423,7 +423,7 @@ struct AppSelectionStepView: View {
             if viewModel.selectedApps.applicationTokens.isEmpty {
                 VStack(spacing: 16) {
                     Image(systemName: "apps.iphone")
-                        .font(.system(size: 40))
+                        .font(.largeTitle)
                         .foregroundColor(.gray)
 
                     Text("No apps selected")
@@ -516,7 +516,7 @@ struct DetectionStepView: View {
                     }
 
                     Image(systemName: "magnifyingglass")
-                        .font(.system(size: 40))
+                        .font(.largeTitle)
                         .foregroundColor(.luxuryPurple)
                 }
 
@@ -530,7 +530,7 @@ struct DetectionStepView: View {
             } else {
                 // Results
                 Image(systemName: "checkmark.circle.fill")
-                    .font(.system(size: 60))
+                    .font(.largeTitle)
                     .foregroundColor(.green)
 
                 Text("Detection Complete!")
@@ -593,7 +593,7 @@ struct CompleteStepView: View {
                     .frame(width: 120, height: 120)
 
                 Image(systemName: "checkmark.circle.fill")
-                    .font(.system(size: 60))
+                    .font(.largeTitle)
                     .foregroundColor(.green)
             }
 

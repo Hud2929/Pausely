@@ -8,11 +8,11 @@ struct TermsOfServiceView: View {
             ScrollView {
                 VStack(alignment: .leading, spacing: 24) {
                     Text("Terms of Service")
-                        .font(.system(size: 32, weight: .bold))
+                        .font(.largeTitle.weight(.bold))
                         .foregroundStyle(.primary)
 
                     Text("Last updated: April 9, 2026")
-                        .font(.system(size: 14))
+                        .font(.footnote)
                         .foregroundStyle(.secondary)
 
                     VStack(alignment: .leading, spacing: 16) {

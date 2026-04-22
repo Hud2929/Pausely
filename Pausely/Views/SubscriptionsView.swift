@@ -100,11 +100,11 @@ struct PremiumSubscriptionsView: View {
         HStack(spacing: 12) {
             VStack(alignment: .leading, spacing: 4) {
                 Text("\(filteredSubscriptions.count)")
-                    .font(.system(size: 32, weight: .bold, design: .rounded))
+                    .font(.title.weight(.bold))
                     .foregroundColor(BrandColors.primary)
 
                 Text("Subscriptions")
-                    .font(.system(size: 17, weight: .semibold))
+                    .font(.body.weight(.semibold))
                     .foregroundColor(.white)
             }
 
@@ -118,7 +118,7 @@ struct PremiumSubscriptionsView: View {
                         .frame(width: 44, height: 44)
 
                     Image(systemName: "square.grid.2x2")
-                        .font(.system(size: 16, weight: .semibold))
+                        .font(.callout.weight(.semibold))
                         .foregroundColor(Color.luxuryPurple)
                 }
             }
@@ -131,7 +131,7 @@ struct PremiumSubscriptionsView: View {
                         .frame(width: 44, height: 44)
 
                     Image(systemName: "plus")
-                        .font(.system(size: 18, weight: .semibold))
+                        .font(.callout.weight(.semibold))
                         .foregroundColor(.white)
                 }
             }
@@ -149,24 +149,24 @@ struct PremiumSubscriptionsView: View {
                             .frame(width: 36, height: 36)
 
                         Image(systemName: "apple.logo")
-                            .font(.system(size: 16, weight: .semibold))
+                            .font(.callout.weight(.semibold))
                             .foregroundColor(Color.luxuryPurple)
                     }
 
                     VStack(alignment: .leading, spacing: 2) {
                         Text("Apple Subscriptions")
-                            .font(.system(size: 14, weight: .semibold))
+                            .font(.subheadline.weight(.semibold))
                             .foregroundColor(.white)
 
                         Text("Scan from App Store")
-                            .font(.system(size: 11))
+                            .font(.caption2)
                             .foregroundColor(.white.opacity(0.6))
                     }
 
                     Spacer()
 
                     Image(systemName: "chevron.right")
-                        .font(.system(size: 12, weight: .semibold))
+                        .font(.caption2.weight(.semibold))
                         .foregroundColor(.white.opacity(0.4))
                 }
                 .padding(14)
@@ -189,11 +189,11 @@ struct PremiumSubscriptionsView: View {
             // Search Bar
             HStack(spacing: 12) {
                 Image(systemName: "magnifyingglass")
-                    .font(.system(size: 17))
+                    .font(.body)
                     .foregroundColor(TextColors.tertiary)
-                
+
                 TextField("Search subscriptions...", text: $searchText)
-                    .font(.system(size: 17))
+                    .font(.body)
                     .foregroundColor(.white)
                     .keyboardType(.default)
                     .submitLabel(.search)
@@ -253,10 +253,10 @@ struct SubscriptionFilterPill: View {
         Button(action: action) {
             HStack(spacing: 6) {
                 Text(title)
-                    .font(.system(size: 15, weight: isSelected ? .semibold : .medium))
+                    .font(.subheadline.weight(isSelected ? .semibold : .medium))
                 
                 Text("\(count)")
-                    .font(.system(size: 13, weight: .bold))
+                    .font(.footnote.weight(.bold))
                     .padding(.horizontal, 6)
                     .padding(.vertical, 2)
                     .background(
@@ -325,20 +325,20 @@ struct ArtisticSubscriptionCard: View {
                             .frame(width: 60, height: 60)
                         
                         Text(String(subscription.name.prefix(1)))
-                            .font(.system(size: 26, weight: .bold, design: .rounded))
+                            .font(.title3.weight(.bold))
                             .foregroundColor(.white)
                     }
                     
                     // Info
                     VStack(alignment: .leading, spacing: 6) {
                         Text(subscription.name)
-                            .font(.system(size: 18, weight: .semibold))
+                            .font(.headline.weight(.semibold))
                             .foregroundColor(.white)
                         
                         HStack(spacing: 8) {
                             // Billing frequency badge
                             Text(subscription.billingFrequency.displayName)
-                                .font(.system(size: 12, weight: .medium))
+                                .font(.caption2.weight(.medium))
                                 .padding(.horizontal, 8)
                                 .padding(.vertical, 3)
                                 .background(
@@ -349,7 +349,7 @@ struct ArtisticSubscriptionCard: View {
                             
                             if subscription.isPaused {
                                 Text("Paused")
-                                    .font(.system(size: 12, weight: .medium))
+                                    .font(.caption2.weight(.medium))
                                     .padding(.horizontal, 8)
                                     .padding(.vertical, 3)
                                     .background(
@@ -370,12 +370,12 @@ struct ArtisticSubscriptionCard: View {
                             from: subscription.currency
                         )
                         Text(currencyManager.format(converted))
-                            .font(.system(size: 20, weight: .bold, design: .rounded))
+                            .font(.headline.weight(.bold))
                             .foregroundColor(cardColor)
                         
                         if let days = subscription.daysUntilRenewal {
                             Text(days == 0 ? "Today" : "\(days)d")
-                                .font(.system(size: 13, weight: .medium))
+                                .font(.footnote.weight(.medium))
                                 .foregroundColor(days <= 3 ? SemanticColors.error : TextColors.tertiary)
                         }
                     }
@@ -446,7 +446,7 @@ struct EmptySubscriptionsArtisticView: View {
                         .shadow(color: BrandColors.primary.opacity(0.4), radius: 30, x: 0, y: 15)
                     
                     Image(systemName: "plus")
-                        .font(.system(size: 40, weight: .semibold))
+                        .font(.title.weight(.semibold))
                         .foregroundColor(.white)
                 }
             }
@@ -454,11 +454,11 @@ struct EmptySubscriptionsArtisticView: View {
             
             VStack(spacing: 12) {
                 Text("No subscriptions yet")
-                    .font(.system(size: 24, weight: .bold, design: .rounded))
+                    .font(.title2.weight(.bold))
                     .foregroundColor(.white)
-                
+
                 Text("Add your first subscription to start tracking your spending")
-                    .font(.system(size: 17))
+                    .font(.body)
                     .foregroundColor(TextColors.secondary)
                     .multilineTextAlignment(.center)
                     .padding(.horizontal, 40)
@@ -469,7 +469,7 @@ struct EmptySubscriptionsArtisticView: View {
                     Image(systemName: "plus")
                     Text("Add Subscription")
                 }
-                .font(.system(size: 17, weight: .semibold))
+                .font(.callout.weight(.semibold))
                 .foregroundColor(.white)
                 .padding(.horizontal, 28)
                 .padding(.vertical, 16)
@@ -523,13 +523,13 @@ struct SubscriptionDetailView: View {
                                     .frame(width: 100, height: 100)
                                 
                                 Text(String(subscription.name.prefix(1)))
-                                    .font(.system(size: 44, weight: .bold, design: .rounded))
+                                    .font(.title.weight(.bold))
                                     .foregroundColor(.white)
                             }
                             
                             // Name
                             Text(subscription.name)
-                                .font(.system(size: 28, weight: .bold, design: .rounded))
+                                .font(.title.weight(.bold))
                                 .foregroundColor(.white)
                             
                             // Price
@@ -538,11 +538,11 @@ struct SubscriptionDetailView: View {
                                 from: subscription.currency
                             )
                             Text(currencyManager.format(converted))
-                                .font(.system(size: 36, weight: .bold, design: .monospaced))
+                                .font(.largeTitle.weight(.bold))
                                 .foregroundColor(cardColor)
                             
                             Text("per \(subscription.billingFrequency.displayName.lowercased())")
-                                .font(.system(size: 17))
+                                .font(.body)
                                 .foregroundColor(TextColors.secondary)
                         }
                         .padding(32)
@@ -560,7 +560,7 @@ struct SubscriptionDetailView: View {
                         // Details Section
                         VStack(alignment: .leading, spacing: 16) {
                             Text("Details")
-                                .font(.system(size: 20, weight: .bold, design: .rounded))
+                                .font(.headline.weight(.bold))
                                 .foregroundColor(.white)
                                 .padding(.horizontal, 20)
                             
@@ -580,7 +580,7 @@ struct SubscriptionDetailView: View {
                                     Image(systemName: "xmark.circle")
                                     Text("Cancel Subscription")
                                 }
-                                .font(.system(size: 17, weight: .semibold))
+                                .font(.callout.weight(.semibold))
                                 .foregroundColor(.white)
                                 .frame(maxWidth: .infinity)
                                 .frame(height: 56)
@@ -595,7 +595,7 @@ struct SubscriptionDetailView: View {
                                     Image(systemName: "pencil")
                                     Text("Edit Subscription")
                                 }
-                                .font(.system(size: 17, weight: .semibold))
+                                .font(.callout.weight(.semibold))
                                 .foregroundColor(.white)
                                 .frame(maxWidth: .infinity)
                                 .frame(height: 56)
@@ -613,7 +613,7 @@ struct SubscriptionDetailView: View {
                                     Image(systemName: "trash")
                                     Text("Delete")
                                 }
-                                .font(.system(size: 17, weight: .semibold))
+                                .font(.callout.weight(.semibold))
                                 .foregroundColor(SemanticColors.error)
                                 .frame(maxWidth: .infinity)
                                 .frame(height: 56)
@@ -702,18 +702,18 @@ struct SubscriptionDetailRow: View {
     var body: some View {
         HStack(spacing: 16) {
             Image(systemName: icon)
-                .font(.system(size: 20))
+                .font(.headline)
                 .foregroundColor(BrandColors.primary)
                 .frame(width: 32)
             
             Text(title)
-                .font(.system(size: 17))
+                .font(.body)
                 .foregroundColor(TextColors.secondary)
             
             Spacer()
             
             Text(value)
-                .font(.system(size: 17, weight: .medium))
+                .font(.callout.weight(.medium))
                 .foregroundColor(.white)
         }
         .padding(16)
@@ -778,7 +778,7 @@ struct ArtisticAddSubscriptionView: View {
                         if currentStep > 0 {
                             Button(action: { currentStep -= 1 }) {
                                 Image(systemName: "arrow.left")
-                                    .font(.system(size: 20, weight: .semibold))
+                                    .font(.headline.weight(.semibold))
                                     .foregroundColor(.white)
                                     .frame(width: 56, height: 56)
                                     .background(
@@ -802,7 +802,7 @@ struct ArtisticAddSubscriptionView: View {
                                         .tint(.white)
                                 } else {
                                     Text(currentStep == steps.count - 1 ? "Save" : "Continue")
-                                        .font(.system(size: 17, weight: .semibold))
+                                        .font(.callout.weight(.semibold))
                                     
                                     if currentStep < steps.count - 1 {
                                         Image(systemName: "arrow.right")
@@ -886,11 +886,11 @@ struct StepProgressView: View {
                         
                         if index < currentStep {
                             Image(systemName: "checkmark")
-                                .font(.system(size: 14, weight: .bold))
+                                .font(.footnote.weight(.bold))
                                 .foregroundColor(.white)
                         } else {
                             Text("\(index + 1)")
-                                .font(.system(size: 14, weight: .bold))
+                                .font(.footnote.weight(.bold))
                                 .foregroundColor(index == currentStep ? .white : TextColors.tertiary)
                         }
                     }
@@ -924,11 +924,11 @@ struct NameStepView: View {
             VStack(spacing: 32) {
                 VStack(spacing: 12) {
                     Text("What's the subscription?")
-                        .font(.system(size: 28, weight: .bold, design: .rounded))
+                        .font(.title.weight(.bold))
                         .foregroundColor(.white)
                     
                     Text("Enter the name of the service you're subscribing to")
-                        .font(.system(size: 17))
+                        .font(.body)
                         .foregroundColor(TextColors.secondary)
                         .multilineTextAlignment(.center)
                 }
@@ -941,7 +941,7 @@ struct NameStepView: View {
                 // Category selection
                 VStack(alignment: .leading, spacing: 16) {
                     Text("Category")
-                        .font(.system(size: 17, weight: .semibold))
+                        .font(.callout.weight(.semibold))
                         .foregroundColor(.white)
                         .padding(.horizontal, 20)
                     
@@ -983,12 +983,12 @@ struct SubscriptionCategoryButton: View {
                         .frame(width: 64, height: 64)
                     
                     Image(systemName: icon)
-                        .font(.system(size: 24))
+                        .font(.title3)
                         .foregroundColor(isSelected ? .white : TextColors.secondary)
                 }
-                
+
                 Text(label)
-                    .font(.system(size: 13, weight: isSelected ? .semibold : .medium))
+                    .font(.footnote.weight(isSelected ? .semibold : .medium))
                     .foregroundColor(isSelected ? .white : TextColors.secondary)
             }
         }
@@ -1006,11 +1006,11 @@ struct AmountStepView: View {
             VStack(spacing: 32) {
                 VStack(spacing: 12) {
                     Text("How much does it cost?")
-                        .font(.system(size: 28, weight: .bold, design: .rounded))
+                        .font(.title.weight(.bold))
                         .foregroundColor(.white)
                     
                     Text("Enter the amount you pay for this subscription")
-                        .font(.system(size: 17))
+                        .font(.body)
                         .foregroundColor(TextColors.secondary)
                         .multilineTextAlignment(.center)
                 }
@@ -1019,11 +1019,11 @@ struct AmountStepView: View {
                 // Amount display
                 HStack(spacing: 4) {
                     Text("$")
-                        .font(.system(size: 40, weight: .bold))
+                        .font(.largeTitle.weight(.bold))
                         .foregroundColor(BrandColors.primary)
                     
                     Text(amount.isEmpty ? "0.00" : amount)
-                        .font(.system(size: 56, weight: .bold, design: .monospaced))
+                        .font(.largeTitle.weight(.bold))
                         .foregroundColor(.white)
                 }
                 .padding(.vertical, 20)
@@ -1039,7 +1039,7 @@ struct AmountStepView: View {
                 // Frequency selection
                 VStack(alignment: .leading, spacing: 16) {
                     Text("Billing Frequency")
-                        .font(.system(size: 17, weight: .semibold))
+                        .font(.callout.weight(.semibold))
                         .foregroundColor(.white)
                         .padding(.horizontal, 20)
                     
@@ -1074,14 +1074,14 @@ struct FrequencyButton: View {
         Button(action: action) {
             HStack {
                 Text(title)
-                    .font(.system(size: 17, weight: isSelected ? .semibold : .regular))
+                    .font(.callout.weight(isSelected ? .semibold : .regular))
                     .foregroundColor(isSelected ? .white : TextColors.secondary)
                 
                 Spacer()
                 
                 if isSelected {
                     Image(systemName: "checkmark.circle.fill")
-                        .font(.system(size: 22))
+                        .font(.title3)
                         .foregroundColor(BrandColors.primary)
                 }
             }
@@ -1108,11 +1108,11 @@ struct ScheduleStepView: View {
             VStack(spacing: 32) {
                 VStack(spacing: 12) {
                     Text("When does it renew?")
-                        .font(.system(size: 28, weight: .bold, design: .rounded))
+                        .font(.title.weight(.bold))
                         .foregroundColor(.white)
                     
                     Text("Select the next billing date for this subscription")
-                        .font(.system(size: 17))
+                        .font(.body)
                         .foregroundColor(TextColors.secondary)
                         .multilineTextAlignment(.center)
                 }
@@ -1121,7 +1121,7 @@ struct ScheduleStepView: View {
                 // Date picker card
                 VStack(spacing: 20) {
                     Image(systemName: "calendar.badge.clock")
-                        .font(.system(size: 48))
+                        .font(.largeTitle)
                         .foregroundColor(BrandColors.primary)
                     
                     DatePicker(
@@ -1162,7 +1162,7 @@ struct QuickDateButton: View {
     var body: some View {
         Button(action: action) {
             Text(title)
-                .font(.system(size: 15, weight: .semibold))
+                .font(.subheadline.weight(.semibold))
                 .foregroundColor(.white)
                 .padding(.horizontal, 16)
                 .padding(.vertical, 12)

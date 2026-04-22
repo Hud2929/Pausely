@@ -6,16 +6,25 @@ import Auth
 import PostgREST
 import os.log
 
-class SupabaseManager {
+class SupabaseManager: ObservableObject {
     static let shared = SupabaseManager()
 
     let client: SupabaseClient
-    private(set) var isConfigured = false
+    @Published var isConfigured: Bool = false
     private(set) var isDemoMode = false
 
     /// Returns true if the app is running in demo mode (no real Supabase credentials configured)
     var isUsingDemoMode: Bool {
         return isDemoMode
+    }
+
+    /// Returns a user-friendly message if Supabase is not properly configured
+    func configurationErrorMessage() -> String? {
+        guard !isConfigured else { return nil }
+        if isDemoMode {
+            return "Running in offline mode. Some features may be limited."
+        }
+        return "Supabase is not configured. Please check your settings."
     }
 
     private init() {
@@ -691,7 +700,7 @@ struct CurrencySelectorToolbarButton: View {
             HStack(spacing: 4) {
                 Text(manager.currentCurrency.flag)
                 Text(manager.selectedCurrency)
-                    .font(.system(size: 15, weight: .semibold, design: .rounded))
+                    .font(.system(.subheadline, design: .rounded).weight(.semibold))
             }
             .foregroundStyle(Color.luxuryGold)
         }

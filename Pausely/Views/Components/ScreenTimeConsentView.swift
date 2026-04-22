@@ -56,17 +56,17 @@ struct ScreenTimeConsentView: View {
                     .frame(width: 120, height: 120)
                 
                 Image(systemName: "chart.bar.fill")
-                    .font(.system(size: 50))
+                    .font(.largeTitle)
                     .foregroundColor(.white)
             }
             
             VStack(spacing: 8) {
                 Text("Usage Insights")
-                    .font(.system(size: 32, weight: .bold))
+                    .font(.largeTitle.weight(.bold))
                     .foregroundColor(.white)
-                
+
                 Text("Connect Screen Time for smarter subscription tracking")
-                    .font(.system(size: 16))
+                    .font(.callout)
                     .foregroundColor(.white.opacity(0.7))
                     .multilineTextAlignment(.center)
             }
@@ -76,7 +76,7 @@ struct ScreenTimeConsentView: View {
     private var benefitsView: some View {
         VStack(alignment: .leading, spacing: 16) {
             Text("What You'll Get")
-                .font(.system(size: 18, weight: .semibold))
+                .font(.subheadline.weight(.semibold))
                 .foregroundColor(.white)
             
             ScreenTimeBenefitRow(
@@ -121,16 +121,16 @@ struct ScreenTimeConsentView: View {
     private var privacyView: some View {
         HStack(spacing: 12) {
             Image(systemName: "lock.shield.fill")
-                .font(.system(size: 24))
+                .font(.title3)
                 .foregroundColor(.green)
-            
+
             VStack(alignment: .leading, spacing: 4) {
                 Text("Your Data Stays Private")
-                    .font(.system(size: 16, weight: .semibold))
+                    .font(.callout.weight(.semibold))
                     .foregroundColor(.white)
-                
+
                 Text("Usage data never leaves your device. We only store insights to help you save money.")
-                    .font(.system(size: 13))
+                    .font(.footnote)
                     .foregroundColor(.white.opacity(0.6))
             }
         }
@@ -159,7 +159,7 @@ struct ScreenTimeConsentView: View {
                     }
                     
                     Text(screenTimeManager.isLoading ? "Connecting..." : "Connect Screen Time")
-                        .font(.system(size: 17, weight: .semibold))
+                        .font(.body.weight(.semibold))
                 }
                 .foregroundColor(.black)
                 .frame(maxWidth: .infinity)
@@ -180,7 +180,7 @@ struct ScreenTimeConsentView: View {
                 dismiss()
             } label: {
                 Text("Not Now")
-                    .font(.system(size: 16, weight: .medium))
+                    .font(.callout.weight(.medium))
                     .foregroundColor(.white.opacity(0.7))
             }
         }
@@ -217,17 +217,17 @@ struct ScreenTimeBenefitRow: View {
                     .frame(width: 44, height: 44)
                 
                 Image(systemName: icon)
-                    .font(.system(size: 20))
+                    .font(.callout)
                     .foregroundColor(iconColor)
             }
             
             VStack(alignment: .leading, spacing: 2) {
                 Text(title)
-                    .font(.system(size: 16, weight: .semibold))
+                    .font(.callout.weight(.semibold))
                     .foregroundColor(.white)
-                
+
                 Text(description)
-                    .font(.system(size: 14))
+                    .font(.footnote)
                     .foregroundColor(.white.opacity(0.6))
             }
             

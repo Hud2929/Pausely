@@ -66,17 +66,17 @@ struct SmartImportView: View {
                     .frame(width: 100, height: 100)
                 
                 Image(systemName: "tray.and.arrow.down.fill")
-                    .font(.system(size: 40))
+                    .font(.title)
                     .foregroundColor(Color.luxuryPurple)
             }
             
             VStack(spacing: 8) {
                 Text("Smart Import")
-                    .font(.system(size: 28, weight: .bold))
+                    .font(.title.weight(.bold))
                     .foregroundColor(.white)
-                
+
                 Text("Import your subscriptions from multiple sources")
-                    .font(.system(size: 16))
+                    .font(.callout)
                     .foregroundColor(.white.opacity(0.7))
                     .multilineTextAlignment(.center)
             }
@@ -124,7 +124,7 @@ struct SmartImportView: View {
                 
                 VStack {
                     Text("\(Int(importManager.importProgress * 100))%")
-                        .font(.system(size: 32, weight: .bold))
+                        .font(.title.weight(.bold))
                         .foregroundColor(.white)
                 }
             }
@@ -132,7 +132,7 @@ struct SmartImportView: View {
             
             VStack(spacing: 12) {
                 Text(importManager.importPhase)
-                    .font(.system(size: 18, weight: .medium))
+                    .font(.subheadline.weight(.medium))
                     .foregroundColor(.white)
                 
                 HStack(spacing: 24) {
@@ -152,7 +152,7 @@ struct SmartImportView: View {
             
             Button(action: { importManager.cancelImport() }) {
                 Text("Cancel")
-                    .font(.system(size: 17, weight: .semibold))
+                    .font(.callout.weight(.semibold))
                     .foregroundColor(.white)
                     .frame(maxWidth: .infinity)
                     .frame(height: 56)
@@ -169,16 +169,16 @@ struct SmartImportView: View {
         VStack(spacing: 24) {
             VStack(spacing: 16) {
                 Image(systemName: "checkmark.circle.fill")
-                    .font(.system(size: 60))
+                    .font(.largeTitle)
                     .foregroundColor(.green)
-                
+
                 VStack(spacing: 8) {
                     Text("Import Complete!")
-                        .font(.system(size: 24, weight: .bold))
+                        .font(.title2.weight(.bold))
                         .foregroundColor(.white)
-                    
+
                     Text("Found \(results.imported) subscriptions worth \(formatCurrency(results.totalValue))")
-                        .font(.system(size: 16))
+                        .font(.callout)
                         .foregroundColor(.white.opacity(0.7))
                 }
             }
@@ -215,7 +215,7 @@ struct SmartImportView: View {
             
             Button(action: { dismiss() }) {
                 Text("Done")
-                    .font(.system(size: 17, weight: .semibold))
+                    .font(.callout.weight(.semibold))
                     .foregroundColor(.black)
                     .frame(maxWidth: .infinity)
                     .frame(height: 56)
@@ -250,19 +250,19 @@ struct ImportOptionCard: View {
                         .frame(width: 60, height: 60)
                     
                     Image(systemName: icon)
-                        .font(.system(size: 24))
+                        .font(.title3)
                         .foregroundColor(color)
                 }
                 
                 VStack(alignment: .leading, spacing: 4) {
                     HStack {
                         Text(title)
-                            .font(.system(size: 17, weight: .semibold))
+                            .font(.callout.weight(.semibold))
                             .foregroundColor(.white)
-                        
+
                         if isPro {
                             Text("PRO")
-                                .font(.system(size: 10, weight: .bold))
+                                .font(.caption2.weight(.bold))
                                 .padding(.horizontal, 6)
                                 .padding(.vertical, 2)
                                 .background(Color.luxuryGold)
@@ -272,15 +272,15 @@ struct ImportOptionCard: View {
                     }
                     
                     Text(description)
-                        .font(.system(size: 14))
+                        .font(.footnote)
                         .foregroundColor(.white.opacity(0.6))
                         .multilineTextAlignment(.leading)
                 }
-                
+
                 Spacer()
-                
+
                 Image(systemName: "chevron.right")
-                    .font(.system(size: 14, weight: .semibold))
+                    .font(.footnote.weight(.semibold))
                     .foregroundColor(.white.opacity(0.4))
             }
             .padding(16)
@@ -307,11 +307,11 @@ struct CSVImportSheet: View {
                 
                 VStack(spacing: 20) {
                     Text("Paste your bank statement CSV")
-                        .font(.system(size: 16))
+                        .font(.callout)
                         .foregroundColor(.white.opacity(0.7))
                     
                     TextEditor(text: $csvText)
-                        .font(.system(size: 14, design: .monospaced))
+                        .font(.footnote)
                         .foregroundColor(.white)
                         .padding(12)
                         .background(Color.white.opacity(0.1))
@@ -327,7 +327,7 @@ struct CSVImportSheet: View {
                         }
 
                     Text("Expected format: Date, Description, Amount")
-                        .font(.system(size: 13))
+                        .font(.caption)
                         .foregroundColor(.white.opacity(0.5))
 
                     Spacer()
@@ -337,7 +337,7 @@ struct CSVImportSheet: View {
                         dismiss()
                     }) {
                         Text("Import \(csvText.isEmpty ? 0 : csvText.components(separatedBy: .newlines).count - 1) Transactions")
-                            .font(.system(size: 17, weight: .semibold))
+                            .font(.callout.weight(.semibold))
                             .foregroundColor(.black)
                             .frame(maxWidth: .infinity)
                             .frame(height: 56)
@@ -369,11 +369,11 @@ struct ImportStatItem: View {
     var body: some View {
         VStack(spacing: 4) {
             Text(value)
-                .font(.system(size: 28, weight: .bold))
+                .font(.title.weight(.bold))
                 .foregroundColor(color)
-            
+
             Text(label)
-                .font(.system(size: 13))
+                .font(.caption)
                 .foregroundColor(.white.opacity(0.6))
         }
     }
@@ -388,18 +388,18 @@ struct ResultRow: View {
     var body: some View {
         HStack {
             Image(systemName: icon)
-                .font(.system(size: 20))
+                .font(.headline)
                 .foregroundColor(color)
                 .frame(width: 32)
-            
+
             Text(title)
-                .font(.system(size: 16))
+                .font(.callout)
                 .foregroundColor(.white)
-            
+
             Spacer()
-            
+
             Text(value)
-                .font(.system(size: 16, weight: .semibold))
+                .font(.callout.weight(.semibold))
                 .foregroundColor(color)
         }
     }

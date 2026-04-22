@@ -150,7 +150,7 @@ struct PremiumButton: ViewModifier {
     
     func body(content: Content) -> some View {
         content
-            .font(.system(size: 17, weight: .semibold, design: .rounded))
+            .font(.body.weight(.semibold))
             .foregroundStyle(.white)
             .padding(.horizontal, 32)
             .padding(.vertical, 18)

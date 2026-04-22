@@ -117,7 +117,7 @@ struct TierSelectionSheet: View {
                         dismiss()
                     } label: {
                         Text("Cancel")
-                            .font(.system(size: 17, weight: .medium))
+                            .font(.body.weight(.medium))
                             .foregroundColor(.white.opacity(0.7))
                     }
                 }
@@ -129,7 +129,7 @@ struct TierSelectionSheet: View {
                         dismiss()
                     } label: {
                         Text("Add")
-                            .font(.system(size: 17, weight: .semibold))
+                            .font(.body.weight(.semibold))
                             .foregroundStyle(
                                 LinearGradient(
                                     colors: [.luxuryPurple, .luxuryPink],
@@ -170,7 +170,7 @@ struct TierSelectionSheet: View {
                         )
 
                     Image(systemName: entry.iconName)
-                        .font(.system(size: 32, weight: .bold))
+                        .font(.title.weight(.bold))
                         .foregroundColor(iconColor)
                 }
                 .frame(width: 72, height: 72)
@@ -182,7 +182,7 @@ struct TierSelectionSheet: View {
                     .foregroundColor(.white)
 
                 Text(entry.description)
-                    .font(.system(size: 14, weight: .medium))
+                    .font(.subheadline.weight(.medium))
                     .foregroundColor(.white.opacity(0.6))
                     .multilineTextAlignment(.center)
                     .lineLimit(2)
@@ -276,7 +276,7 @@ struct TierSelectionSheet: View {
                 Spacer()
                 if isOverridingPrice, let override = parsePriceOverride() {
                     Text(currencyManager.format(override))
-                        .font(.system(size: 20, weight: .bold, design: .rounded))
+                        .font(.headline.weight(.bold))
                         .foregroundStyle(
                             LinearGradient(
                                 colors: [.white, .white.opacity(0.8)],
@@ -286,7 +286,7 @@ struct TierSelectionSheet: View {
                         )
                 } else {
                     Text(effectivePriceText)
-                        .font(.system(size: 20, weight: .bold, design: .rounded))
+                        .font(.headline.weight(.bold))
                         .foregroundStyle(
                             LinearGradient(
                                 colors: [.white, .white.opacity(0.8)],
@@ -316,9 +316,9 @@ struct TierSelectionSheet: View {
                 if savings > 0 {
                     HStack {
                         Image(systemName: "sparkles")
-                            .font(.system(size: 12, weight: .bold))
+                            .font(.caption2.weight(.bold))
                         Text("You save \(currencyManager.formatCatalogPrice(savings * 12))/yr")
-                            .font(.system(size: 13, weight: .semibold))
+                            .font(.footnote.weight(.semibold))
                     }
                     .foregroundStyle(
                         LinearGradient(
@@ -361,7 +361,7 @@ struct TierSelectionSheet: View {
 
             Toggle(isOn: $isOverridingPrice) {
                 Text("I pay a different amount")
-                    .font(.system(size: 15, weight: .medium))
+                    .font(.subheadline.weight(.medium))
                     .foregroundColor(.white.opacity(0.8))
             }
             .tint(.luxuryPurple)
@@ -378,11 +378,11 @@ struct TierSelectionSheet: View {
             if isOverridingPrice {
                 HStack(spacing: 12) {
                     Text(currencyManager.selectedCurrency == "USD" ? "$" : currencyManager.currencySymbol(for: currencyManager.selectedCurrency))
-                        .font(.system(size: 20, weight: .semibold))
+                        .font(.headline.weight(.semibold))
                         .foregroundColor(.white.opacity(0.6))
 
                     TextField("Your monthly price", text: $priceOverrideText)
-                        .font(.system(size: 20, weight: .semibold, design: .rounded))
+                        .font(.headline.weight(.semibold))
                         .foregroundColor(.white)
                         .keyboardType(.decimalPad)
                         .submitLabel(.done)
@@ -462,7 +462,7 @@ struct PremiumTierRow: View {
 
                 // Tier icon
                 Image(systemName: tier.icon)
-                    .font(.system(size: 22))
+                    .font(.title3)
                     .foregroundColor(isSelected ? .luxuryPurple : .white.opacity(0.4))
                     .frame(width: 32)
 
@@ -470,12 +470,12 @@ struct PremiumTierRow: View {
                 VStack(alignment: .leading, spacing: 4) {
                     HStack(spacing: 8) {
                         Text(tier.displayName)
-                            .font(.system(size: 16, weight: isSelected ? .semibold : .medium, design: .rounded))
+                            .font(.callout.weight(isSelected ? .semibold : .medium))
                             .foregroundColor(.white)
 
                         if tierPricing?.isBestValue == true {
                             Text("BEST VALUE")
-                                .font(.system(size: 9, weight: .bold))
+                                .font(.caption2.weight(.bold))
                                 .foregroundColor(.white)
                                 .padding(.horizontal, 6)
                                 .padding(.vertical, 2)
@@ -491,7 +491,7 @@ struct PremiumTierRow: View {
                     }
 
                     Text(tierDescription)
-                        .font(.system(size: 12, weight: .medium))
+                        .font(.caption2.weight(.medium))
                         .foregroundColor(.white.opacity(0.5))
                 }
 
@@ -501,7 +501,7 @@ struct PremiumTierRow: View {
                 if let pricing = tierPricing {
                     VStack(alignment: .trailing, spacing: 2) {
                         Text("\(currencyManager.priceIndicator)\(currencyManager.formatCatalogPrice(pricing.monthlyPriceUSD))/mo")
-                            .font(.system(size: 15, weight: .semibold, design: .rounded))
+                            .font(.subheadline.weight(.semibold))
                             .foregroundColor(.white)
                     }
                 }
@@ -554,7 +554,7 @@ struct BillingToggleButton: View {
     var body: some View {
         Button(action: action) {
             Text(title)
-                .font(.system(size: 15, weight: isSelected ? .semibold : .medium))
+                .font(.subheadline.weight(isSelected ? .semibold : .medium))
                 .foregroundColor(isSelected ? .white : .white.opacity(0.5))
                 .frame(maxWidth: .infinity)
                 .padding(.vertical, 12)

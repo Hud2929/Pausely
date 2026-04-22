@@ -62,18 +62,18 @@ struct Colors {
 }
 
 struct Typography {
-    static let largeTitle = Font.system(size: 34, weight: .bold, design: .rounded)
-    static let title1 = Font.system(size: 28, weight: .bold, design: .rounded)
-    static let title2 = Font.system(size: 22, weight: .bold, design: .rounded)
-    static let title3 = Font.system(size: 20, weight: .semibold, design: .rounded)
-    static let headline = Font.system(size: 17, weight: .semibold)
-    static let body = Font.system(size: 17, weight: .regular)
-    static let callout = Font.system(size: 16, weight: .regular)
-    static let subheadline = Font.system(size: 15, weight: .regular)
-    static let footnote = Font.system(size: 13, weight: .regular)
-    static let caption = Font.system(size: 12, weight: .regular)
-    static let number = Font.system(size: 48, weight: .bold, design: .rounded)
-    static let numberSmall = Font.system(size: 32, weight: .bold, design: .rounded)
+    static let largeTitle = Font.system(.largeTitle, design: .rounded).weight(.bold)
+    static let title1 = Font.system(.title, design: .rounded).weight(.bold)
+    static let title2 = Font.system(.title2, design: .rounded).weight(.bold)
+    static let title3 = Font.system(.title3, design: .rounded).weight(.semibold)
+    static let headline = Font.headline.weight(.semibold)
+    static let body = Font.body
+    static let callout = Font.callout
+    static let subheadline = Font.subheadline
+    static let footnote = Font.footnote
+    static let caption = Font.caption
+    static let number = Font.system(.largeTitle, design: .rounded).weight(.bold)
+    static let numberSmall = Font.system(.title, design: .rounded).weight(.bold)
 }
 
 struct Spacing {
@@ -157,19 +157,19 @@ extension Color {
 }
 
 struct PremiumTypography {
-    static let largeTitle = Font.system(size: 34, weight: .bold, design: .rounded)
-    static let title1 = Font.system(size: 28, weight: .bold, design: .rounded)
-    static let title2 = Font.system(size: 22, weight: .bold, design: .rounded)
-    static let title3 = Font.system(size: 20, weight: .semibold, design: .rounded)
-    static let headline = Font.system(size: 17, weight: .semibold, design: .default)
-    static let body = Font.system(size: 17, weight: .regular, design: .default)
-    static let callout = Font.system(size: 16, weight: .regular, design: .default)
-    static let subheadline = Font.system(size: 15, weight: .regular, design: .default)
-    static let footnote = Font.system(size: 13, weight: .regular, design: .default)
-    static let caption = Font.system(size: 12, weight: .regular, design: .default)
-    static let monoTitle = Font.system(size: 32, weight: .bold, design: .monospaced)
-    static let monoHeadline = Font.system(size: 20, weight: .semibold, design: .monospaced)
-    static let monoBody = Font.system(size: 16, weight: .regular, design: .monospaced)
+    static let largeTitle = Font.system(.largeTitle, design: .rounded).weight(.bold)
+    static let title1 = Font.system(.title, design: .rounded).weight(.bold)
+    static let title2 = Font.system(.title2, design: .rounded).weight(.bold)
+    static let title3 = Font.system(.title3, design: .rounded).weight(.semibold)
+    static let headline = Font.headline.weight(.semibold)
+    static let body = Font.body
+    static let callout = Font.callout
+    static let subheadline = Font.subheadline
+    static let footnote = Font.footnote
+    static let caption = Font.caption
+    static let monoTitle = Font.system(.title, design: .monospaced).weight(.bold)
+    static let monoHeadline = Font.system(.headline, design: .monospaced).weight(.semibold)
+    static let monoBody = Font.system(.callout, design: .monospaced)
 }
 
 struct PremiumSpacing {
@@ -357,7 +357,7 @@ struct Badge: View {
 
     var body: some View {
         Text(text)
-            .font(.system(size: 11, weight: .bold))
+            .font(.caption2.weight(.bold))
             .foregroundColor(.white)
             .padding(.horizontal, 10)
             .padding(.vertical, 4)
@@ -429,7 +429,7 @@ struct EmptyState: View {
     var body: some View {
         VStack(spacing: Spacing.md) {
             Image(systemName: icon)
-                .font(.system(size: 48))
+                .font(.largeTitle)
                 .foregroundColor(Colors.textTertiary)
             Text(title)
                 .font(Typography.headline)
@@ -740,7 +740,7 @@ struct PremiumBadge: View {
 
     var body: some View {
         Text(text)
-            .font(.system(size: 11, weight: .bold))
+            .font(.caption2.weight(.bold))
             .foregroundColor(.white)
             .padding(.horizontal, 10)
             .padding(.vertical, 4)

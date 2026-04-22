@@ -20,7 +20,7 @@ struct PrivacySecurityView: View {
                     HStack {
                         Button(action: { dismiss() }) {
                             Image(systemName: "arrow.left")
-                                .font(.system(size: 20, weight: .semibold))
+                                .font(.headline.weight(.semibold))
                                 .foregroundColor(CyberColors.hotPink)
                                 .accessibilityLabel("Back")
                         }
@@ -28,7 +28,7 @@ struct PrivacySecurityView: View {
                         Spacer()
                         
                         Text("Privacy & Security")
-                            .font(.system(size: 20, weight: .bold))
+                            .font(.headline.weight(.bold))
                             .foregroundColor(.white)
                         
                         Spacer()
@@ -46,7 +46,7 @@ struct PrivacySecurityView: View {
                             .shadow(color: CyberColors.hotPink.opacity(0.5), radius: 20, x: 0, y: 0)
                         
                         Image(systemName: "lock.shield.fill")
-                            .font(.system(size: 40))
+                            .font(.title)
                             .foregroundColor(CyberColors.hotPink)
                     }
                     .padding(.top, 20)
@@ -54,7 +54,7 @@ struct PrivacySecurityView: View {
                     // Security Section
                     VStack(spacing: 16) {
                         Text("SECURITY")
-                            .font(.system(size: 13, weight: .bold))
+                            .font(.footnote.weight(.bold))
                             .foregroundColor(.white.opacity(0.5))
                             .tracking(2)
                             .frame(maxWidth: .infinity, alignment: .leading)
@@ -67,7 +67,14 @@ struct PrivacySecurityView: View {
                                     title: "Biometric Authentication",
                                     subtitle: "Use Face ID or Touch ID",
                                     isOn: $biometricEnabled,
-                                    glowColor: CyberColors.hotPink
+                                    glowColor: CyberColors.hotPink,
+                                    onToggle: { isOn in
+                                        if isOn {
+                                            HapticStyle.medium.trigger()
+                                        } else {
+                                            HapticStyle.light.trigger()
+                                        }
+                                    }
                                 )
                                 
                                 Divider().background(Color.white.opacity(0.1))
@@ -77,7 +84,14 @@ struct PrivacySecurityView: View {
                                     title: "Face ID",
                                     subtitle: "Enable Face ID for app access",
                                     isOn: $faceIDEnabled,
-                                    glowColor: CyberColors.cyan
+                                    glowColor: CyberColors.cyan,
+                                    onToggle: { isOn in
+                                        if isOn {
+                                            HapticStyle.medium.trigger()
+                                        } else {
+                                            HapticStyle.light.trigger()
+                                        }
+                                    }
                                 )
                                 
                                 Divider().background(Color.white.opacity(0.1))
@@ -97,7 +111,7 @@ struct PrivacySecurityView: View {
                     // Privacy Section
                     VStack(spacing: 16) {
                         Text("PRIVACY")
-                            .font(.system(size: 13, weight: .bold))
+                            .font(.footnote.weight(.bold))
                             .foregroundColor(.white.opacity(0.5))
                             .tracking(2)
                             .frame(maxWidth: .infinity, alignment: .leading)
@@ -140,7 +154,7 @@ struct PrivacySecurityView: View {
                     // Danger Zone
                     VStack(spacing: 16) {
                         Text("DANGER ZONE")
-                            .font(.system(size: 13, weight: .bold))
+                            .font(.footnote.weight(.bold))
                             .foregroundColor(.red.opacity(0.7))
                             .tracking(2)
                             .frame(maxWidth: .infinity, alignment: .leading)
@@ -149,17 +163,17 @@ struct PrivacySecurityView: View {
                         FuturisticGlassCard(glowColor: .red) {
                             VStack(spacing: 16) {
                                 Text("Delete Account")
-                                    .font(.system(size: 18, weight: .bold))
+                                    .font(.callout.weight(.bold))
                                     .foregroundColor(.red)
                                 
                                 Text("This will permanently delete all your data. This action cannot be undone.")
-                                    .font(.system(size: 14))
+                                    .font(.subheadline)
                                     .foregroundColor(.white.opacity(0.7))
                                     .multilineTextAlignment(.center)
                                 
                                 Button(action: { showingDeleteAccountConfirmation = true }) {
                                     Text("DELETE ACCOUNT")
-                                        .font(.system(size: 15, weight: .bold))
+                                        .font(.subheadline.weight(.bold))
                                         .foregroundColor(.red)
                                         .frame(maxWidth: .infinity)
                                         .frame(height: 50)
@@ -202,32 +216,33 @@ struct SecurityToggleRow: View {
     let subtitle: String
     @Binding var isOn: Bool
     let glowColor: Color
-    
+    var onToggle: ((Bool) -> Void)? = nil
+
     var body: some View {
         HStack(spacing: 16) {
             ZStack {
                 RoundedRectangle(cornerRadius: 10)
                     .fill(glowColor.opacity(0.2))
                     .frame(width: 40, height: 40)
-                
+
                 Image(systemName: icon)
-                    .font(.system(size: 18))
+                    .font(.callout)
                     .foregroundColor(glowColor)
             }
-            
+
             VStack(alignment: .leading, spacing: 3) {
                 Text(title)
-                    .font(.system(size: 16, weight: .semibold))
+                    .font(.callout.weight(.semibold))
                     .foregroundColor(.white)
-                
+
                 Text(subtitle)
-                    .font(.system(size: 13))
+                    .font(.footnote)
                     .foregroundColor(.white.opacity(0.6))
             }
-            
+
             Spacer()
-            
-            CyberToggle(isOn: $isOn, glowColor: glowColor)
+
+            CyberToggle(isOn: $isOn, glowColor: glowColor, onToggle: onToggle)
         }
         .padding(.vertical, 12)
     }
@@ -248,18 +263,18 @@ struct NavigationButton: View {
                         .frame(width: 40, height: 40)
                     
                     Image(systemName: icon)
-                        .font(.system(size: 18))
+                        .font(.callout)
                         .foregroundColor(glowColor)
                 }
                 
                 Text(title)
-                    .font(.system(size: 16, weight: .semibold))
+                    .font(.callout.weight(.semibold))
                     .foregroundColor(.white)
                 
                 Spacer()
                 
                 Image(systemName: "chevron.right")
-                    .font(.system(size: 14))
+                    .font(.footnote)
                     .foregroundColor(.white.opacity(0.5))
             }
             .padding(.vertical, 12)

@@ -38,15 +38,15 @@ struct LanguageSettingsView: View {
                 // Header
                 VStack(spacing: 8) {
                     Image(systemName: "globe")
-                        .font(.system(size: 48))
+                        .font(.largeTitle)
                         .foregroundStyle(Color.luxuryGold)
-                    
+
                     Text("Language")
-                        .font(.system(size: 28, weight: .bold, design: .rounded))
+                        .font(.system(.title, design: .rounded).weight(.bold))
                         .foregroundStyle(.white)
-                    
+
                     Text("Choose your preferred language")
-                        .font(.system(size: 15, weight: .medium, design: .rounded))
+                        .font(.system(.subheadline, design: .rounded).weight(.medium))
                         .foregroundStyle(.white.opacity(0.6))
                 }
                 .padding(.top, 20)
@@ -57,7 +57,7 @@ struct LanguageSettingsView: View {
                         .foregroundStyle(.white.opacity(0.5))
                     
                     TextField("Search languages...", text: $searchText)
-                        .font(.system(size: 16, weight: .medium, design: .rounded))
+                        .font(.system(.callout, design: .rounded).weight(.medium))
                         .foregroundStyle(.white)
                         .keyboardType(.default)
                         .submitLabel(.search)
@@ -80,7 +80,7 @@ struct LanguageSettingsView: View {
                 if searchText.isEmpty {
                     VStack(alignment: .leading, spacing: 12) {
                         Text("Suggested")
-                            .font(.system(size: 13, weight: .semibold, design: .rounded))
+                            .font(.system(.footnote, design: .rounded).weight(.semibold))
                             .foregroundStyle(.white.opacity(0.5))
                             .textCase(.uppercase)
                             .padding(.leading, 4)
@@ -100,7 +100,7 @@ struct LanguageSettingsView: View {
                 // All Languages
                 VStack(alignment: .leading, spacing: 12) {
                     Text(searchText.isEmpty ? "All Languages" : "Results")
-                        .font(.system(size: 13, weight: .semibold, design: .rounded))
+                        .font(.system(.footnote, design: .rounded).weight(.semibold))
                         .foregroundStyle(.white.opacity(0.5))
                         .textCase(.uppercase)
                         .padding(.leading, 4)
@@ -118,11 +118,11 @@ struct LanguageSettingsView: View {
                 // Info Note
                 HStack(spacing: 12) {
                     Image(systemName: "info.circle.fill")
-                        .font(.system(size: 20))
+                        .font(.title3)
                         .foregroundStyle(Color.luxuryGold)
-                    
+
                     Text("Some features may not be available in all languages. The app will restart to apply changes.")
-                        .font(.system(size: 13, weight: .medium, design: .rounded))
+                        .font(.system(.footnote, design: .rounded).weight(.medium))
                         .foregroundStyle(.white.opacity(0.6))
                         .multilineTextAlignment(.leading)
                 }
@@ -155,23 +155,23 @@ struct LanguageRow: View {
         Button(action: action) {
             HStack(spacing: 16) {
                 Text(language.flag)
-                    .font(.system(size: 28))
-                
+                    .font(.title)
+
                 VStack(alignment: .leading, spacing: 2) {
                     Text(language.name)
-                        .font(.system(size: 16, weight: .semibold, design: .rounded))
+                        .font(.system(.callout, design: .rounded).weight(.semibold))
                         .foregroundStyle(.white)
-                    
+
                     Text(language.code.uppercased())
-                        .font(.system(size: 13, weight: .medium, design: .rounded))
+                        .font(.system(.footnote, design: .rounded).weight(.medium))
                         .foregroundStyle(.white.opacity(0.5))
                 }
-                
+
                 Spacer()
-                
+
                 if isSelected {
                     Image(systemName: "checkmark.circle.fill")
-                        .font(.system(size: 24))
+                        .font(.title3)
                         .foregroundStyle(Color.luxuryGold)
                 }
             }

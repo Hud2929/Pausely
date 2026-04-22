@@ -515,7 +515,7 @@ struct CelebrationView: View {
                     }
                     
                     Image(systemName: "checkmark.circle.fill")
-                        .font(.system(size: 80))
+                        .font(.system(.largeTitle, design: .rounded))
                         .foregroundColor(.green)
                         .scaleEffect(showContent ? 1 : 0)
                         .animation(.spring(response: 0.4, dampingFraction: 0.6), value: showContent)
@@ -532,7 +532,7 @@ struct CelebrationView: View {
                         .foregroundColor(.white.opacity(0.8))
                     
                     Text(currencyManager.format(amount))
-                        .font(.system(size: 48, weight: .bold, design: .rounded))
+                        .font(.largeTitle.weight(.bold))
                         .foregroundColor(.green)
                     
                     Text("per year")
@@ -712,7 +712,7 @@ struct TrialDetailSheet: View {
                     // Header
                     VStack(spacing: 16) {
                         Image(systemName: trial.status.icon)
-                            .font(.system(size: 60))
+                            .font(.system(.title, design: .rounded))
                             .foregroundColor(trial.status.color)
                         
                         Text(trial.serviceName)

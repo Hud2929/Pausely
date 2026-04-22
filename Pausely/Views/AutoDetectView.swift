@@ -65,17 +65,17 @@ struct AutoDetectView: View {
                     .frame(width: 120, height: 120)
 
                 Image(systemName: "apple.logo")
-                    .font(.system(size: 50))
+                    .font(.largeTitle)
                     .foregroundColor(Color.luxuryPurple)
             }
 
             VStack(spacing: 12) {
                 Text("Apple Subscriptions")
-                    .font(.system(size: 28, weight: .bold))
+                    .font(.title.weight(.bold))
                     .foregroundColor(.white)
 
                 Text("Scan your Apple ID for active subscriptions")
-                    .font(.system(size: 17))
+                    .font(.body)
                     .foregroundColor(.white.opacity(0.7))
                     .multilineTextAlignment(.center)
             }
@@ -99,7 +99,7 @@ struct AutoDetectView: View {
                     Image(systemName: "magnifyingglass")
                     Text("Scan Apple ID")
                 }
-                .font(.system(size: 17, weight: .semibold))
+                .font(.body.weight(.semibold))
                 .foregroundColor(.white)
                 .frame(maxWidth: .infinity)
                 .frame(height: 56)
@@ -129,11 +129,11 @@ struct AutoDetectView: View {
 
             VStack(spacing: 12) {
                 Text("Scanning...")
-                    .font(.system(size: 24, weight: .bold))
+                    .font(.title2.weight(.bold))
                     .foregroundColor(.white)
 
                 Text("Checking your Apple subscriptions")
-                    .font(.system(size: 17))
+                    .font(.body)
                     .foregroundColor(.white.opacity(0.7))
             }
 
@@ -152,17 +152,17 @@ struct AutoDetectView: View {
                     .frame(width: 120, height: 120)
 
                 Image(systemName: "tray")
-                    .font(.system(size: 50))
+                    .font(.largeTitle)
                     .foregroundColor(.orange)
             }
 
             VStack(spacing: 12) {
                 Text("No Subscriptions Found")
-                    .font(.system(size: 24, weight: .bold))
+                    .font(.title2.weight(.bold))
                     .foregroundColor(.white)
 
                 Text("No active App Store subscriptions were found on this Apple ID")
-                    .font(.system(size: 17))
+                    .font(.body)
                     .foregroundColor(.white.opacity(0.7))
                     .multilineTextAlignment(.center)
                     .padding(.horizontal, 40)
@@ -172,7 +172,7 @@ struct AutoDetectView: View {
 
             Button(action: { dismiss() }) {
                 Text("Done")
-                    .font(.system(size: 17, weight: .semibold))
+                    .font(.body.weight(.semibold))
                     .foregroundColor(.white)
                     .frame(maxWidth: .infinity)
                     .frame(height: 56)
@@ -191,11 +191,11 @@ struct AutoDetectView: View {
                 // Header
                 VStack(spacing: 8) {
                     Image(systemName: "checkmark.circle.fill")
-                        .font(.system(size: 48))
+                        .font(.largeTitle)
                         .foregroundColor(.green)
 
                     Text("Found \(detectedSubscriptions.count) Subscription\(detectedSubscriptions.count == 1 ? "" : "s")")
-                        .font(.system(size: 24, weight: .bold))
+                        .font(.title2.weight(.bold))
                         .foregroundColor(.white)
                 }
                 .padding(.top, 20)
@@ -221,7 +221,7 @@ struct AutoDetectView: View {
                                 Image(systemName: "plus.circle.fill")
                                 Text("Add \(selectedForImport.count) Subscription\(selectedForImport.count == 1 ? "" : "s")")
                             }
-                            .font(.system(size: 17, weight: .semibold))
+                            .font(.body.weight(.semibold))
                             .foregroundColor(.white)
                             .frame(maxWidth: .infinity)
                             .frame(height: 56)
@@ -232,7 +232,7 @@ struct AutoDetectView: View {
 
                     Button(action: { dismiss() }) {
                         Text(selectedForImport.count > 0 ? "Done" : "Skip")
-                            .font(.system(size: 17, weight: .medium))
+                            .font(.body.weight(.medium))
                             .foregroundColor(.white.opacity(0.7))
                             .frame(maxWidth: .infinity)
                             .frame(height: 56)
@@ -255,17 +255,17 @@ struct AutoDetectView: View {
                     .frame(width: 120, height: 120)
 
                 Image(systemName: "checkmark")
-                    .font(.system(size: 50, weight: .bold))
+                    .font(.largeTitle.weight(.bold))
                     .foregroundColor(.green)
             }
 
             VStack(spacing: 12) {
                 Text("Import Complete!")
-                    .font(.system(size: 24, weight: .bold))
+                    .font(.title2.weight(.bold))
                     .foregroundColor(.white)
 
                 Text("\(selectedForImport.count) subscription\(selectedForImport.count == 1 ? "" : "s") added")
-                    .font(.system(size: 17))
+                    .font(.body)
                     .foregroundColor(.white.opacity(0.7))
             }
 
@@ -273,7 +273,7 @@ struct AutoDetectView: View {
 
             Button(action: { dismiss() }) {
                 Text("Done")
-                    .font(.system(size: 17, weight: .semibold))
+                    .font(.body.weight(.semibold))
                     .foregroundColor(.white)
                     .frame(maxWidth: .infinity)
                     .frame(height: 56)
@@ -345,12 +345,12 @@ struct InfoRow: View {
     var body: some View {
         HStack(spacing: 12) {
             Image(systemName: icon)
-                .font(.system(size: 16))
+                .font(.callout)
                 .foregroundColor(Color.luxuryPurple)
                 .frame(width: 24)
 
             Text(text)
-                .font(.system(size: 15))
+                .font(.subheadline)
                 .foregroundColor(.white.opacity(0.8))
 
             Spacer()
@@ -390,7 +390,7 @@ struct AppleDetectedSubscriptionRow: View {
                 .frame(width: 50, height: 50)
 
             Image(systemName: subscription.iconName)
-                .font(.system(size: 22))
+                .font(.title3)
                 .foregroundColor(categoryColor)
         }
     }
@@ -398,12 +398,12 @@ struct AppleDetectedSubscriptionRow: View {
     private var infoView: some View {
         VStack(alignment: .leading, spacing: 4) {
             Text(subscription.name)
-                .font(.system(size: 17, weight: .semibold))
+                .font(.body.weight(.semibold))
                 .foregroundColor(.white)
 
             HStack(spacing: 6) {
                 Text(subscription.billingDisplay)
-                    .font(.system(size: 14))
+                    .font(.footnote)
                     .foregroundColor(.white.opacity(0.6))
 
                 if subscription.isInTrial {
@@ -419,7 +419,7 @@ struct AppleDetectedSubscriptionRow: View {
 
     private var trialBadge: some View {
         Text("TRIAL")
-            .font(.system(size: 10, weight: .bold))
+            .font(.caption2.weight(.bold))
             .foregroundColor(.orange)
             .padding(.horizontal, 6)
             .padding(.vertical, 2)
@@ -429,7 +429,7 @@ struct AppleDetectedSubscriptionRow: View {
 
     private var expiredBadge: some View {
         Text("EXPIRED")
-            .font(.system(size: 10, weight: .bold))
+            .font(.caption2.weight(.bold))
             .foregroundColor(.red)
             .padding(.horizontal, 6)
             .padding(.vertical, 2)
@@ -440,11 +440,11 @@ struct AppleDetectedSubscriptionRow: View {
     private var priceView: some View {
         VStack(alignment: .trailing, spacing: 2) {
             Text(subscription.formattedPrice)
-                .font(.system(size: 17, weight: .semibold))
+                .font(.body.weight(.semibold))
                 .foregroundColor(.white)
 
             Text(statusText)
-                .font(.system(size: 11))
+                .font(.caption2)
                 .foregroundColor(statusColor)
         }
     }
@@ -461,7 +461,7 @@ struct AppleDetectedSubscriptionRow: View {
 
     private var checkboxView: some View {
         Image(systemName: isSelected ? "checkmark.circle.fill" : "circle")
-            .font(.system(size: 24))
+            .font(.title3)
             .foregroundColor(isSelected ? Color.luxuryPurple : .white.opacity(0.4))
     }
 

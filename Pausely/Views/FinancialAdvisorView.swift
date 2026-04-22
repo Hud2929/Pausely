@@ -76,7 +76,7 @@ struct FinancialAdvisorView: View {
                     .blur(radius: 20)
                 
                 Image(systemName: "brain.head.profile")
-                    .font(.system(size: 50, weight: .light))
+                    .font(.system(.largeTitle, design: .rounded).weight(.light))
                     .foregroundStyle(LinearGradient(
                         colors: [Color.luxuryTeal, .white],
                         startPoint: .top,
@@ -86,11 +86,11 @@ struct FinancialAdvisorView: View {
             
             VStack(spacing: 6) {
                 Text("AI Financial Advisor")
-                    .font(.system(size: 30, weight: .bold, design: .rounded))
+                    .font(.system(.title, design: .rounded).weight(.bold))
                     .foregroundStyle(.white)
                 
                 Text("Personalized subscription intelligence")
-                    .font(.system(size: 15, weight: .medium, design: .rounded))
+                    .font(.system(.subheadline, design: .rounded).weight(.medium))
                     .foregroundStyle(.white.opacity(0.6))
             }
         }
@@ -121,11 +121,11 @@ struct FinancialAdvisorView: View {
                 
                 VStack(spacing: 0) {
                     Text("\(healthScore)")
-                        .font(.system(size: 48, weight: .bold, design: .rounded))
+                        .font(.system(.largeTitle, design: .rounded).weight(.bold))
                         .foregroundStyle(.white)
                     
                     Text(scoreLabel)
-                        .font(.system(size: 14, weight: .semibold, design: .rounded))
+                        .font(.system(.footnote, design: .rounded).weight(.semibold))
                         .foregroundStyle(colorForScore(healthScore))
                 }
             }
@@ -150,24 +150,24 @@ struct FinancialAdvisorView: View {
             HStack {
                 VStack(alignment: .leading, spacing: 4) {
                     Text("Monthly Savings Potential")
-                        .font(.system(size: 14, weight: .semibold, design: .rounded))
+                        .font(.system(.footnote, design: .rounded).weight(.semibold))
                         .foregroundStyle(.white.opacity(0.7))
-                    
+
                     Text(currencyManager.format(potentialSavings))
-                        .font(.system(size: 36, weight: .bold, design: .rounded))
+                        .font(.system(.largeTitle, design: .rounded).weight(.bold))
                         .foregroundStyle(Color.luxuryGold)
                 }
-                
+
                 Spacer()
-                
+
                 Image(systemName: "sparkles")
-                    .font(.system(size: 32))
+                    .font(.title2)
                     .foregroundStyle(Color.luxuryGold)
             }
             
             if potentialSavings > 0 {
                 Text("You could save \(currencyManager.format(potentialSavings * 12)) per year!")
-                    .font(.system(size: 15, weight: .medium, design: .rounded))
+                    .font(.system(.subheadline, design: .rounded).weight(.medium))
                     .foregroundStyle(Color.luxuryTeal)
             }
         }
@@ -181,18 +181,18 @@ struct FinancialAdvisorView: View {
         VStack(alignment: .leading, spacing: 16) {
             HStack {
                 Text("AI Insights")
-                    .font(.system(size: 20, weight: .bold, design: .rounded))
+                    .font(.system(.title3, design: .rounded).weight(.bold))
                     .foregroundStyle(.white)
                 
                 Spacer()
                 
                 if insights.isEmpty {
                     Text("All caught up!")
-                        .font(.system(size: 13, weight: .medium, design: .rounded))
+                        .font(.system(.footnote, design: .rounded).weight(.medium))
                         .foregroundStyle(Color.luxuryTeal)
                 } else {
                     Text("\(insights.count) recommendations")
-                        .font(.system(size: 13, weight: .medium, design: .rounded))
+                        .font(.system(.footnote, design: .rounded).weight(.medium))
                         .foregroundStyle(.white.opacity(0.5))
                 }
             }
@@ -219,18 +219,18 @@ struct FinancialAdvisorView: View {
         
         return VStack(alignment: .leading, spacing: 16) {
             Text("Quick Actions")
-                .font(.system(size: 20, weight: .bold, design: .rounded))
+                .font(.system(.title3, design: .rounded).weight(.bold))
                 .foregroundStyle(.white)
                 .padding(.horizontal, 20)
-            
+
             if actions.isEmpty {
                 HStack {
                     Image(systemName: "checkmark.circle.fill")
-                        .font(.system(size: 24))
+                        .font(.title3)
                         .foregroundStyle(Color.luxuryTeal)
-                    
+
                     Text("No pending actions")
-                        .font(.system(size: 15, weight: .medium, design: .rounded))
+                        .font(.system(.subheadline, design: .rounded).weight(.medium))
                         .foregroundStyle(.white.opacity(0.7))
                 }
                 .padding()
@@ -497,14 +497,14 @@ struct ScoreMetric: View {
         VStack(spacing: 4) {
             HStack(spacing: 4) {
                 Image(systemName: icon)
-                    .font(.system(size: 14))
+                    .font(.footnote)
                 Text(value)
-                    .font(.system(size: 18, weight: .bold, design: .rounded))
+                    .font(.system(.body, design: .rounded).weight(.bold))
             }
             .foregroundStyle(.white)
             
             Text(label)
-                .font(.system(size: 11, weight: .medium, design: .rounded))
+                .font(.system(.caption2, design: .rounded).weight(.medium))
                 .foregroundStyle(.white.opacity(0.6))
         }
     }
@@ -525,25 +525,25 @@ struct InsightCard: View {
                         .frame(width: 44, height: 44)
                     
                     Image(systemName: insight.type.icon)
-                        .font(.system(size: 20))
+                        .font(.title3)
                         .foregroundStyle(insight.type.color)
                 }
                 
                 VStack(alignment: .leading, spacing: 4) {
                     Text(insight.title)
-                        .font(.system(size: 15, weight: .semibold, design: .rounded))
+                        .font(.system(.subheadline, design: .rounded).weight(.semibold))
                         .foregroundStyle(.white)
                         .lineLimit(1)
                     
                     Text(insight.description)
-                        .font(.system(size: 13, weight: .medium, design: .rounded))
+                        .font(.system(.footnote, design: .rounded).weight(.medium))
                         .foregroundStyle(.white.opacity(0.6))
                         .lineLimit(2)
                         .multilineTextAlignment(.leading)
                     
                     if insight.potentialSavings > 0 {
                         Text("Save \(CurrencyManager.shared.format(insight.potentialSavings))/month")
-                            .font(.system(size: 12, weight: .bold, design: .rounded))
+                            .font(.system(.caption, design: .rounded).weight(.bold))
                             .foregroundStyle(Color.luxuryGold)
                     }
                 }
@@ -551,7 +551,7 @@ struct InsightCard: View {
                 Spacer()
                 
                 Image(systemName: "chevron.right")
-                    .font(.system(size: 14))
+                    .font(.footnote)
                     .foregroundStyle(.white.opacity(0.3))
             }
             .padding()
@@ -572,17 +572,17 @@ struct ActionItemCard: View {
     var body: some View {
         HStack(spacing: 12) {
             Image(systemName: insight.type.icon)
-                .font(.system(size: 20))
+                .font(.title3)
                 .foregroundStyle(insight.type.color)
 
             VStack(alignment: .leading, spacing: 2) {
                 Text(insight.actionTitle)
-                    .font(.system(size: 15, weight: .semibold, design: .rounded))
+                    .font(.system(.subheadline, design: .rounded).weight(.semibold))
                     .foregroundStyle(.white)
 
                 if insight.potentialSavings > 0 {
                     Text("Save \(CurrencyManager.shared.format(insight.potentialSavings))/month")
-                        .font(.system(size: 13, weight: .medium, design: .rounded))
+                        .font(.system(.footnote, design: .rounded).weight(.medium))
                         .foregroundStyle(Color.luxuryGold)
                 }
             }
@@ -591,7 +591,7 @@ struct ActionItemCard: View {
 
             Button(action: onGo) {
                 Text("Go")
-                    .font(.system(size: 14, weight: .semibold, design: .rounded))
+                    .font(.system(.footnote, design: .rounded).weight(.semibold))
                     .foregroundStyle(.white)
                     .padding(.horizontal, 16)
                     .padding(.vertical, 8)
@@ -622,20 +622,20 @@ struct InsightDetailSheet: View {
                             .frame(width: 80, height: 80)
                         
                         Image(systemName: insight.type.icon)
-                            .font(.system(size: 36))
+                            .font(.title)
                             .foregroundStyle(insight.type.color)
                     }
                     .padding(.top, 20)
                     
                     // Title
                     Text(insight.title)
-                        .font(.system(size: 24, weight: .bold, design: .rounded))
+                        .font(.system(.title2, design: .rounded).weight(.bold))
                         .foregroundStyle(.white)
                         .multilineTextAlignment(.center)
                     
                     // Description
                     Text(insight.description)
-                        .font(.system(size: 16, weight: .medium, design: .rounded))
+                        .font(.system(.callout, design: .rounded).weight(.medium))
                         .foregroundStyle(.white.opacity(0.8))
                         .multilineTextAlignment(.center)
                         .padding(.horizontal)
@@ -644,11 +644,11 @@ struct InsightDetailSheet: View {
                     if insight.potentialSavings > 0 {
                         VStack(spacing: 8) {
                             Text("Potential Monthly Savings")
-                                .font(.system(size: 14, weight: .semibold, design: .rounded))
+                                .font(.system(.footnote, design: .rounded).weight(.semibold))
                                 .foregroundStyle(.white.opacity(0.6))
                             
                             Text(CurrencyManager.shared.format(insight.potentialSavings))
-                                .font(.system(size: 42, weight: .bold, design: .rounded))
+                                .font(.system(.largeTitle, design: .rounded).weight(.bold))
                                 .foregroundStyle(Color.luxuryGold)
                         }
                         .padding()
@@ -665,7 +665,7 @@ struct InsightDetailSheet: View {
                             onAction(insight.actionTitle)
                         }) {
                             Text(insight.actionTitle)
-                                .font(.system(size: 17, weight: .semibold, design: .rounded))
+                                .font(.system(.body, design: .rounded).weight(.semibold))
                                 .foregroundStyle(.white)
                                 .frame(maxWidth: .infinity)
                                 .padding()
@@ -693,15 +693,15 @@ struct EmptyInsightsView: View {
     var body: some View {
         VStack(spacing: 16) {
             Image(systemName: "checkmark.circle.fill")
-                .font(.system(size: 48))
+                .font(.largeTitle)
                 .foregroundStyle(Color.luxuryTeal)
-            
+
             Text("All caught up!")
-                .font(.system(size: 18, weight: .bold, design: .rounded))
+                .font(.system(.body, design: .rounded).weight(.bold))
                 .foregroundStyle(.white)
-            
+
             Text("Your subscriptions are well-optimized. Great job!")
-                .font(.system(size: 14, weight: .medium, design: .rounded))
+                .font(.system(.footnote, design: .rounded).weight(.medium))
                 .foregroundStyle(.white.opacity(0.6))
                 .multilineTextAlignment(.center)
         }

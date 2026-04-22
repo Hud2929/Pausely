@@ -181,10 +181,10 @@ struct EfficiencyScoreCard: View {
 
                 VStack(spacing: 0) {
                     Text("\(Int(animatedScore))")
-                        .font(.system(size: 22, weight: .bold, design: .rounded))
+                        .font(.system(.title3, design: .rounded).weight(.bold))
                         .foregroundStyle(.primary)
                     Text("/100")
-                        .font(.system(size: 9, weight: .medium))
+                        .font(.caption2.weight(.medium))
                         .foregroundStyle(.secondary)
                 }
             }
@@ -305,7 +305,7 @@ struct CostPerUseEmptyState: View {
                     .frame(width: 64, height: 64)
 
                 Image(systemName: "chart.bar.xaxis")
-                    .font(.system(size: 28, weight: .semibold))
+                    .font(.title2.weight(.semibold))
                     .foregroundStyle(Color.luxuryPurple)
             }
 
@@ -437,7 +437,7 @@ struct SmartAlertCard: View {
                     .frame(width: 44, height: 44)
 
                 Image(systemName: alertIcon)
-                    .font(.system(size: 20, weight: .semibold))
+                    .font(.callout.weight(.semibold))
                     .foregroundStyle(alertColor)
             }
 
@@ -457,7 +457,7 @@ struct SmartAlertCard: View {
 
             Button(action: onDismiss) {
                 Image(systemName: "xmark")
-                    .font(.system(size: 12, weight: .semibold))
+                    .font(.caption2.weight(.semibold))
                     .foregroundStyle(.secondary)
                     .padding(6)
                     .background(.ultraThinMaterial)

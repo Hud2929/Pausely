@@ -82,7 +82,7 @@ struct ReferralSheet: View {
                     Button("Done") {
                         dismiss()
                     }
-                    .font(.system(size: 17, weight: .semibold, design: .rounded))
+                    .font(.system(.body, design: .rounded).weight(.semibold))
                     .foregroundStyle(Color.luxuryGold)
                 }
             }
@@ -216,7 +216,7 @@ struct ReferralSheet: View {
                     )
                 
                 Image(systemName: isEligibleForFreePro ? "crown.fill" : "gift.fill")
-                    .font(.system(size: 50, weight: .light))
+                    .font(.system(.largeTitle, design: .rounded).weight(.light))
                     .foregroundStyle(
                         LinearGradient(
                             colors: [Color.luxuryGold, .white],
@@ -228,14 +228,14 @@ struct ReferralSheet: View {
                 // Floating sparkles
                 HStack {
                     Image(systemName: "sparkle")
-                        .font(.system(size: 24))
+                        .font(.title3)
                         .foregroundStyle(Color.luxuryGold)
                         .offset(x: -70, y: -40)
-                    
+
                     Spacer()
-                    
+
                     Image(systemName: "sparkle.fill")
-                        .font(.system(size: 18))
+                        .font(.callout)
                         .foregroundStyle(Color.luxuryPink)
                         .offset(x: 60, y: 30)
                 }
@@ -248,21 +248,21 @@ struct ReferralSheet: View {
             VStack(spacing: 12) {
                 if isEligibleForFreePro {
                     Text("Pro Unlocked! 🎉")
-                        .font(.system(size: 32, weight: .bold, design: .rounded))
+                        .font(.system(.largeTitle, design: .rounded).weight(.bold))
                         .foregroundStyle(.white)
-                    
+
                     Text("You've earned FREE Premium forever by referring 3 friends!")
-                        .font(.system(size: 16, weight: .medium, design: .rounded))
+                        .font(.system(.callout, design: .rounded).weight(.medium))
                         .foregroundStyle(Color.luxuryTeal)
                         .multilineTextAlignment(.center)
                         .padding(.horizontal, 24)
                 } else {
                     Text("Get Pro FREE!")
-                        .font(.system(size: 32, weight: .bold, design: .rounded))
+                        .font(.system(.largeTitle, design: .rounded).weight(.bold))
                         .foregroundStyle(.white)
-                    
+
                     Text("Refer 3 friends and unlock Premium forever. No subscription needed!")
-                        .font(.system(size: 16, weight: .medium, design: .rounded))
+                        .font(.system(.callout, design: .rounded).weight(.medium))
                         .foregroundStyle(.white.opacity(0.7))
                         .multilineTextAlignment(.center)
                         .padding(.horizontal, 24)
@@ -279,7 +279,7 @@ struct ReferralSheet: View {
     private var referralCodeCard: some View {
         VStack(spacing: 16) {
             Text("YOUR UNIQUE CODE")
-                .font(.system(size: 12, weight: .semibold, design: .rounded))
+                .font(.system(.caption2, design: .rounded).weight(.semibold))
                 .foregroundStyle(.white.opacity(0.5))
                 .tracking(2)
             
@@ -315,8 +315,7 @@ struct ReferralSheet: View {
                     Button("Generate Code") {
                         generateAndSaveLocalCode()
                     }
-                    .font(.subheadline)
-                    .fontWeight(.semibold)
+                    .font(.subheadline.weight(.semibold))
                     .foregroundColor(.white)
                     .padding(.horizontal, 20)
                     .padding(.vertical, 10)
@@ -327,7 +326,7 @@ struct ReferralSheet: View {
                 // Code display
                 HStack(spacing: 12) {
                     Text(displayCode)
-                        .font(.system(size: 24, weight: .bold, design: .rounded))
+                        .font(.system(.title2, design: .rounded).weight(.bold))
                         .foregroundStyle(.white)
                         .kerning(1)
                         .lineLimit(1)
@@ -339,7 +338,7 @@ struct ReferralSheet: View {
                     
                     Button(action: copyToClipboard) {
                         Image(systemName: copiedToClipboard ? "checkmark" : "doc.on.doc")
-                            .font(.system(size: 20, weight: .semibold))
+                            .font(.callout.weight(.semibold))
                             .foregroundStyle(copiedToClipboard ? Color.luxuryTeal : Color.luxuryGold)
                             .frame(width: 44, height: 44)
                             .background(
@@ -373,22 +372,22 @@ struct ReferralSheet: View {
                     
                     HStack {
                         Text("\(progressCount) of 3 completed")
-                            .font(.system(size: 13, weight: .medium, design: .rounded))
+                            .font(.system(.footnote, design: .rounded).weight(.medium))
                             .foregroundStyle(.white.opacity(0.6))
-                        
+
                         Spacer()
-                        
+
                         if progressCount < 3 {
                             Text("\(3 - progressCount) more to go!")
-                                .font(.system(size: 13, weight: .semibold, design: .rounded))
+                                .font(.system(.footnote, design: .rounded).weight(.semibold))
                                 .foregroundStyle(Color.luxuryGold)
                         } else {
                             Text("Completed! 🎉")
-                                .font(.system(size: 13, weight: .semibold, design: .rounded))
+                                .font(.system(.footnote, design: .rounded).weight(.semibold))
                                 .foregroundStyle(Color.luxuryTeal)
                         }
                     }
-                    
+
                     // Claim Free Pro Button (when eligible)
                     if isEligibleForFreePro && !paymentManager.isPremium {
                         Button(action: claimFreePro) {
@@ -396,7 +395,7 @@ struct ReferralSheet: View {
                                 Image(systemName: "crown.fill")
                                 Text("Claim Free Pro")
                             }
-                            .font(.system(size: 16, weight: .bold, design: .rounded))
+                            .font(.system(.callout, design: .rounded).weight(.bold))
                             .foregroundColor(.white)
                             .frame(maxWidth: .infinity)
                             .padding()
@@ -486,22 +485,22 @@ struct ReferralSheet: View {
     private var friendsSection: some View {
         VStack(alignment: .leading, spacing: 16) {
             Text("Referred Friends")
-                .font(.system(size: 20, weight: .bold, design: .rounded))
+                .font(.system(.title3, design: .rounded).weight(.bold))
                 .foregroundStyle(.white)
             
             if referralManager.conversions.isEmpty {
                 // Empty state
                 VStack(spacing: 12) {
                     Image(systemName: "person.3")
-                        .font(.system(size: 40))
+                        .font(.title)
                         .foregroundStyle(.white.opacity(0.3))
-                    
+
                     Text("No referrals yet")
-                        .font(.system(size: 16, weight: .semibold, design: .rounded))
+                        .font(.system(.callout, design: .rounded).weight(.semibold))
                         .foregroundStyle(.white)
-                    
+
                     Text("Share your code to start earning!")
-                        .font(.system(size: 14, weight: .medium, design: .rounded))
+                        .font(.system(.footnote, design: .rounded).weight(.medium))
                         .foregroundStyle(.white.opacity(0.6))
                 }
                 .frame(maxWidth: .infinity)
@@ -525,7 +524,7 @@ struct ReferralSheet: View {
     private var howItWorksSection: some View {
         VStack(alignment: .leading, spacing: 16) {
             Text("How It Works")
-                .font(.system(size: 20, weight: .bold, design: .rounded))
+                .font(.system(.title3, design: .rounded).weight(.bold))
                 .foregroundStyle(.white)
             
             VStack(spacing: 16) {
@@ -557,7 +556,7 @@ struct ReferralSheet: View {
     private var shareSection: some View {
         VStack(spacing: 16) {
             Text("Share Via")
-                .font(.system(size: 16, weight: .semibold, design: .rounded))
+                .font(.system(.callout, design: .rounded).weight(.semibold))
                 .foregroundStyle(.white.opacity(0.7))
             
             HStack(spacing: 20) {
@@ -592,11 +591,11 @@ struct ReferralSheet: View {
     private var termsSection: some View {
         VStack(spacing: 8) {
             Text("Terms & Conditions")
-                .font(.system(size: 13, weight: .semibold, design: .rounded))
+                .font(.system(.footnote, design: .rounded).weight(.semibold))
                 .foregroundStyle(Color.luxuryGold)
-            
+
             Text("Rewards are granted when referred friends complete signup and verify their account. Free Pro access is permanent and non-transferable. Self-referrals are not allowed.")
-                .font(.system(size: 12, weight: .medium, design: .rounded))
+                .font(.system(.caption, design: .rounded).weight(.medium))
                 .foregroundStyle(.white.opacity(0.5))
                 .multilineTextAlignment(.center)
                 .padding(.horizontal, 32)
@@ -611,11 +610,11 @@ struct ReferralSheet: View {
             
             HStack(spacing: 12) {
                 Image(systemName: "checkmark.circle.fill")
-                    .font(.system(size: 24))
+                    .font(.title3)
                     .foregroundStyle(Color.luxuryTeal)
-                
+
                 Text("Copied to clipboard!")
-                    .font(.system(size: 17, weight: .semibold, design: .rounded))
+                    .font(.system(.body, design: .rounded).weight(.semibold))
                     .foregroundStyle(.white)
             }
             .padding(.horizontal, 24)
@@ -779,9 +778,9 @@ struct ReferralTabButton: View {
         Button(action: action) {
             HStack(spacing: 6) {
                 Image(systemName: icon)
-                    .font(.system(size: 14, weight: .semibold))
+                    .font(.footnote.weight(.semibold))
                 Text(title)
-                    .font(.system(size: 15, weight: .semibold, design: .rounded))
+                    .font(.system(.subheadline, design: .rounded).weight(.semibold))
             }
             .foregroundStyle(isSelected ? .white : .white.opacity(0.6))
             .frame(maxWidth: .infinity)
@@ -806,30 +805,30 @@ struct ConversionRow: View {
                     .frame(width: 44, height: 44)
                 
                 Image(systemName: statusIcon)
-                    .font(.system(size: 20))
+                    .font(.callout)
                     .foregroundStyle(statusColor)
             }
             
             VStack(alignment: .leading, spacing: 4) {
                 Text(conversion.referredUserEmail ?? "Anonymous")
-                    .font(.system(size: 15, weight: .semibold, design: .rounded))
+                    .font(.system(.subheadline, design: .rounded).weight(.semibold))
                     .foregroundStyle(.white)
-                
+
                 Text(statusText)
-                    .font(.system(size: 12, weight: .medium, design: .rounded))
+                    .font(.system(.caption, design: .rounded).weight(.medium))
                     .foregroundStyle(statusColor)
             }
             
             Spacer()
-            
+
             Text(formatDate(conversion.createdAt))
-                .font(.system(size: 12, weight: .medium, design: .rounded))
+                .font(.system(.caption, design: .rounded).weight(.medium))
                 .foregroundStyle(.white.opacity(0.5))
         }
         .padding()
         .glass(intensity: 0.08, tint: .white)
     }
-    
+
     private var statusColor: Color {
         switch conversion.status {
         case .converted:
@@ -878,12 +877,12 @@ struct EmptyFriendRow: View {
                     .frame(width: 44, height: 44)
                 
                 Image(systemName: "person")
-                    .font(.system(size: 20))
+                    .font(.callout)
                     .foregroundStyle(.white.opacity(0.3))
             }
             
             Text("Waiting...")
-                .font(.system(size: 15, weight: .medium, design: .rounded))
+                .font(.system(.subheadline, design: .rounded).weight(.medium))
                 .foregroundStyle(.white.opacity(0.4))
             
             Spacer()
@@ -907,23 +906,23 @@ struct ReferralStepRow: View {
                     .frame(width: 44, height: 44)
                 
                 Text("\(number)")
-                    .font(.system(size: 18, weight: .bold, design: .rounded))
+                    .font(.system(.callout, design: .rounded).weight(.bold))
                     .foregroundStyle(Color.luxuryGold)
             }
             
             VStack(alignment: .leading, spacing: 4) {
                 HStack(spacing: 8) {
                     Image(systemName: icon)
-                        .font(.system(size: 14))
+                        .font(.footnote)
                         .foregroundStyle(Color.luxuryGold)
-                    
+
                     Text(title)
-                        .font(.system(size: 16, weight: .semibold, design: .rounded))
+                        .font(.system(.callout, design: .rounded).weight(.semibold))
                         .foregroundStyle(.white)
                 }
-                
+
                 Text(description)
-                    .font(.system(size: 13, weight: .medium, design: .rounded))
+                    .font(.system(.footnote, design: .rounded).weight(.medium))
                     .foregroundStyle(.white.opacity(0.6))
                     .lineSpacing(2)
             }
@@ -941,7 +940,7 @@ struct ShareButton: View {
     var body: some View {
         Button(action: action) {
             Image(systemName: icon)
-                .font(.system(size: 24, weight: .semibold))
+                .font(.title3.weight(.semibold))
                 .foregroundStyle(.white)
                 .frame(width: 64, height: 64)
                 .background(
@@ -976,29 +975,29 @@ struct FriendRow: View {
     var body: some View {
         HStack(spacing: 12) {
             Text(friend.avatar)
-                .font(.system(size: 28))
-            
+                .font(.title)
+
             VStack(alignment: .leading, spacing: 4) {
                 Text(friend.name)
-                    .font(.system(size: 16, weight: .semibold, design: .rounded))
+                    .font(.system(.callout, design: .rounded).weight(.semibold))
                     .foregroundStyle(.white)
-                
+
                 HStack(spacing: 4) {
                     Circle()
                         .fill(statusColor)
                         .frame(width: 6, height: 6)
-                    
+
                     Text(statusText)
-                        .font(.system(size: 12, weight: .medium, design: .rounded))
+                        .font(.system(.caption, design: .rounded).weight(.medium))
                         .foregroundStyle(statusColor)
                 }
             }
-            
+
             Spacer()
-            
+
             if let date = friend.date {
                 Text(timeAgo(date))
-                    .font(.system(size: 12, weight: .medium, design: .rounded))
+                    .font(.system(.caption, design: .rounded).weight(.medium))
                     .foregroundStyle(.white.opacity(0.5))
             }
         }

@@ -96,16 +96,16 @@ struct RevolutionaryInsightsView: View {
     private var insightsHeader: some View {
         VStack(alignment: .leading, spacing: 4) {
             Text("Insights")
-                .font(.system(size: 32, weight: .bold, design: .rounded))
+                .font(.system(.largeTitle, design: .rounded).weight(.bold))
                 .foregroundColor(.white)
 
             if let lastDate = engine.lastAnalysisDate {
                 Text("Analyzed \(lastDate.formatted(.relative(presentation: .named)))")
-                    .font(.system(size: 14))
+                    .font(.footnote)
                     .foregroundColor(.gray)
             } else {
                 Text("Real analysis of your subscription health")
-                    .font(.system(size: 14))
+                    .font(.footnote)
                     .foregroundColor(.gray)
             }
         }

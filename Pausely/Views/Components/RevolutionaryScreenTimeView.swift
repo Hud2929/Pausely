@@ -149,7 +149,7 @@ struct RevolutionaryScreenTimeDashboard: View {
         VStack(spacing: 16) {
             HStack {
                 Image(systemName: screenTimeManager.authorizationStatus.icon)
-                    .font(.system(size: 32))
+                    .font(.largeTitle)
                     .foregroundColor(screenTimeManager.authorizationStatus.color)
                 
                 VStack(alignment: .leading, spacing: 4) {
@@ -528,7 +528,7 @@ struct STEmptyInsightsView: View {
     var body: some View {
         VStack(spacing: 16) {
             Image(systemName: "chart.pie")
-                .font(.system(size: 48))
+                .font(.largeTitle)
                 .foregroundColor(.gray)
             
             Text("No Usage Data Yet")
@@ -594,7 +594,7 @@ struct ScreenTimeAuthorizationSheet: View {
                     .frame(width: 100, height: 100)
                 
                 Image(systemName: "chart.bar.fill")
-                    .font(.system(size: 44))
+                    .font(.largeTitle)
                     .foregroundColor(.white)
             }
             
@@ -727,7 +727,7 @@ struct STBenefitRow: View {
                     .frame(width: 44, height: 44)
                 
                 Image(systemName: icon)
-                    .font(.system(size: 20))
+                    .font(.callout)
                     .foregroundColor(color)
             }
             
@@ -760,7 +760,7 @@ struct STInsightDetailSheet: View {
                     VStack(spacing: 24) {
                         VStack(spacing: 12) {
                             Image(systemName: insight.usageCategory.icon)
-                                .font(.system(size: 48))
+                                .font(.largeTitle)
                                 .foregroundColor(insight.usageCategory.color)
                             
                             Text(insight.subscriptionName)

@@ -122,7 +122,7 @@ struct ReferralSuccessView: View {
                 
                 // Icon
                 Image(systemName: isCompleted ? "crown.fill" : "gift.fill")
-                    .font(.system(size: 60, weight: .light))
+                    .font(.system(.largeTitle, design: .rounded).weight(.light))
                     .foregroundStyle(
                         LinearGradient(
                             colors: isCompleted ?
@@ -144,31 +144,31 @@ struct ReferralSuccessView: View {
     private var sparkleElements: some View {
         Group {
             Image(systemName: "sparkle")
-                .font(.system(size: 30))
+                .font(.title2)
                 .foregroundStyle(Color.luxuryGold)
                 .offset(x: -100, y: -80)
                 .opacity(appear ? 1 : 0)
                 .scaleEffect(appear ? 1 : 0)
                 .animation(.spring(response: 0.6, dampingFraction: 0.6).delay(0.3), value: appear)
-            
+
             Image(systemName: "sparkle.fill")
-                .font(.system(size: 24))
+                .font(.title3)
                 .foregroundStyle(Color.luxuryPink)
                 .offset(x: 100, y: -60)
                 .opacity(appear ? 1 : 0)
                 .scaleEffect(appear ? 1 : 0)
                 .animation(.spring(response: 0.6, dampingFraction: 0.6).delay(0.4), value: appear)
-            
+
             Image(systemName: "star.fill")
-                .font(.system(size: 20))
+                .font(.callout)
                 .foregroundStyle(Color.luxuryTeal)
                 .offset(x: 90, y: 70)
                 .opacity(appear ? 1 : 0)
                 .scaleEffect(appear ? 1 : 0)
                 .animation(.spring(response: 0.6, dampingFraction: 0.6).delay(0.5), value: appear)
-            
+
             Image(systemName: "star")
-                .font(.system(size: 28))
+                .font(.title2)
                 .foregroundStyle(.white)
                 .offset(x: -90, y: 60)
                 .opacity(appear ? 1 : 0)
@@ -181,25 +181,25 @@ struct ReferralSuccessView: View {
         VStack(spacing: 12) {
             // Main headline
             Text(isCompleted ? "Premium Unlocked!" : "Referral Complete!")
-                .font(.system(size: 36, weight: .bold, design: .rounded))
+                .font(.system(.largeTitle, design: .rounded).weight(.bold))
                 .foregroundStyle(.white)
                 .multilineTextAlignment(.center)
                 .offset(y: appear ? 0 : 20)
                 .opacity(appear ? 1 : 0)
-            
+
             // Friend info
             if let friendName = friendName {
                 Text("\(friendName) joined using your code!")
-                    .font(.system(size: 18, weight: .medium, design: .rounded))
+                    .font(.system(.body, design: .rounded).weight(.medium))
                     .foregroundStyle(Color.luxuryGold)
                     .offset(y: appear ? 0 : 20)
                     .opacity(appear ? 1 : 0)
                     .animation(.easeOut(duration: 0.5).delay(0.2), value: appear)
             }
-            
+
             // Status message
             Text(statusMessage)
-                .font(.system(size: 17, weight: .medium, design: .rounded))
+                .font(.system(.body, design: .rounded).weight(.medium))
                 .foregroundStyle(.white.opacity(0.8))
                 .multilineTextAlignment(.center)
                 .padding(.horizontal, 32)
@@ -232,18 +232,18 @@ struct ReferralSuccessView: View {
                             
                             if index < referralCount {
                                 Image(systemName: "checkmark")
-                                    .font(.system(size: 20, weight: .bold))
+                                    .font(.callout.weight(.bold))
                                     .foregroundStyle(.white)
                                     .transition(.scale)
                             } else {
                                 Text("\(index + 1)")
-                                    .font(.system(size: 18, weight: .bold, design: .rounded))
+                                    .font(.system(.callout, design: .rounded).weight(.bold))
                                     .foregroundStyle(.white.opacity(0.5))
                             }
                         }
-                        
+
                         Text(milestoneReward(for: index))
-                            .font(.system(size: 11, weight: .medium, design: .rounded))
+                            .font(.system(.caption2, design: .rounded).weight(.medium))
                             .foregroundStyle(index < referralCount ? Color.luxuryGold : .white.opacity(0.4))
                     }
                 }
@@ -293,7 +293,7 @@ struct ReferralSuccessView: View {
                     .shadow(color: Color.luxuryGold.opacity(0.5), radius: 20)
                 
                 Image(systemName: "crown.fill")
-                    .font(.system(size: 50))
+                    .font(.title)
                     .foregroundStyle(
                         LinearGradient(
                             colors: [Color.luxuryGold, .white],
@@ -328,9 +328,9 @@ struct ReferralSuccessView: View {
                 }) {
                     HStack(spacing: 12) {
                         Image(systemName: "square.and.arrow.up.fill")
-                            .font(.system(size: 18, weight: .semibold))
+                            .font(.callout.weight(.semibold))
                         Text("Share Again")
-                            .font(.system(size: 17, weight: .semibold, design: .rounded))
+                            .font(.system(.body, design: .rounded).weight(.semibold))
                     }
                     .foregroundStyle(.white)
                     .frame(maxWidth: .infinity)
@@ -368,7 +368,7 @@ struct ReferralSuccessView: View {
                 onDismiss()
             }) {
                 Text(isCompleted ? "Start Using Pro" : "Awesome!")
-                    .font(.system(size: 17, weight: .semibold, design: .rounded))
+                    .font(.system(.body, design: .rounded).weight(.semibold))
                     .foregroundStyle(isCompleted ? Color.luxuryGold : .white)
                     .frame(maxWidth: .infinity)
                     .padding(.vertical, 18)
@@ -494,18 +494,18 @@ struct ReferralBenefitRow: View {
     var body: some View {
         HStack(spacing: 12) {
             Image(systemName: icon)
-                .font(.system(size: 20))
+                .font(.callout)
                 .foregroundStyle(Color.luxuryGold)
                 .frame(width: 30)
-            
+
             Text(text)
-                .font(.system(size: 15, weight: .medium, design: .rounded))
+                .font(.system(.subheadline, design: .rounded).weight(.medium))
                 .foregroundStyle(.white)
             
             Spacer()
             
             Image(systemName: "checkmark")
-                .font(.system(size: 14, weight: .bold))
+                .font(.caption.weight(.bold))
                 .foregroundStyle(Color.luxuryTeal)
         }
     }
@@ -529,17 +529,17 @@ struct ReferralMiniSuccessBanner: View {
                     .frame(width: 44, height: 44)
                 
                 Image(systemName: "gift.fill")
-                    .font(.system(size: 20))
+                    .font(.callout)
                     .foregroundStyle(Color.luxuryGold)
             }
-            
+
             VStack(alignment: .leading, spacing: 2) {
                 Text("New Referral!")
-                    .font(.system(size: 15, weight: .bold, design: .rounded))
+                    .font(.system(.subheadline, design: .rounded).weight(.bold))
                     .foregroundStyle(.white)
-                
+
                 Text("\(friendName) joined using your code")
-                    .font(.system(size: 13, weight: .medium, design: .rounded))
+                    .font(.system(.footnote, design: .rounded).weight(.medium))
                     .foregroundStyle(.white.opacity(0.7))
                     .lineLimit(1)
             }
@@ -551,7 +551,7 @@ struct ReferralMiniSuccessBanner: View {
                 dismiss()
             }) {
                 Image(systemName: "xmark")
-                    .font(.system(size: 14, weight: .semibold))
+                    .font(.footnote.weight(.semibold))
                     .foregroundStyle(.white.opacity(0.6))
                     .frame(width: 28, height: 28)
                     .background(

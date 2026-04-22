@@ -67,7 +67,7 @@ struct WasteScoreCard: View {
                                     .foregroundStyle(Color.obsidianText)
                             } else {
                                 Image(systemName: "questionmark")
-                                    .font(.system(size: 24))
+                                    .font(.title3)
                                     .foregroundStyle(Color.obsidianTextSecondary)
                             }
                         }

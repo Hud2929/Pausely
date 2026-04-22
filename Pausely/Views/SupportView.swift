@@ -42,15 +42,15 @@ struct SupportView: View {
                         // Header
                         VStack(spacing: 12) {
                             Image(systemName: "headset")
-                                .font(.system(size: 50))
+                                .font(.largeTitle)
                                 .foregroundStyle(Color.luxuryGold)
                             
                             Text("How Can We Help?")
-                                .font(.system(size: 28, weight: .bold, design: .rounded))
+                                .font(.title.weight(.bold))
                                 .foregroundStyle(.white)
-                            
+
                             Text("Our support team is here for you 24/7")
-                                .font(.system(size: 16, weight: .regular, design: .rounded))
+                                .font(.callout)
                                 .foregroundStyle(.white.opacity(0.7))
                         }
                         .padding(.top, 20)
@@ -59,7 +59,7 @@ struct SupportView: View {
                         SupportGlassCard {
                             VStack(spacing: 16) {
                                 Text("Quick Contact")
-                                    .font(.system(size: 18, weight: .semibold, design: .rounded))
+                                    .font(.headline.weight(.semibold))
                                     .foregroundStyle(.white)
                                 
                                 HStack(spacing: 20) {
@@ -93,13 +93,13 @@ struct SupportView: View {
                         SupportGlassCard {
                             VStack(spacing: 20) {
                                 Text("Send us a message")
-                                    .font(.system(size: 18, weight: .semibold, design: .rounded))
+                                    .font(.headline.weight(.semibold))
                                     .foregroundStyle(.white)
                                 
                                 // Category Picker
                                 VStack(alignment: .leading, spacing: 8) {
                                     Text("Category")
-                                        .font(.system(size: 14, weight: .medium))
+                                        .font(.subheadline.weight(.medium))
                                         .foregroundStyle(.white.opacity(0.7))
                                     
                                     Picker("Category", selection: $category) {
@@ -146,7 +146,7 @@ struct SupportView: View {
                                 // Message Field
                                 VStack(alignment: .leading, spacing: 8) {
                                     Text("Message")
-                                        .font(.system(size: 14, weight: .medium))
+                                        .font(.subheadline.weight(.medium))
                                         .foregroundStyle(.white.opacity(0.7))
                                     
                                     TextEditor(text: $message)
@@ -171,7 +171,7 @@ struct SupportView: View {
                                         Image(systemName: "paperplane.fill")
                                         Text("Send Message")
                                     }
-                                    .font(.system(size: 17, weight: .semibold, design: .rounded))
+                                    .font(.callout.weight(.semibold))
                                     .foregroundStyle(.white)
                                     .frame(maxWidth: .infinity)
                                     .padding()
@@ -194,15 +194,15 @@ struct SupportView: View {
                         // Support Info
                         VStack(spacing: 8) {
                             Text("Support Email:")
-                                .font(.system(size: 14, weight: .medium))
+                                .font(.subheadline.weight(.medium))
                                 .foregroundStyle(.white.opacity(0.6))
-                            
+
                             Text(AppConfig.supportEmail)
-                                .font(.system(size: 16, weight: .semibold, design: .rounded))
+                                .font(.callout.weight(.semibold))
                                 .foregroundStyle(Color.luxuryGold)
-                            
+
                             Text("Response time: \(AppConfig.averageResponseTime)")
-                                .font(.system(size: 13, weight: .regular))
+                                .font(.caption)
                                 .foregroundStyle(.white.opacity(0.5))
                                 .padding(.top, 4)
                         }
@@ -258,11 +258,11 @@ struct SupportContactButton: View {
         Button(action: action) {
             VStack(spacing: 8) {
                 Image(systemName: icon)
-                    .font(.system(size: 24))
+                    .font(.title3)
                     .foregroundStyle(color)
-                
+
                 Text(title)
-                    .font(.system(size: 13, weight: .medium))
+                    .font(.caption)
                     .foregroundStyle(.white)
             }
             .frame(maxWidth: .infinity)
@@ -283,7 +283,7 @@ struct SupportTextField: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
             Text(title)
-                .font(.system(size: 14, weight: .medium))
+                .font(.subheadline.weight(.medium))
                 .foregroundStyle(.white.opacity(0.7))
 
             HStack {

@@ -47,7 +47,7 @@ struct RevolutionaryGeniusView: View {
         .toolbar {
             ToolbarItem(placement: .principal) {
                 Text("Genius AI")
-                    .font(.system(size: 17, weight: .semibold))
+                    .font(.callout.weight(.semibold))
                     .foregroundStyle(.white)
             }
         }
@@ -94,14 +94,14 @@ struct RevolutionaryGeniusView: View {
                     .frame(width: 90, height: 90)
 
                 Image(systemName: "brain.head.profile")
-                    .font(.system(size: 40))
+                    .font(.largeTitle)
                     .foregroundStyle(.white)
             }
             .frame(height: 120)
 
             VStack(spacing: 8) {
                 Text("Subscription Genius")
-                    .font(.system(size: 32, weight: .bold, design: .rounded))
+                    .font(.system(.largeTitle, design: .rounded).weight(.bold))
                     .foregroundStyle(.white)
 
                 Text("Real intelligence from your actual data")
@@ -116,7 +116,7 @@ struct RevolutionaryGeniusView: View {
                     .foregroundStyle(.gray)
 
                 Text("$\(NSDecimalNumber(decimal: engine.totalSavingsFound).doubleValue, specifier: "%.2f")")
-                    .font(.system(size: 48, weight: .bold, design: .rounded))
+                    .font(.system(.largeTitle, design: .rounded).weight(.bold))
                     .foregroundStyle(
                         LinearGradient(
                             colors: [.green, .cyan],
@@ -297,7 +297,7 @@ struct GeniusInsightCard: View {
                     .frame(width: 44, height: 44)
 
                 Image(systemName: insight.icon)
-                    .font(.system(size: 18))
+                    .font(.callout)
                     .foregroundColor(insight.iconColor)
             }
 

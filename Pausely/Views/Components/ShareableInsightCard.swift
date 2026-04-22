@@ -137,17 +137,17 @@ struct ShareableInsightCard: View {
                     .shadow(color: Color.luxuryPurple.opacity(0.4), radius: 20, x: 0, y: 10)
 
                 Image(systemName: "chart.pie.fill")
-                    .font(.system(size: 28, weight: .semibold))
+                    .font(.title2.weight(.semibold))
                     .foregroundStyle(.white)
             }
 
             Text(LocalizedStringKey("My Subscription Insights"))
-                .font(.system(size: 24, weight: .bold, design: .rounded))
+                .font(.system(.title2, design: .rounded).weight(.bold))
                 .foregroundStyle(.white)
                 .multilineTextAlignment(.center)
 
             Text(LocalizedStringKey("Tracked with Pausely"))
-                .font(.system(size: 14, weight: .medium, design: .rounded))
+                .font(.system(.footnote, design: .rounded).weight(.medium))
                 .foregroundStyle(Color.luxuryGold)
         }
         .frame(maxWidth: .infinity)
@@ -159,12 +159,12 @@ struct ShareableInsightCard: View {
             // Total monthly spend (hero number)
             VStack(spacing: 4) {
                 Text("Total Monthly Spend")
-                    .font(.system(size: 13, weight: .medium, design: .rounded))
+                    .font(.system(.footnote, design: .rounded).weight(.medium))
                     .foregroundStyle(.white.opacity(0.6))
                     .textCase(.uppercase)
 
                 Text(totalMonthlySpend.formatted(.currency(code: "USD").precision(.fractionLength(0))))
-                    .font(.system(size: 52, weight: .bold, design: .rounded))
+                    .font(.system(.largeTitle, design: .rounded).weight(.bold))
                     .foregroundStyle(
                         LinearGradient(
                             colors: [Color.luxuryGold, Color.luxuryPink],
@@ -220,17 +220,17 @@ struct ShareableInsightCard: View {
                     .frame(width: 48, height: 48)
 
                 Image(systemName: "banknote.fill")
-                    .font(.system(size: 22, weight: .semibold))
+                    .font(.callout.weight(.semibold))
                     .foregroundStyle(Color.semanticSuccess)
             }
 
             VStack(alignment: .leading, spacing: 3) {
                 Text("Money Saved by Pausing")
-                    .font(.system(size: 13, weight: .medium, design: .rounded))
+                    .font(.system(.footnote, design: .rounded).weight(.medium))
                     .foregroundStyle(.white.opacity(0.6))
 
                 Text(moneySavedByPausing.formatted(.currency(code: "USD").precision(.fractionLength(0))))
-                    .font(.system(size: 24, weight: .bold, design: .rounded))
+                    .font(.system(.title2, design: .rounded).weight(.bold))
                     .foregroundStyle(Color.semanticSuccess)
             }
 
@@ -251,7 +251,7 @@ struct ShareableInsightCard: View {
     private func efficiencySection(score: Double) -> some View {
         VStack(spacing: 12) {
             Text(LocalizedStringKey("Subscription Efficiency"))
-                .font(.system(size: 13, weight: .medium, design: .rounded))
+                .font(.system(.footnote, design: .rounded).weight(.medium))
                 .foregroundStyle(.white.opacity(0.6))
                 .textCase(.uppercase)
 
@@ -277,17 +277,17 @@ struct ShareableInsightCard: View {
 
                 VStack(spacing: 0) {
                     Text("\(Int(score))")
-                        .font(.system(size: 36, weight: .bold, design: .rounded))
+                        .font(.system(.title, design: .rounded).weight(.bold))
                         .foregroundStyle(.white)
 
                     Text("/ 100")
-                        .font(.system(size: 12, weight: .medium, design: .rounded))
+                        .font(.system(.caption2, design: .rounded).weight(.medium))
                         .foregroundStyle(.white.opacity(0.5))
                 }
             }
 
             Text(efficiencyLabel(score: score))
-                .font(.system(size: 15, weight: .semibold, design: .rounded))
+                .font(.system(.subheadline, design: .rounded).weight(.semibold))
                 .foregroundStyle(efficiencyColor(score: score))
         }
         .padding(.vertical, 16)
@@ -302,17 +302,17 @@ struct ShareableInsightCard: View {
     private var footerSection: some View {
         HStack(spacing: 8) {
             Image(systemName: "link")
-                .font(.system(size: 12))
+                .font(.caption2)
                 .foregroundStyle(Color.luxuryGold)
 
             Text("pausely.app")
-                .font(.system(size: 14, weight: .semibold, design: .rounded))
+                .font(.system(.footnote, design: .rounded).weight(.semibold))
                 .foregroundStyle(Color.luxuryGold)
 
             Spacer()
 
             Text("Track smarter. Spend less.")
-                .font(.system(size: 12, weight: .medium, design: .rounded))
+                .font(.system(.caption2, design: .rounded).weight(.medium))
                 .foregroundStyle(.white.opacity(0.5))
         }
         .padding(.vertical, 12)
@@ -366,21 +366,21 @@ struct ShareableHighlightRow: View {
                     .frame(width: 44, height: 44)
 
                 Image(systemName: icon)
-                    .font(.system(size: 20, weight: .semibold))
+                    .font(.callout.weight(.semibold))
                     .foregroundStyle(iconColor)
             }
 
             VStack(alignment: .leading, spacing: 3) {
                 Text(title)
-                    .font(.system(size: 12, weight: .medium, design: .rounded))
+                    .font(.system(.caption2, design: .rounded).weight(.medium))
                     .foregroundStyle(.white.opacity(0.6))
 
                 Text(subtitle)
-                    .font(.system(size: 17, weight: .semibold, design: .rounded))
+                    .font(.system(.body, design: .rounded).weight(.semibold))
                     .foregroundStyle(.white)
 
                 Text(detail)
-                    .font(.system(size: 13, weight: .medium, design: .rounded))
+                    .font(.system(.footnote, design: .rounded).weight(.medium))
                     .foregroundStyle(iconColor)
             }
 

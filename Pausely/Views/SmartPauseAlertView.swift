@@ -59,17 +59,17 @@ struct SmartPauseAlertView: View {
                     .frame(width: 70, height: 70)
                 
                 Image(systemName: suggestion.urgencyLevel.icon)
-                    .font(.system(size: 32))
+                    .font(.title)
                     .foregroundColor(suggestion.urgencyLevel.color)
             }
             
             VStack(spacing: 4) {
                 Text(suggestion.urgencyLevel.title)
-                    .font(.system(size: 20, weight: .bold, design: .rounded))
+                    .font(.headline.weight(.bold))
                     .foregroundColor(.primary)
-                
+
                 Text(suggestion.subscription.name)
-                    .font(.system(size: 17, weight: .semibold))
+                    .font(.body.weight(.semibold))
                     .foregroundColor(.secondary)
             }
         }
@@ -86,7 +86,7 @@ struct SmartPauseAlertView: View {
         VStack(spacing: 16) {
             HStack {
                 Text("Your Usage This Month")
-                    .font(.system(size: 17, weight: .semibold, design: .rounded))
+                    .font(.body.weight(.semibold))
                 
                 Spacer()
                 
@@ -100,13 +100,13 @@ struct SmartPauseAlertView: View {
             VStack(spacing: 8) {
                 HStack {
                     Text("Used")
-                        .font(.system(size: 13, weight: .medium))
+                        .font(.footnote.weight(.medium))
                         .foregroundColor(.secondary)
 
                     Spacer()
 
                     Text(suggestion.formattedUsage)
-                        .font(.system(size: 15, weight: .bold, design: .rounded))
+                        .font(.subheadline.weight(.bold))
                         .foregroundColor(suggestion.currentUsageMinutes < 30 ? .orange : .primary)
 
                     // Show badge when usage is from Screen Time (estimated)
@@ -166,7 +166,7 @@ struct SmartPauseAlertView: View {
         VStack(spacing: 16) {
             HStack {
                 Text("Cost Analysis")
-                    .font(.system(size: 17, weight: .semibold, design: .rounded))
+                    .font(.body.weight(.semibold))
                 
                 Spacer()
             }
@@ -199,11 +199,11 @@ struct SmartPauseAlertView: View {
                 
                 VStack(alignment: .leading, spacing: 2) {
                     Text("Value Rating: \(efficiencyRating)")
-                        .font(.system(size: 15, weight: .semibold))
+                        .font(.subheadline.weight(.semibold))
                         .foregroundColor(efficiencyColor)
-                    
+
                     Text(efficiencyDescription)
-                        .font(.system(size: 13))
+                        .font(.footnote)
                         .foregroundColor(.secondary)
                         .lineLimit(2)
                 }
@@ -224,7 +224,7 @@ struct SmartPauseAlertView: View {
         VStack(spacing: 12) {
             HStack {
                 Text("How Long to Pause?")
-                    .font(.system(size: 17, weight: .semibold, design: .rounded))
+                    .font(.body.weight(.semibold))
                 
                 Spacer()
             }
@@ -239,7 +239,7 @@ struct SmartPauseAlertView: View {
             }
             
             Text("You can unpause anytime. We'll remind you before it resumes.")
-                .font(.system(size: 13))
+                .font(.footnote)
                 .foregroundColor(.secondary)
                 .multilineTextAlignment(.center)
         }
@@ -256,7 +256,7 @@ struct SmartPauseAlertView: View {
                 .foregroundColor(.yellow)
             
             Text(suggestion.reason)
-                .font(.system(size: 15))
+                .font(.subheadline)
                 .foregroundColor(.primary)
                 .lineLimit(3)
             
@@ -278,7 +278,7 @@ struct SmartPauseAlertView: View {
                 HStack {
                     Image(systemName: "pause.circle.fill")
                     Text("Pause for \(selectedDuration.displayName)")
-                        .font(.system(size: 17, weight: .semibold, design: .rounded))
+                        .font(.body.weight(.semibold))
                 }
                 .foregroundColor(.white)
                 .frame(maxWidth: .infinity)
@@ -296,7 +296,7 @@ struct SmartPauseAlertView: View {
             HStack(spacing: 12) {
                 Button(action: onDismiss) {
                     Text("Not Now")
-                        .font(.system(size: 15, weight: .medium))
+                        .font(.subheadline.weight(.medium))
                         .foregroundColor(.secondary)
                         .frame(maxWidth: .infinity)
                         .frame(height: 44)
@@ -306,7 +306,7 @@ struct SmartPauseAlertView: View {
                 
                 Button(action: onAdjustThreshold) {
                     Text("Adjust Alerts")
-                        .font(.system(size: 15, weight: .medium))
+                        .font(.subheadline.weight(.medium))
                         .foregroundColor(.luxuryPurple)
                         .frame(maxWidth: .infinity)
                         .frame(height: 44)
@@ -327,13 +327,13 @@ struct SmartPauseAlertView: View {
                 .frame(width: 20)
             
             Text(title)
-                .font(.system(size: 14))
+                .font(.subheadline)
                 .foregroundColor(.secondary)
-            
+
             Spacer()
-            
+
             Text(value)
-                .font(.system(size: 14, weight: .semibold, design: .rounded))
+                .font(.subheadline.weight(.semibold))
                 .foregroundColor(.primary)
         }
     }
@@ -345,18 +345,18 @@ struct SmartPauseAlertView: View {
                 .foregroundColor(color)
             
             Text(value)
-                .font(.system(size: 22, weight: .bold, design: .rounded))
+                .font(.title3.weight(.bold))
                 .foregroundColor(.primary)
                 .lineLimit(1)
                 .minimumScaleFactor(0.8)
             
             Text(title)
-                .font(.system(size: 12, weight: .medium))
+                .font(.caption.weight(.medium))
                 .foregroundColor(.secondary)
                 .lineLimit(1)
-            
+
             Text(subtitle)
-                .font(.system(size: 11))
+                .font(.caption2)
                 .foregroundColor(.secondary.opacity(0.8))
                 .multilineTextAlignment(.center)
                 .lineLimit(2)
@@ -371,10 +371,10 @@ struct SmartPauseAlertView: View {
         Button(action: { selectedDuration = duration }) {
             VStack(spacing: 4) {
                 Text(duration.displayName)
-                    .font(.system(size: 14, weight: selectedDuration == duration ? .semibold : .medium, design: .rounded))
-                
+                    .font(.subheadline.weight(selectedDuration == duration ? .semibold : .medium))
+
                 Text(saveAmount(for: duration))
-                    .font(.system(size: 12))
+                    .font(.caption)
                     .foregroundColor(.green)
             }
             .foregroundColor(selectedDuration == duration ? .white : .primary)
@@ -538,18 +538,18 @@ struct SmartPauseBanner: View {
                         .frame(width: 44, height: 44)
                     
                     Image(systemName: suggestion.urgencyLevel.icon)
-                        .font(.system(size: 20))
+                        .font(.headline)
                         .foregroundColor(suggestion.urgencyLevel.color)
                 }
                 
                 // Content
                 VStack(alignment: .leading, spacing: 4) {
                     Text("Save \(suggestion.formattedSavings) on \(suggestion.subscription.name)")
-                        .font(.system(size: 15, weight: .semibold, design: .rounded))
+                        .font(.subheadline.weight(.semibold))
                         .foregroundColor(.primary)
                     
                     Text("You've only used it for \(suggestion.formattedUsage) this month")
-                        .font(.system(size: 13))
+                        .font(.footnote)
                         .foregroundColor(.secondary)
                         .lineLimit(1)
                 }
@@ -558,7 +558,7 @@ struct SmartPauseBanner: View {
                 
                 // Arrow
                 Image(systemName: "chevron.right")
-                    .font(.system(size: 14, weight: .semibold))
+                    .font(.footnote.weight(.semibold))
                     .foregroundColor(.luxuryPurple)
             }
             .padding()
@@ -594,10 +594,10 @@ struct SmartPauseDashboardCard: View {
             HStack {
                 VStack(alignment: .leading, spacing: 4) {
                     Text("Smart Pause Suggestions")
-                        .font(.system(size: 18, weight: .bold, design: .rounded))
+                        .font(.headline.weight(.bold))
                     
                     Text("Based on your actual usage")
-                        .font(.system(size: 14))
+                        .font(.subheadline)
                         .foregroundColor(.secondary)
                 }
                 
@@ -605,7 +605,7 @@ struct SmartPauseDashboardCard: View {
                 
                 if suggestions.count > 0 {
                     Text("\(suggestions.count)")
-                        .font(.system(size: 15, weight: .bold, design: .rounded))
+                        .font(.subheadline.weight(.bold))
                         .foregroundColor(.white)
                         .frame(width: 32, height: 32)
                         .background(
@@ -623,7 +623,7 @@ struct SmartPauseDashboardCard: View {
                         .foregroundColor(.green)
                     
                     Text("You're using all your subscriptions well!")
-                        .font(.system(size: 15))
+                        .font(.subheadline)
                         .foregroundColor(.secondary)
                     
                     Spacer()
@@ -640,11 +640,11 @@ struct SmartPauseDashboardCard: View {
                     
                     VStack(alignment: .leading, spacing: 2) {
                         Text("Potential Monthly Savings")
-                            .font(.system(size: 14))
+                            .font(.subheadline)
                             .foregroundColor(.secondary)
-                        
+
                         Text(formattedTotalSavings)
-                            .font(.system(size: 24, weight: .bold, design: .rounded))
+                            .font(.title2.weight(.bold))
                             .foregroundColor(.green)
                     }
                     
@@ -667,10 +667,10 @@ struct SmartPauseDashboardCard: View {
                 Button(action: onViewAll) {
                     HStack {
                         Text("View All Suggestions")
-                            .font(.system(size: 15, weight: .semibold))
-                        
+                            .font(.subheadline.weight(.semibold))
+
                         Image(systemName: "arrow.right")
-                            .font(.system(size: 14, weight: .semibold))
+                            .font(.footnote.weight(.semibold))
                     }
                     .foregroundColor(.luxuryPurple)
                     .frame(maxWidth: .infinity)

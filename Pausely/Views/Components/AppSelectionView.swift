@@ -27,7 +27,7 @@ struct AppSelectionView: View {
                     // Header
                     VStack(spacing: 12) {
                         Image(systemName: "apps.iphone")
-                            .font(.system(size: 60))
+                            .font(.largeTitle)
                             .foregroundColor(.mint)
 
                         Text("Select Apps to Track")

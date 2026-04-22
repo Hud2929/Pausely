@@ -150,17 +150,17 @@ struct BulkAddView: View {
     private func sectionHeader(for category: SubscriptionCategory) -> some View {
         HStack {
             Image(systemName: category.icon)
-                .font(.system(size: 14))
+                .font(.footnote)
                 .foregroundColor(Color.luxuryPurple)
 
             Text(category.rawValue)
-                .font(.system(size: 14, weight: .semibold))
+                .font(.footnote.weight(.semibold))
                 .foregroundColor(.white)
 
             Spacer()
 
             Text("\(filteredSubscriptions.filter { $0.category == category }.count)")
-                .font(.system(size: 12))
+                .font(.caption2)
                 .foregroundColor(.white.opacity(0.5))
         }
         .padding(.horizontal, 16)
@@ -173,13 +173,13 @@ struct BulkAddView: View {
             if selectedCount > 0 {
                 HStack {
                     Text("\(selectedCount) subscription\(selectedCount == 1 ? "" : "s") selected")
-                        .font(.system(size: 14))
+                        .font(.footnote)
                         .foregroundColor(.white.opacity(0.7))
 
                     Spacer()
 
                     Text("Tap to deselect all")
-                        .font(.system(size: 12))
+                        .font(.caption2)
                         .foregroundColor(.white.opacity(0.4))
                         .onTapGesture {
                             selectedSubscriptions.removeAll()
@@ -191,15 +191,15 @@ struct BulkAddView: View {
             Button(action: { showingCSVImport = true }) {
                 HStack(spacing: 8) {
                     Image(systemName: "doc.text")
-                        .font(.system(size: 16))
+                        .font(.callout)
 
                     Text("Import from CSV")
-                        .font(.system(size: 14, weight: .medium))
+                        .font(.footnote.weight(.medium))
 
                     Spacer()
 
                     Image(systemName: "chevron.right")
-                        .font(.system(size: 12))
+                        .font(.caption2)
                         .foregroundColor(.white.opacity(0.4))
                 }
                 .foregroundColor(.white.opacity(0.7))
@@ -218,21 +218,21 @@ struct BulkAddView: View {
             Spacer()
 
             Image(systemName: "checkmark.circle.fill")
-                .font(.system(size: 80))
+                .font(.largeTitle)
                 .foregroundColor(.green)
 
             Text("Added Successfully!")
-                .font(.system(size: 24, weight: .bold))
+                .font(.title2.weight(.bold))
                 .foregroundColor(.white)
 
             VStack(spacing: 8) {
                 Text("\(addedCount) subscription\(addedCount == 1 ? "" : "s") added")
-                    .font(.system(size: 16))
+                    .font(.callout)
                     .foregroundColor(.white.opacity(0.7))
 
                 if failedCount > 0 {
                     Text("\(failedCount) failed (may already exist)")
-                        .font(.system(size: 14))
+                        .font(.footnote)
                         .foregroundColor(.orange)
                 }
             }
@@ -241,7 +241,7 @@ struct BulkAddView: View {
 
             Button(action: { dismiss() }) {
                 Text("Done")
-                    .font(.system(size: 17, weight: .semibold))
+                    .font(.body.weight(.semibold))
                     .foregroundColor(.black)
                     .frame(maxWidth: .infinity)
                     .frame(height: 56)
@@ -392,7 +392,7 @@ struct SubscriptionCatalogRow: View {
                             .frame(width: 24, height: 24)
 
                         Image(systemName: "checkmark")
-                            .font(.system(size: 12, weight: .bold))
+                            .font(.caption2.weight(.bold))
                             .foregroundColor(.black)
                     }
                 }
@@ -404,18 +404,18 @@ struct SubscriptionCatalogRow: View {
                         .frame(width: 44, height: 44)
 
                     Image(systemName: subscription.iconName)
-                        .font(.system(size: 20))
+                        .font(.callout)
                         .foregroundColor(Color.luxuryPurple)
                 }
 
                 // Info
                 VStack(alignment: .leading, spacing: 4) {
                     Text(subscription.name)
-                        .font(.system(size: 16, weight: .semibold))
+                        .font(.callout.weight(.semibold))
                         .foregroundColor(.white)
 
                     Text(subscription.description)
-                        .font(.system(size: 12))
+                        .font(.caption2)
                         .foregroundColor(.white.opacity(0.6))
                         .lineLimit(1)
                 }
@@ -425,11 +425,11 @@ struct SubscriptionCatalogRow: View {
                 // Price
                 VStack(alignment: .trailing, spacing: 2) {
                     Text("$\(String(format: "%.2f", defaultPrice))")
-                        .font(.system(size: 16, weight: .semibold))
+                        .font(.callout.weight(.semibold))
                         .foregroundColor(.white)
 
                     Text(frequency.shortDisplay)
-                        .font(.system(size: 12))
+                        .font(.caption2)
                         .foregroundColor(.white.opacity(0.5))
                 }
             }
@@ -459,10 +459,10 @@ struct BulkAddFilterPill: View {
             HStack(spacing: 4) {
                 if let icon = icon {
                     Image(systemName: icon)
-                        .font(.system(size: 12))
+                        .font(.caption2)
                 }
                 Text(title)
-                    .font(.system(size: 13, weight: .medium))
+                    .font(.footnote.weight(.medium))
             }
             .foregroundColor(isSelected ? .black : .white.opacity(0.7))
             .padding(.horizontal, 12)
@@ -491,16 +491,16 @@ struct BulkAddCSVImportSheet: View {
 
                 VStack(spacing: 20) {
                     Text("Paste your CSV data")
-                        .font(.system(size: 16))
+                        .font(.callout)
                         .foregroundColor(.white.opacity(0.7))
 
                     Text("Format: name, cost, frequency (e.g., Netflix, 15.99, monthly)")
-                        .font(.system(size: 13))
+                        .font(.footnote)
                         .foregroundColor(.white.opacity(0.5))
                         .multilineTextAlignment(.center)
 
                     TextEditor(text: $csvText)
-                        .font(.system(size: 14, design: .monospaced))
+                        .font(.system(.footnote, design: .monospaced))
                         .foregroundColor(.white)
                         .padding(12)
                         .background(Color.white.opacity(0.1))
@@ -521,7 +521,7 @@ struct BulkAddCSVImportSheet: View {
                         onImport(csvText)
                     }) {
                         Text("Import \(csvText.isEmpty ? 0 : csvText.components(separatedBy: .newlines).filter { !$0.isEmpty }.count) Items")
-                            .font(.system(size: 17, weight: .semibold))
+                            .font(.body.weight(.semibold))
                             .foregroundColor(.black)
                             .frame(maxWidth: .infinity)
                             .frame(height: 56)

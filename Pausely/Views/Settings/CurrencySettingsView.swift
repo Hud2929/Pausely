@@ -152,7 +152,7 @@ struct CurrencySettingsView: View {
                 HStack {
                     Button(action: { dismiss() }) {
                         Image(systemName: "xmark")
-                            .font(.system(size: 16, weight: .semibold))
+                            .font(.callout.weight(.semibold))
                             .foregroundColor(.white)
                             .frame(width: 36, height: 36)
                             .background(Color.white.opacity(0.1))
@@ -163,7 +163,7 @@ struct CurrencySettingsView: View {
                     Spacer()
 
                     Text("Currency")
-                        .font(.system(size: 17, weight: .semibold))
+                        .font(.callout.weight(.semibold))
                         .foregroundColor(.white)
 
                     Spacer()
@@ -182,16 +182,16 @@ struct CurrencySettingsView: View {
                             .frame(width: 80, height: 80)
 
                         Text(currentSymbol)
-                            .font(.system(size: 36, weight: .bold))
+                            .font(.largeTitle.weight(.bold))
                             .foregroundColor(.luxuryPurple)
                     }
 
                     Text(currentName)
-                        .font(.system(size: 20, weight: .bold))
+                        .font(.title3.weight(.bold))
                         .foregroundColor(.white)
 
                     Text(currentCode)
-                        .font(.system(size: 14, weight: .medium))
+                        .font(.footnote.weight(.medium))
                         .foregroundColor(.gray)
                 }
                 .padding(.vertical, 20)
@@ -200,11 +200,11 @@ struct CurrencySettingsView: View {
                 HStack(spacing: 12) {
                     Image(systemName: "magnifyingglass")
                         .foregroundColor(.gray)
-                        .font(.system(size: 16))
+                        .font(.callout)
 
                     TextField("Search currencies...", text: $searchText)
                         .foregroundColor(.white)
-                        .font(.system(size: 16))
+                        .font(.callout)
                         .keyboardType(.default)
                         .submitLabel(.search)
 
@@ -226,7 +226,7 @@ struct CurrencySettingsView: View {
                 // Results count
                 HStack {
                     Text("\(filteredCurrencies.count) currencies")
-                        .font(.system(size: 13))
+                        .font(.caption)
                         .foregroundColor(.gray)
 
                     Spacer()
@@ -294,17 +294,17 @@ struct CurrencyRow: View {
                         .frame(width: 48, height: 48)
 
                     Text(symbol)
-                        .font(.system(size: 20, weight: .bold))
+                        .font(.callout.weight(.bold))
                         .foregroundColor(isSelected ? .luxuryPurple : .white)
                 }
 
                 VStack(alignment: .leading, spacing: 4) {
                     Text(name)
-                        .font(.system(size: 16, weight: .medium))
+                        .font(.callout.weight(.medium))
                         .foregroundColor(.white)
 
                     Text(code)
-                        .font(.system(size: 13, weight: .medium))
+                        .font(.footnote.weight(.medium))
                         .foregroundColor(.gray)
                 }
 
@@ -312,7 +312,7 @@ struct CurrencyRow: View {
 
                 if isSelected {
                     Image(systemName: "checkmark.circle.fill")
-                        .font(.system(size: 22))
+                        .font(.title3)
                         .foregroundColor(.luxuryPurple)
                         .shadow(color: .luxuryPurple.opacity(0.5), radius: 8)
                 }

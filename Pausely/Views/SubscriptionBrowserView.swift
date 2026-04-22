@@ -102,7 +102,7 @@ struct SubscriptionBrowserView: View {
                     dismiss()
                 } label: {
                     Image(systemName: "xmark")
-                        .font(.system(size: 16, weight: .medium))
+                        .font(.callout.weight(.medium))
                         .foregroundColor(.white.opacity(0.7))
                 }
             }
@@ -124,10 +124,10 @@ struct SubscriptionBrowserView: View {
         HStack(spacing: 12) {
             Image(systemName: "magnifyingglass")
                 .foregroundColor(.white.opacity(0.5))
-                .font(.system(size: 16, weight: .medium))
+                .font(.callout.weight(.medium))
 
             TextField("Search services...", text: $searchText)
-                .font(.system(size: 17, weight: .medium))
+                .font(.body.weight(.medium))
                 .foregroundColor(.white)
                 .autocapitalization(.none)
                 .keyboardType(.default)
@@ -261,7 +261,7 @@ struct PremiumCategoryPill: View {
             action()
         }) {
             Text(title)
-                .font(.system(size: 13, weight: isSelected ? .semibold : .medium))
+                .font(.footnote.weight(isSelected ? .semibold : .medium))
                 .foregroundColor(isSelected ? .white : .white.opacity(0.7))
                 .padding(.horizontal, 16)
                 .padding(.vertical, 8)
@@ -363,7 +363,7 @@ struct CatalogEntryCard: View {
                 .frame(width: 48, height: 48)
 
             Image(systemName: entry.iconName)
-                .font(.system(size: 20, weight: .bold))
+                .font(.headline.weight(.bold))
                 .foregroundColor(iconColor)
         }
     }
@@ -374,7 +374,7 @@ struct CatalogEntryCard: View {
             Group {
                 if showCheckmark {
                     Image(systemName: "checkmark.circle.fill")
-                        .font(.system(size: 24, weight: .bold))
+                        .font(.title2.weight(.bold))
                         .foregroundStyle(
                             LinearGradient(
                                 colors: [.luxuryPurple, .luxuryPink],
@@ -385,7 +385,7 @@ struct CatalogEntryCard: View {
                         .shadow(color: .luxuryPurple.opacity(0.6), radius: 10)
                 } else {
                     Image(systemName: "checkmark")
-                        .font(.system(size: 14, weight: .bold))
+                        .font(.footnote.weight(.bold))
                         .foregroundColor(.white)
                         .padding(5)
                         .background(Circle().fill(Color.luxuryPurple))
@@ -401,12 +401,12 @@ struct CatalogEntryCard: View {
     private var nameAndCategory: some View {
         VStack(alignment: .leading, spacing: 4) {
             Text(entry.name)
-                .font(.system(size: 16, weight: .semibold, design: .rounded))
+                .font(.callout.weight(.semibold))
                 .foregroundColor(.white)
                 .lineLimit(1)
 
             Text(entry.category.rawValue)
-                .font(.system(size: 12, weight: .medium))
+                .font(.caption2.weight(.medium))
                 .foregroundColor(.white.opacity(0.5))
         }
     }
@@ -416,7 +416,7 @@ struct CatalogEntryCard: View {
             if let pricing = defaultPricing {
                 HStack(alignment: .firstTextBaseline, spacing: 4) {
                     Text("\(currencyManager.priceIndicator)\(currencyManager.formatCatalogPrice(pricing.monthlyPriceUSD))")
-                        .font(.system(size: 18, weight: .bold, design: .rounded))
+                        .font(.headline.weight(.bold))
                         .foregroundStyle(
                             LinearGradient(
                                 colors: [.white, .white.opacity(0.85)],
@@ -425,13 +425,13 @@ struct CatalogEntryCard: View {
                             )
                         )
                     Text("/mo")
-                        .font(.system(size: 11, weight: .medium))
+                        .font(.caption2.weight(.medium))
                         .foregroundColor(.white.opacity(0.4))
                 }
 
                 if let annual = pricing.annualPriceUSD, annual > 0 {
                     Text("or \(currencyManager.priceIndicator)\(currencyManager.formatCatalogPrice(annual))/yr")
-                        .font(.system(size: 11, weight: .medium))
+                        .font(.caption2.weight(.medium))
                         .foregroundColor(.white.opacity(0.4))
                 }
             }
@@ -446,7 +446,7 @@ struct CatalogEntryCard: View {
                 HStack(spacing: 5) {
                     ForEach(Array(entry.availableTiers.prefix(3).enumerated()), id: \.element) { _, tier in
                         Text(tier.displayName)
-                            .font(.system(size: 9, weight: .semibold))
+                            .font(.caption2.weight(.semibold))
                             .foregroundColor(.white.opacity(0.6))
                             .padding(.horizontal, 7)
                             .padding(.vertical, 3)
@@ -461,7 +461,7 @@ struct CatalogEntryCard: View {
                     }
                     if entry.availableTiers.count > 3 {
                         Text("+\(entry.availableTiers.count - 3)")
-                            .font(.system(size: 9, weight: .medium))
+                            .font(.caption2.weight(.medium))
                             .foregroundColor(.white.opacity(0.4))
                     }
                 }

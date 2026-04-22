@@ -31,22 +31,22 @@ struct BillingHistoryView: View {
                 // Header
                 VStack(spacing: 16) {
                     Image(systemName: "list.bullet.rectangle.fill")
-                        .font(.system(size: 48))
+                        .font(.largeTitle)
                         .foregroundStyle(Color.luxuryGold)
-                    
+
                     Text("Billing History")
-                        .font(.system(size: 28, weight: .bold, design: .rounded))
+                        .font(.system(.title, design: .rounded).weight(.bold))
                         .foregroundStyle(.white)
-                    
+
                     if !transactions.isEmpty {
                         // Total spent (only show if has transactions)
                         VStack(spacing: 4) {
                             Text("Total Spent")
-                                .font(.system(size: 14, weight: .medium, design: .rounded))
+                                .font(.system(.footnote, design: .rounded).weight(.medium))
                                 .foregroundStyle(.white.opacity(0.5))
-                            
+
                             Text("$\(String(format: "%.2f", calculateTotal()))")
-                                .font(.system(size: 36, weight: .bold, design: .rounded))
+                                .font(.system(.largeTitle, design: .rounded).weight(.bold))
                                 .foregroundStyle(.white)
                         }
                         .padding(.top, 8)
@@ -62,25 +62,25 @@ struct BillingHistoryView: View {
                     // Empty State
                     VStack(spacing: 20) {
                         Image(systemName: "doc.text")
-                            .font(.system(size: 80))
+                            .font(.largeTitle)
                             .foregroundStyle(.white.opacity(0.3))
-                        
+
                         Text("No Billing History")
-                            .font(.system(size: 22, weight: .bold, design: .rounded))
+                            .font(.system(.title3, design: .rounded).weight(.bold))
                             .foregroundStyle(.white)
-                        
+
                         Text("Your transactions will appear here once you make a purchase or receive credits.")
-                            .font(.system(size: 15, weight: .medium, design: .rounded))
+                            .font(.system(.subheadline, design: .rounded).weight(.medium))
                             .foregroundStyle(.white.opacity(0.6))
                             .multilineTextAlignment(.center)
                             .padding(.horizontal, 40)
-                        
+
                         Button(action: { showingPaywall = true }) {
                             HStack(spacing: 12) {
                                 Image(systemName: "crown.fill")
-                                    .font(.system(size: 18, weight: .semibold))
+                                    .font(.system(.callout, design: .rounded).weight(.semibold))
                                 Text("Upgrade to Pro")
-                                    .font(.system(size: 17, weight: .semibold, design: .rounded))
+                                    .font(.system(.body, design: .rounded).weight(.semibold))
                             }
                             .foregroundStyle(.white)
                             .frame(maxWidth: .infinity)
@@ -114,7 +114,7 @@ struct BillingHistoryView: View {
                         ForEach(groupedTransactions.keys.sorted(by: >), id: \.self) { month in
                             VStack(alignment: .leading, spacing: 8) {
                                 Text(month)
-                                    .font(.system(size: 14, weight: .semibold, design: .rounded))
+                                    .font(.system(.footnote, design: .rounded).weight(.semibold))
                                     .foregroundStyle(.white.opacity(0.5))
                                     .padding(.leading, 4)
                                 
@@ -132,9 +132,9 @@ struct BillingHistoryView: View {
                     Button(action: { exportReceipts() }) {
                         HStack(spacing: 12) {
                             Image(systemName: "square.and.arrow.up")
-                                .font(.system(size: 18, weight: .semibold))
+                                .font(.system(.callout, design: .rounded).weight(.semibold))
                             Text("Export All Receipts")
-                                .font(.system(size: 17, weight: .semibold, design: .rounded))
+                                .font(.system(.body, design: .rounded).weight(.semibold))
                         }
                         .foregroundStyle(Color.luxuryGold)
                         .frame(maxWidth: .infinity)
@@ -221,34 +221,34 @@ struct TransactionRow: View {
                         .frame(width: 44, height: 44)
                     
                     Image(systemName: transaction.icon)
-                        .font(.system(size: 20, weight: .semibold))
+                        .font(.system(.callout, design: .rounded).weight(.semibold))
                         .foregroundStyle(backgroundColor)
                 }
-                
+
                 VStack(alignment: .leading, spacing: 4) {
                     Text(transaction.title)
-                        .font(.system(size: 16, weight: .semibold, design: .rounded))
+                        .font(.system(.callout, design: .rounded).weight(.semibold))
                         .foregroundStyle(.white)
-                    
+
                     Text(transaction.description)
-                        .font(.system(size: 13, weight: .medium, design: .rounded))
+                        .font(.system(.footnote, design: .rounded).weight(.medium))
                         .foregroundStyle(.white.opacity(0.5))
-                    
+
                     Text(transaction.paymentMethod)
-                        .font(.system(size: 12, weight: .medium, design: .rounded))
+                        .font(.system(.caption, design: .rounded).weight(.medium))
                         .foregroundStyle(.white.opacity(0.3))
                         .padding(.top, 2)
                 }
-                
+
                 Spacer()
-                
+
                 VStack(alignment: .trailing, spacing: 4) {
                     Text(formatAmount(transaction.amount))
-                        .font(.system(size: 17, weight: .bold, design: .rounded))
+                        .font(.system(.body, design: .rounded).weight(.bold))
                         .foregroundStyle(amountColor)
-                    
+
                     Text(formatDate(transaction.date))
-                        .font(.system(size: 12, weight: .medium, design: .rounded))
+                        .font(.system(.caption, design: .rounded).weight(.medium))
                         .foregroundStyle(.white.opacity(0.4))
                     
                     TransactionStatusBadge(status: transaction.status)
@@ -304,7 +304,7 @@ struct TransactionStatusBadge: View {
                 .frame(width: 6, height: 6)
             
             Text(statusText)
-                .font(.system(size: 11, weight: .semibold, design: .rounded))
+                .font(.system(.caption2, design: .rounded).weight(.semibold))
                 .foregroundStyle(statusColor)
         }
         .padding(.horizontal, 8)
@@ -340,7 +340,7 @@ struct FilterPill: View {
     var body: some View {
         Button(action: action) {
             Text(title)
-                .font(.system(size: 14, weight: isSelected ? .semibold : .medium, design: .rounded))
+                .font(.system(.footnote, design: .rounded).weight(isSelected ? .semibold : .medium))
                 .foregroundStyle(isSelected ? .white : .white.opacity(0.6))
                 .padding(.horizontal, 16)
                 .padding(.vertical, 8)
@@ -364,26 +364,26 @@ struct ReceiptView: View {
                     // Receipt Header
                     VStack(spacing: 16) {
                         Image(systemName: "checkmark.circle.fill")
-                            .font(.system(size: 64))
+                            .font(.largeTitle)
                             .foregroundStyle(Color.luxuryGold)
-                        
+
                         Text("Receipt")
-                            .font(.system(size: 28, weight: .bold, design: .rounded))
+                            .font(.system(.title, design: .rounded).weight(.bold))
                             .foregroundStyle(.white)
-                        
+
                         Text(transaction.title)
-                            .font(.system(size: 18, weight: .semibold, design: .rounded))
+                            .font(.system(.subheadline, design: .rounded).weight(.semibold))
                             .foregroundStyle(.white.opacity(0.8))
                     }
                     
                     // Amount
                     VStack(spacing: 8) {
                         Text("$\(String(format: "%.2f", abs(transaction.amount)))")
-                            .font(.system(size: 48, weight: .bold, design: .rounded))
+                            .font(.system(.largeTitle, design: .rounded).weight(.bold))
                             .foregroundStyle(.white)
-                        
+
                         Text("Paid on \(formatFullDate(transaction.date))")
-                            .font(.system(size: 15, weight: .medium, design: .rounded))
+                            .font(.system(.subheadline, design: .rounded).weight(.medium))
                             .foregroundStyle(.white.opacity(0.6))
                     }
                     
@@ -403,9 +403,9 @@ struct ReceiptView: View {
                         Button(action: { shareReceipt() }) {
                             HStack(spacing: 12) {
                                 Image(systemName: "square.and.arrow.up")
-                                    .font(.system(size: 18, weight: .semibold))
+                                    .font(.system(.callout, design: .rounded).weight(.semibold))
                                 Text("Share Receipt")
-                                    .font(.system(size: 17, weight: .semibold, design: .rounded))
+                                    .font(.system(.body, design: .rounded).weight(.semibold))
                             }
                             .foregroundStyle(.white)
                             .frame(maxWidth: .infinity)
@@ -415,13 +415,13 @@ struct ReceiptView: View {
                                     .fill(Color.luxuryPurple)
                             )
                         }
-                        
+
                         Button(action: { downloadPDF() }) {
                             HStack(spacing: 12) {
                                 Image(systemName: "arrow.down.doc")
-                                    .font(.system(size: 18, weight: .semibold))
+                                    .font(.system(.callout, design: .rounded).weight(.semibold))
                                 Text("Download PDF")
-                                    .font(.system(size: 17, weight: .semibold, design: .rounded))
+                                    .font(.system(.body, design: .rounded).weight(.semibold))
                             }
                             .foregroundStyle(Color.luxuryGold)
                             .frame(maxWidth: .infinity)
@@ -485,13 +485,13 @@ struct ReceiptRow: View {
     var body: some View {
         HStack {
             Text(label)
-                .font(.system(size: 15, weight: .medium, design: .rounded))
+                .font(.system(.subheadline, design: .rounded).weight(.medium))
                 .foregroundStyle(.white.opacity(0.6))
-            
+
             Spacer()
-            
+
             Text(value)
-                .font(.system(size: 15, weight: .semibold, design: .rounded))
+                .font(.system(.subheadline, design: .rounded).weight(.semibold))
                 .foregroundStyle(valueColor)
                 .multilineTextAlignment(.trailing)
         }

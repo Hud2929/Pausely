@@ -134,12 +134,12 @@ struct SubscriptionManagementView: View {
                     .frame(width: 100, height: 100)
                 
                 Text(String(subscription.name.prefix(1)))
-                    .font(.largeTitle.bold())
+                    .font(.largeTitle.weight(.bold))
                     .foregroundStyle(.white)
             }
             
             Text(subscription.name)
-                .font(.title.bold())
+                .font(.title.weight(.bold))
                 .foregroundColor(.primary)
 
             Text(subscription.displayAmount + "/" + subscription.billingFrequency.rawValue)
@@ -212,11 +212,11 @@ struct SubscriptionManagementView: View {
             HStack {
                 VStack(alignment: .leading, spacing: 4) {
                     Text("💡 Smart Suggestion")
-                        .font(.system(size: 14, weight: .bold, design: .rounded))
+                        .font(.subheadline.weight(.bold))
                         .foregroundColor(.yellow)
                     
                     Text("Consider Pausing This Subscription")
-                        .font(.system(size: 17, weight: .bold, design: .rounded))
+                        .font(.body.weight(.bold))
                 }
                 
                 Spacer()
@@ -255,7 +255,7 @@ struct SubscriptionManagementView: View {
         VStack(spacing: 16) {
             HStack {
                 Text("📱 Usage Tracking")
-                    .font(.system(size: 17, weight: .bold, design: .rounded))
+                    .font(.body.weight(.bold))
 
                 Spacer()
 
@@ -300,7 +300,7 @@ struct SubscriptionManagementView: View {
                     VStack(alignment: .leading, spacing: 4) {
                         HStack(spacing: 8) {
                             Text("This Month's Usage")
-                                .font(.system(size: 14))
+                                .font(.subheadline)
                                 .foregroundColor(.secondary)
 
                             EstimateBadge(isEstimated: screenTimeManager.isEstimated(for: subscription.name))
@@ -308,10 +308,10 @@ struct SubscriptionManagementView: View {
 
                         if currentUsageMinutes > 0 {
                             Text(screenTimeManager.formatMinutes(currentUsageMinutes))
-                                .font(.system(size: 36, weight: .bold, design: .rounded))
+                                .font(.title.weight(.bold))
                         } else {
                             Text("No data yet")
-                                .font(.system(size: 28, weight: .medium, design: .rounded))
+                                .font(.title2.weight(.medium))
                                 .foregroundColor(.secondary)
                         }
 
@@ -339,10 +339,10 @@ struct SubscriptionManagementView: View {
 
                         VStack(spacing: 0) {
                             Text("\(min(currentUsageMinutes * 100 / 600, 100))%")
-                                .font(.system(size: 14, weight: .bold))
+                                .font(.subheadline.weight(.bold))
                                 .foregroundColor(.primary)
                             Text("of 10h")
-                                .font(.system(size: 10))
+                                .font(.caption2)
                                 .foregroundColor(.secondary)
                         }
                     }
@@ -355,11 +355,11 @@ struct SubscriptionManagementView: View {
                     HStack {
                         VStack(alignment: .leading, spacing: 4) {
                             Text("Cost Per Hour")
-                                .font(.system(size: 14))
+                                .font(.subheadline)
                                 .foregroundColor(.secondary)
 
                             Text(formatCostPerHour(cph))
-                                .font(.system(size: 28, weight: .bold, design: .rounded))
+                                .font(.title2.weight(.bold))
                                 .foregroundColor(costPerHourColor(cph))
                         }
 
@@ -367,11 +367,11 @@ struct SubscriptionManagementView: View {
 
                         VStack(alignment: .trailing, spacing: 4) {
                             Text(efficiencyRating(cph))
-                                .font(.system(size: 14, weight: .semibold))
+                                .font(.subheadline.weight(.semibold))
                                 .foregroundColor(costPerHourColor(cph))
 
                             Text(efficiencyDescription(cph))
-                                .font(.system(size: 12))
+                                .font(.caption2)
                                 .foregroundColor(.secondary)
                                 .multilineTextAlignment(.trailing)
                         }
@@ -422,7 +422,7 @@ struct SubscriptionManagementView: View {
                             .frame(height: max(CGFloat(minutes) / 120 * 40, 4))
                         
                         Text("\(day)")
-                            .font(.system(size: 9))
+                            .font(.caption2)
                             .foregroundColor(.secondary)
                     }
                 }
@@ -440,7 +440,7 @@ struct SubscriptionManagementView: View {
             HStack {
                 Image(systemName: "clock.badge.checkmark")
                 Text("Enable Automatic Screen Time Tracking")
-                    .font(.system(size: 15, weight: .semibold))
+                    .font(.subheadline.weight(.semibold))
             }
             .foregroundColor(.white)
             .frame(maxWidth: .infinity)
@@ -459,9 +459,9 @@ struct SubscriptionManagementView: View {
             
             VStack(alignment: .leading, spacing: 2) {
                 Text("Manual Tracking Mode")
-                    .font(.system(size: 14, weight: .semibold))
+                    .font(.subheadline.weight(.semibold))
                 Text("Tap + buttons to add usage time")
-                    .font(.system(size: 12))
+                    .font(.caption)
                     .foregroundColor(.secondary)
             }
             
@@ -726,7 +726,7 @@ struct QuickAddButton: View {
             HapticStyle.light.trigger()
         }) {
             Label(label, systemImage: "plus.circle")
-                .font(.system(size: 13, weight: .medium))
+                .font(.caption.weight(.medium))
         }
         .buttonStyle(.bordered)
         .tint(.luxuryPurple)
@@ -748,7 +748,7 @@ struct UsageHistorySheet: View {
                     Section {
                         VStack(spacing: 16) {
                             Image(systemName: "chart.bar")
-                                .font(.system(size: 50))
+                                .font(.largeTitle)
                                 .foregroundColor(.secondary)
                             
                             Text("No Usage History Yet")

@@ -68,56 +68,6 @@ extension View {
     }
 }
 
-// MARK: - Skeleton Card
-struct SkeletonCard: View {
-    let height: CGFloat
-    var cornerRadius: CGFloat = 20
-
-    var body: some View {
-        RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
-            .fill(Color.white.opacity(0.05))
-            .frame(height: height)
-            .shimmer()
-    }
-}
-
-// MARK: - Skeleton Row
-struct SkeletonRow: View {
-    var body: some View {
-        HStack(spacing: 16) {
-            Circle()
-                .fill(Color.white.opacity(0.05))
-                .frame(width: 56, height: 56)
-                .shimmer()
-
-            VStack(alignment: .leading, spacing: 8) {
-                RoundedRectangle(cornerRadius: 6, style: .continuous)
-                    .fill(Color.white.opacity(0.05))
-                    .frame(width: 140, height: 18)
-                    .shimmer()
-
-                RoundedRectangle(cornerRadius: 4, style: .continuous)
-                    .fill(Color.white.opacity(0.05))
-                    .frame(width: 90, height: 14)
-                    .shimmer()
-            }
-
-            Spacer()
-
-            RoundedRectangle(cornerRadius: 6, style: .continuous)
-                .fill(Color.white.opacity(0.05))
-                .frame(width: 60, height: 22)
-                .shimmer()
-        }
-        .padding(.vertical, 12)
-        .padding(.horizontal, 16)
-        .background(
-            RoundedRectangle(cornerRadius: 20, style: .continuous)
-                .fill(Color.white.opacity(0.03))
-        )
-    }
-}
-
 // MARK: - Animated List Row Entrance
 struct ListRowEntrance: ViewModifier {
     let index: Int
@@ -179,7 +129,7 @@ struct SuccessCheckmark: View {
                 .frame(width: 80, height: 80)
 
             Image(systemName: "checkmark")
-                .font(.system(size: 36, weight: .bold))
+                .font(.title.weight(.bold))
                 .foregroundColor(.green)
         }
         .scaleEffect(scale)
@@ -209,7 +159,7 @@ struct CountUpNumber: View {
 
     init(
         value: Double,
-        font: Font = .system(size: 32, weight: .bold, design: .rounded),
+        font: Font = .system(.title, design: .rounded).weight(.bold),
         color: Color = .white,
         formatter: @escaping (Double) -> String = { String(format: "%.0f", $0) }
     ) {
@@ -335,7 +285,7 @@ struct ArtisticEmptyState: View {
                         .shadow(color: Color.luxuryPurple.opacity(0.35), radius: 25, x: 0, y: 12)
 
                     Image(systemName: icon)
-                        .font(.system(size: 36, weight: .semibold))
+                        .font(.title2.weight(.semibold))
                         .foregroundColor(.white)
                 }
             }
@@ -397,7 +347,7 @@ struct PremiumRefreshSpinner: View {
 
     var body: some View {
         Image(systemName: "arrow.2.circlepath")
-            .font(.system(size: 20, weight: .semibold))
+            .font(.title3.weight(.semibold))
             .foregroundStyle(Color.luxuryPurple)
             .rotationEffect(.degrees(rotation))
             .onAppear {

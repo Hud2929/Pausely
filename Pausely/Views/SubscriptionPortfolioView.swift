@@ -114,11 +114,11 @@ struct SubscriptionPortfolioView: View {
             // Total Portfolio Value
             VStack(spacing: 4) {
                 Text("Total Subscriptions")
-                    .font(.system(size: 14, weight: .medium, design: .rounded))
+                    .font(.subheadline.weight(.medium))
                     .foregroundStyle(Color.obsidianTextSecondary)
 
                 Text("\(activeSubscriptions.count)")
-                    .font(.system(size: 48, weight: .bold, design: .rounded))
+                    .font(.title.weight(.bold))
                     .foregroundStyle(Color.obsidianText)
             }
 
@@ -154,15 +154,15 @@ struct SubscriptionPortfolioView: View {
                 // Center content
                 VStack(spacing: 2) {
                     Text(currencyManager.currencySymbol(for: currencyManager.selectedCurrency))
-                        .font(.system(size: 24, weight: .medium, design: .rounded))
+                        .font(.title2.weight(.medium))
                         .foregroundStyle(Color.obsidianTextSecondary)
 
                     Text(formatAmount(totalMonthlySpend))
-                        .font(.system(size: 32, weight: .bold, design: .rounded))
+                        .font(.title.weight(.bold))
                         .foregroundStyle(Color.obsidianText)
 
                     Text("per month")
-                        .font(.system(size: 13, weight: .medium, design: .rounded))
+                        .font(.footnote.weight(.medium))
                         .foregroundStyle(Color.obsidianTextTertiary)
                 }
             }
@@ -205,7 +205,7 @@ struct SubscriptionPortfolioView: View {
     private var categoryBreakdownSection: some View {
         VStack(alignment: .leading, spacing: 16) {
             Text("Breakdown by Category")
-                .font(.system(size: 18, weight: .semibold, design: .rounded))
+                .font(.headline.weight(.semibold))
                 .foregroundStyle(Color.obsidianText)
 
             // Category bars
@@ -243,23 +243,23 @@ struct SubscriptionPortfolioView: View {
                         .frame(width: 36, height: 36)
 
                     Image(systemName: category.icon)
-                        .font(.system(size: 16, weight: .semibold))
+                        .font(.callout.weight(.semibold))
                         .foregroundStyle(category.color)
                 }
 
                 Text(category.rawValue)
-                    .font(.system(size: 16, weight: .semibold, design: .rounded))
+                    .font(.callout.weight(.semibold))
                     .foregroundStyle(Color.obsidianText)
 
                 Spacer()
 
                 VStack(alignment: .trailing, spacing: 2) {
                     Text(currencyManager.currencySymbol(for: currencyManager.selectedCurrency) + formatAmount(categoryTotal(category)))
-                        .font(.system(size: 15, weight: .bold, design: .rounded))
+                        .font(.subheadline.weight(.bold))
                         .foregroundStyle(Color.obsidianText)
 
                     Text("/month")
-                        .font(.system(size: 11, weight: .medium, design: .rounded))
+                        .font(.caption2.weight(.medium))
                         .foregroundStyle(Color.obsidianTextTertiary)
                 }
             }
@@ -305,11 +305,11 @@ struct PortfolioStatPill: View {
     var body: some View {
         VStack(spacing: 4) {
             Text(value)
-                .font(.system(size: 16, weight: .bold, design: .rounded))
+                .font(.callout.weight(.bold))
                 .foregroundStyle(color)
 
             Text(title)
-                .font(.system(size: 11, weight: .medium, design: .rounded))
+                .font(.caption2.weight(.medium))
                 .foregroundStyle(Color.obsidianTextTertiary)
         }
         .frame(maxWidth: .infinity)
@@ -332,18 +332,18 @@ struct CategoryBarRow: View {
             HStack {
                 HStack(spacing: 8) {
                     Image(systemName: category.icon)
-                        .font(.system(size: 12, weight: .medium))
+                        .font(.caption2.weight(.medium))
                         .foregroundStyle(category.color)
 
                     Text(category.rawValue)
-                        .font(.system(size: 13, weight: .medium, design: .rounded))
+                        .font(.footnote.weight(.medium))
                         .foregroundStyle(Color.obsidianText)
                 }
 
                 Spacer()
 
                 Text(currencyManager.currencySymbol(for: currencyManager.selectedCurrency) + String(format: "%.2f", amount))
-                    .font(.system(size: 13, weight: .semibold, design: .rounded))
+                    .font(.footnote.weight(.semibold))
                     .foregroundStyle(Color.obsidianTextSecondary)
             }
 
@@ -402,19 +402,19 @@ struct PortfolioSubscriptionRow: View {
                         .frame(width: 44, height: 44)
 
                     Text(String(subscription.name.prefix(1)))
-                        .font(.system(size: 18, weight: .bold, design: .rounded))
+                        .font(.subheadline.weight(.bold))
                         .foregroundStyle(categoryColor)
                 }
 
                 // Name and billing
                 VStack(alignment: .leading, spacing: 4) {
                     Text(subscription.name)
-                        .font(.system(size: 15, weight: .semibold, design: .rounded))
+                        .font(.subheadline.weight(.semibold))
                         .foregroundStyle(Color.obsidianText)
                         .lineLimit(1)
 
                     Text(subscription.billingFrequency.displayName)
-                        .font(.system(size: 12, weight: .medium, design: .rounded))
+                        .font(.caption2.weight(.medium))
                         .foregroundStyle(Color.obsidianTextTertiary)
                 }
 
@@ -423,16 +423,16 @@ struct PortfolioSubscriptionRow: View {
                 // Amount
                 VStack(alignment: .trailing, spacing: 2) {
                     Text(currencyManager.format(currencyManager.convertToSelected(subscription.amount, from: subscription.currency)))
-                        .font(.system(size: 15, weight: .bold, design: .rounded))
+                        .font(.subheadline.weight(.bold))
                         .foregroundStyle(Color.obsidianText)
 
                     Text("/\(subscription.billingFrequency.shortDisplay)")
-                        .font(.system(size: 11, weight: .medium, design: .rounded))
+                        .font(.caption2.weight(.medium))
                         .foregroundStyle(Color.obsidianTextTertiary)
                 }
 
                 Image(systemName: "chevron.right")
-                    .font(.system(size: 12, weight: .medium))
+                    .font(.caption2.weight(.medium))
                     .foregroundStyle(Color.obsidianTextTertiary)
             }
             .padding(.vertical, 8)

@@ -186,7 +186,7 @@ struct ConfirmCancellationStep: View {
                     .frame(width: 120, height: 120)
                 
                 Image(systemName: "xmark.circle.fill")
-                    .font(.system(size: 60))
+                    .font(.largeTitle)
                     .foregroundStyle(Color.semanticDestructive)
             }
             
@@ -306,7 +306,7 @@ struct MethodButton: View {
         Button(action: action) {
             HStack(spacing: STSpacing.base) {
                 Image(systemName: icon)
-                    .font(.system(size: 24))
+                    .font(.title3)
                     .foregroundStyle(Color.accentMint)
                     .frame(width: 44)
                 
@@ -318,7 +318,7 @@ struct MethodButton: View {
                         
                         if isRecommended {
                             Text("RECOMMENDED")
-                                .font(.system(size: 10, weight: .bold))
+                                .font(.caption2.weight(.bold))
                                 .foregroundStyle(Color.obsidianBlack)
                                 .padding(.horizontal, 8)
                                 .padding(.vertical, 2)
@@ -511,7 +511,7 @@ struct CancellationSuccessStep: View {
                     .frame(width: 140, height: 140)
                 
                 Image(systemName: "checkmark.circle.fill")
-                    .font(.system(size: 80))
+                    .font(.largeTitle)
                     .foregroundStyle(Color.semanticSuccess)
                     .scaleEffect(showConfetti ? 1.0 : 0.5)
                     .animation(.spring(response: 0.5, dampingFraction: 0.6), value: showConfetti)

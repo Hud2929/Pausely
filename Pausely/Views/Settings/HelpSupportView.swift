@@ -50,7 +50,7 @@ struct HelpSupportView: View {
                     HStack {
                         Button(action: { dismiss() }) {
                             Image(systemName: "arrow.left")
-                                .font(.system(size: 20, weight: .semibold))
+                                .font(.headline.weight(.semibold))
                                 .foregroundColor(CyberColors.electric)
                                 .accessibilityLabel("Back")
                         }
@@ -58,7 +58,7 @@ struct HelpSupportView: View {
                         Spacer()
                         
                         Text("Help & Support")
-                            .font(.system(size: 20, weight: .bold))
+                            .font(.headline.weight(.bold))
                             .foregroundColor(.white)
                         
                         Spacer()
@@ -76,7 +76,7 @@ struct HelpSupportView: View {
                             .shadow(color: CyberColors.electric.opacity(0.5), radius: 20, x: 0, y: 0)
                         
                         Image(systemName: "questionmark.bubble.fill")
-                            .font(.system(size: 40))
+                            .font(.title)
                             .foregroundColor(CyberColors.electric)
                     }
                     .padding(.top, 20)
@@ -84,11 +84,11 @@ struct HelpSupportView: View {
                     // Search
                     HStack(spacing: 12) {
                         Image(systemName: "magnifyingglass")
-                            .font(.system(size: 17))
+                            .font(.body)
                             .foregroundColor(.white.opacity(0.6))
                         
                         TextField("Search help articles...", text: $searchText)
-                            .font(.system(size: 17))
+                            .font(.body)
                             .foregroundColor(.white)
                             .keyboardType(.default)
                             .submitLabel(.search)
@@ -107,7 +107,7 @@ struct HelpSupportView: View {
                     // FAQ Section
                     VStack(spacing: 16) {
                         Text("FREQUENTLY ASKED QUESTIONS")
-                            .font(.system(size: 13, weight: .bold))
+                            .font(.footnote.weight(.bold))
                             .foregroundColor(.white.opacity(0.5))
                             .tracking(2)
                             .frame(maxWidth: .infinity, alignment: .leading)
@@ -124,7 +124,7 @@ struct HelpSupportView: View {
                     // Contact Section
                     VStack(spacing: 16) {
                         Text("CONTACT US")
-                            .font(.system(size: 13, weight: .bold))
+                            .font(.footnote.weight(.bold))
                             .foregroundColor(.white.opacity(0.5))
                             .tracking(2)
                             .frame(maxWidth: .infinity, alignment: .leading)
@@ -196,14 +196,14 @@ struct HelpFAQItem: View {
             isExpanded: $isExpanded,
             content: {
                 Text(answer)
-                    .font(.system(size: 15))
+                    .font(.subheadline)
                     .foregroundColor(.white.opacity(0.8))
                     .padding(.top, 12)
                     .padding(.bottom, 4)
             },
             label: {
                 Text(question)
-                    .font(.system(size: 16, weight: .semibold))
+                    .font(.callout.weight(.semibold))
                     .foregroundColor(.white)
             }
         )
@@ -245,24 +245,24 @@ struct ContactButton: View {
                         .frame(width: 48, height: 48)
 
                     Image(systemName: icon)
-                        .font(.system(size: 22))
+                        .font(.title3)
                         .foregroundColor(glowColor)
                 }
 
                 VStack(alignment: .leading, spacing: 4) {
                     Text(title)
-                        .font(.system(size: 17, weight: .semibold))
+                        .font(.callout.weight(.semibold))
                         .foregroundColor(.white)
 
                     Text(subtitle)
-                        .font(.system(size: 14))
+                        .font(.footnote)
                         .foregroundColor(.white.opacity(0.6))
                 }
 
                 Spacer()
 
                 Image(systemName: "arrow.up.right")
-                    .font(.system(size: 16))
+                    .font(.callout)
                     .foregroundColor(glowColor)
             }
             .scaleEffect(isPressed ? 0.98 : 1)

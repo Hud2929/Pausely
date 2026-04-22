@@ -21,7 +21,7 @@ struct RevolutionaryCancelButton: View {
         }) {
             HStack(spacing: 12) {
                 Image(systemName: "xmark.circle.fill")
-                    .font(.system(size: 20))
+                    .font(.callout)
                 
                 VStack(alignment: .leading, spacing: 2) {
                     Text("Cancel Subscription")
@@ -94,7 +94,7 @@ struct RevolutionaryPauseButton: View {
         }) {
             HStack(spacing: 12) {
                 Image(systemName: "pause.circle.fill")
-                    .font(.system(size: 20))
+                    .font(.title3)
                     .foregroundStyle(Color.accentMint)
                 
                 VStack(alignment: .leading, spacing: 2) {
@@ -178,7 +178,7 @@ struct RevolutionaryCancelConfirmationSheet: View {
                             .frame(width: 100, height: 100)
                         
                         Image(systemName: "xmark.circle.fill")
-                            .font(.system(size: 50))
+                            .font(.largeTitle)
                             .foregroundStyle(Color.semanticDestructive)
                     }
                     
@@ -293,7 +293,7 @@ struct RevolutionaryPauseSheet: View {
                             .frame(width: 100, height: 100)
                         
                         Image(systemName: "pause.circle.fill")
-                            .font(.system(size: 50))
+                            .font(.largeTitle)
                             .foregroundStyle(Color.accentMint)
                     }
                     
@@ -403,7 +403,7 @@ struct CancellationSuccessOverlay: View {
             
             VStack(spacing: 16) {
                 Image(systemName: "checkmark.circle.fill")
-                    .font(.system(size: 60))
+                    .font(.largeTitle)
                     .foregroundStyle(Color.semanticSuccess)
                 
                 Text("Cancelled!")
@@ -453,7 +453,7 @@ struct PauseSuccessOverlay: View {
             
             VStack(spacing: 16) {
                 Image(systemName: "pause.circle.fill")
-                    .font(.system(size: 60))
+                    .font(.largeTitle)
                     .foregroundStyle(Color.accentMint)
                 
                 Text("Paused!")

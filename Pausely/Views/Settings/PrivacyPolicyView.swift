@@ -8,11 +8,11 @@ struct PrivacyPolicyView: View {
             ScrollView {
                 VStack(alignment: .leading, spacing: 24) {
                     Text("Privacy Policy")
-                        .font(.system(size: 32, weight: .bold))
+                        .font(.largeTitle.weight(.bold))
                         .foregroundStyle(.primary)
 
                     Text("Last updated: April 9, 2026")
-                        .font(.system(size: 14))
+                        .font(.footnote)
                         .foregroundStyle(.secondary)
 
                     VStack(alignment: .leading, spacing: 16) {
@@ -75,11 +75,11 @@ struct PolicySection<Content: View>: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
             Text(title)
-                .font(.system(size: 17, weight: .semibold))
+                .font(.body.weight(.semibold))
                 .foregroundStyle(.primary)
 
             content()
-                .font(.system(size: 15))
+                .font(.subheadline)
                 .foregroundStyle(.secondary)
         }
         .padding()

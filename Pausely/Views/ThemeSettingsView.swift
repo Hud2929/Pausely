@@ -13,15 +13,15 @@ struct ThemeSettingsView: View {
                     // Header
                     VStack(spacing: 8) {
                         Image(systemName: "paintbrush.fill")
-                            .font(.system(size: 48))
+                            .font(.largeTitle)
                             .foregroundStyle(Color.luxuryPink)
                         
                         Text("Appearance")
-                            .font(.system(size: 28, weight: .bold, design: .rounded))
+                            .font(.title.weight(.bold))
                             .foregroundStyle(.white)
-                        
+
                         Text("Choose your preferred theme")
-                            .font(.system(size: 15, weight: .medium, design: .rounded))
+                            .font(.subheadline.weight(.medium))
                             .foregroundStyle(.white.opacity(0.6))
                     }
                     .padding(.top, 20)
@@ -68,7 +68,7 @@ struct ThemeSettingsView: View {
                     // Preview
                     VStack(alignment: .leading, spacing: 12) {
                         Text("Preview")
-                            .font(.system(size: 13, weight: .semibold, design: .rounded))
+                            .font(.footnote.weight(.semibold))
                             .foregroundStyle(.white.opacity(0.5))
                             .textCase(.uppercase)
                             .padding(.leading, 4)
@@ -92,7 +92,7 @@ struct ThemeSettingsView: View {
                                     .shadow(color: .black.opacity(0.1), radius: 4)
                                 
                                 Text("Light")
-                                    .font(.system(size: 13, weight: .medium, design: .rounded))
+                                    .font(.footnote.weight(.medium))
                                     .foregroundStyle(!themeManager.isDarkMode ? Color.luxuryGold : .white.opacity(0.5))
                             }
                             
@@ -114,7 +114,7 @@ struct ThemeSettingsView: View {
                                     .shadow(color: .black.opacity(0.3), radius: 4)
                                 
                                 Text("Dark")
-                                    .font(.system(size: 13, weight: .medium, design: .rounded))
+                                    .font(.footnote.weight(.medium))
                                     .foregroundStyle(themeManager.isDarkMode ? Color.luxuryGold : .white.opacity(0.5))
                             }
                         }
@@ -153,17 +153,17 @@ struct ThemeOptionRow: View {
                         .frame(width: 44, height: 44)
                     
                     Image(systemName: icon)
-                        .font(.system(size: 20, weight: .semibold))
+                        .font(.headline.weight(.semibold))
                         .foregroundStyle(isSelected ? Color.luxuryPink : .white.opacity(0.7))
                 }
                 
                 VStack(alignment: .leading, spacing: 2) {
                     Text(title)
-                        .font(.system(size: 17, weight: .semibold, design: .rounded))
+                        .font(.callout.weight(.semibold))
                         .foregroundStyle(.white)
-                    
+
                     Text(subtitle)
-                        .font(.system(size: 14, weight: .medium, design: .rounded))
+                        .font(.subheadline.weight(.medium))
                         .foregroundStyle(.white.opacity(0.5))
                 }
                 
@@ -171,7 +171,7 @@ struct ThemeOptionRow: View {
                 
                 if isSelected {
                     Image(systemName: "checkmark.circle.fill")
-                        .font(.system(size: 24))
+                        .font(.title3)
                         .foregroundStyle(Color.luxuryGold)
                 }
             }

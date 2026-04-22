@@ -101,12 +101,12 @@ struct HeroSpendCard: View {
         HStack {
             VStack(alignment: .leading, spacing: 4) {
                 Text("Total Spending")
-                    .font(.system(size: 13, weight: .semibold, design: .rounded))
+                    .font(.system(.footnote, design: .rounded).weight(.semibold))
                     .foregroundStyle(.secondary)
                     .textCase(.uppercase)
 
                 Text("\(subscriptionCount) active subscription\(subscriptionCount == 1 ? "" : "s")")
-                    .font(.system(size: 13, weight: .medium, design: .rounded))
+                    .font(.system(.footnote, design: .rounded).weight(.medium))
                     .foregroundStyle(.tertiary)
             }
 
@@ -126,7 +126,7 @@ struct HeroSpendCard: View {
                     HapticStyle.light.trigger()
                 }) {
                     Text(tf.short.uppercased())
-                        .font(.system(size: 12, weight: .semibold, design: .rounded))
+                        .font(.system(.caption, design: .rounded).weight(.semibold))
                         .foregroundStyle(timeframe == tf ? .white : .secondary)
                         .padding(.horizontal, 12)
                         .padding(.vertical, 6)
@@ -178,11 +178,11 @@ struct HeroSpendCard: View {
 
             VStack(spacing: 0) {
                 Text(currencyManager.currencySymbol(for: currencyManager.selectedCurrency))
-                    .font(.system(size: 14, weight: .medium, design: .rounded))
+                    .font(.system(.footnote, design: .rounded).weight(.medium))
                     .foregroundStyle(Color.obsidianTextSecondary)
 
                 Text(formatAmount(amount))
-                    .font(.system(size: 18, weight: .bold, design: .rounded))
+                    .font(.system(.body, design: .rounded).weight(.bold))
                     .foregroundStyle(Color.obsidianText)
             }
         }
@@ -193,12 +193,12 @@ struct HeroSpendCard: View {
             AnimatedCounter(
                 value: amount,
                 currencyCode: currencyManager.selectedCurrency,
-                font: .system(size: 36, weight: .bold, design: .rounded),
+                font: .system(.largeTitle, design: .rounded).weight(.bold),
                 color: .luxuryGold
             )
 
             Text("per \(timeframeLabel)")
-                .font(.system(size: 15, weight: .medium, design: .rounded))
+                .font(.system(.subheadline, design: .rounded).weight(.medium))
                 .foregroundStyle(.secondary)
 
             if currencyManager.selectedCurrency != "USD" {
@@ -206,7 +206,7 @@ struct HeroSpendCard: View {
                     Text("•")
                         .foregroundStyle(.tertiary)
                     Text(currencyManager.currentCurrency.displayName)
-                        .font(.system(size: 15, weight: .semibold, design: .rounded))
+                        .font(.system(.subheadline, design: .rounded).weight(.semibold))
                         .foregroundStyle(Color.luxuryGold)
                 }
             }
@@ -264,11 +264,11 @@ struct HeroStatPill: View {
     var body: some View {
         VStack(spacing: 4) {
             Text(value)
-                .font(.system(size: 14, weight: .bold, design: .rounded))
+                .font(.system(.footnote, design: .rounded).weight(.bold))
                 .foregroundStyle(color)
 
             Text(title)
-                .font(.system(size: 11, weight: .medium, design: .rounded))
+                .font(.system(.caption2, design: .rounded).weight(.medium))
                 .foregroundStyle(Color.obsidianTextTertiary)
         }
         .frame(maxWidth: .infinity)

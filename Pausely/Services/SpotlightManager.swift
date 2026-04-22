@@ -1,5 +1,5 @@
 import CoreSpotlight
-import MobileCoreServices
+import UniformTypeIdentifiers
 import os.log
 
 /// Indexes subscriptions into Core Spotlight so users can find them via iOS system search.
@@ -45,7 +45,7 @@ final class SpotlightManager {
     // MARK: - Helpers
 
     private func searchableItem(for subscription: Subscription) -> CSSearchableItem {
-        let attributeSet = CSSearchableItemAttributeSet(itemContentType: kUTTypeItem as String)
+        let attributeSet = CSSearchableItemAttributeSet(itemContentType: UTType.item.identifier)
         attributeSet.title = subscription.name
         attributeSet.contentDescription = "\(subscription.displayAmount) • \(subscription.billingFrequency.displayName)"
         attributeSet.keywords = [subscription.category ?? "subscription", "subscription", "billing"]

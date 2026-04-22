@@ -57,7 +57,7 @@ struct CostPerUseCard: View {
                     .frame(width: 52, height: 52)
 
                 Text(String(result.subscription.name.prefix(1)))
-                    .font(.system(size: 22, weight: .bold, design: .rounded))
+                    .font(.system(.title3, design: .rounded).weight(.bold))
                     .foregroundStyle(.white)
             }
 
@@ -97,11 +97,11 @@ struct CostPerUseCard: View {
             HStack(alignment: .lastTextBaseline, spacing: 8) {
                 if let cph = result.costPerHour {
                     Text(CostPerUseCalculator.formatCostPerHour(cph, currencyCode: result.subscription.currency))
-                        .font(.system(size: 40, weight: .bold, design: .rounded))
+                        .font(.system(.largeTitle, design: .rounded).weight(.bold))
                         .foregroundStyle(result.valueTier.swiftUIColor)
                 } else {
                     Text("—")
-                        .font(.system(size: 40, weight: .bold, design: .rounded))
+                        .font(.system(.largeTitle, design: .rounded).weight(.bold))
                         .foregroundStyle(.secondary)
                 }
 
@@ -256,9 +256,9 @@ struct ValueTierBadge: View {
     var body: some View {
         HStack(spacing: 4) {
             Image(systemName: tier.icon)
-                .font(.system(size: 10, weight: .semibold))
+                .font(.caption2.weight(.semibold))
             Text(tier.label)
-                .font(.system(size: 11, weight: .semibold))
+                .font(.caption2.weight(.semibold))
         }
         .foregroundStyle(tier.swiftUIColor)
         .padding(.horizontal, 10)
@@ -278,14 +278,14 @@ struct DetailPill: View {
         VStack(spacing: 4) {
             HStack(spacing: 4) {
                 Image(systemName: icon)
-                    .font(.system(size: 10))
+                    .font(.caption2)
                 Text(label)
-                    .font(.system(size: 10, weight: .medium))
+                    .font(.caption2.weight(.medium))
             }
             .foregroundStyle(.secondary)
 
             Text(value)
-                .font(.system(size: 15, weight: .semibold, design: .rounded))
+                .font(.system(.subheadline, design: .rounded).weight(.semibold))
                 .foregroundStyle(.primary)
         }
         .frame(maxWidth: .infinity)
@@ -342,12 +342,12 @@ struct CostPerUseRow: View {
                         .rotationEffect(.degrees(-90))
 
                     Text(CostPerUseCalculator.formatValueScore(score))
-                        .font(.system(size: 12, weight: .bold, design: .rounded))
+                        .font(.system(.caption, design: .rounded).weight(.bold))
                         .foregroundStyle(.primary)
                 }
             } else {
                 Image(systemName: "questionmark.circle")
-                    .font(.system(size: 20))
+                    .font(.callout)
                     .foregroundStyle(.secondary)
             }
         }
