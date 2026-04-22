@@ -317,13 +317,21 @@ struct CSVImportSheet: View {
                         .background(Color.white.opacity(0.1))
                         .cornerRadius(12)
                         .frame(maxHeight: 300)
-                    
+                        .toolbar {
+                            ToolbarItemGroup(placement: .keyboard) {
+                                Spacer()
+                                Button("Done") {
+                                    UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder), to: nil, from: nil, for: nil)
+                                }
+                            }
+                        }
+
                     Text("Expected format: Date, Description, Amount")
                         .font(.system(size: 13))
                         .foregroundColor(.white.opacity(0.5))
-                    
+
                     Spacer()
-                    
+
                     Button(action: {
                         onImport(csvText)
                         dismiss()
@@ -337,6 +345,7 @@ struct CSVImportSheet: View {
                             .cornerRadius(16)
                     }
                     .disabled(csvText.isEmpty)
+                    .accessibilityHint(csvText.isEmpty ? "Please paste CSV data to import" : "")
                 }
                 .padding(20)
             }

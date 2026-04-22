@@ -185,6 +185,7 @@ struct SupportView: View {
                                     .cornerRadius(14)
                                 }
                                 .disabled(name.isEmpty || email.isEmpty || message.isEmpty)
+                                .accessibilityHint(name.isEmpty || email.isEmpty || message.isEmpty ? "Please fill in your name, email, and message" : "")
                                 .opacity(name.isEmpty || email.isEmpty || message.isEmpty ? 0.6 : 1)
                             }
                             .padding()

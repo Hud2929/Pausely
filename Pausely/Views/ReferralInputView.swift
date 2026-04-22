@@ -307,6 +307,7 @@ struct ReferralInputView: View {
                 .shadow(color: referralCode.isEmpty ? Color.clear : Color.luxuryPurple.opacity(0.4), radius: 15, x: 0, y: 8)
             }
             .disabled(referralCode.isEmpty || isValidating)
+            .accessibilityHint(referralCode.isEmpty ? "Please enter a referral code first" : isValidating ? "Please wait, validating code" : "")
             .buttonStyle(PlainButtonStyle())
             
             // Skip button
@@ -605,8 +606,9 @@ struct InlineReferralInput: View {
                                 .fill(code.isEmpty ? Color.gray.opacity(0.3) : Color.luxuryPurple)
                         )
                         .disabled(code.isEmpty || isValidating)
+                        .accessibilityHint(code.isEmpty ? "Please enter a referral code first" : isValidating ? "Please wait, validating code" : "")
                     }
-                    
+
                     Text("Both you and your friend will receive rewards")
                         .font(.system(size: 12, weight: .medium, design: .rounded))
                         .foregroundStyle(.white.opacity(0.5))

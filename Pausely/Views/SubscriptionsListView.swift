@@ -1280,6 +1280,7 @@ struct SmartURLInputView: View {
                 .cornerRadius(12)
             }
             .disabled(name.isEmpty || amount.isEmpty)
+            .accessibilityHint(name.isEmpty || amount.isEmpty ? "Please enter a service name and amount" : "")
             .opacity(name.isEmpty || amount.isEmpty ? 0.6 : 1)
         }
     }
@@ -2151,6 +2152,7 @@ struct EnhancedAddSubscriptionView: View {
             .shadow(color: canSave ? Color.luxuryPurple.opacity(0.4) : Color.clear, radius: 15, x: 0, y: 8)
         }
         .disabled(!canSave || isLoading)
+        .accessibilityHint(!canSave ? "Please fill in all required fields correctly" : isLoading ? "Please wait, saving subscription" : "")
         .pressEffect(scale: 0.97)
     }
 

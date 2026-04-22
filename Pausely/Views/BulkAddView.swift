@@ -80,6 +80,7 @@ struct BulkAddView: View {
                         }
                         .foregroundColor(selectedCount > 0 ? Color.luxuryGold : .white.opacity(0.5))
                         .disabled(selectedCount == 0 || isAdding)
+                        .accessibilityHint(selectedCount == 0 ? "Please select at least one subscription to add" : isAdding ? "Please wait, adding subscriptions" : "")
                     }
                 }
             }
@@ -505,6 +506,14 @@ struct BulkAddCSVImportSheet: View {
                         .background(Color.white.opacity(0.1))
                         .cornerRadius(12)
                         .frame(maxHeight: 300)
+                        .toolbar {
+                            ToolbarItemGroup(placement: .keyboard) {
+                                Spacer()
+                                Button("Done") {
+                                    UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder), to: nil, from: nil, for: nil)
+                                }
+                            }
+                        }
 
                     Spacer()
 
@@ -520,6 +529,7 @@ struct BulkAddCSVImportSheet: View {
                             .cornerRadius(16)
                     }
                     .disabled(csvText.isEmpty)
+                    .accessibilityHint(csvText.isEmpty ? "Please paste CSV data to import" : "")
                 }
                 .padding(20)
             }

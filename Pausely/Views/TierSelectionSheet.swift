@@ -385,6 +385,7 @@ struct TierSelectionSheet: View {
                         .font(.system(size: 20, weight: .semibold, design: .rounded))
                         .foregroundColor(.white)
                         .keyboardType(.decimalPad)
+                        .submitLabel(.done)
                         .tint(.luxuryPurple)
                 }
                 .padding(16)

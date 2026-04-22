@@ -620,6 +620,7 @@ struct AddTrialSheet: View {
                         addTrial()
                     }
                     .disabled(serviceName.isEmpty || costAfterTrial.isEmpty)
+                    .accessibilityHint(serviceName.isEmpty || costAfterTrial.isEmpty ? "Please enter a service name and cost after trial" : "")
                 }
             }
         }

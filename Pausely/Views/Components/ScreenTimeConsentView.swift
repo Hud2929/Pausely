@@ -174,7 +174,8 @@ struct ScreenTimeConsentView: View {
                 .cornerRadius(16)
             }
             .disabled(screenTimeManager.isLoading)
-            
+            .accessibilityHint(screenTimeManager.isLoading ? "Please wait, connecting to Screen Time" : "")
+
             Button {
                 dismiss()
             } label: {

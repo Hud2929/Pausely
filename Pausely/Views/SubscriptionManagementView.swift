@@ -899,6 +899,7 @@ struct UsageInputSheet: View {
                         }
                     }
                     .disabled(hours.isEmpty && minutes.isEmpty)
+                    .accessibilityHint(hours.isEmpty && minutes.isEmpty ? "Please enter hours or minutes" : "")
                 }
                 
                 Section(header: Text("Quick Set")) {

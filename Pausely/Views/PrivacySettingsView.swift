@@ -388,7 +388,8 @@ struct ChangePasswordView: View {
                                 .fill(.white.opacity(0.1))
                         )
                         .foregroundStyle(.white)
-                    
+                        .submitLabel(.next)
+
                     SecureField("New Password", text: $newPassword)
                         .textContentType(.newPassword)
                         .font(.system(size: 17, weight: .medium, design: .rounded))
@@ -398,7 +399,8 @@ struct ChangePasswordView: View {
                                 .fill(.white.opacity(0.1))
                         )
                         .foregroundStyle(.white)
-                    
+                        .submitLabel(.next)
+
                     SecureField("Confirm New Password", text: $confirmPassword)
                         .textContentType(.newPassword)
                         .font(.system(size: 17, weight: .medium, design: .rounded))
@@ -408,6 +410,7 @@ struct ChangePasswordView: View {
                                 .fill(.white.opacity(0.1))
                         )
                         .foregroundStyle(.white)
+                        .submitLabel(.done)
                 }
                 .padding(.horizontal, 20)
                 
@@ -428,6 +431,7 @@ struct ChangePasswordView: View {
                         .fill(canSubmit ? Color.purple : Color.purple.opacity(0.5))
                 )
                 .disabled(!canSubmit || isLoading)
+                .accessibilityHint(!canSubmit ? "Please fill in all password fields correctly" : isLoading ? "Please wait, updating password" : "")
                 .padding(.horizontal, 20)
                 
                 Spacer()
@@ -589,6 +593,7 @@ struct TwoFactorSetupView: View {
                 
                 TextField("Enter verification code", text: $verificationCode)
                     .keyboardType(.numberPad)
+                    .submitLabel(.done)
                     .font(.system(size: 17, weight: .medium, design: .rounded))
                     .padding()
                     .background(
@@ -613,6 +618,7 @@ struct TwoFactorSetupView: View {
                         )
                 }
                 .disabled(verificationCode.count != 6)
+                .accessibilityHint(verificationCode.count != 6 ? "Please enter the 6-digit verification code" : "")
                 .padding(.horizontal, 40)
                 
                 Spacer()

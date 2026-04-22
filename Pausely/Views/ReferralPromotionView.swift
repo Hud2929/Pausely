@@ -605,6 +605,8 @@ struct ApplyReferralView: View {
                             .autocorrectionDisabled()
                             .multilineTextAlignment(.center)
                             .foregroundColor(.white)
+                            .keyboardType(.default)
+                            .submitLabel(.go)
                             .padding()
                             .glass(intensity: 0.2, tint: .white)
                         
@@ -640,6 +642,7 @@ struct ApplyReferralView: View {
                             .shadow(color: Color.luxuryPurple.opacity(0.4), radius: 15)
                         }
                         .disabled(code.count < 6 || isApplying)
+                        .accessibilityHint(code.count < 6 ? "Please enter a valid 6-character referral code" : isApplying ? "Please wait, applying code" : "")
                         .opacity(code.count < 6 || isApplying ? 0.6 : 1)
                     }
                     .padding(.horizontal, 32)
