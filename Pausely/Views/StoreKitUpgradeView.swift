@@ -162,8 +162,8 @@ struct StoreKitUpgradeView: View {
                 Image(systemName: "xmark.circle.fill")
                     .font(AppTypography.headlineLarge)
                     .foregroundStyle(.white.opacity(0.6))
-                    .accessibilityLabel("Close")
             }
+            .accessibilityLabel("Close")
         }
         .padding(.top, 16)
     }
@@ -175,7 +175,7 @@ struct StoreKitUpgradeView: View {
             HStack(spacing: 6) {
                 Image(systemName: "gift.fill")
                     .font(.system(size: 14, weight: .semibold))
-                Text("7-DAY FREE TRIAL")
+                Text(LocalizedStringKey("7-DAY FREE TRIAL"))
                     .font(.system(size: 13, weight: .bold, design: .rounded))
             }
             .foregroundColor(.black)
@@ -189,8 +189,8 @@ struct StoreKitUpgradeView: View {
             .animation(.spring(response: 0.4, dampingFraction: 0.6), value: appearAnimation)
 
             // Main headline
-            Text("Start Your 7-Day Free Trial")
-                .font(.system(size: 28, weight: .bold, design: .rounded))
+            Text(LocalizedStringKey("Start Your 7-Day Free Trial"))
+                .font(.largeTitle.bold())
                 .foregroundStyle(.white)
                 .multilineTextAlignment(.center)
                 .accessibilityFocused($focusedElement, equals: .title)
@@ -202,7 +202,7 @@ struct StoreKitUpgradeView: View {
                     .foregroundStyle(.white.opacity(0.8))
                     .multilineTextAlignment(.center)
 
-                Text("Cancel anytime. No charge for 7 days.")
+                Text(LocalizedStringKey("Cancel anytime. No charge for 7 days."))
                     .font(AppTypography.bodySmall)
                     .foregroundColor(.luxuryGold)
             }
@@ -309,13 +309,14 @@ struct StoreKitUpgradeView: View {
                 RoundedRectangle(cornerRadius: 16, style: .continuous)
                     .fill(Color.white.opacity(0.06))
             )
+            .accessibilityElement(children: .contain)
 
             // Selected plan details
             if let product = storeManager.product(for: selectedPlan.tier) {
                 HStack {
                     VStack(alignment: .leading, spacing: 4) {
                         Text(product.displayPrice)
-                            .font(.system(size: 28, weight: .bold, design: .rounded))
+                            .font(.title2.bold())
                             .foregroundStyle(.white)
 
                         Text(selectedPlan.period)
@@ -328,7 +329,7 @@ struct StoreKitUpgradeView: View {
                     if let savings = selectedPlan.savings {
                         VStack(alignment: .trailing, spacing: 4) {
                             Text(savings)
-                                .font(.system(size: 15, weight: .bold, design: .rounded))
+                                .font(.subheadline.bold())
                                 .foregroundColor(.green)
 
                             if selectedPlan == .annual {
@@ -357,17 +358,17 @@ struct StoreKitUpgradeView: View {
     // MARK: - Feature Checklist Section
     private var featureChecklistSection: some View {
         VStack(spacing: 16) {
-            Text("What you get with Pro")
+            Text(LocalizedStringKey("What you get with Pro"))
                 .font(AppTypography.headlineLarge)
                 .foregroundStyle(.white)
                 .frame(maxWidth: .infinity, alignment: .leading)
 
             VStack(spacing: 12) {
-                TrialFeatureRow(icon: "infinity", text: "Unlimited subscriptions")
-                TrialFeatureRow(icon: "chart.bar.fill", text: "Cost-per-use analytics")
-                TrialFeatureRow(icon: "bell.badge.fill", text: "Smart renewal alerts")
-                TrialFeatureRow(icon: "clock.arrow.circlepath", text: "Usage tracking")
-                TrialFeatureRow(icon: "xmark.circle.fill", text: "Cancel anytime")
+                TrialFeatureRow(icon: "infinity", text: NSLocalizedString("Unlimited subscriptions", comment: ""))
+                TrialFeatureRow(icon: "chart.bar.fill", text: NSLocalizedString("Cost-per-use analytics", comment: ""))
+                TrialFeatureRow(icon: "bell.badge.fill", text: NSLocalizedString("Smart renewal alerts", comment: ""))
+                TrialFeatureRow(icon: "clock.arrow.circlepath", text: NSLocalizedString("Usage tracking", comment: ""))
+                TrialFeatureRow(icon: "xmark.circle.fill", text: NSLocalizedString("Cancel anytime", comment: ""))
             }
         }
         .padding(20)
@@ -403,7 +404,7 @@ struct StoreKitUpgradeView: View {
                     }
                 }
 
-                Text("Join 10,000+ users managing their subscriptions")
+                Text(LocalizedStringKey("Join 10,000+ users managing their subscriptions"))
                     .font(AppTypography.bodySmall)
                     .foregroundStyle(.white.opacity(0.7))
                     .multilineTextAlignment(.leading)
@@ -417,7 +418,7 @@ struct StoreKitUpgradeView: View {
                     .font(.system(size: 16))
                     .foregroundColor(Color.luxuryGold)
 
-                Text("30-day money-back guarantee")
+                Text(LocalizedStringKey("30-day money-back guarantee"))
                     .font(AppTypography.bodySmall)
                     .foregroundColor(Color.luxuryGold)
 

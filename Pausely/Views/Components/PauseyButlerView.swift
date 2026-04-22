@@ -360,6 +360,7 @@ struct PauseyFloatingButton: View {
                 )
                 .shadow(color: Color.luxuryPurple.opacity(0.5), radius: 10, y: 5)
         }
+        .accessibilityLabel("Ask Pausey about \(subscription.name)")
         .sheet(isPresented: $showingPausey) {
             PauseyButlerView(subscription: subscription)
         }

@@ -315,7 +315,9 @@ struct ArtisticEmptyState: View {
                         .frame(width: 140 + CGFloat(i * 35), height: 140 + CGFloat(i * 35))
                         .rotationEffect(.degrees(animate ? 360 : 0))
                         .animation(
-                            .linear(duration: 12 + Double(i) * 6).repeatForever(autoreverses: false),
+                            UIAccessibility.isReduceMotionEnabled
+                                ? .none
+                                : .linear(duration: 12 + Double(i) * 6).repeatForever(autoreverses: false),
                             value: animate
                         )
                 }

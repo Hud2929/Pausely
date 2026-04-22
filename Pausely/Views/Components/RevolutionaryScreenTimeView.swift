@@ -518,6 +518,9 @@ struct STInsightRow: View {
             )
         }
         .buttonStyle(.plain)
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel("\(insight.subscriptionName), \(ScreenTimeManager.shared.formatMinutes(insight.monthlyMinutesUsed)) used this month")
+        .accessibilityHint("Double-tap to view details")
     }
 }
 

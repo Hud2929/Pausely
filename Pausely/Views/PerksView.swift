@@ -58,21 +58,22 @@ struct PerksView: View {
                     .blur(radius: 20)
                 
                 Image(systemName: "wand.and.stars")
-                    .font(.system(size: 50, weight: .light))
+                    .font(.largeTitle.weight(.light))
                     .foregroundStyle(LinearGradient(
                         colors: [Color.luxuryGold, .white],
                         startPoint: .top,
                         endPoint: .bottom
                     ))
+                    .accessibilityLabel("Smart perks")
             }
             
             VStack(spacing: 6) {
                 Text("Smart Perks")
-                    .font(.system(size: 30, weight: .bold, design: .rounded))
+                    .font(.title.bold())
                     .foregroundStyle(.white)
-                
+
                 Text("AI-powered subscription optimization")
-                    .font(.system(size: 15, weight: .medium, design: .rounded))
+                    .font(.subheadline.weight(.medium))
                     .foregroundStyle(.white.opacity(0.6))
             }
         }
@@ -82,27 +83,27 @@ struct PerksView: View {
         VStack(spacing: 16) {
             VStack(spacing: 4) {
                 Text("Total Money Saved")
-                    .font(.system(size: 13, weight: .semibold, design: .rounded))
+                    .font(.caption.weight(.semibold))
                     .foregroundStyle(.white.opacity(0.6))
                     .textCase(.uppercase)
-                
+
                 HStack(alignment: .firstTextBaseline, spacing: 4) {
                     Text(currencyManager.currentCurrency.symbol)
-                        .font(.system(size: 28, weight: .bold, design: .rounded))
+                        .font(.title2.bold())
                         .foregroundStyle(Color.luxuryGold)
-                    
+
                     Text("\(Int(perkEngine.totalMoneySaved))")
-                        .font(.system(size: 42, weight: .bold, design: .rounded))
+                        .font(.largeTitle.bold())
                         .foregroundStyle(.white)
                 }
-                
+
                 if perkEngine.totalMoneySaved > 0 {
                     Text("You're optimizing like a pro!")
-                        .font(.system(size: 14, weight: .medium, design: .rounded))
+                        .font(.subheadline.weight(.medium))
                         .foregroundStyle(Color.luxuryTeal)
                 } else {
                     Text("Discover perks below to start saving")
-                        .font(.system(size: 14, weight: .medium, design: .rounded))
+                        .font(.subheadline.weight(.medium))
                         .foregroundStyle(.white.opacity(0.5))
                 }
             }
@@ -343,11 +344,11 @@ struct DiscoverSection: View {
             
             HStack {
                 Text("Recommended for You")
-                    .font(.system(size: 18, weight: .bold, design: .rounded))
+                    .font(.headline.bold())
                     .foregroundStyle(.white)
                 Spacer()
                 Text("\(perks.count) found")
-                    .font(.system(size: 13, weight: .medium, design: .rounded))
+                    .font(.caption.weight(.medium))
                     .foregroundStyle(.white.opacity(0.5))
             }
             .padding(.horizontal, 20)
@@ -404,11 +405,11 @@ struct TrialProtectionPromoBanner: View {
 
                 VStack(alignment: .leading, spacing: 4) {
                     Text("Trial Protection")
-                        .font(.system(size: 16, weight: .bold, design: .rounded))
+                        .font(.headline.weight(.bold))
                         .foregroundStyle(.white)
 
                     Text("Track free trials, get reminders, cancel before you get charged!")
-                        .font(.system(size: 13, weight: .medium, design: .rounded))
+                        .font(.subheadline.weight(.medium))
                         .foregroundStyle(.white.opacity(0.7))
                         .multilineTextAlignment(.leading)
                 }
@@ -417,7 +418,7 @@ struct TrialProtectionPromoBanner: View {
 
                 if trialStore.activeTrials.count > 0 {
                     Text("\(trialStore.activeTrials.count)")
-                        .font(.system(size: 14, weight: .bold))
+                        .font(.subheadline.weight(.bold))
                         .foregroundStyle(.white)
                         .padding(.horizontal, 10)
                         .padding(.vertical, 4)
@@ -426,7 +427,7 @@ struct TrialProtectionPromoBanner: View {
                 }
 
                 Image(systemName: "chevron.right")
-                    .font(.system(size: 14, weight: .semibold))
+                    .font(.subheadline.weight(.semibold))
                     .foregroundColor(.white.opacity(0.3))
             }
             .padding()
@@ -457,7 +458,7 @@ struct ActiveSection: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
             Text("Active Optimizations")
-                .font(.system(size: 18, weight: .bold, design: .rounded))
+                .font(.headline.bold())
                 .foregroundStyle(.white)
                 .padding(.horizontal, 20)
             
@@ -489,7 +490,7 @@ struct SavedSection: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
             Text("Recent Actions")
-                .font(.system(size: 18, weight: .bold, design: .rounded))
+                .font(.headline.bold())
                 .foregroundStyle(.white)
                 .padding(.horizontal, 20)
             
@@ -538,23 +539,23 @@ struct PerkCard: View {
                 
                 VStack(alignment: .leading, spacing: 4) {
                     Text(perk.title)
-                        .font(.system(size: 15, weight: .semibold, design: .rounded))
+                        .font(.subheadline.weight(.semibold))
                         .foregroundStyle(.white)
                         .lineLimit(1)
                     Text(perk.description)
-                        .font(.system(size: 13, weight: .medium, design: .rounded))
+                        .font(.caption.weight(.medium))
                         .foregroundStyle(.white.opacity(0.6))
                         .lineLimit(1)
                     HStack(spacing: 6) {
                         DifficultyBadge(difficulty: perk.difficulty)
                         Text("Save $\(Int(perk.estimatedSavings))/year")
-                            .font(.system(size: 12, weight: .bold, design: .rounded))
+                            .font(.caption.weight(.bold))
                             .foregroundStyle(Color.luxuryGold)
                     }
                 }
                 Spacer()
                 Image(systemName: "chevron.right")
-                    .font(.system(size: 14, weight: .semibold))
+                    .font(.caption.weight(.semibold))
                     .foregroundStyle(.white.opacity(0.3))
             }
             .padding()
@@ -596,18 +597,18 @@ struct ActivePerkCard: View {
             
             VStack(alignment: .leading, spacing: 4) {
                 Text(perk.title)
-                    .font(.system(size: 15, weight: .semibold, design: .rounded))
+                    .font(.subheadline.weight(.semibold))
                     .foregroundStyle(.white)
                     .lineLimit(1)
                 Text("Saving $\(Int(perk.estimatedAnnualSavings))/year")
-                    .font(.system(size: 13, weight: .bold, design: .rounded))
+                    .font(.caption.weight(.bold))
                     .foregroundStyle(Color.luxuryGold)
             }
-            
+
             Spacer()
-            
+
             Image(systemName: "checkmark.circle.fill")
-                .font(.system(size: 24))
+                .font(.title3)
                 .foregroundStyle(.green)
         }
         .padding()
@@ -633,23 +634,23 @@ struct ActionCard: View {
     var body: some View {
         HStack(spacing: 12) {
             Image(systemName: "checkmark.circle.fill")
-                .font(.system(size: 22))
+                .font(.title3)
                 .foregroundStyle(Color.luxuryGold)
-            
+
             VStack(alignment: .leading, spacing: 2) {
                 Text(action.title)
-                    .font(.system(size: 14, weight: .medium, design: .rounded))
+                    .font(.subheadline.weight(.medium))
                     .foregroundStyle(.white)
                     .lineLimit(1)
                 Text(action.date, style: .date)
-                    .font(.system(size: 12, weight: .medium, design: .rounded))
+                    .font(.caption.weight(.medium))
                     .foregroundStyle(.white.opacity(0.5))
             }
-            
+
             Spacer()
-            
+
             Text("+\(Int(action.moneySaved))")
-                .font(.system(size: 16, weight: .bold, design: .rounded))
+                .font(.headline.weight(.bold))
                 .foregroundStyle(Color.luxuryGold)
         }
         .padding()
@@ -680,38 +681,38 @@ struct PerkActionSheet: View {
                         }
                         
                         Text(perk.title)
-                            .font(.system(size: 24, weight: .bold, design: .rounded))
+                            .font(.title2.bold())
                             .foregroundStyle(.white)
                             .multilineTextAlignment(.center)
-                        
+
                         Text(perk.description)
-                            .font(.system(size: 15, weight: .medium, design: .rounded))
+                            .font(.subheadline.weight(.medium))
                             .foregroundStyle(.white.opacity(0.7))
                             .multilineTextAlignment(.center)
                     }
                     .padding(.top, 20)
-                    
+
                     VStack(spacing: 12) {
                         Text("Potential Annual Savings")
-                            .font(.system(size: 13, weight: .semibold, design: .rounded))
+                            .font(.caption.weight(.semibold))
                             .foregroundStyle(.white.opacity(0.6))
-                        
+
                         Text("$\(Int(perk.estimatedSavings))")
-                            .font(.system(size: 48, weight: .bold, design: .rounded))
+                            .font(.largeTitle.bold())
                             .foregroundStyle(Color.luxuryGold)
-                        
+
                         DifficultyBadge(difficulty: perk.difficulty)
                     }
                     .padding()
                     .glassCard(color: colorFor(perk.color))
                     .padding(.horizontal)
-                    
+
                     VStack(alignment: .leading, spacing: 16) {
                         Text("Follow these steps:")
-                            .font(.system(size: 17, weight: .semibold, design: .rounded))
+                            .font(.headline.weight(.semibold))
                             .foregroundStyle(.white)
                             .padding(.horizontal)
-                        
+
                         VStack(spacing: 12) {
                             ForEach(Array(perk.steps.enumerated()), id: \.offset) { index, step in
                                 PerkStepRow(number: index + 1, text: step, isCompleted: index < currentStep)
@@ -719,9 +720,9 @@ struct PerkActionSheet: View {
                         }
                         .padding(.horizontal)
                     }
-                    
+
                     Spacer(minLength: 30)
-                    
+
                     VStack(spacing: 12) {
                         if currentStep < perk.steps.count {
                             Button(action: { currentStep += 1 }) {
@@ -729,7 +730,7 @@ struct PerkActionSheet: View {
                                     Image(systemName: "checkmark.circle")
                                     Text("Complete Step \(currentStep + 1)")
                                 }
-                                .font(.system(size: 17, weight: .semibold, design: .rounded))
+                                .font(.headline.weight(.semibold))
                                 .foregroundStyle(.white)
                                 .frame(maxWidth: .infinity)
                                 .padding()
@@ -741,7 +742,7 @@ struct PerkActionSheet: View {
                                     Image(systemName: "checkmark.circle.fill")
                                     Text("Mark as Complete")
                                 }
-                                .font(.system(size: 17, weight: .semibold, design: .rounded))
+                                .font(.headline.weight(.semibold))
                                 .foregroundStyle(.white)
                                 .frame(maxWidth: .infinity)
                                 .padding()
@@ -752,7 +753,7 @@ struct PerkActionSheet: View {
                                 Image(systemName: "checkmark.circle.fill")
                                 Text("Completed!")
                             }
-                            .font(.system(size: 16, weight: .semibold, design: .rounded))
+                            .font(.headline.weight(.semibold))
                             .foregroundStyle(.white)
                             .frame(maxWidth: .infinity)
                             .padding()
@@ -805,17 +806,17 @@ struct PerkStepRow: View {
                 
                 if isCompleted {
                     Image(systemName: "checkmark")
-                        .font(.system(size: 16, weight: .bold))
+                        .font(.subheadline.weight(.bold))
                         .foregroundStyle(Color.luxuryTeal)
                 } else {
                     Text("\(number)")
-                        .font(.system(size: 16, weight: .bold, design: .rounded))
+                        .font(.subheadline.weight(.bold))
                         .foregroundStyle(.white.opacity(0.7))
                 }
             }
-            
+
             Text(text)
-                .font(.system(size: 15, weight: .medium, design: .rounded))
+                .font(.subheadline.weight(.medium))
                 .foregroundStyle(isCompleted ? .white.opacity(0.6) : .white)
                 .strikethrough(isCompleted)
         }
@@ -833,10 +834,10 @@ struct PerkStatBox: View {
     var body: some View {
         VStack(spacing: 4) {
             Text(value)
-                .font(.system(size: 28, weight: .bold, design: .rounded))
+                .font(.title2.bold())
                 .foregroundStyle(color)
             Text(label)
-                .font(.system(size: 13, weight: .medium, design: .rounded))
+                .font(.caption.weight(.medium))
                 .foregroundStyle(.white.opacity(0.6))
         }
         .frame(maxWidth: .infinity)
@@ -852,7 +853,7 @@ struct DifficultyBadge: View {
                 .fill(difficultyColor.opacity(0.8))
                 .frame(width: 6, height: 6)
             Text(difficulty.rawValue)
-                .font(.system(size: 11, weight: .semibold, design: .rounded))
+                .font(.caption.weight(.semibold))
                 .foregroundStyle(difficultyColor)
         }
         .padding(.horizontal, 8)
@@ -883,9 +884,9 @@ struct TabButton: View {
         }) {
             HStack(spacing: 6) {
                 Image(systemName: icon)
-                    .font(.system(size: 14, weight: .semibold))
+                    .font(.caption.weight(.semibold))
                 Text(title)
-                    .font(.system(size: 14, weight: .semibold, design: .rounded))
+                    .font(.caption.weight(.semibold))
             }
             .foregroundStyle(isSelected ? .white : .white.opacity(0.7))
             .padding(.horizontal, 16)
@@ -897,6 +898,8 @@ struct TabButton: View {
             .scaleEffect(pressed ? 0.95 : 1.0)
         }
         .buttonStyle(PlainButtonStyle())
+        .accessibilityLabel("\(title) tab")
+        .accessibilityValue(isSelected ? "Selected" : "Not selected")
         .simultaneousGesture(
             DragGesture(minimumDistance: 0)
                 .onChanged { _ in withAnimation(.easeInOut(duration: 0.1)) { pressed = true } }
@@ -913,17 +916,19 @@ struct EmptyStateView: View {
     var body: some View {
         VStack(spacing: 16) {
             Image(systemName: icon)
-                .font(.system(size: 48))
+                .font(.title.weight(.regular))
                 .foregroundStyle(.white.opacity(0.3))
             Text(title)
-                .font(.system(size: 18, weight: .bold, design: .rounded))
+                .font(.headline.bold())
                 .foregroundStyle(.white)
             Text(message)
-                .font(.system(size: 14, weight: .medium, design: .rounded))
+                .font(.subheadline.weight(.medium))
                 .foregroundStyle(.white.opacity(0.6))
                 .multilineTextAlignment(.center)
         }
         .padding(.vertical, 40)
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel("\(title), \(message)")
     }
 }
 

@@ -51,11 +51,11 @@ struct CostPerUseDashboardSection: View {
             // Section header
             HStack {
                 VStack(alignment: .leading, spacing: 4) {
-                    Text("Cost Per Use")
+                    Text(LocalizedStringKey("Cost Per Use"))
                         .font(AppTypography.headlineLarge)
                         .foregroundStyle(.primary)
 
-                    Text("Where your money goes furthest")
+                    Text(LocalizedStringKey("Where your money goes furthest"))
                         .font(AppTypography.bodySmall)
                         .foregroundStyle(.secondary)
                 }
@@ -78,6 +78,7 @@ struct CostPerUseDashboardSection: View {
                                     )
                             )
                     }
+                    .accessibilityLabel("Share cost per use insights")
                 }
             }
 
@@ -97,7 +98,7 @@ struct CostPerUseDashboardSection: View {
                             Image(systemName: "trophy.fill")
                                 .font(AppTypography.labelMedium)
                                 .foregroundStyle(Color.semanticSuccess)
-                            Text("Best Value")
+                            Text(LocalizedStringKey("Best Value"))
                                 .font(AppTypography.headlineSmall)
                                 .foregroundStyle(.primary)
                         }
@@ -117,7 +118,7 @@ struct CostPerUseDashboardSection: View {
                             Image(systemName: "exclamationmark.triangle.fill")
                                 .font(AppTypography.labelMedium)
                                 .foregroundStyle(Color.semanticWarning)
-                            Text("Consider Pausing")
+                            Text(LocalizedStringKey("Consider Pausing"))
                                 .font(AppTypography.headlineSmall)
                                 .foregroundStyle(.primary)
                         }
@@ -194,7 +195,7 @@ struct EfficiencyScoreCard: View {
             }
 
             VStack(alignment: .leading, spacing: 4) {
-                Text("Subscription Efficiency")
+                Text(LocalizedStringKey("Subscription Efficiency"))
                     .font(AppTypography.headlineSmall)
                     .foregroundStyle(.primary)
 
@@ -313,7 +314,7 @@ struct CostPerUseEmptyState: View {
                     .font(AppTypography.headlineMedium)
                     .foregroundStyle(.primary)
 
-                Text("Enable Screen Time tracking or manually add usage to see your cost-per-use insights.")
+                Text(LocalizedStringKey("Enable Screen Time tracking or manually add usage to see your cost-per-use insights."))
                     .font(AppTypography.bodySmall)
                     .foregroundStyle(.secondary)
                     .multilineTextAlignment(.center)
@@ -324,7 +325,7 @@ struct CostPerUseEmptyState: View {
             } label: {
                 HStack(spacing: 8) {
                     Image(systemName: "clock.badge.checkmark")
-                    Text("Enable Tracking")
+                    Text(LocalizedStringKey("Enable Tracking"))
                 }
                 .font(AppTypography.headlineSmall)
                 .foregroundStyle(.white)
@@ -403,7 +404,7 @@ struct CostPerUseAlertsSection: View {
                     Image(systemName: "bell.badge.fill")
                         .font(AppTypography.labelMedium)
                         .foregroundStyle(Color.semanticWarning)
-                    Text("Smart Alerts")
+                    Text(LocalizedStringKey("Smart Alerts"))
                         .font(AppTypography.headlineSmall)
                         .foregroundStyle(.primary)
                 }
@@ -462,6 +463,7 @@ struct SmartAlertCard: View {
                     .background(.ultraThinMaterial)
                     .clipShape(Circle())
             }
+            .accessibilityLabel("Dismiss alert")
         }
         .padding(14)
         .glassBackground(cornerRadius: 16, strokeColor: alertColor.opacity(0.2), strokeWidth: 1)

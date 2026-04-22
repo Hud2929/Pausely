@@ -155,6 +155,8 @@ struct SubscriptionsListView: View {
                                         selectedCategory = nil
                                     }
                                 }
+                                .accessibilityLabel("Filter by All")
+                                .accessibilityValue(selectedCategory == nil ? "Selected" : "Not selected")
 
                                 ForEach(ServiceCategory.allCases, id: \.self) { category in
                                     let count = store.subscriptions.filter {
@@ -170,6 +172,8 @@ struct SubscriptionsListView: View {
                                                 selectedCategory = category
                                             }
                                         }
+                                        .accessibilityLabel("Filter by \(category.rawValue)")
+                                        .accessibilityValue(selectedCategory == category ? "Selected" : "Not selected")
                                     }
                                 }
                             }
@@ -499,6 +503,7 @@ struct EnhancedSubscriptionRow: View {
                     .background(Color.luxuryPurple.opacity(0.15))
                     .clipShape(Circle())
             }
+            .accessibilityLabel("Ask Pausey about \(subscription.name)")
             .padding(.leading, 8)
         }
         .padding()
@@ -509,6 +514,9 @@ struct EnhancedSubscriptionRow: View {
         } onRelease: {
             withAnimation(.easeInOut(duration: 0.1)) { pressed = false }
         }
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel("\(subscription.name), \(subscription.displayAmount) per \(subscription.billingFrequency.shortDisplay), status \(subscription.status.displayName)")
+        .accessibilityHint("Double-tap to view details")
         .sheet(isPresented: $showingPausey) {
             PauseyButlerView(subscription: subscription)
         }
@@ -651,6 +659,7 @@ struct EmptyFilterView: View {
                         )
                 )
             }
+            .accessibilityLabel("Clear filters")
             .premiumPress(haptic: .light, scale: 0.97)
             .padding(.top, 8)
             .opacity(appeared ? 1 : 0)
@@ -1106,8 +1115,9 @@ struct SmartURLInputView: View {
                         Image(systemName: "xmark.circle.fill")
                             .foregroundStyle(.white.opacity(0.5))
                     }
+                    .accessibilityLabel("Clear URL")
                 }
-                
+
                 Button(action: parseURL) {
                     if isParsing {
                         ProgressView()
@@ -1118,6 +1128,7 @@ struct SmartURLInputView: View {
                             .foregroundStyle(Color.luxuryGold)
                     }
                 }
+                .accessibilityLabel("Parse URL")
                 .disabled(urlText.isEmpty || isParsing)
             }
             .padding()
@@ -1132,6 +1143,7 @@ struct SmartURLInputView: View {
                 .font(AppTypography.bodySmall)
                 .foregroundStyle(Color.luxuryGold)
             }
+            .accessibilityLabel("Paste URL from clipboard")
         }
     }
     

@@ -141,12 +141,12 @@ struct ShareableInsightCard: View {
                     .foregroundStyle(.white)
             }
 
-            Text("My Subscription Insights")
+            Text(LocalizedStringKey("My Subscription Insights"))
                 .font(.system(size: 24, weight: .bold, design: .rounded))
                 .foregroundStyle(.white)
                 .multilineTextAlignment(.center)
 
-            Text("Tracked with Pausely")
+            Text(LocalizedStringKey("Tracked with Pausely"))
                 .font(.system(size: 14, weight: .medium, design: .rounded))
                 .foregroundStyle(Color.luxuryGold)
         }
@@ -250,7 +250,7 @@ struct ShareableInsightCard: View {
     // MARK: - Efficiency Section
     private func efficiencySection(score: Double) -> some View {
         VStack(spacing: 12) {
-            Text("Subscription Efficiency")
+            Text(LocalizedStringKey("Subscription Efficiency"))
                 .font(.system(size: 13, weight: .medium, design: .rounded))
                 .foregroundStyle(.white.opacity(0.6))
                 .textCase(.uppercase)

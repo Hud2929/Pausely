@@ -75,7 +75,12 @@ struct RevolutionaryGeniusView: View {
                         .stroke(Color.purple.opacity(0.3 - Double(i) * 0.1), lineWidth: 2)
                         .frame(width: 100 + CGFloat(i * 30), height: 100 + CGFloat(i * 30))
                         .scaleEffect(engine.isAnalyzing ? 1.1 : 1.0)
-                        .animation(.easeInOut(duration: 2).repeatForever(autoreverses: true).delay(Double(i) * 0.3), value: engine.isAnalyzing)
+                        .animation(
+                            UIAccessibility.isReduceMotionEnabled
+                                ? .none
+                                : .easeInOut(duration: 2).repeatForever(autoreverses: true).delay(Double(i) * 0.3),
+                            value: engine.isAnalyzing
+                        )
                 }
 
                 Circle()

@@ -211,6 +211,7 @@ struct CurrencySettingsView: View {
                             Image(systemName: "xmark.circle.fill")
                                 .foregroundColor(.gray)
                         }
+                        .accessibilityLabel("Clear search")
                     }
                 }
                 .padding(.horizontal, 16)

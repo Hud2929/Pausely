@@ -131,7 +131,7 @@ struct ProfileHeaderCard: View {
                         .shadow(color: BrandColors.primary.opacity(0.4), radius: 20, x: 0, y: 10)
 
                     Text(user?.initials ?? "U")
-                        .font(.system(size: 44, weight: .bold, design: .rounded))
+                        .font(.largeTitle.bold())
                         .foregroundColor(.white)
                 }
 
@@ -145,6 +145,7 @@ struct ProfileHeaderCard: View {
                             .foregroundColor(.white)
                     }
                     .offset(x: 45, y: -45)
+                    .accessibilityLabel("Pro member")
                 }
             }
             .frame(height: 180)
@@ -152,12 +153,12 @@ struct ProfileHeaderCard: View {
             // User info
             VStack(spacing: 6) {
                 Text(user?.displayName ?? "User")
-                    .font(.system(size: 28, weight: .bold, design: .rounded))
+                    .font(.title2.bold())
                     .foregroundColor(.white)
 
                 if let email = user?.email, !email.isEmpty {
                     Text(email)
-                        .font(.system(size: 15))
+                        .font(.subheadline)
                         .foregroundColor(TextColors.secondary)
                 }
 
@@ -177,6 +178,8 @@ struct ProfileHeaderCard: View {
                         .stroke(Color.white.opacity(0.06), lineWidth: 1)
                 )
         )
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel("Profile, \(user?.displayName ?? "User"), \(isPremium ? "Pro member" : "Free tier")")
     }
 }
 
@@ -199,11 +202,11 @@ struct PremiumStatusCard: View {
                 
                 VStack(alignment: .leading, spacing: 4) {
                     Text("Pro Member")
-                        .font(.system(size: 18, weight: .bold))
+                        .font(.headline.bold())
                         .foregroundColor(.white)
-                    
+
                     Text("Member since \(memberSinceText)")
-                        .font(.system(size: 14))
+                        .font(.subheadline)
                         .foregroundColor(TextColors.secondary)
                 }
                 
@@ -249,11 +252,11 @@ struct ProFeatureItem: View {
     var body: some View {
         VStack(spacing: 6) {
             Image(systemName: icon)
-                .font(.system(size: 20))
+                .font(.headline)
                 .foregroundColor(BrandColors.accent)
-            
+
             Text(text)
-                .font(.system(size: 12, weight: .medium))
+                .font(.caption)
                 .foregroundColor(TextColors.secondary)
         }
     }
@@ -283,11 +286,11 @@ struct UpgradePromptCard: View {
                     
                     VStack(alignment: .leading, spacing: 4) {
                         Text("Upgrade to Pro")
-                            .font(.system(size: 18, weight: .bold))
+                            .font(.headline.bold())
                             .foregroundColor(.white)
-                        
+
                         Text("Unlock unlimited subscriptions and more")
-                            .font(.system(size: 14))
+                            .font(.subheadline)
                             .foregroundColor(TextColors.secondary)
                     }
                     
@@ -331,7 +334,7 @@ struct BenefitPill: View {
     
     var body: some View {
         Text(text)
-            .font(.system(size: 12, weight: .medium))
+            .font(.caption)
             .foregroundColor(BrandColors.primary)
             .padding(.horizontal, 10)
             .padding(.vertical, 5)
@@ -406,11 +409,11 @@ struct ProfileStatBox: View {
             
             VStack(spacing: 4) {
                 Text(value)
-                    .font(.system(size: 24, weight: .bold, design: .rounded))
+                    .font(.title2.bold())
                     .foregroundColor(.white)
-                
+
                 Text(label)
-                    .font(.system(size: 13, weight: .medium))
+                    .font(.subheadline)
                     .foregroundColor(TextColors.secondary)
             }
         }
@@ -436,10 +439,10 @@ struct SettingsSection: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 16) {
             Text("Settings")
-                .font(.system(size: 20, weight: .bold, design: .rounded))
+                .font(.title2.bold())
                 .foregroundColor(.white)
                 .padding(.horizontal, 4)
-            
+
             VStack(spacing: 1) {
                 SettingsRow(icon: "bell.fill", title: "Notifications", color: SemanticColors.warning, action: onNotifications)
                 SettingsRow(icon: "dollarsign.circle.fill", title: "Currency", value: "USD", color: SemanticColors.success, action: onCurrency)
@@ -475,24 +478,24 @@ struct SettingsRow: View {
                         .frame(width: 36, height: 36)
 
                     Image(systemName: icon)
-                        .font(.system(size: 16))
+                        .font(.body)
                         .foregroundColor(color)
                 }
 
                 Text(title)
-                    .font(.system(size: 17, weight: .medium))
+                    .font(.body)
                     .foregroundColor(.white)
 
                 Spacer()
 
                 if let value = value {
                     Text(value)
-                        .font(.system(size: 17))
+                        .font(.body)
                         .foregroundColor(TextColors.secondary)
                 }
 
                 Image(systemName: "chevron.right")
-                    .font(.system(size: 15, weight: .semibold))
+                    .font(.subheadline.weight(.semibold))
                     .foregroundColor(TextColors.tertiary)
             }
             .padding(14)
@@ -513,10 +516,10 @@ struct AboutSection: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 16) {
             Text("About")
-                .font(.system(size: 20, weight: .bold, design: .rounded))
+                .font(.title2.bold())
                 .foregroundColor(.white)
                 .padding(.horizontal, 4)
-            
+
             VStack(spacing: 1) {
                 AboutRow(title: "Version", value: "2.0.1")
                 AboutRow(title: "Build", value: "2024.02")
@@ -553,18 +556,18 @@ struct AboutRow: View {
         }) {
             HStack {
                 Text(title)
-                    .font(.system(size: 17))
+                    .font(.body)
                     .foregroundColor(.white)
 
                 Spacer()
 
                 if let value = value {
                     Text(value)
-                        .font(.system(size: 17))
+                        .font(.body)
                         .foregroundColor(TextColors.secondary)
                 } else {
                     Image(systemName: "arrow.up.right")
-                        .font(.system(size: 15))
+                        .font(.subheadline)
                         .foregroundColor(TextColors.tertiary)
                 }
             }
@@ -594,10 +597,10 @@ struct SignOutButton: View {
         }) {
             HStack {
                 Image(systemName: "arrow.left.circle.fill")
-                    .font(.system(size: 20))
+                    .font(.title3)
 
                 Text("Sign Out")
-                    .font(.system(size: 17, weight: .semibold))
+                    .font(.body.weight(.semibold))
             }
             .foregroundColor(SemanticColors.error)
             .frame(maxWidth: .infinity)

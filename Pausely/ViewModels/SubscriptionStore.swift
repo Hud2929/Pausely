@@ -95,6 +95,8 @@ class SubscriptionStore: ObservableObject {
                 self.lastFetchDate = Date()
                 self.error = nil
                 self.saveToCache()
+                WidgetDataStore.shared.publish(subscriptions: self.subscriptions)
+                SpotlightManager.shared.index(subscriptions: self.subscriptions)
             }
             
         } catch {
@@ -255,6 +257,8 @@ class SubscriptionStore: ObservableObject {
                 self.subscriptions.insert(localSub, at: 0)
                 self.calculateTotals()
                 self.saveToLocalStorage()
+                WidgetDataStore.shared.publish(subscriptions: self.subscriptions)
+                SpotlightManager.shared.index(subscriptions: self.subscriptions)
             }
             return false
         }
@@ -279,6 +283,8 @@ class SubscriptionStore: ObservableObject {
                     self.subscriptions.insert(newRecord.toSubscription(), at: 0)
                     self.calculateTotals()
                     self.saveToCache()
+                    WidgetDataStore.shared.publish(subscriptions: self.subscriptions)
+                    SpotlightManager.shared.index(subscriptions: self.subscriptions)
                 }
                 // Trigger review prompt after adding first subscription
                 if self.subscriptions.count == 1 {
@@ -325,11 +331,13 @@ class SubscriptionStore: ObservableObject {
                     self.subscriptions[index] = subscription
                     self.calculateTotals()
                     self.saveToLocalStorage()
+                    WidgetDataStore.shared.publish(subscriptions: self.subscriptions)
+                    SpotlightManager.shared.index(subscriptions: self.subscriptions)
                 }
             }
             return
         }
-        
+
         do {
             let record = SubscriptionRecord(from: subscription)
             
@@ -347,6 +355,8 @@ class SubscriptionStore: ObservableObject {
                         self.subscriptions[index] = updatedRecord.toSubscription()
                         self.calculateTotals()
                         self.saveToCache()
+                        WidgetDataStore.shared.publish(subscriptions: self.subscriptions)
+                        SpotlightManager.shared.index(subscriptions: self.subscriptions)
                     }
                 }
             }
@@ -402,10 +412,12 @@ class SubscriptionStore: ObservableObject {
                 self.subscriptions.removeAll { $0.id == id }
                 self.calculateTotals()
                 self.saveToLocalStorage()
+                WidgetDataStore.shared.publish(subscriptions: self.subscriptions)
+                SpotlightManager.shared.index(subscriptions: self.subscriptions)
             }
             return
         }
-        
+
         do {
             try await client
                 .from("subscriptions")
@@ -417,6 +429,8 @@ class SubscriptionStore: ObservableObject {
                 self.subscriptions.removeAll { $0.id == id }
                 self.calculateTotals()
                 self.saveToCache()
+                WidgetDataStore.shared.publish(subscriptions: self.subscriptions)
+                SpotlightManager.shared.index(subscriptions: self.subscriptions)
             }
         } catch {
             print("Error deleting subscription: \(error)")
@@ -448,11 +462,13 @@ class SubscriptionStore: ObservableObject {
                     self.subscriptions[index].status = status
                     self.calculateTotals()
                     self.saveToLocalStorage()
+                    WidgetDataStore.shared.publish(subscriptions: self.subscriptions)
+                    SpotlightManager.shared.index(subscriptions: self.subscriptions)
                 }
             }
             return
         }
-        
+
         do {
             try await client
                 .from("subscriptions")
@@ -465,6 +481,8 @@ class SubscriptionStore: ObservableObject {
                     self.subscriptions[index].status = status
                     self.calculateTotals()
                     self.saveToCache()
+                    WidgetDataStore.shared.publish(subscriptions: self.subscriptions)
+                    SpotlightManager.shared.index(subscriptions: self.subscriptions)
                 }
             }
             // Check for savings milestone after status change (e.g., pause/cancel)

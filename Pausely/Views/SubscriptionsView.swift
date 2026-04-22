@@ -478,7 +478,10 @@ struct EmptySubscriptionsArtisticView: View {
                 .shadow(color: BrandColors.primary.opacity(0.4), radius: 20, x: 0, y: 10)
             }
         }
-        .onAppear { animate = true }
+        .onAppear {
+            guard !UIAccessibility.isReduceMotionEnabled else { return }
+            animate = true
+        }
     }
 }
 
@@ -781,6 +784,7 @@ struct ArtisticAddSubscriptionView: View {
                                             .fill(BackgroundColors.tertiary)
                                     )
                             }
+                            .accessibilityLabel("Previous step")
                         }
                         
                         Button(action: {

@@ -311,7 +311,6 @@ struct ReferralShareSheet: View {
                 self.referralCode = code
             }
         } catch {
-            print("Error loading referral code: \(error)")
         }
     }
     

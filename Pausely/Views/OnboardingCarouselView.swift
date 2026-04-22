@@ -46,7 +46,7 @@ struct OnboardingCarouselView: View {
                     Spacer()
                     Button(action: skipOnboarding) {
                         Text("Skip")
-                            .font(.system(size: 15, weight: .medium, design: .rounded))
+                            .font(.system(.subheadline, design: .rounded).weight(.medium))
                             .foregroundColor(TextColors.secondary)
                             .padding(.horizontal, 16)
                             .padding(.vertical, 8)
@@ -58,6 +58,7 @@ struct OnboardingCarouselView: View {
                     .padding(.top, 16)
                     .padding(.trailing, 24)
                     .opacity(skipButtonOpacity)
+                    .accessibilityLabel("Skip onboarding")
                 }
 
                 // Page indicator
@@ -67,6 +68,8 @@ struct OnboardingCarouselView: View {
                             .fill(currentPage == index ? Color.luxuryGold : Color.white.opacity(0.2))
                             .frame(width: currentPage == index ? 24 : 8, height: 8)
                             .animation(.spring(response: 0.35, dampingFraction: 0.7), value: currentPage)
+                            .accessibilityLabel("Page \(index + 1) of \(totalPages)")
+                            .accessibilityValue(currentPage == index ? "Selected" : "Not selected")
                     }
                 }
                 .padding(.top, 12)
@@ -90,6 +93,10 @@ struct OnboardingCarouselView: View {
             }
         }
         .onAppear {
+            guard !UIAccessibility.isReduceMotionEnabled else {
+                animateContent = true
+                return
+            }
             withAnimation(.easeOut(duration: 0.6).delay(0.2)) {
                 animateContent = true
             }
@@ -108,10 +115,10 @@ struct OnboardingCarouselView: View {
             Button(action: advancePage) {
                 HStack(spacing: 8) {
                     Text(currentPage < totalPages - 1 ? "Next" : "Get Started")
-                        .font(.system(size: 17, weight: .semibold, design: .rounded))
+                        .font(.system(.headline, design: .rounded).weight(.semibold))
 
                     Image(systemName: currentPage < totalPages - 1 ? "arrow.right" : "sparkles")
-                        .font(.system(size: 16, weight: .semibold))
+                        .font(.subheadline.weight(.semibold))
                 }
                 .foregroundColor(.white)
                 .frame(maxWidth: .infinity)
@@ -140,15 +147,17 @@ struct OnboardingCarouselView: View {
                 )
                 .shadow(color: Color.luxuryPurple.opacity(0.5), radius: 20, x: 0, y: 10)
             }
+            .accessibilityLabel(currentPage < totalPages - 1 ? "Next page" : "Get started")
             .pressEffect(scale: 0.97)
             .animation(.spring(response: 0.3), value: currentPage)
 
             if currentPage < totalPages - 1 {
                 Button(action: skipOnboarding) {
                     Text("I already have an account")
-                        .font(.system(size: 15, weight: .medium, design: .rounded))
+                        .font(.system(.subheadline, design: .rounded).weight(.medium))
                         .foregroundColor(TextColors.secondary)
                 }
+                .accessibilityLabel("I already have an account")
             }
         }
     }
@@ -216,7 +225,7 @@ struct OnboardingPageView: View {
             VStack(spacing: 16) {
                 HStack(spacing: 12) {
                     Image(systemName: page.icon)
-                        .font(.system(size: 28, weight: .semibold))
+                        .font(.title2.weight(.semibold))
                         .foregroundStyle(
                             LinearGradient(
                                 colors: page.colors,
@@ -226,29 +235,39 @@ struct OnboardingPageView: View {
                         )
 
                     Text(page.title)
-                        .font(.system(size: 24, weight: .bold, design: .rounded))
+                        .font(.system(.title2, design: .rounded).weight(.bold))
                         .foregroundColor(.white)
                         .multilineTextAlignment(.center)
                 }
 
                 Text(page.description)
-                    .font(.system(size: 17, weight: .medium, design: .rounded))
+                    .font(.system(.headline, design: .rounded).weight(.medium))
                     .foregroundColor(TextColors.secondary)
                     .multilineTextAlignment(.center)
                     .padding(.horizontal, 32)
             }
             .opacity(localAnimate ? 1 : 0)
             .offset(y: localAnimate ? 0 : 20)
+            .accessibilityElement(children: .combine)
+            .accessibilityLabel("\(page.title), \(page.description)")
 
             Spacer()
         }
         .onAppear {
+            guard !UIAccessibility.isReduceMotionEnabled else {
+                localAnimate = true
+                return
+            }
             withAnimation(.easeOut(duration: 0.5).delay(0.1)) {
                 localAnimate = true
             }
         }
         .onChange(of: animate) { newValue in
             if newValue {
+                guard !UIAccessibility.isReduceMotionEnabled else {
+                    localAnimate = true
+                    return
+                }
                 withAnimation(.easeOut(duration: 0.5).delay(0.1)) {
                     localAnimate = true
                 }
@@ -298,7 +317,7 @@ struct SubscriptionsIllustration: View {
                 // Header
                 HStack {
                     Text("Your Subscriptions")
-                        .font(.system(size: 18, weight: .bold, design: .rounded))
+                        .font(.system(.headline, design: .rounded).weight(.bold))
                         .foregroundColor(.white)
 
                     Spacer()
@@ -308,8 +327,9 @@ struct SubscriptionsIllustration: View {
                         .frame(width: 32, height: 32)
                         .overlay(
                             Image(systemName: "plus")
-                                .font(.system(size: 14, weight: .semibold))
+                                .font(.subheadline.weight(.semibold))
                                 .foregroundColor(colors[0])
+                                .accessibilityLabel("Add subscription")
                         )
                 }
                 .padding(.horizontal, 20)
@@ -318,11 +338,11 @@ struct SubscriptionsIllustration: View {
                 // Total spend
                 VStack(spacing: 4) {
                     Text("$247.83")
-                        .font(.system(size: 36, weight: .bold, design: .rounded))
+                        .font(.system(.largeTitle, design: .rounded).weight(.bold))
                         .foregroundColor(.white)
 
                     Text("per month")
-                        .font(.system(size: 13, weight: .medium))
+                        .font(.footnote.weight(.medium))
                         .foregroundColor(TextColors.secondary)
                 }
                 .padding(.vertical, 12)
@@ -348,24 +368,24 @@ struct SubscriptionsIllustration: View {
                                 .frame(width: 36, height: 36)
                                 .overlay(
                                     Text(String(sub.name.prefix(1)))
-                                        .font(.system(size: 14, weight: .bold))
+                                        .font(.subheadline.weight(.bold))
                                         .foregroundColor(sub.color)
                                 )
 
                             VStack(alignment: .leading, spacing: 2) {
                                 Text(sub.name)
-                                    .font(.system(size: 14, weight: .semibold))
+                                    .font(.subheadline.weight(.semibold))
                                     .foregroundColor(.white)
 
                                 Text("Monthly")
-                                    .font(.system(size: 11, weight: .medium))
+                                    .font(.caption.weight(.medium))
                                     .foregroundColor(TextColors.secondary)
                             }
 
                             Spacer()
 
                             Text(sub.price)
-                                .font(.system(size: 14, weight: .bold))
+                                .font(.subheadline.weight(.bold))
                                 .foregroundColor(.white)
                         }
                         .padding(10)
@@ -375,7 +395,7 @@ struct SubscriptionsIllustration: View {
                         )
                         .offset(y: animate ? 0 : CGFloat(20 - index * 5))
                         .opacity(animate ? 1 : 0)
-                        .animation(.spring(response: 0.5, dampingFraction: 0.7).delay(Double(index) * 0.1), value: animate)
+                        .animation(UIAccessibility.isReduceMotionEnabled ? .none : .spring(response: 0.5, dampingFraction: 0.7).delay(Double(index) * 0.1), value: animate)
                     }
                 }
                 .padding(.horizontal, 20)
@@ -412,15 +432,16 @@ struct CostPerUseIllustration: View {
             VStack(spacing: 16) {
                 // Header
                 HStack {
-                    Text("Cost Per Use")
-                        .font(.system(size: 18, weight: .bold, design: .rounded))
+                    Text(LocalizedStringKey("Cost Per Use"))
+                        .font(.system(.headline, design: .rounded).weight(.bold))
                         .foregroundColor(.white)
 
                     Spacer()
 
                     Image(systemName: "chart.bar.fill")
-                        .font(.system(size: 18, weight: .semibold))
+                        .font(.headline.weight(.semibold))
                         .foregroundColor(colors[0])
+                        .accessibilityLabel("Cost per use chart")
                 }
                 .padding(.horizontal, 20)
                 .padding(.top, 20)
@@ -431,10 +452,10 @@ struct CostPerUseIllustration: View {
                         VStack(spacing: 8) {
                             // Value label
                             Text("$\(Int(bar.value * 10))")
-                                .font(.system(size: 11, weight: .bold, design: .rounded))
+                                .font(.system(.caption, design: .rounded).weight(.bold))
                                 .foregroundColor(.white)
                                 .opacity(animate ? 1 : 0)
-                                .animation(.easeOut(duration: 0.4).delay(0.3 + Double(index) * 0.1), value: animate)
+                                .animation(UIAccessibility.isReduceMotionEnabled ? .none : .easeOut(duration: 0.4).delay(0.3 + Double(index) * 0.1), value: animate)
 
                             // Bar
                             RoundedRectangle(cornerRadius: 8, style: .continuous)
@@ -446,11 +467,11 @@ struct CostPerUseIllustration: View {
                                     )
                                 )
                                 .frame(width: 44, height: animate ? CGFloat(bar.value * 140) : 0)
-                                .animation(.spring(response: 0.6, dampingFraction: 0.7).delay(Double(index) * 0.1), value: animate)
+                                .animation(UIAccessibility.isReduceMotionEnabled ? .none : .spring(response: 0.6, dampingFraction: 0.7).delay(Double(index) * 0.1), value: animate)
 
                             // Label
                             Text(bar.label)
-                                .font(.system(size: 11, weight: .medium))
+                                .font(.caption.weight(.medium))
                                 .foregroundColor(TextColors.secondary)
                         }
                     }
@@ -461,11 +482,11 @@ struct CostPerUseIllustration: View {
                 // Insight badge
                 HStack(spacing: 8) {
                     Image(systemName: "lightbulb.fill")
-                        .font(.system(size: 14))
+                        .font(.subheadline)
                         .foregroundColor(Color.luxuryGold)
 
                     Text("Gym costs $8.50 per visit")
-                        .font(.system(size: 13, weight: .medium))
+                        .font(.subheadline.weight(.medium))
                         .foregroundColor(.white)
                 }
                 .padding(.horizontal, 14)
@@ -508,8 +529,8 @@ struct AlertsIllustration: View {
             VStack(spacing: 16) {
                 // Header
                 HStack {
-                    Text("Smart Alerts")
-                        .font(.system(size: 18, weight: .bold, design: .rounded))
+                    Text(LocalizedStringKey("Smart Alerts"))
+                        .font(.system(.headline, design: .rounded).weight(.bold))
                         .foregroundColor(.white)
 
                     Spacer()
@@ -519,14 +540,15 @@ struct AlertsIllustration: View {
                             .fill(Color.red.opacity(0.9))
                             .frame(width: 22, height: 22)
                             .scaleEffect(animate ? 1 : 0)
-                            .animation(.spring(response: 0.4, dampingFraction: 0.6).delay(0.3), value: animate)
+                            .animation(UIAccessibility.isReduceMotionEnabled ? .none : .spring(response: 0.4, dampingFraction: 0.6).delay(0.3), value: animate)
 
                         Text("3")
-                            .font(.system(size: 12, weight: .bold))
+                            .font(.caption.weight(.bold))
                             .foregroundColor(.white)
                             .opacity(animate ? 1 : 0)
-                            .animation(.easeOut(duration: 0.2).delay(0.4), value: animate)
+                            .animation(UIAccessibility.isReduceMotionEnabled ? .none : .easeOut(duration: 0.2).delay(0.4), value: animate)
                     }
+                    .accessibilityLabel("3 alerts")
                 }
                 .padding(.horizontal, 20)
                 .padding(.top, 20)
@@ -591,17 +613,17 @@ struct NotificationCard: View {
                     .frame(width: 40, height: 40)
 
                 Image(systemName: icon)
-                    .font(.system(size: 18, weight: .semibold))
+                    .font(.subheadline.weight(.semibold))
                     .foregroundColor(iconColor)
             }
 
             VStack(alignment: .leading, spacing: 3) {
                 Text(title)
-                    .font(.system(size: 14, weight: .semibold))
+                    .font(.subheadline.weight(.semibold))
                     .foregroundColor(.white)
 
                 Text(message)
-                    .font(.system(size: 12, weight: .medium))
+                    .font(.caption.weight(.medium))
                     .foregroundColor(TextColors.secondary)
                     .lineLimit(1)
             }
@@ -609,7 +631,7 @@ struct NotificationCard: View {
             Spacer()
 
             Text(time)
-                .font(.system(size: 11, weight: .medium))
+                .font(.caption.weight(.medium))
                 .foregroundColor(TextColors.tertiary)
         }
         .padding(12)
@@ -623,7 +645,9 @@ struct NotificationCard: View {
         )
         .opacity(animate ? 1 : 0)
         .offset(x: animate ? 0 : 30)
-        .animation(.spring(response: 0.5, dampingFraction: 0.75).delay(delay), value: animate)
+        .animation(UIAccessibility.isReduceMotionEnabled ? .none : .spring(response: 0.5, dampingFraction: 0.75).delay(delay), value: animate)
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel("\(title), \(message), \(time)")
     }
 }
 

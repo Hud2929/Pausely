@@ -472,6 +472,8 @@ struct BulkAddFilterPill: View {
             )
         }
         .buttonStyle(PlainButtonStyle())
+        .accessibilityLabel("Filter by \(title)")
+        .accessibilityValue(isSelected ? "Selected" : "Not selected")
     }
 }
 

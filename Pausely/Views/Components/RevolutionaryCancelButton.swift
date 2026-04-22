@@ -264,6 +264,7 @@ struct RevolutionaryCancelConfirmationSheet: View {
                         Image(systemName: "xmark")
                             .foregroundStyle(Color.obsidianText)
                     }
+                    .accessibilityLabel("Close")
                 }
             }
         }
@@ -342,6 +343,7 @@ struct RevolutionaryPauseSheet: View {
                         Image(systemName: "xmark")
                             .foregroundStyle(Color.obsidianText)
                     }
+                    .accessibilityLabel("Close")
                 }
             }
         }

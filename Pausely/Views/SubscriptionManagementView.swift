@@ -134,14 +134,14 @@ struct SubscriptionManagementView: View {
                     .frame(width: 100, height: 100)
                 
                 Text(String(subscription.name.prefix(1)))
-                    .font(.system(size: 44, weight: .bold))
+                    .font(.largeTitle.bold())
                     .foregroundStyle(.white)
             }
             
             Text(subscription.name)
                 .font(.title.bold())
                 .foregroundColor(.primary)
-            
+
             Text(subscription.displayAmount + "/" + subscription.billingFrequency.rawValue)
                 .font(.title2)
                 .foregroundStyle(
@@ -165,6 +165,8 @@ struct SubscriptionManagementView: View {
                 .background(usageColor.opacity(0.2))
                 .foregroundStyle(usageColor)
                 .cornerRadius(8)
+                .accessibilityElement(children: .combine)
+                .accessibilityLabel("Usage this month: \(screenTimeManager.formatMinutes(currentUsageMinutes))")
             }
             
             // Cost per hour badge (if usage data available)
@@ -179,6 +181,8 @@ struct SubscriptionManagementView: View {
                 .background(costPerHourColor(cph).opacity(0.2))
                 .foregroundStyle(costPerHourColor(cph))
                 .cornerRadius(8)
+                .accessibilityElement(children: .combine)
+                .accessibilityLabel("Cost per hour: \(formatCostPerHour(cph))")
             }
             
             // Difficulty badge
@@ -192,9 +196,14 @@ struct SubscriptionManagementView: View {
             .background(difficultyColor.opacity(0.2))
             .foregroundColor(difficultyColor)
             .cornerRadius(8)
+            .accessibilityElement(children: .combine)
+            .accessibilityLabel("Cancellation difficulty: \(actionManager.getCancellationDifficulty(for: subscription).rawValue)")
         }
         .padding()
         .glassCard(color: iconColor)
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel("\(subscription.name), \(subscription.displayAmount) per \(subscription.billingFrequency.rawValue)")
+        .accessibilityHint("Double-tap to view details")
     }
     
     // MARK: - Smart Pause Section (REVOLUTIONARY FEATURE)
@@ -217,6 +226,7 @@ struct SubscriptionManagementView: View {
                         .font(.title3)
                         .foregroundColor(.luxuryPurple)
                 }
+                .accessibilityLabel("Smart pause info")
             }
             
             SmartPauseBanner(
@@ -278,6 +288,7 @@ struct SubscriptionManagementView: View {
                         .font(.title3)
                         .foregroundColor(.luxuryPurple)
                 }
+                .accessibilityLabel("Edit usage")
             }
 
             // Disclaimer about estimated data
@@ -460,6 +471,7 @@ struct SubscriptionManagementView: View {
                 Image(systemName: "info.circle")
                     .foregroundColor(.blue)
             }
+            .accessibilityLabel("Screen time info")
         }
         .padding()
         .background(Color.blue.opacity(0.1))

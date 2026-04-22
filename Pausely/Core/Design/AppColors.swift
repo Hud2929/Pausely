@@ -411,7 +411,10 @@ struct LoadingDots: View {
                     )
             }
         }
-        .onAppear { isAnimating = true }
+        .onAppear {
+            guard !UIAccessibility.isReduceMotionEnabled else { return }
+            isAnimating = true
+        }
     }
 }
 
@@ -699,7 +702,10 @@ struct PremiumLoadingIndicator: View {
                     )
             }
         }
-        .onAppear { isAnimating = true }
+        .onAppear {
+            guard !UIAccessibility.isReduceMotionEnabled else { return }
+            isAnimating = true
+        }
     }
 }
 

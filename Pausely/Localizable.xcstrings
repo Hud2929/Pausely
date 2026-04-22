@@ -2,6 +2,56 @@
   "sourceLanguage": "en",
   "strings": {
     "": {},
+    "Unlimited subscriptions": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Unlimited subscriptions"
+          }
+        }
+      }
+    },
+    "Cost-per-use analytics": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cost-per-use analytics"
+          }
+        }
+      }
+    },
+    "Smart renewal alerts": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Smart renewal alerts"
+          }
+        }
+      }
+    },
+    "Usage tracking": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Usage tracking"
+          }
+        }
+      }
+    },
+    "Cancel anytime": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cancel anytime"
+          }
+        }
+      }
+    },
     "/%@": {},
     "/100": {},
     "/hour": {},
@@ -5423,7 +5473,207 @@
     "Your transactions will appear here once you make a purchase or receive credits.": {},
     "Your Trial Protection Impact": {},
     "YOUR UNIQUE CODE": {},
-    "Your Usage This Month": {}
+    "Your Usage This Month": {},
+    "Cost Per Use": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cost Per Use"
+          }
+        }
+      }
+    },
+    "Smart Alerts": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Smart Alerts"
+          }
+        }
+      }
+    },
+    "Subscription Efficiency": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Subscription Efficiency"
+          }
+        }
+      }
+    },
+    "7-DAY FREE TRIAL": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "7-DAY FREE TRIAL"
+          }
+        }
+      }
+    },
+    "Start Your 7-Day Free Trial": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Start Your 7-Day Free Trial"
+          }
+        }
+      }
+    },
+    "Cancel anytime. No charge for 7 days.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cancel anytime. No charge for 7 days."
+          }
+        }
+      }
+    },
+    "What you get with Pro": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "What you get with Pro"
+          }
+        }
+      }
+    },
+    "Join 10,000+ users managing their subscriptions": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Join 10,000+ users managing their subscriptions"
+          }
+        }
+      }
+    },
+    "30-day money-back guarantee": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "30-day money-back guarantee"
+          }
+        }
+      }
+    },
+    "Where your money goes furthest": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Where your money goes furthest"
+          }
+        }
+      }
+    },
+    "Best Value": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Best Value"
+          }
+        }
+      }
+    },
+    "Consider Pausing": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Consider Pausing"
+          }
+        }
+      }
+    },
+    "Enable Screen Time tracking or manually add usage to see your cost-per-use insights.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Enable Screen Time tracking or manually add usage to see your cost-per-use insights."
+          }
+        }
+      }
+    },
+    "Enable Tracking": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Enable Tracking"
+          }
+        }
+      }
+    },
+    "Usage Trend": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Usage Trend"
+          }
+        }
+      }
+    },
+    "Last 3 Months": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Last 3 Months"
+          }
+        }
+      }
+    },
+    "Since You Started Tracking": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Since You Started Tracking"
+          }
+        }
+      }
+    },
+    "Category Comparison": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Category Comparison"
+          }
+        }
+      }
+    },
+    "My Subscription Insights": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "My Subscription Insights"
+          }
+        }
+      }
+    },
+    "Tracked with Pausely": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tracked with Pausely"
+          }
+        }
+      }
+    }
   },
   "version": "1.0"
 }

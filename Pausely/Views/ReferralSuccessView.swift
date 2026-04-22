@@ -559,6 +559,7 @@ struct ReferralMiniSuccessBanner: View {
                             .fill(.white.opacity(0.1))
                     )
             }
+            .accessibilityLabel("Close")
         }
         .padding()
         .background(

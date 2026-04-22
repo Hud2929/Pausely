@@ -21,12 +21,13 @@ struct PauselyWidgetProvider: TimelineProvider {
     }
     
     func getSnapshot(in context: Context, completion: @escaping (PauselyWidgetEntry) -> Void) {
+        let summary = WidgetDataStore.shared.readSummary()
         let entry = PauselyWidgetEntry(
             date: Date(),
-            monthlySpend: 142.99,
-            activeSubscriptions: 12,
-            upcomingRenewals: 2,
-            topInsight: "Save $45 by pausing unused subscriptions"
+            monthlySpend: summary.monthlySpend,
+            activeSubscriptions: summary.activeCount,
+            upcomingRenewals: summary.upcomingCount,
+            topInsight: summary.topInsight
         )
         completion(entry)
     }
@@ -45,14 +46,13 @@ struct PauselyWidgetProvider: TimelineProvider {
     }
     
     private func fetchCurrentEntry() async -> PauselyWidgetEntry {
-        // TODO: Fetch real data from shared UserDefaults or App Group when extension is ready
-        // For now, return loading state placeholder
-        PauselyWidgetEntry(
+        let summary = WidgetDataStore.shared.readSummary()
+        return PauselyWidgetEntry(
             date: Date(),
-            monthlySpend: 0,
-            activeSubscriptions: 0,
-            upcomingRenewals: 0,
-            topInsight: "Loading..."
+            monthlySpend: summary.monthlySpend,
+            activeSubscriptions: summary.activeCount,
+            upcomingRenewals: summary.upcomingCount,
+            topInsight: summary.topInsight
         )
     }
 }

@@ -71,7 +71,7 @@ struct CostPerUseDetailSection: View {
                     .font(AppTypography.headlineMedium)
                     .foregroundStyle(Color.luxuryPurple)
 
-                Text("Cost Per Use")
+                Text(LocalizedStringKey("Cost Per Use"))
                     .font(AppTypography.headlineLarge)
                     .foregroundStyle(.primary)
 
@@ -107,13 +107,13 @@ struct CostPerUseDetailSection: View {
     private var usageTrendSection: some View {
         VStack(alignment: .leading, spacing: 12) {
             HStack {
-                Text("Usage Trend")
+                Text(LocalizedStringKey("Usage Trend"))
                     .font(AppTypography.headlineSmall)
                     .foregroundStyle(.primary)
 
                 Spacer()
 
-                Text("Last 3 Months")
+                Text(LocalizedStringKey("Last 3 Months"))
                     .font(AppTypography.labelMedium)
                     .foregroundStyle(.secondary)
             }
@@ -170,7 +170,7 @@ struct CostPerUseDetailSection: View {
             }
 
             VStack(alignment: .leading, spacing: 3) {
-                Text("Since You Started Tracking")
+                Text(LocalizedStringKey("Since You Started Tracking"))
                     .font(AppTypography.labelLarge)
                     .foregroundStyle(.secondary)
 
@@ -197,7 +197,7 @@ struct CostPerUseDetailSection: View {
 
         return AnyView(
             VStack(alignment: .leading, spacing: 12) {
-                Text("Category Comparison")
+                Text(LocalizedStringKey("Category Comparison"))
                     .font(AppTypography.headlineSmall)
                     .foregroundStyle(.primary)
 

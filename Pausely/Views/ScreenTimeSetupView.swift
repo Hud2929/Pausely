@@ -505,9 +505,11 @@ struct DetectionStepView: View {
                             .frame(width: 80 + CGFloat(i * 30), height: 80 + CGFloat(i * 30))
                             .scaleEffect(viewModel.isDetecting ? 1.2 : 1.0)
                             .animation(
-                                Animation.easeInOut(duration: 1.0)
-                                    .repeatForever(autoreverses: true)
-                                    .delay(Double(i) * 0.3),
+                                UIAccessibility.isReduceMotionEnabled
+                                    ? .none
+                                    : Animation.easeInOut(duration: 1.0)
+                                        .repeatForever(autoreverses: true)
+                                        .delay(Double(i) * 0.3),
                                 value: viewModel.isDetecting
                             )
                     }

@@ -297,6 +297,8 @@ struct DashboardView: View {
                 // Notifications
                 NotificationButton()
             }
+            .accessibilityElement(children: .combine)
+            .accessibilityLabel("Dashboard header, \(greeting)")
         }
         .padding(.horizontal, 20)
         .opacity(appear ? 1 : 0)
@@ -310,6 +312,14 @@ struct DashboardView: View {
         case 12..<17: return "Good afternoon"
         default: return "Good evening"
         }
+    }
+}
+
+// MARK: - Accessibility Helpers
+
+extension DashboardInsightCard {
+    func accessibilityLabelText() -> String {
+        "\(title), \(subtitle), value \(value)"
     }
 }
 
@@ -491,6 +501,8 @@ struct DashboardInsightCard: View {
         }
         .padding(14)
         .glassBackground(cornerRadius: 16, strokeColor: .white.opacity(0.1), strokeWidth: 0.5)
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel("\(title), \(subtitle), value \(value)")
     }
 }
 
@@ -523,6 +535,7 @@ struct CurrencySelectorButton: View {
                     )
             )
         }
+        .accessibilityLabel("Select currency, currently \(currencyManager.selectedCurrency)")
         .sheet(isPresented: $showingCurrencyPicker) {
             CurrencySettingsView()
         }
@@ -629,6 +642,9 @@ struct ReferralPromotionCard: View {
             .glassBackground(cornerRadius: 20, strokeColor: Color.luxuryGold.opacity(0.3), strokeWidth: 1)
         }
         .buttonStyle(PlainButtonStyle())
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel("Unlock Pro for Free, refer friends and earn free months")
+        .accessibilityHint("Double-tap to view referral options")
         .sheet(isPresented: $showingApply) {
             ApplyReferralView()
         }
