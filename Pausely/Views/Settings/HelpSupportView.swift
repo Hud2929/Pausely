@@ -90,6 +90,8 @@ struct HelpSupportView: View {
                         TextField("Search help articles...", text: $searchText)
                             .font(.system(size: 17))
                             .foregroundColor(.white)
+                            .keyboardType(.default)
+                            .submitLabel(.search)
                     }
                     .padding(16)
                     .background(

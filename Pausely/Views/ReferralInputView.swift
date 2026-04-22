@@ -196,6 +196,8 @@ struct ReferralInputView: View {
                         .textInputAutocapitalization(.characters)
                         .autocorrectionDisabled()
                         .focused($isTextFieldFocused)
+                        .keyboardType(.default)
+                        .submitLabel(.go)
                         .onChange(of: referralCode) { _, _ in
                             // Clear validation state when typing
                             if isValid != nil {
@@ -207,7 +209,6 @@ struct ReferralInputView: View {
                                 referralCode = String(referralCode.prefix(10))
                             }
                         }
-                        .submitLabel(.go)
                         .onSubmit {
                             validateAndApply()
                         }
@@ -568,6 +569,8 @@ struct InlineReferralInput: View {
                             .textInputAutocapitalization(.characters)
                             .autocorrectionDisabled()
                             .focused($isFocused)
+                            .keyboardType(.default)
+                            .submitLabel(.go)
                             .padding()
                             .background(
                                 RoundedRectangle(cornerRadius: 12, style: .continuous)

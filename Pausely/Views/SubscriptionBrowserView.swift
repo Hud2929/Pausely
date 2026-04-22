@@ -130,6 +130,8 @@ struct SubscriptionBrowserView: View {
                 .font(.system(size: 17, weight: .medium))
                 .foregroundColor(.white)
                 .autocapitalization(.none)
+                .keyboardType(.default)
+                .submitLabel(.search)
                 .tint(.luxuryPurple)
 
             if !searchText.isEmpty {

@@ -577,6 +577,7 @@ struct AboutRow: View {
         }
         .buttonStyle(PlainButtonStyle())
         .disabled(action == nil)
+        .accessibilityHint(action == nil ? "No action available for this row" : "")
         .simultaneousGesture(
             DragGesture(minimumDistance: 0)
                 .onChanged { _ in withAnimation(.easeInOut(duration: 0.1)) { isPressed = true } }

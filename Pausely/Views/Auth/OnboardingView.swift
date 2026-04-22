@@ -142,6 +142,7 @@ struct EmailConfirmationView: View {
                         .cornerRadius(16)
                     }
                     .disabled(showCheckingEmail)
+                    .accessibilityHint(showCheckingEmail ? "Please wait, checking confirmation status" : "")
                     
                     Button(action: resendEmail) {
                         HStack {
@@ -159,6 +160,7 @@ struct EmailConfirmationView: View {
                         .glass(intensity: 0.2, tint: .white)
                     }
                     .disabled(resendTimer < 60)
+                    .accessibilityHint(resendTimer < 60 ? "Please wait \(resendTimer) seconds before resending" : "")
                     
                     Button(action: goBackToSignIn) {
                         Text("Back to Sign In")
@@ -414,6 +416,7 @@ struct EnhancedLoginView: View {
             .shadow(color: Color.luxuryPurple.opacity(0.4), radius: 15)
         }
         .disabled(email.isEmpty || password.isEmpty || isLoading)
+        .accessibilityHint(email.isEmpty || password.isEmpty ? "Please enter your email and password" : isLoading ? "Please wait, signing in" : "")
         .opacity(email.isEmpty || password.isEmpty ? 0.6 : 1)
     }
     
@@ -708,7 +711,8 @@ struct PasswordResetView: View {
                 .cornerRadius(16)
             }
             .disabled(resetEmail.isEmpty || isLoading)
-            
+            .accessibilityHint(resetEmail.isEmpty ? "Please enter your email address" : isLoading ? "Please wait, sending reset link" : "")
+
             Button("Cancel") {
                 dismiss()
             }

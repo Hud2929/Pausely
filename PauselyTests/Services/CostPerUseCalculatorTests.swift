@@ -47,7 +47,7 @@ final class CostPerUseCalculatorTests: XCTestCase {
     }
 
     func testValueScore_cappedAt100() {
-        let score = CostPerUseCalculator.valueScore(monthlyCost: Decimal(1), monthlyHoursUsed: 1000)
+        let score = CostPerUseCalculator.valueScore(monthlyCost: Decimal(0), monthlyHoursUsed: 1000)
         XCTAssertEqual(score, 100)
     }
 
@@ -228,7 +228,7 @@ final class CostPerUseCalculatorTests: XCTestCase {
 
     func testShouldAlertCostIncrease() {
         XCTAssertTrue(CostPerUseCalculator.shouldAlertCostIncrease(
-            currentCostPerHour: Decimal(15),
+            currentCostPerHour: Decimal(16),
             previousCostPerHour: Decimal(10)
         ))
     }

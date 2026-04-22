@@ -104,6 +104,7 @@ struct SubscriptionsListView: View {
                     TextField("Search subscriptions...", text: $searchText)
                         .foregroundStyle(.white)
                         .textInputAutocapitalization(.never)
+                        .keyboardType(.default)
                         .submitLabel(.search)
                 }
                 .padding()
@@ -805,6 +806,7 @@ struct LuxuryAddSubscriptionView: View {
                                 .font(AppTypography.bodyLarge)
                                 .foregroundStyle(.white)
                                 .focused($focusedField, equals: .name)
+                                .submitLabel(.next)
                                 .padding()
                                 .glass(intensity: 0.2, tint: .white)
                         }
@@ -825,6 +827,7 @@ struct LuxuryAddSubscriptionView: View {
                                     .font(AppTypography.displaySmall)
                                     .foregroundStyle(.white)
                                     .keyboardType(.decimalPad)
+                                    .submitLabel(.done)
                                     .focused($focusedField, equals: .amount)
                             }
                             .padding()
@@ -861,7 +864,8 @@ struct LuxuryAddSubscriptionView: View {
                                 .premiumButton(gradient: [Color.luxuryPurple, Color.luxuryPink])
                         }
                         .disabled(name.isEmpty || amount.isEmpty)
-                        
+                        .accessibilityHint(name.isEmpty || amount.isEmpty ? "Please enter a service name and amount" : "")
+
                         Button(action: { dismiss() }) {
                             Text("Cancel")
                                 .font(AppTypography.bodyLarge)
@@ -1130,6 +1134,7 @@ struct SmartURLInputView: View {
                 }
                 .accessibilityLabel("Parse URL")
                 .disabled(urlText.isEmpty || isParsing)
+                .accessibilityHint(urlText.isEmpty ? "Please enter a URL first" : isParsing ? "Please wait, parsing URL" : "")
             }
             .padding()
             .glass(intensity: 0.2, tint: .white)

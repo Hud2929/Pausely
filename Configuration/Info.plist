@@ -88,5 +88,17 @@
     <false/>
     <key>UIApplicationSupportsRightToLeftLayout</key>
     <true/>
+    <key>NSFaceIDUsageDescription</key>
+    <string>Use Face ID to securely sign in to your Pausely account.</string>
+    <key>NSScreenTimeUsageDescription</key>
+    <string>Pausely uses Screen Time to help you track subscription usage and calculate cost-per-use insights.</string>
+    <key>UIBackgroundModes</key>
+    <array>
+        <string>fetch</string>
+    </array>
+    <key>BGTaskSchedulerPermittedIdentifiers</key>
+    <array>
+        <string>com.pausely.app.refresh</string>
+    </array>
 </dict>
 </plist>

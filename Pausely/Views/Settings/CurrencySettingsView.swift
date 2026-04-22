@@ -205,6 +205,8 @@ struct CurrencySettingsView: View {
                     TextField("Search currencies...", text: $searchText)
                         .foregroundColor(.white)
                         .font(.system(size: 16))
+                        .keyboardType(.default)
+                        .submitLabel(.search)
 
                     if !searchText.isEmpty {
                         Button(action: { searchText = "" }) {

@@ -59,6 +59,8 @@ struct LanguageSettingsView: View {
                     TextField("Search languages...", text: $searchText)
                         .font(.system(size: 16, weight: .medium, design: .rounded))
                         .foregroundStyle(.white)
+                        .keyboardType(.default)
+                        .submitLabel(.search)
                     
                     if !searchText.isEmpty {
                         Button(action: { searchText = "" }) {

@@ -489,6 +489,7 @@ struct StoreKitUpgradeView: View {
                 .shadow(color: Color.luxuryGold.opacity(0.5), radius: 20, x: 0, y: 10)
             }
             .disabled(storeManager.isLoading || storeManager.products.isEmpty)
+            .accessibilityHint(storeManager.isLoading ? "Please wait, purchase in progress" : storeManager.products.isEmpty ? "Products are loading, please wait" : "")
             .pressEffect(scale: 0.97)
 
             // Restore purchases button
@@ -503,6 +504,7 @@ struct StoreKitUpgradeView: View {
                     .underline()
             }
             .disabled(storeManager.isLoading)
+            .accessibilityHint(storeManager.isLoading ? "Please wait, purchase in progress" : "")
 
             // Terms
             Text("Free for 7 days, then auto-renews. Cancel anytime in App Store Settings.")

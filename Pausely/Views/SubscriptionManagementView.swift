@@ -867,22 +867,24 @@ struct UsageInputSheet: View {
                     HStack {
                         TextField("Hours", text: $hours)
                             .keyboardType(.numberPad)
+                            .submitLabel(.done)
                             .frame(width: 80)
-                        
+
                         Text("hours")
                             .foregroundColor(.secondary)
-                        
+
                         Spacer()
                     }
-                    
+
                     HStack {
                         TextField("Minutes", text: $minutes)
                             .keyboardType(.numberPad)
+                            .submitLabel(.done)
                             .frame(width: 80)
-                        
+
                         Text("minutes")
                             .foregroundColor(.secondary)
-                        
+
                         Spacer()
                     }
                 }

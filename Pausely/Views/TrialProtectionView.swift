@@ -568,7 +568,8 @@ struct AddTrialSheet: View {
             Form {
                 Section("Trial Details") {
                     TextField("Service Name (e.g., Netflix)", text: $serviceName)
-                    
+                        .submitLabel(.next)
+
                     Picker("Category", selection: $selectedCategory) {
                         ForEach(categories, id: \.self) { category in
                             Text(category).tag(category)
@@ -603,6 +604,7 @@ struct AddTrialSheet: View {
                         Text(CurrencyManager.shared.currentCurrency.symbol)
                         TextField("Monthly cost", text: $costAfterTrial)
                             .keyboardType(.decimalPad)
+                            .submitLabel(.done)
                     }
                 }
             }

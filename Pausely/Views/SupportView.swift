@@ -122,7 +122,8 @@ struct SupportView: View {
                                 SupportTextField(
                                     title: "Your Name",
                                     text: $name,
-                                    icon: "person"
+                                    icon: "person",
+                                    submitLabel: .next
                                 )
                                 
                                 // Email Field
@@ -130,14 +131,16 @@ struct SupportView: View {
                                     title: "Your Email",
                                     text: $email,
                                     icon: "envelope",
-                                    keyboardType: .emailAddress
+                                    keyboardType: .emailAddress,
+                                    submitLabel: .next
                                 )
                                 
                                 // Subject Field
                                 SupportTextField(
                                     title: "Subject",
                                     text: $subject,
-                                    icon: "text.quote"
+                                    icon: "text.quote",
+                                    submitLabel: .next
                                 )
                                 
                                 // Message Field
@@ -152,6 +155,14 @@ struct SupportView: View {
                                         .background(Color.white.opacity(0.1))
                                         .cornerRadius(12)
                                         .foregroundStyle(.white)
+                                        .toolbar {
+                                            ToolbarItemGroup(placement: .keyboard) {
+                                                Spacer()
+                                                Button("Done") {
+                                                    UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder), to: nil, from: nil, for: nil)
+                                                }
+                                            }
+                                        }
                                 }
                                 
                                 // Submit Button
@@ -266,22 +277,24 @@ struct SupportTextField: View {
     @Binding var text: String
     let icon: String
     var keyboardType: UIKeyboardType = .default
-    
+    var submitLabel: SubmitLabel = .next
+
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
             Text(title)
                 .font(.system(size: 14, weight: .medium))
                 .foregroundStyle(.white.opacity(0.7))
-            
+
             HStack {
                 Image(systemName: icon)
                     .foregroundStyle(Color.luxuryGold)
                     .frame(width: 24)
-                
+
                 TextField("", text: $text)
                     .foregroundStyle(.white)
                     .keyboardType(keyboardType)
                     .autocapitalization(.none)
+                    .submitLabel(submitLabel)
             }
             .padding()
             .background(Color.white.opacity(0.1))

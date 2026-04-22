@@ -195,6 +195,8 @@ struct PremiumSubscriptionsView: View {
                 TextField("Search subscriptions...", text: $searchText)
                     .font(.system(size: 17))
                     .foregroundColor(.white)
+                    .keyboardType(.default)
+                    .submitLabel(.search)
             }
             .padding(14)
             .background(

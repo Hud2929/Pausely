@@ -928,6 +928,7 @@ struct PremiumSignUpView: View {
                         .buttonStyle(PrimaryButtonStyle(isLoading: isLoading, isDisabled: !isValid))
                         .padding(.horizontal, 24)
                         .disabled(!isValid || isLoading)
+                        .accessibilityHint(!isValid ? "Please fill in all required fields correctly" : isLoading ? "Please wait, creating account" : "")
 
                         // Divider
                         HStack {
@@ -1136,6 +1137,7 @@ struct PremiumSignInView: View {
                         .buttonStyle(PrimaryButtonStyle(isLoading: isLoading, isDisabled: !isValid))
                         .padding(.horizontal, 24)
                         .disabled(!isValid || isLoading)
+                        .accessibilityHint(!isValid ? "Please enter your email and password" : isLoading ? "Please wait, signing in" : "")
 
                         Button("Forgot Password?") {
                             showPasswordReset = true
