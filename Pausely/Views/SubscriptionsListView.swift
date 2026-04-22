@@ -296,10 +296,7 @@ struct SubscriptionsListView: View {
             // Stat cards skeleton
             HStack(spacing: 12) {
                 ForEach(0..<3) { _ in
-                    RoundedRectangle(cornerRadius: 20, style: .continuous)
-                        .fill(Color.white.opacity(0.05))
-                        .frame(height: 90)
-                        .shimmer()
+                    SkeletonCard(height: 90)
                 }
             }
             .padding(.horizontal, 20)
@@ -307,47 +304,15 @@ struct SubscriptionsListView: View {
             // Category chips skeleton
             HStack(spacing: 8) {
                 ForEach(0..<4) { _ in
-                    RoundedRectangle(cornerRadius: 16, style: .continuous)
-                        .fill(Color.white.opacity(0.05))
-                        .frame(width: 80, height: 36)
-                        .shimmer()
+                    SkeletonCard(height: 36, cornerRadius: 16)
+                        .frame(width: 80)
                 }
             }
             .padding(.horizontal, 20)
 
-            // Subscription row skeletons
+            // Subscription row skeletons using SkeletonRow
             ForEach(0..<4) { _ in
-                HStack(spacing: 16) {
-                    Circle()
-                        .fill(Color.white.opacity(0.05))
-                        .frame(width: 56, height: 56)
-                        .shimmer()
-
-                    VStack(alignment: .leading, spacing: 8) {
-                        RoundedRectangle(cornerRadius: 6, style: .continuous)
-                            .fill(Color.white.opacity(0.05))
-                            .frame(width: 140, height: 18)
-                            .shimmer()
-
-                        RoundedRectangle(cornerRadius: 4, style: .continuous)
-                            .fill(Color.white.opacity(0.05))
-                            .frame(width: 90, height: 14)
-                            .shimmer()
-                    }
-
-                    Spacer()
-
-                    RoundedRectangle(cornerRadius: 6, style: .continuous)
-                        .fill(Color.white.opacity(0.05))
-                        .frame(width: 60, height: 22)
-                        .shimmer()
-                }
-                .padding(.vertical, 12)
-                .padding(.horizontal, 16)
-                .background(
-                    RoundedRectangle(cornerRadius: 20, style: .continuous)
-                        .fill(Color.white.opacity(0.03))
-                )
+                SkeletonRow()
             }
             .padding(.horizontal, 20)
 

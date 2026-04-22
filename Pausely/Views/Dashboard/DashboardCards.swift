@@ -78,6 +78,9 @@ struct RenewalCard: View {
         .padding(14)
         .frame(width: 120, height: 120)
         .glassBackground(cornerRadius: 20, strokeColor: urgencyColor.opacity(0.3), strokeWidth: 1)
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel("\(subscription.name), renews in \(subscription.daysUntilRenewal ?? 0) days, \(currencyManager.format(currencyManager.convertToSelected(subscription.amount, from: subscription.currency)))")
+        .accessibilityHint("Double-tap to view details")
     }
 }
 
@@ -160,6 +163,9 @@ struct RecentSubCard: View {
         .frame(width: 100)
         .padding(.vertical, 16)
         .glassBackground(cornerRadius: 20, strokeColor: .white.opacity(0.15), strokeWidth: 0.5)
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel("\(subscription.name), \(currencyManager.format(currencyManager.convertToSelected(subscription.amount, from: subscription.currency)))")
+        .accessibilityHint("Double-tap to view details")
     }
 }
 

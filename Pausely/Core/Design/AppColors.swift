@@ -404,9 +404,11 @@ struct LoadingDots: View {
                     .scaleEffect(isAnimating ? 1 : 0.5)
                     .opacity(isAnimating ? 1 : 0.3)
                     .animation(
-                        .easeInOut(duration: 0.5)
-                        .repeatForever(autoreverses: true)
-                        .delay(Double(index) * 0.15),
+                        UIAccessibility.isReduceMotionEnabled
+                            ? .none
+                            : .easeInOut(duration: 0.5)
+                                .repeatForever(autoreverses: true)
+                                .delay(Double(index) * 0.15),
                         value: isAnimating
                     )
             }
@@ -695,9 +697,11 @@ struct PremiumLoadingIndicator: View {
                     .scaleEffect(isAnimating ? 1 : 0.5)
                     .opacity(isAnimating ? 1 : 0.3)
                     .animation(
-                        .easeInOut(duration: 0.5)
-                        .repeatForever(autoreverses: true)
-                        .delay(Double(index) * 0.15),
+                        UIAccessibility.isReduceMotionEnabled
+                            ? .none
+                            : .easeInOut(duration: 0.5)
+                                .repeatForever(autoreverses: true)
+                                .delay(Double(index) * 0.15),
                         value: isAnimating
                     )
             }

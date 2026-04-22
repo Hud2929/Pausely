@@ -775,6 +775,7 @@ struct PasswordResetView: View {
                 await MainActor.run {
                     isLoading = false
                     errorMessage = error.localizedDescription
+                    HapticStyle.warning.trigger()
                 }
             }
         }

@@ -292,6 +292,7 @@ final class GradientAnimationState: ObservableObject {
 struct AnimatedGradientBackground: View {
     @ObservedObject private var state = GradientAnimationState.shared
     @Environment(\.colorScheme) private var colorScheme
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     var body: some View {
         ZStack {
@@ -309,7 +310,8 @@ struct AnimatedGradientBackground: View {
                             )
                         )
                         .frame(width: geo.size.width * 0.8)
-                        .offset(x: state.animate ? 50 : -50, y: state.animate ? -100 : -150)
+                        .offset(x: reduceMotion ? 0 : (state.animate ? 50 : -50),
+                                y: reduceMotion ? -125 : (state.animate ? -100 : -150))
                         .blur(radius: 60)
 
                     Circle()
@@ -322,7 +324,8 @@ struct AnimatedGradientBackground: View {
                             )
                         )
                         .frame(width: geo.size.width * 0.6)
-                        .offset(x: state.animate ? -80 : 80, y: state.animate ? 200 : 100)
+                        .offset(x: reduceMotion ? 0 : (state.animate ? -80 : 80),
+                                y: reduceMotion ? 150 : (state.animate ? 200 : 100))
                         .blur(radius: 50)
 
                     Circle()
@@ -335,7 +338,8 @@ struct AnimatedGradientBackground: View {
                             )
                         )
                         .frame(width: geo.size.width * 0.5)
-                        .offset(x: state.animate ? 100 : -100, y: state.animate ? 50 : -50)
+                        .offset(x: reduceMotion ? 0 : (state.animate ? 100 : -100),
+                                y: reduceMotion ? 0 : (state.animate ? 50 : -50))
                         .blur(radius: 40)
 
                     Circle()
@@ -348,7 +352,8 @@ struct AnimatedGradientBackground: View {
                             )
                         )
                         .frame(width: geo.size.width * 0.4)
-                        .offset(x: state.animate ? -120 : 120, y: state.animate ? -80 : 80)
+                        .offset(x: reduceMotion ? 0 : (state.animate ? -120 : 120),
+                                y: reduceMotion ? 0 : (state.animate ? -80 : 80))
                         .blur(radius: 30)
                 }
             }

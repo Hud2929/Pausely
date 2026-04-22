@@ -163,10 +163,16 @@ struct RevolutionaryCancelConfirmationSheet: View {
     let subscription: Subscription
     let onConfirm: () async -> Void
     let onDismiss: () -> Void
-    
+
+    @AccessibilityFocusState private var focusedElement: FocusElement?
+
+    enum FocusElement {
+        case confirmationMessage
+    }
+
     @State private var isProcessing = false
     @Environment(\.dismiss) private var dismiss
-    
+
     var body: some View {
         NavigationStack {
             VStack(spacing: 24) {
@@ -190,6 +196,7 @@ struct RevolutionaryCancelConfirmationSheet: View {
                         .font(STFont.bodyMedium)
                         .foregroundStyle(Color.obsidianTextSecondary)
                         .multilineTextAlignment(.center)
+                        .accessibilityFocused($focusedElement, equals: .confirmationMessage)
                 }
                 
                 // Savings display
@@ -260,6 +267,9 @@ struct RevolutionaryCancelConfirmationSheet: View {
             .background(Color.obsidianBlack)
             .navigationTitle("Cancel")
             .navigationBarTitleDisplayMode(.inline)
+            .onAppear {
+                focusedElement = .confirmationMessage
+            }
             .toolbar {
                 ToolbarItem(placement: .navigationBarTrailing) {
                     Button(action: { dismiss() }) {

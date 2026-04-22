@@ -41,7 +41,12 @@ struct ReferralPromotionView: View {
                         .font(.title3)
                         .foregroundColor(.white)
                         .rotationEffect(.degrees(appear ? 0 : -10))
-                        .animation(.easeInOut(duration: 0.5).repeatForever(autoreverses: true), value: appear)
+                        .animation(
+                            UIAccessibility.isReduceMotionEnabled
+                                ? .none
+                                : .easeInOut(duration: 0.5).repeatForever(autoreverses: true),
+                            value: appear
+                        )
                 }
             }
             

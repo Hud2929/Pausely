@@ -124,6 +124,7 @@ final class ScreenTimeSetupViewModel: ObservableObject {
             } catch {
                 isRequesting = false
                 authorizationError = error.localizedDescription
+                HapticStyle.warning.trigger()
             }
         }
     }

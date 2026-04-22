@@ -308,6 +308,7 @@ struct AutoDetectView: View {
                 if let error = appleScanner.scanError {
                     errorMessage = error
                     showError = true
+                    HapticStyle.warning.trigger()
                 }
             }
         }

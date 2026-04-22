@@ -195,6 +195,7 @@ struct ScreenTimeConsentView: View {
                 await MainActor.run {
                     errorMessage = error.localizedDescription
                     showError = true
+                    HapticStyle.warning.trigger()
                 }
             }
         }

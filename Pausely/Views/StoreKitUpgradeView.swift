@@ -403,6 +403,8 @@ struct StoreKitUpgradeView: View {
                         )
                     }
                     .buttonStyle(PlainButtonStyle())
+                    .accessibilityValue(selectedPlan == plan ? "Selected" : "Not selected")
+                    .accessibilityAddTraits(selectedPlan == plan ? .isSelected : [])
                 }
             }
             .padding(4)
@@ -645,6 +647,7 @@ struct StoreKitUpgradeView: View {
         HapticStyle.medium.trigger()
 
         guard let product = storeManager.product(for: selectedPlan.tier) else {
+            HapticStyle.warning.trigger()
             errorMessage = "Subscription not available. Please try again."
             showErrorAlert = true
             return
@@ -785,6 +788,8 @@ struct StoreKitPlanCard: View {
             )
         }
         .buttonStyle(PlainButtonStyle())
+        .accessibilityValue(isSelected ? "Selected" : "Not selected")
+        .accessibilityAddTraits(isSelected ? .isSelected : [])
     }
 }
 

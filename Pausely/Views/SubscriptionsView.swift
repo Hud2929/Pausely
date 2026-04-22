@@ -433,7 +433,9 @@ struct EmptySubscriptionsArtisticView: View {
                         .frame(width: 150 + CGFloat(i * 40), height: 150 + CGFloat(i * 40))
                         .rotationEffect(.degrees(animate ? 360 : 0))
                         .animation(
-                            .linear(duration: 10 + Double(i) * 5).repeatForever(autoreverses: false),
+                            UIAccessibility.isReduceMotionEnabled
+                                ? .none
+                                : .linear(duration: 10 + Double(i) * 5).repeatForever(autoreverses: false),
                             value: animate
                         )
                 }

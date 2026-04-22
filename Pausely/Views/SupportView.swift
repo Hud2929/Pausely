@@ -243,6 +243,7 @@ struct SupportView: View {
             UIApplication.shared.open(url)
             showSuccessAlert = true
         } else {
+            HapticStyle.warning.trigger()
             showErrorAlert = true
         }
     }

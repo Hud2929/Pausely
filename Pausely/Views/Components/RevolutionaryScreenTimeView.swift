@@ -708,6 +708,7 @@ struct ScreenTimeAuthorizationSheet: View {
             } catch {
                 errorMessage = error.localizedDescription
                 showError = true
+                HapticStyle.warning.trigger()
             }
         }
     }

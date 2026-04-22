@@ -231,38 +231,27 @@ struct DashboardView: View {
     private var dashboardSkeletonSection: some View {
         VStack(spacing: 20) {
             // Hero card skeleton
-            RoundedRectangle(cornerRadius: 28, style: .continuous)
-                .fill(Color.white.opacity(0.05))
-                .frame(height: 180)
-                .shimmer()
+            SkeletonCard(height: 180, cornerRadius: 28)
                 .padding(.horizontal, 20)
                 .padding(.top, 20)
 
             // Quick actions skeleton
             HStack(spacing: 12) {
                 ForEach(0..<3) { _ in
-                    RoundedRectangle(cornerRadius: 20, style: .continuous)
-                        .fill(Color.white.opacity(0.05))
-                        .frame(height: 100)
-                        .shimmer()
+                    SkeletonCard(height: 100)
                 }
             }
             .padding(.horizontal, 20)
 
             // Insights card skeleton
-            RoundedRectangle(cornerRadius: 24, style: .continuous)
-                .fill(Color.white.opacity(0.05))
-                .frame(height: 120)
-                .shimmer()
+            SkeletonCard(height: 120, cornerRadius: 24)
                 .padding(.horizontal, 20)
 
             // Carousel skeleton
             HStack(spacing: 12) {
                 ForEach(0..<2) { _ in
-                    RoundedRectangle(cornerRadius: 20, style: .continuous)
-                        .fill(Color.white.opacity(0.05))
-                        .frame(width: 160, height: 100)
-                        .shimmer()
+                    SkeletonCard(height: 100)
+                        .frame(width: 160)
                 }
             }
             .padding(.horizontal, 20)

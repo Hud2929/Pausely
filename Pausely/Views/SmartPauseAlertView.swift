@@ -7,7 +7,13 @@ struct SmartPauseAlertView: View {
     let onPause: () -> Void
     let onDismiss: () -> Void
     let onAdjustThreshold: () -> Void
-    
+
+    @AccessibilityFocusState private var focusedElement: FocusElement?
+
+    enum FocusElement {
+        case primaryAction
+    }
+
     @State private var showDetails = false
     @State private var selectedDuration: PauseDuration
     
@@ -47,6 +53,9 @@ struct SmartPauseAlertView: View {
         .background(Color(.systemBackground))
         .cornerRadius(20)
         .shadow(radius: 20)
+        .onAppear {
+            focusedElement = .primaryAction
+        }
     }
     
     // MARK: - Header Section
@@ -292,6 +301,7 @@ struct SmartPauseAlertView: View {
                 )
                 .cornerRadius(14)
             }
+            .accessibilityFocused($focusedElement, equals: .primaryAction)
             
             HStack(spacing: 12) {
                 Button(action: onDismiss) {

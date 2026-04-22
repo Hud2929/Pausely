@@ -338,6 +338,7 @@ struct CurrencyRow: View {
                     withAnimation(.easeOut(duration: 0.1)) { isPressed = false }
                 }
         )
+        .accessibilityValue(isSelected ? "Selected" : "Not selected")
     }
 }
 
