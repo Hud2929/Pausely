@@ -1,0 +1,79 @@
+═══════════════════════════════════════════════════════════════════
+  APP STORE CONNECT VERIFICATION CHECKLIST
+  Complete these before testing on physical device
+═══════════════════════════════════════════════════════════════════
+
+1. PRODUCTS STATUS
+   □ Go to App Store Connect → My Apps → Pausely → Subscriptions
+   □ Verify both products show: "Cleared for Sale" (green dot)
+   □ If showing "Waiting for Review" - that's OK for sandbox testing
+   □ If showing "Missing Metadata" - add display name/description
+
+2. PRODUCT IDS (CRITICAL - MUST MATCH EXACTLY)
+   App Store Connect should show:
+   □ com.pausely.premium.monthly
+   □ com.pausely.premium.annual
+   
+   Verify code matches:
+   Open: Pausely/Services/StoreKitConfig.swift
+   Should see:
+     case monthlyPro = "com.pausely.premium.monthly"
+     case annualPro = "com.pausely.premium.annual"
+
+3. SANDBOX TESTER SETUP
+   □ App Store Connect → Users and Access → Sandbox
+   □ Tester email created
+   □ Password set (remember this!)
+   □ Territory set to match your App Store country
+   □ Click tester → "Agree to Terms" if prompted
+
+4. DEVICE PREPARATION
+   On your iPhone/iPad:
+   □ Settings → App Store → Sandbox Account
+   □ Sign out of personal Apple ID if present
+   □ Sign in with sandbox tester email
+   □ Settings → iTunes & App Store → Sign out of real account
+
+5. BUILD CONFIGURATION
+   □ Bundle ID: com.pausely.app.Pausely
+   □ Version matches App Store Connect
+   □ Build succeeds in Xcode
+
+6. QUICK VERIFICATION COMMANDS
+   
+   Check bundle ID:
+   $ grep "PRODUCT_BUNDLE_IDENTIFIER" Pausely.xcodeproj/project.pbxproj
+   
+   Check product IDs in code:
+   $ grep "premium.monthly\|premium.annual" Pausely/Services/StoreKitConfig.swift
+   
+   Build:
+   $ xcodebuild -project Pausely.xcodeproj -scheme Pausely build
+
+═══════════════════════════════════════════════════════════════════
+  YOU ARE READY IF:
+  ✅ Products show "Cleared for Sale" or "Waiting for Review"
+  ✅ Product IDs match exactly between ASC and code
+  ✅ Sandbox tester created and terms accepted
+  ✅ Device signed into sandbox account
+  ✅ Build succeeds
+═══════════════════════════════════════════════════════════════════
+
+TESTING OPTIONS:
+
+A) SIMULATOR (Fastest - No ASC setup needed)
+   - Uses Configuration.storekit
+   - No sandbox account needed
+   - Best for quick feature testing
+
+B) DEVICE + SANDBOX (Real testing)
+   - Uses App Store Connect products
+   - Requires sandbox account signed in
+   - Best for production validation
+
+C) TESTFLIGHT (Beta distribution)
+   - Requires build upload
+   - External testers can test
+   - Best for pre-release testing
+
+═══════════════════════════════════════════════════════════════════

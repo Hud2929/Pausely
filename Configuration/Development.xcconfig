@@ -1,0 +1,7 @@
+// Development Environment Configuration
+
+PAUSELY_ENVIRONMENT = DEV
+
+// Supabase Configuration
+SUPABASE_URL = https://ddaotwyaowspwspyddzs.supabase.co
+SUPABASE_ANON_KEY = sb_publishable_lZhseeKOOHcA_VGHtDZYKQ_qvQCxWJz

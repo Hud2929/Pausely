@@ -1,0 +1,75 @@
+{
+  "identifier" : "pausely-products",
+  "nonRenewingSubscriptions" : [],
+  "products" : [],
+  "settings" : {
+    "_storeKitErrors" : [
+      { "current" : null, "enabled" : false, "name" : "Load Products" },
+      { "current" : null, "enabled" : false, "name" : "Purchase" },
+      { "current" : null, "enabled" : false, "name" : "Verification" }
+    ]
+  },
+  "subscriptionGroups" : [
+    {
+      "id" : "com.pausely.premium",
+      "localizations" : [],
+      "name" : "Pausely Pro",
+      "subscriptions" : [
+        {
+          "adHocOffers" : [],
+          "codeOffers" : [],
+          "displayPrice" : "7.99",
+          "familyShareable" : false,
+          "groupNumber" : 1,
+          "id" : "com.pausely.premium.monthly",
+          "introductoryOffer" : {
+            "id" : "intro-monthly",
+            "paymentMode" : "FreeTrial",
+            "period" : "P1W",
+            "periodCount" : 1,
+            "periodUnit" : "WEEK"
+          },
+          "localizations" : [
+            {
+              "description" : "Unlimited subscriptions with AI insights",
+              "displayName" : "Pro Monthly",
+              "locale" : "en_US"
+            }
+          ],
+          "recurringSubscriptionPeriod" : "P1M",
+          "referenceName" : "Monthly Pro",
+          "type" : "RecurringSubscription"
+        },
+        {
+          "adHocOffers" : [],
+          "codeOffers" : [],
+          "displayPrice" : "69.99",
+          "familyShareable" : false,
+          "groupNumber" : 2,
+          "id" : "com.pausely.premium.annual",
+          "introductoryOffer" : {
+            "id" : "intro-annual",
+            "paymentMode" : "FreeTrial",
+            "period" : "P1W",
+            "periodCount" : 1,
+            "periodUnit" : "WEEK"
+          },
+          "localizations" : [
+            {
+              "description" : "Save 27% with annual billing + all features",
+              "displayName" : "Pro Annual",
+              "locale" : "en_US"
+            }
+          ],
+          "recurringSubscriptionPeriod" : "P1Y",
+          "referenceName" : "Annual Pro",
+          "type" : "RecurringSubscription"
+        }
+      ]
+    }
+  ],
+  "version" : {
+    "major" : 1,
+    "minor" : 0
+  }
+}

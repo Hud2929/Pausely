@@ -1,0 +1,163 @@
+{
+  "app_info": {
+    "bundle_id": "com.pausely.app.Pausely",
+    "app_name": "Pausely",
+    "version": "1.0.1"
+  },
+  "subscription_group": {
+    "reference_name": "Pausely Pro Subscriptions",
+    "display_name": "Pausely Pro",
+    "group_id": "com.pausely.premium"
+  },
+  "products": [
+    {
+      "reference_name": "Monthly Pro",
+      "product_id": "com.pausely.premium.monthly",
+      "type": "auto_renewable_subscription",
+      "subscription_group_id": "com.pausely.premium",
+      "group_level": 2,
+      "localization": [
+        {
+          "locale": "en-US",
+          "display_name": "Pausely Pro Monthly",
+          "description": "Unlimited subscriptions + AI features"
+        },
+        {
+          "locale": "es-MX",
+          "display_name": "Pausely Pro Mensual",
+          "description": "Suscripciones ilimitadas + funciones de IA"
+        },
+        {
+          "locale": "fr-CA",
+          "display_name": "Pausely Pro Mensuel",
+          "description": "Abonnements illimités + fonctions IA"
+        },
+        {
+          "locale": "de-DE",
+          "display_name": "Pausely Pro Monatlich",
+          "description": "Unbegrenzte Abonnements + KI-Funktionen"
+        }
+      ],
+      "subscription_duration": "1 Month",
+      "pricing": {
+        "default": {
+          "tier": 62,
+          "usd": 7.99
+        },
+        "territories": [
+          {"country": "US", "tier": 62, "price": "7.99"},
+          {"country": "CA", "tier": 62, "price": "9.99"},
+          {"country": "GB", "tier": 62, "price": "5.99"},
+          {"country": "AU", "tier": 62, "price": "10.99"},
+          {"country": "DE", "tier": 62, "price": "7.99"},
+          {"country": "FR", "tier": 62, "price": "7.99"},
+          {"country": "JP", "tier": 62, "price": "800"},
+          {"country": "MX", "tier": 62, "price": "129"}
+        ]
+      },
+      "introductory_offer": {
+        "enabled": true,
+        "type": "free_trial",
+        "duration": "1 Week",
+        "payment_mode": "free"
+      }
+    },
+    {
+      "reference_name": "Annual Pro",
+      "product_id": "com.pausely.premium.annual",
+      "type": "auto_renewable_subscription",
+      "subscription_group_id": "com.pausely.premium",
+      "group_level": 1,
+      "localization": [
+        {
+          "locale": "en-US",
+          "display_name": "Pausely Pro Annual",
+          "description": "Save 27% with annual billing"
+        },
+        {
+          "locale": "es-MX",
+          "display_name": "Pausely Pro Anual",
+          "description": "Ahorra 34% con facturación anual"
+        },
+        {
+          "locale": "fr-CA",
+          "display_name": "Pausely Pro Annuel",
+          "description": "Économisez 34% avec la facturation annuelle"
+        },
+        {
+          "locale": "de-DE",
+          "display_name": "Pausely Pro Jährlich",
+          "description": "Sparen Sie 34% mit jährlicher Abrechnung"
+        }
+      ],
+      "subscription_duration": "1 Year",
+      "pricing": {
+        "default": {
+          "tier": 89,
+          "usd": 69.99
+        },
+        "territories": [
+          {"country": "US", "tier": 89, "price": "69.99"},
+          {"country": "CA", "tier": 89, "price": "69.99"},
+          {"country": "GB", "tier": 89, "price": "44.99"},
+          {"country": "AU", "tier": 89, "price": "79.99"},
+          {"country": "DE", "tier": 89, "price": "69.99"},
+          {"country": "FR", "tier": 89, "price": "69.99"},
+          {"country": "JP", "tier": 89, "price": "6000"},
+          {"country": "MX", "tier": 89, "price": "999"}
+        ]
+      },
+      "introductory_offer": {
+        "enabled": true,
+        "type": "free_trial",
+        "duration": "1 Week",
+        "payment_mode": "free"
+      },
+      "marketing_highlight": {
+        "enabled": true,
+        "text": "BEST VALUE - Save 27%"
+      }
+    }
+  ],
+  "review_screenshots": {
+    "requirements": [
+      {
+        "purpose": "Paywall Display",
+        "description": "Show subscription pricing and features",
+        "iphone_size": "1290 x 2796",
+        "ipad_size": "2048 x 2732"
+      },
+      {
+        "purpose": "Subscription Management",
+        "description": "Show where users can manage subscriptions",
+        "iphone_size": "1290 x 2796",
+        "ipad_size": "2048 x 2732"
+      },
+      {
+        "purpose": "Premium Features",
+        "description": "Show unlocked premium functionality",
+        "iphone_size": "1290 x 2796",
+        "ipad_size": "2048 x 2732"
+      }
+    ]
+  },
+  "app_review_info": {
+    "notes": "This app helps users track and optimize their subscription spending. FREE FEATURES: Track up to 5 subscriptions, basic cost analysis, manual usage tracking, referral program. PREMIUM FEATURES (Subscription): Unlimited subscriptions, smart pause suggestions, AI financial insights, cost per hour calculation, alternative service recommendations. Subscription auto-renews unless cancelled 24 hours before renewal. Users can cancel anytime in Settings > Apple ID > Subscriptions.",
+    "demo_account": {
+      "username": "demo@pausely.app",
+      "password": "Demo123!"
+    },
+    "contact": {
+      "first_name": "[YOUR_FIRST_NAME]",
+      "last_name": "[YOUR_LAST_NAME]",
+      "email": "[YOUR_EMAIL]",
+      "phone": "[YOUR_PHONE]"
+    }
+  },
+  "urls": {
+    "privacy_policy": "https://www.pausely.app/privacy",
+    "terms_of_service": "https://www.pausely.app/terms",
+    "support": "https://www.pausely.app/support",
+    "marketing": "https://www.pausely.app"
+  }
+}

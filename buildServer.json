@@ -1,0 +1,14 @@
+{
+  "name": "Pausely",
+  "argv": [
+    "/Applications/Xcode.app/Contents/Developer/usr/bin/xcodebuild",
+    "-project", "/Users/hudson/Desktop/Pausely/Pausely.xcodeproj",
+    "-scheme", "Pausely",
+    "-destination", "platform=iOS Simulator,name=iPhone 16",
+    "-configuration", "Debug",
+    "CODE_SIGNING_ALLOWED=NO"
+  ],
+  "version": "0.2",
+  "bspVersion": "2.0",
+  "languages": ["swift", "objective-c", "objective-cpp", "c", "cpp"]
+}

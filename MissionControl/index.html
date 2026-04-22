@@ -1,0 +1,281 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pausely 🚀 Mission Control</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <!-- Auth Screen -->
+    <div id="auth-screen" class="auth-screen">
+        <div class="auth-card">
+            <div class="logo">🚀 Mission Control</div>
+            <h1>Pausely Admin</h1>
+            <p>Creator Dashboard - Real-time Analytics & Security</p>
+            <form id="login-form">
+                <input type="email" id="admin-email" placeholder="Admin Email" required>
+                <input type="password" id="admin-password" placeholder="Password" required>
+                <button type="submit" class="btn-primary">Enter Mission Control</button>
+            </form>
+            <div id="login-error" class="error-message"></div>
+        </div>
+    </div>
+
+    <!-- Main Dashboard -->
+    <div id="dashboard" class="dashboard hidden">
+        <!-- Header -->
+        <header class="header">
+            <div class="header-left">
+                <div class="logo-small">🚀</div>
+                <h1>Mission Control</h1>
+                <span class="live-indicator">
+                    <span class="pulse"></span>
+                    LIVE
+                </span>
+            </div>
+            <div class="header-right">
+                <div class="security-status" id="security-status">
+                    <span class="shield">🛡️</span>
+                    <span class="status-text">Secure</span>
+                </div>
+                <button id="logout-btn" class="btn-secondary">Logout</button>
+            </div>
+        </header>
+
+        <!-- Navigation -->
+        <nav class="nav">
+            <button class="nav-btn active" data-section="overview">📊 Overview</button>
+            <button class="nav-btn" data-section="users">👥 Users</button>
+            <button class="nav-btn" data-section="revenue">💰 Revenue</button>
+            <button class="nav-btn" data-section="security">🔒 Security</button>
+            <button class="nav-btn" data-section="system">⚙️ System</button>
+            <button class="nav-btn" data-section="referrals">🎁 Referrals</button>
+        </nav>
+
+        <!-- Overview Section -->
+        <section id="overview" class="section active">
+            <div class="stats-grid">
+                <div class="stat-card primary">
+                    <div class="stat-label">Total Users</div>
+                    <div class="stat-value" id="total-users">0</div>
+                    <div class="stat-change" id="users-change">+0 today</div>
+                    <div class="stat-chart">
+                        <canvas id="users-chart"></canvas>
+                    </div>
+                </div>
+                <div class="stat-card success">
+                    <div class="stat-label">Active Pro Users</div>
+                    <div class="stat-value" id="pro-users">0</div>
+                    <div class="stat-change" id="pro-change">$0 MRR</div>
+                </div>
+                <div class="stat-card warning">
+                    <div class="stat-label">Free Tier Users</div>
+                    <div class="stat-value" id="free-users">0</div>
+                    <div class="stat-change" id="conversion-rate">0% conversion</div>
+                </div>
+                <div class="stat-card danger">
+                    <div class="stat-label">Active Threats</div>
+                    <div class="stat-value" id="threats-count">0</div>
+                    <div class="stat-change">Blocked Today</div>
+                </div>
+            </div>
+
+            <div class="charts-row">
+                <div class="chart-card">
+                    <h3>User Growth (7 Days)</h3>
+                    <canvas id="growth-chart"></canvas>
+                </div>
+                <div class="chart-card">
+                    <h3>Revenue Breakdown</h3>
+                    <canvas id="revenue-chart"></canvas>
+                </div>
+            </div>
+
+            <div class="activity-feed">
+                <h3>🔄 Live Activity Feed</h3>
+                <div id="activity-list" class="activity-list">
+                    <!-- Real-time activity items -->
+                </div>
+            </div>
+        </section>
+
+        <!-- Users Section -->
+        <section id="users" class="section">
+            <div class="section-header">
+                <h2>User Management</h2>
+                <input type="text" id="user-search" placeholder="Search users...">
+            </div>
+            <div class="table-container">
+                <table id="users-table">
+                    <thead>
+                        <tr>
+                            <th>User</th>
+                            <th>Tier</th>
+                            <th>Subscriptions</th>
+                            <th>Joined</th>
+                            <th>Last Active</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="users-tbody">
+                        <!-- Dynamic user rows -->
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <!-- Revenue Section -->
+        <section id="revenue" class="section">
+            <div class="revenue-cards">
+                <div class="revenue-card">
+                    <div class="revenue-label">Monthly Recurring Revenue</div>
+                    <div class="revenue-value" id="mrr">$0</div>
+                    <div class="revenue-sub">Across all active subscriptions</div>
+                </div>
+                <div class="revenue-card">
+                    <div class="revenue-label">Annual Revenue</div>
+                    <div class="revenue-value" id="arr">$0</div>
+                    <div class="revenue-sub">Projected ARR</div>
+                </div>
+                <div class="revenue-card">
+                    <div class="revenue-label">Lifetime Revenue</div>
+                    <div class="revenue-value" id="ltr">$0</div>
+                    <div class="revenue-sub">Since launch</div>
+                </div>
+            </div>
+            <div class="revenue-breakdown">
+                <h3>Payment Sources</h3>
+                <div id="payment-sources">
+                    <div class="source-item">
+                        <span class="source-name">App Store</span>
+                        <span class="source-amount" id="appstore-revenue">$0</span>
+                    </div>
+                    <div class="source-item">
+                        <span class="source-name">LemonSqueezy</span>
+                        <span class="source-amount" id="lemonsqueezy-revenue">$0</span>
+                    </div>
+                    <div class="source-item">
+                        <span class="source-name">Referral Discounts</span>
+                        <span class="source-amount" id="referral-revenue">$0</span>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Security Section -->
+        <section id="security" class="section">
+            <div class="security-grid">
+                <div class="security-card">
+                    <h3>🔴 Active Threats</h3>
+                    <div id="active-threats" class="threats-list">
+                        <div class="no-threats">No active threats detected</div>
+                    </div>
+                </div>
+                <div class="security-card">
+                    <h3>📊 Security Metrics</h3>
+                    <div class="security-metrics">
+                        <div class="metric">
+                            <span class="metric-label">Failed Logins (24h)</span>
+                            <span class="metric-value" id="failed-logins">0</span>
+                        </div>
+                        <div class="metric">
+                            <span class="metric-label">Blocked IPs</span>
+                            <span class="metric-value" id="blocked-ips">0</span>
+                        </div>
+                        <div class="metric">
+                            <span class="metric-label">Suspicious Activities</span>
+                            <span class="metric-value" id="suspicious-activities">0</span>
+                        </div>
+                        <div class="metric">
+                            <span class="metric-label">Rate Limit Hits</span>
+                            <span class="metric-value" id="rate-limits">0</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="security-card wide">
+                    <h3>🚨 Security Log (Real-time)</h3>
+                    <div id="security-log" class="security-log">
+                        <!-- Real-time security events -->
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- System Section -->
+        <section id="system" class="section">
+            <div class="system-grid">
+                <div class="system-card">
+                    <h3>📡 Supabase Status</h3>
+                    <div class="status-indicator online" id="supabase-status">
+                        <span class="status-dot"></span>
+                        Operational
+                    </div>
+                    <div class="system-metrics">
+                        <div class="sys-metric">
+                            <span>Database Size</span>
+                            <span id="db-size">0 MB</span>
+                        </div>
+                        <div class="sys-metric">
+                            <span>API Requests (24h)</span>
+                            <span id="api-requests">0</span>
+                        </div>
+                        <div class="sys-metric">
+                            <span>Avg Response Time</span>
+                            <span id="response-time">0ms</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="system-card">
+                    <h3>📱 App Versions</h3>
+                    <div id="app-versions">
+                        <div class="version-item">
+                            <span class="version-num">v1.0</span>
+                            <span class="version-users" id="v1-0-users">0 users</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="system-card wide">
+                    <h3>🔔 System Events</h3>
+                    <div id="system-events" class="system-events">
+                        <!-- System events -->
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Referrals Section -->
+        <section id="referrals" class="section">
+            <div class="referral-stats">
+                <div class="referral-card">
+                    <div class="referral-label">Total Referral Codes</div>
+                    <div class="referral-value" id="total-referral-codes">0</div>
+                </div>
+                <div class="referral-card">
+                    <div class="referral-label">Successful Referrals</div>
+                    <div class="referral-value" id="successful-referrals">0</div>
+                </div>
+                <div class="referral-card">
+                    <div class="referral-label">Conversion Rate</div>
+                    <div class="referral-value" id="referral-conversion">0%</div>
+                </div>
+                <div class="referral-card">
+                    <div class="referral-label">Revenue from Referrals</div>
+                    <div class="referral-value" id="referral-revenue-total">$0</div>
+                </div>
+            </div>
+            <div class="top-referrers">
+                <h3>🏆 Top Referrers</h3>
+                <div id="top-referrers-list">
+                    <!-- Top referrers -->
+                </div>
+            </div>
+        </section>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>

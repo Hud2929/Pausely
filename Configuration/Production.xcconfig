@@ -1,0 +1,8 @@
+// Production Environment Configuration
+// Values injected via CI/CD secrets
+
+PAUSELY_ENVIRONMENT = PROD
+
+// Supabase Configuration
+SUPABASE_URL = $(SUPABASE_URL_PROD)
+SUPABASE_ANON_KEY = $(SUPABASE_ANON_KEY_PROD)

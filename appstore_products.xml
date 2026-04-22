@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<subscription_group>
+    <reference_name>Pausely Pro Subscriptions</reference_name>
+    <subscriptions>
+        <subscription>
+            <product_id>com.pausely.premium.monthly</product_id>
+            <reference_name>Monthly Pro</reference_name>
+            <duration>1 Month</duration>
+            <price_tier>60</price_tier>
+            <group_level>2</group_level>
+            <introductory_offer>
+                <type>free_trial</type>
+                <duration>1 Week</duration>
+            </introductory_offer>
+        </subscription>
+        <subscription>
+            <product_id>com.pausely.premium.annual</product_id>
+            <reference_name>Annual Pro</reference_name>
+            <duration>1 Year</duration>
+            <price_tier>85</price_tier>
+            <group_level>1</group_level>
+            <introductory_offer>
+                <type>free_trial</type>
+                <duration>1 Week</duration>
+            </introductory_offer>
+        </subscription>
+    </subscriptions>
+</subscription_group>

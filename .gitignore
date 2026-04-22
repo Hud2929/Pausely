@@ -1,0 +1,80 @@
+# Xcode
+.DS_Store
+build/
+*.xcuserstate
+*.xcworkspace/xcuserdata/
+xcuserdata/
+*.moved-aside
+*.hmap
+*.ipa
+*.dSYM.zip
+*.dSYM
+
+# Derived data
+DerivedData/
+.swiftpm/
+Packages/
+
+# Build products
+*.plist
+!Info.plist
+
+# Environment / Secrets
+.env
+.env.*
+*.env
+!.env.example
+
+# Credentials - NEVER commit these
+*.p8
+*.key
+*.cer
+*.mobileprovision
+Credentials*
+Secrets*
+
+# Dependencies
+Carthage/
+Pods/
+.build/
+
+# SPM
+*.Resolved.*
+
+# CocoaPods
+*.xcworkspace
+!Project.xcworkspace
+
+# Archives
+*.zip
+*.tar
+*.gz
+
+# Mission Control / Backend
+backend/node_modules/
+backend/.blitz/
+backend/.next/
+backend/dist/
+
+# Logs
+*.log
+logs/
+
+# Temporary
+*.tmp
+*.temp
+*.swp
+*~
+
+# App Store Connect
+*.itmsp
+*.pkg
+
+# Claude / AI tools
+.agents/
+.asc/
+.blitz/
+.claude/
+.codex/
+.sourcekit-lsp/
+.mcp.json

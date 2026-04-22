@@ -1,0 +1,126 @@
+===============================================================================
+PAUSELY EMAIL SETUP - QUICK CONFIGURATION GUIDE
+===============================================================================
+
+I've created everything for you. Just follow these steps:
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+STEP 1: OPEN SUPABASE DASHBOARD
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+1. Go to https://supabase.com/dashboard
+2. Sign in to your account
+3. Select your Pausely project
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+STEP 2: CONFIGURE EMAIL TEMPLATES
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Go to: Authentication → Email Templates
+
+---
+TEMPLATE 1: CONFIRM SIGNUP
+---
+Subject: Confirm Your Email - Pausely
+
+1. Click "Confirm Signup" tab
+2. Copy the HTML from: SUPABASE_EMAIL_CONFIG.md (search for "Template Type: Confirm Signup")
+3. Paste into the HTML editor
+4. Click Save
+
+---
+TEMPLATE 2: RESET PASSWORD
+---
+Subject: Reset Your Pausely Password
+
+1. Click "Reset Password" tab  
+2. Copy the HTML from: SUPABASE_EMAIL_CONFIG.md (search for "Template Type: Reset Password")
+3. Paste into the HTML editor
+4. Click Save
+
+---
+TEMPLATE 3: MAGIC LINK (Optional)
+---
+Subject: Your Magic Link to Pausely
+
+1. Click "Magic Link" tab
+2. Copy the HTML from: SUPABASE_EMAIL_CONFIG.md (search for "Template Type: Magic Link")
+3. Paste into the HTML editor
+4. Click Save
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+STEP 3: CONFIGURE URL SETTINGS (CRITICAL!)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Go to: Authentication → URL Configuration
+
+---
+Site URL:
+---
+Enter: pausely://auth/callback
+
+---
+Redirect URLs (Add all 3):
+---
+1. pausely://auth/confirm
+2. pausely://auth/reset-password
+3. pausely://auth/callback
+
+Click Save for each
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+STEP 4: TEST THE FLOW
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+1. Build and run the app on your iPhone (not simulator - deep links don't work there)
+2. Sign up with a real email address
+3. Check your email (and spam folder)
+4. Click the "Confirm Email Address" button in the email
+5. The app should open and log you in automatically!
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+SUPPORT INFORMATION
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Support Email: Clawdgood@gmail.com
+This is now configured in:
+- All email templates
+- In-app support view (Profile → Support)
+- Email confirmation "Need Help?" button
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+TROUBLESHOOTING
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Problem: Emails going to spam?
+→ Set up custom SMTP (SendGrid/AWS SES) in Supabase
+→ Add SPF/DKIM DNS records to your domain
+
+Problem: Deep links not opening the app?
+→ Make sure you're testing on a real device, not simulator
+→ Check that "pausely" URL scheme is in Info.plist
+→ Verify Redirect URLs in Supabase match exactly
+
+Problem: User clicks email but not logged in?
+→ Check Xcode console for error messages
+→ Make sure Supabase auth is working
+→ Test with auto-confirm disabled in Supabase settings
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+FILES CREATED FOR YOU
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+✅ Services/AppConfig.swift - App configuration with support email
+✅ Services/EmailTemplates.swift - HTML email templates
+✅ Views/SupportView.swift - In-app support contact form
+✅ SUPABASE_EMAIL_CONFIG.md - Complete setup guide with copy-paste HTML
+✅ SETUP_INSTRUCTIONS.txt - This file
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+You're all set! Just copy the HTML templates into Supabase and you're good to go.
+
+The emails will look stunning with Pausely's dark gradient theme, gold accents,
+and your support email (Clawdgood@gmail.com) is prominently displayed for help.
+
+ revolutionary.

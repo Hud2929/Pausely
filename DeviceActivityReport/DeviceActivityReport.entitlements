@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <!-- Family Controls entitlement for extension -->
+    <key>com.apple.developer.family-controls</key>
+    <true/>
+
+    <!-- Device Activity Monitoring - REQUIRED for Screen Time API -->
+    <key>com.apple.developer.device-activity.monitor</key>
+    <true/>
+
+    <!-- App Group for sharing data between app and extension -->
+    <key>com.apple.security.application-groups</key>
+    <array>
+        <string>group.com.pausely.app.shared</string>
+    </array>
+</dict>
+</plist>

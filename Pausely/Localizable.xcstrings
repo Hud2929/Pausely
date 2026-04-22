@@ -1,0 +1,5429 @@
+{
+  "sourceLanguage": "en",
+  "strings": {
+    "": {},
+    "/%@": {},
+    "/100": {},
+    "/hour": {},
+    "/mo": {},
+    "/month": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "/mois"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "/Monat"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "/mes"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "/月"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "/الشهر"
+          }
+        }
+      }
+    },
+    "%@": {},
+    "%@ %@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "new",
+            "value": "%1$@ %2$@"
+          }
+        }
+      }
+    },
+    "%@ joined using your code": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ a rejoint avec votre code"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ ist mit Ihrem Code beigetreten"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ se unió usando tu código"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@があなたのコードを使用して参加しました"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "انضم %@ باستخدام الرمز الخاص بك"
+          }
+        }
+      }
+    },
+    "%@ joined using your code!": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ a rejoint avec votre code !"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ ist mit Ihrem Code beigetreten!"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "¡%@ se unió usando tu código!"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@があなたのコードを使用して参加しました！"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "انضم %@ باستخدام الرمز الخاص بك!"
+          }
+        }
+      }
+    },
+    "%@ trial ends soon!": {},
+    "%@/mo": {},
+    "%@/mo after": {},
+    "%@%@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "new",
+            "value": "%1$@%2$@"
+          }
+        }
+      }
+    },
+    "%@%@/mo": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "new",
+            "value": "%1$@%2$@/mo"
+          }
+        }
+      }
+    },
+    "%lld": {},
+    "%lld active subscription%@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "new",
+            "value": "%1$lld active subscription%2$@"
+          }
+        }
+      }
+    },
+    "%lld apps selected": {},
+    "%lld currencies": {},
+    "%lld failed (may already exist)": {},
+    "%lld found": {},
+    "%lld hours remaining": {},
+    "%lld issues": {},
+    "%lld more to go!": {},
+    "%lld of 3 completed": {},
+    "%lld of 3 conversions for FREE Pro": {},
+    "%lld potential subscriptions found": {},
+    "%lld recommendations": {},
+    "%lld services": {},
+    "%lld sessions/week • %lld%% confidence": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "new",
+            "value": "%1$lld sessions/week • %2$lld%% confidence"
+          }
+        }
+      }
+    },
+    "%lld sub%@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "new",
+            "value": "%1$lld sub%2$@"
+          }
+        }
+      }
+    },
+    "%lld subscription%@ added": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "new",
+            "value": "%1$lld subscription%2$@ added"
+          }
+        }
+      }
+    },
+    "%lld subscription%@ selected": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "new",
+            "value": "%1$lld subscription%2$@ selected"
+          }
+        }
+      }
+    },
+    "%lld subscriptions": {},
+    "%lld subscriptions wasting money": {},
+    "%lld this week": {},
+    "%lld/%lld subs": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "new",
+            "value": "%1$lld/%2$lld subs"
+          }
+        }
+      }
+    },
+    "%lld/%lld subscriptions used": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "new",
+            "value": "%1$lld/%2$lld subscriptions used"
+          }
+        }
+      }
+    },
+    "%lld%%": {},
+    "%lld%% confidence": {},
+    "%lldd": {},
+    "%lldd trial": {},
+    "%lldh %lldm used this month": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "new",
+            "value": "%1$lldh %2$lldm used this month"
+          }
+        }
+      }
+    },
+    "•": {},
+    "• All content and design of the app is property of Pausely\n• You retain ownership of data you input\n• You grant us license to use anonymized data for improvements": {},
+    "• All data is encrypted in transit and at rest\n• We use industry-standard security measures\n• Your data is stored securely in Supabase cloud infrastructure\n• You can request deletion of your data at any time": {},
+    "• You must provide accurate information when creating an account\n• You are responsible for maintaining the security of your account\n• You must be at least 13 years old to use our service\n• You are responsible for all activity under your account": {},
+    "+%lld": {},
+    "~$%@/mo": {},
+    "✅ Automatically tracking %lld subscriptions via Screen Time": {},
+    "✓ Valid code! You'll get 30% off your first month.": {},
+    "✗ Invalid or expired code": {},
+    "💡 Smart Suggestion": {},
+    "📱 Usage Tracking": {},
+    "$": {},
+    "$%.2f": {},
+    "$%@": {},
+    "$%@/hr": {},
+    "$%lld": {},
+    "$%lld/mo": {},
+    "$247": {},
+    "0.00": {},
+    "0h": {},
+    "1. Edit Scheme → Run → Options": {},
+    "2. Select Products under StoreKit Config": {},
+    "2FA is Disabled": {},
+    "2FA is Enabled": {},
+    "3. Add In-App Purchase capability": {},
+    "30%": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "30 %"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "30 %"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "30 %"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "30%"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "30%"
+          }
+        }
+      }
+    },
+    "30% Off Your First Month!": {},
+    "30h": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "30h"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "30h"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "30h"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "30時間"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "30 ساعة"
+          }
+        }
+      }
+    },
+    "72": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "72"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "72"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "72"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "72"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "72"
+          }
+        }
+      }
+    },
+    "A new confirmation email has been sent to %@": {},
+    "About": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "À propos"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Über"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Acerca de"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "について"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "حول"
+          }
+        }
+      }
+    },
+    "Account Security": {},
+    "Active %@": {},
+    "Active Optimizations": {},
+    "Active Sessions": {},
+    "Add": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ajouter"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hinzufügen"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Añadir"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "追加"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "إضافة"
+          }
+        }
+      }
+    },
+    "Add (%lld)": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ajouter (%lld)"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hinzufügen (%lld)"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Añadir (%lld)"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "追加 (%lld)"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "إضافة (%lld)"
+          }
+        }
+      }
+    },
+    "Add %lld Subscription%@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "new",
+            "value": "Add %1$lld Subscription%2$@"
+          }
+        }
+      }
+    },
+    "Add a subscription to see your spending dashboard, upcoming renewals, and smart insights.": {},
+    "Add a subscription to track": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ajoutez un abonnement à suivre"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fügen Sie ein Abonnement hinzu"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Añade una suscripción para rastrear"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "追跡するサブスクリプションを追加"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "أضف اشتراكًا للتتبع"
+          }
+        }
+      }
+    },
+    "Add an extra layer of security to your account": {},
+    "Add Custom Trial": {},
+    "Add from URL": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ajouter depuis une URL"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Von URL hinzufügen"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Añadir desde URL"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "URLから追加"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "إضافة من رابط"
+          }
+        }
+      }
+    },
+    "Add Manually": {},
+    "Add subscription": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ajouter un abonnement"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Abonnement hinzufügen"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Añadir suscripción"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "サブスクリプションを追加"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "إضافة اشتراك"
+          }
+        }
+      }
+    },
+    "Add Subscription": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ajouter un abonnement"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Abonnement hinzufügen"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Añadir suscripción"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "サブスクリプションを追加"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "إضافة اشتراك"
+          }
+        }
+      }
+    },
+    "Add Subscriptions": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ajouter des abonnements"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Abonnements hinzufügen"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Añadir suscripciones"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "サブスクリプションを追加"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "إضافة اشتراكات"
+          }
+        }
+      }
+    },
+    "Add Trial": {},
+    "Add your first subscription to start tracking": {},
+    "Add your first subscription to start tracking your spending": {},
+    "Added Successfully!": {},
+    "Adjust Alerts": {},
+    "After Trial": {},
+    "AI Financial Advisor": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Conseiller financier IA"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "KI-Finanzberater"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Asesor financiero de IA"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "AIファイナンシャルアドバイザー"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "مستشار مالي بالذكاء الاصطناعي"
+          }
+        }
+      }
+    },
+    "AI Insights": {},
+    "AI-powered subscription optimization": {},
+    "ALERTS": {},
+    "All caught up!": {},
+    "All Insights": {},
+    "All Languages": {},
+    "Allow": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Autoriser"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Erlauben"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Permitir"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "許可"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "سماح"
+          }
+        }
+      }
+    },
+    "Almost at Limit": {},
+    "Already have an account? Sign In": {},
+    "Alternative": {},
+    "Amount": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Montant"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Betrag"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Importe"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "金額"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "المبلغ"
+          }
+        }
+      }
+    },
+    "Analytics": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Analyses"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Analysen"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Análisis"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "分析"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "التحليلات"
+          }
+        }
+      }
+    },
+    "Analyzed %@": {},
+    "Analyzing your app usage...": {},
+    "Analyzing your subscriptions...": {},
+    "Analyzing...": {},
+    "Annual Cost": {},
+    "Annual cost:": {},
+    "Annual total": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Total annuel"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Jahrestotal"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Total anual"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "年間合計"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "المجموع السنوي"
+          }
+        }
+      }
+    },
+    "App Permissions": {},
+    "App Selection": {},
+    "Appearance": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Apparence"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Erscheinungsbild"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Apariencia"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "外観"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "المظهر"
+          }
+        }
+      }
+    },
+    "Apple Subscriptions": {},
+    "Apply": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Appliquer"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Anwenden"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aplicar"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "適用"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "تطبيق"
+          }
+        }
+      }
+    },
+    "Apply Code": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Appliquer le code"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Code anwenden"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aplicar código"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "コードを適用"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "تطبيق الرمز"
+          }
+        }
+      }
+    },
+    "Apply Referral": {},
+    "Are you sure you want to cancel %@? This action cannot be undone.": {},
+    "Authorization Error": {},
+    "Authorized": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Autorisé"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Autorisiert"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Autorizado"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "承認済み"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "تم التفويض"
+          }
+        }
+      }
+    },
+    "Auto-renews until canceled. Cancel anytime in App Store Settings.": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Renouvellement automatique jusqu'à annulation. Annulez à tout moment dans les paramètres App Store."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Verlängert sich automatisch bis zur Kündigung. Jederzeit in den App Store-Einstellungen kündbar."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Se renueva automáticamente hasta que se cancele. Cancele en cualquier momento en Ajustes de App Store."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "キャンセルするまで自動更新されます。App Store設定でいつでもキャンセルできます。"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "يتم التجديد التلقائي حتى الإلغاء. يمكنك الإلغاء في أي وقت من إعدادات App Store."
+          }
+        }
+      }
+    },
+    "Auto-Tracking": {},
+    "Automatically detect your subscriptions by tracking how often you use apps. No manual entry needed.": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Détectez automatiquement vos abonnements en suivant la fréquence d'utilisation de vos apps. Aucune saisie manuelle requise."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Erkennen Sie Abonnements automatisch durch die Verfolgung Ihrer App-Nutzung. Keine manuelle Eingabe nötig."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Detecta automáticamente tus suscripciones rastreando la frecuencia de uso de tus apps. No se necesita entrada manual."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "アプリの使用頻度を追跡してサブスクリプションを自動検出します。手動入力は不要です。"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "اكتشف اشتراكاتك تلقائيًا من خلال تتبع عدد مرات استخدام التطبيقات. لا حاجة للإدخال اليدوي."
+          }
+        }
+      }
+    },
+    "Automatically send crash logs": {},
+    "Awesome!": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Génial !"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Toll!"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "¡Genial!"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "素晴らしい！"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "رائع!"
+          }
+        }
+      }
+    },
+    "Back": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Retour"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Zurück"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Atrás"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "戻る"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "رجوع"
+          }
+        }
+      }
+    },
+    "Back to Sign In": {},
+    "Based on your actual usage": {},
+    "BEST VALUE": {},
+    "Billing Cycle": {},
+    "Billing Frequency": {},
+    "Billing History": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Historique de facturation"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Abrechnungsverlauf"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Historial de facturación"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "請求履歴"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "سجل الفوترة"
+          }
+        }
+      }
+    },
+    "Both you and your friend will receive rewards": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Vous et votre ami recevrez des récompenses"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sie und Ihr Freund erhalten Belohnungen"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tú y tu amigo recibirán recompensas"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "あなたとお友達の両方に報酬が入ります"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ستحصل أنت وصديقك على مكافآت"
+          }
+        }
+      }
+    },
+    "Breakdown by Category": {},
+    "Bulk Add": {},
+    "By creating an account, you agree to our Terms of Service and Privacy Policy": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "En créant un compte, vous acceptez nos conditions d'utilisation et notre politique de confidentialité"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Durch die Erstellung eines Kontos stimmen Sie unseren Nutzungsbedingungen und Datenschutzrichtlinien zu"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Al crear una cuenta, aceptas nuestros Términos de Servicio y Política de Privacidad"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "アカウントを作成することで、利用規約とプライバシーポリシーに同意したものとみなされます"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "بإنشاء حساب، فإنك توافق على شروط الخدمة وسياسة الخصوصية"
+          }
+        }
+      }
+    },
+    "By downloading or using Pausely, you agree to be bound by these Terms of Service. If you do not agree to these terms, please do not use our app.": {},
+    "By enabling notifications, you agree to receive:\n\n• Renewal reminders\n• Free trial expiration alerts\n• Price change notifications\n\nYou can disable notifications at any time in your device settings.": {},
+    "Cancel": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Annuler"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Abbrechen"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cancelar"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "キャンセル"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "إلغاء"
+          }
+        }
+      }
+    },
+    "Cancel %@?": {},
+    "Cancel Now": {},
+    "Cancel Subscription": {},
+    "Cancel This Trial": {},
+    "Cancellation Difficulty: %@": {},
+    "Cancellation Initiated": {},
+    "Cancelled": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Annulé"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Storniert"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cancelado"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "キャンセル済み"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "تم الإلغاء"
+          }
+        }
+      }
+    },
+    "Cancelled!": {},
+    "Category": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Catégorie"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kategorie"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Categoría"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "カテゴリー"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "الفئة"
+          }
+        }
+      }
+    },
+    "Category Breakdown": {},
+    "Change Password": {},
+    "Change Selection": {},
+    "Cheaper Alternatives": {},
+    "Check Your Email": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Vérifiez votre e-mail"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Überprüfen Sie Ihre E-Mail"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Revisa tu correo"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "メールを確認してください"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "تحقق من بريدك الإلكتروني"
+          }
+        }
+      }
+    },
+    "Checking your Apple subscriptions": {},
+    "Choose which subscription apps you want to monitor with Screen Time. You can change this later.": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Choisissez les apps d'abonnement à surveiller avec Screen Time. Vous pourrez modifier cela plus tard."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Wählen Sie die Abonnement-Apps, die Sie mit Screen Time überwachen möchten. Sie können dies später ändern."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Elige qué apps de suscripción quieres monitorear con Screen Time. Puedes cambiar esto más tarde."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Screen Timeで監視するサブスクリプションアプリを選択してください。後で変更できます。"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "اختر تطبيقات الاشتراك التي تريد مراقبتها باستخدام Screen Time. يمكنك تغيير ذلك لاحقًا."
+          }
+        }
+      }
+    },
+    "Choose which subscription apps you want to monitor. You can change this later.": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Choisissez les apps d'abonnement à surveiller. Vous pourrez modifier cela plus tard."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Wählen Sie die Abonnement-Apps, die Sie überwachen möchten. Sie können dies später ändern."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Elige qué apps de suscripción quieres monitorear. Puedes cambiar esto más tarde."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "監視するサブスクリプションアプリを選択してください。後で変更できます。"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "اختر تطبيقات الاشتراك التي تريد مراقبتها. يمكنك تغيير ذلك لاحقًا."
+          }
+        }
+      }
+    },
+    "Choose Your Plan": {},
+    "Choose your preferred language": {},
+    "Choose your preferred theme": {},
+    "Claim Free Pro": {},
+    "Clear Filters": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Effacer les filtres"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Filter löschen"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Borrar filtros"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "フィルターをクリア"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "مسح الفلاتر"
+          }
+        }
+      }
+    },
+    "Close": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fermer"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Schließen"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cerrar"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "閉じる"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "إغلاق"
+          }
+        }
+      }
+    },
+    "Code Applied!": {},
+    "Codes are case-insensitive and can only be used once": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Les codes ne sont pas sensibles à la casse et ne peuvent être utilisés qu'une seule fois"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Codes sind nicht case-sensitiv und können nur einmal verwendet werden"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Los códigos no distinguen mayúsculas y solo se pueden usar una vez"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "コードは大文字と小文字を区別せず、一度のみ使用できます"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "الرموز غير حساسة لحالة الأحرف ويمكن استخدامها مرة واحدة فقط"
+          }
+        }
+      }
+    },
+    "Coming Soon": {},
+    "Complete Step %lld": {},
+    "Completed!": {},
+    "Completed! 🎉": {},
+    "Confirm Cancellation": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Confirmer l'annulation"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kündigung bestätigen"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Confirmar cancelación"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "キャンセルを確認"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "تأكيد الإلغاء"
+          }
+        }
+      }
+    },
+    "Confirm New Password": {},
+    "Connect Screen Time": {},
+    "Connect Screen Time for smarter subscription tracking": {},
+    "Connect Screen Time or enter usage manually to see insights.": {},
+    "Connect Screen Time to automatically track your subscription usage and get personalized recommendations to save money.": {},
+    "Connect Screen Time to automatically track your subscriptions without manual entry": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Connectez Screen Time pour suivre automatiquement vos abonnements sans saisie manuelle"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Verbinden Sie Screen Time, um Abonnements automatisch ohne manuelle Eingabe zu verfolgen"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Conecta Screen Time para rastrear automáticamente tus suscripciones sin entrada manual"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Screen Timeを接続して、手動入力なしでサブスクリプションを自動追跡します"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "قم بتوصيل Screen Time لتتبع اشتراكاتك تلقائيًا دون إدخال يدوي"
+          }
+        }
+      }
+    },
+    "Connecting...": {},
+    "Connection Error": {},
+    "Connection Issue": {},
+    "Cons": {},
+    "Consider Pausing This Subscription": {},
+    "Contact Support": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Contacter le support"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Support kontaktieren"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Contactar soporte"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "サポートに連絡"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "التواصل مع الدعم"
+          }
+        }
+      }
+    },
+    "CONTACT US": {},
+    "Continue": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Continuer"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Weiter"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Continuar"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "続ける"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "متابعة"
+          }
+        }
+      }
+    },
+    "Continue Offline": {},
+    "Control your data and app permissions": {},
+    "Copied to clipboard!": {},
+    "Copied!": {},
+    "Copy": {},
+    "Cost Analysis": {},
+    "Cost Per Hour": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Coût par heure"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kosten pro Stunde"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Costo por hora"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "時間あたりのコスト"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "التكلفة لكل ساعة"
+          }
+        }
+      }
+    },
+    "Cost per hour: %@": {},
+    "Could not load subscriptions": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Impossible de charger les abonnements"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Abonnements konnten nicht geladen werden"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No se pudieron cargar las suscripciones"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "サブスクリプションを読み込めませんでした"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "تعذر تحميل الاشتراكات"
+          }
+        }
+      }
+    },
+    "Couldn't load code": {},
+    "Crash Reporting": {},
+    "Create Account": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Créer un compte"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Konto erstellen"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Crear cuenta"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "アカウントを作成"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "إنشاء حساب"
+          }
+        }
+      }
+    },
+    "CSV Import": {},
+    "Currency": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Devise"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Währung"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Moneda"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "通貨"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "العملة"
+          }
+        }
+      }
+    },
+    "Current": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Actuel"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aktuell"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Actual"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "現在"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "الحالي"
+          }
+        }
+      }
+    },
+    "Current Device": {},
+    "Current Password": {},
+    "Custom Price": {},
+    "Daily Usage": {},
+    "DANGER ZONE": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ZONE DE DANGER"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "GEFAHRENBEREICH"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ZONA DE PELIGRO"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "危険区域"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "منطقة الخطر"
+          }
+        }
+      }
+    },
+    "Dark": {},
+    "Dashboard": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tableau de bord"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dashboard"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Panel"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ダッシュボード"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "لوحة التحكم"
+          }
+        }
+      }
+    },
+    "Data & Privacy": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Données et confidentialité"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Daten & Privatsphäre"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Datos y privacidad"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "データとプライバシー"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "البيانات والخصوصية"
+          }
+        }
+      }
+    },
+    "Data Management": {},
+    "Delete": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Supprimer"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Löschen"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Eliminar"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "削除"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "حذف"
+          }
+        }
+      }
+    },
+    "Delete Account": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Supprimer le compte"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Konto löschen"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Eliminar cuenta"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "アカウントを削除"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "حذف الحساب"
+          }
+        }
+      }
+    },
+    "DELETE ACCOUNT": {},
+    "Delete Account?": {},
+    "Delete Subscription?": {},
+    "Demo Mode - Data is not being saved": {},
+    "Details": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Détails"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Details"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Detalles"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "詳細"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "التفاصيل"
+          }
+        }
+      }
+    },
+    "Detected Price:": {},
+    "Detected Subscriptions": {},
+    "Detection Complete!": {},
+    "Did you complete the cancellation?": {},
+    "Didn't receive the email?": {},
+    "Disable 2FA": {},
+    "Discover perks below to start saving": {},
+    "Don't have an account? Sign Up": {},
+    "Don't want to connect Screen Time?": {},
+    "Done": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Terminé"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fertig"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hecho"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "完了"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "تم"
+          }
+        }
+      }
+    },
+    "Download PDF": {},
+    "Drag it into Xcode, then:": {},
+    "Duration: %lld days": {},
+    "Easy": {},
+    "Edit Details": {},
+    "Edit Subscription": {},
+    "Email": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "E-mail"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "E-Mail"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Correo electrónico"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "メールアドレス"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "البريد الإلكتروني"
+          }
+        }
+      }
+    },
+    "Email Import": {},
+    "Email Import will be available in a future update.": {},
+    "Email Sent!": {},
+    "Enable": {},
+    "Enable 2FA": {},
+    "Enable 7-day free trial": {},
+    "Enable Automatic Screen Time Tracking": {},
+    "Enable Screen Time": {},
+    "Enable Screen Time to automatically track how much you use each subscription app. This helps you identify unused subscriptions and save money.": {},
+    "Enable two-factor authentication to secure your account": {},
+    "Ending Soon!": {},
+    "Ends %@": {},
+    "Enter a referral code to get 30% off Pausely Pro": {},
+    "Enter code": {},
+    "Enter code (optional)": {},
+    "Enter it now to get 30% off Premium and help your friend earn rewards too!": {},
+    "Enter referral code": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Entrez le code de parrainage"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Empfehlungscode eingeben"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Introduce el código de referido"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "紹介コードを入力"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "أدخل رمز الإحالة"
+          }
+        }
+      }
+    },
+    "Enter the amount you pay for this subscription": {},
+    "Enter the name of the service you're subscribing to": {},
+    "Enter Usage for %@": {},
+    "Enter Usage Manually": {},
+    "Enter verification code": {},
+    "Enter your email address and we'll send you a link to reset your password.": {},
+    "Enter your usage manually for personalized insights.": {},
+    "Error": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Erreur"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fehler"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Error"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "エラー"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "خطأ"
+          }
+        }
+      }
+    },
+    "Estimated": {},
+    "Expected format: Date, Description, Amount": {},
+    "EXPIRED": {},
+    "Export All Receipts": {},
+    "Features": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fonctionnalités"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Funktionen"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Funciones"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "機能"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "الميزات"
+          }
+        }
+      }
+    },
+    "File Products.storekit exists in your project folder.": {},
+    "First Name": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Prénom"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Vorname"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nombre"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "名"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "الاسم الأول"
+          }
+        }
+      }
+    },
+    "Follow these steps": {},
+    "Follow these steps:": {},
+    "For questions about these Terms of Service, contact us:\n\nEmail: pausely@proton.me": {},
+    "Forgot Password?": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mot de passe oublié ?"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Passwort vergessen?"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "¿Olvidaste tu contraseña?"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "パスワードを忘れましたか？"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "نسيت كلمة المرور؟"
+          }
+        }
+      }
+    },
+    "Format: name, cost, frequency (e.g., Netflix, 15.99, monthly)": {},
+    "Found %lld Subscription%@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "new",
+            "value": "Found %1$lld Subscription%2$@"
+          }
+        }
+      }
+    },
+    "Found %lld subscriptions worth %@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "new",
+            "value": "Found %1$lld subscriptions worth %2$@"
+          }
+        }
+      }
+    },
+    "Free for 7 days, then auto-renews. Cancel anytime in App Store Settings.": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Gratuit pendant 7 jours, puis renouvellement automatique. Annulez à tout moment."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "7 Tage kostenlos, dann automatische Verlängerung. Jederzeit kündbar."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Gratis por 7 días, luego se renueva automáticamente. Cancele cuando quiera."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "7日間無料、その後自動更新。いつでもキャンセル可能。"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "مجانًا لمدة 7 أيام، ثم التجديد التلقائي. يمكنك الإلغاء في أي وقت من إعدادات App Store."
+          }
+        }
+      }
+    },
+    "Free Trial": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Essai gratuit"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kostenlose Testversion"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Prueba gratuita"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "無料トライアル"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "تجربة مجانية"
+          }
+        }
+      }
+    },
+    "Frequency": {},
+    "FREQUENTLY ASKED QUESTIONS": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "QUESTIONS FRÉQUEMMENT POSÉES"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "HÄUFIG GESTELLTE FRAGEN"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "PREGUNTAS FRECUENTES"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "よくある質問"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "الأسئلة الشائعة"
+          }
+        }
+      }
+    },
+    "Generate Code": {},
+    "Genius": {},
+    "Genius AI": {},
+    "Get 30% Off": {},
+    "Get 30% off Premium": {},
+    "Get Free Pro + Give 30% Off": {},
+    "Get Pro FREE!": {},
+    "Get Started": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Commencer"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Loslegen"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Empezar"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "始める"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "البدء"
+          }
+        }
+      }
+    },
+    "Go": {},
+    "Good morning": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bonjour"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Guten Morgen"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Buenos días"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "おはようございます"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "صباح الخير"
+          }
+        }
+      }
+    },
+    "Great job! All subscriptions are well-used.": {},
+    "Great! You're actively managing your subscriptions.": {},
+    "Hard": {},
+    "Have a referral code?": {},
+    "Have a Referral Code?": {},
+    "Haven't used it this month (0 minutes)": {},
+    "Health Score": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Score de santé"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Gesundheits-Score"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Puntuación de salud"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "健全性スコア"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "درجة الصحة"
+          }
+        }
+      }
+    },
+    "Heavy usage (20 hours)": {},
+    "Help & Support": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aide et support"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hilfe & Support"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ayuda y soporte"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ヘルプとサポート"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "المساعدة والدعم"
+          }
+        }
+      }
+    },
+    "Help improve the app": {},
+    "Home": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Maison"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Zuhause"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hogar"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ホーム"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "الرئيسية"
+          }
+        }
+      }
+    },
+    "hours": {},
+    "Hours": {},
+    "How Can We Help?": {},
+    "How It Works": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Comment ça marche"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "So funktioniert es"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cómo funciona"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "使い方"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "كيف يعمل"
+          }
+        }
+      }
+    },
+    "How Long to Pause?": {},
+    "How much does it cost?": {},
+    "How often": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fréquence"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Wie oft"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Frecuencia"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "頻度"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "المدة"
+          }
+        }
+      }
+    },
+    "How Trial Protection Works": {},
+    "How would you like to add a subscription?": {},
+    "How would you like to cancel?": {},
+    "How would you like to handle\n%@?": {},
+    "https://...": {},
+    "I already have an account": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "J'ai déjà un compte"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ich habe bereits ein Konto"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ya tengo una cuenta"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "すでにアカウントを持っています"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "لدي حساب بالفعل"
+          }
+        }
+      }
+    },
+    "I don't have a code": {},
+    "I pay a different amount": {},
+    "I'll open the cancellation page for you. You'll need to confirm the cancellation on the service's website. You'll receive a confirmation email once it's processed.": {},
+    "I've Already Cancelled": {},
+    "I've confirmed my email": {},
+    "I've opened the cancellation page. You'll receive a confirmation email once processed.": {},
+    "If Optimized": {},
+    "If you have any questions about this Privacy Policy, please contact us:\n\nEmail: pausely@proton.me": {},
+    "Import %lld Items": {},
+    "Import %lld Transactions": {},
+    "Import Complete!": {},
+    "Import from CSV": {},
+    "Import from Email": {},
+    "Import your subscriptions from multiple sources": {},
+    "Insight": {},
+    "Insights": {},
+    "INSIGHTS": {},
+    "Keep It": {},
+    "Keep Subscription": {},
+    "Keep This Subscription": {},
+    "Language": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Langue"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sprache"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Idioma"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "言語"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "اللغة"
+          }
+        }
+      }
+    },
+    "Last Name": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nom"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nachname"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Apellido"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "姓"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "اسم العائلة"
+          }
+        }
+      }
+    },
+    "Last updated: %@ ago": {},
+    "Last updated: April 9, 2026": {},
+    "Light": {},
+    "Light usage (30 minutes)": {},
+    "Loading subscriptions...": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Chargement des abonnements..."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Abonnements werden geladen..."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cargando suscripciones..."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "サブスクリプションを読み込み中..."
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "جارٍ تحميل الاشتراكات..."
+          }
+        }
+      }
+    },
+    "Loading your code...": {},
+    "Loading your referral code...": {},
+    "Look for an email from %@ (%@) with the subject \"Confirm Your Email - %@\". Click the button to verify your account.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "new",
+            "value": "Look for an email from %1$@ (%2$@) with the subject \"Confirm Your Email - %3$@\". Click the button to verify your account."
+          }
+        }
+      }
+    },
+    "Manage in App Store": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Gérer dans l'App Store"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Im App Store verwalten"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Gestionar en App Store"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "App Storeで管理"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "الإدارة في App Store"
+          }
+        }
+      }
+    },
+    "Manual Tracking Mode": {},
+    "Mark as Complete": {},
+    "Medium": {},
+    "Member since %@": {},
+    "Message": {},
+    "Message Sent!": {},
+    "minutes": {},
+    "Minutes": {},
+    "Moderate usage (5 hours)": {},
+    "Money Saved": {},
+    "Monthly": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mensuel"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Monatlich"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mensual"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "月額"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "شهريًا"
+          }
+        }
+      }
+    },
+    "Monthly cost": {},
+    "Monthly cost:": {},
+    "Monthly Savings Potential": {},
+    "Need Help?": {},
+    "Netflix, Spotify, Apple Music...": {},
+    "Netflix, Spotify...": {},
+    "New Password": {},
+    "New Referral!": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nouveau parrainage !"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Neue Empfehlung!"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "¡Nueva referencia!"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "新しい紹介！"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "إحالة جديدة!"
+          }
+        }
+      }
+    },
+    "New Subscription": {},
+    "Next": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Suivant"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Weiter"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Siguiente"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "次へ"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "التالي"
+          }
+        }
+      }
+    },
+    "Next billing": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Prochaine facturation"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nächste Abrechnung"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Próxima facturación"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "次の請求日"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "الفوترة التالية"
+          }
+        }
+      }
+    },
+    "Next Billing Date": {},
+    "Next Renewal": {},
+    "No %@ subscriptions yet": {},
+    "No active App Store subscriptions were found on this Apple ID": {},
+    "No apps selected": {},
+    "No Billing History": {},
+    "No data yet": {},
+    "No new subscriptions detected.\nWe'll keep tracking your usage.": {},
+    "No other active sessions": {},
+    "No pending actions": {},
+    "No referrals yet": {},
+    "No subscriptions found": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aucun abonnement trouvé"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Keine Abonnements gefunden"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No se encontraron suscripciones"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "サブスクリプションが見つかりません"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "لم يتم العثور على اشتراكات"
+          }
+        }
+      }
+    },
+    "No Subscriptions Found": {},
+    "No subscriptions yet": {},
+    "No Usage Data Yet": {},
+    "No Usage History Yet": {},
+    "Not Now": {},
+    "Note: Apple Screen Time API provides session counts, not exact minutes. Usage is estimated based on session frequency.": {},
+    "Note: Apple Screen Time API provides session counts, not exact minutes. Usage shown is estimated based on session frequency.": {},
+    "Note: Screen Time data is estimated from session counts. Manual entries are exact values you provided.": {},
+    "Notifications": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Notifications"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Benachrichtigungen"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Notificaciones"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "通知"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "الإشعارات"
+          }
+        }
+      }
+    },
+    "of 10h": {},
+    "Offline Mode": {},
+    "OK": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "OK"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "OK"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "OK"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "OK"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "موافق"
+          }
+        }
+      }
+    },
+    "One tap, instantly": {},
+    "Oops": {},
+    "Open Cancel Page": {},
+    "Open Pause Page": {},
+    "Optimize": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Optimiser"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Optimieren"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Optimizar"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "最適化"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "تحسين"
+          }
+        }
+      }
+    },
+    "or": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ou"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "oder"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "o"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "または"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "أو"
+          }
+        }
+      }
+    },
+    "or %@%@/yr": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "new",
+            "value": "or %1$@%2$@/yr"
+          }
+        }
+      }
+    },
+    "Other Devices": {},
+    "Our app is not intended for users under 13 years of age. We do not knowingly collect information from children under 13.": {},
+    "Our support team is here for you 24/7": {},
+    "Paid on %@": {},
+    "Password": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mot de passe"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Passwort"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Contraseña"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "パスワード"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "كلمة المرور"
+          }
+        }
+      }
+    },
+    "Past 6 Months": {},
+    "Paste a link to Netflix, Spotify, or any subscription service": {},
+    "Paste email content or forwarding headers to automatically detect subscriptions": {},
+    "Paste from Clipboard": {},
+    "Paste from URL": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Coller depuis une URL"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Von URL einfügen"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pegar desde URL"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "URLから貼り付け"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "لصق من رابط"
+          }
+        }
+      }
+    },
+    "Paste Subscription URL": {},
+    "Paste your bank statement CSV": {},
+    "Paste your CSV data": {},
+    "Pause": {},
+    "Pause %@?": {},
+    "Pause for %@": {},
+    "Pause Instead": {},
+    "Pause Subscription": {},
+    "Paused": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "En pause"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pausiert"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pausado"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "一時停止中"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "متوقف مؤقتًا"
+          }
+        }
+      }
+    },
+    "Paused!": {},
+    "Pausely": {},
+    "Pausely helps you track subscriptions but:\n\n• We are not responsible for actual subscription cancellations\n• You must manage cancellations directly with service providers\n• We do not guarantee accuracy of pricing information\n• Renewal dates may vary from actual billing dates": {},
+    "Pausely is a subscription management application that helps you track, monitor, and manage your recurring subscriptions. Our service provides reminders, analytics, and insights about your subscriptions.": {},
+    "Pausely is provided 'as is' without warranties. We are not liable for:\n\n• Decisions made based on app information\n• Errors in third-party pricing data\n• Service interruptions\n• Loss of data due to third-party issues": {},
+    "Pausely needs Screen Time access to track which apps you use. Your data stays on your device.": {},
+    "Pausey at your service": {},
+    "per %@": {},
+    "per month": {},
+    "per year": {},
+    "Perks": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Avantages"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Vorteile"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Beneficios"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "特典"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "المزايا"
+          }
+        }
+      }
+    },
+    "Permanently delete your account": {},
+    "Personalized subscription intelligence": {},
+    "Please make sure you have an email app installed on your device.": {},
+    "Please wait...": {},
+    "Potential Annual Savings": {},
+    "Potential Monthly Savings": {},
+    "Premium Unlocked!": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Premium débloqué !"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Premium freigeschaltet!"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "¡Premium desbloqueado!"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "プレミアム解除！"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "تم فتح Premium!"
+          }
+        }
+      }
+    },
+    "Preview": {},
+    "Price": {},
+    "Privacy": {},
+    "PRIVACY": {},
+    "Privacy & Security": {},
+    "Privacy Policy": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Politique de confidentialité"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Datenschutzrichtlinie"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Política de privacidad"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "プライバシーポリシー"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "سياسة الخصوصية"
+          }
+        }
+      }
+    },
+    "PRO": {},
+    "Pro Member": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Membre Pro"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pro-Mitglied"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Miembro Pro"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Proメンバー"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "عضو Pro"
+          }
+        }
+      }
+    },
+    "Pro Unlocked! 🎉": {},
+    "Profile": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Profil"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Profil"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Perfil"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "プロフィール"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "الملف الشخصي"
+          }
+        }
+      }
+    },
+    "Pros": {},
+    "Purchase Error": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Erreur d'achat"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kauf fehlgeschlagen"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Error de compra"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "購入エラー"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "خطأ في الشراء"
+          }
+        }
+      }
+    },
+    "Purchase Successful!": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Achat réussi !"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kauf erfolgreich!"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "¡Compra exitosa!"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "購入完了！"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "تم الشراء بنجاح!"
+          }
+        }
+      }
+    },
+    "Quick Actions": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Actions rapides"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Schnellaktionen"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Acciones rápidas"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "クイックアクション"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "إجراءات سريعة"
+          }
+        }
+      }
+    },
+    "Quick Add": {},
+    "Quick Add Trial": {},
+    "Quick Contact": {},
+    "Quick Set": {},
+    "Real analysis of your subscription health": {},
+    "Real intelligence from your actual data": {},
+    "Receipt": {},
+    "Recent": {},
+    "Recent Actions": {},
+    "Recently Added": {},
+    "Recommendation": {},
+    "RECOMMENDED": {},
+    "Recommended for You": {},
+    "Refer & Earn": {},
+    "REFER & EARN": {},
+    "Refer 3 friends and unlock Premium forever. No subscription needed!": {},
+    "Refer Friends": {},
+    "Refer friends and earn free months": {},
+    "Refer Friends, Earn Rewards": {},
+    "Referral code \"%@\" has been applied": {},
+    "Referral code copied to clipboard": {},
+    "Referral Complete!": {},
+    "Referred Friends": {},
+    "Refund eligible": {},
+    "Remember me": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Se souvenir de moi"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Angemeldet bleiben"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Recordarme"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ログイン状態を保持"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "تذكرني"
+          }
+        }
+      }
+    },
+    "Renews %@": {},
+    "Renews in %@": {},
+    "Required for app blocking": {},
+    "Resend Email": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Renvoyer l'e-mail"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "E-Mail erneut senden"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reenviar correo"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "メールを再送信"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "إعادة إرسال البريد"
+          }
+        }
+      }
+    },
+    "Resend in %llds": {},
+    "Reset Password": {},
+    "Response time: %@": {},
+    "Restore Purchases": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Restaurer les achats"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Käufe wiederherstellen"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Restaurar compras"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "購入を復元"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "استعادة المشتريات"
+          }
+        }
+      }
+    },
+    "Results": {},
+    "Rewards are granted when referred friends complete signup and verify their account. Free Pro access is permanent and non-transferable. Self-referrals are not allowed.": {},
+    "Run Real Analysis": {},
+    "Save": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Enregistrer"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Speichern"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Guardar"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "保存"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "حفظ"
+          }
+        }
+      }
+    },
+    "Save %@": {},
+    "Save %@ on %@": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "new",
+            "value": "Save %1$@ on %2$@"
+          }
+        }
+      }
+    },
+    "Save %@/mo": {},
+    "Save %@/month": {},
+    "Save $%lld/year": {},
+    "Save $48/year": {},
+    "Save Usage": {},
+    "Saved": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Enregistré"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Gespeichert"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Guardado"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "保存済み"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "تم الحفظ"
+          }
+        }
+      }
+    },
+    "Saving %@/month": {},
+    "Saving $%lld/year": {},
+    "Scan Apple ID": {},
+    "Scan Error": {},
+    "Scan for Subscriptions": {},
+    "Scan from App Store": {},
+    "Scan this QR code with your authenticator app": {},
+    "Scan your Apple ID for active subscriptions": {},
+    "Scanning...": {},
+    "Screen Time Access": {},
+    "Screen Time tracks when you open apps, not the exact minutes. You'll see estimated usage based on session frequency.": {},
+    "Search currencies...": {},
+    "Search help articles...": {},
+    "Search languages...": {},
+    "Search services...": {},
+    "Search subscriptions": {},
+    "Search subscriptions...": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Rechercher des abonnements..."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Abonnements suchen..."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Buscar suscripciones..."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "サブスクリプションを検索..."
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "البحث في الاشتراكات..."
+          }
+        }
+      }
+    },
+    "SECURITY": {},
+    "See All": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Voir tout"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Alle anzeigen"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ver todo"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "すべて表示"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "عرض الكل"
+          }
+        }
+      }
+    },
+    "Select Apps": {},
+    "Select Apps to Track": {},
+    "Select Currency": {},
+    "Select the next billing date for this subscription": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sélectionnez la prochaine date de facturation pour cet abonnement"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Wählen Sie das nächste Abrechnungsdatum für dieses Abonnement"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Selecciona la próxima fecha de facturación para esta suscripción"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "このサブスクリプションの次の請求日を選択"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "حدد تاريخ الفوترة التالي لهذا الاشتراك"
+          }
+        }
+      }
+    },
+    "Select Your Plan": {},
+    "Send Message": {},
+    "Send Reset Link": {},
+    "Send us a message": {},
+    "Service": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Service"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dienst"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Servicio"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "サービス"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "الخدمة"
+          }
+        }
+      }
+    },
+    "Service name": {},
+    "Service Name": {},
+    "Service Name (e.g., Netflix)": {},
+    "Settings": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Paramètres"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Einstellungen"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ajustes"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "設定"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "الإعدادات"
+          }
+        }
+      }
+    },
+    "Setup 2FA": {},
+    "Share": {},
+    "Share Again": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Partager à nouveau"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Erneut teilen"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Compartir de nuevo"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "もう一度共有"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "مشاركة مرة أخرى"
+          }
+        }
+      }
+    },
+    "Share Receipt": {},
+    "Share Via": {},
+    "Share your code and both get rewarded": {},
+    "Share your code to start earning!": {},
+    "Sign In": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Se connecter"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Anmelden"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Iniciar sesión"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "サインイン"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "تسجيل الدخول"
+          }
+        }
+      }
+    },
+    "Sign in to continue": {},
+    "Sign in with %@": {},
+    "Sign Out": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Déconnexion"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Abmelden"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cerrar sesión"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "サインアウト"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "تسجيل الخروج"
+          }
+        }
+      }
+    },
+    "Skip": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Passer"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Überspringen"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Omitir"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "スキップ"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "تخطي"
+          }
+        }
+      }
+    },
+    "Skip - Track Later": {},
+    "Skip for Now": {},
+    "Smart Import": {},
+    "Smart Insights": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Analyses intelligentes"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Intelligente Einblicke"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Insights inteligentes"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "スマート洞察"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "رؤى ذكية"
+          }
+        }
+      }
+    },
+    "Smart Pause": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pause intelligente"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Smart Pause"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pausa inteligente"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "スマート一時停止"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "إيقاف مؤقت ذكي"
+          }
+        }
+      }
+    },
+    "Smart Pause Suggestions": {},
+    "Smart Perks": {},
+    "Smart Subscription Manager": {},
+    "Smart Usage Insights": {},
+    "Smart Usage Tracking": {},
+    "Some features may not be available in all languages. The app will restart to apply changes.": {},
+    "Something went wrong: %@": {},
+    "SPENDING EFFICIENCY": {},
+    "Spending Forecast": {},
+    "Start Free Trial": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Démarrer l'essai gratuit"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kostenlose Testversion starten"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Iniciar prueba gratuita"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "無料トライアルを開始"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "بدء التجربة المجانية"
+          }
+        }
+      }
+    },
+    "Start managing your subscriptions": {},
+    "Start Using Pro": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Commencer à utiliser Pro"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pro nutzen"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Empezar a usar Pro"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Proを使い始める"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "البدء باستخدام Pro"
+          }
+        }
+      }
+    },
+    "Start with a 7‑day free trial, cancel anytime": {},
+    "Start your subscription journey": {},
+    "Starting at %@/month": {},
+    "StoreKit Setup Required": {},
+    "Subscription Cancelled!": {},
+    "Subscription Details": {},
+    "Subscription Genius": {},
+    "Subscription Health": {},
+    "Subscription Limit Reached": {},
+    "Subscriptions": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Abonnements"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Abonnements"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Suscripciones"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "サブスクリプション"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "الاشتراكات"
+          }
+        }
+      }
+    },
+    "Subscriptions saved locally": {},
+    "Success": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Succès"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Erfolg"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Éxito"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "成功"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "نجاح"
+          }
+        }
+      }
+    },
+    "Success!": {},
+    "Suggested": {},
+    "Support Email:": {},
+    "Switch to %@": {},
+    "Switch to annual billing for Netflix": {},
+    "Sync": {},
+    "Tab": {},
+    "Take a break without canceling": {},
+    "Take control of your subscriptions": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Prenez le contrôle de vos abonnements"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Behalten Sie Ihre Abonnements im Griff"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Toma el control de tus suscripciones"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "サブスクリプションを管理しよう"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "تحكم في اشتراكاتك"
+          }
+        }
+      }
+    },
+    "Tap + buttons to add usage time": {},
+    "Tap to deselect all": {},
+    "Temporarily pause for later": {},
+    "Terms & Conditions": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Conditions générales"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Allgemeine Geschäftsbedingungen"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Términos y condiciones"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "利用規約"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "الشروط والأحكام"
+          }
+        }
+      }
+    },
+    "Terms of Service": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Conditions d'utilisation"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nutzungsbedingungen"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Términos de servicio"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "利用規約"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "شروط الخدمة"
+          }
+        }
+      }
+    },
+    "Then %@ after 7 days": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Puis %@ après 7 jours"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dann %@ nach 7 Tagen"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Luego %@ después de 7 días"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "7日後に%@"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ثم %@ بعد 7 أيام"
+          }
+        }
+      }
+    },
+    "These terms shall be governed by applicable laws. Any disputes shall be resolved through binding arbitration or in courts of competent jurisdiction.": {},
+    "This helps Pausely calculate your cost per hour and suggest when to pause subscriptions to save money.": {},
+    "This month: %@": {},
+    "This Month's Usage": {},
+    "This takes a few seconds": {},
+    "This will cancel your subscription immediately": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cela annulera immédiatement votre abonnement"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dies kündigt Ihr Abonnement sofort"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Esto cancelará tu suscripción inmediatamente"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "これによりサブスクリプションが直ちにキャンセルされます"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "سيؤدي هذا إلى إلغاء اشتراكك فورًا"
+          }
+        }
+      }
+    },
+    "This will permanently delete all your data. This action cannot be undone.": {},
+    "This will permanently remove %@ from your subscriptions.": {},
+    "Today": {},
+    "Toggle to start your free trial before billing begins": {},
+    "Top Usage": {},
+    "Total Money Saved": {},
+    "TOTAL SAVINGS IDENTIFIED": {},
+    "Total Spending": {},
+    "Total Spent": {},
+    "Total Subscriptions": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Total des abonnements"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Abonnements insgesamt"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Total de suscripciones"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "サブスクリプション合計"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "إجمالي الاشتراكات"
+          }
+        }
+      }
+    },
+    "Total Tracked Time": {},
+    "Track %lld Apps": {},
+    "Track a new recurring expense": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Suivre une nouvelle dépense récurrente"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Neue wiederkehrende Ausgabe verfolgen"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Rastrear un nuevo gasto recurrente"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "新しい定期支出を追跡"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "تتبع مصروف متكرر جديد"
+          }
+        }
+      }
+    },
+    "Track All Known Apps": {},
+    "Track free trials, get reminders, cancel before you get charged!": {},
+    "TRACK USAGE": {},
+    "Track your first subscription": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Suivez votre premier abonnement"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Verfolgen Sie Ihr erstes Abonnement"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Rastrea tu primera suscripción"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "最初のサブスクリプションを追加"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "تتبع اشتراكك الأول"
+          }
+        }
+      }
+    },
+    "Track Your Subscription Usage": {},
+    "Tracked": {},
+    "TRIAL": {},
+    "Trial Cancelled!": {},
+    "Trial Details": {},
+    "Trial Duration": {},
+    "Trial Protection": {},
+    "Trials Tracked": {},
+    "Try a different search term": {},
+    "Try Again": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Réessayer"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Erneut versuchen"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Intentar de nuevo"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "再試行"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "إعادة المحاولة"
+          }
+        }
+      }
+    },
+    "Two-Factor Auth": {},
+    "Typical: 10h/month": {},
+    "Unlock Pro for Free": {},
+    "Unlock Unlimited\nSubscriptions": {},
+    "Unlock unlimited subscriptions and more": {},
+    "Upcoming": {},
+    "Update Password": {},
+    "Update Usage": {},
+    "Updated %@ ago": {},
+    "Upgrade Now": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mettre à niveau maintenant"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Jetzt upgraden"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Actualizar ahora"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "今すぐアップグレード"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "الترقية الآن"
+          }
+        }
+      }
+    },
+    "Upgrade to add more subscriptions": {},
+    "Upgrade to Premium to see alternatives": {},
+    "Upgrade to Pro": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Passer à Pro"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Auf Pro upgraden"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Actualizar a Pro"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Proにアップグレード"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "الترقية إلى Pro"
+          }
+        }
+      }
+    },
+    "Upgrade to Pro and take full control of your subscriptions": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Passez à Pro et prenez le contrôle total de vos abonnements"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Upgraden Sie auf Pro und behalten Sie die volle Kontrolle über Ihre Abonnements"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Actualiza a Pro y toma el control total de tus suscripciones"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Proにアップグレードしてサブスクリプションを完全に管理しましょう"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "الترقية إلى Pro وتحكم بالكامل في اشتراكاتك"
+          }
+        }
+      }
+    },
+    "Usage data is estimated from Screen Time session tracking. Apple does not provide exact minutes used.": {},
+    "Usage data never leaves your device. We only store insights to help you save money.": {},
+    "Usage data will appear here as you track your time with %@": {},
+    "Usage History": {},
+    "Usage Insight": {},
+    "Usage Insights": {},
+    "Usage is estimated from Screen Time session data": {},
+    "Usage tracking is now active. We'll monitor your app usage and suggest subscriptions we detect.": {},
+    "Usage Tracking Setup": {},
+    "Used": {},
+    "Value Rating: %@": {},
+    "Verify & Enable": {},
+    "View All Suggestions": {},
+    "View all your subscriptions": {},
+    "Waiting...": {},
+    "Waste Alert": {},
+    "Waste Alerts": {},
+    "WASTE SCORE": {},
+    "We collect information you provide directly, including:\n\n• Email address (for account creation and authentication)\n• Subscription data you manually enter\n• Usage analytics and app performance data\n• Device information for push notifications": {},
+    "We do not sell, trade, or otherwise transfer your personal information to third parties, except:\n\n• With your explicit consent\n• To comply with legal obligations\n• To protect our rights and prevent fraud": {},
+    "We may update this privacy policy from time to time. We will notify you of any material changes by posting the new policy in the app and updating the 'Last updated' date.": {},
+    "We reserve the right to:\n\n• Modify or discontinue features\n• Change pricing with notice\n• Update these terms periodically\n• Terminate accounts that violate our policies": {},
+    "We use collected information to:\n\n• Provide and maintain our subscription tracking services\n• Send you renewal reminders and notifications\n• Improve our app functionality and user experience\n• Communicate with you about your subscriptions": {},
+    "We'll get back to you at %@ within 24 hours.": {},
+    "We'll guide you through the easiest method.": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nous vous guiderons vers la méthode la plus simple."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Wir führen Sie durch die einfachste Methode."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Te guiaremos por el método más fácil."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "最も簡単な方法をご案内します。"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "سنرشدك إلى أسهل طريقة."
+          }
+        }
+      }
+    },
+    "We'll help you cancel. After cancelling, mark it here to track your savings!": {},
+    "We'll open the cancellation page for %@. Would you like to proceed?": {},
+    "We'll open the cancellation page for you. After cancelling, mark it here to track your savings!": {},
+    "We'll open the pause settings for %@.": {},
+    "We've sent a confirmation link to": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nous avons envoyé un lien de confirmation à"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Wir haben einen Bestätigungslink gesendet an"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hemos enviado un enlace de confirmación a"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "確認リンクを送信しました"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "لقد أرسلنا رابط التأكيد إلى"
+          }
+        }
+      }
+    },
+    "We've sent a password reset link to": {},
+    "Welcome Back": {},
+    "Welcome to Pausely": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bienvenue sur Pausely"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Willkommen bei Pausely"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bienvenido a Pausely"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pauselyへようこそ"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "مرحبًا بك في Pausely"
+          }
+        }
+      }
+    },
+    "Welcome to Pausely Pro! You now have unlimited subscriptions and all premium features.": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bienvenue sur Pausely Pro ! Vous avez maintenant des abonnements illimités et toutes les fonctionnalités premium."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Willkommen bei Pausely Pro! Sie haben jetzt unbegrenzte Abonnements und alle Premium-Funktionen."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "¡Bienvenido a Pausely Pro! Ahora tienes suscripciones ilimitadas y todas las funciones premium."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pausely Proへようこそ！無制限のサブスクリプションとすべてのプレミアム機能が利用可能になりました。"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "مرحبًا بك في Pausely Pro! لديك الآن اشتراكات غير محدودة وجميع الميزات المتميزة."
+          }
+        }
+      }
+    },
+    "What happens next?": {},
+    "What you'll get": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ce que vous obtiendrez"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Was Sie erhalten"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lo que obtendrás"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "入手できるもの"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ما ستحصل عليه"
+          }
+        }
+      }
+    },
+    "What You'll Get": {},
+    "What's the subscription?": {},
+    "When does it renew?": {},
+    "With your permission, we may send push notifications for:\n\n• Upcoming subscription renewals\n• Free trial expirations\n• Price change alerts\n\nYou can disable notifications at any time in Settings.": {},
+    "Yes, Cancel %@": {},
+    "Yes, Cancel Now": {},
+    "You can unpause anytime. We'll remind you before it resumes.": {},
+    "You could save %@ per year!": {},
+    "You got %@ off!": {},
+    "You have the right to:\n\n• Access your personal data\n• Correct inaccurate data\n• Delete your data\n• Opt out of notifications\n• Export your data\n\nContact us at pausely@proton.me to exercise these rights.": {},
+    "You just saved": {},
+    "You save %@ per year!": {},
+    "You save %@/yr": {},
+    "You'll be charged %@/month starting tomorrow unless you cancel.": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Vous serez facturé %@/mois à partir de demain sauf annulation."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ab morgen werden Ihnen %@/Monat berechnet, sofern Sie nicht kündigen."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Se te cobrará %@/mes a partir de mañana a menos que canceles."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "キャンセルしない限り、明日から%@/月が請求されます。"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "سيتم خصم %@/شهر بدءًا من الغد ما لم تقم بالإلغاء."
+          }
+        }
+      }
+    },
+    "YOU'LL SAVE": {},
+    "You'll save:": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Vous économiserez :"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sie sparen:"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ahorrarás:"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "節約額："
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ستوفر:"
+          }
+        }
+      }
+    },
+    "You're All Set!": {},
+    "You're optimizing like a pro!": {},
+    "You're using all your subscriptions well!": {},
+    "You've earned FREE Premium forever by referring 3 friends!": {},
+    "You've only used it for %@ this month": {},
+    "You've reached your free limit": {},
+    "You've taken control of your spending.": {},
+    "You've unlocked FREE Pro!": {},
+    "You've used %lld of %lld free subscriptions. Upgrade for unlimited.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "new",
+            "value": "You've used %1$lld of %2$lld free subscriptions. Upgrade for unlimited."
+          }
+        }
+      }
+    },
+    "You've used all %lld free subscriptions. Upgrade to Pro for unlimited.": {},
+    "Your": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Votre"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ihr"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tu"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "あなたの"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "الخاص بك"
+          }
+        }
+      }
+    },
+    "Your account is protected with two-factor authentication": {},
+    "YOUR ANNUAL SAVINGS": {},
+    "Your Data Stays Private": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Vos données restent privées"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ihre Daten bleiben privat"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tus datos permanecen privados"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "あなたのデータはプライベートのままです"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "بياناتك تبقى خاصة"
+          }
+        }
+      }
+    },
+    "Your monthly price": {},
+    "Your password has been updated successfully.": {},
+    "YOUR PROGRESS": {},
+    "YOUR REFERRAL CODE": {},
+    "Your referral code has been applied. You'll get 30% off your first month of Pro!": {},
+    "Your subscription will resume automatically": {},
+    "Your Subscriptions": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Vos abonnements"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ihre Abonnements"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tus suscripciones"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "あなたのサブスクリプション"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "اشتراكاتك"
+          }
+        }
+      }
+    },
+    "Your subscriptions are well-optimized. Great job!": {},
+    "Your transactions will appear here once you make a purchase or receive credits.": {},
+    "Your Trial Protection Impact": {},
+    "YOUR UNIQUE CODE": {},
+    "Your Usage This Month": {}
+  },
+  "version": "1.0"
+}

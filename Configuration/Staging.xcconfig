@@ -1,0 +1,33 @@
+//
+//  Staging.xcconfig
+//  Pausely
+//
+//  Cataclysmic Security Configuration - Staging Environment
+//
+
+// MARK: - Environment
+PAUSELY_ENVIRONMENT = STAGING
+
+// MARK: - Supabase Configuration
+SUPABASE_URL = $(SUPABASE_URL_STAGING)
+SUPABASE_ANON_KEY = $(SUPABASE_ANON_KEY_STAGING)
+SUPABASE_SCHEMA = public
+
+// MARK: - RevenueCat Configuration
+REVENUECAT_API_KEY = $(REVENUECAT_API_KEY_STAGING)
+
+// MARK: - Plaid Configuration
+PLAID_CLIENT_ID = $(PLAID_CLIENT_ID)
+PLAID_SECRET = $(PLAID_SECRET_STAGING)
+
+// MARK: - Privacy API Configuration
+PRIVACY_API_KEY = $(PRIVACY_API_KEY_STAGING)
+PRIVACY_BASE_URL = https:/$()/api.privacy.com
+
+// MARK: - OpenAI Configuration
+OPENAI_API_KEY = $(OPENAI_API_KEY)
+
+// MARK: - App Configuration
+BUNDLE_IDENTIFIER = com.pausely.staging
+APP_NAME = Pausely Beta
+APP_ICON = AppIcon-Staging
