@@ -54,7 +54,7 @@ struct EmailConfirmationView: View {
                         )
 
                     Image(systemName: "envelope.badge.shield.fill")
-                        .font(.system(size: 50, weight: .light))
+                        .font(.system(.largeTitle, design: .rounded).weight(.light))
                         .foregroundStyle(
                             LinearGradient(
                                 colors: [Color.luxuryGold, .white],
@@ -67,19 +67,19 @@ struct EmailConfirmationView: View {
                 // Text
                 VStack(spacing: 16) {
                     Text("Check Your Email")
-                        .font(.system(size: 32, weight: .bold, design: .rounded))
+                        .font(.system(.title, design: .rounded).weight(.bold))
                         .foregroundStyle(.white)
-                    
+
                     Text("We've sent a confirmation link to")
-                        .font(.system(size: 17, weight: .regular, design: .rounded))
+                        .font(.system(.body, design: .rounded))
                         .foregroundStyle(.white.opacity(0.7))
-                    
+
                     Text(email)
-                        .font(.system(size: 17, weight: .semibold, design: .rounded))
+                        .font(.system(.body, design: .rounded).weight(.semibold))
                         .foregroundStyle(Color.luxuryGold)
-                    
+
                     Text("Look for an email from \(AppConfig.appName) (\(AppConfig.noreplyEmail)) with the subject \"Confirm Your Email - \(AppConfig.appName)\". Click the button to verify your account.")
-                        .font(.system(size: 15, weight: .regular, design: .rounded))
+                        .font(.system(.subheadline, design: .rounded))
                         .foregroundStyle(.white.opacity(0.6))
                         .multilineTextAlignment(.center)
                         .lineSpacing(4)
@@ -97,17 +97,17 @@ struct EmailConfirmationView: View {
                     // Support Contact
                     VStack(spacing: 8) {
                         Text("Didn't receive the email?")
-                            .font(.system(size: 14, weight: .medium))
+                            .font(.system(.subheadline, design: .rounded).weight(.medium))
                             .foregroundStyle(.white.opacity(0.7))
-                        
-                        Button(action: { 
+
+                        Button(action: {
                             SupportEmailContact.supportRequest(userEmail: email, issue: "Did not receive confirmation email").openMail()
                         }) {
                             HStack(spacing: 6) {
                                 Image(systemName: "headset")
                                 Text("Contact Support")
                             }
-                            .font(.system(size: 15, weight: .semibold, design: .rounded))
+                            .font(.system(.subheadline, design: .rounded).weight(.semibold))
                             .foregroundStyle(Color.luxuryGold)
                         }
                     }
@@ -128,7 +128,7 @@ struct EmailConfirmationView: View {
                             }
                             Text("I've confirmed my email")
                         }
-                        .font(.system(size: 17, weight: .semibold, design: .rounded))
+                        .font(.system(.body, design: .rounded).weight(.semibold))
                         .foregroundStyle(.white)
                         .frame(maxWidth: .infinity)
                         .padding()
@@ -154,7 +154,7 @@ struct EmailConfirmationView: View {
                                     .foregroundStyle(.white)
                             }
                         }
-                        .font(.system(size: 17, weight: .semibold, design: .rounded))
+                        .font(.system(.body, design: .rounded).weight(.semibold))
                         .frame(maxWidth: .infinity)
                         .padding()
                         .glass(intensity: 0.2, tint: .white)
@@ -164,7 +164,7 @@ struct EmailConfirmationView: View {
                     
                     Button(action: goBackToSignIn) {
                         Text("Back to Sign In")
-                            .font(.system(size: 17, weight: .medium, design: .rounded))
+                            .font(.system(.body, design: .rounded).weight(.medium))
                             .foregroundStyle(.white.opacity(0.6))
                     }
                 }
@@ -329,16 +329,16 @@ struct EnhancedLoginView: View {
                     .shadow(color: Color.luxuryPurple.opacity(0.5), radius: 20)
                 
                 Image(systemName: "pause.circle.fill")
-                    .font(.system(size: 40))
+                    .font(.system(.largeTitle, design: .rounded))
                     .foregroundStyle(.white)
             }
-            
+
             Text(isSignUp ? "Create Account" : "Welcome Back")
-                .font(.system(size: 32, weight: .bold, design: .rounded))
+                .font(.system(.title, design: .rounded).weight(.bold))
                 .foregroundStyle(.white)
-            
+
             Text(isSignUp ? "Start managing your subscriptions" : "Sign in to continue")
-                .font(.system(size: 17, weight: .regular, design: .rounded))
+                .font(.system(.body, design: .rounded))
                 .foregroundStyle(.white.opacity(0.6))
         }
         .padding(.top, 40)
@@ -384,7 +384,7 @@ struct EnhancedLoginView: View {
                     Button("Forgot Password?") {
                         showPasswordReset = true
                     }
-                    .font(.system(size: 14, weight: .medium, design: .rounded))
+                    .font(.system(.subheadline, design: .rounded).weight(.medium))
                     .foregroundStyle(Color.luxuryGold)
                 }
             }
@@ -400,7 +400,7 @@ struct EnhancedLoginView: View {
                         .padding(.trailing, 8)
                 }
                 Text(isSignUp ? "Create Account" : "Sign In")
-                    .font(.system(size: 17, weight: .semibold, design: .rounded))
+                    .font(.system(.body, design: .rounded).weight(.semibold))
             }
             .foregroundStyle(.white)
             .frame(maxWidth: .infinity)
@@ -428,7 +428,7 @@ struct EnhancedLoginView: View {
                     .frame(height: 1)
                 
                 Text("or")
-                    .font(.system(size: 14, weight: .medium, design: .rounded))
+                    .font(.system(.subheadline, design: .rounded).weight(.medium))
                     .foregroundStyle(.white.opacity(0.5))
                 
                 Rectangle()
@@ -439,9 +439,9 @@ struct EnhancedLoginView: View {
             Button(action: attemptBiometricAuth) {
                 HStack(spacing: 12) {
                     Image(systemName: biometricIcon)
-                        .font(.system(size: 20))
+                        .font(.system(.body, design: .rounded))
                     Text("Sign in with \(biometricType)")
-                        .font(.system(size: 17, weight: .semibold, design: .rounded))
+                        .font(.system(.body, design: .rounded).weight(.semibold))
                 }
                 .foregroundStyle(.white)
                 .frame(maxWidth: .infinity)
@@ -459,7 +459,7 @@ struct EnhancedLoginView: View {
             }
         }) {
             Text(isSignUp ? "Already have an account? Sign In" : "Don't have an account? Sign Up")
-                .font(.system(size: 15, weight: .medium, design: .rounded))
+                .font(.system(.subheadline, design: .rounded).weight(.medium))
                 .foregroundStyle(.white.opacity(0.7))
         }
         .padding(.top, 8)
@@ -565,7 +565,7 @@ struct EnhancedTextField: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
             Text(title)
-                .font(.system(size: 13, weight: .semibold, design: .rounded))
+                .font(.system(.caption, design: .rounded).weight(.semibold))
                 .foregroundStyle(.white.opacity(0.6))
                 .textCase(.uppercase)
             
@@ -603,7 +603,7 @@ struct ErrorMessageView: View {
             Image(systemName: "exclamationmark.triangle.fill")
                 .foregroundStyle(.orange)
             Text(message)
-                .font(.system(size: 14, weight: .medium, design: .rounded))
+                .font(.system(.subheadline, design: .rounded).weight(.medium))
                 .foregroundStyle(.white)
             Spacer()
         }
@@ -624,10 +624,10 @@ struct RememberMeToggleStyle: ToggleStyle {
         HStack(spacing: 8) {
             Image(systemName: configuration.isOn ? "checkmark.square.fill" : "square")
                 .foregroundStyle(configuration.isOn ? Color.luxuryGold : .white.opacity(0.5))
-                .font(.system(size: 18))
-            
+                .font(.system(.body, design: .rounded))
+
             Text("Remember me")
-                .font(.system(size: 14, weight: .medium, design: .rounded))
+                .font(.system(.subheadline, design: .rounded).weight(.medium))
                 .foregroundStyle(.white.opacity(0.7))
         }
         .onTapGesture {
@@ -665,16 +665,16 @@ struct PasswordResetView: View {
             Spacer()
             
             Image(systemName: "lock.rotation")
-                .font(.system(size: 60))
+                .font(.system(.largeTitle, design: .rounded))
                 .foregroundStyle(Color.luxuryGold)
-            
+
             VStack(spacing: 12) {
                 Text("Reset Password")
-                    .font(.system(size: 28, weight: .bold, design: .rounded))
+                    .font(.system(.title, design: .rounded).weight(.bold))
                     .foregroundStyle(.white)
-                
+
                 Text("Enter your email address and we'll send you a link to reset your password.")
-                    .font(.system(size: 15, weight: .regular, design: .rounded))
+                    .font(.system(.subheadline, design: .rounded))
                     .foregroundStyle(.white.opacity(0.6))
                     .multilineTextAlignment(.center)
             }
@@ -696,7 +696,7 @@ struct PasswordResetView: View {
                         ProgressView().tint(.white)
                     }
                     Text("Send Reset Link")
-                        .font(.system(size: 17, weight: .semibold, design: .rounded))
+                        .font(.system(.body, design: .rounded).weight(.semibold))
                 }
                 .foregroundStyle(.white)
                 .frame(maxWidth: .infinity)
@@ -716,7 +716,7 @@ struct PasswordResetView: View {
             Button("Cancel") {
                 dismiss()
             }
-            .font(.system(size: 17, weight: .medium, design: .rounded))
+            .font(.system(.body, design: .rounded).weight(.medium))
             .foregroundStyle(.white.opacity(0.6))
             
             Spacer()
@@ -728,27 +728,27 @@ struct PasswordResetView: View {
             Spacer()
             
             Image(systemName: "checkmark.circle.fill")
-                .font(.system(size: 80))
+                .font(.system(.largeTitle, design: .rounded))
                 .foregroundStyle(Color.luxuryTeal)
-            
+
             VStack(spacing: 12) {
                 Text("Check Your Email")
-                    .font(.system(size: 28, weight: .bold, design: .rounded))
+                    .font(.system(.title, design: .rounded).weight(.bold))
                     .foregroundStyle(.white)
-                
+
                 Text("We've sent a password reset link to")
-                    .font(.system(size: 15, weight: .regular, design: .rounded))
+                    .font(.system(.subheadline, design: .rounded))
                     .foregroundStyle(.white.opacity(0.6))
-                
+
                 Text(resetEmail)
-                    .font(.system(size: 17, weight: .semibold, design: .rounded))
+                    .font(.system(.body, design: .rounded).weight(.semibold))
                     .foregroundStyle(Color.luxuryGold)
             }
             
             Button("Done") {
                 dismiss()
             }
-            .font(.system(size: 17, weight: .semibold, design: .rounded))
+            .font(.system(.body, design: .rounded).weight(.semibold))
             .foregroundStyle(.white)
             .frame(maxWidth: .infinity)
             .padding()
@@ -794,12 +794,12 @@ struct TipRow: View {
     var body: some View {
         HStack(spacing: 12) {
             Image(systemName: icon)
-                .font(.system(size: 16))
+                .font(.system(.subheadline, design: .rounded))
                 .foregroundColor(Color(hex: "00F0FF"))
                 .frame(width: 24)
-            
+
             Text(text)
-                .font(.system(size: 14))
+                .font(.system(.subheadline, design: .rounded))
                 .foregroundColor(.white)
             
             Spacer()

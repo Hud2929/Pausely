@@ -21,7 +21,7 @@ final class PauselyAppIntentsTests: XCTestCase {
     func testGetMonthlySpendIntent_noSubscriptions() async throws {
         let intent = GetMonthlySpendIntent()
         let result = try await intent.perform()
-        XCTAssertTrue(result.value.contains("0.00") || result.value.contains("$0"))
+        XCTAssertTrue((result.value ?? "").contains("0.00") || (result.value ?? "").contains("$0"))
     }
 
     func testGetMonthlySpendIntent_withSubscriptions() async throws {
@@ -30,7 +30,7 @@ final class PauselyAppIntentsTests: XCTestCase {
 
         let intent = GetMonthlySpendIntent()
         let result = try await intent.perform()
-        XCTAssertTrue(result.value.contains("15.99"))
+        XCTAssertTrue((result.value ?? "").contains("15.99"))
     }
 
     // MARK: - GetSubscriptionCountIntent
@@ -57,7 +57,7 @@ final class PauselyAppIntentsTests: XCTestCase {
         let intent = GetUpcomingRenewalsIntent()
         intent.daysAhead = 7
         let result = try await intent.perform()
-        XCTAssertTrue(result.value.contains("No subscriptions renewing"))
+        XCTAssertTrue((result.value ?? "").contains("No subscriptions renewing"))
     }
 
     func testGetUpcomingRenewalsIntent_oneUpcoming() async throws {
@@ -68,8 +68,8 @@ final class PauselyAppIntentsTests: XCTestCase {
         let intent = GetUpcomingRenewalsIntent()
         intent.daysAhead = 7
         let result = try await intent.perform()
-        XCTAssertTrue(result.value.contains("Hulu"))
-        XCTAssertTrue(result.value.contains("in 3 days"))
+        XCTAssertTrue((result.value ?? "").contains("Hulu"))
+        XCTAssertTrue((result.value ?? "").contains("in 3 days"))
     }
 
     // MARK: - GetBestValueSubscriptionIntent
@@ -87,7 +87,7 @@ final class PauselyAppIntentsTests: XCTestCase {
         ]
         let intent = GetBestValueSubscriptionIntent()
         let result = try await intent.perform()
-        XCTAssertTrue(result.value.contains("Cheap"))
+        XCTAssertTrue((result.value ?? "").contains("Cheap"))
     }
 
     // MARK: - GetSubscriptionDetailIntent
@@ -99,15 +99,15 @@ final class PauselyAppIntentsTests: XCTestCase {
         let intent = GetSubscriptionDetailIntent()
         intent.name = "Spotify"
         let result = try await intent.perform()
-        XCTAssertTrue(result.value.contains("Spotify"))
-        XCTAssertTrue(result.value.contains("Active"))
+        XCTAssertTrue((result.value ?? "").contains("Spotify"))
+        XCTAssertTrue((result.value ?? "").contains("Active"))
     }
 
     func testGetSubscriptionDetailIntent_notFound() async throws {
         let intent = GetSubscriptionDetailIntent()
         intent.name = "NonExistent"
         let result = try await intent.perform()
-        XCTAssertTrue(result.value.contains("No subscription found"))
+        XCTAssertTrue((result.value ?? "").contains("No subscription found"))
     }
 
     // MARK: - PauseSubscriptionIntent
@@ -127,7 +127,7 @@ final class PauselyAppIntentsTests: XCTestCase {
         let intent = PauseSubscriptionIntent()
         intent.name = "Missing"
         let result = try await intent.perform()
-        XCTAssertTrue(result.value.contains("No subscription found"))
+        XCTAssertTrue((result.value ?? "").contains("No subscription found"))
     }
 
     // MARK: - ResumeSubscriptionIntent

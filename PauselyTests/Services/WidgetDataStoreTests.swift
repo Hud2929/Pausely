@@ -6,18 +6,19 @@ import XCTest
 final class WidgetDataStoreTests: XCTestCase {
 
     private var sut: WidgetDataStore!
-    private let suiteName = "group.com.pausely.app.shared"
+    private var testDefaults: UserDefaults!
 
     override func setUp() {
         super.setUp()
-        sut = WidgetDataStore.shared
-        // Clear shared defaults before each test
-        UserDefaults(suiteName: suiteName)?.removePersistentDomain(forName: suiteName)
+        testDefaults = UserDefaults(suiteName: "test.pausely.widget")
+        testDefaults.removePersistentDomain(forName: "test.pausely.widget")
+        sut = WidgetDataStore.forTesting(defaults: testDefaults)
     }
 
     override func tearDown() {
-        UserDefaults(suiteName: suiteName)?.removePersistentDomain(forName: suiteName)
+        testDefaults.removePersistentDomain(forName: "test.pausely.widget")
         sut = nil
+        testDefaults = nil
         super.tearDown()
     }
 

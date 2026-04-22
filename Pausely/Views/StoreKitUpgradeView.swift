@@ -174,9 +174,9 @@ struct StoreKitUpgradeView: View {
             // Trial badge
             HStack(spacing: 6) {
                 Image(systemName: "gift.fill")
-                    .font(.system(size: 14, weight: .semibold))
+                    .font(.system(.caption, design: .rounded).weight(.semibold))
                 Text(LocalizedStringKey("7-DAY FREE TRIAL"))
-                    .font(.system(size: 13, weight: .bold, design: .rounded))
+                    .font(.system(.caption, design: .rounded).weight(.bold))
             }
             .foregroundColor(.black)
             .padding(.horizontal, 14)
@@ -239,7 +239,7 @@ struct StoreKitUpgradeView: View {
 
                 // Crown icon
                 Image(systemName: "crown.fill")
-                    .font(.system(size: 32, weight: .semibold))
+                    .font(.system(.title, design: .rounded).weight(.semibold))
                     .foregroundStyle(
                         LinearGradient(
                             colors: [.luxuryGold, .luxuryPink],
@@ -273,11 +273,11 @@ struct StoreKitUpgradeView: View {
                     }) {
                         HStack(spacing: 6) {
                             Text(plan.title)
-                                .font(.system(size: 15, weight: .semibold, design: .rounded))
+                                .font(.system(.subheadline, design: .rounded).weight(.semibold))
 
                             if let badge = plan.badge {
                                 Text(badge)
-                                    .font(.system(size: 10, weight: .bold))
+                                    .font(.system(.caption2, design: .rounded).weight(.bold))
                                     .foregroundColor(.black)
                                     .padding(.horizontal, 6)
                                     .padding(.vertical, 2)
@@ -394,7 +394,7 @@ struct StoreKitUpgradeView: View {
                             .frame(width: 28, height: 28)
                             .overlay(
                                 Image(systemName: ["person.fill", "person.fill", "person.fill"][i])
-                                    .font(.system(size: 12))
+                                    .font(.system(.caption2, design: .rounded))
                                     .foregroundColor(.white)
                             )
                             .overlay(
@@ -415,7 +415,7 @@ struct StoreKitUpgradeView: View {
             // Money-back guarantee
             HStack(spacing: 8) {
                 Image(systemName: "shield.checkered.fill")
-                    .font(.system(size: 16))
+                    .font(.system(.subheadline, design: .rounded))
                     .foregroundColor(Color.luxuryGold)
 
                 Text(LocalizedStringKey("30-day money-back guarantee"))
@@ -455,10 +455,10 @@ struct StoreKitUpgradeView: View {
                             .scaleEffect(1.2)
                     } else {
                         Image(systemName: "sparkles")
-                            .font(.system(size: 20, weight: .semibold))
+                            .font(.system(.title3, design: .rounded).weight(.semibold))
 
                         Text("Start Free Trial")
-                            .font(.system(size: 18, weight: .bold, design: .rounded))
+                            .font(.system(.body, design: .rounded).weight(.bold))
                     }
                 }
                 .foregroundStyle(.white)
@@ -571,11 +571,11 @@ struct TrialFeatureRow: View {
     var body: some View {
         HStack(spacing: 12) {
             Image(systemName: "checkmark.circle.fill")
-                .font(.system(size: 20, weight: .semibold))
+                .font(.system(.title3, design: .rounded).weight(.semibold))
                 .foregroundColor(Color.luxuryGold)
 
             Text(text)
-                .font(.system(size: 15, weight: .medium, design: .rounded))
+                .font(.system(.subheadline, design: .rounded).weight(.medium))
                 .foregroundStyle(.white)
 
             Spacer()

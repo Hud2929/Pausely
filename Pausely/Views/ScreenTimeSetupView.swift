@@ -350,6 +350,7 @@ struct AuthorizationStepView: View {
                     .cornerRadius(16)
                 }
                 .disabled(viewModel.isRequesting)
+                .accessibilityHint(viewModel.isRequesting ? "Please wait, requesting authorization" : "")
 
                 Button(action: viewModel.skipDetection) {
                     Text("Skip for Now")
@@ -563,6 +564,7 @@ struct DetectionStepView: View {
                     .cornerRadius(16)
             }
             .disabled(viewModel.isDetecting)
+            .accessibilityHint(viewModel.isDetecting ? "Please wait, detection in progress" : "")
             .padding(.horizontal, 24)
             .padding(.bottom, 60)
         }

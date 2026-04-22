@@ -502,6 +502,7 @@ struct CatalogEntryCard: View {
         }
         .buttonStyle(PlainButtonStyle())
         .disabled(isAdded)
+        .accessibilityHint(isAdded ? "This subscription has already been added" : "")
         .onAppear {
             if justAdded == entry.bundleId {
                 showCheckmark = true

@@ -141,7 +141,7 @@ struct ProfileHeaderCard: View {
                             .fill(BrandColors.accent)
                             .frame(width: 36, height: 36)
                         Image(systemName: "crown.fill")
-                            .font(.system(size: 16))
+                            .font(.system(.subheadline, design: .rounded))
                             .foregroundColor(.white)
                     }
                     .offset(x: 45, y: -45)
@@ -197,7 +197,7 @@ struct PremiumStatusCard: View {
         VStack(spacing: 16) {
             HStack {
                 Image(systemName: "crown.fill")
-                    .font(.system(size: 24))
+                    .font(.system(.title2, design: .rounded))
                     .foregroundColor(BrandColors.accent)
                 
                 VStack(alignment: .leading, spacing: 4) {
@@ -280,7 +280,7 @@ struct UpgradePromptCard: View {
                             .frame(width: 52, height: 52)
                         
                         Image(systemName: "crown.fill")
-                            .font(.system(size: 24))
+                            .font(.system(.title2, design: .rounded))
                             .foregroundColor(BrandColors.primary)
                     }
                     
@@ -297,7 +297,7 @@ struct UpgradePromptCard: View {
                     Spacer()
                     
                     Image(systemName: "chevron.right")
-                        .font(.system(size: 18, weight: .semibold))
+                        .font(.system(.body, design: .rounded).weight(.semibold))
                         .foregroundColor(BrandColors.primary)
                 }
                 
@@ -403,7 +403,7 @@ struct ProfileStatBox: View {
                 Spacer()
                 
                 Image(systemName: icon)
-                    .font(.system(size: 18))
+                    .font(.system(.body, design: .rounded))
                     .foregroundColor(color)
             }
             

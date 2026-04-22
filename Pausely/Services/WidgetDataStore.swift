@@ -7,11 +7,20 @@ final class WidgetDataStore {
     static let shared = WidgetDataStore()
 
     private let suiteName = "group.com.pausely.app.shared"
+    private let injectedDefaults: UserDefaults?
+
     private var defaults: UserDefaults? {
-        UserDefaults(suiteName: suiteName)
+        injectedDefaults ?? UserDefaults(suiteName: suiteName)
     }
 
-    private init() {}
+    private init(defaults: UserDefaults? = nil) {
+        self.injectedDefaults = defaults
+    }
+
+    /// Creates a testable instance with injected UserDefaults.
+    static func forTesting(defaults: UserDefaults) -> WidgetDataStore {
+        WidgetDataStore(defaults: defaults)
+    }
 
     // MARK: - Publish
 

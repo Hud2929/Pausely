@@ -191,18 +191,18 @@ struct PremiumSplashScreen: View {
                         .shadow(color: .brandPrimary.opacity(0.5), radius: 30, x: 0, y: 15)
                     
                     Image(systemName: "pause.circle.fill")
-                        .font(.system(size: 44, weight: .medium))
+                        .font(.system(.largeTitle, design: .rounded).weight(.medium))
                         .foregroundColor(.white)
                 }
                 
                 // Text
                 VStack(spacing: 12) {
                     Text("Pausely")
-                        .font(.system(size: 48, weight: .bold, design: .rounded))
+                        .font(.system(.largeTitle, design: .rounded).weight(.bold))
                         .foregroundColor(.white)
-                    
+
                     Text("Smart Subscription Manager")
-                        .font(.system(size: 17, weight: .medium, design: .default))
+                        .font(.system(.body, design: .rounded).weight(.medium))
                         .foregroundColor(TextColors.secondary)
                 }
                 .opacity(opacity)
@@ -286,7 +286,7 @@ struct PremiumWelcomeFlow: View {
                     }
                 }) {
                     Text("Skip")
-                        .font(.system(size: 15, weight: .medium, design: .rounded))
+                        .font(.system(.subheadline, design: .rounded).weight(.medium))
                         .foregroundColor(TextColors.secondary)
                 }
                 .padding(.top, 16)
@@ -349,7 +349,7 @@ struct PremiumWelcomeFlow: View {
                     }
                 }) {
                     Text(currentPage < totalPages - 1 ? "Next" : "Get Started")
-                        .font(.system(size: 17, weight: .semibold, design: .rounded))
+                        .font(.system(.body, design: .rounded).weight(.semibold))
                         .foregroundColor(.white)
                         .frame(maxWidth: .infinity)
                         .frame(height: 56)
@@ -373,7 +373,7 @@ struct PremiumWelcomeFlow: View {
                     }
                 }) {
                     Text("I already have an account")
-                        .font(.system(size: 15, weight: .medium, design: .rounded))
+                        .font(.system(.subheadline, design: .rounded).weight(.medium))
                         .foregroundColor(TextColors.secondary)
                 }
             }
@@ -402,18 +402,18 @@ struct PremiumWelcomeFlow: View {
                         .shadow(color: BrandColors.primary.opacity(0.4), radius: 30, x: 0, y: 15)
 
                     Image(systemName: "pause.circle.fill")
-                        .font(.system(size: 48))
+                        .font(.system(.largeTitle, design: .rounded))
                         .foregroundColor(.white)
                 }
 
                 VStack(spacing: 8) {
                     Text("Welcome to Pausely")
-                        .font(.system(size: 32, weight: .bold, design: .rounded))
+                        .font(.system(.title, design: .rounded).weight(.bold))
                         .foregroundColor(.white)
                         .multilineTextAlignment(.center)
 
                     Text("Take control of your subscriptions")
-                        .font(.system(size: 17, weight: .medium))
+                        .font(.system(.body, design: .rounded).weight(.medium))
                         .foregroundColor(TextColors.secondary)
                 }
             }
@@ -480,16 +480,16 @@ struct OnboardingPreviewPage: View {
             VStack(spacing: 12) {
                 HStack(spacing: 12) {
                     Image(systemName: icon)
-                        .font(.system(size: 28, weight: .semibold))
+                        .font(.system(.title2, design: .rounded).weight(.semibold))
                         .foregroundColor(BrandColors.primary)
 
                     Text(title)
-                        .font(.system(size: 24, weight: .bold, design: .rounded))
+                        .font(.system(.title2, design: .rounded).weight(.bold))
                         .foregroundColor(.white)
                 }
 
                 Text(description)
-                    .font(.system(size: 17, weight: .medium))
+                    .font(.system(.body, design: .rounded).weight(.medium))
                     .foregroundColor(TextColors.secondary)
                     .multilineTextAlignment(.center)
                     .padding(.horizontal, 32)
@@ -516,11 +516,11 @@ struct DashboardPreviewCard: View {
                 HStack {
                     VStack(alignment: .leading, spacing: 4) {
                         Text("Dashboard")
-                            .font(.system(size: 22, weight: .bold, design: .rounded))
+                            .font(.system(.title2, design: .rounded).weight(.bold))
                             .foregroundColor(.white)
 
                         Text("Good morning")
-                            .font(.system(size: 13, weight: .medium))
+                            .font(.system(.footnote, design: .rounded).weight(.medium))
                             .foregroundColor(TextColors.secondary)
                     }
 
@@ -531,7 +531,7 @@ struct DashboardPreviewCard: View {
                         .frame(width: 36, height: 36)
                         .overlay(
                             Image(systemName: "bell")
-                                .font(.system(size: 16))
+                                .font(.system(.subheadline, design: .rounded))
                                 .foregroundColor(BrandColors.primary)
                         )
                 }
@@ -541,11 +541,11 @@ struct DashboardPreviewCard: View {
                 // Hero spend card
                 VStack(spacing: 8) {
                     Text("$247")
-                        .font(.system(size: 40, weight: .bold, design: .rounded))
+                        .font(.system(.largeTitle, design: .rounded).weight(.bold))
                         .foregroundColor(.white)
 
                     Text("/month")
-                        .font(.system(size: 15, weight: .medium))
+                        .font(.system(.subheadline, design: .rounded).weight(.medium))
                         .foregroundColor(TextColors.secondary)
                 }
                 .frame(maxWidth: .infinity)
@@ -594,7 +594,7 @@ struct SubscriptionListPreviewCard: View {
                 // Header
                 HStack {
                     Text("Your Subscriptions")
-                        .font(.system(size: 22, weight: .bold, design: .rounded))
+                        .font(.system(.title2, design: .rounded).weight(.bold))
                         .foregroundColor(.white)
 
                     Spacer()
@@ -604,7 +604,7 @@ struct SubscriptionListPreviewCard: View {
                         .frame(width: 36, height: 36)
                         .overlay(
                             Image(systemName: "plus")
-                                .font(.system(size: 16))
+                                .font(.system(.subheadline, design: .rounded))
                                 .foregroundColor(BrandColors.primary)
                         )
                 }
@@ -637,24 +637,24 @@ struct PreviewSubscriptionRow: View {
                 .frame(width: 40, height: 40)
                 .overlay(
                     Text(String(name.prefix(1)))
-                        .font(.system(size: 16, weight: .bold))
+                        .font(.system(.subheadline, design: .rounded).weight(.bold))
                         .foregroundColor(color)
                 )
 
             VStack(alignment: .leading, spacing: 2) {
                 Text(name)
-                    .font(.system(size: 15, weight: .semibold))
+                    .font(.system(.subheadline, design: .rounded).weight(.semibold))
                     .foregroundColor(.white)
 
                 Text("Monthly")
-                    .font(.system(size: 12, weight: .medium))
+                    .font(.system(.caption, design: .rounded).weight(.medium))
                     .foregroundColor(TextColors.secondary)
             }
 
             Spacer()
 
             Text(price)
-                .font(.system(size: 15, weight: .bold))
+                .font(.system(.subheadline, design: .rounded).weight(.bold))
                 .foregroundColor(.white)
         }
         .padding(12)
@@ -680,13 +680,13 @@ struct InsightsPreviewCard: View {
                 // Header
                 HStack {
                     Text("Smart Insights")
-                        .font(.system(size: 22, weight: .bold, design: .rounded))
+                        .font(.system(.title2, design: .rounded).weight(.bold))
                         .foregroundColor(.white)
 
                     Spacer()
 
                     Image(systemName: "sparkles")
-                        .font(.system(size: 20))
+                        .font(.system(.title3, design: .rounded))
                         .foregroundColor(BrandColors.primary)
                 }
                 .padding(.horizontal, 20)
@@ -706,17 +706,17 @@ struct InsightsPreviewCard: View {
                             .rotationEffect(.degrees(-90))
 
                         Text("72")
-                            .font(.system(size: 20, weight: .bold))
+                            .font(.system(.title3, design: .rounded).weight(.bold))
                             .foregroundColor(.white)
                     }
 
                     VStack(alignment: .leading, spacing: 4) {
                         Text("Health Score")
-                            .font(.system(size: 17, weight: .semibold))
+                            .font(.system(.body, design: .rounded).weight(.semibold))
                             .foregroundColor(.white)
 
                         Text("Great! You're actively managing your subscriptions.")
-                            .font(.system(size: 13, weight: .medium))
+                            .font(.system(.footnote, design: .rounded).weight(.medium))
                             .foregroundColor(TextColors.secondary)
                             .lineLimit(2)
                     }
@@ -735,23 +735,23 @@ struct InsightsPreviewCard: View {
                 // Recommendation card
                 HStack(spacing: 12) {
                     Image(systemName: "lightbulb.fill")
-                        .font(.system(size: 24))
+                        .font(.system(.title2, design: .rounded))
                         .foregroundColor(Color.luxuryGold)
 
                     VStack(alignment: .leading, spacing: 2) {
                         Text("Save $48/year")
-                            .font(.system(size: 15, weight: .semibold))
+                            .font(.system(.subheadline, design: .rounded).weight(.semibold))
                             .foregroundColor(.white)
 
                         Text("Switch to annual billing for Netflix")
-                            .font(.system(size: 13, weight: .medium))
+                            .font(.system(.footnote, design: .rounded).weight(.medium))
                             .foregroundColor(TextColors.secondary)
                     }
 
                     Spacer()
 
                     Image(systemName: "chevron.right")
-                        .font(.system(size: 14, weight: .semibold))
+                        .font(.system(.footnote, design: .rounded).weight(.semibold))
                         .foregroundColor(TextColors.secondary)
                 }
                 .padding(16)
@@ -786,17 +786,17 @@ struct PremiumFeatureRow: View {
                     .frame(width: 52, height: 52)
                 
                 Image(systemName: icon)
-                    .font(.system(size: 24, weight: .semibold))
+                    .font(.system(.title2, design: .rounded).weight(.semibold))
                     .foregroundColor(BrandColors.primary)
             }
-            
+
             VStack(alignment: .leading, spacing: 4) {
                 Text(title)
-                    .font(.system(size: 17, weight: .semibold))
+                    .font(.system(.body, design: .rounded).weight(.semibold))
                     .foregroundColor(.white)
-                
+
                 Text(description)
-                    .font(.system(size: 15, weight: .regular))
+                    .font(.system(.subheadline, design: .rounded))
                     .foregroundColor(.textSecondary)
             }
             
@@ -843,11 +843,11 @@ struct PremiumSignUpView: View {
                         // Header
                         VStack(spacing: 8) {
                             Text("Create Account")
-                                .font(.system(size: 28, weight: .bold, design: .rounded))
+                                .font(.system(.title, design: .rounded).weight(.bold))
                                 .foregroundColor(.white)
 
                             Text("Start your subscription journey")
-                                .font(.system(size: 17))
+                                .font(.system(.body, design: .rounded))
                                 .foregroundColor(TextColors.secondary)
                         }
                         .padding(.top, 20)
@@ -858,13 +858,13 @@ struct PremiumSignUpView: View {
                             HStack(spacing: 12) {
                                 VStack(alignment: .leading, spacing: 8) {
                                     Text("First Name")
-                                        .font(.system(size: 15, weight: .medium))
+                                        .font(.system(.subheadline, design: .rounded).weight(.medium))
                                         .foregroundColor(TextColors.secondary)
                                     PremiumTextField(placeholder: "Jane", text: $firstName)
                                 }
                                 VStack(alignment: .leading, spacing: 8) {
                                     Text("Last Name")
-                                        .font(.system(size: 15, weight: .medium))
+                                        .font(.system(.subheadline, design: .rounded).weight(.medium))
                                         .foregroundColor(TextColors.secondary)
                                     PremiumTextField(placeholder: "Smith", text: $lastName)
                                 }
@@ -873,7 +873,7 @@ struct PremiumSignUpView: View {
                             // Email
                             VStack(alignment: .leading, spacing: 8) {
                                 Text("Email")
-                                    .font(.system(size: 15, weight: .medium))
+                                    .font(.system(.subheadline, design: .rounded).weight(.medium))
                                     .foregroundColor(TextColors.secondary)
 
                                 PremiumTextField(
@@ -887,7 +887,7 @@ struct PremiumSignUpView: View {
                             // Password
                             VStack(alignment: .leading, spacing: 8) {
                                 Text("Password")
-                                    .font(.system(size: 15, weight: .medium))
+                                    .font(.system(.subheadline, design: .rounded).weight(.medium))
                                     .foregroundColor(TextColors.secondary)
 
                                 PremiumTextField(
@@ -905,7 +905,7 @@ struct PremiumSignUpView: View {
                                 Image(systemName: "exclamationmark.triangle.fill")
                                     .foregroundColor(.error)
                                 Text(errorMessage)
-                                    .font(.system(size: 15))
+                                    .font(.system(.subheadline, design: .rounded))
                                     .foregroundColor(.error)
                             }
                             .padding(.horizontal, 24)
@@ -921,7 +921,7 @@ struct PremiumSignUpView: View {
                                         .tint(.white)
                                 } else {
                                     Text("Create Account")
-                                        .font(.system(size: 17, weight: .semibold))
+                                        .font(.system(.body, design: .rounded).weight(.semibold))
                                 }
                             }
                         }
@@ -933,7 +933,7 @@ struct PremiumSignUpView: View {
                         // Divider
                         HStack {
                             Rectangle().fill(Color.white.opacity(0.1)).frame(height: 1)
-                            Text("or").font(.system(size: 13)).foregroundColor(.textTertiary).padding(.horizontal, 8)
+                            Text("or").font(.system(.footnote, design: .rounded)).foregroundColor(.textTertiary).padding(.horizontal, 8)
                             Rectangle().fill(Color.white.opacity(0.1)).frame(height: 1)
                         }
                         .padding(.horizontal, 24)
@@ -954,7 +954,7 @@ struct PremiumSignUpView: View {
 
                         // Terms
                         Text("By creating an account, you agree to our Terms of Service and Privacy Policy")
-                            .font(.system(size: 13))
+                            .font(.system(.footnote, design: .rounded))
                             .foregroundColor(.textTertiary)
                             .multilineTextAlignment(.center)
                             .padding(.horizontal, 40)
@@ -1072,11 +1072,11 @@ struct PremiumSignInView: View {
                         // Header
                         VStack(spacing: 8) {
                             Text("Welcome Back")
-                                .font(.system(size: 28, weight: .bold, design: .rounded))
+                                .font(.system(.title, design: .rounded).weight(.bold))
                                 .foregroundColor(.white)
 
                             Text("Sign in to continue")
-                                .font(.system(size: 17))
+                                .font(.system(.body, design: .rounded))
                                 .foregroundColor(TextColors.secondary)
                         }
                         .padding(.top, 20)
@@ -1085,7 +1085,7 @@ struct PremiumSignInView: View {
                         VStack(spacing: 20) {
                             VStack(alignment: .leading, spacing: 8) {
                                 Text("Email")
-                                    .font(.system(size: 15, weight: .medium))
+                                    .font(.system(.subheadline, design: .rounded).weight(.medium))
                                     .foregroundColor(TextColors.secondary)
 
                                 PremiumTextField(
@@ -1098,7 +1098,7 @@ struct PremiumSignInView: View {
 
                             VStack(alignment: .leading, spacing: 8) {
                                 Text("Password")
-                                    .font(.system(size: 15, weight: .medium))
+                                    .font(.system(.subheadline, design: .rounded).weight(.medium))
                                     .foregroundColor(TextColors.secondary)
 
                                 PremiumTextField(
@@ -1115,7 +1115,7 @@ struct PremiumSignInView: View {
                                 Image(systemName: "exclamationmark.triangle.fill")
                                     .foregroundColor(.error)
                                 Text(errorMessage)
-                                    .font(.system(size: 15))
+                                    .font(.system(.subheadline, design: .rounded))
                                     .foregroundColor(.error)
                             }
                             .padding(.horizontal, 24)
@@ -1130,7 +1130,7 @@ struct PremiumSignInView: View {
                                         .tint(.white)
                                 } else {
                                     Text("Sign In")
-                                        .font(.system(size: 17, weight: .semibold))
+                                        .font(.system(.body, design: .rounded).weight(.semibold))
                                 }
                             }
                         }
@@ -1142,13 +1142,13 @@ struct PremiumSignInView: View {
                         Button("Forgot Password?") {
                             showPasswordReset = true
                         }
-                        .font(.system(size: 15))
+                        .font(.system(.subheadline, design: .rounded))
                         .foregroundColor(TextColors.secondary)
 
                         // Divider
                         HStack {
                             Rectangle().fill(Color.white.opacity(0.1)).frame(height: 1)
-                            Text("or").font(.system(size: 13)).foregroundColor(.textTertiary).padding(.horizontal, 8)
+                            Text("or").font(.system(.footnote, design: .rounded)).foregroundColor(.textTertiary).padding(.horizontal, 8)
                             Rectangle().fill(Color.white.opacity(0.1)).frame(height: 1)
                         }
                         .padding(.horizontal, 24)

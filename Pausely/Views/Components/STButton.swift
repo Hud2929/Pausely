@@ -64,6 +64,7 @@ struct STButton: View {
             )
         }
         .disabled(isLoading)
+        .accessibilityHint(isLoading ? "Please wait, processing" : "")
         .buttonStyle(.plain)
     }
     

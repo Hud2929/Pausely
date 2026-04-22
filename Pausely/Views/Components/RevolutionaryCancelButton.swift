@@ -240,7 +240,8 @@ struct RevolutionaryCancelConfirmationSheet: View {
                         .clipShape(RoundedRectangle(cornerRadius: STRadius.md))
                     }
                     .disabled(isProcessing)
-                    
+                    .accessibilityHint(isProcessing ? "Please wait, cancellation in progress" : "")
+
                     Button(action: {
                         dismiss()
                         onDismiss()
@@ -252,6 +253,7 @@ struct RevolutionaryCancelConfirmationSheet: View {
                             .frame(height: 56)
                     }
                     .disabled(isProcessing)
+                    .accessibilityHint(isProcessing ? "Please wait, cancellation in progress" : "")
                 }
             }
             .padding()
@@ -331,6 +333,7 @@ struct RevolutionaryPauseSheet: View {
                         .foregroundStyle(Color.obsidianTextSecondary)
                 }
                 .disabled(isProcessing)
+                .accessibilityHint(isProcessing ? "Please wait, pause in progress" : "")
             }
             .padding()
             .background(Color.obsidianBlack)
@@ -385,6 +388,7 @@ struct PauseDurationButton: View {
         }
         .buttonStyle(.plain)
         .disabled(isProcessing)
+        .accessibilityHint(isProcessing ? "Please wait, pause in progress" : "")
     }
 }
 

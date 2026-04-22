@@ -173,6 +173,7 @@ struct RevolutionaryGeniusView: View {
             .cornerRadius(16)
         }
         .disabled(engine.isAnalyzing)
+        .accessibilityHint(engine.isAnalyzing ? "Please wait, analysis in progress" : "")
     }
 
     // MARK: - Results Section

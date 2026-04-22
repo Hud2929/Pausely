@@ -688,7 +688,8 @@ struct ScreenTimeAuthorizationSheet: View {
                 .cornerRadius(12)
             }
             .disabled(manager.isLoading)
-            
+            .accessibilityHint(manager.isLoading ? "Please wait, connecting to Screen Time" : "")
+
             Button {
                 dismiss()
             } label: {

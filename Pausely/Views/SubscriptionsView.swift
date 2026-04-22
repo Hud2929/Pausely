@@ -818,6 +818,7 @@ struct ArtisticAddSubscriptionView: View {
                             )
                         }
                         .disabled(!canProceed || isSaving)
+                        .accessibilityHint(!canProceed ? "Please complete the current step" : isSaving ? "Please wait, saving subscription" : "")
                         .opacity(canProceed ? 1 : 0.6)
                     }
                     .padding(.horizontal, 20)
