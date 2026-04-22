@@ -7,6 +7,7 @@
 
 import Foundation
 import StoreKit
+import os.log
 
 @MainActor
 final class AppleSubscriptionScanner: ObservableObject {
@@ -57,9 +58,9 @@ final class AppleSubscriptionScanner: ObservableObject {
         lastScanDate = Date()
 
         #if DEBUG
-        print("✅ Apple Subscription Scanner: Found \(detected.count) entitlements")
+        os_log("✅ Apple Subscription Scanner: Found %d entitlements", log: .default, type: .info, detected.count)
         for sub in detected {
-            print("   - \(sub.name): \(sub.formattedPrice) (\(sub.billingDisplay)) - \(sub.status)")
+            os_log("   - %{public}@: %{public}@ (%{public}@) - %{public}@", log: .default, type: .info, sub.name, sub.formattedPrice, sub.billingDisplay, String(describing: sub.status))
         }
         #endif
 

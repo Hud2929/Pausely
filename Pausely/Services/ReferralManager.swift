@@ -3,6 +3,7 @@ import SwiftUI
 import Supabase
 import Auth
 import PostgREST
+import os.log
 
 // MARK: - Referral Data Models
 
@@ -118,7 +119,7 @@ class ReferralManager: ObservableObject {
         if let savedCode = UserDefaults.standard.string(forKey: "local_referral_code") {
             self.currentUserReferralCode = savedCode
             #if DEBUG
-            print("ReferralManager: Loaded saved code: \(savedCode)")
+            os_log("ReferralManager: Loaded saved code: %{public}@", log: .default, type: .info, savedCode)
             #endif
         } else {
             // Generate a code immediately if none exists
@@ -126,7 +127,7 @@ class ReferralManager: ObservableObject {
             self.currentUserReferralCode = code
             UserDefaults.standard.set(code, forKey: "local_referral_code")
             #if DEBUG
-            print("ReferralManager: Generated new code: \(code)")
+            os_log("ReferralManager: Generated new code: %{public}@", log: .default, type: .info, code)
             #endif
         }
         
@@ -186,7 +187,7 @@ class ReferralManager: ObservableObject {
             }
         } catch {
             #if DEBUG
-            print("No existing referral code found, creating new one")
+            os_log("No existing referral code found, creating new one", log: .default, type: .info)
             #endif
         }
         
@@ -204,16 +205,16 @@ class ReferralManager: ObservableObject {
         // Prevent self-referral
         if uppercasedCode == currentUserReferralCode?.uppercased() {
             #if DEBUG
-            print("Self-referral prevented")
+            os_log("Self-referral prevented", log: .default, type: .info)
             #endif
             return false
         }
-        
+
         // Check local storage for valid codes (for offline support)
         if let localCodes = UserDefaults.standard.array(forKey: "valid_referral_codes") as? [String],
            localCodes.contains(uppercasedCode) {
             #if DEBUG
-            print("Validated code from local storage: \(uppercasedCode)")
+            os_log("Validated code from local storage: %{public}@", log: .default, type: .info, uppercasedCode)
             #endif
             return true
         }
@@ -241,7 +242,7 @@ class ReferralManager: ObservableObject {
             return isValid
         } catch {
             #if DEBUG
-            print("Error validating referral code: \(error)")
+            os_log("Error validating referral code: %{public}@", log: .default, type: .error, error.localizedDescription)
             #endif
             // Fail-closed: reject codes when server is unavailable
             return false
@@ -384,7 +385,7 @@ class ReferralManager: ObservableObject {
         
         referralDiscountUsed = true
         #if DEBUG
-        print("✅ Referral discount marked as used - will not apply to future payments")
+        os_log("✅ Referral discount marked as used - will not apply to future payments", log: .default, type: .info)
         #endif
         
         // Sync to database
@@ -420,14 +421,14 @@ class ReferralManager: ObservableObject {
                 .execute()
         } catch {
             #if DEBUG
-            print("Error syncing referral discount used to database: \(error)")
+            os_log("Error syncing referral discount used to database: %{public}@", log: .default, type: .error, error.localizedDescription)
             #endif
         }
     }
-    
+
     private func loadReferralDiscountUsedFromDatabase() async {
         guard let userId = RevolutionaryAuthManager.shared.currentUser?.id else { return }
-        
+
         do {
             let response: [UserSettings] = try await client
                 .from("user_settings")
@@ -435,13 +436,13 @@ class ReferralManager: ObservableObject {
                 .eq("user_id", value: userId)
                 .execute()
                 .value
-            
+
             if let settings = response.first {
                 self.referralDiscountUsed = settings.referralDiscountUsed
             }
         } catch {
             #if DEBUG
-            print("Error loading referral discount used from database: \(error)")
+            os_log("Error loading referral discount used from database: %{public}@", log: .default, type: .error, error.localizedDescription)
             #endif
         }
     }
@@ -479,11 +480,11 @@ class ReferralManager: ObservableObject {
             self.conversions = conversions
         } catch {
             #if DEBUG
-            print("Error loading referral data: \(error)")
+            os_log("Error loading referral data: %{public}@", log: .default, type: .error, error.localizedDescription)
             #endif
         }
     }
-    
+
     // MARK: - Deep Link Handling
     
     /// Handles referral deep links from both URL schemes and universal links
@@ -494,11 +495,11 @@ class ReferralManager: ObservableObject {
     /// - https://pausely.app/referral?code=CODE
     func handleReferralDeepLink(_ url: URL) -> Bool {
         #if DEBUG
-        print("🔗 ReferralManager handling URL: \(url.absoluteString)")
-        print("   - scheme: \(url.scheme ?? "nil")")
-        print("   - host: \(url.host ?? "nil")")
-        print("   - path: \(url.path)")
-        print("   - pathComponents: \(url.pathComponents)")
+        os_log("🔗 ReferralManager handling URL: %{public}@", log: .default, type: .info, url.absoluteString)
+        os_log("   - scheme: %{public}@", log: .default, type: .info, url.scheme ?? "nil")
+        os_log("   - host: %{public}@", log: .default, type: .info, url.host ?? "nil")
+        os_log("   - path: %{public}@", log: .default, type: .info, url.path)
+        os_log("   - pathComponents: %{public}@", log: .default, type: .info, String(describing: url.pathComponents))
         #endif
         
         // Check if this is a supported scheme (pausely URL scheme or https universal link)
@@ -508,55 +509,55 @@ class ReferralManager: ObservableObject {
         
         guard isPauselyScheme || isUniversalLink else {
             #if DEBUG
-            print("   ❌ Not a pausely URL scheme or universal link")
+            os_log("   ❌ Not a pausely URL scheme or universal link", log: .default, type: .info)
             #endif
             return false
         }
-        
+
         let components = URLComponents(url: url, resolvingAgainstBaseURL: false)
         let queryItems = components?.queryItems ?? []
-        
+
         // Get path components (removing empty strings from leading/trailing slashes)
         let pathComponents = url.pathComponents.filter { !$0.isEmpty }
         #if DEBUG
-        print("   - filtered pathComponents: \(pathComponents)")
+        os_log("   - filtered pathComponents: %{public}@", log: .default, type: .info, String(describing: pathComponents))
         #endif
-        
+
         // Handle pausely://r/CODE or https://pausely.app/r/CODE
         if pathComponents.count >= 1 && (pathComponents[0].lowercased() == "r" || pathComponents[0].lowercased() == "referral") {
             // Check for code in path: /r/CODE or /referral/CODE
             if pathComponents.count >= 2 {
                 let code = pathComponents[1]
                 #if DEBUG
-                print("   ✅ Found code in path: \(code)")
+                os_log("   ✅ Found code in path: %{public}@", log: .default, type: .info, code)
                 #endif
                 handleIncomingReferralCode(code, source: "deep_link_path")
                 return true
             }
-            
+
             // Check for code in query: /r?code=CODE
             if let code = queryItems.first(where: { $0.name.lowercased() == "code" })?.value {
                 #if DEBUG
-                print("   ✅ Found code in query: \(code)")
+                os_log("   ✅ Found code in query: %{public}@", log: .default, type: .info, code)
                 #endif
                 handleIncomingReferralCode(code, source: "deep_link_query")
                 return true
             }
         }
-        
+
         // Handle legacy format: pausely://referral?code=CODE (no path, just query)
         if pathComponents.isEmpty {
             if let code = queryItems.first(where: { $0.name.lowercased() == "code" })?.value {
                 #if DEBUG
-                print("   ✅ Found code in query (legacy format): \(code)")
+                os_log("   ✅ Found code in query (legacy format): %{public}@", log: .default, type: .info, code)
                 #endif
                 handleIncomingReferralCode(code, source: "deep_link_legacy")
                 return true
             }
         }
-        
+
         #if DEBUG
-        print("   ❌ No referral code found in URL")
+        os_log("   ❌ No referral code found in URL", log: .default, type: .info)
         #endif
         return false
     }
@@ -569,7 +570,7 @@ class ReferralManager: ObservableObject {
         guard cleanCode.count >= 6,
               cleanCode.rangeOfCharacter(from: validCharacters.inverted) == nil else {
             #if DEBUG
-            print("❌ Invalid referral code format: \(cleanCode)")
+            os_log("❌ Invalid referral code format: %{public}@", log: .default, type: .error, cleanCode)
             #endif
             NotificationCenter.default.post(
                 name: .referralCodeInvalid,
@@ -577,17 +578,17 @@ class ReferralManager: ObservableObject {
             )
             return
         }
-        
+
         Task {
             let isValid = await validateReferralCode(cleanCode)
-            
+
             await MainActor.run {
                 if isValid {
                     self.pendingReferralCode = cleanCode
                     #if DEBUG
-                    print("✅ Referral code stored: \(cleanCode) (source: \(source))")
+                    os_log("✅ Referral code stored: %{public}@ (source: %{public}@)", log: .default, type: .info, cleanCode, source)
                     #endif
-                    
+
                     // Show success notification
                     NotificationCenter.default.post(
                         name: .referralCodeReceived,
@@ -596,9 +597,9 @@ class ReferralManager: ObservableObject {
                     )
                 } else {
                     #if DEBUG
-                    print("❌ Invalid referral code: \(cleanCode)")
+                    os_log("❌ Invalid referral code: %{public}@", log: .default, type: .error, cleanCode)
                     #endif
-                    
+
                     // Show invalid code notification
                     NotificationCenter.default.post(
                         name: .referralCodeInvalid,

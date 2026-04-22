@@ -100,7 +100,7 @@ class SubscriptionStore: ObservableObject {
             }
             
         } catch {
-            print("Error fetching subscriptions: \(error)")
+            os_log("Error fetching subscriptions: %{public}@", log: .default, type: .error, error.localizedDescription)
             await MainActor.run {
                 self.error = error
                 // Try to load from cache if available
@@ -293,13 +293,13 @@ class SubscriptionStore: ObservableObject {
             }
             return false
         } catch {
-            print("Error adding subscription: \(error)")
+            os_log("Error adding subscription: %{public}@", log: .default, type: .error, error.localizedDescription)
             let dbError = DatabaseError.from(error)
-            
+
             // Automatically fall back to local storage for table/connection errors
             switch dbError {
             case .tableNotFound, .networkError, .notAuthenticated, .unknown:
-                print("Falling back to local storage due to: \(dbError)")
+                os_log("Falling back to local storage due to: %{public}@", log: .default, type: .info, String(describing: dbError))
                 await MainActor.run {
                     self.enableLocalStorage()
                 }
@@ -361,13 +361,13 @@ class SubscriptionStore: ObservableObject {
                 }
             }
         } catch {
-            print("Error updating subscription: \(error)")
+            os_log("Error updating subscription: %{public}@", log: .default, type: .error, error.localizedDescription)
             let dbError = DatabaseError.from(error)
-            
+
             // Automatically fall back to local storage for table/connection errors
             switch dbError {
             case .tableNotFound, .networkError, .notAuthenticated, .unknown:
-                print("Falling back to local storage due to: \(dbError)")
+                os_log("Falling back to local storage due to: %{public}@", log: .default, type: .info, String(describing: dbError))
                 await MainActor.run {
                     self.enableLocalStorage()
                 }
@@ -433,13 +433,13 @@ class SubscriptionStore: ObservableObject {
                 SpotlightManager.shared.index(subscriptions: self.subscriptions)
             }
         } catch {
-            print("Error deleting subscription: \(error)")
+            os_log("Error deleting subscription: %{public}@", log: .default, type: .error, error.localizedDescription)
             let dbError = DatabaseError.from(error)
-            
+
             // Automatically fall back to local storage for table/connection errors
             switch dbError {
             case .tableNotFound, .networkError, .notAuthenticated, .unknown:
-                print("Falling back to local storage due to: \(dbError)")
+                os_log("Falling back to local storage due to: %{public}@", log: .default, type: .info, String(describing: dbError))
                 await MainActor.run {
                     self.enableLocalStorage()
                 }
@@ -454,7 +454,7 @@ class SubscriptionStore: ObservableObject {
             }
         }
     }
-    
+
     func updateSubscriptionStatus(id: UUID, status: SubscriptionStatus) async throws {
         if isUsingLocalStorage {
             await MainActor.run {
@@ -495,7 +495,7 @@ class SubscriptionStore: ObservableObject {
             // Automatically fall back to local storage for table/connection errors
             switch dbError {
             case .tableNotFound, .networkError, .notAuthenticated, .unknown:
-                print("Falling back to local storage due to: \(dbError)")
+                os_log("Falling back to local storage due to: %{public}@", log: .default, type: .info, String(describing: dbError))
                 await MainActor.run {
                     self.enableLocalStorage()
                 }
@@ -516,7 +516,7 @@ class SubscriptionStore: ObservableObject {
             }
         }
     }
-    
+
     func pauseSubscription(id: UUID, until date: Date) async throws {
         if isUsingLocalStorage {
             await MainActor.run {
@@ -555,7 +555,7 @@ class SubscriptionStore: ObservableObject {
             // Automatically fall back to local storage for table/connection errors
             switch dbError {
             case .tableNotFound, .networkError, .notAuthenticated, .unknown:
-                print("Falling back to local storage due to: \(dbError)")
+                os_log("Falling back to local storage due to: %{public}@", log: .default, type: .info, String(describing: dbError))
                 await MainActor.run {
                     self.enableLocalStorage()
                 }
@@ -573,7 +573,7 @@ class SubscriptionStore: ObservableObject {
             }
         }
     }
-    
+
     func resumeSubscription(id: UUID) async throws {
         try await updateSubscriptionStatus(id: id, status: .active)
     }
@@ -610,24 +610,24 @@ class SubscriptionStore: ObservableObject {
         do {
             let data = try JSONEncoder().encode(subscriptions)
             UserDefaults.standard.set(data, forKey: localStorageKey)
-            print("Saved \(subscriptions.count) subscriptions to local storage")
+            os_log("Saved %d subscriptions to local storage", log: .default, type: .info, subscriptions.count)
         } catch {
             os_log("Local storage save failed: %{public}@", log: .default, type: .error, error.localizedDescription)
         }
     }
-    
+
     private func loadFromLocalStorage() {
         guard let data = UserDefaults.standard.data(forKey: localStorageKey) else {
-            print("No local subscriptions found")
+            os_log("No local subscriptions found", log: .default, type: .info)
             return
         }
-        
+
         do {
             let localSubs = try JSONDecoder().decode([Subscription].self, from: data)
             Task { @MainActor in
                 self.subscriptions = localSubs
                 self.calculateTotals()
-                print("Loaded \(localSubs.count) subscriptions from local storage")
+                os_log("Loaded %d subscriptions from local storage", log: .default, type: .info, localSubs.count)
             }
         } catch {
             os_log("Local storage load failed: %{public}@", log: .default, type: .error, error.localizedDescription)

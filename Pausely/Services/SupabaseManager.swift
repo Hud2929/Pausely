@@ -4,6 +4,7 @@ import SwiftUI
 import Supabase
 import Auth
 import PostgREST
+import os.log
 
 class SupabaseManager {
     static let shared = SupabaseManager()
@@ -21,7 +22,7 @@ class SupabaseManager {
         // Use EnvironmentConfig for secure credential management
         // Credentials MUST be set via environment variables or XCConfig files
         guard let supabaseURL = URL(string: EnvironmentConfig.supabaseURL) else {
-            print("⚠️ Invalid Supabase URL. Running in offline mode.")
+            os_log("⚠️ Invalid Supabase URL. Running in offline mode.", log: .default, type: .error)
             guard let demoURL = URL(string: "https://demo.supabase.co") else {
                 // Ultimate fallback: create a dummy URL that won't crash
                 var components = URLComponents()
@@ -43,7 +44,7 @@ class SupabaseManager {
 
         // Validate credentials are not using placeholders
         if supabaseKey.isEmpty || supabaseKey == "YOUR_SUPABASE_ANON_KEY" {
-            print("⚠️ Supabase Anon Key not configured. Running in offline mode.")
+            os_log("⚠️ Supabase Anon Key not configured. Running in offline mode.", log: .default, type: .error)
             client = SupabaseClient(supabaseURL: supabaseURL, supabaseKey: "INVALID_DEMO_KEY_NOT_REAL")
             isConfigured = false
             isDemoMode = true

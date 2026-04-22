@@ -9,6 +9,7 @@
 import Foundation
 import SwiftUI
 import Supabase
+import os.log
 
 /// Represents a free trial being tracked
 struct TrackedTrial: Identifiable, Codable {
@@ -350,9 +351,9 @@ class TrialProtectionStore: ObservableObject {
                 self.saveTrials()
             }
 
-            print("✅ Loaded \(remoteTrials.count) trials from Supabase")
+            os_log("✅ Loaded %d trials from Supabase", log: .default, type: .info, remoteTrials.count)
         } catch {
-            print("❌ Failed to load trials from Supabase: \(error)")
+            os_log("❌ Failed to load trials from Supabase: %{public}@", log: .default, type: .error, error.localizedDescription)
             // Fall back to local
             loadTrials()
         }

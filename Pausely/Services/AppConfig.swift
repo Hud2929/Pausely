@@ -1,5 +1,6 @@
 import Foundation
 import UIKit
+import os.log
 
 /// Pausely App Configuration
 /// Contains all app-wide settings including email configuration
@@ -32,7 +33,7 @@ enum AppConfig {
         // Return empty string - functionality will be disabled
         // This is intentional - passwords should NEVER be in source code
         #if DEBUG
-        print("⚠️ WARNING: SUPPORT_EMAIL_PASSWORD not configured. Email features disabled.")
+        os_log("⚠️ WARNING: SUPPORT_EMAIL_PASSWORD not configured. Email features disabled.")
         #endif
         return ""
     }

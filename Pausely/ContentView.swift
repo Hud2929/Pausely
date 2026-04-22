@@ -1,5 +1,6 @@
 import SwiftUI
 import AuthenticationServices
+import os.log
 
 @main
 struct PauselyApp: App {
@@ -62,7 +63,7 @@ class AppDelegate: NSObject, UIApplicationDelegate {
 
     private func handleDeepLink(_ url: URL) {
         #if DEBUG
-        print("🔗 AppDelegate handling URL: \(url.absoluteString)")
+        os_log("🔗 AppDelegate handling URL: %{public}@", log: .default, type: .info, url.absoluteString)
         #endif
         _ = ReferralManager.shared.handleReferralDeepLink(url)
     }
@@ -122,7 +123,7 @@ struct RootView: View {
         .onOpenURL { url in
             // Handle deep links (referral codes, auth callbacks, etc.)
             #if DEBUG
-            print("🔗 RootView received URL: \(url.absoluteString)")
+            os_log("🔗 RootView received URL: %{public}@", log: .default, type: .info, url.absoluteString)
             #endif
             _ = ReferralManager.shared.handleReferralDeepLink(url)
             // Also handle auth deep links (email confirm, password reset)

@@ -6,6 +6,7 @@
 //
 
 import Foundation
+import os.log
 
 // MARK: - Catalog Subscription (for tracking)
 
@@ -125,7 +126,7 @@ final class SubscriptionCatalogService: ObservableObject {
             guard let httpResponse = response as? HTTPURLResponse,
                   httpResponse.statusCode == 200 else {
                 #if DEBUG
-                print("CatalogService: Remote fetch failed with status \((response as? HTTPURLResponse)?.statusCode ?? 0)")
+                os_log("CatalogService: Remote fetch failed with status %d", log: .default, type: .error, (response as? HTTPURLResponse)?.statusCode ?? 0)
                 #endif
                 return nil
             }
@@ -139,7 +140,7 @@ final class SubscriptionCatalogService: ObservableObject {
             return nil
         } catch {
             #if DEBUG
-            print("CatalogService: Remote fetch error - \(error)")
+            os_log("CatalogService: Remote fetch error - %{public}@", log: .default, type: .error, error.localizedDescription)
             #endif
             return nil
         }
