@@ -587,6 +587,7 @@ struct EnhancedTextField: View {
                         Image(systemName: showPassword ? "eye.slash" : "eye")
                             .foregroundStyle(.white.opacity(0.5))
                     }
+                    .accessibilityLabel(showPassword ? "Hide password" : "Show password")
                 }
             }
             .padding()

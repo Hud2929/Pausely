@@ -122,6 +122,7 @@ struct PremiumSubscriptionsView: View {
                         .foregroundColor(Color.luxuryPurple)
                 }
             }
+            .accessibilityLabel("Browse subscriptions")
 
             // Add Button - opens premium catalog browser
             Button(action: { showingBrowser = true }) {
@@ -135,6 +136,7 @@ struct PremiumSubscriptionsView: View {
                         .foregroundColor(.white)
                 }
             }
+            .accessibilityLabel("Add subscription")
         }
     }
 
@@ -277,6 +279,7 @@ struct SubscriptionFilterPill: View {
             )
         }
         .buttonStyle(PlainButtonStyle())
+        .accessibilityValue(isSelected ? "Selected" : "Not selected")
     }
 }
 
@@ -403,6 +406,9 @@ struct ArtisticSubscriptionCard: View {
         } onRelease: {
             withAnimation(.easeInOut(duration: 0.1)) { isPressed = false }
         }
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel("\(subscription.name), \(currencyManager.format(currencyManager.convertToSelected(subscription.amount, from: subscription.currency))) per \(subscription.billingFrequency.displayName.lowercased())\(subscription.isPaused ? ", paused" : "")")
+        .accessibilityHint("Double-tap to view details")
         .onAppear {
             withAnimation(.easeOut(duration: 0.5).delay(Double(index) * 0.05)) {
                 appear = true

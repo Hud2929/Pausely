@@ -67,6 +67,7 @@ struct LanguageSettingsView: View {
                             Image(systemName: "xmark.circle.fill")
                                 .foregroundStyle(.white.opacity(0.5))
                         }
+                        .accessibilityLabel("Clear search")
                     }
                 }
                 .padding()

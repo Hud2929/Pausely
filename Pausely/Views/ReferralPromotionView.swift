@@ -512,6 +512,7 @@ struct ReferralCodeInputView: View {
                         Image(systemName: "xmark.circle.fill")
                             .foregroundColor(.white.opacity(0.5))
                     }
+                    .accessibilityLabel("Clear referral code")
                 }
             }
             

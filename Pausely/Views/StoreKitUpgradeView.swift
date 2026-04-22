@@ -13,6 +13,7 @@ struct StoreKitUpgradeView: View {
     @ObservedObject private var currencyManager = CurrencyManager.shared
 
     @State private var selectedPlan: PlanOption = .annual
+    @State private var isTrialEnabled = true
     @State private var appearAnimation = false
     @State private var showConfetti = false
     @State private var showErrorAlert = false
@@ -88,8 +89,8 @@ struct StoreKitUpgradeView: View {
                     trialHeroSection
                         .padding(.top, 16)
 
-                    // Usage indicator (subtle, not the main focus)
-                    usageSection
+                    // Free trial toggle
+                    trialToggleSection
                         .padding(.top, 20)
 
                     // Plan selection
@@ -123,6 +124,9 @@ struct StoreKitUpgradeView: View {
                 appearAnimation = true
             }
             focusedElement = .title
+
+            // Restore trial toggle preference (default to ON)
+            isTrialEnabled = !StoreKitConfig.TrialConfig.userOptedOut
 
             // Load StoreKit products
             Task {
@@ -189,7 +193,7 @@ struct StoreKitUpgradeView: View {
             .animation(.spring(response: 0.4, dampingFraction: 0.6), value: appearAnimation)
 
             // Main headline
-            Text(LocalizedStringKey("Start Your 7-Day Free Trial"))
+            Text(LocalizedStringKey(isTrialEnabled ? "Start Your 7-Day Free Trial" : "Unlock Pausely Pro"))
                 .font(.largeTitle.bold())
                 .foregroundStyle(.white)
                 .multilineTextAlignment(.center)
@@ -197,14 +201,111 @@ struct StoreKitUpgradeView: View {
 
             // Subtitle with pricing
             VStack(spacing: 4) {
-                Text("Then \(SubscriptionTier.pro.priceInUserCurrency())/month or \(SubscriptionTier.proAnnual.priceInUserCurrency())/year")
-                    .font(AppTypography.bodyLarge)
-                    .foregroundStyle(.white.opacity(0.8))
-                    .multilineTextAlignment(.center)
+                if isTrialEnabled {
+                    Text("Then \(SubscriptionTier.pro.priceInUserCurrency())/month or \(SubscriptionTier.proAnnual.priceInUserCurrency())/year")
+                        .font(AppTypography.bodyLarge)
+                        .foregroundStyle(.white.opacity(0.8))
+                        .multilineTextAlignment(.center)
 
-                Text(LocalizedStringKey("Cancel anytime. No charge for 7 days."))
-                    .font(AppTypography.bodySmall)
-                    .foregroundColor(.luxuryGold)
+                    Text(LocalizedStringKey("Cancel anytime. No charge for 7 days."))
+                        .font(AppTypography.bodySmall)
+                        .foregroundColor(.luxuryGold)
+                } else {
+                    Text("\(SubscriptionTier.pro.priceInUserCurrency())/month or \(SubscriptionTier.proAnnual.priceInUserCurrency())/year")
+                        .font(AppTypography.bodyLarge)
+                        .foregroundStyle(.white.opacity(0.8))
+                        .multilineTextAlignment(.center)
+
+                    Text(LocalizedStringKey("Cancel anytime."))
+                        .font(AppTypography.bodySmall)
+                        .foregroundColor(.luxuryGold)
+                }
+            }
+        }
+        .opacity(appearAnimation ? 1 : 0)
+        .offset(y: appearAnimation ? 0 : 20)
+    }
+
+    // MARK: - Trial Toggle Section
+    private var trialToggleSection: some View {
+        VStack(spacing: 12) {
+            Button(action: {
+                withAnimation(.spring(response: 0.35, dampingFraction: 0.7)) {
+                    isTrialEnabled.toggle()
+                    StoreKitConfig.TrialConfig.userOptedOut = !isTrialEnabled
+                    HapticStyle.medium.trigger()
+                }
+            }) {
+                HStack(spacing: 16) {
+                    // Icon
+                    ZStack {
+                        Circle()
+                            .fill(isTrialEnabled ? Color.luxuryGold.opacity(0.2) : Color.white.opacity(0.06))
+                            .frame(width: 48, height: 48)
+
+                        Image(systemName: isTrialEnabled ? "gift.fill" : "gift")
+                            .font(.system(.title3, design: .rounded))
+                            .foregroundColor(isTrialEnabled ? .luxuryGold : .white.opacity(0.5))
+                    }
+
+                    // Text
+                    VStack(alignment: .leading, spacing: 4) {
+                        Text("Start 7-Day Free Trial")
+                            .font(.system(.body, design: .rounded).weight(.semibold))
+                            .foregroundStyle(.white)
+
+                        Text(isTrialEnabled ? "Try Pro free for 7 days" : "Subscribe without trial")
+                            .font(AppTypography.bodySmall)
+                            .foregroundStyle(TextColors.secondary)
+                    }
+
+                    Spacer()
+
+                    // Toggle indicator
+                    ZStack {
+                        Capsule()
+                            .fill(isTrialEnabled ? Color.luxuryGold : Color.white.opacity(0.15))
+                            .frame(width: 52, height: 32)
+
+                        Circle()
+                            .fill(.white)
+                            .frame(width: 26, height: 26)
+                            .offset(x: isTrialEnabled ? 10 : -10)
+                            .animation(.spring(response: 0.3, dampingFraction: 0.7), value: isTrialEnabled)
+                    }
+                }
+                .padding(.horizontal, 16)
+                .padding(.vertical, 14)
+                .background(
+                    RoundedRectangle(cornerRadius: 16, style: .continuous)
+                        .fill(isTrialEnabled ? Color.luxuryGold.opacity(0.1) : Color.white.opacity(0.04))
+                        .overlay(
+                            RoundedRectangle(cornerRadius: 16, style: .continuous)
+                                .stroke(isTrialEnabled ? Color.luxuryGold.opacity(0.4) : Color.white.opacity(0.08), lineWidth: 1.5)
+                        )
+                )
+            }
+            .buttonStyle(PlainButtonStyle())
+            .accessibilityLabel(isTrialEnabled ? "Free trial enabled" : "Free trial disabled")
+            .accessibilityHint("Double tap to toggle free trial")
+
+            // Price context below toggle
+            if let product = storeManager.product(for: selectedPlan.tier) {
+                HStack {
+                    Spacer()
+                    if isTrialEnabled {
+                        VStack(spacing: 2) {
+                            Text("Then \(product.displayPrice)\(selectedPlan.period)")
+                                .font(AppTypography.bodySmall)
+                                .foregroundStyle(.white.opacity(0.6))
+                        }
+                    } else {
+                        Text("\(product.displayPrice)\(selectedPlan.period)")
+                            .font(AppTypography.bodySmall)
+                            .foregroundStyle(.white.opacity(0.6))
+                    }
+                    Spacer()
+                }
             }
         }
         .opacity(appearAnimation ? 1 : 0)
@@ -315,38 +416,58 @@ struct StoreKitUpgradeView: View {
             if let product = storeManager.product(for: selectedPlan.tier) {
                 HStack {
                     VStack(alignment: .leading, spacing: 4) {
-                        Text(product.displayPrice)
-                            .font(.title2.bold())
-                            .foregroundStyle(.white)
+                        if isTrialEnabled {
+                            Text("Free")
+                                .font(.title2.bold())
+                                .foregroundStyle(.white)
 
-                        Text(selectedPlan.period)
-                            .font(AppTypography.bodySmall)
-                            .foregroundStyle(TextColors.secondary)
+                            Text("for 7 days")
+                                .font(AppTypography.bodySmall)
+                                .foregroundStyle(Color.luxuryGold)
+                        } else {
+                            Text(product.displayPrice)
+                                .font(.title2.bold())
+                                .foregroundStyle(.white)
+
+                            Text(selectedPlan.period)
+                                .font(AppTypography.bodySmall)
+                                .foregroundStyle(TextColors.secondary)
+                        }
                     }
 
                     Spacer()
 
-                    if let savings = selectedPlan.savings {
-                        VStack(alignment: .trailing, spacing: 4) {
+                    VStack(alignment: .trailing, spacing: 4) {
+                        if isTrialEnabled {
+                            Text("7 days free")
+                                .font(.subheadline.bold())
+                                .foregroundColor(.luxuryGold)
+                                .padding(.horizontal, 10)
+                                .padding(.vertical, 4)
+                                .background(Color.luxuryGold.opacity(0.15))
+                                .cornerRadius(8)
+                        }
+
+                        if let savings = selectedPlan.savings {
                             Text(savings)
                                 .font(.subheadline.bold())
                                 .foregroundColor(.green)
+                        }
 
-                            if selectedPlan == .annual {
-                                Text("$\(String(format: "%.2f", Double(truncating: product.price as NSNumber) / 12))/mo equivalent")
-                                    .font(AppTypography.labelMedium)
-                                    .foregroundStyle(TextColors.tertiary)
-                            }
+                        if selectedPlan == .annual {
+                            Text("$\(String(format: "%.2f", Double(truncating: product.price as NSNumber) / 12))/mo equivalent")
+                                .font(AppTypography.labelMedium)
+                                .foregroundStyle(TextColors.tertiary)
                         }
                     }
                 }
                 .padding(16)
                 .background(
                     RoundedRectangle(cornerRadius: 16, style: .continuous)
-                        .fill(Color.white.opacity(0.04))
+                        .fill(isTrialEnabled ? Color.luxuryGold.opacity(0.06) : Color.white.opacity(0.04))
                         .overlay(
                             RoundedRectangle(cornerRadius: 16, style: .continuous)
-                                .stroke(Color.white.opacity(0.08), lineWidth: 1)
+                                .stroke(isTrialEnabled ? Color.luxuryGold.opacity(0.2) : Color.white.opacity(0.08), lineWidth: 1)
                         )
                 )
             }
@@ -457,7 +578,7 @@ struct StoreKitUpgradeView: View {
                         Image(systemName: "sparkles")
                             .font(.system(.title3, design: .rounded).weight(.semibold))
 
-                        Text("Start Free Trial")
+                        Text(isTrialEnabled ? "Start Free Trial" : "Subscribe")
                             .font(.system(.body, design: .rounded).weight(.bold))
                     }
                 }
@@ -507,7 +628,9 @@ struct StoreKitUpgradeView: View {
             .accessibilityHint(storeManager.isLoading ? "Please wait, purchase in progress" : "")
 
             // Terms
-            Text("Free for 7 days, then auto-renews. Cancel anytime in App Store Settings.")
+            Text(isTrialEnabled
+                ? "Free for 7 days, then auto-renews. Cancel anytime in App Store Settings."
+                : "Auto-renews. Cancel anytime in App Store Settings.")
                 .font(AppTypography.labelMedium)
                 .foregroundStyle(.white.opacity(0.4))
                 .multilineTextAlignment(.center)

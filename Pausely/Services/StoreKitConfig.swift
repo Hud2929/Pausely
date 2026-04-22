@@ -48,6 +48,17 @@ enum StoreKitConfig {
         static let enabled = true
         static let days = 7
         static let displayText = "7-Day Free Trial"
+
+        /// Whether user has explicitly opted out of the free trial UI
+        static var userOptedOut: Bool {
+            get { UserDefaults.standard.bool(forKey: Keys.trialToggleOptOut) }
+            set { UserDefaults.standard.set(newValue, forKey: Keys.trialToggleOptOut) }
+        }
+
+        /// Whether trial UI should be shown (enabled and not opted out)
+        static var showTrialUI: Bool {
+            enabled && !userOptedOut
+        }
     }
     
     // MARK: - Features List
@@ -83,6 +94,7 @@ enum StoreKitConfig {
         static let lastVerificationDate = "storekit_last_verification"
         static let trialUsed = "storekit_trial_used"
         static let originalPurchaseDate = "storekit_original_purchase_date"
+        static let trialToggleOptOut = "storekit_trial_toggle_opt_out"
     }
 }
 

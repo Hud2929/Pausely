@@ -531,6 +531,7 @@ struct PremiumTierRow: View {
                     }
                 }
         )
+        .accessibilityValue(isSelected ? "Selected" : "Not selected")
     }
 
     private var tierDescription: String {
@@ -572,6 +573,7 @@ struct BillingToggleButton: View {
                 .cornerRadius(10)
         }
         .buttonStyle(PlainButtonStyle())
+        .accessibilityValue(isSelected ? "Selected" : "Not selected")
     }
 }
 

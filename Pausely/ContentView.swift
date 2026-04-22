@@ -75,6 +75,7 @@ struct RootView: View {
     @State private var supabaseManager = SupabaseManager.shared
     @State private var showSplash = true
     @State private var splashAnimation = false
+    @State private var showAuth = false
     @AppStorage("hasCompletedOnboarding") private var hasCompletedOnboarding = false
 
     var body: some View {
@@ -89,10 +90,23 @@ struct RootView: View {
                         PremiumMainTabView()
                     }
                     .transition(.opacity.combined(with: .scale(0.98)))
-                } else if !hasCompletedOnboarding {
+                } else if !showAuth && !hasCompletedOnboarding {
                     // New user: show value-first onboarding BEFORE auth wall
-                    OnboardingCarouselView()
-                        .transition(.opacity.combined(with: .move(edge: .bottom)))
+                    OnboardingCarouselView(
+                        onGetStarted: {
+                            withAnimation(.easeInOut(duration: 0.4)) {
+                                showAuth = true
+                                hasCompletedOnboarding = true
+                            }
+                        },
+                        onSignIn: {
+                            withAnimation(.easeInOut(duration: 0.4)) {
+                                showAuth = true
+                                hasCompletedOnboarding = true
+                            }
+                        }
+                    )
+                    .transition(.opacity.combined(with: .move(edge: .bottom)))
                 } else {
                     // Onboarding completed but not authenticated: show auth
                     PremiumWelcomeFlow()
@@ -107,7 +121,7 @@ struct RootView: View {
             }
         }
         .animation(.easeInOut(duration: 0.5), value: authManager.isAuthenticated)
-        .animation(.easeInOut(duration: 0.5), value: hasCompletedOnboarding)
+        .animation(.easeInOut(duration: 0.5), value: showAuth)
         .onAppear {
             DispatchQueue.main.asyncAfter(deadline: .now() + 2.5) {
                 withAnimation(.easeOut(duration: 0.4)) {

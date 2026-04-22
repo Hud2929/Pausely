@@ -346,6 +346,7 @@ struct ReferralSheet: View {
                                     .fill(.white.opacity(0.1))
                             )
                     }
+                    .accessibilityLabel(copiedToClipboard ? "Copied" : "Copy referral code")
                 }
                 
                 // Progress indicator
@@ -563,25 +564,29 @@ struct ReferralSheet: View {
                 ShareButton(
                     icon: "message.fill",
                     color: .green,
-                    action: { shareViaMessages() }
+                    action: { shareViaMessages() },
+                    label: "Share via Messages"
                 )
-                
+
                 ShareButton(
                     icon: "envelope.fill",
                     color: .blue,
-                    action: { shareViaEmail() }
+                    action: { shareViaEmail() },
+                    label: "Share via Email"
                 )
-                
+
                 ShareButton(
                     icon: "square.and.arrow.up",
                     color: Color.luxuryPurple,
-                    action: { shareViaSystem() }
+                    action: { shareViaSystem() },
+                    label: "Share"
                 )
-                
+
                 ShareButton(
                     icon: "link",
                     color: Color.luxuryPink,
-                    action: { copyToClipboard() }
+                    action: { copyToClipboard() },
+                    label: "Copy link"
                 )
             }
         }
@@ -936,7 +941,8 @@ struct ShareButton: View {
     let icon: String
     let color: Color
     let action: () -> Void
-    
+    var label: String? = nil
+
     var body: some View {
         Button(action: action) {
             Image(systemName: icon)
@@ -953,6 +959,7 @@ struct ShareButton: View {
                 )
         }
         .buttonStyle(PlainButtonStyle())
+        .accessibilityLabel(label ?? "Share")
     }
 }
 

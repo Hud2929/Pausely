@@ -282,6 +282,7 @@ struct SubscriptionManagementView: View {
                         .font(.title3)
                         .foregroundColor(.accentColor)
                 }
+                .accessibilityLabel("View usage insights")
 
                 Button(action: { showingUsageInput = true }) {
                     Image(systemName: "pencil.circle")
