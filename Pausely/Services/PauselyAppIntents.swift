@@ -3,11 +3,11 @@ import AppIntents
 import Foundation
 
 // MARK: - Get Monthly Spend Intent
-@MainActor
 struct GetMonthlySpendIntent: AppIntent {
     static var title: LocalizedStringResource = "Get Monthly Spend"
     static var description = IntentDescription("Find out how much you're spending on subscriptions this month.")
 
+    @MainActor
     func perform() async throws -> some IntentResult & ReturnsValue<String> {
         let store = SubscriptionStore.shared
         let currencyCode = CurrencyManager.shared.currentCurrency.code
@@ -18,7 +18,6 @@ struct GetMonthlySpendIntent: AppIntent {
 }
 
 // MARK: - Get Upcoming Renewals Intent
-@MainActor
 struct GetUpcomingRenewalsIntent: AppIntent {
     static var title: LocalizedStringResource = "Get Upcoming Renewals"
     static var description = IntentDescription("See which subscriptions are renewing soon.")
@@ -26,6 +25,7 @@ struct GetUpcomingRenewalsIntent: AppIntent {
     @Parameter(title: "Days Ahead", default: 7)
     var daysAhead: Int
 
+    @MainActor
     func perform() async throws -> some IntentResult & ReturnsValue<String> {
         let store = SubscriptionStore.shared
         let calendar = Calendar.current
@@ -56,11 +56,11 @@ struct GetUpcomingRenewalsIntent: AppIntent {
 }
 
 // MARK: - Get Subscription Count Intent
-@MainActor
 struct GetSubscriptionCountIntent: AppIntent {
     static var title: LocalizedStringResource = "Count Subscriptions"
     static var description = IntentDescription("Count how many subscriptions you're tracking.")
 
+    @MainActor
     func perform() async throws -> some IntentResult & ReturnsValue<String> {
         let store = SubscriptionStore.shared
         let active = store.subscriptions.filter { $0.status == .active }.count
@@ -71,11 +71,11 @@ struct GetSubscriptionCountIntent: AppIntent {
 }
 
 // MARK: - Get Best Value Subscription Intent
-@MainActor
 struct GetBestValueSubscriptionIntent: AppIntent {
     static var title: LocalizedStringResource = "Get Best Value Subscription"
     static var description = IntentDescription("Find which subscription gives you the best value per hour of use.")
 
+    @MainActor
     func perform() async throws -> some IntentResult & ReturnsValue<String> {
         let store = SubscriptionStore.shared
         let activeSubs = store.subscriptions.filter { $0.status == .active }
@@ -100,7 +100,6 @@ struct GetBestValueSubscriptionIntent: AppIntent {
 }
 
 // MARK: - Add Subscription Intent
-@MainActor
 struct AddSubscriptionIntent: AppIntent {
     static var title: LocalizedStringResource = "Add Subscription"
     static var description = IntentDescription("Quickly add a new subscription to track.")
@@ -111,6 +110,7 @@ struct AddSubscriptionIntent: AppIntent {
     @Parameter(title: "Monthly Cost", requestValueDialog: "How much does it cost per month?")
     var monthlyCost: Double
 
+    @MainActor
     func perform() async throws -> some IntentResult & ReturnsValue<String> {
         let store = SubscriptionStore.shared
 
@@ -139,7 +139,6 @@ struct AddSubscriptionIntent: AppIntent {
 }
 
 // MARK: - Get Subscription Detail Intent
-@MainActor
 struct GetSubscriptionDetailIntent: AppIntent {
     static var title: LocalizedStringResource = "Get Subscription Detail"
     static var description = IntentDescription("Get details about a specific subscription.")
@@ -147,6 +146,7 @@ struct GetSubscriptionDetailIntent: AppIntent {
     @Parameter(title: "Subscription Name", requestValueDialog: "Which subscription?")
     var name: String
 
+    @MainActor
     func perform() async throws -> some IntentResult & ReturnsValue<String> {
         let store = SubscriptionStore.shared
         let query = name.lowercased()
@@ -165,7 +165,6 @@ struct GetSubscriptionDetailIntent: AppIntent {
 }
 
 // MARK: - Pause Subscription Intent
-@MainActor
 struct PauseSubscriptionIntent: AppIntent {
     static var title: LocalizedStringResource = "Pause Subscription"
     static var description = IntentDescription("Pause a subscription to stop tracking it temporarily.")
@@ -173,6 +172,7 @@ struct PauseSubscriptionIntent: AppIntent {
     @Parameter(title: "Subscription Name", requestValueDialog: "Which subscription do you want to pause?")
     var name: String
 
+    @MainActor
     func perform() async throws -> some IntentResult & ReturnsValue<String> {
         let store = SubscriptionStore.shared
         let query = name.lowercased()
@@ -187,7 +187,6 @@ struct PauseSubscriptionIntent: AppIntent {
 }
 
 // MARK: - Resume Subscription Intent
-@MainActor
 struct ResumeSubscriptionIntent: AppIntent {
     static var title: LocalizedStringResource = "Resume Subscription"
     static var description = IntentDescription("Resume a paused subscription.")
@@ -195,6 +194,7 @@ struct ResumeSubscriptionIntent: AppIntent {
     @Parameter(title: "Subscription Name", requestValueDialog: "Which subscription do you want to resume?")
     var name: String
 
+    @MainActor
     func perform() async throws -> some IntentResult & ReturnsValue<String> {
         let store = SubscriptionStore.shared
         let query = name.lowercased()
@@ -209,7 +209,6 @@ struct ResumeSubscriptionIntent: AppIntent {
 }
 
 // MARK: - Delete Subscription Intent
-@MainActor
 struct DeleteSubscriptionIntent: AppIntent {
     static var title: LocalizedStringResource = "Delete Subscription"
     static var description = IntentDescription("Remove a subscription from tracking.")
@@ -217,6 +216,7 @@ struct DeleteSubscriptionIntent: AppIntent {
     @Parameter(title: "Subscription Name", requestValueDialog: "Which subscription do you want to delete?")
     var name: String
 
+    @MainActor
     func perform() async throws -> some IntentResult & ReturnsValue<String> {
         let store = SubscriptionStore.shared
         let query = name.lowercased()
@@ -229,4 +229,3 @@ struct DeleteSubscriptionIntent: AppIntent {
         return .result(value: "Deleted \(sub.name).")
     }
 }
-

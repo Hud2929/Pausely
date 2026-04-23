@@ -60,7 +60,7 @@ struct OnboardingCarouselView: View {
                 animateContent = true
             }
         }
-        .onChange(of: currentPage) { _ in
+        .onChange(of: currentPage) { _, _ in
             HapticStyle.light.trigger()
             withAnimation(.easeOut(duration: 0.4)) {
                 animateContent = true
@@ -252,7 +252,7 @@ struct DashboardPreviewPage: View {
             Spacer()
         }
         .onAppear { triggerAnimation() }
-        .onChange(of: animate) { _ in triggerAnimation() }
+        .onChange(of: animate) { _, _ in triggerAnimation() }
     }
 
     private func triggerAnimation() {
@@ -423,7 +423,7 @@ struct SmartDetectionPreviewPage: View {
             Spacer()
         }
         .onAppear { triggerAnimation() }
-        .onChange(of: animate) { _ in triggerAnimation() }
+        .onChange(of: animate) { _, _ in triggerAnimation() }
     }
 
     private func triggerAnimation() {
@@ -597,7 +597,7 @@ struct InsightsPreviewPage: View {
             Spacer()
         }
         .onAppear { triggerAnimation() }
-        .onChange(of: animate) { _ in triggerAnimation() }
+        .onChange(of: animate) { _, _ in triggerAnimation() }
     }
 
     private func triggerAnimation() {

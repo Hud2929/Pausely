@@ -194,7 +194,7 @@ struct DashboardView: View {
             Button("Cancel", role: .cancel) {}
         }
         .sheet(isPresented: $showingAddSubscription) {
-            EnhancedAddSubscriptionView()
+            ArtisticAddSubscriptionView()
         }
         .sheet(isPresented: $showingSmartURLInput) {
             SmartURLInputView()
@@ -381,8 +381,8 @@ struct DashboardEmptyState: View {
 
                 // Central icon cluster
                 ZStack {
-                    // Main pie chart icon
-                    Image(systemName: "chart.pie.fill")
+                    // Main icon
+                    Image(systemName: "rectangle.stack.badge.plus")
                         .font(.system(.largeTitle, design: .rounded).weight(.semibold))
                         .foregroundStyle(
                             LinearGradient(
@@ -422,12 +422,12 @@ struct DashboardEmptyState: View {
 
             // Text content
             VStack(spacing: 12) {
-                Text("Start Tracking Your Subscriptions")
+                Text("Track Your First Subscription")
                     .font(AppTypography.headlineLarge)
                     .foregroundStyle(.white)
                     .multilineTextAlignment(.center)
 
-                Text("Add your first subscription to see spending insights")
+                Text("Add a subscription to see your spending insights, renewal alerts, and cost-per-use analytics.")
                     .font(AppTypography.bodyMedium)
                     .foregroundStyle(.white.opacity(0.6))
                     .multilineTextAlignment(.center)
@@ -442,7 +442,7 @@ struct DashboardEmptyState: View {
                 HStack(spacing: 10) {
                     Image(systemName: "plus.circle.fill")
                         .font(AppTypography.headlineMedium)
-                    Text("Add First Subscription")
+                    Text("Add Subscription")
                         .font(AppTypography.headlineSmall)
                 }
                 .foregroundStyle(.white)

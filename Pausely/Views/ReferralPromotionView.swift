@@ -8,7 +8,7 @@ struct ReferralPromotionView: View {
     @State private var showReferralSheet = false
     @State private var showApplySheet = false
     @State private var appear = false
-    
+
     var body: some View {
         VStack(spacing: 16) {
             // Header
@@ -152,6 +152,7 @@ struct ReferralShareSheet: View {
     @State private var isLoading = false
     @State private var showCopiedAlert = false
     @State private var referralCode: String?
+    @State private var loadError: String?
     
     var body: some View {
         NavigationView {
@@ -302,6 +303,7 @@ struct ReferralShareSheet: View {
                 await loadReferralCode()
             }
         }
+        .errorBanner($loadError)
     }
     
     private func loadReferralCode() async {
@@ -316,6 +318,9 @@ struct ReferralShareSheet: View {
                 self.referralCode = code
             }
         } catch {
+            await MainActor.run {
+                self.loadError = "Unable to load referral code. Please try again."
+            }
         }
     }
     
