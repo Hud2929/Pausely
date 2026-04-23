@@ -16,10 +16,11 @@ struct PauselyWidgetProvider: TimelineProvider {
             monthlySpend: 0,
             activeSubscriptions: 0,
             upcomingRenewals: 0,
+            currencySymbol: "$",
             topInsight: "Loading..."
         )
     }
-    
+
     func getSnapshot(in context: Context, completion: @escaping (PauselyWidgetEntry) -> Void) {
         let summary = WidgetDataStore.shared.readSummary()
         let entry = PauselyWidgetEntry(
@@ -27,6 +28,7 @@ struct PauselyWidgetProvider: TimelineProvider {
             monthlySpend: summary.monthlySpend,
             activeSubscriptions: summary.activeCount,
             upcomingRenewals: summary.upcomingCount,
+            currencySymbol: summary.currencySymbol,
             topInsight: summary.topInsight
         )
         completion(entry)
@@ -52,6 +54,7 @@ struct PauselyWidgetProvider: TimelineProvider {
             monthlySpend: summary.monthlySpend,
             activeSubscriptions: summary.activeCount,
             upcomingRenewals: summary.upcomingCount,
+            currencySymbol: summary.currencySymbol,
             topInsight: summary.topInsight
         )
     }
@@ -63,6 +66,7 @@ struct PauselyWidgetEntry: TimelineEntry {
     let monthlySpend: Double
     let activeSubscriptions: Int
     let upcomingRenewals: Int
+    let currencySymbol: String
     let topInsight: String
 }
 
@@ -104,7 +108,7 @@ struct SmallWidgetView: View {
             }
             
             VStack(alignment: .leading, spacing: 2) {
-                Text("$")
+                Text(entry.currencySymbol)
                     .font(.caption)
                     .foregroundStyle(.secondary) +
                 Text(String(format: "%.0f", entry.monthlySpend))
@@ -144,7 +148,7 @@ struct MediumWidgetView: View {
                     .foregroundStyle(.secondary)
                 
                 HStack(alignment: .firstTextBaseline, spacing: 0) {
-                    Text("$")
+                    Text(entry.currencySymbol)
                         .font(.title3)
                     Text(String(format: "%.2f", entry.monthlySpend))
                         .font(.title.bold())
@@ -218,7 +222,7 @@ struct LargeWidgetView: View {
                 LargeStatCard(
                     title: "Monthly",
                     value: String(format: "%.2f", entry.monthlySpend),
-                    prefix: "$",
+                    prefix: entry.currencySymbol,
                     trend: "+12%"
                 )
                 
@@ -231,7 +235,7 @@ struct LargeWidgetView: View {
                 LargeStatCard(
                     title: "Yearly",
                     value: String(format: "%.0f", entry.monthlySpend * 12),
-                    prefix: "$"
+                    prefix: entry.currencySymbol
                 )
             }
             
@@ -269,7 +273,7 @@ struct AccessoryCircularView: View {
             AccessoryWidgetBackground()
             
             VStack {
-                Text("$")
+                Text(entry.currencySymbol)
                     .font(.caption)
                 Text(String(format: "%.0f", entry.monthlySpend))
                     .font(.headline)
@@ -284,7 +288,7 @@ struct AccessoryRectangularView: View {
     var body: some View {
         HStack {
             Image(systemName: "creditcard.fill")
-            Text("$")
+            Text(entry.currencySymbol)
                 .font(.caption) +
             Text(String(format: "%.2f", entry.monthlySpend))
                 .font(.headline)
@@ -299,7 +303,7 @@ struct AccessoryInlineView: View {
     let entry: PauselyWidgetEntry
     
     var body: some View {
-        Text("$")
+        Text(entry.currencySymbol)
             .font(.caption) +
         Text(String(format: "%.2f", entry.monthlySpend))
             .font(.headline)
@@ -410,6 +414,7 @@ struct PauselyWidget: Widget {
             monthlySpend: 142.99,
             activeSubscriptions: 12,
             upcomingRenewals: 2,
+            currencySymbol: "$",
             topInsight: "Save $45 by pausing unused subscriptions"
         )
     )
@@ -422,6 +427,7 @@ struct PauselyWidget: Widget {
             monthlySpend: 142.99,
             activeSubscriptions: 12,
             upcomingRenewals: 2,
+            currencySymbol: "$",
             topInsight: "Save $45 by pausing unused subscriptions"
         )
     )
