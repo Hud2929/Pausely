@@ -274,8 +274,7 @@ struct SpendingForecastCard: View {
     }
 
     private func formatCurrency(_ amount: Decimal) -> String {
-        let value = NSDecimalNumber(decimal: amount).doubleValue
-        return String(format: "$%.0f", value)
+        CurrencyManager.shared.format(amount)
     }
 }
 
@@ -305,7 +304,7 @@ struct ForecastRow: View {
                     )
             }
 
-            Text("$\(NSDecimalNumber(decimal: amount).intValue)/mo")
+            Text("\(CurrencyManager.shared.format(amount))/mo")
                 .font(.subheadline.bold())
                 .foregroundColor(color)
         }
@@ -346,7 +345,7 @@ struct CategoryBreakdownCard: View {
                         .font(.caption)
                         .foregroundColor(.gray)
 
-                    Text("$\(NSDecimalNumber(decimal: category.amount).intValue)")
+                    Text(CurrencyManager.shared.format(category.amount))
                         .font(.subheadline.bold())
                         .foregroundColor(.white)
                 }
@@ -453,7 +452,7 @@ struct WasteAlertRow: View {
                 Text("Save")
                     .font(.caption2)
                     .foregroundColor(.gray)
-                Text("$\(NSDecimalNumber(decimal: alert.potentialSavings).intValue)/mo")
+                Text("\(CurrencyManager.shared.format(alert.potentialSavings))/mo")
                     .font(.subheadline.bold())
                     .foregroundColor(.green)
             }
@@ -520,7 +519,7 @@ struct InsightRow: View {
                     Text("Save")
                         .font(.caption2)
                         .foregroundColor(.gray)
-                    Text("$\(NSDecimalNumber(decimal: savings).intValue)")
+                    Text(CurrencyManager.shared.format(savings))
                         .font(.caption.bold())
                         .foregroundColor(.green)
                 }

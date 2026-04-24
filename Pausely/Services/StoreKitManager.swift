@@ -278,12 +278,9 @@ final class StoreKitManager: ObservableObject {
         !purchasedProductIDs.isEmpty
     }
     
-    /// Gets formatted price for a product
+    /// Gets formatted price for a product (uses our pricing, not StoreKit sandbox prices)
     func price(for tier: SubscriptionTier) -> String {
-        guard let product = product(for: tier) else {
-            return tier == .pro ? "$7.99" : "$69.99"
-        }
-        return product.displayPrice
+        return tier.priceInUserCurrency()
     }
 }
 

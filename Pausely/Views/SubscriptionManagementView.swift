@@ -16,7 +16,11 @@ struct SubscriptionManagementView: View {
     @State private var manualUsageMinutes: String = ""
     @State private var showingScreenTimeInfo = false
     @State private var showingUsageHistory = false
-    
+    @State private var showingSharing = false
+    @State private var showingPriceHistory = false
+    @State private var showingAnnualSavings = false
+    @State private var nextBillingDate: Date = Date()
+
     var service: SubscriptionService? {
         actionManager.getService(for: subscription.name)
     }
@@ -46,7 +50,10 @@ struct SubscriptionManagementView: View {
             VStack(spacing: 24) {
                 // Header with subscription info
                 headerSection
-                
+
+                // Billing Date
+                billingDateSection
+
                 // Smart Pause Suggestion (REVOLUTIONARY FEATURE)
                 if let suggestion = smartSuggestion, subscription.isActive {
                     smartPauseSection(suggestion: suggestion)
@@ -93,6 +100,15 @@ struct SubscriptionManagementView: View {
         .sheet(isPresented: $showingUsageHistory) {
             UsageHistorySheet(subscriptionName: subscription.name)
         }
+        .sheet(isPresented: $showingSharing) {
+            SubscriptionSharingView(subscription: subscription)
+        }
+        .sheet(isPresented: $showingPriceHistory) {
+            PriceHistoryView(subscription: subscription)
+        }
+        .sheet(isPresented: $showingAnnualSavings) {
+            AnnualSavingsCalculatorView(subscription: subscription)
+        }
         .alert("Cancel Subscription", isPresented: $showingCancelConfirmation) {
             Button("Open Cancel Page", role: .destructive) {
                 HapticStyle.heavy.trigger()
@@ -112,6 +128,7 @@ struct SubscriptionManagementView: View {
             Text("We'll open the pause settings for \(subscription.name).")
         }
         .onAppear {
+            nextBillingDate = subscription.nextBillingDate ?? Date()
             // Sync screen time data when view appears
             Task {
                 await screenTimeManager.syncUsageData()
@@ -142,7 +159,7 @@ struct SubscriptionManagementView: View {
                 .font(.title.weight(.bold))
                 .foregroundColor(.primary)
 
-            Text(subscription.displayAmount + "/" + subscription.billingFrequency.rawValue)
+            Text(subscription.displayAmountInUserCurrency + "/" + subscription.billingFrequency.rawValue)
                 .font(.title2)
                 .foregroundStyle(
                     LinearGradient(
@@ -202,10 +219,66 @@ struct SubscriptionManagementView: View {
         .padding()
         .glassCard(color: iconColor)
         .accessibilityElement(children: .combine)
-        .accessibilityLabel("\(subscription.name), \(subscription.displayAmount) per \(subscription.billingFrequency.rawValue)")
+        .accessibilityLabel("\(subscription.name), \(subscription.displayAmountInUserCurrency) per \(subscription.billingFrequency.rawValue)")
         .accessibilityHint("Double-tap to view details")
     }
-    
+
+    private var billingDateSection: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            HStack {
+                Image(systemName: "calendar.badge.clock")
+                    .foregroundStyle(Color.accentMint)
+                Text("Next Billing Date")
+                    .font(.headline.weight(.semibold))
+                Spacer()
+                if subscription.nextBillingDate == nil {
+                    Text("Not set")
+                        .font(.caption.weight(.medium))
+                        .foregroundStyle(.orange)
+                        .padding(.horizontal, 8)
+                        .padding(.vertical, 2)
+                        .background(Color.orange.opacity(0.15))
+                        .clipShape(Capsule())
+                }
+            }
+
+            DatePicker(
+                "Next Billing Date",
+                selection: $nextBillingDate,
+                displayedComponents: .date
+            )
+            .datePickerStyle(.compact)
+            .labelsHidden()
+            .onChange(of: nextBillingDate) { _, newDate in
+                Task {
+                    await saveBillingDate(newDate)
+                }
+            }
+
+            if subscription.nextBillingDate == nil {
+                Text("Set your billing date to get renewal reminders and track upcoming payments.")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+            }
+        }
+        .padding()
+        .background(
+            RoundedRectangle(cornerRadius: 16)
+                .fill(Color(.secondarySystemBackground))
+        )
+    }
+
+    private func saveBillingDate(_ date: Date) async {
+        var updated = subscription
+        updated.nextBillingDate = date
+        updated.updatedAt = Date()
+        do {
+            try await SubscriptionStore.shared.updateSubscription(updated)
+        } catch {
+            print("Failed to save billing date: \(error)")
+        }
+    }
+
     // MARK: - Smart Pause Section (REVOLUTIONARY FEATURE)
     private func smartPauseSection(suggestion: PauseSuggestion) -> some View {
         VStack(spacing: 16) {
@@ -500,9 +573,13 @@ struct SubscriptionManagementView: View {
                 )
             }
             
-            // Pause Button - Only for Pro users (REVOLUTIONARY ONE-TAP)
+            // Pause/Resume Button - Only for Pro users (REVOLUTIONARY ONE-TAP)
             if paymentManager.canPauseSubscriptions && actionManager.canPause(subscription) {
-                RevolutionaryPauseButton(subscription: subscription)
+                if subscription.isPaused {
+                    RevolutionaryResumeButton(subscription: subscription)
+                } else {
+                    RevolutionaryPauseButton(subscription: subscription)
+                }
             }
             
             // Find Alternatives - Premium feature
@@ -546,6 +623,44 @@ struct SubscriptionManagementView: View {
                     // Open edit view
                 }
             )
+
+            // Cost Sharing - split with friends/family
+            ActionButton(
+                title: "Split Cost",
+                subtitle: "Share with friends or family",
+                icon: "person.2.fill",
+                color: .purple,
+                isPremium: false,
+                action: {
+                    showingSharing = true
+                }
+            )
+
+            // Price History - track price changes
+            ActionButton(
+                title: "Price History",
+                subtitle: "Track price changes over time",
+                icon: "chart.line.uptrend.xyaxis",
+                color: .orange,
+                isPremium: false,
+                action: {
+                    showingPriceHistory = true
+                }
+            )
+
+            // Annual Savings Calculator
+            if subscription.billingFrequency == .monthly {
+                ActionButton(
+                    title: "Annual Savings",
+                    subtitle: "See savings with yearly billing",
+                    icon: "calendar.badge.checkmark",
+                    color: .green,
+                    isPremium: false,
+                    action: {
+                        showingAnnualSavings = true
+                    }
+                )
+            }
         }
     }
     
@@ -1166,7 +1281,7 @@ struct AlternativeDetailView: View {
                                 Text("Current")
                                     .font(.caption)
                                     .foregroundStyle(.secondary)
-                                Text(current.displayAmount + "/mo")
+                                Text(current.displayAmountInUserCurrency + "/mo")
                                     .font(.title3)
                                     .strikethrough()
                                     .foregroundStyle(.red)

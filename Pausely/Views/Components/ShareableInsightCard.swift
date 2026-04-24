@@ -481,7 +481,8 @@ struct ShareableInsightSheet: View {
                 costPerSession: nil,
                 valueScore: 85,
                 valueTier: .great,
-                sessions: 12
+                sessions: 12,
+                hasUsageData: true
             ),
             worstValueSubscription: CostPerUseResult(
                 subscription: Subscription(name: "Adobe CC", price: 54.99, category: "Productivity"),
@@ -490,7 +491,8 @@ struct ShareableInsightSheet: View {
                 costPerSession: nil,
                 valueScore: 15,
                 valueTier: .poor,
-                sessions: 3
+                sessions: 3,
+                hasUsageData: true
             ),
             moneySavedByPausing: Decimal(32.00),
             efficiencyScore: 62

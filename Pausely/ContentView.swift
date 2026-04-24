@@ -1,6 +1,7 @@
 import SwiftUI
 import AuthenticationServices
 import os.log
+import TipKit
 
 @main
 struct PauselyApp: App {
@@ -48,6 +49,9 @@ class AppDelegate: NSObject, UIApplicationDelegate {
         UITabBar.appearance().standardAppearance = tabBarAppearance
         UITabBar.appearance().scrollEdgeAppearance = tabBarAppearance
 
+        // Configure TipKit for contextual tips
+        TipKitConfiguration.configure()
+
         // Handle URL if app was launched via deep link
         if let url = launchOptions?[.url] as? URL {
             handleDeepLink(url)
@@ -65,7 +69,7 @@ class AppDelegate: NSObject, UIApplicationDelegate {
         #if DEBUG
         os_log("🔗 AppDelegate handling URL: %{public}@", log: .default, type: .info, url.absoluteString)
         #endif
-        _ = ReferralManager.shared.handleReferralDeepLink(url)
+        DeepLinkManager.shared.process(url)
     }
 }
 
@@ -135,15 +139,11 @@ struct RootView: View {
             await StoreKitManager.shared.loadProducts()
         }
         .onOpenURL { url in
-            // Handle deep links (referral codes, auth callbacks, etc.)
+            // Handle deep links (referral codes, auth callbacks, subscription management, etc.)
             #if DEBUG
             os_log("🔗 RootView received URL: %{public}@", log: .default, type: .info, url.absoluteString)
             #endif
-            _ = ReferralManager.shared.handleReferralDeepLink(url)
-            // Also handle auth deep links (email confirm, password reset)
-            Task {
-                _ = await authManager.handleDeepLink(url)
-            }
+            DeepLinkManager.shared.process(url)
         }
     }
 }
@@ -843,8 +843,12 @@ struct PremiumSignUpView: View {
     @State private var showEmailConfirmation = false
     @State private var pendingEmail = ""
 
+    var isPasswordValid: Bool {
+        PasswordStrength.rulesMet(password) == 4
+    }
+
     var isValid: Bool {
-        !firstName.isEmpty && !email.isEmpty && email.contains("@") && password.count >= 6
+        !firstName.isEmpty && !email.isEmpty && email.contains("@") && isPasswordValid
     }
 
     var body: some View {
@@ -905,10 +909,14 @@ struct PremiumSignUpView: View {
                                     .foregroundColor(TextColors.secondary)
 
                                 PremiumTextField(
-                                    placeholder: "Min. 6 characters",
+                                    placeholder: "Min. 8 characters",
                                     text: $password,
                                     isSecure: true
                                 )
+
+                                if !password.isEmpty {
+                                    PasswordStrengthMeter(password: password)
+                                }
                             }
                         }
                         .padding(.horizontal, 24)
@@ -1033,7 +1041,7 @@ struct PremiumSignUpView: View {
         showError = false
         Task {
             do {
-                try await authManager.signUp(
+                try await authManager.signUpWithOTP(
                     email: email,
                     password: password,
                     firstName: firstName.isEmpty ? nil : firstName,
@@ -1044,7 +1052,7 @@ struct PremiumSignUpView: View {
                     if authManager.isAuthenticated {
                         dismiss()
                     } else {
-                        // Email confirmation required - show the confirmation view
+                        // OTP sent — show code entry view
                         pendingEmail = email
                         showEmailConfirmation = true
                     }

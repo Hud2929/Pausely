@@ -2,6 +2,7 @@ import Foundation
 import Auth
 import PostgREST
 import os.log
+import ActivityKit
 
 @MainActor
 class SubscriptionStore: ObservableObject {
@@ -97,6 +98,7 @@ class SubscriptionStore: ObservableObject {
                 self.saveToCache()
                 WidgetDataStore.shared.publish(subscriptions: self.subscriptions)
                 SpotlightManager.shared.index(subscriptions: self.subscriptions)
+                self.startLiveActivityIfNeeded()
             }
             
         } catch {
@@ -333,6 +335,7 @@ class SubscriptionStore: ObservableObject {
                     self.saveToLocalStorage()
                     WidgetDataStore.shared.publish(subscriptions: self.subscriptions)
                     SpotlightManager.shared.index(subscriptions: self.subscriptions)
+                    PriceHistoryTracker.shared.recordPriceIfChanged(subscription)
                 }
             }
             return
@@ -350,13 +353,15 @@ class SubscriptionStore: ObservableObject {
                 .value
             
             if let updatedRecord = updated.first {
+                let updatedSubscription = updatedRecord.toSubscription()
                 await MainActor.run {
                     if let index = self.subscriptions.firstIndex(where: { $0.id == subscription.id }) {
-                        self.subscriptions[index] = updatedRecord.toSubscription()
+                        self.subscriptions[index] = updatedSubscription
                         self.calculateTotals()
                         self.saveToCache()
                         WidgetDataStore.shared.publish(subscriptions: self.subscriptions)
                         SpotlightManager.shared.index(subscriptions: self.subscriptions)
+                        PriceHistoryTracker.shared.recordPriceIfChanged(updatedSubscription)
                     }
                 }
             }
@@ -525,6 +530,8 @@ class SubscriptionStore: ObservableObject {
                     self.subscriptions[index].pausedUntil = date
                     self.calculateTotals()
                     self.saveToLocalStorage()
+                    WidgetDataStore.shared.publish(subscriptions: self.subscriptions)
+                    SpotlightManager.shared.index(subscriptions: self.subscriptions)
                 }
             }
             return
@@ -547,6 +554,8 @@ class SubscriptionStore: ObservableObject {
                     self.subscriptions[index].pausedUntil = date
                     self.calculateTotals()
                     self.saveToCache()
+                    WidgetDataStore.shared.publish(subscriptions: self.subscriptions)
+                    SpotlightManager.shared.index(subscriptions: self.subscriptions)
                 }
             }
         } catch {
@@ -566,6 +575,8 @@ class SubscriptionStore: ObservableObject {
                         self.subscriptions[index].pausedUntil = date
                         self.calculateTotals()
                         self.saveToLocalStorage()
+                        WidgetDataStore.shared.publish(subscriptions: self.subscriptions)
+                        SpotlightManager.shared.index(subscriptions: self.subscriptions)
                     }
                 }
             case .offlineMode:
@@ -845,13 +856,13 @@ class SubscriptionStore: ObservableObject {
         let calendar = Calendar.current
         let now = Date()
         let thirtyDaysFromNow = calendar.date(byAdding: .day, value: 30, to: now) ?? now
-        
+
         return activeSubscriptions
             .filter { sub in
-                guard let nextBilling = sub.nextBillingDate else { return false }
+                guard let nextBilling = sub.calculatedNextBillingDate else { return false }
                 return nextBilling >= now && nextBilling <= thirtyDaysFromNow
             }
-            .sorted { ($0.nextBillingDate ?? now) < ($1.nextBillingDate ?? now) }
+            .sorted { ($0.calculatedNextBillingDate ?? now) < ($1.calculatedNextBillingDate ?? now) }
     }
     
     func subscriptionsByCategory() -> [(category: String, subscriptions: [Subscription], total: Decimal)] {
@@ -881,6 +892,23 @@ class SubscriptionStore: ObservableObject {
             total += monthlyAmount
         }
         return total
+    }
+
+    // MARK: - Live Activity
+
+    private func startLiveActivityIfNeeded() {
+        guard UserDefaults.standard.bool(forKey: "liveActivitiesEnabled") else { return }
+
+        // Find the most urgent upcoming renewal
+        let upcoming = activeSubscriptions
+            .filter { ($0.daysUntilRenewal ?? 999) <= 14 }
+            .sorted { ($0.daysUntilRenewal ?? 999) < ($1.daysUntilRenewal ?? 999) }
+
+        if let first = upcoming.first {
+            LiveActivityManager.shared.startLiveActivity(for: first)
+        } else {
+            LiveActivityManager.shared.endCurrentActivity()
+        }
     }
 }
 

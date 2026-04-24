@@ -124,7 +124,29 @@ struct Subscription: Identifiable, Codable, Equatable {
     var displayAmount: String {
         return formatCurrency(amount)
     }
-    
+
+    /// Amount formatted in the user's currently selected currency
+    var displayAmountInUserCurrency: String {
+        let manager = CurrencyManager.shared
+        guard currency != manager.selectedCurrency else {
+            return displayAmount
+        }
+        let amountValue = Double(truncating: amount as NSNumber)
+        let converted = (try? manager.convert(amountValue, from: currency, to: manager.selectedCurrency)) ?? amountValue
+        return manager.format(Decimal(converted))
+    }
+
+    /// Monthly cost formatted in the user's currently selected currency
+    var displayMonthlyCostInUserCurrency: String {
+        let manager = CurrencyManager.shared
+        guard currency != manager.selectedCurrency else {
+            return formatCurrency(monthlyCost)
+        }
+        let amountValue = Double(truncating: monthlyCost as NSNumber)
+        let converted = (try? manager.convert(amountValue, from: currency, to: manager.selectedCurrency)) ?? amountValue
+        return manager.format(Decimal(converted))
+    }
+
     var displayAnnualCost: String {
         return formatCurrency(annualCost)
     }
@@ -173,9 +195,18 @@ struct Subscription: Identifiable, Codable, Equatable {
     var isPaused: Bool {
         status == .paused
     }
-    
+
+    /// Returns the user's actual next billing date if set, otherwise nil.
+    /// No heuristic guessing — we only show dates the user has explicitly entered.
+    var calculatedNextBillingDate: Date? {
+        guard let manual = nextBillingDate else { return nil }
+        // Allow a 1-day grace period for "bills today" scenarios
+        let gracePeriod = Date().addingTimeInterval(-86400)
+        return manual >= gracePeriod ? manual : nil
+    }
+
     var daysUntilRenewal: Int? {
-        guard let nextDate = nextBillingDate else { return nil }
+        guard let nextDate = calculatedNextBillingDate else { return nil }
         let calendar = Calendar.current
         let components = calendar.dateComponents([.day], from: Date(), to: nextDate)
         return components.day

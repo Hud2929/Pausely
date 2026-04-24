@@ -12,6 +12,11 @@ struct PremiumSubscriptionsView: View {
     @State private var showingAutoDetect = false
     @State private var selectedSubscription: Subscription?
     @State private var cardOffset: CGFloat = 0
+    @Binding var deepLinkedSubscription: Subscription?
+
+    init(deepLinkedSubscription: Binding<Subscription?> = .constant(nil)) {
+        self._deepLinkedSubscription = deepLinkedSubscription
+    }
     
     enum FilterType: String, CaseIterable {
         case all = "All"
@@ -93,6 +98,12 @@ struct PremiumSubscriptionsView: View {
         }
         .sheet(isPresented: $showingAutoDetect) {
             AutoDetectView()
+        }
+        .onChange(of: deepLinkedSubscription) { oldValue, newValue in
+            if let subscription = newValue {
+                selectedSubscription = subscription
+                deepLinkedSubscription = nil
+            }
         }
     }
     
@@ -743,7 +754,8 @@ struct ArtisticAddSubscriptionView: View {
     
     @State private var currentStep = 0
     @State private var isSaving = false
-    
+    @State private var showConfetti = false
+
     let steps = ["Name", "Amount", "Schedule"]
     
     var canProceed: Bool {
@@ -758,7 +770,14 @@ struct ArtisticAddSubscriptionView: View {
         NavigationView {
             ZStack {
                 PremiumBackground()
-                
+
+                // Confetti overlay for first subscription celebration
+                if showConfetti {
+                    ConfettiView()
+                        .allowsHitTesting(false)
+                        .ignoresSafeArea()
+                }
+
                 VStack(spacing: 0) {
                     // Progress
                     StepProgressView(steps: steps, currentStep: currentStep)
@@ -862,11 +881,21 @@ struct ArtisticAddSubscriptionView: View {
             )
             
             do {
+                let wasFirstSubscription = store.subscriptions.isEmpty
                 _ = try await store.addSubscription(subscription)
-                
+
                 await MainActor.run {
                     isSaving = false
-                    dismiss()
+                    if wasFirstSubscription {
+                        showConfetti = true
+                        HapticStyle.success.trigger()
+                        // Dismiss after confetti plays
+                        DispatchQueue.main.asyncAfter(deadline: .now() + 2.5) {
+                            dismiss()
+                        }
+                    } else {
+                        dismiss()
+                    }
                 }
             } catch {
                 await MainActor.run {
@@ -1008,7 +1037,8 @@ struct SubscriptionCategoryButton: View {
 struct AmountStepView: View {
     @Binding var amount: String
     @Binding var selectedFrequency: BillingFrequency
-    
+    @ObservedObject private var currencyManager = CurrencyManager.shared
+
     var body: some View {
         ScrollView(showsIndicators: false) {
             VStack(spacing: 32) {
@@ -1026,10 +1056,10 @@ struct AmountStepView: View {
                 
                 // Amount display
                 HStack(spacing: 4) {
-                    Text("$")
+                    Text(currencyManager.currencySymbol(for: currencyManager.selectedCurrency))
                         .font(.largeTitle.weight(.bold))
                         .foregroundColor(BrandColors.primary)
-                    
+
                     Text(amount.isEmpty ? "0.00" : amount)
                         .font(.largeTitle.weight(.bold))
                         .foregroundColor(.white)

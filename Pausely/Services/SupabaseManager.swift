@@ -232,6 +232,40 @@ class CurrencyManager: ObservableObject {
     @Published var isLoadingRates = false
     @Published var error: Error?
 
+    /// Fallback rates for major currencies — used when API is unreachable.
+    /// Rates are vs USD (1 USD = X currency). Updated April 2026.
+    private let fallbackRates: [String: Double] = [
+        "USD": 1.0, "EUR": 0.92, "GBP": 0.79, "JPY": 149.50,
+        "CAD": 1.38, "AUD": 1.53, "CHF": 0.88, "CNY": 7.24,
+        "INR": 83.50, "BRL": 5.05, "KRW": 1330.0, "MXN": 16.80,
+        "SGD": 1.35, "HKD": 7.82, "NOK": 10.65, "SEK": 10.50,
+        "DKK": 6.88, "NZD": 1.66, "ZAR": 18.50, "RUB": 92.0,
+        "TRY": 32.0, "PLN": 4.0, "THB": 36.0, "IDR": 15800.0,
+        "MYR": 4.75, "PHP": 56.0, "CZK": 23.5, "ILS": 3.65,
+        "AED": 3.67, "SAR": 3.75, "TWD": 31.5, "VND": 24800.0,
+        "EGP": 47.0, "PKR": 278.0, "NGN": 1450.0, "BDT": 109.5,
+        "RON": 4.6, "HUF": 360.0, "UAH": 39.5, "CLP": 965.0,
+        "COP": 3920.0, "PEN": 3.72, "ARS": 860.0, "MAD": 10.0,
+        "QAR": 3.64, "KWD": 0.307, "BHD": 0.376, "OMR": 0.385,
+        "JOD": 0.709, "LKR": 299.0, "NPR": 133.0, "KES": 132.0,
+        "GHS": 14.5, "TZS": 2570.0, "UGX": 3820.0, "ISK": 138.0,
+        "HRK": 6.9, "BGN": 1.8, "RSD": 108.0, "GEL": 2.7,
+        "AMD": 389.0, "AZN": 1.7, "KZT": 500.0, "UZS": 12500.0,
+        "TJS": 10.9, "KGS": 88.5, "MNT": 3370.0, "MMK": 2090.0,
+        "KHR": 4050.0, "LAK": 20800.0, "BND": 1.35, "BWP": 13.5,
+        "MUR": 46.5, "SCR": 13.5, "ZMW": 26.0, "MWK": 1730.0,
+        "MZN": 63.5, "NAD": 18.5, "SZL": 18.5, "LSL": 18.5,
+        "AOA": 830.0, "CDF": 2780.0, "RWF": 1310.0, "BIF": 2870.0,
+        "DJF": 177.0, "ETB": 57.0, "SOS": 571.0, "GMD": 67.5,
+        "GNF": 8600.0, "LRD": 193.0, "SLL": 22600.0, "MRU": 39.5,
+        "STN": 22.5, "XOF": 605.0, "XAF": 605.0, "XCD": 2.7,
+        "AWG": 1.79, "ANG": 1.79, "TTD": 6.78, "BBD": 2.0,
+        "BSD": 1.0, "BZD": 2.0, "JMD": 155.0, "HTG": 132.0,
+        "DOP": 58.5, "CUP": 24.0, "GTQ": 7.75, "HNL": 24.7,
+        "NIO": 36.7, "CRC": 512.0, "PAB": 1.0, "UYU": 39.0,
+        "PYG": 7300.0, "BOB": 6.91, "VES": 36.5
+    ]
+
     private let session: URLSession = {
         let config = URLSessionConfiguration.default
         config.timeoutIntervalForRequest = 10
@@ -395,7 +429,8 @@ class CurrencyManager: ObservableObject {
         Currency(code: "IQD", name: "Iraqi Dinar", symbol: "د.ع", flag: "🇮🇶", locale: "ar_IQ"),
         Currency(code: "YER", name: "Yemeni Rial", symbol: "﷼", flag: "🇾🇪", locale: "ar_YE"),
         Currency(code: "SYP", name: "Syrian Pound", symbol: "£", flag: "🇸🇾", locale: "ar_SY"),
-        
+        Currency(code: "TRY", name: "Turkish Lira", symbol: "₺", flag: "🇹🇷", locale: "tr_TR"),
+
         // Cryptocurrencies & Special
         Currency(code: "BTC", name: "Bitcoin", symbol: "₿", flag: "🪙", locale: "en_US"),
         Currency(code: "ETH", name: "Ethereum", symbol: "Ξ", flag: "💎", locale: "en_US"),
@@ -420,7 +455,7 @@ class CurrencyManager: ObservableObject {
             selectedCurrency = currencies.contains { $0.code == currencyCode } ? currencyCode : "USD"
         }
         
-        _ = loadCachedRates()
+        self.exchangeRates = loadCachedRates() ?? fallbackRates
 
         Task {
             try? await fetchExchangeRates()
@@ -459,7 +494,12 @@ class CurrencyManager: ObservableObject {
         if let cached = loadCachedRates() {
             return cached
         }
-        throw CurrencyError.fetchFailed(lastError)
+        // Use hardcoded fallback rates so prices are never wrong
+        await MainActor.run {
+            self.exchangeRates = self.fallbackRates
+            self.lastUpdated = Date(timeIntervalSince1970: 0) // Mark as fallback
+        }
+        return fallbackRates
     }
 
     private func performFetch() async throws -> [String: Double] {
@@ -475,11 +515,14 @@ class CurrencyManager: ObservableObject {
     }
 
     private func loadCachedRates() -> [String: Double]? {
+        var result = fallbackRates
         if let cached = UserDefaults.standard.dictionary(forKey: ratesCacheKey) as? [String: Double] {
             lastUpdated = UserDefaults.standard.object(forKey: ratesDateKey) as? Date
-            return cached
+            for (code, rate) in cached {
+                result[code] = rate
+            }
         }
-        return nil
+        return result
     }
     
     private func cacheRates() {
@@ -541,8 +584,6 @@ class CurrencyManager: ObservableObject {
         formatter.numberStyle = .currency
         formatter.currencyCode = code
         formatter.currencySymbol = currency.symbol
-        formatter.maximumFractionDigits = 2
-        formatter.minimumFractionDigits = 2
 
         return formatter.string(from: finalAmount as NSDecimalNumber) ?? "\(currency.symbol)\(finalAmount)"
     }
@@ -674,8 +715,6 @@ struct Currency: Identifiable, Codable, Hashable {
         formatter.numberStyle = .currency
         formatter.currencyCode = code
         formatter.currencySymbol = symbol
-        formatter.maximumFractionDigits = 2
-        formatter.minimumFractionDigits = 2
         return formatter.string(from: NSNumber(value: amount)) ?? "\(symbol)\(amount)"
     }
 }

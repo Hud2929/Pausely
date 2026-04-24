@@ -22,7 +22,7 @@ enum StoreKitConfig {
         var description: String {
             switch self {
             case .monthlyPro: return "Unlimited subscriptions + AI features"
-            case .annualPro: return "Save 27% with annual billing"
+            case .annualPro: return "Save 17% with annual billing"
             }
         }
         
@@ -36,11 +36,15 @@ enum StoreKitConfig {
     
     // MARK: - Pricing (for display when StoreKit hasn't loaded yet)
     struct FallbackPricing {
-        static let monthlyDisplay = "$7.99"
-        static let annualDisplay = "$69.99"
-        static let monthlyValue = 7.99
-        static let annualValue = 69.99
-        static let savingsPercent = 27
+        static var monthlyDisplay: String {
+            CurrencyManager.shared.format(monthlyValue)
+        }
+        static var annualDisplay: String {
+            CurrencyManager.shared.format(annualValue)
+        }
+        static let monthlyValue = Decimal(7.99)
+        static let annualValue = Decimal(79.99)
+        static let savingsPercent = 17
     }
     
     // MARK: - Trial Configuration

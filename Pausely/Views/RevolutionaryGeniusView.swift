@@ -55,7 +55,9 @@ struct RevolutionaryGeniusView: View {
             StoreKitUpgradeView(currentSubscriptionCount: subscriptionStore.subscriptions.count)
         }
         .task {
-            await runAnalysis()
+            if paymentManager.isPremium {
+                await runAnalysis()
+            }
         }
         .onAppear {
             withAnimation(.easeOut(duration: 0.55).delay(0.05)) {
@@ -115,7 +117,7 @@ struct RevolutionaryGeniusView: View {
                     .font(.caption)
                     .foregroundStyle(.gray)
 
-                Text("$\(NSDecimalNumber(decimal: engine.totalSavingsFound).doubleValue, specifier: "%.2f")")
+                Text(CurrencyManager.shared.format(engine.totalSavingsFound))
                     .font(.system(.largeTitle, design: .rounded).weight(.bold))
                     .foregroundStyle(
                         LinearGradient(
@@ -191,7 +193,7 @@ struct RevolutionaryGeniusView: View {
 
                 GeniusSummaryCard(
                     title: "Potential Savings",
-                    value: "$\(NSDecimalNumber(decimal: report.totalPotentialSavings).intValue)/mo",
+                    value: "\(CurrencyManager.shared.format(report.totalPotentialSavings))/mo",
                     icon: "dollarsign.circle.fill",
                     color: .green
                 )
@@ -354,8 +356,7 @@ struct GeniusInsightCard: View {
     }
 
     private func formatCurrency(_ amount: Decimal) -> String {
-        let value = NSDecimalNumber(decimal: amount).doubleValue
-        return String(format: "$%.2f", value)
+        CurrencyManager.shared.format(amount)
     }
 }
 

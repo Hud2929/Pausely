@@ -1,4 +1,5 @@
 import SwiftUI
+import TipKit
 
 struct QuickActionsGrid: View {
     let onAddTap: () -> Void
@@ -8,6 +9,7 @@ struct QuickActionsGrid: View {
     @ObservedObject private var store = SubscriptionStore.shared
     @State private var showingComingSoonAlert = false
     @State private var comingSoonMessage = ""
+    private let addTip = AddSubscriptionTip()
 
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
@@ -28,6 +30,7 @@ struct QuickActionsGrid: View {
                         onPaywallTap()
                     }
                 }
+                .popoverTip(addTip, arrowEdge: .bottom)
 
                 QuickActionButton(
                     icon: "pause.circle.fill",

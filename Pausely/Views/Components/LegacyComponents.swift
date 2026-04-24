@@ -30,16 +30,21 @@ enum CancellationResult {
 }
 
 enum PauseResult {
-    case success(endDate: Date)
+    case success(endDate: Date, monthlySavings: Decimal)
+    case reminderSet(reminderDate: Date)
     case failure(Error)
     case notAvailable
 
     var message: String {
         switch self {
-        case .success(let endDate):
+        case .success(let endDate, _):
             let formatter = DateFormatter()
             formatter.dateStyle = .medium
             return "Paused until \(formatter.string(from: endDate))"
+        case .reminderSet(let reminderDate):
+            let formatter = DateFormatter()
+            formatter.dateStyle = .medium
+            return "We'll remind you on \(formatter.string(from: reminderDate)) to pause this subscription."
         case .failure:
             return "Pause failed. Please try again."
         case .notAvailable:
@@ -49,7 +54,7 @@ enum PauseResult {
 
     var monthlySavings: Decimal? {
         switch self {
-        case .success: return 0
+        case .success(_, let savings): return savings
         default: return nil
         }
     }

@@ -14,7 +14,8 @@ struct RevolutionaryCancelButton: View {
     @State private var isProcessing = false
     @State private var result: CancellationResult?
     @State private var showSuccess = false
-    
+    @State private var errorMessage: String? = nil
+
     var body: some View {
         Button(action: {
             showingConfirmation = true
@@ -60,22 +61,30 @@ struct RevolutionaryCancelButton: View {
                 CancellationSuccessOverlay(result: result, isPresented: $showSuccess)
             }
         }
+        .errorBanner($errorMessage)
     }
     
     private func performCancellation() async {
         isProcessing = true
+        errorMessage = nil
 
-        // Stub: In a real app, this would call a cancellation API
-        // For now, just simulate success
-        let cancelResult = CancellationResult.success(savings: subscription.monthlyCost * 12)
+        do {
+            try await SubscriptionStore.shared.deleteSubscription(id: subscription.id)
+            NotificationManager.shared.cancelReminder(for: subscription.id)
 
-        await MainActor.run {
-            self.result = cancelResult
-            self.isProcessing = false
-            self.showSuccess = true
-
-            // Haptic feedback
-            Haptic.success()
+            let cancelResult = CancellationResult.success(savings: subscription.monthlyCost * 12)
+            await MainActor.run {
+                self.result = cancelResult
+                self.isProcessing = false
+                self.showSuccess = true
+                Haptic.success()
+            }
+        } catch {
+            await MainActor.run {
+                self.errorMessage = "Could not cancel: \(error.localizedDescription)"
+                self.isProcessing = false
+                Haptic.error()
+            }
         }
     }
 }
@@ -87,7 +96,8 @@ struct RevolutionaryPauseButton: View {
     @State private var isProcessing = false
     @State private var result: PauseResult?
     @State private var showSuccess = false
-    
+    @State private var errorMessage: String? = nil
+
     var body: some View {
         Button(action: {
             showingDurationPicker = true
@@ -98,10 +108,10 @@ struct RevolutionaryPauseButton: View {
                     .foregroundStyle(Color.accentMint)
                 
                 VStack(alignment: .leading, spacing: 2) {
-                    Text("Pause Instead")
+                    Text("Remind Me to Pause")
                         .font(STFont.labelLarge)
-                    
-                    Text("Temporarily pause for later")
+
+                    Text("Get a reminder to pause on their site")
                         .font(STFont.bodySmall)
                         .foregroundStyle(Color.obsidianTextSecondary)
                 }
@@ -134,26 +144,35 @@ struct RevolutionaryPauseButton: View {
                 PauseSuccessOverlay(result: result, isPresented: $showSuccess)
             }
         }
+        .errorBanner($errorMessage)
     }
-    
+
     private func performPause(duration: RevolutionaryPauseDuration) async {
         isProcessing = true
+        errorMessage = nil
 
-        // Calculate pause end date
-        let pauseEndDate = Calendar.current.date(
+        let reminderDate = Calendar.current.date(
             byAdding: duration.calendarComponent,
             value: duration.value,
             to: Date()
         ) ?? Date()
 
-        // Stub: In a real app, this would call a pause API
-        let pauseResult = PauseResult.success(endDate: pauseEndDate)
+        do {
+            // Schedule a local reminder notification instead of fake-pausing
+            let pauseURL = SubscriptionActionManager.shared.getService(for: subscription.name)?.pauseURL
+            NotificationManager.shared.schedulePauseReminder(
+                for: subscription,
+                reminderDate: reminderDate,
+                pauseURL: pauseURL
+            )
 
-        await MainActor.run {
-            self.result = pauseResult
-            self.isProcessing = false
-            self.showSuccess = true
-            Haptic.success()
+            let pauseResult = PauseResult.reminderSet(reminderDate: reminderDate)
+            await MainActor.run {
+                self.result = pauseResult
+                self.isProcessing = false
+                self.showSuccess = true
+                Haptic.success()
+            }
         }
     }
 }
@@ -307,11 +326,11 @@ struct RevolutionaryPauseSheet: View {
                             .foregroundStyle(Color.accentMint)
                     }
                     
-                    Text("Pause \(subscription.name)?")
+                    Text("Remind Me to Pause \(subscription.name)")
                         .font(STFont.headlineLarge)
                         .foregroundStyle(Color.obsidianText)
-                    
-                    Text("Your subscription will resume automatically")
+
+                    Text("We'll send you a reminder to pause \(subscription.name) on their website.")
                         .font(STFont.bodyMedium)
                         .foregroundStyle(Color.obsidianTextSecondary)
                         .multilineTextAlignment(.center)
@@ -343,11 +362,11 @@ struct RevolutionaryPauseSheet: View {
                         .foregroundStyle(Color.obsidianTextSecondary)
                 }
                 .disabled(isProcessing)
-                .accessibilityHint(isProcessing ? "Please wait, pause in progress" : "")
+                .accessibilityHint(isProcessing ? "Please wait, setting reminder" : "")
             }
             .padding()
             .background(Color.obsidianBlack)
-            .navigationTitle("Pause")
+            .navigationTitle("Remind Me to Pause")
             .navigationBarTitleDisplayMode(.inline
             )
             .toolbar {
@@ -374,11 +393,11 @@ struct PauseDurationButton: View {
         Button(action: action) {
             HStack {
                 VStack(alignment: .leading, spacing: 4) {
-                    Text("Pause for \(duration.displayName)")
+                    Text("Remind me in \(duration.displayName)")
                         .font(STFont.labelLarge)
                         .foregroundStyle(Color.obsidianText)
-                    
-                    Text("Save \(savings.formatted(.currency(code: "USD")))")
+
+                    Text("Potential savings: \(savings.formatted(.currency(code: "USD")))")
                         .font(STFont.bodySmall)
                         .foregroundStyle(Color.semanticSuccess)
                 }
@@ -398,7 +417,7 @@ struct PauseDurationButton: View {
         }
         .buttonStyle(.plain)
         .disabled(isProcessing)
-        .accessibilityHint(isProcessing ? "Please wait, pause in progress" : "")
+        .accessibilityHint(isProcessing ? "Please wait, setting reminder" : "")
     }
 }
 
@@ -466,30 +485,143 @@ struct PauseSuccessOverlay: View {
                     .font(.largeTitle)
                     .foregroundStyle(Color.accentMint)
                 
-                Text("Paused!")
+                Text("Reminder Set!")
                     .font(STFont.headlineLarge)
                     .foregroundStyle(Color.obsidianText)
-                
+
                 Text(result.message)
                     .font(STFont.bodyMedium)
                     .foregroundStyle(Color.obsidianTextSecondary)
                     .multilineTextAlignment(.center)
-                
-                if let savings = result.monthlySavings {
-                    Label("Saving \(savings.formatted(.currency(code: "USD")))/month", 
-                          systemImage: "dollarsign.circle")
-                        .font(STFont.labelMedium)
-                        .foregroundStyle(Color.semanticSuccess)
-                        .padding(.horizontal, 12)
-                        .padding(.vertical, 6)
-                        .background(Color.semanticSuccess.opacity(0.15))
-                        .clipShape(Capsule())
-                }
             }
             .padding(40)
             .background(Color.obsidianSurface)
             .clipShape(RoundedRectangle(cornerRadius: STRadius.lg))
             
+            Spacer()
+        }
+        .background(Color.obsidianBlack.opacity(0.9))
+        .ignoresSafeArea()
+        .onAppear {
+            DispatchQueue.main.asyncAfter(deadline: .now() + 2) {
+                withAnimation {
+                    isPresented = false
+                }
+            }
+        }
+    }
+}
+
+// MARK: - Revolutionary Resume Button
+struct RevolutionaryResumeButton: View {
+    let subscription: Subscription
+    @State private var isProcessing = false
+    @State private var showSuccess = false
+    @State private var errorMessage: String? = nil
+
+    var body: some View {
+        Button(action: {
+            Task { await performResume() }
+        }) {
+            HStack(spacing: 12) {
+                Image(systemName: "play.circle.fill")
+                    .font(.title3)
+                    .foregroundStyle(Color.semanticSuccess)
+
+                VStack(alignment: .leading, spacing: 2) {
+                    Text("Resume Subscription")
+                        .font(STFont.labelLarge)
+
+                    if let pausedUntil = subscription.pausedUntil {
+                        Text("Resumes automatically on \(pausedUntil.formatted(date: .abbreviated, time: .omitted))")
+                            .font(STFont.bodySmall)
+                            .foregroundStyle(Color.obsidianTextSecondary)
+                    } else {
+                        Text("Reactivate your subscription")
+                            .font(STFont.bodySmall)
+                            .foregroundStyle(Color.obsidianTextSecondary)
+                    }
+                }
+
+                Spacer()
+
+                if isProcessing {
+                    ProgressView()
+                        .tint(Color.semanticSuccess)
+                } else {
+                    Image(systemName: "chevron.right")
+                        .foregroundStyle(Color.obsidianTextTertiary)
+                }
+            }
+            .padding()
+            .background(
+                RoundedRectangle(cornerRadius: STRadius.md)
+                    .fill(Color.semanticSuccess.opacity(0.1))
+                    .overlay(
+                        RoundedRectangle(cornerRadius: STRadius.md)
+                            .stroke(Color.semanticSuccess.opacity(0.3), lineWidth: 1)
+                    )
+            )
+        }
+        .buttonStyle(.plain)
+        .disabled(isProcessing)
+        .overlay {
+            if showSuccess {
+                ResumeSuccessOverlay(isPresented: $showSuccess)
+            }
+        }
+        .errorBanner($errorMessage)
+    }
+
+    private func performResume() async {
+        isProcessing = true
+        errorMessage = nil
+
+        do {
+            try await SubscriptionStore.shared.resumeSubscription(id: subscription.id)
+            NotificationManager.shared.cancelPauseReminder(for: subscription.id)
+
+            await MainActor.run {
+                self.isProcessing = false
+                self.showSuccess = true
+                Haptic.success()
+            }
+        } catch {
+            await MainActor.run {
+                self.errorMessage = "Could not resume: \(error.localizedDescription)"
+                self.isProcessing = false
+                Haptic.error()
+            }
+        }
+    }
+}
+
+// MARK: - Resume Success Overlay
+struct ResumeSuccessOverlay: View {
+    @Binding var isPresented: Bool
+
+    var body: some View {
+        VStack(spacing: 20) {
+            Spacer()
+
+            VStack(spacing: 16) {
+                Image(systemName: "checkmark.circle.fill")
+                    .font(.largeTitle)
+                    .foregroundStyle(Color.semanticSuccess)
+
+                Text("Resumed!")
+                    .font(STFont.headlineLarge)
+                    .foregroundStyle(Color.obsidianText)
+
+                Text("Your subscription is active again.")
+                    .font(STFont.bodyMedium)
+                    .foregroundStyle(Color.obsidianTextSecondary)
+                    .multilineTextAlignment(.center)
+            }
+            .padding(40)
+            .background(Color.obsidianSurface)
+            .clipShape(RoundedRectangle(cornerRadius: STRadius.lg))
+
             Spacer()
         }
         .background(Color.obsidianBlack.opacity(0.9))
@@ -512,11 +644,18 @@ struct PauseSuccessOverlay: View {
             amount: 15.99,
             billingFrequency: .monthly
         ))
-        
+
         RevolutionaryPauseButton(subscription: Subscription(
             name: "Netflix",
             amount: 15.99,
             billingFrequency: .monthly
+        ))
+
+        RevolutionaryResumeButton(subscription: Subscription(
+            name: "Netflix",
+            amount: 15.99,
+            billingFrequency: .monthly,
+            status: .paused
         ))
     }
     .padding()

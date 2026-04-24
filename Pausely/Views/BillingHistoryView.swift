@@ -4,6 +4,7 @@ import SwiftUI
 struct BillingHistoryView: View {
     @Environment(\.dismiss) private var dismiss
     @ObservedObject private var paymentManager = PaymentManager.shared
+    @ObservedObject private var currencyManager = CurrencyManager.shared
     @State private var transactions: [BillingTransaction] = []
     @State private var selectedFilter: TransactionFilter = .all
     @State private var isLoading = true
@@ -45,7 +46,7 @@ struct BillingHistoryView: View {
                                 .font(.system(.footnote, design: .rounded).weight(.medium))
                                 .foregroundStyle(.white.opacity(0.5))
 
-                            Text("$\(String(format: "%.2f", calculateTotal()))")
+                            Text(currencyManager.format(Decimal(calculateTotal())))
                                 .font(.system(.largeTitle, design: .rounded).weight(.bold))
                                 .foregroundStyle(.white)
                         }
@@ -210,6 +211,7 @@ struct BillingTransaction: Identifiable {
 
 struct TransactionRow: View {
     let transaction: BillingTransaction
+    @ObservedObject private var currencyManager = CurrencyManager.shared
     @State private var showingReceipt = false
     
     var body: some View {
@@ -280,10 +282,11 @@ struct TransactionRow: View {
     }
     
     private func formatAmount(_ amount: Double) -> String {
+        let formatted = currencyManager.format(Decimal(abs(amount)))
         if amount < 0 {
-            return "-$\(String(format: "%.2f", abs(amount)))"
+            return "-\(formatted)"
         }
-        return "+$\(String(format: "%.2f", amount))"
+        return "+\(formatted)"
     }
     
     private func formatDate(_ date: Date) -> String {
@@ -355,6 +358,7 @@ struct FilterPill: View {
 
 struct ReceiptView: View {
     @Environment(\.dismiss) private var dismiss
+    @ObservedObject private var currencyManager = CurrencyManager.shared
     let transaction: BillingTransaction
     
     var body: some View {
@@ -378,7 +382,7 @@ struct ReceiptView: View {
                     
                     // Amount
                     VStack(spacing: 8) {
-                        Text("$\(String(format: "%.2f", abs(transaction.amount)))")
+                        Text(currencyManager.format(Decimal(abs(transaction.amount))))
                             .font(.system(.largeTitle, design: .rounded).weight(.bold))
                             .foregroundStyle(.white)
 

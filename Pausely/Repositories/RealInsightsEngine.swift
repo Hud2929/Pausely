@@ -28,6 +28,16 @@ final class RealInsightsEngine: ObservableObject {
 
     private init() {}
 
+    // MARK: - Formatting Helpers
+
+    private func formatDecimal(_ value: Decimal) -> String {
+        let formatter = NumberFormatter()
+        formatter.numberStyle = .decimal
+        formatter.maximumFractionDigits = 2
+        formatter.minimumFractionDigits = 0
+        return formatter.string(from: NSDecimalNumber(decimal: value)) ?? "0"
+    }
+
     // MARK: - Main Analysis
 
     /// Generate real insights from subscription and usage data
@@ -275,7 +285,7 @@ final class RealInsightsEngine: ObservableObject {
             insights.append(RealInsight(
                 type: .duplicate,
                 title: "Multiple \(category) Subs",
-                description: "You have \(subs.count) \(category) subscriptions: \(names). Total: $\(totalCost)/month",
+                description: "You have \(subs.count) \(category) subscriptions: \(names). Total: $\(formatDecimal(totalCost))/month",
                 icon: "doc.on.doc.fill",
                 iconColor: .orange,
                 priority: 70,
@@ -355,7 +365,7 @@ final class RealInsightsEngine: ObservableObject {
                 insights.append(RealInsight(
                     type: .annualSavings,
                     title: "Annual Plan: \(sub.name)",
-                    description: "Switch to annual billing to save ~$\(savings)/year on \(sub.name).",
+                    description: "Switch to annual billing to save ~$\(formatDecimal(savings))/year on \(sub.name).",
                     icon: "calendar.badge.clock",
                     iconColor: .blue,
                     priority: 50,
@@ -416,7 +426,7 @@ final class RealInsightsEngine: ObservableObject {
         insights.append(RealInsight(
             type: .spendingTrend,
             title: "Monthly Spending",
-            description: "You're spending $\(totalMonthly)/month on \(active.count) active subscriptions.",
+            description: "You're spending $\(formatDecimal(totalMonthly))/month on \(active.count) active subscriptions.",
             icon: "dollarsign.circle.fill",
             iconColor: .blue,
             priority: 30,

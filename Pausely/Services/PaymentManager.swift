@@ -61,7 +61,7 @@ enum SubscriptionTier: String, CaseIterable, Comparable {
         switch self {
         case .free:        return 0
         case .pro:         return 7.99
-        case .proAnnual:   return Decimal(69.99) / 12
+        case .proAnnual:   return Decimal(79.99) / 12
         }
     }
 
@@ -72,7 +72,7 @@ enum SubscriptionTier: String, CaseIterable, Comparable {
         switch self {
         case .free:        return 0
         case .pro:         return 7.99
-        case .proAnnual:   return 69.99
+        case .proAnnual:   return 79.99
         }
     }
 
@@ -99,9 +99,10 @@ enum SubscriptionTier: String, CaseIterable, Comparable {
     }
 
     /// Convert USD price to user's selected currency
+    /// USD and CAD use the same base price (7.99); other currencies are converted.
     private func convertToUserCurrency(_ usdPrice: Decimal) -> Decimal {
         let currencyCode = CurrencyManager.shared.selectedCurrency
-        guard currencyCode != "USD" else { return usdPrice }
+        guard currencyCode != "USD", currencyCode != "CAD" else { return usdPrice }
 
         let rate = CurrencyManager.shared.exchangeRates[currencyCode] ?? 1.0
         return usdPrice * Decimal(rate)
@@ -114,20 +115,16 @@ enum SubscriptionTier: String, CaseIterable, Comparable {
         return Decimal(dollars + 0.99)
     }
 
-    /// Format price with currency symbol
+    /// Format price with proper currency formatting
     private func formatPrice(_ price: Decimal, currencyCode: String) -> String {
-        let currency = CurrencyManager.shared.currency(for: currencyCode)
-        let symbol = currency?.symbol ?? "$"
-
-        let doublePrice = NSDecimalNumber(decimal: price).doubleValue
-        return String(format: "%@%.2f", symbol, doublePrice)
+        return CurrencyManager.shared.format(price, currencyCode: currencyCode)
     }
     
     var savingsPercent: String {
         switch self {
         case .free:        return ""
         case .pro:         return ""
-        case .proAnnual:   return "Save 27%"
+        case .proAnnual:   return "Save 17%"
         }
     }
     

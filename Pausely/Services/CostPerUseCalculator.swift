@@ -114,7 +114,8 @@ struct CostPerUseCalculator {
                         costPerSession: nil,
                         valueScore: nil,
                         valueTier: .unknown,
-                        sessions: 0
+                        sessions: 0,
+                        hasUsageData: false
                     )
                 }
                 let cph = costPerHour(monthlyCost: sub.monthlyCost, monthlyHoursUsed: hours)
@@ -132,7 +133,8 @@ struct CostPerUseCalculator {
                     costPerSession: nil,
                     valueScore: score,
                     valueTier: tier,
-                    sessions: 0
+                    sessions: 0,
+                    hasUsageData: true
                 )
             }
             .sorted { lhs, rhs in
@@ -303,6 +305,7 @@ struct CostPerUseResult: Identifiable {
     let valueScore: Double?
     let valueTier: ValueTier
     let sessions: Int
+    let hasUsageData: Bool
 
     var displayCostPerHour: String {
         guard let cph = costPerHour else { return "—" }
@@ -319,7 +322,7 @@ struct CostPerUseResult: Identifiable {
     }
 
     var isWasted: Bool {
-        monthlyHoursUsed == 0 && subscription.monthlyCost > 0
+        monthlyHoursUsed == 0 && subscription.monthlyCost > 0 && hasUsageData
     }
 
     var wastedAmount: Decimal {

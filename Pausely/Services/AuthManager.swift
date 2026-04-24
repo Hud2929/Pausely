@@ -27,7 +27,8 @@ class RevolutionaryAuthManager: ObservableObject {
     private let biometricKey = "biometric_auth_enabled"
     private let lastEmailKey = "last_auth_email"
     private var refreshTask: Task<Void, Never>?
-    
+    private var pendingPassword: String?
+
     // MARK: - Scale Optimizations
     private let authQueue = DispatchQueue(label: "com.pausely.auth", qos: .userInitiated)
     private var pendingRequests: [String: Task<Any, Error>] = [:]
@@ -305,9 +306,105 @@ class RevolutionaryAuthManager: ObservableObject {
             throw authError
         }
     }
-    
+
+    // MARK: - OTP-based Email Verification (REVOLUTIONARY)
+
+    /// Signs up using OTP instead of link-based confirmation.
+    /// Sends a 6-digit code to the user's email for verification.
+    func signUpWithOTP(email: String, password: String,
+                       firstName: String? = nil, lastName: String? = nil) async throws {
+        await MainActor.run { state = .loading }
+
+        do {
+            // Store password and profile temporarily for after OTP verification
+            pendingPassword = password
+            if let fn = firstName, !fn.isEmpty { UserDefaults.standard.set(fn, forKey: "pending_firstName") }
+            if let ln = lastName, !ln.isEmpty { UserDefaults.standard.set(ln, forKey: "pending_lastName") }
+            UserDefaults.standard.set(email, forKey: lastEmailKey)
+
+            // Send OTP — creates user if they don't exist
+            try await client.auth.signInWithOTP(
+                email: email,
+                shouldCreateUser: true
+            )
+
+            await MainActor.run {
+                self.state = .emailConfirmationRequired(email)
+            }
+
+        } catch {
+            pendingPassword = nil
+            UserDefaults.standard.removeObject(forKey: "pending_firstName")
+            UserDefaults.standard.removeObject(forKey: "pending_lastName")
+            let authError = PauselyAuthError.unknown(error)
+            await MainActor.run { self.state = .error(authError) }
+            throw authError
+        }
+    }
+
+    /// Verifies the 6-digit OTP code sent to email.
+    /// After successful verification, sets the pending password and profile if they exist.
+    func verifyEmailOTP(email: String, code: String) async throws {
+        await MainActor.run { state = .loading }
+
+        do {
+            let session = try await client.auth.verifyOTP(
+                email: email,
+                token: code,
+                type: .email
+            )
+
+            let supabaseUser = session.user
+            let firstName = UserDefaults.standard.string(forKey: "pending_firstName")
+            let lastName = UserDefaults.standard.string(forKey: "pending_lastName")
+
+            let user = makeUser(from: supabaseUser, firstName: firstName, lastName: lastName)
+            cacheSession(userId: supabaseUser.id.uuidString,
+                         email: supabaseUser.email,
+                         createdAt: supabaseUser.createdAt)
+
+            // Save profile
+            if let fn = firstName { saveProfile(userId: supabaseUser.id.uuidString, firstName: fn, lastName: lastName) }
+
+            // Set password if we have one pending
+            if let password = pendingPassword {
+                _ = try? await client.auth.update(user: UserAttributes(password: password))
+                pendingPassword = nil
+            }
+
+            // Clean up pending profile data
+            UserDefaults.standard.removeObject(forKey: "pending_firstName")
+            UserDefaults.standard.removeObject(forKey: "pending_lastName")
+
+            await MainActor.run {
+                self.currentUser = user
+                self.isAuthenticated = true
+                self.state = .authenticated(user)
+            }
+
+            startSessionRefresh()
+
+        } catch {
+            let authError = PauselyAuthError.unknown(error)
+            await MainActor.run { self.state = .error(authError) }
+            throw authError
+        }
+    }
+
+    /// Resend the OTP code to the user's email
+    func resendOTP(email: String) async throws {
+        do {
+            try await client.auth.signInWithOTP(
+                email: email,
+                shouldCreateUser: true
+            )
+        } catch {
+            throw PauselyAuthError.unknown(error)
+        }
+    }
+
     // MARK: - Sign In
-    
+
     func signIn(email: String, password: String) async throws {
         await MainActor.run { state = .loading }
         #if DEBUG

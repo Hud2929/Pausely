@@ -85,8 +85,8 @@ struct DashboardView: View {
     var body: some View {
         ScrollView(showsIndicators: false) {
             VStack(spacing: 0) {
-                // Hero Header
-                heroHeader
+                // Personalized Header
+                personalizedHeader
                     .padding(.top, 16)
 
                 // Offline Mode Banner
@@ -111,22 +111,19 @@ struct DashboardView: View {
                     .padding(.horizontal, 20)
                     .padding(.top, 40)
                 } else {
-                    // Referral Promotion
-                    if !paymentManager.isPremium || referralManager.referralData?.isEligibleForFreePro == false {
-                        ReferralPromotionCard()
-                            .padding(.horizontal, 20)
-                            .padding(.top, 16)
-                    }
+                    // Next Payment Card (prominent)
+                    NextPaymentCard(subscription: store.upcomingRenewals.first ?? store.activeSubscriptions.first)
+                        .padding(.horizontal, 20)
+                        .padding(.top, 20)
 
-                    // Total Spend Hero Card
-                    HeroSpendCard(
-                        amount: displayAmount,
-                        timeframe: $selectedTimeframe,
-                        subscriptionCount: store.subscriptions.count,
-                        isLoading: store.isLoading && store.subscriptions.isEmpty
+                    // Total Spend Summary
+                    TotalSpendSummaryCard(
+                        monthlySpend: store.totalMonthlySpend,
+                        yearlySpend: store.totalAnnualSpend,
+                        subscriptionCount: store.subscriptions.count
                     )
                     .padding(.horizontal, 20)
-                    .padding(.top, 20)
+                    .padding(.top, 16)
 
                     // Quick Actions
                     QuickActionsGrid(
@@ -146,7 +143,6 @@ struct DashboardView: View {
                         UpcomingRenewalsCarousel(subscriptions: store.upcomingRenewals)
                             .padding(.top, 24)
                     } else if !store.isLoading {
-                        // Empty state for upcoming renewals
                         ArtisticEmptyState(
                             icon: "calendar.badge.clock",
                             title: "No upcoming renewals",
@@ -156,6 +152,12 @@ struct DashboardView: View {
                         )
                         .padding(.horizontal, 20)
                         .padding(.top, 24)
+                    }
+
+                    // Paused Subscriptions
+                    if !store.pausedSubscriptions.isEmpty {
+                        PausedSubscriptionsSection(subscriptions: store.pausedSubscriptions)
+                            .padding(.top, 24)
                     }
 
                     // Cost Per Use (killer feature)
@@ -181,8 +183,8 @@ struct DashboardView: View {
         }
         .refreshable {
             HapticStyle.medium.trigger()
-            await store.refresh()
-            HapticStyle.light.trigger()
+            await store.fetchSubscriptions(force: true)
+            HapticStyle.success.trigger()
         }
         .confirmationDialog("Add Subscription", isPresented: $showingAddOptions) {
             Button("Add Manually") {
@@ -194,7 +196,7 @@ struct DashboardView: View {
             Button("Cancel", role: .cancel) {}
         }
         .sheet(isPresented: $showingAddSubscription) {
-            ArtisticAddSubscriptionView()
+            SubscriptionBrowserView()
         }
         .sheet(isPresented: $showingSmartURLInput) {
             SmartURLInputView()
@@ -260,26 +262,30 @@ struct DashboardView: View {
         }
     }
 
-    // MARK: - Hero Header
-    private var heroHeader: some View {
-        HStack(alignment: .firstTextBaseline, spacing: 16) {
-            VStack(alignment: .leading, spacing: 4) {
+    // MARK: - Personalized Header
+    private var personalizedHeader: some View {
+        HStack(alignment: .top, spacing: 16) {
+            VStack(alignment: .leading, spacing: 6) {
                 Text(greeting)
-                    .font(AppTypography.bodySmall)
+                    .font(.system(.subheadline, design: .rounded).weight(.medium))
                     .foregroundStyle(.secondary)
 
-                Text("Dashboard")
-                    .font(AppTypography.displayLarge)
+                Text("Your Subscriptions")
+                    .font(.system(.title, design: .rounded).weight(.bold))
                     .foregroundStyle(.primary)
+
+                if !store.subscriptions.isEmpty {
+                    Text(summaryText)
+                        .font(.system(.caption, design: .rounded).weight(.medium))
+                        .foregroundStyle(.tertiary)
+                        .lineLimit(1)
+                }
             }
 
             Spacer()
 
             HStack(spacing: 12) {
-                // Currency selector
                 CurrencySelectorButton()
-
-                // Notifications
                 NotificationButton()
             }
             .accessibilityElement(children: .combine)
@@ -292,11 +298,27 @@ struct DashboardView: View {
 
     private var greeting: String {
         let hour = Calendar.current.component(.hour, from: Date())
+        let name = RevolutionaryAuthManager.shared.currentUser?.displayName ?? ""
+        let prefix = name.isEmpty ? "" : "\(name), "
         switch hour {
-        case 0..<12: return "Good morning"
-        case 12..<17: return "Good afternoon"
-        default: return "Good evening"
+        case 0..<12: return "\(prefix)Good morning"
+        case 12..<17: return "\(prefix)Good afternoon"
+        default: return "\(prefix)Good evening"
         }
+    }
+
+    private var summaryText: String {
+        let active = store.activeSubscriptions.count
+        let paused = store.pausedSubscriptions.count
+        let monthlyTotal = store.activeSubscriptions.reduce(Decimal(0)) { total, sub in
+            let converted = (try? currencyManager.convert(sub.monthlyCost, from: sub.currency, to: currencyManager.selectedCurrency)) ?? sub.monthlyCost
+            return total + converted
+        }
+        let monthly = currencyManager.format(monthlyTotal)
+        if paused > 0 {
+            return "\(active) active, \(paused) paused • \(monthly)/mo"
+        }
+        return "\(active) active subscriptions • \(monthly)/mo"
     }
 }
 
@@ -551,15 +573,19 @@ struct SmartInsightsSection: View {
     @ObservedObject private var store = SubscriptionStore.shared
     @ObservedObject private var screenTimeManager = ScreenTimeManager.shared
     @ObservedObject private var paymentManager = PaymentManager.shared
+    @ObservedObject private var currencyManager = CurrencyManager.shared
 
     var potentialSavings: Decimal {
-        // Calculate potential savings from low-usage subscriptions
+        // Calculate potential savings from low-usage subscriptions in user's selected currency
         store.subscriptions
             .filter { sub in
-                guard let usage = screenTimeManager.getCurrentMonthUsage(for: sub.name) as Int? else { return false }
+                let usage = screenTimeManager.getCurrentMonthUsage(for: sub.name)
                 return usage < 60 && sub.monthlyCost > 5
             }
-            .reduce(0) { $0 + $1.monthlyCost }
+            .reduce(Decimal(0)) { total, sub in
+                let converted = (try? currencyManager.convert(sub.monthlyCost, from: sub.currency, to: currencyManager.selectedCurrency)) ?? sub.monthlyCost
+                return total + converted
+            }
     }
 
     var body: some View {
@@ -582,12 +608,13 @@ struct SmartInsightsSection: View {
                 }
 
                 // Hidden perks
+                let perksCount = PerkEngine.shared.discoveredPerks.count
                 DashboardInsightCard(
                     icon: "gift.fill",
                     iconColor: Color.luxuryGold,
                     title: "Available Perks",
-                    subtitle: "From your subscriptions",
-                    value: "3",
+                    subtitle: perksCount > 0 ? "From your subscriptions" : "Analyze to discover perks",
+                    value: perksCount > 0 ? "\(perksCount)" : "—",
                     valueColor: Color.luxuryGold
                 )
 
@@ -605,11 +632,7 @@ struct SmartInsightsSection: View {
     }
 
     private func formatCurrency(_ amount: Decimal) -> String {
-        let formatter = NumberFormatter()
-        formatter.numberStyle = .currency
-        formatter.currencyCode = "USD"
-        formatter.maximumFractionDigits = 0
-        return formatter.string(from: amount as NSDecimalNumber) ?? "$0"
+        return CurrencyManager.shared.format(amount)
     }
 }
 

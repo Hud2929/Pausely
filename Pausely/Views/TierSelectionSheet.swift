@@ -377,7 +377,7 @@ struct TierSelectionSheet: View {
 
             if isOverridingPrice {
                 HStack(spacing: 12) {
-                    Text(currencyManager.selectedCurrency == "USD" ? "$" : currencyManager.currencySymbol(for: currencyManager.selectedCurrency))
+                    Text(currencyManager.currencySymbol(for: currencyManager.selectedCurrency))
                         .font(.headline.weight(.semibold))
                         .foregroundColor(.white.opacity(0.6))
 

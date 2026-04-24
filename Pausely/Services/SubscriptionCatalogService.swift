@@ -438,6 +438,36 @@ final class SubscriptionCatalogService: ObservableObject {
                       tiers: [
                           TierPricing(tier: .individual, region: .us, monthlyPriceUSD: 25.00, annualPriceUSD: 250.00, isBestValue: true),
                       ]),
+            makeEntry(bundleId: "com.shudder.shudder", name: "Shudder", category: .entertainment,
+                      description: "Horror, thriller, and supernatural streaming.",
+                      cancellationURL: "https://www.shudder.com/account/subscription",
+                      tiers: [
+                          TierPricing(tier: .individual, region: .us, monthlyPriceUSD: 6.99, annualPriceUSD: 71.88, isBestValue: true),
+                      ]),
+            makeEntry(bundleId: "com.britbox.britbox", name: "BritBox", category: .entertainment,
+                      description: "British TV and classic BBC shows.",
+                      cancellationURL: "https://www.britbox.com/account/subscription",
+                      tiers: [
+                          TierPricing(tier: .individual, region: .us, monthlyPriceUSD: 8.99, annualPriceUSD: 89.99, isBestValue: true),
+                      ]),
+            makeEntry(bundleId: "com.starz.starz", name: "Starz", category: .entertainment,
+                      description: "Premium movies and original series.",
+                      cancellationURL: "https://www.starz.com/account/subscription",
+                      tiers: [
+                          TierPricing(tier: .individual, region: .us, monthlyPriceUSD: 9.99, annualPriceUSD: 74.99, isBestValue: true),
+                      ]),
+            makeEntry(bundleId: "com.showtime.showtime", name: "Paramount+ with Showtime", category: .entertainment,
+                      description: "Hit movies, docs, and Showtime originals.",
+                      cancellationURL: "https://www.paramountplus.com/account/subscription",
+                      tiers: [
+                          TierPricing(tier: .individual, region: .us, monthlyPriceUSD: 11.99, annualPriceUSD: 119.99, isBestValue: true),
+                      ]),
+            makeEntry(bundleId: "com.acorn.acorn", name: "Acorn TV", category: .entertainment,
+                      description: "British and international mysteries and dramas.",
+                      cancellationURL: "https://acorn.tv/account/subscription",
+                      tiers: [
+                          TierPricing(tier: .individual, region: .us, monthlyPriceUSD: 7.99, annualPriceUSD: 79.99, isBestValue: true),
+                      ]),
         ]
     }
 
@@ -512,6 +542,12 @@ final class SubscriptionCatalogService: ObservableObject {
                       tiers: [
                           TierPricing(tier: .individual, region: .us, monthlyPriceUSD: 0, annualPriceUSD: 0, isBestValue: false),
                           TierPricing(tier: .individual, region: .uk, monthlyPriceUSD: 0, annualPriceUSD: 0, isBestValue: false),
+                      ]),
+            makeEntry(bundleId: "com.google.youtubemusic", name: "YouTube Music Premium", category: .music,
+                      description: "Ad-free music, background play, and offline downloads.",
+                      cancellationURL: "https://www.youtube.com/paid_memberships",
+                      tiers: [
+                          TierPricing(tier: .individual, region: .us, monthlyPriceUSD: 10.99, annualPriceUSD: 109.99, isBestValue: true),
                       ]),
         ]
     }
@@ -702,6 +738,24 @@ final class SubscriptionCatalogService: ObservableObject {
                       tiers: [
                           TierPricing(tier: .individual, region: .us, monthlyPriceUSD: 19.99, annualPriceUSD: 79.99, isBestValue: false),
                           TierPricing(tier: .individual, region: .uk, monthlyPriceUSD: 9.99, annualPriceUSD: 49.99, isBestValue: false),
+                      ]),
+            makeEntry(bundleId: "com.noom.noom", name: "Noom", category: .healthFitness,
+                      description: "Psychology-based weight loss and healthy habit coaching.",
+                      cancellationURL: "https://www.noom.com/subscription",
+                      tiers: [
+                          TierPricing(tier: .individual, region: .us, monthlyPriceUSD: 59.00, annualPriceUSD: 199.00, isBestValue: true),
+                      ]),
+            makeEntry(bundleId: "com.fitbit.premium", name: "Fitbit Premium", category: .healthFitness,
+                      description: "Guided workouts, sleep insights, and wellness reports.",
+                      cancellationURL: "https://www.fitbit.com/settings/subscription",
+                      tiers: [
+                          TierPricing(tier: .individual, region: .us, monthlyPriceUSD: 9.99, annualPriceUSD: 79.99, isBestValue: true),
+                      ]),
+            makeEntry(bundleId: "com.nike.ntc", name: "Nike Training Club Premium", category: .healthFitness,
+                      description: "Expert-led workouts and personalized training plans.",
+                      cancellationURL: "https://www.nike.com/membership/subscription",
+                      tiers: [
+                          TierPricing(tier: .individual, region: .us, monthlyPriceUSD: 14.99, annualPriceUSD: nil, isBestValue: false),
                       ]),
         ]
     }
@@ -951,6 +1005,24 @@ final class SubscriptionCatalogService: ObservableObject {
                       tiers: [
                           TierPricing(tier: .individual, region: .us, monthlyPriceUSD: 0, annualPriceUSD: 0, isBestValue: false),
                       ]),
+            makeEntry(bundleId: "com.samsclub.samsclub", name: "Sam's Club", category: .shopping,
+                      description: "Warehouse membership with bulk savings and same-day delivery.",
+                      cancellationURL: "https://www.samsclub.com/account/subscription",
+                      tiers: [
+                          TierPricing(tier: .individual, region: .us, monthlyPriceUSD: 4.17, annualPriceUSD: 50.00, isBestValue: true),
+                      ]),
+            makeEntry(bundleId: "com.bjs.bjs", name: "BJ's", category: .shopping,
+                      description: "Warehouse club with low prices and gas savings.",
+                      cancellationURL: "https://www.bjs.com/account/subscription",
+                      tiers: [
+                          TierPricing(tier: .individual, region: .us, monthlyPriceUSD: 4.58, annualPriceUSD: 55.00, isBestValue: true),
+                      ]),
+            makeEntry(bundleId: "com.instacart.instacartplus", name: "Instacart+", category: .shopping,
+                      description: "Unlimited free delivery on groceries and essentials.",
+                      cancellationURL: "https://www.instacart.com/account/subscription",
+                      tiers: [
+                          TierPricing(tier: .individual, region: .us, monthlyPriceUSD: 9.99, annualPriceUSD: 99.00, isBestValue: true),
+                      ]),
         ]
     }
 
@@ -982,6 +1054,24 @@ final class SubscriptionCatalogService: ObservableObject {
                       tiers: [
                           TierPricing(tier: .individual, region: .us, monthlyPriceUSD: 9.99, annualPriceUSD: 59.99, isBestValue: true),
                           TierPricing(tier: .family, region: .us, monthlyPriceUSD: 14.99, annualPriceUSD: 89.99, isBestValue: false),
+                      ]),
+            makeEntry(bundleId: "com.blueapron.BlueApron", name: "Blue Apron", category: .food,
+                      description: "Chef-designed recipes with fresh ingredients delivered weekly.",
+                      cancellationURL: "https://www.blueapron.com/account/subscription",
+                      tiers: [
+                          TierPricing(tier: .individual, region: .us, monthlyPriceUSD: 47.95, annualPriceUSD: nil, isBestValue: false),
+                      ]),
+            makeEntry(bundleId: "com.factor.factor", name: "Factor", category: .food,
+                      description: "Fresh, dietitian-approved prepared meals delivered weekly.",
+                      cancellationURL: "https://www.factor75.com/account/subscription",
+                      tiers: [
+                          TierPricing(tier: .individual, region: .us, monthlyPriceUSD: 60.00, annualPriceUSD: nil, isBestValue: false),
+                      ]),
+            makeEntry(bundleId: "com.dailyharvest.dailyharvest", name: "Daily Harvest", category: .food,
+                      description: "Organic, plant-based smoothies and bowls delivered weekly.",
+                      cancellationURL: "https://www.dailyharvest.com/account/subscription",
+                      tiers: [
+                          TierPricing(tier: .individual, region: .us, monthlyPriceUSD: 71.91, annualPriceUSD: nil, isBestValue: false),
                       ]),
         ]
     }
@@ -1041,6 +1131,18 @@ final class SubscriptionCatalogService: ObservableObject {
                       tiers: [
                           TierPricing(tier: .individual, region: .us, monthlyPriceUSD: 3.99, annualPriceUSD: 34.99, isBestValue: false),
                           TierPricing(tier: .family, region: .us, monthlyPriceUSD: 7.99, annualPriceUSD: 49.99, isBestValue: true),
+                      ]),
+            makeEntry(bundleId: "com.dazn.dazn", name: "DAZN", category: .sports,
+                      description: "Live and on-demand boxing, MMA, and combat sports streaming.",
+                      cancellationURL: "https://www.dazn.com/account/subscription",
+                      tiers: [
+                          TierPricing(tier: .individual, region: .us, monthlyPriceUSD: 19.99, annualPriceUSD: 224.99, isBestValue: true),
+                      ]),
+            makeEntry(bundleId: "com.fubo.fubotv", name: "FuboTV", category: .sports,
+                      description: "Live sports and TV streaming with cloud DVR.",
+                      cancellationURL: "https://www.fubo.tv/account/subscription",
+                      tiers: [
+                          TierPricing(tier: .individual, region: .us, monthlyPriceUSD: 79.99, annualPriceUSD: nil, isBestValue: false),
                       ]),
             makeEntry(bundleId: "com.ea.EAPlay", name: "EA Play", category: .sports,
                       description: "Play new games first and get rewards.",

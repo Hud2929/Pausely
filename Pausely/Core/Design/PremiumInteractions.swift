@@ -234,6 +234,8 @@ struct AnimatedCategoryChip: View {
                 .scaleEffect(pressed ? 0.92 : 1.0)
         }
         .buttonStyle(PlainButtonStyle())
+        .accessibilityLabel("Filter by \(title)")
+        .accessibilityValue(isSelected ? "Selected" : "Not selected")
         .simultaneousGesture(
             DragGesture(minimumDistance: 0)
                 .onChanged { _ in

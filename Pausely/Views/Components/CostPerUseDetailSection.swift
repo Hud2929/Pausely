@@ -32,7 +32,8 @@ struct CostPerUseDetailSection: View {
             costPerSession: nil,
             valueScore: score,
             valueTier: tier,
-            sessions: 0
+            sessions: 0,
+            hasUsageData: true
         )
     }
 

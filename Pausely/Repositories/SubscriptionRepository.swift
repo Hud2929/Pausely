@@ -35,7 +35,7 @@ final class SubscriptionRepository {
     
     var upcomingRenewals: [Subscription] {
         activeSubscriptions
-            .filter { $0.daysUntilRenewal != nil && $0.daysUntilRenewal! <= 7 }
+            .filter { ($0.daysUntilRenewal ?? 999) <= 7 }
             .sorted { ($0.daysUntilRenewal ?? 999) < ($1.daysUntilRenewal ?? 999) }
     }
     

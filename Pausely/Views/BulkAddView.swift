@@ -13,6 +13,7 @@ struct BulkAddView: View {
     @Environment(\.dismiss) private var dismiss
     @ObservedObject private var catalogService = SubscriptionCatalogService.shared
     @ObservedObject private var subscriptionStore = SubscriptionStore.shared
+    @ObservedObject private var currencyManager = CurrencyManager.shared
 
     @State private var searchText = ""
     @State private var selectedCategory: SubscriptionCategory?
@@ -368,6 +369,7 @@ struct SubscriptionCatalogRow: View {
     let subscription: CatalogEntry
     let isSelected: Bool
     let onToggle: () -> Void
+    @ObservedObject private var currencyManager = CurrencyManager.shared
 
     private var defaultPrice: Double {
         subscription.defaultIndividualPricing?.monthlyPriceUSD ?? 0
@@ -424,7 +426,7 @@ struct SubscriptionCatalogRow: View {
 
                 // Price
                 VStack(alignment: .trailing, spacing: 2) {
-                    Text("$\(String(format: "%.2f", defaultPrice))")
+                    Text(currencyManager.format(Decimal(defaultPrice)))
                         .font(.callout.weight(.semibold))
                         .foregroundColor(.white)
 

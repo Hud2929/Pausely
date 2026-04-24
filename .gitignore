@@ -24,6 +24,7 @@ Packages/
 .env.*
 *.env
 !.env.example
+backend/.dev.vars
 
 # Credentials - NEVER commit these
 *.p8

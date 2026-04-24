@@ -448,7 +448,10 @@ struct CatalogEntryCard: View {
                         Text(tier.displayName)
                             .font(.caption2.weight(.semibold))
                             .foregroundColor(.white.opacity(0.6))
-                            .padding(.horizontal, 7)
+                            .lineLimit(1)
+                            .allowsTightening(false)
+                            .minimumScaleFactor(0.85)
+                            .padding(.horizontal, 10)
                             .padding(.vertical, 3)
                             .background(
                                 Capsule()

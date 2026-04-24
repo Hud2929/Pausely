@@ -198,7 +198,7 @@ struct CostPerUseCard: View {
             formatter.currencyCode = result.subscription.currency
             formatter.maximumFractionDigits = 2
             let wasted = formatter.string(from: result.subscription.monthlyCost as NSDecimalNumber) ?? "\(result.subscription.monthlyCost)"
-            return "You're paying \(wasted) for 0 hours of use this month"
+            return "You're paying \(wasted) — no usage data available"
         }
         guard let cph = result.costPerHour else {
             return "Add usage data to see your cost per hour"
@@ -375,7 +375,8 @@ struct CostPerUseRow: View {
                     costPerSession: nil,
                     valueScore: 85,
                     valueTier: .great,
-                    sessions: 12
+                    sessions: 12,
+                    hasUsageData: true
                 )
                 CostPerUseCard(result: result)
 
@@ -391,7 +392,8 @@ struct CostPerUseRow: View {
                     costPerSession: nil,
                     valueScore: 25,
                     valueTier: .poor,
-                    sessions: 2
+                    sessions: 2,
+                    hasUsageData: true
                 )
                 CostPerUseCard(result: result2, showComparison: true, comparisonRatio: 2.5, comparisonName: "Netflix")
 

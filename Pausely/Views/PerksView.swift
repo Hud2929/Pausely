@@ -88,11 +88,7 @@ struct PerksView: View {
                     .textCase(.uppercase)
 
                 HStack(alignment: .firstTextBaseline, spacing: 4) {
-                    Text(currencyManager.currentCurrency.symbol)
-                        .font(.title2.bold())
-                        .foregroundStyle(Color.luxuryGold)
-
-                    Text("\(Int(perkEngine.totalMoneySaved))")
+                    Text(currencyManager.format(Decimal(perkEngine.totalMoneySaved)))
                         .font(.largeTitle.bold())
                         .foregroundStyle(.white)
                 }
@@ -548,7 +544,7 @@ struct PerkCard: View {
                         .lineLimit(1)
                     HStack(spacing: 6) {
                         DifficultyBadge(difficulty: perk.difficulty)
-                        Text("Save $\(Int(perk.estimatedSavings))/year")
+                        Text("Save \(CurrencyManager.shared.format(Decimal(perk.estimatedSavings)))/year")
                             .font(.caption.weight(.bold))
                             .foregroundStyle(Color.luxuryGold)
                     }
@@ -697,7 +693,7 @@ struct PerkActionSheet: View {
                             .font(.caption.weight(.semibold))
                             .foregroundStyle(.white.opacity(0.6))
 
-                        Text("$\(Int(perk.estimatedSavings))")
+                        Text(CurrencyManager.shared.format(Decimal(perk.estimatedSavings)))
                             .font(.largeTitle.bold())
                             .foregroundStyle(Color.luxuryGold)
 

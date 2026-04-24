@@ -226,10 +226,7 @@ struct SmartImportView: View {
     }
     
     private func formatCurrency(_ amount: Decimal) -> String {
-        let formatter = NumberFormatter()
-        formatter.numberStyle = .currency
-        formatter.currencyCode = "USD"
-        return formatter.string(from: amount as NSDecimalNumber) ?? "$0"
+        return CurrencyManager.shared.format(amount)
     }
 }
 

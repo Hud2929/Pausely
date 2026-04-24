@@ -218,17 +218,15 @@ struct RevolutionaryScreenTimeDashboard: View {
             
             SummaryCard(
                 title: "Money at Risk",
-                value: "$",
-                valueSuffix: String(format: "%.0f", totalWaste),
+                value: CurrencyManager.shared.format(Decimal(totalWaste)),
                 subtitle: "Potentially wasted",
                 icon: "flame.fill",
                 color: .red
             )
-            
+
             SummaryCard(
                 title: "Avg Cost/Hour",
-                value: "$",
-                valueSuffix: String(format: "%.2f", averageCostPerHour),
+                value: CurrencyManager.shared.format(Decimal(averageCostPerHour)),
                 subtitle: "Across all subs",
                 icon: "dollarsign.circle.fill",
                 color: .purple
@@ -437,7 +435,7 @@ struct WasteInsightCard: View {
                 Spacer()
                 
                 VStack(alignment: .trailing, spacing: 2) {
-                    Text("$\(insight.formattedCostPerHour)/hr")
+                    Text("\(CurrencyManager.shared.format(Decimal(insight.costPerHour ?? 0)))/hr")
                         .font(.subheadline)
                         .foregroundColor(.white)
 

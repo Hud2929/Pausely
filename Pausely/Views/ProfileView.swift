@@ -10,11 +10,13 @@ struct PremiumProfileView: View {
     @State private var showingCurrency = false
     @State private var showingPrivacy = false
     @State private var showingHelp = false
-    
+    @State private var showingExport = false
+    @State private var showingWhatsNew = false
+
     var body: some View {
         ZStack {
             PremiumBackground()
-            
+
             ScrollView(showsIndicators: false) {
                 VStack(spacing: 0) {
                     // Profile Header with artistic design
@@ -25,7 +27,7 @@ struct PremiumProfileView: View {
                     )
                     .padding(.horizontal, 20)
                     .padding(.top, 16)
-                    
+
                     // Membership Status
                     if !paymentManager.isPremium {
                         UpgradePromptCard {
@@ -40,27 +42,65 @@ struct PremiumProfileView: View {
                         .padding(.horizontal, 20)
                         .padding(.top, 20)
                     }
-                    
+
                     // Stats Grid
                     ProfileStatsGrid(store: store)
                         .padding(.horizontal, 20)
                         .padding(.top, 20)
-                    
+
                     // Settings Section
                     SettingsSection(
                         onNotifications: { showingNotifications = true },
                         onCurrency: { showingCurrency = true },
                         onPrivacy: { showingPrivacy = true },
-                        onHelp: { showingHelp = true }
+                        onHelp: { showingHelp = true },
+                        onExport: { showingExport = true }
                     )
                     .padding(.horizontal, 20)
                     .padding(.top, 24)
-                    
+
+                    // What's New Button
+                    Button(action: {
+                        HapticStyle.medium.trigger()
+                        showingWhatsNew = true
+                    }) {
+                        HStack(spacing: 16) {
+                            ZStack {
+                                RoundedRectangle(cornerRadius: 10)
+                                    .fill(Color.luxuryGold.opacity(0.15))
+                                    .frame(width: 36, height: 36)
+
+                                Image(systemName: "sparkles")
+                                    .font(.body)
+                                    .foregroundColor(Color.luxuryGold)
+                            }
+
+                            Text("What's New")
+                                .font(.body)
+                                .foregroundColor(.white)
+
+                            Spacer()
+
+                            Text("1.05")
+                                .font(.body)
+                                .foregroundColor(TextColors.secondary)
+
+                            Image(systemName: "chevron.right")
+                                .font(.subheadline.weight(.semibold))
+                                .foregroundColor(TextColors.tertiary)
+                        }
+                        .padding(14)
+                        .background(BackgroundColors.secondary)
+                    }
+                    .buttonStyle(PlainButtonStyle())
+                    .padding(.horizontal, 20)
+                    .padding(.top, 24)
+
                     // About Section
                     AboutSection()
                         .padding(.horizontal, 20)
                         .padding(.top, 24)
-                    
+
                     // Sign Out
                     SignOutButton {
                         Task {
@@ -87,6 +127,12 @@ struct PremiumProfileView: View {
         }
         .sheet(isPresented: $showingHelp) {
             HelpSupportView()
+        }
+        .sheet(isPresented: $showingExport) {
+            ExportDataView()
+        }
+        .sheet(isPresented: $showingWhatsNew) {
+            WhatsNewSheet()
         }
     }
 }
@@ -366,27 +412,27 @@ struct ProfileStatsGrid: View {
             )
             
             ProfileStatBox(
-                value: "12",
+                value: "\(uniqueCategories)",
                 label: "Categories",
                 icon: "folder",
                 color: SemanticColors.info
             )
-            
+
             ProfileStatBox(
-                value: "98%",
-                label: "Uptime",
+                value: "\(store.upcomingRenewals.count)",
+                label: "Renewing Soon",
                 icon: "checkmark.shield",
                 color: SemanticColors.success
             )
         }
     }
     
+    private var uniqueCategories: Int {
+        Set(store.subscriptions.compactMap { $0.category }).count
+    }
+
     private func formatCurrency(_ amount: Decimal) -> String {
-        let formatter = NumberFormatter()
-        formatter.numberStyle = .currency
-        formatter.currencyCode = "USD"
-        formatter.maximumFractionDigits = 0
-        return formatter.string(from: amount as NSDecimalNumber) ?? "$0"
+        return CurrencyManager.shared.format(amount)
     }
 }
 
@@ -431,11 +477,13 @@ struct ProfileStatBox: View {
 
 // MARK: - Settings Section
 struct SettingsSection: View {
+    @ObservedObject private var currencyManager = CurrencyManager.shared
     let onNotifications: () -> Void
     let onCurrency: () -> Void
     let onPrivacy: () -> Void
     let onHelp: () -> Void
-    
+    let onExport: () -> Void
+
     var body: some View {
         VStack(alignment: .leading, spacing: 16) {
             Text("Settings")
@@ -445,7 +493,8 @@ struct SettingsSection: View {
 
             VStack(spacing: 1) {
                 SettingsRow(icon: "bell.fill", title: "Notifications", color: SemanticColors.warning, action: onNotifications)
-                SettingsRow(icon: "dollarsign.circle.fill", title: "Currency", value: "USD", color: SemanticColors.success, action: onCurrency)
+                SettingsRow(icon: "dollarsign.circle.fill", title: "Currency", value: currencyManager.selectedCurrency, color: SemanticColors.success, action: onCurrency)
+                SettingsRow(icon: "square.and.arrow.up", title: "Export Data", color: SemanticColors.info, action: onExport)
                 SettingsRow(icon: "lock.fill", title: "Privacy & Security", color: SemanticColors.info, action: onPrivacy)
                 SettingsRow(icon: "questionmark.circle.fill", title: "Help & Support", color: TextColors.secondary, action: onHelp)
             }

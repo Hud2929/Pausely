@@ -10,13 +10,20 @@ import LocalAuthentication
 struct EmailConfirmationView: View {
     let email: String
     @StateObject private var authManager = RevolutionaryAuthManager.shared
+    @State private var otpCode: [String] = Array(repeating: "", count: 6)
     @State private var resendTimer = 60
     @State private var timer: Timer?
     @State private var showResendSuccess = false
-    @State private var showCheckingEmail = false
+    @State private var isVerifying = false
     @State private var resendError: String?
+    @State private var verificationError: String?
+    @State private var focusedIndex = 0
     @Environment(\.dismiss) private var dismiss
-    
+
+    var isCodeComplete: Bool {
+        otpCode.allSatisfy { $0.count == 1 }
+    }
+
     var body: some View {
         ZStack {
             AnimatedGradientBackground()
@@ -63,70 +70,69 @@ struct EmailConfirmationView: View {
                             )
                         )
                 }
-                
+
                 // Text
                 VStack(spacing: 16) {
-                    Text("Check Your Email")
+                    Text("Verify Your Email")
                         .font(.system(.title, design: .rounded).weight(.bold))
                         .foregroundStyle(.white)
 
-                    Text("We've sent a confirmation link to")
+                    Text("Enter the 6-digit code we sent to")
                         .font(.system(.body, design: .rounded))
                         .foregroundStyle(.white.opacity(0.7))
 
                     Text(email)
                         .font(.system(.body, design: .rounded).weight(.semibold))
                         .foregroundStyle(Color.luxuryGold)
+                }
 
-                    Text("Look for an email from \(AppConfig.appName) (\(AppConfig.noreplyEmail)) with the subject \"Confirm Your Email - \(AppConfig.appName)\". Click the button to verify your account.")
-                        .font(.system(.subheadline, design: .rounded))
-                        .foregroundStyle(.white.opacity(0.6))
-                        .multilineTextAlignment(.center)
-                        .lineSpacing(4)
-                        .padding(.horizontal, 32)
-                    
-                    // Helpful tips
-                    VStack(alignment: .leading, spacing: 12) {
-                        TipRow(icon: "mail.stack", text: "Check your spam/junk folder")
-                        TipRow(icon: "clock", text: "The email may take a few minutes")
-                        TipRow(icon: "arrow.down.circle", text: "Tap the button - it will open the app automatically")
-                    }
-                    .padding(.top, 8)
-                    .padding(.horizontal, 32)
-                    
-                    // Support Contact
-                    VStack(spacing: 8) {
-                        Text("Didn't receive the email?")
-                            .font(.system(.subheadline, design: .rounded).weight(.medium))
-                            .foregroundStyle(.white.opacity(0.7))
-
-                        Button(action: {
-                            SupportEmailContact.supportRequest(userEmail: email, issue: "Did not receive confirmation email").openMail()
-                        }) {
-                            HStack(spacing: 6) {
-                                Image(systemName: "headset")
-                                Text("Contact Support")
-                            }
-                            .font(.system(.subheadline, design: .rounded).weight(.semibold))
-                            .foregroundStyle(Color.luxuryGold)
+                // OTP Input
+                HStack(spacing: 12) {
+                    ForEach(0..<6, id: \.self) { index in
+                        OTPDigitBox(
+                            index: index,
+                            text: $otpCode[index],
+                            isFocused: focusedIndex == index,
+                            onBackspace: { handleBackspace(at: index) },
+                            onFocus: { focusedIndex = index }
+                        )
+                        .onChange(of: otpCode[index]) { newValue in
+                            handleDigitChange(at: index, newValue: newValue)
                         }
                     }
-                    .padding(.top, 16)
                 }
-                
+                .padding(.horizontal, 20)
+
+                if let error = verificationError {
+                    HStack(spacing: 6) {
+                        Image(systemName: "exclamationmark.circle.fill")
+                            .foregroundStyle(Color.semanticDestructive)
+                        Text(error)
+                            .font(.system(.subheadline, design: .rounded))
+                            .foregroundStyle(Color.semanticDestructive)
+                    }
+                    .padding(.horizontal, 32)
+                }
+
+                // Tips
+                VStack(alignment: .leading, spacing: 12) {
+                    TipRow(icon: "mail.stack", text: "Check your spam/junk folder")
+                    TipRow(icon: "clock", text: "The code may take a minute to arrive")
+                }
+                .padding(.horizontal, 32)
+
                 Spacer()
-                
+
                 // Action buttons
                 VStack(spacing: 16) {
-                    // I've confirmed button
-                    Button(action: checkConfirmation) {
+                    Button(action: verifyCode) {
                         HStack {
-                            if showCheckingEmail {
+                            if isVerifying {
                                 ProgressView()
                                     .tint(.white)
                                     .padding(.trailing, 8)
                             }
-                            Text("I've confirmed my email")
+                            Text("Verify")
                         }
                         .font(.system(.body, design: .rounded).weight(.semibold))
                         .foregroundStyle(.white)
@@ -134,23 +140,24 @@ struct EmailConfirmationView: View {
                         .padding()
                         .background(
                             LinearGradient(
-                                colors: [Color.luxuryPurple, Color.luxuryPink],
+                                colors: isCodeComplete
+                                    ? [Color.luxuryPurple, Color.luxuryPink]
+                                    : [Color.gray.opacity(0.5), Color.gray.opacity(0.3)],
                                 startPoint: .leading,
                                 endPoint: .trailing
                             )
                         )
                         .cornerRadius(16)
                     }
-                    .disabled(showCheckingEmail)
-                    .accessibilityHint(showCheckingEmail ? "Please wait, checking confirmation status" : "")
-                    
-                    Button(action: resendEmail) {
+                    .disabled(!isCodeComplete || isVerifying)
+
+                    Button(action: resendCode) {
                         HStack {
                             if resendTimer < 60 {
-                                Text("Resend in \(resendTimer)s")
+                                Text("Resend code in \(resendTimer)s")
                                     .foregroundStyle(.white.opacity(0.5))
                             } else {
-                                Text("Resend Email")
+                                Text("Resend Code")
                                     .foregroundStyle(.white)
                             }
                         }
@@ -160,10 +167,9 @@ struct EmailConfirmationView: View {
                         .glass(intensity: 0.2, tint: .white)
                     }
                     .disabled(resendTimer < 60)
-                    .accessibilityHint(resendTimer < 60 ? "Please wait \(resendTimer) seconds before resending" : "")
-                    
+
                     Button(action: goBackToSignIn) {
-                        Text("Back to Sign In")
+                        Text("Use Different Email")
                             .font(.system(.body, design: .rounded).weight(.medium))
                             .foregroundStyle(.white.opacity(0.6))
                     }
@@ -173,19 +179,97 @@ struct EmailConfirmationView: View {
             }
         }
         .errorBanner($resendError)
-        .alert("Email Sent!", isPresented: $showResendSuccess) {
+        .alert("Code Sent!", isPresented: $showResendSuccess) {
             Button("OK", role: .cancel) {}
         } message: {
-            Text("A new confirmation email has been sent to \(email)")
+            Text("A new 6-digit verification code has been sent to \(email)")
         }
         .onAppear {
             startTimer()
+            // Auto-focus first box
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+                focusedIndex = 0
+            }
         }
         .onDisappear {
             timer?.invalidate()
         }
     }
-    
+
+    private func handleDigitChange(at index: Int, newValue: String) {
+        // Only keep the last character
+        if newValue.count > 1 {
+            otpCode[index] = String(newValue.suffix(1))
+        }
+
+        // Move to next field if a digit was entered
+        if newValue.count == 1 && index < 5 {
+            focusedIndex = index + 1
+        }
+
+        // Auto-verify when all 6 digits are entered
+        if isCodeComplete && index == 5 {
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.2) {
+                verifyCode()
+            }
+        }
+    }
+
+    private func handleBackspace(at index: Int) {
+        if otpCode[index].isEmpty && index > 0 {
+            otpCode[index - 1] = ""
+            focusedIndex = index - 1
+        }
+    }
+
+    private func verifyCode() {
+        guard isCodeComplete else { return }
+        let code = otpCode.joined()
+        isVerifying = true
+        verificationError = nil
+        HapticStyle.medium.trigger()
+
+        Task {
+            do {
+                try await authManager.verifyEmailOTP(email: email, code: code)
+                await MainActor.run {
+                    isVerifying = false
+                    HapticStyle.success.trigger()
+                    dismiss()
+                }
+            } catch {
+                await MainActor.run {
+                    isVerifying = false
+                    HapticStyle.error.trigger()
+                    verificationError = "Invalid code. Please try again."
+                    // Clear code for retry
+                    otpCode = Array(repeating: "", count: 6)
+                    focusedIndex = 0
+                }
+            }
+        }
+    }
+
+    private func resendCode() {
+        Task {
+            do {
+                try await authManager.resendOTP(email: email)
+                await MainActor.run {
+                    showResendSuccess = true
+                    resendTimer = 60
+                    startTimer()
+                    otpCode = Array(repeating: "", count: 6)
+                    focusedIndex = 0
+                    verificationError = nil
+                }
+            } catch {
+                await MainActor.run {
+                    resendError = "Failed to resend code. Please try again."
+                }
+            }
+        }
+    }
+
     private func startTimer() {
         timer?.invalidate()
         timer = Timer.scheduledTimer(withTimeInterval: 1, repeats: true) { _ in
@@ -196,53 +280,54 @@ struct EmailConfirmationView: View {
             }
         }
     }
-    
-    private func resendEmail() {
-        Task {
-            do {
-                try await authManager.resendConfirmationEmail(email: email)
-                await MainActor.run {
-                    showResendSuccess = true
-                    resendTimer = 60
-                    startTimer()
-                }
-            } catch {
-                #if DEBUG
-                print("Resend confirmation email failed: \(error)")
-                #endif
-                await MainActor.run {
-                    resendError = error.localizedDescription
-                }
-            }
-        }
-    }
-    
-    private func checkConfirmation() {
-        showCheckingEmail = true
-        Task {
-            // Try to sign in - if email is confirmed, it will work
-            await authManager.checkSession()
-            await MainActor.run {
-                showCheckingEmail = false
-                // If authenticated, PauselyApp will automatically show MainTabView
-                // dismiss() is only needed when presented as a sheet from EnhancedLoginView
-                if authManager.isAuthenticated {
-                    dismiss()
-                }
-            }
-        }
-    }
-    
+
     private func goBackToSignIn() {
-        // When shown as root view, change auth state to unauthenticated
-        // When shown as sheet, use dismiss()
-        // We can detect if we're a sheet by checking if dismiss works, but simpler to just set state
         Task {
             await MainActor.run {
                 authManager.state = .unauthenticated
             }
         }
         dismiss()
+    }
+}
+
+// MARK: - OTP Digit Box
+
+struct OTPDigitBox: View {
+    let index: Int
+    @Binding var text: String
+    let isFocused: Bool
+    let onBackspace: () -> Void
+    let onFocus: () -> Void
+
+    var body: some View {
+        ZStack {
+            RoundedRectangle(cornerRadius: 12)
+                .fill(Color.white.opacity(0.08))
+                .overlay(
+                    RoundedRectangle(cornerRadius: 12)
+                        .stroke(
+                            isFocused ? Color.luxuryGold : Color.white.opacity(0.15),
+                            lineWidth: isFocused ? 2 : 1
+                        )
+                )
+
+            Text(text)
+                .font(.system(.title2, design: .rounded).weight(.bold))
+                .foregroundStyle(.white)
+
+            // Hidden text field for actual input
+            TextField("", text: $text)
+                .keyboardType(.numberPad)
+                .textContentType(.oneTimeCode)
+                .foregroundStyle(.clear)
+                .accentColor(.clear)
+                .background(Color.clear)
+                .onTapGesture {
+                    onFocus()
+                }
+        }
+        .frame(width: 48, height: 56)
     }
 }
 
@@ -269,7 +354,15 @@ struct EnhancedLoginView: View {
     enum Field {
         case email, password
     }
-    
+
+    private var isPasswordValid: Bool {
+        PasswordStrength.rulesMet(password) == 4
+    }
+
+    private var canSubmit: Bool {
+        !email.isEmpty && !password.isEmpty && (!isSignUp || isPasswordValid)
+    }
+
     var body: some View {
         ZStack {
             AnimatedGradientBackground()
@@ -373,7 +466,11 @@ struct EnhancedLoginView: View {
             .onSubmit {
                 isSignUp ? signUp() : signIn()
             }
-            
+
+            if isSignUp && !password.isEmpty {
+                PasswordStrengthMeter(password: password)
+            }
+
             if !isSignUp {
                 HStack {
                     Toggle("Remember me", isOn: $rememberMe)
@@ -415,9 +512,9 @@ struct EnhancedLoginView: View {
             .cornerRadius(16)
             .shadow(color: Color.luxuryPurple.opacity(0.4), radius: 15)
         }
-        .disabled(email.isEmpty || password.isEmpty || isLoading)
-        .accessibilityHint(email.isEmpty || password.isEmpty ? "Please enter your email and password" : isLoading ? "Please wait, signing in" : "")
-        .opacity(email.isEmpty || password.isEmpty ? 0.6 : 1)
+        .disabled(!canSubmit || isLoading)
+        .accessibilityHint(!canSubmit ? "Please enter your email and password" : isLoading ? "Please wait, signing in" : "")
+        .opacity(!canSubmit ? 0.6 : 1)
     }
     
     private var biometricSection: some View {
@@ -525,18 +622,17 @@ struct EnhancedLoginView: View {
         isLoading = true
         errorMessage = ""
         HapticStyle.medium.trigger()
-        
+
         Task {
             do {
-                try await authManager.signUp(email: email, password: password)
+                try await authManager.signUpWithOTP(email: email, password: password)
                 await MainActor.run {
                     isLoading = false
-                    // Only show email confirmation if not already authenticated
-                    // (auth manager handles auto-confirm case by setting authenticated state)
+                    // OTP sent — show code entry screen
                     if !authManager.isAuthenticated {
                         showEmailConfirmation = true
                     }
-                    // If authenticated, the PauselyApp will automatically show MainTabView
+                    // If already authenticated (edge case), the app will show MainTabView
                 }
             } catch {
                 await MainActor.run {

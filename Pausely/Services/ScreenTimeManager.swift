@@ -560,12 +560,13 @@ final class ScreenTimeManager: ObservableObject {
         // Generate recommendation
         let recommendation: InsightRecommendation
         if monthlyHours == 0 {
-            recommendation = .cancel("You haven't used this app in the last 30 days. Consider canceling to save $\(subscription.monthlyCost)/month.")
+            recommendation = .cancel("You haven't used this app in the last 30 days. Consider canceling to save \(subscription.displayMonthlyCostInUserCurrency)/month.")
         } else if monthlyHours < 2 {
-            let potentialSavings = subscription.monthlyCost
-            recommendation = .pause("Very low usage detected. Pause for a month and save $\(potentialSavings).")
+            let potentialSavings = subscription.displayMonthlyCostInUserCurrency
+            recommendation = .pause("Very low usage detected. Pause for a month and save \(potentialSavings).")
         } else if let cph = costPerHour, cph > 10 {
-            recommendation = .highCost("Your cost per hour is $\(String(format: "%.2f", cph)) - quite expensive!")
+            let formattedCph = CurrencyManager.shared.format(Decimal(cph))
+            recommendation = .highCost("Your cost per hour is \(formattedCph) - quite expensive!")
         } else {
             recommendation = .goodValue("Great value! You're getting good use from this subscription.")
         }

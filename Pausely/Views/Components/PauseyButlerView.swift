@@ -144,7 +144,7 @@ struct PauseyButlerView: View {
                     .font(.system(.subheadline, design: .rounded).weight(.semibold))
                     .foregroundStyle(.white)
 
-                Text(subscription.displayAmount + " / " + subscription.billingFrequency.shortDisplay)
+                Text(subscription.displayAmountInUserCurrency + " / " + subscription.billingFrequency.shortDisplay)
                     .font(.footnote.weight(.medium))
                     .foregroundStyle(.gray)
             }

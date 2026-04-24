@@ -136,7 +136,7 @@ struct SubscriptionsListView: View {
                         )
 
                         SubscriptionStatCard(
-                            value: "$\(Int(Double(truncating: store.totalMonthlySpend as NSNumber)))",
+                            value: currencyManager.format(store.totalMonthlySpend),
                             label: "/month",
                             icon: "dollarsign.circle.fill",
                             color: Color.luxuryGold
@@ -277,7 +277,7 @@ struct SubscriptionsListView: View {
             Text("How would you like to add a subscription?")
         }
         .sheet(isPresented: $showingAddSheet) {
-            ArtisticAddSubscriptionView()
+            SubscriptionBrowserView()
         }
         .sheet(isPresented: $showingSmartURLInput) {
             SmartURLInputView()
@@ -353,6 +353,7 @@ struct EnhancedSubscriptionRow: View {
     @ObservedObject private var screenTimeManager = ScreenTimeManager.shared
     @State private var pressed = false
     @State private var showingPausey = false
+    @State private var showingDeleteConfirmation = false
     
     var usageMinutes: Int {
         screenTimeManager.getCurrentMonthUsage(for: subscription.name)
@@ -480,6 +481,18 @@ struct EnhancedSubscriptionRow: View {
                 }
             }
 
+            // Delete button
+            Button(action: { showingDeleteConfirmation = true }) {
+                Image(systemName: "trash")
+                    .font(AppTypography.headlineMedium)
+                    .foregroundStyle(.red)
+                    .frame(width: 36, height: 36)
+                    .background(Color.red.opacity(0.15))
+                    .clipShape(Circle())
+            }
+            .accessibilityLabel("Remove \(subscription.name)")
+            .padding(.leading, 4)
+
             // Pausey button
             Button(action: { showingPausey = true }) {
                 Image(systemName: "figure.butler")
@@ -490,7 +503,7 @@ struct EnhancedSubscriptionRow: View {
                     .clipShape(Circle())
             }
             .accessibilityLabel("Ask Pausey about \(subscription.name)")
-            .padding(.leading, 8)
+            .padding(.leading, 4)
         }
         .padding()
         .glass(intensity: 0.1, tint: .white)
@@ -505,6 +518,23 @@ struct EnhancedSubscriptionRow: View {
         .accessibilityHint("Double-tap to view details")
         .sheet(isPresented: $showingPausey) {
             PauseyButlerView(subscription: subscription)
+        }
+        .alert("Remove Subscription?", isPresented: $showingDeleteConfirmation) {
+            Button("Cancel", role: .cancel) {}
+            Button("Remove", role: .destructive) {
+                HapticStyle.heavy.trigger()
+                Task {
+                    do {
+                        try await SubscriptionStore.shared.deleteSubscription(id: subscription.id)
+                    } catch {
+                        #if DEBUG
+                        print("Error deleting subscription: \(error)")
+                        #endif
+                    }
+                }
+            }
+        } message: {
+            Text("Are you sure you want to remove \(subscription.name) from your subscriptions?")
         }
     }
     
@@ -752,10 +782,11 @@ struct LuxuryAddSubscriptionView: View {
     @State private var amount = ""
     @State private var frequency: BillingFrequency = .monthly
     @ObservedObject private var store = SubscriptionStore.shared
+    @ObservedObject private var currencyManager = CurrencyManager.shared
     @FocusState private var focusedField: Field?
     @State private var showError = false
     @State private var errorMessage = ""
-    
+
     enum Field {
         case name, amount
     }
@@ -804,10 +835,10 @@ struct LuxuryAddSubscriptionView: View {
                                 .textCase(.uppercase)
                             
                             HStack {
-                                Text("$")
+                                Text(currencyManager.currencySymbol(for: currencyManager.selectedCurrency))
                                     .font(AppTypography.headlineLarge)
                                     .foregroundStyle(Color.luxuryGold)
-                                
+
                                 TextField("0.00", text: $amount)
                                     .font(AppTypography.displaySmall)
                                     .foregroundStyle(.white)
@@ -1324,7 +1355,7 @@ struct SmartURLInputView: View {
     
     private func populateFromParsed(_ parsed: ParsedSubscription) {
         name = parsed.name
-        amount = parsed.price != nil ? String(format: "%.2f", parsed.price!) : ""
+        amount = parsed.price.map { String(format: "%.2f", $0) } ?? ""
         selectedCurrency = parsed.currency
         category = parsed.category
         
@@ -1590,6 +1621,7 @@ struct CategoryChip: View {
             )
         }
         .buttonStyle(PlainButtonStyle())
+        .accessibilityValue(isSelected ? "Selected" : "Not selected")
     }
 }
 
@@ -1756,6 +1788,7 @@ struct CategoryButton: View {
             }
         }
         .buttonStyle(PlainButtonStyle())
+        .accessibilityValue(isSelected ? "Selected" : "Not selected")
     }
 }
 

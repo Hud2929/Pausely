@@ -76,17 +76,9 @@ struct WasteScoreCard: View {
                     // Details
                     VStack(alignment: .leading, spacing: STSpacing.xs) {
                         if let costPerHour = subscription.costPerHour {
-                            HStack {
-                                Text("$")
-                                    .font(STFont.bodySmall)
-                                    .foregroundStyle(Color.obsidianTextSecondary)
-                                Text(String(format: "%.2f", Double(truncating: costPerHour as NSNumber)))
-                                    .font(STFont.monoMedium)
-                                    .foregroundStyle(Color.obsidianText)
-                                Text("/hour")
-                                    .font(STFont.bodySmall)
-                                    .foregroundStyle(Color.obsidianTextSecondary)
-                            }
+                            Text("\(CurrencyManager.shared.format(costPerHour, currencyCode: subscription.currency))/hour")
+                                .font(STFont.monoMedium)
+                                .foregroundStyle(Color.obsidianText)
                         }
                         
                         if subscription.monthlyUsageMinutes > 0 {

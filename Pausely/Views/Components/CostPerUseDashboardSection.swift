@@ -1,4 +1,5 @@
 import SwiftUI
+import TipKit
 
 // MARK: - Cost Per Use Dashboard Section
 /// Integrated into the Dashboard view. Shows top/bottom value subscriptions and efficiency score.
@@ -7,6 +8,7 @@ struct CostPerUseDashboardSection: View {
     @ObservedObject private var screenTimeManager = ScreenTimeManager.shared
     @State private var showingShareSheet = false
     @State private var appear = false
+    private let costPerUseTip = CostPerUseTip()
 
     /// Get usage hours for a subscription name
     private func usageHours(for name: String) -> Double? {
@@ -59,6 +61,7 @@ struct CostPerUseDashboardSection: View {
                         .font(AppTypography.bodySmall)
                         .foregroundStyle(.secondary)
                 }
+                .popoverTip(costPerUseTip, arrowEdge: .top)
 
                 Spacer()
 
@@ -365,25 +368,8 @@ struct CostPerUseAlertsSection: View {
         for sub in store.activeSubscriptions {
             let hours = usageHours(for: sub.name) ?? 0
 
-            // Zero usage alert
-            if CostPerUseCalculator.shouldAlertZeroUsage(subscription: sub, monthlyHoursUsed: hours) {
-                let formatter = NumberFormatter()
-                formatter.numberStyle = .currency
-                formatter.currencyCode = sub.currency
-                formatter.maximumFractionDigits = 2
-                let wasted = formatter.string(from: sub.monthlyCost as NSDecimalNumber) ?? "\(sub.monthlyCost)"
-
-                result.append(CostPerUseAlert(
-                    type: .zeroWaste,
-                    subscription: sub,
-                    message: "You used \(sub.name) for 0 hours this month",
-                    detail: "That's \(wasted) wasted. Consider pausing?",
-                    actionLabel: "Pause"
-                ))
-            }
-
-            // Low usage alert (only if not zero, to avoid duplicate)
-            else if CostPerUseCalculator.shouldAlertPause(subscription: sub, monthlyHoursUsed: hours, thresholdHours: 2) {
+            // Low usage alert (only if we have some usage data)
+            if hours > 0, CostPerUseCalculator.shouldAlertPause(subscription: sub, monthlyHoursUsed: hours, thresholdHours: 2) {
                 result.append(CostPerUseAlert(
                     type: .unused,
                     subscription: sub,

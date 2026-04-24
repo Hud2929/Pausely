@@ -63,14 +63,14 @@ struct StoreKitUpgradeView: View {
         var savings: String? {
             switch self {
             case .monthly: return nil
-            case .annual: return "Save 37%"
+            case .annual: return "Save 17%"
             }
         }
 
         var badge: String? {
             switch self {
             case .monthly: return nil
-            case .annual: return "Save 37%"
+            case .annual: return "Save 17%"
             }
         }
     }
@@ -199,7 +199,7 @@ struct StoreKitUpgradeView: View {
                 .multilineTextAlignment(.center)
                 .accessibilityFocused($focusedElement, equals: .title)
 
-            // Subtitle with pricing
+            // Subtitle with pricing (always uses our pricing — StoreKit sandbox prices differ from production)
             VStack(spacing: 4) {
                 if isTrialEnabled {
                     Text("Then \(SubscriptionTier.pro.priceInUserCurrency())/month or \(SubscriptionTier.proAnnual.priceInUserCurrency())/year")
@@ -289,23 +289,21 @@ struct StoreKitUpgradeView: View {
             .accessibilityLabel(isTrialEnabled ? "Free trial enabled" : "Free trial disabled")
             .accessibilityHint("Double tap to toggle free trial")
 
-            // Price context below toggle
-            if let product = storeManager.product(for: selectedPlan.tier) {
-                HStack {
-                    Spacer()
-                    if isTrialEnabled {
-                        VStack(spacing: 2) {
-                            Text("Then \(product.displayPrice)\(selectedPlan.period)")
-                                .font(AppTypography.bodySmall)
-                                .foregroundStyle(.white.opacity(0.6))
-                        }
-                    } else {
-                        Text("\(product.displayPrice)\(selectedPlan.period)")
+            // Price context below toggle (uses our pricing, not StoreKit sandbox prices)
+            HStack {
+                Spacer()
+                if isTrialEnabled {
+                    VStack(spacing: 2) {
+                        Text("Then \(selectedPlan == .monthly ? SubscriptionTier.pro.priceInUserCurrency() : SubscriptionTier.proAnnual.priceInUserCurrency())\(selectedPlan.period)")
                             .font(AppTypography.bodySmall)
                             .foregroundStyle(.white.opacity(0.6))
                     }
-                    Spacer()
+                } else {
+                    Text("\(selectedPlan == .monthly ? SubscriptionTier.pro.priceInUserCurrency() : SubscriptionTier.proAnnual.priceInUserCurrency())\(selectedPlan.period)")
+                        .font(AppTypography.bodySmall)
+                        .foregroundStyle(.white.opacity(0.6))
                 }
+                Spacer()
             }
         }
         .opacity(appearAnimation ? 1 : 0)
@@ -414,65 +412,63 @@ struct StoreKitUpgradeView: View {
             )
             .accessibilityElement(children: .contain)
 
-            // Selected plan details
-            if let product = storeManager.product(for: selectedPlan.tier) {
-                HStack {
-                    VStack(alignment: .leading, spacing: 4) {
-                        if isTrialEnabled {
-                            Text("Free")
-                                .font(.title2.bold())
-                                .foregroundStyle(.white)
+            // Selected plan details (uses our pricing, not StoreKit sandbox prices)
+            HStack {
+                VStack(alignment: .leading, spacing: 4) {
+                    if isTrialEnabled {
+                        Text("Free")
+                            .font(.title2.bold())
+                            .foregroundStyle(.white)
 
-                            Text("for 7 days")
-                                .font(AppTypography.bodySmall)
-                                .foregroundStyle(Color.luxuryGold)
-                        } else {
-                            Text(product.displayPrice)
-                                .font(.title2.bold())
-                                .foregroundStyle(.white)
+                        Text("for 7 days")
+                            .font(AppTypography.bodySmall)
+                            .foregroundStyle(Color.luxuryGold)
+                    } else {
+                        Text(selectedPlan == .monthly ? SubscriptionTier.pro.priceInUserCurrency() : SubscriptionTier.proAnnual.priceInUserCurrency())
+                            .font(.title2.bold())
+                            .foregroundStyle(.white)
 
-                            Text(selectedPlan.period)
-                                .font(AppTypography.bodySmall)
-                                .foregroundStyle(TextColors.secondary)
-                        }
-                    }
-
-                    Spacer()
-
-                    VStack(alignment: .trailing, spacing: 4) {
-                        if isTrialEnabled {
-                            Text("7 days free")
-                                .font(.subheadline.bold())
-                                .foregroundColor(.luxuryGold)
-                                .padding(.horizontal, 10)
-                                .padding(.vertical, 4)
-                                .background(Color.luxuryGold.opacity(0.15))
-                                .cornerRadius(8)
-                        }
-
-                        if let savings = selectedPlan.savings {
-                            Text(savings)
-                                .font(.subheadline.bold())
-                                .foregroundColor(.green)
-                        }
-
-                        if selectedPlan == .annual {
-                            Text("$\(String(format: "%.2f", Double(truncating: product.price as NSNumber) / 12))/mo equivalent")
-                                .font(AppTypography.labelMedium)
-                                .foregroundStyle(TextColors.tertiary)
-                        }
+                        Text(selectedPlan.period)
+                            .font(AppTypography.bodySmall)
+                            .foregroundStyle(TextColors.secondary)
                     }
                 }
-                .padding(16)
-                .background(
-                    RoundedRectangle(cornerRadius: 16, style: .continuous)
-                        .fill(isTrialEnabled ? Color.luxuryGold.opacity(0.06) : Color.white.opacity(0.04))
-                        .overlay(
-                            RoundedRectangle(cornerRadius: 16, style: .continuous)
-                                .stroke(isTrialEnabled ? Color.luxuryGold.opacity(0.2) : Color.white.opacity(0.08), lineWidth: 1)
-                        )
-                )
+
+                Spacer()
+
+                VStack(alignment: .trailing, spacing: 4) {
+                    if isTrialEnabled {
+                        Text("7 days free")
+                            .font(.subheadline.bold())
+                            .foregroundColor(.luxuryGold)
+                            .padding(.horizontal, 10)
+                            .padding(.vertical, 4)
+                            .background(Color.luxuryGold.opacity(0.15))
+                            .cornerRadius(8)
+                    }
+
+                    if let savings = selectedPlan.savings {
+                        Text(savings)
+                            .font(.subheadline.bold())
+                            .foregroundColor(.green)
+                    }
+
+                    if selectedPlan == .annual {
+                        Text("\(SubscriptionTier.pro.monthlyPriceInUserCurrency())/mo equivalent")
+                            .font(AppTypography.labelMedium)
+                            .foregroundStyle(TextColors.tertiary)
+                    }
+                }
             }
+            .padding(16)
+            .background(
+                RoundedRectangle(cornerRadius: 16, style: .continuous)
+                    .fill(isTrialEnabled ? Color.luxuryGold.opacity(0.06) : Color.white.opacity(0.04))
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 16, style: .continuous)
+                            .stroke(isTrialEnabled ? Color.luxuryGold.opacity(0.2) : Color.white.opacity(0.08), lineWidth: 1)
+                    )
+            )
         }
         .opacity(appearAnimation ? 1 : 0)
         .offset(y: appearAnimation ? 0 : 20)
@@ -489,6 +485,7 @@ struct StoreKitUpgradeView: View {
             VStack(spacing: 12) {
                 TrialFeatureRow(icon: "infinity", text: NSLocalizedString("Unlimited subscriptions", comment: ""))
                 TrialFeatureRow(icon: "chart.bar.fill", text: NSLocalizedString("Cost-per-use analytics", comment: ""))
+                TrialFeatureRow(icon: "chart.line.uptrend.xyaxis", text: NSLocalizedString("Advanced Insights", comment: ""))
                 TrialFeatureRow(icon: "bell.badge.fill", text: NSLocalizedString("Smart renewal alerts", comment: ""))
                 TrialFeatureRow(icon: "clock.arrow.circlepath", text: NSLocalizedString("Usage tracking", comment: ""))
                 TrialFeatureRow(icon: "xmark.circle.fill", text: NSLocalizedString("Cancel anytime", comment: ""))
@@ -535,28 +532,6 @@ struct StoreKitUpgradeView: View {
                 Spacer()
             }
 
-            // Money-back guarantee
-            HStack(spacing: 8) {
-                Image(systemName: "shield.checkered.fill")
-                    .font(.system(.subheadline, design: .rounded))
-                    .foregroundColor(Color.luxuryGold)
-
-                Text(LocalizedStringKey("30-day money-back guarantee"))
-                    .font(AppTypography.bodySmall)
-                    .foregroundColor(Color.luxuryGold)
-
-                Spacer()
-            }
-            .padding(.horizontal, 14)
-            .padding(.vertical, 10)
-            .background(
-                RoundedRectangle(cornerRadius: 12, style: .continuous)
-                    .fill(Color.luxuryGold.opacity(0.08))
-                    .overlay(
-                        RoundedRectangle(cornerRadius: 12, style: .continuous)
-                            .stroke(Color.luxuryGold.opacity(0.2), lineWidth: 1)
-                    )
-            )
         }
         .opacity(appearAnimation ? 1 : 0)
         .offset(y: appearAnimation ? 0 : 20)

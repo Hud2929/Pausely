@@ -161,10 +161,78 @@ final class NotificationManager {
     
     // MARK: - Cancellation
     
+    func schedulePauseResumeReminder(for subscription: Subscription, resumeDate: Date) {
+        guard isAuthorized else { return }
+
+        cancelPauseReminder(for: subscription.id)
+
+        guard resumeDate > Date() else { return }
+
+        let content = UNMutableNotificationContent()
+        content.title = "\(subscription.name) pause ending"
+        content.body = "Your subscription will automatically resume tomorrow. Tap to review or resume now."
+        content.sound = .default
+        content.categoryIdentifier = "PAUSE_RESUME"
+        content.userInfo = [
+            "subscription_id": subscription.id.uuidString,
+            "type": "pause_resume"
+        ]
+
+        // Notify 1 day before resume at 10 AM
+        guard let reminderDate = Calendar.current.date(byAdding: .day, value: -1, to: resumeDate) else { return }
+        var dateComponents = Calendar.current.dateComponents([.year, .month, .day], from: reminderDate)
+        dateComponents.hour = 10
+        dateComponents.minute = 0
+
+        let trigger = UNCalendarNotificationTrigger(dateMatching: dateComponents, repeats: false)
+
+        let request = UNNotificationRequest(
+            identifier: "pause-\(subscription.id.uuidString)",
+            content: content,
+            trigger: trigger
+        )
+
+        center.add(request)
+    }
+
+    func schedulePauseReminder(for subscription: Subscription, reminderDate: Date, pauseURL: String?) {
+        guard isAuthorized else { return }
+        cancelPauseReminder(for: subscription.id)
+        guard reminderDate > Date() else { return }
+        let content = UNMutableNotificationContent()
+        content.title = "Reminder: Pause \(subscription.name)"
+        content.body = "Tap to open \(subscription.name)'s pause page."
+        content.sound = .default
+        content.categoryIdentifier = "PAUSE_REMINDER"
+        content.userInfo = [
+            "subscription_id": subscription.id.uuidString,
+            "type": "pause_reminder",
+            "pause_url": pauseURL ?? ""
+        ]
+        var dateComponents = Calendar.current.dateComponents([.year, .month, .day], from: reminderDate)
+        dateComponents.hour = 9
+        dateComponents.minute = 0
+        let trigger = UNCalendarNotificationTrigger(dateMatching: dateComponents, repeats: false)
+        let request = UNNotificationRequest(
+            identifier: "pause-reminder-\(subscription.id.uuidString)",
+            content: content,
+            trigger: trigger
+        )
+        center.add(request)
+    }
+
+    func cancelPauseReminder(for subscriptionId: UUID) {
+        center.removePendingNotificationRequests(withIdentifiers: [
+            "pause-\(subscriptionId.uuidString)",
+            "pause-reminder-\(subscriptionId.uuidString)"
+        ])
+    }
+
     func cancelReminder(for subscriptionId: UUID) {
         center.removePendingNotificationRequests(withIdentifiers: [
             "renewal-\(subscriptionId.uuidString)",
-            "trial-\(subscriptionId.uuidString)"
+            "trial-\(subscriptionId.uuidString)",
+            "pause-\(subscriptionId.uuidString)"
         ])
     }
     
@@ -223,7 +291,34 @@ final class NotificationManager {
             options: []
         )
         
-        center.setNotificationCategories([renewalCategory, trialCategory])
+        // Pause resume actions
+        let resumeNowAction = UNNotificationAction(
+            identifier: "RESUME_NOW",
+            title: "Resume Now",
+            options: .foreground
+        )
+
+        let pauseCategory = UNNotificationCategory(
+            identifier: "PAUSE_RESUME",
+            actions: [resumeNowAction],
+            intentIdentifiers: [],
+            options: []
+        )
+
+        let pauseReminderAction = UNNotificationAction(
+            identifier: "OPEN_PAUSE_PAGE",
+            title: "Open Pause Page",
+            options: .foreground
+        )
+
+        let pauseReminderCategory = UNNotificationCategory(
+            identifier: "PAUSE_REMINDER",
+            actions: [pauseReminderAction],
+            intentIdentifiers: [],
+            options: []
+        )
+
+        center.setNotificationCategories([renewalCategory, trialCategory, pauseCategory, pauseReminderCategory])
     }
     
     private func loadPendingNotifications() async {
@@ -264,6 +359,20 @@ class NotificationDelegate: NSObject, UNUserNotificationCenterDelegate {
         case "SNOOZE":
             // Reschedule for tomorrow
             break
+        case "OPEN_PAUSE_PAGE":
+            if let pauseURL = userInfo["pause_url"] as? String, !pauseURL.isEmpty,
+               let url = URL(string: pauseURL) {
+                Task { @MainActor in
+                    await UIApplication.shared.open(url)
+                }
+            } else if let subId = userInfo["subscription_id"] as? String {
+                // Fallback: navigate to subscription detail so user can find cancel link
+                NotificationCenter.default.post(
+                    name: .openPausePageRequested,
+                    object: nil,
+                    userInfo: ["subscription_id": subId]
+                )
+            }
         default:
             break
         }
@@ -275,4 +384,5 @@ class NotificationDelegate: NSObject, UNUserNotificationCenterDelegate {
 // MARK: - Notification Names
 extension Notification.Name {
     static let cancelSubscriptionRequested = Notification.Name("cancelSubscriptionRequested")
+    static let openPausePageRequested = Notification.Name("openPausePageRequested")
 }
