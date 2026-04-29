@@ -140,6 +140,9 @@
     "%@ of use" : {
 
     },
+    "%@ Price Increase" : {
+
+    },
     "%@ tab" : {
 
     },
@@ -250,6 +253,12 @@
           }
         }
       }
+    },
+    "%@/person" : {
+
+    },
+    "%@/yr" : {
+
     },
     "%@%@" : {
       "localizations" : {
@@ -391,6 +400,16 @@
     "%lld this week" : {
 
     },
+    "%lld/%lld" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%1$lld/%2$lld"
+          }
+        }
+      }
+    },
     "%lld/%lld subs" : {
       "localizations" : {
         "en" : {
@@ -448,6 +467,12 @@
     "• You must provide accurate information when creating an account\n• You are responsible for maintaining the security of your account\n• You must be at least 13 years old to use our service\n• You are responsible for all activity under your account" : {
 
     },
+    "+ %lld more" : {
+
+    },
+    "+ %lld more categories" : {
+
+    },
     "+%@ more than current annual cost" : {
 
     },
@@ -463,10 +488,10 @@
     "✗ Invalid or expired code" : {
 
     },
-    "💡 Smart Suggestion" : {
+    "$5 one-time fee" : {
 
     },
-    "📱 Usage Tracking" : {
+    "$5.00" : {
 
     },
     "$247" : {
@@ -723,6 +748,9 @@
         }
       }
     },
+    "Account Email" : {
+
+    },
     "Account Security" : {
 
     },
@@ -834,6 +862,9 @@
           }
         }
       }
+    },
+    "Add a subscription first to set a pause reminder." : {
+
     },
     "Add a subscription to see your spending insights, renewal alerts, and cost-per-use analytics." : {
 
@@ -1025,6 +1056,9 @@
         }
       }
     },
+    "Add Subscription to Compare" : {
+
+    },
     "Add Subscriptions" : {
       "localizations" : {
         "ar" : {
@@ -1058,6 +1092,9 @@
           }
         }
       }
+    },
+    "Add subscriptions to see your category breakdown" : {
+
     },
     "Add Trial" : {
 
@@ -1100,10 +1137,13 @@
     "Add your first subscription to start tracking" : {
 
     },
-    "Add your first subscription to start tracking your spending" : {
+    "Add your own" : {
 
     },
     "Added Successfully!" : {
+
+    },
+    "Additional Notes (Optional)" : {
 
     },
     "Adjust Alerts" : {
@@ -1370,9 +1410,6 @@
 
     },
     "Analyzing your subscriptions..." : {
-
-    },
-    "Analyzing..." : {
 
     },
     "Annual" : {
@@ -1883,6 +1920,9 @@
     "BEST VALUE" : {
 
     },
+    "Biggest Expenses" : {
+
+    },
     "Billing Cycle" : {
 
     },
@@ -2071,6 +2111,9 @@
         }
       }
     },
+    "Cancel %@" : {
+
+    },
     "Cancel %@?" : {
 
     },
@@ -2128,6 +2171,9 @@
         }
       }
     },
+    "Cancel for Me" : {
+
+    },
     "Cancel Now" : {
 
     },
@@ -2179,6 +2225,9 @@
 
     },
     "Cancellation Initiated" : {
+
+    },
+    "Cancellation Service" : {
 
     },
     "Cancelled" : {
@@ -2329,6 +2378,9 @@
       }
     },
     "Checking your Apple subscriptions" : {
+
+    },
+    "Choose a subscription to pause" : {
 
     },
     "Choose which subscription apps you want to monitor with Screen Time. You can change this later." : {
@@ -2531,7 +2583,13 @@
         }
       }
     },
-    "Coming Soon" : {
+    "Compare" : {
+
+    },
+    "Compare Subscriptions" : {
+
+    },
+    "Complete Payment" : {
 
     },
     "Complete Step %lld" : {
@@ -2803,9 +2861,6 @@
           }
         }
       }
-    },
-    "Continue Offline" : {
-
     },
     "Control your data and app permissions" : {
 
@@ -3093,6 +3148,9 @@
 
     },
     "Current Password" : {
+
+    },
+    "Custom" : {
 
     },
     "Custom Price" : {
@@ -3860,6 +3918,9 @@
         }
       }
     },
+    "Family Plan Opportunities" : {
+
+    },
     "Features" : {
       "localizations" : {
         "ar" : {
@@ -4023,6 +4084,9 @@
           }
         }
       }
+    },
+    "Forgotten Subscriptions" : {
+
     },
     "Format" : {
 
@@ -4218,6 +4282,9 @@
     "Get 30% off Premium" : {
 
     },
+    "Get a reminder to pause on their site" : {
+
+    },
     "Get Best Value Subscription" : {
 
     },
@@ -4270,9 +4337,6 @@
     "Get Pro FREE!" : {
 
     },
-    "Get started" : {
-
-    },
     "Get Started" : {
       "localizations" : {
         "ar" : {
@@ -4314,6 +4378,9 @@
 
     },
     "Go" : {
+
+    },
+    "Go to Pause Page" : {
 
     },
     "Good" : {
@@ -4518,6 +4585,9 @@
     "Hours" : {
 
     },
+    "Hours marked with ~ are estimated from session counts. Tap a subscription to enter exact minutes." : {
+
+    },
     "How Can We Help?" : {
 
     },
@@ -4600,6 +4670,9 @@
       }
     },
     "How Trial Protection Works" : {
+
+    },
+    "How well you're managing your subscriptions" : {
 
     },
     "How would you like to add a subscription?" : {
@@ -4832,6 +4905,9 @@
         }
       }
     },
+    "Lifetime Spend" : {
+
+    },
     "Light" : {
 
     },
@@ -5046,6 +5122,9 @@
     "Message Sent!" : {
 
     },
+    "Metric" : {
+
+    },
     "minutes" : {
 
     },
@@ -5208,6 +5287,9 @@
         }
       }
     },
+    "My Cancellations" : {
+
+    },
     "My Subscription Insights" : {
       "localizations" : {
         "en" : {
@@ -5339,16 +5421,6 @@
     "Next Payment" : {
 
     },
-    "Next payment: %@, %@, %@, %@" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "new",
-            "value" : "Next payment: %1$@, %2$@, %3$@, %4$@"
-          }
-        }
-      }
-    },
     "Next Renewal" : {
 
     },
@@ -5364,13 +5436,22 @@
     "No active App Store subscriptions were found on this Apple ID" : {
 
     },
+    "No active subscriptions" : {
+
+    },
     "No apps selected" : {
 
     },
     "No Billing History" : {
 
     },
+    "No Cancellation Requests" : {
+
+    },
     "No data yet" : {
+
+    },
+    "No more subscriptions to add" : {
 
     },
     "No new subscriptions detected." : {
@@ -5456,6 +5537,9 @@
 
     },
     "No referrals yet" : {
+
+    },
+    "No Savings Found" : {
 
     },
     "No subscriptions found" : {
@@ -5546,6 +5630,9 @@
 
     },
     "Not selected" : {
+
+    },
+    "Not set" : {
 
     },
     "Note: Apple Screen Time API provides session counts, not exact minutes. Usage is estimated based on session frequency." : {
@@ -5691,6 +5778,9 @@
         }
       }
     },
+    "One-time $5 fee to cancel %@" : {
+
+    },
     "Open Cancel Page" : {
 
     },
@@ -5803,6 +5893,9 @@
     "Other Devices" : {
 
     },
+    "Other Plans for %@" : {
+
+    },
     "Our app is not intended for users under 13 years of age. We do not knowingly collect information from children under 13." : {
 
     },
@@ -5818,6 +5911,9 @@
           }
         }
       }
+    },
+    "Paid" : {
+
     },
     "Paid on" : {
       "extractionState" : "stale",
@@ -5958,9 +6054,6 @@
     "Pause" : {
 
     },
-    "Pause %@?" : {
-
-    },
     "Pause a subscription to stop tracking it temporarily." : {
 
     },
@@ -6045,9 +6138,6 @@
     "Paused Subscriptions" : {
 
     },
-    "Paused!" : {
-
-    },
     "Pausely" : {
 
     },
@@ -6070,6 +6160,9 @@
 
     },
     "Pausey at your service" : {
+
+    },
+    "Pay $5.00" : {
 
     },
     "Payment Status" : {
@@ -6266,9 +6359,6 @@
     "Please wait, parsing URL" : {
 
     },
-    "Please wait, pause in progress" : {
-
-    },
     "Please wait, processing" : {
 
     },
@@ -6282,6 +6372,9 @@
 
     },
     "Please wait, sending reset link" : {
+
+    },
+    "Please wait, setting reminder" : {
 
     },
     "Please wait, signing in" : {
@@ -6323,6 +6416,9 @@
           }
         }
       }
+    },
+    "Potential savings: %@" : {
+
     },
     "potential subscriptions found" : {
       "extractionState" : "stale",
@@ -6707,6 +6803,9 @@
     "Quick Contact" : {
 
     },
+    "Quick Pause" : {
+
+    },
     "Quick Set" : {
 
     },
@@ -6720,6 +6819,9 @@
 
     },
     "Real intelligence from your actual data" : {
+
+    },
+    "Reason" : {
 
     },
     "Receipt" : {
@@ -6821,6 +6923,18 @@
         }
       }
     },
+    "Remind me in %@" : {
+
+    },
+    "Remind Me to Pause" : {
+
+    },
+    "Remind Me to Pause %@" : {
+
+    },
+    "Reminder Set!" : {
+
+    },
     "Remove" : {
       "localizations" : {
         "en" : {
@@ -6852,6 +6966,9 @@
       }
     },
     "Renews in %@" : {
+
+    },
+    "Request Submitted" : {
 
     },
     "Required for app blocking" : {
@@ -7064,9 +7181,6 @@
         }
       }
     },
-    "Run Real Analysis" : {
-
-    },
     "Save" : {
       "localizations" : {
         "ar" : {
@@ -7120,7 +7234,7 @@
     "Save %@/month" : {
 
     },
-    "Save $%lld/year" : {
+    "Save %@/year" : {
 
     },
     "Save $48/year" : {
@@ -7204,10 +7318,7 @@
     "Saving %@/mo" : {
 
     },
-    "Saving %@/month" : {
-
-    },
-    "Saving $%lld/year" : {
+    "Saving %@/year" : {
 
     },
     "Scan Apple ID" : {
@@ -7414,6 +7525,12 @@
     "Select currency, currently %@" : {
 
     },
+    "Select Subscription" : {
+
+    },
+    "Select subscriptions to compare side-by-side on cost, usage, and value." : {
+
+    },
     "Select the next billing date for this subscription" : {
       "localizations" : {
         "ar" : {
@@ -7541,6 +7658,9 @@
           }
         }
       }
+    },
+    "Set your billing date to get renewal reminders and track upcoming payments." : {
+
     },
     "Settings" : {
       "localizations" : {
@@ -7974,7 +8094,6 @@
 
     },
     "Smart Suggestion" : {
-      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -8069,6 +8188,9 @@
         }
       }
     },
+    "Spending by Category" : {
+
+    },
     "SPENDING EFFICIENCY" : {
 
     },
@@ -8082,6 +8204,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Spending Overview"
+          }
+        }
+      }
+    },
+    "Split %lld ways = %@/person" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Split %1$lld ways = %2$@/person"
           }
         }
       }
@@ -8227,6 +8359,9 @@
       }
     },
     "Stop Sharing" : {
+
+    },
+    "Submit Request — $5" : {
 
     },
     "Subscribe" : {
@@ -8391,6 +8526,16 @@
     "Switch to %@" : {
 
     },
+    "Switch to %@ at %@/mo" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Switch to %1$@ at %2$@/mo"
+          }
+        }
+      }
+    },
     "Switch to Annual" : {
       "localizations" : {
         "en" : {
@@ -8536,7 +8681,7 @@
     "Tap to deselect all" : {
 
     },
-    "Temporarily pause for later" : {
+    "Tap to set billing date" : {
 
     },
     "Temporarily pause subscriptions you aren't using. We'll remind you before they resume." : {
@@ -8664,6 +8809,9 @@
           }
         }
       }
+    },
+    "These 3 make up %lld%% of your monthly spend" : {
+
     },
     "These terms shall be governed by applicable laws. Any disputes shall be resolved through binding arbitration or in courts of competent jurisdiction." : {
 
@@ -8820,6 +8968,9 @@
     "Top Usage" : {
 
     },
+    "Total" : {
+
+    },
     "Total Money Saved" : {
 
     },
@@ -8873,6 +9024,9 @@
       }
     },
     "Total Tracked Time" : {
+
+    },
+    "Track" : {
 
     },
     "Track %lld Apps" : {
@@ -9183,6 +9337,16 @@
     "Unlock unlimited subscriptions and more" : {
 
     },
+    "Up %@%% (%@ more per month)" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Up %1$@%% (%2$@ more per month)"
+          }
+        }
+      }
+    },
     "Upcoming" : {
 
     },
@@ -9453,7 +9617,6 @@
       }
     },
     "Usage Tracking" : {
-      "extractionState" : "stale",
       "localizations" : {
         "de" : {
           "stringUnit" : {
@@ -9572,6 +9735,9 @@
     "View usage insights" : {
 
     },
+    "Visit %@ Website" : {
+
+    },
     "Waiting..." : {
 
     },
@@ -9659,6 +9825,9 @@
 
     },
     "We do not sell, trade, or otherwise transfer your personal information to third parties, except:\n\n• With your explicit consent\n• To comply with legal obligations\n• To protect our rights and prevent fraud" : {
+
+    },
+    "We handle the cancellation for you" : {
 
     },
     "We may update this privacy policy from time to time. We will notify you of any material changes by posting the new policy in the app and updating the 'Last updated' date." : {
@@ -9822,6 +9991,9 @@
       }
     },
     "We'll open the pause settings for %@." : {
+
+    },
+    "We'll send you a reminder to pause %@ on their website." : {
 
     },
     "We've sent a confirmation link to" : {
@@ -10010,6 +10182,12 @@
     "When does it renew?" : {
 
     },
+    "When you use Cancel for Me, your requests will appear here." : {
+
+    },
+    "Where your money actually goes" : {
+
+    },
     "Where your money goes furthest" : {
       "localizations" : {
         "en" : {
@@ -10165,6 +10343,9 @@
 
     },
     "You just saved" : {
+
+    },
+    "You pay for these through Apple but haven't tracked them" : {
 
     },
     "You save" : {
@@ -10362,6 +10543,9 @@
     "YOUR ANNUAL SAVINGS" : {
 
     },
+    "Your cancellation request for %@ is in progress. We'll handle it within 24 hours." : {
+
+    },
     "Your Data Stays Private" : {
       "localizations" : {
         "ar" : {
@@ -10417,9 +10601,6 @@
     "Your subscription is active again." : {
 
     },
-    "Your subscription will resume automatically" : {
-
-    },
     "Your Subscriptions" : {
       "localizations" : {
         "ar" : {
@@ -10455,6 +10636,12 @@
       }
     },
     "Your subscriptions are well-optimized. Great job!" : {
+
+    },
+    "Your subscriptions look well-optimized. Add more subscriptions or enable Screen Time tracking for deeper insights." : {
+
+    },
+    "Your top 3 highest-cost subscriptions" : {
 
     },
     "Your transactions will appear here once you make a purchase or receive credits." : {

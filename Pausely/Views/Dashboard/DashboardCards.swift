@@ -52,7 +52,7 @@ struct RenewalCard: View {
     }
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 12) {
+        VStack(alignment: .leading, spacing: 10) {
             HStack {
                 Text("\(subscription.daysUntilRenewal ?? 0)d")
                     .font(.system(.footnote, design: .rounded).weight(.bold))
@@ -71,15 +71,29 @@ struct RenewalCard: View {
                 .lineLimit(1)
 
             let converted = currencyManager.convertToSelected(subscription.amount, from: subscription.currency)
-            Text(currencyManager.format(converted))
-                .font(.system(.footnote, design: .rounded).weight(.medium))
-                .foregroundStyle(.secondary)
+            VStack(alignment: .leading, spacing: 2) {
+                Text(currencyManager.format(converted))
+                    .font(.system(.footnote, design: .rounded).weight(.bold))
+                    .foregroundStyle(.primary)
+
+                if let days = subscription.daysUntilRenewal {
+                    let dayText: String = {
+                        if days < 0 { return "Overdue" }
+                        if days == 0 { return "Today" }
+                        if days == 1 { return "Tomorrow" }
+                        return "In \(days) days"
+                    }()
+                    Text(dayText)
+                        .font(.system(.caption2, design: .rounded).weight(.medium))
+                        .foregroundStyle(days <= 3 ? urgencyColor : .secondary)
+                }
+            }
         }
         .padding(14)
-        .frame(width: 120, height: 120)
+        .frame(width: 130, height: 130)
         .glassBackground(cornerRadius: 20, strokeColor: urgencyColor.opacity(0.3), strokeWidth: 1)
         .accessibilityElement(children: .combine)
-        .accessibilityLabel("\(subscription.name), renews in \(subscription.daysUntilRenewal ?? 0) days, \(currencyManager.format(currencyManager.convertToSelected(subscription.amount, from: subscription.currency)))")
+        .accessibilityLabel("\(subscription.name), \(currencyManager.format(currencyManager.convertToSelected(subscription.amount, from: subscription.currency))), \(subscription.daysUntilRenewal.map { $0 == 0 ? "paying today" : "paying in \($0) days" } ?? "no billing date set")")
         .accessibilityHint("Double-tap to view details")
     }
 }
@@ -158,6 +172,18 @@ struct RecentSubCard: View {
                 Text(currencyManager.format(converted))
                     .font(.system(.caption, design: .rounded).weight(.medium))
                     .foregroundStyle(.secondary)
+
+                if let days = subscription.daysUntilRenewal {
+                    let dayText: String = {
+                        if days < 0 { return "Overdue" }
+                        if days == 0 { return "Today" }
+                        if days == 1 { return "Tomorrow" }
+                        return "\(days)d"
+                    }()
+                    Text(dayText)
+                        .font(.system(.caption2, design: .rounded).weight(.medium))
+                        .foregroundStyle(days <= 3 ? .orange : .secondary)
+                }
             }
         }
         .frame(width: 100)

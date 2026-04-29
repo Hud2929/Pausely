@@ -148,6 +148,7 @@ struct RootView: View {
             #endif
             DeepLinkManager.shared.process(url)
         }
+        .preferredColorScheme(.dark)
     }
 }
 

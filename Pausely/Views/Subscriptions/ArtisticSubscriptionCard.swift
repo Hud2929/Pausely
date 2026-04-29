@@ -82,7 +82,7 @@ struct ArtisticSubscriptionCard: View {
 
                     Spacer()
 
-                    // Price
+                    // Price + Payment Countdown
                     VStack(alignment: .trailing, spacing: 4) {
                         let converted = currencyManager.convertToSelected(
                             subscription.amount,
@@ -93,9 +93,19 @@ struct ArtisticSubscriptionCard: View {
                             .foregroundColor(cardColor)
 
                         if let days = subscription.daysUntilRenewal {
-                            Text(days == 0 ? "Today" : "\(days)d")
-                                .font(.footnote.weight(.medium))
+                            let countdownText: String = {
+                                if days < 0 { return "Overdue" }
+                                if days == 0 { return "Paying today" }
+                                if days == 1 { return "Paying tomorrow" }
+                                return "Paying in \(days) days"
+                            }()
+                            Text(countdownText)
+                                .font(.caption.weight(.semibold))
                                 .foregroundColor(days <= 3 ? SemanticColors.error : TextColors.tertiary)
+                        } else {
+                            Text("No date set")
+                                .font(.caption.weight(.medium))
+                                .foregroundColor(TextColors.tertiary)
                         }
                     }
                 }

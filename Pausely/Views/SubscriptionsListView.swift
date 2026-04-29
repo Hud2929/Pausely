@@ -416,11 +416,22 @@ struct EnhancedSubscriptionRow: View {
                         }
                     }
                 } else {
-                    let renewalStatus = subscription.renewalStatus
-                    if case .upcoming = renewalStatus {
-                        Text("Renews in \(renewalStatus.description)")
-                            .font(AppTypography.labelMedium)
-                            .foregroundStyle(.white.opacity(0.4))
+                    // Payment countdown: always show when next billing date is known
+                    if subscription.daysUntilRenewal != nil {
+                        let days = subscription.daysUntilRenewal!
+                        let countdownInfo: (text: String, color: Color) = {
+                            if days < 0 { return ("Payment overdue", .red) }
+                            if days == 0 { return ("Paying today", .orange) }
+                            if days == 1 { return ("Paying tomorrow", .yellow) }
+                            return ("Paying in \(days) days", .white.opacity(0.5))
+                        }()
+                        HStack(spacing: 4) {
+                            Image(systemName: "calendar")
+                                .font(AppTypography.labelSmall)
+                            Text(countdownInfo.text)
+                                .font(AppTypography.labelMedium)
+                        }
+                        .foregroundStyle(countdownInfo.color)
                     }
                 }
             }
