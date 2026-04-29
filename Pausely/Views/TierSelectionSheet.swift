@@ -9,7 +9,7 @@ import SwiftUI
 
 struct TierSelectionSheet: View {
     let entry: CatalogEntry
-    let onSelect: (PricingTier, BillingFrequency, Bool, Decimal?) -> Void
+    let onSelect: (PricingTier, BillingFrequency, Bool, Decimal?, Date) -> Void
 
     @Environment(\.dismiss) private var dismiss
     @ObservedObject private var currencyManager = CurrencyManager.shared
@@ -18,6 +18,7 @@ struct TierSelectionSheet: View {
     @State private var selectedBillingFrequency: BillingFrequency = .monthly
     @State private var isOverridingPrice = false
     @State private var priceOverrideText = ""
+    @State private var nextBillingDate: Date = Date().addingTimeInterval(30 * 24 * 60 * 60)
 
     // MARK: - Region mapping
     private var userRegion: Region {
@@ -134,6 +135,10 @@ struct TierSelectionSheet: View {
                         // Price override section
                         priceOverrideSection
                             .padding(.horizontal, 20)
+
+                        // Billing date section
+                        billingDateSection
+                            .padding(.horizontal, 20)
                     }
                     .padding(.vertical, 20)
                 }
@@ -142,7 +147,7 @@ struct TierSelectionSheet: View {
                 Button {
                     STAnimation.success()
                     let price = parsePriceOverride()
-                    onSelect(selectedTier, selectedBillingFrequency, isOverridingPrice, price)
+                    onSelect(selectedTier, selectedBillingFrequency, isOverridingPrice, price, nextBillingDate)
                     dismiss()
                 } label: {
                     HStack(spacing: 8) {
@@ -376,6 +381,55 @@ struct TierSelectionSheet: View {
         )
     }
 
+    // MARK: - Billing Date
+    private var billingDateSection: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            Text("Next Billing Date")
+                .font(STFont.labelLarge)
+                .foregroundColor(.white.opacity(0.6))
+                .padding(.leading, 4)
+
+            VStack(spacing: 16) {
+                // Quick-select buttons
+                HStack(spacing: 8) {
+                    QuickDateChip(title: "Today", icon: "calendar") {
+                        withAnimation(.easeInOut(duration: 0.2)) {
+                            nextBillingDate = Date()
+                        }
+                    }
+                    QuickDateChip(title: "+7 Days", icon: "7.circle") {
+                        withAnimation(.easeInOut(duration: 0.2)) {
+                            nextBillingDate = Calendar.current.date(byAdding: .day, value: 7, to: Date()) ?? Date()
+                        }
+                    }
+                    QuickDateChip(title: "+30 Days", icon: "30.circle") {
+                        withAnimation(.easeInOut(duration: 0.2)) {
+                            nextBillingDate = Calendar.current.date(byAdding: .day, value: 30, to: Date()) ?? Date()
+                        }
+                    }
+                }
+
+                DatePicker(
+                    "Next Billing Date",
+                    selection: $nextBillingDate,
+                    displayedComponents: .date
+                )
+                .datePickerStyle(.compact)
+                .labelsHidden()
+                .colorMultiply(.luxuryPurple)
+                .padding(14)
+                .background(
+                    RoundedRectangle(cornerRadius: 14)
+                        .fill(Color.white.opacity(0.06))
+                        .overlay(
+                            RoundedRectangle(cornerRadius: 14)
+                                .stroke(Color.white.opacity(0.1), lineWidth: 1)
+                        )
+                )
+            }
+        }
+    }
+
     // MARK: - Price Override
     private var priceOverrideSection: some View {
         VStack(alignment: .leading, spacing: 12) {
@@ -571,6 +625,44 @@ struct PremiumTierRow: View {
     }
 }
 
+// MARK: - Quick Date Chip
+struct QuickDateChip: View {
+    let title: String
+    let icon: String
+    let action: () -> Void
+
+    @State private var isPressed = false
+
+    var body: some View {
+        Button(action: action) {
+            VStack(spacing: 4) {
+                Image(systemName: icon)
+                    .font(.caption2.weight(.semibold))
+                Text(title)
+                    .font(.caption2.weight(.medium))
+            }
+            .foregroundColor(.white.opacity(0.8))
+            .frame(maxWidth: .infinity)
+            .padding(.vertical, 10)
+            .background(
+                RoundedRectangle(cornerRadius: 10)
+                    .fill(Color.white.opacity(0.08))
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 10)
+                            .stroke(Color.white.opacity(0.12), lineWidth: 1)
+                    )
+            )
+            .scaleEffect(isPressed ? 0.95 : 1.0)
+        }
+        .buttonStyle(PlainButtonStyle())
+        .simultaneousGesture(
+            DragGesture(minimumDistance: 0)
+                .onChanged { _ in withAnimation(.easeInOut(duration: 0.1)) { isPressed = true } }
+                .onEnded { _ in withAnimation(.easeInOut(duration: 0.1)) { isPressed = false } }
+        )
+    }
+}
+
 // MARK: - Billing Toggle Button
 struct BillingToggleButton: View {
     let title: String
@@ -623,6 +715,6 @@ struct BillingToggleButton: View {
             ],
             lastUpdated: Date()
         ),
-        onSelect: { _, _, _, _ in }
+        onSelect: { _, _, _, _, _ in }
     )
 }

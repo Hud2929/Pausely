@@ -18,7 +18,7 @@ enum PaymentSource: String, Codable {
 
 // MARK: - Subscription Tier (OPTIMIZED FOR CONVERSION)
 /// Strategic tier structure: 2-sub limit creates urgency, killer features drive upgrade
-enum SubscriptionTier: String, CaseIterable, Comparable {
+enum SubscriptionTier: String, CaseIterable, Comparable, Codable {
     case free = "free"
     case pro = "pro"
     case proAnnual = "pro_annual"
@@ -280,7 +280,13 @@ final class PaymentManager: ObservableObject {
     static let shared = PaymentManager()
     
     // MARK: - State
-    private(set) var currentTier: SubscriptionTier = .free
+    private(set) var currentTier: SubscriptionTier = .free {
+        didSet {
+            guard oldValue != currentTier else { return }
+            AppSettings.shared.currentTier = currentTier
+            objectWillChange.send()
+        }
+    }
     private(set) var isLoading = false
     private(set) var products: [Product] = []
 
@@ -319,8 +325,12 @@ final class PaymentManager: ObservableObject {
     
     // MARK: - Initialization
     private init() {
+        // 1. Restore persisted tier first (survives app restarts)
+        self.currentTier = AppSettings.shared.currentTier
+
         Task {
             await loadProducts()
+            // 2. Verify against StoreKit (may downgrade if subscription expired)
             await updateCurrentEntitlements()
         }
     }
@@ -372,19 +382,25 @@ final class PaymentManager: ObservableObject {
     // MARK: - Entitlements
     
     func updateCurrentEntitlements() async {
-        var activeTier: SubscriptionTier = .free
-        
+        var storeKitTier: SubscriptionTier = .free
+        var hasStoreKitEntitlement = false
+
         for await result in Transaction.currentEntitlements {
             guard let transaction = try? checkVerified(result),
                   transaction.revocationDate == nil else { continue }
-            
+
+            hasStoreKitEntitlement = true
             let tier = tierForProduct(transaction.productID)
-            if tier > activeTier {
-                activeTier = tier
+            if tier > storeKitTier {
+                storeKitTier = tier
             }
         }
-        
-        currentTier = activeTier
+
+        // Only override persisted tier if StoreKit has an active entitlement.
+        // If StoreKit is empty (e.g. referral/LemonSqueezy Pro), keep the persisted tier.
+        if hasStoreKitEntitlement {
+            currentTier = storeKitTier
+        }
     }
     
     private func tierForProduct(_ productID: String) -> SubscriptionTier {

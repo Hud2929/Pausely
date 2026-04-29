@@ -116,8 +116,8 @@ struct SubscriptionBrowserView: View {
         }
         .sheet(isPresented: $showingTierSheet) {
             if let entry = selectedEntry {
-                TierSelectionSheet(entry: entry) { tier, billingFreq, isOverridden, userPrice in
-                    addSubscription(entry: entry, tier: tier, billingFrequency: billingFreq, isOverridden: isOverridden, userPrice: userPrice)
+                TierSelectionSheet(entry: entry) { tier, billingFreq, isOverridden, userPrice, billingDate in
+                    addSubscription(entry: entry, tier: tier, billingFrequency: billingFreq, isOverridden: isOverridden, userPrice: userPrice, nextBillingDate: billingDate)
                 }
             }
         }
@@ -224,7 +224,7 @@ struct SubscriptionBrowserView: View {
         store.subscriptions.contains { $0.bundleIdentifier == entry.bundleId }
     }
 
-    private func addSubscription(entry: CatalogEntry, tier: PricingTier, billingFrequency: BillingFrequency, isOverridden: Bool, userPrice: Decimal?) {
+    private func addSubscription(entry: CatalogEntry, tier: PricingTier, billingFrequency: BillingFrequency, isOverridden: Bool, userPrice: Decimal?, nextBillingDate: Date) {
         let tierPricing = entry.pricing(for: tier)
 
         let price: Double
@@ -242,6 +242,7 @@ struct SubscriptionBrowserView: View {
             category: entry.category.rawValue,
             amount: Decimal(price),
             billingFrequency: billingFrequency,
+            nextBillingDate: nextBillingDate,
             status: .active,
             isDetected: true,
             selectedTier: tier,

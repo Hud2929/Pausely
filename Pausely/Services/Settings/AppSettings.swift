@@ -139,4 +139,7 @@ final class AppSettings: ObservableObject {
 
     @AppSetting("total_money_saved", defaultValue: 0.0)
     var totalMoneySaved: Double
+
+    @AppSetting("current_subscription_tier", defaultValue: SubscriptionTier.free)
+    var currentTier: SubscriptionTier
 }
