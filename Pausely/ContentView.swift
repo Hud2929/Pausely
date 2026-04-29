@@ -10,18 +10,6 @@ struct PauselyApp: App {
     var body: some Scene {
         WindowGroup {
             RootView()
-                .preferredColorScheme(.dark)
-                .onAppear {
-                    // Force iPad to use full screen
-                    #if targetEnvironment(simulator)
-                    if UIDevice.current.userInterfaceIdiom == .pad {
-                        // iPad specific configuration
-                        UIApplication.shared.connectedScenes
-                            .compactMap { $0 as? UIWindowScene }
-                            .forEach { $0.sizeRestrictions?.minimumSize = CGSize(width: 768, height: 1024) }
-                    }
-                    #endif
-                }
         }
     }
 }
@@ -34,7 +22,7 @@ class AppDelegate: NSObject, UIApplicationDelegate {
         appearance.backgroundColor = .clear
         appearance.titleTextAttributes = [
             .font: UIFont.systemFont(ofSize: 17, weight: .semibold),
-            .foregroundColor: UIColor.white
+            .foregroundColor: UIColor.label
         ]
 
         UINavigationBar.appearance().standardAppearance = appearance
@@ -82,10 +70,25 @@ struct RootView: View {
     @State private var showAuth = false
     @AppStorage("hasCompletedOnboarding") private var hasCompletedOnboarding = false
 
+    /// Detects if app was launched for UI testing
+    private var isUITesting: Bool {
+        ProcessInfo.processInfo.arguments.contains("--uitesting")
+    }
+
+    /// Detects if app should run in demo mode (no auth required)
+    private var isDemoMode: Bool {
+        ProcessInfo.processInfo.arguments.contains("--demo-mode")
+    }
+
+    /// Detects if app should reset state for testing
+    private var shouldResetState: Bool {
+        ProcessInfo.processInfo.arguments.contains("--reset-state")
+    }
+
     var body: some View {
         ZStack {
             Group {
-                if authManager.isAuthenticated {
+                if isDemoMode || authManager.isAuthenticated {
                     // Authenticated: show main app
                     VStack(spacing: 0) {
                         if supabaseManager.isUsingDemoMode {
@@ -264,7 +267,7 @@ struct PremiumWelcomeFlow: View {
     private let totalPages = 3
 
     var body: some View {
-        NavigationView {
+        NavigationStack {
             ZStack {
                 PremiumBackground()
 
@@ -305,6 +308,7 @@ struct PremiumWelcomeFlow: View {
                 }
                 .padding(.top, 16)
                 .padding(.trailing, 24)
+                .accessibilityIdentifier("skipButton")
             }
 
             // Page indicator
@@ -380,6 +384,7 @@ struct PremiumWelcomeFlow: View {
                         .shadow(color: BrandColors.primary.opacity(0.4), radius: 15, x: 0, y: 8)
                 }
                 .padding(.horizontal, 24)
+                .accessibilityIdentifier("onboardingNextButton")
 
                 Button(action: {
                     withAnimation(.easeInOut(duration: 0.4)) {
@@ -390,6 +395,7 @@ struct PremiumWelcomeFlow: View {
                         .font(.system(.subheadline, design: .rounded).weight(.medium))
                         .foregroundColor(TextColors.secondary)
                 }
+                .accessibilityIdentifier("alreadyHaveAccountButton")
             }
             .padding(.bottom, 48)
             .padding(.top, 24)
@@ -465,11 +471,13 @@ struct PremiumWelcomeFlow: View {
                 }
                 .buttonStyle(PrimaryButtonStyle())
                 .padding(.horizontal, 24)
+                .accessibilityIdentifier("getStartedButton")
 
                 Button(action: { showSignIn = true }) {
                     Text("I already have an account")
                 }
                 .buttonStyle(GhostButtonStyle())
+                .accessibilityIdentifier("signInButton")
             }
             .padding(.bottom, 48)
         }
@@ -852,12 +860,12 @@ struct PremiumSignUpView: View {
     }
 
     var body: some View {
-        NavigationView {
+        NavigationStack {
             ZStack {
                 PremiumBackground()
 
                 ScrollView(showsIndicators: false) {
-                    VStack(spacing: 32) {
+                    VStack(spacing: 20) {
                         // Header
                         VStack(spacing: 8) {
                             Text("Create Account")
@@ -879,12 +887,14 @@ struct PremiumSignUpView: View {
                                         .font(.system(.subheadline, design: .rounded).weight(.medium))
                                         .foregroundColor(TextColors.secondary)
                                     PremiumTextField(placeholder: "Jane", text: $firstName)
+                                        .accessibilityIdentifier("firstNameTextField")
                                 }
                                 VStack(alignment: .leading, spacing: 8) {
                                     Text("Last Name")
                                         .font(.system(.subheadline, design: .rounded).weight(.medium))
                                         .foregroundColor(TextColors.secondary)
                                     PremiumTextField(placeholder: "Smith", text: $lastName)
+                                        .accessibilityIdentifier("lastNameTextField")
                                 }
                             }
 
@@ -900,6 +910,7 @@ struct PremiumSignUpView: View {
                                     keyboardType: .emailAddress,
                                     autocapitalization: .never
                                 )
+                                .accessibilityIdentifier("emailTextField")
                             }
 
                             // Password
@@ -913,6 +924,7 @@ struct PremiumSignUpView: View {
                                     text: $password,
                                     isSecure: true
                                 )
+                                .accessibilityIdentifier("passwordTextField")
 
                                 if !password.isEmpty {
                                     PasswordStrengthMeter(password: password)
@@ -933,8 +945,7 @@ struct PremiumSignUpView: View {
                             .padding(.horizontal, 24)
                         }
 
-                        Spacer(minLength: 40)
-
+                        // Spacer removed — meter pushes button, keep it reachable on small screens
                         // Button
                         Button(action: performSignUp) {
                             HStack {
@@ -950,6 +961,7 @@ struct PremiumSignUpView: View {
                         .buttonStyle(PrimaryButtonStyle(isLoading: isLoading, isDisabled: !isValid))
                         .padding(.horizontal, 24)
                         .disabled(!isValid || isLoading)
+                        .accessibilityIdentifier("createAccountButton")
                         .accessibilityHint(!isValid ? "Please fill in all required fields correctly" : isLoading ? "Please wait, creating account" : "")
 
                         // Divider
@@ -973,6 +985,7 @@ struct PremiumSignUpView: View {
                         .frame(height: 50)
                         .cornerRadius(14)
                         .padding(.horizontal, 24)
+                        .accessibilityIdentifier("appleSignUpButton")
 
                         // Terms
                         Text("By creating an account, you agree to our Terms of Service and Privacy Policy")
@@ -989,6 +1002,7 @@ struct PremiumSignUpView: View {
                 ToolbarItem(placement: .navigationBarLeading) {
                     Button("Cancel") { dismiss() }
                         .foregroundColor(TextColors.secondary)
+                        .accessibilityIdentifier("cancelButton")
                 }
             }
             .sheet(isPresented: $showEmailConfirmation) {
@@ -1085,12 +1099,12 @@ struct PremiumSignInView: View {
     }
 
     var body: some View {
-        NavigationView {
+        NavigationStack {
             ZStack {
                 PremiumBackground()
 
                 ScrollView(showsIndicators: false) {
-                    VStack(spacing: 32) {
+                    VStack(spacing: 20) {
                         // Header
                         VStack(spacing: 8) {
                             Text("Welcome Back")
@@ -1116,6 +1130,7 @@ struct PremiumSignInView: View {
                                     keyboardType: .emailAddress,
                                     autocapitalization: .never
                                 )
+                                .accessibilityIdentifier("signInEmailTextField")
                             }
 
                             VStack(alignment: .leading, spacing: 8) {
@@ -1128,6 +1143,7 @@ struct PremiumSignInView: View {
                                     text: $password,
                                     isSecure: true
                                 )
+                                .accessibilityIdentifier("signInPasswordTextField")
                             }
                         }
                         .padding(.horizontal, 24)
@@ -1159,6 +1175,7 @@ struct PremiumSignInView: View {
                         .buttonStyle(PrimaryButtonStyle(isLoading: isLoading, isDisabled: !isValid))
                         .padding(.horizontal, 24)
                         .disabled(!isValid || isLoading)
+                        .accessibilityIdentifier("signInButton")
                         .accessibilityHint(!isValid ? "Please enter your email and password" : isLoading ? "Please wait, signing in" : "")
 
                         Button("Forgot Password?") {
@@ -1166,6 +1183,7 @@ struct PremiumSignInView: View {
                         }
                         .font(.system(.subheadline, design: .rounded))
                         .foregroundColor(TextColors.secondary)
+                        .accessibilityIdentifier("forgotPasswordButton")
 
                         // Divider
                         HStack {
@@ -1189,6 +1207,7 @@ struct PremiumSignInView: View {
                         .cornerRadius(14)
                         .padding(.horizontal, 24)
                         .padding(.bottom, 24)
+                        .accessibilityIdentifier("appleSignInButton")
                     }
                 }
             }
@@ -1197,6 +1216,7 @@ struct PremiumSignInView: View {
                 ToolbarItem(placement: .navigationBarLeading) {
                     Button("Cancel") { dismiss() }
                         .foregroundColor(TextColors.secondary)
+                        .accessibilityIdentifier("signInCancelButton")
                 }
             }
             .sheet(isPresented: $showPasswordReset) {

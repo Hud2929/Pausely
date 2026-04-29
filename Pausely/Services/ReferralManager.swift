@@ -91,8 +91,9 @@ class ReferralManager: ObservableObject {
         didSet {
             UserDefaults.standard.set(referralDiscountUsed, forKey: Self.referralDiscountUsedKey)
             // Sync to database when flag changes
-            Task {
-                await syncReferralDiscountUsedToDatabase()
+            Task { [weak self] in
+                guard let self = self else { return }
+                await self.syncReferralDiscountUsedToDatabase()
             }
         }
     }
@@ -131,9 +132,10 @@ class ReferralManager: ObservableObject {
             #endif
         }
         
-        Task {
-            await loadCurrentUserReferralData()
-            await loadReferralDiscountUsedFromDatabase()
+        Task { [weak self] in
+            guard let self = self else { return }
+            await self.loadCurrentUserReferralData()
+            await self.loadReferralDiscountUsedFromDatabase()
         }
     }
     
@@ -389,8 +391,9 @@ class ReferralManager: ObservableObject {
         #endif
         
         // Sync to database
-        Task {
-            await syncReferralDiscountUsedToDatabase()
+        Task { [weak self] in
+            guard let self = self else { return }
+            await self.syncReferralDiscountUsedToDatabase()
         }
     }
     
@@ -579,8 +582,9 @@ class ReferralManager: ObservableObject {
             return
         }
 
-        Task {
-            let isValid = await validateReferralCode(cleanCode)
+        Task { [weak self] in
+            guard let self = self else { return }
+            let isValid = await self.validateReferralCode(cleanCode)
 
             await MainActor.run {
                 if isValid {
@@ -643,6 +647,85 @@ class ReferralManager: ObservableObject {
     
     func hasReferralDiscount() -> Bool {
         return hasActiveReferralDiscount()
+    }
+
+    // MARK: - Share Helpers
+
+    /// Returns the full referral link string
+    func referralLinkString() -> String {
+        guard let code = currentUserReferralCode else {
+            return "https://pausely.app/download"
+        }
+        return "https://pausely.app/r/\(code)"
+    }
+
+    /// Returns the display code or a fallback
+    func displayCode() -> String {
+        currentUserReferralCode ?? "Loading..."
+    }
+
+    /// Opens Messages with a pre-filled referral message
+    func shareViaMessages() {
+        let code = displayCode()
+        let link = referralLinkString()
+        let message = "Get Pausely and manage your subscriptions smarter! Use my code \(code) for 30% off. Get Pro FREE when you refer 3 friends! \(link)"
+
+        guard let encodedBody = message.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed),
+              let url = URL(string: "sms:&body=\(encodedBody)") else { return }
+
+        UIApplication.shared.open(url)
+    }
+
+    /// Opens Mail with a pre-filled referral message
+    func shareViaEmail() {
+        let code = displayCode()
+        let link = referralLinkString()
+        let subject = "Get 30% off Pausely - Subscription Manager"
+        let body = "Hey!\n\nI've been using Pausely to track and manage my subscriptions. It's saved me hundreds!\n\nUse my referral code \(code) to get 30% off. Plus, if you refer 3 friends, you get Pro FREE forever!\n\n\(link)"
+
+        guard let encodedSubject = subject.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed),
+              let encodedBody = body.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed),
+              let url = URL(string: "mailto:?subject=\(encodedSubject)&body=\(encodedBody)") else { return }
+
+        UIApplication.shared.open(url)
+    }
+
+    /// Copies the referral message to the clipboard
+    func copyToClipboard() -> String {
+        let text = "Use my code \(displayCode()) to get 30% off Pausely! \(referralLinkString())"
+        UIPasteboard.general.string = text
+        return text
+    }
+
+    /// Presents a system share sheet with the referral content
+    func shareViaSystem(presentingFrom rootVC: UIViewController?) {
+        let code = displayCode()
+        let link = referralLinkString()
+        let text = "Get Pausely and manage your subscriptions smarter! Use my code \(code) for 30% off. Get Pro FREE when you refer 3 friends!"
+
+        var shareItems: [Any] = [text]
+
+        if let url = URL(string: link), link != "https://pausely.app/download" {
+            shareItems.append(url)
+        } else {
+            shareItems.append("Download at: https://pausely.app")
+        }
+
+        let activityVC = UIActivityViewController(activityItems: shareItems, applicationActivities: nil)
+        activityVC.excludedActivityTypes = [
+            .addToReadingList,
+            .assignToContact,
+            .openInIBooks,
+            .saveToCameraRoll
+        ]
+
+        if let popover = activityVC.popoverPresentationController {
+            popover.sourceView = rootVC?.view
+            popover.sourceRect = CGRect(x: rootVC?.view.bounds.midX ?? 0, y: rootVC?.view.bounds.midY ?? 0, width: 0, height: 0)
+            popover.permittedArrowDirections = []
+        }
+
+        rootVC?.present(activityVC, animated: true)
     }
 }
 

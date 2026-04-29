@@ -3342,8 +3342,7 @@ extension ServiceDatabase {
     static var services: [SubscriptionService] {
         streamingServices + musicServices + productivityServices + storageServices +
         securityServices + gamingServices + fitnessServices + foodServices +
-        newsServices + datingServices + shoppingServices + financeServices +
-        educationServices + designServices + communicationServices + cloudComputingServices
+        newsServices + datingServices + shoppingServices + financeServices
     }
 }
 

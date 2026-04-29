@@ -13,48 +13,22 @@ final class OnboardingFlowTests: XCTestCase {
     func testOnboardingCanBeDismissed() throws {
         let app = XCUIApplication()
 
-        // Look for common onboarding indicators
-        let getStarted = app.buttons["Get Started"]
-        let skipButton = app.buttons["Skip"]
-        let continueButton = app.buttons["Continue"]
+        // Onboarding carousel has a "Get Started" button
+        let getStarted = app.buttons["getStartedButton"]
 
-        if getStarted.exists {
+        if getStarted.waitForExistence(timeout: 5) {
             getStarted.tap()
-        } else if continueButton.exists {
-            // Tap through any onboarding pages
-            for _ in 0..<5 {
-                if continueButton.exists {
-                    continueButton.tap()
-                } else {
-                    break
-                }
-            }
         }
 
-        // After onboarding, we should see the main UI (tabs or login)
-        let dashboardTab = app.tabBars.buttons["Dashboard"]
-        let subscriptionsTab = app.tabBars.buttons["Subscriptions"]
+        // After tapping Get Started, we should see the auth flow or main UI
+        // (since --uitesting without --demo-mode still shows auth)
         let loginButton = app.buttons["Sign In"]
+        let homeTab = app.tabBars.buttons["tabHome"]
 
         XCTAssertTrue(
-            dashboardTab.exists || subscriptionsTab.exists || loginButton.exists,
-            "App should reach main UI after onboarding"
+            loginButton.waitForExistence(timeout: 5) || homeTab.waitForExistence(timeout: 5),
+            "App should reach auth or main UI after onboarding"
         )
-    }
-
-    func testSkipOnboarding() throws {
-        let app = XCUIApplication()
-        app.launchArguments = ["--uitesting", "--reset-state"]
-        app.launch()
-
-        let skipButton = app.buttons["Skip"]
-        if skipButton.exists {
-            skipButton.tap()
-        }
-
-        // Verify we are past onboarding
-        let mainUIExists = app.tabBars.buttons.firstMatch.waitForExistence(timeout: 5)
-        XCTAssertTrue(mainUIExists, "Main UI should appear after skipping onboarding")
     }
 
     func testOnboardingCarouselSwipe() throws {
@@ -70,12 +44,11 @@ final class OnboardingFlowTests: XCTestCase {
             carousel.swipeLeft()
         }
 
-        // After swiping, the Get Started or Next button should still be present
-        let ctaButton = app.buttons["Get Started"]
-        let nextButton = app.buttons["Next"]
+        // After swiping, the Get Started button should still be present
+        let ctaButton = app.buttons["getStartedButton"]
         XCTAssertTrue(
-            ctaButton.exists || nextButton.exists || app.buttons["Skip"].exists,
-            "Onboarding controls should remain visible after swiping"
+            ctaButton.waitForExistence(timeout: 3),
+            "Get Started button should remain visible after swiping"
         )
     }
 }

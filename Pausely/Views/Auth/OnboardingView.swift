@@ -453,7 +453,8 @@ struct EnhancedLoginView: View {
             .onSubmit {
                 focusedField = .password
             }
-            
+            .accessibilityIdentifier("emailTextField")
+
             EnhancedTextField(
                 title: "Password",
                 icon: "lock",
@@ -466,6 +467,7 @@ struct EnhancedLoginView: View {
             .onSubmit {
                 isSignUp ? signUp() : signIn()
             }
+            .accessibilityIdentifier("passwordTextField")
 
             if isSignUp && !password.isEmpty {
                 PasswordStrengthMeter(password: password)
@@ -475,14 +477,16 @@ struct EnhancedLoginView: View {
                 HStack {
                     Toggle("Remember me", isOn: $rememberMe)
                         .toggleStyle(RememberMeToggleStyle())
-                    
+                        .accessibilityIdentifier("rememberMeToggle")
+
                     Spacer()
-                    
+
                     Button("Forgot Password?") {
                         showPasswordReset = true
                     }
                     .font(.system(.subheadline, design: .rounded).weight(.medium))
                     .foregroundStyle(Color.luxuryGold)
+                    .accessibilityIdentifier("forgotPasswordButton")
                 }
             }
         }
@@ -513,6 +517,7 @@ struct EnhancedLoginView: View {
             .shadow(color: Color.luxuryPurple.opacity(0.4), radius: 15)
         }
         .disabled(!canSubmit || isLoading)
+        .accessibilityIdentifier(isSignUp ? "createAccountButton" : "signInButton")
         .accessibilityHint(!canSubmit ? "Please enter your email and password" : isLoading ? "Please wait, signing in" : "")
         .opacity(!canSubmit ? 0.6 : 1)
     }
@@ -545,6 +550,7 @@ struct EnhancedLoginView: View {
                 .padding()
                 .glass(intensity: 0.2, tint: .white)
             }
+            .accessibilityIdentifier("biometricSignInButton")
         }
     }
     
@@ -560,6 +566,7 @@ struct EnhancedLoginView: View {
                 .foregroundStyle(.white.opacity(0.7))
         }
         .padding(.top, 8)
+        .accessibilityIdentifier("toggleSignUpSignInButton")
     }
     
     private var biometricType: String {
@@ -782,11 +789,12 @@ struct PasswordResetView: View {
                 text: $resetEmail,
                 isSecure: false
             )
-            
+            .accessibilityIdentifier("resetEmailTextField")
+
             if !errorMessage.isEmpty {
                 ErrorMessageView(message: errorMessage)
             }
-            
+
             Button(action: sendReset) {
                 HStack {
                     if isLoading {
@@ -808,11 +816,13 @@ struct PasswordResetView: View {
                 .cornerRadius(16)
             }
             .disabled(resetEmail.isEmpty || isLoading)
+            .accessibilityIdentifier("sendResetLinkButton")
             .accessibilityHint(resetEmail.isEmpty ? "Please enter your email address" : isLoading ? "Please wait, sending reset link" : "")
 
             Button("Cancel") {
                 dismiss()
             }
+            .accessibilityIdentifier("cancelButton")
             .font(.system(.body, design: .rounded).weight(.medium))
             .foregroundStyle(.white.opacity(0.6))
             

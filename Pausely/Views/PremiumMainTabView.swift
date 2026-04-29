@@ -32,6 +32,7 @@ struct PremiumMainTabView: View {
                 Label("Home", systemImage: "house.fill")
             }
             .tag(0)
+            .accessibilityIdentifier("tabHome")
 
             // Subscriptions Tab
             NavigationStack {
@@ -42,6 +43,7 @@ struct PremiumMainTabView: View {
                 Label("Subscriptions", systemImage: "creditcard.fill")
             }
             .tag(1)
+            .accessibilityIdentifier("tabSubscriptions")
 
             // Genius Tab
             NavigationStack {
@@ -52,6 +54,7 @@ struct PremiumMainTabView: View {
                 Label("Genius", systemImage: "sparkles")
             }
             .tag(2)
+            .accessibilityIdentifier("tabGenius")
 
             // Insights Tab (Pro only)
             NavigationStack {
@@ -66,6 +69,7 @@ struct PremiumMainTabView: View {
                 }
             }
             .tag(3)
+            .accessibilityIdentifier("tabInsights")
 
             // Profile Tab
             NavigationStack {
@@ -76,6 +80,7 @@ struct PremiumMainTabView: View {
                 Label("Profile", systemImage: "person.fill")
             }
             .tag(4)
+            .accessibilityIdentifier("tabProfile")
         }
         .tint(Colors.primary)
         .onReceive(NotificationCenter.default.publisher(for: .switchToProfileTab)) { _ in

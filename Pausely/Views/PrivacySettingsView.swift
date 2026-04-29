@@ -573,7 +573,7 @@ struct TwoFactorSetupView: View {
     @State private var verificationCode = ""
     
     var body: some View {
-        NavigationView {
+        NavigationStack {
             VStack(spacing: 24) {
                 Text("Scan this QR code with your authenticator app")
                     .font(.system(.body, design: .rounded).weight(.medium))

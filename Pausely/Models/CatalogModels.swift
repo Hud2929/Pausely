@@ -54,6 +54,13 @@ enum SubscriptionCategory: String, Codable, CaseIterable, Identifiable {
     case food
     case sports
     case finance
+    case phone
+    case insurance
+    case gym
+    case automotive
+    case home
+    case pet
+    case personalCare
     case other
 
     var id: String { rawValue }
@@ -67,12 +74,19 @@ enum SubscriptionCategory: String, Codable, CaseIterable, Identifiable {
         case .cloudStorage: return "Cloud Storage"
         case .education: return "Education"
         case .news: return "News"
-        case .utilities: return "Utilities"
+        case .utilities: return "Utilities & Internet"
         case .social: return "Social"
         case .shopping: return "Shopping"
         case .food: return "Food"
         case .sports: return "Sports"
         case .finance: return "Finance"
+        case .phone: return "Phone & Mobile"
+        case .insurance: return "Insurance"
+        case .gym: return "Gym & Fitness"
+        case .automotive: return "Automotive"
+        case .home: return "Home & Security"
+        case .pet: return "Pet"
+        case .personalCare: return "Personal Care"
         case .other: return "Other"
         }
     }
@@ -86,12 +100,19 @@ enum SubscriptionCategory: String, Codable, CaseIterable, Identifiable {
         case .cloudStorage: return "cloud"
         case .education: return "book"
         case .news: return "newspaper"
-        case .utilities: return "wrench"
+        case .utilities: return "wifi"
         case .social: return "person.2"
         case .shopping: return "cart"
         case .food: return "fork.knife"
         case .sports: return "sportscourt"
         case .finance: return "dollarsign.circle"
+        case .phone: return "iphone"
+        case .insurance: return "shield.checkered"
+        case .gym: return "dumbbell"
+        case .automotive: return "car"
+        case .home: return "house"
+        case .pet: return "pawprint"
+        case .personalCare: return "sparkles"
         case .other: return "square.grid.2x2"
         }
     }

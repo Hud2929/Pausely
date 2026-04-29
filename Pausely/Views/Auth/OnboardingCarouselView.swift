@@ -104,7 +104,7 @@ struct OnboardingCarouselView: View {
                     )
                     .shadow(color: Color.luxuryPurple.opacity(0.5), radius: 20, x: 0, y: 10)
             }
-            .accessibilityLabel("Get started")
+            .accessibilityIdentifier("getStartedButton")
             .pressEffect(scale: 0.97)
 
             Button(action: {

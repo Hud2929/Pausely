@@ -198,6 +198,7 @@ struct ReferralInputView: View {
                         .focused($isTextFieldFocused)
                         .keyboardType(.default)
                         .submitLabel(.go)
+                        .accessibilityIdentifier("referralCodeTextField")
                         .onChange(of: referralCode) { _, _ in
                             // Clear validation state when typing
                             if isValid != nil {
@@ -273,7 +274,7 @@ struct ReferralInputView: View {
                             .tint(.white)
                             .padding(.trailing, 8)
                     }
-                    
+
                     Text("Apply Code")
                         .font(.system(.body, design: .rounded).weight(.semibold))
                 }
@@ -292,7 +293,7 @@ struct ReferralInputView: View {
                                     endPoint: .trailing
                                 )
                             )
-                        
+
                         RoundedRectangle(cornerRadius: 16, style: .continuous)
                             .stroke(
                                 LinearGradient(
@@ -307,6 +308,7 @@ struct ReferralInputView: View {
                 .shadow(color: referralCode.isEmpty ? Color.clear : Color.luxuryPurple.opacity(0.4), radius: 15, x: 0, y: 8)
             }
             .disabled(referralCode.isEmpty || isValidating)
+            .accessibilityIdentifier("applyReferralCodeButton")
             .accessibilityHint(referralCode.isEmpty ? "Please enter a referral code first" : isValidating ? "Please wait, validating code" : "")
             .buttonStyle(PlainButtonStyle())
             
@@ -320,6 +322,7 @@ struct ReferralInputView: View {
                     .foregroundStyle(.white.opacity(0.6))
             }
             .buttonStyle(PlainButtonStyle())
+            .accessibilityIdentifier("skipReferralButton")
         }
     }
     

@@ -26,6 +26,12 @@ Packages/
 !.env.example
 backend/.dev.vars
 
+# Xcode Config — may contain secrets
+Configuration/*.xcconfig
+!Configuration/Development.xcconfig
+!Configuration/Production.xcconfig
+!Configuration/Staging.xcconfig
+
 # Credentials - NEVER commit these
 *.p8
 *.key

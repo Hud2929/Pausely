@@ -16,6 +16,7 @@ struct RevolutionaryGeniusView: View {
     @State private var currentReport: GeniusReport?
     @State private var showingPaywall = false
     @State private var appeared = false
+    @State private var hasAttemptedAnalysis = false
 
     var body: some View {
         ZStack {
@@ -34,8 +35,14 @@ struct RevolutionaryGeniusView: View {
                         .padding(.top, 24)
 
                     // Results
-                    if let report = currentReport, !report.insights.isEmpty {
-                        resultsSection(report: report)
+                    if let report = currentReport {
+                        if report.insights.isEmpty {
+                            noInsightsState
+                        } else {
+                            resultsSection(report: report)
+                        }
+                    } else if hasAttemptedAnalysis && !engine.isAnalyzing {
+                        noInsightsState
                     }
 
                     Spacer(minLength: 100)
@@ -56,7 +63,14 @@ struct RevolutionaryGeniusView: View {
         }
         .task {
             if paymentManager.isPremium {
+                hasAttemptedAnalysis = true
                 await runAnalysis()
+            }
+        }
+        .onChange(of: paymentManager.isPremium) { _, isPremium in
+            if isPremium && currentReport == nil && !engine.isAnalyzing {
+                hasAttemptedAnalysis = true
+                Task { await runAnalysis() }
             }
         }
         .onAppear {
@@ -145,6 +159,7 @@ struct RevolutionaryGeniusView: View {
     private var analysisButton: some View {
         Button {
             if paymentManager.isPremium {
+                hasAttemptedAnalysis = true
                 Task { await runAnalysis() }
             } else {
                 showingPaywall = true
@@ -159,7 +174,7 @@ struct RevolutionaryGeniusView: View {
                         .font(.title2)
                 }
 
-                Text(engine.isAnalyzing ? "Analyzing..." : "Run Real Analysis")
+                Text(buttonLabel)
                     .font(.headline)
             }
             .foregroundColor(.black)
@@ -167,7 +182,7 @@ struct RevolutionaryGeniusView: View {
             .frame(height: 56)
             .background(
                 LinearGradient(
-                    colors: [.purple, .pink],
+                    colors: paymentManager.isPremium ? [.purple, .pink] : [.orange, .red],
                     startPoint: .leading,
                     endPoint: .trailing
                 )
@@ -176,6 +191,52 @@ struct RevolutionaryGeniusView: View {
         }
         .disabled(engine.isAnalyzing)
         .accessibilityHint(engine.isAnalyzing ? "Please wait, analysis in progress" : "")
+    }
+
+    private var buttonLabel: String {
+        if engine.isAnalyzing {
+            return "Analyzing..."
+        }
+        return paymentManager.isPremium ? "Run Real Analysis" : "Unlock Pro to Analyze"
+    }
+
+    // MARK: - No Insights State
+
+    private var noInsightsState: some View {
+        VStack(spacing: 16) {
+            ZStack {
+                Circle()
+                    .fill(Color.purple.opacity(0.15))
+                    .frame(width: 64, height: 64)
+
+                Image(systemName: "checkmark.seal.fill")
+                    .font(.title2.weight(.semibold))
+                    .foregroundStyle(Color.purple)
+            }
+
+            VStack(spacing: 6) {
+                Text("No Savings Found")
+                    .font(.system(.headline, design: .rounded).weight(.semibold))
+                    .foregroundStyle(.white)
+
+                Text("Your subscriptions look well-optimized. Add more subscriptions or enable Screen Time tracking for deeper insights.")
+                    .font(.subheadline)
+                    .foregroundStyle(.gray)
+                    .multilineTextAlignment(.center)
+            }
+        }
+        .padding(24)
+        .frame(maxWidth: .infinity)
+        .background(
+            RoundedRectangle(cornerRadius: 20)
+                .fill(Color.white.opacity(0.05))
+                .overlay(
+                    RoundedRectangle(cornerRadius: 20)
+                        .stroke(Color.purple.opacity(0.2), lineWidth: 1)
+                )
+        )
+        .padding(.horizontal, 20)
+        .padding(.top, 24)
     }
 
     // MARK: - Results Section

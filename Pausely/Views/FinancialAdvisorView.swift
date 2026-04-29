@@ -385,19 +385,19 @@ struct FinancialAdvisorView: View {
             }
         case "Find Alternatives":
             alertTitle = "Find Alternatives"
-            alertMessage = "Alternative recommendations are coming soon! We'll analyze your subscriptions and suggest similar services that might offer better value."
+            alertMessage = "We don't have alternative recommendations for this service yet. Research similar services on your own."
             showingAlert = true
         case "Review Category":
             alertTitle = "Review Category"
-            alertMessage = "Category review is coming soon! You'll be able to see a detailed breakdown of spending by category."
+            alertMessage = "Check your Dashboard for a breakdown of spending by category."
             showingAlert = true
         case "Review Duplicates":
             alertTitle = "Review Duplicates"
             alertMessage = "Please review your subscriptions list and consider consolidating duplicate services to save money."
             showingAlert = true
         default:
-            alertTitle = "Coming Soon"
-            alertMessage = "This feature is coming soon!"
+            alertTitle = "Not Available"
+            alertMessage = "This feature is not available right now."
             showingAlert = true
         }
     }
@@ -612,7 +612,7 @@ struct InsightDetailSheet: View {
     @Environment(\.dismiss) private var dismiss
     
     var body: some View {
-        NavigationView {
+        NavigationStack {
             ScrollView {
                 VStack(spacing: 24) {
                     // Icon

@@ -276,7 +276,6 @@ enum SubscriptionTier: String, CaseIterable, Comparable {
 
 // MARK: - Payment Manager (OPTIMIZED)
 @MainActor
-@Observable
 final class PaymentManager: ObservableObject {
     static let shared = PaymentManager()
     
@@ -284,6 +283,13 @@ final class PaymentManager: ObservableObject {
     private(set) var currentTier: SubscriptionTier = .free
     private(set) var isLoading = false
     private(set) var products: [Product] = []
+
+    // MARK: - Debug Override
+    #if DEBUG
+    private var debugPremiumOverride: Bool {
+        UserDefaults.standard.bool(forKey: "debug_auth_bypass")
+    }
+    #endif
     
     // MARK: - Product IDs (must match App Store Connect)
     private let productIDs: Set<String> = [
@@ -293,11 +299,16 @@ final class PaymentManager: ObservableObject {
     
     // MARK: - Backward Compatibility Properties
     var isPremium: Bool {
-        get { currentTier > .free }
+        get {
+            #if DEBUG
+            if debugPremiumOverride { return true }
+            #endif
+            return currentTier > .free
+        }
         set { /* No-op - tier is managed by StoreKit */ }
     }
-    var isPro: Bool { currentTier > .free }
-    var canPauseSubscriptions: Bool { currentTier > .free }
+    var isPro: Bool { isPremium }
+    var canPauseSubscriptions: Bool { isPremium }
     
     /// Legacy property - free tier is now 2 subs
     static let freeTierLimit: Int = 2
@@ -321,9 +332,7 @@ final class PaymentManager: ObservableObject {
             products = try await Product.products(for: productIDs)
                 .sorted { $0.price < $1.price }
         } catch {
-            #if DEBUG
-            print("Failed to load products: \(error)")
-            #endif
+            PauselyLogger.error("Failed to load products: \(error)", category: "Payment")
         }
     }
     

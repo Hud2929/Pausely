@@ -64,7 +64,7 @@ final class WidgetDataStore {
     // MARK: - Read (used by widget extension)
 
     func readSummary() -> WidgetSummary {
-        guard let defaults = UserDefaults(suiteName: suiteName) else {
+        guard let defaults else {
             return WidgetSummary()
         }
         return WidgetSummary(
@@ -77,7 +77,7 @@ final class WidgetDataStore {
     }
 
     func readLiveActivityData() -> LiveActivityData {
-        guard let defaults = UserDefaults(suiteName: suiteName) else {
+        guard let defaults else {
             return LiveActivityData()
         }
         return LiveActivityData(
@@ -97,7 +97,7 @@ final class WidgetDataStore {
         if monthlySpend > 200 {
             return "You're spending \(String(format: "%.0f", monthlySpend))/month — review for savings"
         }
-        let paused = subscriptions.filter { $0.status == .paused }.count
+        let paused = subscriptions.filter { $0.isPaused }.count
         if paused > 0 {
             return "\(paused) subscription\(paused == 1 ? "" : "s") paused — great job saving"
         }

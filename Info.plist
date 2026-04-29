@@ -35,13 +35,14 @@
     <array>
         <string>UIInterfaceOrientationPortrait</string>
     </array>
-    <key>UISupportedInterfaceOrientations~ipad</key>
+    <!-- iPad support removed: app is iPhone-only -->
+    <!-- <key>UISupportedInterfaceOrientations~ipad</key>
     <array>
         <string>UIInterfaceOrientationPortrait</string>
         <string>UIInterfaceOrientationPortraitUpsideDown</string>
         <string>UIInterfaceOrientationLandscapeLeft</string>
         <string>UIInterfaceOrientationLandscapeRight</string>
-    </array>
+    </array> -->
 
     <!-- MARK: - Launch Screen -->
     <key>UILaunchScreen</key>
@@ -111,6 +112,10 @@
         <string>remote-notification</string>
     </array>
     -->
+
+    <!-- MARK: - Live Activity -->
+    <key>NSSupportsLiveActivities</key>
+    <true/>
 
     <!-- MARK: - StoreKit Configuration -->
     <key>SKExternalPurchase</key>

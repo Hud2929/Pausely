@@ -460,5 +460,4 @@ struct PortfolioButtonStyle: ButtonStyle {
 
 #Preview {
     SubscriptionPortfolioView()
-        .preferredColorScheme(.dark)
 }

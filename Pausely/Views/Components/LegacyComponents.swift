@@ -13,7 +13,7 @@ enum CancellationResult {
     var message: String {
         switch self {
         case .success(let savings):
-            return "Cancelled! You saved \(savings.formatted(.currency(code: "USD")))"
+            return "Cancelled! You saved \(CurrencyManager.shared.format(savings))"
         case .failure:
             return "Cancellation failed. Please try again."
         case .notAvailable:
@@ -93,6 +93,17 @@ enum RevolutionaryPauseDuration: CaseIterable {
         case .twoWeeks: return "2 Weeks"
         case .oneMonth: return "1 Month"
         case .threeMonths: return "3 Months"
+        }
+    }
+
+    /// Approximate fraction of a month for savings calculation.
+    /// 1 week ≈ 0.23 months, 2 weeks ≈ 0.46 months.
+    var fractionOfMonth: Double {
+        switch self {
+        case .oneWeek: return 1.0 / 4.345
+        case .twoWeeks: return 2.0 / 4.345
+        case .oneMonth: return 1.0
+        case .threeMonths: return 3.0
         }
     }
 }

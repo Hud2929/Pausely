@@ -155,7 +155,7 @@ struct ReferralShareSheet: View {
     @State private var loadError: String?
     
     var body: some View {
-        NavigationView {
+        NavigationStack {
             ZStack {
                 AnimatedGradientBackground()
                 
@@ -577,7 +577,7 @@ struct ApplyReferralView: View {
     @State private var errorMessage: String?
     
     var body: some View {
-        NavigationView {
+        NavigationStack {
             ZStack {
                 AnimatedGradientBackground()
                 

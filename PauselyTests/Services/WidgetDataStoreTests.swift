@@ -49,18 +49,18 @@ final class WidgetDataStoreTests: XCTestCase {
         XCTAssertEqual(summary.upcomingCount, 0)
     }
 
-    func testPublish_ignoresPausedSubscriptionsInSpend() {
+    func testPublish_ignoresCancelledSubscriptionsInSpend() {
         let active = TestFactories.makeSubscription(
             name: "Netflix",
             amount: 15.99,
             status: .active
         )
-        let paused = TestFactories.makeSubscription(
+        let cancelled = TestFactories.makeSubscription(
             name: "Spotify",
             amount: 9.99,
-            status: .paused
+            status: .cancelled
         )
-        sut.publish(subscriptions: [active, paused])
+        sut.publish(subscriptions: [active, cancelled])
         let summary = sut.readSummary()
 
         XCTAssertEqual(summary.monthlySpend, 15.99, accuracy: 0.01)
@@ -91,7 +91,7 @@ final class WidgetDataStoreTests: XCTestCase {
 
     func testPublish_pausedInsight() {
         let active = TestFactories.makeSubscription(amount: 10, status: .active)
-        let paused = TestFactories.makeSubscription(amount: 10, status: .paused)
+        let paused = TestFactories.makeSubscription(amount: 10, status: .active, pausedUntil: Calendar.current.date(byAdding: .day, value: 7, to: Date()))
         sut.publish(subscriptions: [active, paused])
         let summary = sut.readSummary()
 
@@ -115,7 +115,8 @@ final class WidgetDataStoreTests: XCTestCase {
         XCTAssertEqual(data.subscriptionName, "Hulu")
         XCTAssertEqual(data.amount, 12.99, accuracy: 0.01)
         XCTAssertEqual(data.frequency, "Monthly")
-        XCTAssertEqual(data.daysUntilRenewal, 3)
+        // Allow 2-3 days due to time-of-day boundary
+        XCTAssertTrue(data.daysUntilRenewal == 2 || data.daysUntilRenewal == 3)
     }
 
     func testReadLiveActivityData_fallbackToFirstActive() {

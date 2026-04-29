@@ -1,0 +1,16 @@
+// Development Environment Configuration Template
+// Copy this file to Development.xcconfig and fill in your real keys.
+// Development.xcconfig is gitignored — NEVER commit real credentials.
+
+PAUSELY_ENVIRONMENT = DEV
+
+// Supabase Configuration
+// Get these from your Supabase dashboard:
+// Project Settings → API → Project URL
+SUPABASE_URL = https://your-project.supabase.co
+
+// Project Settings → API → Project API keys → anon public
+SUPABASE_ANON_KEY = your-anon-key-here
+
+// Optional: Service role key (ONLY for admin scripts, never ship in app)
+// SUPABASE_SERVICE_ROLE_KEY = your-service-role-key-here

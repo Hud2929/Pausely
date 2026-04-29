@@ -155,14 +155,10 @@ final class KeychainManager {
             ]
             let addStatus = SecItemAdd(newItem as CFDictionary, nil)
             if addStatus != errSecSuccess {
-                #if DEBUG
-                print("Keychain save failed: \(addStatus)")
-                #endif
+                PauselyLogger.error("Keychain save failed: \(addStatus)", category: "Keychain")
             }
         } else if status != errSecSuccess {
-            #if DEBUG
-            print("Keychain update failed: \(status)")
-            #endif
+            PauselyLogger.error("Keychain update failed: \(status)", category: "Keychain")
         }
     }
 
@@ -198,9 +194,7 @@ final class KeychainManager {
 
         let deleteStatus = SecItemDelete(query as CFDictionary)
         if deleteStatus != errSecSuccess && deleteStatus != errSecItemNotFound {
-            #if DEBUG
-            print("Keychain delete failed: \(deleteStatus)")
-            #endif
+            PauselyLogger.error("Keychain delete failed: \(deleteStatus)", category: "Keychain")
         }
     }
 }

@@ -24,7 +24,7 @@ struct TrialProtectionView: View {
     }
     
     var body: some View {
-        NavigationView {
+        NavigationStack {
             ZStack {
                 LinearGradient(colors: [Color(.systemBackground), Color(.systemGray6)], startPoint: .top, endPoint: .bottom).ignoresSafeArea()
                 
@@ -564,7 +564,7 @@ struct AddTrialSheet: View {
     let categories = ["Entertainment", "Productivity", "Music", "Health", "Education", "Shopping", "Other"]
     
     var body: some View {
-        NavigationView {
+        NavigationStack {
             Form {
                 Section("Trial Details") {
                     TextField("Service Name (e.g., Netflix)", text: $serviceName)
@@ -648,7 +648,7 @@ struct TrialTemplatesSheet: View {
     @ObservedObject private var currencyManager = CurrencyManager.shared
     
     var body: some View {
-        NavigationView {
+        NavigationStack {
             List {
                 ForEach(TrialProtectionStore.templates) { template in
                     Button {
@@ -706,7 +706,7 @@ struct TrialDetailSheet: View {
     @State private var showingCancelOptions = false
     
     var body: some View {
-        NavigationView {
+        NavigationStack {
             ScrollView {
                 VStack(spacing: 20) {
                     // Header

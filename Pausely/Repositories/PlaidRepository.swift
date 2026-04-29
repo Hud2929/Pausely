@@ -35,9 +35,7 @@ final class PlaidRepository {
     /// Create a Plaid Link token for bank connection
     /// Bank connection via Plaid is planned for a future update
     func createLinkToken() async throws -> String {
-        #if DEBUG
-        print("Bank connection: Plaid integration not available in this build")
-        #endif
+        PauselyLogger.info("Bank connection: Plaid integration not available in this build", category: "Plaid")
         throw PlaidError.notImplemented
     }
 
@@ -109,7 +107,7 @@ enum PlaidError: LocalizedError {
     var errorDescription: String? {
         switch self {
         case .notImplemented:
-            return "Bank connection feature coming soon"
+            return "Bank connection is not available. Add subscriptions manually or use the catalog browser."
         case .notAuthenticated:
             return "Please authenticate to connect your bank"
         case .apiError(let message):

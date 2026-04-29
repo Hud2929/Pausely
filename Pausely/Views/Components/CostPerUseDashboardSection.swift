@@ -48,6 +48,10 @@ struct CostPerUseDashboardSection: View {
         rankedResults.contains { $0.valueScore != nil }
     }
 
+    private var hasEstimatedData: Bool {
+        rankedResults.contains { screenTimeManager.isEstimated(for: $0.subscription.name) }
+    }
+
     var body: some View {
         VStack(alignment: .leading, spacing: 16) {
             // Section header
@@ -60,8 +64,19 @@ struct CostPerUseDashboardSection: View {
                     Text(LocalizedStringKey("Where your money goes furthest"))
                         .font(AppTypography.bodySmall)
                         .foregroundStyle(.secondary)
+
+                    if hasEstimatedData {
+                        HStack(spacing: 4) {
+                            Image(systemName: "info.circle.fill")
+                                .font(.system(size: 10))
+                            Text("Hours marked with ~ are estimated from session counts. Tap a subscription to enter exact minutes.")
+                                .font(.system(size: 10))
+                        }
+                        .foregroundStyle(.secondary.opacity(0.7))
+                        .padding(.top, 2)
+                    }
                 }
-                .popoverTip(costPerUseTip, arrowEdge: .top)
+                // .popoverTip(costPerUseTip, arrowEdge: .top) // Disabled for testing
 
                 Spacer()
 
@@ -108,7 +123,7 @@ struct CostPerUseDashboardSection: View {
 
                         VStack(spacing: 8) {
                             ForEach(bestValue.prefix(3)) { result in
-                                CostPerUseCompactRow(result: result)
+                                CostPerUseCompactRow(result: result, isEstimated: screenTimeManager.isEstimated(for: result.subscription.name))
                             }
                         }
                     }
@@ -128,7 +143,7 @@ struct CostPerUseDashboardSection: View {
 
                         VStack(spacing: 8) {
                             ForEach(worstValue.prefix(3)) { result in
-                                CostPerUseCompactRow(result: result)
+                                CostPerUseCompactRow(result: result, isEstimated: screenTimeManager.isEstimated(for: result.subscription.name))
                             }
                         }
                     }
@@ -258,6 +273,7 @@ struct EfficiencyScoreCard: View {
 // MARK: - Compact Row (for dashboard list)
 struct CostPerUseCompactRow: View {
     let result: CostPerUseResult
+    let isEstimated: Bool
 
     var body: some View {
         HStack(spacing: 12) {
@@ -275,7 +291,7 @@ struct CostPerUseCompactRow: View {
             Spacer()
 
             // Hours
-            Text(result.displayHoursUsed)
+            Text((isEstimated ? "~" : "") + result.displayHoursUsed)
                 .font(AppTypography.labelMedium)
                 .foregroundStyle(.secondary)
 

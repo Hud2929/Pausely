@@ -9,74 +9,48 @@ class SubscriptionStore: ObservableObject {
     @Published var subscriptions: [Subscription] = []
     @Published var totalMonthlySpend: Decimal = 0
     @Published var totalAnnualSpend: Decimal = 0
+    @Published var totalLifetimeSpend: Decimal = 0
     @Published var isLoading = false
     @Published var error: Error?
     @Published var lastFetchDate: Date?
-    @Published var isUsingLocalStorage = false
-    
     static let shared = SubscriptionStore()
-    
+
     private let client = SupabaseManager.shared.client
     private var fetchTask: Task<Void, Never>?
-    private let localStorageKey = "local_subscriptions"
-    private let useLocalStorageKey = "use_local_storage_fallback"
-    
+
     // MARK: - Performance Optimizations for Scale
     private var backgroundQueue = DispatchQueue(label: "com.pausely.store", qos: .userInitiated)
     private var calculationTask: Task<Void, Never>?
     private var lastCalculationHash: Int?
     private var cachedSubscriptions: [Subscription]?
     private var cacheTimestamp: Date?
-    
+
     private init() {
-        // Check if user previously chose local storage
-        isUsingLocalStorage = UserDefaults.standard.bool(forKey: useLocalStorageKey)
-        
-        if isUsingLocalStorage {
-            loadFromLocalStorage()
-        } else {
-            loadFromCache()
-        }
-    }
-    
-    // MARK: - Storage Mode
-    
-    func enableLocalStorage() {
-        isUsingLocalStorage = true
-        UserDefaults.standard.set(true, forKey: useLocalStorageKey)
-        loadFromLocalStorage()
-    }
-    
-    func disableLocalStorage() {
-        isUsingLocalStorage = false
-        UserDefaults.standard.set(false, forKey: useLocalStorageKey)
-        Task {
-            await fetchSubscriptions(force: true)
-        }
+        loadFromCache()
     }
     
     // MARK: - Data Fetching
     
     func fetchSubscriptions(force: Bool = false) async {
-        // If using local storage, skip Supabase
-        if isUsingLocalStorage {
-            loadFromLocalStorage()
-            return
-        }
-        
         fetchTask?.cancel()
-        
+
         if !force, let lastFetch = lastFetchDate,
            Date().timeIntervalSince(lastFetch) < 60 {
             return
         }
-        
+
         await MainActor.run { isLoading = true }
         defer { Task { @MainActor in isLoading = false } }
-        
+
+        // Always load from local cache first for responsiveness
+        if subscriptions.isEmpty {
+            loadFromCache()
+        }
+
+        // Attempt to fetch from Supabase and process any pending sync operations
         do {
             guard let session = client.auth.currentSession else {
-                throw NSError(domain: "Auth", code: 401, userInfo: [NSLocalizedDescriptionKey: "Not authenticated"])
+                throw DatabaseError.notAuthenticated
             }
             let userId = session.user.id
 
@@ -87,9 +61,9 @@ class SubscriptionStore: ObservableObject {
                 .order("created_at", ascending: false)
                 .execute()
                 .value
-            
+
             let fetchedSubscriptions = response.map { $0.toSubscription() }
-            
+
             await MainActor.run {
                 self.subscriptions = fetchedSubscriptions
                 self.calculateTotals()
@@ -99,13 +73,16 @@ class SubscriptionStore: ObservableObject {
                 WidgetDataStore.shared.publish(subscriptions: self.subscriptions)
                 SpotlightManager.shared.index(subscriptions: self.subscriptions)
                 self.startLiveActivityIfNeeded()
+                PriceIncreaseMonitor.shared.checkForPriceChanges(subscriptions: self.subscriptions)
             }
-            
+
+            // Process pending sync operations after successful fetch
+            await SyncQueue.shared.processQueue()
+
         } catch {
             os_log("Error fetching subscriptions: %{public}@", log: .default, type: .error, error.localizedDescription)
             await MainActor.run {
-                self.error = error
-                // Try to load from cache if available
+                self.error = DatabaseError.from(error)
                 if self.subscriptions.isEmpty {
                     self.loadFromCache()
                 }
@@ -242,150 +219,91 @@ class SubscriptionStore: ObservableObject {
         }
     }
     
-    /// Adds a subscription. Returns `true` if fell back to local storage, `false` if saved to cloud.
+    /// Adds a subscription. Always updates local state first, then attempts cloud sync.
     @discardableResult
     func addSubscription(_ subscription: Subscription) async throws -> Bool {
-        // Check subscription limit
         let paymentManager = PaymentManager.shared
         if paymentManager.hasReachedSubscriptionLimit(currentCount: subscriptions.count) {
             throw SubscriptionLimitError.freeTierLimitReached
         }
-        
-        // If using local storage, save locally
-        if isUsingLocalStorage {
-            var localSub = subscription
-            localSub.id = UUID()
-            await MainActor.run {
-                self.subscriptions.insert(localSub, at: 0)
-                self.calculateTotals()
-                self.saveToLocalStorage()
-                WidgetDataStore.shared.publish(subscriptions: self.subscriptions)
-                SpotlightManager.shared.index(subscriptions: self.subscriptions)
+
+        var localSub = subscription
+        localSub.id = subscription.id ?? UUID()
+
+        // 1. Update local state immediately (offline-first)
+        await MainActor.run {
+            self.subscriptions.insert(localSub, at: 0)
+            self.calculateTotals()
+            self.saveToCache()
+            WidgetDataStore.shared.publish(subscriptions: self.subscriptions)
+            SpotlightManager.shared.index(subscriptions: self.subscriptions)
+            if self.subscriptions.count == 1 {
+                ReviewPromptManager.shared.requestReviewIfAppropriate(after: .firstSubscriptionAdded)
             }
-            return false
         }
-        
+
+        // 2. Attempt Supabase write
         do {
             guard let session = client.auth.currentSession else {
-                throw NSError(domain: "Auth", code: 401, userInfo: [NSLocalizedDescriptionKey: "Not authenticated"])
+                throw DatabaseError.notAuthenticated
             }
-            let user = session.user
-            var record = SubscriptionRecord(from: subscription)
-            record.user_id = user.id
-            
+            var record = SubscriptionRecord(from: localSub)
+            record.user_id = session.user.id
+
             let inserted: [SubscriptionRecord] = try await client
                 .from("subscriptions")
                 .insert(record)
                 .select()
                 .execute()
                 .value
-            
+
             if let newRecord = inserted.first {
                 await MainActor.run {
-                    self.subscriptions.insert(newRecord.toSubscription(), at: 0)
-                    self.calculateTotals()
-                    self.saveToCache()
-                    WidgetDataStore.shared.publish(subscriptions: self.subscriptions)
-                    SpotlightManager.shared.index(subscriptions: self.subscriptions)
-                }
-                // Trigger review prompt after adding first subscription
-                if self.subscriptions.count == 1 {
-                    ReviewPromptManager.shared.requestReviewIfAppropriate(after: .firstSubscriptionAdded)
+                    if let idx = self.subscriptions.firstIndex(where: { $0.id == localSub.id }) {
+                        self.subscriptions[idx] = newRecord.toSubscription()
+                        self.saveToCache()
+                    }
                 }
             }
             return false
         } catch {
-            os_log("Error adding subscription: %{public}@", log: .default, type: .error, error.localizedDescription)
-            let dbError = DatabaseError.from(error)
-
-            // Automatically fall back to local storage for table/connection errors
-            switch dbError {
-            case .tableNotFound, .networkError, .notAuthenticated, .unknown:
-                os_log("Falling back to local storage due to: %{public}@", log: .default, type: .info, String(describing: dbError))
-                await MainActor.run {
-                    self.enableLocalStorage()
-                }
-                // Retry with local storage
-                var localSub = subscription
-                localSub.id = UUID()
-                await MainActor.run {
-                    self.subscriptions.insert(localSub, at: 0)
-                    self.calculateTotals()
-                    self.saveToLocalStorage()
-                }
-                // Trigger review prompt after adding first subscription (local fallback)
-                if self.subscriptions.count == 1 {
-                    ReviewPromptManager.shared.requestReviewIfAppropriate(after: .firstSubscriptionAdded)
-                }
-                return true
-            case .offlineMode:
-                // Already in offline mode, shouldn't reach here
-                throw dbError
+            os_log("Error adding subscription to cloud: %{public}@", log: .default, type: .error, error.localizedDescription)
+            // 3. Enqueue for retry
+            if let payload = try? JSONEncoder().encode(SubscriptionRecord(from: localSub)) {
+                let op = SyncOperation(type: .create, subscriptionId: localSub.id, payload: payload)
+                SyncQueue.shared.enqueue(op)
             }
+            return true
         }
     }
     
     func updateSubscription(_ subscription: Subscription) async throws {
-        // If using local storage, update locally
-        if isUsingLocalStorage {
-            await MainActor.run {
-                if let index = self.subscriptions.firstIndex(where: { $0.id == subscription.id }) {
-                    self.subscriptions[index] = subscription
-                    self.calculateTotals()
-                    self.saveToLocalStorage()
-                    WidgetDataStore.shared.publish(subscriptions: self.subscriptions)
-                    SpotlightManager.shared.index(subscriptions: self.subscriptions)
-                    PriceHistoryTracker.shared.recordPriceIfChanged(subscription)
-                }
+        // 1. Update local state immediately (offline-first)
+        await MainActor.run {
+            if let index = self.subscriptions.firstIndex(where: { $0.id == subscription.id }) {
+                self.subscriptions[index] = subscription
+                self.calculateTotals()
+                self.saveToCache()
+                WidgetDataStore.shared.publish(subscriptions: self.subscriptions)
+                SpotlightManager.shared.index(subscriptions: self.subscriptions)
+                PriceHistoryTracker.shared.recordPriceIfChanged(subscription)
             }
-            return
         }
 
+        // 2. Attempt Supabase write
         do {
             let record = SubscriptionRecord(from: subscription)
-            
-            let updated: [SubscriptionRecord] = try await client
+            _ = try await client
                 .from("subscriptions")
                 .update(record)
                 .eq("id", value: subscription.id)
-                .select()
                 .execute()
-                .value
-            
-            if let updatedRecord = updated.first {
-                let updatedSubscription = updatedRecord.toSubscription()
-                await MainActor.run {
-                    if let index = self.subscriptions.firstIndex(where: { $0.id == subscription.id }) {
-                        self.subscriptions[index] = updatedSubscription
-                        self.calculateTotals()
-                        self.saveToCache()
-                        WidgetDataStore.shared.publish(subscriptions: self.subscriptions)
-                        SpotlightManager.shared.index(subscriptions: self.subscriptions)
-                        PriceHistoryTracker.shared.recordPriceIfChanged(updatedSubscription)
-                    }
-                }
-            }
         } catch {
-            os_log("Error updating subscription: %{public}@", log: .default, type: .error, error.localizedDescription)
-            let dbError = DatabaseError.from(error)
-
-            // Automatically fall back to local storage for table/connection errors
-            switch dbError {
-            case .tableNotFound, .networkError, .notAuthenticated, .unknown:
-                os_log("Falling back to local storage due to: %{public}@", log: .default, type: .info, String(describing: dbError))
-                await MainActor.run {
-                    self.enableLocalStorage()
-                }
-                // Retry with local storage
-                await MainActor.run {
-                    if let index = self.subscriptions.firstIndex(where: { $0.id == subscription.id }) {
-                        self.subscriptions[index] = subscription
-                        self.calculateTotals()
-                        self.saveToLocalStorage()
-                    }
-                }
-            case .offlineMode:
-                throw dbError
+            os_log("Error updating subscription in cloud: %{public}@", log: .default, type: .error, error.localizedDescription)
+            // 3. Enqueue for retry
+            if let payload = try? JSONEncoder().encode(SubscriptionRecord(from: subscription)) {
+                let op = SyncOperation(type: .update, subscriptionId: subscription.id, payload: payload)
+                SyncQueue.shared.enqueue(op)
             }
         }
     }
@@ -411,202 +329,145 @@ class SubscriptionStore: ObservableObject {
     }
 
     func deleteSubscription(id: UUID) async throws {
-        // If using local storage, delete locally
-        if isUsingLocalStorage {
-            await MainActor.run {
-                self.subscriptions.removeAll { $0.id == id }
-                self.calculateTotals()
-                self.saveToLocalStorage()
-                WidgetDataStore.shared.publish(subscriptions: self.subscriptions)
-                SpotlightManager.shared.index(subscriptions: self.subscriptions)
-            }
-            return
+        // 1. Update local state immediately (offline-first)
+        await MainActor.run {
+            self.subscriptions.removeAll { $0.id == id }
+            self.calculateTotals()
+            self.saveToCache()
+            WidgetDataStore.shared.publish(subscriptions: self.subscriptions)
+            SpotlightManager.shared.index(subscriptions: self.subscriptions)
         }
 
+        // 2. Attempt Supabase write
         do {
             try await client
                 .from("subscriptions")
                 .delete()
                 .eq("id", value: id)
                 .execute()
-            
-            await MainActor.run {
-                self.subscriptions.removeAll { $0.id == id }
+        } catch {
+            os_log("Error deleting subscription from cloud: %{public}@", log: .default, type: .error, error.localizedDescription)
+            // 3. Enqueue for retry
+            let op = SyncOperation(type: .delete, subscriptionId: id, payload: Data())
+            SyncQueue.shared.enqueue(op)
+        }
+    }
+
+    func updateSubscriptionStatus(id: UUID, status: SubscriptionStatus) async throws {
+        // 1. Update local state immediately (offline-first)
+        await MainActor.run {
+            if let index = self.subscriptions.firstIndex(where: { $0.id == id }) {
+                self.subscriptions[index].status = status
                 self.calculateTotals()
                 self.saveToCache()
                 WidgetDataStore.shared.publish(subscriptions: self.subscriptions)
                 SpotlightManager.shared.index(subscriptions: self.subscriptions)
             }
-        } catch {
-            os_log("Error deleting subscription: %{public}@", log: .default, type: .error, error.localizedDescription)
-            let dbError = DatabaseError.from(error)
-
-            // Automatically fall back to local storage for table/connection errors
-            switch dbError {
-            case .tableNotFound, .networkError, .notAuthenticated, .unknown:
-                os_log("Falling back to local storage due to: %{public}@", log: .default, type: .info, String(describing: dbError))
-                await MainActor.run {
-                    self.enableLocalStorage()
-                }
-                // Retry with local storage
-                await MainActor.run {
-                    self.subscriptions.removeAll { $0.id == id }
-                    self.calculateTotals()
-                    self.saveToLocalStorage()
-                }
-            case .offlineMode:
-                throw dbError
-            }
         }
-    }
-
-    func updateSubscriptionStatus(id: UUID, status: SubscriptionStatus) async throws {
-        if isUsingLocalStorage {
-            await MainActor.run {
-                if let index = self.subscriptions.firstIndex(where: { $0.id == id }) {
-                    self.subscriptions[index].status = status
-                    self.calculateTotals()
-                    self.saveToLocalStorage()
-                    WidgetDataStore.shared.publish(subscriptions: self.subscriptions)
-                    SpotlightManager.shared.index(subscriptions: self.subscriptions)
-                }
-            }
-            return
+        if status != .active {
+            checkSavingsMilestone()
         }
 
+        // 2. Attempt Supabase write
         do {
             try await client
                 .from("subscriptions")
                 .update(["status": status.rawValue])
                 .eq("id", value: id)
                 .execute()
-            
-            await MainActor.run {
-                if let index = self.subscriptions.firstIndex(where: { $0.id == id }) {
-                    self.subscriptions[index].status = status
-                    self.calculateTotals()
-                    self.saveToCache()
-                    WidgetDataStore.shared.publish(subscriptions: self.subscriptions)
-                    SpotlightManager.shared.index(subscriptions: self.subscriptions)
-                }
-            }
-            // Check for savings milestone after status change (e.g., pause/cancel)
-            if status != .active {
-                checkSavingsMilestone()
-            }
         } catch {
-            let dbError = DatabaseError.from(error)
-            
-            // Automatically fall back to local storage for table/connection errors
-            switch dbError {
-            case .tableNotFound, .networkError, .notAuthenticated, .unknown:
-                os_log("Falling back to local storage due to: %{public}@", log: .default, type: .info, String(describing: dbError))
-                await MainActor.run {
-                    self.enableLocalStorage()
-                }
-                // Retry with local storage
-                await MainActor.run {
-                    if let index = self.subscriptions.firstIndex(where: { $0.id == id }) {
-                        self.subscriptions[index].status = status
-                        self.calculateTotals()
-                        self.saveToLocalStorage()
-                    }
-                }
-                // Check for savings milestone after status change (e.g., pause/cancel)
-                if status != .active {
-                    checkSavingsMilestone()
-                }
-            case .offlineMode:
-                throw dbError
+            os_log("Error updating subscription status in cloud: %{public}@", log: .default, type: .error, error.localizedDescription)
+            // 3. Enqueue for retry
+            if let payload = try? JSONEncoder().encode(["status": status.rawValue]) {
+                let op = SyncOperation(type: .updateStatus, subscriptionId: id, payload: payload)
+                SyncQueue.shared.enqueue(op)
             }
         }
     }
 
     func pauseSubscription(id: UUID, until date: Date) async throws {
-        if isUsingLocalStorage {
-            await MainActor.run {
-                if let index = self.subscriptions.firstIndex(where: { $0.id == id }) {
-                    self.subscriptions[index].status = .paused
-                    self.subscriptions[index].pausedUntil = date
-                    self.calculateTotals()
-                    self.saveToLocalStorage()
-                    WidgetDataStore.shared.publish(subscriptions: self.subscriptions)
-                    SpotlightManager.shared.index(subscriptions: self.subscriptions)
-                }
+        // 1. Update local state immediately (offline-first)
+        await MainActor.run {
+            if let index = self.subscriptions.firstIndex(where: { $0.id == id }) {
+                self.subscriptions[index].pausedUntil = date
+                self.calculateTotals()
+                self.saveToCache()
+                WidgetDataStore.shared.publish(subscriptions: self.subscriptions)
+                SpotlightManager.shared.index(subscriptions: self.subscriptions)
             }
-            return
         }
-        
+
+        // 2. Attempt Supabase write
         do {
             let dateFormatter = ISO8601DateFormatter()
             try await client
                 .from("subscriptions")
-                .update([
-                    "status": SubscriptionStatus.paused.rawValue,
-                    "paused_until": dateFormatter.string(from: date)
-                ])
+                .update(["paused_until": dateFormatter.string(from: date)])
                 .eq("id", value: id)
                 .execute()
-            
-            await MainActor.run {
-                if let index = self.subscriptions.firstIndex(where: { $0.id == id }) {
-                    self.subscriptions[index].status = .paused
-                    self.subscriptions[index].pausedUntil = date
-                    self.calculateTotals()
-                    self.saveToCache()
-                    WidgetDataStore.shared.publish(subscriptions: self.subscriptions)
-                    SpotlightManager.shared.index(subscriptions: self.subscriptions)
-                }
-            }
         } catch {
-            let dbError = DatabaseError.from(error)
-            
-            // Automatically fall back to local storage for table/connection errors
-            switch dbError {
-            case .tableNotFound, .networkError, .notAuthenticated, .unknown:
-                os_log("Falling back to local storage due to: %{public}@", log: .default, type: .info, String(describing: dbError))
-                await MainActor.run {
-                    self.enableLocalStorage()
-                }
-                // Retry with local storage
-                await MainActor.run {
-                    if let index = self.subscriptions.firstIndex(where: { $0.id == id }) {
-                        self.subscriptions[index].status = .paused
-                        self.subscriptions[index].pausedUntil = date
-                        self.calculateTotals()
-                        self.saveToLocalStorage()
-                        WidgetDataStore.shared.publish(subscriptions: self.subscriptions)
-                        SpotlightManager.shared.index(subscriptions: self.subscriptions)
-                    }
-                }
-            case .offlineMode:
-                throw dbError
+            os_log("Error pausing subscription in cloud: %{public}@", log: .default, type: .error, error.localizedDescription)
+            // 3. Enqueue for retry
+            let dateFormatter = ISO8601DateFormatter()
+            if let payload = try? JSONEncoder().encode(["paused_until": dateFormatter.string(from: date)]) {
+                let op = SyncOperation(type: .pause, subscriptionId: id, payload: payload)
+                SyncQueue.shared.enqueue(op)
             }
         }
     }
 
     func resumeSubscription(id: UUID) async throws {
-        try await updateSubscriptionStatus(id: id, status: .active)
+        // 1. Update local state immediately (offline-first)
+        await MainActor.run {
+            if let index = self.subscriptions.firstIndex(where: { $0.id == id }) {
+                self.subscriptions[index].pausedUntil = nil
+                self.calculateTotals()
+                self.saveToCache()
+                WidgetDataStore.shared.publish(subscriptions: self.subscriptions)
+                SpotlightManager.shared.index(subscriptions: self.subscriptions)
+            }
+        }
+
+        // 2. Attempt Supabase write
+        do {
+            struct ResumePayload: Encodable {
+                let paused_until: String?
+            }
+            try await client
+                .from("subscriptions")
+                .update(ResumePayload(paused_until: nil))
+                .eq("id", value: id)
+                .execute()
+        } catch {
+            os_log("Error resuming subscription in cloud: %{public}@", log: .default, type: .error, error.localizedDescription)
+            // 3. Enqueue for retry
+            if let payload = try? JSONEncoder().encode(["paused_until": "null"]) {
+                let op = SyncOperation(type: .resume, subscriptionId: id, payload: payload)
+                SyncQueue.shared.enqueue(op)
+            }
+        }
     }
     
     // MARK: - Caching
-    
+
     private func saveToCache() {
         do {
             let data = try JSONEncoder().encode(subscriptions)
-            UserDefaults.standard.set(data, forKey: "cached_subscriptions")
-            UserDefaults.standard.set(Date(), forKey: "subscriptions_cache_date")
+            AppSettings.shared.cachedSubscriptions = data
+            AppSettings.shared.subscriptionsCacheDate = Date()
         } catch {
             os_log("Cache save failed: %{public}@", log: .default, type: .error, error.localizedDescription)
         }
     }
-    
+
     private func loadFromCache() {
-        guard let data = UserDefaults.standard.data(forKey: "cached_subscriptions") else { return }
-        
+        let data = AppSettings.shared.cachedSubscriptions
+        guard !data.isEmpty else { return }
+
         do {
             let cached = try JSONDecoder().decode([Subscription].self, from: data)
-            Task { @MainActor in
+            Task { @MainActor [weak self] in
+                guard let self = self else { return }
                 self.subscriptions = cached
                 self.calculateTotals()
             }
@@ -614,84 +475,10 @@ class SubscriptionStore: ObservableObject {
             os_log("Cache load failed: %{public}@", log: .default, type: .error, error.localizedDescription)
         }
     }
-    
-    // MARK: - Local Storage (Offline Mode)
-    
-    private func saveToLocalStorage() {
-        do {
-            let data = try JSONEncoder().encode(subscriptions)
-            UserDefaults.standard.set(data, forKey: localStorageKey)
-            os_log("Saved %d subscriptions to local storage", log: .default, type: .info, subscriptions.count)
-        } catch {
-            os_log("Local storage save failed: %{public}@", log: .default, type: .error, error.localizedDescription)
-        }
-    }
 
-    private func loadFromLocalStorage() {
-        guard let data = UserDefaults.standard.data(forKey: localStorageKey) else {
-            os_log("No local subscriptions found", log: .default, type: .info)
-            return
-        }
-
-        do {
-            let localSubs = try JSONDecoder().decode([Subscription].self, from: data)
-            Task { @MainActor in
-                self.subscriptions = localSubs
-                self.calculateTotals()
-                os_log("Loaded %d subscriptions from local storage", log: .default, type: .info, localSubs.count)
-            }
-        } catch {
-            os_log("Local storage load failed: %{public}@", log: .default, type: .error, error.localizedDescription)
-        }
-    }
-    
-    /// Sync local subscriptions to cloud when connection is restored
-    /// Optimized with batch processing for thousands of subscriptions
-    func syncToCloud() async -> (success: Int, failed: Int) {
-        guard !isUsingLocalStorage else { return (0, 0) }
-        
-        var successCount = 0
-        var failedCount = 0
-        
-        // Get local-only subscriptions (those not synced)
-        let localOnly = subscriptions.filter { sub in
-            // In a real implementation, you'd track sync status
-            true
-        }
-        
-        // Batch processing for scale - process 10 at a time
-        let batchSize = 10
-        let batches = stride(from: 0, to: localOnly.count, by: batchSize).map {
-            Array(localOnly[$0..<min($0 + batchSize, localOnly.count)])
-        }
-        
-        for batch in batches {
-            await withTaskGroup(of: Bool.self) { group in
-                for subscription in batch {
-                    group.addTask {
-                        do {
-                            try await self.addSubscription(subscription)
-                            return true
-                        } catch {
-                            return false
-                        }
-                    }
-                }
-                
-                for await success in group {
-                    if success {
-                        successCount += 1
-                    } else {
-                        failedCount += 1
-                    }
-                }
-            }
-            
-            // Small delay between batches to prevent rate limiting
-            try? await Task.sleep(nanoseconds: 100_000_000)
-        }
-        
-        return (successCount, failedCount)
+    /// Process any pending sync operations with the cloud
+    func processPendingSync() async {
+        await SyncQueue.shared.processQueue()
     }
     
     // MARK: - Batch Operations for Scale
@@ -714,7 +501,8 @@ class SubscriptionStore: ObservableObject {
         for batch in batches {
             await withTaskGroup(of: Bool.self) { group in
                 for sub in batch {
-                    group.addTask {
+                    group.addTask { [weak self] in
+                        guard let self = self else { return false }
                         do {
                             _ = try await self.addSubscription(sub)
                             return true
@@ -803,9 +591,11 @@ class SubscriptionStore: ObservableObject {
                 try? await Task.sleep(nanoseconds: 1_000)
             }
             
+            let lifetimeTotal = currentSubscriptions.reduce(0) { $0 + $1.lifetimeSpend }
             await MainActor.run {
                 self.totalMonthlySpend = monthlyTotal
                 self.totalAnnualSpend = monthlyTotal * 12
+                self.totalLifetimeSpend = lifetimeTotal
             }
         }
     }
@@ -831,25 +621,28 @@ class SubscriptionStore: ObservableObject {
     
     private func performCalculation(activeSubscriptions: [Subscription]) {
         var monthlyTotal: Decimal = 0
+        var lifetimeTotal: Decimal = 0
         for sub in activeSubscriptions {
             monthlyTotal += monthlyEquivalent(for: sub)
+            lifetimeTotal += sub.lifetimeSpend
         }
         totalMonthlySpend = monthlyTotal
         totalAnnualSpend = monthlyTotal * 12
+        totalLifetimeSpend = lifetimeTotal
     }
     
     // MARK: - Computed Properties
     
     var activeSubscriptions: [Subscription] {
-        subscriptions.filter { $0.status == .active }
+        subscriptions.filter { $0.status == .active && !$0.isPaused }
     }
-    
+
     var pausedSubscriptions: [Subscription] {
-        subscriptions.filter { $0.status == .paused }
+        subscriptions.filter { $0.isPaused }
     }
-    
+
     var pausableSubscriptions: [Subscription] {
-        subscriptions.filter { $0.canPause && $0.status == .active }
+        subscriptions.filter { $0.canPause && $0.status == .active && !$0.isPaused }
     }
     
     var upcomingRenewals: [Subscription] {
@@ -897,7 +690,7 @@ class SubscriptionStore: ObservableObject {
     // MARK: - Live Activity
 
     private func startLiveActivityIfNeeded() {
-        guard UserDefaults.standard.bool(forKey: "liveActivitiesEnabled") else { return }
+        guard AppSettings.shared.liveActivitiesEnabled else { return }
 
         // Find the most urgent upcoming renewal
         let upcoming = activeSubscriptions

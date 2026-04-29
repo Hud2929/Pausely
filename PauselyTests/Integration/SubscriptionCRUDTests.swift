@@ -14,12 +14,10 @@ final class SubscriptionCRUDTests: XCTestCase {
         store.subscriptions = []
         store.totalMonthlySpend = 0
         store.totalAnnualSpend = 0
-        store.isUsingLocalStorage = true
     }
 
     override func tearDown() {
         store.subscriptions = []
-        store.isUsingLocalStorage = false
         super.tearDown()
     }
 
@@ -70,7 +68,11 @@ final class SubscriptionCRUDTests: XCTestCase {
 
     func testPausedSubscriptionsFilter() async throws {
         let active = TestFactories.makeSubscription(name: "Active", status: .active)
-        let paused = TestFactories.makeSubscription(name: "Paused", status: .paused)
+        let paused = TestFactories.makeSubscription(
+            name: "Paused",
+            status: .active,
+            pausedUntil: Calendar.current.date(byAdding: .day, value: 7, to: Date())
+        )
         _ = try await store.addSubscription(active)
         _ = try await store.addSubscription(paused)
         XCTAssertEqual(store.pausedSubscriptions.count, 1)
@@ -145,12 +147,14 @@ final class SubscriptionCRUDTests: XCTestCase {
         }
         let pauseDate = TestDates.addDays(30, to: Date())
         try await store.pauseSubscription(id: id, until: pauseDate)
-        XCTAssertEqual(store.subscriptions.first?.status, .paused)
+        XCTAssertEqual(store.subscriptions.first?.status, .active)
+        XCTAssertTrue(store.subscriptions.first?.isPaused ?? false)
         XCTAssertEqual(store.subscriptions.first?.pausedUntil, pauseDate)
     }
 
     func testResumeSubscription() async throws {
-        let sub = TestFactories.makeSubscription(name: "Test", status: .paused)
+        var sub = TestFactories.makeSubscription(name: "Test", status: .active)
+        sub.pausedUntil = TestDates.addDays(30, to: Date())
         _ = try await store.addSubscription(sub)
         guard let id = store.subscriptions.first?.id else {
             XCTFail("No subscription ID")
@@ -158,6 +162,8 @@ final class SubscriptionCRUDTests: XCTestCase {
         }
         try await store.resumeSubscription(id: id)
         XCTAssertEqual(store.subscriptions.first?.status, .active)
+        XCTAssertFalse(store.subscriptions.first?.isPaused ?? true)
+        XCTAssertNil(store.subscriptions.first?.pausedUntil)
     }
 
     // MARK: - Delete

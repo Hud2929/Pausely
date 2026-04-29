@@ -12,6 +12,7 @@ struct PremiumProfileView: View {
     @State private var showingHelp = false
     @State private var showingExport = false
     @State private var showingWhatsNew = false
+    @State private var showingCancellationRequests = false
 
     var body: some View {
         ZStack {
@@ -35,6 +36,7 @@ struct PremiumProfileView: View {
                         }
                         .padding(.horizontal, 20)
                         .padding(.top, 20)
+                        .accessibilityIdentifier("upgradePromptCard")
                     } else {
                         PremiumStatusCard(
                             memberSince: authManager.currentUser?.createdAt ?? Date()
@@ -58,6 +60,40 @@ struct PremiumProfileView: View {
                     )
                     .padding(.horizontal, 20)
                     .padding(.top, 24)
+
+                    // Cancellation Requests
+                    Button(action: {
+                        HapticStyle.medium.trigger()
+                        showingCancellationRequests = true
+                    }) {
+                        HStack(spacing: 16) {
+                            ZStack {
+                                RoundedRectangle(cornerRadius: 10)
+                                    .fill(Color.luxuryPurple.opacity(0.15))
+                                    .frame(width: 36, height: 36)
+
+                                Image(systemName: "xmark.shield.fill")
+                                    .font(.body)
+                                    .foregroundColor(Color.luxuryPurple)
+                            }
+
+                            Text("My Cancellations")
+                                .font(.body)
+                                .foregroundColor(.white)
+
+                            Spacer()
+
+                            Image(systemName: "chevron.right")
+                                .font(.subheadline.weight(.semibold))
+                                .foregroundColor(TextColors.tertiary)
+                        }
+                        .padding(14)
+                        .background(BackgroundColors.secondary)
+                    }
+                    .buttonStyle(PlainButtonStyle())
+                    .padding(.horizontal, 20)
+                    .padding(.top, 24)
+                    .accessibilityIdentifier("myCancellationsButton")
 
                     // What's New Button
                     Button(action: {
@@ -95,6 +131,7 @@ struct PremiumProfileView: View {
                     .buttonStyle(PlainButtonStyle())
                     .padding(.horizontal, 20)
                     .padding(.top, 24)
+                    .accessibilityIdentifier("whatsNewButton")
 
                     // About Section
                     AboutSection()
@@ -110,6 +147,7 @@ struct PremiumProfileView: View {
                     .padding(.horizontal, 20)
                     .padding(.top, 32)
                     .padding(.bottom, 40)
+                    .accessibilityIdentifier("signOutButton")
                 }
             }
         }
@@ -133,6 +171,9 @@ struct PremiumProfileView: View {
         }
         .sheet(isPresented: $showingWhatsNew) {
             WhatsNewSheet()
+        }
+        .sheet(isPresented: $showingCancellationRequests) {
+            CancellationStatusView()
         }
     }
 }
@@ -493,10 +534,15 @@ struct SettingsSection: View {
 
             VStack(spacing: 1) {
                 SettingsRow(icon: "bell.fill", title: "Notifications", color: SemanticColors.warning, action: onNotifications)
+                    .accessibilityIdentifier("notificationsSettingsButton")
                 SettingsRow(icon: "dollarsign.circle.fill", title: "Currency", value: currencyManager.selectedCurrency, color: SemanticColors.success, action: onCurrency)
+                    .accessibilityIdentifier("currencySettingsButton")
                 SettingsRow(icon: "square.and.arrow.up", title: "Export Data", color: SemanticColors.info, action: onExport)
+                    .accessibilityIdentifier("exportDataButton")
                 SettingsRow(icon: "lock.fill", title: "Privacy & Security", color: SemanticColors.info, action: onPrivacy)
+                    .accessibilityIdentifier("privacySecurityButton")
                 SettingsRow(icon: "questionmark.circle.fill", title: "Help & Support", color: TextColors.secondary, action: onHelp)
+                    .accessibilityIdentifier("helpSupportButton")
             }
             .background(
                 RoundedRectangle(cornerRadius: 16)

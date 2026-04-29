@@ -265,24 +265,26 @@ class PerkEngine: ObservableObject {
     
     private func saveData() {
         if let encoded = try? JSONEncoder().encode(activePerks) {
-            UserDefaults.standard.set(encoded, forKey: "active_perks")
+            AppSettings.shared.activePerks = encoded
         }
         if let encoded = try? JSONEncoder().encode(completedActions) {
-            UserDefaults.standard.set(encoded, forKey: "completed_actions")
+            AppSettings.shared.completedActions = encoded
         }
-        UserDefaults.standard.set(totalMoneySaved, forKey: "total_money_saved")
+        AppSettings.shared.totalMoneySaved = totalMoneySaved
     }
-    
+
     private func loadSavedData() {
-        if let data = UserDefaults.standard.data(forKey: "active_perks"),
-           let decoded = try? JSONDecoder().decode([ActivePerk].self, from: data) {
+        let perksData = AppSettings.shared.activePerks
+        if !perksData.isEmpty,
+           let decoded = try? JSONDecoder().decode([ActivePerk].self, from: perksData) {
             activePerks = decoded
         }
-        if let data = UserDefaults.standard.data(forKey: "completed_actions"),
-           let decoded = try? JSONDecoder().decode([PerkAction].self, from: data) {
+        let actionsData = AppSettings.shared.completedActions
+        if !actionsData.isEmpty,
+           let decoded = try? JSONDecoder().decode([PerkAction].self, from: actionsData) {
             completedActions = decoded
         }
-        totalMoneySaved = UserDefaults.standard.double(forKey: "total_money_saved")
+        totalMoneySaved = AppSettings.shared.totalMoneySaved
     }
 }
 
@@ -596,7 +598,7 @@ struct ActivePerkCard: View {
                     .font(.subheadline.weight(.semibold))
                     .foregroundStyle(.white)
                     .lineLimit(1)
-                Text("Saving $\(Int(perk.estimatedAnnualSavings))/year")
+                Text("Saving \(CurrencyManager.shared.format(Decimal(perk.estimatedAnnualSavings)))/year")
                     .font(.caption.weight(.bold))
                     .foregroundStyle(Color.luxuryGold)
             }
@@ -663,7 +665,7 @@ struct PerkActionSheet: View {
     @State private var isCompleted = false
     
     var body: some View {
-        NavigationView {
+        NavigationStack {
             ScrollView {
                 VStack(spacing: 24) {
                     VStack(spacing: 16) {

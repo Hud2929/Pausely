@@ -224,7 +224,7 @@ struct RevolutionaryCancelConfirmationSheet: View {
                         .font(STFont.labelSmall)
                         .foregroundStyle(Color.obsidianTextTertiary)
                     
-                    Text(subscription.annualCost.formatted(.currency(code: "USD")))
+                    Text(CurrencyManager.shared.format(subscription.annualCost))
                         .font(STFont.displayMedium)
                         .foregroundStyle(Color.semanticSuccess)
                     
@@ -307,10 +307,34 @@ struct RevolutionaryPauseSheet: View {
     let subscription: Subscription
     let onPause: (RevolutionaryPauseDuration) async -> Void
     let onDismiss: () -> Void
-    
+
     @State private var isProcessing = false
+    @State private var showingSafari = false
     @Environment(\.dismiss) private var dismiss
-    
+
+    // MARK: - Service Lookup
+
+    private var serviceInfo: SubscriptionService? {
+        SubscriptionActionManager.shared.getService(for: subscription.name)
+    }
+
+    /// Direct link to the service's pause page (only if known)
+    private var pausePageURL: URL? {
+        guard let pauseURL = serviceInfo?.pauseURL, !pauseURL.isEmpty else { return nil }
+        return URL(string: pauseURL)
+    }
+
+    /// General visit link: support page first, then domain homepage.
+    /// Never uses cancelURL — we don't want to trick users into cancelling.
+    private var visitURL: URL? {
+        guard let service = serviceInfo else { return nil }
+        if !service.supportURL.isEmpty,
+           let url = URL(string: service.supportURL) { return url }
+        if !service.domain.isEmpty,
+           let url = URL(string: "https://\(service.domain)") { return url }
+        return nil
+    }
+
     var body: some View {
         NavigationStack {
             VStack(spacing: 24) {
@@ -320,12 +344,12 @@ struct RevolutionaryPauseSheet: View {
                         Circle()
                             .fill(Color.accentMint.opacity(0.2))
                             .frame(width: 100, height: 100)
-                        
+
                         Image(systemName: "pause.circle.fill")
                             .font(.largeTitle)
                             .foregroundStyle(Color.accentMint)
                     }
-                    
+
                     Text("Remind Me to Pause \(subscription.name)")
                         .font(STFont.headlineLarge)
                         .foregroundStyle(Color.obsidianText)
@@ -335,13 +359,13 @@ struct RevolutionaryPauseSheet: View {
                         .foregroundStyle(Color.obsidianTextSecondary)
                         .multilineTextAlignment(.center)
                 }
-                
+
                 // Duration options
                 VStack(spacing: 12) {
                     ForEach(RevolutionaryPauseDuration.allCases, id: \.self) { duration in
                         PauseDurationButton(
                             duration: duration,
-                            savings: subscription.monthlyCost * Decimal(duration.value),
+                            savings: subscription.monthlyCost * Decimal(duration.fractionOfMonth),
                             isProcessing: isProcessing
                         ) {
                             Task {
@@ -353,9 +377,86 @@ struct RevolutionaryPauseSheet: View {
                         }
                     }
                 }
-                
+
+                // Direct link to pause page (only if we have a real pause URL)
+                if let url = pausePageURL {
+                    Button(action: { showingSafari = true }) {
+                        HStack(spacing: 12) {
+                            Image(systemName: "pause.circle")
+                                .font(.title3)
+                                .foregroundStyle(Color.accentMint)
+
+                            VStack(alignment: .leading, spacing: 2) {
+                                Text("Go to Pause Page")
+                                    .font(STFont.labelLarge)
+                                    .foregroundStyle(Color.obsidianText)
+
+                                Text(url.host ?? "Open in Safari")
+                                    .font(STFont.bodySmall)
+                                    .foregroundStyle(Color.obsidianTextSecondary)
+                                    .lineLimit(1)
+                            }
+
+                            Spacer()
+
+                            Image(systemName: "arrow.up.forward")
+                                .foregroundStyle(Color.accentMint)
+                        }
+                        .padding()
+                        .background(Color.obsidianSurface)
+                        .clipShape(RoundedRectangle(cornerRadius: STRadius.md))
+                        .overlay(
+                            RoundedRectangle(cornerRadius: STRadius.md)
+                                .stroke(Color.accentMint.opacity(0.3), lineWidth: 1)
+                        )
+                    }
+                    .buttonStyle(.plain)
+                    .sheet(isPresented: $showingSafari) {
+                        SafariView(url: url)
+                            .ignoresSafeArea()
+                    }
+                } else if let url = visitURL {
+                    // Honest fallback: we don't have a pause page, but we can send them
+                    // to the support page or main website to figure it out themselves.
+                    Button(action: { showingSafari = true }) {
+                        HStack(spacing: 12) {
+                            Image(systemName: "arrow.up.right.square")
+                                .font(.title3)
+                                .foregroundStyle(Color.obsidianTextSecondary)
+
+                            VStack(alignment: .leading, spacing: 2) {
+                                Text("Visit \(subscription.name) Website")
+                                    .font(STFont.labelLarge)
+                                    .foregroundStyle(Color.obsidianText)
+
+                                Text(url.host ?? "Open in Safari")
+                                    .font(STFont.bodySmall)
+                                    .foregroundStyle(Color.obsidianTextSecondary)
+                                    .lineLimit(1)
+                            }
+
+                            Spacer()
+
+                            Image(systemName: "arrow.up.forward")
+                                .foregroundStyle(Color.obsidianTextSecondary)
+                        }
+                        .padding()
+                        .background(Color.obsidianSurface)
+                        .clipShape(RoundedRectangle(cornerRadius: STRadius.md))
+                        .overlay(
+                            RoundedRectangle(cornerRadius: STRadius.md)
+                                .stroke(Color.white.opacity(0.1), lineWidth: 1)
+                        )
+                    }
+                    .buttonStyle(.plain)
+                    .sheet(isPresented: $showingSafari) {
+                        SafariView(url: url)
+                            .ignoresSafeArea()
+                    }
+                }
+
                 Spacer()
-                
+
                 Button(action: { dismiss() }) {
                     Text("Cancel")
                         .font(STFont.labelLarge)
@@ -397,7 +498,7 @@ struct PauseDurationButton: View {
                         .font(STFont.labelLarge)
                         .foregroundStyle(Color.obsidianText)
 
-                    Text("Potential savings: \(savings.formatted(.currency(code: "USD")))")
+                    Text("Potential savings: \(CurrencyManager.shared.format(savings))")
                         .font(STFont.bodySmall)
                         .foregroundStyle(Color.semanticSuccess)
                 }

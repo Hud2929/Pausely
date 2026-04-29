@@ -15,7 +15,7 @@ struct ScreenTimeSetupView: View {
     @StateObject private var viewModel = ScreenTimeSetupViewModel()
 
     var body: some View {
-        NavigationView {
+        NavigationStack {
             ZStack {
                 // Background
                 Color.black.ignoresSafeArea()

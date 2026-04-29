@@ -139,8 +139,7 @@ struct NextPaymentCard: View {
 
     private var daysUntil: Int {
         guard let nextDate = subscription?.calculatedNextBillingDate else { return Int.max }
-        let days = Calendar.current.dateComponents([.day], from: Date(), to: nextDate).day ?? 0
-        return max(0, days)
+        return Calendar.current.dateComponents([.day], from: Date(), to: nextDate).day ?? 0
     }
 
     private var urgencyColor: Color {

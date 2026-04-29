@@ -635,11 +635,11 @@ struct InsightActionButton: View {
             showingAlert = true
         case .exploreBundle:
             alertTitle = "Bundle Options"
-            alertMessage = "Bundle recommendations are coming soon! We'll analyze your subscriptions and suggest bundle deals that could save you money."
+            alertMessage = "We don't have bundle recommendations for this service yet. Check the provider's website for available bundles."
             showingAlert = true
         case .exploreAlternative:
             alertTitle = "Alternative Services"
-            alertMessage = "Alternative recommendations are coming soon! We'll suggest similar services that might offer better value."
+            alertMessage = "We don't have alternative recommendations for this service yet. Research similar services on your own."
             showingAlert = true
         case .upgrade:
             alertTitle = "Upgrade Plan"
@@ -659,15 +659,15 @@ struct InsightActionButton: View {
             showingAlert = true
         case .setupReminder:
             alertTitle = "Set Reminder"
-            alertMessage = "Reminders are coming soon! You'll be able to set custom reminders for subscription renewals."
+            alertMessage = "Use the iOS Reminders app or ask Siri to set a reminder for this subscription's renewal date."
             showingAlert = true
         case .findRetention:
             alertTitle = "Retention Offers"
-            alertMessage = "Retention offer detection is coming soon! We'll alert you when we detect you might be eligible for special deals."
+            alertMessage = "To find retention offers, try starting the cancellation flow on the provider's website — they often offer discounts to keep you."
             showingAlert = true
         case .openFamilyPlan:
             alertTitle = "Family Plans"
-            alertMessage = "Family plan recommendations are coming soon! We'll suggest services that offer family plans if we detect multiple users."
+            alertMessage = "Check the provider's website for family or multi-user plans that could reduce your per-person cost."
             showingAlert = true
         default:
             break

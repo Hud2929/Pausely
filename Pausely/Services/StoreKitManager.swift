@@ -56,19 +56,13 @@ final class StoreKitManager: ObservableObject {
         do {
             let productIDs = ProductID.allCases.map { $0.rawValue }
             products = try await Product.products(for: productIDs)
-            #if DEBUG
-            print("✅ Loaded \(products.count) products from App Store")
-            #endif
+            PauselyLogger.info("Loaded \(products.count) products from App Store", category: "StoreKit")
 
             for product in products {
-                #if DEBUG
-                print("   - \(product.displayName): \(product.displayPrice) (ID: \(product.id))")
-                #endif
+                PauselyLogger.debug("   - \(product.displayName): \(product.displayPrice) (ID: \(product.id))", category: "StoreKit")
             }
         } catch {
-            #if DEBUG
-            print("⚠️ Failed to load StoreKit products (this is normal in development): \(error.localizedDescription)")
-            #endif
+            PauselyLogger.error("Failed to load StoreKit products: \(error.localizedDescription)", category: "StoreKit")
             // Don't show error message - products will load when app is run on device with proper StoreKit config
             errorMessage = nil
         }
@@ -98,96 +92,78 @@ final class StoreKitManager: ObservableObject {
                 // Finish the transaction
                 await transaction.finish()
                 
-                #if DEBUG
-                print("✅ Purchase successful: \(product.displayName)")
-                #endif
+                PauselyLogger.info("Purchase successful: \(product.displayName)", category: "StoreKit")
                 isLoading = false
                 pendingPurchase = nil
                 return true
                 
             case .userCancelled:
-                #if DEBUG
-                print("⚠️ User cancelled purchase")
-                #endif
+                PauselyLogger.debug("User cancelled purchase", category: "StoreKit")
                 errorMessage = "Purchase cancelled"
                 isLoading = false
                 pendingPurchase = nil
                 return false
-                
+
             case .pending:
-                #if DEBUG
-                print("⏳ Purchase pending approval (family sharing)")
-                #endif
+                PauselyLogger.info("Purchase pending approval (family sharing)", category: "StoreKit")
                 errorMessage = "Purchase pending approval"
                 isLoading = false
                 pendingPurchase = nil
                 return false
-                
+
             @unknown default:
-                #if DEBUG
-                print("❌ Unknown purchase result")
-                #endif
+                PauselyLogger.error("Unknown purchase result", category: "StoreKit")
                 errorMessage = "Purchase failed. Please try again."
                 isLoading = false
                 pendingPurchase = nil
                 return false
             }
         } catch StoreKitError.invalidOfferIdentifier {
-            #if DEBUG
-            print("❌ Invalid product ID")
-            #endif
+            PauselyLogger.error("Invalid product ID", category: "StoreKit")
             errorMessage = "This subscription is not available."
         } catch StoreKitError.invalidOfferPrice {
-            #if DEBUG
-            print("❌ Invalid price")
-            #endif
+            PauselyLogger.error("Invalid price", category: "StoreKit")
             errorMessage = "Price information is incorrect."
         } catch {
-            #if DEBUG
-            print("❌ Purchase failed: \(error)")
-            #endif
+            PauselyLogger.error("Purchase failed: \(error)", category: "StoreKit")
             errorMessage = "Purchase failed: \(error.localizedDescription)"
         }
-        
+
         isLoading = false
         pendingPurchase = nil
         return false
     }
-    
+
     // MARK: - Restore Purchases
-    
+
     /// Restores previous purchases
     func restorePurchases() async -> Bool {
         isLoading = true
         errorMessage = nil
-        
+
         do {
             try await AppStore.sync()
             await updatePurchasedProducts()
-            
+
             if purchasedProductIDs.isEmpty {
                 errorMessage = "No previous purchases found."
                 isLoading = false
                 return false
             } else {
-                #if DEBUG
-                print("✅ Restored \(purchasedProductIDs.count) purchases")
-                #endif
+                PauselyLogger.info("Restored \(purchasedProductIDs.count) purchases", category: "StoreKit")
                 isLoading = false
                 return true
             }
         } catch {
-            #if DEBUG
-            print("❌ Restore failed: \(error)")
-            #endif
+            PauselyLogger.error("Restore failed: \(error)", category: "StoreKit")
             errorMessage = "Could not restore purchases."
             isLoading = false
             return false
         }
     }
-    
+
     // MARK: - Transaction Handling
-    
+
     /// Observes transaction updates (renewals, cancellations, etc.)
     private func observeTransactionUpdates() -> Task<Void, Never> {
         Task(priority: .background) { [weak self] in
@@ -195,37 +171,33 @@ final class StoreKitManager: ObservableObject {
             for await verificationResult in Transaction.updates {
                 do {
                     let transaction = try self.checkVerified(verificationResult)
-                    
+
                     // Handle the transaction update
                     await self.updatePurchasedProducts()
-                    
+
                     // Finish the transaction
                     await transaction.finish()
-                    
-                    #if DEBUG
-                    print("🔄 Transaction updated: \(transaction.productID)")
-                    #endif
+
+                    PauselyLogger.info("Transaction updated: \(transaction.productID)", category: "StoreKit")
                 } catch {
-                    #if DEBUG
-                    print("❌ Transaction verification failed: \(error)")
-                    #endif
+                    PauselyLogger.error("Transaction verification failed: \(error)", category: "StoreKit")
                 }
             }
         }
     }
-    
+
     /// Updates the list of purchased products
     func updatePurchasedProducts() async {
         var purchasedIDs: Set<String> = []
-        
+
         for await verificationResult in Transaction.currentEntitlements {
             do {
                 let transaction = try checkVerified(verificationResult)
-                
+
                 if transaction.revocationDate == nil {
                     // Active entitlement
                     purchasedIDs.insert(transaction.productID)
-                    
+
                     // Activate premium in app
                     await MainActor.run {
                         if transaction.productID == ProductID.monthly.rawValue {
@@ -236,12 +208,10 @@ final class StoreKitManager: ObservableObject {
                     }
                 }
             } catch {
-                #if DEBUG
-                print("❌ Failed to verify transaction: \(error)")
-                #endif
+                PauselyLogger.error("Failed to verify transaction: \(error)", category: "StoreKit")
             }
         }
-        
+
         await MainActor.run {
             self.purchasedProductIDs = purchasedIDs
         }

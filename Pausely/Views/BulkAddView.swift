@@ -56,7 +56,7 @@ struct BulkAddView: View {
     }
 
     var body: some View {
-        NavigationView {
+        NavigationStack {
             ZStack {
                 PremiumBackground()
 
@@ -487,7 +487,7 @@ struct BulkAddCSVImportSheet: View {
     let onImport: (String) -> Void
 
     var body: some View {
-        NavigationView {
+        NavigationStack {
             ZStack {
                 Color.black.ignoresSafeArea()
 

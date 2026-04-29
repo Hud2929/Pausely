@@ -10,7 +10,7 @@ import StoreKit
 
 // MARK: - Auto Detect View
 struct AutoDetectView: View {
-    @Environment(\.dismiss) private var dismiss
+    @Binding var isPresented: Bool
     @ObservedObject private var appleScanner = AppleSubscriptionScanner.shared
     @ObservedObject private var subscriptionStore = SubscriptionStore.shared
 
@@ -22,7 +22,7 @@ struct AutoDetectView: View {
     @State private var showError = false
 
     var body: some View {
-        NavigationView {
+        NavigationStack {
             ZStack {
                 PremiumBackground()
 
@@ -41,7 +41,10 @@ struct AutoDetectView: View {
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .navigationBarLeading) {
-                    Button("Close") { dismiss() }
+                    Button("Close") {
+                        PauselyLogger.debug("AutoDetectView Close tapped", category: "AutoDetect")
+                        isPresented = false
+                    }
                         .foregroundColor(.white)
                 }
             }
@@ -170,7 +173,7 @@ struct AutoDetectView: View {
 
             Spacer()
 
-            Button(action: { dismiss() }) {
+            Button(action: { isPresented = false }) {
                 Text("Done")
                     .font(.body.weight(.semibold))
                     .foregroundColor(.white)
@@ -230,7 +233,7 @@ struct AutoDetectView: View {
                         }
                     }
 
-                    Button(action: { dismiss() }) {
+                    Button(action: { isPresented = false }) {
                         Text(selectedForImport.count > 0 ? "Done" : "Skip")
                             .font(.body.weight(.medium))
                             .foregroundColor(.white.opacity(0.7))
@@ -271,7 +274,7 @@ struct AutoDetectView: View {
 
             Spacer()
 
-            Button(action: { dismiss() }) {
+            Button(action: { isPresented = false }) {
                 Text("Done")
                     .font(.body.weight(.semibold))
                     .foregroundColor(.white)
@@ -288,6 +291,7 @@ struct AutoDetectView: View {
     // MARK: - Actions
 
     private func runDetection() {
+        PauselyLogger.debug("runDetection tapped", category: "AutoDetect")
         isScanning = true
         errorMessage = nil
 
@@ -490,6 +494,13 @@ struct AppleDetectedSubscriptionRow: View {
         case .food: return .yellow
         case .sports: return .indigo
         case .finance: return .mint
+        case .phone: return .blue.opacity(0.7)
+        case .insurance: return .green.opacity(0.7)
+        case .gym: return .orange.opacity(0.8)
+        case .automotive: return .red.opacity(0.7)
+        case .home: return .purple.opacity(0.7)
+        case .pet: return .brown.opacity(0.8)
+        case .personalCare: return .pink.opacity(0.7)
         case .other: return .secondary
         }
     }
@@ -506,7 +517,7 @@ struct AppleDetectedSubscriptionRow: View {
 }
 
 #Preview {
-    NavigationView {
-        AutoDetectView()
+    NavigationStack {
+        AutoDetectView(isPresented: .constant(true))
     }
 }

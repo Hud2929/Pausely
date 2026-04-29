@@ -362,7 +362,7 @@ struct ReceiptView: View {
     let transaction: BillingTransaction
     
     var body: some View {
-        NavigationView {
+        NavigationStack {
             ScrollView {
                 VStack(spacing: 32) {
                     // Receipt Header

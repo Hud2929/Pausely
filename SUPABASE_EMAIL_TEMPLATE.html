@@ -1,0 +1,161 @@
+<!--
+  Pausely Supabase Email Template
+  Paste this into: Supabase Dashboard > Authentication > Templates > Confirm Signup
+
+  Variables:
+  - {{ .Token }} = The 6-digit OTP code
+  - {{ .Email }} = User's email address
+-->
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Welcome to Pausely</title>
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+      background-color: #0a0a0f;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+    }
+    .container {
+      max-width: 480px;
+      margin: 0 auto;
+      padding: 48px 24px;
+      text-align: center;
+    }
+    .logo {
+      font-size: 28px;
+      font-weight: 700;
+      color: #ffffff;
+      margin-bottom: 8px;
+      letter-spacing: -0.5px;
+    }
+    .tagline {
+      font-size: 14px;
+      color: #8b8b9e;
+      margin-bottom: 40px;
+    }
+    .card {
+      background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+      border-radius: 20px;
+      padding: 40px 32px;
+      border: 1px solid rgba(255, 255, 255, 0.06);
+    }
+    .welcome {
+      font-size: 22px;
+      font-weight: 700;
+      color: #ffffff;
+      margin-bottom: 12px;
+    }
+    .subtitle {
+      font-size: 15px;
+      color: #a0a0b8;
+      line-height: 1.5;
+      margin-bottom: 32px;
+    }
+    .code-label {
+      font-size: 12px;
+      font-weight: 600;
+      color: #c9a84c;
+      text-transform: uppercase;
+      letter-spacing: 1.5px;
+      margin-bottom: 16px;
+    }
+    .code-box {
+      background: rgba(201, 168, 76, 0.1);
+      border: 2px solid #c9a84c;
+      border-radius: 16px;
+      padding: 24px;
+      margin-bottom: 24px;
+    }
+    .code {
+      font-size: 42px;
+      font-weight: 700;
+      color: #c9a84c;
+      letter-spacing: 8px;
+      font-family: 'SF Mono', Monaco, monospace;
+    }
+    .expires {
+      font-size: 13px;
+      color: #6e6e8a;
+      margin-bottom: 32px;
+    }
+    .divider {
+      height: 1px;
+      background: rgba(255, 255, 255, 0.06);
+      margin: 32px 0;
+    }
+    .tips {
+      text-align: left;
+    }
+    .tips-title {
+      font-size: 13px;
+      font-weight: 600;
+      color: #6e6e8a;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      margin-bottom: 16px;
+    }
+    .tip {
+      font-size: 14px;
+      color: #a0a0b8;
+      margin-bottom: 12px;
+      line-height: 1.5;
+    }
+    .footer {
+      margin-top: 40px;
+      font-size: 12px;
+      color: #4a4a60;
+      line-height: 1.6;
+    }
+    .footer a {
+      color: #c9a84c;
+      text-decoration: none;
+    }
+    @media only screen and (max-width: 480px) {
+      .container { padding: 32px 16px; }
+      .card { padding: 32px 20px; }
+      .code { font-size: 36px; letter-spacing: 6px; }
+      .welcome { font-size: 20px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="logo">Pausely</div>
+    <div class="tagline">Smart Subscription Management</div>
+
+    <div class="card">
+      <div class="welcome">Welcome to Pausely</div>
+      <div class="subtitle">
+        Thanks for signing up! To complete your registration, enter the verification code below in the app.
+      </div>
+
+      <div class="code-label">Your Verification Code</div>
+      <div class="code-box">
+        <div class="code">{{ .Token }}</div>
+      </div>
+
+      <div class="expires">This code expires in 1 hour.</div>
+
+      <div class="divider"></div>
+
+      <div class="tips">
+        <div class="tips-title">Didn't receive the code?</div>
+        <div class="tip">• Check your spam or junk folder</div>
+        <div class="tip">• Make sure {{ .Email }} is correct</div>
+        <div class="tip">• Tap "Resend Code" in the app if needed</div>
+      </div>
+    </div>
+
+    <div class="footer">
+      You're receiving this email because you signed up for Pausely.<br>
+      If you didn't create an account, you can safely ignore this email.<br><br>
+      <a href="https://pausely.app/privacy">Privacy Policy</a> &nbsp;|&nbsp;
+      <a href="https://pausely.app/support">Support</a>
+    </div>
+  </div>
+</body>
+</html>

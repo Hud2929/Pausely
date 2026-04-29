@@ -7,31 +7,44 @@ struct PremiumSubscriptionsView: View {
     @ObservedObject private var store = SubscriptionStore.shared
     @State private var selectedFilter: FilterType = .all
     @State private var searchText = ""
-    @State private var showingAddSheet = false
-    @State private var showingBrowser = false
-    @State private var showingAutoDetect = false
-    @State private var selectedSubscription: Subscription?
+    @State private var activeSheet: ActiveSheet?
     @State private var cardOffset: CGFloat = 0
     @Binding var deepLinkedSubscription: Subscription?
 
     init(deepLinkedSubscription: Binding<Subscription?> = .constant(nil)) {
         self._deepLinkedSubscription = deepLinkedSubscription
     }
-    
+
+    enum ActiveSheet: Identifiable {
+        case add
+        case browser
+        case autoDetect
+        case detail(Subscription)
+
+        var id: String {
+            switch self {
+            case .add: return "add"
+            case .browser: return "browser"
+            case .autoDetect: return "autoDetect"
+            case .detail(let sub): return "detail-\(sub.id)"
+            }
+        }
+    }
+
     enum FilterType: String, CaseIterable {
         case all = "All"
         case active = "Active"
         case paused = "Paused"
         case upcoming = "Upcoming"
     }
-    
+
     var filteredSubscriptions: [Subscription] {
         var result = store.subscriptions
-        
+
         if !searchText.isEmpty {
             result = result.filter { $0.name.localizedCaseInsensitiveContains(searchText) }
         }
-        
+
         switch selectedFilter {
         case .all:
             return result
@@ -43,11 +56,11 @@ struct PremiumSubscriptionsView: View {
             return result.filter { ($0.daysUntilRenewal ?? 999) <= 7 }
         }
     }
-    
+
     var body: some View {
         ZStack {
             PremiumBackground()
-            
+
             VStack(spacing: 0) {
                 // Header
                 subscriptionsHeader
@@ -62,11 +75,11 @@ struct PremiumSubscriptionsView: View {
                 searchAndFilterSection
                     .padding(.horizontal, 20)
                     .padding(.top, 20)
-                
+
                 // Subscription Cards
                 if filteredSubscriptions.isEmpty {
                     EmptySubscriptionsArtisticView {
-                        showingBrowser = true
+                        activeSheet = .browser
                     }
                     .padding(.top, 40)
                 } else {
@@ -76,7 +89,7 @@ struct PremiumSubscriptionsView: View {
                                 ArtisticSubscriptionCard(
                                     subscription: subscription,
                                     index: index,
-                                    onTap: { selectedSubscription = subscription }
+                                    onTap: { activeSheet = .detail(subscription) }
                                 )
                                 .padding(.horizontal, 20)
                             }
@@ -87,26 +100,35 @@ struct PremiumSubscriptionsView: View {
                 }
             }
         }
-        .sheet(isPresented: $showingAddSheet) {
-            ArtisticAddSubscriptionView()
-        }
-        .sheet(item: $selectedSubscription) { subscription in
-            SubscriptionDetailView(subscription: subscription)
-        }
-        .sheet(isPresented: $showingBrowser) {
-            SubscriptionBrowserView()
-        }
-        .sheet(isPresented: $showingAutoDetect) {
-            AutoDetectView()
+        .sheet(item: $activeSheet) { sheet in
+            switch sheet {
+            case .add:
+                ArtisticAddSubscriptionView()
+            case .browser:
+                SubscriptionBrowserView()
+            case .autoDetect:
+                AutoDetectView(isPresented: Binding(
+                    get: { true },
+                    set: { if !$0 { activeSheet = nil } }
+                ))
+            case .detail(let subscription):
+                SubscriptionDetailView(
+                    subscription: subscription,
+                    isPresented: Binding(
+                        get: { true },
+                        set: { if !$0 { activeSheet = nil } }
+                    )
+                )
+            }
         }
         .onChange(of: deepLinkedSubscription) { oldValue, newValue in
             if let subscription = newValue {
-                selectedSubscription = subscription
+                activeSheet = .detail(subscription)
                 deepLinkedSubscription = nil
             }
         }
     }
-    
+
     private var subscriptionsHeader: some View {
         HStack(spacing: 12) {
             VStack(alignment: .leading, spacing: 4) {
@@ -122,7 +144,7 @@ struct PremiumSubscriptionsView: View {
             Spacer()
 
             // Browse Button
-            Button(action: { showingBrowser = true }) {
+            Button(action: { activeSheet = .browser }) {
                 ZStack {
                     Circle()
                         .fill(Color.luxuryPurple.opacity(0.2))
@@ -136,7 +158,7 @@ struct PremiumSubscriptionsView: View {
             .accessibilityLabel("Browse subscriptions")
 
             // Add Button - opens premium catalog browser
-            Button(action: { showingBrowser = true }) {
+            Button(action: { activeSheet = .browser }) {
                 ZStack {
                     Circle()
                         .fill(BrandColors.primary)
@@ -148,13 +170,14 @@ struct PremiumSubscriptionsView: View {
                 }
             }
             .accessibilityLabel("Add subscription")
+            .accessibilityIdentifier("addSubscriptionButton")
         }
     }
 
     // MARK: - Apple Subscription Scanner Button
     private var appleScannerButton: some View {
         HStack(spacing: 0) {
-            Button(action: { showingAutoDetect = true }) {
+            Button(action: { activeSheet = .autoDetect }) {
                 HStack(spacing: 10) {
                     ZStack {
                         Circle()
@@ -196,7 +219,7 @@ struct PremiumSubscriptionsView: View {
         }
         .padding(.horizontal, 20)
     }
-    
+
     private var searchAndFilterSection: some View {
         VStack(spacing: 16) {
             // Search Bar
@@ -220,7 +243,7 @@ struct PremiumSubscriptionsView: View {
                             .stroke(Color.white.opacity(0.08), lineWidth: 1)
                     )
             )
-            
+
             // Filter Pills
             ScrollView(.horizontal, showsIndicators: false) {
                 HStack(spacing: 10) {
@@ -240,7 +263,7 @@ struct PremiumSubscriptionsView: View {
             }
         }
     }
-    
+
     private func countForFilter(_ filter: FilterType) -> Int {
         switch filter {
         case .all:
@@ -252,964 +275,6 @@ struct PremiumSubscriptionsView: View {
         case .upcoming:
             return store.subscriptions.filter { ($0.daysUntilRenewal ?? 999) <= 7 }.count
         }
-    }
-}
-
-// MARK: - Filter Pill
-struct SubscriptionFilterPill: View {
-    let title: String
-    let count: Int
-    let isSelected: Bool
-    let action: () -> Void
-    
-    var body: some View {
-        Button(action: action) {
-            HStack(spacing: 6) {
-                Text(title)
-                    .font(.subheadline.weight(isSelected ? .semibold : .medium))
-                
-                Text("\(count)")
-                    .font(.footnote.weight(.bold))
-                    .padding(.horizontal, 6)
-                    .padding(.vertical, 2)
-                    .background(
-                        Capsule()
-                            .fill(isSelected ? .white.opacity(0.2) : BackgroundColors.tertiary)
-                    )
-            }
-            .foregroundColor(isSelected ? .white : TextColors.secondary)
-            .padding(.horizontal, 16)
-            .padding(.vertical, 10)
-            .background(
-                Capsule()
-                    .fill(isSelected ? BrandColors.primary : BackgroundColors.secondary)
-                    .overlay(
-                        Capsule()
-                            .stroke(isSelected ? Color.clear : Color.white.opacity(0.08), lineWidth: 1)
-                    )
-            )
-        }
-        .buttonStyle(PlainButtonStyle())
-        .accessibilityValue(isSelected ? "Selected" : "Not selected")
-    }
-}
-
-// MARK: - Artistic Subscription Card
-struct ArtisticSubscriptionCard: View {
-    let subscription: Subscription
-    let index: Int
-    let onTap: () -> Void
-    @ObservedObject private var currencyManager = CurrencyManager.shared
-    @State private var isPressed = false
-    @State private var appear = false
-    
-    var cardColor: Color {
-        let colors: [Color] = [
-            BrandColors.primary,
-            BrandColors.secondary,
-            BrandColors.accent,
-            SemanticColors.success,
-            SemanticColors.info,
-            SemanticColors.warning
-        ]
-        return colors[index % colors.count]
-    }
-    
-    var body: some View {
-        Button(action: onTap) {
-            HStack(spacing: 0) {
-                // Left color bar
-                RoundedRectangle(cornerRadius: 4)
-                    .fill(cardColor)
-                    .frame(width: 4)
-                    .padding(.vertical, 20)
-                
-                // Content
-                HStack(spacing: 16) {
-                    // Icon with gradient background
-                    ZStack {
-                        RoundedRectangle(cornerRadius: 16)
-                            .fill(
-                                LinearGradient(
-                                    colors: [cardColor.opacity(0.3), cardColor.opacity(0.1)],
-                                    startPoint: .topLeading,
-                                    endPoint: .bottomTrailing
-                                )
-                            )
-                            .frame(width: 60, height: 60)
-                        
-                        Text(String(subscription.name.prefix(1)))
-                            .font(.title3.weight(.bold))
-                            .foregroundColor(.white)
-                    }
-                    
-                    // Info
-                    VStack(alignment: .leading, spacing: 6) {
-                        Text(subscription.name)
-                            .font(.headline.weight(.semibold))
-                            .foregroundColor(.white)
-                        
-                        HStack(spacing: 8) {
-                            // Billing frequency badge
-                            Text(subscription.billingFrequency.displayName)
-                                .font(.caption2.weight(.medium))
-                                .padding(.horizontal, 8)
-                                .padding(.vertical, 3)
-                                .background(
-                                    Capsule()
-                                        .fill(BackgroundColors.tertiary)
-                                )
-                                .foregroundColor(TextColors.secondary)
-                            
-                            if subscription.isPaused {
-                                Text("Paused")
-                                    .font(.caption2.weight(.medium))
-                                    .padding(.horizontal, 8)
-                                    .padding(.vertical, 3)
-                                    .background(
-                                        Capsule()
-                                            .fill(SemanticColors.warning.opacity(0.2))
-                                    )
-                                    .foregroundColor(SemanticColors.warning)
-                            }
-                        }
-                    }
-                    
-                    Spacer()
-                    
-                    // Price
-                    VStack(alignment: .trailing, spacing: 4) {
-                        let converted = currencyManager.convertToSelected(
-                            subscription.amount,
-                            from: subscription.currency
-                        )
-                        Text(currencyManager.format(converted))
-                            .font(.headline.weight(.bold))
-                            .foregroundColor(cardColor)
-                        
-                        if let days = subscription.daysUntilRenewal {
-                            Text(days == 0 ? "Today" : "\(days)d")
-                                .font(.footnote.weight(.medium))
-                                .foregroundColor(days <= 3 ? SemanticColors.error : TextColors.tertiary)
-                        }
-                    }
-                }
-                .padding(.leading, 16)
-                .padding(.trailing, 20)
-                .padding(.vertical, 16)
-            }
-            .background(
-                RoundedRectangle(cornerRadius: 20)
-                    .fill(BackgroundColors.secondary)
-                    .overlay(
-                        RoundedRectangle(cornerRadius: 20)
-                            .stroke(cardColor.opacity(0.2), lineWidth: 1)
-                    )
-                    .shadow(color: cardColor.opacity(0.1), radius: 10, x: 0, y: 4)
-            )
-            .scaleEffect(isPressed ? 0.98 : 1)
-            .opacity(appear ? 1 : 0)
-            .offset(y: appear ? 0 : 20)
-        }
-        .buttonStyle(PlainButtonStyle())
-        .pressEvents {
-            withAnimation(.easeInOut(duration: 0.1)) { isPressed = true }
-        } onRelease: {
-            withAnimation(.easeInOut(duration: 0.1)) { isPressed = false }
-        }
-        .accessibilityElement(children: .combine)
-        .accessibilityLabel("\(subscription.name), \(currencyManager.format(currencyManager.convertToSelected(subscription.amount, from: subscription.currency))) per \(subscription.billingFrequency.displayName.lowercased())\(subscription.isPaused ? ", paused" : "")")
-        .accessibilityHint("Double-tap to view details")
-        .onAppear {
-            withAnimation(.easeOut(duration: 0.5).delay(Double(index) * 0.05)) {
-                appear = true
-            }
-        }
-    }
-}
-
-// MARK: - Empty Subscriptions Artistic View
-struct EmptySubscriptionsArtisticView: View {
-    let onAdd: () -> Void
-    @State private var animate = false
-    
-    var body: some View {
-        VStack(spacing: 32) {
-            // Animated illustration
-            ZStack {
-                // Orbit rings
-                ForEach(0..<3) { i in
-                    Circle()
-                        .stroke(BrandColors.primary.opacity(0.1 + Double(i) * 0.1), lineWidth: 1)
-                        .frame(width: 150 + CGFloat(i * 40), height: 150 + CGFloat(i * 40))
-                        .rotationEffect(.degrees(animate ? 360 : 0))
-                        .animation(
-                            UIAccessibility.isReduceMotionEnabled
-                                ? .none
-                                : .linear(duration: 10 + Double(i) * 5).repeatForever(autoreverses: false),
-                            value: animate
-                        )
-                }
-                
-                // Center icon
-                ZStack {
-                    Circle()
-                        .fill(
-                            LinearGradient(
-                                colors: [BrandColors.primary, BrandColors.secondary],
-                                startPoint: .topLeading,
-                                endPoint: .bottomTrailing
-                            )
-                        )
-                        .frame(width: 100, height: 100)
-                        .shadow(color: BrandColors.primary.opacity(0.4), radius: 30, x: 0, y: 15)
-                    
-                    Image(systemName: "plus")
-                        .font(.title.weight(.semibold))
-                        .foregroundColor(.white)
-                }
-            }
-            .frame(height: 280)
-            
-            VStack(spacing: 12) {
-                Text("No subscriptions yet")
-                    .font(.title2.weight(.bold))
-                    .foregroundColor(.white)
-
-                Text("Add your first subscription to start tracking your spending")
-                    .font(.body)
-                    .foregroundColor(TextColors.secondary)
-                    .multilineTextAlignment(.center)
-                    .padding(.horizontal, 40)
-            }
-            
-            Button(action: onAdd) {
-                HStack(spacing: 8) {
-                    Image(systemName: "plus")
-                    Text("Add Subscription")
-                }
-                .font(.callout.weight(.semibold))
-                .foregroundColor(.white)
-                .padding(.horizontal, 28)
-                .padding(.vertical, 16)
-                .background(
-                    Capsule()
-                        .fill(Color.brandGradient)
-                )
-                .shadow(color: BrandColors.primary.opacity(0.4), radius: 20, x: 0, y: 10)
-            }
-        }
-        .onAppear {
-            guard !UIAccessibility.isReduceMotionEnabled else { return }
-            animate = true
-        }
-    }
-}
-
-// MARK: - Subscription Detail View
-struct SubscriptionDetailView: View {
-    let subscription: Subscription
-    @Environment(\.dismiss) private var dismiss
-    @ObservedObject private var currencyManager = CurrencyManager.shared
-    @State private var showingEditSheet = false
-    @State private var showingDeleteConfirm = false
-    @State private var showingCancelSheet = false
-    @State private var cancellationURL: URL?
-    
-    var cardColor: Color {
-        BrandColors.primary
-    }
-    
-    var body: some View {
-        NavigationView {
-            ZStack {
-                PremiumBackground()
-                
-                ScrollView(showsIndicators: false) {
-                    VStack(spacing: 24) {
-                        // Header Card
-                        VStack(spacing: 20) {
-                            // Icon
-                            ZStack {
-                                Circle()
-                                    .fill(
-                                        LinearGradient(
-                                            colors: [cardColor.opacity(0.3), cardColor.opacity(0.1)],
-                                            startPoint: .topLeading,
-                                            endPoint: .bottomTrailing
-                                        )
-                                    )
-                                    .frame(width: 100, height: 100)
-                                
-                                Text(String(subscription.name.prefix(1)))
-                                    .font(.title.weight(.bold))
-                                    .foregroundColor(.white)
-                            }
-                            
-                            // Name
-                            Text(subscription.name)
-                                .font(.title.weight(.bold))
-                                .foregroundColor(.white)
-                            
-                            // Price
-                            let converted = currencyManager.convertToSelected(
-                                subscription.amount,
-                                from: subscription.currency
-                            )
-                            Text(currencyManager.format(converted))
-                                .font(.largeTitle.weight(.bold))
-                                .foregroundColor(cardColor)
-                            
-                            Text("per \(subscription.billingFrequency.displayName.lowercased())")
-                                .font(.body)
-                                .foregroundColor(TextColors.secondary)
-                        }
-                        .padding(32)
-                        .frame(maxWidth: .infinity)
-                        .background(
-                            RoundedRectangle(cornerRadius: 28)
-                                .fill(BackgroundColors.secondary)
-                                .overlay(
-                                    RoundedRectangle(cornerRadius: 28)
-                                        .stroke(cardColor.opacity(0.2), lineWidth: 1)
-                                )
-                        )
-                        .padding(.horizontal, 20)
-                        
-                        // Details Section
-                        VStack(alignment: .leading, spacing: 16) {
-                            Text("Details")
-                                .font(.headline.weight(.bold))
-                                .foregroundColor(.white)
-                                .padding(.horizontal, 20)
-                            
-                            VStack(spacing: 1) {
-                                SubscriptionDetailRow(icon: "calendar", title: "Next Billing", value: renewalDateText)
-                                SubscriptionDetailRow(icon: "tag", title: "Category", value: subscription.category ?? "Other")
-                                SubscriptionDetailRow(icon: "checkmark.circle", title: "Status", value: subscription.status.displayName)
-                            }
-                            .padding(.horizontal, 20)
-                        }
-                        
-                        // Actions
-                        VStack(spacing: 12) {
-                            // Cancel Subscription Button
-                            Button(action: { openCancellationPage() }) {
-                                HStack {
-                                    Image(systemName: "xmark.circle")
-                                    Text("Cancel Subscription")
-                                }
-                                .font(.callout.weight(.semibold))
-                                .foregroundColor(.white)
-                                .frame(maxWidth: .infinity)
-                                .frame(height: 56)
-                                .background(
-                                    RoundedRectangle(cornerRadius: 16)
-                                        .fill(Color.red.opacity(0.8))
-                                )
-                            }
-
-                            Button(action: { showingEditSheet = true }) {
-                                HStack {
-                                    Image(systemName: "pencil")
-                                    Text("Edit Subscription")
-                                }
-                                .font(.callout.weight(.semibold))
-                                .foregroundColor(.white)
-                                .frame(maxWidth: .infinity)
-                                .frame(height: 56)
-                                .background(
-                                    RoundedRectangle(cornerRadius: 16)
-                                        .fill(BackgroundColors.tertiary)
-                                )
-                            }
-
-                            Button(action: {
-                                HapticStyle.heavy.trigger()
-                                showingDeleteConfirm = true
-                            }) {
-                                HStack {
-                                    Image(systemName: "trash")
-                                    Text("Delete")
-                                }
-                                .font(.callout.weight(.semibold))
-                                .foregroundColor(SemanticColors.error)
-                                .frame(maxWidth: .infinity)
-                                .frame(height: 56)
-                                .background(
-                                    RoundedRectangle(cornerRadius: 16)
-                                        .fill(SemanticColors.error.opacity(0.1))
-                                )
-                            }
-                        }
-                        .padding(.horizontal, 20)
-                        .padding(.top, 20)
-                        
-                        Spacer(minLength: 40)
-                    }
-                    .padding(.top, 20)
-                }
-            }
-            .navigationBarTitleDisplayMode(.inline)
-            .toolbar {
-                ToolbarItem(placement: .navigationBarLeading) {
-                    Button("Close") { dismiss() }
-                        .foregroundColor(TextColors.secondary)
-                }
-            }
-            .alert("Delete Subscription?", isPresented: $showingDeleteConfirm) {
-                Button("Cancel", role: .cancel) {}
-                Button("Delete", role: .destructive) {
-                    // Delete logic
-                    dismiss()
-                }
-            } message: {
-                Text("This will permanently remove \(subscription.name) from your subscriptions.")
-            }
-            .sheet(isPresented: $showingCancelSheet) {
-                if let url = cancellationURL {
-                    SafariView(url: url)
-                        .ignoresSafeArea()
-                }
-            }
-        }
-    }
-
-    private func openCancellationPage() {
-        // Look up the cancellation URL from the catalog
-        if let entry = SubscriptionCatalogService.shared.entry(for: subscription.bundleIdentifier ?? "") {
-            if let urlString = entry.cancellationURL, let url = URL(string: urlString) {
-                cancellationURL = url
-                showingCancelSheet = true
-                return
-            }
-        }
-
-        // Fallback: search by subscription name in catalog
-        if let entry = SubscriptionCatalogService.shared.catalog.first(where: {
-            $0.name.lowercased() == subscription.name.lowercased() ||
-            subscription.name.lowercased().contains($0.name.lowercased())
-        }) {
-            if let urlString = entry.cancellationURL, let url = URL(string: urlString) {
-                cancellationURL = url
-                showingCancelSheet = true
-                return
-            }
-        }
-
-        // No cancellation URL found - use App Store subscriptions page as fallback
-        if let url = URL(string: "https://apps.apple.com/account/subscriptions") {
-            cancellationURL = url
-            showingCancelSheet = true
-        }
-    }
-
-    var renewalDateText: String {
-        guard let date = subscription.nextBillingDate else { return "Unknown" }
-        let formatter = DateFormatter()
-        formatter.dateStyle = .medium
-        return formatter.string(from: date)
-    }
-}
-
-// MARK: - Detail Row
-struct SubscriptionDetailRow: View {
-    let icon: String
-    let title: String
-    let value: String
-    
-    var body: some View {
-        HStack(spacing: 16) {
-            Image(systemName: icon)
-                .font(.headline)
-                .foregroundColor(BrandColors.primary)
-                .frame(width: 32)
-            
-            Text(title)
-                .font(.body)
-                .foregroundColor(TextColors.secondary)
-            
-            Spacer()
-            
-            Text(value)
-                .font(.callout.weight(.medium))
-                .foregroundColor(.white)
-        }
-        .padding(16)
-        .background(BackgroundColors.secondary)
-    }
-}
-
-// MARK: - Add Subscription View
-struct ArtisticAddSubscriptionView: View {
-    @Environment(\.dismiss) private var dismiss
-    @ObservedObject private var store = SubscriptionStore.shared
-    @ObservedObject private var paymentManager = PaymentManager.shared
-    
-    @State private var name = ""
-    @State private var amount = ""
-    @State private var selectedFrequency: BillingFrequency = .monthly
-    @State private var selectedCategory: NeuralSubscriptionCategory = .entertainment
-    @State private var nextRenewalDate = Date().addingTimeInterval(30 * 24 * 60 * 60)
-    
-    @State private var currentStep = 0
-    @State private var isSaving = false
-    @State private var showConfetti = false
-
-    let steps = ["Name", "Amount", "Schedule"]
-    
-    var canProceed: Bool {
-        switch currentStep {
-        case 0: return !name.isEmpty
-        case 1: return !amount.isEmpty && Double(amount) != nil
-        default: return true
-        }
-    }
-    
-    var body: some View {
-        NavigationView {
-            ZStack {
-                PremiumBackground()
-
-                // Confetti overlay for first subscription celebration
-                if showConfetti {
-                    ConfettiView()
-                        .allowsHitTesting(false)
-                        .ignoresSafeArea()
-                }
-
-                VStack(spacing: 0) {
-                    // Progress
-                    StepProgressView(steps: steps, currentStep: currentStep)
-                        .padding(.horizontal, 20)
-                        .padding(.top, 20)
-                    
-                    // Content
-                    TabView(selection: $currentStep) {
-                        // Step 1: Name
-                        NameStepView(name: $name, selectedCategory: $selectedCategory)
-                            .tag(0)
-                        
-                        // Step 2: Amount
-                        AmountStepView(amount: $amount, selectedFrequency: $selectedFrequency)
-                            .tag(1)
-                        
-                        // Step 3: Schedule
-                        ScheduleStepView(nextRenewalDate: $nextRenewalDate)
-                            .tag(2)
-                    }
-                    .tabViewStyle(PageTabViewStyle(indexDisplayMode: .never))
-                    
-                    // Navigation Buttons
-                    HStack(spacing: 16) {
-                        if currentStep > 0 {
-                            Button(action: { currentStep -= 1 }) {
-                                Image(systemName: "arrow.left")
-                                    .font(.headline.weight(.semibold))
-                                    .foregroundColor(.white)
-                                    .frame(width: 56, height: 56)
-                                    .background(
-                                        RoundedRectangle(cornerRadius: 16)
-                                            .fill(BackgroundColors.tertiary)
-                                    )
-                            }
-                            .accessibilityLabel("Previous step")
-                        }
-                        
-                        Button(action: {
-                            if currentStep < steps.count - 1 {
-                                currentStep += 1
-                            } else {
-                                saveSubscription()
-                            }
-                        }) {
-                            HStack {
-                                if isSaving {
-                                    ProgressView()
-                                        .tint(.white)
-                                } else {
-                                    Text(currentStep == steps.count - 1 ? "Save" : "Continue")
-                                        .font(.callout.weight(.semibold))
-                                    
-                                    if currentStep < steps.count - 1 {
-                                        Image(systemName: "arrow.right")
-                                    }
-                                }
-                            }
-                            .foregroundColor(.white)
-                            .frame(maxWidth: .infinity)
-                            .frame(height: 56)
-                            .background(
-                                RoundedRectangle(cornerRadius: 16)
-                                    .fill(Color.brandGradient)
-                            )
-                        }
-                        .disabled(!canProceed || isSaving)
-                        .accessibilityHint(!canProceed ? "Please complete the current step" : isSaving ? "Please wait, saving subscription" : "")
-                        .opacity(canProceed ? 1 : 0.6)
-                    }
-                    .padding(.horizontal, 20)
-                    .padding(.bottom, 30)
-                }
-            }
-            .navigationBarTitleDisplayMode(.inline)
-            .toolbar {
-                ToolbarItem(placement: .navigationBarLeading) {
-                    Button("Cancel") { dismiss() }
-                        .foregroundColor(TextColors.secondary)
-                }
-            }
-        }
-    }
-    
-    private func saveSubscription() {
-        isSaving = true
-        
-        Task {
-            guard let amountValue = Decimal(string: amount) else {
-                isSaving = false
-                return
-            }
-            
-            let subscription = Subscription(
-                name: name,
-                category: selectedCategory.rawValue,
-                amount: amountValue,
-                currency: "USD",
-                billingFrequency: selectedFrequency,
-                nextBillingDate: nextRenewalDate
-            )
-            
-            do {
-                let wasFirstSubscription = store.subscriptions.isEmpty
-                _ = try await store.addSubscription(subscription)
-
-                await MainActor.run {
-                    isSaving = false
-                    if wasFirstSubscription {
-                        showConfetti = true
-                        HapticStyle.success.trigger()
-                        // Dismiss after confetti plays
-                        DispatchQueue.main.asyncAfter(deadline: .now() + 2.5) {
-                            dismiss()
-                        }
-                    } else {
-                        dismiss()
-                    }
-                }
-            } catch {
-                await MainActor.run {
-                    isSaving = false
-                }
-            }
-        }
-    }
-}
-
-// MARK: - Step Progress View
-struct StepProgressView: View {
-    let steps: [String]
-    let currentStep: Int
-    
-    var body: some View {
-        HStack(spacing: 0) {
-            ForEach(Array(steps.enumerated()), id: \.offset) { index, step in
-                HStack(spacing: 8) {
-                    // Step circle
-                    ZStack {
-                        Circle()
-                            .fill(index <= currentStep ? BrandColors.primary : BackgroundColors.tertiary)
-                            .frame(width: 32, height: 32)
-                        
-                        if index < currentStep {
-                            Image(systemName: "checkmark")
-                                .font(.footnote.weight(.bold))
-                                .foregroundColor(.white)
-                        } else {
-                            Text("\(index + 1)")
-                                .font(.footnote.weight(.bold))
-                                .foregroundColor(index == currentStep ? .white : TextColors.tertiary)
-                        }
-                    }
-                    
-                    if index < steps.count - 1 {
-                        Rectangle()
-                            .fill(index < currentStep ? BrandColors.primary : BackgroundColors.tertiary)
-                            .frame(height: 2)
-                    }
-                }
-            }
-        }
-    }
-}
-
-// MARK: - Name Step
-struct NameStepView: View {
-    @Binding var name: String
-    @Binding var selectedCategory: NeuralSubscriptionCategory
-    
-    let categories: [(NeuralSubscriptionCategory, String, String)] = [
-        (.entertainment, "film.fill", "Entertainment"),
-        (.lifestyle, "heart.fill", "Lifestyle"),
-        (.essential, "checkmark.shield.fill", "Essential"),
-        (.utility, "bolt.fill", "Utility"),
-        (.luxury, "crown.fill", "Luxury")
-    ]
-    
-    var body: some View {
-        ScrollView(showsIndicators: false) {
-            VStack(spacing: 32) {
-                VStack(spacing: 12) {
-                    Text("What's the subscription?")
-                        .font(.title.weight(.bold))
-                        .foregroundColor(.white)
-                    
-                    Text("Enter the name of the service you're subscribing to")
-                        .font(.body)
-                        .foregroundColor(TextColors.secondary)
-                        .multilineTextAlignment(.center)
-                }
-                .padding(.top, 40)
-                
-                // Name input
-                PremiumTextField(placeholder: "e.g. Netflix, Spotify", text: $name)
-                    .padding(.horizontal, 20)
-                
-                // Category selection
-                VStack(alignment: .leading, spacing: 16) {
-                    Text("Category")
-                        .font(.callout.weight(.semibold))
-                        .foregroundColor(.white)
-                        .padding(.horizontal, 20)
-                    
-                    LazyVGrid(columns: [GridItem(.adaptive(minimum: 80))], spacing: 12) {
-                        ForEach(categories, id: \.0) { category, icon, label in
-                            SubscriptionCategoryButton(
-                                icon: icon,
-                                label: label,
-                                isSelected: selectedCategory == category
-                            ) {
-                                withAnimation(.spring(response: 0.3)) {
-                                    selectedCategory = category
-                                }
-                            }
-                        }
-                    }
-                    .padding(.horizontal, 20)
-                }
-                
-                Spacer(minLength: 100)
-            }
-        }
-    }
-}
-
-// MARK: - Category Button
-struct SubscriptionCategoryButton: View {
-    let icon: String
-    let label: String
-    let isSelected: Bool
-    let action: () -> Void
-    
-    var body: some View {
-        Button(action: action) {
-            VStack(spacing: 8) {
-                ZStack {
-                    RoundedRectangle(cornerRadius: 16)
-                        .fill(isSelected ? BrandColors.primary : BackgroundColors.tertiary)
-                        .frame(width: 64, height: 64)
-                    
-                    Image(systemName: icon)
-                        .font(.title3)
-                        .foregroundColor(isSelected ? .white : TextColors.secondary)
-                }
-
-                Text(label)
-                    .font(.footnote.weight(isSelected ? .semibold : .medium))
-                    .foregroundColor(isSelected ? .white : TextColors.secondary)
-            }
-        }
-        .buttonStyle(PlainButtonStyle())
-    }
-}
-
-// MARK: - Amount Step
-struct AmountStepView: View {
-    @Binding var amount: String
-    @Binding var selectedFrequency: BillingFrequency
-    @ObservedObject private var currencyManager = CurrencyManager.shared
-
-    var body: some View {
-        ScrollView(showsIndicators: false) {
-            VStack(spacing: 32) {
-                VStack(spacing: 12) {
-                    Text("How much does it cost?")
-                        .font(.title.weight(.bold))
-                        .foregroundColor(.white)
-                    
-                    Text("Enter the amount you pay for this subscription")
-                        .font(.body)
-                        .foregroundColor(TextColors.secondary)
-                        .multilineTextAlignment(.center)
-                }
-                .padding(.top, 40)
-                
-                // Amount display
-                HStack(spacing: 4) {
-                    Text(currencyManager.currencySymbol(for: currencyManager.selectedCurrency))
-                        .font(.largeTitle.weight(.bold))
-                        .foregroundColor(BrandColors.primary)
-
-                    Text(amount.isEmpty ? "0.00" : amount)
-                        .font(.largeTitle.weight(.bold))
-                        .foregroundColor(.white)
-                }
-                .padding(.vertical, 20)
-                
-                // Amount input
-                PremiumTextField(
-                    placeholder: "0.00",
-                    text: $amount,
-                    keyboardType: .decimalPad
-                )
-                .padding(.horizontal, 20)
-                
-                // Frequency selection
-                VStack(alignment: .leading, spacing: 16) {
-                    Text("Billing Frequency")
-                        .font(.callout.weight(.semibold))
-                        .foregroundColor(.white)
-                        .padding(.horizontal, 20)
-                    
-                    VStack(spacing: 10) {
-                        ForEach(BillingFrequency.allCases, id: \.self) { frequency in
-                            FrequencyButton(
-                                title: frequency.displayName,
-                                isSelected: selectedFrequency == frequency
-                            ) {
-                                withAnimation(.spring(response: 0.3)) {
-                                    selectedFrequency = frequency
-                                }
-                            }
-                        }
-                    }
-                    .padding(.horizontal, 20)
-                }
-                
-                Spacer(minLength: 100)
-            }
-        }
-    }
-}
-
-// MARK: - Frequency Button
-struct FrequencyButton: View {
-    let title: String
-    let isSelected: Bool
-    let action: () -> Void
-    
-    var body: some View {
-        Button(action: action) {
-            HStack {
-                Text(title)
-                    .font(.callout.weight(isSelected ? .semibold : .regular))
-                    .foregroundColor(isSelected ? .white : TextColors.secondary)
-                
-                Spacer()
-                
-                if isSelected {
-                    Image(systemName: "checkmark.circle.fill")
-                        .font(.title3)
-                        .foregroundColor(BrandColors.primary)
-                }
-            }
-            .padding(16)
-            .background(
-                RoundedRectangle(cornerRadius: 14)
-                    .fill(isSelected ? BrandColors.primary.opacity(0.15) : BackgroundColors.secondary)
-                    .overlay(
-                        RoundedRectangle(cornerRadius: 14)
-                            .stroke(isSelected ? BrandColors.primary.opacity(0.5) : Color.white.opacity(0.06), lineWidth: isSelected ? 2 : 1)
-                    )
-            )
-        }
-        .buttonStyle(PlainButtonStyle())
-    }
-}
-
-// MARK: - Schedule Step
-struct ScheduleStepView: View {
-    @Binding var nextRenewalDate: Date
-    
-    var body: some View {
-        ScrollView(showsIndicators: false) {
-            VStack(spacing: 32) {
-                VStack(spacing: 12) {
-                    Text("When does it renew?")
-                        .font(.title.weight(.bold))
-                        .foregroundColor(.white)
-                    
-                    Text("Select the next billing date for this subscription")
-                        .font(.body)
-                        .foregroundColor(TextColors.secondary)
-                        .multilineTextAlignment(.center)
-                }
-                .padding(.top, 40)
-                
-                // Date picker card
-                VStack(spacing: 20) {
-                    Image(systemName: "calendar.badge.clock")
-                        .font(.largeTitle)
-                        .foregroundColor(BrandColors.primary)
-                    
-                    DatePicker(
-                        "Next Renewal",
-                        selection: $nextRenewalDate,
-                        displayedComponents: .date
-                    )
-                    .datePickerStyle(.graphical)
-                    .colorMultiply(BrandColors.primary)
-                    .padding(20)
-                    .background(
-                        RoundedRectangle(cornerRadius: 20)
-                            .fill(BackgroundColors.secondary)
-                    )
-                }
-                .padding(.horizontal, 20)
-                
-                // Quick options
-                HStack(spacing: 12) {
-                    QuickDateButton(title: "Today", days: 0) { nextRenewalDate = Date() }
-                    QuickDateButton(title: "+7 Days", days: 7) { nextRenewalDate = Date().addingTimeInterval(7 * 24 * 60 * 60) }
-                    QuickDateButton(title: "+30 Days", days: 30) { nextRenewalDate = Date().addingTimeInterval(30 * 24 * 60 * 60) }
-                }
-                .padding(.horizontal, 20)
-                
-                Spacer(minLength: 100)
-            }
-        }
-    }
-}
-
-// MARK: - Quick Date Button
-struct QuickDateButton: View {
-    let title: String
-    let days: Int
-    let action: () -> Void
-    
-    var body: some View {
-        Button(action: action) {
-            Text(title)
-                .font(.subheadline.weight(.semibold))
-                .foregroundColor(.white)
-                .padding(.horizontal, 16)
-                .padding(.vertical, 12)
-                .background(
-                    Capsule()
-                        .fill(BackgroundColors.tertiary)
-                )
-        }
-        .buttonStyle(PlainButtonStyle())
     }
 }
 

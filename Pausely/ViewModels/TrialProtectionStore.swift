@@ -108,6 +108,7 @@ class TrialProtectionStore: ObservableObject {
 
     private let userDefaultsKey = "tracked_trials"
     private let statsKey = "trial_stats"
+    // Note: persisted via AppSettings.shared for consistency
     private var checkTimer: Timer?
     private var client: SupabaseClient { SupabaseManager.shared.client }
 
@@ -387,7 +388,7 @@ class TrialProtectionStore: ObservableObject {
 
     private func saveTrials() {
         if let data = try? JSONEncoder().encode(trials) {
-            UserDefaults.standard.set(data, forKey: userDefaultsKey)
+            AppSettings.shared.trackedTrials = data
         }
     }
 
@@ -399,18 +400,20 @@ class TrialProtectionStore: ObservableObject {
     }
 
     private func loadLocalTrials() -> [TrackedTrial] {
-        guard let data = UserDefaults.standard.data(forKey: userDefaultsKey) else { return [] }
+        let data = AppSettings.shared.trackedTrials
+        guard !data.isEmpty else { return [] }
         return (try? JSONDecoder().decode([TrackedTrial].self, from: data)) ?? []
     }
 
     private func saveStats() {
         if let data = try? JSONEncoder().encode(stats) {
-            UserDefaults.standard.set(data, forKey: statsKey)
+            AppSettings.shared.trialStats = data
         }
     }
 
     private func loadStats() {
-        guard let data = UserDefaults.standard.data(forKey: statsKey) else { return }
+        let data = AppSettings.shared.trialStats
+        guard !data.isEmpty else { return }
         if let loaded = try? JSONDecoder().decode(TrialStats.self, from: data) {
             stats = loaded
         }

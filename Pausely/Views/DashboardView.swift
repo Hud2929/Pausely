@@ -31,10 +31,9 @@ struct MainTabView: View {
                     }
                     .tag(2)
 
-                NavigationView {
+                NavigationStack {
                     PremiumProfileView()
                 }
-                .navigationViewStyle(StackNavigationViewStyle())
                 .tabItem {
                     Image(systemName: selectedTab == 3 ? "person.fill" : "person")
                     Text("Profile")
@@ -89,16 +88,17 @@ struct DashboardView: View {
                 personalizedHeader
                     .padding(.top, 16)
 
-                // Offline Mode Banner
-                if store.isUsingLocalStorage {
-                    OfflineModeBanner {
-                        Task {
-                            store.disableLocalStorage()
-                            await store.fetchSubscriptions(force: true)
+                // Price Increase Alerts
+                if !PriceIncreaseMonitor.shared.alerts.isEmpty {
+                    VStack(spacing: 8) {
+                        ForEach(PriceIncreaseMonitor.shared.alerts) { alert in
+                            PriceAlertBanner(alert: alert) {
+                                PriceIncreaseMonitor.shared.dismissAlert(id: alert.id)
+                            }
                         }
                     }
                     .padding(.horizontal, 20)
-                    .padding(.top, 16)
+                    .padding(.top, 12)
                 }
 
                 if store.isLoading && store.subscriptions.isEmpty {
@@ -106,7 +106,7 @@ struct DashboardView: View {
                         .transition(.opacity)
                 } else if store.subscriptions.isEmpty {
                     DashboardEmptyState(
-                        onAdd: { showingAddOptions = true }
+                        onAdd: { showingAddSubscription = true }
                     )
                     .padding(.horizontal, 20)
                     .padding(.top, 40)
@@ -125,9 +125,29 @@ struct DashboardView: View {
                     .padding(.horizontal, 20)
                     .padding(.top, 16)
 
+                    // Lifetime Spend
+                    LifetimeSpendCard(
+                        lifetimeSpend: store.totalLifetimeSpend,
+                        currencyManager: currencyManager
+                    )
+                    .padding(.horizontal, 20)
+                    .padding(.top, 12)
+
+                    // Forgotten Apple Subscriptions
+                    ForgottenSubscriptionsSection()
+
+                    // Biggest Expenses
+                    BiggestExpensesSection()
+
+                    // Category Spending Breakdown
+                    CategorySpendingSection()
+
+                    // Subscription Health Score
+                    SubscriptionHealthScoreSection()
+
                     // Quick Actions
                     QuickActionsGrid(
-                        onAddTap: { showingAddOptions = true },
+                        onAddTap: { showingAddSubscription = true },
                         onPaywallTap: { showingPaywall = true }
                     )
                     .padding(.horizontal, 20)
@@ -137,6 +157,15 @@ struct DashboardView: View {
                     SmartInsightsSection()
                         .padding(.horizontal, 20)
                         .padding(.top, 24)
+
+                    // Family Plan Opportunities
+                    let familySuggestions = FamilyPlanDetector.shared.detectFamilyPlanOpportunities(in: store.subscriptions)
+                    if !familySuggestions.isEmpty {
+                        FamilyPlanSuggestionsSection(
+                            suggestions: familySuggestions,
+                            currencyManager: currencyManager
+                        )
+                    }
 
                     // Upcoming Renewals
                     if !store.upcomingRenewals.isEmpty {
@@ -273,6 +302,8 @@ struct DashboardView: View {
                 Text("Your Subscriptions")
                     .font(.system(.title, design: .rounded).weight(.bold))
                     .foregroundStyle(.primary)
+                    .lineLimit(1)
+                    .allowsTightening(false)
 
                 if !store.subscriptions.isEmpty {
                     Text(summaryText)
@@ -286,7 +317,9 @@ struct DashboardView: View {
 
             HStack(spacing: 12) {
                 CurrencySelectorButton()
+                    .accessibilityIdentifier("currencySelectorButton")
                 NotificationButton()
+                    .accessibilityIdentifier("notificationButton")
             }
             .accessibilityElement(children: .combine)
             .accessibilityLabel("Dashboard header, \(greeting)")
@@ -497,6 +530,7 @@ struct DashboardEmptyState: View {
             .premiumPress(haptic: .medium, scale: 0.96)
             .padding(.horizontal, 32)
             .padding(.top, 8)
+            .accessibilityIdentifier("addSubscriptionButton")
         }
         .padding(.vertical, 40)
         .glass(intensity: 0.08, tint: .white)

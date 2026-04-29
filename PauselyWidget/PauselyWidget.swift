@@ -384,11 +384,54 @@ struct InsightRow: View {
     }
 }
 
-// MARK: - Widget Configuration
+// MARK: - Live Activity Widget
+struct PauselyLiveActivityWidget: Widget {
+    var body: some WidgetConfiguration {
+        ActivityConfiguration(for: PauselyLiveActivityAttributes.self) { context in
+            PauselyLiveActivityView(context: context)
+        } dynamicIsland: { context in
+            DynamicIsland {
+                DynamicIslandExpandedRegion(.leading) {
+                    Image(systemName: "creditcard.fill")
+                        .foregroundStyle(context.state.isUrgent ? .red : .indigo)
+                }
+                DynamicIslandExpandedRegion(.trailing) {
+                    Text("\(context.state.daysUntilRenewal) days")
+                        .font(.headline)
+                        .foregroundStyle(context.state.isUrgent ? .red : .primary)
+                }
+                DynamicIslandExpandedRegion(.bottom) {
+                    Text(context.attributes.subscriptionName)
+                        .font(.subheadline)
+                        .lineLimit(1)
+                }
+            } compactLeading: {
+                Image(systemName: "creditcard.fill")
+                    .foregroundStyle(context.state.isUrgent ? .red : .indigo)
+            } compactTrailing: {
+                Text("\(context.state.daysUntilRenewal)")
+                    .foregroundStyle(context.state.isUrgent ? .red : .primary)
+            } minimal: {
+                Text("\(context.state.daysUntilRenewal)")
+                    .foregroundStyle(context.state.isUrgent ? .red : .primary)
+            }
+        }
+    }
+}
+
+// MARK: - Widget Bundle
 @main
+struct PauselyWidgetBundle: WidgetBundle {
+    var body: some Widget {
+        PauselyWidget()
+        PauselyLiveActivityWidget()
+    }
+}
+
+// MARK: - Home Screen Widget
 struct PauselyWidget: Widget {
     let kind: String = "PauselyWidget"
-    
+
     var body: some WidgetConfiguration {
         StaticConfiguration(kind: kind, provider: PauselyWidgetProvider()) { entry in
             PauselyWidgetEntryView(entry: entry)

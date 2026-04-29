@@ -67,17 +67,52 @@ struct TierSelectionSheet: View {
         case .sports: return .indigo
         case .social: return .teal
         case .news: return .brown
+        case .phone: return .blue.opacity(0.7)
+        case .insurance: return .green.opacity(0.7)
+        case .gym: return .orange.opacity(0.8)
+        case .automotive: return .red.opacity(0.7)
+        case .home: return .purple.opacity(0.7)
+        case .pet: return .brown.opacity(0.8)
+        case .personalCare: return .pink.opacity(0.7)
         case .other: return .secondary
         }
     }
 
     var body: some View {
-        NavigationView {
-            ZStack {
-                PremiumBackground()
+        ZStack {
+            PremiumBackground()
 
-                ScrollView {
+            VStack(spacing: 0) {
+                ScrollView(showsIndicators: false) {
                     VStack(spacing: 24) {
+                        // Manual nav bar
+                        HStack {
+                            Button {
+                                STAnimation.impactLight()
+                                dismiss()
+                            } label: {
+                                Text("Cancel")
+                                    .font(.body.weight(.medium))
+                                    .foregroundColor(.white.opacity(0.7))
+                            }
+
+                            Spacer()
+
+                            Text("Choose Your Plan")
+                                .font(STFont.headlineMedium)
+                                .foregroundColor(.white)
+
+                            Spacer()
+
+                            // Spacer to balance Cancel button width
+                            Text("Cancel")
+                                .font(.body.weight(.medium))
+                                .foregroundColor(.clear)
+                                .accessibilityHidden(true)
+                        }
+                        .padding(.horizontal, 20)
+                        .padding(.top, 16)
+
                         // Premium header card with glow
                         headerCard
                             .padding(.horizontal, 20)
@@ -101,44 +136,34 @@ struct TierSelectionSheet: View {
                             .padding(.horizontal, 20)
                     }
                     .padding(.vertical, 20)
-                    .padding(.bottom, 100)
                 }
-            }
-            .navigationBarTitleDisplayMode(.inline)
-            .toolbar {
-                ToolbarItem(placement: .principal) {
-                    Text("Choose Your Plan")
-                        .font(STFont.headlineMedium)
-                        .foregroundColor(.white)
-                }
-                ToolbarItem(placement: .navigationBarLeading) {
-                    Button {
-                        STAnimation.impactLight()
-                        dismiss()
-                    } label: {
-                        Text("Cancel")
-                            .font(.body.weight(.medium))
-                            .foregroundColor(.white.opacity(0.7))
+
+                // Add button pinned at bottom
+                Button {
+                    STAnimation.success()
+                    let price = parsePriceOverride()
+                    onSelect(selectedTier, selectedBillingFrequency, isOverridingPrice, price)
+                    dismiss()
+                } label: {
+                    HStack(spacing: 8) {
+                        Image(systemName: "plus.circle.fill")
+                        Text("Add Subscription")
                     }
+                    .font(.body.weight(.semibold))
+                    .foregroundColor(.white)
+                    .frame(maxWidth: .infinity)
+                    .frame(height: 56)
+                    .background(
+                        LinearGradient(
+                            colors: [.luxuryPurple, .luxuryPink],
+                            startPoint: .leading,
+                            endPoint: .trailing
+                        )
+                    )
+                    .cornerRadius(16)
                 }
-                ToolbarItem(placement: .navigationBarTrailing) {
-                    Button {
-                        STAnimation.success()
-                        let price = parsePriceOverride()
-                        onSelect(selectedTier, selectedBillingFrequency, isOverridingPrice, price)
-                        dismiss()
-                    } label: {
-                        Text("Add")
-                            .font(.body.weight(.semibold))
-                            .foregroundStyle(
-                                LinearGradient(
-                                    colors: [.luxuryPurple, .luxuryPink],
-                                    startPoint: .leading,
-                                    endPoint: .trailing
-                                )
-                            )
-                    }
-                }
+                .padding(.horizontal, 20)
+                .padding(.vertical, 16)
             }
         }
     }

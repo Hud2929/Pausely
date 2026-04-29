@@ -79,9 +79,10 @@ final class RealGeniusEngine: ObservableObject {
         )
     }
 
-    // MARK: - Trajectory Engine
+    // MARK: - Usage Snapshot Engine
 
-    /// Analyzes usage trends to predict future waste
+    /// Analyzes current usage to flag low-value subscriptions
+    /// NOTE: This is a current-usage snapshot, NOT a time-series trajectory prediction.
     func analyzeTrajectories(subscriptions: [Subscription]) -> [GeniusInsight] {
         var insights: [GeniusInsight] = []
 
@@ -89,31 +90,27 @@ final class RealGeniusEngine: ObservableObject {
             let trajectory = calculateTrajectory(for: sub)
 
             if trajectory == .lowUsage && sub.monthlyCost > 5 {
-                // Projected waste
-                let projectedMonthlyWaste = sub.monthlyCost * Decimal(0.7)
-
                 insights.append(GeniusInsight(
                     type: .trajectoryWarning,
-                    title: "\(sub.name) usage declining",
-                    description: "Your usage dropped 40% over 3 months. At this rate, it will be unused in ~6 weeks.",
+                    title: "Low usage: \(sub.name)",
+                    description: "Only \(screenTimeManager.getCurrentMonthUsage(for: sub.name)) minutes used this month. Consider pausing to save \(formatCurrency(sub.monthlyCost))/mo.",
                     icon: "chart.line.downtrend.xyaxis",
                     iconColor: .red,
-                    potentialSavings: projectedMonthlyWaste,
-                    confidence: 0.82,
+                    potentialSavings: sub.monthlyCost,
+                    confidence: 0.75,
                     subscriptionId: sub.id,
                     action: .review,
                     urgency: .high
                 ))
             } else if trajectory == .growing && sub.monthlyCost > 10 {
-                // Positive reinforcement
                 insights.append(GeniusInsight(
                     type: .positive,
-                    title: "\(sub.name) value increasing",
-                    description: "Your usage is growing! This subscription is delivering more value over time.",
+                    title: "\(sub.name) getting good use",
+                    description: "Usage looks healthy this month. Keep tracking to maintain this value.",
                     icon: "chart.line.uptrend.xyaxis",
                     iconColor: .green,
                     potentialSavings: 0,
-                    confidence: 0.85,
+                    confidence: 0.70,
                     subscriptionId: sub.id,
                     action: .none,
                     urgency: .none
@@ -208,7 +205,7 @@ final class RealGeniusEngine: ObservableObject {
                     insights.append(GeniusInsight(
                         type: .waste,
                         title: "Low value: \(sub.name)",
-                        description: "\(minutes) min used but costing \(formatCurrency(sub.monthlyCost))/mo (~\(String(format: "$%.2f", costPerHour))/hr)",
+                        description: "\(minutes) min used but costing \(formatCurrency(sub.monthlyCost))/mo (~\(CurrencyManager.shared.format(Decimal(costPerHour)))/hr)",
                         icon: "exclamationmark.triangle.fill",
                         iconColor: .orange,
                         potentialSavings: sub.monthlyCost,
@@ -345,8 +342,7 @@ final class RealGeniusEngine: ObservableObject {
     // MARK: - Helpers
 
     private func formatCurrency(_ amount: Decimal) -> String {
-        let value = NSDecimalNumber(decimal: amount).doubleValue
-        return String(format: "$%.2f", value)
+        CurrencyManager.shared.format(amount)
     }
 }
 

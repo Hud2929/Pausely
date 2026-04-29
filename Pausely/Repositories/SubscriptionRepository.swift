@@ -48,7 +48,6 @@ final class SubscriptionRepository {
     
     // MARK: - Private Properties
     private let supabase = SupabaseManager.shared.client
-    private let userDefaults = UserDefaults.standard
     private let cacheKey = "cached_subscriptions"
     
     // MARK: - Initialization
@@ -270,26 +269,27 @@ final class SubscriptionRepository {
     func clear() {
         subscriptions = []
         state = .idle
-        userDefaults.removeObject(forKey: cacheKey)
+        AppSettings.shared.cachedSubscriptions = Data()
     }
-    
+
     // MARK: - Private Methods
-    
+
     private func getCurrentUserId() async throws -> UUID {
         guard let session = supabase.auth.currentSession else {
             throw RepositoryError.notAuthenticated
         }
         return session.user.id
     }
-    
+
     private func cacheSubscriptions(_ subs: [Subscription]) {
         if let encoded = try? JSONEncoder().encode(subs) {
-            userDefaults.set(encoded, forKey: cacheKey)
+            AppSettings.shared.cachedSubscriptions = encoded
         }
     }
-    
+
     private func loadFromCache() {
-        guard let data = userDefaults.data(forKey: cacheKey),
+        let data = AppSettings.shared.cachedSubscriptions
+        guard !data.isEmpty,
               let cached = try? JSONDecoder().decode([Subscription].self, from: data) else {
             return
         }

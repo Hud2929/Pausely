@@ -163,7 +163,7 @@ struct ShareableInsightCard: View {
                     .foregroundStyle(.white.opacity(0.6))
                     .textCase(.uppercase)
 
-                Text(totalMonthlySpend.formatted(.currency(code: "USD").precision(.fractionLength(0))))
+                Text(CurrencyManager.shared.format(totalMonthlySpend))
                     .font(.system(.largeTitle, design: .rounded).weight(.bold))
                     .foregroundStyle(
                         LinearGradient(
@@ -229,7 +229,7 @@ struct ShareableInsightCard: View {
                     .font(.system(.footnote, design: .rounded).weight(.medium))
                     .foregroundStyle(.white.opacity(0.6))
 
-                Text(moneySavedByPausing.formatted(.currency(code: "USD").precision(.fractionLength(0))))
+                Text(CurrencyManager.shared.format(moneySavedByPausing))
                     .font(.system(.title2, design: .rounded).weight(.bold))
                     .foregroundStyle(Color.semanticSuccess)
             }
@@ -409,7 +409,7 @@ struct ShareableInsightSheet: View {
     let efficiencyScore: Double?
 
     var body: some View {
-        NavigationView {
+        NavigationStack {
             ScrollView {
                 VStack(spacing: 24) {
                     ShareableInsightCard(

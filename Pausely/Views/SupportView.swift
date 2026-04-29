@@ -33,7 +33,7 @@ struct SupportView: View {
     }
     
     var body: some View {
-        NavigationView {
+        NavigationStack {
             ZStack {
                 AnimatedGradientBackground()
                 

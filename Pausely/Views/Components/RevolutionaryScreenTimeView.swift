@@ -549,7 +549,7 @@ struct ScreenTimeAuthorizationSheet: View {
     @State private var errorMessage = ""
     
     var body: some View {
-        NavigationView {
+        NavigationStack {
             ZStack {
                 Color.black.ignoresSafeArea()
                 
@@ -751,7 +751,7 @@ struct STInsightDetailSheet: View {
     @Environment(\.dismiss) private var dismiss
     
     var body: some View {
-        NavigationView {
+        NavigationStack {
             ZStack {
                 Color.black.ignoresSafeArea()
                 
@@ -777,12 +777,12 @@ struct STInsightDetailSheet: View {
                         }
                         
                         LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 12) {
-                            STStatBox(title: "Monthly Cost", value: "$\(insight.monthlyCost)", color: .purple)
+                            STStatBox(title: "Monthly Cost", value: CurrencyManager.shared.format(insight.monthlyCost), color: .purple)
                             VStack(spacing: 4) {
                                 STStatBox(title: "Time Used", value: ScreenTimeManager.shared.formatMinutes(insight.monthlyMinutesUsed), color: .mint)
                                 EstimateBadge(isEstimated: insight.isEstimated)
                             }
-                            STStatBox(title: "Cost/Hour", value: " $\(insight.formattedCostPerHour)", color: .orange)
+                            STStatBox(title: "Cost/Hour", value: insight.costPerHour.map { CurrencyManager.shared.format(Decimal($0)) } ?? "N/A", color: .orange)
                             STStatBox(title: "Waste Score", value: "\(insight.wasteScore)/100", color: insight.wasteLevel.color)
                         }
 

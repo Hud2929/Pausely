@@ -72,6 +72,19 @@ class RevolutionaryAuthManager: ObservableObject {
     private init() {
         isBiometricEnabled = UserDefaults.standard.bool(forKey: biometricKey)
 
+        #if DEBUG
+        // Debug bypass for simulator testing — set via:
+        // defaults write com.pausely.app.Pausely debug_auth_bypass -bool true
+        if UserDefaults.standard.bool(forKey: "debug_auth_bypass") {
+            let user = User(id: "debug-user", email: "debug@pausely.app", createdAt: Date(),
+                            firstName: "Debug", lastName: "User")
+            currentUser = user
+            isAuthenticated = true
+            state = .authenticated(user)
+            return
+        }
+        #endif
+
         // Restore session synchronously so the UI is correct on the very first frame,
         // with no flash of the login screen for returning users.
         if let uid = UserDefaults.standard.string(forKey: Self.cachedUserIdKey) {
@@ -83,13 +96,14 @@ class RevolutionaryAuthManager: ObservableObject {
             currentUser = user
             isAuthenticated = true
             state = .authenticated(user)
-            #if DEBUG
-            print("✅ [Cache] Restored session for: \(email ?? uid)")
-            #endif
+            PauselyLogger.info("Restored cached session for: \(email ?? uid)", category: "auth")
         }
 
         // Async: verify the Supabase token is still valid and refresh user data.
-        Task { await verifySession() }
+        Task { [weak self] in
+            guard let self = self else { return }
+            await verifySession()
+        }
     }
 
     // MARK: - Session Cache
@@ -155,18 +169,14 @@ class RevolutionaryAuthManager: ObservableObject {
                 self.currentUser = user
                 self.isAuthenticated = true
                 self.state = .authenticated(user)
-                #if DEBUG
-                print("✅ [Supabase] Session verified for: \(user.email ?? user.id)")
-                #endif
+                PauselyLogger.info("Session verified for: \(user.email ?? user.id)", category: "auth")
             }
             startSessionRefresh()
 
 
         } else if isAuthenticated {
             // Cache said we're logged in but Supabase disagrees — token expired.
-            #if DEBUG
-            print("⚠️ Cached session invalid — signing out")
-            #endif
+            PauselyLogger.info("Cached session invalid — signing out", category: "auth")
             clearSessionCache()
             await MainActor.run {
                 self.currentUser = nil
@@ -220,7 +230,8 @@ class RevolutionaryAuthManager: ObservableObject {
         await requestManager.setRequest(task, for: requestKey)
         
         defer {
-            Task {
+            Task { [weak self] in
+                guard let self = self else { return }
                 await requestManager.removeRequest(for: requestKey)
             }
         }
@@ -284,7 +295,7 @@ class RevolutionaryAuthManager: ObservableObject {
                     
                             
                     #if DEBUG
-                    print("✅ Sign up successful - user auto-confirmed and signed in")
+                    PauselyLogger.info("Sign up successful - user auto-confirmed and signed in", category: "auth")
                     #endif
                 } else {
                     // Stash name so it's available after email confirmation
@@ -292,7 +303,7 @@ class RevolutionaryAuthManager: ObservableObject {
                     self.saveProfile(userId: uid, firstName: firstName, lastName: lastName)
                     self.state = .emailConfirmationRequired(email)
                     #if DEBUG
-                    print("📧 Sign up successful - email confirmation required for: \(email)")
+                    PauselyLogger.info("Sign up successful - email confirmation required for: \(email)", category: "auth")
                     #endif
                 }
             }
@@ -408,7 +419,7 @@ class RevolutionaryAuthManager: ObservableObject {
     func signIn(email: String, password: String) async throws {
         await MainActor.run { state = .loading }
         #if DEBUG
-        print("🔐 Attempting sign in for: \(email)")
+        PauselyLogger.info("Attempting sign in for: \(email)", category: "auth")
         #endif
         
         do {
@@ -432,7 +443,7 @@ class RevolutionaryAuthManager: ObservableObject {
                 self.isAuthenticated = true
                 self.state = .authenticated(user)
                 #if DEBUG
-                print("✅ Sign in successful for: \(email)")
+                PauselyLogger.info("Sign in successful for: \(email)", category: "auth")
                 #endif
             }
 
@@ -441,7 +452,7 @@ class RevolutionaryAuthManager: ObservableObject {
             
         } catch let error as PauselyAuthError {
             #if DEBUG
-            print("❌ Sign in failed with AuthError: \(error.localizedDescription)")
+            PauselyLogger.error("Sign in failed with AuthError: \(error.localizedDescription)", category: "auth")
             #endif
             await MainActor.run {
                 self.state = .error(error)
@@ -465,7 +476,7 @@ class RevolutionaryAuthManager: ObservableObject {
                 }
             }
             #if DEBUG
-            print("❌ Sign in failed with error: \(authError.localizedDescription)")
+            PauselyLogger.error("Sign in failed with error: \(authError.localizedDescription)", category: "auth")
             #endif
             await MainActor.run {
                 self.state = .error(authError)
@@ -543,7 +554,7 @@ class RevolutionaryAuthManager: ObservableObject {
                 self.isAuthenticated = true
                 self.state = .authenticated(user)
                 #if DEBUG
-                print("✅ Apple Sign In successful for user: \(user.id)")
+                PauselyLogger.info("Apple Sign In successful for user: \(user.id)", category: "auth")
                 #endif
             }
 
@@ -586,8 +597,9 @@ class RevolutionaryAuthManager: ObservableObject {
     func startEmailConfirmationPolling() {
         isCheckingEmailConfirmation = true
         confirmationPollingTask?.cancel()
-        confirmationPollingTask = Task {
-            while !Task.isCancelled && isCheckingEmailConfirmation {
+        confirmationPollingTask = Task { [weak self] in
+            guard let self = self else { return }
+            while !Task.isCancelled && self.isCheckingEmailConfirmation {
                 // Check session every 3 seconds
                 try? await Task.sleep(nanoseconds: 3 * 1_000_000_000)
 

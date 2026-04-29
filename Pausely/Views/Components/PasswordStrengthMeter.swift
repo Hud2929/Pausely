@@ -57,57 +57,57 @@ struct PasswordStrengthMeter: View {
     }
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 10) {
+        VStack(alignment: .leading, spacing: 6) {
             // Progress bar
             GeometryReader { geo in
                 ZStack(alignment: .leading) {
-                    RoundedRectangle(cornerRadius: 4)
+                    RoundedRectangle(cornerRadius: 3)
                         .fill(Color.white.opacity(0.1))
-                        .frame(height: 6)
+                        .frame(height: 4)
 
-                    RoundedRectangle(cornerRadius: 4)
+                    RoundedRectangle(cornerRadius: 3)
                         .fill(strength.color)
-                        .frame(width: geo.size.width * progress, height: 6)
+                        .frame(width: geo.size.width * progress, height: 4)
                         .animation(.easeInOut(duration: 0.2), value: progress)
                 }
             }
-            .frame(height: 6)
+            .frame(height: 4)
 
             // Strength label
             HStack {
                 Text(strength.label)
-                    .font(.system(.caption, design: .rounded).weight(.semibold))
+                    .font(.system(.caption2, design: .rounded).weight(.semibold))
                     .foregroundStyle(strength.color)
 
                 Spacer()
             }
 
             // Rules checklist
-            VStack(alignment: .leading, spacing: 6) {
+            VStack(alignment: .leading, spacing: 3) {
                 RuleRow(
-                    text: "At least 8 characters",
+                    text: "8+ characters",
                     isMet: password.count >= PasswordStrength.minimumLength
                 )
                 RuleRow(
-                    text: "One uppercase letter",
+                    text: "Uppercase",
                     isMet: password.range(of: "[A-Z]", options: .regularExpression) != nil
                 )
                 RuleRow(
-                    text: "One lowercase letter",
+                    text: "Lowercase",
                     isMet: password.range(of: "[a-z]", options: .regularExpression) != nil
                 )
                 RuleRow(
-                    text: "One number",
+                    text: "Number",
                     isMet: password.range(of: "[0-9]", options: .regularExpression) != nil
                 )
             }
         }
-        .padding(12)
+        .padding(8)
         .background(
-            RoundedRectangle(cornerRadius: 12)
+            RoundedRectangle(cornerRadius: 10)
                 .fill(Color.white.opacity(0.05))
                 .overlay(
-                    RoundedRectangle(cornerRadius: 12)
+                    RoundedRectangle(cornerRadius: 10)
                         .stroke(Color.white.opacity(0.08), lineWidth: 1)
                 )
         )

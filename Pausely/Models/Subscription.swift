@@ -171,6 +171,11 @@ struct Subscription: Identifiable, Codable, Equatable {
         }
     }
     
+    var lifetimeSpend: Decimal {
+        let monthsSinceCreated = Date().timeIntervalSince(createdAt) / (30.44 * 24 * 60 * 60)
+        return monthlyCost * Decimal(monthsSinceCreated)
+    }
+
     var monthlyCost: Decimal {
         switch billingFrequency {
         case .weekly:
@@ -193,16 +198,14 @@ struct Subscription: Identifiable, Codable, Equatable {
     }
     
     var isPaused: Bool {
-        status == .paused
+        guard let pausedUntil = pausedUntil else { return false }
+        return pausedUntil > Date()
     }
 
     /// Returns the user's actual next billing date if set, otherwise nil.
     /// No heuristic guessing — we only show dates the user has explicitly entered.
     var calculatedNextBillingDate: Date? {
-        guard let manual = nextBillingDate else { return nil }
-        // Allow a 1-day grace period for "bills today" scenarios
-        let gracePeriod = Date().addingTimeInterval(-86400)
-        return manual >= gracePeriod ? manual : nil
+        nextBillingDate
     }
 
     var daysUntilRenewal: Int? {
@@ -459,16 +462,14 @@ extension Subscription {
         updatedAt = Date()
     }
     
-    /// Mark as paused (one-tap)
+    /// Set a pause reminder (one-tap). Does NOT actually pause the real subscription.
     mutating func markAsPaused(until date: Date) {
-        status = .paused
         pausedUntil = date
         updatedAt = Date()
     }
-    
-    /// Resume from pause (one-tap)
+
+    /// Clear the pause reminder (one-tap)
     mutating func resume() {
-        status = .active
         pausedUntil = nil
         updatedAt = Date()
     }

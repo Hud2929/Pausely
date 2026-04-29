@@ -11,7 +11,7 @@ struct SmartImportView: View {
     @State private var showingBulkAdd = false
     
     var body: some View {
-        NavigationView {
+        NavigationStack {
             ZStack {
                 PremiumBackground()
                 
@@ -298,7 +298,7 @@ struct CSVImportSheet: View {
     let onImport: (String) -> Void
     
     var body: some View {
-        NavigationView {
+        NavigationStack {
             ZStack {
                 Color.black.ignoresSafeArea()
                 

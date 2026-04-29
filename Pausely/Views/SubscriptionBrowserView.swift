@@ -19,6 +19,7 @@ struct SubscriptionBrowserView: View {
     @State private var justAdded: String?
     @State private var selectedEntry: CatalogEntry?
     @State private var showingTierSheet = false
+    @State private var showingCustomAdd = false
 
     // MARK: - Computed
     var filteredEntries: [CatalogEntry] {
@@ -71,6 +72,12 @@ struct SubscriptionBrowserView: View {
                         GridItem(.flexible(), spacing: 12),
                         GridItem(.flexible(), spacing: 12)
                     ], spacing: 12) {
+                        if selectedCategory == .other || filteredEntries.isEmpty {
+                            CustomSubscriptionCard {
+                                showingCustomAdd = true
+                            }
+                        }
+
                         ForEach(filteredEntries) { entry in
                             CatalogEntryCard(
                                 entry: entry,
@@ -113,6 +120,9 @@ struct SubscriptionBrowserView: View {
                     addSubscription(entry: entry, tier: tier, billingFrequency: billingFreq, isOverridden: isOverridden, userPrice: userPrice)
                 }
             }
+        }
+        .sheet(isPresented: $showingCustomAdd) {
+            LuxuryAddSubscriptionView()
         }
         .task {
             await catalogService.loadCatalog()
@@ -198,6 +208,13 @@ struct SubscriptionBrowserView: View {
         case .sports: return .indigo
         case .social: return .teal
         case .news: return .brown
+        case .phone: return .blue.opacity(0.7)
+        case .insurance: return .green.opacity(0.7)
+        case .gym: return .orange.opacity(0.8)
+        case .automotive: return .red.opacity(0.7)
+        case .home: return .purple.opacity(0.7)
+        case .pet: return .brown.opacity(0.8)
+        case .personalCare: return .pink.opacity(0.7)
         case .other: return .secondary
         }
     }
@@ -315,6 +332,13 @@ struct CatalogEntryCard: View {
         case .sports: return .indigo
         case .social: return .teal
         case .news: return .brown
+        case .phone: return .blue.opacity(0.7)
+        case .insurance: return .green.opacity(0.7)
+        case .gym: return .orange.opacity(0.8)
+        case .automotive: return .red.opacity(0.7)
+        case .home: return .purple.opacity(0.7)
+        case .pet: return .brown.opacity(0.8)
+        case .personalCare: return .pink.opacity(0.7)
         case .other: return .secondary
         }
     }
@@ -534,8 +558,80 @@ struct CatalogEntryCard: View {
     }
 }
 
+// MARK: - Custom Subscription Card
+struct CustomSubscriptionCard: View {
+    let action: () -> Void
+    @State private var isPressed = false
+
+    var body: some View {
+        Button(action: {
+            STAnimation.impactLight()
+            action()
+        }) {
+            VStack(spacing: 12) {
+                ZStack {
+                    RoundedRectangle(cornerRadius: 16, style: .continuous)
+                        .fill(
+                            LinearGradient(
+                                colors: [Color.luxuryTeal.opacity(0.3), Color.luxuryPurple.opacity(0.2)],
+                                startPoint: .topLeading,
+                                endPoint: .bottomTrailing
+                            )
+                        )
+                        .frame(height: 80)
+
+                    Image(systemName: "plus.circle.fill")
+                        .font(.system(size: 32))
+                        .foregroundStyle(Color.luxuryTeal)
+                }
+
+                VStack(spacing: 4) {
+                    Text("Custom")
+                        .font(.system(.subheadline, design: .rounded).weight(.semibold))
+                        .foregroundStyle(.white)
+
+                    Text("Add your own")
+                        .font(.system(.caption, design: .rounded).weight(.medium))
+                        .foregroundStyle(.white.opacity(0.6))
+                }
+            }
+            .padding(12)
+            .background(
+                RoundedRectangle(cornerRadius: 20, style: .continuous)
+                    .fill(.ultraThinMaterial)
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 20, style: .continuous)
+                            .stroke(Color.luxuryTeal.opacity(0.4), lineWidth: 1.5)
+                            .overlay(
+                                RoundedRectangle(cornerRadius: 20, style: .continuous)
+                                    .stroke(
+                                        LinearGradient(
+                                            colors: [Color.luxuryTeal.opacity(0.5), Color.luxuryPurple.opacity(0.3)],
+                                            startPoint: .topLeading,
+                                            endPoint: .bottomTrailing
+                                        ),
+                                        lineWidth: 1
+                                    )
+                            )
+                    )
+            )
+            .scaleEffect(isPressed ? 0.96 : 1)
+        }
+        .buttonStyle(PlainButtonStyle())
+        .simultaneousGesture(
+            DragGesture(minimumDistance: 0)
+                .onChanged { _ in
+                    withAnimation(.easeInOut(duration: 0.1)) { isPressed = true }
+                }
+                .onEnded { _ in
+                    withAnimation(.easeInOut(duration: 0.1)) { isPressed = false }
+                }
+        )
+    }
+}
+
 #Preview {
-    NavigationView {
+    NavigationStack {
         SubscriptionBrowserView()
     }
 }

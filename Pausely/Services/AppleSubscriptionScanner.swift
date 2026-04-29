@@ -80,6 +80,18 @@ final class AppleSubscriptionScanner: ObservableObject {
         catalogService.entry(for: bundleId)
     }
 
+    /// Find Apple subscriptions that the user pays for but hasn't tracked in Pausely
+    func findForgottenSubscriptions(tracked: [Subscription]) async -> [AppleDetectedSubscription] {
+        await scanSubscriptions()
+        let trackedBundleIds = Set(tracked.compactMap { $0.bundleIdentifier })
+        let trackedNames = Set(tracked.map { $0.name.lowercased() })
+        return detectedSubscriptions.filter { detected in
+            let notTrackedByBundle = trackedBundleIds.contains(detected.bundleId) == false
+            let notTrackedByName = trackedNames.contains(detected.name.lowercased()) == false
+            return notTrackedByBundle && notTrackedByName && detected.status == .active
+        }
+    }
+
     // MARK: - Private Methods
 
     private func processEntitlement(_ result: VerificationResult<Transaction>) async throws -> AppleDetectedSubscription? {

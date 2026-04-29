@@ -7,7 +7,7 @@ struct ThemeSettingsView: View {
     @Environment(\.colorScheme) var systemColorScheme
     
     var body: some View {
-        NavigationView {
+        NavigationStack {
             ScrollView {
                 VStack(spacing: 24) {
                     // Header

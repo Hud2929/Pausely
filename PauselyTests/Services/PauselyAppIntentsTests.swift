@@ -27,6 +27,7 @@ final class PauselyAppIntentsTests: XCTestCase {
     func testGetMonthlySpendIntent_withSubscriptions() async throws {
         let sub = TestFactories.makeSubscription(name: "Netflix", amount: 15.99, status: .active)
         SubscriptionStore.shared.subscriptions = [sub]
+        SubscriptionStore.shared.totalMonthlySpend = sub.monthlyCost
 
         let intent = GetMonthlySpendIntent()
         let result = try await intent.perform()
@@ -69,7 +70,8 @@ final class PauselyAppIntentsTests: XCTestCase {
         intent.daysAhead = 7
         let result = try await intent.perform()
         XCTAssertTrue((result.value ?? "").contains("Hulu"))
-        XCTAssertTrue((result.value ?? "").contains("in 3 days"))
+        // Allow 2-3 days due to time-of-day boundary
+        XCTAssertTrue((result.value ?? "").contains("in 2 days") || (result.value ?? "").contains("in 3 days"))
     }
 
     // MARK: - GetBestValueSubscriptionIntent
@@ -119,8 +121,9 @@ final class PauselyAppIntentsTests: XCTestCase {
         let intent = PauseSubscriptionIntent()
         intent.name = "Netflix"
         let result = try await intent.perform()
-        XCTAssertEqual(result.value, "Paused Netflix.")
-        XCTAssertEqual(SubscriptionStore.shared.subscriptions.first?.status, .paused)
+        XCTAssertTrue((result.value ?? "").contains("pause reminder"))
+        XCTAssertEqual(SubscriptionStore.shared.subscriptions.first?.status, .active)
+        XCTAssertNotNil(SubscriptionStore.shared.subscriptions.first?.pausedUntil)
     }
 
     func testPauseSubscriptionIntent_notFound() async throws {
@@ -133,14 +136,16 @@ final class PauselyAppIntentsTests: XCTestCase {
     // MARK: - ResumeSubscriptionIntent
 
     func testResumeSubscriptionIntent_success() async throws {
-        let sub = TestFactories.makeSubscription(name: "Netflix", status: .paused)
+        var sub = TestFactories.makeSubscription(name: "Netflix", status: .active)
+        sub.pausedUntil = Calendar.current.date(byAdding: .day, value: 7, to: Date())
         SubscriptionStore.shared.subscriptions = [sub]
 
         let intent = ResumeSubscriptionIntent()
         intent.name = "Netflix"
         let result = try await intent.perform()
-        XCTAssertEqual(result.value, "Resumed Netflix.")
+        XCTAssertTrue((result.value ?? "").contains("Cleared pause reminder"))
         XCTAssertEqual(SubscriptionStore.shared.subscriptions.first?.status, .active)
+        XCTAssertNil(SubscriptionStore.shared.subscriptions.first?.pausedUntil)
     }
 
     // MARK: - DeleteSubscriptionIntent

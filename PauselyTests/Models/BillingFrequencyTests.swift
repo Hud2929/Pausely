@@ -110,14 +110,17 @@ final class SubscriptionStatusTests: XCTestCase {
     func testActiveCanTransitionToPaused() {
         var sub = TestFactories.makeSubscription(status: .active)
         sub.markAsPaused(until: TestDates.addDays(30, to: Date()))
-        XCTAssertEqual(sub.status, .paused)
+        XCTAssertEqual(sub.status, .active)
+        XCTAssertTrue(sub.isPaused)
+        XCTAssertNotNil(sub.pausedUntil)
     }
 
     func testPausedCanTransitionToActive() {
-        var sub = TestFactories.makeSubscription(status: .paused)
+        var sub = TestFactories.makeSubscription(status: .active)
         sub.pausedUntil = TestDates.addDays(30, to: Date())
         sub.resume()
         XCTAssertEqual(sub.status, .active)
+        XCTAssertFalse(sub.isPaused)
         XCTAssertNil(sub.pausedUntil)
     }
 
@@ -135,7 +138,8 @@ final class SubscriptionStatusTests: XCTestCase {
 
     func testExpiredCannotBePaused() {
         var sub = TestFactories.makeSubscription(status: .expired)
-        sub.markAsPaused(until: Date())
-        XCTAssertEqual(sub.status, .paused)
+        sub.markAsPaused(until: TestDates.addDays(7, to: Date()))
+        XCTAssertEqual(sub.status, .expired)
+        XCTAssertTrue(sub.isPaused)
     }
 }

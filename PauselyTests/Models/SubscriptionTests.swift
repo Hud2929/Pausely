@@ -79,9 +79,10 @@ final class SubscriptionTests: XCTestCase {
     }
 
     func testIsPaused() {
-        let paused = TestFactories.makeSubscription(status: .paused)
+        var paused = TestFactories.makeSubscription(status: .active)
+        paused.pausedUntil = Calendar.current.date(byAdding: .day, value: 7, to: Date())
         XCTAssertTrue(paused.isPaused)
-        XCTAssertFalse(paused.isActive)
+        XCTAssertTrue(paused.isActive)
     }
 
     // MARK: - Days Until Renewal
@@ -205,15 +206,17 @@ final class SubscriptionTests: XCTestCase {
         var sub = TestFactories.makeSubscription(status: .active)
         let pauseDate = TestDates.addDays(30, to: Date())
         sub.markAsPaused(until: pauseDate)
-        XCTAssertEqual(sub.status, .paused)
+        XCTAssertEqual(sub.status, .active)
+        XCTAssertTrue(sub.isPaused)
         XCTAssertEqual(sub.pausedUntil, pauseDate)
     }
 
     func testResume() {
-        var sub = TestFactories.makeSubscription(status: .paused)
+        var sub = TestFactories.makeSubscription(status: .active)
         sub.pausedUntil = TestDates.addDays(30, to: Date())
         sub.resume()
         XCTAssertEqual(sub.status, .active)
+        XCTAssertFalse(sub.isPaused)
         XCTAssertNil(sub.pausedUntil)
     }
 

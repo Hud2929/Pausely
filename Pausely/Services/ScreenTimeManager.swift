@@ -76,7 +76,7 @@ final class ScreenTimeManager: ObservableObject {
             switch self {
             case .notDetermined: return "Enable Screen Time to track your subscription usage automatically."
             case .denied:        return "Screen Time access was denied. Enable it in Settings to see your usage."
-            case .authorized:    return "Screen Time is active! We're tracking your app usage to help you save money."
+            case .authorized:    return "Usage is estimated from session counts. Tap a subscription to enter exact minutes for accurate cost-per-use."
             case .restricted:    return "Screen Time is restricted by parental controls."
             }
         }
@@ -119,13 +119,12 @@ final class ScreenTimeManager: ObservableObject {
         refreshTimer?.invalidate()
         refreshTimer = Timer.scheduledTimer(withTimeInterval: 1800, repeats: true) { [weak self] _ in
             guard let self = self else { return }
-            Task { @MainActor in
+            Task { @MainActor [weak self] in
+                guard let self = self else { return }
                 guard self.isAuthorized else { return }
                 // Only refresh if cache is stale
                 guard self.shouldRefreshCache() else { return }
-                #if DEBUG
-                print("🔄 Auto-refreshing Screen Time data...")
-                #endif
+                PauselyLogger.debug("Auto-refreshing Screen Time data...", category: "ScreenTime")
                 await self.syncUsageData()
             }
         }
@@ -147,8 +146,9 @@ final class ScreenTimeManager: ObservableObject {
         }
         
         // Load compressed cached usage data
-        Task { @MainActor in
-            loadCompressedCache()
+        Task { @MainActor [weak self] in
+            guard let self = self else { return }
+            self.loadCompressedCache()
         }
     }
     
@@ -259,9 +259,7 @@ final class ScreenTimeManager: ObservableObject {
             authorizationStatus = .authorized
             isAuthorized = true
             UserDefaults.standard.set(true, forKey: userDefaultsKey)
-            #if DEBUG
-            print("✅ Screen Time authorization granted")
-            #endif
+            PauselyLogger.info("Screen Time authorization granted", category: "ScreenTime")
             
             // Immediately sync data after authorization
             await syncUsageData()
@@ -270,9 +268,7 @@ final class ScreenTimeManager: ObservableObject {
             authorizationStatus = .denied
             syncError = error.localizedDescription
             isAuthorized = false
-            #if DEBUG
-            print("❌ Screen Time authorization denied: \(error)")
-            #endif
+            PauselyLogger.error("Screen Time authorization denied: \(error)", category: "ScreenTime")
             throw error
         }
     }
@@ -294,12 +290,10 @@ final class ScreenTimeManager: ObservableObject {
             isLoading = false
         }
         
-        #if DEBUG
-        print("📊 Fetching Screen Time data from \(startDate) to \(endDate)")
-        #endif
-        
+        PauselyLogger.debug("Fetching Screen Time data from \(startDate) to \(endDate)", category: "ScreenTime")
+
         var allUsage: [AppUsageData] = []
-        
+
         // Get usage for all known subscription apps
         for app in SubscriptionCatalogService.shared.catalog {
             if let usage = await fetchUsageForApp(app, start: startDate, end: endDate) {
@@ -307,17 +301,15 @@ final class ScreenTimeManager: ObservableObject {
                 usageCache[app.bundleId] = CacheEntry(data: usage, timestamp: Date())
             }
         }
-        
+
         // Cache the results
         if let encoded = try? JSONEncoder().encode(usageData) {
             UserDefaults.standard.set(encoded, forKey: usageCacheKey)
         }
         lastSyncDate = Date()
         UserDefaults.standard.set(Date(), forKey: lastSyncKey)
-        
-        #if DEBUG
-        print("✅ Fetched \(allUsage.count) app usage records")
-        #endif
+
+        PauselyLogger.info("Fetched \(allUsage.count) app usage records", category: "ScreenTime")
         return allUsage
     }
     
@@ -408,38 +400,28 @@ final class ScreenTimeManager: ObservableObject {
     /// Automatically track all subscriptions - REVOLUTIONARY FEATURE
     func autoTrackSubscriptions(_ subscriptions: [Subscription]) async {
         guard authorizationStatus == .authorized else {
-            #if DEBUG
-            print("⚠️ Cannot auto-track: Screen Time not authorized")
-            #endif
+            PauselyLogger.debug("Cannot auto-track: Screen Time not authorized", category: "ScreenTime")
             return
         }
-        
-        #if DEBUG
-        print("🔄 Auto-tracking \(subscriptions.count) subscriptions...")
-        #endif
-        
+
+        PauselyLogger.debug("Auto-tracking \(subscriptions.count) subscriptions...", category: "ScreenTime")
+
         // Fetch latest data for all subscriptions
         let _ = try? await fetchDeviceActivity()
-        
+
         // Generate insights for each subscription automatically
         for subscription in subscriptions {
             let insight = generateInsight(for: subscription)
-            
+
             // Log the tracking
             if insight.monthlyMinutesUsed > 0 {
-                #if DEBUG
-                print("✅ Tracked: \(subscription.name) - \(formatMinutes(insight.monthlyMinutesUsed)) this month")
-                #endif
+                PauselyLogger.debug("Tracked: \(subscription.name) - \(formatMinutes(insight.monthlyMinutesUsed)) this month", category: "ScreenTime")
             } else {
-                #if DEBUG
-                print("⚠️ No usage data for: \(subscription.name)")
-                #endif
+                PauselyLogger.debug("No usage data for: \(subscription.name)", category: "ScreenTime")
             }
         }
-        
-        #if DEBUG
-        print("✅ Auto-tracking complete")
-        #endif
+
+        PauselyLogger.debug("Auto-tracking complete", category: "ScreenTime")
     }
     
     /// Check if a subscription can be automatically tracked
