@@ -146,12 +146,5 @@
     <string>$(SUPABASE_ANON_KEY)</string>
     <key>SUPABASE_SERVICE_ROLE_KEY</key>
     <string>$(SUPABASE_SERVICE_ROLE_KEY)</string>
-    <key>LEMON_SQUEEZY_API_KEY</key>
-    <string>$(LEMON_SQUEEZY_API_KEY)</string>
-    <key>LEMON_SQUEEZY_STORE_ID</key>
-    <string>$(LEMON_SQUEEZY_STORE_ID)</string>
-    <key>LEMON_SQUEEZY_WEBHOOK_SECRET</key>
-    <string>$(LEMON_SQUEEZY_WEBHOOK_SECRET)</string>
-
 </dict>
 </plist>

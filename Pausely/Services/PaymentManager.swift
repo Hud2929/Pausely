@@ -325,8 +325,16 @@ final class PaymentManager: ObservableObject {
     
     // MARK: - Initialization
     private init() {
+        #if DEBUG
+        if debugPremiumOverride {
+            self.currentTier = .pro
+        } else {
+            self.currentTier = AppSettings.shared.currentTier
+        }
+        #else
         // 1. Restore persisted tier first (survives app restarts)
         self.currentTier = AppSettings.shared.currentTier
+        #endif
 
         Task {
             await loadProducts()
@@ -397,7 +405,7 @@ final class PaymentManager: ObservableObject {
         }
 
         // Only override persisted tier if StoreKit has an active entitlement.
-        // If StoreKit is empty (e.g. referral/LemonSqueezy Pro), keep the persisted tier.
+        // If StoreKit is empty (e.g. referral Pro), keep the persisted tier.
         if hasStoreKitEntitlement {
             currentTier = storeKitTier
         }
@@ -424,11 +432,11 @@ final class PaymentManager: ObservableObject {
     
     /// Check if user can add more subscriptions
     func canAddSubscription(currentCount: Int) -> Bool {
-        currentCount < currentTier.subscriptionLimit
+        isPremium || currentCount < currentTier.subscriptionLimit
     }
-    
+
     func hasReachedSubscriptionLimit(currentCount: Int) -> Bool {
-        currentTier == .free && currentCount >= Self.freeTierLimit
+        !isPremium && currentTier == .free && currentCount >= Self.freeTierLimit
     }
     
     /// Check if user can use bank sync (optional feature)

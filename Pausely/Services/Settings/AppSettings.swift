@@ -101,9 +101,6 @@ final class AppSettings: ObservableObject {
     @AppSetting("premium_source", defaultValue: "")
     var premiumSource: String
 
-    @AppSetting("payment_provider", defaultValue: "storekit")
-    var paymentProvider: String
-
     @AppSetting("last_sync_date", defaultValue: Date.distantPast)
     var lastSyncDate: Date
 
