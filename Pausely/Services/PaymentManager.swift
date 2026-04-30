@@ -303,25 +303,40 @@ final class PaymentManager: ObservableObject {
         "com.pausely.premium.annual"
     ]
     
+    // MARK: - Test User Access (Permanent)
+    private var testUserEmails: [String] {
+        ["hudwkim@gmail.com"]
+    }
+
+    private var isTestUser: Bool {
+        testUserEmails.contains(RevolutionaryAuthManager.shared.currentUser?.email ?? "")
+    }
+
+    /// The effective tier including permanent test user overrides.
+    /// Writes still go to `currentTier` so StoreKit and purchase flows work normally.
+    private var resolvedTier: SubscriptionTier {
+        isTestUser ? .pro : currentTier
+    }
+
     // MARK: - Backward Compatibility Properties
     var isPremium: Bool {
         get {
             #if DEBUG
             if debugPremiumOverride { return true }
             #endif
-            return currentTier > .free
+            return resolvedTier > .free
         }
         set { /* No-op - tier is managed by StoreKit */ }
     }
     var isPro: Bool { isPremium }
     var canPauseSubscriptions: Bool { isPremium }
-    
+
     /// Legacy property - free tier is now 2 subs
     static let freeTierLimit: Int = 2
     var freeTierLimit: Int { Self.freeTierLimit }
-    
+
     /// Can pause subscriptions
-    var canPause: Bool { currentTier > .free }
+    var canPause: Bool { resolvedTier > .free }
     
     // MARK: - Initialization
     private init() {
@@ -340,6 +355,21 @@ final class PaymentManager: ObservableObject {
             await loadProducts()
             // 2. Verify against StoreKit (may downgrade if subscription expired)
             await updateCurrentEntitlements()
+        }
+
+        // Poll for test user sign-in/sign-out so Pro status updates dynamically
+        Task { [weak self] in
+            guard let self = self else { return }
+            var lastEmail: String? = RevolutionaryAuthManager.shared.currentUser?.email
+            while !Task.isCancelled {
+                try? await Task.sleep(nanoseconds: 1 * 1_000_000_000)
+                if Task.isCancelled { break }
+                let currentEmail = RevolutionaryAuthManager.shared.currentUser?.email
+                if currentEmail != lastEmail {
+                    lastEmail = currentEmail
+                    self.objectWillChange.send()
+                }
+            }
         }
     }
     
@@ -432,46 +462,46 @@ final class PaymentManager: ObservableObject {
     
     /// Check if user can add more subscriptions
     func canAddSubscription(currentCount: Int) -> Bool {
-        isPremium || currentCount < currentTier.subscriptionLimit
+        isPremium || currentCount < resolvedTier.subscriptionLimit
     }
 
     func hasReachedSubscriptionLimit(currentCount: Int) -> Bool {
-        !isPremium && currentTier == .free && currentCount >= Self.freeTierLimit
+        !isPremium && resolvedTier == .free && currentCount >= Self.freeTierLimit
     }
-    
+
     /// Check if user can use bank sync (optional feature)
     var canUseBankSync: Bool {
-        currentTier.hasBankSync
+        resolvedTier.hasBankSync
     }
-    
+
     /// Check if user can connect bank accounts
     func canConnectBankAccount(currentCount: Int) -> Bool {
-        currentCount < currentTier.maxBankAccounts
+        currentCount < resolvedTier.maxBankAccounts
     }
-    
+
     /// Check if cancellation assist is available
     var canUseCancellationAssist: Bool {
-        currentTier.hasCancellationAssist
+        resolvedTier.hasCancellationAssist
     }
-    
+
     /// Check if waste score is available
     var canUseWasteScore: Bool {
-        currentTier.hasWasteScore
+        resolvedTier.hasWasteScore
     }
-    
+
     /// Check if analytics are available
     var canUseAnalytics: Bool {
-        currentTier.hasAnalytics
+        resolvedTier.hasAnalytics
     }
-    
+
     /// Check if export is available
     var canUseExport: Bool {
-        currentTier.hasExport
+        resolvedTier.hasExport
     }
-    
+
     /// Check if smart reminders available
     var canUseSmartReminders: Bool {
-        currentTier.hasSmartReminders
+        resolvedTier.hasSmartReminders
     }
     
     // MARK: - Backward Compatibility Methods
@@ -490,6 +520,6 @@ final class PaymentManager: ObservableObject {
     
     /// Check if export is available
     var canUseExportFeature: Bool {
-        currentTier.hasExport
+        resolvedTier.hasExport
     }
 }

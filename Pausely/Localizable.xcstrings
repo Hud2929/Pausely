@@ -199,6 +199,16 @@
         }
       }
     },
+    "%@, %@, %@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%1$@, %2$@, %3$@"
+          }
+        }
+      }
+    },
     "%@, %@, value %@" : {
       "localizations" : {
         "en" : {
@@ -215,16 +225,6 @@
           "stringUnit" : {
             "state" : "new",
             "value" : "%1$@, paused for %2$lld more days, saving %3$@ per month"
-          }
-        }
-      }
-    },
-    "%@, renews in %lld days, %@" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "new",
-            "value" : "%1$@, renews in %2$lld days, %3$@"
           }
         }
       }
@@ -1093,6 +1093,9 @@
         }
       }
     },
+    "Add subscriptions first, then tap the button above to run your analysis." : {
+
+    },
     "Add subscriptions to see your category breakdown" : {
 
     },
@@ -1357,6 +1360,9 @@
           }
         }
       }
+    },
+    "Analysis Failed" : {
+
     },
     "Analytics" : {
       "localizations" : {
@@ -5451,6 +5457,9 @@
     "No data yet" : {
 
     },
+    "No date set" : {
+
+    },
     "No more subscriptions to add" : {
 
     },
@@ -6815,6 +6824,9 @@
     "Reactivate your subscription" : {
 
     },
+    "Ready to Analyze" : {
+
+    },
     "Real analysis of your subscription health" : {
 
     },
@@ -6964,9 +6976,6 @@
           }
         }
       }
-    },
-    "Renews in %@" : {
-
     },
     "Request Submitted" : {
 
@@ -8678,6 +8687,9 @@
     "Tap the + button to add Netflix, Spotify, or any service you pay for." : {
 
     },
+    "Tap the button above to discover savings opportunities hidden in your subscriptions." : {
+
+    },
     "Tap to deselect all" : {
 
     },
@@ -8960,9 +8972,6 @@
       }
     },
     "This will permanently remove %@ from your subscriptions." : {
-
-    },
-    "Today" : {
 
     },
     "Top Usage" : {
