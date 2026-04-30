@@ -7,16 +7,25 @@
 
 import SwiftUI
 
+// MARK: - Analysis State
+
+enum AnalysisState {
+    case idle
+    case analyzing
+    case results(GeniusReport)
+    case noInsights
+    case error(String)
+}
+
 // MARK: - Revolutionary Genius View
 
 struct RevolutionaryGeniusView: View {
     @ObservedObject private var engine = RealGeniusEngine.shared
     @ObservedObject private var subscriptionStore = SubscriptionStore.shared
     @ObservedObject private var paymentManager = PaymentManager.shared
-    @State private var currentReport: GeniusReport?
+    @State private var analysisState: AnalysisState = .idle
     @State private var showingPaywall = false
     @State private var appeared = false
-    @State private var hasAttemptedAnalysis = false
 
     var body: some View {
         ZStack {
@@ -35,14 +44,21 @@ struct RevolutionaryGeniusView: View {
                         .padding(.top, 24)
 
                     // Results
-                    if let report = currentReport {
+                    switch analysisState {
+                    case .idle:
+                        idleState
+                    case .analyzing:
+                        analyzingState
+                    case .results(let report):
                         if report.insights.isEmpty {
                             noInsightsState
                         } else {
                             resultsSection(report: report)
                         }
-                    } else if hasAttemptedAnalysis && !engine.isAnalyzing {
+                    case .noInsights:
                         noInsightsState
+                    case .error(let message):
+                        errorState(message: message)
                     }
 
                     Spacer(minLength: 100)
@@ -61,16 +77,13 @@ struct RevolutionaryGeniusView: View {
         .sheet(isPresented: $showingPaywall) {
             StoreKitUpgradeView(currentSubscriptionCount: subscriptionStore.subscriptions.count)
         }
-        .task {
-            if paymentManager.isPremium {
-                hasAttemptedAnalysis = true
+        .task(id: subscriptionStore.subscriptions.count) {
+            // Auto-run only once: when Pro user first opens Genius with subscriptions
+            // and no prior analysis exists. The button remains the primary control.
+            guard paymentManager.isPremium else { return }
+            guard !subscriptionStore.subscriptions.isEmpty else { return }
+            if case .idle = analysisState {
                 await runAnalysis()
-            }
-        }
-        .onChange(of: paymentManager.isPremium) { _, isPremium in
-            if isPremium && currentReport == nil && !engine.isAnalyzing {
-                hasAttemptedAnalysis = true
-                Task { await runAnalysis() }
             }
         }
         .onAppear {
@@ -159,14 +172,13 @@ struct RevolutionaryGeniusView: View {
     private var analysisButton: some View {
         Button {
             if paymentManager.isPremium {
-                hasAttemptedAnalysis = true
                 Task { await runAnalysis() }
             } else {
                 showingPaywall = true
             }
         } label: {
             HStack(spacing: 12) {
-                if engine.isAnalyzing {
+                if case .analyzing = analysisState {
                     ProgressView()
                         .progressViewStyle(CircularProgressViewStyle(tint: .white))
                 } else {
@@ -189,15 +201,79 @@ struct RevolutionaryGeniusView: View {
             )
             .cornerRadius(16)
         }
-        .disabled(engine.isAnalyzing)
-        .accessibilityHint(engine.isAnalyzing ? "Please wait, analysis in progress" : "")
+        .disabled(isAnalyzing)
+        .accessibilityHint(isAnalyzing ? "Please wait, analysis in progress" : "")
+    }
+
+    private var isAnalyzing: Bool {
+        if case .analyzing = analysisState { return true }
+        return false
     }
 
     private var buttonLabel: String {
-        if engine.isAnalyzing {
+        if case .analyzing = analysisState {
             return "Analyzing..."
         }
         return paymentManager.isPremium ? "Run Real Analysis" : "Unlock Pro to Analyze"
+    }
+
+    // MARK: - Idle State
+
+    private var idleState: some View {
+        VStack(spacing: 16) {
+            ZStack {
+                Circle()
+                    .fill(Color.purple.opacity(0.15))
+                    .frame(width: 64, height: 64)
+
+                Image(systemName: "sparkles")
+                    .font(.title2.weight(.semibold))
+                    .foregroundStyle(Color.purple)
+            }
+
+            VStack(spacing: 6) {
+                Text("Ready to Analyze")
+                    .font(.system(.headline, design: .rounded).weight(.semibold))
+                    .foregroundStyle(.white)
+
+                Text(subscriptionStore.subscriptions.isEmpty
+                     ? "Add subscriptions first, then tap the button above to run your analysis."
+                     : "Tap the button above to discover savings opportunities hidden in your subscriptions.")
+                    .font(.subheadline)
+                    .foregroundStyle(.gray)
+                    .multilineTextAlignment(.center)
+            }
+        }
+        .padding(24)
+        .frame(maxWidth: .infinity)
+        .background(
+            RoundedRectangle(cornerRadius: 20)
+                .fill(Color.white.opacity(0.05))
+                .overlay(
+                    RoundedRectangle(cornerRadius: 20)
+                        .stroke(Color.purple.opacity(0.2), lineWidth: 1)
+                )
+        )
+        .padding(.horizontal, 20)
+        .padding(.top, 24)
+    }
+
+    // MARK: - Analyzing State
+
+    private var analyzingState: some View {
+        VStack(spacing: 16) {
+            ProgressView()
+                .progressViewStyle(CircularProgressViewStyle(tint: .purple))
+                .scaleEffect(1.5)
+
+            Text("Analyzing your subscriptions...")
+                .font(.subheadline)
+                .foregroundStyle(.gray)
+        }
+        .padding(24)
+        .frame(maxWidth: .infinity)
+        .padding(.horizontal, 20)
+        .padding(.top, 24)
     }
 
     // MARK: - No Insights State
@@ -233,6 +309,45 @@ struct RevolutionaryGeniusView: View {
                 .overlay(
                     RoundedRectangle(cornerRadius: 20)
                         .stroke(Color.purple.opacity(0.2), lineWidth: 1)
+                )
+        )
+        .padding(.horizontal, 20)
+        .padding(.top, 24)
+    }
+
+    // MARK: - Error State
+
+    private func errorState(message: String) -> some View {
+        VStack(spacing: 16) {
+            ZStack {
+                Circle()
+                    .fill(Color.red.opacity(0.15))
+                    .frame(width: 64, height: 64)
+
+                Image(systemName: "exclamationmark.triangle.fill")
+                    .font(.title2.weight(.semibold))
+                    .foregroundStyle(Color.red)
+            }
+
+            VStack(spacing: 6) {
+                Text("Analysis Failed")
+                    .font(.system(.headline, design: .rounded).weight(.semibold))
+                    .foregroundStyle(.white)
+
+                Text(message)
+                    .font(.subheadline)
+                    .foregroundStyle(.gray)
+                    .multilineTextAlignment(.center)
+            }
+        }
+        .padding(24)
+        .frame(maxWidth: .infinity)
+        .background(
+            RoundedRectangle(cornerRadius: 20)
+                .fill(Color.white.opacity(0.05))
+                .overlay(
+                    RoundedRectangle(cornerRadius: 20)
+                        .stroke(Color.red.opacity(0.2), lineWidth: 1)
                 )
         )
         .padding(.horizontal, 20)
@@ -282,8 +397,28 @@ struct RevolutionaryGeniusView: View {
     }
 
     private func runAnalysis() async {
+        analysisState = .analyzing
+
         let subs = subscriptionStore.subscriptions
-        currentReport = await engine.analyze(subscriptions: subs)
+        guard !subs.isEmpty else {
+            analysisState = .noInsights
+            return
+        }
+
+        do {
+            let report = try await engine.analyze(subscriptions: subs)
+
+            // Minimum loading duration so the user perceives the action
+            try await Task.sleep(for: .milliseconds(500))
+
+            if report.insights.isEmpty {
+                analysisState = .noInsights
+            } else {
+                analysisState = .results(report)
+            }
+        } catch {
+            analysisState = .error(error.localizedDescription)
+        }
     }
 }
 

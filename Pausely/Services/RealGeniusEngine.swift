@@ -30,8 +30,23 @@ final class RealGeniusEngine: ObservableObject {
 
     // MARK: - Main Analysis
 
+    enum GeniusError: Error, LocalizedError {
+        case noSubscriptions
+
+        var errorDescription: String? {
+            switch self {
+            case .noSubscriptions:
+                return "No subscriptions to analyze."
+            }
+        }
+    }
+
     /// Run full analysis on subscriptions
-    func analyze(subscriptions: [Subscription]) async -> GeniusReport {
+    func analyze(subscriptions: [Subscription]) async throws -> GeniusReport {
+        guard !subscriptions.isEmpty else {
+            throw GeniusError.noSubscriptions
+        }
+
         isAnalyzing = true
         defer {
             isAnalyzing = false
@@ -199,7 +214,7 @@ final class RealGeniusEngine: ObservableObject {
                 ))
             }
             // Very low usage with high cost
-            else if minutes < 60 && sub.monthlyCost > 5 {
+            else if minutes > 0 && minutes < 60 && sub.monthlyCost > 5 {
                 let costPerHour = NSDecimalNumber(decimal: sub.monthlyCost / Decimal(minutes) * 60).doubleValue
                 if costPerHour > 5 {
                     insights.append(GeniusInsight(
