@@ -61,6 +61,14 @@ enum SubscriptionCategory: String, Codable, CaseIterable, Identifiable {
     case home
     case pet
     case personalCare
+    case aiTools
+    case gaming
+    case developerTools
+    case creator
+    case travel
+    case dating
+    case kids
+    case security
     case other
 
     var id: String { rawValue }
@@ -87,6 +95,14 @@ enum SubscriptionCategory: String, Codable, CaseIterable, Identifiable {
         case .home: return "Home & Security"
         case .pet: return "Pet"
         case .personalCare: return "Personal Care"
+        case .aiTools: return "AI & Creativity"
+        case .gaming: return "Gaming"
+        case .developerTools: return "Developer Tools"
+        case .creator: return "Creator Economy"
+        case .travel: return "Travel"
+        case .dating: return "Dating"
+        case .kids: return "Kids & Family"
+        case .security: return "Security"
         case .other: return "Other"
         }
     }
@@ -113,6 +129,14 @@ enum SubscriptionCategory: String, Codable, CaseIterable, Identifiable {
         case .home: return "house"
         case .pet: return "pawprint"
         case .personalCare: return "sparkles"
+        case .aiTools: return "sparkles.square.fill.on.square"
+        case .gaming: return "gamecontroller"
+        case .developerTools: return "chevron.left.forwardslash.chevron.right"
+        case .creator: return "pencil.circle"
+        case .travel: return "airplane"
+        case .dating: return "heart"
+        case .kids: return "figure.and.child.holdinghands"
+        case .security: return "lock.shield"
         case .other: return "square.grid.2x2"
         }
     }

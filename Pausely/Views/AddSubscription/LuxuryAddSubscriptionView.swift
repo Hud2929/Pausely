@@ -155,7 +155,13 @@ struct LuxuryAddSubscriptionView: View {
             return
         }
         HapticStyle.success.trigger()
-        let newSub = Subscription(name: name, price: price, category: category.rawValue, billingFrequency: frequency)
+        let newSub = Subscription(
+            name: name,
+            category: category.rawValue,
+            amount: Decimal(price),
+            currency: currencyManager.selectedCurrency,
+            billingFrequency: frequency
+        )
         Task {
             do {
                 _ = try await store.addSubscription(newSub)

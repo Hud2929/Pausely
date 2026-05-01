@@ -4,6 +4,7 @@ struct ArtisticAddSubscriptionView: View {
     @Environment(\.dismiss) private var dismiss
     @ObservedObject private var store = SubscriptionStore.shared
     @ObservedObject private var paymentManager = PaymentManager.shared
+    @ObservedObject private var currencyManager = CurrencyManager.shared
 
     @State private var name = ""
     @State private var amount = ""
@@ -134,7 +135,7 @@ struct ArtisticAddSubscriptionView: View {
                 name: name,
                 category: selectedCategory.rawValue,
                 amount: amountValue,
-                currency: "USD",
+                currency: currencyManager.selectedCurrency,
                 billingFrequency: selectedFrequency,
                 nextBillingDate: nextRenewalDate
             )

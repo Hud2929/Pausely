@@ -141,6 +141,14 @@ struct CategorySpendingBarRow: View {
         case .home: return .purple.opacity(0.7)
         case .pet: return .brown.opacity(0.8)
         case .personalCare: return .pink.opacity(0.7)
+        case .aiTools: return .purple
+        case .gaming: return .indigo
+        case .developerTools: return .blue.opacity(0.8)
+        case .creator: return .orange.opacity(0.9)
+        case .travel: return .cyan.opacity(0.8)
+        case .dating: return .red.opacity(0.8)
+        case .kids: return .yellow.opacity(0.8)
+        case .security: return .green.opacity(0.9)
         case .other: return .secondary
         }
     }

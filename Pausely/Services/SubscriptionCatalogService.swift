@@ -37,7 +37,22 @@ final class SubscriptionCatalogService: ObservableObject {
     private let cacheDateKey = "subscription_catalog_date"
     private let currencyManager = CurrencyManager.shared
 
+    // MARK: - Dictionary Indexes (O(1) lookups for 500+ entries)
+    private var entryByBundleId: [String: CatalogEntry] = [:]
+    private var entryByName: [String: CatalogEntry] = [:]
+
     private init() {}
+
+    /// Set catalog and rebuild lookup indexes
+    private func setCatalog(_ entries: [CatalogEntry]) {
+        catalog = entries
+        rebuildIndexes()
+    }
+
+    private func rebuildIndexes() {
+        entryByBundleId = Dictionary(uniqueKeysWithValues: catalog.map { ($0.bundleId, $0) })
+        entryByName = Dictionary(uniqueKeysWithValues: catalog.map { ($0.name.lowercased(), $0) })
+    }
 
     // MARK: - Subscriptions (for tracking compatibility)
 
@@ -46,14 +61,14 @@ final class SubscriptionCatalogService: ObservableObject {
         catalog.map { CatalogSubscription(from: $0) }
     }
 
-    /// Find bundle ID for a subscription name
+    /// Find bundle ID for a subscription name (O(1) exact, O(n) partial fallback)
     func findBundleId(for name: String) -> String? {
         let lowercased = name.lowercased()
-        // Try exact match first
-        if let exact = catalog.first(where: { $0.name.lowercased() == lowercased }) {
+        // Try exact match first (O(1))
+        if let exact = entryByName[lowercased] {
             return exact.bundleId
         }
-        // Try partial match
+        // Try partial match (O(n) fallback)
         if let partial = catalog.first(where: { $0.name.lowercased().contains(lowercased) }) {
             return partial.bundleId
         }
@@ -78,7 +93,7 @@ final class SubscriptionCatalogService: ObservableObject {
 
         // 1. Try remote Teenybase API
         if let remote = await fetchFromRemote() {
-            catalog = remote
+            setCatalog(remote)
             lastFetchDate = Date()
             isFromCache = false
             cacheLocally(remote)
@@ -87,14 +102,14 @@ final class SubscriptionCatalogService: ObservableObject {
 
         // 2. Fall back to local cache
         if let cached = loadFromCache() {
-            catalog = cached
+            setCatalog(cached)
             isFromCache = true
             lastFetchDate = UserDefaults.standard.object(forKey: cacheDateKey) as? Date
             return
         }
 
         // 3. Fall back to hardcoded catalog
-        catalog = buildHardcodedCatalog()
+        setCatalog(buildHardcodedCatalog())
         isFromCache = false
     }
 
@@ -245,7 +260,7 @@ final class SubscriptionCatalogService: ObservableObject {
     }
 
     func entry(for bundleId: String) -> CatalogEntry? {
-        catalog.first { $0.bundleId == bundleId }
+        entryByBundleId[bundleId]
     }
 
     // MARK: - Helpers
@@ -336,6 +351,9 @@ final class SubscriptionCatalogService: ObservableObject {
 
         // PERSONAL CARE
         entries.append(contentsOf: buildPersonalCareCatalog())
+
+        // EXPANDED CATALOG (~350 new entries)
+        entries.append(contentsOf: buildExpandedCatalog())
 
         return entries
     }
@@ -1779,6 +1797,14 @@ final class SubscriptionCatalogService: ObservableObject {
         case .home: return "house"
         case .pet: return "pawprint"
         case .personalCare: return "sparkles"
+        case .aiTools: return "sparkles.square.fill.on.square"
+        case .gaming: return "gamecontroller"
+        case .developerTools: return "chevron.left.forwardslash.chevron.right"
+        case .creator: return "pencil.circle"
+        case .travel: return "airplane"
+        case .dating: return "heart"
+        case .kids: return "figure.and.child.holdinghands"
+        case .security: return "lock.shield"
         case .other: return "square.grid.2x2"
         }
     }
