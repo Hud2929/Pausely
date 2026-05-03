@@ -23,7 +23,8 @@ struct TierSelectionSheet: View {
     // MARK: - Region mapping
     private var userRegion: Region {
         switch currencyManager.selectedCurrency {
-        case "USD", "CAD": return .us
+        case "USD": return .us
+        case "CAD": return .ca
         case "GBP": return .uk
         case "EUR": return .eu
         case "AUD": return .au
