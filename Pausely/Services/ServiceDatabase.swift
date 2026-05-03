@@ -3401,38 +3401,50 @@ class SubscriptionActionManager: ObservableObject {
             return service
         }
         
-        // 4. Try contains match
-        if let service = allServices.first(where: { 
-            normalizedName.contains($0.name.lowercased()) ||
-            $0.name.lowercased().contains(normalizedName)
+        // 4. Try contains match (requires match to be at least 3 characters)
+        if let service = allServices.first(where: {
+            let serviceName = $0.name.lowercased()
+            return (normalizedName.contains(serviceName) && serviceName.count >= 3) ||
+                   (serviceName.contains(normalizedName) && normalizedName.count >= 3)
         }) {
             return service
         }
-        
-        // 5. Try partial word matching
+
+        // 5. Try partial word matching (stricter: min 3 chars per word, need 2+ matches)
         let nameWords = normalizedName.split(separator: " ")
         var bestMatch: SubscriptionService?
         var bestScore = 0
-        
+
         for service in allServices {
             let serviceWords = service.name.lowercased().split(separator: " ")
             let aliasWords = service.aliases.flatMap { $0.lowercased().split(separator: " ") }
             let allWords = Set(serviceWords + aliasWords)
-            
+
             let matchCount = nameWords.filter { word in
-                allWords.contains(where: { $0.hasPrefix(word) || word.hasPrefix($0) })
+                guard word.count >= 3 else { return false }
+                return allWords.contains(where: {
+                    let w = $0
+                    guard w.count >= 3 else { return false }
+                    return w.hasPrefix(word) || word.hasPrefix(w)
+                })
             }.count
-            
+
             if matchCount > bestScore {
                 bestScore = matchCount
                 bestMatch = service
             }
         }
-        
-        if bestScore >= 1 {
+
+        // Require at least 2 matching words, or if single-word query, exact prefix match
+        if bestScore >= 2 {
             return bestMatch
         }
-        
+
+        // For single-word queries: only match if the word is a strong prefix (≥4 chars)
+        if nameWords.count == 1, let word = nameWords.first, word.count >= 4, bestScore >= 1 {
+            return bestMatch
+        }
+
         return nil
     }
     
@@ -3657,12 +3669,14 @@ class SubscriptionActionManager: ObservableObject {
     func findAlternatives(for subscription: Subscription) -> [AlternativeService] {
         guard let service = findService(for: subscription.name) else {
             // Return generic alternatives based on category
-            if let category = subscription.category.flatMap({ ServiceCategory(rawValue: $0) }) {
+            if let category = subscription.category.flatMap({ catStr in
+                ServiceCategory.allCases.first { $0.rawValue.lowercased() == catStr.lowercased() }
+            }) {
                 return AlternativeDatabase.getAlternatives(for: category)
             }
             return []
         }
-        
+
         return AlternativeDatabase.getAlternatives(for: service.category)
     }
     

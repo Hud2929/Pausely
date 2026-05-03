@@ -558,13 +558,32 @@ class CurrencyManager: ObservableObject {
         return priceUSD * rate
     }
 
-    /// Format a USD catalog price in the user's selected currency
-    func formatCatalogPrice(_ priceUSD: Double) -> String {
-        let converted = convertFromUSD(priceUSD)
+    /// Format a catalog price in the user's selected currency.
+    /// If the price's source currency matches the user's selected currency, shows it directly.
+    /// Otherwise converts using exchange rates.
+    func formatCatalogPrice(_ price: Double, sourceCurrency: String = "USD") -> String {
+        if sourceCurrency == selectedCurrency {
+            // Price is already in user's currency — show directly
+            let formatter = NumberFormatter()
+            formatter.numberStyle = .currency
+            formatter.currencyCode = selectedCurrency
+            return formatter.string(from: NSNumber(value: price)) ?? "\(selectedCurrency) \(price)"
+        }
+        // Different currency — convert via exchange rates
+        let converted = convertCrossCurrency(price, from: sourceCurrency, to: selectedCurrency)
         let formatter = NumberFormatter()
         formatter.numberStyle = .currency
         formatter.currencyCode = selectedCurrency
         return formatter.string(from: NSNumber(value: converted)) ?? "\(selectedCurrency) \(converted)"
+    }
+
+    /// Convert between two currencies using the exchange rate table (both vs USD)
+    func convertCrossCurrency(_ amount: Double, from sourceCurrency: String, to targetCurrency: String) -> Double {
+        guard sourceCurrency != targetCurrency else { return amount }
+        let sourceRate = exchangeRates[sourceCurrency] ?? 1.0
+        let targetRate = exchangeRates[targetCurrency] ?? 1.0
+        let amountInUSD = amount / sourceRate
+        return amountInUSD * targetRate
     }
 
     /// Indicator prefix for non-USD prices (shows ≈ when converting)

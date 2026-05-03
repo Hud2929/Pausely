@@ -47,6 +47,21 @@ struct SubscriptionBrowserView: View {
             PremiumBackground()
 
             VStack(spacing: 0) {
+                // Close button row
+                HStack {
+                    Spacer()
+                    Button {
+                        STAnimation.impactLight()
+                        dismiss()
+                    } label: {
+                        Image(systemName: "xmark.circle.fill")
+                            .font(.title2)
+                            .foregroundColor(.white.opacity(0.6))
+                    }
+                }
+                .padding(.horizontal, 20)
+                .padding(.top, 16)
+
                 // Premium glass search bar
                 searchBar
                     .padding(.horizontal, 20)
@@ -178,7 +193,7 @@ struct SubscriptionBrowserView: View {
 
                 ForEach(SubscriptionCategory.allCases, id: \.self) { cat in
                     PremiumCategoryPill(
-                        title: cat.rawValue,
+                        title: cat.displayName,
                         isSelected: selectedCategory == cat,
                         accentColor: categoryAccent(for: cat)
                     ) {
@@ -323,7 +338,9 @@ struct CatalogEntryCard: View {
     @State private var showCheckmark = false
 
     private var defaultPricing: TierPricing? {
-        entry.defaultIndividualPricing ?? entry.supportedTiers.first
+        entry.supportedTiers.first { $0.tier == .individual && $0.currencyCode == currencyManager.selectedCurrency }
+            ?? entry.defaultIndividualPricing
+            ?? entry.supportedTiers.first
     }
 
     private var iconColor: Color {
@@ -456,7 +473,7 @@ struct CatalogEntryCard: View {
         VStack(alignment: .leading, spacing: 6) {
             if let pricing = defaultPricing {
                 HStack(alignment: .firstTextBaseline, spacing: 4) {
-                    Text("\(currencyManager.priceIndicator)\(currencyManager.formatCatalogPrice(pricing.monthlyPriceUSD))")
+                    Text("\(currencyManager.priceIndicator)\(currencyManager.formatCatalogPrice(pricing.monthlyPriceUSD, sourceCurrency: pricing.currencyCode))")
                         .font(.headline.weight(.bold))
                         .foregroundStyle(
                             LinearGradient(
@@ -471,7 +488,7 @@ struct CatalogEntryCard: View {
                 }
 
                 if let annual = pricing.annualPriceUSD, annual > 0 {
-                    Text("or \(currencyManager.priceIndicator)\(currencyManager.formatCatalogPrice(annual))/yr")
+                    Text("or \(currencyManager.priceIndicator)\(currencyManager.formatCatalogPrice(annual, sourceCurrency: pricing.currencyCode))/yr")
                         .font(.caption2.weight(.medium))
                         .foregroundColor(.white.opacity(0.4))
                 }

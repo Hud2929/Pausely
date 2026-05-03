@@ -355,7 +355,7 @@ struct TierSelectionSheet: View {
                     HStack {
                         Image(systemName: "sparkles")
                             .font(.caption2.weight(.bold))
-                        Text("You save \(currencyManager.formatCatalogPrice(savings * 12))/yr")
+                        Text("You save \(currencyManager.formatCatalogPrice(savings * 12, sourceCurrency: pricing.currencyCode))/yr")
                             .font(.footnote.weight(.semibold))
                     }
                     .foregroundStyle(
@@ -439,12 +439,49 @@ struct TierSelectionSheet: View {
     }
 
     // MARK: - Price Override
+    @AppStorage("hasSeenCustomPriceHint") private var hasSeenCustomPriceHint = false
+
     private var priceOverrideSection: some View {
         VStack(alignment: .leading, spacing: 12) {
             Text("Custom Price")
                 .font(STFont.labelLarge)
                 .foregroundColor(.white.opacity(0.6))
                 .padding(.leading, 4)
+
+            if !hasSeenCustomPriceHint {
+                HStack(spacing: 8) {
+                    Image(systemName: "sparkles")
+                        .font(.caption.weight(.semibold))
+                        .foregroundColor(.luxuryPurple)
+
+                    Text("Don't see your price? Tap below to enter a custom amount")
+                        .font(.caption.weight(.medium))
+                        .foregroundColor(.white.opacity(0.7))
+
+                    Spacer()
+
+                    Button {
+                        withAnimation(.easeInOut(duration: 0.2)) {
+                            hasSeenCustomPriceHint = true
+                        }
+                    } label: {
+                        Image(systemName: "xmark.circle.fill")
+                            .font(.caption)
+                            .foregroundColor(.white.opacity(0.4))
+                    }
+                }
+                .padding(.horizontal, 14)
+                .padding(.vertical, 10)
+                .background(
+                    RoundedRectangle(cornerRadius: 10)
+                        .fill(Color.luxuryPurple.opacity(0.12))
+                        .overlay(
+                            RoundedRectangle(cornerRadius: 10)
+                                .stroke(Color.luxuryPurple.opacity(0.25), lineWidth: 1)
+                        )
+                )
+                .transition(.move(edge: .top).combined(with: .opacity))
+            }
 
             Toggle(isOn: $isOverridingPrice) {
                 Text("I pay a different amount")
@@ -499,13 +536,13 @@ struct TierSelectionSheet: View {
             price = pricing.monthlyPriceUSD
         }
 
-        return "\(currencyManager.priceIndicator)\(currencyManager.formatCatalogPrice(price))/\(selectedBillingFrequency == .yearly ? "yr" : "mo")"
+        return "\(currencyManager.priceIndicator)\(currencyManager.formatCatalogPrice(price, sourceCurrency: pricing.currencyCode))/\(selectedBillingFrequency == .yearly ? "yr" : "mo")"
     }
 
     private var annualTotalText: String {
         guard let pricing = selectedTierPricing,
               let annual = pricing.annualPriceUSD else { return "" }
-        return "\(currencyManager.priceIndicator)\(currencyManager.formatCatalogPrice(annual))/yr"
+        return "\(currencyManager.priceIndicator)\(currencyManager.formatCatalogPrice(annual, sourceCurrency: pricing.currencyCode))/yr"
     }
 
     private func parsePriceOverride() -> Decimal? {
@@ -587,7 +624,7 @@ struct PremiumTierRow: View {
                 // Price
                 if let pricing = tierPricing {
                     VStack(alignment: .trailing, spacing: 2) {
-                        Text("\(currencyManager.priceIndicator)\(currencyManager.formatCatalogPrice(pricing.monthlyPriceUSD))/mo")
+                        Text("\(currencyManager.priceIndicator)\(currencyManager.formatCatalogPrice(pricing.monthlyPriceUSD, sourceCurrency: pricing.currencyCode))/mo")
                             .font(.subheadline.weight(.semibold))
                             .foregroundColor(.white)
                     }

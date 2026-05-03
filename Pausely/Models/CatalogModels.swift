@@ -19,10 +19,11 @@ enum Region: String, Codable, CaseIterable {
 
     var currencyCode: String {
         switch self {
-        case .us, .ca, .au: return "USD"
+        case .us, .global: return "USD"
+        case .ca: return "CAD"
         case .uk: return "GBP"
         case .eu: return "EUR"
-        case .global: return "USD"
+        case .au: return "AUD"
         }
     }
 
@@ -196,6 +197,12 @@ struct TierPricing: Codable, Equatable, Identifiable {
     let monthlyPriceUSD: Double
     let annualPriceUSD: Double?
     let isBestValue: Bool
+    let currencyCode: String
+
+    // MARK: - Coding Keys
+    enum CodingKeys: String, CodingKey {
+        case tier, region, monthlyPriceUSD, annualPriceUSD, isBestValue, currencyCode
+    }
 
     // MARK: - Memberwise Initializer
     init(
@@ -203,13 +210,15 @@ struct TierPricing: Codable, Equatable, Identifiable {
         region: Region,
         monthlyPriceUSD: Double,
         annualPriceUSD: Double? = nil,
-        isBestValue: Bool = false
+        isBestValue: Bool = false,
+        currencyCode: String? = nil
     ) {
         self.tier = tier
         self.region = region
         self.monthlyPriceUSD = monthlyPriceUSD
         self.annualPriceUSD = annualPriceUSD
         self.isBestValue = isBestValue
+        self.currencyCode = currencyCode ?? region.currencyCode
     }
 
     var monthlyPricePerUser: Double? {
@@ -217,15 +226,21 @@ struct TierPricing: Codable, Equatable, Identifiable {
         return monthlyPriceUSD / Double(max)
     }
 
-    func monthlyPrice(in currencyCode: String, rates: [String: Double]) -> Double {
-        let rate = rates[currencyCode] ?? 1.0
-        return monthlyPriceUSD * rate
+    /// Returns the monthly price in the requested currency, converting from the tier's true currency if needed.
+    func monthlyPrice(in targetCurrency: String, rates: [String: Double]) -> Double {
+        guard targetCurrency != currencyCode else { return monthlyPriceUSD }
+        guard let sourceRate = rates[currencyCode], let targetRate = rates[targetCurrency] else { return monthlyPriceUSD }
+        let amountInUSD = monthlyPriceUSD / sourceRate
+        return amountInUSD * targetRate
     }
 
-    func annualPrice(in currencyCode: String, rates: [String: Double]) -> Double? {
+    /// Returns the annual price in the requested currency, converting from the tier's true currency if needed.
+    func annualPrice(in targetCurrency: String, rates: [String: Double]) -> Double? {
         guard let annual = annualPriceUSD else { return nil }
-        let rate = rates[currencyCode] ?? 1.0
-        return annual * rate
+        guard targetCurrency != currencyCode else { return annual }
+        guard let sourceRate = rates[currencyCode], let targetRate = rates[targetCurrency] else { return annual }
+        let amountInUSD = annual / sourceRate
+        return amountInUSD * targetRate
     }
 }
 

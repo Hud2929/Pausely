@@ -285,6 +285,10 @@ final class PaymentManager: ObservableObject {
             guard oldValue != currentTier else { return }
             AppSettings.shared.currentTier = currentTier
             objectWillChange.send()
+            // Auto-add Pausely Pro to subscription list when user upgrades
+            if oldValue == .free && currentTier > .free {
+                Task { await autoAddPauselyProIfNeeded() }
+            }
         }
     }
     private(set) var isLoading = false
@@ -355,6 +359,10 @@ final class PaymentManager: ObservableObject {
             await loadProducts()
             // 2. Verify against StoreKit (may downgrade if subscription expired)
             await updateCurrentEntitlements()
+            // 3. Auto-add Pausely Pro if user is already Pro on launch
+            if self.currentTier > .free {
+                await autoAddPauselyProIfNeeded()
+            }
         }
 
         // Poll for test user sign-in/sign-out so Pro status updates dynamically
@@ -517,7 +525,64 @@ final class PaymentManager: ObservableObject {
     func grantFreeProForReferrals() {
         currentTier = .pro
     }
-    
+
+    // MARK: - Auto-Add Pausely Pro Subscription
+
+    private let pauselyProAutoAddedKey = "pausely_pro_auto_added"
+
+    /// Automatically adds Pausely Pro to the user's subscription list when they upgrade.
+    /// Uses a UserDefaults flag to prevent duplicate additions.
+    func autoAddPauselyProIfNeeded() async {
+        guard !UserDefaults.standard.bool(forKey: pauselyProAutoAddedKey) else { return }
+
+        let store = SubscriptionStore.shared
+
+        // Check if Pausely Pro is already tracked
+        let alreadyAdded = store.subscriptions.contains {
+            $0.bundleIdentifier == "com.pausely.app.Pausely" ||
+            $0.name.lowercased().contains("pausely")
+        }
+        guard !alreadyAdded else {
+            UserDefaults.standard.set(true, forKey: pauselyProAutoAddedKey)
+            return
+        }
+
+        let amount: Decimal
+        let frequency: BillingFrequency
+        switch currentTier {
+        case .proAnnual:
+            amount = 79.99
+            frequency = .yearly
+        case .pro:
+            amount = 7.99
+            frequency = .monthly
+        case .free:
+            return
+        }
+
+        let nextBilling = Calendar.current.date(byAdding: frequency == .yearly ? .year : .month, value: 1, to: Date())
+
+        let subscription = Subscription(
+            name: "Pausely Pro",
+            bundleIdentifier: "com.pausely.app.Pausely",
+            category: SubscriptionCategory.productivity.rawValue,
+            amount: amount,
+            currency: "USD",
+            billingFrequency: frequency,
+            nextBillingDate: nextBilling,
+            status: .active,
+            isDetected: true
+        )
+
+        do {
+            _ = try await store.addSubscription(subscription)
+            UserDefaults.standard.set(true, forKey: pauselyProAutoAddedKey)
+            PauselyLogger.info("Auto-added Pausely Pro subscription (\(currentTier.displayName))", category: "Payment")
+        } catch {
+            PauselyLogger.error("Failed to auto-add Pausely Pro: \(error)", category: "Payment")
+        }
+    }
+
     /// Check if export is available
     var canUseExportFeature: Bool {
         resolvedTier.hasExport

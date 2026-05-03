@@ -50,8 +50,15 @@ final class SubscriptionCatalogService: ObservableObject {
     }
 
     private func rebuildIndexes() {
-        entryByBundleId = Dictionary(uniqueKeysWithValues: catalog.map { ($0.bundleId, $0) })
-        entryByName = Dictionary(uniqueKeysWithValues: catalog.map { ($0.name.lowercased(), $0) })
+        // Build indexes safely, handling duplicates by keeping the last occurrence
+        var bundleDict: [String: CatalogEntry] = [:]
+        var nameDict: [String: CatalogEntry] = [:]
+        for entry in catalog {
+            bundleDict[entry.bundleId] = entry
+            nameDict[entry.name.lowercased()] = entry
+        }
+        entryByBundleId = bundleDict
+        entryByName = nameDict
     }
 
     // MARK: - Subscriptions (for tracking compatibility)
@@ -91,26 +98,35 @@ final class SubscriptionCatalogService: ObservableObject {
         isLoading = true
         defer { isLoading = false }
 
-        // 1. Try remote Teenybase API
-        if let remote = await fetchFromRemote() {
-            setCatalog(remote)
+        // Always start with hardcoded catalog as the base
+        var merged = buildHardcodedCatalog()
+
+        // 1. Try to supplement with remote Teenybase API
+        if let remote = await fetchFromRemote(), !remote.isEmpty {
+            merged = mergeCatalogs(base: merged, updates: remote)
             lastFetchDate = Date()
             isFromCache = false
-            cacheLocally(remote)
-            return
+            cacheLocally(merged)
         }
-
-        // 2. Fall back to local cache
-        if let cached = loadFromCache() {
-            setCatalog(cached)
+        // 2. Fall back to local cache only if remote failed AND hardcoded is empty
+        else if merged.isEmpty, let cached = loadFromCache() {
+            merged = cached
             isFromCache = true
             lastFetchDate = UserDefaults.standard.object(forKey: cacheDateKey) as? Date
-            return
         }
 
-        // 3. Fall back to hardcoded catalog
-        setCatalog(buildHardcodedCatalog())
-        isFromCache = false
+        setCatalog(merged)
+        CatalogValidator.validate(merged)
+    }
+
+    /// Merge remote updates into the hardcoded base catalog.
+    /// Remote entries override hardcoded ones by bundleId; new entries are appended.
+    private func mergeCatalogs(base: [CatalogEntry], updates: [CatalogEntry]) -> [CatalogEntry] {
+        var dict = Dictionary(uniqueKeysWithValues: base.map { ($0.bundleId, $0) })
+        for entry in updates {
+            dict[entry.bundleId] = entry
+        }
+        return Array(dict.values).sorted { $0.name < $1.name }
     }
 
     // MARK: - Remote Fetch
@@ -190,13 +206,15 @@ final class SubscriptionCatalogService: ObservableObject {
                 let region = Region(rawValue: regionStr) ?? .global
                 let annualUSD = tierData["annualPriceUSD"] as? Double
                 let bestValue = tierData["isBestValue"] as? Bool ?? false
+                let currencyCode = tierData["currencyCode"] as? String
 
                 tierList.append(TierPricing(
                     tier: tier,
                     region: region,
                     monthlyPriceUSD: monthlyUSD,
                     annualPriceUSD: annualUSD,
-                    isBestValue: bestValue
+                    isBestValue: bestValue,
+                    currencyCode: currencyCode
                 ))
             }
 

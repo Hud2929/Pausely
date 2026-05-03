@@ -105,7 +105,7 @@ struct LuxuryAddSubscriptionView: View {
 
                             Picker("Category", selection: $category) {
                                 ForEach(SubscriptionCategory.allCases, id: \.self) { cat in
-                                    Text(cat.rawValue.capitalized)
+                                    Text(cat.displayName)
                                         .tag(cat)
                                         .foregroundStyle(.white)
                                 }
