@@ -7,10 +7,8 @@ struct ActionsSection: View {
     @ObservedObject var actionManager: SubscriptionActionManager
     let onPaywall: () -> Void
     let onUsageHistory: () -> Void
-    let onSharing: () -> Void
     let onPriceHistory: () -> Void
     let onAnnualSavings: () -> Void
-    let onCancellationRequest: () -> Void
 
     var body: some View {
         VStack(spacing: 16) {
@@ -31,15 +29,6 @@ struct ActionsSection: View {
                     action: onPaywall
                 )
             }
-
-            ActionButton(
-                title: "Cancel for Me",
-                subtitle: "We handle it — $5 one-time",
-                icon: "xmark.shield.fill",
-                color: .purple,
-                isPremium: false,
-                action: onCancellationRequest
-            )
 
             if paymentManager.canPauseSubscriptions && actionManager.canPause(subscription) {
                 if subscription.isPaused {
@@ -82,15 +71,6 @@ struct ActionsSection: View {
                 color: .blue,
                 isPremium: false,
                 action: { }
-            )
-
-            ActionButton(
-                title: "Split Cost",
-                subtitle: "Share with friends or family",
-                icon: "person.2.fill",
-                color: .purple,
-                isPremium: false,
-                action: onSharing
             )
 
             ActionButton(

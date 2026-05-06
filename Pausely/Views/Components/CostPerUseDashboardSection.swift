@@ -75,6 +75,15 @@ struct CostPerUseDashboardSection: View {
                         .foregroundStyle(.secondary.opacity(0.7))
                         .padding(.top, 2)
                     }
+
+                    HStack(spacing: 4) {
+                        Image(systemName: "iphone")
+                            .font(.system(size: 10))
+                        Text("Tracks phone screen time only — off-phone usage not included.")
+                            .font(.system(size: 10))
+                    }
+                    .foregroundStyle(.secondary.opacity(0.7))
+                    .padding(.top, 2)
                 }
                 // .popoverTip(costPerUseTip, arrowEdge: .top) // Disabled for testing
 

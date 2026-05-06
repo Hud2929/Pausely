@@ -4,39 +4,12 @@ import SwiftUI
 struct SubscriptionHealthScoreSection: View {
     @ObservedObject private var store = SubscriptionStore.shared
     @ObservedObject private var screenTimeManager = ScreenTimeManager.shared
+    @ObservedObject private var insightsEngine = RealInsightsEngine.shared
     @State private var appear = false
     @State private var animatedScore: Double = 0
 
     private var healthScore: Int {
-        let subs = store.subscriptions
-        guard !subs.isEmpty else { return 0 }
-
-        var score = 0
-
-        // 40 points: billing dates known
-        let withBillingDate = subs.filter { $0.nextBillingDate != nil }.count
-        let billingScore = Int((Double(withBillingDate) / Double(subs.count)) * 40)
-        score += billingScore
-
-        // 30 points: usage tracked
-        let withUsage = subs.filter { screenTimeManager.getCurrentMonthUsage(for: $0.name) > 0 }.count
-        let usageScore = Int((Double(withUsage) / Double(subs.count)) * 30)
-        score += usageScore
-
-        // 15 points: no paused subscriptions with expired dates
-        let activePaused = store.pausedSubscriptions.filter {
-            guard let until = $0.pausedUntil else { return false }
-            return until > Date()
-        }.count
-        let pauseScore = activePaused > 0 ? 15 : 0
-        score += pauseScore
-
-        // 15 points: mix of categories (diversified tracking)
-        let uniqueCategories = Set(subs.map { $0.category }).count
-        let categoryScore = min(15, uniqueCategories * 3)
-        score += categoryScore
-
-        return min(100, score)
+        insightsEngine.healthScore
     }
 
     private var scoreLabel: String {
@@ -62,16 +35,40 @@ struct SubscriptionHealthScoreSection: View {
     private var scoreDescription: String {
         switch healthScore {
         case 80...100:
-            return "You're on top of your subscriptions. Great job tracking everything!"
+            return "Your subscriptions are well-organized, affordable, and delivering value."
         case 60..<80:
-            return "Mostly tracked. Add missing billing dates or usage to improve."
+            return "Solid foundation. A few tweaks to cost or tracking could improve your score."
         case 40..<60:
-            return "Some gaps in your tracking. Tap a subscription to fill in details."
-        case 20..<40:
-            return "Several subscriptions need attention. Add billing dates and usage."
+            return "Some areas need attention. Review untracked subscriptions or high costs."
+        case 20..<39:
+            return "Several issues detected. Add billing dates, track usage, and review duplicates."
         default:
-            return "Start by adding your subscriptions and setting billing dates."
+            return "Start by adding subscriptions and setting billing dates to build your health score."
         }
+    }
+
+    private var activeSubs: [Subscription] {
+        store.subscriptions.filter { $0.status == .active }
+    }
+
+    private var dataCompleteness: String {
+        guard !activeSubs.isEmpty else { return "0%" }
+        let withBilling = activeSubs.filter { $0.nextBillingDate != nil }.count
+        let withUsage = activeSubs.filter { screenTimeManager.getCurrentMonthUsage(for: $0.name) > 0 }.count
+        let avg = Double(withBilling + withUsage) / Double(activeSubs.count * 2)
+        return "\(Int(avg * 100))%"
+    }
+
+    private var avgMonthlyCost: String {
+        guard !activeSubs.isEmpty else { return "$0" }
+        let total = activeSubs.reduce(Decimal(0)) { $0 + $1.monthlyCost }
+        let avg = total / Decimal(activeSubs.count)
+        return CurrencyManager.shared.format(avg)
+    }
+
+    private var duplicateCount: Int {
+        let grouped = Dictionary(grouping: activeSubs) { $0.name.lowercased() }
+        return grouped.values.filter { $0.count > 1 }.reduce(0) { $0 + $1.count - 1 }
     }
 
     var body: some View {
@@ -82,7 +79,7 @@ struct SubscriptionHealthScoreSection: View {
                         .font(AppTypography.headlineLarge)
                         .foregroundStyle(.primary)
 
-                    Text("How well you're managing your subscriptions")
+                    Text("Overall score based on organization, cost, and value")
                         .font(AppTypography.bodySmall)
                         .foregroundStyle(.secondary)
                 }
@@ -141,10 +138,13 @@ struct SubscriptionHealthScoreSection: View {
             .padding(16)
             .glassBackground(cornerRadius: 20, strokeColor: scoreColor.opacity(0.2), strokeWidth: 1)
 
-            // Breakdown
-            BreakdownRow(icon: "calendar", label: "Billing dates set", count: store.subscriptions.filter { $0.nextBillingDate != nil }.count, total: store.subscriptions.count)
-            BreakdownRow(icon: "clock", label: "Usage tracked", count: store.subscriptions.filter { screenTimeManager.getCurrentMonthUsage(for: $0.name) > 0 }.count, total: store.subscriptions.count)
-            BreakdownRow(icon: "pause.circle", label: "Active pause reminders", count: store.pausedSubscriptions.count, total: store.subscriptions.count)
+            // Breakdown — reflects the 5 components of the unified score
+            BreakdownRow(icon: "checkmark.circle", label: "Data completeness", value: dataCompleteness)
+            BreakdownRow(icon: "dollarsign.circle", label: "Avg monthly cost", value: avgMonthlyCost)
+            BreakdownRow(icon: "chart.bar", label: "Active subscriptions", value: "\(activeSubs.count)")
+            if duplicateCount > 0 {
+                BreakdownRow(icon: "doc.on.doc", label: "Duplicate services", value: "\(duplicateCount)")
+            }
         }
         .padding(.horizontal, 20)
         .padding(.top, 24)
@@ -154,6 +154,20 @@ struct SubscriptionHealthScoreSection: View {
             withAnimation(.easeOut(duration: 0.5).delay(0.2)) {
                 appear = true
             }
+            Task {
+                await insightsEngine.analyze(subscriptions: store.subscriptions)
+                withAnimation(.easeOut(duration: 1.0)) {
+                    animatedScore = Double(healthScore)
+                }
+            }
+        }
+        .onChange(of: store.subscriptions.count) {
+            Task {
+                await insightsEngine.analyze(subscriptions: store.subscriptions)
+                withAnimation(.easeOut(duration: 1.0)) {
+                    animatedScore = Double(healthScore)
+                }
+            }
         }
     }
 }
@@ -161,8 +175,7 @@ struct SubscriptionHealthScoreSection: View {
 struct BreakdownRow: View {
     let icon: String
     let label: String
-    let count: Int
-    let total: Int
+    let value: String
 
     var body: some View {
         HStack(spacing: 10) {
@@ -179,7 +192,7 @@ struct BreakdownRow: View {
 
             Spacer()
 
-            Text("\(count)/\(total)")
+            Text(value)
                 .font(AppTypography.labelMedium)
                 .foregroundStyle(.primary)
                 .fontWeight(.medium)

@@ -2,39 +2,34 @@
 //  RevolutionaryCancelButton.swift
 //  Pausely
 //
-//  ONE-TAP Cancellation & Pause - Revolutionary UI
+//  Opens the real cancel URL for the subscription service
 //
 
 import SwiftUI
+import SafariServices
 
 // MARK: - Revolutionary Cancel Button
 struct RevolutionaryCancelButton: View {
     let subscription: Subscription
-    @State private var showingConfirmation = false
-    @State private var isProcessing = false
-    @State private var result: CancellationResult?
-    @State private var showSuccess = false
-    @State private var errorMessage: String? = nil
+    @State private var showingFlow = false
 
     var body: some View {
-        Button(action: {
-            showingConfirmation = true
-        }) {
+        Button(action: { showingFlow = true }) {
             HStack(spacing: 12) {
                 Image(systemName: "xmark.circle.fill")
                     .font(.callout)
-                
+
                 VStack(alignment: .leading, spacing: 2) {
                     Text("Cancel Subscription")
                         .font(STFont.labelLarge)
-                    
-                    Text("One tap, instantly")
+
+                    Text("Open cancel page in Safari")
                         .font(STFont.bodySmall)
                         .foregroundStyle(Color.obsidianTextSecondary)
                 }
-                
+
                 Spacer()
-                
+
                 Image(systemName: "chevron.right")
                     .foregroundStyle(Color.obsidianTextTertiary)
             }
@@ -49,40 +44,191 @@ struct RevolutionaryCancelButton: View {
             )
         }
         .buttonStyle(.plain)
-        .sheet(isPresented: $showingConfirmation) {
-            RevolutionaryCancelConfirmationSheet(
-                subscription: subscription,
-                onConfirm: performCancellation,
-                onDismiss: { showingConfirmation = false }
-            )
+        .sheet(isPresented: $showingFlow) {
+            CancelSubscriptionFlow(subscription: subscription)
         }
-        .overlay {
-            if showSuccess, let result = result {
-                CancellationSuccessOverlay(result: result, isPresented: $showSuccess)
-            }
-        }
-        .errorBanner($errorMessage)
     }
-    
-    private func performCancellation() async {
-        isProcessing = true
-        errorMessage = nil
+}
 
+// MARK: - Cancel Flow Sheet
+struct CancelSubscriptionFlow: View {
+    let subscription: Subscription
+    @Environment(\.dismiss) private var dismiss
+
+    @State private var isShowingSafari = false
+    @State private var showConfirmDelete = false
+    @State private var isDeleting = false
+    @State private var errorMessage: String? = nil
+
+    private var service: SubscriptionService? {
+        SubscriptionActionManager.shared.getService(for: subscription.name)
+    }
+
+    private var cancelURL: URL? {
+        SubscriptionActionManager.shared.generateCancelURL(for: subscription)
+    }
+
+    var body: some View {
+        NavigationStack {
+            ScrollView {
+                VStack(spacing: 28) {
+                    // Header
+                    VStack(spacing: 12) {
+                        ZStack {
+                            Circle()
+                                .fill(Color.semanticDestructive.opacity(0.2))
+                                .frame(width: 80, height: 80)
+                            Image(systemName: "xmark.circle.fill")
+                                .font(.largeTitle)
+                                .foregroundStyle(Color.semanticDestructive)
+                        }
+
+                        Text("Cancel \(subscription.name)")
+                            .font(STFont.headlineLarge)
+                            .foregroundStyle(Color.obsidianText)
+
+                        Text("We'll take you to the official cancellation page")
+                            .font(STFont.bodyMedium)
+                            .foregroundStyle(Color.obsidianTextSecondary)
+                            .multilineTextAlignment(.center)
+                    }
+
+                    // Savings
+                    VStack(spacing: 8) {
+                        Text("YOU'LL SAVE")
+                            .font(STFont.labelSmall)
+                            .foregroundStyle(Color.obsidianTextTertiary)
+                        Text(subscription.displayAnnualCost)
+                            .font(STFont.displayMedium)
+                            .foregroundStyle(Color.semanticSuccess)
+                        Text("per year")
+                            .font(STFont.bodyMedium)
+                            .foregroundStyle(Color.obsidianTextSecondary)
+                    }
+                    .padding()
+                    .frame(maxWidth: .infinity)
+                    .background(Color.semanticSuccess.opacity(0.1))
+                    .clipShape(RoundedRectangle(cornerRadius: STRadius.lg))
+
+                    // Steps
+                    if let svc = service, !svc.instructions.isEmpty {
+                        VStack(alignment: .leading, spacing: 12) {
+                            Text("How to cancel")
+                                .font(STFont.labelLarge)
+                                .foregroundStyle(Color.obsidianText)
+
+                            VStack(alignment: .leading, spacing: 10) {
+                                ForEach(svc.instructions.prefix(4)) { step in
+                                    HStack(alignment: .top, spacing: 10) {
+                                        Text("\(step.order)")
+                                            .font(.caption.weight(.bold))
+                                            .foregroundColor(Color.obsidianBlack)
+                                            .frame(width: 22, height: 22)
+                                            .background(Color.accentMint)
+                                            .clipShape(Circle())
+
+                                        Text(step.description)
+                                            .font(STFont.bodySmall)
+                                            .foregroundStyle(Color.obsidianText)
+                                            .multilineTextAlignment(.leading)
+
+                                        Spacer()
+                                    }
+                                }
+                            }
+                        }
+                        .padding()
+                        .background(Color.obsidianSurface)
+                        .clipShape(RoundedRectangle(cornerRadius: STRadius.lg))
+                    }
+
+                    // Open cancel page button
+                    if cancelURL != nil {
+                        Button(action: { isShowingSafari = true }) {
+                            HStack {
+                                Image(systemName: "arrow.up.right.square")
+                                Text("Open Cancellation Page")
+                                    .font(STFont.labelLarge)
+                                Spacer()
+                                Image(systemName: "arrow.up.forward")
+                            }
+                            .foregroundStyle(.white)
+                            .padding()
+                            .background(Color.semanticDestructive)
+                            .clipShape(RoundedRectangle(cornerRadius: STRadius.md))
+                        }
+                        .buttonStyle(.plain)
+                    } else {
+                        Text("No direct cancel link found. Search for \"cancel \(subscription.name)\" in your browser.")
+                            .font(STFont.bodySmall)
+                            .foregroundStyle(Color.obsidianTextSecondary)
+                            .multilineTextAlignment(.center)
+                            .padding()
+                    }
+
+                    // Done button
+                    Button(action: { showConfirmDelete = true }) {
+                        HStack {
+                            Image(systemName: "checkmark.circle.fill")
+                            Text("I Cancelled — Remove from Tracking")
+                                .font(STFont.labelLarge)
+                            Spacer()
+                        }
+                        .foregroundStyle(Color.semanticSuccess)
+                        .padding()
+                        .background(Color.semanticSuccess.opacity(0.1))
+                        .overlay(
+                            RoundedRectangle(cornerRadius: STRadius.md)
+                                .stroke(Color.semanticSuccess.opacity(0.3), lineWidth: 1)
+                        )
+                        .clipShape(RoundedRectangle(cornerRadius: STRadius.md))
+                    }
+                    .buttonStyle(.plain)
+                    .disabled(isDeleting)
+                }
+                .padding()
+            }
+            .background(Color.obsidianBlack.ignoresSafeArea())
+            .navigationTitle("Cancel Subscription")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .navigationBarTrailing) {
+                    Button("Close") { dismiss() }
+                        .foregroundStyle(Color.accentMint)
+                }
+            }
+            .sheet(isPresented: $isShowingSafari) {
+                if let url = cancelURL {
+                    SafariView(url: url)
+                        .ignoresSafeArea()
+                }
+            }
+            .alert("Remove from tracking?", isPresented: $showConfirmDelete) {
+                Button("Remove", role: .destructive) {
+                    Task { await removeSubscription() }
+                }
+                Button("Keep", role: .cancel) { }
+            } message: {
+                Text("This will remove \(subscription.name) from your Pausely dashboard. Your actual subscription is managed by \(subscription.name).")
+            }
+            .errorBanner($errorMessage)
+        }
+    }
+
+    private func removeSubscription() async {
+        isDeleting = true
         do {
             try await SubscriptionStore.shared.deleteSubscription(id: subscription.id)
             NotificationManager.shared.cancelReminder(for: subscription.id)
-
-            let cancelResult = CancellationResult.success(savings: subscription.monthlyCost * 12)
             await MainActor.run {
-                self.result = cancelResult
-                self.isProcessing = false
-                self.showSuccess = true
+                isDeleting = false
+                dismiss()
                 Haptic.success()
             }
         } catch {
             await MainActor.run {
-                self.errorMessage = "Could not cancel: \(error.localizedDescription)"
-                self.isProcessing = false
+                errorMessage = "Could not remove: \(error.localizedDescription)"
+                isDeleting = false
                 Haptic.error()
             }
         }

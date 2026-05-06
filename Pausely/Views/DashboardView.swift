@@ -145,13 +145,18 @@ struct DashboardView: View {
                     // Subscription Health Score
                     SubscriptionHealthScoreSection()
 
+                    // Compare & Save (prominent key feature)
+                    ComparePromoSection()
+                        .padding(.horizontal, 20)
+                        .padding(.top, 24)
+
                     // Quick Actions
                     QuickActionsGrid(
                         onAddTap: { showingAddSubscription = true },
                         onPaywallTap: { showingPaywall = true }
                     )
                     .padding(.horizontal, 20)
-                    .padding(.top, 24)
+                    .padding(.top, 16)
 
                     // Smart Insights
                     SmartInsightsSection()

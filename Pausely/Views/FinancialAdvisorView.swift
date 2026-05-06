@@ -8,20 +8,21 @@ struct FinancialAdvisorView: View {
     @ObservedObject private var store = SubscriptionStore.shared
     @ObservedObject private var currencyManager = CurrencyManager.shared
     @ObservedObject private var screenTimeManager = ScreenTimeManager.shared
+    @ObservedObject private var insightsEngine = RealInsightsEngine.shared
     @State private var appear = false
     @State private var selectedInsight: AdvisorInsight?
     @State private var showingActionSheet = false
     @State private var showingAlert = false
     @State private var alertTitle = ""
     @State private var alertMessage = ""
-    
+
     // Computed insights based on user's subscriptions
     private var insights: [AdvisorInsight] {
         generateInsights()
     }
-    
+
     private var healthScore: Int {
-        calculateHealthScore()
+        insightsEngine.healthScore
     }
     
     var body: some View {
@@ -58,6 +59,14 @@ struct FinancialAdvisorView: View {
             Button("OK", role: .cancel) {}
         } message: {
             Text(alertMessage)
+        }
+        .task {
+            await insightsEngine.analyze(subscriptions: store.subscriptions)
+        }
+        .onChange(of: store.subscriptions.count) {
+            Task {
+                await insightsEngine.analyze(subscriptions: store.subscriptions)
+            }
         }
     }
     
@@ -416,25 +425,6 @@ struct FinancialAdvisorView: View {
         return totals
     }
     
-    private func calculateHealthScore() -> Int {
-        let subscriptions = store.subscriptions
-        guard !subscriptions.isEmpty else { return 0 }
-        
-        var score = 100
-        
-        // Deductions
-        let duplicateDeduction = findDuplicates(in: subscriptions).count * 15
-        score -= duplicateDeduction
-        
-        let unusedCount = insights.filter { $0.type == .savings && $0.title.contains("Low Usage") }.count
-        score -= unusedCount * 10
-        
-        let highCostCount = insights.filter { $0.type == .warning && $0.title.contains("High-Cost") }.count
-        score -= highCostCount * 5
-        
-        return max(0, min(100, score))
-    }
-    
     private func colorForScore(_ score: Int) -> Color {
         switch score {
         case 80...100: return .green
@@ -449,7 +439,7 @@ struct FinancialAdvisorView: View {
         case 80...100: return "Excellent"
         case 60..<80: return "Good"
         case 40..<60: return "Fair"
-        case 20..<40: return "Poor"
+        case 20..<40: return "Needs Work"
         default: return "Critical"
         }
     }

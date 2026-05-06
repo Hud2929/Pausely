@@ -79,6 +79,14 @@ struct CostPerUseDetailSection: View {
                 Spacer()
             }
 
+            HStack(spacing: 4) {
+                Image(systemName: "iphone")
+                    .font(.system(size: 11))
+                Text("Tracks phone screen time only — off-phone usage not included.")
+                    .font(.system(size: 11))
+            }
+            .foregroundStyle(.secondary.opacity(0.7))
+
             // Main cost-per-use card
             CostPerUseCard(result: result)
 

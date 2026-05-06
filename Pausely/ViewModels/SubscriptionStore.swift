@@ -462,7 +462,18 @@ class SubscriptionStore: ObservableObject {
 
     private func loadFromCache() {
         let data = AppSettings.shared.cachedSubscriptions
-        guard !data.isEmpty else { return }
+        guard !data.isEmpty else {
+            // Demo data for screenshots / simulator
+            #if DEBUG
+            if subscriptions.isEmpty {
+                let demoSubs = Self.makeDemoSubscriptions()
+                self.subscriptions = demoSubs
+                self.calculateTotals()
+                self.saveToCache()
+            }
+            #endif
+            return
+        }
 
         do {
             let cached = try JSONDecoder().decode([Subscription].self, from: data)
@@ -475,6 +486,87 @@ class SubscriptionStore: ObservableObject {
             os_log("Cache load failed: %{public}@", log: .default, type: .error, error.localizedDescription)
         }
     }
+
+    #if DEBUG
+    static func makeDemoSubscriptions() -> [Subscription] {
+        let calendar = Calendar.current
+        return [
+            Subscription(
+                id: UUID(),
+                name: "Netflix",
+                bundleIdentifier: "com.netflix.Netflix",
+                category: "Entertainment",
+                amount: 15.99,
+                billingFrequency: .monthly,
+                nextBillingDate: calendar.date(byAdding: .day, value: 5, to: Date()),
+                status: .active,
+                canPause: true
+            ),
+            Subscription(
+                id: UUID(),
+                name: "Spotify",
+                bundleIdentifier: "com.spotify.client",
+                category: "Music",
+                amount: 10.99,
+                billingFrequency: .monthly,
+                nextBillingDate: calendar.date(byAdding: .day, value: 12, to: Date()),
+                status: .active,
+                canPause: true
+            ),
+            Subscription(
+                id: UUID(),
+                name: "ChatGPT Plus",
+                category: "AI Tools",
+                amount: 20.00,
+                billingFrequency: .monthly,
+                nextBillingDate: calendar.date(byAdding: .day, value: 18, to: Date()),
+                status: .active,
+                canPause: false
+            ),
+            Subscription(
+                id: UUID(),
+                name: "Apple One",
+                category: "Productivity",
+                amount: 32.95,
+                billingFrequency: .monthly,
+                nextBillingDate: calendar.date(byAdding: .day, value: 2, to: Date()),
+                status: .active,
+                canPause: true
+            ),
+            Subscription(
+                id: UUID(),
+                name: "YouTube Premium",
+                category: "Entertainment",
+                amount: 13.99,
+                billingFrequency: .monthly,
+                nextBillingDate: calendar.date(byAdding: .day, value: 24, to: Date()),
+                status: .active,
+                canPause: true
+            ),
+            Subscription(
+                id: UUID(),
+                name: "Notion",
+                category: "Productivity",
+                amount: 10.00,
+                billingFrequency: .monthly,
+                nextBillingDate: calendar.date(byAdding: .day, value: 8, to: Date()),
+                status: .paused,
+                canPause: true,
+                pausedUntil: calendar.date(byAdding: .month, value: 2, to: Date())
+            ),
+            Subscription(
+                id: UUID(),
+                name: "Peloton",
+                category: "Health & Fitness",
+                amount: 44.00,
+                billingFrequency: .monthly,
+                nextBillingDate: calendar.date(byAdding: .day, value: 15, to: Date()),
+                status: .active,
+                canPause: true
+            )
+        ]
+    }
+    #endif
 
     /// Process any pending sync operations with the cloud
     func processPendingSync() async {

@@ -46,9 +46,9 @@ struct QuickActionsGrid: View {
                 }
 
                 QuickActionButton(
-                    icon: "chart.pie.fill",
+                    icon: "arrow.left.arrow.right.circle.fill",
                     title: "Compare",
-                    subtitle: "Analyze",
+                    subtitle: "Catalog",
                     gradient: [.luxuryGold, .luxuryPink]
                 ) {
                     showingCompareSheet = true
@@ -59,7 +59,7 @@ struct QuickActionsGrid: View {
             QuickPauseSheet()
         }
         .sheet(isPresented: $showingCompareSheet) {
-            SubscriptionCompareView()
+            CatalogCategoryCompareView()
         }
     }
 }

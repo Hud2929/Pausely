@@ -186,6 +186,7 @@ enum ServiceCategory: String, Codable, CaseIterable {
     case design = "Design & Creative"
     case communication = "Communication"
     case cloudComputing = "Cloud Computing"
+    case aiTools = "AI & Productivity Tools"
     case other = "Other"
     
     var icon: String {
@@ -206,6 +207,7 @@ enum ServiceCategory: String, Codable, CaseIterable {
         case .design: return "paintbrush.fill"
         case .communication: return "bubble.left.fill"
         case .cloudComputing: return "server.rack"
+        case .aiTools: return "cpu.fill"
         case .other: return "app.fill"
         }
     }
@@ -228,6 +230,7 @@ enum ServiceCategory: String, Codable, CaseIterable {
         case .design: return .purple.opacity(0.8)
         case .communication: return .blue.opacity(0.8)
         case .cloudComputing: return .cyan.opacity(0.8)
+        case .aiTools: return .indigo.opacity(0.9)
         case .other: return .secondary
         }
     }

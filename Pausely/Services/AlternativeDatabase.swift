@@ -25,6 +25,20 @@ enum AlternativeDatabase {
             return newsAlternatives
         case .dating:
             return datingAlternatives
+        case .aiTools:
+            return aiToolsAlternatives
+        case .education:
+            return educationAlternatives
+        case .design:
+            return designAlternatives
+        case .communication:
+            return communicationAlternatives
+        case .cloudComputing:
+            return cloudComputingAlternatives
+        case .shopping:
+            return shoppingAlternatives
+        case .finance:
+            return financeAlternatives
         default:
             return []
         }
@@ -540,6 +554,515 @@ enum AlternativeDatabase {
             rating: 4.0,
             category: .dating,
             savingsPercentage: 100
+        )
+    ]
+
+    // MARK: - AI Tools Alternatives
+    static let aiToolsAlternatives: [AlternativeService] = [
+        AlternativeService(
+            name: "ChatGPT Free",
+            description: "Free tier of ChatGPT with GPT-3.5",
+            monthlyPrice: 0,
+            annualPrice: 0,
+            features: ["GPT-3.5", "Web browsing", "Unlimited messages"],
+            pros: ["Completely free", "No usage limits", "Great for most tasks"],
+            cons: ["No GPT-4", "Slower during peak", "No plugins"],
+            websiteURL: "https://chat.openai.com",
+            rating: 4.5,
+            category: .aiTools,
+            savingsPercentage: 100
+        ),
+        AlternativeService(
+            name: "Claude Free",
+            description: "Free tier of Claude AI",
+            monthlyPrice: 0,
+            annualPrice: 0,
+            features: ["Claude 3.5 Sonnet", "200K context", "Strong reasoning"],
+            pros: ["Very capable free tier", "Large context window", "No daily limits"],
+            cons: ["Usage caps during high demand", "No advanced features"],
+            websiteURL: "https://claude.ai",
+            rating: 4.6,
+            category: .aiTools,
+            savingsPercentage: 100
+        ),
+        AlternativeService(
+            name: "Gemini Free",
+            description: "Google's free AI assistant",
+            monthlyPrice: 0,
+            annualPrice: 0,
+            features: ["Gemini Pro", "Google integration", "Multimodal"],
+            pros: ["Free", "Google ecosystem", "Good coding help"],
+            cons: ["Inconsistent quality", "Privacy concerns"],
+            websiteURL: "https://gemini.google.com",
+            rating: 4.2,
+            category: .aiTools,
+            savingsPercentage: 100
+        ),
+        AlternativeService(
+            name: "Perplexity Free",
+            description: "AI search with free tier",
+            monthlyPrice: 0,
+            annualPrice: 0,
+            features: ["AI search", "Citations", "5 pro searches/day"],
+            pros: ["Great for research", "Sourced answers", "No signup needed"],
+            cons: ["Limited pro searches", "No advanced models"],
+            websiteURL: "https://perplexity.ai",
+            rating: 4.4,
+            category: .aiTools,
+            savingsPercentage: 100
+        ),
+        AlternativeService(
+            name: "Microsoft Copilot Free",
+            description: "Free AI powered by GPT-4",
+            monthlyPrice: 0,
+            annualPrice: 0,
+            features: ["GPT-4 access", "DALL-E 3 images", "Web search"],
+            pros: ["Free GPT-4", "Image generation", "Microsoft integration"],
+            cons: ["Limited conversations", "Microsoft account required"],
+            websiteURL: "https://copilot.microsoft.com",
+            rating: 4.3,
+            category: .aiTools,
+            savingsPercentage: 100
+        ),
+        AlternativeService(
+            name: "Poe Free",
+            description: "Access multiple AI models free",
+            monthlyPrice: 0,
+            annualPrice: 0,
+            features: ["Multiple bots", "Custom bots", "Community bots"],
+            pros: ["One app for many AIs", "Free daily messages", "Easy to use"],
+            cons: ["Limited daily messages", "Queue during peak"],
+            websiteURL: "https://poe.com",
+            rating: 4.1,
+            category: .aiTools,
+            savingsPercentage: 100
+        ),
+        AlternativeService(
+            name: "Meta AI",
+            description: "Free AI assistant by Meta",
+            monthlyPrice: 0,
+            annualPrice: 0,
+            features: ["Llama 3", "WhatsApp/Instagram integration", "Image generation"],
+            pros: ["Completely free", "No usage limits", "Integrated in apps"],
+            cons: ["Less capable than GPT-4/Claude", "Meta privacy concerns"],
+            websiteURL: "https://meta.ai",
+            rating: 4.0,
+            category: .aiTools,
+            savingsPercentage: 100
+        )
+    ]
+
+    // MARK: - Education Alternatives
+    static let educationAlternatives: [AlternativeService] = [
+        AlternativeService(
+            name: "Khan Academy",
+            description: "Completely free education platform",
+            monthlyPrice: 0,
+            annualPrice: 0,
+            features: ["K-12 to college", "Practice exercises", "Personalized learning"],
+            pros: ["100% free", "Non-profit", "High quality content"],
+            cons: ["No certificates", "Self-paced only"],
+            websiteURL: "https://khanacademy.org",
+            rating: 4.7,
+            category: .education,
+            savingsPercentage: 100
+        ),
+        AlternativeService(
+            name: "Coursera Audit",
+            description: "Audit courses for free",
+            monthlyPrice: 0,
+            annualPrice: 0,
+            features: ["University courses", "Video lectures", "Readings"],
+            pros: ["Free to learn", "Top universities", "Professional content"],
+            cons: ["No certificate", "No graded assignments", "Limited access"],
+            websiteURL: "https://coursera.org",
+            rating: 4.5,
+            category: .education,
+            savingsPercentage: 100
+        ),
+        AlternativeService(
+            name: "edX Audit",
+            description: "Free access to MIT/Harvard courses",
+            monthlyPrice: 0,
+            annualPrice: 0,
+            features: ["Ivy League content", "Self-paced", "Audit mode"],
+            pros: ["Prestigious institutions", "Free learning", "Quality content"],
+            cons: ["No certificate free", "Limited interaction"],
+            websiteURL: "https://edx.org",
+            rating: 4.4,
+            category: .education,
+            savingsPercentage: 100
+        ),
+        AlternativeService(
+            name: "YouTube Learning",
+            description: "Free educational content",
+            monthlyPrice: 0,
+            annualPrice: 0,
+            features: ["Unlimited videos", "All topics", "Expert creators"],
+            pros: ["Completely free", "Huge variety", "Learn anything"],
+            cons: ["Quality varies", "No structured path", "Ads"],
+            websiteURL: "https://youtube.com/learning",
+            rating: 4.2,
+            category: .education,
+            savingsPercentage: 100
+        ),
+        AlternativeService(
+            name: "MIT OpenCourseWare",
+            description: "Free MIT course materials",
+            monthlyPrice: 0,
+            annualPrice: 0,
+            features: ["MIT lectures", "Problem sets", "Syllabi"],
+            pros: ["World-class content", "Completely free", "Self-paced"],
+            cons: ["No instructor support", "No credit", "Requires discipline"],
+            websiteURL: "https://ocw.mit.edu",
+            rating: 4.6,
+            category: .education,
+            savingsPercentage: 100
+        )
+    ]
+
+    // MARK: - Design Alternatives
+    static let designAlternatives: [AlternativeService] = [
+        AlternativeService(
+            name: "Canva Free",
+            description: "Free graphic design tool",
+            monthlyPrice: 0,
+            annualPrice: 0,
+            features: ["250K+ templates", "5GB storage", "Basic features"],
+            pros: ["Very capable free tier", "Easy to use", "Great templates"],
+            cons: ["No brand kit free", "Limited exports", "No background remover"],
+            websiteURL: "https://canva.com",
+            rating: 4.5,
+            category: .design,
+            savingsPercentage: 100
+        ),
+        AlternativeService(
+            name: "Figma Free",
+            description: "Free design and prototyping tool",
+            monthlyPrice: 0,
+            annualPrice: 0,
+            features: ["3 projects", "Unlimited files", "Collaboration"],
+            pros: ["Industry standard", "Real-time collaboration", "Powerful free tier"],
+            cons: ["3 project limit", "No dev mode free", "Cloud only"],
+            websiteURL: "https://figma.com",
+            rating: 4.7,
+            category: .design,
+            savingsPercentage: 100
+        ),
+        AlternativeService(
+            name: "Photopea",
+            description: "Free browser-based Photoshop alternative",
+            monthlyPrice: 0,
+            annualPrice: 0,
+            features: ["PSD support", "Layers", "Advanced editing"],
+            pros: ["Photoshop-like", "Completely free", "No install"],
+            cons: ["Ads support it", "Slower than native", "Export limits"],
+            websiteURL: "https://photopea.com",
+            rating: 4.3,
+            category: .design,
+            savingsPercentage: 100
+        ),
+        AlternativeService(
+            name: "GIMP",
+            description: "Free open-source image editor",
+            monthlyPrice: 0,
+            annualPrice: 0,
+            features: ["Layers", "Plugins", "Advanced tools"],
+            pros: ["Completely free", "Open source", "Powerful"],
+            cons: ["Steeper learning curve", "Dated UI", "No native CMYK"],
+            websiteURL: "https://gimp.org",
+            rating: 4.1,
+            category: .design,
+            savingsPercentage: 100
+        ),
+        AlternativeService(
+            name: "Krita",
+            description: "Free digital painting software",
+            monthlyPrice: 0,
+            annualPrice: 0,
+            features: ["Brush engines", "Animation", "Comic tools"],
+            pros: ["Free", "Great for artists", "Active development"],
+            cons: ["Not for photo editing", "Resource heavy", "Learning curve"],
+            websiteURL: "https://krita.org",
+            rating: 4.4,
+            category: .design,
+            savingsPercentage: 100
+        )
+    ]
+
+    // MARK: - Communication Alternatives
+    static let communicationAlternatives: [AlternativeService] = [
+        AlternativeService(
+            name: "Discord Free",
+            description: "Free voice, video, and text chat",
+            monthlyPrice: 0,
+            annualPrice: 0,
+            features: ["Unlimited servers", "Voice channels", "Screen share"],
+            pros: ["Completely free", "Great communities", "Low latency"],
+            cons: ["8MB file limit", "No custom emojis everywhere", "No HD streaming"],
+            websiteURL: "https://discord.com",
+            rating: 4.5,
+            category: .communication,
+            savingsPercentage: 100
+        ),
+        AlternativeService(
+            name: "Telegram Free",
+            description: "Free messaging with unlimited storage",
+            monthlyPrice: 0,
+            annualPrice: 0,
+            features: ["Unlimited cloud storage", "Large groups", "Bots"],
+            pros: ["Free forever", "Fast", "Privacy focused"],
+            cons: ["Not as popular as WhatsApp", "End-to-end not default"],
+            websiteURL: "https://telegram.org",
+            rating: 4.4,
+            category: .communication,
+            savingsPercentage: 100
+        ),
+        AlternativeService(
+            name: "Signal Free",
+            description: "Free private messaging",
+            monthlyPrice: 0,
+            annualPrice: 0,
+            features: ["End-to-end encryption", "Open source", "No ads"],
+            pros: ["Most private", "Non-profit", "Completely free"],
+            cons: ["Smaller user base", "Fewer features", "No cloud backup"],
+            websiteURL: "https://signal.org",
+            rating: 4.5,
+            category: .communication,
+            savingsPercentage: 100
+        ),
+        AlternativeService(
+            name: "WhatsApp Free",
+            description: "Free messaging and calls",
+            monthlyPrice: 0,
+            annualPrice: 0,
+            features: ["End-to-end encryption", "Voice/video calls", "Status"],
+            pros: ["Huge user base", "Free calls", "Simple"],
+            cons: ["Meta owned", "No usernames", "Limited customization"],
+            websiteURL: "https://whatsapp.com",
+            rating: 4.3,
+            category: .communication,
+            savingsPercentage: 100
+        ),
+        AlternativeService(
+            name: "Slack Free",
+            description: "Free team communication",
+            monthlyPrice: 0,
+            annualPrice: 0,
+            features: ["10K message history", "1:1 video calls", "Integrations"],
+            pros: ["Great for teams", "Many integrations", "Clean UI"],
+            cons: ["Message history limit", "No group video free", "File storage limit"],
+            websiteURL: "https://slack.com",
+            rating: 4.4,
+            category: .communication,
+            savingsPercentage: 100
+        )
+    ]
+
+    // MARK: - Cloud Computing Alternatives
+    static let cloudComputingAlternatives: [AlternativeService] = [
+        AlternativeService(
+            name: "AWS Free Tier",
+            description: "12 months free + always-free services",
+            monthlyPrice: 0,
+            annualPrice: 0,
+            features: ["750 hrs EC2", "5GB S3", "RDS", "Lambda"],
+            pros: ["Generous free tier", "Enterprise grade", "Many services"],
+            cons: ["Complex billing", "Easy to over-spend", "Steep learning curve"],
+            websiteURL: "https://aws.amazon.com/free",
+            rating: 4.3,
+            category: .cloudComputing,
+            savingsPercentage: 100
+        ),
+        AlternativeService(
+            name: "Google Cloud Free",
+            description: "$300 credit + always-free tier",
+            monthlyPrice: 0,
+            annualPrice: 0,
+            features: ["$300 credit", "Compute Engine", "Cloud Storage", "BigQuery"],
+            pros: ["$300 to start", "Always-free tier", "Good ML tools"],
+            cons: ["Credit expires", "Complex pricing", "Smaller community"],
+            websiteURL: "https://cloud.google.com/free",
+            rating: 4.2,
+            category: .cloudComputing,
+            savingsPercentage: 100
+        ),
+        AlternativeService(
+            name: "Oracle Cloud Free Tier",
+            description: "Always-free VMs and databases",
+            monthlyPrice: 0,
+            annualPrice: 0,
+            features: ["2 AMD VMs forever", "Autonomous DB", "Block storage"],
+            pros: ["Truly always free", "Generous resources", "No credit card"],
+            cons: ["Complex UI", "Limited regions", "Oracle reputation"],
+            websiteURL: "https://oracle.com/cloud/free",
+            rating: 3.9,
+            category: .cloudComputing,
+            savingsPercentage: 100
+        ),
+        AlternativeService(
+            name: "Vercel Hobby",
+            description: "Free hosting for frontend projects",
+            monthlyPrice: 0,
+            annualPrice: 0,
+            features: ["Unlimited hobby sites", "CI/CD", "Preview deploys"],
+            pros: ["Best for Next.js", "Fast global CDN", "Git integration"],
+            cons: ["Function limits", "No team features", "Bandwidth limits"],
+            websiteURL: "https://vercel.com",
+            rating: 4.5,
+            category: .cloudComputing,
+            savingsPercentage: 100
+        ),
+        AlternativeService(
+            name: "Netlify Starter",
+            description: "Free static site hosting",
+            monthlyPrice: 0,
+            annualPrice: 0,
+            features: ["100GB bandwidth", "Form handling", "Edge functions"],
+            pros: ["Easy deploys", "Form handling free", "Good DX"],
+            cons: ["Build minute limits", "Bandwidth cap", "No advanced analytics"],
+            websiteURL: "https://netlify.com",
+            rating: 4.4,
+            category: .cloudComputing,
+            savingsPercentage: 100
+        ),
+        AlternativeService(
+            name: "Heroku Eco",
+            description: "Low-cost dynos for hobby projects",
+            monthlyPrice: 5,
+            annualPrice: 60,
+            features: ["Sleeping dynos", "Postgres", "Add-ons"],
+            pros: ["Easy to use", "Great for prototypes", "Good ecosystem"],
+            cons: ["Dynos sleep", "More expensive than alternatives", "No free tier"],
+            websiteURL: "https://heroku.com",
+            rating: 4.0,
+            category: .cloudComputing,
+            savingsPercentage: 20
+        )
+    ]
+
+    // MARK: - Shopping Alternatives
+    static let shoppingAlternatives: [AlternativeService] = [
+        AlternativeService(
+            name: "Honey",
+            description: "Free browser extension for coupons",
+            monthlyPrice: 0,
+            annualPrice: 0,
+            features: ["Auto-apply coupons", "Price tracking", "Drops alerts"],
+            pros: ["Completely free", "Saves money", "Easy to use"],
+            cons: ["PayPal owned", "Not always best deal", "Privacy concerns"],
+            websiteURL: "https://joinhoney.com",
+            rating: 4.2,
+            category: .shopping,
+            savingsPercentage: 100
+        ),
+        AlternativeService(
+            name: "Rakuten",
+            description: "Free cashback on purchases",
+            monthlyPrice: 0,
+            annualPrice: 0,
+            features: ["Cashback", "Browser extension", "In-store offers"],
+            pros: ["Real cash back", "Free to use", "Thousands of stores"],
+            cons: ["Quarterly payouts", "Rates vary", "Need to activate"],
+            websiteURL: "https://rakuten.com",
+            rating: 4.3,
+            category: .shopping,
+            savingsPercentage: 100
+        ),
+        AlternativeService(
+            name: "Capital One Shopping",
+            description: "Free price comparison tool",
+            monthlyPrice: 0,
+            annualPrice: 0,
+            features: ["Price comparison", "Coupon codes", "Price drop alerts"],
+            pros: ["Free", "Works automatically", "No Capital One account needed"],
+            cons: ["Browser extension only", "Data collection", "Limited international"],
+            websiteURL: "https://capitaloneshopping.com",
+            rating: 4.1,
+            category: .shopping,
+            savingsPercentage: 100
+        ),
+        AlternativeService(
+            name: "RetailMeNot",
+            description: "Free coupon and deal aggregator",
+            monthlyPrice: 0,
+            annualPrice: 0,
+            features: ["Coupon codes", "Cashback", "Gift card deals"],
+            pros: ["Free", "Large database", "Easy to search"],
+            cons: ["Expired codes", "Cluttered site", "Lower cashback rates"],
+            websiteURL: "https://retailmenot.com",
+            rating: 3.9,
+            category: .shopping,
+            savingsPercentage: 100
+        )
+    ]
+
+    // MARK: - Finance Alternatives
+    static let financeAlternatives: [AlternativeService] = [
+        AlternativeService(
+            name: "YNAB Trial",
+            description: "34-day free trial budgeting app",
+            monthlyPrice: 0,
+            annualPrice: 109,
+            features: ["Zero-based budgeting", "Bank sync", "Goals"],
+            pros: ["Best budgeting method", "Educational", "Free trial"],
+            cons: ["Paid after trial", "Learning curve", "Manual effort"],
+            websiteURL: "https://ynab.com",
+            rating: 4.6,
+            category: .finance,
+            savingsPercentage: 0
+        ),
+        AlternativeService(
+            name: "PocketGuard Free",
+            description: "Free budgeting and bill tracking",
+            monthlyPrice: 0,
+            annualPrice: 0,
+            features: ["Income tracking", "Bill reminders", "Spending insights"],
+            pros: ["Free tier useful", "Simple UI", "Bank sync"],
+            cons: ["Limited categories free", "Ads", "Fewer features"],
+            websiteURL: "https://pocketguard.com",
+            rating: 4.0,
+            category: .finance,
+            savingsPercentage: 100
+        ),
+        AlternativeService(
+            name: "Credit Karma",
+            description: "Free credit score and monitoring",
+            monthlyPrice: 0,
+            annualPrice: 0,
+            features: ["Free credit score", "Monitoring", "Tax filing"],
+            pros: ["Completely free", "Weekly updates", "Credit simulator"],
+            cons: ["VantageScore not FICO", "Product recommendations", "Intuit owned"],
+            websiteURL: "https://creditkarma.com",
+            rating: 4.2,
+            category: .finance,
+            savingsPercentage: 100
+        ),
+        AlternativeService(
+            name: "NerdWallet Free Tools",
+            description: "Free financial calculators and advice",
+            monthlyPrice: 0,
+            annualPrice: 0,
+            features: ["Free credit score", "Calculators", "Comparison tools"],
+            pros: ["Completely free", "Educational", "Unbiased reviews"],
+            cons: ["Affiliate links", "Generic advice", "No active management"],
+            websiteURL: "https://nerdwallet.com",
+            rating: 4.1,
+            category: .finance,
+            savingsPercentage: 100
+        ),
+        AlternativeService(
+            name: "Monarch Money",
+            description: "Premium budgeting with 7-day trial",
+            monthlyPrice: 8.33,
+            annualPrice: 99.99,
+            features: ["Collaborative budgeting", "Investment tracking", "Goals"],
+            pros: ["Beautiful UI", "Great for couples", "Comprehensive"],
+            cons: ["Paid only", "No free tier", "Pricey"],
+            websiteURL: "https://monarchmoney.com",
+            rating: 4.5,
+            category: .finance,
+            savingsPercentage: 30
         )
     ]
 }

@@ -1053,7 +1053,7 @@ enum ServiceDatabase {
         SubscriptionService(
             id: "chatgpt",
             name: "ChatGPT Plus",
-            category: .productivity,
+            category: .aiTools,
             domain: "chat.openai.com",
             cancelURL: "https://chat.openai.com/account/manage",
             pauseURL: nil,
@@ -1073,7 +1073,7 @@ enum ServiceDatabase {
         SubscriptionService(
             id: "claude",
             name: "Claude Pro",
-            category: .productivity,
+            category: .aiTools,
             domain: "claude.ai",
             cancelURL: "https://claude.ai/settings",
             pauseURL: nil,
@@ -1093,7 +1093,7 @@ enum ServiceDatabase {
         SubscriptionService(
             id: "midjourney",
             name: "Midjourney",
-            category: .productivity,
+            category: .aiTools,
             domain: "midjourney.com",
             cancelURL: "https://www.midjourney.com/account/",
             pauseURL: nil,
@@ -1113,7 +1113,7 @@ enum ServiceDatabase {
         SubscriptionService(
             id: "notionai",
             name: "Notion AI",
-            category: .productivity,
+            category: .aiTools,
             domain: "notion.so",
             cancelURL: "https://www.notion.so/settings/billing",
             pauseURL: nil,
@@ -1133,7 +1133,7 @@ enum ServiceDatabase {
         SubscriptionService(
             id: "perplexity",
             name: "Perplexity Pro",
-            category: .productivity,
+            category: .aiTools,
             domain: "perplexity.ai",
             cancelURL: "https://www.perplexity.ai/settings",
             pauseURL: nil,
@@ -3342,7 +3342,8 @@ extension ServiceDatabase {
     static var services: [SubscriptionService] {
         streamingServices + musicServices + productivityServices + storageServices +
         securityServices + gamingServices + fitnessServices + foodServices +
-        newsServices + datingServices + shoppingServices + financeServices
+        newsServices + datingServices + shoppingServices + financeServices +
+        educationServices + designServices + communicationServices + cloudComputingServices
     }
 }
 
@@ -3668,16 +3669,85 @@ class SubscriptionActionManager: ObservableObject {
     /// Find alternative services for a subscription
     func findAlternatives(for subscription: Subscription) -> [AlternativeService] {
         guard let service = findService(for: subscription.name) else {
-            // Return generic alternatives based on category
-            if let category = subscription.category.flatMap({ catStr in
-                ServiceCategory.allCases.first { $0.rawValue.lowercased() == catStr.lowercased() }
-            }) {
-                return AlternativeDatabase.getAlternatives(for: category)
+            // Map SubscriptionCategory raw values to ServiceCategory
+            if let categoryString = subscription.category,
+               let mappedCategory = mapSubscriptionCategoryToServiceCategory(categoryString) {
+                return AlternativeDatabase.getAlternatives(for: mappedCategory)
             }
             return []
         }
 
         return AlternativeDatabase.getAlternatives(for: service.category)
+    }
+
+    /// Maps SubscriptionCategory rawValue strings to ServiceCategory values
+    private func mapSubscriptionCategoryToServiceCategory(_ categoryString: String) -> ServiceCategory? {
+        // Direct rawValue matches first
+        if let direct = ServiceCategory.allCases.first(where: { $0.rawValue.lowercased() == categoryString.lowercased() }) {
+            return direct
+        }
+
+        // Map SubscriptionCategory raw values to ServiceCategory
+        switch categoryString.lowercased() {
+        case "aitools":
+            return .aiTools
+        case "healthfitness":
+            return .fitness
+        case "cloudstorage":
+            return .storage
+        case "entertainment":
+            return .streaming
+        case "music":
+            return .music
+        case "productivity":
+            return .productivity
+        case "education":
+            return .education
+        case "news":
+            return .news
+        case "utilities":
+            return .other
+        case "social":
+            return .communication
+        case "shopping":
+            return .shopping
+        case "food":
+            return .food
+        case "sports":
+            return .fitness
+        case "finance":
+            return .finance
+        case "phone":
+            return .communication
+        case "insurance":
+            return .other
+        case "gym":
+            return .fitness
+        case "automotive":
+            return .other
+        case "home":
+            return .other
+        case "pet":
+            return .other
+        case "personalcare":
+            return .other
+        case "gaming":
+            return .gaming
+        case "developertools":
+            return .cloudComputing
+        case "creator":
+            return .design
+        case "travel":
+            return .other
+        case "dating":
+            return .dating
+        case "kids":
+            return .other
+        case "security":
+            return .security
+        default:
+            return nil
+        }
     }
     
     /// Calculate potential savings

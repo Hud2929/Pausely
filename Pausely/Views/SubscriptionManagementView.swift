@@ -6,10 +6,8 @@ enum ManagementSheet: Identifiable {
     case smartPause(PauseSuggestion, () -> Void)
     case usageInput(String, Int, (Int) -> Void)
     case usageHistory(String)
-    case sharing(Subscription)
     case priceHistory(Subscription)
     case annualSavings(Subscription)
-    case cancellationRequest(Subscription)
 
     var id: String {
         switch self {
@@ -18,10 +16,8 @@ enum ManagementSheet: Identifiable {
         case .smartPause(let s, _): return "smartPause-\(s.id)"
         case .usageInput(let name, _, _): return "usageInput-\(name)"
         case .usageHistory(let name): return "history-\(name)"
-        case .sharing(let sub): return "sharing-\(sub.id)"
         case .priceHistory(let sub): return "priceHistory-\(sub.id)"
         case .annualSavings(let sub): return "annualSavings-\(sub.id)"
-        case .cancellationRequest(let sub): return "cancelReq-\(sub.id)"
         }
     }
 }
@@ -120,10 +116,8 @@ struct SubscriptionManagementView: View {
                     actionManager: actionManager,
                     onPaywall: { activeSheet = .paywall },
                     onUsageHistory: { activeSheet = .usageHistory(subscription.name) },
-                    onSharing: { activeSheet = .sharing(subscription) },
                     onPriceHistory: { activeSheet = .priceHistory(subscription) },
-                    onAnnualSavings: { activeSheet = .annualSavings(subscription) },
-                    onCancellationRequest: { activeSheet = .cancellationRequest(subscription) }
+                    onAnnualSavings: { activeSheet = .annualSavings(subscription) }
                 )
 
                 if !alternatives.isEmpty {
@@ -154,14 +148,10 @@ struct SubscriptionManagementView: View {
                 UsageInputSheet(subscriptionName: name, currentMinutes: minutes, onSave: onSave)
             case .usageHistory(let name):
                 UsageHistorySheet(subscriptionName: name)
-            case .sharing(let sub):
-                SubscriptionSharingView(subscription: sub)
             case .priceHistory(let sub):
                 PriceHistoryView(subscription: sub)
             case .annualSavings(let sub):
                 AnnualSavingsCalculatorView(subscription: sub)
-            case .cancellationRequest(let sub):
-                CancellationRequestView(subscription: sub)
             }
         }
         .alert(item: $activeAlert) { alert in

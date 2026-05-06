@@ -12,7 +12,7 @@ struct PremiumProfileView: View {
     @State private var showingHelp = false
     @State private var showingExport = false
     @State private var showingWhatsNew = false
-    @State private var showingCancellationRequests = false
+    @State private var showingMarketingVideo = false
 
     var body: some View {
         ZStack {
@@ -61,40 +61,6 @@ struct PremiumProfileView: View {
                     .padding(.horizontal, 20)
                     .padding(.top, 24)
 
-                    // Cancellation Requests
-                    Button(action: {
-                        HapticStyle.medium.trigger()
-                        showingCancellationRequests = true
-                    }) {
-                        HStack(spacing: 16) {
-                            ZStack {
-                                RoundedRectangle(cornerRadius: 10)
-                                    .fill(Color.luxuryPurple.opacity(0.15))
-                                    .frame(width: 36, height: 36)
-
-                                Image(systemName: "xmark.shield.fill")
-                                    .font(.body)
-                                    .foregroundColor(Color.luxuryPurple)
-                            }
-
-                            Text("My Cancellations")
-                                .font(.body)
-                                .foregroundColor(.white)
-
-                            Spacer()
-
-                            Image(systemName: "chevron.right")
-                                .font(.subheadline.weight(.semibold))
-                                .foregroundColor(TextColors.tertiary)
-                        }
-                        .padding(14)
-                        .background(BackgroundColors.secondary)
-                    }
-                    .buttonStyle(PlainButtonStyle())
-                    .padding(.horizontal, 20)
-                    .padding(.top, 24)
-                    .accessibilityIdentifier("myCancellationsButton")
-
                     // What's New Button
                     Button(action: {
                         HapticStyle.medium.trigger()
@@ -138,6 +104,39 @@ struct PremiumProfileView: View {
                         .padding(.horizontal, 20)
                         .padding(.top, 24)
 
+                    // Marketing Video
+                    Button(action: {
+                        HapticStyle.medium.trigger()
+                        showingMarketingVideo = true
+                    }) {
+                        HStack(spacing: 16) {
+                            ZStack {
+                                RoundedRectangle(cornerRadius: 10)
+                                    .fill(Color.luxuryPink.opacity(0.15))
+                                    .frame(width: 36, height: 36)
+
+                                Image(systemName: "film.fill")
+                                    .font(.body)
+                                    .foregroundColor(Color.luxuryPink)
+                            }
+
+                            Text("Marketing Video")
+                                .font(.body)
+                                .foregroundColor(.white)
+
+                            Spacer()
+
+                            Image(systemName: "chevron.right")
+                                .font(.subheadline.weight(.semibold))
+                                .foregroundColor(TextColors.tertiary)
+                        }
+                        .padding(14)
+                        .background(BackgroundColors.secondary)
+                    }
+                    .buttonStyle(PlainButtonStyle())
+                    .padding(.horizontal, 20)
+                    .padding(.top, 24)
+
                     // Sign Out
                     SignOutButton {
                         Task {
@@ -172,8 +171,8 @@ struct PremiumProfileView: View {
         .sheet(isPresented: $showingWhatsNew) {
             WhatsNewSheet()
         }
-        .sheet(isPresented: $showingCancellationRequests) {
-            CancellationStatusView()
+        .fullScreenCover(isPresented: $showingMarketingVideo) {
+            MarketingVideoView()
         }
     }
 }

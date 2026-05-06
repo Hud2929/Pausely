@@ -95,48 +95,57 @@ final class RealInsightsEngine: ObservableObject {
 
     // MARK: - Health Score
 
-    /// Calculate subscription health score (0-100)
-    /// Based on: cost efficiency, usage, variety, and waste
+    /// Unified subscription health score (0-100).
+    /// Single source of truth used by Dashboard, Insights, and Financial Advisor.
+    /// Measures: organization, affordability, value, diversity, and structure.
     func calculateHealthScore(subscriptions: [Subscription]) -> Int {
-        guard !subscriptions.isEmpty else { return 100 }
+        guard !subscriptions.isEmpty else { return 0 }
 
         let active = subscriptions.filter { $0.status == .active }
         guard !active.isEmpty else { return 100 }
 
-        // Factor 1: Average cost per subscription (lower is better, max 30 points)
+        let count = active.count
+        var score = 0.0
+
+        // 1. Data Completeness (20 pts) — organized tracking
+        let withBilling = active.filter { $0.nextBillingDate != nil }.count
+        let withUsage = active.filter { screenTimeManager.getCurrentMonthUsage(for: $0.name) > 0 }.count
+        score += (Double(withBilling) / Double(count)) * 12
+        score += (Double(withUsage) / Double(count)) * 8
+
+        // 2. Cost Efficiency (25 pts) — reasonable average spend
         let totalMonthly = active.reduce(Decimal(0)) { $0 + $1.monthlyCost }
-        let avgCost = NSDecimalNumber(decimal: totalMonthly / Decimal(active.count)).doubleValue
-        let costScore = max(0, min(30, 30 - (avgCost - 10) * 1.5))
+        let avgCost = NSDecimalNumber(decimal: totalMonthly / Decimal(count)).doubleValue
+        // $5 avg = 25 pts, $15 avg = 10 pts, $25+ avg = 0 pts
+        score += max(0, 25 - (avgCost - 5) * 1.5)
 
-        // Factor 2: Waste score from usage (max 30 points)
-        var wasteScore = 30.0
+        // 3. Usage Value (25 pts) — getting value from what you pay for
+        var valueScore = 25.0
         for sub in active {
-            let usage = screenTimeManager.getUsage(for: sub.name)
-            if usage == nil || usage?.minutesUsed == 0 {
-                wasteScore -= 5 // No usage data = potential waste
+            let minutes = screenTimeManager.getCurrentMonthUsage(for: sub.name)
+            if minutes == 0 {
+                valueScore -= 3 // Untracked or unused
+            } else {
+                let hours = Double(minutes) / 60.0
+                let cph = NSDecimalNumber(decimal: sub.monthlyCost / Decimal(hours)).doubleValue
+                if cph > 20 { valueScore -= 4 }
+                else if cph > 10 { valueScore -= 2 }
             }
         }
-        wasteScore = max(0, wasteScore)
+        score += max(0, valueScore)
 
-        // Factor 3: Category diversity (max 20 points)
+        // 4. Category Diversity (15 pts) — not over-concentrated
         let categories = Set(active.compactMap { $0.category })
-        let diversityScore = min(20, Double(categories.count) * 4)
+        score += min(15, Double(categories.count) * 3)
 
-        // Factor 4: Value ratio - are they getting good deals? (max 20 points)
-        var valueScore = 20.0
-        for sub in active {
-            let usage = screenTimeManager.getUsage(for: sub.name)
-            let minutes = usage?.minutesUsed ?? 0
-            if minutes > 0 {
-                let costPerHour = NSDecimalNumber(decimal: sub.monthlyCost / Decimal(minutes) * 60).doubleValue
-                if costPerHour > 10 { valueScore -= 2 }
-                if costPerHour > 20 { valueScore -= 3 }
-            }
-        }
-        valueScore = max(0, valueScore)
+        // 5. Structural Health (15 pts) — no duplicates, reasonable count
+        let grouped = Dictionary(grouping: active) { $0.name.lowercased() }
+        let duplicatePenalty = grouped.values
+            .filter { $0.count > 1 }
+            .reduce(0) { $0 + ($1.count - 1) } * 5
+        score += max(0, 15 - Double(duplicatePenalty))
 
-        let totalScore = Int(costScore + wasteScore + diversityScore + valueScore)
-        return min(100, max(25, totalScore))
+        return min(100, max(0, Int(score)))
     }
 
     // MARK: - Waste Detection
