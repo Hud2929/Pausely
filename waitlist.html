@@ -1,0 +1,535 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="theme-color" content="#1a1a2e">
+    <title>Pausely - Join the Waitlist</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Segoe UI', Roboto, sans-serif;
+            background: #0f0f1a;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow-x: hidden;
+            position: relative;
+        }
+
+        /* Animated gradient orbs */
+        .orb {
+            position: absolute;
+            border-radius: 50%;
+            filter: blur(80px);
+            opacity: 0.5;
+            animation: float 20s ease-in-out infinite;
+            pointer-events: none;
+        }
+        .orb-1 {
+            width: 400px; height: 400px;
+            background: linear-gradient(135deg, #c9a227, #d4af37);
+            top: -100px; left: -100px;
+            animation-delay: 0s;
+        }
+        .orb-2 {
+            width: 350px; height: 350px;
+            background: linear-gradient(135deg, #8b5cf6, #a855f7);
+            bottom: -80px; right: -80px;
+            animation-delay: -7s;
+        }
+        .orb-3 {
+            width: 300px; height: 300px;
+            background: linear-gradient(135deg, #ec4899, #f472b6);
+            top: 40%; left: 60%;
+            animation-delay: -14s;
+            opacity: 0.3;
+        }
+        @keyframes float {
+            0%, 100% { transform: translate(0, 0) scale(1); }
+            33% { transform: translate(30px, -30px) scale(1.05); }
+            66% { transform: translate(-20px, 20px) scale(0.95); }
+        }
+
+        .container {
+            width: 100%;
+            max-width: 420px;
+            padding: 24px;
+            position: relative;
+            z-index: 1;
+        }
+
+        .glass-card {
+            background: rgba(255, 255, 255, 0.06);
+            backdrop-filter: blur(24px);
+            -webkit-backdrop-filter: blur(24px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 24px;
+            padding: 40px 32px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.05);
+        }
+
+        .logo {
+            text-align: center;
+            margin-bottom: 28px;
+        }
+        .logo-icon {
+            width: 64px; height: 64px;
+            background: linear-gradient(135deg, #c9a227 0%, #d4af37 50%, #f0e68c 100%);
+            border-radius: 18px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 28px;
+            font-weight: 700;
+            color: #1a1a2e;
+            box-shadow: 0 4px 16px rgba(201, 162, 39, 0.3);
+            margin-bottom: 16px;
+        }
+        .logo h1 {
+            font-size: 32px;
+            font-weight: 700;
+            color: #ffffff;
+            letter-spacing: -0.5px;
+        }
+        .logo p {
+            font-size: 15px;
+            color: rgba(255, 255, 255, 0.55);
+            margin-top: 6px;
+        }
+
+        .headline {
+            text-align: center;
+            margin-bottom: 28px;
+        }
+        .headline h2 {
+            font-size: 22px;
+            font-weight: 600;
+            color: #ffffff;
+            line-height: 1.3;
+            margin-bottom: 10px;
+        }
+        .headline p {
+            font-size: 15px;
+            color: rgba(255, 255, 255, 0.6);
+            line-height: 1.5;
+        }
+
+        .features {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            margin-bottom: 28px;
+        }
+        .feature {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 10px 14px;
+            background: rgba(255, 255, 255, 0.04);
+            border-radius: 12px;
+            border: 1px solid rgba(255, 255, 255, 0.06);
+        }
+        .feature-icon {
+            width: 32px; height: 32px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 16px;
+            flex-shrink: 0;
+        }
+        .feature-icon.gold { background: rgba(201, 162, 39, 0.15); }
+        .feature-icon.purple { background: rgba(139, 92, 246, 0.15); }
+        .feature-icon.pink { background: rgba(236, 72, 153, 0.15); }
+        .feature-text {
+            font-size: 14px;
+            color: rgba(255, 255, 255, 0.8);
+            font-weight: 500;
+        }
+
+        .form-group {
+            margin-bottom: 16px;
+        }
+        .form-group label {
+            display: block;
+            font-size: 13px;
+            font-weight: 500;
+            color: rgba(255, 255, 255, 0.7);
+            margin-bottom: 6px;
+            text-transform: uppercase;
+            letter-spacing: 0.3px;
+        }
+        .form-group input,
+        .form-group select {
+            width: 100%;
+            padding: 14px 16px;
+            background: rgba(255, 255, 255, 0.06);
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            border-radius: 14px;
+            color: #ffffff;
+            font-size: 16px;
+            font-family: inherit;
+            outline: none;
+            transition: all 0.2s;
+            -webkit-appearance: none;
+        }
+        .form-group input::placeholder {
+            color: rgba(255, 255, 255, 0.3);
+        }
+        .form-group input:focus,
+        .form-group select:focus {
+            border-color: rgba(201, 162, 39, 0.5);
+            background: rgba(255, 255, 255, 0.09);
+            box-shadow: 0 0 0 3px rgba(201, 162, 39, 0.1);
+        }
+        .form-group select {
+            cursor: pointer;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='rgba(255,255,255,0.5)' d='M6 8L1 3h10z'/%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 16px center;
+            padding-right: 40px;
+        }
+        .form-group select option {
+            background: #1a1a2e;
+            color: #ffffff;
+        }
+
+        .btn-primary {
+            width: 100%;
+            padding: 16px;
+            background: linear-gradient(135deg, #c9a227 0%, #d4af37 100%);
+            border: none;
+            border-radius: 14px;
+            color: #1a1a2e;
+            font-size: 16px;
+            font-weight: 700;
+            font-family: inherit;
+            cursor: pointer;
+            transition: all 0.2s;
+            box-shadow: 0 4px 16px rgba(201, 162, 39, 0.25);
+            position: relative;
+            overflow: hidden;
+        }
+        .btn-primary:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 6px 20px rgba(201, 162, 39, 0.35);
+        }
+        .btn-primary:active {
+            transform: translateY(0);
+        }
+        .btn-primary:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+        .btn-primary .spinner {
+            display: none;
+            width: 18px; height: 18px;
+            border: 2px solid rgba(26, 26, 46, 0.3);
+            border-top-color: #1a1a2e;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+            margin: 0 auto;
+        }
+        .btn-primary.loading .spinner { display: block; }
+        .btn-primary.loading .btn-text { display: none; }
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        .error-msg {
+            margin-top: 12px;
+            padding: 12px 16px;
+            background: rgba(239, 68, 68, 0.1);
+            border: 1px solid rgba(239, 68, 68, 0.2);
+            border-radius: 12px;
+            color: #fca5a5;
+            font-size: 14px;
+            display: none;
+        }
+        .error-msg.visible { display: block; }
+
+        .success-state {
+            text-align: center;
+            display: none;
+        }
+        .success-state.visible { display: block; }
+        .success-icon {
+            width: 72px; height: 72px;
+            background: linear-gradient(135deg, #22c55e, #16a34a);
+            border-radius: 50%;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 36px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 20px rgba(34, 197, 94, 0.3);
+        }
+        .success-state h3 {
+            font-size: 22px;
+            font-weight: 600;
+            color: #ffffff;
+            margin-bottom: 10px;
+        }
+        .success-state p {
+            font-size: 15px;
+            color: rgba(255, 255, 255, 0.6);
+            line-height: 1.5;
+        }
+
+        .trust-badge {
+            text-align: center;
+            margin-top: 20px;
+            font-size: 12px;
+            color: rgba(255, 255, 255, 0.3);
+        }
+        .trust-badge span {
+            margin: 0 6px;
+        }
+
+        .affiliate-tag {
+            text-align: center;
+            margin-bottom: 16px;
+            padding: 8px 14px;
+            background: rgba(139, 92, 246, 0.12);
+            border: 1px solid rgba(139, 92, 246, 0.2);
+            border-radius: 10px;
+            display: none;
+        }
+        .affiliate-tag.visible {
+            display: inline-block;
+        }
+        .affiliate-tag span {
+            font-size: 12px;
+            color: rgba(255, 255, 255, 0.6);
+            font-weight: 500;
+        }
+        .affiliate-tag strong {
+            color: #a78bfa;
+        }
+
+        @media (max-width: 480px) {
+            .container { padding: 16px; }
+            .glass-card { padding: 28px 20px; border-radius: 20px; }
+            .logo h1 { font-size: 28px; }
+            .headline h2 { font-size: 20px; }
+        }
+    </style>
+</head>
+<body>
+    <div class="orb orb-1"></div>
+    <div class="orb orb-2"></div>
+    <div class="orb orb-3"></div>
+
+    <div class="container">
+        <div class="glass-card">
+            <div class="logo">
+                <img src="icon.png" alt="Pausely" class="logo-icon-img" width="64" height="64" style="border-radius: 18px; margin-bottom: 16px; box-shadow: 0 4px 16px rgba(201, 162, 39, 0.3);">
+                <h1>Pausely</h1>
+                <p>Smart Subscription Manager</p>
+            </div>
+
+            <div class="headline">
+                <h2>Be the First to Experience What's Next</h2>
+                <p>Join the waitlist and get early access to the next evolution of Pausely. No spam, just a heads up when we launch.</p>
+            </div>
+
+            <div class="features">
+                <div class="feature">
+                    <div class="feature-icon gold">&#9889;</div>
+                    <div class="feature-text">Early access to new features</div>
+                </div>
+                <div class="feature">
+                    <div class="feature-icon purple">&#128200;</div>
+                    <div class="feature-text">Advanced subscription analytics</div>
+                </div>
+                <div class="feature">
+                    <div class="feature-icon pink">&#127873;</div>
+                    <div class="feature-text">Exclusive launch-day perks</div>
+                </div>
+            </div>
+
+            <div style="text-align: center;">
+                <div class="affiliate-tag" id="affiliate-tag">
+                    <span>Referred by <strong id="affiliate-name">a friend</strong></span>
+                </div>
+            </div>
+
+            <form id="waitlist-form">
+                <div class="form-group">
+                    <label for="email">Email Address</label>
+                    <input type="email" id="email" name="email" placeholder="you@example.com" required autocomplete="email">
+                </div>
+
+                <div class="form-group">
+                    <label for="source">How did you hear about us?</label>
+                    <select id="source" name="source">
+                        <option value="waitlist">Select an option</option>
+                        <option value="tiktok">TikTok</option>
+                        <option value="instagram">Instagram</option>
+                        <option value="twitter">Twitter / X</option>
+                        <option value="youtube">YouTube</option>
+                        <option value="friend">From a friend</option>
+                        <option value="search">Search engine</option>
+                        <option value="other">Other</option>
+                    </select>
+                </div>
+
+                <button type="submit" class="btn-primary" id="submit-btn">
+                    <span class="btn-text">Join the Waitlist</span>
+                    <div class="spinner"></div>
+                </button>
+            </form>
+
+            <div class="error-msg" id="error-msg"></div>
+
+            <div class="success-state" id="success-state">
+                <div class="success-icon">&#10003;</div>
+                <h3>You're on the list!</h3>
+                <p>We've sent a welcome email to your inbox. Check your email (and spam folder) for confirmation. We'll notify you as soon as the new version is ready.</p>
+            </div>
+
+            <div class="trust-badge">
+                <span>&#128274;</span> Your email is safe with us
+                <span>&middot;</span>
+                Unsubscribe anytime
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ============================================
+        // CONFIGURATION - REPLACE WITH YOUR CREDENTIALS
+        // ============================================
+        // Supabase config (for affiliate lookup only)
+        const SUPABASE_URL = 'https://ddaotwyaowspwspyddzs.supabase.co';
+        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRkYW90d3lhb3dzcHdzcHlkZHpzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzAzOTg2ODIsImV4cCI6MjA4NTk3NDY4Mn0.UHXLulJBx6JqVPUFjDCxP0DE5zeU32knixXo2gvcSxI';
+
+        // Edge Function URL (auto-filled from Supabase URL)
+        const EDGE_FUNCTION_URL = SUPABASE_URL.replace(/\/+$/, '') + '/functions/v1/waitlist-signup';
+
+        // ============================================
+        // INITIALIZE SUPABASE
+        // ============================================
+        let supabase = null;
+        if (!SUPABASE_URL.includes('your-project') && !SUPABASE_ANON_KEY.includes('your-anon-key')) {
+            supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+        }
+
+        // ============================================
+        // AFFILIATE TRACKING
+        // ============================================
+        function getUrlParam(name) {
+            const params = new URLSearchParams(window.location.search);
+            return params.get(name);
+        }
+
+        const affiliateCode = getUrlParam('ref') || getUrlParam('affiliate') || null;
+        let affiliateName = 'a friend';
+
+        async function loadAffiliateInfo() {
+            if (!affiliateCode || !supabase) return;
+
+            try {
+                const { data, error } = await supabase
+                    .from('affiliates')
+                    .select('name')
+                    .eq('code', affiliateCode)
+                    .eq('is_active', true)
+                    .single();
+
+                if (data && !error) {
+                    affiliateName = data.name;
+                    document.getElementById('affiliate-name').textContent = data.name;
+                    document.getElementById('affiliate-tag').classList.add('visible');
+                }
+            } catch (e) {
+                console.log('Affiliate lookup failed:', e);
+            }
+        }
+
+        // ============================================
+        // FORM HANDLING
+        // ============================================
+        const form = document.getElementById('waitlist-form');
+        const submitBtn = document.getElementById('submit-btn');
+        const errorMsg = document.getElementById('error-msg');
+        const successState = document.getElementById('success-state');
+
+        function showError(msg) {
+            errorMsg.textContent = msg;
+            errorMsg.classList.add('visible');
+        }
+
+        function hideError() {
+            errorMsg.classList.remove('visible');
+        }
+
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            hideError();
+
+            if (SUPABASE_URL.includes('your-project')) {
+                showError('This form is not yet configured. Please set SUPABASE_URL in the code.');
+                return;
+            }
+
+            const email = document.getElementById('email').value.trim().toLowerCase();
+            const source = document.getElementById('source').value;
+
+            // Basic email validation
+            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            if (!emailRegex.test(email)) {
+                showError('Please enter a valid email address.');
+                return;
+            }
+
+            submitBtn.disabled = true;
+            submitBtn.classList.add('loading');
+
+            try {
+                const response = await fetch(EDGE_FUNCTION_URL, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        email: email,
+                        affiliate_code: affiliateCode,
+                        source: source !== 'waitlist' ? source : 'organic'
+                    })
+                });
+
+                const result = await response.json();
+
+                if (response.ok && result.success) {
+                    // Success
+                    form.style.display = 'none';
+                    successState.classList.add('visible');
+
+                    // Show email confirmation if sent
+                    if (result.email_sent) {
+                        const emailNote = document.createElement('p');
+                        emailNote.style.cssText = 'font-size: 14px; color: rgba(255,255,255,0.5); margin-top: 12px;';
+                        emailNote.textContent = 'Check your inbox for a confirmation email!';
+                        successState.querySelector('p').after(emailNote);
+                    }
+
+                    localStorage.setItem('pausely_waitlist_email', email);
+                } else {
+                    showError(result.error || 'Something went wrong. Please try again.');
+                }
+            } catch (err) {
+                console.error('Waitlist signup error:', err);
+                showError('Network error. Please check your connection and try again.');
+            } finally {
+                submitBtn.disabled = false;
+                submitBtn.classList.remove('loading');
+            }
+        });
+
+        // Load affiliate info on page load
+        loadAffiliateInfo();
+    </script>
+</body>
+</html>
