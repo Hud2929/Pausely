@@ -151,6 +151,14 @@ class RevolutionaryAuthManager: ObservableObject {
         )
     }
 
+    // MARK: - Post Auth Setup
+
+    /// Called after any successful authentication. Previously handled affiliate attribution.
+    /// Now kept as a hook for future post-auth logic.
+    private func postAuthSetup(user: User) {
+        // Affiliate system disabled
+    }
+
     deinit {
         refreshTask?.cancel()
     }
@@ -172,7 +180,7 @@ class RevolutionaryAuthManager: ObservableObject {
                 PauselyLogger.info("Session verified for: \(user.email ?? user.id)", category: "auth")
             }
             startSessionRefresh()
-
+            postAuthSetup(user: user)
 
         } else if isAuthenticated {
             // Cache said we're logged in but Supabase disagrees — token expired.
@@ -292,8 +300,8 @@ class RevolutionaryAuthManager: ObservableObject {
                     self.isAuthenticated = true
                     self.state = .authenticated(user)
                     self.startSessionRefresh()
-                    
-                            
+                    self.postAuthSetup(user: user)
+
                     #if DEBUG
                     PauselyLogger.info("Sign up successful - user auto-confirmed and signed in", category: "auth")
                     #endif
@@ -394,6 +402,7 @@ class RevolutionaryAuthManager: ObservableObject {
             }
 
             startSessionRefresh()
+            postAuthSetup(user: user)
 
         } catch {
             let authError = PauselyAuthError.unknown(error)
@@ -448,8 +457,8 @@ class RevolutionaryAuthManager: ObservableObject {
             }
 
             startSessionRefresh()
-            
-            
+            postAuthSetup(user: user)
+
         } catch let error as PauselyAuthError {
             #if DEBUG
             PauselyLogger.error("Sign in failed with AuthError: \(error.localizedDescription)", category: "auth")
@@ -522,9 +531,10 @@ class RevolutionaryAuthManager: ObservableObject {
                 self.state = .authenticated(user)
             }
             startSessionRefresh()
+            postAuthSetup(user: user)
         }
     }
-    
+
     // MARK: - Sign in with Apple
 
     func signInWithApple(idToken: String, rawNonce: String, fullName: PersonNameComponents?) async throws {
@@ -559,7 +569,7 @@ class RevolutionaryAuthManager: ObservableObject {
             }
 
             startSessionRefresh()
-            
+            postAuthSetup(user: user)
 
         } catch {
             let authError = PauselyAuthError.unknown(error)
@@ -618,6 +628,7 @@ class RevolutionaryAuthManager: ObservableObject {
                         self.isCheckingEmailConfirmation = false
                     }
                     startSessionRefresh()
+                    postAuthSetup(user: user)
                     break
                 }
             }

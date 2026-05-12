@@ -888,9 +888,9 @@ struct ReferralCodeRecord: Codable, Identifiable {
     let totalEarnings: Decimal
     let createdAt: Date
     let isEligibleForFreePro: Bool
-    
+
     var id: String { code }
-    
+
     enum CodingKeys: String, CodingKey {
         case code
         case referrerUserId = "referrer_user_id"
@@ -899,6 +899,30 @@ struct ReferralCodeRecord: Codable, Identifiable {
         case totalEarnings = "total_earnings"
         case createdAt = "created_at"
         case isEligibleForFreePro = "is_eligible_for_free_pro"
+    }
+}
+
+// MARK: - Waitlist Model
+
+struct WaitlistEntry: Codable, Identifiable {
+    let id: UUID
+    let email: String
+    let source: String?
+    let signedUpAt: Date
+    let notifiedAt: Date?
+    let convertedUserId: UUID?
+    let convertedAt: Date?
+    let createdAt: Date
+
+    enum CodingKeys: String, CodingKey {
+        case id
+        case email
+        case source
+        case signedUpAt = "signed_up_at"
+        case notifiedAt = "notified_at"
+        case convertedUserId = "converted_user_id"
+        case convertedAt = "converted_at"
+        case createdAt = "created_at"
     }
 }
 

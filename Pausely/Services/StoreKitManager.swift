@@ -1,6 +1,7 @@
 import Foundation
 import StoreKit
 import SwiftUI
+import Supabase
 
 // MARK: - StoreKit Manager
 /// Handles in-app purchases using Apple's StoreKit 2
@@ -88,7 +89,7 @@ final class StoreKitManager: ObservableObject {
                 
                 // Update entitlements
                 await updatePurchasedProducts()
-                
+
                 // Finish the transaction
                 await transaction.finish()
                 
