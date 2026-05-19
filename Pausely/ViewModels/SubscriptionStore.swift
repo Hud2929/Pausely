@@ -265,7 +265,7 @@ class SubscriptionStore: ObservableObject {
                     }
                 }
             }
-            return false
+            return true
         } catch {
             os_log("Error adding subscription to cloud: %{public}@", log: .default, type: .error, error.localizedDescription)
             // 3. Enqueue for retry
@@ -273,7 +273,7 @@ class SubscriptionStore: ObservableObject {
                 let op = SyncOperation(type: .create, subscriptionId: localSub.id, payload: payload)
                 SyncQueue.shared.enqueue(op)
             }
-            return true
+            throw error
         }
     }
     
@@ -305,6 +305,7 @@ class SubscriptionStore: ObservableObject {
                 let op = SyncOperation(type: .update, subscriptionId: subscription.id, payload: payload)
                 SyncQueue.shared.enqueue(op)
             }
+            throw error
         }
     }
 
@@ -350,6 +351,7 @@ class SubscriptionStore: ObservableObject {
             // 3. Enqueue for retry
             let op = SyncOperation(type: .delete, subscriptionId: id, payload: Data())
             SyncQueue.shared.enqueue(op)
+            throw error
         }
     }
 
@@ -490,6 +492,7 @@ class SubscriptionStore: ObservableObject {
     #if DEBUG
     static func makeDemoSubscriptions() -> [Subscription] {
         let calendar = Calendar.current
+        let now = Date()
         return [
             Subscription(
                 id: UUID(),
@@ -498,9 +501,10 @@ class SubscriptionStore: ObservableObject {
                 category: "Entertainment",
                 amount: 15.99,
                 billingFrequency: .monthly,
-                nextBillingDate: calendar.date(byAdding: .day, value: 5, to: Date()),
+                nextBillingDate: calendar.date(byAdding: .day, value: 5, to: now),
                 status: .active,
-                canPause: true
+                canPause: true,
+                startDate: calendar.date(byAdding: .year, value: -2, to: now)
             ),
             Subscription(
                 id: UUID(),
@@ -509,9 +513,10 @@ class SubscriptionStore: ObservableObject {
                 category: "Music",
                 amount: 10.99,
                 billingFrequency: .monthly,
-                nextBillingDate: calendar.date(byAdding: .day, value: 12, to: Date()),
+                nextBillingDate: calendar.date(byAdding: .day, value: 12, to: now),
                 status: .active,
-                canPause: true
+                canPause: true,
+                startDate: calendar.date(byAdding: .year, value: -1, to: now)
             ),
             Subscription(
                 id: UUID(),
@@ -519,9 +524,10 @@ class SubscriptionStore: ObservableObject {
                 category: "AI Tools",
                 amount: 20.00,
                 billingFrequency: .monthly,
-                nextBillingDate: calendar.date(byAdding: .day, value: 18, to: Date()),
+                nextBillingDate: calendar.date(byAdding: .day, value: 18, to: now),
                 status: .active,
-                canPause: false
+                canPause: false,
+                startDate: calendar.date(byAdding: .month, value: -8, to: now)
             ),
             Subscription(
                 id: UUID(),
@@ -529,9 +535,10 @@ class SubscriptionStore: ObservableObject {
                 category: "Productivity",
                 amount: 32.95,
                 billingFrequency: .monthly,
-                nextBillingDate: calendar.date(byAdding: .day, value: 2, to: Date()),
+                nextBillingDate: calendar.date(byAdding: .day, value: 2, to: now),
                 status: .active,
-                canPause: true
+                canPause: true,
+                startDate: calendar.date(byAdding: .month, value: -6, to: now)
             ),
             Subscription(
                 id: UUID(),
@@ -539,9 +546,10 @@ class SubscriptionStore: ObservableObject {
                 category: "Entertainment",
                 amount: 13.99,
                 billingFrequency: .monthly,
-                nextBillingDate: calendar.date(byAdding: .day, value: 24, to: Date()),
+                nextBillingDate: calendar.date(byAdding: .day, value: 24, to: now),
                 status: .active,
-                canPause: true
+                canPause: true,
+                startDate: calendar.date(byAdding: .year, value: -3, to: now)
             ),
             Subscription(
                 id: UUID(),
@@ -549,10 +557,11 @@ class SubscriptionStore: ObservableObject {
                 category: "Productivity",
                 amount: 10.00,
                 billingFrequency: .monthly,
-                nextBillingDate: calendar.date(byAdding: .day, value: 8, to: Date()),
+                nextBillingDate: calendar.date(byAdding: .day, value: 8, to: now),
                 status: .paused,
                 canPause: true,
-                pausedUntil: calendar.date(byAdding: .month, value: 2, to: Date())
+                pausedUntil: calendar.date(byAdding: .month, value: 2, to: now),
+                startDate: calendar.date(byAdding: .month, value: -4, to: now)
             ),
             Subscription(
                 id: UUID(),
@@ -560,9 +569,10 @@ class SubscriptionStore: ObservableObject {
                 category: "Health & Fitness",
                 amount: 44.00,
                 billingFrequency: .monthly,
-                nextBillingDate: calendar.date(byAdding: .day, value: 15, to: Date()),
+                nextBillingDate: calendar.date(byAdding: .day, value: 15, to: now),
                 status: .active,
-                canPause: true
+                canPause: true,
+                startDate: calendar.date(byAdding: .month, value: -3, to: now)
             )
         ]
     }

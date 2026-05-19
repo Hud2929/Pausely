@@ -68,6 +68,7 @@ struct RootView: View {
     @State private var showSplash = true
     @State private var splashAnimation = false
     @State private var showAuth = false
+    @State private var splashWorkItem: DispatchWorkItem?
     @AppStorage("hasCompletedOnboarding") private var hasCompletedOnboarding = false
 
     /// Detects if app was launched for UI testing
@@ -130,16 +131,21 @@ struct RootView: View {
         .animation(.easeInOut(duration: 0.5), value: authManager.isAuthenticated)
         .animation(.easeInOut(duration: 0.5), value: showAuth)
         .onAppear {
-            DispatchQueue.main.asyncAfter(deadline: .now() + 2.5) {
+            let workItem = DispatchWorkItem {
                 withAnimation(.easeOut(duration: 0.4)) {
                     showSplash = false
                 }
             }
+            splashWorkItem = workItem
+            DispatchQueue.main.asyncAfter(deadline: .now() + 2.5, execute: workItem)
+        }
+        .onDisappear {
+            splashWorkItem?.cancel()
         }
         .task {
             // Initialize StoreKit: starts the transaction listener and checks
             // existing entitlements so returning subscribers are recognized immediately.
-            await StoreKitManager.shared.loadProducts()
+            await StoreKitManager.shared.loadProductsIfNeeded()
         }
         .onOpenURL { url in
             // Handle deep links (referral codes, auth callbacks, subscription management, etc.)

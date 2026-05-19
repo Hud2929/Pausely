@@ -116,7 +116,7 @@ serve(async (req) => {
             'Content-Type': 'application/json'
           },
           body: JSON.stringify({
-            from: 'Pausely <onboarding@resend.dev>',
+            from: 'Pausely <hello@pausely.pro>',
             to: normalizedEmail,
             subject: "You're on the Pausely waitlist!",
             html: htmlBody
@@ -235,7 +235,7 @@ function getWelcomeEmailHTML(email: string): string {
               <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
                 <tr>
                   <td align="center">
-                    <a href="https://pausely.app" style="display:inline-block;padding:14px 32px;background-color:#111827;color:#FFFFFF;text-decoration:none;border-radius:10px;font-size:15px;font-weight:600;">
+                    <a href="https://pausely.pro" style="display:inline-block;padding:14px 32px;background-color:#111827;color:#FFFFFF;text-decoration:none;border-radius:10px;font-size:15px;font-weight:600;">
                       Visit Pausely
                     </a>
                   </td>
@@ -255,9 +255,9 @@ function getWelcomeEmailHTML(email: string): string {
                 &copy; 2026 Pausely. All rights reserved.
               </p>
               <p style="margin:8px 0 0 0;font-size:13px;color:#9CA3AF;">
-                <a href="https://pausely.app/support" style="color:#6B7280;text-decoration:underline;">Support</a>
+                <a href="https://pausely.pro/support" style="color:#6B7280;text-decoration:underline;">Support</a>
                 &nbsp;&middot;&nbsp;
-                <a href="https://pausely.app/privacy" style="color:#6B7280;text-decoration:underline;">Privacy</a>
+                <a href="https://pausely.pro/privacy" style="color:#6B7280;text-decoration:underline;">Privacy</a>
               </p>
             </td>
           </tr>

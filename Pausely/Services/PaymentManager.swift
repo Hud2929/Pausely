@@ -307,19 +307,15 @@ final class PaymentManager: ObservableObject {
         "com.pausely.premium.annual"
     ]
     
-    // MARK: - Test User Access (Permanent)
-    private var testUserEmails: [String] {
-        ["hudwkim@gmail.com"]
+    // MARK: - Debug Pro Override
+    private var debugFreePro: Bool {
+        UserDefaults.standard.bool(forKey: "debug_free_pro")
     }
 
-    private var isTestUser: Bool {
-        testUserEmails.contains(RevolutionaryAuthManager.shared.currentUser?.email ?? "")
-    }
-
-    /// The effective tier including permanent test user overrides.
+    /// The effective tier including debug override.
     /// Writes still go to `currentTier` so StoreKit and purchase flows work normally.
     private var resolvedTier: SubscriptionTier {
-        isTestUser ? .pro : currentTier
+        debugFreePro ? .pro : currentTier
     }
 
     // MARK: - Backward Compatibility Properties
@@ -365,20 +361,6 @@ final class PaymentManager: ObservableObject {
             }
         }
 
-        // Poll for test user sign-in/sign-out so Pro status updates dynamically
-        Task { [weak self] in
-            guard let self = self else { return }
-            var lastEmail: String? = RevolutionaryAuthManager.shared.currentUser?.email
-            while !Task.isCancelled {
-                try? await Task.sleep(nanoseconds: 1 * 1_000_000_000)
-                if Task.isCancelled { break }
-                let currentEmail = RevolutionaryAuthManager.shared.currentUser?.email
-                if currentEmail != lastEmail {
-                    lastEmail = currentEmail
-                    self.objectWillChange.send()
-                }
-            }
-        }
     }
     
     // MARK: - StoreKit Integration
@@ -517,13 +499,18 @@ final class PaymentManager: ObservableObject {
     /// Legacy method for activating premium (now maps to Pro)
     func activatePremium(source: PaymentSource) {
         Task {
-            await updateCurrentEntitlements()
+            switch source {
+            case .storeKitMonthly, .storeKitAnnual:
+                await updateCurrentEntitlements()
+            case .referral, .promoCode:
+                currentTier = .pro
+            }
         }
     }
-    
+
     /// Legacy method for granting free Pro (referrals)
     func grantFreeProForReferrals() {
-        currentTier = .pro
+        activatePremium(source: .referral)
     }
 
     // MARK: - Auto-Add Pausely Pro Subscription

@@ -21,7 +21,8 @@ class RevolutionaryAuthManager: ObservableObject {
     @Published var isCheckingEmailConfirmation = false
     
     private var confirmationPollingTask: Task<Void, Never>?
-    
+    private var verifyTask: Task<Void, Never>?
+
     // MARK: - Private Properties
     private var client: SupabaseClient { SupabaseManager.shared.client }
     private let biometricKey = "biometric_auth_enabled"
@@ -63,6 +64,8 @@ class RevolutionaryAuthManager: ObservableObject {
     private static let cachedUserIdKey    = "auth_cached_user_id"
     private static let cachedEmailKey     = "auth_cached_email"
     private static let cachedCreatedAtKey = "auth_cached_created_at"
+    private static let pendingFirstNameKey = "pending_firstName"
+    private static let pendingLastNameKey  = "pending_lastName"
     
     // Keychain keys for secure storage
     private static let keychainAccessTokenKey = "auth_access_token"
@@ -87,9 +90,10 @@ class RevolutionaryAuthManager: ObservableObject {
 
         // Restore session synchronously so the UI is correct on the very first frame,
         // with no flash of the login screen for returning users.
-        if let uid = UserDefaults.standard.string(forKey: Self.cachedUserIdKey) {
-            let email     = UserDefaults.standard.string(forKey: Self.cachedEmailKey)
-            let createdAt = UserDefaults.standard.object(forKey: Self.cachedCreatedAtKey) as? Date
+        if let uid = KeychainManager.shared.get(Self.cachedUserIdKey) {
+            let email     = KeychainManager.shared.get(Self.cachedEmailKey)
+            let createdAtString = KeychainManager.shared.get(Self.cachedCreatedAtKey)
+            let createdAt = createdAtString.flatMap { ISO8601DateFormatter().date(from: $0) }
             let profile   = Self.loadProfileStatic(userId: uid)
             let user = User(id: uid, email: email, createdAt: createdAt,
                             firstName: profile.firstName, lastName: profile.lastName)
@@ -100,7 +104,7 @@ class RevolutionaryAuthManager: ObservableObject {
         }
 
         // Async: verify the Supabase token is still valid and refresh user data.
-        Task { [weak self] in
+        verifyTask = Task { [weak self] in
             guard let self = self else { return }
             await verifySession()
         }
@@ -109,23 +113,25 @@ class RevolutionaryAuthManager: ObservableObject {
     // MARK: - Session Cache
 
     private func cacheSession(userId: String, email: String?, createdAt: Date?) {
-        UserDefaults.standard.set(userId,    forKey: Self.cachedUserIdKey)
-        UserDefaults.standard.set(email,     forKey: Self.cachedEmailKey)
-        UserDefaults.standard.set(createdAt, forKey: Self.cachedCreatedAtKey)
+        KeychainManager.shared.save(userId, forKey: Self.cachedUserIdKey)
+        if let email = email { KeychainManager.shared.save(email, forKey: Self.cachedEmailKey) }
+        if let createdAt = createdAt {
+            KeychainManager.shared.save(ISO8601DateFormatter().string(from: createdAt), forKey: Self.cachedCreatedAtKey)
+        }
     }
 
     private func clearSessionCache() {
-        UserDefaults.standard.removeObject(forKey: Self.cachedUserIdKey)
-        UserDefaults.standard.removeObject(forKey: Self.cachedEmailKey)
-        UserDefaults.standard.removeObject(forKey: Self.cachedCreatedAtKey)
+        KeychainManager.shared.delete(key: Self.cachedUserIdKey)
+        KeychainManager.shared.delete(key: Self.cachedEmailKey)
+        KeychainManager.shared.delete(key: Self.cachedCreatedAtKey)
         clearKeychainTokens()
     }
 
     // MARK: - Profile Persistence
 
     private func saveProfile(userId: String, firstName: String?, lastName: String?) {
-        UserDefaults.standard.set(firstName, forKey: "profile_\(userId)_firstName")
-        UserDefaults.standard.set(lastName,  forKey: "profile_\(userId)_lastName")
+        if let fn = firstName { KeychainManager.shared.save(fn, forKey: "profile_\(userId)_firstName") }
+        if let ln = lastName  { KeychainManager.shared.save(ln, forKey: "profile_\(userId)_lastName") }
     }
 
     private func loadProfile(userId: String) -> (firstName: String?, lastName: String?) {
@@ -133,8 +139,8 @@ class RevolutionaryAuthManager: ObservableObject {
     }
 
     private static func loadProfileStatic(userId: String) -> (firstName: String?, lastName: String?) {
-        let fn = UserDefaults.standard.string(forKey: "profile_\(userId)_firstName")
-        let ln = UserDefaults.standard.string(forKey: "profile_\(userId)_lastName")
+        let fn = KeychainManager.shared.get("profile_\(userId)_firstName")
+        let ln = KeychainManager.shared.get("profile_\(userId)_lastName")
         return (fn, ln)
     }
 
@@ -161,6 +167,7 @@ class RevolutionaryAuthManager: ObservableObject {
 
     deinit {
         refreshTask?.cancel()
+        verifyTask?.cancel()
     }
 
     // MARK: - Session Verification
@@ -337,8 +344,8 @@ class RevolutionaryAuthManager: ObservableObject {
         do {
             // Store password and profile temporarily for after OTP verification
             pendingPassword = password
-            if let fn = firstName, !fn.isEmpty { UserDefaults.standard.set(fn, forKey: "pending_firstName") }
-            if let ln = lastName, !ln.isEmpty { UserDefaults.standard.set(ln, forKey: "pending_lastName") }
+            if let fn = firstName, !fn.isEmpty { KeychainManager.shared.save(fn, forKey: Self.pendingFirstNameKey) }
+            if let ln = lastName, !ln.isEmpty { KeychainManager.shared.save(ln, forKey: Self.pendingLastNameKey) }
             UserDefaults.standard.set(email, forKey: lastEmailKey)
 
             // Send OTP — creates user if they don't exist
@@ -353,8 +360,8 @@ class RevolutionaryAuthManager: ObservableObject {
 
         } catch {
             pendingPassword = nil
-            UserDefaults.standard.removeObject(forKey: "pending_firstName")
-            UserDefaults.standard.removeObject(forKey: "pending_lastName")
+            KeychainManager.shared.delete(key: Self.pendingFirstNameKey)
+            KeychainManager.shared.delete(key: Self.pendingLastNameKey)
             let authError = PauselyAuthError.unknown(error)
             await MainActor.run { self.state = .error(authError) }
             throw authError
@@ -374,8 +381,8 @@ class RevolutionaryAuthManager: ObservableObject {
             )
 
             let supabaseUser = session.user
-            let firstName = UserDefaults.standard.string(forKey: "pending_firstName")
-            let lastName = UserDefaults.standard.string(forKey: "pending_lastName")
+            let firstName = KeychainManager.shared.get(Self.pendingFirstNameKey)
+            let lastName = KeychainManager.shared.get(Self.pendingLastNameKey)
 
             let user = makeUser(from: supabaseUser, firstName: firstName, lastName: lastName)
             cacheSession(userId: supabaseUser.id.uuidString,
@@ -392,8 +399,8 @@ class RevolutionaryAuthManager: ObservableObject {
             }
 
             // Clean up pending profile data
-            UserDefaults.standard.removeObject(forKey: "pending_firstName")
-            UserDefaults.standard.removeObject(forKey: "pending_lastName")
+            KeychainManager.shared.delete(key: Self.pendingFirstNameKey)
+            KeychainManager.shared.delete(key: Self.pendingLastNameKey)
 
             await MainActor.run {
                 self.currentUser = user
@@ -669,7 +676,7 @@ class RevolutionaryAuthManager: ObservableObject {
             }
 
             startSessionRefresh()
-            
+            postAuthSetup(user: user)
 
         } catch {
             let authError = PauselyAuthError.unknown(error)
@@ -743,10 +750,9 @@ class RevolutionaryAuthManager: ObservableObject {
             pendingRequests.removeAll()
         }
         
-        clearSessionCache()
-
         do {
             try await client.auth.signOut()
+            clearSessionCache()
         } catch {
             os_log("Sign out failed: %{public}@", log: .default, type: .error, error.localizedDescription)
         }

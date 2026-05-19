@@ -20,6 +20,8 @@ enum DeepLinkRoute {
 final class DeepLinkManager {
     static let shared = DeepLinkManager()
 
+    private var authDeepLinkTask: Task<Void, Never>?
+
     private init() {}
 
     func handle(_ url: URL) -> DeepLinkRoute {
@@ -65,12 +67,14 @@ final class DeepLinkManager {
             _ = ReferralManager.shared.handleReferralDeepLink(url)
 
         case .authConfirm:
-            Task {
+            authDeepLinkTask?.cancel()
+            authDeepLinkTask = Task {
                 _ = await RevolutionaryAuthManager.shared.handleDeepLink(url)
             }
 
         case .authResetPassword:
-            Task {
+            authDeepLinkTask?.cancel()
+            authDeepLinkTask = Task {
                 _ = await RevolutionaryAuthManager.shared.handleDeepLink(url)
             }
 

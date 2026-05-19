@@ -32,6 +32,7 @@ final class StoreKitManager: ObservableObject {
     // MARK: - Private
     private var updates: Task<Void, Never>?
     private let entitlementManager = EntitlementManager.shared
+    private var hasLoadedProducts = false
     
     private init() {
         // Start listening for transaction updates
@@ -48,9 +49,16 @@ final class StoreKitManager: ObservableObject {
     }
     
     // MARK: - Product Loading
-    
+
+    /// Loads products only if they haven't been loaded yet this session.
+    func loadProductsIfNeeded() async {
+        guard !hasLoadedProducts else { return }
+        await loadProducts()
+    }
+
     /// Fetches available products from App Store
     func loadProducts() async {
+        guard !hasLoadedProducts else { return }
         isLoading = true
         errorMessage = nil
 
@@ -68,9 +76,10 @@ final class StoreKitManager: ObservableObject {
             errorMessage = nil
         }
 
+        hasLoadedProducts = true
         isLoading = false
     }
-    
+
     // MARK: - Purchasing
     
     /// Initiates a purchase for the given product
@@ -91,8 +100,15 @@ final class StoreKitManager: ObservableObject {
                 await updatePurchasedProducts()
 
                 // Finish the transaction
-                await transaction.finish()
-                
+                do {
+                    try await transaction.finish()
+                } catch {
+                    PauselyLogger.error("Failed to finish transaction: \(error)", category: "StoreKit")
+                }
+
+                // Notify PaymentManager so tier updates immediately
+                await PaymentManager.shared.updateCurrentEntitlements()
+
                 PauselyLogger.info("Purchase successful: \(product.displayName)", category: "StoreKit")
                 isLoading = false
                 pendingPurchase = nil
@@ -235,12 +251,10 @@ final class StoreKitManager: ObservableObject {
         switch tier {
         case .free:
             return nil
-        case .plus, .premium:
+        case .pro:
             return products.first { $0.id == ProductID.monthly.rawValue }
-        case .plusAnnual, .premiumAnnual:
+        case .proAnnual:
             return products.first { $0.id == ProductID.annual.rawValue }
-        case .pro, .proAnnual:
-            return products.first { $0.id == ProductID.monthly.rawValue }
         }
     }
     
