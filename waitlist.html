@@ -5,7 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <meta name="theme-color" content="#1a1a2e">
     <title>Pausely - Join the Waitlist</title>
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
 
@@ -289,27 +288,6 @@
             margin: 0 6px;
         }
 
-        .affiliate-tag {
-            text-align: center;
-            margin-bottom: 16px;
-            padding: 8px 14px;
-            background: rgba(139, 92, 246, 0.12);
-            border: 1px solid rgba(139, 92, 246, 0.2);
-            border-radius: 10px;
-            display: none;
-        }
-        .affiliate-tag.visible {
-            display: inline-block;
-        }
-        .affiliate-tag span {
-            font-size: 12px;
-            color: rgba(255, 255, 255, 0.6);
-            font-weight: 500;
-        }
-        .affiliate-tag strong {
-            color: #a78bfa;
-        }
-
         @media (max-width: 480px) {
             .container { padding: 16px; }
             .glass-card { padding: 28px 20px; border-radius: 20px; }
@@ -326,7 +304,7 @@
     <div class="container">
         <div class="glass-card">
             <div class="logo">
-                <img src="icon.png" alt="Pausely" class="logo-icon-img" width="64" height="64" style="border-radius: 18px; margin-bottom: 16px; box-shadow: 0 4px 16px rgba(201, 162, 39, 0.3);">
+                <img src="icon-email.png" alt="Pausely" class="logo-icon-img" width="64" height="64" style="border-radius: 18px; margin-bottom: 16px; box-shadow: 0 4px 16px rgba(201, 162, 39, 0.3);">
                 <h1>Pausely</h1>
                 <p>Smart Subscription Manager</p>
             </div>
@@ -348,12 +326,6 @@
                 <div class="feature">
                     <div class="feature-icon pink">&#127873;</div>
                     <div class="feature-text">Exclusive launch-day perks</div>
-                </div>
-            </div>
-
-            <div style="text-align: center;">
-                <div class="affiliate-tag" id="affiliate-tag">
-                    <span>Referred by <strong id="affiliate-name">a friend</strong></span>
                 </div>
             </div>
 
@@ -400,59 +372,9 @@
     </div>
 
     <script>
-        // ============================================
-        // CONFIGURATION - REPLACE WITH YOUR CREDENTIALS
-        // ============================================
-        // Supabase config (for affiliate lookup only)
-        const SUPABASE_URL = 'https://ddaotwyaowspwspyddzs.supabase.co';
-        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRkYW90d3lhb3dzcHdzcHlkZHpzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzAzOTg2ODIsImV4cCI6MjA4NTk3NDY4Mn0.UHXLulJBx6JqVPUFjDCxP0DE5zeU32knixXo2gvcSxI';
+        // Edge Function URL
+        const EDGE_FUNCTION_URL = 'https://ddaotwyaowspwspyddzs.supabase.co/functions/v1/waitlist-signup';
 
-        // Edge Function URL (auto-filled from Supabase URL)
-        const EDGE_FUNCTION_URL = SUPABASE_URL.replace(/\/+$/, '') + '/functions/v1/waitlist-signup';
-
-        // ============================================
-        // INITIALIZE SUPABASE
-        // ============================================
-        let supabase = null;
-        if (!SUPABASE_URL.includes('your-project') && !SUPABASE_ANON_KEY.includes('your-anon-key')) {
-            supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-        }
-
-        // ============================================
-        // AFFILIATE TRACKING
-        // ============================================
-        function getUrlParam(name) {
-            const params = new URLSearchParams(window.location.search);
-            return params.get(name);
-        }
-
-        const affiliateCode = getUrlParam('ref') || getUrlParam('affiliate') || null;
-        let affiliateName = 'a friend';
-
-        async function loadAffiliateInfo() {
-            if (!affiliateCode || !supabase) return;
-
-            try {
-                const { data, error } = await supabase
-                    .from('affiliates')
-                    .select('name')
-                    .eq('code', affiliateCode)
-                    .eq('is_active', true)
-                    .single();
-
-                if (data && !error) {
-                    affiliateName = data.name;
-                    document.getElementById('affiliate-name').textContent = data.name;
-                    document.getElementById('affiliate-tag').classList.add('visible');
-                }
-            } catch (e) {
-                console.log('Affiliate lookup failed:', e);
-            }
-        }
-
-        // ============================================
-        // FORM HANDLING
-        // ============================================
         const form = document.getElementById('waitlist-form');
         const submitBtn = document.getElementById('submit-btn');
         const errorMsg = document.getElementById('error-msg');
@@ -471,15 +393,9 @@
             e.preventDefault();
             hideError();
 
-            if (SUPABASE_URL.includes('your-project')) {
-                showError('This form is not yet configured. Please set SUPABASE_URL in the code.');
-                return;
-            }
-
             const email = document.getElementById('email').value.trim().toLowerCase();
             const source = document.getElementById('source').value;
 
-            // Basic email validation
             const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
             if (!emailRegex.test(email)) {
                 showError('Please enter a valid email address.');
@@ -495,7 +411,6 @@
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
                         email: email,
-                        affiliate_code: affiliateCode,
                         source: source !== 'waitlist' ? source : 'organic'
                     })
                 });
@@ -503,11 +418,9 @@
                 const result = await response.json();
 
                 if (response.ok && result.success) {
-                    // Success
                     form.style.display = 'none';
                     successState.classList.add('visible');
 
-                    // Show email confirmation if sent
                     if (result.email_sent) {
                         const emailNote = document.createElement('p');
                         emailNote.style.cssText = 'font-size: 14px; color: rgba(255,255,255,0.5); margin-top: 12px;';
@@ -527,9 +440,6 @@
                 submitBtn.classList.remove('loading');
             }
         });
-
-        // Load affiliate info on page load
-        loadAffiliateInfo();
     </script>
 </body>
 </html>
