@@ -278,13 +278,22 @@ class ReferralManager: ObservableObject {
             .from("referral_conversions")
             .insert(conversion)
             .execute()
-        
-        // Update referrer's pending conversions
-        try await client
+
+        // Update referrer's pending conversions (read-modify-write)
+        let referrerData: [ReferralData] = try await client
             .from("referral_codes")
-            .update(["pending_conversions": 1])
+            .select()
             .eq("code", value: code.uppercased())
             .execute()
+            .value
+
+        if let data = referrerData.first {
+            try await client
+                .from("referral_codes")
+                .update(["pending_conversions": data.pendingConversions + 1])
+                .eq("code", value: code.uppercased())
+                .execute()
+        }
         
         self.referrerCodeUsed = code.uppercased()
         self.appliedReferralDiscount = true
@@ -317,23 +326,28 @@ class ReferralManager: ObservableObject {
             .value
         
         guard let conversion = conversions.first else { return }
-        
-        // Update referrer stats using RPC or direct increment
-        // First update count fields
+
+        // Read current referrer stats
+        let referrerData: [ReferralData] = try await client
+            .from("referral_codes")
+            .select()
+            .eq("code", value: conversion.referrerCode)
+            .execute()
+            .value
+
+        guard let data = referrerData.first else { return }
+
+        // Update referrer stats (read-modify-write)
+        let commissionCents = 500 // $5.00 = 500 cents
+        let newEarnings = data.totalEarnings + Decimal(commissionCents)
+
         try await client
             .from("referral_codes")
             .update([
-                "conversions": 1,
-                "pending_conversions": -1
+                "conversions": data.conversions + 1,
+                "pending_conversions": max(0, data.pendingConversions - 1),
+                "total_earnings": newEarnings
             ])
-            .eq("code", value: conversion.referrerCode)
-            .execute()
-
-        // Then update earnings separately as a raw query
-        let newEarnings = 500 // $5.00 = 500 cents
-        try await client
-            .from("referral_codes")
-            .update(["total_earnings": newEarnings])
             .eq("code", value: conversion.referrerCode)
             .execute()
         
@@ -408,7 +422,8 @@ class ReferralManager: ObservableObject {
     /// Gets the discounted price if referral discount is active and unused
     func getDiscountedPrice(originalPrice: Decimal) -> Decimal {
         guard hasActiveReferralDiscount() else { return originalPrice }
-        return originalPrice * Decimal(0.7) // 30% off = 70% of original price
+        let discountMultiplier = Decimal(1.0 - Self.referralDiscountPercentage)
+        return originalPrice * discountMultiplier
     }
     
     // MARK: - Database Sync for Referral Discount Used
@@ -494,8 +509,8 @@ class ReferralManager: ObservableObject {
     /// Supports formats:
     /// - pausely://r/CODE
     /// - pausely://referral?code=CODE
-    /// - https://pausely.app/r/CODE
-    /// - https://pausely.app/referral?code=CODE
+    /// - https://pausely.pro/r/CODE
+    /// - https://pausely.pro/referral?code=CODE
     func handleReferralDeepLink(_ url: URL) -> Bool {
         #if DEBUG
         os_log("🔗 ReferralManager handling URL: %{public}@", log: .default, type: .info, url.absoluteString)
@@ -508,7 +523,7 @@ class ReferralManager: ObservableObject {
         // Check if this is a supported scheme (pausely URL scheme or https universal link)
         let scheme = url.scheme?.lowercased() ?? ""
         let isPauselyScheme = scheme == "pausely"
-        let isUniversalLink = scheme == "https" && (url.host?.lowercased() == "pausely.app" || url.host?.lowercased() == "www.pausely.app")
+        let isUniversalLink = scheme == "https" && (url.host?.lowercased() == "pausely.pro" || url.host?.lowercased() == "www.pausely.pro")
         
         guard isPauselyScheme || isUniversalLink else {
             #if DEBUG
@@ -526,7 +541,7 @@ class ReferralManager: ObservableObject {
         os_log("   - filtered pathComponents: %{public}@", log: .default, type: .info, String(describing: pathComponents))
         #endif
 
-        // Handle pausely://r/CODE or https://pausely.app/r/CODE
+        // Handle pausely://r/CODE or https://pausely.pro/r/CODE
         if pathComponents.count >= 1 && (pathComponents[0].lowercased() == "r" || pathComponents[0].lowercased() == "referral") {
             // Check for code in path: /r/CODE or /referral/CODE
             if pathComponents.count >= 2 {
@@ -619,14 +634,14 @@ class ReferralManager: ObservableObject {
     
     func getReferralShareURL() -> URL? {
         guard let code = currentUserReferralCode else { return nil }
-        return URL(string: "https://pausely.app/r/\(code)")
+        return URL(string: "https://pausely.pro/r/\(code)")
     }
     
     func getReferralShareText() -> String {
         guard let code = currentUserReferralCode else {
             return "Check out Pausely - the smart subscription manager!"
         }
-        return "Get 30% off your first month of Pausely Pro! Use my referral code: \(code)\n\nhttps://pausely.app/r/\(code)"
+        return "Get 30% off your first month of Pausely Pro! Use my referral code: \(code)\n\nhttps://pausely.pro/r/\(code)"
     }
     
     // MARK: - Helper Methods
@@ -654,9 +669,9 @@ class ReferralManager: ObservableObject {
     /// Returns the full referral link string
     func referralLinkString() -> String {
         guard let code = currentUserReferralCode else {
-            return "https://pausely.app/download"
+            return "https://pausely.pro/download"
         }
-        return "https://pausely.app/r/\(code)"
+        return "https://pausely.pro/r/\(code)"
     }
 
     /// Returns the display code or a fallback
@@ -705,10 +720,10 @@ class ReferralManager: ObservableObject {
 
         var shareItems: [Any] = [text]
 
-        if let url = URL(string: link), link != "https://pausely.app/download" {
+        if let url = URL(string: link), link != "https://pausely.pro/download" {
             shareItems.append(url)
         } else {
-            shareItems.append("Download at: https://pausely.app")
+            shareItems.append("Download at: https://pausely.pro")
         }
 
         let activityVC = UIActivityViewController(activityItems: shareItems, applicationActivities: nil)

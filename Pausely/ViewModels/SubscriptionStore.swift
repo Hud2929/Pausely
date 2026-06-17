@@ -443,7 +443,7 @@ class SubscriptionStore: ObservableObject {
         } catch {
             os_log("Error resuming subscription in cloud: %{public}@", log: .default, type: .error, error.localizedDescription)
             // 3. Enqueue for retry
-            if let payload = try? JSONEncoder().encode(["paused_until": "null"]) {
+            if let payload = try? JSONEncoder().encode(ResumePayload(paused_until: nil)) {
                 let op = SyncOperation(type: .resume, subscriptionId: id, payload: payload)
                 SyncQueue.shared.enqueue(op)
             }
@@ -600,27 +600,12 @@ class SubscriptionStore: ObservableObject {
             Array(uniqueSubs[$0..<min($0 + batchSize, uniqueSubs.count)])
         }
         
-        for batch in batches {
-            await withTaskGroup(of: Bool.self) { group in
-                for sub in batch {
-                    group.addTask { [weak self] in
-                        guard let self = self else { return false }
-                        do {
-                            _ = try await self.addSubscription(sub)
-                            return true
-                        } catch {
-                            return false
-                        }
-                    }
-                }
-                
-                for await success in group {
-                    if success {
-                        added += 1
-                    } else {
-                        failed += 1
-                    }
-                }
+        for sub in uniqueSubs {
+            do {
+                _ = try await addSubscription(sub)
+                added += 1
+            } catch {
+                failed += 1
             }
         }
         
@@ -702,7 +687,7 @@ class SubscriptionStore: ObservableObject {
         }
     }
     
-    private func monthlyEquivalent(for sub: Subscription) -> Decimal {
+    nonisolated private func monthlyEquivalent(for sub: Subscription) -> Decimal {
         guard sub.status == .active else { return 0 }
         
         switch sub.billingFrequency {

@@ -175,13 +175,9 @@ struct BillingHistoryView: View {
     }
     
     private func loadTransactions() {
-        isLoading = true
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
-            // In production, load from backend
-            // For new users, this starts empty
-            transactions = [] // Start empty for new users
-            isLoading = false
-        }
+        // TODO: Load real StoreKit transaction history using Transaction.currentEntitlements
+        // or backend billing records when available
+        transactions = []
     }
     
     private func exportReceipts() {

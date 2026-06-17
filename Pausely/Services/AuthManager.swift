@@ -180,12 +180,10 @@ class RevolutionaryAuthManager: ObservableObject {
             cacheSession(userId: session.user.id.uuidString,
                          email: session.user.email,
                          createdAt: session.user.createdAt)
-            await MainActor.run {
-                self.currentUser = user
-                self.isAuthenticated = true
-                self.state = .authenticated(user)
-                PauselyLogger.info("Session verified for: \(user.email ?? user.id)", category: "auth")
-            }
+            currentUser = user
+            isAuthenticated = true
+            state = .authenticated(user)
+            PauselyLogger.info("Session verified for: \(user.email ?? user.id)", category: "auth")
             startSessionRefresh()
             postAuthSetup(user: user)
 
@@ -193,13 +191,11 @@ class RevolutionaryAuthManager: ObservableObject {
             // Cache said we're logged in but Supabase disagrees — token expired.
             PauselyLogger.info("Cached session invalid — signing out", category: "auth")
             clearSessionCache()
-            await MainActor.run {
-                self.currentUser = nil
-                self.isAuthenticated = false
-                self.state = .unauthenticated
-            }
+            currentUser = nil
+            isAuthenticated = false
+            state = .unauthenticated
         } else {
-            await MainActor.run { self.state = .unauthenticated }
+            state = .unauthenticated
         }
     }
     
@@ -280,7 +276,7 @@ class RevolutionaryAuthManager: ObservableObject {
     
     func signUp(email: String, password: String,
                 firstName: String? = nil, lastName: String? = nil) async throws {
-        await MainActor.run { state = .loading }
+        state = .loading
 
         do {
             var userMetadata: [String: AnyJSON] = ["app_name": .string("Pausely")]
@@ -295,40 +291,38 @@ class RevolutionaryAuthManager: ObservableObject {
 
             UserDefaults.standard.set(email, forKey: lastEmailKey)
 
-            await MainActor.run {
-                if let session = authResponse.session {
-                    let uid = session.user.id.uuidString
-                    self.saveProfile(userId: uid, firstName: firstName, lastName: lastName)
-                    self.cacheSession(userId: uid, email: session.user.email,
-                                      createdAt: session.user.createdAt)
-                    let user = self.makeUser(from: session.user,
-                                             firstName: firstName, lastName: lastName)
-                    self.currentUser = user
-                    self.isAuthenticated = true
-                    self.state = .authenticated(user)
-                    self.startSessionRefresh()
-                    self.postAuthSetup(user: user)
+            if let session = authResponse.session {
+                let uid = session.user.id.uuidString
+                saveProfile(userId: uid, firstName: firstName, lastName: lastName)
+                cacheSession(userId: uid, email: session.user.email,
+                             createdAt: session.user.createdAt)
+                let user = makeUser(from: session.user,
+                                    firstName: firstName, lastName: lastName)
+                currentUser = user
+                isAuthenticated = true
+                state = .authenticated(user)
+                startSessionRefresh()
+                postAuthSetup(user: user)
 
-                    #if DEBUG
-                    PauselyLogger.info("Sign up successful - user auto-confirmed and signed in", category: "auth")
-                    #endif
-                } else {
-                    // Stash name so it's available after email confirmation
-                    let uid = authResponse.user.id.uuidString
-                    self.saveProfile(userId: uid, firstName: firstName, lastName: lastName)
-                    self.state = .emailConfirmationRequired(email)
-                    #if DEBUG
-                    PauselyLogger.info("Sign up successful - email confirmation required for: \(email)", category: "auth")
-                    #endif
-                }
+                #if DEBUG
+                PauselyLogger.info("Sign up successful - user auto-confirmed and signed in", category: "auth")
+                #endif
+            } else {
+                // Stash name so it's available after email confirmation
+                let uid = authResponse.user.id.uuidString
+                saveProfile(userId: uid, firstName: firstName, lastName: lastName)
+                state = .emailConfirmationRequired(email)
+                #if DEBUG
+                PauselyLogger.info("Sign up successful - email confirmation required for: \(email)", category: "auth")
+                #endif
             }
 
         } catch let error as PauselyAuthError {
-            await MainActor.run { self.state = .error(error) }
+            state = .error(error)
             throw error
         } catch {
             let authError = PauselyAuthError.unknown(error)
-            await MainActor.run { self.state = .error(authError) }
+            state = .error(authError)
             throw authError
         }
     }
@@ -339,7 +333,7 @@ class RevolutionaryAuthManager: ObservableObject {
     /// Sends a 6-digit code to the user's email for verification.
     func signUpWithOTP(email: String, password: String,
                        firstName: String? = nil, lastName: String? = nil) async throws {
-        await MainActor.run { state = .loading }
+        state = .loading
 
         do {
             // Store password and profile temporarily for after OTP verification
@@ -354,16 +348,14 @@ class RevolutionaryAuthManager: ObservableObject {
                 shouldCreateUser: true
             )
 
-            await MainActor.run {
-                self.state = .emailConfirmationRequired(email)
-            }
+            state = .emailConfirmationRequired(email)
 
         } catch {
             pendingPassword = nil
             KeychainManager.shared.delete(key: Self.pendingFirstNameKey)
             KeychainManager.shared.delete(key: Self.pendingLastNameKey)
             let authError = PauselyAuthError.unknown(error)
-            await MainActor.run { self.state = .error(authError) }
+            state = .error(authError)
             throw authError
         }
     }
@@ -371,7 +363,7 @@ class RevolutionaryAuthManager: ObservableObject {
     /// Verifies the 6-digit OTP code sent to email.
     /// After successful verification, sets the pending password and profile if they exist.
     func verifyEmailOTP(email: String, code: String) async throws {
-        await MainActor.run { state = .loading }
+        state = .loading
 
         do {
             let session = try await client.auth.verifyOTP(
@@ -394,7 +386,7 @@ class RevolutionaryAuthManager: ObservableObject {
 
             // Set password if we have one pending
             if let password = pendingPassword {
-                _ = try? await client.auth.update(user: UserAttributes(password: password))
+                _ = try await client.auth.update(user: UserAttributes(password: password))
                 pendingPassword = nil
             }
 
@@ -402,18 +394,16 @@ class RevolutionaryAuthManager: ObservableObject {
             KeychainManager.shared.delete(key: Self.pendingFirstNameKey)
             KeychainManager.shared.delete(key: Self.pendingLastNameKey)
 
-            await MainActor.run {
-                self.currentUser = user
-                self.isAuthenticated = true
-                self.state = .authenticated(user)
-            }
+            currentUser = user
+            isAuthenticated = true
+            state = .authenticated(user)
 
             startSessionRefresh()
             postAuthSetup(user: user)
 
         } catch {
             let authError = PauselyAuthError.unknown(error)
-            await MainActor.run { self.state = .error(authError) }
+            state = .error(authError)
             throw authError
         }
     }
@@ -433,7 +423,7 @@ class RevolutionaryAuthManager: ObservableObject {
     // MARK: - Sign In
 
     func signIn(email: String, password: String) async throws {
-        await MainActor.run { state = .loading }
+        state = .loading
         #if DEBUG
         PauselyLogger.info("Attempting sign in for: \(email)", category: "auth")
         #endif
@@ -454,14 +444,12 @@ class RevolutionaryAuthManager: ObservableObject {
                          email: supabaseUser.email,
                          createdAt: supabaseUser.createdAt)
 
-            await MainActor.run {
-                self.currentUser = user
-                self.isAuthenticated = true
-                self.state = .authenticated(user)
-                #if DEBUG
-                PauselyLogger.info("Sign in successful for: \(email)", category: "auth")
-                #endif
-            }
+            currentUser = user
+            isAuthenticated = true
+            state = .authenticated(user)
+            #if DEBUG
+            PauselyLogger.info("Sign in successful for: \(email)", category: "auth")
+            #endif
 
             startSessionRefresh()
             postAuthSetup(user: user)
@@ -470,9 +458,7 @@ class RevolutionaryAuthManager: ObservableObject {
             #if DEBUG
             PauselyLogger.error("Sign in failed with AuthError: \(error.localizedDescription)", category: "auth")
             #endif
-            await MainActor.run {
-                self.state = .error(error)
-            }
+            state = .error(error)
             throw error
         } catch {
             let authError: PauselyAuthError
@@ -494,13 +480,11 @@ class RevolutionaryAuthManager: ObservableObject {
             #if DEBUG
             PauselyLogger.error("Sign in failed with error: \(authError.localizedDescription)", category: "auth")
             #endif
-            await MainActor.run {
-                self.state = .error(authError)
-            }
+            state = .error(authError)
             throw authError
         }
     }
-    
+
     /// Sign in with remember me option
     func signIn(email: String, password: String, rememberMe: Bool) async throws {
         // Store remember me preference
@@ -532,11 +516,9 @@ class RevolutionaryAuthManager: ObservableObject {
             cacheSession(userId: session.user.id.uuidString,
                          email: session.user.email,
                          createdAt: session.user.createdAt)
-            await MainActor.run {
-                self.currentUser = user
-                self.isAuthenticated = true
-                self.state = .authenticated(user)
-            }
+            currentUser = user
+            isAuthenticated = true
+            state = .authenticated(user)
             startSessionRefresh()
             postAuthSetup(user: user)
         }
@@ -545,7 +527,7 @@ class RevolutionaryAuthManager: ObservableObject {
     // MARK: - Sign in with Apple
 
     func signInWithApple(idToken: String, rawNonce: String, fullName: PersonNameComponents?) async throws {
-        await MainActor.run { state = .loading }
+        state = .loading
 
         do {
             let session = try await client.auth.signInWithIdToken(
@@ -566,21 +548,19 @@ class RevolutionaryAuthManager: ObservableObject {
 
             let user = makeUser(from: supabaseUser, firstName: firstName, lastName: lastName)
 
-            await MainActor.run {
-                self.currentUser = user
-                self.isAuthenticated = true
-                self.state = .authenticated(user)
-                #if DEBUG
-                PauselyLogger.info("Apple Sign In successful for user: \(user.id)", category: "auth")
-                #endif
-            }
+            currentUser = user
+            isAuthenticated = true
+            state = .authenticated(user)
+            #if DEBUG
+            PauselyLogger.info("Apple Sign In successful for user: \(user.id)", category: "auth")
+            #endif
 
             startSessionRefresh()
             postAuthSetup(user: user)
 
         } catch {
             let authError = PauselyAuthError.unknown(error)
-            await MainActor.run { self.state = .error(authError) }
+            state = .error(authError)
             throw authError
         }
     }
@@ -588,7 +568,7 @@ class RevolutionaryAuthManager: ObservableObject {
     // MARK: - Magic Link Sign In
     
     func signInWithMagicLink(email: String) async throws {
-        await MainActor.run { state = .loading }
+        state = .loading
         
         do {
             try await client.auth.signInWithOTP(
@@ -596,19 +576,15 @@ class RevolutionaryAuthManager: ObservableObject {
                 shouldCreateUser: false
             )
             
-            await MainActor.run {
-                self.state = .emailConfirmationRequired(email)
-            }
-            
+            state = .emailConfirmationRequired(email)
+
         } catch {
             let authError = PauselyAuthError.unknown(error)
-            await MainActor.run {
-                self.state = .error(authError)
-            }
+            state = .error(authError)
             throw authError
         }
     }
-    
+
     // MARK: - Email Confirmation Polling
     
     func startEmailConfirmationPolling() {
@@ -628,12 +604,10 @@ class RevolutionaryAuthManager: ObservableObject {
                     cacheSession(userId: session.user.id.uuidString,
                                  email: session.user.email,
                                  createdAt: session.user.createdAt)
-                    await MainActor.run {
-                        self.currentUser = user
-                        self.isAuthenticated = true
-                        self.state = .authenticated(user)
-                        self.isCheckingEmailConfirmation = false
-                    }
+                    currentUser = user
+                    isAuthenticated = true
+                    state = .authenticated(user)
+                    isCheckingEmailConfirmation = false
                     startSessionRefresh()
                     postAuthSetup(user: user)
                     break
@@ -653,9 +627,12 @@ class RevolutionaryAuthManager: ObservableObject {
     /// Handles email confirmation deep link
     /// URL format: pausely://auth/confirm?token=xxx&type=signup&email=xxx
     func confirmEmail(token: String, email: String, type: String = "signup") async throws {
-        await MainActor.run { state = .loading }
+        state = .loading
         
         do {
+            guard type == "signup" || type == "email_change" || type == "recovery" else {
+                throw NSError(domain: "AuthManager", code: 1, userInfo: [NSLocalizedDescriptionKey: "Invalid verification type: \(type)"])
+            }
             let session = try await client.auth.verifyOTP(
                 email: email,
                 token: token,
@@ -669,18 +646,16 @@ class RevolutionaryAuthManager: ObservableObject {
                          email: supabaseUser.email,
                          createdAt: supabaseUser.createdAt)
 
-            await MainActor.run {
-                self.currentUser = user
-                self.isAuthenticated = true
-                self.state = .authenticated(user)
-            }
+            currentUser = user
+            isAuthenticated = true
+            state = .authenticated(user)
 
             startSessionRefresh()
             postAuthSetup(user: user)
 
         } catch {
             let authError = PauselyAuthError.unknown(error)
-            await MainActor.run { self.state = .error(authError) }
+            state = .error(authError)
             throw authError
         }
     }
@@ -688,7 +663,7 @@ class RevolutionaryAuthManager: ObservableObject {
     /// Handles password reset confirmation from deep link
     /// URL format: pausely://auth/reset-password?token=xxx&email=xxx
     func confirmPasswordReset(token: String, email: String, newPassword: String) async throws {
-        await MainActor.run { state = .loading }
+        state = .loading
         
         do {
             // First verify the token
@@ -701,23 +676,19 @@ class RevolutionaryAuthManager: ObservableObject {
             // Then update password
             _ = try await client.auth.update(user: UserAttributes(password: newPassword))
             
-            await MainActor.run {
-                self.state = .unauthenticated
-            }
-            
+            state = .unauthenticated
+
         } catch {
             let authError = PauselyAuthError.unknown(error)
-            await MainActor.run {
-                self.state = .error(authError)
-            }
+            state = .error(authError)
             throw authError
         }
     }
-    
+
     // MARK: - Password Reset
     
     func sendPasswordReset(email: String) async throws {
-        await MainActor.run { state = .loading }
+        state = .loading
         
         do {
             try await client.auth.resetPasswordForEmail(
@@ -725,15 +696,11 @@ class RevolutionaryAuthManager: ObservableObject {
                 redirectTo: URL(string: "pausely://auth/reset-password")
             )
             
-            await MainActor.run {
-                self.state = .unauthenticated
-            }
-            
+            state = .unauthenticated
+
         } catch {
             let authError = PauselyAuthError.unknown(error)
-            await MainActor.run {
-                self.state = .error(authError)
-            }
+            state = .error(authError)
             throw authError
         }
     }
@@ -745,10 +712,8 @@ class RevolutionaryAuthManager: ObservableObject {
         refreshTask = nil
         
         // Cancel all pending auth requests (async-safe)
-        await MainActor.run {
-            pendingRequests.values.forEach { $0.cancel() }
-            pendingRequests.removeAll()
-        }
+        pendingRequests.values.forEach { $0.cancel() }
+        pendingRequests.removeAll()
         
         do {
             try await client.auth.signOut()
@@ -757,11 +722,9 @@ class RevolutionaryAuthManager: ObservableObject {
             os_log("Sign out failed: %{public}@", log: .default, type: .error, error.localizedDescription)
         }
 
-        await MainActor.run {
-            self.isAuthenticated = false
-            self.currentUser = nil
-            self.state = .unauthenticated
-        }
+        isAuthenticated = false
+        currentUser = nil
+        state = .unauthenticated
     }
     
     // MARK: - Biometric Authentication
@@ -769,9 +732,7 @@ class RevolutionaryAuthManager: ObservableObject {
     func toggleBiometricAuthentication(enabled: Bool) async throws {
         guard enabled else {
             UserDefaults.standard.set(false, forKey: biometricKey)
-            await MainActor.run {
-                self.isBiometricEnabled = false
-            }
+            isBiometricEnabled = false
             return
         }
         
@@ -790,9 +751,7 @@ class RevolutionaryAuthManager: ObservableObject {
             
             if success {
                 UserDefaults.standard.set(true, forKey: biometricKey)
-                await MainActor.run {
-                    self.isBiometricEnabled = true
-                }
+                isBiometricEnabled = true
             }
         } catch {
             throw PauselyAuthError.biometricFailed
@@ -809,12 +768,10 @@ class RevolutionaryAuthManager: ObservableObject {
             )
             
             if success, let lastEmail = UserDefaults.standard.string(forKey: lastEmailKey) {
-                await MainActor.run {
-                    NotificationCenter.default.post(
-                        name: .biometricAuthSuccess,
-                        object: lastEmail
-                    )
-                }
+                NotificationCenter.default.post(
+                    name: .biometricAuthSuccess,
+                    object: lastEmail
+                )
             }
         } catch {
             os_log("Biometric auth failed: %{public}@", log: .default, type: .error, error.localizedDescription)

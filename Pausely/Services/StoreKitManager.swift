@@ -99,11 +99,11 @@ final class StoreKitManager: ObservableObject {
                 // Update entitlements
                 await updatePurchasedProducts()
 
-                // Finish the transaction
+                // Finish the transaction with retry
                 do {
-                    try await transaction.finish()
+                    try await finishTransactionWithRetry(transaction)
                 } catch {
-                    PauselyLogger.error("Failed to finish transaction: \(error)", category: "StoreKit")
+                    PauselyLogger.error("Failed to finish transaction after retries: \(error)", category: "StoreKit")
                 }
 
                 // Notify PaymentManager so tier updates immediately
@@ -193,7 +193,11 @@ final class StoreKitManager: ObservableObject {
                     await self.updatePurchasedProducts()
 
                     // Finish the transaction
-                    await transaction.finish()
+                    do {
+                        try await self.finishTransactionWithRetry(transaction)
+                    } catch {
+                        PauselyLogger.error("Failed to finish transaction update: \(error)", category: "StoreKit")
+                    }
 
                     PauselyLogger.info("Transaction updated: \(transaction.productID)", category: "StoreKit")
                 } catch {
@@ -216,12 +220,10 @@ final class StoreKitManager: ObservableObject {
                     purchasedIDs.insert(transaction.productID)
 
                     // Activate premium in app
-                    await MainActor.run {
-                        if transaction.productID == ProductID.monthly.rawValue {
-                            PaymentManager.shared.activatePremium(source: .storeKitMonthly)
-                        } else if transaction.productID == ProductID.annual.rawValue {
-                            PaymentManager.shared.activatePremium(source: .storeKitAnnual)
-                        }
+                    if transaction.productID == ProductID.monthly.rawValue {
+                        PaymentManager.shared.activatePremium(source: .storeKitMonthly)
+                    } else if transaction.productID == ProductID.annual.rawValue {
+                        PaymentManager.shared.activatePremium(source: .storeKitAnnual)
                     }
                 }
             } catch {
@@ -229,13 +231,27 @@ final class StoreKitManager: ObservableObject {
             }
         }
 
-        await MainActor.run {
-            self.purchasedProductIDs = purchasedIDs
-        }
+        purchasedProductIDs = purchasedIDs
     }
     
     // MARK: - Helpers
-    
+
+    /// Finishes a transaction with exponential backoff retry
+    private func finishTransactionWithRetry(_ transaction: Transaction, maxRetries: Int = 3) async throws {
+        var attempt = 0
+        while attempt < maxRetries {
+            do {
+                try await transaction.finish()
+                return
+            } catch {
+                attempt += 1
+                if attempt >= maxRetries { throw error }
+                let delay = UInt64(pow(2.0, Double(attempt)) * 100_000_000) // 200ms, 400ms, 800ms
+                try? await Task.sleep(nanoseconds: delay)
+            }
+        }
+    }
+
     /// Verifies a StoreKit transaction
     private func checkVerified<T>(_ result: VerificationResult<T>) throws -> T {
         switch result {

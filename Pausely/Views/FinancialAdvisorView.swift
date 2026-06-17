@@ -15,11 +15,7 @@ struct FinancialAdvisorView: View {
     @State private var showingAlert = false
     @State private var alertTitle = ""
     @State private var alertMessage = ""
-
-    // Computed insights based on user's subscriptions
-    private var insights: [AdvisorInsight] {
-        generateInsights()
-    }
+    @State private var insights: [AdvisorInsight] = []
 
     private var healthScore: Int {
         insightsEngine.healthScore
@@ -62,10 +58,12 @@ struct FinancialAdvisorView: View {
         }
         .task {
             await insightsEngine.analyze(subscriptions: store.subscriptions)
+            insights = generateInsights()
         }
         .onChange(of: store.subscriptions.count) {
             Task {
                 await insightsEngine.analyze(subscriptions: store.subscriptions)
+                insights = generateInsights()
             }
         }
     }

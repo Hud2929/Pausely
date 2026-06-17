@@ -34,6 +34,7 @@ final class ScreenTimeManager: ObservableObject {
     // MARK: - Private Properties
     private let center = AuthorizationCenter.shared
     private let userDefaultsKey = "screen_time_authorized_v2"
+    private let manualTrackingEnabledKey = "screen_time_manual_tracking_enabled"
     private let lastSyncKey = "screen_time_last_sync_v2"
     private let usageCacheKey = "screen_time_usage_cache_v3" // Version bump for new format
     private let compressionKey = "screen_time_compressed"
@@ -198,29 +199,25 @@ final class ScreenTimeManager: ObservableObject {
     private func saveCompressedCache() {
         let cacheKeys = allCacheKeys()
         let cacheData = usageCache
-        
-        processingQueue.async { [weak self] in
-            guard let self = self else { return }
-            
-            var compressedData: [String: CompressedUsageData] = [:]
-            
-            // Only save recent entries (last 30 days)
-            let cutoffDate = Date().addingTimeInterval(-30 * 24 * 3600)
-            
-            for key in cacheKeys {
-                guard let entry = cacheData[key] else { continue }
-                guard entry.timestamp > cutoffDate else { continue }
-                
-                compressedData[key as String] = CompressedUsageData(from: entry.data, timestamp: entry.timestamp)
-            }
-            
-            do {
-                let encoded = try JSONEncoder().encode(compressedData)
-                let compressed = try encoded.compressed()
-                UserDefaults.standard.set(compressed, forKey: self.compressionKey)
-            } catch {
-                os_log("ScreenTime cache save failed: %{public}@", log: .default, type: .error, error.localizedDescription)
-            }
+
+        var compressedData: [String: CompressedUsageData] = [:]
+
+        // Only save recent entries (last 30 days)
+        let cutoffDate = Date().addingTimeInterval(-30 * 24 * 3600)
+
+        for key in cacheKeys {
+            guard let entry = cacheData[key] else { continue }
+            guard entry.timestamp > cutoffDate else { continue }
+
+            compressedData[key] = CompressedUsageData(from: entry.data, timestamp: entry.timestamp)
+        }
+
+        do {
+            let encoded = try JSONEncoder().encode(compressedData)
+            let compressed = try encoded.compressed()
+            UserDefaults.standard.set(compressed, forKey: compressionKey)
+        } catch {
+            os_log("ScreenTime cache save failed: %{public}@", log: .default, type: .error, error.localizedDescription)
         }
     }
     
@@ -493,9 +490,7 @@ final class ScreenTimeManager: ObservableObject {
         do {
             let _ = try await fetchDeviceActivity()
         } catch {
-            await MainActor.run {
-                syncError = error.localizedDescription
-            }
+            syncError = error.localizedDescription
         }
     }
     
@@ -738,9 +733,9 @@ final class ScreenTimeManager: ObservableObject {
     }
     
     func enableManualTracking() {
-        authorizationStatus = .authorized
-        isAuthorized = true
-        UserDefaults.standard.set(true, forKey: userDefaultsKey)
+        // Manual tracking does not require FamilyControls authorization
+        // Use a separate flag so the UI distinguishes between API and manual mode
+        UserDefaults.standard.set(true, forKey: Self.manualTrackingEnabledKey)
     }
     
     func setMonthlyUsage(minutes: Int, for subscriptionName: String) {
@@ -1014,7 +1009,7 @@ struct CompressedUsageData: Codable {
         self.isManual = data.isManualEntry
     }
     
-    @MainActor func toAppUsageData(bundleId: String) -> AppUsageData {
+    func toAppUsageData(bundleId: String) -> AppUsageData {
         AppUsageData(
             bundleId: bundleId,
             appName: SubscriptionCatalogService.shared.appName(for: bundleId) ?? bundleId,

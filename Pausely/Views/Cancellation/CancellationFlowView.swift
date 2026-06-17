@@ -138,7 +138,12 @@ struct CancellationFlowView: View {
     private func prepareCancellation(method: CancellationMethod) {
         switch method {
         case .website:
-            cancellationURL = URL(string: subscription.pauseUrl ?? "https://google.com/search?q=how+to+cancel+\(subscription.name)")
+            if let pauseUrl = subscription.pauseUrl, let url = URL(string: pauseUrl) {
+                cancellationURL = url
+            } else {
+                let encodedName = subscription.name.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? ""
+                cancellationURL = URL(string: "https://www.google.com/search?q=how+to+cancel+\(encodedName)")
+            }
         case .email:
             emailDraft = CancellationEmail(
                 to: "support@\(subscription.name.lowercased().replacingOccurrences(of: " ", with: "")).com",
@@ -587,14 +592,25 @@ struct SafariView: UIViewControllerRepresentable {
 // MARK: - Mail View
 struct MailView: UIViewControllerRepresentable {
     let email: CancellationEmail
-    
+
+    func makeCoordinator() -> Coordinator {
+        Coordinator()
+    }
+
     func makeUIViewController(context: Context) -> MFMailComposeViewController {
         let composer = MFMailComposeViewController()
         composer.setToRecipients([email.to])
         composer.setSubject(email.subject)
         composer.setMessageBody(email.body, isHTML: false)
+        composer.mailComposeDelegate = context.coordinator
         return composer
     }
-    
+
     func updateUIViewController(_ uiViewController: MFMailComposeViewController, context: Context) {}
+
+    class Coordinator: NSObject, MFMailComposeViewControllerDelegate {
+        func mailComposeController(_ controller: MFMailComposeViewController, didFinishWith result: MFMailComposeResult, error: Error?) {
+            controller.dismiss(animated: true)
+        }
+    }
 }

@@ -18,9 +18,43 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 }
 
+// Simple in-memory rate limiter: 5 requests per minute per IP
+const rateLimitMap = new Map<string, { count: number; resetTime: number }>()
+const RATE_LIMIT_MAX = 5
+const RATE_LIMIT_WINDOW_MS = 60_000
+
+function checkRateLimit(ip: string): boolean {
+  const now = Date.now()
+  const entry = rateLimitMap.get(ip)
+  if (!entry || now > entry.resetTime) {
+    rateLimitMap.set(ip, { count: 1, resetTime: now + RATE_LIMIT_WINDOW_MS })
+    return true
+  }
+  if (entry.count >= RATE_LIMIT_MAX) {
+    return false
+  }
+  entry.count++
+  return true
+}
+
+// Valid source values
+const VALID_SOURCES = new Set([
+  'waitlist', 'organic', 'tiktok', 'instagram', 'twitter', 'youtube',
+  'friend', 'search', 'other'
+])
+
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response('ok', { headers: corsHeaders })
+  }
+
+  // Rate limiting
+  const clientIP = req.headers.get('x-forwarded-for') || req.headers.get('cf-connecting-ip') || 'unknown'
+  if (!checkRateLimit(clientIP)) {
+    return new Response(
+      JSON.stringify({ error: 'Rate limit exceeded. Please try again later.' }),
+      { status: 429, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+    )
   }
 
   try {
@@ -35,6 +69,16 @@ serve(async (req) => {
     }
 
     const normalizedEmail = email.toLowerCase().trim()
+
+    // Validate source
+    const normalizedSource = (source || 'waitlist').toString().toLowerCase().trim()
+    const validSource = VALID_SOURCES.has(normalizedSource) ? normalizedSource : 'other'
+    if (validSource.length > 50) {
+      return new Response(
+        JSON.stringify({ error: 'Invalid source' }),
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      )
+    }
 
     const supabase = createClient(SUPABASE_URL!, SUPABASE_SERVICE_ROLE_KEY!, {
       auth: { autoRefreshToken: false, persistSession: false }
@@ -57,7 +101,7 @@ serve(async (req) => {
       .from('waitlist')
       .insert({
         email: normalizedEmail,
-        source: source || 'waitlist'
+        source: validSource
       })
 
     if (insertError) {

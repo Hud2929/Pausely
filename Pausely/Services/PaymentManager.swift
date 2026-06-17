@@ -297,20 +297,22 @@ final class PaymentManager: ObservableObject {
     // MARK: - Debug Override
     #if DEBUG
     private var debugPremiumOverride: Bool {
-        UserDefaults.standard.bool(forKey: "debug_auth_bypass")
+        UserDefaults.standard.bool(forKey: "debug_premium_override")
     }
+
+    private var debugFreePro: Bool {
+        UserDefaults.standard.bool(forKey: "debug_free_pro")
+    }
+    #else
+    private var debugPremiumOverride: Bool { false }
+    private var debugFreePro: Bool { false }
     #endif
-    
+
     // MARK: - Product IDs (must match App Store Connect)
     private let productIDs: Set<String> = [
         "com.pausely.premium.monthly",
         "com.pausely.premium.annual"
     ]
-    
-    // MARK: - Debug Pro Override
-    private var debugFreePro: Bool {
-        UserDefaults.standard.bool(forKey: "debug_free_pro")
-    }
 
     /// The effective tier including debug override.
     /// Writes still go to `currentTier` so StoreKit and purchase flows work normally.

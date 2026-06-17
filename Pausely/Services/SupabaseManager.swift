@@ -6,6 +6,7 @@ import Auth
 import PostgREST
 import os.log
 
+@MainActor
 class SupabaseManager: ObservableObject {
     static let shared = SupabaseManager()
 
@@ -468,19 +469,17 @@ class CurrencyManager: ObservableObject {
             return exchangeRates
         }
 
-        await MainActor.run { isLoadingRates = true }
-        defer { Task { @MainActor in isLoadingRates = false } }
+        isLoadingRates = true
+        defer { isLoadingRates = false }
 
         var lastError: Error?
         for attempt in 0..<3 {
             do {
                 let rates = try await performFetch()
-                await MainActor.run {
-                    self.exchangeRates = rates
-                    self.lastUpdated = Date()
-                    self.error = nil
-                    self.cacheRates()
-                }
+                exchangeRates = rates
+                lastUpdated = Date()
+                error = nil
+                cacheRates()
                 return rates
             } catch {
                 lastError = error
@@ -495,10 +494,8 @@ class CurrencyManager: ObservableObject {
             return cached
         }
         // Use hardcoded fallback rates so prices are never wrong
-        await MainActor.run {
-            self.exchangeRates = self.fallbackRates
-            self.lastUpdated = Date(timeIntervalSince1970: 0) // Mark as fallback
-        }
+        exchangeRates = fallbackRates
+        lastUpdated = Date(timeIntervalSince1970: 0) // Mark as fallback
         return fallbackRates
     }
 

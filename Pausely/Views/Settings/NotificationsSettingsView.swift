@@ -3,12 +3,12 @@ import SwiftUI
 struct NotificationsSettingsView: View {
     @Environment(\.dismiss) private var dismiss
     
-    @State private var renewalAlerts = true
-    @State private var priceChangeAlerts = true
-    @State private var usageReminders = false
-    @State private var weeklyReports = true
-    @State private var trialEndingAlerts = true
-    @State private var savingsOpportunities = true
+    @AppStorage("renewalAlerts") private var renewalAlerts = true
+    @AppStorage("priceChangeAlerts") private var priceChangeAlerts = true
+    @AppStorage("usageReminders") private var usageReminders = false
+    @AppStorage("weeklyReports") private var weeklyReports = true
+    @AppStorage("trialEndingAlerts") private var trialEndingAlerts = true
+    @AppStorage("savingsOpportunities") private var savingsOpportunities = true
     
     var body: some View {
         ZStack {

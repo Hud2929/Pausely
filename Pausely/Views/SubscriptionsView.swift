@@ -122,7 +122,7 @@ struct PremiumSubscriptionsView: View {
             }
         }
         .onChange(of: deepLinkedSubscription) { oldValue, newValue in
-            if let subscription = newValue {
+            if oldValue == nil, let subscription = newValue {
                 activeSheet = .detail(subscription)
                 deepLinkedSubscription = nil
             }

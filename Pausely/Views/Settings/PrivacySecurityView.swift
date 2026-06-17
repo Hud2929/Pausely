@@ -2,10 +2,10 @@ import SwiftUI
 
 struct PrivacySecurityView: View {
     @Environment(\.dismiss) private var dismiss
-    @State private var biometricEnabled = true
-    @State private var faceIDEnabled = true
-    @State private var dataEncryption = true
-    @State private var analyticsEnabled = false
+    @AppStorage("biometricEnabled") private var biometricEnabled = true
+    @AppStorage("faceIDEnabled") private var faceIDEnabled = true
+    @AppStorage("dataEncryption") private var dataEncryption = true
+    @AppStorage("analyticsEnabled") private var analyticsEnabled = false
     @State private var showingDeleteAccountConfirmation = false
     @State private var showingPrivacyPolicy = false
     @State private var showingTermsOfService = false
