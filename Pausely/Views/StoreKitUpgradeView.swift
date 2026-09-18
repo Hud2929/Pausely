@@ -147,9 +147,12 @@ struct StoreKitUpgradeView: View {
             Button("OK", role: .cancel) {}
             if storeManager.errorMessage != nil {
                 Button("Try Again") {
-                    Task {
-                        await attemptPurchase()
-                    }
+                    Task { await attemptPurchase() }
+                }
+            }
+            Button("Contact Support") {
+                if let url = URL(string: "mailto:\(AppConfig.supportEmail)") {
+                    UIApplication.shared.open(url)
                 }
             }
         } message: {
@@ -657,7 +660,7 @@ struct StoreKitUpgradeView: View {
                 dismiss()
             }
         } else if let errorMsg = storeManager.errorMessage {
-            errorMessage = errorMsg
+            errorMessage = mapStoreKitError(errorMsg)
             showErrorAlert = true
         }
     }
@@ -675,9 +678,17 @@ struct StoreKitUpgradeView: View {
                 dismiss()
             }
         } else if let errorMsg = storeManager.errorMessage {
-            errorMessage = errorMsg
+            errorMessage = mapStoreKitError(errorMsg)
             showErrorAlert = true
         }
+    }
+
+    private func mapStoreKitError(_ raw: String) -> String {
+        let lower = raw.lowercased()
+        if lower.contains("cancel") { return "Purchase cancelled." }
+        if lower.contains("network") || lower.contains("internet") { return "No internet connection. Try again." }
+        if lower.contains("not allowed") || lower.contains("restricted") { return "Purchases are restricted on this device." }
+        return "Purchase failed. Please try again."
     }
 }
 

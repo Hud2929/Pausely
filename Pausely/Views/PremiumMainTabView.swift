@@ -47,6 +47,7 @@ struct PremiumMainTabView: View {
                 .padding(.bottom, 8)
         }
         .ignoresSafeArea(edges: .bottom)
+        .errorToast(message: $subscriptionStore.lastErrorMessage)
         .onReceive(NotificationCenter.default.publisher(for: .switchToProfileTab)) { _ in
             withAnimation { selectedTab = 3 }
         }

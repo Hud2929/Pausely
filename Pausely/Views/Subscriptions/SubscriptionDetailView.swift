@@ -295,14 +295,7 @@ private struct CancelTimingCard: View {
     @ObservedObject private var currencyManager = CurrencyManager.shared
 
     private var cycleDays: Int {
-        switch subscription.billingFrequency {
-        case .weekly:      return 7
-        case .biweekly:    return 14
-        case .monthly:     return 30
-        case .quarterly:   return 91
-        case .semiannual:  return 182
-        case .yearly:      return 365
-        }
+        CancelTimingCalculator.cycleDays(for: subscription.billingFrequency)
     }
 
     private var lastBillingDate: Date? {
@@ -311,8 +304,7 @@ private struct CancelTimingCard: View {
     }
 
     private var daysUsed: Int {
-        guard let last = lastBillingDate else { return 0 }
-        return max(0, Calendar.current.dateComponents([.day], from: last, to: Date()).day ?? 0)
+        CancelTimingCalculator.daysUsed(from: lastBillingDate ?? Date())
     }
 
     private var daysRemaining: Int {
@@ -321,34 +313,37 @@ private struct CancelTimingCard: View {
     }
 
     private var progress: Double {
-        guard cycleDays > 0 else { return 0 }
-        return min(1, Double(daysUsed) / Double(cycleDays))
+        CancelTimingCalculator.progress(lastBillingDate: lastBillingDate, cycleDays: cycleDays)
     }
 
     private var valueUsed: Decimal {
         currencyManager.convertToSelected(
-            subscription.monthlyCost * Decimal(progress),
+            CancelTimingCalculator.valueUsed(monthlyCost: subscription.monthlyCost, progress: progress),
             from: subscription.currency
         )
     }
 
     private var valueRemaining: Decimal {
         currencyManager.convertToSelected(
-            subscription.monthlyCost * Decimal(1 - progress),
+            CancelTimingCalculator.valueRemaining(monthlyCost: subscription.monthlyCost, progress: progress),
             from: subscription.currency
         )
     }
 
     private var timingAdvice: (text: String, color: Color) {
-        let daysToWait = max(0, cycleDays / 2 - daysUsed)
-        switch progress {
-        case 0.85...:
-            return ("Great time to cancel — you've used most of this cycle.", .green)
-        case 0.50..<0.85:
-            return ("Decent timing — \(daysRemaining) \(daysRemaining == 1 ? "day" : "days") left in this cycle.", .yellow)
-        default:
-            return ("You just got billed — wait \(daysToWait) more \(daysToWait == 1 ? "day" : "days") for better timing.", .orange)
-        }
+        let advice = CancelTimingCalculator.cancelAdvice(
+            daysUsed: daysUsed,
+            daysRemaining: daysRemaining,
+            cycleDays: cycleDays
+        )
+        let color: Color = {
+            switch advice.level {
+            case .good: return .green
+            case .fair: return .yellow
+            case .poor: return .orange
+            }
+        }()
+        return (advice.text, color)
     }
 
     var body: some View {
@@ -429,9 +424,6 @@ private struct LifetimeCostCard: View {
         cm.convertToSelected(subscription.monthlyCost, from: subscription.currency)
     }
 
-    // Conservative estimate: 30 years to retirement (used for lifetime cost projection)
-    private let retirementYears: Int = 30
-
     private struct Projection {
         let label: String
         let years: Int
@@ -452,7 +444,7 @@ private struct LifetimeCostCard: View {
             HStack(spacing: 0) {
                 ForEach(projections.indices, id: \.self) { i in
                     let p = projections[i]
-                    let cost = monthly * 12 * Decimal(p.years)
+                    let cost = LifetimeCostCalculator.projectedCost(monthly: monthly, years: p.years)
                     VStack(spacing: 4) {
                         Text(p.label)
                             .font(.system(size: 10, design: .rounded))
@@ -471,7 +463,7 @@ private struct LifetimeCostCard: View {
             }
 
             // Retirement bomb
-            let retirementCost = monthly * 12 * Decimal(retirementYears)
+            let retirementCost = LifetimeCostCalculator.retirementCost(monthly: monthly)
             HStack(spacing: 8) {
                 Image(systemName: "clock.arrow.2.circlepath")
                     .font(.caption)

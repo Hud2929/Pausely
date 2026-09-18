@@ -77,6 +77,8 @@ struct SubscriptionsListView: View {
                         .keyboardType(.default)
                         .submitLabel(.search)
                         .accessibilityIdentifier("searchTextField")
+                        .accessibilityLabel("Search subscriptions")
+                        .accessibilityHint("Type to filter your \(store.subscriptions.count) subscription\(store.subscriptions.count == 1 ? "" : "s")")
                 }
                 .padding(.horizontal, 14)
                 .padding(.vertical, 12)
@@ -350,6 +352,7 @@ struct EnhancedSubscriptionRow: View {
                             EstimateBadge(isEstimated: screenTimeManager.isEstimated(for: subscription.name))
                         }
                         .foregroundStyle(usageColor)
+                        .accessibilityLabel(usageAccessibilityLabel)
 
                         if let cph = costPerHour {
                             Text("•")
@@ -424,9 +427,9 @@ struct EnhancedSubscriptionRow: View {
         } onRelease: {
             withAnimation(.easeInOut(duration: 0.1)) { pressed = false }
         }
-        .accessibilityElement(children: .combine)
-        .accessibilityLabel("\(subscription.name), \(subscription.displayAmount) per \(subscription.billingFrequency.shortDisplay), status \(subscription.status.displayName)")
-        .accessibilityHint("Double-tap to view details")
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel(rowAccessibilityLabel)
+        .accessibilityHint("Double tap to view details and manage")
     }
     
     var usageColor: Color {
@@ -434,6 +437,24 @@ struct EnhancedSubscriptionRow: View {
         if usageMinutes < 60 { return .orange }
         if usageMinutes < 180 { return .yellow }
         return .green
+    }
+
+    var usageAccessibilityLabel: String {
+        if usageMinutes < 30  { return "Poor value — rarely used" }
+        if usageMinutes < 60  { return "Fair value" }
+        if usageMinutes < 180 { return "Good value" }
+        return "Great value — used frequently"
+    }
+
+    private var rowAccessibilityLabel: String {
+        var parts: [String] = [subscription.name, subscription.status.displayName]
+        parts.append("\(subscription.displayAmount) per \(subscription.billingFrequency.shortDisplay)")
+        if hasUsageData {
+            parts.append(usageAccessibilityLabel)
+        } else if let days = subscription.daysUntilRenewal, days >= 0, days <= 7 {
+            parts.append(days == 0 ? "renews today" : "renews in \(days) \(days == 1 ? "day" : "days")")
+        }
+        return parts.joined(separator: ", ")
     }
     
     private func formatCostPerHour(_ value: Decimal) -> String {

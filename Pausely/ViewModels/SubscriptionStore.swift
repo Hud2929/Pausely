@@ -11,7 +11,7 @@ class SubscriptionStore: ObservableObject {
     @Published var totalAnnualSpend: Decimal = 0
     @Published var totalLifetimeSpend: Decimal = 0
     @Published var isLoading = false
-    @Published var error: Error?
+    @Published var lastErrorMessage: String?
     @Published var lastFetchDate: Date?
     static let shared = SubscriptionStore()
 
@@ -68,7 +68,7 @@ class SubscriptionStore: ObservableObject {
                 self.subscriptions = fetchedSubscriptions
                 self.calculateTotals()
                 self.lastFetchDate = Date()
-                self.error = nil
+                self.lastErrorMessage = nil
                 self.saveToCache()
                 WidgetDataStore.shared.publish(subscriptions: self.subscriptions)
                 SpotlightManager.shared.index(subscriptions: self.subscriptions)
@@ -82,9 +82,11 @@ class SubscriptionStore: ObservableObject {
         } catch {
             os_log("Error fetching subscriptions: %{public}@", log: .default, type: .error, error.localizedDescription)
             await MainActor.run {
-                self.error = DatabaseError.from(error)
                 if self.subscriptions.isEmpty {
                     self.loadFromCache()
+                    if self.subscriptions.isEmpty {
+                        self.lastErrorMessage = "Couldn't load subscriptions. Pull to refresh."
+                    }
                 }
             }
         }
@@ -242,6 +244,14 @@ class SubscriptionStore: ObservableObject {
             }
         }
 
+        // Schedule 3-tier renewal notifications + trial notifications
+        NotificationManager.shared.scheduleRenewalReminder(for: localSub)
+        NotificationManager.shared.scheduleUrgentRenewalReminder(for: localSub)
+        NotificationManager.shared.scheduleDayOfRenewalAlert(for: localSub)
+        if localSub.status == .trial {
+            NotificationManager.shared.scheduleTrialEndingReminder(for: localSub)
+        }
+
         // 2. Attempt Supabase write
         do {
             guard let session = client.auth.currentSession else {
@@ -281,13 +291,29 @@ class SubscriptionStore: ObservableObject {
         // 1. Update local state immediately (offline-first)
         await MainActor.run {
             if let index = self.subscriptions.firstIndex(where: { $0.id == subscription.id }) {
+                let oldAmount = self.subscriptions[index].amount
                 self.subscriptions[index] = subscription
                 self.calculateTotals()
                 self.saveToCache()
                 WidgetDataStore.shared.publish(subscriptions: self.subscriptions)
                 SpotlightManager.shared.index(subscriptions: self.subscriptions)
                 PriceHistoryTracker.shared.recordPriceIfChanged(subscription)
+                if subscription.amount > oldAmount {
+                    NotificationManager.shared.schedulePriceIncreaseAlert(
+                        subscription: subscription,
+                        oldPrice: oldAmount,
+                        newPrice: subscription.amount
+                    )
+                }
             }
+        }
+
+        // Reschedule 3-tier renewal notifications after update
+        NotificationManager.shared.scheduleRenewalReminder(for: subscription)
+        NotificationManager.shared.scheduleUrgentRenewalReminder(for: subscription)
+        NotificationManager.shared.scheduleDayOfRenewalAlert(for: subscription)
+        if subscription.status == .trial {
+            NotificationManager.shared.scheduleTrialEndingReminder(for: subscription)
         }
 
         // 2. Attempt Supabase write
@@ -351,6 +377,7 @@ class SubscriptionStore: ObservableObject {
             // 3. Enqueue for retry
             let op = SyncOperation(type: .delete, subscriptionId: id, payload: Data())
             SyncQueue.shared.enqueue(op)
+            self.lastErrorMessage = "Couldn't delete — will retry when online"
             throw error
         }
     }
@@ -379,6 +406,7 @@ class SubscriptionStore: ObservableObject {
                 .execute()
         } catch {
             os_log("Error updating subscription status in cloud: %{public}@", log: .default, type: .error, error.localizedDescription)
+            self.lastErrorMessage = "Saved locally, will sync when back online"
             // 3. Enqueue for retry
             if let payload = try? JSONEncoder().encode(["status": status.rawValue]) {
                 let op = SyncOperation(type: .updateStatus, subscriptionId: id, payload: payload)
@@ -409,6 +437,7 @@ class SubscriptionStore: ObservableObject {
                 .execute()
         } catch {
             os_log("Error pausing subscription in cloud: %{public}@", log: .default, type: .error, error.localizedDescription)
+            self.lastErrorMessage = "Saved locally, will sync when back online"
             // 3. Enqueue for retry
             let dateFormatter = ISO8601DateFormatter()
             if let payload = try? JSONEncoder().encode(["paused_until": dateFormatter.string(from: date)]) {
@@ -431,10 +460,10 @@ class SubscriptionStore: ObservableObject {
         }
 
         // 2. Attempt Supabase write
+        struct ResumePayload: Encodable {
+            let paused_until: String?
+        }
         do {
-            struct ResumePayload: Encodable {
-                let paused_until: String?
-            }
             try await client
                 .from("subscriptions")
                 .update(ResumePayload(paused_until: nil))
@@ -653,31 +682,44 @@ class SubscriptionStore: ObservableObject {
         }
         
         // For large datasets, calculate in background
+        // Capture currency context on main actor before entering background task
+        let exchangeRates = CurrencyManager.shared.exchangeRates
+        let selectedCurrency = CurrencyManager.shared.selectedCurrency
+
         calculationTask = Task { [weak self] in
             guard let self = self else { return }
-            
+
             let active = currentSubscriptions.filter { $0.status == .active }
-            
+
             // Process in chunks to prevent blocking
             let chunkSize = 50
             let chunks = stride(from: 0, to: active.count, by: chunkSize).map {
                 Array(active[$0..<min($0 + chunkSize, active.count)])
             }
-            
+
             var monthlyTotal: Decimal = 0
-            
+
             for chunk in chunks {
                 if Task.isCancelled { return }
-                
+
                 let chunkTotal = chunk.reduce(Decimal(0)) { total, sub in
-                    total + self.monthlyEquivalent(for: sub)
+                    let rawMonthly = self.monthlyEquivalent(for: sub)
+                    // Convert from subscription's stored currency to user's display currency
+                    guard sub.currency != selectedCurrency,
+                          let srcRate = exchangeRates[sub.currency],
+                          let dstRate = exchangeRates[selectedCurrency],
+                          srcRate > 0 else {
+                        return total + rawMonthly
+                    }
+                    let converted = Decimal(Double(truncating: rawMonthly as NSDecimalNumber) / srcRate * dstRate)
+                    return total + converted
                 }
                 monthlyTotal += chunkTotal
-                
+
                 // Yield to prevent blocking
                 try? await Task.sleep(nanoseconds: 1_000)
             }
-            
+
             let lifetimeTotal = currentSubscriptions.reduce(0) { $0 + $1.lifetimeSpend }
             await MainActor.run {
                 self.totalMonthlySpend = monthlyTotal
@@ -709,8 +751,12 @@ class SubscriptionStore: ObservableObject {
     private func performCalculation(activeSubscriptions: [Subscription]) {
         var monthlyTotal: Decimal = 0
         var lifetimeTotal: Decimal = 0
+        let cm = CurrencyManager.shared
         for sub in activeSubscriptions {
-            monthlyTotal += monthlyEquivalent(for: sub)
+            let rawMonthly = monthlyEquivalent(for: sub)
+            // Convert from subscription's stored currency to user's display currency
+            let convertedMonthly = cm.convertToSelected(rawMonthly, from: sub.currency)
+            monthlyTotal += convertedMonthly
             lifetimeTotal += sub.lifetimeSpend
         }
         totalMonthlySpend = monthlyTotal

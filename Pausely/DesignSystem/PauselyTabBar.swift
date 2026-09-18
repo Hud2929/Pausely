@@ -81,6 +81,7 @@ private struct TabBarButton: View {
                             .font(.system(size: 18, weight: isSelected ? .semibold : .medium))
                             .foregroundStyle(isSelected ? Color.accentMint : Color.obsidianTextSecondary)
                             .scaleEffect(isSelected ? 1.08 : 1)
+                            .accessibilityHidden(true)
                     }
 
                     if badgeCount > 0 {
@@ -89,12 +90,14 @@ private struct TabBarButton: View {
                             .frame(width: 7, height: 7)
                             .offset(x: 14, y: -4)
                             .transition(.scale.combined(with: .opacity))
+                            .accessibilityHidden(true)
                     }
                 }
 
                 Text(item.label)
                     .font(.system(size: 10, weight: isSelected ? .semibold : .medium, design: .rounded))
                     .foregroundStyle(isSelected ? Color.accentMint : Color.obsidianTextTertiary)
+                    .accessibilityHidden(true)
             }
             .frame(maxWidth: .infinity)
             .padding(.vertical, 4)
@@ -102,6 +105,7 @@ private struct TabBarButton: View {
         }
         .buttonStyle(PlainButtonStyle())
         .accessibilityLabel(badgeCount > 0 ? "\(accessLabel), \(badgeCount) alert\(badgeCount == 1 ? "" : "s")" : accessLabel)
+        .accessibilityHint("Double tap to navigate")
         .animation(.spring(response: 0.3, dampingFraction: 0.72), value: isSelected)
         .animation(.spring(response: 0.3, dampingFraction: 0.7), value: badgeCount)
     }

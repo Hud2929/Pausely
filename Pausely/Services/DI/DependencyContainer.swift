@@ -31,6 +31,7 @@ final class DependencyContainer: ObservableObject {
     }
 
     /// Production container wiring real singletons
+    @MainActor
     convenience init() {
         self.init(
             authService: RevolutionaryAuthManager.shared,
@@ -42,23 +43,23 @@ final class DependencyContainer: ObservableObject {
         )
     }
 
-    /// Testing container
+    /// Testing container — pass nil for any dependency to use the real singleton.
     @MainActor
     static func forTesting(
-        authService: RevolutionaryAuthManager = RevolutionaryAuthManager.shared,
-        subscriptionDataService: SubscriptionStore = SubscriptionStore.shared,
-        paymentService: PaymentManager = PaymentManager.shared,
-        currencyService: CurrencyManager = CurrencyManager.shared,
-        referralService: ReferralManager = ReferralManager.shared,
-        screenTimeService: ScreenTimeManager = ScreenTimeManager.shared
+        authService: RevolutionaryAuthManager? = nil,
+        subscriptionDataService: SubscriptionStore? = nil,
+        paymentService: PaymentManager? = nil,
+        currencyService: CurrencyManager? = nil,
+        referralService: ReferralManager? = nil,
+        screenTimeService: ScreenTimeManager? = nil
     ) -> DependencyContainer {
         DependencyContainer(
-            authService: authService,
-            subscriptionDataService: subscriptionDataService,
-            paymentService: paymentService,
-            currencyService: currencyService,
-            referralService: referralService,
-            screenTimeService: screenTimeService
+            authService: authService ?? RevolutionaryAuthManager.shared,
+            subscriptionDataService: subscriptionDataService ?? SubscriptionStore.shared,
+            paymentService: paymentService ?? PaymentManager.shared,
+            currencyService: currencyService ?? CurrencyManager.shared,
+            referralService: referralService ?? ReferralManager.shared,
+            screenTimeService: screenTimeService ?? ScreenTimeManager.shared
         )
     }
 }
