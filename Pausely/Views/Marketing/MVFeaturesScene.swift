@@ -113,7 +113,7 @@ struct MVFeaturesScene: View {
                 startAnimations()
             }
         }
-        .onChange(of: isActive) { active in
+        .onChange(of: isActive) { _, active in
             if active {
                 startAnimations()
             }

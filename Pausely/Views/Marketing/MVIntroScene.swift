@@ -123,7 +123,7 @@ struct MVIntroScene: View {
         .onAppear {
             if isActive { startAnimations() }
         }
-        .onChange(of: isActive) { active in
+        .onChange(of: isActive) { _, active in
             if active {
                 startAnimations()
             } else {
@@ -203,7 +203,7 @@ struct HookCardView: View {
             }
             .padding(.horizontal, 32)
         }
-        .onChange(of: isActive) { active in
+        .onChange(of: isActive) { _, active in
             if active {
                 flash = true
                 DispatchQueue.main.asyncAfter(deadline: .now() + 0.15) {

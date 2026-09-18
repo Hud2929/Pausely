@@ -134,7 +134,7 @@ struct MVOutroScene: View {
         .onAppear {
             if isActive { startAnimations() }
         }
-        .onChange(of: isActive) { active in
+        .onChange(of: isActive) { _, active in
             if active {
                 startAnimations()
             } else {

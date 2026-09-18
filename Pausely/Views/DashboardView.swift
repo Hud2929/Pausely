@@ -40,7 +40,7 @@ struct MainTabView: View {
                 }
                 .tag(3)
             }
-            .tint(Color.luxuryGold)
+            .tint(Color.accentMint)
             .onChange(of: selectedTab) { oldValue, newValue in
                 HapticStyle.light.trigger()
             }
@@ -62,13 +62,10 @@ struct DashboardView: View {
     @ObservedObject private var referralManager = ReferralManager.shared
     @State private var appear = false
     @State private var showingPaywall = false
-    @State private var showingAddOptions = false
     @State private var showingAddSubscription = false
-    @State private var showingSmartURLInput = false
     @State private var showingApplyReferral = false
     @State private var selectedTimeframe: DashboardTimeframe = .monthly
-    @State private var showingComingSoonAlert = false
-    @State private var comingSoonMessage = ""
+    @State private var heroScale: CGFloat = 1.0
 
     var displayAmount: Decimal {
         switch selectedTimeframe {
@@ -84,9 +81,8 @@ struct DashboardView: View {
     var body: some View {
         ScrollView(showsIndicators: false) {
             VStack(spacing: 0) {
-                // Personalized Header
-                personalizedHeader
-                    .padding(.top, 16)
+                // Hero Header — big number dominates
+                heroHeader
 
                 // Price Increase Alerts
                 if !PriceIncreaseMonitor.shared.alerts.isEmpty {
@@ -111,105 +107,53 @@ struct DashboardView: View {
                     .padding(.horizontal, 20)
                     .padding(.top, 40)
                 } else {
-                    // Next Payment Card (prominent)
+                    // 1. Next upcoming payment — most urgent item
                     NextPaymentCard(subscription: store.upcomingRenewals.first ?? store.activeSubscriptions.first)
                         .padding(.horizontal, 20)
                         .padding(.top, 20)
 
-                    // Total Spend Summary
-                    TotalSpendSummaryCard(
-                        monthlySpend: store.totalMonthlySpend,
-                        yearlySpend: store.totalAnnualSpend,
-                        subscriptionCount: store.subscriptions.count
-                    )
-                    .padding(.horizontal, 20)
-                    .padding(.top, 16)
+                    // 2. Upcoming bills this week
+                    BillsThisWeekCard(subscriptions: store.activeSubscriptions)
+                        .padding(.horizontal, 20)
+                        .padding(.top, 16)
 
-                    // Lifetime Spend
+                    // 2b. Perception Gap — the $219 problem
+                    PerceptionGapCard(monthlySpend: store.totalMonthlySpend)
+                        .padding(.horizontal, 20)
+                        .padding(.top, 16)
+
+                    // 2c. Waste Score Callout
+                    WasteScoreCalloutCard()
+                        .padding(.horizontal, 20)
+                        .padding(.top, 16)
+
+                    // 3. Trials ending soon (conditional)
+                    let expiringTrials = store.activeSubscriptions.filter { sub in
+                        guard let trial = sub.trialEndsAt else { return false }
+                        return trial > Date() && trial < Date().addingTimeInterval(7 * 86400)
+                    }
+                    if !expiringTrials.isEmpty {
+                        TrialExpirationSection(subscriptions: expiringTrials)
+                            .padding(.horizontal, 20)
+                            .padding(.top, 16)
+                    }
+
+                    // 4. Biggest expenses
+                    BiggestExpensesSection()
+
+                    // 5. Paused subscriptions (conditional)
+                    if !store.pausedSubscriptions.isEmpty {
+                        PausedSubscriptionsSection(subscriptions: store.pausedSubscriptions)
+                            .padding(.top, 16)
+                    }
+
+                    // 6. Lifetime spend
                     LifetimeSpendCard(
                         lifetimeSpend: store.totalLifetimeSpend,
                         currencyManager: currencyManager
                     )
                     .padding(.horizontal, 20)
-                    .padding(.top, 12)
-
-                    // Forgotten Apple Subscriptions
-                    ForgottenSubscriptionsSection()
-
-                    // Biggest Expenses
-                    BiggestExpensesSection()
-
-                    // Category Spending Breakdown
-                    CategorySpendingSection()
-
-                    // Subscription Health Score
-                    SubscriptionHealthScoreSection()
-
-                    // Compare & Save (prominent key feature)
-                    ComparePromoSection()
-                        .padding(.horizontal, 20)
-                        .padding(.top, 24)
-
-                    // Quick Actions
-                    QuickActionsGrid(
-                        onAddTap: { showingAddSubscription = true },
-                        onPaywallTap: { showingPaywall = true }
-                    )
-                    .padding(.horizontal, 20)
                     .padding(.top, 16)
-
-                    // Smart Insights
-                    SmartInsightsSection()
-                        .padding(.horizontal, 20)
-                        .padding(.top, 24)
-
-                    // Family Plan Opportunities
-                    let familySuggestions = FamilyPlanDetector.shared.detectFamilyPlanOpportunities(in: store.subscriptions)
-                    if !familySuggestions.isEmpty {
-                        FamilyPlanSuggestionsSection(
-                            suggestions: familySuggestions,
-                            currencyManager: currencyManager
-                        )
-                    }
-
-                    // Upcoming Renewals
-                    if !store.upcomingRenewals.isEmpty {
-                        UpcomingRenewalsCarousel(subscriptions: store.upcomingRenewals)
-                            .padding(.top, 24)
-                    } else if !store.isLoading {
-                        ArtisticEmptyState(
-                            icon: "calendar.badge.clock",
-                            title: "No upcoming renewals",
-                            message: "Your subscriptions are all set for now.",
-                            action: nil,
-                            actionTitle: nil
-                        )
-                        .padding(.horizontal, 20)
-                        .padding(.top, 24)
-                    }
-
-                    // Paused Subscriptions
-                    if !store.pausedSubscriptions.isEmpty {
-                        PausedSubscriptionsSection(subscriptions: store.pausedSubscriptions)
-                            .padding(.top, 24)
-                    }
-
-                    // Cost Per Use (killer feature)
-                    CostPerUseDashboardSection()
-
-                    // Smart Alerts
-                    CostPerUseAlertsSection()
-
-                    // Usage Tracking (if data available)
-                    if screenTimeManager.hasAnyUsageData {
-                        UsageHighlightsSection()
-                            .padding(.horizontal, 20)
-                            .padding(.top, 24)
-                    }
-
-                    // Recent Subscriptions
-                    RecentSubscriptionsCarousel(subscriptions: store.subscriptions)
-                        .padding(.top, 24)
 
                     Spacer(minLength: 100)
                 }
@@ -220,20 +164,8 @@ struct DashboardView: View {
             await store.fetchSubscriptions(force: true)
             HapticStyle.success.trigger()
         }
-        .confirmationDialog("Add Subscription", isPresented: $showingAddOptions) {
-            Button("Add Manually") {
-                showingAddSubscription = true
-            }
-            Button("Paste from URL") {
-                showingSmartURLInput = true
-            }
-            Button("Cancel", role: .cancel) {}
-        }
         .sheet(isPresented: $showingAddSubscription) {
             SubscriptionBrowserView()
-        }
-        .sheet(isPresented: $showingSmartURLInput) {
-            SmartURLInputView()
         }
         .sheet(isPresented: $showingPaywall) {
             StoreKitUpgradeView(currentSubscriptionCount: store.subscriptions.count)
@@ -242,7 +174,7 @@ struct DashboardView: View {
             ApplyReferralView()
         }
         .onAppear {
-            withAnimation(.easeOut(duration: 0.6)) {
+            withAnimation(.spring(response: 0.5, dampingFraction: 0.8)) {
                 appear = true
             }
             Task {
@@ -252,6 +184,16 @@ struct DashboardView: View {
         }
         .onReceive(NotificationCenter.default.publisher(for: .referralCodeReceived)) { _ in
             checkPendingReferralCode()
+        }
+        .onReceive(NotificationCenter.default.publisher(for: Notification.Name("subscriptionAdded"))) { _ in
+            withAnimation(.spring(response: 0.15, dampingFraction: 0.5)) {
+                heroScale = 1.04
+            }
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.15) {
+                withAnimation(.spring(response: 0.25, dampingFraction: 0.6)) {
+                    heroScale = 1.0
+                }
+            }
         }
     }
 
@@ -296,67 +238,66 @@ struct DashboardView: View {
         }
     }
 
-    // MARK: - Personalized Header
-    private var personalizedHeader: some View {
-        HStack(alignment: .top, spacing: 16) {
-            VStack(alignment: .leading, spacing: 6) {
-                Text(greeting)
-                    .font(.system(.subheadline, design: .rounded).weight(.medium))
-                    .foregroundStyle(.secondary)
+    // MARK: - Hero Header
+    private var heroHeader: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            HStack(alignment: .top) {
+                // Timeframe label
+                Text(selectedTimeframe == .weekly ? "WEEKLY SPEND" : selectedTimeframe == .yearly ? "YEARLY SPEND" : "MONTHLY SPEND")
+                    .font(.system(size: 11, weight: .semibold, design: .rounded))
+                    .foregroundStyle(Color.obsidianTextTertiary)
+                    .tracking(2)
+                    .animation(.none, value: selectedTimeframe)
 
-                Text("Your Subscriptions")
-                    .font(.system(.title, design: .rounded).weight(.bold))
-                    .foregroundStyle(.primary)
-                    .lineLimit(1)
-                    .allowsTightening(false)
+                Spacer()
 
-                if !store.subscriptions.isEmpty {
-                    Text(summaryText)
-                        .font(.system(.caption, design: .rounded).weight(.medium))
-                        .foregroundStyle(.tertiary)
-                        .lineLimit(1)
+                HStack(spacing: 8) {
+                    CurrencySelectorButton()
+                        .accessibilityIdentifier("currencySelectorButton")
+                    NotificationButton()
+                        .accessibilityIdentifier("notificationButton")
                 }
             }
 
-            Spacer()
+            Text(currencyManager.format(displayAmount))
+                .font(.system(.largeTitle, design: .rounded).weight(.black))
+                .foregroundStyle(Color.accentMint)
+                .contentTransition(.numericText())
+                .scaleEffect(heroScale)
 
             HStack(spacing: 12) {
-                CurrencySelectorButton()
-                    .accessibilityIdentifier("currencySelectorButton")
-                NotificationButton()
-                    .accessibilityIdentifier("notificationButton")
+                let count = store.activeSubscriptions.count
+                Text("\(count) active")
+                    .font(.system(.caption, design: .rounded).weight(.medium))
+                    .foregroundStyle(Color.obsidianTextSecondary)
+
+                // Timeframe picker — compact inline
+                HStack(spacing: 0) {
+                    ForEach(DashboardTimeframe.allCases, id: \.self) { tf in
+                        Button {
+                            withAnimation(.spring(response: 0.28, dampingFraction: 0.72)) { selectedTimeframe = tf }
+                            HapticStyle.light.trigger()
+                        } label: {
+                            Text(tf.shortLabel)
+                                .font(.system(size: 11, weight: selectedTimeframe == tf ? .bold : .medium, design: .rounded))
+                                .foregroundStyle(selectedTimeframe == tf ? Color.obsidianSurface : Color.obsidianTextTertiary)
+                                .padding(.horizontal, 8)
+                                .padding(.vertical, 4)
+                                .background(selectedTimeframe == tf ? Color.accentMint : Color.clear)
+                                .clipShape(Capsule())
+                        }
+                        .buttonStyle(PlainButtonStyle())
+                    }
+                }
+                .background(Color.obsidianElevated)
+                .clipShape(Capsule())
             }
-            .accessibilityElement(children: .combine)
-            .accessibilityLabel("Dashboard header, \(greeting)")
         }
         .padding(.horizontal, 20)
+        .padding(.top, 24)
+        .padding(.bottom, 8)
         .opacity(appear ? 1 : 0)
-        .offset(y: appear ? 0 : -20)
-    }
-
-    private var greeting: String {
-        let hour = Calendar.current.component(.hour, from: Date())
-        let name = RevolutionaryAuthManager.shared.currentUser?.displayName ?? ""
-        let prefix = name.isEmpty ? "" : "\(name), "
-        switch hour {
-        case 0..<12: return "\(prefix)Good morning"
-        case 12..<17: return "\(prefix)Good afternoon"
-        default: return "\(prefix)Good evening"
-        }
-    }
-
-    private var summaryText: String {
-        let active = store.activeSubscriptions.count
-        let paused = store.pausedSubscriptions.count
-        let monthlyTotal = store.activeSubscriptions.reduce(Decimal(0)) { total, sub in
-            let converted = (try? currencyManager.convert(sub.monthlyCost, from: sub.currency, to: currencyManager.selectedCurrency)) ?? sub.monthlyCost
-            return total + converted
-        }
-        let monthly = currencyManager.format(monthlyTotal)
-        if paused > 0 {
-            return "\(active) active, \(paused) paused • \(monthly)/mo"
-        }
-        return "\(active) active subscriptions • \(monthly)/mo"
+        .offset(y: appear ? 0 : -8)
     }
 }
 
@@ -368,186 +309,70 @@ extension DashboardInsightCard {
     }
 }
 
-// MARK: - Dashboard Empty State View
-struct DashboardEmptyStateView: View {
-    let onAdd: () -> Void
-
-    var body: some View {
-        ArtisticEmptyState(
-            icon: "chart.pie.fill",
-            title: "Track your first subscription",
-            message: "Add a subscription to see your spending dashboard, upcoming renewals, and smart insights.",
-            action: onAdd,
-            actionTitle: "Add Subscription"
-        )
-    }
-}
-
 // MARK: - Compelling Dashboard Empty State
 struct DashboardEmptyState: View {
     let onAdd: () -> Void
-    @State private var animate = false
 
     var body: some View {
-        VStack(spacing: 32) {
-            // Artistic SF Symbols composition
-            ZStack {
-                // Orbiting circles
-                ForEach(0..<3) { i in
-                    Circle()
-                        .stroke(
-                            LinearGradient(
-                                colors: [
-                                    Color.luxuryPurple.opacity(0.15 - Double(i) * 0.03),
-                                    Color.luxuryGold.opacity(0.1 - Double(i) * 0.02)
-                                ],
-                                startPoint: .topLeading,
-                                endPoint: .bottomTrailing
-                            ),
-                            lineWidth: 1
-                        )
-                        .frame(width: 160 + CGFloat(i * 40), height: 160 + CGFloat(i * 40))
-                        .rotationEffect(.degrees(animate ? 360 : 0))
-                        .animation(
-                            UIAccessibility.isReduceMotionEnabled
-                                ? .none
-                                : .linear(duration: 10 + Double(i) * 5).repeatForever(autoreverses: false),
-                            value: animate
-                        )
-                }
-
-                // Background glow
-                Circle()
-                    .fill(
-                        RadialGradient(
-                            colors: [
-                                Color.luxuryPurple.opacity(0.25),
-                                Color.luxuryPurple.opacity(0.05),
-                                .clear
-                            ],
-                            center: .center,
-                            startRadius: 20,
-                            endRadius: 90
-                        )
-                    )
-                    .frame(width: 180, height: 180)
-                    .scaleEffect(animate ? 1.1 : 0.9)
-                    .animation(
-                        UIAccessibility.isReduceMotionEnabled
-                            ? .none
-                            : .easeInOut(duration: 2).repeatForever(autoreverses: true),
-                        value: animate
-                    )
-
-                // Central icon cluster
+        VStack(spacing: 0) {
+            VStack(spacing: 0) {
+                // Icon
                 ZStack {
-                    // Main icon
-                    Image(systemName: "rectangle.stack.badge.plus")
-                        .font(.system(.largeTitle, design: .rounded).weight(.semibold))
-                        .foregroundStyle(
-                            LinearGradient(
-                                colors: [Color.luxuryGold, Color.luxuryPurple],
-                                startPoint: .topLeading,
-                                endPoint: .bottomTrailing
-                            )
-                        )
-                        .shadow(color: Color.luxuryGold.opacity(0.4), radius: 20, x: 0, y: 8)
+                    Circle()
+                        .fill(Color.accentMint.opacity(0.12))
+                        .frame(width: 88, height: 88)
 
-                    // Dollar sign orbiting
-                    Image(systemName: "dollarsign.circle.fill")
-                        .font(.system(.title3, design: .rounded).weight(.semibold))
-                        .foregroundColor(Color.luxuryGold)
-                        .offset(x: animate ? 50 : 42, y: animate ? -30 : -26)
-                        .animation(
-                            UIAccessibility.isReduceMotionEnabled
-                                ? .none
-                                : .easeInOut(duration: 2.5).repeatForever(autoreverses: true),
-                            value: animate
-                        )
+                    Circle()
+                        .stroke(Color.accentMint.opacity(0.2), lineWidth: 1.5)
+                        .frame(width: 88, height: 88)
 
-                    // Plus circle orbiting
-                    Image(systemName: "plus.circle.fill")
-                        .font(.system(.title3, design: .rounded).weight(.semibold))
-                        .foregroundColor(Color.luxuryPurple)
-                        .offset(x: animate ? -45 : -38, y: animate ? 35 : 30)
-                        .animation(
-                            UIAccessibility.isReduceMotionEnabled
-                                ? .none
-                                : .easeInOut(duration: 2.2).repeatForever(autoreverses: true),
-                            value: animate
-                        )
+                    Image(systemName: "plus")
+                        .font(.system(size: 34, weight: .semibold, design: .rounded))
+                        .foregroundStyle(Color.accentMint)
                 }
-            }
-            .frame(height: 220)
 
-            // Text content
-            VStack(spacing: 12) {
-                Text("Track Your First Subscription")
-                    .font(AppTypography.headlineLarge)
+                // Text content — 8pt gap between headline and body
+                Text("Track Your Subscriptions")
+                    .font(.system(.title3, design: .rounded).weight(.bold))
                     .foregroundStyle(.white)
                     .multilineTextAlignment(.center)
+                    .padding(.top, 20)
 
-                Text("Add a subscription to see your spending insights, renewal alerts, and cost-per-use analytics.")
-                    .font(AppTypography.bodyMedium)
-                    .foregroundStyle(.white.opacity(0.6))
+                Text("Add services to see your monthly spend, renewal dates, and savings opportunities.")
+                    .font(.system(.subheadline, design: .rounded))
+                    .foregroundStyle(Color.obsidianTextSecondary)
                     .multilineTextAlignment(.center)
-                    .padding(.horizontal, 24)
-            }
+                    .lineSpacing(3)
+                    .padding(.top, 8)
 
-            // CTA Button with glass morphism
-            Button(action: {
-                HapticStyle.medium.trigger()
-                onAdd()
-            }) {
-                HStack(spacing: 10) {
-                    Image(systemName: "plus.circle.fill")
-                        .font(AppTypography.headlineMedium)
-                    Text("Add Subscription")
-                        .font(AppTypography.headlineSmall)
-                }
-                .foregroundStyle(.white)
-                .frame(maxWidth: .infinity)
-                .frame(height: 56)
-                .background(
-                    ZStack {
-                        RoundedRectangle(cornerRadius: 18, style: .continuous)
-                            .fill(
-                                LinearGradient(
-                                    colors: [Color.luxuryPurple, Color.luxuryPink],
-                                    startPoint: .topLeading,
-                                    endPoint: .bottomTrailing
-                                )
-                            )
-
-                        RoundedRectangle(cornerRadius: 18, style: .continuous)
-                            .stroke(
-                                LinearGradient(
-                                    colors: [.white.opacity(0.5), .white.opacity(0)],
-                                    startPoint: .top,
-                                    endPoint: .center
-                                ),
-                                lineWidth: 1.5
-                            )
+                // Full-width mint CTA — 24pt gap from body
+                Button(action: {
+                    HapticStyle.medium.trigger()
+                    onAdd()
+                }) {
+                    HStack(spacing: 8) {
+                        Image(systemName: "plus")
+                            .font(.system(size: 15, weight: .semibold))
+                        Text("Add Subscription")
+                            .font(.system(.body, design: .rounded).weight(.semibold))
                     }
-                )
-                .shadow(color: Color.luxuryPurple.opacity(0.4), radius: 20, x: 0, y: 10)
+                    .foregroundStyle(Color.black)
+                    .frame(maxWidth: .infinity)
+                    .frame(height: 52)
+                    .background(
+                        RoundedRectangle(cornerRadius: 16, style: .continuous)
+                            .fill(Color.accentMint)
+                    )
+                }
+                .buttonStyle(PlainButtonStyle())
+                .padding(.top, 24)
+                .accessibilityIdentifier("addSubscriptionButton")
             }
-            .premiumPress(haptic: .medium, scale: 0.96)
             .padding(.horizontal, 32)
-            .padding(.top, 8)
-            .accessibilityIdentifier("addSubscriptionButton")
+            .padding(.vertical, 28)
+            .surfaceCard(cornerRadius: 24)
         }
-        .padding(.vertical, 40)
-        .glass(intensity: 0.08, tint: .white)
-        .onAppear {
-            guard !UIAccessibility.isReduceMotionEnabled else {
-                animate = true
-                return
-            }
-            withAnimation(.easeOut(duration: 0.5).delay(0.2)) {
-                animate = true
-            }
-        }
+        .padding(.vertical, 16)
     }
 }
 
@@ -568,7 +393,7 @@ struct SpendingSparkline: View {
                     RoundedRectangle(cornerRadius: 4)
                         .fill(
                             LinearGradient(
-                                colors: [.luxuryPurple.opacity(0.8), .luxuryPink.opacity(0.6)],
+                                colors: [.accentMint.opacity(0.8), .accentMint.opacity(0.6)],
                                 startPoint: .bottom,
                                 endPoint: .top
                             )
@@ -599,10 +424,24 @@ struct SpendingSparkline: View {
     }
 
     private func getDailyTotal(for date: Date) -> Decimal {
-        // Sum all active subscriptions
-        return store.subscriptions
-            .filter { $0.status == .active }
-            .reduce(Decimal(0)) { $0 + $1.monthlyCost }
+        let calendar = Calendar.current
+        // Sum amounts for subscriptions that renew on this specific day
+        let renewalTotal = store.subscriptions
+            .filter { sub in
+                guard sub.status == .active,
+                      let billingDate = sub.nextBillingDate else { return false }
+                return calendar.isDate(billingDate, inSameDayAs: date)
+            }
+            .reduce(Decimal(0)) { $0 + CurrencyManager.shared.convertToSelected($1.amount, from: $1.currency) }
+
+        // If no renewals today, show a low baseline (monthly cost / 30 as a daily average)
+        if renewalTotal == 0 {
+            let dailyAverage = store.subscriptions
+                .filter { $0.status == .active }
+                .reduce(Decimal(0)) { $0 + CurrencyManager.shared.convertToSelected($1.monthlyCost, from: $1.currency) } / 30
+            return dailyAverage * Decimal(0.3) // Show at 30% baseline so chart isn't flat
+        }
+        return renewalTotal
     }
 }
 
@@ -650,11 +489,11 @@ struct SmartInsightsSection: View {
                 let perksCount = PerkEngine.shared.discoveredPerks.count
                 DashboardInsightCard(
                     icon: "gift.fill",
-                    iconColor: Color.luxuryGold,
+                    iconColor: Color.accentMint,
                     title: "Available Perks",
                     subtitle: perksCount > 0 ? "From your subscriptions" : "Analyze to discover perks",
                     value: perksCount > 0 ? "\(perksCount)" : "—",
-                    valueColor: Color.luxuryGold
+                    valueColor: Color.accentMint
                 )
 
                 // Usage status
@@ -759,13 +598,16 @@ struct CurrencySelectorButton: View {
 // MARK: - Notification Button
 
 struct NotificationButton: View {
+    @State private var showingSettings = false
+
     var body: some View {
         Button(action: {
             HapticStyle.light.trigger()
+            showingSettings = true
         }) {
             Image(systemName: "bell.fill")
                 .font(AppTypography.headlineMedium)
-                .foregroundStyle(Color.luxuryGold)
+                .foregroundStyle(Color.accentMint)
                 .padding(10)
                 .background(
                     Circle()
@@ -776,7 +618,11 @@ struct NotificationButton: View {
                         )
                 )
         }
-        .accessibilityLabel("Notifications")
+        .frame(minWidth: 44, minHeight: 44)
+        .accessibilityLabel("Notification Settings")
+        .sheet(isPresented: $showingSettings) {
+            NotificationsSettingsView()
+        }
     }
 }
 
@@ -789,7 +635,7 @@ struct OfflineModeBanner: View {
         HStack(spacing: 12) {
             Image(systemName: "wifi.slash")
                 .font(AppTypography.headlineLarge)
-                .foregroundStyle(Color.luxuryTeal)
+                .foregroundStyle(Color.accentMint)
 
             VStack(alignment: .leading, spacing: 2) {
                 Text("Offline Mode")
@@ -806,15 +652,15 @@ struct OfflineModeBanner: View {
             Button(action: onEnableCloud) {
                 Text("Sync")
                     .font(AppTypography.labelLarge)
-                    .foregroundStyle(.white)
+                    .foregroundStyle(Color.black)
                     .padding(.horizontal, 14)
                     .padding(.vertical, 8)
-                    .background(Color.luxuryTeal)
+                    .background(Color.accentMint)
                     .clipShape(Capsule())
             }
         }
         .padding(14)
-        .glassBackground(cornerRadius: 16, strokeColor: Color.luxuryTeal.opacity(0.3), strokeWidth: 1)
+        .glassBackground(cornerRadius: 16, strokeColor: Color.accentMint.opacity(0.3), strokeWidth: 1)
     }
 }
 
@@ -828,12 +674,12 @@ struct ReferralPromotionCard: View {
             HStack(spacing: 14) {
                 ZStack {
                     Circle()
-                        .fill(Color.luxuryGold.opacity(0.2))
+                        .fill(Color.accentMint.opacity(0.2))
                         .frame(width: 48, height: 48)
 
                     Image(systemName: "gift.fill")
                         .font(AppTypography.displaySmall)
-                        .foregroundStyle(Color.luxuryGold)
+                        .foregroundStyle(Color.accentMint)
                 }
 
                 VStack(alignment: .leading, spacing: 3) {
@@ -850,10 +696,10 @@ struct ReferralPromotionCard: View {
 
                 Image(systemName: "chevron.right")
                     .font(AppTypography.labelLarge)
-                    .foregroundStyle(Color.luxuryGold)
+                    .foregroundStyle(Color.accentMint)
             }
             .padding(16)
-            .glassBackground(cornerRadius: 20, strokeColor: Color.luxuryGold.opacity(0.3), strokeWidth: 1)
+            .glassBackground(cornerRadius: 20, strokeColor: Color.accentMint.opacity(0.3), strokeWidth: 1)
         }
         .buttonStyle(PlainButtonStyle())
         .accessibilityElement(children: .combine)

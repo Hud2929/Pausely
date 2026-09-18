@@ -12,7 +12,7 @@ struct PremiumProfileView: View {
     @State private var showingHelp = false
     @State private var showingExport = false
     @State private var showingWhatsNew = false
-    @State private var showingMarketingVideo = false
+    @State private var showingWrapped = false
 
     var body: some View {
         ZStack {
@@ -50,6 +50,24 @@ struct PremiumProfileView: View {
                         .padding(.horizontal, 20)
                         .padding(.top, 20)
 
+                    // Personality Card (always visible, drives Wrapped engagement)
+                    PersonalityProfileCard(subscriptions: store.activeSubscriptions) {
+                        if paymentManager.isPremium {
+                            showingWrapped = true
+                        }
+                    }
+                    .padding(.horizontal, 20)
+                    .padding(.top, 20)
+
+                    // Subscription Wrapped
+                    if paymentManager.isPremium {
+                        WrappedEntryCard {
+                            showingWrapped = true
+                        }
+                        .padding(.horizontal, 20)
+                        .padding(.top, 12)
+                    }
+
                     // Settings Section
                     SettingsSection(
                         onNotifications: { showingNotifications = true },
@@ -69,12 +87,12 @@ struct PremiumProfileView: View {
                         HStack(spacing: 16) {
                             ZStack {
                                 RoundedRectangle(cornerRadius: 10)
-                                    .fill(Color.luxuryGold.opacity(0.15))
+                                    .fill(Color.accentMint.opacity(0.15))
                                     .frame(width: 36, height: 36)
 
                                 Image(systemName: "sparkles")
                                     .font(.body)
-                                    .foregroundColor(Color.luxuryGold)
+                                    .foregroundColor(Color.accentMint)
                             }
 
                             Text("What's New")
@@ -83,16 +101,16 @@ struct PremiumProfileView: View {
 
                             Spacer()
 
-                            Text("1.05")
+                            Text(Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "–")
                                 .font(.body)
-                                .foregroundColor(TextColors.secondary)
+                                .foregroundColor(Color.obsidianTextSecondary)
 
                             Image(systemName: "chevron.right")
                                 .font(.subheadline.weight(.semibold))
-                                .foregroundColor(TextColors.tertiary)
+                                .foregroundColor(Color.obsidianTextTertiary)
                         }
                         .padding(14)
-                        .background(BackgroundColors.secondary)
+                        .background(Color.obsidianSurface)
                     }
                     .buttonStyle(PlainButtonStyle())
                     .padding(.horizontal, 20)
@@ -103,39 +121,6 @@ struct PremiumProfileView: View {
                     AboutSection()
                         .padding(.horizontal, 20)
                         .padding(.top, 24)
-
-                    // Marketing Video
-                    Button(action: {
-                        HapticStyle.medium.trigger()
-                        showingMarketingVideo = true
-                    }) {
-                        HStack(spacing: 16) {
-                            ZStack {
-                                RoundedRectangle(cornerRadius: 10)
-                                    .fill(Color.luxuryPink.opacity(0.15))
-                                    .frame(width: 36, height: 36)
-
-                                Image(systemName: "film.fill")
-                                    .font(.body)
-                                    .foregroundColor(Color.luxuryPink)
-                            }
-
-                            Text("Marketing Video")
-                                .font(.body)
-                                .foregroundColor(.white)
-
-                            Spacer()
-
-                            Image(systemName: "chevron.right")
-                                .font(.subheadline.weight(.semibold))
-                                .foregroundColor(TextColors.tertiary)
-                        }
-                        .padding(14)
-                        .background(BackgroundColors.secondary)
-                    }
-                    .buttonStyle(PlainButtonStyle())
-                    .padding(.horizontal, 20)
-                    .padding(.top, 24)
 
                     // Sign Out
                     SignOutButton {
@@ -171,8 +156,8 @@ struct PremiumProfileView: View {
         .sheet(isPresented: $showingWhatsNew) {
             WhatsNewSheet()
         }
-        .fullScreenCover(isPresented: $showingMarketingVideo) {
-            MarketingVideoView()
+        .sheet(isPresented: $showingWrapped) {
+            SubscriptionWrappedView(subscriptions: store.subscriptions)
         }
     }
 }
@@ -184,86 +169,60 @@ struct ProfileHeaderCard: View {
     let subscriptionCount: Int
 
     var body: some View {
-        VStack(spacing: 24) {
-            // Avatar with artistic ring
+        HStack(spacing: 16) {
+            // Avatar
             ZStack {
-                ForEach(0..<3) { i in
-                    Circle()
-                        .stroke(
-                            AngularGradient(
-                                colors: [
-                                    BrandColors.primary.opacity(0.3 - Double(i) * 0.1),
-                                    BrandColors.secondary.opacity(0.2 - Double(i) * 0.05),
-                                    BrandColors.primary.opacity(0.3 - Double(i) * 0.1)
-                                ],
-                                center: .center
-                            ),
-                            lineWidth: 2
-                        )
-                        .frame(width: 140 + CGFloat(i * 20), height: 140 + CGFloat(i * 20))
-                        .rotationEffect(.degrees(Double(i) * 45))
-                }
+                Circle()
+                    .fill(Color.accentMint.opacity(0.15))
+                    .frame(width: 72, height: 72)
 
-                ZStack {
-                    Circle()
-                        .fill(
-                            LinearGradient(
-                                colors: [BrandColors.primary, BrandColors.secondary],
-                                startPoint: .topLeading,
-                                endPoint: .bottomTrailing
-                            )
-                        )
-                        .frame(width: 110, height: 110)
-                        .shadow(color: BrandColors.primary.opacity(0.4), radius: 20, x: 0, y: 10)
-
-                    Text(user?.initials ?? "U")
-                        .font(.largeTitle.bold())
-                        .foregroundColor(.white)
-                }
+                Text(user?.initials ?? "U")
+                    .font(.system(.title2, design: .rounded).weight(.bold))
+                    .foregroundStyle(Color.accentMint)
 
                 if isPremium {
-                    ZStack {
-                        Circle()
-                            .fill(BrandColors.accent)
-                            .frame(width: 36, height: 36)
-                        Image(systemName: "crown.fill")
-                            .font(.system(.subheadline, design: .rounded))
-                            .foregroundColor(.white)
-                    }
-                    .offset(x: 45, y: -45)
-                    .accessibilityLabel("Pro member")
+                    Circle()
+                        .fill(Color.accentMint)
+                        .frame(width: 22, height: 22)
+                        .overlay(
+                            Image(systemName: "checkmark")
+                                .font(.system(size: 10, weight: .bold))
+                                .foregroundStyle(Color.black)
+                        )
+                        .offset(x: 24, y: -24)
                 }
             }
-            .frame(height: 180)
+            .accessibilityHidden(true)
 
             // User info
-            VStack(spacing: 6) {
+            VStack(alignment: .leading, spacing: 4) {
                 Text(user?.displayName ?? "User")
-                    .font(.title2.bold())
-                    .foregroundColor(.white)
+                    .font(.system(.headline, design: .rounded).weight(.bold))
+                    .foregroundStyle(Color.obsidianText)
 
                 if let email = user?.email, !email.isEmpty {
                     Text(email)
-                        .font(.subheadline)
-                        .foregroundColor(TextColors.secondary)
+                        .font(.system(.caption, design: .rounded))
+                        .foregroundStyle(Color.obsidianTextSecondary)
+                        .lineLimit(1)
                 }
 
                 if isPremium {
-                    PremiumBadge(text: "PRO MEMBER", badgeColor: BrandColors.accent)
-                        .padding(.top, 4)
+                    Text("Pro Member")
+                        .font(.system(.caption2, design: .rounded).weight(.semibold))
+                        .foregroundStyle(Color.accentMint)
+                        .padding(.horizontal, 8)
+                        .padding(.vertical, 3)
+                        .background(Color.accentMint.opacity(0.12))
+                        .clipShape(Capsule())
+                        .padding(.top, 2)
                 }
             }
+
+            Spacer()
         }
-        .padding(32)
-        .frame(maxWidth: .infinity)
-        .background(
-            RoundedRectangle(cornerRadius: 28)
-                .fill(BackgroundColors.secondary)
-                .overlay(
-                    RoundedRectangle(cornerRadius: 28)
-                        .stroke(Color.white.opacity(0.06), lineWidth: 1)
-                )
-        )
+        .padding(20)
+        .surfaceCard(cornerRadius: 20)
         .accessibilityElement(children: .combine)
         .accessibilityLabel("Profile, \(user?.displayName ?? "User"), \(isPremium ? "Pro member" : "Free tier")")
     }
@@ -284,7 +243,7 @@ struct PremiumStatusCard: View {
             HStack {
                 Image(systemName: "crown.fill")
                     .font(.system(.title2, design: .rounded))
-                    .foregroundColor(BrandColors.accent)
+                    .foregroundColor(Color.accentMint)
                 
                 VStack(alignment: .leading, spacing: 4) {
                     Text("Pro Member")
@@ -293,12 +252,12 @@ struct PremiumStatusCard: View {
 
                     Text("Member since \(memberSinceText)")
                         .font(.subheadline)
-                        .foregroundColor(TextColors.secondary)
+                        .foregroundColor(Color.obsidianTextSecondary)
                 }
                 
                 Spacer()
                 
-                PremiumBadge(text: "ACTIVE", badgeColor: SemanticColors.success)
+                PremiumBadge(text: "ACTIVE", badgeColor: Color.semanticSuccess)
             }
             
             PremiumDivider()
@@ -310,23 +269,7 @@ struct PremiumStatusCard: View {
             }
         }
         .padding(20)
-        .background(
-            RoundedRectangle(cornerRadius: 20)
-                .fill(
-                    LinearGradient(
-                        colors: [
-                            BrandColors.accent.opacity(0.15),
-                            BrandColors.primary.opacity(0.05)
-                        ],
-                        startPoint: .topLeading,
-                        endPoint: .bottomTrailing
-                    )
-                )
-                .overlay(
-                    RoundedRectangle(cornerRadius: 20)
-                        .stroke(BrandColors.accent.opacity(0.3), lineWidth: 1)
-                )
-        )
+        .surfaceCard(cornerRadius: 20)
     }
 }
 
@@ -339,11 +282,11 @@ struct ProFeatureItem: View {
         VStack(spacing: 6) {
             Image(systemName: icon)
                 .font(.headline)
-                .foregroundColor(BrandColors.accent)
+                .foregroundColor(Color.accentMint)
 
             Text(text)
                 .font(.caption)
-                .foregroundColor(TextColors.secondary)
+                .foregroundColor(Color.obsidianTextSecondary)
         }
     }
 }
@@ -358,51 +301,35 @@ struct UpgradePromptCard: View {
             HapticStyle.medium.trigger()
             onUpgrade()
         }) {
-            VStack(spacing: 16) {
-                HStack {
-                    ZStack {
-                        RoundedRectangle(cornerRadius: 14)
-                            .fill(BrandColors.primary.opacity(0.2))
-                            .frame(width: 52, height: 52)
-                        
-                        Image(systemName: "crown.fill")
-                            .font(.system(.title2, design: .rounded))
-                            .foregroundColor(BrandColors.primary)
-                    }
-                    
-                    VStack(alignment: .leading, spacing: 4) {
-                        Text("Upgrade to Pro")
-                            .font(.headline.bold())
-                            .foregroundColor(.white)
+            HStack(spacing: 14) {
+                ZStack {
+                    RoundedRectangle(cornerRadius: 12)
+                        .fill(Color.accentMint.opacity(0.12))
+                        .frame(width: 44, height: 44)
 
-                        Text("Unlock unlimited subscriptions and more")
-                            .font(.subheadline)
-                            .foregroundColor(TextColors.secondary)
-                    }
-                    
-                    Spacer()
-                    
-                    Image(systemName: "chevron.right")
+                    Image(systemName: "sparkles")
                         .font(.system(.body, design: .rounded).weight(.semibold))
-                        .foregroundColor(BrandColors.primary)
+                        .foregroundStyle(Color.accentMint)
                 }
-                
-                // Benefits
-                HStack(spacing: 16) {
-                    BenefitPill(text: "Unlimited")
-                    BenefitPill(text: "Smart Pause")
-                    BenefitPill(text: "Export")
+
+                VStack(alignment: .leading, spacing: 3) {
+                    Text("Upgrade to Pro")
+                        .font(.system(.subheadline, design: .rounded).weight(.semibold))
+                        .foregroundStyle(Color.obsidianText)
+
+                    Text("Unlimited subscriptions & all features")
+                        .font(.system(.caption, design: .rounded))
+                        .foregroundStyle(Color.obsidianTextSecondary)
                 }
+
+                Spacer()
+
+                Image(systemName: "chevron.right")
+                    .font(.system(.caption, design: .rounded).weight(.semibold))
+                    .foregroundStyle(Color.obsidianTextTertiary)
             }
-            .padding(20)
-            .background(
-                RoundedRectangle(cornerRadius: 20)
-                    .fill(BackgroundColors.secondary)
-                    .overlay(
-                        RoundedRectangle(cornerRadius: 20)
-                            .stroke(BrandColors.primary.opacity(0.3), lineWidth: 1)
-                    )
-            )
+            .padding(16)
+            .surfaceCard(cornerRadius: 16)
         }
         .buttonStyle(PlainButtonStyle())
         .scaleEffect(isPressed ? 0.98 : 1)
@@ -421,12 +348,12 @@ struct BenefitPill: View {
     var body: some View {
         Text(text)
             .font(.caption)
-            .foregroundColor(BrandColors.primary)
+            .foregroundColor(Color.accentMint)
             .padding(.horizontal, 10)
             .padding(.vertical, 5)
             .background(
                 Capsule()
-                    .fill(BrandColors.primary.opacity(0.15))
+                    .fill(Color.accentMint.opacity(0.15))
             )
     }
 }
@@ -434,45 +361,73 @@ struct BenefitPill: View {
 // MARK: - Profile Stats Grid
 struct ProfileStatsGrid: View {
     @ObservedObject var store: SubscriptionStore
-    
+
     var body: some View {
-        LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 12) {
-            ProfileStatBox(
-                value: "\(store.subscriptions.count)",
-                label: "Subscriptions",
-                icon: "list.bullet.rectangle",
-                color: BrandColors.primary
-            )
-            
-            ProfileStatBox(
+        VStack(spacing: 12) {
+            // Hero row: monthly spend spans full width — the most important number
+            ProfileStatHero(
                 value: formatCurrency(store.totalMonthlySpend),
-                label: "Monthly",
-                icon: "calendar",
-                color: BrandColors.secondary
-            )
-            
-            ProfileStatBox(
-                value: "\(uniqueCategories)",
-                label: "Categories",
-                icon: "folder",
-                color: SemanticColors.info
+                label: "Monthly Spend"
             )
 
-            ProfileStatBox(
-                value: "\(store.upcomingRenewals.count)",
-                label: "Renewing Soon",
-                icon: "checkmark.shield",
-                color: SemanticColors.success
-            )
+            // Secondary row: two equal smaller stats
+            HStack(spacing: 12) {
+                let subCount = store.subscriptions.count
+                ProfileStatBox(
+                    value: "\(subCount)",
+                    label: subCount == 1 ? "subscription" : "subscriptions",
+                    icon: "list.bullet.rectangle",
+                    color: Color.accentMint
+                )
+
+                ProfileStatBox(
+                    value: "\(store.upcomingRenewals.count)",
+                    label: "renewing soon",
+                    icon: "checkmark.shield",
+                    color: Color.semanticSuccess
+                )
+            }
         }
-    }
-    
-    private var uniqueCategories: Int {
-        Set(store.subscriptions.compactMap { $0.category }).count
     }
 
     private func formatCurrency(_ amount: Decimal) -> String {
         return CurrencyManager.shared.format(amount)
+    }
+}
+
+// MARK: - Profile Stat Hero (full-width featured stat)
+struct ProfileStatHero: View {
+    let value: String
+    let label: String
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 0) {
+            Text(value)
+                .font(.system(.title, design: .rounded).weight(.bold))
+                .foregroundStyle(Color.accentMint)
+
+            Rectangle()
+                .fill(Color.white.opacity(0.08))
+                .frame(maxWidth: .infinity)
+                .frame(height: 1)
+                .padding(.top, 10)
+                .padding(.bottom, 8)
+
+            Text(label)
+                .font(.system(.caption, design: .rounded))
+                .foregroundStyle(Color.obsidianTextSecondary)
+        }
+        .padding(.horizontal, 18)
+        .padding(.vertical, 16)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(
+            RoundedRectangle(cornerRadius: 16)
+                .fill(Color.obsidianSurface)
+                .overlay(
+                    RoundedRectangle(cornerRadius: 16)
+                        .stroke(Color.white.opacity(0.06), lineWidth: 1)
+                )
+        )
     }
 }
 
@@ -482,31 +437,36 @@ struct ProfileStatBox: View {
     let label: String
     let icon: String
     let color: Color
-    
-    var body: some View {
-        VStack(spacing: 12) {
-            HStack {
-                Spacer()
-                
-                Image(systemName: icon)
-                    .font(.system(.body, design: .rounded))
-                    .foregroundColor(color)
-            }
-            
-            VStack(spacing: 4) {
-                Text(value)
-                    .font(.title2.bold())
-                    .foregroundColor(.white)
 
-                Text(label)
-                    .font(.subheadline)
-                    .foregroundColor(TextColors.secondary)
+    var body: some View {
+        VStack(alignment: .leading, spacing: 0) {
+            HStack {
+                Text(value)
+                    .font(.system(.title2, design: .rounded).weight(.bold))
+                    .foregroundStyle(Color.accentMint)
+                Spacer()
+                Image(systemName: icon)
+                    .font(.system(.caption, design: .rounded))
+                    .foregroundColor(color.opacity(0.6))
             }
+
+            Rectangle()
+                .fill(Color.white.opacity(0.08))
+                .frame(maxWidth: .infinity)
+                .frame(height: 1)
+                .padding(.top, 10)
+                .padding(.bottom, 8)
+
+            Text(label)
+                .font(.system(.caption, design: .rounded))
+                .foregroundStyle(Color.obsidianTextSecondary)
         }
-        .padding(16)
+        .padding(.horizontal, 14)
+        .padding(.vertical, 14)
+        .frame(maxWidth: .infinity, alignment: .leading)
         .background(
             RoundedRectangle(cornerRadius: 16)
-                .fill(BackgroundColors.secondary)
+                .fill(Color.obsidianSurface)
                 .overlay(
                     RoundedRectangle(cornerRadius: 16)
                         .stroke(Color.white.opacity(0.06), lineWidth: 1)
@@ -518,6 +478,7 @@ struct ProfileStatBox: View {
 // MARK: - Settings Section
 struct SettingsSection: View {
     @ObservedObject private var currencyManager = CurrencyManager.shared
+    @Environment(\.openURL) private var openURL
     let onNotifications: () -> Void
     let onCurrency: () -> Void
     let onPrivacy: () -> Void
@@ -532,20 +493,26 @@ struct SettingsSection: View {
                 .padding(.horizontal, 4)
 
             VStack(spacing: 1) {
-                SettingsRow(icon: "bell.fill", title: "Notifications", color: SemanticColors.warning, action: onNotifications)
+                SettingsRow(icon: "arrow.down.circle.fill", title: "Import from App Store", color: Color.accentMint, action: {
+                    if let url = URL(string: "https://apps.apple.com/account/subscriptions") {
+                        openURL(url)
+                    }
+                })
+                .accessibilityIdentifier("importFromAppStoreButton")
+                SettingsRow(icon: "bell.fill", title: "Notifications", color: Color.semanticWarning, action: onNotifications)
                     .accessibilityIdentifier("notificationsSettingsButton")
-                SettingsRow(icon: "dollarsign.circle.fill", title: "Currency", value: currencyManager.selectedCurrency, color: SemanticColors.success, action: onCurrency)
+                SettingsRow(icon: "dollarsign.circle.fill", title: "Currency", value: currencyManager.selectedCurrency, color: Color.semanticSuccess, action: onCurrency)
                     .accessibilityIdentifier("currencySettingsButton")
-                SettingsRow(icon: "square.and.arrow.up", title: "Export Data", color: SemanticColors.info, action: onExport)
+                SettingsRow(icon: "square.and.arrow.up", title: "Export Data", color: Color.semanticInfo, action: onExport)
                     .accessibilityIdentifier("exportDataButton")
-                SettingsRow(icon: "lock.fill", title: "Privacy & Security", color: SemanticColors.info, action: onPrivacy)
+                SettingsRow(icon: "lock.fill", title: "Privacy & Security", color: Color.semanticInfo, action: onPrivacy)
                     .accessibilityIdentifier("privacySecurityButton")
-                SettingsRow(icon: "questionmark.circle.fill", title: "Help & Support", color: TextColors.secondary, action: onHelp)
+                SettingsRow(icon: "questionmark.circle.fill", title: "Help & Support", color: Color.obsidianTextSecondary, action: onHelp)
                     .accessibilityIdentifier("helpSupportButton")
             }
             .background(
                 RoundedRectangle(cornerRadius: 16)
-                    .fill(BackgroundColors.secondary)
+                    .fill(Color.obsidianSurface)
             )
         }
     }
@@ -585,15 +552,15 @@ struct SettingsRow: View {
                 if let value = value {
                     Text(value)
                         .font(.body)
-                        .foregroundColor(TextColors.secondary)
+                        .foregroundColor(Color.obsidianTextSecondary)
                 }
 
                 Image(systemName: "chevron.right")
                     .font(.subheadline.weight(.semibold))
-                    .foregroundColor(TextColors.tertiary)
+                    .foregroundColor(Color.obsidianTextTertiary)
             }
             .padding(14)
-            .background(BackgroundColors.secondary)
+            .background(Color.obsidianSurface)
             .scaleEffect(isPressed ? 0.98 : 1)
         }
         .buttonStyle(PlainButtonStyle())
@@ -630,7 +597,7 @@ struct AboutSection: View {
             }
             .background(
                 RoundedRectangle(cornerRadius: 16)
-                    .fill(BackgroundColors.secondary)
+                    .fill(Color.obsidianSurface)
             )
         }
     }
@@ -658,15 +625,15 @@ struct AboutRow: View {
                 if let value = value {
                     Text(value)
                         .font(.body)
-                        .foregroundColor(TextColors.secondary)
+                        .foregroundColor(Color.obsidianTextSecondary)
                 } else {
                     Image(systemName: "arrow.up.right")
                         .font(.subheadline)
-                        .foregroundColor(TextColors.tertiary)
+                        .foregroundColor(Color.obsidianTextTertiary)
                 }
             }
             .padding(14)
-            .background(BackgroundColors.secondary)
+            .background(Color.obsidianSurface)
             .scaleEffect(isPressed ? 0.98 : 1)
         }
         .buttonStyle(PlainButtonStyle())
@@ -697,15 +664,15 @@ struct SignOutButton: View {
                 Text("Sign Out")
                     .font(.body.weight(.semibold))
             }
-            .foregroundColor(SemanticColors.error)
+            .foregroundColor(Color.semanticDestructive)
             .frame(maxWidth: .infinity)
             .frame(height: 56)
             .background(
                 RoundedRectangle(cornerRadius: 16)
-                    .fill(SemanticColors.error.opacity(0.1))
+                    .fill(Color.semanticDestructive.opacity(0.1))
                     .overlay(
                         RoundedRectangle(cornerRadius: 16)
-                            .stroke(SemanticColors.error.opacity(0.2), lineWidth: 1)
+                            .stroke(Color.semanticDestructive.opacity(0.2), lineWidth: 1)
                     )
             )
             .scaleEffect(isPressed ? 0.97 : 1)
@@ -716,6 +683,652 @@ struct SignOutButton: View {
                 .onChanged { _ in withAnimation(.easeInOut(duration: 0.1)) { isPressed = true } }
                 .onEnded { _ in withAnimation(.easeInOut(duration: 0.1)) { isPressed = false } }
         )
+    }
+}
+
+// MARK: - Wrapped Entry Card
+
+struct WrappedEntryCard: View {
+    let action: () -> Void
+
+    var body: some View {
+        Button(action: {
+            HapticStyle.medium.trigger()
+            action()
+        }) {
+            HStack(spacing: 14) {
+                ZStack {
+                    RoundedRectangle(cornerRadius: 12)
+                        .fill(LinearGradient(
+                            colors: [Color.accentMint.opacity(0.3), Color.accentMint.opacity(0.1)],
+                            startPoint: .topLeading,
+                            endPoint: .bottomTrailing
+                        ))
+                        .frame(width: 44, height: 44)
+                    Image(systemName: "chart.bar.xaxis.ascending.badge.clock")
+                        .font(.system(size: 18, weight: .semibold))
+                        .foregroundStyle(Color.accentMint)
+                }
+
+                VStack(alignment: .leading, spacing: 2) {
+                    Text("Subscription Wrapped")
+                        .font(.system(.body, design: .rounded).weight(.semibold))
+                        .foregroundStyle(.white)
+                    Text("Your year in subscriptions — shareable")
+                        .font(.system(.caption, design: .rounded))
+                        .foregroundStyle(Color.obsidianTextSecondary)
+                }
+
+                Spacer()
+
+                Image(systemName: "chevron.right")
+                    .font(.caption.weight(.semibold))
+                    .foregroundStyle(Color.obsidianTextTertiary)
+            }
+            .padding(14)
+            .background(
+                RoundedRectangle(cornerRadius: 16, style: .continuous)
+                    .fill(Color.obsidianSurface)
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 16, style: .continuous)
+                            .stroke(Color.accentMint.opacity(0.2), lineWidth: 1)
+                    )
+            )
+        }
+        .buttonStyle(PlainButtonStyle())
+    }
+}
+
+// MARK: - Subscription Wrapped View (Story Format)
+
+struct SubscriptionWrappedView: View {
+    let subscriptions: [Subscription]
+    @Environment(\.dismiss) private var dismiss
+    @State private var currentPage = 0
+
+    @MainActor
+    private var stats: WrappedStats { WrappedStats(subscriptions: subscriptions) }
+
+    @MainActor
+    private var personality: SubscriptionPersonality {
+        PersonalityEngine.compute(subscriptions: subscriptions)
+    }
+
+    var body: some View {
+        ZStack(alignment: .bottom) {
+            Color.black.ignoresSafeArea()
+
+            // Story cards — full screen TabView
+            TabView(selection: $currentPage) {
+                WrappedStory1_TotalSpent(stats: stats).tag(0)
+                WrappedStory2_TopService(stats: stats).tag(1)
+                WrappedStory3_VsAverage(stats: stats).tag(2)
+                WrappedStory4_CouldBuy(stats: stats).tag(3)
+                WrappedStory5_Personality(personality: personality).tag(4)
+            }
+            .tabViewStyle(.page(indexDisplayMode: .never))
+            .ignoresSafeArea()
+
+            // Progress dots + controls
+            VStack(spacing: 0) {
+                // Progress bar strip
+                HStack(spacing: 4) {
+                    ForEach(0..<5) { i in
+                        Capsule()
+                            .fill(i <= currentPage ? Color.white : Color.white.opacity(0.3))
+                            .frame(maxWidth: .infinity)
+                            .frame(height: 3)
+                            .animation(.easeInOut(duration: 0.25), value: currentPage)
+                    }
+                }
+                .padding(.horizontal, 20)
+                .padding(.top, 56)
+
+                Spacer()
+
+                // Share + Done
+                HStack(spacing: 12) {
+                    Button {
+                        HapticStyle.medium.trigger()
+                        shareCurrentCard()
+                    } label: {
+                        HStack(spacing: 8) {
+                            Image(systemName: "square.and.arrow.up")
+                                .font(.system(size: 15, weight: .semibold))
+                            Text("Share")
+                                .font(.system(.headline, design: .rounded).weight(.semibold))
+                        }
+                        .foregroundStyle(.black)
+                        .frame(maxWidth: .infinity)
+                        .frame(height: 50)
+                        .background(Color.accentMint)
+                        .clipShape(Capsule())
+                    }
+                    .buttonStyle(PlainButtonStyle())
+
+                    Button {
+                        dismiss()
+                    } label: {
+                        Text("Done")
+                            .font(.system(.headline, design: .rounded).weight(.semibold))
+                            .foregroundStyle(.white)
+                            .frame(width: 80, height: 50)
+                            .background(Color.white.opacity(0.15))
+                            .clipShape(Capsule())
+                    }
+                    .buttonStyle(PlainButtonStyle())
+                }
+                .padding(.horizontal, 24)
+                .padding(.bottom, 48)
+            }
+        }
+        .statusBar(hidden: true)
+    }
+
+    @MainActor
+    private func shareCurrentCard() {
+        let view: AnyView
+        switch currentPage {
+        case 0: view = AnyView(WrappedStory1_TotalSpent(stats: stats).frame(width: 390, height: 844))
+        case 1: view = AnyView(WrappedStory2_TopService(stats: stats).frame(width: 390, height: 844))
+        case 2: view = AnyView(WrappedStory3_VsAverage(stats: stats).frame(width: 390, height: 844))
+        case 3: view = AnyView(WrappedStory4_CouldBuy(stats: stats).frame(width: 390, height: 844))
+        default: view = AnyView(WrappedStory5_Personality(personality: personality).frame(width: 390, height: 844))
+        }
+        let renderer = ImageRenderer(content: view)
+        renderer.scale = 3
+        guard let image = renderer.uiImage else { return }
+        let vc = UIActivityViewController(activityItems: [image], applicationActivities: nil)
+        if let scene = UIApplication.shared.connectedScenes.first as? UIWindowScene,
+           let root = scene.windows.first?.rootViewController {
+            root.present(vc, animated: true)
+        }
+    }
+}
+
+// MARK: - Story Card Base
+
+private struct StoryBackground: View {
+    let gradient: [Color]
+    var body: some View {
+        LinearGradient(colors: gradient, startPoint: .topLeading, endPoint: .bottomTrailing)
+            .ignoresSafeArea()
+    }
+}
+
+private struct StoryPausleyBadge: View {
+    var body: some View {
+        HStack(spacing: 6) {
+            Image(systemName: "sparkles")
+                .font(.system(size: 12, weight: .bold))
+            Text("pausely")
+                .font(.system(size: 13, weight: .black, design: .rounded))
+                .tracking(0.5)
+        }
+        .foregroundStyle(Color.accentMint)
+        .padding(.horizontal, 14)
+        .padding(.vertical, 7)
+        .background(Color.black.opacity(0.4))
+        .clipShape(Capsule())
+    }
+}
+
+// MARK: - Story 1: Total Spent
+
+private struct WrappedStory1_TotalSpent: View {
+    let stats: WrappedStats
+    var body: some View {
+        ZStack {
+            StoryBackground(gradient: [Color(hex: "#050810"), Color(hex: "#0A1A12")])
+            // Glow
+            Circle().fill(Color.accentMint.opacity(0.12))
+                .frame(width: 400).offset(x: 100, y: -200).blur(radius: 80)
+
+            VStack(alignment: .leading, spacing: 0) {
+                HStack { StoryPausleyBadge(); Spacer() }
+                    .padding(.horizontal, 32).padding(.top, 64)
+
+                Spacer()
+
+                VStack(alignment: .leading, spacing: 16) {
+                    Text("\(stats.year) WRAPPED")
+                        .font(.system(size: 13, weight: .bold, design: .rounded))
+                        .foregroundStyle(Color.white.opacity(0.5))
+                        .tracking(2)
+
+                    Text("This year,\nyou spent")
+                        .font(.system(size: 38, weight: .black, design: .rounded))
+                        .foregroundStyle(.white)
+                        .lineSpacing(4)
+
+                    Text(CurrencyManager.shared.format(stats.totalSpent))
+                        .font(.system(size: 72, weight: .black, design: .rounded))
+                        .foregroundStyle(Color.accentMint)
+                        .minimumScaleFactor(0.4)
+                        .lineLimit(1)
+
+                    Text("on \(stats.totalCount) subscription\(stats.totalCount == 1 ? "" : "s")")
+                        .font(.system(size: 22, weight: .semibold, design: .rounded))
+                        .foregroundStyle(Color.white.opacity(0.7))
+                }
+                .padding(.horizontal, 32)
+
+                Spacer()
+                Spacer()
+            }
+        }
+    }
+}
+
+// MARK: - Story 2: Top Service
+
+private struct WrappedStory2_TopService: View {
+    let stats: WrappedStats
+    var body: some View {
+        ZStack {
+            StoryBackground(gradient: [Color(hex: "#100510"), Color(hex: "#1A0A1A")])
+            Circle().fill(Color.purple.opacity(0.15))
+                .frame(width: 350).offset(x: -80, y: 150).blur(radius: 70)
+
+            VStack(alignment: .leading, spacing: 0) {
+                HStack { StoryPausleyBadge(); Spacer() }
+                    .padding(.horizontal, 32).padding(.top, 64)
+
+                Spacer()
+
+                VStack(alignment: .leading, spacing: 16) {
+                    Text("YOUR TOP SERVICE")
+                        .font(.system(size: 11, weight: .bold, design: .rounded))
+                        .foregroundStyle(Color.white.opacity(0.5))
+                        .tracking(2)
+
+                    Text(stats.topService)
+                        .font(.system(size: 58, weight: .black, design: .rounded))
+                        .foregroundStyle(.white)
+                        .minimumScaleFactor(0.4)
+                        .lineLimit(2)
+
+                    Text("most expensive\nsubscription")
+                        .font(.system(size: 22, weight: .medium, design: .rounded))
+                        .foregroundStyle(Color.white.opacity(0.6))
+                        .lineSpacing(4)
+
+                    if stats.cancelledCount > 0 {
+                        HStack(spacing: 8) {
+                            Image(systemName: "checkmark.circle.fill").foregroundStyle(.green)
+                            Text("You cancelled \(stats.cancelledCount) subscription\(stats.cancelledCount == 1 ? "" : "s") this year")
+                                .font(.system(.subheadline, design: .rounded).weight(.medium))
+                                .foregroundStyle(Color.white.opacity(0.8))
+                        }
+                        .padding(12)
+                        .background(Color.green.opacity(0.15))
+                        .clipShape(RoundedRectangle(cornerRadius: 12))
+                    }
+                }
+                .padding(.horizontal, 32)
+
+                Spacer()
+                Spacer()
+            }
+        }
+    }
+}
+
+// MARK: - Story 3: vs Average
+
+private struct WrappedStory3_VsAverage: View {
+    let stats: WrappedStats
+
+    private var localAverage: Decimal {
+        CurrencyManager.shared.convertToSelected(Decimal(219), from: "USD")
+    }
+    private var monthlySpend: Decimal {
+        stats.totalCount > 0 ? stats.totalSpent / Decimal(max(1, Calendar.current.component(.month, from: Date()))) : 0
+    }
+    private var isBelow: Bool {
+        monthlySpend < localAverage
+    }
+    private var pct: Int {
+        guard NSDecimalNumber(decimal: localAverage).doubleValue > 0 else { return 0 }
+        let diff = abs(NSDecimalNumber(decimal: monthlySpend - localAverage).doubleValue)
+        return Int((diff / NSDecimalNumber(decimal: localAverage).doubleValue) * 100)
+    }
+
+    var body: some View {
+        ZStack {
+            StoryBackground(gradient: isBelow
+                ? [Color(hex: "#051005"), Color(hex: "#0A1A0A")]
+                : [Color(hex: "#100800"), Color(hex: "#1A1000")]
+            )
+            Circle().fill((isBelow ? Color.green : Color.orange).opacity(0.12))
+                .frame(width: 400).offset(y: 100).blur(radius: 80)
+
+            VStack(alignment: .leading, spacing: 0) {
+                HStack { StoryPausleyBadge(); Spacer() }
+                    .padding(.horizontal, 32).padding(.top, 64)
+
+                Spacer()
+
+                VStack(alignment: .leading, spacing: 20) {
+                    Text("VS. THE AVERAGE")
+                        .font(.system(size: 11, weight: .bold, design: .rounded))
+                        .foregroundStyle(Color.white.opacity(0.5))
+                        .tracking(2)
+
+                    Text(isBelow ? "You spend\n\(pct)% less\nthan average" : "You spend\n\(pct)% more\nthan average")
+                        .font(.system(size: 52, weight: .black, design: .rounded))
+                        .foregroundStyle(isBelow ? Color.green : Color.orange)
+                        .lineSpacing(4)
+
+                    VStack(alignment: .leading, spacing: 8) {
+                        HStack {
+                            Text("You")
+                                .font(.system(.caption, design: .rounded).weight(.semibold))
+                                .foregroundStyle(.white.opacity(0.7))
+                            Spacer()
+                            Text(CurrencyManager.shared.format(monthlySpend) + "/mo")
+                                .font(.system(.subheadline, design: .rounded).weight(.bold))
+                                .foregroundStyle(.white)
+                        }
+                        HStack {
+                            Text("Avg. Pausely User")
+                                .font(.system(.caption, design: .rounded).weight(.semibold))
+                                .foregroundStyle(.white.opacity(0.5))
+                            Spacer()
+                            Text(CurrencyManager.shared.format(localAverage) + "/mo")
+                                .font(.system(.subheadline, design: .rounded).weight(.bold))
+                                .foregroundStyle(.white.opacity(0.6))
+                        }
+                    }
+                    .padding(16)
+                    .background(Color.white.opacity(0.06))
+                    .clipShape(RoundedRectangle(cornerRadius: 14))
+                }
+                .padding(.horizontal, 32)
+
+                Spacer()
+                Spacer()
+            }
+        }
+    }
+}
+
+// MARK: - Story 4: What You Could've Bought
+
+private struct WrappedStory4_CouldBuy: View {
+    let stats: WrappedStats
+
+    private var annual: Double {
+        NSDecimalNumber(decimal: stats.totalSpent).doubleValue
+    }
+    private var localAnnual: Double {
+        NSDecimalNumber(decimal: CurrencyManager.shared.convertToSelected(stats.totalSpent, from: CurrencyManager.shared.currentCurrency.code)).doubleValue
+    }
+    private func convertedPrice(_ usdPrice: Double) -> Double {
+        NSDecimalNumber(decimal: CurrencyManager.shared.convertToSelected(Decimal(usdPrice), from: "USD")).doubleValue
+    }
+
+    private var comparisons: [(emoji: String, count: Int, item: String)] {
+        let flights = convertedPrice(350)
+        let iphones = convertedPrice(999)
+        let vacations = convertedPrice(1200)
+        return [
+            ("✈️", flights > 0 ? Int(localAnnual / flights) : 0, "round-trip flights"),
+            ("📱", iphones > 0 ? Int(localAnnual / iphones) : 0, "iPhones"),
+            ("🏖️", vacations > 0 ? Int(localAnnual / vacations) : 0, "week-long vacations"),
+        ]
+    }
+
+    var body: some View {
+        ZStack {
+            StoryBackground(gradient: [Color(hex: "#080510"), Color(hex: "#10080A")])
+            Circle().fill(Color.blue.opacity(0.12))
+                .frame(width: 350).offset(x: 120, y: -100).blur(radius: 70)
+
+            VStack(alignment: .leading, spacing: 0) {
+                HStack { StoryPausleyBadge(); Spacer() }
+                    .padding(.horizontal, 32).padding(.top, 64)
+
+                Spacer()
+
+                VStack(alignment: .leading, spacing: 24) {
+                    Text("WHAT ELSE YOU COULD'VE DONE")
+                        .font(.system(size: 10, weight: .bold, design: .rounded))
+                        .foregroundStyle(Color.white.opacity(0.5))
+                        .tracking(1.5)
+
+                    Text("With \(CurrencyManager.shared.format(stats.totalSpent))\nyou could've had…")
+                        .font(.system(size: 32, weight: .black, design: .rounded))
+                        .foregroundStyle(.white)
+                        .lineSpacing(4)
+
+                    VStack(spacing: 12) {
+                        ForEach(comparisons.indices, id: \.self) { i in
+                            let c = comparisons[i]
+                            HStack(spacing: 16) {
+                                Text(c.emoji)
+                                    .font(.system(size: 36))
+                                VStack(alignment: .leading, spacing: 2) {
+                                    Text("\(c.count)")
+                                        .font(.system(size: 36, weight: .black, design: .rounded))
+                                        .foregroundStyle(.white)
+                                    Text(c.item)
+                                        .font(.system(.caption, design: .rounded).weight(.medium))
+                                        .foregroundStyle(Color.white.opacity(0.5))
+                                }
+                            }
+                        }
+                    }
+                }
+                .padding(.horizontal, 32)
+
+                Spacer()
+                Spacer()
+            }
+        }
+    }
+}
+
+// MARK: - Story 5: Personality
+
+private struct WrappedStory5_Personality: View {
+    let personality: SubscriptionPersonality
+
+    var body: some View {
+        ZStack {
+            StoryBackground(gradient: [Color(hex: "#050A10"), Color(hex: "#0A1015")])
+            Circle().fill(Color.accentMint.opacity(0.10))
+                .frame(width: 450).offset(y: 200).blur(radius: 100)
+
+            VStack(alignment: .leading, spacing: 0) {
+                HStack { StoryPausleyBadge(); Spacer() }
+                    .padding(.horizontal, 32).padding(.top, 64)
+
+                Spacer()
+
+                VStack(alignment: .leading, spacing: 20) {
+                    Text("YOUR SUBSCRIPTION PERSONALITY")
+                        .font(.system(size: 10, weight: .bold, design: .rounded))
+                        .foregroundStyle(Color.white.opacity(0.5))
+                        .tracking(1.5)
+
+                    Text(personality.emoji)
+                        .font(.system(size: 72))
+
+                    Text(personality.name)
+                        .font(.system(size: 42, weight: .black, design: .rounded))
+                        .foregroundStyle(Color.accentMint)
+                        .lineLimit(2)
+                        .minimumScaleFactor(0.6)
+
+                    Text(personality.headline)
+                        .font(.system(size: 20, weight: .medium, design: .rounded))
+                        .foregroundStyle(Color.white.opacity(0.8))
+                        .lineSpacing(4)
+
+                    Text(personality.description)
+                        .font(.system(.subheadline, design: .rounded))
+                        .foregroundStyle(Color.white.opacity(0.5))
+                        .lineSpacing(3)
+                        .lineLimit(4)
+                }
+                .padding(.horizontal, 32)
+
+                Spacer()
+
+                Text("Track & optimize at pausely.app")
+                    .font(.system(size: 12, design: .rounded))
+                    .foregroundStyle(Color.white.opacity(0.25))
+                    .padding(.horizontal, 32)
+                    .padding(.bottom, 100)
+            }
+        }
+    }
+}
+
+// MARK: - Wrapped Card (shareable content)
+
+struct WrappedCard: View {
+    let stats: WrappedStats
+
+    var body: some View {
+        ZStack {
+            // Background
+            LinearGradient(
+                colors: [Color(hex: "#0A0A0F"), Color(hex: "#0D1A14")],
+                startPoint: .topLeading,
+                endPoint: .bottomTrailing
+            )
+
+            // Subtle glow
+            Circle()
+                .fill(Color.accentMint.opacity(0.08))
+                .frame(width: 300, height: 300)
+                .offset(x: 80, y: -120)
+                .blur(radius: 60)
+
+            VStack(alignment: .leading, spacing: 0) {
+                // Header
+                HStack {
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text("pausely")
+                            .font(.system(size: 13, weight: .bold, design: .rounded))
+                            .foregroundStyle(Color.accentMint)
+                            .tracking(1)
+                        Text("\(stats.year) WRAPPED")
+                            .font(.system(size: 22, weight: .black, design: .rounded))
+                            .foregroundStyle(.white)
+                    }
+                    Spacer()
+                    Image(systemName: "sparkles")
+                        .font(.system(size: 22))
+                        .foregroundStyle(Color.accentMint)
+                }
+                .padding(.horizontal, 28)
+                .padding(.top, 32)
+
+                Spacer()
+
+                // Hero number
+                VStack(alignment: .leading, spacing: 4) {
+                    Text("Total Spent")
+                        .font(.system(size: 13, design: .rounded).weight(.medium))
+                        .foregroundStyle(Color.white.opacity(0.5))
+                        .padding(.horizontal, 28)
+                    Text(CurrencyManager.shared.format(stats.totalSpent))
+                        .font(.system(size: 52, weight: .black, design: .rounded))
+                        .foregroundStyle(
+                            LinearGradient(
+                                colors: [Color.accentMint, Color.accentMint.opacity(0.7)],
+                                startPoint: .leading,
+                                endPoint: .trailing
+                            )
+                        )
+                        .minimumScaleFactor(0.5)
+                        .lineLimit(1)
+                        .padding(.horizontal, 28)
+                }
+
+                Spacer()
+
+                // Stats grid
+                HStack(spacing: 0) {
+                    WrappedStat(value: "\(stats.totalCount)", label: "services\ntracked")
+                    Divider().background(Color.white.opacity(0.1)).frame(height: 44)
+                    WrappedStat(value: stats.topService, label: "top\nservice")
+                    Divider().background(Color.white.opacity(0.1)).frame(height: 44)
+                    WrappedStat(value: "\(stats.cancelledCount)", label: "cancelled\nthis year")
+                }
+                .padding(.horizontal, 28)
+                .padding(.vertical, 20)
+                .background(Color.white.opacity(0.04))
+
+                // Footer
+                HStack {
+                    Text("Track smarter. Save more.")
+                        .font(.system(size: 11, design: .rounded))
+                        .foregroundStyle(Color.white.opacity(0.3))
+                    Spacer()
+                    Text("pausely.app")
+                        .font(.system(size: 11, weight: .semibold, design: .rounded))
+                        .foregroundStyle(Color.accentMint.opacity(0.6))
+                }
+                .padding(.horizontal, 28)
+                .padding(.vertical, 16)
+            }
+        }
+        .frame(width: 380, height: 520)
+    }
+}
+
+private struct WrappedStat: View {
+    let value: String
+    let label: String
+
+    var body: some View {
+        VStack(spacing: 4) {
+            Text(value)
+                .font(.system(.headline, design: .rounded).weight(.bold))
+                .foregroundStyle(.white)
+                .lineLimit(1)
+                .minimumScaleFactor(0.7)
+            Text(label)
+                .font(.system(size: 10, design: .rounded))
+                .foregroundStyle(Color.white.opacity(0.4))
+                .multilineTextAlignment(.center)
+        }
+        .frame(maxWidth: .infinity)
+    }
+}
+
+// MARK: - Wrapped Stats
+
+struct WrappedStats {
+    let year: Int
+    let totalSpent: Decimal
+    let totalCount: Int
+    let cancelledCount: Int
+    let topService: String
+    let topCategory: String
+
+    init(subscriptions: [Subscription]) {
+        year = Calendar.current.component(.year, from: Date())
+        let active = subscriptions.filter { $0.status == .active || $0.status == .trial }
+        let yearStart = Calendar.current.date(from: DateComponents(year: year, month: 1, day: 1)) ?? Date()
+        let cancelled = subscriptions.filter {
+            $0.status == .cancelled &&
+            $0.updatedAt >= yearStart
+        }
+        totalCount = active.count
+        cancelledCount = cancelled.count
+        let monthsThisYear = max(1, Calendar.current.component(.month, from: Date()))
+        let monthly = active.reduce(Decimal(0)) { $0 + $1.monthlyCost }
+        totalSpent = monthly * Decimal(monthsThisYear)
+        topService = active.max(by: { $0.monthlyCost < $1.monthlyCost })?.name ?? "–"
+        let grouped = Dictionary(grouping: active) { $0.category ?? "Other" }
+        topCategory = grouped.max(by: { a, b in
+            a.value.reduce(Decimal(0)) { $0 + $1.monthlyCost } < b.value.reduce(Decimal(0)) { $0 + $1.monthlyCost }
+        })?.key ?? "–"
     }
 }
 
