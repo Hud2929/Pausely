@@ -1,92 +1,57 @@
 import SwiftUI
 
-// MARK: - Premium Main Tab View (Clean Apple TabView)
+// MARK: - Premium Main Tab View (Custom Floating Tab Bar)
 struct PremiumMainTabView: View {
     @State private var selectedTab = 0
     @State private var deepLinkedSubscription: Subscription?
-    @State private var showingPaywall = false
     @ObservedObject private var subscriptionStore = SubscriptionStore.shared
-    @ObservedObject private var paymentManager = PaymentManager.shared
-
-    private var tabSelection: Binding<Int> {
-        Binding(
-            get: { selectedTab },
-            set: { newValue in
-                if newValue == 3 && !paymentManager.isPro {
-                    showingPaywall = true
-                } else {
-                    selectedTab = newValue
-                }
-            }
-        )
-    }
+    @ObservedObject private var insightsEngine = RealInsightsEngine.shared
 
     var body: some View {
-        TabView(selection: tabSelection) {
-            // Home Tab
-            NavigationStack {
-                DashboardView()
-                    .navigationBarHidden(true)
-            }
-            .tabItem {
-                Label("Home", systemImage: "house.fill")
-            }
-            .tag(0)
-            .accessibilityIdentifier("tabHome")
-
-            // Subscriptions Tab
-            NavigationStack {
-                PremiumSubscriptionsView(deepLinkedSubscription: $deepLinkedSubscription)
-                    .navigationBarHidden(true)
-            }
-            .tabItem {
-                Label("Subscriptions", systemImage: "creditcard.fill")
-            }
-            .tag(1)
-            .accessibilityIdentifier("tabSubscriptions")
-
-            // Genius Tab
-            NavigationStack {
-                RevolutionaryGeniusView()
-                    .navigationBarHidden(true)
-            }
-            .tabItem {
-                Label("Genius", systemImage: "sparkles")
-            }
-            .tag(2)
-            .accessibilityIdentifier("tabGenius")
-
-            // Insights Tab (Pro only)
-            NavigationStack {
-                RevolutionaryInsightsView()
-                    .navigationBarHidden(true)
-            }
-            .tabItem {
-                if paymentManager.isPro {
-                    Label("Insights", systemImage: "chart.line.uptrend.xyaxis")
-                } else {
-                    Label("Insights", systemImage: "chart.line.uptrend.xyaxis")
+        ZStack(alignment: .bottom) {
+            // Tab content — opacity-based so scroll/nav state persists across tab switches
+            ZStack {
+                NavigationStack {
+                    DashboardView().navigationBarHidden(true)
                 }
-            }
-            .tag(3)
-            .accessibilityIdentifier("tabInsights")
+                .opacity(selectedTab == 0 ? 1 : 0)
+                .allowsHitTesting(selectedTab == 0)
 
-            // Profile Tab
-            NavigationStack {
-                PremiumProfileView()
-                    .navigationBarHidden(true)
+                NavigationStack {
+                    PremiumSubscriptionsView(deepLinkedSubscription: $deepLinkedSubscription)
+                        .navigationBarHidden(true)
+                }
+                .opacity(selectedTab == 1 ? 1 : 0)
+                .allowsHitTesting(selectedTab == 1)
+
+                NavigationStack {
+                    AnalysisView().navigationBarHidden(true)
+                }
+                .opacity(selectedTab == 2 ? 1 : 0)
+                .allowsHitTesting(selectedTab == 2)
+
+                NavigationStack {
+                    PremiumProfileView().navigationBarHidden(true)
+                }
+                .opacity(selectedTab == 3 ? 1 : 0)
+                .allowsHitTesting(selectedTab == 3)
             }
-            .tabItem {
-                Label("Profile", systemImage: "person.fill")
-            }
-            .tag(4)
-            .accessibilityIdentifier("tabProfile")
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
+            .ignoresSafeArea()
+
+            // Custom floating tab bar
+            PauselyTabBar(
+                selectedTab: $selectedTab,
+                badgeCounts: selectedTab == 2 ? [:] : [2: insightsEngine.wasteAlerts.count]
+            )
+                .padding(.bottom, 8)
         }
-        .tint(Colors.primary)
+        .ignoresSafeArea(edges: .bottom)
         .onReceive(NotificationCenter.default.publisher(for: .switchToProfileTab)) { _ in
-            withAnimation {
-                selectedTab = 4
-            }
+            withAnimation { selectedTab = 3 }
+        }
+        .onReceive(NotificationCenter.default.publisher(for: .switchToAnalysisTab)) { _ in
+            withAnimation { selectedTab = 2 }
         }
         .onReceive(NotificationCenter.default.publisher(for: .showSubscriptionManagement)) { notification in
             if let idString = notification.userInfo?["subscription_id"] as? String,
@@ -101,15 +66,13 @@ struct PremiumMainTabView: View {
         .task {
             await subscriptionStore.fetchSubscriptions()
         }
-        .sheet(isPresented: $showingPaywall) {
-            StoreKitUpgradeView(currentSubscriptionCount: subscriptionStore.subscriptions.count)
-        }
         .whatsNewSheet()
     }
 }
 
 extension Notification.Name {
     static let switchToProfileTab = Notification.Name("switchToProfileTab")
+    static let switchToAnalysisTab = Notification.Name("switchToAnalysisTab")
 }
 
 #Preview {

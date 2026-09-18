@@ -29,7 +29,7 @@ struct HeroSpendCard: View {
                         .stroke(Color.obsidianBorder, lineWidth: 1)
                 )
         )
-        .shadow(color: .luxuryPurple.opacity(0.15), radius: 30, x: 0, y: 15)
+        .shadow(color: .accentMint.opacity(0.15), radius: 30, x: 0, y: 15)
         .opacity(appear ? 1 : 0)
         .offset(y: appear ? 0 : 30)
         .onAppear {
@@ -132,13 +132,13 @@ struct HeroSpendCard: View {
                         .padding(.vertical, 6)
                         .background(
                             Capsule()
-                                .fill(timeframe == tf ? Color.luxuryPurple : Color.clear)
+                                .fill(timeframe == tf ? Color.accentMint : Color.clear)
                         )
                 }
             }
         }
         .padding(4)
-        .background(Color(.systemGray6))
+        .background(Color.obsidianElevated)
         .clipShape(Capsule())
     }
 
@@ -162,9 +162,9 @@ struct HeroSpendCard: View {
                         colors: [
                             Color.accentMint,
                             Color.accentMint.opacity(0.6),
-                            Color.luxuryPurple,
-                            Color.luxuryPink,
-                            Color.luxuryGold,
+                            Color.accentMint,
+                            Color.accentMint,
+                            Color.accentMint,
                             Color.accentMint
                         ],
                         center: .center,
@@ -194,7 +194,7 @@ struct HeroSpendCard: View {
                 value: amount,
                 currencyCode: currencyManager.selectedCurrency,
                 font: .system(.largeTitle, design: .rounded).weight(.bold),
-                color: .luxuryGold
+                color: .accentMint
             )
 
             Text("per \(timeframeLabel)")
@@ -207,7 +207,7 @@ struct HeroSpendCard: View {
                         .foregroundStyle(.tertiary)
                     Text(currencyManager.currentCurrency.displayName)
                         .font(.system(.subheadline, design: .rounded).weight(.semibold))
-                        .foregroundStyle(Color.luxuryGold)
+                        .foregroundStyle(Color.accentMint)
                 }
             }
         }
@@ -233,13 +233,13 @@ struct HeroSpendCard: View {
             HeroStatPill(
                 title: "Yearly",
                 value: currencyManager.currencySymbol(for: currencyManager.selectedCurrency) + formatAmount(amount * 12),
-                color: Color.luxuryGold
+                color: Color.accentMint
             )
 
             HeroStatPill(
                 title: "Weekly",
-                value: currencyManager.currencySymbol(for: currencyManager.selectedCurrency) + formatAmount(Decimal(Double(truncating: amount as NSDecimalNumber) / 4.33)),
-                color: Color.luxuryPurple
+                value: currencyManager.currencySymbol(for: currencyManager.selectedCurrency) + formatAmount(amount * 12 / 52),
+                color: Color.accentMint
             )
         }
     }

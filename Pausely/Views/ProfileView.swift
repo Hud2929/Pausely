@@ -651,11 +651,12 @@ struct AboutRow: View {
 struct SignOutButton: View {
     let action: () -> Void
     @State private var isPressed = false
+    @State private var showConfirm = false
 
     var body: some View {
         Button(action: {
-            HapticStyle.heavy.trigger()
-            action()
+            HapticStyle.medium.trigger()
+            showConfirm = true
         }) {
             HStack {
                 Image(systemName: "arrow.left.circle.fill")
@@ -683,6 +684,15 @@ struct SignOutButton: View {
                 .onChanged { _ in withAnimation(.easeInOut(duration: 0.1)) { isPressed = true } }
                 .onEnded { _ in withAnimation(.easeInOut(duration: 0.1)) { isPressed = false } }
         )
+        .confirmationDialog("Sign out of Pausely?", isPresented: $showConfirm, titleVisibility: .visible) {
+            Button("Sign Out", role: .destructive) {
+                HapticStyle.heavy.trigger()
+                action()
+            }
+            Button("Cancel", role: .cancel) {}
+        } message: {
+            Text("Your data is saved and will be here when you return.")
+        }
     }
 }
 

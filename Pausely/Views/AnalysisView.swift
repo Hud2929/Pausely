@@ -310,10 +310,10 @@ struct AnalysisView: View {
                     .foregroundStyle(Color.accentMint)
             }
             VStack(spacing: 6) {
-                Text("Fully Optimized")
+                Text("Nothing to Optimize")
                     .font(.system(.headline, design: .rounded).weight(.semibold))
                     .foregroundStyle(.white)
-                Text("Your subscriptions are well-optimized. Enable Screen Time tracking for deeper usage-based recommendations.")
+                Text("No obvious savings found with your current subscriptions. Enable Screen Time tracking for usage-based recommendations.")
                     .font(.system(.subheadline, design: .rounded))
                     .foregroundStyle(Color.obsidianTextSecondary)
                     .multilineTextAlignment(.center)

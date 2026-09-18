@@ -36,7 +36,7 @@ struct EmailConfirmationView: View {
                     Circle()
                         .fill(
                             RadialGradient(
-                                colors: [Color.luxuryGold.opacity(0.3), .clear],
+                                colors: [Color.accentMint.opacity(0.3), .clear],
                                 center: .center,
                                 startRadius: 0,
                                 endRadius: 100
@@ -64,7 +64,7 @@ struct EmailConfirmationView: View {
                         .font(.system(.largeTitle, design: .rounded).weight(.light))
                         .foregroundStyle(
                             LinearGradient(
-                                colors: [Color.luxuryGold, .white],
+                                colors: [Color.accentMint, .white],
                                 startPoint: .topLeading,
                                 endPoint: .bottomTrailing
                             )
@@ -83,7 +83,7 @@ struct EmailConfirmationView: View {
 
                     Text(email)
                         .font(.system(.body, design: .rounded).weight(.semibold))
-                        .foregroundStyle(Color.luxuryGold)
+                        .foregroundStyle(Color.accentMint)
                 }
 
                 // OTP Input
@@ -141,7 +141,7 @@ struct EmailConfirmationView: View {
                         .background(
                             LinearGradient(
                                 colors: isCodeComplete
-                                    ? [Color.luxuryPurple, Color.luxuryPink]
+                                    ? [Color.accentMint, Color.accentMint]
                                     : [Color.gray.opacity(0.5), Color.gray.opacity(0.3)],
                                 startPoint: .leading,
                                 endPoint: .trailing
@@ -307,7 +307,7 @@ struct OTPDigitBox: View {
                 .overlay(
                     RoundedRectangle(cornerRadius: 12)
                         .stroke(
-                            isFocused ? Color.luxuryGold : Color.white.opacity(0.15),
+                            isFocused ? Color.accentMint : Color.white.opacity(0.15),
                             lineWidth: isFocused ? 2 : 1
                         )
                 )
@@ -413,13 +413,13 @@ struct EnhancedLoginView: View {
                 Circle()
                     .fill(
                         LinearGradient(
-                            colors: [Color.luxuryPurple, Color.luxuryPink],
+                            colors: [Color.accentMint, Color.accentMint],
                             startPoint: .topLeading,
                             endPoint: .bottomTrailing
                         )
                     )
                     .frame(width: 80, height: 80)
-                    .shadow(color: Color.luxuryPurple.opacity(0.5), radius: 20)
+                    .shadow(color: Color.accentMint.opacity(0.5), radius: 20)
                 
                 Image(systemName: "pause.circle.fill")
                     .font(.system(.largeTitle, design: .rounded))
@@ -485,7 +485,7 @@ struct EnhancedLoginView: View {
                         showPasswordReset = true
                     }
                     .font(.system(.subheadline, design: .rounded).weight(.medium))
-                    .foregroundStyle(Color.luxuryGold)
+                    .foregroundStyle(Color.accentMint)
                     .accessibilityIdentifier("forgotPasswordButton")
                 }
             }
@@ -508,13 +508,13 @@ struct EnhancedLoginView: View {
             .padding()
             .background(
                 LinearGradient(
-                    colors: [Color.luxuryPurple, Color.luxuryPink],
+                    colors: [Color.accentMint, Color.accentMint],
                     startPoint: .leading,
                     endPoint: .trailing
                 )
             )
             .cornerRadius(16)
-            .shadow(color: Color.luxuryPurple.opacity(0.4), radius: 15)
+            .shadow(color: Color.accentMint.opacity(0.4), radius: 15)
         }
         .disabled(!canSubmit || isLoading)
         .accessibilityIdentifier(isSignUp ? "createAccountButton" : "signInButton")
@@ -727,7 +727,7 @@ struct RememberMeToggleStyle: ToggleStyle {
     func makeBody(configuration: Configuration) -> some View {
         HStack(spacing: 8) {
             Image(systemName: configuration.isOn ? "checkmark.square.fill" : "square")
-                .foregroundStyle(configuration.isOn ? Color.luxuryGold : .white.opacity(0.5))
+                .foregroundStyle(configuration.isOn ? Color.accentMint : .white.opacity(0.5))
                 .font(.system(.body, design: .rounded))
 
             Text("Remember me")
@@ -770,7 +770,7 @@ struct PasswordResetView: View {
             
             Image(systemName: "lock.rotation")
                 .font(.system(.largeTitle, design: .rounded))
-                .foregroundStyle(Color.luxuryGold)
+                .foregroundStyle(Color.accentMint)
 
             VStack(spacing: 12) {
                 Text("Reset Password")
@@ -808,7 +808,7 @@ struct PasswordResetView: View {
                 .padding()
                 .background(
                     LinearGradient(
-                        colors: [Color.luxuryPurple, Color.luxuryPink],
+                        colors: [Color.accentMint, Color.accentMint],
                         startPoint: .leading,
                         endPoint: .trailing
                     )
@@ -836,7 +836,7 @@ struct PasswordResetView: View {
             
             Image(systemName: "checkmark.circle.fill")
                 .font(.system(.largeTitle, design: .rounded))
-                .foregroundStyle(Color.luxuryTeal)
+                .foregroundStyle(Color.accentMint)
 
             VStack(spacing: 12) {
                 Text("Check Your Email")
@@ -849,7 +849,7 @@ struct PasswordResetView: View {
 
                 Text(resetEmail)
                     .font(.system(.body, design: .rounded).weight(.semibold))
-                    .foregroundStyle(Color.luxuryGold)
+                    .foregroundStyle(Color.accentMint)
             }
             
             Button("Done") {
@@ -859,7 +859,7 @@ struct PasswordResetView: View {
             .foregroundStyle(.white)
             .frame(maxWidth: .infinity)
             .padding()
-            .background(Color.luxuryGold.opacity(0.3))
+            .background(Color.accentMint.opacity(0.3))
             .cornerRadius(16)
             
             Spacer()

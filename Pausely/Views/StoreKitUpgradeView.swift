@@ -63,16 +63,15 @@ struct StoreKitUpgradeView: View {
         var savings: String? {
             switch self {
             case .monthly: return nil
-            case .annual: return "Save 17%"
+            case .annual:
+                let monthly = SubscriptionTier.pro.monthlyPrice   // $7.99
+                let annual = Decimal(79.99)                        // $79.99/yr
+                let pct = ((monthly * 12 - annual) / (monthly * 12) * 100)
+                return "Save \(Int((pct as NSDecimalNumber).doubleValue.rounded()))%"
             }
         }
 
-        var badge: String? {
-            switch self {
-            case .monthly: return nil
-            case .annual: return "Save 17%"
-            }
-        }
+        var badge: String? { savings }
     }
 
     var body: some View {
@@ -108,6 +107,10 @@ struct StoreKitUpgradeView: View {
                     // CTA Buttons
                     ctaSection
                         .padding(.top, 32)
+
+                    // Legal disclosure — required by Apple and GDPR
+                    legalDisclosureSection
+                        .padding(.top, 12)
                         .padding(.bottom, 32)
                 }
                 .padding(.horizontal, 24)
@@ -187,7 +190,7 @@ struct StoreKitUpgradeView: View {
             .padding(.vertical, 6)
             .background(
                 Capsule()
-                    .fill(Color.luxuryGold)
+                    .fill(Color.accentMint)
             )
             .scaleEffect(appearAnimation ? 1 : 0.8)
             .animation(.spring(response: 0.4, dampingFraction: 0.6), value: appearAnimation)
@@ -209,7 +212,7 @@ struct StoreKitUpgradeView: View {
 
                     Text(LocalizedStringKey("Cancel anytime. No charge for 7 days."))
                         .font(AppTypography.bodySmall)
-                        .foregroundColor(.luxuryGold)
+                        .foregroundColor(.accentMint)
                 } else {
                     Text("\(SubscriptionTier.pro.priceInUserCurrency())/month or \(SubscriptionTier.proAnnual.priceInUserCurrency())/year")
                         .font(AppTypography.bodyLarge)
@@ -218,7 +221,7 @@ struct StoreKitUpgradeView: View {
 
                     Text(LocalizedStringKey("Cancel anytime."))
                         .font(AppTypography.bodySmall)
-                        .foregroundColor(.luxuryGold)
+                        .foregroundColor(.accentMint)
                 }
             }
         }
@@ -240,12 +243,12 @@ struct StoreKitUpgradeView: View {
                     // Icon
                     ZStack {
                         Circle()
-                            .fill(isTrialEnabled ? Color.luxuryGold.opacity(0.2) : Color.white.opacity(0.06))
+                            .fill(isTrialEnabled ? Color.accentMint.opacity(0.2) : Color.white.opacity(0.06))
                             .frame(width: 48, height: 48)
 
                         Image(systemName: isTrialEnabled ? "gift.fill" : "gift")
                             .font(.system(.title3, design: .rounded))
-                            .foregroundColor(isTrialEnabled ? .luxuryGold : .white.opacity(0.5))
+                            .foregroundColor(isTrialEnabled ? .accentMint : .white.opacity(0.5))
                     }
 
                     // Text
@@ -256,7 +259,7 @@ struct StoreKitUpgradeView: View {
 
                         Text(isTrialEnabled ? "Try Pro free for 7 days" : "Subscribe without trial")
                             .font(AppTypography.bodySmall)
-                            .foregroundStyle(TextColors.secondary)
+                            .foregroundStyle(Color.obsidianTextSecondary)
                     }
 
                     Spacer()
@@ -264,7 +267,7 @@ struct StoreKitUpgradeView: View {
                     // Toggle indicator
                     ZStack {
                         Capsule()
-                            .fill(isTrialEnabled ? Color.luxuryGold : Color.white.opacity(0.15))
+                            .fill(isTrialEnabled ? Color.accentMint : Color.white.opacity(0.15))
                             .frame(width: 52, height: 32)
 
                         Circle()
@@ -278,10 +281,10 @@ struct StoreKitUpgradeView: View {
                 .padding(.vertical, 14)
                 .background(
                     RoundedRectangle(cornerRadius: 16, style: .continuous)
-                        .fill(isTrialEnabled ? Color.luxuryGold.opacity(0.1) : Color.white.opacity(0.04))
+                        .fill(isTrialEnabled ? Color.accentMint.opacity(0.1) : Color.white.opacity(0.04))
                         .overlay(
                             RoundedRectangle(cornerRadius: 16, style: .continuous)
-                                .stroke(isTrialEnabled ? Color.luxuryGold.opacity(0.4) : Color.white.opacity(0.08), lineWidth: 1.5)
+                                .stroke(isTrialEnabled ? Color.accentMint.opacity(0.4) : Color.white.opacity(0.08), lineWidth: 1.5)
                         )
                 )
             }
@@ -325,7 +328,7 @@ struct StoreKitUpgradeView: View {
                     .trim(from: 0, to: CGFloat(min(currentSubscriptionCount, maxFreeSubscriptions)) / CGFloat(maxFreeSubscriptions))
                     .stroke(
                         AngularGradient(
-                            colors: [.luxuryGold, .luxuryPink, .luxuryPurple],
+                            colors: [.accentMint, .accentMint, .accentMint],
                             center: .center,
                             startAngle: .degrees(-90),
                             endAngle: .degrees(270)
@@ -341,12 +344,12 @@ struct StoreKitUpgradeView: View {
                     .font(.system(.title, design: .rounded).weight(.semibold))
                     .foregroundStyle(
                         LinearGradient(
-                            colors: [.luxuryGold, .luxuryPink],
+                            colors: [.accentMint, .accentMint],
                             startPoint: .topLeading,
                             endPoint: .bottomTrailing
                         )
                     )
-                    .shadow(color: .luxuryGold.opacity(0.5), radius: 15)
+                    .shadow(color: .accentMint.opacity(0.5), radius: 15)
             }
 
             // Usage text
@@ -380,21 +383,21 @@ struct StoreKitUpgradeView: View {
                                     .foregroundColor(.black)
                                     .padding(.horizontal, 6)
                                     .padding(.vertical, 2)
-                                    .background(Color.luxuryGold)
+                                    .background(Color.accentMint)
                                     .cornerRadius(4)
                             }
                         }
-                        .foregroundColor(selectedPlan == plan ? .white : TextColors.secondary)
+                        .foregroundColor(selectedPlan == plan ? .white : Color.obsidianTextSecondary)
                         .frame(maxWidth: .infinity)
                         .frame(height: 44)
                         .background(
                             ZStack {
                                 if selectedPlan == plan {
                                     RoundedRectangle(cornerRadius: 12, style: .continuous)
-                                        .fill(Color.luxuryPurple.opacity(0.5))
+                                        .fill(Color.accentMint.opacity(0.5))
                                         .overlay(
                                             RoundedRectangle(cornerRadius: 12, style: .continuous)
-                                                .stroke(Color.luxuryPurple.opacity(0.6), lineWidth: 1)
+                                                .stroke(Color.accentMint.opacity(0.6), lineWidth: 1)
                                         )
                                 }
                             }
@@ -422,7 +425,7 @@ struct StoreKitUpgradeView: View {
 
                         Text("for 7 days")
                             .font(AppTypography.bodySmall)
-                            .foregroundStyle(Color.luxuryGold)
+                            .foregroundStyle(Color.accentMint)
                     } else {
                         Text(selectedPlan == .monthly ? SubscriptionTier.pro.priceInUserCurrency() : SubscriptionTier.proAnnual.priceInUserCurrency())
                             .font(.title2.bold())
@@ -430,7 +433,7 @@ struct StoreKitUpgradeView: View {
 
                         Text(selectedPlan.period)
                             .font(AppTypography.bodySmall)
-                            .foregroundStyle(TextColors.secondary)
+                            .foregroundStyle(Color.obsidianTextSecondary)
                     }
                 }
 
@@ -440,10 +443,10 @@ struct StoreKitUpgradeView: View {
                     if isTrialEnabled {
                         Text("7 days free")
                             .font(.subheadline.bold())
-                            .foregroundColor(.luxuryGold)
+                            .foregroundColor(.accentMint)
                             .padding(.horizontal, 10)
                             .padding(.vertical, 4)
-                            .background(Color.luxuryGold.opacity(0.15))
+                            .background(Color.accentMint.opacity(0.15))
                             .cornerRadius(8)
                     }
 
@@ -456,17 +459,17 @@ struct StoreKitUpgradeView: View {
                     if selectedPlan == .annual {
                         Text("\(SubscriptionTier.pro.monthlyPriceInUserCurrency())/mo equivalent")
                             .font(AppTypography.labelMedium)
-                            .foregroundStyle(TextColors.tertiary)
+                            .foregroundStyle(Color.obsidianTextTertiary)
                     }
                 }
             }
             .padding(16)
             .background(
                 RoundedRectangle(cornerRadius: 16, style: .continuous)
-                    .fill(isTrialEnabled ? Color.luxuryGold.opacity(0.06) : Color.white.opacity(0.04))
+                    .fill(isTrialEnabled ? Color.accentMint.opacity(0.06) : Color.white.opacity(0.04))
                     .overlay(
                         RoundedRectangle(cornerRadius: 16, style: .continuous)
-                            .stroke(isTrialEnabled ? Color.luxuryGold.opacity(0.2) : Color.white.opacity(0.08), lineWidth: 1)
+                            .stroke(isTrialEnabled ? Color.accentMint.opacity(0.2) : Color.white.opacity(0.08), lineWidth: 1)
                     )
             )
         }
@@ -507,9 +510,9 @@ struct StoreKitUpgradeView: View {
                     ForEach(0..<3) { i in
                         Circle()
                             .fill([
-                                Color.luxuryPurple,
-                                Color.luxuryPink,
-                                Color.luxuryTeal
+                                Color.accentMint,
+                                Color.accentMint,
+                                Color.accentMint
                             ][i])
                             .frame(width: 28, height: 28)
                             .overlay(
@@ -519,12 +522,12 @@ struct StoreKitUpgradeView: View {
                             )
                             .overlay(
                                 Circle()
-                                    .stroke(Color.deepBlack, lineWidth: 2)
+                                    .stroke(Color.obsidianBlack, lineWidth: 2)
                             )
                     }
                 }
 
-                Text(LocalizedStringKey("Join 10,000+ users managing their subscriptions"))
+                Text(LocalizedStringKey("Take control of your subscription spending"))
                     .font(AppTypography.bodySmall)
                     .foregroundStyle(.white.opacity(0.7))
                     .multilineTextAlignment(.leading)
@@ -559,32 +562,14 @@ struct StoreKitUpgradeView: View {
                             .font(.system(.body, design: .rounded).weight(.bold))
                     }
                 }
-                .foregroundStyle(.white)
+                .foregroundStyle(Color.black)
                 .frame(maxWidth: .infinity)
                 .frame(height: 60)
                 .background(
-                    ZStack {
-                        RoundedRectangle(cornerRadius: 20, style: .continuous)
-                            .fill(
-                                LinearGradient(
-                                    colors: [.luxuryGold, .luxuryPink],
-                                    startPoint: .topLeading,
-                                    endPoint: .bottomTrailing
-                                )
-                            )
-
-                        RoundedRectangle(cornerRadius: 20, style: .continuous)
-                            .stroke(
-                                LinearGradient(
-                                    colors: [.white.opacity(0.5), .white.opacity(0)],
-                                    startPoint: .top,
-                                    endPoint: .center
-                                ),
-                                lineWidth: 1.5
-                            )
-                    }
+                    RoundedRectangle(cornerRadius: 20, style: .continuous)
+                        .fill(Color.accentMint)
+                        .shadow(color: Color.accentMint.opacity(0.35), radius: 20, x: 0, y: 10)
                 )
-                .shadow(color: Color.luxuryGold.opacity(0.5), radius: 20, x: 0, y: 10)
             }
             .disabled(storeManager.isLoading || storeManager.products.isEmpty)
             .accessibilityHint(storeManager.isLoading ? "Please wait, purchase in progress" : storeManager.products.isEmpty ? "Products are loading, please wait" : "")
@@ -615,6 +600,38 @@ struct StoreKitUpgradeView: View {
         }
         .opacity(appearAnimation ? 1 : 0)
         .offset(y: appearAnimation ? 0 : 20)
+    }
+
+    // MARK: - Legal Disclosure
+    private var legalDisclosureSection: some View {
+        VStack(spacing: 8) {
+            if isTrialEnabled {
+                Text("After your free trial, you'll be charged \(selectedPlan == .monthly ? SubscriptionTier.pro.priceInUserCurrency() + "/month" : SubscriptionTier.proAnnual.priceInUserCurrency() + "/year") unless you cancel at least 24 hours before the trial ends.")
+                    .font(.system(.caption2, design: .rounded))
+                    .foregroundStyle(Color.obsidianTextTertiary)
+                    .multilineTextAlignment(.center)
+            }
+            Text("Subscription auto-renews. Cancel anytime in Settings → Apple ID → Subscriptions.")
+                .font(.system(.caption2, design: .rounded))
+                .foregroundStyle(Color.obsidianTextTertiary)
+                .multilineTextAlignment(.center)
+            HStack(spacing: 12) {
+                Button("Terms of Service") {
+                    if let url = URL(string: "https://pausely.app/terms") { UIApplication.shared.open(url) }
+                }
+                Text("·").foregroundStyle(Color.obsidianTextTertiary)
+                Button("Privacy Policy") {
+                    if let url = URL(string: "https://pausely.app/privacy") { UIApplication.shared.open(url) }
+                }
+                Text("·").foregroundStyle(Color.obsidianTextTertiary)
+                Button("Refund Policy") {
+                    if let url = URL(string: "https://pausely.app/refunds") { UIApplication.shared.open(url) }
+                }
+            }
+            .font(.system(.caption2, design: .rounded))
+            .foregroundStyle(Color.accentMint.opacity(0.7))
+        }
+        .padding(.horizontal, 24)
     }
 
     // MARK: - Actions
@@ -673,7 +690,7 @@ struct TrialFeatureRow: View {
         HStack(spacing: 12) {
             Image(systemName: "checkmark.circle.fill")
                 .font(.system(.title3, design: .rounded).weight(.semibold))
-                .foregroundColor(Color.luxuryGold)
+                .foregroundColor(Color.accentMint)
 
             Text(text)
                 .font(.system(.subheadline, design: .rounded).weight(.medium))
@@ -697,12 +714,12 @@ struct StoreKitPlanCard: View {
                 // Selection indicator
                 ZStack {
                     Circle()
-                        .stroke(isSelected ? Color.luxuryGold : Color.white.opacity(0.3), lineWidth: 2)
+                        .stroke(isSelected ? Color.accentMint : Color.white.opacity(0.3), lineWidth: 2)
                         .frame(width: 28, height: 28)
 
                     if isSelected {
                         Circle()
-                            .fill(Color.luxuryGold)
+                            .fill(Color.accentMint)
                             .frame(width: 18, height: 18)
 
                         Image(systemName: "checkmark")
@@ -724,7 +741,7 @@ struct StoreKitPlanCard: View {
                                 .foregroundStyle(.black)
                                 .padding(.horizontal, 8)
                                 .padding(.vertical, 4)
-                                .background(Color.luxuryGold)
+                                .background(Color.accentMint)
                                 .cornerRadius(6)
                         }
                     }
@@ -752,11 +769,11 @@ struct StoreKitPlanCard: View {
             .padding(20)
             .background(
                 RoundedRectangle(cornerRadius: 20, style: .continuous)
-                    .fill(isSelected ? Color.luxuryPurple.opacity(0.3) : Color.white.opacity(0.05))
+                    .fill(isSelected ? Color.accentMint.opacity(0.3) : Color.white.opacity(0.05))
                     .overlay(
                         RoundedRectangle(cornerRadius: 20, style: .continuous)
                             .stroke(
-                                isSelected ? Color.luxuryGold : Color.white.opacity(0.1),
+                                isSelected ? Color.accentMint : Color.white.opacity(0.1),
                                 lineWidth: isSelected ? 2 : 1
                             )
                     )
@@ -779,11 +796,11 @@ struct FeatureRowUpgrade: View {
         HStack(spacing: 14) {
             ZStack {
                 Circle()
-                    .fill(Color.luxuryGold.opacity(0.15))
+                    .fill(Color.accentMint.opacity(0.15))
                     .frame(width: 40, height: 40)
                 Image(systemName: icon)
                     .font(AppTypography.headlineMedium)
-                    .foregroundColor(.luxuryGold)
+                    .foregroundColor(.accentMint)
             }
 
             VStack(alignment: .leading, spacing: 2) {

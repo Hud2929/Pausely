@@ -6,21 +6,15 @@ struct SubscriptionsListView: View {
     @ObservedObject private var paymentManager = PaymentManager.shared
     @ObservedObject private var currencyManager = CurrencyManager.shared
     @State private var showingAddSheet = false
-    @State private var showingAddOptions = false
-    @State private var showingSmartURLInput = false
     @State private var showingPaywall = false
     @State private var searchText = ""
     @State private var selectedSubscription: Subscription?
     @State private var selectedCategory: ServiceCategory?
+    @State private var subscriptionToDelete: Subscription?
     
     /// Check if user can add more subscriptions
     var canAddSubscription: Bool {
         paymentManager.canAddSubscription(currentCount: store.subscriptions.count)
-    }
-    
-    /// Current subscription count display for free users (e.g., "3/3")
-    var subscriptionCountDisplay: String {
-        "\(store.subscriptions.count)/\(PaymentManager.freeTierLimit)"
     }
     
     var filteredSubscriptions: [Subscription] {
@@ -44,108 +38,55 @@ struct SubscriptionsListView: View {
         ScrollView(showsIndicators: false) {
             VStack(spacing: 20) {
                 // Header
-                HStack {
+                HStack(alignment: .bottom) {
                     VStack(alignment: .leading, spacing: 4) {
-                        Text("Your")
-                            .font(AppTypography.displaySmall)
-                            .foregroundStyle(.white)
-                        
-                        Text("Subscriptions")
-                            .font(AppTypography.displaySmall)
-                            .foregroundStyle(
-                                LinearGradient(
-                                    colors: [Color.luxuryGold, Color.luxuryPink],
-                                    startPoint: .leading,
-                                    endPoint: .trailing
-                                )
-                            )
-                    }
-                    
-                    Spacer()
-                    
-                    // Add button - shows paywall if limit reached
-                    Button(action: {
-                        HapticStyle.medium.trigger()
-                        if canAddSubscription {
-                            showingAddSheet = true
-                        } else {
-                            showingPaywall = true
-                        }
-                    }) {
-                        ZStack {
-                            Circle()
-                                .fill(
-                                    LinearGradient(
-                                        colors: canAddSubscription
-                                            ? [Color.luxuryPurple, Color.luxuryPink]
-                                            : [Color.gray, Color.gray.opacity(0.5)],
-                                        startPoint: .topLeading,
-                                        endPoint: .bottomTrailing
-                                    )
-                                )
-                                .frame(width: 48, height: 48)
+                        Text("SUBSCRIPTIONS")
+                            .font(.system(size: 11, weight: .semibold, design: .rounded))
+                            .foregroundStyle(Color.obsidianTextTertiary)
+                            .tracking(2)
 
-                            Image(systemName: canAddSubscription ? "plus" : "lock.fill")
-                                .font(AppTypography.headlineLarge)
-                                .foregroundStyle(.white)
+                        HStack(alignment: .firstTextBaseline, spacing: 4) {
+                            Text(currencyManager.format(store.totalMonthlySpend))
+                                .font(.system(.title2, design: .rounded).weight(.bold))
+                                .foregroundStyle(Color.accentMint)
+                            Text("/mo")
+                                .font(.system(.footnote, design: .rounded).weight(.medium))
+                                .foregroundStyle(Color.obsidianTextSecondary)
                         }
-                        .shadow(color: canAddSubscription ? Color.luxuryPurple.opacity(0.5) : Color.clear, radius: 15)
-                        .accessibilityLabel(canAddSubscription ? "Add subscription" : "Upgrade to add more subscriptions")
+
+                        let count = store.activeSubscriptions.count
+                        Text("\(count) active")
+                            .font(.system(.caption, design: .rounded))
+                            .foregroundStyle(Color.obsidianTextSecondary)
                     }
-                    .accessibilityIdentifier("addSubscriptionButton")
+
+                    Spacer()
                 }
                 .padding(.horizontal, 20)
                 .padding(.top, 20)
                 
                 // Search
-                HStack {
+                HStack(spacing: 10) {
                     Image(systemName: "magnifyingglass")
-                        .foregroundStyle(.white.opacity(0.5))
+                        .foregroundStyle(Color.obsidianTextSecondary)
+                        .font(.system(size: 15))
 
-                    TextField("Search subscriptions...", text: $searchText)
-                        .foregroundStyle(.white)
+                    TextField("Search subscriptions", text: $searchText)
+                        .foregroundStyle(Color.obsidianText)
                         .textInputAutocapitalization(.never)
                         .keyboardType(.default)
                         .submitLabel(.search)
                         .accessibilityIdentifier("searchTextField")
                 }
-                .padding()
-                .glass(intensity: 0.15, tint: .white)
+                .padding(.horizontal, 14)
+                .padding(.vertical, 12)
+                .surfaceCard(cornerRadius: 14)
                 .padding(.horizontal, 20)
 
                 // Content or skeleton
                 if store.isLoading && store.subscriptions.isEmpty {
                     skeletonSection
                 } else {
-                    // Stats cards
-                    HStack(spacing: 12) {
-                        // Show "X/3" for free users, just count for pro
-                        SubscriptionStatCard(
-                            value: paymentManager.isPremium ? "\(store.subscriptions.count)" : subscriptionCountDisplay,
-                            label: paymentManager.isPremium ? "Active" : "Used",
-                            icon: "checkmark.circle.fill",
-                            color: canAddSubscription ? Color.luxuryTeal : .orange
-                        )
-
-                        // Only show pausable count for Pro users
-                        SubscriptionStatCard(
-                            value: paymentManager.canPauseSubscriptions
-                                ? store.pausableSubscriptions.count.formatted()
-                                : "—",
-                            label: "Pausable",
-                            icon: "pause.circle.fill",
-                            color: paymentManager.canPauseSubscriptions ? .orange : .gray
-                        )
-
-                        SubscriptionStatCard(
-                            value: currencyManager.format(store.totalMonthlySpend),
-                            label: "/month",
-                            icon: "dollarsign.circle.fill",
-                            color: Color.luxuryGold
-                        )
-                    }
-                    .padding(.horizontal, 20)
-
                     // Category Filter
                     if selectedCategory != nil || !store.subscriptions.isEmpty {
                         ScrollView(.horizontal, showsIndicators: false) {
@@ -184,8 +125,8 @@ struct SubscriptionsListView: View {
                         }
                     }
 
-                    // Upgrade banner for free users at/near limit
-                    if !paymentManager.isPremium && store.subscriptions.count >= 2 {
+                    // Upgrade banner for free users approaching or at limit
+                    if !paymentManager.isPremium && store.subscriptions.count >= PaymentManager.freeTierLimit - 1 {
                         UpgradeBannerView(
                             currentCount: store.subscriptions.count,
                             limit: PaymentManager.freeTierLimit,
@@ -236,14 +177,8 @@ struct SubscriptionsListView: View {
                                 .buttonStyle(PlainButtonStyle())
                                 .swipeActions(edge: .trailing, allowsFullSwipe: false) {
                                     Button(role: .destructive) {
-                                        HapticStyle.heavy.trigger()
-                                        Task {
-                                            do {
-                                                try await store.deleteSubscription(id: subscription.id)
-                                            } catch {
-                                                PauselyLogger.error("Error deleting subscription: \(error)", category: "Subscriptions")
-                                            }
-                                        }
+                                        HapticStyle.medium.trigger()
+                                        subscriptionToDelete = subscription
                                     } label: {
                                         Label("Delete", systemImage: "trash")
                                     }
@@ -263,30 +198,69 @@ struct SubscriptionsListView: View {
             await store.fetchSubscriptions()
             HapticStyle.light.trigger()
         }
-        .confirmationDialog("Add Subscription", isPresented: $showingAddOptions, titleVisibility: .visible) {
-            Button("Add Manually") {
-                showingAddSheet = true
+        .safeAreaInset(edge: .bottom) {
+            // Fixed FAB — always accessible, never buried in scroll
+            HStack {
+                Spacer()
+                Button(action: {
+                    HapticStyle.medium.trigger()
+                    if canAddSubscription {
+                        showingAddSheet = true
+                    } else {
+                        showingPaywall = true
+                    }
+                }) {
+                    HStack(spacing: 8) {
+                        Image(systemName: canAddSubscription ? "plus" : "lock.fill")
+                            .font(.system(size: 15, weight: .bold))
+                        Text(canAddSubscription ? "Add" : "Upgrade")
+                            .font(.system(.subheadline, design: .rounded).weight(.bold))
+                    }
+                    .foregroundStyle(Color.black)
+                    .padding(.horizontal, 20)
+                    .frame(height: 48)
+                    .background(
+                        Capsule()
+                            .fill(canAddSubscription ? Color.accentMint : Color.obsidianElevated)
+                            .shadow(color: canAddSubscription ? Color.accentMint.opacity(0.35) : .clear, radius: 12, y: 4)
+                    )
+                }
+                .accessibilityLabel(canAddSubscription ? "Add subscription" : "Upgrade to add more subscriptions")
+                .accessibilityIdentifier("addSubscriptionButton")
+                Spacer()
             }
-            
-            Button("Paste from URL") {
-                showingSmartURLInput = true
-            }
-            
-            Button("Cancel", role: .cancel) {}
-        } message: {
-            Text("How would you like to add a subscription?")
+            .padding(.bottom, 12)
+            .background(Color.clear)
         }
         .sheet(isPresented: $showingAddSheet) {
             SubscriptionBrowserView()
-        }
-        .sheet(isPresented: $showingSmartURLInput) {
-            SmartURLInputView()
         }
         .sheet(item: $selectedSubscription) { subscription in
             SubscriptionManagementView(subscription: subscription)
         }
         .sheet(isPresented: $showingPaywall) {
-            StoreKitUpgradeView(currentSubscriptionCount: 0)
+            StoreKitUpgradeView(currentSubscriptionCount: store.subscriptions.count)
+        }
+        .confirmationDialog(
+            "Delete \"\(subscriptionToDelete?.name ?? "subscription")\"?",
+            isPresented: Binding(get: { subscriptionToDelete != nil }, set: { if !$0 { subscriptionToDelete = nil } }),
+            titleVisibility: .visible
+        ) {
+            Button("Delete", role: .destructive) {
+                guard let sub = subscriptionToDelete else { return }
+                HapticStyle.heavy.trigger()
+                Task {
+                    do {
+                        try await store.deleteSubscription(id: sub.id)
+                    } catch {
+                        PauselyLogger.error("Error deleting subscription: \(error)", category: "Subscriptions")
+                    }
+                    subscriptionToDelete = nil
+                }
+            }
+            Button("Cancel", role: .cancel) { subscriptionToDelete = nil }
+        } message: {
+            Text("This will permanently remove it from your list.")
         }
     }
 
@@ -326,8 +300,6 @@ struct EnhancedSubscriptionRow: View {
     @ObservedObject private var currencyManager = CurrencyManager.shared
     @ObservedObject private var screenTimeManager = ScreenTimeManager.shared
     @State private var pressed = false
-    @State private var showingPausey = false
-    @State private var showingDeleteConfirmation = false
     
     var usageMinutes: Int {
         screenTimeManager.getCurrentMonthUsage(for: subscription.name)
@@ -342,31 +314,9 @@ struct EnhancedSubscriptionRow: View {
     }
     
     var body: some View {
-        HStack(spacing: 16) {
-            // Icon with gradient
-            ZStack {
-                Circle()
-                    .fill(
-                        LinearGradient(
-                            colors: [categoryColor.opacity(0.4), categoryColor.opacity(0.1)],
-                            startPoint: .topLeading,
-                            endPoint: .bottomTrailing
-                        )
-                    )
-                    .frame(width: 56, height: 56)
-                
-                if let logoUrl = subscription.logoUrl,
-                   URL(string: logoUrl) != nil {
-                    // AsyncImage would go here for real logos
-                    Text(String(subscription.name.prefix(1)))
-                        .font(AppTypography.displaySmall)
-                        .foregroundStyle(.white)
-                } else {
-                    Image(systemName: categoryIcon)
-                        .font(AppTypography.headlineLarge)
-                        .foregroundStyle(.white)
-                }
-            }
+        HStack(spacing: 14) {
+            // Service logo — real brand mark or colored initial fallback
+            ServiceLogoView(name: subscription.name, category: subscription.category, size: 52)
             
             VStack(alignment: .leading, spacing: 6) {
                 Text(subscription.name)
@@ -446,13 +396,7 @@ struct EnhancedSubscriptionRow: View {
                 )
                 Text(currencyManager.format(convertedAmount))
                     .font(AppTypography.headlineLarge)
-                    .foregroundStyle(
-                        LinearGradient(
-                            colors: [Color.luxuryGold, Color.luxuryPink],
-                            startPoint: .leading,
-                            endPoint: .trailing
-                        )
-                    )
+                    .foregroundStyle(Color.accentMint)
 
                 // Show original amount if different currency
                 if subscription.currency != currencyManager.selectedCurrency {
@@ -466,32 +410,14 @@ struct EnhancedSubscriptionRow: View {
                 }
             }
 
-            // Delete button
-            Button(action: { showingDeleteConfirmation = true }) {
-                Image(systemName: "trash")
-                    .font(AppTypography.headlineMedium)
-                    .foregroundStyle(.red)
-                    .frame(width: 36, height: 36)
-                    .background(Color.red.opacity(0.15))
-                    .clipShape(Circle())
-            }
-            .accessibilityLabel("Remove \(subscription.name)")
-            .padding(.leading, 4)
-
-            // Pausey button
-            Button(action: { showingPausey = true }) {
-                Image(systemName: "figure.butler")
-                    .font(AppTypography.headlineMedium)
-                    .foregroundStyle(Color.luxuryPurple)
-                    .frame(width: 36, height: 36)
-                    .background(Color.luxuryPurple.opacity(0.15))
-                    .clipShape(Circle())
-            }
-            .accessibilityLabel("Ask Pausey about \(subscription.name)")
-            .padding(.leading, 4)
+            // Swipe-to-delete handles removal — no inline button needed
+            Image(systemName: "chevron.right")
+                .font(.system(size: 12, weight: .medium))
+                .foregroundStyle(Color.obsidianTextTertiary)
         }
-        .padding()
-        .glass(intensity: 0.1, tint: .white)
+        .padding(.horizontal, 16)
+        .padding(.vertical, 14)
+        .surfaceCard(cornerRadius: 18)
         .scaleEffect(pressed ? 0.98 : 1)
         .pressEvents {
             withAnimation(.easeInOut(duration: 0.1)) { pressed = true }
@@ -501,24 +427,6 @@ struct EnhancedSubscriptionRow: View {
         .accessibilityElement(children: .combine)
         .accessibilityLabel("\(subscription.name), \(subscription.displayAmount) per \(subscription.billingFrequency.shortDisplay), status \(subscription.status.displayName)")
         .accessibilityHint("Double-tap to view details")
-        .sheet(isPresented: $showingPausey) {
-            PauseyButlerView(subscription: subscription)
-        }
-        .alert("Remove Subscription?", isPresented: $showingDeleteConfirmation) {
-            Button("Cancel", role: .cancel) {}
-            Button("Remove", role: .destructive) {
-                HapticStyle.heavy.trigger()
-                Task {
-                    do {
-                        try await SubscriptionStore.shared.deleteSubscription(id: subscription.id)
-                    } catch {
-                        PauselyLogger.error("Error deleting subscription: \(error.localizedDescription)", category: "subscriptions")
-                    }
-                }
-            }
-        } message: {
-            Text("Are you sure you want to remove \(subscription.name) from your subscriptions?")
-        }
     }
     
     var usageColor: Color {
@@ -529,11 +437,7 @@ struct EnhancedSubscriptionRow: View {
     }
     
     private func formatCostPerHour(_ value: Decimal) -> String {
-        let formatter = NumberFormatter()
-        formatter.numberStyle = .currency
-        formatter.currencyCode = subscription.currency
-        formatter.maximumFractionDigits = 2
-        return formatter.string(from: value as NSDecimalNumber) ?? "\(value)"
+        CurrencyManager.shared.format(value) + "/hr"
     }
     
     private func costPerHourColor(_ value: Decimal) -> Color {
@@ -544,25 +448,6 @@ struct EnhancedSubscriptionRow: View {
         return .green
     }
     
-    var categoryColor: Color {
-        if let category = subscription.category,
-           let serviceCategory = ServiceCategory.allCases.first(where: { 
-               $0.rawValue.lowercased() == category.lowercased() 
-           }) {
-            return serviceCategory.color
-        }
-        return .purple
-    }
-    
-    var categoryIcon: String {
-        if let category = subscription.category,
-           let serviceCategory = ServiceCategory.allCases.first(where: { 
-               $0.rawValue.lowercased() == category.lowercased() 
-           }) {
-            return serviceCategory.icon
-        }
-        return "star.fill"
-    }
 }
 
 // See CategoryFilterChip.swift
