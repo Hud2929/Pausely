@@ -87,7 +87,7 @@ struct Screenshot5View: View {
                             .multilineTextAlignment(.center)
                             .padding(.horizontal, 20)
 
-                        Text("Starting at $7.99/month")
+                        Text("Starting at $9.99/month")
                             .font(AppTypography.bodySmall)
                             .foregroundColor(.luxuryGold)
                     }
@@ -165,7 +165,7 @@ struct Screenshot5View: View {
                             planTitle: "Monthly",
                             badge: nil,
                             savings: nil,
-                            price: "$7.99",
+                            price: "$9.99",
                             period: "/month",
                             isSelected: false
                         )

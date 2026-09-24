@@ -41,16 +41,16 @@
       "subscription_duration": "1 Month",
       "pricing": {
         "default": {
-          "tier": 62,
-          "usd": 7.99
+          "tier": 65,
+          "usd": 9.99
         },
         "territories": [
-          {"country": "US", "tier": 62, "price": "7.99"},
-          {"country": "CA", "tier": 62, "price": "9.99"},
-          {"country": "GB", "tier": 62, "price": "5.99"},
-          {"country": "AU", "tier": 62, "price": "10.99"},
-          {"country": "DE", "tier": 62, "price": "7.99"},
-          {"country": "FR", "tier": 62, "price": "7.99"},
+          {"country": "US", "tier": 65, "price": "9.99"},
+          {"country": "CA", "tier": 65, "price": "9.99"},
+          {"country": "GB", "tier": 65, "price": "6.99"},
+          {"country": "AU", "tier": 65, "price": "12.99"},
+          {"country": "DE", "tier": 65, "price": "9.99"},
+          {"country": "FR", "tier": 65, "price": "9.99"},
           {"country": "JP", "tier": 62, "price": "800"},
           {"country": "MX", "tier": 62, "price": "129"}
         ]

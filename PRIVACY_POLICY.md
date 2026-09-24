@@ -1,8 +1,8 @@
 # Privacy Policy
 
-**Last Updated:** February 25, 2024
+**Last Updated:** September 22, 2026
 
-**Effective Date:** February 25, 2024
+**Effective Date:** September 17, 2026
 
 ---
 
@@ -56,7 +56,35 @@ Pausely ("we," "our," or "us") is committed to protecting your privacy. This Pri
 - This data is processed locally on your device
 - We do not transmit detailed app usage data to our servers
 
-### 3. Information from Third Parties
+### 3. Gmail Integration (Optional)
+
+If you choose to connect your Gmail account, Pausely uses Google's Gmail API with **read-only access** to detect your subscriptions automatically.
+
+**What we access:**
+- Email headers (From, Subject, Date) to identify billing senders
+- Email body content to extract subscription name, billing amount, and billing date from receipts
+
+**How it works — on your device:**
+- All email content is fetched and processed entirely on your device
+- We use Gmail's `gmail.readonly` scope — we cannot send, delete, or modify any emails
+- Raw email content (headers and body text) is **never transmitted to Pausely's servers**
+- Only the extracted subscription data (service name, amount, billing date) is saved to your Pausely account in Supabase
+
+**What we do NOT do:**
+- We do not store, cache, or log raw email content on any server
+- We do not share your email data with any third party
+- We do not use your email content for advertising or profiling
+- We do not read emails unrelated to subscription billing
+
+**Disconnecting:**
+You can disconnect Gmail at any time from Profile → Settings → Import from Gmail → Disconnect. This revokes Pausely's access token immediately. To fully revoke access, also visit myaccount.google.com/permissions.
+
+**Google API Services User Data Policy:**
+Pausely's use of information received from Google APIs adheres to the [Google API Services User Data Policy](https://developers.google.com/terms/api-services-user-data-policy), including the Limited Use requirements.
+
+---
+
+### 4. Information from Third Parties
 
 **Payment Processors:**
 - We use LemonSqueezy for payment processing
@@ -169,7 +197,6 @@ We share limited information with trusted service providers:
 |----------|---------|-------------|
 | Supabase | Database & Authentication | Account data, subscription data |
 | LemonSqueezy | Payment Processing | Purchase confirmation, subscription status |
-| RevenueCat (future) | Subscription Management | Purchase history, subscription status |
 | Sentry | Error Tracking | Crash logs, error reports (anonymized) |
 
 All providers are contractually bound to:
@@ -276,7 +303,7 @@ We may update this Privacy Policy from time to time. When we make changes:
 - For material changes, we will notify you via email or in-app notification
 - Continued use after changes constitutes acceptance
 
-**Last material update:** February 25, 2024
+**Last material update:** September 17, 2026
 
 ---
 
@@ -289,8 +316,8 @@ If you have questions, concerns, or requests regarding this Privacy Policy or ou
 **Support:** support@pausely.app
 
 **Mailing Address:**
-Pausely Privacy Team
-[Your Business Address]
+Pausely
+[Business address on file — contact pausely@proton.me for details]
 
 **Response Time:** We aim to respond to all inquiries within 48 hours.
 
@@ -309,4 +336,4 @@ Pausely Privacy Team
 
 ---
 
-*© 2024 Pausely. All rights reserved.*
+*© 2026 Pausely. All rights reserved.*

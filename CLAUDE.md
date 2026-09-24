@@ -72,5 +72,8 @@ Supabase redirect URLs must match: `pausely://auth/confirm`, `pausely://auth/res
 ## Configuration Notes
 
 - Lemon Squeezy credentials go in `Info.plist` (not hardcoded). Demo mode activates automatically if keys are missing, enabling simulated purchases for development.
-- `AppConfig.swift` contains app-wide constants (support email, URL scheme, deep link paths). Credentials should not be added to `AppConfig.swift` directly — that file currently has a plaintext password that should be moved to Keychain.
-- `AppConfiguration.swift` contains a hardcoded Lemon Squeezy API key in `ProductionKeys` — this should be moved to `Info.plist` or environment config, not left in source.
+- `AppConfig.swift` contains app-wide constants (support email, URL scheme, deep link paths). Credentials should not be added to `AppConfig.swift` directly — it reads `SUPPORT_EMAIL_PASSWORD` from environment variables or `Info.plist` at runtime.
+
+## Autonomy
+
+I trust Claude to act autonomously on this project. Unless an action is destructive, irreversible, or affects shared/external systems (e.g., force push, delete production data, send messages, spend money), Claude may proceed without asking for approval. Claude should proactively identify problems, propose fixes, and keep working until blocked or complete.

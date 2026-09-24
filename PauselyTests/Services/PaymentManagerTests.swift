@@ -21,10 +21,16 @@ final class PaymentManagerTests: XCTestCase {
     // MARK: - roundTo99 (via priceInUserCurrency / monthlyPriceInUserCurrency)
 
     func testProMonthlyPrice_endsIn99() {
-        // 7.99 → roundTo99 → floor(7.99) + 0.99 = 7.99
-        let result = SubscriptionTier.pro.priceInUserCurrency()
-        XCTAssertTrue(result.contains("7.99") || result.contains("7,99"),
-                      "Pro monthly price should contain 7.99, got: \(result)")
+        // USD and CAD both $9.99
+        CurrencyManager.shared.selectedCurrency = "USD"
+        let usdResult = SubscriptionTier.pro.priceInUserCurrency()
+        XCTAssertTrue(usdResult.contains("9.99") || usdResult.contains("9,99"),
+                      "Pro monthly USD price should be 9.99, got: \(usdResult)")
+
+        CurrencyManager.shared.selectedCurrency = "CAD"
+        let cadResult = SubscriptionTier.pro.priceInUserCurrency()
+        XCTAssertTrue(cadResult.contains("9.99") || cadResult.contains("9,99"),
+                      "Pro monthly CAD price should be 9.99, got: \(cadResult)")
     }
 
     func testProAnnualPrice_endsIn99() {
@@ -51,16 +57,18 @@ final class PaymentManagerTests: XCTestCase {
 
     // MARK: - convertToUserCurrency: USD/CAD parity
 
-    func testUSD_andCAD_useSameBasePrice() {
-        // Both USD and CAD use the same base price per the business rule
+    func testCAD_andUSD_samePriceOf999() {
+        // USD and CAD both fixed at $9.99 — all other currencies convert from USD base
         CurrencyManager.shared.selectedCurrency = "USD"
-        let usdDigits = SubscriptionTier.pro.priceInUserCurrency().filter { $0.isNumber }
+        let usdResult = SubscriptionTier.pro.priceInUserCurrency()
 
         CurrencyManager.shared.selectedCurrency = "CAD"
-        let cadDigits = SubscriptionTier.pro.priceInUserCurrency().filter { $0.isNumber }
+        let cadResult = SubscriptionTier.pro.priceInUserCurrency()
 
-        XCTAssertEqual(usdDigits, cadDigits,
-                       "USD and CAD should use the same base price")
+        XCTAssertTrue(usdResult.contains("9.99") || usdResult.contains("9,99"),
+                      "USD price should be 9.99, got: \(usdResult)")
+        XCTAssertTrue(cadResult.contains("9.99") || cadResult.contains("9,99"),
+                      "CAD price should be 9.99, got: \(cadResult)")
     }
 
     // MARK: - convertToUserCurrency: missing rate falls back to 1.0
@@ -81,7 +89,7 @@ final class PaymentManagerTests: XCTestCase {
         CurrencyTestHelpers.withRates(["EUR": 0.92]) {
             CurrencyManager.shared.selectedCurrency = "EUR"
             let result = SubscriptionTier.pro.priceInUserCurrency()
-            // 7.99 * 0.92 = 7.3508 → roundTo99 → floor(7.3508) + 0.99 = 7.99
+            // USD 9.99 * 0.92 = 9.1908 → roundTo99 → floor(9.1908) + 0.99 = 9.99
             XCTAssertFalse(result.isEmpty)
             XCTAssertFalse(result.lowercased().contains("nan"))
         }
@@ -91,7 +99,7 @@ final class PaymentManagerTests: XCTestCase {
         CurrencyTestHelpers.withRates(["JPY": 150.0]) {
             CurrencyManager.shared.selectedCurrency = "JPY"
             let result = SubscriptionTier.pro.priceInUserCurrency()
-            // 7.99 * 150 = 1198.5 → roundTo99 → floor(1198.5) + 0.99 = 1198.99
+            // USD 9.99 * 150 = 1498.5 → roundTo99 → floor(1498.5) + 0.99 = 1498.99
             XCTAssertFalse(result.isEmpty)
             XCTAssertFalse(result.lowercased().contains("nan"))
         }
@@ -124,7 +132,7 @@ final class PaymentManagerTests: XCTestCase {
     }
 
     func testSavingsPercent_proAnnual_approximately17() {
-        // Monthly $7.99 × 12 = $95.88, annual $79.99
+        // Monthly USD $9.99 × 12 = $119.88, annual $79.99
         // Savings = (95.88 - 79.99) / 95.88 ≈ 16.6% → displayed as "17%"
         XCTAssertTrue(SubscriptionTier.proAnnual.savingsPercent.contains("17"),
                       "Annual savings should be ~17%, got: \(SubscriptionTier.proAnnual.savingsPercent)")

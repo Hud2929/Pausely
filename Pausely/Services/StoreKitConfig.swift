@@ -42,7 +42,7 @@ enum StoreKitConfig {
         static var annualDisplay: String {
             CurrencyManager.shared.format(annualValue)
         }
-        static let monthlyValue = Decimal(7.99)
+        static let monthlyValue: Decimal = 9.99
         static let annualValue = Decimal(79.99)
         static let savingsPercent = 17
     }

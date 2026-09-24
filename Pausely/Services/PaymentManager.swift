@@ -60,7 +60,7 @@ enum SubscriptionTier: String, CaseIterable, Comparable, Codable {
     var monthlyPrice: Decimal {
         switch self {
         case .free:        return 0
-        case .pro:         return 7.99
+        case .pro:         return 9.99
         case .proAnnual:   return Decimal(79.99) / 12
         }
     }
@@ -71,7 +71,7 @@ enum SubscriptionTier: String, CaseIterable, Comparable, Codable {
     private var baseUSDPrice: Decimal {
         switch self {
         case .free:        return 0
-        case .pro:         return 7.99
+        case .pro:         return 9.99
         case .proAnnual:   return 79.99
         }
     }
@@ -99,7 +99,7 @@ enum SubscriptionTier: String, CaseIterable, Comparable, Codable {
     }
 
     /// Convert USD price to user's selected currency
-    /// USD and CAD use the same base price (7.99); other currencies are converted.
+    /// USD: $9.99/mo · CAD: $9.99/mo (same as USD) · Other currencies: converted from $9.99 USD base.
     private func convertToUserCurrency(_ usdPrice: Decimal) -> Decimal {
         let currencyCode = CurrencyManager.shared.selectedCurrency
         guard currencyCode != "USD", currencyCode != "CAD" else { return usdPrice }
@@ -543,7 +543,7 @@ final class PaymentManager: ObservableObject {
             amount = 79.99
             frequency = .yearly
         case .pro:
-            amount = 7.99
+            amount = 9.99
             frequency = .monthly
         case .free:
             return
