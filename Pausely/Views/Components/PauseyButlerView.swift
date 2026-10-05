@@ -80,7 +80,7 @@ struct PauseyButlerView: View {
             ZStack {
                 // Glow effect
                 Circle()
-                    .fill(Color.luxuryPurple.opacity(0.3))
+                    .fill(Color.accentMint.opacity(0.3))
                     .frame(width: 100, height: 100)
                     .blur(radius: 20)
 
@@ -88,7 +88,7 @@ struct PauseyButlerView: View {
                 Circle()
                     .fill(
                         LinearGradient(
-                            colors: [.luxuryPurple, .luxuryPink],
+                            colors: [.accentMint, .accentMint],
                             startPoint: .topLeading,
                             endPoint: .bottomTrailing
                         )
@@ -127,7 +127,7 @@ struct PauseyButlerView: View {
                 Circle()
                     .fill(
                         LinearGradient(
-                            colors: [.luxuryPurple.opacity(0.3), .luxuryPink.opacity(0.2)],
+                            colors: [.accentMint.opacity(0.3), .accentMint.opacity(0.2)],
                             startPoint: .topLeading,
                             endPoint: .bottomTrailing
                         )
@@ -241,13 +241,13 @@ struct PauseyButlerView: View {
                     .padding(20)
                     .background(
                         LinearGradient(
-                            colors: [Color.luxuryPurple, Color.luxuryPink],
+                            colors: [Color.accentMint, Color.accentMint],
                             startPoint: .leading,
                             endPoint: .trailing
                         )
                     )
                     .clipShape(RoundedRectangle(cornerRadius: 16))
-                    .shadow(color: Color.luxuryPurple.opacity(0.4), radius: 15, y: 8)
+                    .shadow(color: Color.accentMint.opacity(0.4), radius: 15, y: 8)
                 }
             }
 
@@ -352,13 +352,13 @@ struct PauseyFloatingButton: View {
                     Circle()
                         .fill(
                             LinearGradient(
-                                colors: [.luxuryPurple, .luxuryPink],
+                                colors: [.accentMint, .accentMint],
                                 startPoint: .topLeading,
                                 endPoint: .bottomTrailing
                             )
                         )
                 )
-                .shadow(color: Color.luxuryPurple.opacity(0.5), radius: 10, y: 5)
+                .shadow(color: Color.accentMint.opacity(0.5), radius: 10, y: 5)
         }
         .accessibilityLabel("Ask Pausey about \(subscription.name)")
         .sheet(isPresented: $showingPausey) {

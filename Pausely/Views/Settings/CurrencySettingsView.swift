@@ -178,12 +178,12 @@ struct CurrencySettingsView: View {
                 VStack(spacing: 12) {
                     ZStack {
                         Circle()
-                            .fill(Color.luxuryPurple.opacity(0.2))
+                            .fill(Color.accentMint.opacity(0.2))
                             .frame(width: 80, height: 80)
 
                         Text(currentSymbol)
                             .font(.largeTitle.weight(.bold))
-                            .foregroundColor(.luxuryPurple)
+                            .foregroundColor(.accentMint)
                     }
 
                     Text(currentName)
@@ -290,12 +290,12 @@ struct CurrencyRow: View {
                 // Symbol circle
                 ZStack {
                     Circle()
-                        .fill(isSelected ? Color.luxuryPurple.opacity(0.3) : Color.white.opacity(0.08))
+                        .fill(isSelected ? Color.accentMint.opacity(0.3) : Color.white.opacity(0.08))
                         .frame(width: 48, height: 48)
 
                     Text(symbol)
                         .font(.callout.weight(.bold))
-                        .foregroundColor(isSelected ? .luxuryPurple : .white)
+                        .foregroundColor(isSelected ? .accentMint : .white)
                 }
 
                 VStack(alignment: .leading, spacing: 4) {
@@ -313,17 +313,17 @@ struct CurrencyRow: View {
                 if isSelected {
                     Image(systemName: "checkmark.circle.fill")
                         .font(.title3)
-                        .foregroundColor(.luxuryPurple)
-                        .shadow(color: .luxuryPurple.opacity(0.5), radius: 8)
+                        .foregroundColor(.accentMint)
+                        .shadow(color: .accentMint.opacity(0.5), radius: 8)
                 }
             }
             .padding(14)
             .background(
                 RoundedRectangle(cornerRadius: 14)
-                    .fill(isSelected ? Color.luxuryPurple.opacity(0.12) : Color.white.opacity(0.05))
+                    .fill(isSelected ? Color.accentMint.opacity(0.12) : Color.white.opacity(0.05))
                     .overlay(
                         RoundedRectangle(cornerRadius: 14)
-                            .stroke(isSelected ? Color.luxuryPurple : Color.clear, lineWidth: 1.5)
+                            .stroke(isSelected ? Color.accentMint : Color.clear, lineWidth: 1.5)
                     )
             )
             .scaleEffect(isPressed ? 0.98 : 1)

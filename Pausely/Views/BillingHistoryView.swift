@@ -33,7 +33,7 @@ struct BillingHistoryView: View {
                 VStack(spacing: 16) {
                     Image(systemName: "list.bullet.rectangle.fill")
                         .font(.largeTitle)
-                        .foregroundStyle(Color.luxuryGold)
+                        .foregroundStyle(Color.accentMint)
 
                     Text("Billing History")
                         .font(.system(.title, design: .rounded).weight(.bold))
@@ -88,7 +88,7 @@ struct BillingHistoryView: View {
                             .padding()
                             .background(
                                 RoundedRectangle(cornerRadius: 14)
-                                    .fill(Color.luxuryGold)
+                                    .fill(Color.accentMint)
                             )
                         }
                         .padding(.horizontal, 40)
@@ -137,10 +137,10 @@ struct BillingHistoryView: View {
                             Text("Export All Receipts")
                                 .font(.system(.body, design: .rounded).weight(.semibold))
                         }
-                        .foregroundStyle(Color.luxuryGold)
+                        .foregroundStyle(Color.accentMint)
                         .frame(maxWidth: .infinity)
                         .padding()
-                        .glass(intensity: 0.08, tint: Color.luxuryGold)
+                        .glass(intensity: 0.08, tint: Color.accentMint)
                     }
                     .buttonStyle(PlainButtonStyle())
                     .padding(.horizontal, 20)
@@ -264,15 +264,15 @@ struct TransactionRow: View {
     
     private var backgroundColor: Color {
         switch transaction.type {
-        case .payment: return Color.luxuryPurple
+        case .payment: return Color.accentMint
         case .refund: return Color.orange
-        case .credit: return Color.luxuryGold
+        case .credit: return Color.accentMint
         }
     }
     
     private var amountColor: Color {
         if transaction.amount < 0 {
-            return Color.luxuryGold
+            return Color.accentMint
         }
         return .white
     }
@@ -316,7 +316,7 @@ struct TransactionStatusBadge: View {
     
     private var statusColor: Color {
         switch status {
-        case .completed: return Color.luxuryGold
+        case .completed: return Color.accentMint
         case .pending: return Color.orange
         case .failed: return Color.red
         }
@@ -345,7 +345,7 @@ struct FilterPill: View {
                 .padding(.vertical, 8)
                 .background(
                     Capsule()
-                        .fill(isSelected ? Color.luxuryPurple : .white.opacity(0.1))
+                        .fill(isSelected ? Color.accentMint : .white.opacity(0.1))
                 )
         }
         .buttonStyle(PlainButtonStyle())
@@ -365,7 +365,7 @@ struct ReceiptView: View {
                     VStack(spacing: 16) {
                         Image(systemName: "checkmark.circle.fill")
                             .font(.largeTitle)
-                            .foregroundStyle(Color.luxuryGold)
+                            .foregroundStyle(Color.accentMint)
 
                         Text("Receipt")
                             .font(.system(.title, design: .rounded).weight(.bold))
@@ -412,7 +412,7 @@ struct ReceiptView: View {
                             .padding()
                             .background(
                                 RoundedRectangle(cornerRadius: 14)
-                                    .fill(Color.luxuryPurple)
+                                    .fill(Color.accentMint)
                             )
                         }
 
@@ -423,10 +423,10 @@ struct ReceiptView: View {
                                 Text("Download PDF")
                                     .font(.system(.body, design: .rounded).weight(.semibold))
                             }
-                            .foregroundStyle(Color.luxuryGold)
+                            .foregroundStyle(Color.accentMint)
                             .frame(maxWidth: .infinity)
                             .padding()
-                            .glass(intensity: 0.08, tint: Color.luxuryGold)
+                            .glass(intensity: 0.08, tint: Color.accentMint)
                         }
                     }
                     .padding(.horizontal, 20)
@@ -462,7 +462,7 @@ struct ReceiptView: View {
     
     private func statusColor(_ status: BillingTransaction.TransactionStatus) -> Color {
         switch status {
-        case .completed: return Color.luxuryGold
+        case .completed: return Color.accentMint
         case .pending: return Color.orange
         case .failed: return Color.red
         }

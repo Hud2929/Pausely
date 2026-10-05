@@ -12,4 +12,12 @@ enum DashboardTimeframe: String, CaseIterable {
         case .yearly: return "yr"
         }
     }
+
+    var shortLabel: String {
+        switch self {
+        case .weekly: return "WK"
+        case .monthly: return "MO"
+        case .yearly: return "YR"
+        }
+    }
 }

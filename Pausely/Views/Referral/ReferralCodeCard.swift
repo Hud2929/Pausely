@@ -24,7 +24,7 @@ struct ReferralCodeCard: View {
                 VStack(spacing: 8) {
                     ProgressView()
                         .scaleEffect(1.2)
-                        .tint(Color.luxuryGold)
+                        .tint(Color.accentMint)
                     Text("Loading your code...")
                         .font(.caption)
                         .foregroundColor(.white.opacity(0.7))
@@ -76,7 +76,7 @@ struct ReferralCodeCard: View {
                     }) {
                         Image(systemName: copiedToClipboard ? "checkmark" : "doc.on.doc")
                             .font(.callout.weight(.semibold))
-                            .foregroundStyle(copiedToClipboard ? Color.luxuryTeal : Color.luxuryGold)
+                            .foregroundStyle(copiedToClipboard ? Color.accentMint : Color.accentMint)
                             .frame(width: 44, height: 44)
                             .background(
                                 Circle()
@@ -96,7 +96,7 @@ struct ReferralCodeCard: View {
                             RoundedRectangle(cornerRadius: 10, style: .continuous)
                                 .fill(
                                     LinearGradient(
-                                        colors: [Color.luxuryGold, Color.luxuryPink],
+                                        colors: [Color.accentMint, Color.accentMint],
                                         startPoint: .leading,
                                         endPoint: .trailing
                                     )
@@ -117,11 +117,11 @@ struct ReferralCodeCard: View {
                         if progressCount < 3 {
                             Text("\(3 - progressCount) more to go!")
                                 .font(.system(.footnote, design: .rounded).weight(.semibold))
-                                .foregroundStyle(Color.luxuryGold)
+                                .foregroundStyle(Color.accentMint)
                         } else {
                             Text("Completed! 🎉")
                                 .font(.system(.footnote, design: .rounded).weight(.semibold))
-                                .foregroundStyle(Color.luxuryTeal)
+                                .foregroundStyle(Color.accentMint)
                         }
                     }
 
@@ -137,7 +137,7 @@ struct ReferralCodeCard: View {
                             .padding()
                             .background(
                                 LinearGradient(
-                                    colors: [Color.luxuryGold, Color.orange],
+                                    colors: [Color.accentMint, Color.orange],
                                     startPoint: .leading,
                                     endPoint: .trailing
                                 )
@@ -156,8 +156,8 @@ struct ReferralCodeCard: View {
                     .fill(
                         LinearGradient(
                             colors: [
-                                Color.luxuryPurple.opacity(0.2),
-                                Color.luxuryPink.opacity(0.1)
+                                Color.accentMint.opacity(0.2),
+                                Color.accentMint.opacity(0.1)
                             ],
                             startPoint: .topLeading,
                             endPoint: .bottomTrailing

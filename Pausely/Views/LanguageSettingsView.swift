@@ -3,35 +3,37 @@ import SwiftUI
 @MainActor
 struct LanguageSettingsView: View {
     @Environment(\.dismiss) private var dismiss
-    @AppStorage("app_language") private var selectedLanguage = "en"
+    @AppStorage("app_language") private var selectedLanguage = "system"
     @State private var searchText = ""
-    
+
+    /// Languages that have translations in Localizable.xcstrings
     let languages: [AppLanguage] = [
+        AppLanguage(code: "system", name: "System Default", flag: "📱", isRTL: false),
         AppLanguage(code: "en", name: "English", flag: "🇺🇸", isRTL: false),
         AppLanguage(code: "es", name: "Spanish", flag: "🇪🇸", isRTL: false),
         AppLanguage(code: "fr", name: "French", flag: "🇫🇷", isRTL: false),
         AppLanguage(code: "de", name: "German", flag: "🇩🇪", isRTL: false),
-        AppLanguage(code: "it", name: "Italian", flag: "🇮🇹", isRTL: false),
-        AppLanguage(code: "pt", name: "Portuguese", flag: "🇧🇷", isRTL: false),
-        AppLanguage(code: "ru", name: "Russian", flag: "🇷🇺", isRTL: false),
-        AppLanguage(code: "zh", name: "Chinese (Simplified)", flag: "🇨🇳", isRTL: false),
         AppLanguage(code: "ja", name: "Japanese", flag: "🇯🇵", isRTL: false),
-        AppLanguage(code: "ko", name: "Korean", flag: "🇰🇷", isRTL: false),
         AppLanguage(code: "ar", name: "Arabic", flag: "🇸🇦", isRTL: true),
-        AppLanguage(code: "hi", name: "Hindi", flag: "🇮🇳", isRTL: false),
-        AppLanguage(code: "nl", name: "Dutch", flag: "🇳🇱", isRTL: false),
-        AppLanguage(code: "pl", name: "Polish", flag: "🇵🇱", isRTL: false),
-        AppLanguage(code: "tr", name: "Turkish", flag: "🇹🇷", isRTL: false),
-        AppLanguage(code: "sv", name: "Swedish", flag: "🇸🇪", isRTL: false),
     ]
-    
+
     var filteredLanguages: [AppLanguage] {
         if searchText.isEmpty {
             return languages
         }
         return languages.filter { $0.name.localizedCaseInsensitiveContains(searchText) }
     }
-    
+
+    /// Display name for the currently selected language
+    static func displayName(for code: String) -> String {
+        if code == "system" { return "System" }
+        let supported: [String: String] = [
+            "en": "English", "es": "Spanish", "fr": "French",
+            "de": "German", "ja": "Japanese", "ar": "Arabic"
+        ]
+        return supported[code] ?? code.uppercased()
+    }
+
     var body: some View {
         ScrollView {
             VStack(spacing: 24) {
@@ -39,7 +41,7 @@ struct LanguageSettingsView: View {
                 VStack(spacing: 8) {
                     Image(systemName: "globe")
                         .font(.largeTitle)
-                        .foregroundStyle(Color.luxuryGold)
+                        .foregroundStyle(Color.accentMint)
 
                     Text("Language")
                         .font(.system(.title, design: .rounded).weight(.bold))
@@ -50,79 +52,57 @@ struct LanguageSettingsView: View {
                         .foregroundStyle(.white.opacity(0.6))
                 }
                 .padding(.top, 20)
-                
-                // Search
-                HStack {
-                    Image(systemName: "magnifyingglass")
-                        .foregroundStyle(.white.opacity(0.5))
-                    
-                    TextField("Search languages...", text: $searchText)
-                        .font(.system(.callout, design: .rounded).weight(.medium))
-                        .foregroundStyle(.white)
-                        .keyboardType(.default)
-                        .submitLabel(.search)
-                    
-                    if !searchText.isEmpty {
-                        Button(action: { searchText = "" }) {
-                            Image(systemName: "xmark.circle.fill")
-                                .foregroundStyle(.white.opacity(0.5))
-                        }
-                        .accessibilityLabel("Clear search")
-                    }
-                }
-                .padding()
-                .background(
-                    RoundedRectangle(cornerRadius: 12)
-                        .fill(.white.opacity(0.1))
-                )
-                .padding(.horizontal, 20)
-                
-                // Suggested Section
-                if searchText.isEmpty {
-                    VStack(alignment: .leading, spacing: 12) {
-                        Text("Suggested")
-                            .font(.system(.footnote, design: .rounded).weight(.semibold))
+
+                // Search (only show if enough languages to warrant it)
+                if languages.count > 5 {
+                    HStack {
+                        Image(systemName: "magnifyingglass")
                             .foregroundStyle(.white.opacity(0.5))
-                            .textCase(.uppercase)
-                            .padding(.leading, 4)
-                        
-                        let suggested = languages.prefix(3)
-                        ForEach(suggested) { language in
-                            LanguageRow(
-                                language: language,
-                                isSelected: selectedLanguage == language.code,
-                                action: { selectedLanguage = language.code }
-                            )
+
+                        TextField("Search languages...", text: $searchText)
+                            .font(.system(.callout, design: .rounded).weight(.medium))
+                            .foregroundStyle(.white)
+                            .keyboardType(.default)
+                            .submitLabel(.search)
+
+                        if !searchText.isEmpty {
+                            Button(action: { searchText = "" }) {
+                                Image(systemName: "xmark.circle.fill")
+                                    .foregroundStyle(.white.opacity(0.5))
+                            }
+                            .accessibilityLabel("Clear search")
                         }
                     }
+                    .padding()
+                    .background(
+                        RoundedRectangle(cornerRadius: 12)
+                            .fill(.white.opacity(0.1))
+                    )
                     .padding(.horizontal, 20)
                 }
-                
-                // All Languages
+
+                // Language List
                 VStack(alignment: .leading, spacing: 12) {
-                    Text(searchText.isEmpty ? "All Languages" : "Results")
-                        .font(.system(.footnote, design: .rounded).weight(.semibold))
-                        .foregroundStyle(.white.opacity(0.5))
-                        .textCase(.uppercase)
-                        .padding(.leading, 4)
-                    
                     ForEach(filteredLanguages) { language in
                         LanguageRow(
                             language: language,
                             isSelected: selectedLanguage == language.code,
-                            action: { selectedLanguage = language.code }
+                            action: {
+                                selectedLanguage = language.code
+                                HapticStyle.medium.trigger()
+                            }
                         )
                     }
                 }
                 .padding(.horizontal, 20)
-                
+
                 // Info Note
                 HStack(spacing: 12) {
                     Image(systemName: "info.circle.fill")
                         .font(.title3)
-                        .foregroundStyle(Color.luxuryGold)
+                        .foregroundStyle(Color.accentMint)
 
-                    Text("Some features may not be available in all languages. The app will restart to apply changes.")
+                    Text("Language changes apply instantly. Some features may not be fully translated yet.")
                         .font(.system(.footnote, design: .rounded).weight(.medium))
                         .foregroundStyle(.white.opacity(0.6))
                         .multilineTextAlignment(.leading)
@@ -130,7 +110,7 @@ struct LanguageSettingsView: View {
                 .padding()
                 .glass(intensity: 0.05, tint: .white)
                 .padding(.horizontal, 20)
-                
+
                 Spacer(minLength: 40)
             }
         }
@@ -151,7 +131,7 @@ struct LanguageRow: View {
     let language: AppLanguage
     let isSelected: Bool
     let action: () -> Void
-    
+
     var body: some View {
         Button(action: action) {
             HStack(spacing: 16) {
@@ -163,7 +143,7 @@ struct LanguageRow: View {
                         .font(.system(.callout, design: .rounded).weight(.semibold))
                         .foregroundStyle(.white)
 
-                    Text(language.code.uppercased())
+                    Text(language.code == "system" ? "Uses device language" : language.code.uppercased())
                         .font(.system(.footnote, design: .rounded).weight(.medium))
                         .foregroundStyle(.white.opacity(0.5))
                 }
@@ -173,14 +153,14 @@ struct LanguageRow: View {
                 if isSelected {
                     Image(systemName: "checkmark.circle.fill")
                         .font(.title3)
-                        .foregroundStyle(Color.luxuryGold)
+                        .foregroundStyle(Color.accentMint)
                 }
             }
             .padding()
-            .glass(intensity: isSelected ? 0.15 : 0.08, tint: isSelected ? Color.luxuryGold : .white)
+            .glass(intensity: isSelected ? 0.15 : 0.08, tint: isSelected ? Color.accentMint : .white)
             .overlay(
                 RoundedRectangle(cornerRadius: 14)
-                    .stroke(isSelected ? Color.luxuryGold.opacity(0.5) : Color.clear, lineWidth: 1)
+                    .stroke(isSelected ? Color.accentMint.opacity(0.5) : Color.clear, lineWidth: 1)
             )
         }
         .buttonStyle(PlainButtonStyle())

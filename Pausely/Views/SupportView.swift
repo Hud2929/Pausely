@@ -43,7 +43,7 @@ struct SupportView: View {
                         VStack(spacing: 12) {
                             Image(systemName: "headset")
                                 .font(.largeTitle)
-                                .foregroundStyle(Color.luxuryGold)
+                                .foregroundStyle(Color.accentMint)
                             
                             Text("How Can We Help?")
                                 .font(.title.weight(.bold))
@@ -66,7 +66,7 @@ struct SupportView: View {
                                     SupportContactButton(
                                         icon: "envelope.fill",
                                         title: "Email Us",
-                                        color: Color.luxuryGold
+                                        color: Color.accentMint
                                     ) {
                                         SupportEmailContact.supportRequest(
                                             userEmail: email,
@@ -77,7 +77,7 @@ struct SupportView: View {
                                     SupportContactButton(
                                         icon: "doc.text.fill",
                                         title: "FAQ",
-                                        color: Color.luxuryPurple
+                                        color: Color.accentMint
                                     ) {
                                         // Open FAQ
                                         if let url = URL(string: AppConfig.websiteURL + "/faq") {
@@ -177,7 +177,7 @@ struct SupportView: View {
                                     .padding()
                                     .background(
                                         LinearGradient(
-                                            colors: [Color.luxuryPurple, Color.luxuryPink],
+                                            colors: [Color.accentMint, Color.accentMint],
                                             startPoint: .leading,
                                             endPoint: .trailing
                                         )
@@ -199,7 +199,7 @@ struct SupportView: View {
 
                             Text(AppConfig.supportEmail)
                                 .font(.callout.weight(.semibold))
-                                .foregroundStyle(Color.luxuryGold)
+                                .foregroundStyle(Color.accentMint)
 
                             Text("Response time: \(AppConfig.averageResponseTime)")
                                 .font(.caption)
@@ -289,7 +289,7 @@ struct SupportTextField: View {
 
             HStack {
                 Image(systemName: icon)
-                    .foregroundStyle(Color.luxuryGold)
+                    .foregroundStyle(Color.accentMint)
                     .frame(width: 24)
 
                 TextField("", text: $text)

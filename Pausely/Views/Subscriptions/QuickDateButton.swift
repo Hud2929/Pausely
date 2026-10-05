@@ -14,7 +14,7 @@ struct QuickDateButton: View {
                 .padding(.vertical, 12)
                 .background(
                     Capsule()
-                        .fill(BackgroundColors.tertiary)
+                        .fill(Color.obsidianElevated)
                 )
         }
         .buttonStyle(PlainButtonStyle())

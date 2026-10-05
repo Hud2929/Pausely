@@ -237,7 +237,7 @@ final class StoreKitManager: ObservableObject {
     // MARK: - Helpers
 
     /// Finishes a transaction with exponential backoff retry
-    private func finishTransactionWithRetry(_ transaction: Transaction, maxRetries: Int = 3) async throws {
+    private func finishTransactionWithRetry(_ transaction: StoreKit.Transaction, maxRetries: Int = 3) async throws {
         var attempt = 0
         while attempt < maxRetries {
             do {

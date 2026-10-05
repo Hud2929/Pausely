@@ -5,6 +5,7 @@ import SwiftUI
 
 struct PremiumSubscriptionsView: View {
     @ObservedObject private var store = SubscriptionStore.shared
+    @ObservedObject private var currencyManager = CurrencyManager.shared
     @State private var selectedFilter: FilterType = .all
     @State private var searchText = ""
     @State private var activeSheet: ActiveSheet?
@@ -34,9 +35,17 @@ struct PremiumSubscriptionsView: View {
     enum FilterType: String, CaseIterable {
         case all = "All"
         case active = "Active"
-        case paused = "Paused"
         case upcoming = "Upcoming"
     }
+
+    enum SortOrder: String, CaseIterable {
+        case renewalDate = "Renewal Date"
+        case highestCost = "Highest Cost"
+        case alphabetical = "A–Z"
+    }
+
+    @State private var sortOrder: SortOrder = .renewalDate
+    @State private var showingSortPicker = false
 
     var filteredSubscriptions: [Subscription] {
         var result = store.subscriptions
@@ -46,15 +55,21 @@ struct PremiumSubscriptionsView: View {
         }
 
         switch selectedFilter {
-        case .all:
-            return result
-        case .active:
-            return result.filter { !$0.isPaused }
-        case .paused:
-            return result.filter { $0.isPaused }
-        case .upcoming:
-            return result.filter { ($0.daysUntilRenewal ?? 999) <= 7 }
+        case .all: break
+        case .active: result = result.filter { !$0.isPaused }
+        case .upcoming: result = result.filter { ($0.daysUntilRenewal ?? 999) <= 7 }
         }
+
+        switch sortOrder {
+        case .renewalDate:
+            result.sort { ($0.daysUntilRenewal ?? 999) < ($1.daysUntilRenewal ?? 999) }
+        case .highestCost:
+            result.sort { $0.monthlyCost > $1.monthlyCost }
+        case .alphabetical:
+            result.sort { $0.name.localizedCaseInsensitiveCompare($1.name) == .orderedAscending }
+        }
+
+        return result
     }
 
     var body: some View {
@@ -69,7 +84,7 @@ struct PremiumSubscriptionsView: View {
 
                 // Apple Subscription Scanner Button
                 appleScannerButton
-                    .padding(.top, 16)
+                    .padding(.top, 12)
 
                 // Search & Filter
                 searchAndFilterSection
@@ -84,7 +99,7 @@ struct PremiumSubscriptionsView: View {
                     .padding(.top, 40)
                 } else {
                     ScrollView(showsIndicators: false) {
-                        LazyVStack(spacing: 16) {
+                        LazyVStack(spacing: 8) {
                             ForEach(Array(filteredSubscriptions.enumerated()), id: \.element.id) { index, subscription in
                                 ArtisticSubscriptionCard(
                                     subscription: subscription,
@@ -92,6 +107,25 @@ struct PremiumSubscriptionsView: View {
                                     onTap: { activeSheet = .detail(subscription) }
                                 )
                                 .padding(.horizontal, 20)
+                                .swipeActions(edge: .trailing, allowsFullSwipe: false) {
+                                    Button(role: .destructive) {
+                                        HapticStyle.heavy.trigger()
+                                        Task {
+                                            try? await SubscriptionStore.shared.deleteSubscription(id: subscription.id)
+                                        }
+                                    } label: {
+                                        Label("Delete", systemImage: "trash")
+                                    }
+                                }
+                                .swipeActions(edge: .leading, allowsFullSwipe: false) {
+                                    Button {
+                                        HapticStyle.medium.trigger()
+                                        activeSheet = .detail(subscription)
+                                    } label: {
+                                        Label("Details", systemImage: "info.circle")
+                                    }
+                                    .tint(Color.accentMint)
+                                }
                             }
                         }
                         .padding(.top, 20)
@@ -130,39 +164,50 @@ struct PremiumSubscriptionsView: View {
     }
 
     private var subscriptionsHeader: some View {
-        HStack(spacing: 12) {
+        HStack(alignment: .bottom, spacing: 12) {
             VStack(alignment: .leading, spacing: 4) {
-                Text("\(filteredSubscriptions.count)")
-                    .font(.title.weight(.bold))
-                    .foregroundColor(BrandColors.primary)
+                Text("SUBSCRIPTIONS")
+                    .font(.system(size: 11, weight: .semibold, design: .rounded))
+                    .foregroundStyle(Color.obsidianTextTertiary)
+                    .tracking(2)
 
-                Text("Subscriptions")
-                    .font(.body.weight(.semibold))
-                    .foregroundColor(.white)
+                Text(currencyManager.format(store.totalMonthlySpend))
+                    .font(.system(.title2, design: .rounded).weight(.bold))
+                    .foregroundStyle(Color.accentMint)
+
+                let count = store.subscriptions.filter { !$0.isPaused }.count
+                Text("\(count) active")
+                    .font(.system(.caption, design: .rounded))
+                    .foregroundStyle(Color.obsidianTextSecondary)
             }
 
             Spacer()
 
-            // Browse Button
-            Button(action: { activeSheet = .browser }) {
+            // Sort Button
+            Menu {
+                ForEach(SortOrder.allCases, id: \.self) { order in
+                    Button(action: { withAnimation { sortOrder = order } }) {
+                        Label(order.rawValue, systemImage: sortOrder == order ? "checkmark" : "")
+                    }
+                }
+            } label: {
                 ZStack {
                     Circle()
-                        .fill(Color.luxuryPurple.opacity(0.2))
-                        .frame(width: 44, height: 44)
-
-                    Image(systemName: "square.grid.2x2")
+                        .fill(Color.obsidianElevated)
+                        .frame(width: 40, height: 40)
+                    Image(systemName: "arrow.up.arrow.down")
                         .font(.callout.weight(.semibold))
-                        .foregroundColor(Color.luxuryPurple)
+                        .foregroundColor(Color.obsidianTextSecondary)
                 }
             }
-            .accessibilityLabel("Browse subscriptions")
+            .accessibilityLabel("Sort subscriptions")
 
             // Add Button - opens premium catalog browser
             Button(action: { activeSheet = .browser }) {
                 ZStack {
                     Circle()
-                        .fill(BrandColors.primary)
-                        .frame(width: 44, height: 44)
+                        .fill(Color.accentMint)
+                        .frame(width: 40, height: 40)
 
                     Image(systemName: "plus")
                         .font(.callout.weight(.semibold))
@@ -181,12 +226,12 @@ struct PremiumSubscriptionsView: View {
                 HStack(spacing: 10) {
                     ZStack {
                         Circle()
-                            .fill(Color.luxuryPurple.opacity(0.2))
+                            .fill(Color.accentMint.opacity(0.2))
                             .frame(width: 36, height: 36)
 
                         Image(systemName: "apple.logo")
                             .font(.callout.weight(.semibold))
-                            .foregroundColor(Color.luxuryPurple)
+                            .foregroundColor(Color.accentMint)
                     }
 
                     VStack(alignment: .leading, spacing: 2) {
@@ -211,7 +256,7 @@ struct PremiumSubscriptionsView: View {
                         .fill(.ultraThinMaterial)
                         .overlay(
                             RoundedRectangle(cornerRadius: 14)
-                                .stroke(Color.luxuryPurple.opacity(0.3), lineWidth: 1)
+                                .stroke(Color.accentMint.opacity(0.3), lineWidth: 1)
                         )
                 )
             }
@@ -226,7 +271,7 @@ struct PremiumSubscriptionsView: View {
             HStack(spacing: 12) {
                 Image(systemName: "magnifyingglass")
                     .font(.body)
-                    .foregroundColor(TextColors.tertiary)
+                    .foregroundColor(Color.obsidianTextTertiary)
 
                 TextField("Search subscriptions...", text: $searchText)
                     .font(.body)
@@ -237,7 +282,7 @@ struct PremiumSubscriptionsView: View {
             .padding(14)
             .background(
                 RoundedRectangle(cornerRadius: 14)
-                    .fill(BackgroundColors.tertiary)
+                    .fill(Color.obsidianElevated)
                     .overlay(
                         RoundedRectangle(cornerRadius: 14)
                             .stroke(Color.white.opacity(0.08), lineWidth: 1)
@@ -270,8 +315,6 @@ struct PremiumSubscriptionsView: View {
             return store.subscriptions.count
         case .active:
             return store.subscriptions.filter { !$0.isPaused }.count
-        case .paused:
-            return store.subscriptions.filter { $0.isPaused }.count
         case .upcoming:
             return store.subscriptions.filter { ($0.daysUntilRenewal ?? 999) <= 7 }.count
         }

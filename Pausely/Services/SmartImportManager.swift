@@ -49,6 +49,7 @@ final class SmartImportManager: ObservableObject {
         let amount: Decimal
         let currency: String
         let billingFrequency: BillingFrequency
+        let nextBillingDate: Date?
         let confidence: Confidence
         let source: String
         
@@ -131,7 +132,8 @@ final class SmartImportManager: ObservableObject {
                         category: "Other",
                         amount: sub.amount,
                         currency: sub.currency,
-                        billingFrequency: sub.billingFrequency
+                        billingFrequency: sub.billingFrequency,
+                        nextBillingDate: sub.nextBillingDate
                     )
                     
                     do {
@@ -250,6 +252,7 @@ final class SmartImportManager: ObservableObject {
                 amount: amount,
                 currency: "USD",
                 billingFrequency: billingFrequency,
+                nextBillingDate: nil,
                 confidence: .high,
                 source: "CSV"
             )

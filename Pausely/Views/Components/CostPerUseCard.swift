@@ -150,7 +150,7 @@ struct CostPerUseCard: View {
         HStack(spacing: 8) {
             Image(systemName: "arrow.left.arrow.right")
                 .font(AppTypography.labelMedium)
-                .foregroundStyle(Color.luxuryTeal)
+                .foregroundStyle(Color.accentMint)
 
             Text("You use \(result.subscription.name)")
                 .font(AppTypography.bodySmall)
@@ -158,7 +158,7 @@ struct CostPerUseCard: View {
 
             + Text(" \(String(format: "%.1f", ratio))x ")
                 .font(AppTypography.bodySmall)
-                .foregroundStyle(Color.luxuryTeal)
+                .foregroundStyle(Color.accentMint)
                 .fontWeight(.semibold)
 
             + Text("more than \(name)")
@@ -166,7 +166,7 @@ struct CostPerUseCard: View {
                 .foregroundStyle(.secondary)
         }
         .padding(10)
-        .background(Color.luxuryTeal.opacity(0.08))
+        .background(Color.accentMint.opacity(0.08))
         .clipShape(RoundedRectangle(cornerRadius: 10, style: .continuous))
     }
 
@@ -244,7 +244,7 @@ struct CostPerUseCard: View {
         case .great:   return .semanticSuccess
         case .fair:    return .semanticWarning
         case .poor:    return .semanticDestructive
-        case .unknown: return .luxuryPurple
+        case .unknown: return .accentMint
         }
     }
 }

@@ -10,19 +10,19 @@ struct ReferralStepRow: View {
         HStack(spacing: 16) {
             ZStack {
                 Circle()
-                    .fill(Color.luxuryGold.opacity(0.2))
+                    .fill(Color.accentMint.opacity(0.2))
                     .frame(width: 44, height: 44)
 
                 Text("\(number)")
                     .font(.system(.callout, design: .rounded).weight(.bold))
-                    .foregroundStyle(Color.luxuryGold)
+                    .foregroundStyle(Color.accentMint)
             }
 
             VStack(alignment: .leading, spacing: 4) {
                 HStack(spacing: 8) {
                     Image(systemName: icon)
                         .font(.footnote)
-                        .foregroundStyle(Color.luxuryGold)
+                        .foregroundStyle(Color.accentMint)
 
                     Text(title)
                         .font(.system(.callout, design: .rounded).weight(.semibold))

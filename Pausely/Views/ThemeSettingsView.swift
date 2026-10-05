@@ -14,7 +14,7 @@ struct ThemeSettingsView: View {
                     VStack(spacing: 8) {
                         Image(systemName: "paintbrush.fill")
                             .font(.largeTitle)
-                            .foregroundStyle(Color.luxuryPink)
+                            .foregroundStyle(Color.accentMint)
                         
                         Text("Appearance")
                             .font(.title.weight(.bold))
@@ -93,7 +93,7 @@ struct ThemeSettingsView: View {
                                 
                                 Text("Light")
                                     .font(.footnote.weight(.medium))
-                                    .foregroundStyle(!themeManager.isDarkMode ? Color.luxuryGold : .white.opacity(0.5))
+                                    .foregroundStyle(!themeManager.isDarkMode ? Color.accentMint : .white.opacity(0.5))
                             }
                             
                             // Dark Preview
@@ -115,7 +115,7 @@ struct ThemeSettingsView: View {
                                 
                                 Text("Dark")
                                     .font(.footnote.weight(.medium))
-                                    .foregroundStyle(themeManager.isDarkMode ? Color.luxuryGold : .white.opacity(0.5))
+                                    .foregroundStyle(themeManager.isDarkMode ? Color.accentMint : .white.opacity(0.5))
                             }
                         }
                         .padding()
@@ -149,12 +149,12 @@ struct ThemeOptionRow: View {
             HStack(spacing: 16) {
                 ZStack {
                     Circle()
-                        .fill(isSelected ? Color.luxuryPink.opacity(0.3) : .white.opacity(0.1))
+                        .fill(isSelected ? Color.accentMint.opacity(0.3) : .white.opacity(0.1))
                         .frame(width: 44, height: 44)
                     
                     Image(systemName: icon)
                         .font(.headline.weight(.semibold))
-                        .foregroundStyle(isSelected ? Color.luxuryPink : .white.opacity(0.7))
+                        .foregroundStyle(isSelected ? Color.accentMint : .white.opacity(0.7))
                 }
                 
                 VStack(alignment: .leading, spacing: 2) {
@@ -172,14 +172,14 @@ struct ThemeOptionRow: View {
                 if isSelected {
                     Image(systemName: "checkmark.circle.fill")
                         .font(.title3)
-                        .foregroundStyle(Color.luxuryGold)
+                        .foregroundStyle(Color.accentMint)
                 }
             }
             .padding()
-            .glass(intensity: isSelected ? 0.15 : 0.08, tint: isSelected ? Color.luxuryPink : .white)
+            .glass(intensity: isSelected ? 0.15 : 0.08, tint: isSelected ? Color.accentMint : .white)
             .overlay(
                 RoundedRectangle(cornerRadius: 14)
-                    .stroke(isSelected ? Color.luxuryPink.opacity(0.5) : Color.clear, lineWidth: 1)
+                    .stroke(isSelected ? Color.accentMint.opacity(0.5) : Color.clear, lineWidth: 1)
             )
         }
         .buttonStyle(PlainButtonStyle())

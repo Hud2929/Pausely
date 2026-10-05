@@ -94,14 +94,14 @@ struct CostPerUseDashboardSection: View {
                     Button(action: { showingShareSheet = true }) {
                         Image(systemName: "square.and.arrow.up")
                             .font(AppTypography.headlineMedium)
-                            .foregroundStyle(Color.luxuryGold)
+                            .foregroundStyle(Color.accentMint)
                             .padding(10)
                             .background(
                                 Circle()
                                     .fill(.ultraThinMaterial)
                                     .overlay(
                                         Circle()
-                                            .stroke(Color.luxuryGold.opacity(0.3), lineWidth: 0.5)
+                                            .stroke(Color.accentMint.opacity(0.3), lineWidth: 0.5)
                                     )
                             )
                     }
@@ -246,7 +246,7 @@ struct EfficiencyScoreCard: View {
     private var scoreColor: Color {
         switch score {
         case 80...100: return .semanticSuccess
-        case 60..<80:  return Color.luxuryTeal
+        case 60..<80:  return Color.accentMint
         case 40..<60:  return .semanticWarning
         case 20..<40:  return Color(hex: "F97316")
         default:       return .semanticDestructive
@@ -329,12 +329,12 @@ struct CostPerUseEmptyState: View {
         VStack(spacing: 16) {
             ZStack {
                 Circle()
-                    .fill(Color.luxuryPurple.opacity(0.15))
+                    .fill(Color.accentMint.opacity(0.15))
                     .frame(width: 64, height: 64)
 
                 Image(systemName: "chart.bar.xaxis")
                     .font(.title2.weight(.semibold))
-                    .foregroundStyle(Color.luxuryPurple)
+                    .foregroundStyle(Color.accentMint)
             }
 
             VStack(spacing: 6) {
@@ -361,7 +361,7 @@ struct CostPerUseEmptyState: View {
                 .frame(height: 48)
                 .background(
                     LinearGradient(
-                        colors: [Color.luxuryPurple, Color.luxuryPink],
+                        colors: [Color.accentMint, Color.accentMint],
                         startPoint: .leading,
                         endPoint: .trailing
                     )
@@ -371,7 +371,7 @@ struct CostPerUseEmptyState: View {
         }
         .padding(24)
         .frame(maxWidth: .infinity)
-        .glassBackground(cornerRadius: 20, strokeColor: Color.luxuryPurple.opacity(0.2), strokeWidth: 1)
+        .glassBackground(cornerRadius: 20, strokeColor: Color.accentMint.opacity(0.2), strokeWidth: 1)
     }
 }
 

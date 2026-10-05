@@ -18,15 +18,15 @@ struct SubscriptionFilterPill: View {
                     .padding(.vertical, 2)
                     .background(
                         Capsule()
-                            .fill(isSelected ? .white.opacity(0.2) : BackgroundColors.tertiary)
+                            .fill(isSelected ? .white.opacity(0.2) : Color.obsidianElevated)
                     )
             }
-            .foregroundColor(isSelected ? .white : TextColors.secondary)
+            .foregroundColor(isSelected ? .white : Color.obsidianTextSecondary)
             .padding(.horizontal, 16)
             .padding(.vertical, 10)
             .background(
                 Capsule()
-                    .fill(isSelected ? BrandColors.primary : BackgroundColors.secondary)
+                    .fill(isSelected ? Color.accentMint : Color.obsidianSurface)
                     .overlay(
                         Capsule()
                             .stroke(isSelected ? Color.clear : Color.white.opacity(0.08), lineWidth: 1)

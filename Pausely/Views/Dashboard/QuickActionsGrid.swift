@@ -7,7 +7,7 @@ struct QuickActionsGrid: View {
 
     @ObservedObject private var paymentManager = PaymentManager.shared
     @ObservedObject private var store = SubscriptionStore.shared
-    @State private var showingPauseSheet = false
+    @State private var showingUpcomingSheet = false
     @State private var showingCompareSheet = false
     private let addTip = AddSubscriptionTip()
 
@@ -22,7 +22,7 @@ struct QuickActionsGrid: View {
                     icon: "plus.circle.fill",
                     title: "Add",
                     subtitle: paymentManager.isPremium ? "New" : "\(store.subscriptions.count)/2",
-                    gradient: [.luxuryTeal, .luxuryPurple]
+                    gradient: [.accentMint, .accentMint]
                 ) {
                     if paymentManager.canAddSubscription(currentCount: store.subscriptions.count) {
                         onAddTap()
@@ -33,30 +33,26 @@ struct QuickActionsGrid: View {
                 // .popoverTip(addTip, arrowEdge: .bottom) // Disabled for testing
 
                 QuickActionButton(
-                    icon: "pause.circle.fill",
-                    title: "Pause",
-                    subtitle: paymentManager.canPauseSubscriptions ? "\(store.activeSubscriptions.count)" : "Pro",
-                    gradient: paymentManager.canPauseSubscriptions ? [.luxuryPink, .orange] : [.gray, .gray.opacity(0.5)]
+                    icon: "calendar.badge.clock",
+                    title: "Upcoming",
+                    subtitle: "Bills",
+                    gradient: [.accentMint, .accentMint]
                 ) {
-                    if paymentManager.canPauseSubscriptions {
-                        showingPauseSheet = true
-                    } else {
-                        onPaywallTap()
-                    }
+                    showingUpcomingSheet = true
                 }
 
                 QuickActionButton(
                     icon: "arrow.left.arrow.right.circle.fill",
                     title: "Compare",
                     subtitle: "Catalog",
-                    gradient: [.luxuryGold, .luxuryPink]
+                    gradient: [.accentMint, .accentMint]
                 ) {
                     showingCompareSheet = true
                 }
             }
         }
-        .sheet(isPresented: $showingPauseSheet) {
-            QuickPauseSheet()
+        .sheet(isPresented: $showingUpcomingSheet) {
+            UpcomingBillsSheet()
         }
         .sheet(isPresented: $showingCompareSheet) {
             CatalogCategoryCompareView()
@@ -64,27 +60,29 @@ struct QuickActionsGrid: View {
     }
 }
 
-// MARK: - Quick Pause Sheet
-struct QuickPauseSheet: View {
+// MARK: - Upcoming Bills Sheet
+struct UpcomingBillsSheet: View {
     @Environment(\.dismiss) private var dismiss
     @ObservedObject private var store = SubscriptionStore.shared
-    @State private var selectedSubscription: Subscription? = nil
-    @State private var showingPauseOptions = false
+
+    private var sortedByBillingDate: [Subscription] {
+        store.subscriptions
+            .filter { $0.nextBillingDate != nil }
+            .sorted { ($0.nextBillingDate ?? .distantFuture) < ($1.nextBillingDate ?? .distantFuture) }
+    }
 
     var body: some View {
         NavigationStack {
             ScrollView {
-                VStack(spacing: 20) {
-                    if store.activeSubscriptions.isEmpty {
+                VStack(spacing: 12) {
+                    if sortedByBillingDate.isEmpty {
                         VStack(spacing: 16) {
-                            Image(systemName: "pause.circle")
+                            Image(systemName: "calendar.badge.clock")
                                 .font(.system(size: 48))
                                 .foregroundStyle(.secondary)
-
-                            Text("No active subscriptions")
+                            Text("No upcoming bills")
                                 .font(.system(.title3, design: .rounded).weight(.semibold))
-
-                            Text("Add a subscription first to set a pause reminder.")
+                            Text("Add subscriptions to see their renewal dates here.")
                                 .font(.system(.body, design: .rounded))
                                 .foregroundStyle(.secondary)
                                 .multilineTextAlignment(.center)
@@ -92,116 +90,88 @@ struct QuickPauseSheet: View {
                         .padding(.top, 80)
                         .padding(.horizontal, 32)
                     } else {
-                        VStack(alignment: .leading, spacing: 12) {
-                            Text("Choose a subscription to pause")
-                                .font(.system(.subheadline, design: .rounded).weight(.medium))
-                                .foregroundStyle(.secondary)
-                                .padding(.horizontal, 4)
-
-                            ForEach(store.activeSubscriptions) { subscription in
-                                QuickPauseRow(
-                                    subscription: subscription,
-                                    onPause: {
-                                        selectedSubscription = subscription
-                                        showingPauseOptions = true
-                                    }
-                                )
-                            }
+                        ForEach(sortedByBillingDate) { sub in
+                            UpcomingBillRow(subscription: sub)
                         }
-                        .padding(.horizontal, 20)
-                        .padding(.top, 16)
                     }
                 }
+                .padding(.horizontal, 20)
+                .padding(.top, 16)
             }
             .background(Color.obsidianBlack.ignoresSafeArea())
-            .navigationTitle("Quick Pause")
+            .navigationTitle("Upcoming Bills")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .navigationBarTrailing) {
-                    Button("Done") {
-                        dismiss()
-                    }
-                    .foregroundStyle(.white)
+                    Button("Done") { dismiss() }
+                        .foregroundStyle(.white)
                 }
-            }
-            .sheet(item: $selectedSubscription) { subscription in
-                RevolutionaryPauseSheet(
-                    subscription: subscription,
-                    onPause: { duration in
-                        let reminderDate = Calendar.current.date(
-                            byAdding: duration.calendarComponent,
-                            value: duration.value,
-                            to: Date()
-                        ) ?? Date()
-                        let pauseURL = SubscriptionActionManager.shared.getService(for: subscription.name)?.pauseURL
-                        NotificationManager.shared.schedulePauseReminder(
-                            for: subscription,
-                            reminderDate: reminderDate,
-                            pauseURL: pauseURL
-                        )
-                        selectedSubscription = nil
-                        dismiss()
-                    },
-                    onDismiss: {
-                        selectedSubscription = nil
-                    }
-                )
             }
         }
     }
 }
 
-// MARK: - Quick Pause Row
-struct QuickPauseRow: View {
+// MARK: - Upcoming Bill Row
+struct UpcomingBillRow: View {
     let subscription: Subscription
-    let onPause: () -> Void
+
+    private var daysUntilBilling: Int? {
+        guard let date = subscription.nextBillingDate else { return nil }
+        return Calendar.current.dateComponents([.day], from: Date(), to: date).day
+    }
+
+    private var urgencyColor: Color {
+        guard let days = daysUntilBilling else { return .secondary }
+        if days < 0 { return Color.semanticDestructive }
+        if days <= 3 { return .orange }
+        if days <= 7 { return .yellow }
+        return Color.semanticSuccess
+    }
+
+    private var daysLabel: String {
+        guard let days = daysUntilBilling else { return "Unknown" }
+        if days < 0 { return "Overdue" }
+        if days == 0 { return "Today" }
+        if days == 1 { return "Tomorrow" }
+        return "In \(days) days"
+    }
 
     var body: some View {
         HStack(spacing: 14) {
             ZStack {
                 Circle()
-                    .fill(Color.accentMint.opacity(0.15))
+                    .fill(urgencyColor.opacity(0.15))
                     .frame(width: 44, height: 44)
-
                 Text(String(subscription.name.prefix(1)))
                     .font(.system(.callout, design: .rounded).weight(.bold))
-                    .foregroundStyle(Color.accentMint)
+                    .foregroundStyle(urgencyColor)
             }
 
             VStack(alignment: .leading, spacing: 3) {
                 Text(subscription.name)
                     .font(.system(.body, design: .rounded).weight(.semibold))
                     .foregroundStyle(.white)
-
-                Text(CurrencyManager.shared.format(subscription.monthlyCost) + "/month")
-                    .font(.system(.caption, design: .rounded).weight(.medium))
-                    .foregroundStyle(.secondary)
+                if let date = subscription.nextBillingDate {
+                    Text(date.formatted(date: .abbreviated, time: .omitted))
+                        .font(.system(.caption, design: .rounded))
+                        .foregroundStyle(.secondary)
+                }
             }
 
             Spacer()
 
-            Button(action: onPause) {
-                HStack(spacing: 4) {
-                    Image(systemName: "pause.circle.fill")
-                        .font(.caption)
-                    Text("Pause")
-                        .font(.system(.caption, design: .rounded).weight(.semibold))
-                }
-                .foregroundStyle(Color.accentMint)
-                .padding(.horizontal, 12)
-                .padding(.vertical, 8)
-                .background(Color.accentMint.opacity(0.15))
-                .clipShape(Capsule())
+            VStack(alignment: .trailing, spacing: 3) {
+                let converted = CurrencyManager.shared.convertToSelected(subscription.amount, from: subscription.currency)
+                Text(CurrencyManager.shared.format(converted))
+                    .font(.system(.callout, design: .rounded).weight(.semibold))
+                    .foregroundStyle(.white)
+                Text(daysLabel)
+                    .font(.system(.caption2, design: .rounded).weight(.medium))
+                    .foregroundStyle(urgencyColor)
             }
-            .buttonStyle(.plain)
         }
         .padding(14)
-        .background(Color.obsidianSurface)
-        .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
-        .overlay(
-            RoundedRectangle(cornerRadius: 16, style: .continuous)
-                .stroke(Color.white.opacity(0.08), lineWidth: 1)
-        )
+        .surfaceCard(cornerRadius: 16)
     }
 }
 
@@ -209,7 +179,7 @@ struct QuickActionButton: View {
     let icon: String
     let title: String
     let subtitle: String
-    let gradient: [Color]
+    let gradient: [Color]   // kept for API compatibility — accent color is used instead
     let action: () -> Void
 
     @State private var isPressed = false
@@ -222,34 +192,27 @@ struct QuickActionButton: View {
             VStack(spacing: 12) {
                 ZStack {
                     Circle()
-                        .fill(
-                            LinearGradient(
-                                colors: gradient,
-                                startPoint: .topLeading,
-                                endPoint: .bottomTrailing
-                            )
-                        )
-                        .frame(width: 52, height: 52)
-                        .shadow(color: gradient[0].opacity(0.4), radius: 10, x: 0, y: 5)
+                        .fill(Color.accentMint.opacity(0.12))
+                        .frame(width: 48, height: 48)
 
                     Image(systemName: icon)
-                        .font(.title3.weight(.semibold))
-                        .foregroundStyle(.white)
+                        .font(.system(size: 18, weight: .semibold))
+                        .foregroundStyle(Color.accentMint)
                 }
 
                 VStack(spacing: 2) {
                     Text(title)
                         .font(.system(.subheadline, design: .rounded).weight(.semibold))
-                        .foregroundStyle(.primary)
+                        .foregroundStyle(Color.obsidianText)
 
                     Text(subtitle)
                         .font(.system(.caption2, design: .rounded).weight(.medium))
-                        .foregroundStyle(.secondary)
+                        .foregroundStyle(Color.obsidianTextSecondary)
                 }
             }
             .frame(maxWidth: .infinity)
             .padding(.vertical, 16)
-            .glassBackground(cornerRadius: 20, strokeColor: .white.opacity(0.2), strokeWidth: 0.5)
+            .surfaceCard(cornerRadius: 18)
             .scaleEffect(isPressed ? 0.96 : 1)
         }
         .buttonStyle(PlainButtonStyle())

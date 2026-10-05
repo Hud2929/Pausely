@@ -8,12 +8,12 @@ struct LifetimeSpendCard: View {
         HStack(spacing: 16) {
             ZStack {
                 Circle()
-                    .fill(Color.luxuryGold.opacity(0.15))
+                    .fill(Color.accentMint.opacity(0.15))
                     .frame(width: 50, height: 50)
 
                 Image(systemName: "clock.arrow.circlepath")
                     .font(.title2)
-                    .foregroundStyle(Color.luxuryGold)
+                    .foregroundStyle(Color.accentMint)
             }
 
             VStack(alignment: .leading, spacing: 4) {
@@ -29,13 +29,6 @@ struct LifetimeSpendCard: View {
             Spacer()
         }
         .padding(16)
-        .background(
-            RoundedRectangle(cornerRadius: 20, style: .continuous)
-                .fill(.ultraThinMaterial)
-                .overlay(
-                    RoundedRectangle(cornerRadius: 20, style: .continuous)
-                        .stroke(Color.luxuryGold.opacity(0.2), lineWidth: 1)
-                )
-        )
+        .surfaceCard(cornerRadius: 20)
     }
 }

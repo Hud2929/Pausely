@@ -74,7 +74,7 @@ struct FinancialAdvisorView: View {
             ZStack {
                 Circle()
                     .fill(RadialGradient(
-                        colors: [Color.luxuryTeal.opacity(0.4), .clear],
+                        colors: [Color.accentMint.opacity(0.4), .clear],
                         center: .center,
                         startRadius: 0,
                         endRadius: 80
@@ -85,7 +85,7 @@ struct FinancialAdvisorView: View {
                 Image(systemName: "brain.head.profile")
                     .font(.system(.largeTitle, design: .rounded).weight(.light))
                     .foregroundStyle(LinearGradient(
-                        colors: [Color.luxuryTeal, .white],
+                        colors: [Color.accentMint, .white],
                         startPoint: .top,
                         endPoint: .bottom
                     ))
@@ -145,7 +145,7 @@ struct FinancialAdvisorView: View {
             }
         }
         .padding()
-        .glassCard(color: Color.luxuryTeal)
+        .glassCard(color: Color.accentMint)
         .padding(.horizontal, 20)
     }
     
@@ -162,24 +162,24 @@ struct FinancialAdvisorView: View {
 
                     Text(currencyManager.format(potentialSavings))
                         .font(.system(.largeTitle, design: .rounded).weight(.bold))
-                        .foregroundStyle(Color.luxuryGold)
+                        .foregroundStyle(Color.accentMint)
                 }
 
                 Spacer()
 
                 Image(systemName: "sparkles")
                     .font(.title2)
-                    .foregroundStyle(Color.luxuryGold)
+                    .foregroundStyle(Color.accentMint)
             }
             
             if potentialSavings > 0 {
                 Text("You could save \(currencyManager.format(potentialSavings * 12)) per year!")
                     .font(.system(.subheadline, design: .rounded).weight(.medium))
-                    .foregroundStyle(Color.luxuryTeal)
+                    .foregroundStyle(Color.accentMint)
             }
         }
         .padding()
-        .glass(intensity: 0.1, tint: Color.luxuryGold)
+        .glass(intensity: 0.1, tint: Color.accentMint)
         .padding(.horizontal, 20)
     }
     
@@ -196,7 +196,7 @@ struct FinancialAdvisorView: View {
                 if insights.isEmpty {
                     Text("All caught up!")
                         .font(.system(.footnote, design: .rounded).weight(.medium))
-                        .foregroundStyle(Color.luxuryTeal)
+                        .foregroundStyle(Color.accentMint)
                 } else {
                     Text("\(insights.count) recommendations")
                         .font(.system(.footnote, design: .rounded).weight(.medium))
@@ -234,7 +234,7 @@ struct FinancialAdvisorView: View {
                 HStack {
                     Image(systemName: "checkmark.circle.fill")
                         .font(.title3)
-                        .foregroundStyle(Color.luxuryTeal)
+                        .foregroundStyle(Color.accentMint)
 
                     Text("No pending actions")
                         .font(.system(.subheadline, design: .rounded).weight(.medium))
@@ -532,7 +532,7 @@ struct InsightCard: View {
                     if insight.potentialSavings > 0 {
                         Text("Save \(CurrencyManager.shared.format(insight.potentialSavings))/month")
                             .font(.system(.caption, design: .rounded).weight(.bold))
-                            .foregroundStyle(Color.luxuryGold)
+                            .foregroundStyle(Color.accentMint)
                     }
                 }
                 
@@ -571,7 +571,7 @@ struct ActionItemCard: View {
                 if insight.potentialSavings > 0 {
                     Text("Save \(CurrencyManager.shared.format(insight.potentialSavings))/month")
                         .font(.system(.footnote, design: .rounded).weight(.medium))
-                        .foregroundStyle(Color.luxuryGold)
+                        .foregroundStyle(Color.accentMint)
                 }
             }
 
@@ -585,12 +585,12 @@ struct ActionItemCard: View {
                     .padding(.vertical, 8)
                     .background(
                         RoundedRectangle(cornerRadius: 8)
-                            .fill(Color.luxuryTeal)
+                            .fill(Color.accentMint)
                     )
             }
         }
         .padding()
-        .glass(intensity: 0.1, tint: Color.luxuryTeal)
+        .glass(intensity: 0.1, tint: Color.accentMint)
     }
 }
 
@@ -637,10 +637,10 @@ struct InsightDetailSheet: View {
                             
                             Text(CurrencyManager.shared.format(insight.potentialSavings))
                                 .font(.system(.largeTitle, design: .rounded).weight(.bold))
-                                .foregroundStyle(Color.luxuryGold)
+                                .foregroundStyle(Color.accentMint)
                         }
                         .padding()
-                        .glassCard(color: Color.luxuryGold)
+                        .glassCard(color: Color.accentMint)
                         .padding(.horizontal)
                     }
                     
@@ -659,7 +659,7 @@ struct InsightDetailSheet: View {
                                 .padding()
                                 .background(
                                     RoundedRectangle(cornerRadius: 14)
-                                        .fill(Color.luxuryTeal)
+                                        .fill(Color.accentMint)
                                 )
                         }
                         .padding(.horizontal)
@@ -682,7 +682,7 @@ struct EmptyInsightsView: View {
         VStack(spacing: 16) {
             Image(systemName: "checkmark.circle.fill")
                 .font(.largeTitle)
-                .foregroundStyle(Color.luxuryTeal)
+                .foregroundStyle(Color.accentMint)
 
             Text("All caught up!")
                 .font(.system(.body, design: .rounded).weight(.bold))

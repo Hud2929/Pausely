@@ -29,14 +29,14 @@ struct ReferralShareSection: View {
 
                 ShareButton(
                     icon: "square.and.arrow.up",
-                    color: Color.luxuryPurple,
+                    color: Color.accentMint,
                     action: onShareSystem,
                     label: "Share"
                 )
 
                 ShareButton(
                     icon: "link",
-                    color: Color.luxuryPink,
+                    color: Color.accentMint,
                     action: onCopyLink,
                     label: "Copy link"
                 )

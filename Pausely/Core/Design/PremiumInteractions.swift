@@ -82,7 +82,7 @@ struct ListRowEntrance: ViewModifier {
                     appeared = true
                     return
                 }
-                withAnimation(.easeOut(duration: 0.4).delay(Double(index) * 0.05)) {
+                withAnimation(.spring(response: 0.44, dampingFraction: 0.78).delay(Double(index) * 0.04)) {
                     appeared = true
                 }
             }
@@ -229,7 +229,7 @@ struct AnimatedCategoryChip: View {
                 .padding(.vertical, 8)
                 .background(
                     Capsule()
-                        .fill(isSelected ? Color.luxuryPurple : Color.white.opacity(0.1))
+                        .fill(isSelected ? Color.accentMint : Color.white.opacity(0.1))
                 )
                 .scaleEffect(pressed ? 0.92 : 1.0)
         }
@@ -263,7 +263,7 @@ struct ArtisticEmptyState: View {
             ZStack {
                 ForEach(0..<3) { i in
                     Circle()
-                        .stroke(Color.luxuryPurple.opacity(0.08 + Double(i) * 0.06), lineWidth: 1)
+                        .stroke(Color.accentMint.opacity(0.08 + Double(i) * 0.06), lineWidth: 1)
                         .frame(width: 140 + CGFloat(i * 35), height: 140 + CGFloat(i * 35))
                         .rotationEffect(.degrees(animate ? 360 : 0))
                         .animation(
@@ -278,13 +278,13 @@ struct ArtisticEmptyState: View {
                     Circle()
                         .fill(
                             LinearGradient(
-                                colors: [Color.luxuryPurple, Color.luxuryPink],
+                                colors: [Color.accentMint, Color.accentMint],
                                 startPoint: .topLeading,
                                 endPoint: .bottomTrailing
                             )
                         )
                         .frame(width: 90, height: 90)
-                        .shadow(color: Color.luxuryPurple.opacity(0.35), radius: 25, x: 0, y: 12)
+                        .shadow(color: Color.accentMint.opacity(0.35), radius: 25, x: 0, y: 12)
 
                     Image(systemName: icon)
                         .font(.title2.weight(.semibold))
@@ -320,13 +320,13 @@ struct ArtisticEmptyState: View {
                     .frame(height: 52)
                     .background(
                         LinearGradient(
-                            colors: [Color.luxuryPurple, Color.luxuryPink],
+                            colors: [Color.accentMint, Color.accentMint],
                             startPoint: .topLeading,
                             endPoint: .bottomTrailing
                         )
                     )
                     .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
-                    .shadow(color: Color.luxuryPurple.opacity(0.35), radius: 15, x: 0, y: 8)
+                    .shadow(color: Color.accentMint.opacity(0.35), radius: 15, x: 0, y: 8)
                 }
                 .premiumPress(haptic: .medium, scale: 0.96)
                 .padding(.horizontal, 40)
@@ -350,7 +350,7 @@ struct PremiumRefreshSpinner: View {
     var body: some View {
         Image(systemName: "arrow.2.circlepath")
             .font(.title3.weight(.semibold))
-            .foregroundStyle(Color.luxuryPurple)
+            .foregroundStyle(Color.accentMint)
             .rotationEffect(.degrees(rotation))
             .onAppear {
                 guard !UIAccessibility.isReduceMotionEnabled else { return }

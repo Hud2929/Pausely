@@ -27,7 +27,7 @@ struct ComparePromoSection: View {
                     Circle()
                         .fill(
                             LinearGradient(
-                                colors: [.luxuryGold, .luxuryPink],
+                                colors: [.accentMint, .accentMint],
                                 startPoint: .topLeading,
                                 endPoint: .bottomTrailing
                             )
@@ -79,7 +79,7 @@ struct ComparePromoSection: View {
                         RoundedRectangle(cornerRadius: 14, style: .continuous)
                             .fill(
                                 LinearGradient(
-                                    colors: [.luxuryTeal, .luxuryPurple],
+                                    colors: [.accentMint, .accentMint],
                                     startPoint: .leading,
                                     endPoint: .trailing
                                 )
@@ -121,8 +121,8 @@ struct ComparePromoSection: View {
                         .stroke(
                             LinearGradient(
                                 colors: [
-                                    Color.luxuryGold.opacity(0.4),
-                                    Color.luxuryPink.opacity(0.2)
+                                    Color.accentMint.opacity(0.4),
+                                    Color.accentMint.opacity(0.2)
                                 ],
                                 startPoint: .topLeading,
                                 endPoint: .bottomTrailing
@@ -150,7 +150,7 @@ struct CompareStatPill: View {
         HStack(spacing: 6) {
             Image(systemName: icon)
                 .font(.caption2)
-                .foregroundStyle(Color.luxuryGold)
+                .foregroundStyle(Color.accentMint)
 
             VStack(alignment: .leading, spacing: 0) {
                 Text(value)

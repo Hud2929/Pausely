@@ -15,7 +15,7 @@ struct AmountStepView: View {
 
                     Text("Enter the amount you pay for this subscription")
                         .font(.body)
-                        .foregroundColor(TextColors.secondary)
+                        .foregroundColor(Color.obsidianTextSecondary)
                         .multilineTextAlignment(.center)
                 }
                 .padding(.top, 40)
@@ -24,7 +24,7 @@ struct AmountStepView: View {
                 HStack(spacing: 4) {
                     Text(currencyManager.currencySymbol(for: currencyManager.selectedCurrency))
                         .font(.largeTitle.weight(.bold))
-                        .foregroundColor(BrandColors.primary)
+                        .foregroundColor(Color.accentMint)
 
                     Text(amount.isEmpty ? "0.00" : amount)
                         .font(.largeTitle.weight(.bold))

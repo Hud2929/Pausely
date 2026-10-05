@@ -170,7 +170,7 @@ struct StepIndicatorView: View {
         HStack(spacing: 8) {
             ForEach(0..<totalSteps, id: \.self) { step in
                 Circle()
-                    .fill(step == currentStep ? Color.luxuryPurple : Color.gray.opacity(0.3))
+                    .fill(step == currentStep ? Color.accentMint : Color.gray.opacity(0.3))
                     .frame(width: step == currentStep ? 10 : 8, height: step == currentStep ? 10 : 8)
             }
         }
@@ -192,7 +192,7 @@ struct WelcomeStepView: View {
                     Circle()
                         .stroke(
                             LinearGradient(
-                                colors: [.luxuryPurple, .luxuryPink],
+                                colors: [.accentMint, .accentMint],
                                 startPoint: .topLeading,
                                 endPoint: .bottomTrailing
                             ),
@@ -205,7 +205,7 @@ struct WelcomeStepView: View {
                 Circle()
                     .fill(
                         LinearGradient(
-                            colors: [.luxuryPurple, .luxuryPink],
+                            colors: [.accentMint, .accentMint],
                             startPoint: .topLeading,
                             endPoint: .bottomTrailing
                         )
@@ -233,7 +233,7 @@ struct WelcomeStepView: View {
             VStack(alignment: .leading, spacing: 16) {
                 FeatureRow(icon: "eye.fill", text: "Detects app usage patterns", color: .blue)
                 FeatureRow(icon: "dollarsign.circle.fill", text: "Shows cost per hour of use", color: .green)
-                FeatureRow(icon: "wand.and.stars", text: "Suggests subscriptions to review", color: .purple)
+                FeatureRow(icon: "wand.and.stars", text: "Suggests subscriptions to review", color: Color.accentMint)
             }
             .padding(.horizontal, 40)
             .padding(.top, 20)
@@ -434,7 +434,7 @@ struct AppSelectionStepView: View {
                     Button(action: { showingPicker = true }) {
                         Text("Select Apps")
                             .font(.headline)
-                            .foregroundColor(.luxuryPurple)
+                            .foregroundColor(.accentMint)
                     }
                 }
                 .frame(maxHeight: .infinity)
@@ -447,7 +447,7 @@ struct AppSelectionStepView: View {
                     Button(action: { showingPicker = true }) {
                         Text("Change Selection")
                             .font(.subheadline)
-                            .foregroundColor(.luxuryPurple)
+                            .foregroundColor(.accentMint)
                     }
                 }
                 .frame(maxHeight: .infinity)
@@ -503,7 +503,7 @@ struct DetectionStepView: View {
                 ZStack {
                     ForEach(0..<3) { i in
                         Circle()
-                            .stroke(Color.luxuryPurple.opacity(0.3), lineWidth: 2)
+                            .stroke(Color.accentMint.opacity(0.3), lineWidth: 2)
                             .frame(width: 80 + CGFloat(i * 30), height: 80 + CGFloat(i * 30))
                             .scaleEffect(viewModel.isDetecting ? 1.2 : 1.0)
                             .animation(
@@ -518,7 +518,7 @@ struct DetectionStepView: View {
 
                     Image(systemName: "magnifyingglass")
                         .font(.largeTitle)
-                        .foregroundColor(.luxuryPurple)
+                        .foregroundColor(.accentMint)
                 }
 
                 Text("Analyzing your app usage...")
@@ -664,9 +664,9 @@ struct DetectedSubscriptionRow: View {
             // Icon
             Image(systemName: subscription.iconName)
                 .font(.title2)
-                .foregroundColor(.luxuryPurple)
+                .foregroundColor(.accentMint)
                 .frame(width: 44, height: 44)
-                .background(Color.luxuryPurple.opacity(0.2))
+                .background(Color.accentMint.opacity(0.2))
                 .cornerRadius(10)
 
             // Info
@@ -693,10 +693,10 @@ struct DetectedSubscriptionRow: View {
                 }) {
                     Text("Add")
                         .font(.caption.bold())
-                        .foregroundColor(.luxuryPurple)
+                        .foregroundColor(.accentMint)
                         .padding(.horizontal, 12)
                         .padding(.vertical, 6)
-                        .background(Color.luxuryPurple.opacity(0.2))
+                        .background(Color.accentMint.opacity(0.2))
                         .cornerRadius(8)
                 }
             }

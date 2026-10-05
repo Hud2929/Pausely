@@ -9,195 +9,105 @@ struct PrivacySecurityView: View {
     @State private var showingDeleteAccountConfirmation = false
     @State private var showingPrivacyPolicy = false
     @State private var showingTermsOfService = false
-    
+    @State private var changePasswordActive = false
+
     var body: some View {
         ZStack {
-            HolographicBackground()
-            
+            PremiumBackground()
+
             ScrollView(showsIndicators: false) {
-                VStack(spacing: 32) {
+                VStack(spacing: 28) {
                     // Header
                     HStack {
                         Button(action: { dismiss() }) {
-                            Image(systemName: "arrow.left")
-                                .font(.headline.weight(.semibold))
-                                .foregroundColor(CyberColors.hotPink)
-                                .accessibilityLabel("Back")
+                            HStack(spacing: 6) {
+                                Image(systemName: "chevron.left")
+                                Text("Back")
+                            }
+                            .font(.body.weight(.medium))
+                            .foregroundColor(Color.obsidianTextSecondary)
                         }
-                        
+
                         Spacer()
-                        
+
                         Text("Privacy & Security")
                             .font(.headline.weight(.bold))
                             .foregroundColor(.white)
-                        
+
                         Spacer()
-                        
-                        Color.clear.frame(width: 44)
+
+                        Color.clear.frame(width: 60)
                     }
                     .padding(.horizontal, 20)
                     .padding(.top, 16)
-                    
-                    // Shield Icon
+
+                    // Icon
                     ZStack {
                         Circle()
-                            .stroke(CyberColors.hotPink, lineWidth: 2)
-                            .frame(width: 100, height: 100)
-                            .shadow(color: CyberColors.hotPink.opacity(0.5), radius: 20, x: 0, y: 0)
-                        
+                            .fill(Color.accentMint.opacity(0.12))
+                            .frame(width: 80, height: 80)
+
                         Image(systemName: "lock.shield.fill")
                             .font(.title)
-                            .foregroundColor(CyberColors.hotPink)
+                            .foregroundColor(Color.accentMint)
                     }
-                    .padding(.top, 20)
-                    
+
                     // Security Section
-                    VStack(spacing: 16) {
-                        Text("SECURITY")
-                            .font(.footnote.weight(.bold))
-                            .foregroundColor(.white.opacity(0.5))
-                            .tracking(2)
-                            .frame(maxWidth: .infinity, alignment: .leading)
-                            .padding(.horizontal, 20)
-                        
-                        FuturisticGlassCard(glowColor: CyberColors.hotPink) {
-                            VStack(spacing: 0) {
-                                SecurityToggleRow(
-                                    icon: "touchid",
-                                    title: "Biometric Authentication",
-                                    subtitle: "Use Face ID or Touch ID",
-                                    isOn: $biometricEnabled,
-                                    glowColor: CyberColors.hotPink,
-                                    onToggle: { isOn in
-                                        if isOn {
-                                            HapticStyle.medium.trigger()
-                                        } else {
-                                            HapticStyle.light.trigger()
-                                        }
-                                    }
-                                )
-                                
-                                Divider().background(Color.white.opacity(0.1))
-                                
-                                SecurityToggleRow(
-                                    icon: "faceid",
-                                    title: "Face ID",
-                                    subtitle: "Enable Face ID for app access",
-                                    isOn: $faceIDEnabled,
-                                    glowColor: CyberColors.cyan,
-                                    onToggle: { isOn in
-                                        if isOn {
-                                            HapticStyle.medium.trigger()
-                                        } else {
-                                            HapticStyle.light.trigger()
-                                        }
-                                    }
-                                )
-                                
-                                Divider().background(Color.white.opacity(0.1))
-                                
-                                SecurityToggleRow(
-                                    icon: "lock.fill",
-                                    title: "End-to-End Encryption",
-                                    subtitle: "Your data is always encrypted",
-                                    isOn: $dataEncryption,
-                                    glowColor: CyberColors.lime
-                                )
-                            }
-                        }
-                        .padding(.horizontal, 20)
+                    settingsGroup(title: "SECURITY") {
+                        SettingsToggleRow(icon: "touchid", title: "Biometric Authentication", subtitle: "Use Face ID or Touch ID", isOn: $biometricEnabled)
+                        settingsDivider()
+                        SettingsToggleRow(icon: "faceid", title: "Face ID", subtitle: "Enable Face ID for app access", isOn: $faceIDEnabled)
+                        settingsDivider()
+                        SettingsToggleRow(icon: "lock.fill", title: "End-to-End Encryption", subtitle: "Your data is always encrypted", isOn: $dataEncryption)
                     }
-                    
+                    .padding(.horizontal, 20)
+
                     // Privacy Section
-                    VStack(spacing: 16) {
-                        Text("PRIVACY")
-                            .font(.footnote.weight(.bold))
-                            .foregroundColor(.white.opacity(0.5))
-                            .tracking(2)
-                            .frame(maxWidth: .infinity, alignment: .leading)
-                            .padding(.horizontal, 20)
-                        
-                        FuturisticGlassCard(glowColor: CyberColors.electric) {
-                            VStack(spacing: 0) {
-                                SecurityToggleRow(
-                                    icon: "chart.bar.fill",
-                                    title: "Analytics",
-                                    subtitle: "Help improve the app with usage data",
-                                    isOn: $analyticsEnabled,
-                                    glowColor: CyberColors.electric
-                                )
-                                
-                                Divider().background(Color.white.opacity(0.1))
-                                
-                                NavigationButton(
-                                    icon: "doc.text.fill",
-                                    title: "Privacy Policy",
-                                    glowColor: CyberColors.cyan
-                                ) {
-                                    showingPrivacyPolicy = true
-                                }
-
-                                Divider().background(Color.white.opacity(0.1))
-
-                                NavigationButton(
-                                    icon: "doc.fill",
-                                    title: "Terms of Service",
-                                    glowColor: CyberColors.magenta
-                                ) {
-                                    showingTermsOfService = true
-                                }
-                            }
-                        }
-                        .padding(.horizontal, 20)
+                    settingsGroup(title: "PRIVACY") {
+                        SettingsToggleRow(icon: "chart.bar.fill", title: "Analytics", subtitle: "Help improve the app with usage data", isOn: $analyticsEnabled)
+                        settingsDivider()
+                        SettingsNavRow(icon: "doc.text.fill", title: "Privacy Policy") { showingPrivacyPolicy = true }
+                        settingsDivider()
+                        SettingsNavRow(icon: "doc.fill", title: "Terms of Service") { showingTermsOfService = true }
                     }
-                    
-                    // Danger Zone
-                    VStack(spacing: 16) {
-                        Text("DANGER ZONE")
-                            .font(.footnote.weight(.bold))
-                            .foregroundColor(.red.opacity(0.7))
-                            .tracking(2)
-                            .frame(maxWidth: .infinity, alignment: .leading)
-                            .padding(.horizontal, 20)
-                        
-                        FuturisticGlassCard(glowColor: .red) {
-                            VStack(spacing: 16) {
-                                Text("Delete Account")
-                                    .font(.callout.weight(.bold))
-                                    .foregroundColor(.red)
-                                
-                                Text("This will permanently delete all your data. This action cannot be undone.")
-                                    .font(.subheadline)
-                                    .foregroundColor(.white.opacity(0.7))
-                                    .multilineTextAlignment(.center)
-                                
-                                Button(action: { showingDeleteAccountConfirmation = true }) {
-                                    Text("DELETE ACCOUNT")
-                                        .font(.subheadline.weight(.bold))
-                                        .foregroundColor(.red)
-                                        .frame(maxWidth: .infinity)
-                                        .frame(height: 50)
-                                        .background(
-                                            RoundedRectangle(cornerRadius: 12)
-                                                .stroke(.red, lineWidth: 2)
-                                                .background(.red.opacity(0.1))
-                                        )
+                    .padding(.horizontal, 20)
+
+                    // Account Section
+                    settingsGroup(title: "DANGER ZONE") {
+                        Button(action: { showingDeleteAccountConfirmation = true }) {
+                            HStack(spacing: 14) {
+                                ZStack {
+                                    RoundedRectangle(cornerRadius: 10)
+                                        .fill(Color.semanticDestructive.opacity(0.12))
+                                        .frame(width: 38, height: 38)
+                                    Image(systemName: "trash.fill")
+                                        .font(.callout)
+                                        .foregroundColor(Color.semanticDestructive)
                                 }
-                                .buttonStyle(PlainButtonStyle())
-                                .alert("Delete Account?", isPresented: $showingDeleteAccountConfirmation) {
-                                    Button("Cancel", role: .cancel) { }
-                                    Button("Delete", role: .destructive) {
-                                        // Account deletion logic would go here
-                                    }
-                                } message: {
-                                    Text("This will permanently delete all your data. This action cannot be undone.")
+                                VStack(alignment: .leading, spacing: 2) {
+                                    Text("Delete Account")
+                                        .font(.callout.weight(.semibold))
+                                        .foregroundColor(Color.semanticDestructive)
+                                    Text("Permanently remove all data")
+                                        .font(.footnote)
+                                        .foregroundColor(Color.obsidianTextSecondary)
                                 }
+                                Spacer()
                             }
+                            .padding(.horizontal, 16)
+                            .padding(.vertical, 12)
                         }
-                        .padding(.horizontal, 20)
+                        .buttonStyle(PlainButtonStyle())
+                        .alert("Delete Account?", isPresented: $showingDeleteAccountConfirmation) {
+                            Button("Cancel", role: .cancel) {}
+                            Button("Delete", role: .destructive) {}
+                        } message: {
+                            Text("This will permanently delete all your data. This action cannot be undone.")
+                        }
                     }
-                    
-                    Spacer(minLength: 40)
+                    .padding(.horizontal, 20)
+
+                    Spacer(minLength: 60)
                 }
             }
         }
@@ -208,8 +118,115 @@ struct PrivacySecurityView: View {
             TermsOfServiceView()
         }
     }
+
+    @ViewBuilder
+    private func settingsGroup<Content: View>(title: String, @ViewBuilder content: () -> Content) -> some View {
+        VStack(alignment: .leading, spacing: 8) {
+            Text(title)
+                .font(.caption.weight(.bold))
+                .foregroundColor(Color.obsidianTextTertiary)
+                .tracking(1.5)
+                .padding(.leading, 4)
+
+            VStack(spacing: 0) {
+                content()
+            }
+            .background(
+                RoundedRectangle(cornerRadius: 16)
+                    .fill(Color.obsidianSurface)
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 16)
+                            .stroke(Color.white.opacity(0.06), lineWidth: 1)
+                    )
+            )
+        }
+    }
+
+    private func settingsDivider() -> some View {
+        Divider()
+            .background(Color.white.opacity(0.06))
+            .padding(.leading, 68)
+    }
 }
 
+struct SettingsToggleRow: View {
+    let icon: String
+    let title: String
+    let subtitle: String
+    @Binding var isOn: Bool
+
+    var body: some View {
+        HStack(spacing: 14) {
+            ZStack {
+                RoundedRectangle(cornerRadius: 10)
+                    .fill(Color.accentMint.opacity(0.12))
+                    .frame(width: 38, height: 38)
+                Image(systemName: icon)
+                    .font(.callout)
+                    .foregroundColor(Color.accentMint)
+            }
+            VStack(alignment: .leading, spacing: 2) {
+                Text(title)
+                    .font(.callout.weight(.semibold))
+                    .foregroundColor(.white)
+                Text(subtitle)
+                    .font(.footnote)
+                    .foregroundColor(Color.obsidianTextSecondary)
+            }
+            Spacer()
+            Toggle("", isOn: $isOn)
+                .tint(Color.accentMint)
+                .labelsHidden()
+        }
+        .padding(.horizontal, 16)
+        .padding(.vertical, 12)
+    }
+}
+
+struct SettingsNavRow: View {
+    let icon: String
+    let title: String
+    let action: () -> Void
+
+    var body: some View {
+        Button(action: action) {
+            HStack(spacing: 14) {
+                ZStack {
+                    RoundedRectangle(cornerRadius: 10)
+                        .fill(Color.accentMint.opacity(0.12))
+                        .frame(width: 38, height: 38)
+                    Image(systemName: icon)
+                        .font(.callout)
+                        .foregroundColor(Color.accentMint)
+                }
+                Text(title)
+                    .font(.callout.weight(.semibold))
+                    .foregroundColor(.white)
+                Spacer()
+                Image(systemName: "chevron.right")
+                    .font(.caption.weight(.semibold))
+                    .foregroundColor(Color.obsidianTextTertiary)
+            }
+            .padding(.horizontal, 16)
+            .padding(.vertical, 12)
+        }
+        .buttonStyle(PlainButtonStyle())
+    }
+}
+
+// NavigationButton kept for backwards compatibility with any remaining legacy callers
+struct NavigationButton: View {
+    let icon: String
+    let title: String
+    let glowColor: Color
+    let action: () -> Void
+
+    var body: some View {
+        SettingsNavRow(icon: icon, title: title, action: action)
+    }
+}
+
+// SecurityToggleRow kept for backwards compatibility
 struct SecurityToggleRow: View {
     let icon: String
     let title: String
@@ -219,67 +236,8 @@ struct SecurityToggleRow: View {
     var onToggle: ((Bool) -> Void)? = nil
 
     var body: some View {
-        HStack(spacing: 16) {
-            ZStack {
-                RoundedRectangle(cornerRadius: 10)
-                    .fill(glowColor.opacity(0.2))
-                    .frame(width: 40, height: 40)
-
-                Image(systemName: icon)
-                    .font(.callout)
-                    .foregroundColor(glowColor)
-            }
-
-            VStack(alignment: .leading, spacing: 3) {
-                Text(title)
-                    .font(.callout.weight(.semibold))
-                    .foregroundColor(.white)
-
-                Text(subtitle)
-                    .font(.footnote)
-                    .foregroundColor(.white.opacity(0.6))
-            }
-
-            Spacer()
-
-            CyberToggle(isOn: $isOn, glowColor: glowColor, onToggle: onToggle)
-        }
-        .padding(.vertical, 12)
-    }
-}
-
-struct NavigationButton: View {
-    let icon: String
-    let title: String
-    let glowColor: Color
-    let action: () -> Void
-    
-    var body: some View {
-        Button(action: action) {
-            HStack(spacing: 16) {
-                ZStack {
-                    RoundedRectangle(cornerRadius: 10)
-                        .fill(glowColor.opacity(0.2))
-                        .frame(width: 40, height: 40)
-                    
-                    Image(systemName: icon)
-                        .font(.callout)
-                        .foregroundColor(glowColor)
-                }
-                
-                Text(title)
-                    .font(.callout.weight(.semibold))
-                    .foregroundColor(.white)
-                
-                Spacer()
-                
-                Image(systemName: "chevron.right")
-                    .font(.footnote)
-                    .foregroundColor(.white.opacity(0.5))
-            }
-            .padding(.vertical, 12)
-        }
-        .buttonStyle(PlainButtonStyle())
+        SettingsToggleRow(icon: icon, title: title, subtitle: subtitle, isOn: $isOn)
+            .onChange(of: isOn) { _, newValue in onToggle?(newValue) }
     }
 }
 

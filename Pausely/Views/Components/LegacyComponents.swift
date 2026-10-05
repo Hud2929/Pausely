@@ -171,10 +171,10 @@ struct HolographicBackground: View {
 
 // MARK: - Futuristic Glass Card (stub for deleted theme)
 struct FuturisticGlassCard<Content: View>: View {
-    var glowColor: Color = CyberColors.primary
+    var glowColor: Color = Color.accentMint
     let content: Content
 
-    init(glowColor: Color = CyberColors.primary, @ViewBuilder content: () -> Content) {
+    init(glowColor: Color = Color.accentMint, @ViewBuilder content: () -> Content) {
         self.glowColor = glowColor
         self.content = content()
     }

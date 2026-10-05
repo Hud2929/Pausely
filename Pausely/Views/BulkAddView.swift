@@ -79,7 +79,7 @@ struct BulkAddView: View {
                         Button(selectedCount > 0 ? "Add (\(selectedCount))" : "Add") {
                             Task { await addSelectedSubscriptions() }
                         }
-                        .foregroundColor(selectedCount > 0 ? Color.luxuryGold : .white.opacity(0.5))
+                        .foregroundColor(selectedCount > 0 ? Color.accentMint : .white.opacity(0.5))
                         .disabled(selectedCount == 0 || isAdding)
                         .accessibilityHint(selectedCount == 0 ? "Please select at least one subscription to add" : isAdding ? "Please wait, adding subscriptions" : "")
                     }
@@ -152,7 +152,7 @@ struct BulkAddView: View {
         HStack {
             Image(systemName: category.icon)
                 .font(.footnote)
-                .foregroundColor(Color.luxuryPurple)
+                .foregroundColor(Color.accentMint)
 
             Text(category.rawValue)
                 .font(.footnote.weight(.semibold))
@@ -246,7 +246,7 @@ struct BulkAddView: View {
                     .foregroundColor(.black)
                     .frame(maxWidth: .infinity)
                     .frame(height: 56)
-                    .background(Color.luxuryGold)
+                    .background(Color.accentMint)
                     .cornerRadius(16)
             }
             .padding(.horizontal, 24)
@@ -385,12 +385,12 @@ struct SubscriptionCatalogRow: View {
                 // Selection indicator
                 ZStack {
                     Circle()
-                        .stroke(isSelected ? Color.luxuryGold : Color.white.opacity(0.3), lineWidth: 2)
+                        .stroke(isSelected ? Color.accentMint : Color.white.opacity(0.3), lineWidth: 2)
                         .frame(width: 24, height: 24)
 
                     if isSelected {
                         Circle()
-                            .fill(Color.luxuryGold)
+                            .fill(Color.accentMint)
                             .frame(width: 24, height: 24)
 
                         Image(systemName: "checkmark")
@@ -402,12 +402,12 @@ struct SubscriptionCatalogRow: View {
                 // Icon
                 ZStack {
                     RoundedRectangle(cornerRadius: 10)
-                        .fill(Color.luxuryPurple.opacity(0.2))
+                        .fill(Color.accentMint.opacity(0.2))
                         .frame(width: 44, height: 44)
 
                     Image(systemName: subscription.iconName)
                         .font(.callout)
-                        .foregroundColor(Color.luxuryPurple)
+                        .foregroundColor(Color.accentMint)
                 }
 
                 // Info
@@ -441,7 +441,7 @@ struct SubscriptionCatalogRow: View {
                     .fill(Color.backgroundSecondary)
                     .overlay(
                         RoundedRectangle(cornerRadius: 16)
-                            .stroke(isSelected ? Color.luxuryGold.opacity(0.5) : Color.white.opacity(0.05), lineWidth: 1)
+                            .stroke(isSelected ? Color.accentMint.opacity(0.5) : Color.white.opacity(0.05), lineWidth: 1)
                     )
             )
         }
@@ -471,7 +471,7 @@ struct BulkAddFilterPill: View {
             .padding(.vertical, 8)
             .background(
                 Capsule()
-                    .fill(isSelected ? Color.luxuryGold : Color.backgroundSecondary)
+                    .fill(isSelected ? Color.accentMint : Color.backgroundSecondary)
             )
         }
         .buttonStyle(PlainButtonStyle())
@@ -527,7 +527,7 @@ struct BulkAddCSVImportSheet: View {
                             .foregroundColor(.black)
                             .frame(maxWidth: .infinity)
                             .frame(height: 56)
-                            .background(csvText.isEmpty ? Color.gray : Color.luxuryTeal)
+                            .background(csvText.isEmpty ? Color.gray : Color.accentMint)
                             .cornerRadius(16)
                     }
                     .disabled(csvText.isEmpty)

@@ -18,7 +18,7 @@ struct WhatsNewSheet: View {
                         Circle()
                             .fill(
                                 LinearGradient(
-                                    colors: [Color.luxuryGold.opacity(0.3), Color.luxuryPink.opacity(0.2)],
+                                    colors: [Color.accentMint.opacity(0.3), Color.accentMint.opacity(0.2)],
                                     startPoint: .topLeading,
                                     endPoint: .bottomTrailing
                                 )
@@ -27,7 +27,7 @@ struct WhatsNewSheet: View {
 
                         Image(systemName: "sparkles")
                             .font(.system(.title, design: .rounded).weight(.semibold))
-                            .foregroundStyle(Color.luxuryGold)
+                            .foregroundStyle(Color.accentMint)
                     }
 
                     Text("What's New in \(currentVersion)")
@@ -37,7 +37,7 @@ struct WhatsNewSheet: View {
 
                     Text("Check out the latest improvements")
                         .font(.system(.body, design: .rounded))
-                        .foregroundColor(TextColors.secondary)
+                        .foregroundColor(Color.obsidianTextSecondary)
                         .multilineTextAlignment(.center)
                 }
                 .padding(.top, 32)
@@ -47,21 +47,21 @@ struct WhatsNewSheet: View {
                 VStack(spacing: 16) {
                     WhatsNewFeatureRow(
                         icon: "arrow.down.circle.fill",
-                        iconColor: Color.luxuryTeal,
+                        iconColor: Color.accentMint,
                         title: "Pull to Refresh",
                         description: "Swipe down on your Dashboard to instantly refresh your subscription data."
                     )
 
                     WhatsNewFeatureRow(
                         icon: "gift.fill",
-                        iconColor: Color.luxuryGold,
+                        iconColor: Color.accentMint,
                         title: "First-Subscription Celebration",
                         description: "Enjoy a fun confetti animation when you add your very first subscription."
                     )
 
                     WhatsNewFeatureRow(
                         icon: "star.fill",
-                        iconColor: Color.luxuryPink,
+                        iconColor: Color.accentMint,
                         title: "What's New Updates",
                         description: "Stay in the loop with a quick summary of new features after every update."
                     )
@@ -85,13 +85,13 @@ struct WhatsNewSheet: View {
                             RoundedRectangle(cornerRadius: 16, style: .continuous)
                                 .fill(
                                     LinearGradient(
-                                        colors: [BrandColors.primary, BrandColors.secondary],
+                                        colors: [Color.accentMint, Color.accentMint],
                                         startPoint: .topLeading,
                                         endPoint: .bottomTrailing
                                     )
                                 )
                         )
-                        .shadow(color: BrandColors.primary.opacity(0.4), radius: 15, x: 0, y: 8)
+                        .shadow(color: Color.accentMint.opacity(0.4), radius: 15, x: 0, y: 8)
                 }
                 .padding(.horizontal, 24)
                 .padding(.bottom, 40)
@@ -126,7 +126,7 @@ struct WhatsNewFeatureRow: View {
 
                 Text(description)
                     .font(.system(.subheadline, design: .rounded))
-                    .foregroundColor(TextColors.secondary)
+                    .foregroundColor(Color.obsidianTextSecondary)
                     .fixedSize(horizontal: false, vertical: true)
             }
 
@@ -135,7 +135,7 @@ struct WhatsNewFeatureRow: View {
         .padding(16)
         .background(
             RoundedRectangle(cornerRadius: 20, style: .continuous)
-                .fill(BackgroundColors.secondary)
+                .fill(Color.obsidianSurface)
                 .overlay(
                     RoundedRectangle(cornerRadius: 20, style: .continuous)
                         .stroke(Color.white.opacity(0.06), lineWidth: 1)

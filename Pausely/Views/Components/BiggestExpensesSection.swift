@@ -20,7 +20,7 @@ struct BiggestExpensesSection: View {
                         .font(AppTypography.headlineLarge)
                         .foregroundStyle(.primary)
 
-                    Text("Your top 3 highest-cost subscriptions")
+                    Text("Highest monthly cost")
                         .font(AppTypography.bodySmall)
                         .foregroundStyle(.secondary)
                 }
@@ -65,14 +65,17 @@ struct BiggestExpenseRow: View {
 
     var body: some View {
         HStack(spacing: 14) {
-            ZStack {
-                Circle()
-                    .fill(rankColor.opacity(0.15))
-                    .frame(width: 36, height: 36)
+            // Brand logo with rank badge overlay
+            ZStack(alignment: .bottomTrailing) {
+                ServiceLogoView(name: subscription.name, category: subscription.category, size: 44)
 
                 Text("\(rank)")
-                    .font(.system(size: 14, weight: .bold))
-                    .foregroundStyle(rankColor)
+                    .font(.system(size: 10, weight: .black))
+                    .foregroundStyle(.black)
+                    .frame(width: 18, height: 18)
+                    .background(rankColor)
+                    .clipShape(Circle())
+                    .offset(x: 4, y: 4)
             }
 
             VStack(alignment: .leading, spacing: 2) {
@@ -93,14 +96,14 @@ struct BiggestExpenseRow: View {
                 .foregroundStyle(.primary)
         }
         .padding(14)
-        .glassBackground(cornerRadius: 14, strokeColor: rankColor.opacity(0.15), strokeWidth: 0.5)
+        .surfaceCard(cornerRadius: 14)
     }
 
     private var rankColor: Color {
         switch rank {
         case 1: return .semanticDestructive
         case 2: return .semanticWarning
-        case 3: return Color.luxuryTeal
+        case 3: return Color.accentMint
         default: return .secondary
         }
     }

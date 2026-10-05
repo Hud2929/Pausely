@@ -18,8 +18,8 @@ struct ReferralHeroSection: View {
                     .fill(
                         RadialGradient(
                             colors: [
-                                Color.luxuryGold.opacity(0.4),
-                                Color.luxuryPink.opacity(0.2),
+                                Color.accentMint.opacity(0.4),
+                                Color.accentMint.opacity(0.2),
                                 .clear
                             ],
                             center: .center,
@@ -34,8 +34,8 @@ struct ReferralHeroSection: View {
                     .fill(
                         LinearGradient(
                             colors: [
-                                Color.luxuryGold.opacity(0.3),
-                                Color.luxuryPurple.opacity(0.2)
+                                Color.accentMint.opacity(0.3),
+                                Color.accentMint.opacity(0.2)
                             ],
                             startPoint: .topLeading,
                             endPoint: .bottomTrailing
@@ -46,7 +46,7 @@ struct ReferralHeroSection: View {
                         Circle()
                             .stroke(
                                 LinearGradient(
-                                    colors: [Color.luxuryGold.opacity(0.6), .white.opacity(0.2)],
+                                    colors: [Color.accentMint.opacity(0.6), .white.opacity(0.2)],
                                     startPoint: .topLeading,
                                     endPoint: .bottomTrailing
                                 ),
@@ -58,7 +58,7 @@ struct ReferralHeroSection: View {
                     .font(.system(.largeTitle, design: .rounded).weight(.light))
                     .foregroundStyle(
                         LinearGradient(
-                            colors: [Color.luxuryGold, .white],
+                            colors: [Color.accentMint, .white],
                             startPoint: .top,
                             endPoint: .bottom
                         )
@@ -67,14 +67,14 @@ struct ReferralHeroSection: View {
                 HStack {
                     Image(systemName: "sparkle")
                         .font(.title3)
-                        .foregroundStyle(Color.luxuryGold)
+                        .foregroundStyle(Color.accentMint)
                         .offset(x: -70, y: -40)
 
                     Spacer()
 
                     Image(systemName: "sparkle.fill")
                         .font(.callout)
-                        .foregroundStyle(Color.luxuryPink)
+                        .foregroundStyle(Color.accentMint)
                         .offset(x: 60, y: 30)
                 }
                 .frame(width: 180)
@@ -90,7 +90,7 @@ struct ReferralHeroSection: View {
 
                     Text("You've earned FREE Premium forever by referring 3 friends!")
                         .font(.system(.callout, design: .rounded).weight(.medium))
-                        .foregroundStyle(Color.luxuryTeal)
+                        .foregroundStyle(Color.accentMint)
                         .multilineTextAlignment(.center)
                         .padding(.horizontal, 24)
                 } else {

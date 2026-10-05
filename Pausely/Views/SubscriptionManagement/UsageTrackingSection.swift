@@ -48,7 +48,7 @@ struct UsageTrackingSection: View {
                 Button(action: onEditUsage) {
                     Image(systemName: "pencil.circle")
                         .font(.title3)
-                        .foregroundColor(.luxuryPurple)
+                        .foregroundColor(.accentMint)
                 }
                 .accessibilityLabel("Edit usage")
             }

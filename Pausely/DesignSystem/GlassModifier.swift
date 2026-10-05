@@ -44,12 +44,12 @@ struct EstimateBadge: View {
 /// A disclaimer banner for Screen Time usage data
 struct ScreenTimeDisclaimer: View {
     var body: some View {
-        HStack(spacing: 8) {
-            Image(systemName: "info.circle.fill")
+        HStack(alignment: .top, spacing: 8) {
+            Image(systemName: "iphone")
                 .font(.caption)
                 .foregroundColor(.orange)
 
-            Text("Usage data is estimated from Screen Time session tracking. Apple does not provide exact minutes used.")
+            Text("iOS app only — Screen Time tracks time spent in the iPhone app, not web or desktop usage. This subscription must have an iOS app installed on your device.")
                 .font(.caption2)
                 .foregroundColor(.secondary)
         }
@@ -217,34 +217,21 @@ private struct PressEffectModifier: ViewModifier {
     }
 }
 
-extension Color {
-    static let deepBlack = Color(red: 0.04, green: 0.04, blue: 0.06)
-    static let richBlack = Color(red: 0.02, green: 0.02, blue: 0.04)
-    static let luxuryGold = Color(red: 0.96, green: 0.79, blue: 0.39)
-    static let luxurySilver = Color(red: 0.85, green: 0.85, blue: 0.88)
-    static let luxuryPurple = Color(red: 0.53, green: 0.32, blue: 0.95)
-    static let luxuryPink = Color(red: 0.95, green: 0.30, blue: 0.65)
-    static let luxuryTeal = Color(red: 0.20, green: 0.75, blue: 0.85)
-}
-
 // MARK: - Reusable Gradients
 
 extension LinearGradient {
-    static var premium: LinearGradient {
-        LinearGradient(colors: [.luxuryPurple, .luxuryPink], startPoint: .leading, endPoint: .trailing)
+    /// Mint gradient for hero numbers and primary CTAs
+    static var mintAccent: LinearGradient {
+        LinearGradient(
+            colors: [Color(hex: "#34D399"), Color(hex: "#10B981")],
+            startPoint: .topLeading,
+            endPoint: .bottomTrailing
+        )
     }
 
-    static var premiumDiagonal: LinearGradient {
-        LinearGradient(colors: [.luxuryPurple, .luxuryPink], startPoint: .topLeading, endPoint: .bottomTrailing)
-    }
-
-    static var goldPink: LinearGradient {
-        LinearGradient(colors: [.luxuryGold, .luxuryPink], startPoint: .leading, endPoint: .trailing)
-    }
-
-    static var tealPurple: LinearGradient {
-        LinearGradient(colors: [.luxuryTeal, .luxuryPurple], startPoint: .leading, endPoint: .trailing)
-    }
+    // Compatibility aliases — new code should use .mintAccent
+    static var premium: LinearGradient { .mintAccent }
+    static var premiumDiagonal: LinearGradient { .mintAccent }
 }
 
 // MARK: - Flexible Glass Modifier
@@ -274,94 +261,23 @@ extension View {
     }
 }
 
-// MARK: - Shared Gradient Animation State
-@MainActor
-final class GradientAnimationState: ObservableObject {
-    static let shared = GradientAnimationState()
-    @Published var animate = false
-
-    private init() {
-        if !UIAccessibility.isReduceMotionEnabled {
-            withAnimation(.easeInOut(duration: 8).repeatForever(autoreverses: true)) {
-                animate.toggle()
-            }
-        }
-    }
-}
-
+// MARK: - Clean Dark Background (replaces animated gradient blobs)
 struct AnimatedGradientBackground: View {
-    @ObservedObject private var state = GradientAnimationState.shared
-    @Environment(\.colorScheme) private var colorScheme
-    @Environment(\.accessibilityReduceMotion) private var reduceMotion
-
     var body: some View {
         ZStack {
-            backgroundColor.ignoresSafeArea()
+            Color.obsidianBlack.ignoresSafeArea()
 
+            // Subtle mint vignette at top-right — depth without noise
             GeometryReader { geo in
-                ZStack {
-                    Circle()
-                        .fill(
-                            RadialGradient(
-                                colors: [.luxuryPurple.opacity(0.6), .clear],
-                                center: .center,
-                                startRadius: 0,
-                                endRadius: geo.size.width * 0.6
-                            )
-                        )
-                        .frame(width: geo.size.width * 0.8)
-                        .offset(x: reduceMotion ? 0 : (state.animate ? 50 : -50),
-                                y: reduceMotion ? -125 : (state.animate ? -100 : -150))
-                        .blur(radius: 60)
-
-                    Circle()
-                        .fill(
-                            RadialGradient(
-                                colors: [.luxuryPink.opacity(0.5), .clear],
-                                center: .center,
-                                startRadius: 0,
-                                endRadius: geo.size.width * 0.5
-                            )
-                        )
-                        .frame(width: geo.size.width * 0.6)
-                        .offset(x: reduceMotion ? 0 : (state.animate ? -80 : 80),
-                                y: reduceMotion ? 150 : (state.animate ? 200 : 100))
-                        .blur(radius: 50)
-
-                    Circle()
-                        .fill(
-                            RadialGradient(
-                                colors: [.luxuryTeal.opacity(0.4), .clear],
-                                center: .center,
-                                startRadius: 0,
-                                endRadius: geo.size.width * 0.4
-                            )
-                        )
-                        .frame(width: geo.size.width * 0.5)
-                        .offset(x: reduceMotion ? 0 : (state.animate ? 100 : -100),
-                                y: reduceMotion ? 0 : (state.animate ? 50 : -50))
-                        .blur(radius: 40)
-
-                    Circle()
-                        .fill(
-                            RadialGradient(
-                                colors: [.luxuryGold.opacity(0.3), .clear],
-                                center: .center,
-                                startRadius: 0,
-                                endRadius: geo.size.width * 0.3
-                            )
-                        )
-                        .frame(width: geo.size.width * 0.4)
-                        .offset(x: reduceMotion ? 0 : (state.animate ? -120 : 120),
-                                y: reduceMotion ? 0 : (state.animate ? -80 : 80))
-                        .blur(radius: 30)
-                }
+                RadialGradient(
+                    colors: [Color.accentMint.opacity(0.04), .clear],
+                    center: .topTrailing,
+                    startRadius: 0,
+                    endRadius: geo.size.width * 0.8
+                )
+                .ignoresSafeArea()
             }
         }
-    }
-
-    private var backgroundColor: Color {
-        colorScheme == .dark ? .deepBlack : Color(.systemBackground)
     }
 }
 

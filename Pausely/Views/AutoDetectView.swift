@@ -64,12 +64,12 @@ struct AutoDetectView: View {
             // Icon
             ZStack {
                 Circle()
-                    .fill(Color.luxuryPurple.opacity(0.2))
+                    .fill(Color.accentMint.opacity(0.2))
                     .frame(width: 120, height: 120)
 
                 Image(systemName: "apple.logo")
                     .font(.largeTitle)
-                    .foregroundColor(Color.luxuryPurple)
+                    .foregroundColor(Color.accentMint)
             }
 
             VStack(spacing: 12) {
@@ -106,7 +106,7 @@ struct AutoDetectView: View {
                 .foregroundColor(.white)
                 .frame(maxWidth: .infinity)
                 .frame(height: 56)
-                .background(Color.luxuryPurple)
+                .background(Color.accentMint)
                 .cornerRadius(16)
             }
             .padding(.horizontal, 20)
@@ -121,12 +121,12 @@ struct AutoDetectView: View {
 
             ZStack {
                 Circle()
-                    .stroke(Color.luxuryPurple.opacity(0.2), lineWidth: 8)
+                    .stroke(Color.accentMint.opacity(0.2), lineWidth: 8)
                     .frame(width: 140, height: 140)
 
                 ProgressView()
                     .scaleEffect(2)
-                    .tint(Color.luxuryPurple)
+                    .tint(Color.accentMint)
             }
             .frame(height: 180)
 
@@ -179,7 +179,7 @@ struct AutoDetectView: View {
                     .foregroundColor(.white)
                     .frame(maxWidth: .infinity)
                     .frame(height: 56)
-                    .background(Color.luxuryPurple)
+                    .background(Color.accentMint)
                     .cornerRadius(16)
             }
             .padding(.horizontal, 20)
@@ -228,7 +228,7 @@ struct AutoDetectView: View {
                             .foregroundColor(.white)
                             .frame(maxWidth: .infinity)
                             .frame(height: 56)
-                            .background(Color.luxuryPurple)
+                            .background(Color.accentMint)
                             .cornerRadius(16)
                         }
                     }
@@ -280,7 +280,7 @@ struct AutoDetectView: View {
                     .foregroundColor(.white)
                     .frame(maxWidth: .infinity)
                     .frame(height: 56)
-                    .background(Color.luxuryPurple)
+                    .background(Color.accentMint)
                     .cornerRadius(16)
             }
             .padding(.horizontal, 20)
@@ -351,7 +351,7 @@ struct InfoRow: View {
         HStack(spacing: 12) {
             Image(systemName: icon)
                 .font(.callout)
-                .foregroundColor(Color.luxuryPurple)
+                .foregroundColor(Color.accentMint)
                 .frame(width: 24)
 
             Text(text)
@@ -467,7 +467,7 @@ struct AppleDetectedSubscriptionRow: View {
     private var checkboxView: some View {
         Image(systemName: isSelected ? "checkmark.circle.fill" : "circle")
             .font(.title3)
-            .foregroundColor(isSelected ? Color.luxuryPurple : .white.opacity(0.4))
+            .foregroundColor(isSelected ? Color.accentMint : .white.opacity(0.4))
     }
 
     private var cardBackground: some View {
@@ -475,7 +475,7 @@ struct AppleDetectedSubscriptionRow: View {
             .fill(Color.white.opacity(0.05))
             .overlay(
                 RoundedRectangle(cornerRadius: 16)
-                    .stroke(isSelected ? Color.luxuryPurple.opacity(0.5) : Color.clear, lineWidth: 2)
+                    .stroke(isSelected ? Color.accentMint.opacity(0.5) : Color.clear, lineWidth: 2)
             )
     }
 

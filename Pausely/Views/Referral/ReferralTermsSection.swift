@@ -5,7 +5,7 @@ struct ReferralTermsSection: View {
         VStack(spacing: 8) {
             Text("Terms & Conditions")
                 .font(.system(.footnote, design: .rounded).weight(.semibold))
-                .foregroundStyle(Color.luxuryGold)
+                .foregroundStyle(Color.accentMint)
 
             Text("Rewards are granted when referred friends complete signup and verify their account. Free Pro access is permanent and non-transferable. Self-referrals are not allowed.")
                 .font(.system(.caption, design: .rounded).weight(.medium))

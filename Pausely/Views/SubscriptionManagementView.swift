@@ -3,7 +3,6 @@ import SwiftUI
 enum ManagementSheet: Identifiable {
     case paywall
     case alternative(AlternativeService)
-    case smartPause(PauseSuggestion, () -> Void)
     case usageInput(String, Int, (Int) -> Void)
     case usageHistory(String)
     case priceHistory(Subscription)
@@ -13,7 +12,6 @@ enum ManagementSheet: Identifiable {
         switch self {
         case .paywall: return "paywall"
         case .alternative(let alt): return "alt-\(alt.id)"
-        case .smartPause(let s, _): return "smartPause-\(s.id)"
         case .usageInput(let name, _, _): return "usageInput-\(name)"
         case .usageHistory(let name): return "history-\(name)"
         case .priceHistory(let sub): return "priceHistory-\(sub.id)"
@@ -24,12 +22,10 @@ enum ManagementSheet: Identifiable {
 
 enum ManagementAlert: Identifiable {
     case cancel(String, () -> Void)
-    case pause(String, () -> Void)
 
     var id: String {
         switch self {
         case .cancel: return "cancel"
-        case .pause: return "pause"
         }
     }
 }
@@ -55,10 +51,6 @@ struct SubscriptionManagementView: View {
         screenTimeManager.calculateCostPerHour(monthlyCost: subscription.monthlyCost, subscriptionName: subscription.name)
     }
 
-    var smartSuggestion: PauseSuggestion? {
-        screenTimeManager.shouldSuggestPause(for: subscription, thresholdMinutes: 60)
-    }
-
     var usageStats: AppUsageStats? {
         screenTimeManager.getUsageStats(for: subscription.name)
     }
@@ -77,18 +69,6 @@ struct SubscriptionManagementView: View {
 
                 BillingDateSection(subscription: subscription)
 
-                if let suggestion = smartSuggestion, subscription.isActive {
-                    SmartPauseSection(
-                        subscription: subscription,
-                        suggestion: suggestion,
-                        onInfoTap: {
-                            activeSheet = .smartPause(suggestion, {
-                                activeAlert = .pause(subscription.name, { openPauseURL() })
-                            })
-                        }
-                    )
-                }
-
                 CostPerUseDetailSection(subscription: subscription)
 
                 UsageTrackingSection(
@@ -104,9 +84,7 @@ struct SubscriptionManagementView: View {
                             { minutes in screenTimeManager.setMonthlyUsage(minutes: minutes, for: subscription.name) }
                         )
                     },
-                    onViewInsights: {
-                        // Navigation handled by caller if needed
-                    }
+                    onViewInsights: { }
                 )
 
                 ActionsSection(
@@ -142,8 +120,6 @@ struct SubscriptionManagementView: View {
                 StoreKitUpgradeView(currentSubscriptionCount: 0)
             case .alternative(let alt):
                 AlternativeDetailView(alternative: alt, current: subscription)
-            case .smartPause(let suggestion, let onPause):
-                SmartPauseDetailSheet(suggestion: suggestion, onPause: onPause)
             case .usageInput(let name, let minutes, let onSave):
                 UsageInputSheet(subscriptionName: name, currentMinutes: minutes, onSave: onSave)
             case .usageHistory(let name):
@@ -163,31 +139,12 @@ struct SubscriptionManagementView: View {
                     primaryButton: .destructive(Text("Open Cancel Page"), action: action),
                     secondaryButton: .cancel(Text("Cancel"))
                 )
-            case .pause(let name, let action):
-                return Alert(
-                    title: Text("Pause Subscription"),
-                    message: Text("We'll open the pause settings for \(name)."),
-                    primaryButton: .default(Text("Open Pause Page"), action: action),
-                    secondaryButton: .cancel(Text("Cancel"))
-                )
             }
         }
         .onAppear {
             Task {
                 await screenTimeManager.syncUsageData()
             }
-        }
-    }
-
-    private func openCancelURL() {
-        if let url = actionManager.generateCancelURL(for: subscription) {
-            UIApplication.shared.open(url)
-        }
-    }
-
-    private func openPauseURL() {
-        if let url = actionManager.generatePauseURL(for: subscription) {
-            UIApplication.shared.open(url)
         }
     }
 }

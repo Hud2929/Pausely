@@ -78,7 +78,7 @@ struct ReferralSheet: View {
                         dismiss()
                     }
                     .font(.system(.body, design: .rounded).weight(.semibold))
-                    .foregroundStyle(Color.luxuryGold)
+                    .foregroundStyle(Color.accentMint)
                 }
             }
         }

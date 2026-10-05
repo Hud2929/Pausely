@@ -75,7 +75,7 @@ struct TrialProtectionView: View {
                     } label: {
                         Image(systemName: "plus.circle.fill")
                             .font(.title2)
-                            .foregroundStyle(LinearGradient(colors: [.purple, .pink], startPoint: .leading, endPoint: .trailing))
+                            .foregroundStyle(Color.accentMint)
                     }
                 }
             }

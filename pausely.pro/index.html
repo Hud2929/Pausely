@@ -13,6 +13,7 @@
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             min-height: 100vh;
             display: flex;
+            flex-direction: column;
             align-items: center;
             justify-content: center;
         }
@@ -20,17 +21,14 @@
             text-align: center;
             color: white;
             padding: 40px;
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
         }
-        h1 {
-            font-size: 48px;
-            font-weight: 700;
-            margin-bottom: 20px;
-        }
-        p {
-            font-size: 20px;
-            opacity: 0.9;
-            margin-bottom: 30px;
-        }
+        h1 { font-size: 48px; font-weight: 700; margin-bottom: 20px; }
+        p { font-size: 20px; opacity: 0.9; margin-bottom: 30px; }
         .links {
             display: flex;
             gap: 20px;
@@ -45,9 +43,19 @@
             border-radius: 8px;
             transition: background 0.3s;
         }
-        a:hover {
-            background: rgba(255,255,255,0.3);
+        a:hover { background: rgba(255,255,255,0.3); }
+        footer {
+            width: 100%;
+            text-align: center;
+            padding: 24px 40px;
+            font-size: 13px;
+            color: rgba(255,255,255,0.55);
+            border-top: 1px solid rgba(255,255,255,0.15);
         }
+        footer a { padding: 4px 8px; font-size: 13px; background: none; }
+        footer a:hover { background: rgba(255,255,255,0.1); border-radius: 4px; }
+        .footer-links { display: flex; gap: 4px; justify-content: center; flex-wrap: wrap; margin-bottom: 10px; }
+        .footer-sep { opacity: 0.35; }
     </style>
 </head>
 <body>
@@ -58,7 +66,24 @@
             <a href="/support">Support</a>
             <a href="/privacy">Privacy Policy</a>
             <a href="/terms">Terms of Service</a>
+            <a href="/refunds">Refund Policy</a>
         </div>
     </div>
+    <footer>
+        <div class="footer-links">
+            <a href="/privacy">Privacy Policy</a>
+            <span class="footer-sep">·</span>
+            <a href="/terms">Terms of Service</a>
+            <span class="footer-sep">·</span>
+            <a href="/refunds">Refund Policy</a>
+            <span class="footer-sep">·</span>
+            <a href="/cookies">Cookie Policy</a>
+            <span class="footer-sep">·</span>
+            <a href="/support">Support</a>
+            <span class="footer-sep">·</span>
+            <a href="/delete">Delete My Data</a>
+        </div>
+        <div>Pausely &nbsp;·&nbsp; Contact: <a href="mailto:pausely@proton.me">pausely@proton.me</a></div>
+    </footer>
 </body>
 </html>

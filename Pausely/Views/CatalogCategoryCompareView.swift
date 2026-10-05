@@ -67,7 +67,7 @@ struct CatalogCategoryCompareView: View {
                                 selectedEntries.removeAll()
                             }
                         }
-                        .foregroundStyle(Color.luxuryTeal)
+                        .foregroundStyle(Color.accentMint)
                     }
                 }
             }
@@ -412,7 +412,7 @@ struct CatalogCompareRow: View {
 struct CategoryComparePill: View {
     let title: String
     let isSelected: Bool
-    var accentColor: Color = .luxuryPurple
+    var accentColor: Color = .accentMint
     let action: () -> Void
 
     var body: some View {
@@ -588,7 +588,7 @@ struct TierPricingRow: View {
                 HStack(spacing: 6) {
                     Image(systemName: tier.icon)
                         .font(.caption)
-                        .foregroundStyle(Color.luxuryTeal)
+                        .foregroundStyle(Color.accentMint)
 
                     Text(tier.displayName)
                         .font(.subheadline.weight(.semibold))

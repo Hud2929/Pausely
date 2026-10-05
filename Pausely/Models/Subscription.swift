@@ -349,6 +349,18 @@ enum BillingFrequency: String, Codable, CaseIterable, Identifiable {
         case .yearly: return "/yr"
         }
     }
+
+    /// Grammatically correct billing period label, e.g. "per month", "per year"
+    var billingPeriodLabel: String {
+        switch self {
+        case .weekly:     return "per week"
+        case .biweekly:   return "every 2 weeks"
+        case .monthly:    return "per month"
+        case .quarterly:  return "every 3 months"
+        case .semiannual: return "every 6 months"
+        case .yearly:     return "per year"
+        }
+    }
     
     var multiplierToMonthly: Decimal {
         switch self {

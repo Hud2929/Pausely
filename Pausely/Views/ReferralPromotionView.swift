@@ -75,7 +75,7 @@ struct ReferralPromotionView: View {
                     Text(paymentManager.isPremium ? "Refer Friends" : "Get 30% Off")
                         .font(.system(.callout, design: .rounded).weight(.semibold))
                 }
-                .foregroundColor(.purple)
+                .foregroundColor(Color.accentMint)
                 .frame(maxWidth: .infinity)
                 .frame(height: 48)
                 .background(Color.white)
@@ -86,8 +86,8 @@ struct ReferralPromotionView: View {
         .background(
             LinearGradient(
                 colors: [
-                    Color.luxuryPurple,
-                    Color.luxuryPink
+                    Color.accentMint,
+                    Color.accentMint
                 ],
                 startPoint: .topLeading,
                 endPoint: .bottomTrailing
@@ -98,7 +98,7 @@ struct ReferralPromotionView: View {
             RoundedRectangle(cornerRadius: 20)
                 .stroke(Color.white.opacity(0.3), lineWidth: 1)
         )
-        .shadow(color: Color.luxuryPurple.opacity(0.4), radius: 20, x: 0, y: 10)
+        .shadow(color: Color.accentMint.opacity(0.4), radius: 20, x: 0, y: 10)
         .sheet(isPresented: $showReferralSheet) {
             ReferralShareSheet()
         }
@@ -167,13 +167,13 @@ struct ReferralShareSheet: View {
                                 Circle()
                                     .fill(
                                         LinearGradient(
-                                            colors: [Color.luxuryPurple, Color.luxuryPink],
+                                            colors: [Color.accentMint, Color.accentMint],
                                             startPoint: .topLeading,
                                             endPoint: .bottomTrailing
                                         )
                                     )
                                     .frame(width: 100, height: 100)
-                                    .shadow(color: Color.luxuryPurple.opacity(0.5), radius: 20)
+                                    .shadow(color: Color.accentMint.opacity(0.5), radius: 20)
                                 
                                 Image(systemName: "gift.fill")
                                     .font(.title)
@@ -199,14 +199,14 @@ struct ReferralShareSheet: View {
                                 icon: "person.2.fill",
                                 title: "You Get",
                                 description: "FREE Pro when 3 friends subscribe",
-                                color: Color.luxuryGold
+                                color: Color.accentMint
                             )
                             
                             RewardCard(
                                 icon: "percent",
                                 title: "They Get",
                                 description: "30% off their first month of Pro",
-                                color: Color.luxuryTeal
+                                color: Color.accentMint
                             )
                         }
                         .padding(.horizontal, 20)
@@ -251,7 +251,7 @@ struct ReferralShareSheet: View {
                                                 Text("Share")
                                             }
                                             .font(.system(.subheadline, design: .rounded).weight(.semibold))
-                                            .foregroundColor(.purple)
+                                            .foregroundColor(Color.accentMint)
                                             .frame(maxWidth: .infinity)
                                             .frame(height: 48)
                                             .background(Color.white)
@@ -396,7 +396,7 @@ struct ReferralStatsView: View {
                 StatBox(
                     value: "\(data.conversions)",
                     label: "Conversions",
-                    color: Color.luxuryGold
+                    color: Color.accentMint
                 )
                 
                 StatBox(
@@ -408,7 +408,7 @@ struct ReferralStatsView: View {
                 StatBox(
                     value: data.isEligibleForFreePro ? "✓" : "\(max(0, 3 - data.conversions))",
                     label: data.isEligibleForFreePro ? "Free Pro!" : "To Free Pro",
-                    color: data.isEligibleForFreePro ? .green : Color.luxuryTeal
+                    color: data.isEligibleForFreePro ? .green : Color.accentMint
                 )
             }
             
@@ -424,7 +424,7 @@ struct ReferralStatsView: View {
                             RoundedRectangle(cornerRadius: 4)
                                 .fill(
                                     LinearGradient(
-                                        colors: [Color.luxuryGold, Color.luxuryPink],
+                                        colors: [Color.accentMint, Color.accentMint],
                                         startPoint: .leading,
                                         endPoint: .trailing
                                     )
@@ -441,10 +441,10 @@ struct ReferralStatsView: View {
             } else {
                 HStack {
                     Image(systemName: "crown.fill")
-                        .foregroundColor(Color.luxuryGold)
+                        .foregroundColor(Color.accentMint)
                     Text("You've unlocked FREE Pro!")
                         .font(.system(.subheadline, design: .rounded).weight(.semibold))
-                        .foregroundColor(Color.luxuryGold)
+                        .foregroundColor(Color.accentMint)
                 }
                 .padding(.vertical, 8)
             }
@@ -487,7 +487,7 @@ struct ReferralCodeInputView: View {
         VStack(alignment: .leading, spacing: 12) {
             HStack {
                 Image(systemName: "gift")
-                    .foregroundColor(Color.luxuryGold)
+                    .foregroundColor(Color.accentMint)
                 
                 Text("Have a referral code?")
                     .font(.system(.subheadline, design: .rounded).weight(.semibold))
@@ -537,7 +537,7 @@ struct ReferralCodeInputView: View {
             }
         }
         .padding()
-        .glass(intensity: 0.1, tint: Color.luxuryGold)
+        .glass(intensity: 0.1, tint: Color.accentMint)
     }
     
     private func validateCode(_ value: String) {
@@ -586,12 +586,12 @@ struct ApplyReferralView: View {
                     VStack(spacing: 16) {
                         ZStack {
                             Circle()
-                                .fill(Color.luxuryGold.opacity(0.2))
+                                .fill(Color.accentMint.opacity(0.2))
                                 .frame(width: 100, height: 100)
                             
                             Image(systemName: "percent")
                                 .font(.system(.largeTitle, design: .rounded).weight(.bold))
-                                .foregroundColor(Color.luxuryGold)
+                                .foregroundColor(Color.accentMint)
                         }
                         
                         VStack(spacing: 8) {
@@ -644,13 +644,13 @@ struct ApplyReferralView: View {
                             .frame(height: 54)
                             .background(
                                 LinearGradient(
-                                    colors: [Color.luxuryPurple, Color.luxuryPink],
+                                    colors: [Color.accentMint, Color.accentMint],
                                     startPoint: .leading,
                                     endPoint: .trailing
                                 )
                             )
                             .cornerRadius(16)
-                            .shadow(color: Color.luxuryPurple.opacity(0.4), radius: 15)
+                            .shadow(color: Color.accentMint.opacity(0.4), radius: 15)
                         }
                         .disabled(code.count < 6 || isApplying)
                         .accessibilityHint(code.count < 6 ? "Please enter a valid 6-character referral code" : isApplying ? "Please wait, applying code" : "")

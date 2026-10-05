@@ -3,6 +3,7 @@ import Auth
 import PostgREST
 import os.log
 import ActivityKit
+import Combine
 
 @MainActor
 class SubscriptionStore: ObservableObject {
@@ -24,9 +25,18 @@ class SubscriptionStore: ObservableObject {
     private var lastCalculationHash: Int?
     private var cachedSubscriptions: [Subscription]?
     private var cacheTimestamp: Date?
+    private var currencyCancellable: AnyCancellable?
 
     private init() {
         loadFromCache()
+        // Recalculate totals whenever the user switches display currency
+        currencyCancellable = CurrencyManager.shared.$selectedCurrency
+            .dropFirst()
+            .sink { [weak self] _ in
+                guard let self else { return }
+                self.lastCalculationHash = nil // invalidate hash so recalc runs
+                self.performCalculation(activeSubscriptions: self.subscriptions.filter { $0.status == .active })
+            }
     }
     
     // MARK: - Data Fetching
@@ -65,6 +75,11 @@ class SubscriptionStore: ObservableObject {
             let fetchedSubscriptions = response.map { $0.toSubscription() }
 
             await MainActor.run {
+                // Don't wipe locally-added subscriptions if Supabase returns empty
+                // (user may be in demo/offline mode with locally-tracked subs)
+                if fetchedSubscriptions.isEmpty && !self.subscriptions.isEmpty {
+                    return
+                }
                 self.subscriptions = fetchedSubscriptions
                 self.calculateTotals()
                 self.lastFetchDate = Date()
@@ -508,11 +523,9 @@ class SubscriptionStore: ObservableObject {
 
         do {
             let cached = try JSONDecoder().decode([Subscription].self, from: data)
-            Task { @MainActor [weak self] in
-                guard let self = self else { return }
-                self.subscriptions = cached
-                self.calculateTotals()
-            }
+            // SubscriptionStore is @MainActor so we can update synchronously here
+            self.subscriptions = cached
+            self.calculateTotals()
         } catch {
             os_log("Cache load failed: %{public}@", log: .default, type: .error, error.localizedDescription)
         }
@@ -622,12 +635,6 @@ class SubscriptionStore: ObservableObject {
         // Deduplication check
         let existingNames = Set(subscriptions.map { $0.name.lowercased() })
         let uniqueSubs = newSubscriptions.filter { !existingNames.contains($0.name.lowercased()) }
-        
-        // Process in batches of 5 for memory efficiency
-        let batchSize = 5
-        let batches = stride(from: 0, to: uniqueSubs.count, by: batchSize).map {
-            Array(uniqueSubs[$0..<min($0 + batchSize, uniqueSubs.count)])
-        }
         
         for sub in uniqueSubs {
             do {
@@ -798,26 +805,7 @@ class SubscriptionStore: ObservableObject {
     }
     
     private func calculateCategoryTotal(_ subscriptions: [Subscription]) -> Decimal {
-        var total: Decimal = 0
-        for sub in subscriptions {
-            let monthlyAmount: Decimal
-            switch sub.billingFrequency {
-            case .monthly:
-                monthlyAmount = sub.amount
-            case .yearly:
-                monthlyAmount = sub.amount / 12
-            case .weekly:
-                monthlyAmount = sub.amount * Decimal(52) / 12
-            case .biweekly:
-                monthlyAmount = sub.amount * Decimal(26) / 12
-            case .quarterly:
-                monthlyAmount = sub.amount / 3
-            case .semiannual:
-                monthlyAmount = sub.amount / 6
-            }
-            total += monthlyAmount
-        }
-        return total
+        subscriptions.reduce(Decimal(0)) { $0 + monthlyEquivalent(for: $1) }
     }
 
     // MARK: - Live Activity

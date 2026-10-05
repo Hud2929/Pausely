@@ -20,7 +20,7 @@ struct UpgradeBannerView: View {
 
                     Image(systemName: isAtLimit ? "lock.fill" : "crown.fill")
                         .font(AppTypography.headlineLarge)
-                        .foregroundStyle(isAtLimit ? .red : Color.luxuryGold)
+                        .foregroundStyle(isAtLimit ? .red : Color.accentMint)
                 }
 
                 VStack(alignment: .leading, spacing: 4) {
@@ -42,13 +42,13 @@ struct UpgradeBannerView: View {
 
                 Image(systemName: "chevron.right")
                     .font(AppTypography.labelLarge)
-                    .foregroundStyle(Color.luxuryGold)
+                    .foregroundStyle(Color.accentMint)
             }
             .padding()
-            .glass(intensity: isAtLimit ? 0.15 : 0.1, tint: isAtLimit ? .red : Color.luxuryGold)
+            .glass(intensity: isAtLimit ? 0.15 : 0.1, tint: isAtLimit ? .red : Color.accentMint)
             .overlay(
                 RoundedRectangle(cornerRadius: 16)
-                    .stroke(isAtLimit ? Color.red.opacity(0.3) : Color.luxuryGold.opacity(0.3), lineWidth: 1)
+                    .stroke(isAtLimit ? Color.red.opacity(0.3) : Color.accentMint.opacity(0.3), lineWidth: 1)
             )
         }
         .buttonStyle(PlainButtonStyle())

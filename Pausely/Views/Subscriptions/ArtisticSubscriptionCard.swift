@@ -8,135 +8,122 @@ struct ArtisticSubscriptionCard: View {
     @State private var isPressed = false
     @State private var appear = false
 
+    private var cardAccessibilityLabel: String {
+        let amount = currencyManager.format(currencyManager.convertToSelected(subscription.amount, from: subscription.currency))
+        var parts = [subscription.name, amount + " per " + subscription.billingFrequency.displayName.lowercased()]
+        if subscription.isPaused { parts.append("paused") }
+        if let days = subscription.daysUntilRenewal, days >= 0, days <= 7 {
+            parts.append(days == 0 ? "renews today" : "renews in \(days) \(days == 1 ? "day" : "days")")
+        }
+        return parts.joined(separator: ", ")
+    }
+
     var cardColor: Color {
-        let colors: [Color] = [
-            BrandColors.primary,
-            BrandColors.secondary,
-            BrandColors.accent,
-            SemanticColors.success,
-            SemanticColors.info,
-            SemanticColors.warning
-        ]
-        return colors[index % colors.count]
+        if let days = subscription.daysUntilRenewal {
+            if days <= 2 { return Color.semanticDestructive }
+            if days <= 6 { return Color.semanticWarning }
+        }
+        return Color.accentMint
     }
 
     var body: some View {
         Button(action: onTap) {
-            HStack(spacing: 0) {
-                // Left color bar
-                RoundedRectangle(cornerRadius: 4)
-                    .fill(cardColor)
-                    .frame(width: 4)
-                    .padding(.vertical, 20)
+            HStack(spacing: 14) {
+                // 40pt circle avatar — compact, colored
+                ZStack {
+                    Circle()
+                        .fill(cardColor.opacity(0.15))
+                        .frame(width: 40, height: 40)
 
-                // Content
-                HStack(spacing: 16) {
-                    // Icon with gradient background
-                    ZStack {
-                        RoundedRectangle(cornerRadius: 16)
-                            .fill(
-                                LinearGradient(
-                                    colors: [cardColor.opacity(0.3), cardColor.opacity(0.1)],
-                                    startPoint: .topLeading,
-                                    endPoint: .bottomTrailing
-                                )
-                            )
-                            .frame(width: 60, height: 60)
+                    Text(String(subscription.name.prefix(1)))
+                        .font(.system(.callout, design: .rounded).weight(.bold))
+                        .foregroundStyle(cardColor)
+                }
 
-                        Text(String(subscription.name.prefix(1)))
-                            .font(.title3.weight(.bold))
-                            .foregroundColor(.white)
-                    }
+                // Name + frequency
+                VStack(alignment: .leading, spacing: 3) {
+                    Text(subscription.name)
+                        .font(.system(.callout, design: .rounded).weight(.semibold))
+                        .foregroundStyle(.white)
+                        .lineLimit(1)
 
-                    // Info
-                    VStack(alignment: .leading, spacing: 6) {
-                        Text(subscription.name)
-                            .font(.headline.weight(.semibold))
-                            .foregroundColor(.white)
+                    HStack(spacing: 6) {
+                        Text(subscription.billingFrequency.displayName)
+                            .font(.system(.caption2, design: .rounded))
+                            .foregroundStyle(Color.obsidianTextTertiary)
 
-                        HStack(spacing: 8) {
-                            // Billing frequency badge
-                            Text(subscription.billingFrequency.displayName)
-                                .font(.caption2.weight(.medium))
-                                .padding(.horizontal, 8)
-                                .padding(.vertical, 3)
+                        if subscription.isPaused {
+                            Text("Paused")
+                                .font(.system(size: 10, weight: .semibold, design: .rounded))
+                                .foregroundStyle(Color.semanticWarning)
+                                .padding(.horizontal, 6)
+                                .padding(.vertical, 2)
                                 .background(
                                     Capsule()
-                                        .fill(BackgroundColors.tertiary)
+                                        .fill(Color.semanticWarning.opacity(0.15))
                                 )
-                                .foregroundColor(TextColors.secondary)
-
-                            if subscription.isPaused {
-                                Text("Paused")
-                                    .font(.caption2.weight(.medium))
-                                    .padding(.horizontal, 8)
-                                    .padding(.vertical, 3)
-                                    .background(
-                                        Capsule()
-                                            .fill(SemanticColors.warning.opacity(0.2))
-                                    )
-                                    .foregroundColor(SemanticColors.warning)
-                            }
-                        }
-                    }
-
-                    Spacer()
-
-                    // Price + Payment Countdown
-                    VStack(alignment: .trailing, spacing: 4) {
-                        let converted = currencyManager.convertToSelected(
-                            subscription.amount,
-                            from: subscription.currency
-                        )
-                        Text(currencyManager.format(converted))
-                            .font(.headline.weight(.bold))
-                            .foregroundColor(cardColor)
-
-                        if let days = subscription.daysUntilRenewal {
-                            let countdownText: String = {
-                                if days < 0 { return "Overdue" }
-                                if days == 0 { return "Paying today" }
-                                if days == 1 { return "Paying tomorrow" }
-                                return "Paying in \(days) days"
-                            }()
-                            Text(countdownText)
-                                .font(.caption.weight(.semibold))
-                                .foregroundColor(days <= 3 ? SemanticColors.error : TextColors.tertiary)
-                        } else {
-                            Text("No date set")
-                                .font(.caption.weight(.medium))
-                                .foregroundColor(TextColors.tertiary)
                         }
                     }
                 }
-                .padding(.leading, 16)
-                .padding(.trailing, 20)
-                .padding(.vertical, 16)
-            }
-            .background(
-                RoundedRectangle(cornerRadius: 20)
-                    .fill(BackgroundColors.secondary)
-                    .overlay(
-                        RoundedRectangle(cornerRadius: 20)
-                            .stroke(cardColor.opacity(0.2), lineWidth: 1)
+
+                Spacer()
+
+                // Amount + countdown
+                VStack(alignment: .trailing, spacing: 3) {
+                    let converted = currencyManager.convertToSelected(
+                        subscription.amount,
+                        from: subscription.currency
                     )
-                    .shadow(color: cardColor.opacity(0.1), radius: 10, x: 0, y: 4)
+                    Text(currencyManager.format(converted))
+                        .font(.system(.callout, design: .rounded).weight(.bold))
+                        .foregroundStyle(cardColor)
+
+                    if let days = subscription.daysUntilRenewal {
+                        let countdownText: String = {
+                            if days < 0 { return "Overdue" }
+                            if days == 0 { return "Today" }
+                            if days == 1 { return "Tomorrow" }
+                            return "in \(days)d"
+                        }()
+                        Text(countdownText)
+                            .font(.system(.caption2, design: .rounded))
+                            .foregroundStyle(days <= 3 ? Color.semanticDestructive : Color.obsidianTextTertiary)
+                    } else {
+                        Text("No date")
+                            .font(.system(.caption2, design: .rounded))
+                            .foregroundStyle(Color.obsidianTextTertiary)
+                    }
+                }
+            }
+            .padding(.horizontal, 16)
+            .padding(.vertical, 14)
+            .background(
+                RoundedRectangle(cornerRadius: 14, style: .continuous)
+                    .fill(Color.obsidianSurface)
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 14, style: .continuous)
+                            .stroke(Color.white.opacity(0.06), lineWidth: 1)
+                    )
             )
             .scaleEffect(isPressed ? 0.98 : 1)
             .opacity(appear ? 1 : 0)
-            .offset(y: appear ? 0 : 20)
+            .offset(y: appear ? 0 : 16)
         }
         .buttonStyle(PlainButtonStyle())
-        .pressEvents {
-            withAnimation(.easeInOut(duration: 0.1)) { isPressed = true }
-        } onRelease: {
-            withAnimation(.easeInOut(duration: 0.1)) { isPressed = false }
-        }
-        .accessibilityElement(children: .combine)
-        .accessibilityLabel("\(subscription.name), \(currencyManager.format(currencyManager.convertToSelected(subscription.amount, from: subscription.currency))) per \(subscription.billingFrequency.displayName.lowercased())\(subscription.isPaused ? ", paused" : "")")
-        .accessibilityHint("Double-tap to view details")
+        .simultaneousGesture(
+            DragGesture(minimumDistance: 0)
+                .onChanged { _ in
+                    withAnimation(.easeInOut(duration: 0.1)) { isPressed = true }
+                }
+                .onEnded { _ in
+                    withAnimation(.easeInOut(duration: 0.15)) { isPressed = false }
+                }
+        )
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel(cardAccessibilityLabel)
+        .accessibilityHint("Double tap to view details and manage")
         .onAppear {
-            withAnimation(.easeOut(duration: 0.5).delay(Double(index) * 0.05)) {
+            withAnimation(.easeOut(duration: 0.4).delay(Double(index) * 0.04)) {
                 appear = true
             }
         }

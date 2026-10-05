@@ -5,12 +5,15 @@ import FamilyControls
 @MainActor
 struct PrivacySettingsView: View {
     @Environment(\.dismiss) private var dismiss
-    @AppStorage("analytics_enabled") private var analyticsEnabled = true
-    @AppStorage("crash_reporting") private var crashReporting = true
+    @AppStorage("analytics_enabled") private var analyticsEnabled = false
+    @AppStorage("crash_reporting") private var crashReporting = false
     @State private var showingPermissionAlert = false
     @State private var isCheckingPermissions = true
     @State private var screenTimeAuthorized = false
     @State private var cancellables = Set<AnyCancellable>()
+    @State private var showingDeleteConfirmation = false
+    @State private var isDeletingAccount = false
+    @State private var deleteError: String?
     
     var body: some View {
         ScrollView {
@@ -19,7 +22,7 @@ struct PrivacySettingsView: View {
                 VStack(spacing: 8) {
                     Image(systemName: "shield.lefthalf.filled")
                         .font(.largeTitle)
-                        .foregroundStyle(Color.luxuryTeal)
+                        .foregroundStyle(Color.accentMint)
 
                     Text("Privacy & Security")
                         .font(.system(.title, design: .rounded).weight(.bold))
@@ -125,7 +128,7 @@ struct PrivacySettingsView: View {
                             Spacer()
                             
                             Toggle("", isOn: $analyticsEnabled)
-                                .toggleStyle(SwitchToggleStyle(tint: Color.luxuryGold))
+                                .toggleStyle(SwitchToggleStyle(tint: Color.accentMint))
                         }
                         .padding()
                         .glass(intensity: 0.08, tint: .white)
@@ -155,7 +158,7 @@ struct PrivacySettingsView: View {
                             Spacer()
                             
                             Toggle("", isOn: $crashReporting)
-                                .toggleStyle(SwitchToggleStyle(tint: Color.luxuryGold))
+                                .toggleStyle(SwitchToggleStyle(tint: Color.accentMint))
                         }
                         .padding()
                         .glass(intensity: 0.08, tint: .white)
@@ -171,7 +174,7 @@ struct PrivacySettingsView: View {
                             .padding(.leading, 4)
                         
                         NavigationLink(destination: ChangePasswordView()) {
-                            PrivacyRow(icon: "key.fill", title: "Change Password", subtitle: "Update your password", color: .purple)
+                            PrivacyRow(icon: "key.fill", title: "Change Password", subtitle: "Update your password", color: Color.accentMint)
                         }
                         
                         NavigationLink(destination: TwoFactorView()) {
@@ -193,10 +196,10 @@ struct PrivacySettingsView: View {
                             .padding(.leading, 4)
                         
                         Button(action: { exportData() }) {
-                            PrivacyRow(icon: "square.and.arrow.up", title: "Export Your Data", subtitle: "Download all your data", color: Color.luxuryGold)
+                            PrivacyRow(icon: "square.and.arrow.up", title: "Export Your Data", subtitle: "Download all your data", color: Color.accentMint)
                         }
                         
-                        Button(action: { deleteAccount() }) {
+                        Button(action: { showingDeleteConfirmation = true }) {
                             HStack(spacing: 16) {
                                 ZStack {
                                     Circle()
@@ -240,10 +243,10 @@ struct PrivacySettingsView: View {
                                 Text("Privacy Policy")
                                     .font(.system(.body, design: .rounded).weight(.semibold))
                             }
-                            .foregroundStyle(Color.luxuryTeal)
+                            .foregroundStyle(Color.accentMint)
                             .frame(maxWidth: .infinity)
                             .padding()
-                            .glass(intensity: 0.08, tint: Color.luxuryTeal)
+                            .glass(intensity: 0.08, tint: Color.accentMint)
                         }
                         
                         Button(action: { openTerms() }) {
@@ -264,6 +267,26 @@ struct PrivacySettingsView: View {
                 
                 Spacer(minLength: 40)
             }
+        }
+        .confirmationDialog(
+            "Delete Account",
+            isPresented: $showingDeleteConfirmation,
+            titleVisibility: .visible
+        ) {
+            Button("Delete My Account", role: .destructive) {
+                Task { await deleteAccount() }
+            }
+            Button("Cancel", role: .cancel) {}
+        } message: {
+            Text("This will permanently delete your account and all your subscription data. This action cannot be undone.")
+        }
+        .alert("Error Deleting Account", isPresented: Binding(
+            get: { deleteError != nil },
+            set: { if !$0 { deleteError = nil } }
+        )) {
+            Button("OK", role: .cancel) {}
+        } message: {
+            Text(deleteError ?? "An unknown error occurred. Please try again or contact pausely@proton.me.")
         }
         .navigationTitle("Privacy")
         .navigationBarTitleDisplayMode(.inline)
@@ -297,11 +320,49 @@ struct PrivacySettingsView: View {
     }
     
     private func exportData() {
-        // Export user data functionality
+        Task {
+            let subs = SubscriptionStore.shared.subscriptions
+            guard let data = try? JSONEncoder().encode(subs),
+                  let json = String(data: data, encoding: .utf8) else { return }
+            await MainActor.run {
+                let av = UIActivityViewController(activityItems: [json], applicationActivities: nil)
+                if let scene = UIApplication.shared.connectedScenes.first as? UIWindowScene,
+                   let root = scene.windows.first?.rootViewController {
+                    root.present(av, animated: true)
+                }
+            }
+        }
     }
-    
-    private func deleteAccount() {
-        // Account deletion flow
+
+    private func deleteAccount() async {
+        isDeletingAccount = true
+        defer { isDeletingAccount = false }
+        do {
+            let userId = RevolutionaryAuthManager.shared.currentUser?.id
+            // 1. Delete all user subscriptions from Supabase
+            if let uid = userId {
+                try await SupabaseManager.shared.client
+                    .from("subscriptions")
+                    .delete()
+                    .eq("user_id", value: uid)
+                    .execute()
+            }
+            // 2. Insert GDPR deletion audit record before clearing
+            let email = RevolutionaryAuthManager.shared.currentUser?.email ?? ""
+            try? await SupabaseManager.shared.client
+                .from("deletion_requests")
+                .insert(["email": email, "source": "in_app"])
+                .execute()
+            // 3. Clear local cached data
+            AppSettings.shared.cachedSubscriptions = Data()
+            SubscriptionStore.shared.subscriptions = []
+            // 4. Sign out — Supabase auth session ended
+            await RevolutionaryAuthManager.shared.signOut()
+        } catch {
+            await MainActor.run {
+                deleteError = error.localizedDescription
+            }
+        }
     }
     
     private func openPrivacyPolicy() {
@@ -370,7 +431,7 @@ struct ChangePasswordView: View {
                 VStack(spacing: 8) {
                     Image(systemName: "key.fill")
                         .font(.largeTitle)
-                        .foregroundStyle(.purple)
+                        .foregroundStyle(Color.accentMint)
 
                     Text("Change Password")
                         .font(.system(.title, design: .rounded).weight(.bold))
@@ -428,7 +489,7 @@ struct ChangePasswordView: View {
                 .padding()
                 .background(
                     RoundedRectangle(cornerRadius: 14)
-                        .fill(canSubmit ? Color.purple : Color.purple.opacity(0.5))
+                        .fill(canSubmit ? Color.accentMint : Color.accentMint.opacity(0.4))
                 )
                 .disabled(!canSubmit || isLoading)
                 .accessibilityHint(!canSubmit ? "Please fill in all password fields correctly" : isLoading ? "Please wait, updating password" : "")

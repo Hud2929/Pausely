@@ -55,7 +55,7 @@ struct SubscriptionCompareView: View {
                             showingSubscriptionPicker = true
                         } label: {
                             Image(systemName: "plus")
-                                .foregroundStyle(Color.luxuryTeal)
+                                .foregroundStyle(Color.accentMint)
                         }
                     }
                 }
@@ -79,12 +79,12 @@ struct SubscriptionCompareView: View {
         VStack(spacing: 20) {
             ZStack {
                 Circle()
-                    .fill(Color.luxuryTeal.opacity(0.15))
+                    .fill(Color.accentMint.opacity(0.15))
                     .frame(width: 80, height: 80)
 
                 Image(systemName: "arrow.left.arrow.right.circle.fill")
                     .font(.system(size: 36))
-                    .foregroundStyle(Color.luxuryTeal)
+                    .foregroundStyle(Color.accentMint)
             }
 
             VStack(spacing: 8) {
@@ -111,7 +111,7 @@ struct SubscriptionCompareView: View {
                 .frame(height: 52)
                 .background(
                     LinearGradient(
-                        colors: [Color.luxuryTeal, Color.luxuryPurple],
+                        colors: [Color.accentMint, Color.accentMint],
                         startPoint: .leading,
                         endPoint: .trailing
                     )
@@ -413,7 +413,7 @@ struct AlternativePlanCard: View {
         VStack(alignment: .leading, spacing: 8) {
             HStack {
                 Image(systemName: tier.icon)
-                    .foregroundStyle(currentTier ? Color.luxuryTeal : .white)
+                    .foregroundStyle(currentTier ? Color.accentMint : .white)
 
                 Text(tier.displayName)
                     .font(.subheadline.weight(.semibold))
@@ -424,10 +424,10 @@ struct AlternativePlanCard: View {
                 if currentTier {
                     Text("Current")
                         .font(.caption2.weight(.bold))
-                        .foregroundStyle(Color.luxuryTeal)
+                        .foregroundStyle(Color.accentMint)
                         .padding(.horizontal, 8)
                         .padding(.vertical, 2)
-                        .background(Color.luxuryTeal.opacity(0.15))
+                        .background(Color.accentMint.opacity(0.15))
                         .clipShape(Capsule())
                 }
             }
@@ -445,7 +445,7 @@ struct AlternativePlanCard: View {
             if let perUser = pricing.monthlyPricePerUser {
                 Text("\(CurrencyManager.shared.format(Decimal(perUser)))/person")
                     .font(.caption2)
-                    .foregroundStyle(Color.luxuryTeal)
+                    .foregroundStyle(Color.accentMint)
             }
 
             if pricing.isBestValue {
@@ -465,7 +465,7 @@ struct AlternativePlanCard: View {
                 .fill(Color.obsidianSurface)
                 .overlay(
                     RoundedRectangle(cornerRadius: 16, style: .continuous)
-                        .stroke(currentTier ? Color.luxuryTeal.opacity(0.5) : Color.white.opacity(0.08), lineWidth: 1)
+                        .stroke(currentTier ? Color.accentMint.opacity(0.5) : Color.white.opacity(0.08), lineWidth: 1)
                 )
         )
     }

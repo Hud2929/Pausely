@@ -13,7 +13,7 @@ struct ScheduleStepView: View {
 
                     Text("Select the next billing date for this subscription")
                         .font(.body)
-                        .foregroundColor(TextColors.secondary)
+                        .foregroundColor(Color.obsidianTextSecondary)
                         .multilineTextAlignment(.center)
                 }
                 .padding(.top, 40)
@@ -22,7 +22,7 @@ struct ScheduleStepView: View {
                 VStack(spacing: 20) {
                     Image(systemName: "calendar.badge.clock")
                         .font(.largeTitle)
-                        .foregroundColor(BrandColors.primary)
+                        .foregroundColor(Color.accentMint)
 
                     DatePicker(
                         "Next Renewal",
@@ -30,11 +30,11 @@ struct ScheduleStepView: View {
                         displayedComponents: .date
                     )
                     .datePickerStyle(.graphical)
-                    .colorMultiply(BrandColors.primary)
+                    .colorMultiply(Color.accentMint)
                     .padding(20)
                     .background(
                         RoundedRectangle(cornerRadius: 20)
-                            .fill(BackgroundColors.secondary)
+                            .fill(Color.obsidianSurface)
                     )
                 }
                 .padding(.horizontal, 20)

@@ -27,6 +27,7 @@ struct PriceAlertBanner: View {
                     .font(.caption.weight(.semibold))
                     .foregroundStyle(.white.opacity(0.5))
             }
+            .frame(minWidth: 44, minHeight: 44)
         }
         .padding(14)
         .background(

@@ -19,7 +19,7 @@ struct ReferralTabButton: View {
             .padding(.vertical, 12)
             .background(
                 RoundedRectangle(cornerRadius: 12, style: .continuous)
-                    .fill(isSelected ? Color.luxuryPurple.opacity(0.5) : Color.clear)
+                    .fill(isSelected ? Color.accentMint.opacity(0.5) : Color.clear)
             )
         }
         .buttonStyle(PlainButtonStyle())

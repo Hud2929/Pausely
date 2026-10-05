@@ -8,31 +8,36 @@ struct EmptyFilterView: View {
 
     var body: some View {
         VStack(spacing: 20) {
-            Image(systemName: "magnifyingglass")
-                .font(AppTypography.displayLarge)
-                .foregroundStyle(.white.opacity(0.3))
-                .scaleEffect(appeared ? 1 : 0.8)
-                .opacity(appeared ? 1 : 0)
-
-            Text("No subscriptions found")
-                .font(AppTypography.headlineMedium)
-                .foregroundStyle(.white)
-                .opacity(appeared ? 1 : 0)
-                .offset(y: appeared ? 0 : 10)
-
-            if !searchText.isEmpty {
-                Text("Try a different search term")
-                    .font(AppTypography.labelLarge)
-                    .foregroundStyle(.white.opacity(0.5))
-                    .opacity(appeared ? 1 : 0)
-                    .offset(y: appeared ? 0 : 10)
-            } else if let category = category {
-                Text("No \(category.rawValue) subscriptions yet")
-                    .font(AppTypography.labelLarge)
-                    .foregroundStyle(.white.opacity(0.5))
-                    .opacity(appeared ? 1 : 0)
-                    .offset(y: appeared ? 0 : 10)
+            ZStack {
+                Circle()
+                    .fill(Color.white.opacity(0.06))
+                    .frame(width: 64, height: 64)
+                Image(systemName: "magnifyingglass")
+                    .font(.system(size: 24, weight: .semibold, design: .rounded))
+                    .foregroundStyle(.white.opacity(0.4))
             }
+            .scaleEffect(appeared ? 1 : 0.8)
+            .opacity(appeared ? 1 : 0)
+
+            VStack(spacing: 6) {
+                Text("No Results Found")
+                    .font(.system(.headline, design: .rounded).weight(.semibold))
+                    .foregroundStyle(.white)
+
+                if !searchText.isEmpty {
+                    Text("No subscriptions match \"\(searchText)\".")
+                        .font(.system(.subheadline, design: .rounded))
+                        .foregroundStyle(.white.opacity(0.5))
+                        .multilineTextAlignment(.center)
+                } else if let category = category {
+                    Text("You have no \(category.rawValue) subscriptions.")
+                        .font(.system(.subheadline, design: .rounded))
+                        .foregroundStyle(.white.opacity(0.5))
+                        .multilineTextAlignment(.center)
+                }
+            }
+            .opacity(appeared ? 1 : 0)
+            .offset(y: appeared ? 0 : 8)
 
             Button(action: {
                 HapticStyle.light.trigger()
@@ -40,35 +45,33 @@ struct EmptyFilterView: View {
             }) {
                 HStack(spacing: 8) {
                     Image(systemName: "xmark.circle.fill")
-                        .font(AppTypography.bodyMedium)
+                        .font(.system(size: 14, weight: .semibold, design: .rounded))
                     Text("Clear Filters")
-                        .font(AppTypography.headlineSmall)
+                        .font(.system(.subheadline, design: .rounded).weight(.semibold))
                 }
-                .foregroundStyle(.white)
-                .padding(.horizontal, 24)
-                .padding(.vertical, 14)
+                .foregroundStyle(Color.accentMint)
+                .padding(.horizontal, 20)
+                .padding(.vertical, 12)
                 .background(
-                    RoundedRectangle(cornerRadius: 16, style: .continuous)
-                        .fill(.white.opacity(0.1))
-                        .overlay(
-                            RoundedRectangle(cornerRadius: 16, style: .continuous)
-                                .stroke(.white.opacity(0.2), lineWidth: 1)
-                        )
+                    RoundedRectangle(cornerRadius: 12, style: .continuous)
+                        .fill(Color.accentMint.opacity(0.12))
                 )
             }
+            .buttonStyle(PlainButtonStyle())
             .accessibilityLabel("Clear filters")
-            .premiumPress(haptic: .light, scale: 0.97)
-            .padding(.top, 8)
+            .padding(.top, 4)
             .opacity(appeared ? 1 : 0)
-            .offset(y: appeared ? 0 : 10)
+            .offset(y: appeared ? 0 : 8)
         }
-        .padding(.vertical, 40)
+        .padding(28)
+        .frame(maxWidth: .infinity)
+        .surfaceCard(cornerRadius: 20)
         .onAppear {
             guard !UIAccessibility.isReduceMotionEnabled else {
                 appeared = true
                 return
             }
-            withAnimation(.easeOut(duration: 0.4).delay(0.1)) {
+            withAnimation(.spring(response: 0.4, dampingFraction: 0.8).delay(0.1)) {
                 appeared = true
             }
         }

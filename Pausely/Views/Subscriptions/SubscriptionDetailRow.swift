@@ -9,12 +9,12 @@ struct SubscriptionDetailRow: View {
         HStack(spacing: 16) {
             Image(systemName: icon)
                 .font(.headline)
-                .foregroundColor(BrandColors.primary)
+                .foregroundColor(Color.accentMint)
                 .frame(width: 32)
 
             Text(title)
                 .font(.body)
-                .foregroundColor(TextColors.secondary)
+                .foregroundColor(Color.obsidianTextSecondary)
 
             Spacer()
 
@@ -23,6 +23,6 @@ struct SubscriptionDetailRow: View {
                 .foregroundColor(.white)
         }
         .padding(16)
-        .background(BackgroundColors.secondary)
+        .background(Color.obsidianSurface)
     }
 }

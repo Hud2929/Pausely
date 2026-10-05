@@ -13,6 +13,8 @@ struct PremiumProfileView: View {
     @State private var showingExport = false
     @State private var showingWhatsNew = false
     @State private var showingWrapped = false
+    @State private var showingGmailImport = false
+    @State private var showingLanguage = false
 
     var body: some View {
         ZStack {
@@ -74,7 +76,9 @@ struct PremiumProfileView: View {
                         onCurrency: { showingCurrency = true },
                         onPrivacy: { showingPrivacy = true },
                         onHelp: { showingHelp = true },
-                        onExport: { showingExport = true }
+                        onExport: { showingExport = true },
+                        onGmailImport: { showingGmailImport = true },
+                        onLanguage: { showingLanguage = true }
                     )
                     .padding(.horizontal, 20)
                     .padding(.top, 24)
@@ -158,6 +162,20 @@ struct PremiumProfileView: View {
         }
         .sheet(isPresented: $showingWrapped) {
             SubscriptionWrappedView(subscriptions: store.subscriptions)
+        }
+        .sheet(isPresented: $showingGmailImport) {
+            GmailImportView()
+        }
+        .sheet(isPresented: $showingLanguage) {
+            NavigationStack {
+                LanguageSettingsView()
+                    .toolbar {
+                        ToolbarItem(placement: .topBarLeading) {
+                            Button("Close") { showingLanguage = false }
+                                .foregroundStyle(Color.accentMint)
+                        }
+                    }
+            }
         }
     }
 }
@@ -484,6 +502,9 @@ struct SettingsSection: View {
     let onPrivacy: () -> Void
     let onHelp: () -> Void
     let onExport: () -> Void
+    var onGmailImport: (() -> Void)? = nil
+    var onLanguage: (() -> Void)? = nil
+    @AppStorage("app_language") private var appLanguage = "system"
 
     var body: some View {
         VStack(alignment: .leading, spacing: 16) {
@@ -499,10 +520,20 @@ struct SettingsSection: View {
                     }
                 })
                 .accessibilityIdentifier("importFromAppStoreButton")
+                SettingsRow(
+                    icon: "envelope.fill",
+                    title: GmailSubscriptionScanner.shared.isConnected ? "Gmail Connected" : "Import from Gmail",
+                    value: GmailSubscriptionScanner.shared.connectedEmail,
+                    color: Color.accentMint,
+                    action: { onGmailImport?() }
+                )
+                .accessibilityIdentifier("gmailImportButton")
                 SettingsRow(icon: "bell.fill", title: "Notifications", color: Color.semanticWarning, action: onNotifications)
                     .accessibilityIdentifier("notificationsSettingsButton")
                 SettingsRow(icon: "dollarsign.circle.fill", title: "Currency", value: currencyManager.selectedCurrency, color: Color.semanticSuccess, action: onCurrency)
                     .accessibilityIdentifier("currencySettingsButton")
+                SettingsRow(icon: "globe", title: "Language", value: LanguageSettingsView.displayName(for: appLanguage), color: Color.accentMint, action: { onLanguage?() })
+                    .accessibilityIdentifier("languageSettingsButton")
                 SettingsRow(icon: "square.and.arrow.up", title: "Export Data", color: Color.semanticInfo, action: onExport)
                     .accessibilityIdentifier("exportDataButton")
                 SettingsRow(icon: "lock.fill", title: "Privacy & Security", color: Color.semanticInfo, action: onPrivacy)
@@ -1079,13 +1110,13 @@ private struct WrappedStory4_CouldBuy: View {
     }
 
     private var comparisons: [(emoji: String, count: Int, item: String)] {
-        let flights = convertedPrice(350)
-        let iphones = convertedPrice(999)
-        let vacations = convertedPrice(1200)
+        let coffee = convertedPrice(3)
+        let dinner = convertedPrice(45)
+        let drinks = convertedPrice(11)
         return [
-            ("✈️", flights > 0 ? Int(localAnnual / flights) : 0, "round-trip flights"),
-            ("📱", iphones > 0 ? Int(localAnnual / iphones) : 0, "iPhones"),
-            ("🏖️", vacations > 0 ? Int(localAnnual / vacations) : 0, "week-long vacations"),
+            ("☕️", coffee > 0 ? Int(localAnnual / coffee) : 0, "coffees"),
+            ("🍽️", dinner > 0 ? Int(localAnnual / dinner) : 0, "dinners out"),
+            ("🍹", drinks > 0 ? Int(localAnnual / drinks) : 0, "cocktails"),
         ]
     }
 

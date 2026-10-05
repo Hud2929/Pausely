@@ -36,7 +36,7 @@ struct SimpleCurrencyPickerView: View {
                             Spacer()
                             if selectedCurrency == currency.code {
                                 Image(systemName: "checkmark")
-                                    .foregroundStyle(Color.luxuryGold)
+                                    .foregroundStyle(Color.accentMint)
                             }
                         }
                     }

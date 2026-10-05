@@ -20,7 +20,7 @@ struct OnboardingCarouselView: View {
                 HStack(spacing: 8) {
                     ForEach(0..<totalPages, id: \.self) { index in
                         Capsule()
-                            .fill(currentPage == index ? Color.luxuryGold : Color.white.opacity(0.2))
+                            .fill(currentPage == index ? Color.accentMint : Color.white.opacity(0.2))
                             .frame(width: currentPage == index ? 24 : 8, height: 8)
                             .animation(.spring(response: 0.35, dampingFraction: 0.7), value: currentPage)
                             .accessibilityLabel("Page \(index + 1) of \(totalPages)")
@@ -85,7 +85,7 @@ struct OnboardingCarouselView: View {
                             RoundedRectangle(cornerRadius: 20, style: .continuous)
                                 .fill(
                                     LinearGradient(
-                                        colors: [Color.luxuryPurple, Color.luxuryPink],
+                                        colors: [Color.accentMint, Color.accentMint],
                                         startPoint: .topLeading,
                                         endPoint: .bottomTrailing
                                     )
@@ -102,7 +102,7 @@ struct OnboardingCarouselView: View {
                                 )
                         }
                     )
-                    .shadow(color: Color.luxuryPurple.opacity(0.5), radius: 20, x: 0, y: 10)
+                    .shadow(color: Color.accentMint.opacity(0.5), radius: 20, x: 0, y: 10)
             }
             .accessibilityIdentifier("getStartedButton")
             .pressEffect(scale: 0.97)
@@ -113,7 +113,7 @@ struct OnboardingCarouselView: View {
             }) {
                 Text("Already have an account? **Sign In**")
                     .font(.system(.subheadline, design: .rounded).weight(.medium))
-                    .foregroundColor(TextColors.secondary)
+                    .foregroundColor(Color.obsidianTextSecondary)
             }
             .accessibilityLabel("Already have an account? Sign In")
         }
@@ -135,7 +135,7 @@ struct DashboardPreviewPage: View {
                     .fill(Color.white.opacity(0.05))
                     .overlay(
                         RoundedRectangle(cornerRadius: 28, style: .continuous)
-                            .stroke(Color.luxuryPurple.opacity(0.2), lineWidth: 1)
+                            .stroke(Color.accentMint.opacity(0.2), lineWidth: 1)
                     )
 
                 VStack(spacing: 16) {
@@ -148,18 +148,18 @@ struct DashboardPreviewPage: View {
 
                             Text("Good morning")
                                 .font(.system(.footnote, design: .rounded).weight(.medium))
-                                .foregroundColor(TextColors.secondary)
+                                .foregroundColor(Color.obsidianTextSecondary)
                         }
 
                         Spacer()
 
                         Circle()
-                            .fill(Color.luxuryPurple.opacity(0.2))
+                            .fill(Color.accentMint.opacity(0.2))
                             .frame(width: 36, height: 36)
                             .overlay(
                                 Image(systemName: "bell")
                                     .font(.system(.subheadline, design: .rounded))
-                                    .foregroundColor(Color.luxuryPurple)
+                                    .foregroundColor(Color.accentMint)
                             )
                     }
                     .padding(.horizontal, 20)
@@ -173,7 +173,7 @@ struct DashboardPreviewPage: View {
 
                         Text("/month")
                             .font(.system(.subheadline, design: .rounded).weight(.medium))
-                            .foregroundColor(TextColors.secondary)
+                            .foregroundColor(Color.obsidianTextSecondary)
                     }
                     .frame(maxWidth: .infinity)
                     .padding(.vertical, 24)
@@ -182,7 +182,7 @@ struct DashboardPreviewPage: View {
                             RoundedRectangle(cornerRadius: 20, style: .continuous)
                                 .fill(
                                     LinearGradient(
-                                        colors: [Color.luxuryPurple.opacity(0.3), Color.luxuryPink.opacity(0.1)],
+                                        colors: [Color.accentMint.opacity(0.3), Color.accentMint.opacity(0.1)],
                                         startPoint: .topLeading,
                                         endPoint: .bottomTrailing
                                     )
@@ -199,7 +199,7 @@ struct DashboardPreviewPage: View {
                             RoundedRectangle(cornerRadius: 4, style: .continuous)
                                 .fill(
                                     LinearGradient(
-                                        colors: [Color.luxuryPurple.opacity(0.8), Color.luxuryPink.opacity(0.5)],
+                                        colors: [Color.accentMint.opacity(0.8), Color.accentMint.opacity(0.5)],
                                         startPoint: .top,
                                         endPoint: .bottom
                                     )
@@ -232,7 +232,7 @@ struct DashboardPreviewPage: View {
                         .font(.system(.title2, design: .rounded).weight(.semibold))
                         .foregroundStyle(
                             LinearGradient(
-                                colors: [Color.luxuryPurple, Color.luxuryPink],
+                                colors: [Color.accentMint, Color.accentMint],
                                 startPoint: .topLeading,
                                 endPoint: .bottomTrailing
                             )
@@ -286,7 +286,7 @@ struct SmartDetectionPreviewPage: View {
                     .fill(Color.white.opacity(0.05))
                     .overlay(
                         RoundedRectangle(cornerRadius: 28, style: .continuous)
-                            .stroke(Color.luxuryTeal.opacity(0.2), lineWidth: 1)
+                            .stroke(Color.accentMint.opacity(0.2), lineWidth: 1)
                     )
 
                 VStack(spacing: 12) {
@@ -299,12 +299,12 @@ struct SmartDetectionPreviewPage: View {
                         Spacer()
 
                         Circle()
-                            .fill(Color.luxuryTeal.opacity(0.2))
+                            .fill(Color.accentMint.opacity(0.2))
                             .frame(width: 36, height: 36)
                             .overlay(
                                 Image(systemName: "plus")
                                     .font(.system(.subheadline, design: .rounded))
-                                    .foregroundColor(Color.luxuryTeal)
+                                    .foregroundColor(Color.accentMint)
                             )
                     }
                     .padding(.horizontal, 20)
@@ -341,7 +341,7 @@ struct SmartDetectionPreviewPage: View {
                                                     Capsule()
                                                         .fill(
                                                             LinearGradient(
-                                                                colors: [Color.luxuryPurple, Color.luxuryPink],
+                                                                colors: [Color.accentMint, Color.accentMint],
                                                                 startPoint: .leading,
                                                                 endPoint: .trailing
                                                             )
@@ -352,7 +352,7 @@ struct SmartDetectionPreviewPage: View {
 
                                     Text("Monthly")
                                         .font(.system(.caption, design: .rounded).weight(.medium))
-                                        .foregroundColor(TextColors.secondary)
+                                        .foregroundColor(Color.obsidianTextSecondary)
                                 }
 
                                 Spacer()
@@ -369,7 +369,7 @@ struct SmartDetectionPreviewPage: View {
                                         RoundedRectangle(cornerRadius: 14, style: .continuous)
                                             .stroke(
                                                 index == 1
-                                                    ? Color.luxuryPurple.opacity(0.3)
+                                                    ? Color.accentMint.opacity(0.3)
                                                     : Color.white.opacity(0.06),
                                                 lineWidth: index == 1 ? 1.5 : 1
                                             )
@@ -403,7 +403,7 @@ struct SmartDetectionPreviewPage: View {
                         .font(.system(.title2, design: .rounded).weight(.semibold))
                         .foregroundStyle(
                             LinearGradient(
-                                colors: [Color.luxuryTeal, Color.luxuryPurple],
+                                colors: [Color.accentMint, Color.accentMint],
                                 startPoint: .topLeading,
                                 endPoint: .bottomTrailing
                             )
@@ -450,7 +450,7 @@ struct InsightsPreviewPage: View {
                     .fill(Color.white.opacity(0.05))
                     .overlay(
                         RoundedRectangle(cornerRadius: 28, style: .continuous)
-                            .stroke(Color.luxuryGold.opacity(0.2), lineWidth: 1)
+                            .stroke(Color.accentMint.opacity(0.2), lineWidth: 1)
                     )
 
                 VStack(spacing: 16) {
@@ -464,7 +464,7 @@ struct InsightsPreviewPage: View {
 
                         Image(systemName: "sparkles")
                             .font(.system(.title3, design: .rounded))
-                            .foregroundColor(Color.luxuryGold)
+                            .foregroundColor(Color.accentMint)
                     }
                     .padding(.horizontal, 20)
                     .padding(.top, 20)
@@ -473,13 +473,13 @@ struct InsightsPreviewPage: View {
                     HStack(spacing: 16) {
                         ZStack {
                             Circle()
-                                .stroke(Color.luxuryTeal.opacity(0.2), lineWidth: 8)
+                                .stroke(Color.accentMint.opacity(0.2), lineWidth: 8)
                                 .frame(width: 70, height: 70)
 
                             Circle()
                                 .trim(from: 0, to: localAnimate ? 0.72 : 0)
                                 .stroke(
-                                    Color.luxuryTeal,
+                                    Color.accentMint,
                                     style: StrokeStyle(lineWidth: 8, lineCap: .round)
                                 )
                                 .frame(width: 70, height: 70)
@@ -503,7 +503,7 @@ struct InsightsPreviewPage: View {
 
                             Text("Great! You're actively managing your subscriptions.")
                                 .font(.system(.footnote, design: .rounded).weight(.medium))
-                                .foregroundColor(TextColors.secondary)
+                                .foregroundColor(Color.obsidianTextSecondary)
                                 .lineLimit(2)
                         }
                     }
@@ -511,11 +511,11 @@ struct InsightsPreviewPage: View {
                     .background(
                         ZStack {
                             RoundedRectangle(cornerRadius: 16, style: .continuous)
-                                .fill(Color.luxuryTeal.opacity(0.08))
+                                .fill(Color.accentMint.opacity(0.08))
                             RoundedRectangle(cornerRadius: 16, style: .continuous)
                                 .fill(.ultraThinMaterial.opacity(0.3))
                             RoundedRectangle(cornerRadius: 16, style: .continuous)
-                                .stroke(Color.luxuryTeal.opacity(0.25), lineWidth: 1)
+                                .stroke(Color.accentMint.opacity(0.25), lineWidth: 1)
                         }
                     )
                     .padding(.horizontal, 20)
@@ -527,7 +527,7 @@ struct InsightsPreviewPage: View {
                     HStack(spacing: 12) {
                         Image(systemName: "lightbulb.fill")
                             .font(.system(.title2, design: .rounded))
-                            .foregroundColor(Color.luxuryGold)
+                            .foregroundColor(Color.accentMint)
 
                         VStack(alignment: .leading, spacing: 2) {
                             Text("You could save $42/month")
@@ -536,24 +536,24 @@ struct InsightsPreviewPage: View {
 
                             Text("Switch to annual billing for 3 subscriptions")
                                 .font(.system(.footnote, design: .rounded).weight(.medium))
-                                .foregroundColor(TextColors.secondary)
+                                .foregroundColor(Color.obsidianTextSecondary)
                         }
 
                         Spacer()
 
                         Image(systemName: "chevron.right")
                             .font(.system(.footnote, design: .rounded).weight(.semibold))
-                            .foregroundColor(TextColors.secondary)
+                            .foregroundColor(Color.obsidianTextSecondary)
                     }
                     .padding(16)
                     .background(
                         ZStack {
                             RoundedRectangle(cornerRadius: 16, style: .continuous)
-                                .fill(Color.luxuryGold.opacity(0.08))
+                                .fill(Color.accentMint.opacity(0.08))
                             RoundedRectangle(cornerRadius: 16, style: .continuous)
                                 .fill(.ultraThinMaterial.opacity(0.3))
                             RoundedRectangle(cornerRadius: 16, style: .continuous)
-                                .stroke(Color.luxuryGold.opacity(0.25), lineWidth: 1)
+                                .stroke(Color.accentMint.opacity(0.25), lineWidth: 1)
                         }
                     )
                     .padding(.horizontal, 20)
@@ -577,7 +577,7 @@ struct InsightsPreviewPage: View {
                         .font(.system(.title2, design: .rounded).weight(.semibold))
                         .foregroundStyle(
                             LinearGradient(
-                                colors: [Color.luxuryGold, Color.luxuryPink],
+                                colors: [Color.accentMint, Color.accentMint],
                                 startPoint: .topLeading,
                                 endPoint: .bottomTrailing
                             )

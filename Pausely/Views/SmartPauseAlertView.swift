@@ -294,7 +294,7 @@ struct SmartPauseAlertView: View {
                 .frame(height: 54)
                 .background(
                     LinearGradient(
-                        colors: [.luxuryPurple, .luxuryPink],
+                        colors: [.accentMint, .accentMint],
                         startPoint: .leading,
                         endPoint: .trailing
                     )
@@ -317,10 +317,10 @@ struct SmartPauseAlertView: View {
                 Button(action: onAdjustThreshold) {
                     Text("Adjust Alerts")
                         .font(.subheadline.weight(.medium))
-                        .foregroundColor(.luxuryPurple)
+                        .foregroundColor(.accentMint)
                         .frame(maxWidth: .infinity)
                         .frame(height: 44)
-                        .background(Color.luxuryPurple.opacity(0.1))
+                        .background(Color.accentMint.opacity(0.1))
                         .cornerRadius(10)
                 }
             }
@@ -391,7 +391,7 @@ struct SmartPauseAlertView: View {
             .frame(width: 80, height: 60)
             .background(
                 selectedDuration == duration ?
-                AnyView(LinearGradient(colors: [.luxuryPurple, .luxuryPink], startPoint: .leading, endPoint: .trailing)) :
+                AnyView(LinearGradient(colors: [.accentMint, .accentMint], startPoint: .leading, endPoint: .trailing)) :
                 AnyView(Color(.tertiarySystemBackground))
             )
             .cornerRadius(12)
@@ -569,7 +569,7 @@ struct SmartPauseBanner: View {
                 // Arrow
                 Image(systemName: "chevron.right")
                     .font(.footnote.weight(.semibold))
-                    .foregroundColor(.luxuryPurple)
+                    .foregroundColor(.accentMint)
             }
             .padding()
             .background(
@@ -619,7 +619,7 @@ struct SmartPauseDashboardCard: View {
                         .foregroundColor(.white)
                         .frame(width: 32, height: 32)
                         .background(
-                            LinearGradient(colors: [.luxuryPurple, .luxuryPink], startPoint: .leading, endPoint: .trailing)
+                            LinearGradient(colors: [.accentMint, .accentMint], startPoint: .leading, endPoint: .trailing)
                         )
                         .cornerRadius(10)
                 }
@@ -682,10 +682,10 @@ struct SmartPauseDashboardCard: View {
                         Image(systemName: "arrow.right")
                             .font(.footnote.weight(.semibold))
                     }
-                    .foregroundColor(.luxuryPurple)
+                    .foregroundColor(.accentMint)
                     .frame(maxWidth: .infinity)
                     .frame(height: 44)
-                    .background(Color.luxuryPurple.opacity(0.1))
+                    .background(Color.accentMint.opacity(0.1))
                     .cornerRadius(10)
                 }
             }

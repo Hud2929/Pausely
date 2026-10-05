@@ -70,7 +70,7 @@ struct ArtisticAddSubscriptionView: View {
                                     .frame(width: 56, height: 56)
                                     .background(
                                         RoundedRectangle(cornerRadius: 16)
-                                            .fill(BackgroundColors.tertiary)
+                                            .fill(Color.obsidianElevated)
                                     )
                             }
                             .accessibilityLabel("Previous step")
@@ -101,7 +101,7 @@ struct ArtisticAddSubscriptionView: View {
                             .frame(height: 56)
                             .background(
                                 RoundedRectangle(cornerRadius: 16)
-                                    .fill(Color.brandGradient)
+                                    .fill(LinearGradient(colors: [Color.accentMint, Color(hex: "#6EE7B7")], startPoint: .leading, endPoint: .trailing))
                             )
                         }
                         .disabled(!canProceed || isSaving)
@@ -116,7 +116,7 @@ struct ArtisticAddSubscriptionView: View {
             .toolbar {
                 ToolbarItem(placement: .navigationBarLeading) {
                     Button("Cancel") { dismiss() }
-                        .foregroundColor(TextColors.secondary)
+                        .foregroundColor(Color.obsidianTextSecondary)
                 }
             }
         }

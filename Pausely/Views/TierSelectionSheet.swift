@@ -7,9 +7,20 @@
 
 import SwiftUI
 
+// MARK: - Section appear animation helper
+private extension View {
+    func sectionAppear(_ appeared: Bool, delay: Double) -> some View {
+        self
+            .opacity(appeared ? 1 : 0)
+            .offset(y: appeared ? 0 : 18)
+            .animation(.spring(response: 0.52, dampingFraction: 0.82).delay(delay), value: appeared)
+    }
+}
+
 struct TierSelectionSheet: View {
     let entry: CatalogEntry
-    let onSelect: (PricingTier, BillingFrequency, Bool, Decimal?, Date) -> Void
+    /// Parameters: tier, billingFreq, isPriceOverridden, overridePrice, nextBillingDate, trialEndsAt
+    let onSelect: (PricingTier, BillingFrequency, Bool, Decimal?, Date, Date?) -> Void
 
     @Environment(\.dismiss) private var dismiss
     @ObservedObject private var currencyManager = CurrencyManager.shared
@@ -18,9 +29,23 @@ struct TierSelectionSheet: View {
     @State private var selectedBillingFrequency: BillingFrequency = .monthly
     @State private var isOverridingPrice = false
     @State private var priceOverrideText = ""
-    @State private var nextBillingDate: Date = Date().addingTimeInterval(30 * 24 * 60 * 60)
+    @State private var priceError: String? = nil
+    @State private var nextBillingDate: Date = Calendar.current.date(byAdding: .month, value: 1, to: Date()) ?? Date()
+    @State private var hasFreeTrial = false
+    @State private var trialEndsAt: Date = Calendar.current.date(byAdding: .day, value: 14, to: Date()) ?? Date()
+    @State private var appeared = false
 
-    // MARK: - Region mapping
+    // MARK: - Bindings with animation
+    private var overrideBinding: Binding<Bool> {
+        Binding(get: { isOverridingPrice },
+                set: { val in withAnimation(.spring(response: 0.38, dampingFraction: 0.78)) { isOverridingPrice = val } })
+    }
+    private var trialBinding: Binding<Bool> {
+        Binding(get: { hasFreeTrial },
+                set: { val in withAnimation(.spring(response: 0.38, dampingFraction: 0.78)) { hasFreeTrial = val } })
+    }
+
+    // MARK: - Region
     private var userRegion: Region {
         switch currencyManager.selectedCurrency {
         case "USD": return .us
@@ -28,18 +53,21 @@ struct TierSelectionSheet: View {
         case "GBP": return .uk
         case "EUR": return .eu
         case "AUD": return .au
-        default: return .us
+        default:    return .us
         }
     }
 
     private var availableTierPricings: [TierPricing] {
-        let regionTiers = entry.supportedTiers.filter { $0.region == userRegion }
-        if !regionTiers.isEmpty { return regionTiers }
-
-        let globalTiers = entry.supportedTiers.filter { $0.region == .global }
-        if !globalTiers.isEmpty { return globalTiers }
-
-        return entry.supportedTiers
+        // For EVERY tier type the entry has, find the best pricing for this user's region.
+        // Priority: user's region → global → US → any available.
+        // This ensures all plan types (Individual/Family/Student) appear even if only
+        // US pricing exists — non-US users get approximate pricing with the "≈" indicator.
+        entry.availableTiers.compactMap { tier in
+            entry.supportedTiers.first { $0.tier == tier && $0.region == userRegion }
+                ?? entry.supportedTiers.first { $0.tier == tier && $0.region == .global }
+                ?? entry.supportedTiers.first { $0.tier == tier && $0.region == .us }
+                ?? entry.supportedTiers.first { $0.tier == tier }
+        }
     }
 
     private var uniqueTiers: [PricingTier] {
@@ -51,169 +79,140 @@ struct TierSelectionSheet: View {
     }
 
     private var showAnnualOption: Bool {
-        selectedTierPricing?.annualPriceUSD != nil && (selectedTierPricing?.annualPriceUSD ?? 0) > 0
+        (selectedTierPricing?.annualPriceUSD ?? 0) > 0
     }
 
-    private var iconColor: Color {
-        switch entry.category {
-        case .entertainment: return .purple
-        case .music: return .pink
-        case .productivity: return .blue
-        case .healthFitness: return .green
-        case .cloudStorage: return .cyan
-        case .education: return .orange
-        case .utilities: return .gray
-        case .finance: return .mint
-        case .food: return .yellow
-        case .shopping: return .red
-        case .sports: return .indigo
-        case .social: return .teal
-        case .news: return .brown
-        case .phone: return .blue.opacity(0.7)
-        case .insurance: return .green.opacity(0.7)
-        case .gym: return .orange.opacity(0.8)
-        case .automotive: return .red.opacity(0.7)
-        case .home: return .purple.opacity(0.7)
-        case .pet: return .brown.opacity(0.8)
-        case .personalCare: return .pink.opacity(0.7)
-        case .aiTools: return .purple
-        case .gaming: return .indigo
-        case .developerTools: return .blue.opacity(0.8)
-        case .creator: return .orange.opacity(0.9)
-        case .travel: return .cyan.opacity(0.8)
-        case .dating: return .red.opacity(0.8)
-        case .kids: return .yellow.opacity(0.8)
-        case .security: return .green.opacity(0.9)
-        case .other: return .secondary
+    private var canAdd: Bool {
+        if isOverridingPrice {
+            guard let price = parsePriceOverride(), price > 0 else { return false }
         }
+        return true
     }
 
+    private var displayPriceText: String {
+        if isOverridingPrice {
+            if let price = parsePriceOverride(), price > 0 {
+                return currencyManager.format(price)
+            }
+            return "—"
+        }
+        return effectivePriceText
+    }
+
+    // MARK: - Body
     var body: some View {
         ZStack {
             PremiumBackground()
 
-            VStack(spacing: 0) {
-                ScrollView(showsIndicators: false) {
-                    VStack(spacing: 24) {
-                        // Manual nav bar
-                        HStack {
-                            Button {
-                                STAnimation.impactLight()
-                                dismiss()
-                            } label: {
-                                Text("Cancel")
-                                    .font(.body.weight(.medium))
-                                    .foregroundColor(.white.opacity(0.7))
-                            }
+            ScrollView(showsIndicators: false) {
+                VStack(spacing: 16) {
+                    // Drag indicator
+                    Capsule()
+                        .fill(Color.white.opacity(0.18))
+                        .frame(width: 36, height: 4)
+                        .padding(.top, 10)
+                        .padding(.bottom, 2)
 
-                            Spacer()
-
-                            Text("Choose Your Plan")
-                                .font(STFont.headlineMedium)
-                                .foregroundColor(.white)
-
-                            Spacer()
-
-                            // Spacer to balance Cancel button width
-                            Text("Cancel")
-                                .font(.body.weight(.medium))
-                                .foregroundColor(.clear)
-                                .accessibilityHidden(true)
-                        }
+                    navBar
                         .padding(.horizontal, 20)
-                        .padding(.top, 16)
+                        .sectionAppear(appeared, delay: 0)
 
-                        // Premium header card with glow
-                        headerCard
+                    headerCard
+                        .padding(.horizontal, 20)
+                        .sectionAppear(appeared, delay: 0.04)
+
+                    tierSelectionSection
+                        .padding(.horizontal, 20)
+                        .sectionAppear(appeared, delay: 0.09)
+
+                    if showAnnualOption {
+                        billingToggleSection
                             .padding(.horizontal, 20)
+                            .sectionAppear(appeared, delay: 0.13)
+                    }
 
-                        // Tier selection
-                        tierSelectionSection
+                    priceSummaryCard
+                        .padding(.horizontal, 20)
+                        .sectionAppear(appeared, delay: 0.17)
+
+                    freeTrialToggleSection
+                        .padding(.horizontal, 20)
+                        .sectionAppear(appeared, delay: 0.20)
+
+                    if hasFreeTrial {
+                        freeTrialDateSection
                             .padding(.horizontal, 20)
+                            .transition(.asymmetric(
+                                insertion: .move(edge: .top).combined(with: .opacity),
+                                removal: .opacity
+                            ))
+                    }
 
-                        // Billing toggle (if applicable)
-                        if showAnnualOption {
-                            billingToggleSection
-                                .padding(.horizontal, 20)
-                        }
+                    priceOverrideSection
+                        .padding(.horizontal, 20)
+                        .sectionAppear(appeared, delay: 0.23)
 
-                        // Price summary card
-                        priceSummaryCard
-                            .padding(.horizontal, 20)
-
-                        // Price override section
-                        priceOverrideSection
-                            .padding(.horizontal, 20)
-
-                        // Billing date section
+                    if !hasFreeTrial {
                         billingDateSection
                             .padding(.horizontal, 20)
+                            .sectionAppear(appeared, delay: 0.26)
                     }
-                    .padding(.vertical, 20)
                 }
-
-                // Add button pinned at bottom
-                Button {
-                    STAnimation.success()
-                    let price = parsePriceOverride()
-                    onSelect(selectedTier, selectedBillingFrequency, isOverridingPrice, price, nextBillingDate)
-                    dismiss()
-                } label: {
-                    HStack(spacing: 8) {
-                        Image(systemName: "plus.circle.fill")
-                        Text("Add Subscription")
-                    }
-                    .font(.body.weight(.semibold))
-                    .foregroundColor(.white)
-                    .frame(maxWidth: .infinity)
-                    .frame(height: 56)
-                    .background(
-                        LinearGradient(
-                            colors: [.luxuryPurple, .luxuryPink],
-                            startPoint: .leading,
-                            endPoint: .trailing
-                        )
-                    )
-                    .cornerRadius(16)
-                }
-                .padding(.horizontal, 20)
-                .padding(.vertical, 16)
+                .padding(.bottom, 8)
             }
+        }
+        .safeAreaInset(edge: .bottom) {
+            addButton
+        }
+        .onAppear {
+            withAnimation(.spring(response: 0.6, dampingFraction: 0.85)) { appeared = true }
+            // Auto-select best value tier
+            if let best = availableTierPricings.first(where: { $0.isBestValue }) {
+                selectedTier = best.tier
+            } else if uniqueTiers.contains(.individual) {
+                selectedTier = .individual
+            } else if let first = uniqueTiers.first {
+                selectedTier = first
+            }
+        }
+        .onChange(of: trialEndsAt) { _, newDate in
+            if hasFreeTrial {
+                nextBillingDate = Calendar.current.date(byAdding: .day, value: 1, to: newDate) ?? newDate
+            }
+        }
+        .onChange(of: hasFreeTrial) { _, isOn in
+            nextBillingDate = isOn
+                ? (Calendar.current.date(byAdding: .day, value: 1, to: trialEndsAt) ?? nextBillingDate)
+                : (Calendar.current.date(byAdding: .month, value: 1, to: Date()) ?? Date())
         }
     }
 
-    // MARK: - Premium Header Card
+    // MARK: - Nav Bar
+    private var navBar: some View {
+        HStack {
+            Button {
+                STAnimation.impactLight()
+                dismiss()
+            } label: {
+                Text("Cancel")
+                    .font(.body.weight(.medium))
+                    .foregroundColor(.white.opacity(0.7))
+            }
+            Spacer()
+            Text("Choose Your Plan")
+                .font(STFont.headlineMedium)
+                .foregroundColor(.white)
+            Spacer()
+            Text("Cancel").font(.body.weight(.medium)).foregroundColor(.clear).accessibilityHidden(true)
+        }
+    }
+
+    // MARK: - Header Card — real brand logo, prominent
     private var headerCard: some View {
         VStack(spacing: 16) {
-            // Icon with glow
-            ZStack {
-                // Outer glow
-                Circle()
-                    .fill(
-                        RadialGradient(
-                            colors: [iconColor.opacity(0.5), .clear],
-                            center: .center,
-                            startRadius: 0,
-                            endRadius: 50
-                        )
-                    )
-                    .frame(width: 100, height: 100)
-
-                // Icon background with glass
-                ZStack {
-                    RoundedRectangle(cornerRadius: 22)
-                        .fill(.ultraThinMaterial)
-                        .overlay(
-                            RoundedRectangle(cornerRadius: 22)
-                                .stroke(iconColor.opacity(0.5), lineWidth: 1.5)
-                        )
-
-                    Image(systemName: entry.iconName)
-                        .font(.title.weight(.bold))
-                        .foregroundColor(iconColor)
-                }
-                .frame(width: 72, height: 72)
-            }
+            // Real brand logo via Clearbit / initial fallback
+            ServiceLogoView(name: entry.name, category: entry.category.rawValue, size: 80)
+                .shadow(color: iconColor.opacity(0.45), radius: 24, x: 0, y: 10)
 
             VStack(spacing: 6) {
                 Text(entry.name)
@@ -222,9 +221,19 @@ struct TierSelectionSheet: View {
 
                 Text(entry.description)
                     .font(.subheadline.weight(.medium))
-                    .foregroundColor(.white.opacity(0.6))
+                    .foregroundColor(.white.opacity(0.55))
                     .multilineTextAlignment(.center)
                     .lineLimit(2)
+
+                if entry.trialDays > 0 {
+                    Label("\(entry.trialDays)-day free trial available", systemImage: "gift.fill")
+                        .font(.caption.weight(.semibold))
+                        .foregroundStyle(Color.accentMint)
+                        .padding(.horizontal, 14)
+                        .padding(.vertical, 5)
+                        .background(Capsule().fill(Color.accentMint.opacity(0.14)))
+                        .padding(.top, 4)
+                }
             }
         }
         .padding(28)
@@ -232,33 +241,25 @@ struct TierSelectionSheet: View {
         .background(
             RoundedRectangle(cornerRadius: 24)
                 .fill(.ultraThinMaterial)
-                .overlay(
-                    RoundedRectangle(cornerRadius: 24)
-                        .stroke(Color.white.opacity(0.12), lineWidth: 1)
-                )
+                .overlay(RoundedRectangle(cornerRadius: 24).stroke(Color.white.opacity(0.10), lineWidth: 1))
         )
     }
 
     // MARK: - Tier Selection
     private var tierSelectionSection: some View {
         VStack(alignment: .leading, spacing: 12) {
-            Text("Select Your Plan")
-                .font(STFont.labelLarge)
-                .foregroundColor(.white.opacity(0.6))
-                .padding(.leading, 4)
-
+            sectionLabel(uniqueTiers.count == 1 ? "Your Plan" : "Select Your Plan")
             VStack(spacing: 10) {
                 ForEach(uniqueTiers, id: \.self) { tier in
                     PremiumTierRow(
                         tier: tier,
                         tierPricing: availableTierPricings.first { $0.tier == tier },
                         isSelected: selectedTier == tier,
+                        isOnlyOption: uniqueTiers.count == 1,
                         currencyManager: currencyManager
                     ) {
                         STAnimation.impactMedium()
-                        withAnimation(STAnimation.snappy) {
-                            selectedTier = tier
-                        }
+                        withAnimation(STAnimation.snappy) { selectedTier = tier }
                     }
                 }
             }
@@ -268,77 +269,43 @@ struct TierSelectionSheet: View {
     // MARK: - Billing Toggle
     private var billingToggleSection: some View {
         VStack(alignment: .leading, spacing: 12) {
-            Text("Billing Cycle")
-                .font(STFont.labelLarge)
-                .foregroundColor(.white.opacity(0.6))
-                .padding(.leading, 4)
-
+            sectionLabel("Billing Cycle")
             HStack(spacing: 0) {
-                BillingToggleButton(
-                    title: "Monthly",
-                    isSelected: selectedBillingFrequency == .monthly
-                ) {
+                BillingToggleButton(title: "Monthly", isSelected: selectedBillingFrequency == .monthly) {
                     STAnimation.impactLight()
-                    withAnimation(STAnimation.snappy) {
-                        selectedBillingFrequency = .monthly
-                    }
+                    withAnimation(STAnimation.snappy) { selectedBillingFrequency = .monthly }
                 }
-
-                BillingToggleButton(
-                    title: "Annual",
-                    isSelected: selectedBillingFrequency == .yearly
-                ) {
+                BillingToggleButton(title: "Annual", isSelected: selectedBillingFrequency == .yearly) {
                     STAnimation.impactLight()
-                    withAnimation(STAnimation.snappy) {
-                        selectedBillingFrequency = .yearly
-                    }
+                    withAnimation(STAnimation.snappy) { selectedBillingFrequency = .yearly }
                 }
             }
+            .clipShape(RoundedRectangle(cornerRadius: 12))
             .background(
                 RoundedRectangle(cornerRadius: 12)
                     .fill(Color.white.opacity(0.08))
-                    .overlay(
-                        RoundedRectangle(cornerRadius: 12)
-                            .stroke(Color.white.opacity(0.1), lineWidth: 1)
-                    )
+                    .overlay(RoundedRectangle(cornerRadius: 12).stroke(Color.white.opacity(0.1), lineWidth: 1))
             )
         }
     }
 
     // MARK: - Price Summary
     private var priceSummaryCard: some View {
-        VStack(spacing: 16) {
+        VStack(spacing: 14) {
             HStack {
                 Text("Price")
                     .font(STFont.labelLarge)
                     .foregroundColor(.white.opacity(0.6))
                 Spacer()
-                if isOverridingPrice, let override = parsePriceOverride() {
-                    Text(currencyManager.format(override))
-                        .font(.headline.weight(.bold))
-                        .foregroundStyle(
-                            LinearGradient(
-                                colors: [.white, .white.opacity(0.8)],
-                                startPoint: .top,
-                                endPoint: .bottom
-                            )
-                        )
-                } else {
-                    Text(effectivePriceText)
-                        .font(.headline.weight(.bold))
-                        .foregroundStyle(
-                            LinearGradient(
-                                colors: [.white, .white.opacity(0.8)],
-                                startPoint: .top,
-                                endPoint: .bottom
-                            )
-                        )
-                }
+                Text(displayPriceText)
+                    .font(.headline.weight(.bold))
+                    .foregroundColor(.white)
+                    .contentTransition(.numericText())
             }
 
-            if showAnnualOption && !isOverridingPrice {
+            if showAnnualOption && !isOverridingPrice && selectedBillingFrequency == .yearly {
                 HStack {
-                    Text("Annual total")
+                    Text("Billed annually")
                         .font(STFont.labelMedium)
                         .foregroundColor(.white.opacity(0.4))
                     Spacer()
@@ -346,35 +313,42 @@ struct TierSelectionSheet: View {
                         .font(STFont.labelMedium)
                         .foregroundColor(.white.opacity(0.4))
                 }
+            } else if showAnnualOption && !isOverridingPrice && selectedBillingFrequency == .monthly {
+                // Hint to switch to annual
+                if let pricing = selectedTierPricing, let annual = pricing.annualPriceUSD {
+                    let savings = pricing.monthlyPriceUSD - (annual / 12)
+                    if savings > 0 {
+                        HStack(spacing: 6) {
+                            Image(systemName: "arrow.up.circle")
+                                .font(.caption2.weight(.semibold))
+                            Text("Switch to Annual, save \(currencyManager.formatCatalogPrice(savings * 12, sourceCurrency: pricing.currencyCode))/yr")
+                                .font(.caption.weight(.medium))
+                        }
+                        .foregroundStyle(.white.opacity(0.35))
+                    }
+                }
             }
 
-            // Savings badge if annual
-            if showAnnualOption && selectedBillingFrequency == .yearly, let pricing = selectedTierPricing, let annual = pricing.annualPriceUSD {
-                let monthlyEquivalent = annual / 12
-                let savings = pricing.monthlyPriceUSD - monthlyEquivalent
+            if showAnnualOption,
+               selectedBillingFrequency == .yearly,
+               let pricing = selectedTierPricing,
+               let annual = pricing.annualPriceUSD {
+                let savings = pricing.monthlyPriceUSD - (annual / 12)
                 if savings > 0 {
-                    HStack {
+                    HStack(spacing: 6) {
                         Image(systemName: "sparkles")
                             .font(.caption2.weight(.bold))
-                        Text("You save \(currencyManager.formatCatalogPrice(savings * 12, sourceCurrency: pricing.currencyCode))/yr")
+                        Text("Save \(currencyManager.formatCatalogPrice(savings * 12, sourceCurrency: pricing.currencyCode))/yr vs monthly")
                             .font(.footnote.weight(.semibold))
                     }
-                    .foregroundStyle(
-                        LinearGradient(
-                            colors: [.luxuryGold, .luxuryPink],
-                            startPoint: .leading,
-                            endPoint: .trailing
-                        )
-                    )
-                    .padding(.horizontal, 12)
-                    .padding(.vertical, 6)
+                    .foregroundStyle(Color.accentMint)
+                    .padding(.horizontal, 14)
+                    .padding(.vertical, 7)
+                    .frame(maxWidth: .infinity)
                     .background(
                         Capsule()
-                            .fill(Color.luxuryGold.opacity(0.15))
-                            .overlay(
-                                Capsule()
-                                    .stroke(Color.luxuryGold.opacity(0.3), lineWidth: 1)
-                            )
+                            .fill(Color.accentMint.opacity(0.12))
+                            .overlay(Capsule().stroke(Color.accentMint.opacity(0.25), lineWidth: 1))
                     )
                 }
             }
@@ -383,58 +357,70 @@ struct TierSelectionSheet: View {
         .background(
             RoundedRectangle(cornerRadius: 20)
                 .fill(.ultraThinMaterial)
-                .overlay(
-                    RoundedRectangle(cornerRadius: 20)
-                        .stroke(Color.white.opacity(0.1), lineWidth: 1)
-                )
+                .overlay(RoundedRectangle(cornerRadius: 20).stroke(Color.white.opacity(0.1), lineWidth: 1))
         )
     }
 
-    // MARK: - Billing Date
-    private var billingDateSection: some View {
+    // MARK: - Free Trial Toggle
+    private var freeTrialToggleSection: some View {
         VStack(alignment: .leading, spacing: 12) {
-            Text("Next Billing Date")
-                .font(STFont.labelLarge)
-                .foregroundColor(.white.opacity(0.6))
-                .padding(.leading, 4)
+            sectionLabel("Free Trial")
+            Toggle(isOn: trialBinding) {
+                VStack(alignment: .leading, spacing: 2) {
+                    Text("I'm currently in a free trial")
+                        .font(.subheadline.weight(.medium))
+                        .foregroundColor(.white.opacity(0.9))
+                    Text("We'll alert you before billing starts")
+                        .font(.caption.weight(.regular))
+                        .foregroundColor(.white.opacity(0.4))
+                }
+            }
+            .tint(.accentMint)
+            .padding(16)
+            .background(
+                RoundedRectangle(cornerRadius: 14)
+                    .fill(hasFreeTrial ? Color.accentMint.opacity(0.09) : Color.white.opacity(0.06))
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 14)
+                            .stroke(hasFreeTrial ? Color.accentMint.opacity(0.3) : Color.white.opacity(0.08), lineWidth: 1)
+                    )
+            )
+            .animation(.easeInOut(duration: 0.2), value: hasFreeTrial)
+        }
+    }
 
-            VStack(spacing: 16) {
-                // Quick-select buttons
+    // MARK: - Free Trial Date (shown when hasFreeTrial = true)
+    private var freeTrialDateSection: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            sectionLabel("Trial Ends On")
+            VStack(spacing: 10) {
                 HStack(spacing: 8) {
-                    QuickDateChip(title: "Today", icon: "calendar") {
-                        withAnimation(.easeInOut(duration: 0.2)) {
-                            nextBillingDate = Date()
-                        }
-                    }
                     QuickDateChip(title: "+7 Days", icon: "7.circle") {
                         withAnimation(.easeInOut(duration: 0.2)) {
-                            nextBillingDate = Calendar.current.date(byAdding: .day, value: 7, to: Date()) ?? Date()
+                            trialEndsAt = Calendar.current.date(byAdding: .day, value: 7, to: Date()) ?? Date()
+                        }
+                    }
+                    QuickDateChip(title: "+14 Days", icon: "14.circle") {
+                        withAnimation(.easeInOut(duration: 0.2)) {
+                            trialEndsAt = Calendar.current.date(byAdding: .day, value: 14, to: Date()) ?? Date()
                         }
                     }
                     QuickDateChip(title: "+30 Days", icon: "30.circle") {
                         withAnimation(.easeInOut(duration: 0.2)) {
-                            nextBillingDate = Calendar.current.date(byAdding: .day, value: 30, to: Date()) ?? Date()
+                            trialEndsAt = Calendar.current.date(byAdding: .day, value: 30, to: Date()) ?? Date()
                         }
                     }
                 }
-
-                DatePicker(
-                    "Next Billing Date",
-                    selection: $nextBillingDate,
-                    displayedComponents: .date
-                )
-                .datePickerStyle(.compact)
-                .labelsHidden()
-                .colorMultiply(.luxuryPurple)
-                .padding(14)
-                .background(
-                    RoundedRectangle(cornerRadius: 14)
-                        .fill(Color.white.opacity(0.06))
-                        .overlay(
-                            RoundedRectangle(cornerRadius: 14)
-                                .stroke(Color.white.opacity(0.1), lineWidth: 1)
-                        )
-                )
+                DatePicker("Trial ends", selection: $trialEndsAt, in: Date()..., displayedComponents: .date)
+                    .datePickerStyle(.compact)
+                    .labelsHidden()
+                    .colorMultiply(.accentMint)
+                    .padding(14)
+                    .background(
+                        RoundedRectangle(cornerRadius: 14)
+                            .fill(Color.white.opacity(0.06))
+                            .overlay(RoundedRectangle(cornerRadius: 14).stroke(Color.accentMint.opacity(0.22), lineWidth: 1))
+                    )
             }
         }
     }
@@ -444,112 +430,238 @@ struct TierSelectionSheet: View {
 
     private var priceOverrideSection: some View {
         VStack(alignment: .leading, spacing: 12) {
-            Text("Custom Price")
-                .font(STFont.labelLarge)
-                .foregroundColor(.white.opacity(0.6))
-                .padding(.leading, 4)
+            sectionLabel("Custom Price")
 
             if !hasSeenCustomPriceHint {
                 HStack(spacing: 8) {
                     Image(systemName: "sparkles")
                         .font(.caption.weight(.semibold))
-                        .foregroundColor(.luxuryPurple)
-
-                    Text("Don't see your price? Tap below to enter a custom amount")
+                        .foregroundColor(.accentMint)
+                    Text("Got a promo, bundle, or discount? Enter what you actually pay.")
                         .font(.caption.weight(.medium))
                         .foregroundColor(.white.opacity(0.7))
-
                     Spacer()
-
                     Button {
-                        withAnimation(.easeInOut(duration: 0.2)) {
-                            hasSeenCustomPriceHint = true
-                        }
+                        withAnimation { hasSeenCustomPriceHint = true }
                     } label: {
                         Image(systemName: "xmark.circle.fill")
                             .font(.caption)
-                            .foregroundColor(.white.opacity(0.4))
+                            .foregroundColor(.white.opacity(0.35))
                     }
                 }
-                .padding(.horizontal, 14)
-                .padding(.vertical, 10)
+                .padding(.horizontal, 14).padding(.vertical, 10)
                 .background(
                     RoundedRectangle(cornerRadius: 10)
-                        .fill(Color.luxuryPurple.opacity(0.12))
-                        .overlay(
-                            RoundedRectangle(cornerRadius: 10)
-                                .stroke(Color.luxuryPurple.opacity(0.25), lineWidth: 1)
-                        )
+                        .fill(Color.accentMint.opacity(0.09))
+                        .overlay(RoundedRectangle(cornerRadius: 10).stroke(Color.accentMint.opacity(0.2), lineWidth: 1))
                 )
                 .transition(.move(edge: .top).combined(with: .opacity))
             }
 
-            Toggle(isOn: $isOverridingPrice) {
+            Toggle(isOn: overrideBinding) {
                 Text("I pay a different amount")
                     .font(.subheadline.weight(.medium))
                     .foregroundColor(.white.opacity(0.8))
             }
-            .tint(.luxuryPurple)
+            .tint(.accentMint)
             .padding(16)
             .background(
                 RoundedRectangle(cornerRadius: 14)
                     .fill(Color.white.opacity(0.06))
-                    .overlay(
-                        RoundedRectangle(cornerRadius: 14)
-                            .stroke(Color.white.opacity(0.08), lineWidth: 1)
-                    )
+                    .overlay(RoundedRectangle(cornerRadius: 14).stroke(Color.white.opacity(0.08), lineWidth: 1))
             )
 
             if isOverridingPrice {
-                HStack(spacing: 12) {
-                    Text(currencyManager.currencySymbol(for: currencyManager.selectedCurrency))
-                        .font(.headline.weight(.semibold))
-                        .foregroundColor(.white.opacity(0.6))
+                VStack(alignment: .leading, spacing: 6) {
+                    HStack(spacing: 12) {
+                        Text(currencyManager.currencySymbol(for: currencyManager.selectedCurrency))
+                            .font(.headline.weight(.semibold))
+                            .foregroundColor(.white.opacity(0.55))
+                        TextField("Your price per month", text: $priceOverrideText)
+                            .font(.headline.weight(.semibold))
+                            .foregroundColor(.white)
+                            .keyboardType(.decimalPad)
+                            .tint(.accentMint)
+                            .onChange(of: priceOverrideText) { _, val in
+                                let clean = val.replacingOccurrences(of: ",", with: ".")
+                                if let d = Decimal(string: clean), d <= 0 {
+                                    priceError = "Enter an amount greater than $0"
+                                } else {
+                                    priceError = nil
+                                }
+                            }
+                    }
+                    .padding(16)
+                    .background(
+                        RoundedRectangle(cornerRadius: 14)
+                            .fill(Color.white.opacity(0.06))
+                            .overlay(
+                                RoundedRectangle(cornerRadius: 14)
+                                    .stroke(priceError != nil ? Color.red.opacity(0.5) : Color.accentMint.opacity(0.3), lineWidth: 1)
+                            )
+                    )
 
-                    TextField("Your monthly price", text: $priceOverrideText)
-                        .font(.headline.weight(.semibold))
-                        .foregroundColor(.white)
-                        .keyboardType(.decimalPad)
-                        .submitLabel(.done)
-                        .tint(.luxuryPurple)
+                    if let err = priceError {
+                        Label(err, systemImage: "exclamationmark.circle.fill")
+                            .font(.caption.weight(.medium))
+                            .foregroundStyle(Color.red.opacity(0.75))
+                            .padding(.leading, 4)
+                            .transition(.opacity.combined(with: .move(edge: .top)))
+                    }
                 }
-                .padding(16)
-                .background(
-                    RoundedRectangle(cornerRadius: 14)
-                        .fill(Color.white.opacity(0.06))
-                        .overlay(
-                            RoundedRectangle(cornerRadius: 14)
-                                .stroke(Color.luxuryPurple.opacity(0.3), lineWidth: 1)
-                        )
-                )
+                .transition(.move(edge: .top).combined(with: .opacity))
             }
         }
     }
 
-    // MARK: - Computed
+    // MARK: - Billing Date
+    private var billingDateSection: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            sectionLabel(hasFreeTrial ? "First Charge Date" : "Next Billing Date")
+
+            VStack(spacing: 10) {
+                if hasFreeTrial {
+                    Label("Set automatically — 1 day after your trial ends", systemImage: "info.circle")
+                        .font(.caption.weight(.medium))
+                        .foregroundStyle(.white.opacity(0.45))
+                } else {
+                    HStack(spacing: 8) {
+                        QuickDateChip(title: "Today", icon: "calendar") {
+                            withAnimation(.easeInOut(duration: 0.2)) { nextBillingDate = Date() }
+                        }
+                        QuickDateChip(title: "+7 Days", icon: "7.circle") {
+                            withAnimation(.easeInOut(duration: 0.2)) {
+                                nextBillingDate = Calendar.current.date(byAdding: .day, value: 7, to: Date()) ?? Date()
+                            }
+                        }
+                        QuickDateChip(title: "+30 Days", icon: "30.circle") {
+                            withAnimation(.easeInOut(duration: 0.2)) {
+                                nextBillingDate = Calendar.current.date(byAdding: .month, value: 1, to: Date()) ?? Date()
+                            }
+                        }
+                    }
+                }
+
+                DatePicker("Next Billing Date", selection: $nextBillingDate, in: Date()..., displayedComponents: .date)
+                    .datePickerStyle(.compact)
+                    .labelsHidden()
+                    .colorMultiply(.accentMint)
+                    .disabled(hasFreeTrial)
+                    .padding(14)
+                    .background(
+                        RoundedRectangle(cornerRadius: 14)
+                            .fill(Color.white.opacity(hasFreeTrial ? 0.03 : 0.06))
+                            .overlay(RoundedRectangle(cornerRadius: 14).stroke(Color.white.opacity(0.1), lineWidth: 1))
+                    )
+                    .animation(.easeInOut(duration: 0.15), value: hasFreeTrial)
+            }
+        }
+    }
+
+    // MARK: - Add Button (safeAreaInset)
+    private var addButton: some View {
+        VStack(spacing: 0) {
+            Divider().background(Color.white.opacity(0.06))
+            Button {
+                guard canAdd else {
+                    STAnimation.impactMedium()
+                    priceError = "Enter an amount greater than $0"
+                    return
+                }
+                STAnimation.success()
+                let price = parsePriceOverride()
+                onSelect(selectedTier, selectedBillingFrequency, isOverridingPrice, price, nextBillingDate, hasFreeTrial ? trialEndsAt : nil)
+                dismiss()
+            } label: {
+                HStack(spacing: 10) {
+                    Image(systemName: hasFreeTrial ? "clock.badge.checkmark.fill" : "plus.circle.fill")
+                        .font(.body.weight(.bold))
+                    VStack(spacing: 1) {
+                        Text(hasFreeTrial ? "Start Tracking Trial" : "Add \(entry.name)")
+                            .font(.body.weight(.semibold))
+                        if !hasFreeTrial {
+                            Text(effectivePriceText)
+                                .font(.caption2.weight(.medium))
+                                .opacity(0.65)
+                        }
+                    }
+                }
+                .font(.body.weight(.semibold))
+                .foregroundColor(canAdd ? .black : .white.opacity(0.35))
+                .frame(maxWidth: .infinity)
+                .frame(height: 56)
+                .background(
+                    RoundedRectangle(cornerRadius: 16, style: .continuous)
+                        .fill(canAdd ? Color.accentMint : Color.white.opacity(0.1))
+                )
+                .animation(.easeInOut(duration: 0.18), value: canAdd)
+                .animation(.easeInOut(duration: 0.18), value: hasFreeTrial)
+            }
+            .padding(.horizontal, 20)
+            .padding(.top, 12)
+            .padding(.bottom, 20)
+            .background(.ultraThinMaterial)
+        }
+    }
+
+    // MARK: - Helpers
+    private func sectionLabel(_ title: String) -> some View {
+        Text(title)
+            .font(STFont.labelLarge)
+            .foregroundColor(.white.opacity(0.55))
+            .padding(.leading, 4)
+    }
+
+    private var iconColor: Color {
+        switch entry.category {
+        case .entertainment: return .purple
+        case .music:         return .pink
+        case .productivity:  return .blue
+        case .healthFitness: return .green
+        case .cloudStorage:  return .cyan
+        case .education:     return .orange
+        case .utilities:     return .gray
+        case .finance:       return .mint
+        case .food:          return .yellow
+        case .shopping:      return .red
+        case .sports:        return .indigo
+        case .social:        return .teal
+        case .news:          return .brown
+        case .phone:         return .blue.opacity(0.7)
+        case .insurance:     return .green.opacity(0.7)
+        case .gym:           return .orange.opacity(0.8)
+        case .automotive:    return .red.opacity(0.7)
+        case .home:          return .purple.opacity(0.7)
+        case .pet:           return .brown.opacity(0.8)
+        case .personalCare:  return .pink.opacity(0.7)
+        case .aiTools:       return .purple
+        case .gaming:        return .indigo
+        case .developerTools:return .blue.opacity(0.8)
+        case .creator:       return .orange.opacity(0.9)
+        case .travel:        return .cyan.opacity(0.8)
+        case .dating:        return .red.opacity(0.8)
+        case .kids:          return .yellow.opacity(0.8)
+        case .security:      return .green.opacity(0.9)
+        case .other:         return .secondary
+        }
+    }
+
     private var effectivePriceText: String {
         guard let pricing = selectedTierPricing else { return "N/A" }
-
-        let price: Double
-        if selectedBillingFrequency == .yearly {
-            price = pricing.annualPriceUSD ?? pricing.monthlyPriceUSD * 12
-        } else {
-            price = pricing.monthlyPriceUSD
-        }
-
+        let price: Double = selectedBillingFrequency == .yearly
+            ? (pricing.annualPriceUSD ?? pricing.monthlyPriceUSD * 12)
+            : pricing.monthlyPriceUSD
         return "\(currencyManager.priceIndicator)\(currencyManager.formatCatalogPrice(price, sourceCurrency: pricing.currencyCode))/\(selectedBillingFrequency == .yearly ? "yr" : "mo")"
     }
 
     private var annualTotalText: String {
-        guard let pricing = selectedTierPricing,
-              let annual = pricing.annualPriceUSD else { return "" }
+        guard let pricing = selectedTierPricing, let annual = pricing.annualPriceUSD else { return "" }
         return "\(currencyManager.priceIndicator)\(currencyManager.formatCatalogPrice(annual, sourceCurrency: pricing.currencyCode))/yr"
     }
 
     private func parsePriceOverride() -> Decimal? {
         guard isOverridingPrice, !priceOverrideText.isEmpty else { return nil }
-        let cleaned = priceOverrideText.replacingOccurrences(of: ",", with: ".")
-        return Decimal(string: cleaned)
+        return Decimal(string: priceOverrideText.replacingOccurrences(of: ",", with: "."))
     }
 }
 
@@ -558,103 +670,81 @@ struct PremiumTierRow: View {
     let tier: PricingTier
     let tierPricing: TierPricing?
     let isSelected: Bool
+    var isOnlyOption: Bool = false
     let currencyManager: CurrencyManager
     let onTap: () -> Void
 
     @State private var isPressed = false
 
     var body: some View {
-        Button(action: onTap) {
+        Button(action: { if !isOnlyOption { onTap() } }) {
             HStack(spacing: 16) {
-                // Selection indicator
-                ZStack {
-                    Circle()
-                        .stroke(isSelected ? Color.luxuryPurple : Color.white.opacity(0.2), lineWidth: 2)
-                        .frame(width: 28, height: 28)
-
-                    if isSelected {
+                // Radio indicator — hidden when only one plan (no choice to make)
+                if !isOnlyOption {
+                    ZStack {
                         Circle()
-                            .fill(
-                                LinearGradient(
-                                    colors: [.luxuryPurple, .luxuryPink],
-                                    startPoint: .topLeading,
-                                    endPoint: .bottomTrailing
-                                )
-                            )
-                            .frame(width: 20, height: 20)
+                            .stroke(isSelected ? Color.accentMint : Color.white.opacity(0.2), lineWidth: 2)
+                            .frame(width: 28, height: 28)
+                        if isSelected {
+                            Circle()
+                                .fill(Color.accentMint)
+                                .frame(width: 18, height: 18)
+                                .transition(.scale.combined(with: .opacity))
+                        }
                     }
+                    .animation(.spring(response: 0.3, dampingFraction: 0.7), value: isSelected)
+                } else {
+                    // Single plan: show a small checkmark instead
+                    Image(systemName: "checkmark.circle.fill")
+                        .font(.system(size: 20, weight: .semibold))
+                        .foregroundStyle(Color.accentMint)
+                        .frame(width: 28, height: 28)
                 }
 
-                // Tier icon
-                Image(systemName: tier.icon)
-                    .font(.title3)
-                    .foregroundColor(isSelected ? .luxuryPurple : .white.opacity(0.4))
-                    .frame(width: 32)
-
-                // Tier info
-                VStack(alignment: .leading, spacing: 4) {
+                VStack(alignment: .leading, spacing: 3) {
                     HStack(spacing: 8) {
                         Text(tier.displayName)
                             .font(.callout.weight(isSelected ? .semibold : .medium))
                             .foregroundColor(.white)
-
                         if tierPricing?.isBestValue == true {
                             Text("BEST VALUE")
                                 .font(.caption2.weight(.bold))
-                                .foregroundColor(.white)
-                                .padding(.horizontal, 6)
-                                .padding(.vertical, 2)
-                                .background(
-                                    LinearGradient(
-                                        colors: [.luxuryPurple, .luxuryPink],
-                                        startPoint: .leading,
-                                        endPoint: .trailing
-                                    )
-                                )
-                                .cornerRadius(4)
+                                .foregroundColor(.black)
+                                .padding(.horizontal, 6).padding(.vertical, 2)
+                                .background(Color.accentMint.cornerRadius(4))
                         }
                     }
-
                     Text(tierDescription)
                         .font(.caption2.weight(.medium))
-                        .foregroundColor(.white.opacity(0.5))
+                        .foregroundColor(.white.opacity(0.45))
                 }
 
                 Spacer()
 
-                // Price
                 if let pricing = tierPricing {
-                    VStack(alignment: .trailing, spacing: 2) {
-                        Text("\(currencyManager.priceIndicator)\(currencyManager.formatCatalogPrice(pricing.monthlyPriceUSD, sourceCurrency: pricing.currencyCode))/mo")
-                            .font(.subheadline.weight(.semibold))
-                            .foregroundColor(.white)
-                    }
+                    Text("\(currencyManager.priceIndicator)\(currencyManager.formatCatalogPrice(pricing.monthlyPriceUSD, sourceCurrency: pricing.currencyCode))/mo")
+                        .font(.subheadline.weight(.semibold))
+                        .foregroundColor(.white)
                 }
             }
             .padding(16)
             .background(
                 RoundedRectangle(cornerRadius: 16)
-                    .fill(isSelected ? Color.luxuryPurple.opacity(0.15) : Color.white.opacity(0.05))
+                    .fill((isSelected || isOnlyOption) ? Color.accentMint.opacity(0.10) : Color.white.opacity(0.05))
                     .overlay(
                         RoundedRectangle(cornerRadius: 16)
-                            .stroke(isSelected ? Color.luxuryPurple.opacity(0.5) : Color.white.opacity(0.08), lineWidth: isSelected ? 2 : 1)
+                            .stroke((isSelected || isOnlyOption) ? Color.accentMint.opacity(0.4) : Color.white.opacity(0.08),
+                                    lineWidth: (isSelected || isOnlyOption) ? 1.5 : 1)
                     )
             )
             .scaleEffect(isPressed ? 0.98 : 1.0)
+            .animation(.spring(response: 0.3, dampingFraction: 0.7), value: isSelected)
         }
         .buttonStyle(PlainButtonStyle())
         .simultaneousGesture(
             DragGesture(minimumDistance: 0)
-                .onChanged { _ in
-                    withAnimation(PremiumAnimations.fast) {
-                        isPressed = true
-                    }
-                }
-                .onEnded { _ in
-                    withAnimation(STAnimation.snappy) {
-                        isPressed = false
-                    }
-                }
+                .onChanged { _ in withAnimation(PremiumAnimations.fast) { isPressed = true } }
+                .onEnded   { _ in withAnimation(STAnimation.snappy)     { isPressed = false } }
         )
         .accessibilityValue(isSelected ? "Selected" : "Not selected")
     }
@@ -662,10 +752,10 @@ struct PremiumTierRow: View {
     private var tierDescription: String {
         switch tier {
         case .individual: return "For one person"
-        case .family: return "Up to \(tier.maxUsers ?? 6) members"
-        case .student: return "Verified students only"
-        case .duo: return "For two people"
-        case .team: return "Flexible team size"
+        case .family:     return "Up to \(tier.maxUsers ?? 6) members"
+        case .student:    return "Verified students only"
+        case .duo:        return "For two people"
+        case .team:       return "Flexible team size"
         case .enterprise: return "Custom pricing"
         }
     }
@@ -676,16 +766,13 @@ struct QuickDateChip: View {
     let title: String
     let icon: String
     let action: () -> Void
-
     @State private var isPressed = false
 
     var body: some View {
         Button(action: action) {
             VStack(spacing: 4) {
-                Image(systemName: icon)
-                    .font(.caption2.weight(.semibold))
-                Text(title)
-                    .font(.caption2.weight(.medium))
+                Image(systemName: icon).font(.caption2.weight(.semibold))
+                Text(title).font(.caption2.weight(.medium))
             }
             .foregroundColor(.white.opacity(0.8))
             .frame(maxWidth: .infinity)
@@ -693,18 +780,15 @@ struct QuickDateChip: View {
             .background(
                 RoundedRectangle(cornerRadius: 10)
                     .fill(Color.white.opacity(0.08))
-                    .overlay(
-                        RoundedRectangle(cornerRadius: 10)
-                            .stroke(Color.white.opacity(0.12), lineWidth: 1)
-                    )
+                    .overlay(RoundedRectangle(cornerRadius: 10).stroke(Color.white.opacity(0.12), lineWidth: 1))
             )
-            .scaleEffect(isPressed ? 0.95 : 1.0)
+            .scaleEffect(isPressed ? 0.94 : 1.0)
         }
         .buttonStyle(PlainButtonStyle())
         .simultaneousGesture(
             DragGesture(minimumDistance: 0)
                 .onChanged { _ in withAnimation(.easeInOut(duration: 0.1)) { isPressed = true } }
-                .onEnded { _ in withAnimation(.easeInOut(duration: 0.1)) { isPressed = false } }
+                .onEnded   { _ in withAnimation(.easeInOut(duration: 0.1)) { isPressed = false } }
         )
     }
 }
@@ -724,16 +808,12 @@ struct BillingToggleButton: View {
                 .padding(.vertical, 12)
                 .background {
                     if isSelected {
-                        LinearGradient(
-                            colors: [.luxuryPurple, .luxuryPink],
-                            startPoint: .leading,
-                            endPoint: .trailing
-                        )
-                    } else {
-                        Color.clear
+                        Color.accentMint
+                            .cornerRadius(10)
+                            .transition(.opacity)
                     }
                 }
-                .cornerRadius(10)
+                .animation(.easeInOut(duration: 0.15), value: isSelected)
         }
         .buttonStyle(PlainButtonStyle())
         .accessibilityValue(isSelected ? "Selected" : "Not selected")
@@ -752,15 +832,15 @@ struct BillingToggleButton: View {
             appStoreProductId: nil,
             websiteURL: "https://netflix.com",
             cancellationURL: nil,
-            trialDays: 0,
+            trialDays: 30,
             canPause: true,
             supportedTiers: [
                 TierPricing(tier: .individual, region: .us, monthlyPriceUSD: 15.49, annualPriceUSD: 139.99, isBestValue: false),
-                TierPricing(tier: .family, region: .us, monthlyPriceUSD: 22.99, annualPriceUSD: 229.99, isBestValue: true),
-                TierPricing(tier: .student, region: .us, monthlyPriceUSD: 7.99, annualPriceUSD: nil, isBestValue: false),
+                TierPricing(tier: .family,     region: .us, monthlyPriceUSD: 22.99, annualPriceUSD: 229.99, isBestValue: true),
+                TierPricing(tier: .student,    region: .us, monthlyPriceUSD: 7.99,  annualPriceUSD: nil,    isBestValue: false),
             ],
             lastUpdated: Date()
         ),
-        onSelect: { _, _, _, _, _ in }
+        onSelect: { _, _, _, _, _, _ in }
     )
 }

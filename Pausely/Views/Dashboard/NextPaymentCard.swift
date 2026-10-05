@@ -53,15 +53,7 @@ struct NextPaymentCard: View {
     }
 
     private var cardIcon: some View {
-        ZStack {
-            Circle()
-                .fill(urgencyColor.opacity(0.15))
-                .frame(width: 52, height: 52)
-
-            Image(systemName: "creditcard.fill")
-                .font(.title3)
-                .foregroundStyle(urgencyColor)
-        }
+        ServiceLogoView(name: subscription?.name ?? "", category: subscription?.category, size: 52)
     }
 
     private func cardInfo(for sub: Subscription) -> some View {
@@ -227,7 +219,7 @@ struct TotalSpendSummaryCard: View {
                                 .padding(.vertical, 5)
                                 .background(
                                     Capsule()
-                                        .fill(selectedTimeframe == tf ? Color.luxuryPurple : Color.clear)
+                                        .fill(selectedTimeframe == tf ? Color.accentMint : Color.clear)
                                 )
                         }
                     }
@@ -241,7 +233,7 @@ struct TotalSpendSummaryCard: View {
             HStack(alignment: .firstTextBaseline, spacing: 4) {
                 Text(currencyManager.currencySymbol(for: currencyManager.selectedCurrency))
                     .font(.system(.title2, design: .rounded).weight(.semibold))
-                    .foregroundStyle(Color.luxuryGold)
+                    .foregroundStyle(Color.accentMint)
 
                 Text(formattedAmount(displayAmount))
                     .font(.system(.largeTitle, design: .rounded).weight(.black))
@@ -264,7 +256,7 @@ struct TotalSpendSummaryCard: View {
                 MiniSpendPill(
                     label: "Yearly",
                     amount: yearlySpend,
-                    color: .luxuryGold
+                    color: .accentMint
                 )
             }
         }
@@ -277,7 +269,7 @@ struct TotalSpendSummaryCard: View {
                         .stroke(Color.obsidianBorder, lineWidth: 1)
                 )
         )
-        .shadow(color: .luxuryPurple.opacity(0.1), radius: 30, x: 0, y: 15)
+        .shadow(color: .accentMint.opacity(0.1), radius: 30, x: 0, y: 15)
         .opacity(appear ? 1 : 0)
         .offset(y: appear ? 0 : 30)
         .onAppear {

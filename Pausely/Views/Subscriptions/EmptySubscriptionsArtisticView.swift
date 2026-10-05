@@ -11,7 +11,7 @@ struct EmptySubscriptionsArtisticView: View {
                 // Orbit rings
                 ForEach(0..<3) { i in
                     Circle()
-                        .stroke(BrandColors.primary.opacity(0.1 + Double(i) * 0.1), lineWidth: 1)
+                        .stroke(Color.accentMint.opacity(0.1 + Double(i) * 0.1), lineWidth: 1)
                         .frame(width: 120 + CGFloat(i * 30), height: 120 + CGFloat(i * 30))
                         .rotationEffect(.degrees(animate ? 360 : 0))
                         .animation(
@@ -27,13 +27,13 @@ struct EmptySubscriptionsArtisticView: View {
                     Circle()
                         .fill(
                             LinearGradient(
-                                colors: [BrandColors.primary, BrandColors.secondary],
+                                colors: [Color.accentMint, Color.accentMint],
                                 startPoint: .topLeading,
                                 endPoint: .bottomTrailing
                             )
                         )
                         .frame(width: 80, height: 80)
-                        .shadow(color: BrandColors.primary.opacity(0.4), radius: 20, x: 0, y: 10)
+                        .shadow(color: Color.accentMint.opacity(0.4), radius: 20, x: 0, y: 10)
 
                     Image(systemName: "plus")
                         .font(.title3.weight(.semibold))
@@ -49,7 +49,7 @@ struct EmptySubscriptionsArtisticView: View {
 
                 Text("Add your first subscription to start tracking")
                     .font(.subheadline)
-                    .foregroundColor(TextColors.secondary)
+                    .foregroundColor(Color.obsidianTextSecondary)
                     .multilineTextAlignment(.center)
                     .padding(.horizontal, 40)
             }
@@ -65,9 +65,9 @@ struct EmptySubscriptionsArtisticView: View {
                 .padding(.vertical, 16)
                 .background(
                     Capsule()
-                        .fill(Color.brandGradient)
+                        .fill(LinearGradient(colors: [Color.accentMint, Color(hex: "#6EE7B7")], startPoint: .leading, endPoint: .trailing))
                 )
-                .shadow(color: BrandColors.primary.opacity(0.4), radius: 20, x: 0, y: 10)
+                .shadow(color: Color.accentMint.opacity(0.4), radius: 20, x: 0, y: 10)
             }
         }
         .padding(.bottom, 80)

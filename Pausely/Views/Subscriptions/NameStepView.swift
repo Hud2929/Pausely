@@ -22,7 +22,7 @@ struct NameStepView: View {
 
                     Text("Enter the name of the service you're subscribing to")
                         .font(.body)
-                        .foregroundColor(TextColors.secondary)
+                        .foregroundColor(Color.obsidianTextSecondary)
                         .multilineTextAlignment(.center)
                 }
                 .padding(.top, 40)

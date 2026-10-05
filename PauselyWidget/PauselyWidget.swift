@@ -10,26 +10,31 @@ import SwiftUI
 struct PauselyWidgetProvider: TimelineProvider {
     
     func placeholder(in context: Context) -> PauselyWidgetEntry {
-        // Widget placeholder - shows loading state without fake data
         PauselyWidgetEntry(
             date: Date(),
             monthlySpend: 0,
             activeSubscriptions: 0,
             upcomingRenewals: 0,
             currencySymbol: "$",
-            topInsight: "Loading..."
+            topInsight: "Loading...",
+            nextChargeName: "–",
+            nextChargeDate: nil,
+            nextChargeAmount: 0
         )
     }
 
     func getSnapshot(in context: Context, completion: @escaping (PauselyWidgetEntry) -> Void) {
-        let summary = WidgetDataStore.shared.readSummary()
+        let summary = WidgetReader.readSummary()
         let entry = PauselyWidgetEntry(
             date: Date(),
             monthlySpend: summary.monthlySpend,
             activeSubscriptions: summary.activeCount,
             upcomingRenewals: summary.upcomingCount,
             currencySymbol: summary.currencySymbol,
-            topInsight: summary.topInsight
+            topInsight: summary.topInsight,
+            nextChargeName: WidgetReader.readLiveActivityName(),
+            nextChargeDate: WidgetReader.readLiveActivityDate(),
+            nextChargeAmount: WidgetReader.readLiveActivityAmount()
         )
         completion(entry)
     }
@@ -48,14 +53,17 @@ struct PauselyWidgetProvider: TimelineProvider {
     }
     
     private func fetchCurrentEntry() async -> PauselyWidgetEntry {
-        let summary = WidgetDataStore.shared.readSummary()
+        let summary = WidgetReader.readSummary()
         return PauselyWidgetEntry(
             date: Date(),
             monthlySpend: summary.monthlySpend,
             activeSubscriptions: summary.activeCount,
             upcomingRenewals: summary.upcomingCount,
             currencySymbol: summary.currencySymbol,
-            topInsight: summary.topInsight
+            topInsight: summary.topInsight,
+            nextChargeName: WidgetReader.readLiveActivityName(),
+            nextChargeDate: WidgetReader.readLiveActivityDate(),
+            nextChargeAmount: WidgetReader.readLiveActivityAmount()
         )
     }
 }
@@ -68,6 +76,15 @@ struct PauselyWidgetEntry: TimelineEntry {
     let upcomingRenewals: Int
     let currencySymbol: String
     let topInsight: String
+    // Next charge details (for small widget)
+    let nextChargeName: String
+    let nextChargeDate: Date?
+    let nextChargeAmount: Double
+
+    var nextChargeDays: Int {
+        guard let d = nextChargeDate else { return 0 }
+        return max(0, Calendar.current.dateComponents([.day], from: Date(), to: d).day ?? 0)
+    }
 }
 
 // MARK: - Widget Views
@@ -95,42 +112,86 @@ struct PauselyWidgetEntryView: View {
     }
 }
 
-// MARK: - Small Widget
+// MARK: - Small Widget (Next Charge)
 struct SmallWidgetView: View {
     let entry: PauselyWidgetEntry
-    
-    var body: some View {
-        VStack(spacing: 8) {
-            HStack {
-                Image(systemName: "creditcard.fill")
-                    .foregroundStyle(.indigo)
-                Spacer()
-            }
-            
-            VStack(alignment: .leading, spacing: 2) {
-                Text(entry.currencySymbol)
-                    .font(.caption)
-                    .foregroundStyle(.secondary) +
-                Text(String(format: "%.0f", entry.monthlySpend))
-                    .font(.title2.bold())
-                
-                Text("monthly")
-                    .font(.caption2)
-                    .foregroundStyle(.secondary)
-            }
-            .frame(maxWidth: .infinity, alignment: .leading)
-            
-            Spacer()
-            
-            HStack {
-                Image(systemName: "app.fill")
-                    .font(.caption)
-                Text("\(entry.activeSubscriptions)")
-                    .font(.caption.bold())
-            }
-            .foregroundStyle(.indigo)
+
+    private var urgencyColor: Color {
+        switch entry.nextChargeDays {
+        case 0...1: return .red
+        case 2...3: return .orange
+        case 4...7: return .yellow
+        default:    return .green
         }
-        .padding()
+    }
+
+    private var daysLabel: String {
+        switch entry.nextChargeDays {
+        case 0: return "today"
+        case 1: return "tomorrow"
+        default: return "in \(entry.nextChargeDays) days"
+        }
+    }
+
+    private var hasData: Bool {
+        entry.nextChargeAmount > 0 && entry.nextChargeName != "–" && entry.nextChargeName != "Subscription"
+    }
+
+    var body: some View {
+        Group {
+            if hasData {
+                VStack(alignment: .leading, spacing: 0) {
+                    HStack(spacing: 4) {
+                        Circle()
+                            .fill(urgencyColor)
+                            .frame(width: 6, height: 6)
+                        Text("NEXT CHARGE")
+                            .font(.system(size: 9, weight: .bold, design: .rounded))
+                            .foregroundStyle(.secondary)
+                            .tracking(0.8)
+                    }
+
+                    Spacer()
+
+                    Text(entry.nextChargeName)
+                        .font(.system(.headline, design: .rounded).weight(.semibold))
+                        .foregroundStyle(.primary)
+                        .lineLimit(1)
+
+                    HStack(alignment: .firstTextBaseline, spacing: 1) {
+                        Text(entry.currencySymbol)
+                            .font(.system(.caption, design: .rounded))
+                            .foregroundStyle(.secondary)
+                        Text(String(format: "%.2f", entry.nextChargeAmount))
+                            .font(.system(.title2, design: .rounded).weight(.black))
+                            .foregroundStyle(.primary)
+                    }
+
+                    Spacer()
+
+                    Text(daysLabel)
+                        .font(.system(.caption2, design: .rounded).weight(.semibold))
+                        .foregroundStyle(urgencyColor)
+                        .padding(.horizontal, 8)
+                        .padding(.vertical, 3)
+                        .background(urgencyColor.opacity(0.15))
+                        .clipShape(Capsule())
+                }
+                .padding(14)
+            } else {
+                VStack(spacing: 8) {
+                    Image(systemName: "creditcard.fill")
+                        .font(.title2)
+                        .foregroundStyle(.secondary)
+                    Text("Add subscriptions to track")
+                        .font(.system(.caption2, design: .rounded))
+                        .foregroundStyle(.secondary)
+                        .multilineTextAlignment(.center)
+                }
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
+                .padding(14)
+            }
+        }
         .containerBackground(.fill.tertiary, for: .widget)
     }
 }
@@ -154,13 +215,9 @@ struct MediumWidgetView: View {
                         .font(.title.bold())
                 }
                 
-                HStack {
-                    Image(systemName: "arrow.up")
-                        .font(.caption2)
-                    Text("12% from last month")
-                        .font(.caption2)
-                }
-                .foregroundStyle(.orange)
+                Text("\(entry.upcomingRenewals) renewing soon")
+                    .font(.caption2)
+                    .foregroundStyle(entry.upcomingRenewals > 0 ? .orange : .secondary)
             }
             
             Divider()
@@ -222,8 +279,7 @@ struct LargeWidgetView: View {
                 LargeStatCard(
                     title: "Monthly",
                     value: String(format: "%.2f", entry.monthlySpend),
-                    prefix: entry.currencySymbol,
-                    trend: "+12%"
+                    prefix: entry.currencySymbol
                 )
                 
                 LargeStatCard(
@@ -253,9 +309,9 @@ struct LargeWidgetView: View {
                 )
                 
                 InsightRow(
-                    icon: "checkmark.circle.fill",
-                    color: .green,
-                    text: "You saved $89 this month!"
+                    icon: "calendar.badge.clock",
+                    color: .blue,
+                    text: "\(entry.upcomingRenewals) renewal\(entry.upcomingRenewals == 1 ? "" : "s") in the next 7 days"
                 )
             }
         }
@@ -424,6 +480,7 @@ struct PauselyLiveActivityWidget: Widget {
 struct PauselyWidgetBundle: WidgetBundle {
     var body: some Widget {
         PauselyWidget()
+        TrialCountdownWidget()
         PauselyLiveActivityWidget()
     }
 }
@@ -451,27 +508,13 @@ struct PauselyWidget: Widget {
 
 // MARK: - Preview
 #Preview(as: .systemSmall) {
-    PauselyWidgetEntryView(
-        entry: PauselyWidgetEntry(
-            date: Date(),
-            monthlySpend: 142.99,
-            activeSubscriptions: 12,
-            upcomingRenewals: 2,
-            currencySymbol: "$",
-            topInsight: "Save $45 by pausing unused subscriptions"
-        )
-    )
+    PauselyWidget()
+} timeline: {
+    PauselyWidgetEntry(date: Date(), monthlySpend: 142.99, activeSubscriptions: 12, upcomingRenewals: 2, currencySymbol: "$", topInsight: "Save $45 by pausing", nextChargeName: "Netflix", nextChargeDate: Calendar.current.date(byAdding: .day, value: 2, to: Date()), nextChargeAmount: 15.99)
 }
 
 #Preview(as: .systemMedium) {
-    PauselyWidgetEntryView(
-        entry: PauselyWidgetEntry(
-            date: Date(),
-            monthlySpend: 142.99,
-            activeSubscriptions: 12,
-            upcomingRenewals: 2,
-            currencySymbol: "$",
-            topInsight: "Save $45 by pausing unused subscriptions"
-        )
-    )
+    PauselyWidget()
+} timeline: {
+    PauselyWidgetEntry(date: Date(), monthlySpend: 142.99, activeSubscriptions: 12, upcomingRenewals: 2, currencySymbol: "$", topInsight: "Save $45 by pausing unused subscriptions", nextChargeName: "Netflix", nextChargeDate: Calendar.current.date(byAdding: .day, value: 2, to: Date()), nextChargeAmount: 15.99)
 }

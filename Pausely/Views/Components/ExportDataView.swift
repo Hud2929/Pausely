@@ -86,7 +86,7 @@ struct ExportDataView: View {
                         .font(.system(.subheadline, design: .rounded).weight(.semibold))
                         .foregroundStyle(.white)
                         .padding(.vertical, 14)
-                        .background(filteredCount > 0 ? Color.luxuryPurple : Color.gray)
+                        .background(filteredCount > 0 ? Color.accentMint : Color.gray)
                         .clipShape(RoundedRectangle(cornerRadius: 14))
                     }
                     .disabled(filteredCount == 0 || isExporting)

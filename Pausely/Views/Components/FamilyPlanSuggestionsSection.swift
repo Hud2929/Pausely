@@ -9,7 +9,7 @@ struct FamilyPlanSuggestionsSection: View {
             HStack {
                 Image(systemName: "person.3")
                     .font(.title3)
-                    .foregroundStyle(Color.luxuryTeal)
+                    .foregroundStyle(Color.accentMint)
 
                 Text("Family Plan Opportunities")
                     .font(.headline.weight(.semibold))
@@ -42,10 +42,10 @@ struct FamilyPlanCard: View {
 
                 Text("Save \(currencyManager.format(suggestion.savingsPerMonth))/mo")
                     .font(.caption.weight(.bold))
-                    .foregroundStyle(Color.luxuryTeal)
+                    .foregroundStyle(Color.accentMint)
                     .padding(.horizontal, 8)
                     .padding(.vertical, 4)
-                    .background(Color.luxuryTeal.opacity(0.15))
+                    .background(Color.accentMint.opacity(0.15))
                     .clipShape(Capsule())
             }
 
@@ -67,7 +67,7 @@ struct FamilyPlanCard: View {
                 .fill(.ultraThinMaterial)
                 .overlay(
                     RoundedRectangle(cornerRadius: 16, style: .continuous)
-                        .stroke(Color.luxuryTeal.opacity(0.2), lineWidth: 1)
+                        .stroke(Color.accentMint.opacity(0.2), lineWidth: 1)
                 )
         )
     }

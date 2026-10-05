@@ -47,7 +47,7 @@ struct ParsedResultCard: View {
 
                     Text("\(result.currency) \(String(format: "%.2f", price))")
                         .font(AppTypography.headlineMedium)
-                        .foregroundStyle(Color.luxuryGold)
+                        .foregroundStyle(Color.accentMint)
 
                     Text("/\(result.billingFrequency.rawValue)")
                         .font(AppTypography.labelLarge)

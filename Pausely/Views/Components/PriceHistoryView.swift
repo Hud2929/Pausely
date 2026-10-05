@@ -160,11 +160,11 @@ struct PriceHistoryView: View {
             HStack(spacing: 12) {
                 ZStack {
                     Circle()
-                        .fill(Color.luxuryGold.opacity(0.15))
+                        .fill(Color.accentMint.opacity(0.15))
                         .frame(width: 44, height: 44)
                     Image(systemName: "chart.line.uptrend.xyaxis")
                         .font(.title3)
-                        .foregroundStyle(Color.luxuryGold)
+                        .foregroundStyle(Color.accentMint)
                 }
 
                 VStack(alignment: .leading, spacing: 2) {
@@ -190,10 +190,10 @@ struct PriceHistoryView: View {
             }
         }
         .padding(16)
-        .background(Color.luxuryGold.opacity(0.06))
+        .background(Color.accentMint.opacity(0.06))
         .overlay(
             RoundedRectangle(cornerRadius: 20, style: .continuous)
-                .stroke(Color.luxuryGold.opacity(0.2), lineWidth: 1)
+                .stroke(Color.accentMint.opacity(0.2), lineWidth: 1)
         )
         .clipShape(RoundedRectangle(cornerRadius: 20, style: .continuous))
     }
@@ -204,11 +204,11 @@ struct PriceHistoryView: View {
 
             ZStack {
                 Circle()
-                    .fill(Color.luxuryGold.opacity(0.15))
+                    .fill(Color.accentMint.opacity(0.15))
                     .frame(width: 80, height: 80)
                 Image(systemName: "chart.line.uptrend.xyaxis")
                     .font(.largeTitle)
-                    .foregroundStyle(Color.luxuryGold)
+                    .foregroundStyle(Color.accentMint)
             }
 
             VStack(spacing: 8) {

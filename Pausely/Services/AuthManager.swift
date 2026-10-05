@@ -159,10 +159,35 @@ class RevolutionaryAuthManager: ObservableObject {
 
     // MARK: - Post Auth Setup
 
-    /// Called after any successful authentication. Previously handled affiliate attribution.
-    /// Now kept as a hook for future post-auth logic.
+    /// Called after any successful authentication.
+    /// Checks Supabase `profiles.is_pro` to honor lifetime/admin-granted Pro status.
     private func postAuthSetup(user: User) {
-        // Affiliate system disabled
+        Task {
+            await checkLifetimeProStatus(userId: user.id)
+        }
+    }
+
+    private func checkLifetimeProStatus(userId: String) async {
+        struct ProfileRow: Decodable {
+            let is_pro: Bool?
+        }
+        do {
+            let rows: [ProfileRow] = try await SupabaseManager.shared.client
+                .from("profiles")
+                .select("is_pro")
+                .eq("id", value: userId)
+                .limit(1)
+                .execute()
+                .value
+            if let profile = rows.first, profile.is_pro == true {
+                // Honor admin-granted pro — only set if not already active via StoreKit
+                if !PaymentManager.shared.isPremium {
+                    PaymentManager.shared.activatePremium(source: .referral)
+                }
+            }
+        } catch {
+            PauselyLogger.error("Failed to check lifetime pro: \(error)", category: "auth")
+        }
     }
 
     deinit {

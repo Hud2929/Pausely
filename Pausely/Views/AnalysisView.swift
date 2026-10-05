@@ -12,6 +12,7 @@ struct AnalysisView: View {
     @ObservedObject private var geniusEngine = RealGeniusEngine.shared
     @ObservedObject private var store = SubscriptionStore.shared
     @ObservedObject private var paymentManager = PaymentManager.shared
+    @ObservedObject private var currencyManager = CurrencyManager.shared
 
     @State private var aiState: AIRunState = .idle
     @State private var showingPaywall = false
@@ -94,6 +95,11 @@ struct AnalysisView: View {
 
     private var staticSection: some View {
         VStack(spacing: 16) {
+            // Hero row — always shown when data is available
+            if let forecast = insightsEngine.spendingForecast, forecast.currentMonthly > 0 {
+                analysisHero(monthly: forecast.currentMonthly)
+            }
+
             if insightsEngine.isAnalyzing {
                 SkeletonCard(height: 120, cornerRadius: 20)
                 SkeletonCard(height: 100, cornerRadius: 20)
@@ -130,6 +136,33 @@ struct AnalysisView: View {
         }
     }
 
+    @ViewBuilder
+    private func analysisHero(monthly: Decimal) -> some View {
+        VStack(spacing: 6) {
+            Text(CurrencyManager.shared.format(monthly))
+                .font(.system(.largeTitle, design: .rounded).weight(.black))
+                .foregroundStyle(Color.accentMint)
+                .minimumScaleFactor(0.7)
+                .lineLimit(1)
+            HStack(spacing: 6) {
+                Text("across \(store.subscriptions.filter { $0.status == .active }.count) subscription\(store.subscriptions.filter { $0.status == .active }.count == 1 ? "" : "s") · per month")
+                    .font(.system(.caption, design: .rounded))
+                    .foregroundStyle(Color.obsidianTextTertiary)
+            }
+        }
+        .frame(maxWidth: .infinity)
+        .padding(.vertical, 12)
+        .padding(.horizontal, 16)
+        .background(
+            RoundedRectangle(cornerRadius: 16, style: .continuous)
+                .fill(Color.accentMint.opacity(0.06))
+                .overlay(
+                    RoundedRectangle(cornerRadius: 16, style: .continuous)
+                        .stroke(Color.accentMint.opacity(0.12), lineWidth: 1)
+                )
+        )
+    }
+
     // MARK: - Section Divider
 
     private var aiDivider: some View {
@@ -153,40 +186,49 @@ struct AnalysisView: View {
 
     // MARK: - AI Section
 
+    private var showRunButton: Bool {
+        // Hide the button for small sets (≤5 subs) — auto-runs on load for Pro users
+        // Always show for free users (paywall) or when user wants to re-run >5 subs
+        if !paymentManager.isPremium { return true }
+        return store.subscriptions.count > 5
+    }
+
     private var aiSection: some View {
         VStack(spacing: 16) {
-            // Run button
-            Button {
-                if paymentManager.isPremium {
-                    Task { await runAIAnalysis() }
-                } else {
-                    HapticStyle.medium.trigger()
-                    showingPaywall = true
-                }
-            } label: {
-                HStack(spacing: 10) {
-                    if case .analyzing = aiState {
-                        ProgressView()
-                            .progressViewStyle(CircularProgressViewStyle(tint: .black))
-                            .scaleEffect(0.85)
+            // Run button — only shown for large sets or non-pro users
+            if showRunButton {
+                Button {
+                    if paymentManager.isPremium {
+                        Task { await runAIAnalysis() }
                     } else {
-                        Image(systemName: paymentManager.isPremium ? "wand.and.stars" : "crown.fill")
-                            .font(.system(size: 16, weight: .semibold))
+                        HapticStyle.medium.trigger()
+                        showingPaywall = true
                     }
-                    Text(aiButtonLabel)
-                        .font(.system(.headline, design: .rounded).weight(.semibold))
+                } label: {
+                    HStack(spacing: 10) {
+                        if case .analyzing = aiState {
+                            ProgressView()
+                                .progressViewStyle(CircularProgressViewStyle(tint: .black))
+                                .scaleEffect(0.85)
+                        } else {
+                            Image(systemName: paymentManager.isPremium ? "wand.and.stars" : "crown.fill")
+                                .font(.system(size: 16, weight: .semibold))
+                        }
+                        Text(aiButtonLabel)
+                            .font(.system(.headline, design: .rounded).weight(.semibold))
+                    }
+                    .foregroundStyle(Color.black)
+                    .frame(maxWidth: .infinity)
+                    .frame(height: 52)
+                    .background(
+                        RoundedRectangle(cornerRadius: 16, style: .continuous)
+                            .fill(paymentManager.isPremium ? Color.accentMint : Color.orange)
+                            .shadow(color: (paymentManager.isPremium ? Color.accentMint : Color.orange).opacity(0.3), radius: 12, x: 0, y: 6)
+                    )
                 }
-                .foregroundStyle(Color.black)
-                .frame(maxWidth: .infinity)
-                .frame(height: 52)
-                .background(
-                    RoundedRectangle(cornerRadius: 16, style: .continuous)
-                        .fill(paymentManager.isPremium ? Color.accentMint : Color.orange)
-                        .shadow(color: (paymentManager.isPremium ? Color.accentMint : Color.orange).opacity(0.3), radius: 12, x: 0, y: 6)
-                )
+                .buttonStyle(PlainButtonStyle())
+                .disabled({ if case .analyzing = aiState { return true } else { return false } }())
             }
-            .buttonStyle(PlainButtonStyle())
-            .disabled({ if case .analyzing = aiState { return true } else { return false } }())
 
             // AI results
             switch aiState {
@@ -400,6 +442,9 @@ struct AnalysisView: View {
                 HapticStyle.success.trigger()
                 aiState = .results(report)
             }
+        } catch is CancellationError {
+            // Task cancelled by .task(id:) restart — reset so next run can auto-trigger
+            if case .analyzing = aiState { aiState = .idle }
         } catch {
             aiState = .error(error.localizedDescription)
         }
@@ -424,19 +469,19 @@ private struct AnnualSpendRealityCard: View {
     private var comparisons: [Comparison] {
         // Convert USD reference prices to user's currency for accurate comparisons
         let cm = CurrencyManager.shared
-        let latteUSD = Decimal(6.50)
-        let flightUSD = Decimal(350)
-        let hotelUSD = Decimal(180)
-        let latteLocal = NSDecimalNumber(decimal: cm.convertToSelected(latteUSD, from: "USD")).doubleValue
-        let flightLocal = NSDecimalNumber(decimal: cm.convertToSelected(flightUSD, from: "USD")).doubleValue
-        let hotelLocal = NSDecimalNumber(decimal: cm.convertToSelected(hotelUSD, from: "USD")).doubleValue
-        let lattes = latteLocal > 0 ? Int(annualDouble / latteLocal) : 0
-        let flights = flightLocal > 0 ? Int(annualDouble / flightLocal) : 0
-        let hotelNights = hotelLocal > 0 ? Int(annualDouble / hotelLocal) : 0
+        let coffeeUSD = Decimal(4)
+        let movieUSD = Decimal(15)
+        let dinnerUSD = Decimal(22)
+        let coffeeLocal = NSDecimalNumber(decimal: cm.convertToSelected(coffeeUSD, from: "USD")).doubleValue
+        let movieLocal = NSDecimalNumber(decimal: cm.convertToSelected(movieUSD, from: "USD")).doubleValue
+        let dinnerLocal = NSDecimalNumber(decimal: cm.convertToSelected(dinnerUSD, from: "USD")).doubleValue
+        let coffees = coffeeLocal > 0 ? Int(annualDouble / coffeeLocal) : 0
+        let movies = movieLocal > 0 ? Int(annualDouble / movieLocal) : 0
+        let dinners = dinnerLocal > 0 ? Int(annualDouble / dinnerLocal) : 0
         return [
-            Comparison(icon: "cup.and.saucer.fill",  count: "\(lattes)",       label: "lattes"),
-            Comparison(icon: "airplane",              count: "\(flights)",      label: "round trips"),
-            Comparison(icon: "moon.stars.fill",       count: "\(hotelNights)", label: "hotel nights"),
+            Comparison(icon: "cup.and.saucer.fill", count: "\(coffees)", label: "coffees"),
+            Comparison(icon: "ticket.fill",          count: "\(movies)",  label: "movie tickets"),
+            Comparison(icon: "fork.knife",           count: "\(dinners)", label: "dinners out"),
         ]
     }
 

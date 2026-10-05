@@ -96,7 +96,7 @@ struct SubscriptionDetailView: View {
 
                         VStack(spacing: 1) {
                             SubscriptionDetailRow(icon: "calendar", title: "Next Billing", value: renewalDateText)
-                            SubscriptionDetailRow(icon: "tag", title: "Category", value: subscription.category ?? "Other")
+                            SubscriptionDetailRow(icon: "tag", title: "Category", value: (subscription.category ?? "other").capitalized)
                             SubscriptionDetailRow(icon: "checkmark.circle", title: "Status", value: subscription.status.displayName)
                             SubscriptionDetailRow(icon: "dollarsign.circle", title: "Annual Equivalent", value: annualEquivalentText)
                             SubscriptionDetailRow(icon: "clock.arrow.circlepath", title: "Total Paid Since Added", value: totalPaidText)
@@ -283,7 +283,7 @@ struct SubscriptionDetailView: View {
         let converted = currencyManager.convertToSelected(subscription.monthlyCost, from: subscription.currency)
         let total = converted * Decimal(max(0, months))
         let formatted = currencyManager.format(total)
-        if months <= 0 { return "\(formatted) since added" }
+        if months <= 0 { return formatted }
         return "\(formatted) over \(months) mo"
     }
 }

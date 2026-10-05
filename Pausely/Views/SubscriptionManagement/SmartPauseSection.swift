@@ -22,7 +22,7 @@ struct SmartPauseSection: View {
                 Button(action: onInfoTap) {
                     Image(systemName: "info.circle")
                         .font(.title3)
-                        .foregroundColor(.luxuryPurple)
+                        .foregroundColor(.accentMint)
                 }
                 .accessibilityLabel("Smart pause info")
             }

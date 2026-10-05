@@ -62,12 +62,12 @@ struct SmartImportView: View {
         VStack(spacing: 16) {
             ZStack {
                 Circle()
-                    .fill(Color.luxuryPurple.opacity(0.2))
+                    .fill(Color.accentMint.opacity(0.2))
                     .frame(width: 100, height: 100)
                 
                 Image(systemName: "tray.and.arrow.down.fill")
                     .font(.title)
-                    .foregroundColor(Color.luxuryPurple)
+                    .foregroundColor(Color.accentMint)
             }
             
             VStack(spacing: 8) {
@@ -89,7 +89,7 @@ struct SmartImportView: View {
                 icon: "plus.circle.fill",
                 title: "Manual Bulk Add",
                 description: "Quickly add multiple subscriptions at once",
-                color: Color.luxuryPurple
+                color: Color.accentMint
             ) {
                 showingBulkAdd = true
             }
@@ -98,7 +98,7 @@ struct SmartImportView: View {
                 icon: "doc.text",
                 title: "Import from CSV",
                 description: "Import subscriptions from a CSV file",
-                color: Color.luxuryTeal
+                color: Color.accentMint
             ) {
                 showingCSVInput = true
             }
@@ -109,13 +109,13 @@ struct SmartImportView: View {
         VStack(spacing: 32) {
             ZStack {
                 Circle()
-                    .stroke(Color.luxuryPurple.opacity(0.2), lineWidth: 8)
+                    .stroke(Color.accentMint.opacity(0.2), lineWidth: 8)
                     .frame(width: 140, height: 140)
                 
                 Circle()
                     .trim(from: 0, to: importManager.importProgress)
                     .stroke(
-                        Color.luxuryPurple,
+                        Color.accentMint,
                         style: StrokeStyle(lineWidth: 8, lineCap: .round)
                     )
                     .frame(width: 140, height: 140)
@@ -219,7 +219,7 @@ struct SmartImportView: View {
                     .foregroundColor(.black)
                     .frame(maxWidth: .infinity)
                     .frame(height: 56)
-                    .background(Color.luxuryGold)
+                    .background(Color.accentMint)
                     .cornerRadius(16)
             }
         }
@@ -262,7 +262,7 @@ struct ImportOptionCard: View {
                                 .font(.caption2.weight(.bold))
                                 .padding(.horizontal, 6)
                                 .padding(.vertical, 2)
-                                .background(Color.luxuryGold)
+                                .background(Color.accentMint)
                                 .foregroundColor(.black)
                                 .cornerRadius(4)
                         }
@@ -338,7 +338,7 @@ struct CSVImportSheet: View {
                             .foregroundColor(.black)
                             .frame(maxWidth: .infinity)
                             .frame(height: 56)
-                            .background(csvText.isEmpty ? Color.gray : Color.luxuryTeal)
+                            .background(csvText.isEmpty ? Color.gray : Color.accentMint)
                             .cornerRadius(16)
                     }
                     .disabled(csvText.isEmpty)

@@ -138,6 +138,10 @@
     <!-- MARK: - Privacy Manifest -->
     <!-- The PrivacyInfo.xcprivacy file is included in the bundle -->
 
+    <!-- MARK: - Gmail OAuth -->
+    <key>GMAIL_CLIENT_ID</key>
+    <string>732559079146-52e72urbp4pm2ao75or3csn4nc23b0lm.apps.googleusercontent.com</string>
+
     <!-- MARK: - Credentials (Configure via Xcode or CI environment) -->
     <!-- These are placeholder values - set via Xcode build settings or CI environment -->
     <key>SUPABASE_URL</key>

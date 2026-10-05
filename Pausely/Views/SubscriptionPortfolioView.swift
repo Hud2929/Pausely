@@ -137,9 +137,9 @@ struct SubscriptionPortfolioView: View {
                             colors: [
                                 Color.accentMint,
                                 Color.accentMint.opacity(0.6),
-                                Color.luxuryPurple,
-                                Color.luxuryPink,
-                                Color.luxuryGold,
+                                Color.accentMint,
+                                Color.accentMint,
+                                Color.accentMint,
                                 Color.accentMint
                             ],
                             center: .center,
@@ -179,13 +179,13 @@ struct SubscriptionPortfolioView: View {
                 PortfolioStatPill(
                     title: "Yearly",
                     value: currencyManager.currencySymbol(for: currencyManager.selectedCurrency) + formatAmount(annualSpend),
-                    color: Color.luxuryGold
+                    color: Color.accentMint
                 )
 
                 PortfolioStatPill(
                     title: "Categories",
                     value: "\(sortedCategories.count)",
-                    color: Color.luxuryPurple
+                    color: Color.accentMint
                 )
             }
         }
@@ -342,7 +342,7 @@ struct CategoryBarRow: View {
 
                 Spacer()
 
-                Text(currencyManager.currencySymbol(for: currencyManager.selectedCurrency) + String(format: "%.2f", amount))
+                Text(currencyManager.format(Decimal(amount)))
                     .font(.footnote.weight(.semibold))
                     .foregroundStyle(Color.obsidianTextSecondary)
             }

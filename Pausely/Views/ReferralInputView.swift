@@ -69,8 +69,8 @@ struct ReferralInputView: View {
                     .fill(
                         RadialGradient(
                             colors: [
-                                Color.luxuryGold.opacity(0.3),
-                                Color.luxuryPink.opacity(0.2),
+                                Color.accentMint.opacity(0.3),
+                                Color.accentMint.opacity(0.2),
                                 .clear
                             ],
                             center: .center,
@@ -87,8 +87,8 @@ struct ReferralInputView: View {
                         .fill(
                             LinearGradient(
                                 colors: [
-                                    Color.luxuryGold.opacity(0.3),
-                                    Color.luxuryPurple.opacity(0.2)
+                                    Color.accentMint.opacity(0.3),
+                                    Color.accentMint.opacity(0.2)
                                 ],
                                 startPoint: .topLeading,
                                 endPoint: .bottomTrailing
@@ -99,7 +99,7 @@ struct ReferralInputView: View {
                             Circle()
                                 .stroke(
                                     LinearGradient(
-                                        colors: [Color.luxuryGold.opacity(0.6), .white.opacity(0.2)],
+                                        colors: [Color.accentMint.opacity(0.6), .white.opacity(0.2)],
                                         startPoint: .topLeading,
                                         endPoint: .bottomTrailing
                                     ),
@@ -111,7 +111,7 @@ struct ReferralInputView: View {
                         .font(.system(.largeTitle, design: .rounded).weight(.light))
                         .foregroundStyle(
                             LinearGradient(
-                                colors: [Color.luxuryGold, .white],
+                                colors: [Color.accentMint, .white],
                                 startPoint: .top,
                                 endPoint: .bottom
                             )
@@ -127,13 +127,13 @@ struct ReferralInputView: View {
                             Circle()
                                 .fill(
                                     LinearGradient(
-                                        colors: [Color.luxuryPink, Color.luxuryPurple],
+                                        colors: [Color.accentMint, Color.accentMint],
                                         startPoint: .topLeading,
                                         endPoint: .bottomTrailing
                                     )
                                 )
                                 .frame(width: 44, height: 44)
-                                .shadow(color: Color.luxuryPink.opacity(0.5), radius: 10)
+                                .shadow(color: Color.accentMint.opacity(0.5), radius: 10)
                             
                             Text("30%")
                                 .font(.system(.footnote, design: .rounded).weight(.bold))
@@ -148,14 +148,14 @@ struct ReferralInputView: View {
                 HStack {
                     Image(systemName: "sparkle")
                         .font(.title3)
-                        .foregroundStyle(Color.luxuryGold)
+                        .foregroundStyle(Color.accentMint)
                         .offset(x: -60, y: -30)
 
                     Spacer()
 
                     Image(systemName: "sparkle.fill")
                         .font(.callout)
-                        .foregroundStyle(Color.luxuryPink)
+                        .foregroundStyle(Color.accentMint)
                         .offset(x: 50, y: 20)
                 }
                 .frame(width: 180)
@@ -187,7 +187,7 @@ struct ReferralInputView: View {
                 HStack(spacing: 12) {
                     Image(systemName: "ticket.fill")
                         .font(.title3)
-                        .foregroundStyle(Color.luxuryGold)
+                        .foregroundStyle(Color.accentMint)
                         .frame(width: 40)
 
                     TextField("Enter referral code", text: $referralCode)
@@ -217,11 +217,11 @@ struct ReferralInputView: View {
                     // Validation indicator
                     if isValidating {
                         ProgressView()
-                            .tint(Color.luxuryGold)
+                            .tint(Color.accentMint)
                     } else if let isValid = isValid {
                         Image(systemName: isValid ? "checkmark.circle.fill" : "xmark.circle.fill")
                             .font(.title3)
-                            .foregroundStyle(isValid ? Color.luxuryTeal : .red)
+                            .foregroundStyle(isValid ? Color.accentMint : .red)
                     }
                 }
                 .padding()
@@ -233,8 +233,8 @@ struct ReferralInputView: View {
                         // Border with validation state
                         RoundedRectangle(cornerRadius: 16, style: .continuous)
                             .stroke(
-                                isValid == nil ? Color.luxuryGold.opacity(0.5) :
-                                    (isValid == true ? Color.luxuryTeal : .red),
+                                isValid == nil ? Color.accentMint.opacity(0.5) :
+                                    (isValid == true ? Color.accentMint : .red),
                                 lineWidth: 2
                             )
                     }
@@ -288,7 +288,7 @@ struct ReferralInputView: View {
                                 LinearGradient(
                                     colors: referralCode.isEmpty ?
                                         [Color.gray.opacity(0.5), Color.gray.opacity(0.3)] :
-                                        [Color.luxuryPurple, Color.luxuryPink],
+                                        [Color.accentMint, Color.accentMint],
                                     startPoint: .leading,
                                     endPoint: .trailing
                                 )
@@ -305,7 +305,7 @@ struct ReferralInputView: View {
                             )
                     }
                 )
-                .shadow(color: referralCode.isEmpty ? Color.clear : Color.luxuryPurple.opacity(0.4), radius: 15, x: 0, y: 8)
+                .shadow(color: referralCode.isEmpty ? Color.clear : Color.accentMint.opacity(0.4), radius: 15, x: 0, y: 8)
             }
             .disabled(referralCode.isEmpty || isValidating)
             .accessibilityIdentifier("applyReferralCodeButton")
@@ -382,7 +382,7 @@ struct ReferralCodeAppliedView: View {
                     Circle()
                         .fill(
                             RadialGradient(
-                                colors: [Color.luxuryTeal.opacity(0.4), .clear],
+                                colors: [Color.accentMint.opacity(0.4), .clear],
                                 center: .center,
                                 startRadius: 0,
                                 endRadius: 100
@@ -393,16 +393,16 @@ struct ReferralCodeAppliedView: View {
                     
                     ZStack {
                         Circle()
-                            .fill(Color.luxuryTeal.opacity(0.2))
+                            .fill(Color.accentMint.opacity(0.2))
                             .frame(width: 120, height: 120)
                             .overlay(
                                 Circle()
-                                    .stroke(Color.luxuryTeal.opacity(0.5), lineWidth: 2)
+                                    .stroke(Color.accentMint.opacity(0.5), lineWidth: 2)
                             )
                         
                         Image(systemName: "checkmark")
                             .font(.system(.largeTitle, design: .default).weight(.bold))
-                            .foregroundStyle(Color.luxuryTeal)
+                            .foregroundStyle(Color.accentMint)
                     }
                     .scaleEffect(scale)
                 }
@@ -420,7 +420,7 @@ struct ReferralCodeAppliedView: View {
 
                         Text("You got \(discount) off!")
                             .font(.system(.title2, design: .rounded).weight(.bold))
-                            .foregroundStyle(Color.luxuryGold)
+                            .foregroundStyle(Color.accentMint)
                     }
                     .multilineTextAlignment(.center)
                     .padding(.horizontal, 24)
@@ -435,7 +435,7 @@ struct ReferralCodeAppliedView: View {
                     BenefitPreviewRow(icon: "crown.fill", text: "You can also earn free Pro by referring 3 friends")
                 }
                 .padding()
-                .glass(intensity: 0.1, tint: Color.luxuryTeal)
+                .glass(intensity: 0.1, tint: Color.accentMint)
                 .offset(y: appear ? 0 : 30)
                 .opacity(appear ? 1 : 0)
                 
@@ -456,7 +456,7 @@ struct ReferralCodeAppliedView: View {
                                 RoundedRectangle(cornerRadius: 16, style: .continuous)
                                     .fill(
                                         LinearGradient(
-                                            colors: [Color.luxuryPurple, Color.luxuryPink],
+                                            colors: [Color.accentMint, Color.accentMint],
                                             startPoint: .leading,
                                             endPoint: .trailing
                                         )
@@ -473,7 +473,7 @@ struct ReferralCodeAppliedView: View {
                                     )
                             }
                         )
-                        .shadow(color: Color.luxuryPurple.opacity(0.4), radius: 15, x: 0, y: 8)
+                        .shadow(color: Color.accentMint.opacity(0.4), radius: 15, x: 0, y: 8)
                 }
                 .buttonStyle(PlainButtonStyle())
                 .padding(.horizontal, 24)
@@ -500,7 +500,7 @@ struct BenefitPreviewRow: View {
         HStack(spacing: 12) {
             Image(systemName: icon)
                 .font(.callout)
-                .foregroundStyle(icon == "crown.fill" ? Color.luxuryGold : Color.luxuryTeal)
+                .foregroundStyle(icon == "crown.fill" ? Color.accentMint : Color.accentMint)
                 .frame(width: 24)
 
             Text(text)
@@ -536,12 +536,12 @@ struct InlineReferralInput: View {
                 HStack(spacing: 12) {
                     ZStack {
                         Circle()
-                            .fill(Color.luxuryGold.opacity(0.2))
+                            .fill(Color.accentMint.opacity(0.2))
                             .frame(width: 40, height: 40)
                         
                         Image(systemName: "gift.fill")
                             .font(.callout)
-                            .foregroundStyle(Color.luxuryGold)
+                            .foregroundStyle(Color.accentMint)
                     }
                     
                     VStack(alignment: .leading, spacing: 2) {
@@ -551,7 +551,7 @@ struct InlineReferralInput: View {
 
                         Text("Get 30% off Premium")
                             .font(.system(.footnote, design: .rounded).weight(.medium))
-                            .foregroundStyle(Color.luxuryGold)
+                            .foregroundStyle(Color.accentMint)
                     }
                     
                     Spacer()
@@ -581,7 +581,7 @@ struct InlineReferralInput: View {
                                     .fill(.white.opacity(0.1))
                                     .overlay(
                                         RoundedRectangle(cornerRadius: 12, style: .continuous)
-                                            .stroke(Color.luxuryGold.opacity(0.3), lineWidth: 1)
+                                            .stroke(Color.accentMint.opacity(0.3), lineWidth: 1)
                                     )
                             )
                         
@@ -606,7 +606,7 @@ struct InlineReferralInput: View {
                         .frame(width: 70, height: 48)
                         .background(
                             RoundedRectangle(cornerRadius: 12, style: .continuous)
-                                .fill(code.isEmpty ? Color.gray.opacity(0.3) : Color.luxuryPurple)
+                                .fill(code.isEmpty ? Color.gray.opacity(0.3) : Color.accentMint)
                         )
                         .disabled(code.isEmpty || isValidating)
                         .accessibilityHint(code.isEmpty ? "Please enter a referral code first" : isValidating ? "Please wait, validating code" : "")
@@ -620,7 +620,7 @@ struct InlineReferralInput: View {
             }
         }
         .padding()
-        .glass(intensity: 0.1, tint: Color.luxuryGold)
+        .glass(intensity: 0.1, tint: Color.accentMint)
     }
 }
 

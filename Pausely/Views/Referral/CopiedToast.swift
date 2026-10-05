@@ -8,7 +8,7 @@ struct CopiedToast: View {
             HStack(spacing: 12) {
                 Image(systemName: "checkmark.circle.fill")
                     .font(.title3)
-                    .foregroundStyle(Color.luxuryTeal)
+                    .foregroundStyle(Color.accentMint)
 
                 Text("Copied to clipboard!")
                     .font(.system(.body, design: .rounded).weight(.semibold))
@@ -21,7 +21,7 @@ struct CopiedToast: View {
                     .fill(.ultraThinMaterial)
                     .overlay(
                         RoundedRectangle(cornerRadius: 16, style: .continuous)
-                            .stroke(Color.luxuryTeal.opacity(0.5), lineWidth: 1)
+                            .stroke(Color.accentMint.opacity(0.5), lineWidth: 1)
                     )
             )
             .shadow(radius: 20)

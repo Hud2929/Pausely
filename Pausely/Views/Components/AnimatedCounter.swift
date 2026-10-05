@@ -37,7 +37,7 @@ struct AnimatedCounter: View {
         .font(font)
         .foregroundStyle(
             LinearGradient(
-                colors: [.luxuryGold, .luxuryPink],
+                colors: [.accentMint, .accentMint],
                 startPoint: .leading,
                 endPoint: .trailing
             )

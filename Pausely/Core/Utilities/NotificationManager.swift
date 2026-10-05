@@ -101,6 +101,64 @@ final class NotificationManager {
         center.add(request)
     }
     
+    /// 24-hour "last chance" urgent reminder — fires the day before billing at 11 AM
+    func scheduleUrgentRenewalReminder(for subscription: Subscription) {
+        guard isAuthorized,
+              let nextBilling = subscription.nextBillingDate else { return }
+
+        let content = UNMutableNotificationContent()
+        content.title = "⚠️ \(subscription.name) charges tomorrow"
+        content.body = "\(subscription.displayAmount) will be charged in 24 hours. Last chance to cancel or pause."
+        content.sound = UNNotificationSound(named: UNNotificationSoundName("notification_urgent.caf"))
+        content.categoryIdentifier = "RENEWAL_URGENT"
+        content.userInfo = [
+            "subscription_id": subscription.id.uuidString,
+            "type": "renewal_urgent"
+        ]
+
+        guard let reminderDate = Calendar.current.date(byAdding: .day, value: -1, to: nextBilling),
+              reminderDate > Date() else { return }
+
+        var dc = Calendar.current.dateComponents([.year, .month, .day], from: reminderDate)
+        dc.hour = 11
+        dc.minute = 0
+
+        let request = UNNotificationRequest(
+            identifier: "renewal-urgent-\(subscription.id.uuidString)",
+            content: content,
+            trigger: UNCalendarNotificationTrigger(dateMatching: dc, repeats: false)
+        )
+        center.add(request)
+    }
+
+    /// Day-of "charging today" notification — fires at 9 AM on billing day
+    func scheduleDayOfRenewalAlert(for subscription: Subscription) {
+        guard isAuthorized,
+              let nextBilling = subscription.nextBillingDate,
+              nextBilling > Date() else { return }
+
+        let content = UNMutableNotificationContent()
+        content.title = "💳 \(subscription.name) is charging today"
+        content.body = "\(subscription.displayAmount) will be charged today. Open Pausely to review your subscriptions."
+        content.sound = .default
+        content.categoryIdentifier = "RENEWAL_DAY_OF"
+        content.userInfo = [
+            "subscription_id": subscription.id.uuidString,
+            "type": "renewal_day_of"
+        ]
+
+        var dc = Calendar.current.dateComponents([.year, .month, .day], from: nextBilling)
+        dc.hour = 9
+        dc.minute = 0
+
+        let request = UNNotificationRequest(
+            identifier: "renewal-dayof-\(subscription.id.uuidString)",
+            content: content,
+            trigger: UNCalendarNotificationTrigger(dateMatching: dc, repeats: false)
+        )
+        center.add(request)
+    }
+
     func scheduleTrialEndingReminder(for subscription: Subscription) {
         guard isAuthorized,
               subscription.status == .trial,

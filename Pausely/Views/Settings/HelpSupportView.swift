@@ -30,7 +30,7 @@ struct HelpSupportView: View {
             UIApplication.shared.open(url)
         }
     }
-    
+
     let faqs = [
         ("How do I add a subscription?", "Tap the + button on the Subscriptions tab and enter the details."),
         ("Can I pause a subscription?", "Yes, Pro members can pause subscriptions they're not using."),
@@ -39,167 +39,198 @@ struct HelpSupportView: View {
         ("How do I cancel my subscription?", "Go to Profile > Subscriptions and swipe left on any item."),
         ("What is Smart Pause?", "Smart Pause analyzes your usage and suggests subscriptions to pause.")
     ]
-    
+
+    var filteredFAQs: [(String, String)] {
+        guard !searchText.isEmpty else { return faqs }
+        return faqs.filter {
+            $0.0.localizedCaseInsensitiveContains(searchText) ||
+            $0.1.localizedCaseInsensitiveContains(searchText)
+        }
+    }
+
     var body: some View {
         ZStack {
-            HolographicBackground()
-            
+            PremiumBackground()
+
             ScrollView(showsIndicators: false) {
-                VStack(spacing: 32) {
+                VStack(spacing: 28) {
                     // Header
                     HStack {
                         Button(action: { dismiss() }) {
-                            Image(systemName: "arrow.left")
-                                .font(.headline.weight(.semibold))
-                                .foregroundColor(CyberColors.electric)
-                                .accessibilityLabel("Back")
+                            HStack(spacing: 6) {
+                                Image(systemName: "chevron.left")
+                                Text("Back")
+                            }
+                            .font(.body.weight(.medium))
+                            .foregroundColor(Color.obsidianTextSecondary)
                         }
-                        
+
                         Spacer()
-                        
+
                         Text("Help & Support")
                             .font(.headline.weight(.bold))
                             .foregroundColor(.white)
-                        
+
                         Spacer()
-                        
-                        Color.clear.frame(width: 44)
+
+                        Color.clear.frame(width: 60)
                     }
                     .padding(.horizontal, 20)
                     .padding(.top, 16)
-                    
+
                     // Icon
                     ZStack {
                         Circle()
-                            .stroke(CyberColors.electric, lineWidth: 2)
-                            .frame(width: 100, height: 100)
-                            .shadow(color: CyberColors.electric.opacity(0.5), radius: 20, x: 0, y: 0)
-                        
+                            .fill(Color.accentMint.opacity(0.12))
+                            .frame(width: 80, height: 80)
+
                         Image(systemName: "questionmark.bubble.fill")
                             .font(.title)
-                            .foregroundColor(CyberColors.electric)
+                            .foregroundColor(Color.accentMint)
                     }
-                    .padding(.top, 20)
-                    
+
                     // Search
                     HStack(spacing: 12) {
                         Image(systemName: "magnifyingglass")
                             .font(.body)
-                            .foregroundColor(.white.opacity(0.6))
-                        
+                            .foregroundColor(Color.obsidianTextTertiary)
+
                         TextField("Search help articles...", text: $searchText)
                             .font(.body)
                             .foregroundColor(.white)
                             .keyboardType(.default)
                             .submitLabel(.search)
                     }
-                    .padding(16)
+                    .padding(14)
                     .background(
-                        RoundedRectangle(cornerRadius: 16)
-                            .fill(Color.white.opacity(0.05))
+                        RoundedRectangle(cornerRadius: 14)
+                            .fill(Color.obsidianElevated)
                             .overlay(
-                                RoundedRectangle(cornerRadius: 16)
-                                    .stroke(CyberColors.electric.opacity(0.3), lineWidth: 1)
+                                RoundedRectangle(cornerRadius: 14)
+                                    .stroke(Color.white.opacity(0.08), lineWidth: 1)
                             )
                     )
                     .padding(.horizontal, 20)
-                    
+
                     // FAQ Section
-                    VStack(spacing: 16) {
+                    VStack(alignment: .leading, spacing: 8) {
                         Text("FREQUENTLY ASKED QUESTIONS")
-                            .font(.footnote.weight(.bold))
-                            .foregroundColor(.white.opacity(0.5))
-                            .tracking(2)
-                            .frame(maxWidth: .infinity, alignment: .leading)
+                            .font(.caption.weight(.bold))
+                            .foregroundColor(Color.obsidianTextTertiary)
+                            .tracking(1.5)
+                            .padding(.leading, 4)
                             .padding(.horizontal, 20)
-                        
-                        VStack(spacing: 12) {
-                            ForEach(faqs, id: \.0) { question, answer in
-                                HelpFAQItem(question: question, answer: answer)
+
+                        VStack(spacing: 8) {
+                            if filteredFAQs.isEmpty {
+                                Text("No results for \"\(searchText)\"")
+                                    .font(.subheadline)
+                                    .foregroundColor(Color.obsidianTextSecondary)
                                     .padding(.horizontal, 20)
+                            } else {
+                                ForEach(filteredFAQs, id: \.0) { question, answer in
+                                    HelpFAQItem(question: question, answer: answer)
+                                        .padding(.horizontal, 20)
+                                }
                             }
                         }
                     }
-                    
+
                     // Contact Section
-                    VStack(spacing: 16) {
+                    VStack(alignment: .leading, spacing: 8) {
                         Text("CONTACT US")
-                            .font(.footnote.weight(.bold))
-                            .foregroundColor(.white.opacity(0.5))
-                            .tracking(2)
-                            .frame(maxWidth: .infinity, alignment: .leading)
-                            .padding(.horizontal, 20)
-                        
-                        FuturisticGlassCard(glowColor: CyberColors.cyan) {
-                            VStack(spacing: 16) {
-                                ContactButton(
-                                    icon: "envelope.fill",
-                                    title: "Email Support",
-                                    subtitle: "pausely@proton.me",
-                                    glowColor: CyberColors.cyan
-                                ) {
-                                    openMailto()
-                                }
+                            .font(.caption.weight(.bold))
+                            .foregroundColor(Color.obsidianTextTertiary)
+                            .tracking(1.5)
+                            .padding(.leading, 4)
 
-                                Divider().background(Color.white.opacity(0.1))
-
-                                ContactButton(
-                                    icon: "message.fill",
-                                    title: "Live Chat",
-                                    subtitle: "Available 24/7",
-                                    glowColor: CyberColors.lime
-                                ) {
-                                    openMailto(subject: "Live Chat Request")
-                                }
-
-                                Divider().background(Color.white.opacity(0.1))
-
-                                ContactButton(
-                                    icon: "globe",
-                                    title: "Help Center",
-                                    subtitle: "Visit our support website",
-                                    glowColor: CyberColors.magenta
-                                ) {
-                                    openSupportWebsite()
-                                }
-
-                                Divider().background(Color.white.opacity(0.1))
-
-                                ContactButton(
-                                    icon: "star.fill",
-                                    title: "Rate App",
-                                    subtitle: "Let us know what you think",
-                                    glowColor: CyberColors.gold
-                                ) {
-                                    openAppStoreReview()
-                                }
+                        VStack(spacing: 0) {
+                            ContactRow(icon: "envelope.fill", title: "Email Support", subtitle: "pausely@proton.me") {
+                                openMailto()
+                            }
+                            Divider().background(Color.white.opacity(0.06)).padding(.leading, 68)
+                            ContactRow(icon: "globe", title: "Help Center", subtitle: "Visit our support website") {
+                                openSupportWebsite()
+                            }
+                            Divider().background(Color.white.opacity(0.06)).padding(.leading, 68)
+                            ContactRow(icon: "star.fill", title: "Rate App", subtitle: "Let us know what you think") {
+                                openAppStoreReview()
                             }
                         }
-                        .padding(.horizontal, 20)
+                        .background(
+                            RoundedRectangle(cornerRadius: 16)
+                                .fill(Color.obsidianSurface)
+                                .overlay(
+                                    RoundedRectangle(cornerRadius: 16)
+                                        .stroke(Color.white.opacity(0.06), lineWidth: 1)
+                                )
+                        )
                     }
-                    
-                    Spacer(minLength: 40)
+                    .padding(.horizontal, 20)
+
+                    Spacer(minLength: 60)
                 }
             }
         }
     }
 }
 
+private struct ContactRow: View {
+    let icon: String
+    let title: String
+    let subtitle: String
+    let action: () -> Void
+
+    var body: some View {
+        Button(action: {
+            HapticStyle.light.trigger()
+            action()
+        }) {
+            HStack(spacing: 14) {
+                ZStack {
+                    RoundedRectangle(cornerRadius: 10)
+                        .fill(Color.accentMint.opacity(0.12))
+                        .frame(width: 38, height: 38)
+                    Image(systemName: icon)
+                        .font(.callout)
+                        .foregroundColor(Color.accentMint)
+                }
+                VStack(alignment: .leading, spacing: 2) {
+                    Text(title)
+                        .font(.callout.weight(.semibold))
+                        .foregroundColor(.white)
+                    Text(subtitle)
+                        .font(.footnote)
+                        .foregroundColor(Color.obsidianTextSecondary)
+                }
+                Spacer()
+                Image(systemName: "chevron.right")
+                    .font(.caption.weight(.semibold))
+                    .foregroundColor(Color.obsidianTextTertiary)
+            }
+            .padding(.horizontal, 16)
+            .padding(.vertical, 12)
+        }
+        .buttonStyle(PlainButtonStyle())
+    }
+}
+
 struct HelpFAQItem: View {
     let question: String
     let answer: String
-    
+
     @State private var isExpanded = false
-    
+
     var body: some View {
         DisclosureGroup(
             isExpanded: $isExpanded,
             content: {
                 Text(answer)
                     .font(.subheadline)
-                    .foregroundColor(.white.opacity(0.8))
-                    .padding(.top, 12)
+                    .foregroundColor(Color.obsidianTextSecondary)
+                    .padding(.top, 10)
                     .padding(.bottom, 4)
+                    .frame(maxWidth: .infinity, alignment: .leading)
             },
             label: {
                 Text(question)
@@ -209,70 +240,30 @@ struct HelpFAQItem: View {
         )
         .padding(16)
         .background(
-            RoundedRectangle(cornerRadius: 16)
-                .fill(Color.white.opacity(0.05))
+            RoundedRectangle(cornerRadius: 14)
+                .fill(Color.obsidianSurface)
                 .overlay(
-                    RoundedRectangle(cornerRadius: 16)
-                        .stroke(Color.white.opacity(0.08), lineWidth: 1)
+                    RoundedRectangle(cornerRadius: 14)
+                        .stroke(Color.white.opacity(0.06), lineWidth: 1)
                 )
         )
-        .accentColor(CyberColors.electric)
+        .tint(Color.accentMint)
         .onChange(of: isExpanded) { _, expanded in
-            if expanded {
-                HapticStyle.light.trigger()
-            }
+            if expanded { HapticStyle.light.trigger() }
         }
     }
 }
 
+// Legacy ContactButton kept for backwards compat
 struct ContactButton: View {
     let icon: String
     let title: String
     let subtitle: String
     let glowColor: Color
     let action: () -> Void
-    @State private var isPressed = false
 
     var body: some View {
-        Button(action: {
-            HapticStyle.light.trigger()
-            action()
-        }) {
-            HStack(spacing: 16) {
-                ZStack {
-                    RoundedRectangle(cornerRadius: 12)
-                        .fill(glowColor.opacity(0.2))
-                        .frame(width: 48, height: 48)
-
-                    Image(systemName: icon)
-                        .font(.title3)
-                        .foregroundColor(glowColor)
-                }
-
-                VStack(alignment: .leading, spacing: 4) {
-                    Text(title)
-                        .font(.callout.weight(.semibold))
-                        .foregroundColor(.white)
-
-                    Text(subtitle)
-                        .font(.footnote)
-                        .foregroundColor(.white.opacity(0.6))
-                }
-
-                Spacer()
-
-                Image(systemName: "arrow.up.right")
-                    .font(.callout)
-                    .foregroundColor(glowColor)
-            }
-            .scaleEffect(isPressed ? 0.98 : 1)
-        }
-        .buttonStyle(PlainButtonStyle())
-        .simultaneousGesture(
-            DragGesture(minimumDistance: 0)
-                .onChanged { _ in withAnimation(.easeInOut(duration: 0.1)) { isPressed = true } }
-                .onEnded { _ in withAnimation(.easeInOut(duration: 0.1)) { isPressed = false } }
-        )
+        ContactRow(icon: icon, title: title, subtitle: subtitle, action: action)
     }
 }
 

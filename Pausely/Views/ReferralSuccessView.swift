@@ -77,8 +77,8 @@ struct ReferralSuccessView: View {
                 Circle()
                     .stroke(
                         isCompleted ? 
-                            LinearGradient(colors: [Color.luxuryGold, Color.luxuryPink], startPoint: .topLeading, endPoint: .bottomTrailing) :
-                            LinearGradient(colors: [Color.luxuryTeal, Color.luxuryPurple], startPoint: .topLeading, endPoint: .bottomTrailing),
+                            LinearGradient(colors: [Color.accentMint, Color.accentMint], startPoint: .topLeading, endPoint: .bottomTrailing) :
+                            LinearGradient(colors: [Color.accentMint, Color.accentMint], startPoint: .topLeading, endPoint: .bottomTrailing),
                         lineWidth: 2
                     )
                     .frame(width: 120 + CGFloat(i * 40), height: 120 + CGFloat(i * 40))
@@ -93,15 +93,15 @@ struct ReferralSuccessView: View {
                     .fill(
                         LinearGradient(
                             colors: isCompleted ?
-                                [Color.luxuryGold.opacity(0.4), Color.luxuryPink.opacity(0.3)] :
-                                [Color.luxuryTeal.opacity(0.4), Color.luxuryPurple.opacity(0.3)],
+                                [Color.accentMint.opacity(0.4), Color.accentMint.opacity(0.3)] :
+                                [Color.accentMint.opacity(0.4), Color.accentMint.opacity(0.3)],
                             startPoint: .topLeading,
                             endPoint: .bottomTrailing
                         )
                     )
                     .frame(width: 140, height: 140)
                     .shadow(
-                        color: isCompleted ? Color.luxuryGold.opacity(0.5) : Color.luxuryTeal.opacity(0.5),
+                        color: isCompleted ? Color.accentMint.opacity(0.5) : Color.accentMint.opacity(0.5),
                         radius: 30
                     )
                 
@@ -126,8 +126,8 @@ struct ReferralSuccessView: View {
                     .foregroundStyle(
                         LinearGradient(
                             colors: isCompleted ?
-                                [Color.luxuryGold, .white] :
-                                [Color.luxuryTeal, Color.luxuryPurple],
+                                [Color.accentMint, .white] :
+                                [Color.accentMint, Color.accentMint],
                             startPoint: .top,
                             endPoint: .bottom
                         )
@@ -145,7 +145,7 @@ struct ReferralSuccessView: View {
         Group {
             Image(systemName: "sparkle")
                 .font(.title2)
-                .foregroundStyle(Color.luxuryGold)
+                .foregroundStyle(Color.accentMint)
                 .offset(x: -100, y: -80)
                 .opacity(appear ? 1 : 0)
                 .scaleEffect(appear ? 1 : 0)
@@ -153,7 +153,7 @@ struct ReferralSuccessView: View {
 
             Image(systemName: "sparkle.fill")
                 .font(.title3)
-                .foregroundStyle(Color.luxuryPink)
+                .foregroundStyle(Color.accentMint)
                 .offset(x: 100, y: -60)
                 .opacity(appear ? 1 : 0)
                 .scaleEffect(appear ? 1 : 0)
@@ -161,7 +161,7 @@ struct ReferralSuccessView: View {
 
             Image(systemName: "star.fill")
                 .font(.callout)
-                .foregroundStyle(Color.luxuryTeal)
+                .foregroundStyle(Color.accentMint)
                 .offset(x: 90, y: 70)
                 .opacity(appear ? 1 : 0)
                 .scaleEffect(appear ? 1 : 0)
@@ -191,7 +191,7 @@ struct ReferralSuccessView: View {
             if let friendName = friendName {
                 Text("\(friendName) joined using your code!")
                     .font(.system(.body, design: .rounded).weight(.medium))
-                    .foregroundStyle(Color.luxuryGold)
+                    .foregroundStyle(Color.accentMint)
                     .offset(y: appear ? 0 : 20)
                     .opacity(appear ? 1 : 0)
                     .animation(.easeOut(duration: 0.5).delay(0.2), value: appear)
@@ -227,7 +227,7 @@ struct ReferralSuccessView: View {
                     VStack(spacing: 8) {
                         ZStack {
                             Circle()
-                                .fill(index < referralCount ? Color.luxuryGold : .white.opacity(0.2))
+                                .fill(index < referralCount ? Color.accentMint : .white.opacity(0.2))
                                 .frame(width: 44, height: 44)
                             
                             if index < referralCount {
@@ -244,7 +244,7 @@ struct ReferralSuccessView: View {
 
                         Text(milestoneReward(for: index))
                             .font(.system(.caption2, design: .rounded).weight(.medium))
-                            .foregroundStyle(index < referralCount ? Color.luxuryGold : .white.opacity(0.4))
+                            .foregroundStyle(index < referralCount ? Color.accentMint : .white.opacity(0.4))
                     }
                 }
             }
@@ -259,7 +259,7 @@ struct ReferralSuccessView: View {
                     RoundedRectangle(cornerRadius: 12, style: .continuous)
                         .fill(
                             LinearGradient(
-                                colors: [Color.luxuryGold, Color.luxuryPink],
+                                colors: [Color.accentMint, Color.accentMint],
                                 startPoint: .leading,
                                 endPoint: .trailing
                             )
@@ -284,19 +284,19 @@ struct ReferralSuccessView: View {
                 Circle()
                     .fill(
                         LinearGradient(
-                            colors: [Color.luxuryGold.opacity(0.3), Color.luxuryPink.opacity(0.2)],
+                            colors: [Color.accentMint.opacity(0.3), Color.accentMint.opacity(0.2)],
                             startPoint: .topLeading,
                             endPoint: .bottomTrailing
                         )
                     )
                     .frame(width: 100, height: 100)
-                    .shadow(color: Color.luxuryGold.opacity(0.5), radius: 20)
+                    .shadow(color: Color.accentMint.opacity(0.5), radius: 20)
                 
                 Image(systemName: "crown.fill")
                     .font(.title)
                     .foregroundStyle(
                         LinearGradient(
-                            colors: [Color.luxuryGold, .white],
+                            colors: [Color.accentMint, .white],
                             startPoint: .top,
                             endPoint: .bottom
                         )
@@ -312,7 +312,7 @@ struct ReferralSuccessView: View {
             }
         }
         .padding()
-        .glass(intensity: 0.15, tint: Color.luxuryGold)
+        .glass(intensity: 0.15, tint: Color.accentMint)
         .offset(y: appear ? 0 : 30)
         .opacity(appear ? 1 : 0)
         .animation(.easeOut(duration: 0.5).delay(0.4), value: appear)
@@ -340,7 +340,7 @@ struct ReferralSuccessView: View {
                             RoundedRectangle(cornerRadius: 16, style: .continuous)
                                 .fill(
                                     LinearGradient(
-                                        colors: [Color.luxuryPurple, Color.luxuryPink],
+                                        colors: [Color.accentMint, Color.accentMint],
                                         startPoint: .leading,
                                         endPoint: .trailing
                                     )
@@ -357,7 +357,7 @@ struct ReferralSuccessView: View {
                                 )
                         }
                     )
-                    .shadow(color: Color.luxuryPurple.opacity(0.4), radius: 15, x: 0, y: 8)
+                    .shadow(color: Color.accentMint.opacity(0.4), radius: 15, x: 0, y: 8)
                 }
                 .buttonStyle(PlainButtonStyle())
             }
@@ -369,15 +369,15 @@ struct ReferralSuccessView: View {
             }) {
                 Text(isCompleted ? "Start Using Pro" : "Awesome!")
                     .font(.system(.body, design: .rounded).weight(.semibold))
-                    .foregroundStyle(isCompleted ? Color.luxuryGold : .white)
+                    .foregroundStyle(isCompleted ? Color.accentMint : .white)
                     .frame(maxWidth: .infinity)
                     .padding(.vertical, 18)
                     .background(
                         RoundedRectangle(cornerRadius: 16, style: .continuous)
-                            .fill(isCompleted ? Color.luxuryGold.opacity(0.15) : .white.opacity(0.1))
+                            .fill(isCompleted ? Color.accentMint.opacity(0.15) : .white.opacity(0.1))
                             .overlay(
                                 RoundedRectangle(cornerRadius: 16, style: .continuous)
-                                    .stroke(isCompleted ? Color.luxuryGold.opacity(0.4) : .white.opacity(0.2), lineWidth: 1)
+                                    .stroke(isCompleted ? Color.accentMint.opacity(0.4) : .white.opacity(0.2), lineWidth: 1)
                             )
                     )
             }
@@ -413,7 +413,7 @@ struct ReferralSuccessView: View {
 // MARK: - Confetti View
 struct ConfettiView: View {
     @State private var confettiParticles: [ConfettiParticle] = []
-    let colors: [Color] = [.luxuryGold, .luxuryPink, .luxuryPurple, .luxuryTeal, .white, .green]
+    let colors: [Color] = [.accentMint, .accentMint, .accentMint, .accentMint, .white, .green]
 
     var body: some View {
         GeometryReader { geometry in
@@ -495,7 +495,7 @@ struct ReferralBenefitRow: View {
         HStack(spacing: 12) {
             Image(systemName: icon)
                 .font(.callout)
-                .foregroundStyle(Color.luxuryGold)
+                .foregroundStyle(Color.accentMint)
                 .frame(width: 30)
 
             Text(text)
@@ -506,7 +506,7 @@ struct ReferralBenefitRow: View {
             
             Image(systemName: "checkmark")
                 .font(.caption.weight(.bold))
-                .foregroundStyle(Color.luxuryTeal)
+                .foregroundStyle(Color.accentMint)
         }
     }
 }
@@ -525,12 +525,12 @@ struct ReferralMiniSuccessBanner: View {
             // Icon
             ZStack {
                 Circle()
-                    .fill(Color.luxuryGold.opacity(0.2))
+                    .fill(Color.accentMint.opacity(0.2))
                     .frame(width: 44, height: 44)
                 
                 Image(systemName: "gift.fill")
                     .font(.callout)
-                    .foregroundStyle(Color.luxuryGold)
+                    .foregroundStyle(Color.accentMint)
             }
 
             VStack(alignment: .leading, spacing: 2) {
@@ -568,8 +568,8 @@ struct ReferralMiniSuccessBanner: View {
                     .fill(
                         LinearGradient(
                             colors: [
-                                Color.luxuryGold.opacity(0.2),
-                                Color.luxuryPurple.opacity(0.1)
+                                Color.accentMint.opacity(0.2),
+                                Color.accentMint.opacity(0.1)
                             ],
                             startPoint: .topLeading,
                             endPoint: .bottomTrailing
@@ -580,7 +580,7 @@ struct ReferralMiniSuccessBanner: View {
                     .fill(.ultraThinMaterial.opacity(0.5))
                 
                 RoundedRectangle(cornerRadius: 20, style: .continuous)
-                    .stroke(Color.luxuryGold.opacity(0.4), lineWidth: 1.5)
+                    .stroke(Color.accentMint.opacity(0.4), lineWidth: 1.5)
             }
         )
         .offset(y: offset)

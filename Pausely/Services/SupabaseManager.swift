@@ -757,7 +757,7 @@ struct CurrencySelectorToolbarButton: View {
                 Text(manager.selectedCurrency)
                     .font(.system(.subheadline, design: .rounded).weight(.semibold))
             }
-            .foregroundStyle(Color.luxuryGold)
+            .foregroundStyle(Color.accentMint)
         }
         .sheet(isPresented: $showPicker) {
             SimpleCurrencyPickerView(selectedCurrency: $manager.selectedCurrency)

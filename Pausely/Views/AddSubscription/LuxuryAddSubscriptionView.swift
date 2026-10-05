@@ -63,7 +63,7 @@ struct LuxuryAddSubscriptionView: View {
                             HStack {
                                 Text(currencyManager.currencySymbol(for: currencyManager.selectedCurrency))
                                     .font(AppTypography.headlineLarge)
-                                    .foregroundStyle(Color.luxuryGold)
+                                    .foregroundStyle(Color.accentMint)
 
                                 TextField("0.00", text: $amount)
                                     .font(AppTypography.displaySmall)
@@ -124,7 +124,7 @@ struct LuxuryAddSubscriptionView: View {
                     VStack(spacing: 16) {
                         Button(action: saveSubscription) {
                             Text("Add Subscription")
-                                .premiumButton(gradient: [Color.luxuryPurple, Color.luxuryPink])
+                                .premiumButton(gradient: [Color.accentMint, Color.accentMint])
                         }
                         .disabled(name.isEmpty || amount.isEmpty)
                         .accessibilityIdentifier("addSubscriptionButton")

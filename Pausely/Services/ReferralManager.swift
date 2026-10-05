@@ -346,7 +346,7 @@ class ReferralManager: ObservableObject {
             .update([
                 "conversions": data.conversions + 1,
                 "pending_conversions": max(0, data.pendingConversions - 1),
-                "total_earnings": newEarnings
+                "total_earnings": NSDecimalNumber(decimal: newEarnings).intValue
             ])
             .eq("code", value: conversion.referrerCode)
             .execute()

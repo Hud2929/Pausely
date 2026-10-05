@@ -117,8 +117,8 @@ struct DashboardView: View {
                         .padding(.horizontal, 20)
                         .padding(.top, 16)
 
-                    // 2b. Perception Gap — the $219 problem
-                    PerceptionGapCard(monthlySpend: store.totalMonthlySpend)
+                    // 2b. Top Opportunity Card — waste / savings / healthy
+                    TopOpportunityCard()
                         .padding(.horizontal, 20)
                         .padding(.top, 16)
 
@@ -301,17 +301,12 @@ struct DashboardView: View {
     }
 }
 
-// MARK: - Accessibility Helpers
-
-extension DashboardInsightCard {
-    func accessibilityLabelText() -> String {
-        "\(title), \(subtitle), value \(value)"
-    }
-}
-
 // MARK: - Compelling Dashboard Empty State
 struct DashboardEmptyState: View {
     let onAdd: () -> Void
+    @ObservedObject private var paymentManager = PaymentManager.shared
+
+    private var isFree: Bool { !paymentManager.isPremium }
 
     var body: some View {
         VStack(spacing: 0) {
@@ -331,7 +326,7 @@ struct DashboardEmptyState: View {
                         .foregroundStyle(Color.accentMint)
                 }
 
-                // Text content — 8pt gap between headline and body
+                // Text content
                 Text("Track Your Subscriptions")
                     .font(.system(.title3, design: .rounded).weight(.bold))
                     .foregroundStyle(.white)
@@ -345,7 +340,15 @@ struct DashboardEmptyState: View {
                     .lineSpacing(3)
                     .padding(.top, 8)
 
-                // Full-width mint CTA — 24pt gap from body
+                // Post-signup guidance
+                VStack(alignment: .leading, spacing: 8) {
+                    GuidanceBullet(icon: "magnifyingglass", text: "Search 400+ services or add custom ones")
+                    GuidanceBullet(icon: "bell.badge", text: "Get alerts before renewals hit")
+                    GuidanceBullet(icon: "chart.bar", text: "Spot waste and save money automatically")
+                }
+                .padding(.top, 16)
+
+                // Full-width mint CTA
                 Button(action: {
                     HapticStyle.medium.trigger()
                     onAdd()
@@ -367,6 +370,15 @@ struct DashboardEmptyState: View {
                 .buttonStyle(PlainButtonStyle())
                 .padding(.top, 24)
                 .accessibilityIdentifier("addSubscriptionButton")
+
+                // Free tier limit
+                if isFree {
+                    Text("Free plan: track up to 2 subscriptions. Upgrade for unlimited.")
+                        .font(.system(.caption2, design: .rounded))
+                        .foregroundStyle(Color.obsidianTextTertiary)
+                        .multilineTextAlignment(.center)
+                        .padding(.top, 12)
+                }
             }
             .padding(.horizontal, 32)
             .padding(.vertical, 28)
@@ -376,186 +388,20 @@ struct DashboardEmptyState: View {
     }
 }
 
-// MARK: - Spending Sparkline
-
-struct SpendingSparkline: View {
-    @ObservedObject private var store = SubscriptionStore.shared
-
-    var body: some View {
-        GeometryReader { geo in
-            let maxCost = store.subscriptions.map { $0.monthlyCost }.max() ?? 1
-
-            HStack(alignment: .bottom, spacing: 6) {
-                ForEach(weeklyData.indices, id: \.self) { index in
-                    let value = weeklyData[index]
-                    let height = maxCost > 0 ? (CGFloat(truncating: value as NSDecimalNumber) / CGFloat(truncating: maxCost as NSDecimalNumber)) : 0.3
-
-                    RoundedRectangle(cornerRadius: 4)
-                        .fill(
-                            LinearGradient(
-                                colors: [.accentMint.opacity(0.8), .accentMint.opacity(0.6)],
-                                startPoint: .bottom,
-                                endPoint: .top
-                            )
-                        )
-                        .frame(height: max(8, geo.size.height * height))
-                        .scaleEffect(y: store.subscriptions.isEmpty ? 0.3 : 1, anchor: .bottom)
-                        .animation(.easeOut(duration: 0.5).delay(Double(index) * 0.05), value: store.subscriptions.isEmpty)
-                }
-            }
-        }
-    }
-
-    private var weeklyData: [Decimal] {
-        // Real weekly spending from subscriptions
-        return getRealWeeklySpendingHistory()
-    }
-
-    private func getRealWeeklySpendingHistory() -> [Decimal] {
-        let calendar = Calendar.current
-        let today = Date()
-
-        return (0..<7).map { dayOffset in
-            guard let date = calendar.date(byAdding: .day, value: -dayOffset, to: today) else {
-                return Decimal(0)
-            }
-            return getDailyTotal(for: date)
-        }.reversed()
-    }
-
-    private func getDailyTotal(for date: Date) -> Decimal {
-        let calendar = Calendar.current
-        // Sum amounts for subscriptions that renew on this specific day
-        let renewalTotal = store.subscriptions
-            .filter { sub in
-                guard sub.status == .active,
-                      let billingDate = sub.nextBillingDate else { return false }
-                return calendar.isDate(billingDate, inSameDayAs: date)
-            }
-            .reduce(Decimal(0)) { $0 + CurrencyManager.shared.convertToSelected($1.amount, from: $1.currency) }
-
-        // If no renewals today, show a low baseline (monthly cost / 30 as a daily average)
-        if renewalTotal == 0 {
-            let dailyAverage = store.subscriptions
-                .filter { $0.status == .active }
-                .reduce(Decimal(0)) { $0 + CurrencyManager.shared.convertToSelected($1.monthlyCost, from: $1.currency) } / 30
-            return dailyAverage * Decimal(0.3) // Show at 30% baseline so chart isn't flat
-        }
-        return renewalTotal
-    }
-}
-
-// MARK: - Smart Insights Section
-
-struct SmartInsightsSection: View {
-    @ObservedObject private var store = SubscriptionStore.shared
-    @ObservedObject private var screenTimeManager = ScreenTimeManager.shared
-    @ObservedObject private var paymentManager = PaymentManager.shared
-    @ObservedObject private var currencyManager = CurrencyManager.shared
-
-    var potentialSavings: Decimal {
-        // Calculate potential savings from low-usage subscriptions in user's selected currency
-        store.subscriptions
-            .filter { sub in
-                let usage = screenTimeManager.getCurrentMonthUsage(for: sub.name)
-                return usage < 60 && sub.monthlyCost > 5
-            }
-            .reduce(Decimal(0)) { total, sub in
-                let converted = (try? currencyManager.convert(sub.monthlyCost, from: sub.currency, to: currencyManager.selectedCurrency)) ?? sub.monthlyCost
-                return total + converted
-            }
-    }
-
-    var body: some View {
-        VStack(alignment: .leading, spacing: 12) {
-            Text("Smart Insights")
-                .font(AppTypography.headlineLarge)
-                .foregroundStyle(.primary)
-
-            VStack(spacing: 10) {
-                // Savings opportunity
-                if potentialSavings > 0 {
-                    DashboardInsightCard(
-                        icon: "leaf.fill",
-                        iconColor: .green,
-                        title: "Potential Savings",
-                        subtitle: "From low-usage subscriptions",
-                        value: formatCurrency(potentialSavings),
-                        valueColor: .green
-                    )
-                }
-
-                // Hidden perks
-                let perksCount = PerkEngine.shared.discoveredPerks.count
-                DashboardInsightCard(
-                    icon: "gift.fill",
-                    iconColor: Color.accentMint,
-                    title: "Available Perks",
-                    subtitle: perksCount > 0 ? "From your subscriptions" : "Analyze to discover perks",
-                    value: perksCount > 0 ? "\(perksCount)" : "—",
-                    valueColor: Color.accentMint
-                )
-
-                // Usage status
-                DashboardInsightCard(
-                    icon: screenTimeManager.authorizationStatus.icon,
-                    iconColor: screenTimeManager.authorizationStatus.color,
-                    title: "Usage Tracking",
-                    subtitle: screenTimeManager.hasAnyUsageData ? "Data available" : "Not enabled",
-                    value: screenTimeManager.hasAnyUsageData ? "Active" : "Setup",
-                    valueColor: screenTimeManager.hasAnyUsageData ? .green : .orange
-                )
-            }
-        }
-    }
-
-    private func formatCurrency(_ amount: Decimal) -> String {
-        return CurrencyManager.shared.format(amount)
-    }
-}
-
-// MARK: - Insight Card
-
-struct DashboardInsightCard: View {
+private struct GuidanceBullet: View {
     let icon: String
-    let iconColor: Color
-    let title: String
-    let subtitle: String
-    let value: String
-    let valueColor: Color
+    let text: String
 
     var body: some View {
-        HStack(spacing: 14) {
-            ZStack {
-                Circle()
-                    .fill(iconColor.opacity(0.15))
-                    .frame(width: 44, height: 44)
-
-                Image(systemName: icon)
-                    .font(AppTypography.headlineMedium)
-                    .foregroundStyle(iconColor)
-            }
-
-            VStack(alignment: .leading, spacing: 2) {
-                Text(title)
-                    .font(AppTypography.headlineSmall)
-                    .foregroundStyle(.primary)
-
-                Text(subtitle)
-                    .font(AppTypography.labelMedium)
-                    .foregroundStyle(.secondary)
-            }
-
-            Spacer()
-
-            Text(value)
-                .font(AppTypography.headlineMedium)
-                .foregroundStyle(valueColor)
+        HStack(spacing: 10) {
+            Image(systemName: icon)
+                .font(.system(size: 13, weight: .semibold))
+                .foregroundStyle(Color.accentMint)
+                .frame(width: 20)
+            Text(text)
+                .font(.system(.caption, design: .rounded))
+                .foregroundStyle(Color.obsidianTextSecondary)
         }
-        .padding(14)
-        .glassBackground(cornerRadius: 16, strokeColor: .white.opacity(0.1), strokeWidth: 0.5)
-        .accessibilityElement(children: .combine)
-        .accessibilityLabel("\(title), \(subtitle), value \(value)")
     }
 }
 
@@ -622,91 +468,6 @@ struct NotificationButton: View {
         .accessibilityLabel("Notification Settings")
         .sheet(isPresented: $showingSettings) {
             NotificationsSettingsView()
-        }
-    }
-}
-
-// MARK: - Offline Mode Banner
-
-struct OfflineModeBanner: View {
-    let onEnableCloud: () -> Void
-
-    var body: some View {
-        HStack(spacing: 12) {
-            Image(systemName: "wifi.slash")
-                .font(AppTypography.headlineLarge)
-                .foregroundStyle(Color.accentMint)
-
-            VStack(alignment: .leading, spacing: 2) {
-                Text("Offline Mode")
-                    .font(AppTypography.headlineSmall)
-                    .foregroundStyle(.primary)
-
-                Text("Subscriptions saved locally")
-                    .font(AppTypography.labelMedium)
-                    .foregroundStyle(.secondary)
-            }
-
-            Spacer()
-
-            Button(action: onEnableCloud) {
-                Text("Sync")
-                    .font(AppTypography.labelLarge)
-                    .foregroundStyle(Color.black)
-                    .padding(.horizontal, 14)
-                    .padding(.vertical, 8)
-                    .background(Color.accentMint)
-                    .clipShape(Capsule())
-            }
-        }
-        .padding(14)
-        .glassBackground(cornerRadius: 16, strokeColor: Color.accentMint.opacity(0.3), strokeWidth: 1)
-    }
-}
-
-// MARK: - Referral Promotion Card
-
-struct ReferralPromotionCard: View {
-    @State private var showingApply = false
-
-    var body: some View {
-        Button(action: { showingApply = true }) {
-            HStack(spacing: 14) {
-                ZStack {
-                    Circle()
-                        .fill(Color.accentMint.opacity(0.2))
-                        .frame(width: 48, height: 48)
-
-                    Image(systemName: "gift.fill")
-                        .font(AppTypography.displaySmall)
-                        .foregroundStyle(Color.accentMint)
-                }
-
-                VStack(alignment: .leading, spacing: 3) {
-                    Text("Unlock Pro for Free")
-                        .font(AppTypography.headlineMedium)
-                        .foregroundStyle(.primary)
-
-                    Text("Refer friends and earn free months")
-                        .font(AppTypography.labelMedium)
-                        .foregroundStyle(.secondary)
-                }
-
-                Spacer()
-
-                Image(systemName: "chevron.right")
-                    .font(AppTypography.labelLarge)
-                    .foregroundStyle(Color.accentMint)
-            }
-            .padding(16)
-            .glassBackground(cornerRadius: 20, strokeColor: Color.accentMint.opacity(0.3), strokeWidth: 1)
-        }
-        .buttonStyle(PlainButtonStyle())
-        .accessibilityElement(children: .combine)
-        .accessibilityLabel("Unlock Pro for Free, refer friends and earn free months")
-        .accessibilityHint("Double-tap to view referral options")
-        .sheet(isPresented: $showingApply) {
-            ApplyReferralView()
         }
     }
 }

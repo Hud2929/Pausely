@@ -2,181 +2,166 @@ import SwiftUI
 
 struct NotificationsSettingsView: View {
     @Environment(\.dismiss) private var dismiss
-    
+
     @AppStorage("renewalAlerts") private var renewalAlerts = true
     @AppStorage("priceChangeAlerts") private var priceChangeAlerts = true
     @AppStorage("usageReminders") private var usageReminders = false
     @AppStorage("weeklyReports") private var weeklyReports = true
     @AppStorage("trialEndingAlerts") private var trialEndingAlerts = true
     @AppStorage("savingsOpportunities") private var savingsOpportunities = true
-    
+
     var body: some View {
         ZStack {
-            HolographicBackground()
-            
+            PremiumBackground()
+
             ScrollView(showsIndicators: false) {
-                VStack(spacing: 32) {
+                VStack(spacing: 28) {
                     // Header
                     HStack {
                         Button(action: { dismiss() }) {
-                            Image(systemName: "arrow.left")
-                                .font(.headline.weight(.semibold))
-                                .foregroundColor(CyberColors.cyan)
-                                .accessibilityLabel("Back")
+                            HStack(spacing: 6) {
+                                Image(systemName: "chevron.left")
+                                Text("Back")
+                            }
+                            .font(.body.weight(.medium))
+                            .foregroundColor(Color.obsidianTextSecondary)
                         }
-                        
+                        .accessibilityLabel("Back")
+
                         Spacer()
-                        
+
                         Text("Notifications")
                             .font(.headline.weight(.bold))
                             .foregroundColor(.white)
-                        
+
                         Spacer()
-                        
-                        Color.clear.frame(width: 44)
+
+                        Color.clear.frame(width: 60)
                     }
                     .padding(.horizontal, 20)
                     .padding(.top, 16)
-                    
+
                     // Icon
                     ZStack {
                         Circle()
-                            .stroke(CyberColors.cyan, lineWidth: 2)
-                            .frame(width: 100, height: 100)
-                            .shadow(color: CyberColors.cyan.opacity(0.5), radius: 20, x: 0, y: 0)
-                        
+                            .fill(Color.accentMint.opacity(0.12))
+                            .frame(width: 80, height: 80)
+
                         Image(systemName: "bell.badge.fill")
                             .font(.title)
-                            .foregroundColor(CyberColors.cyan)
+                            .foregroundColor(Color.accentMint)
                     }
-                    .padding(.top, 20)
-                    
-                    // Settings List
-                    VStack(spacing: 16) {
-                        Text("ALERTS")
-                            .font(.footnote.weight(.bold))
-                            .foregroundColor(.white.opacity(0.5))
-                            .tracking(2)
-                            .frame(maxWidth: .infinity, alignment: .leading)
-                            .padding(.horizontal, 20)
-                        
-                        FuturisticGlassCard(glowColor: CyberColors.cyan) {
-                            VStack(spacing: 0) {
-                                NotificationToggleRow(
-                                    icon: "calendar.badge.exclamationmark",
-                                    title: "Renewal Alerts",
-                                    subtitle: "Get notified before subscriptions renew",
-                                    isOn: $renewalAlerts,
-                                    glowColor: CyberColors.cyan
-                                )
-                                
-                                Divider().background(Color.white.opacity(0.1))
-                                
-                                NotificationToggleRow(
-                                    icon: "tag.fill",
-                                    title: "Price Change Alerts",
-                                    subtitle: "Notify when subscription prices change",
-                                    isOn: $priceChangeAlerts,
-                                    glowColor: CyberColors.magenta
-                                )
-                                
-                                Divider().background(Color.white.opacity(0.1))
-                                
-                                NotificationToggleRow(
-                                    icon: "clock.fill",
-                                    title: "Trial Ending Alerts",
-                                    subtitle: "Remind before free trials expire",
-                                    isOn: $trialEndingAlerts,
-                                    glowColor: CyberColors.lime
-                                )
-                            }
-                        }
-                        .padding(.horizontal, 20)
-                    }
-                    
-                    VStack(spacing: 16) {
-                        Text("INSIGHTS")
-                            .font(.footnote.weight(.bold))
-                            .foregroundColor(.white.opacity(0.5))
-                            .tracking(2)
-                            .frame(maxWidth: .infinity, alignment: .leading)
-                            .padding(.horizontal, 20)
-                        
-                        FuturisticGlassCard(glowColor: CyberColors.magenta) {
-                            VStack(spacing: 0) {
-                                NotificationToggleRow(
-                                    icon: "chart.pie.fill",
-                                    title: "Weekly Reports",
-                                    subtitle: "Summary of your spending each week",
-                                    isOn: $weeklyReports,
-                                    glowColor: CyberColors.magenta
-                                )
-                                
-                                Divider().background(Color.white.opacity(0.1))
-                                
-                                NotificationToggleRow(
-                                    icon: "dollarsign.circle.fill",
-                                    title: "Savings Opportunities",
-                                    subtitle: "Alert when we find ways to save",
-                                    isOn: $savingsOpportunities,
-                                    glowColor: CyberColors.hotPink
-                                )
-                                
-                                Divider().background(Color.white.opacity(0.1))
-                                
-                                NotificationToggleRow(
-                                    icon: "eye.fill",
-                                    title: "Usage Reminders",
-                                    subtitle: "Track subscriptions you don't use",
-                                    isOn: $usageReminders,
-                                    glowColor: CyberColors.electric
-                                )
-                            }
-                        }
-                        .padding(.horizontal, 20)
-                    }
-                    
-                    Spacer(minLength: 40)
+
+                    // Alerts Section
+                    notificationSection(
+                        title: "ALERTS",
+                        rows: [
+                            NotifRow(icon: "calendar.badge.exclamationmark",
+                                     title: "Renewal Alerts",
+                                     subtitle: "Get notified before subscriptions renew",
+                                     binding: $renewalAlerts),
+                            NotifRow(icon: "tag.fill",
+                                     title: "Price Change Alerts",
+                                     subtitle: "Notify when subscription prices change",
+                                     binding: $priceChangeAlerts),
+                            NotifRow(icon: "clock.fill",
+                                     title: "Trial Ending Alerts",
+                                     subtitle: "Remind before free trials expire",
+                                     binding: $trialEndingAlerts),
+                        ]
+                    )
+                    .padding(.horizontal, 20)
+
+                    // Insights Section
+                    notificationSection(
+                        title: "INSIGHTS",
+                        rows: [
+                            NotifRow(icon: "chart.pie.fill",
+                                     title: "Weekly Reports",
+                                     subtitle: "Summary of your spending each week",
+                                     binding: $weeklyReports),
+                            NotifRow(icon: "dollarsign.circle.fill",
+                                     title: "Savings Opportunities",
+                                     subtitle: "Alert when we find ways to save",
+                                     binding: $savingsOpportunities),
+                            NotifRow(icon: "eye.fill",
+                                     title: "Usage Reminders",
+                                     subtitle: "Track subscriptions you don't use",
+                                     binding: $usageReminders),
+                        ]
+                    )
+                    .padding(.horizontal, 20)
+
+                    Spacer(minLength: 60)
                 }
             }
         }
     }
-}
 
-struct NotificationToggleRow: View {
-    let icon: String
-    let title: String
-    let subtitle: String
-    @Binding var isOn: Bool
-    let glowColor: Color
-    
-    var body: some View {
-        HStack(spacing: 16) {
-            ZStack {
-                RoundedRectangle(cornerRadius: 10)
-                    .fill(glowColor.opacity(0.2))
-                    .frame(width: 40, height: 40)
-                
-                Image(systemName: icon)
-                    .font(.callout)
-                    .foregroundColor(glowColor)
+    private struct NotifRow {
+        let icon: String
+        let title: String
+        let subtitle: String
+        let binding: Binding<Bool>
+    }
+
+    @ViewBuilder
+    private func notificationSection(title: String, rows: [NotifRow]) -> some View {
+        VStack(alignment: .leading, spacing: 8) {
+            Text(title)
+                .font(.caption.weight(.bold))
+                .foregroundColor(Color.obsidianTextTertiary)
+                .tracking(1.5)
+                .padding(.leading, 4)
+
+            VStack(spacing: 0) {
+                ForEach(Array(rows.enumerated()), id: \.offset) { index, row in
+                    HStack(spacing: 14) {
+                        ZStack {
+                            RoundedRectangle(cornerRadius: 10)
+                                .fill(Color.accentMint.opacity(0.12))
+                                .frame(width: 38, height: 38)
+
+                            Image(systemName: row.icon)
+                                .font(.callout)
+                                .foregroundColor(Color.accentMint)
+                        }
+
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text(row.title)
+                                .font(.callout.weight(.semibold))
+                                .foregroundColor(.white)
+
+                            Text(row.subtitle)
+                                .font(.footnote)
+                                .foregroundColor(Color.obsidianTextSecondary)
+                        }
+
+                        Spacer()
+
+                        Toggle("", isOn: row.binding)
+                            .tint(Color.accentMint)
+                            .labelsHidden()
+                    }
+                    .padding(.horizontal, 16)
+                    .padding(.vertical, 12)
+
+                    if index < rows.count - 1 {
+                        Divider()
+                            .background(Color.white.opacity(0.06))
+                            .padding(.leading, 68)
+                    }
+                }
             }
-            
-            VStack(alignment: .leading, spacing: 3) {
-                Text(title)
-                    .font(.callout.weight(.semibold))
-                    .foregroundColor(.white)
-                
-                Text(subtitle)
-                    .font(.footnote)
-                    .foregroundColor(.white.opacity(0.6))
-            }
-            
-            Spacer()
-            
-            CyberToggle(isOn: $isOn, glowColor: glowColor)
+            .background(
+                RoundedRectangle(cornerRadius: 16)
+                    .fill(Color.obsidianSurface)
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 16)
+                            .stroke(Color.white.opacity(0.06), lineWidth: 1)
+                    )
+            )
         }
-        .padding(.vertical, 12)
     }
 }
 

@@ -735,7 +735,7 @@ final class ScreenTimeManager: ObservableObject {
     func enableManualTracking() {
         // Manual tracking does not require FamilyControls authorization
         // Use a separate flag so the UI distinguishes between API and manual mode
-        UserDefaults.standard.set(true, forKey: Self.manualTrackingEnabledKey)
+        UserDefaults.standard.set(true, forKey: manualTrackingEnabledKey)
     }
     
     func setMonthlyUsage(minutes: Int, for subscriptionName: String) {
@@ -1012,7 +1012,7 @@ struct CompressedUsageData: Codable {
     func toAppUsageData(bundleId: String) -> AppUsageData {
         AppUsageData(
             bundleId: bundleId,
-            appName: SubscriptionCatalogService.shared.appName(for: bundleId) ?? bundleId,
+            appName: bundleId,
             minutesUsed: Int(minutes),
             launches: Int(launches),
             pickUps: Int(pickUps),

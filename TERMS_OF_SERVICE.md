@@ -1,8 +1,8 @@
 # Terms of Service
 
-**Last Updated:** February 25, 2024
+**Last Updated:** September 17, 2026
 
-**Effective Date:** February 25, 2024
+**Effective Date:** September 17, 2026
 
 ---
 
@@ -106,7 +106,7 @@ Pro Tier features include:
 
 **Pricing:**
 - Monthly: $7.99 USD per month
-- Annual: $69.99 USD per year (save 27%)
+- Annual: $79.99 USD per year (save approx. 17%)
 
 Prices are subject to change with 30 days' notice. Currency conversion may apply based on your location.
 
@@ -405,13 +405,13 @@ You agree to indemnify and hold harmless Pausely and its affiliates from any cla
 
 ### 12.1 Governing Law
 
-These Terms are governed by the laws of [Your Jurisdiction], without regard to conflict of law principles.
+These Terms are governed by applicable laws, without regard to conflict of law principles. For EU users, mandatory local consumer protection laws of your country of residence apply in addition to these Terms.
 
 ### 12.2 Dispute Resolution
 
 **Informal Resolution:** We encourage you to contact us first at support@pausely.app to resolve any disputes informally.
 
-**Arbitration:** Any dispute not resolved informally shall be resolved through binding arbitration in accordance with the rules of the American Arbitration Association. The arbitration shall take place in [Your City, State].
+**Arbitration:** Any dispute not resolved informally shall be resolved through binding arbitration in accordance with the rules of the American Arbitration Association (for US users) or through the applicable dispute resolution mechanism in your jurisdiction.
 
 **Class Action Waiver:** You agree to resolve disputes on an individual basis and waive any right to participate in class actions or representative proceedings.
 
@@ -514,4 +514,4 @@ For questions about these Terms, contact us:
 
 **BY USING PAUSELY, YOU ACKNOWLEDGE THAT YOU HAVE READ, UNDERSTOOD, AND AGREE TO THESE TERMS OF SERVICE.**
 
-*© 2024 Pausely. All rights reserved.*
+*© 2026 Pausely. All rights reserved.*

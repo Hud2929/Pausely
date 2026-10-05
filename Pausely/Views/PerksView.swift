@@ -49,7 +49,7 @@ struct PerksView: View {
             ZStack {
                 Circle()
                     .fill(RadialGradient(
-                        colors: [Color.luxuryGold.opacity(0.4), .clear],
+                        colors: [Color.accentMint.opacity(0.4), .clear],
                         center: .center,
                         startRadius: 0,
                         endRadius: 80
@@ -60,7 +60,7 @@ struct PerksView: View {
                 Image(systemName: "wand.and.stars")
                     .font(.largeTitle.weight(.light))
                     .foregroundStyle(LinearGradient(
-                        colors: [Color.luxuryGold, .white],
+                        colors: [Color.accentMint, .white],
                         startPoint: .top,
                         endPoint: .bottom
                     ))
@@ -96,7 +96,7 @@ struct PerksView: View {
                 if perkEngine.totalMoneySaved > 0 {
                     Text("You're optimizing like a pro!")
                         .font(.subheadline.weight(.medium))
-                        .foregroundStyle(Color.luxuryTeal)
+                        .foregroundStyle(Color.accentMint)
                 } else {
                     Text("Discover perks below to start saving")
                         .font(.subheadline.weight(.medium))
@@ -107,15 +107,15 @@ struct PerksView: View {
             Divider().background(.white.opacity(0.1))
             
             HStack(spacing: 0) {
-                PerkStatBox(value: "\(perkEngine.discoveredPerks.count)", label: "Found", color: Color.luxuryTeal)
+                PerkStatBox(value: "\(perkEngine.discoveredPerks.count)", label: "Found", color: Color.accentMint)
                 Divider().background(.white.opacity(0.1))
-                PerkStatBox(value: "\(perkEngine.activePerks.count)", label: "Active", color: Color.luxuryGold)
+                PerkStatBox(value: "\(perkEngine.activePerks.count)", label: "Active", color: Color.accentMint)
                 Divider().background(.white.opacity(0.1))
-                PerkStatBox(value: "\(perkEngine.completedActions.count)", label: "Actions", color: Color.luxuryPink)
+                PerkStatBox(value: "\(perkEngine.completedActions.count)", label: "Actions", color: Color.accentMint)
             }
         }
         .padding()
-        .glassCard(color: Color.luxuryGold)
+        .glassCard(color: Color.accentMint)
         .padding(.horizontal, 20)
     }
     
@@ -389,7 +389,7 @@ struct TrialProtectionPromoBanner: View {
                     Circle()
                         .fill(
                             LinearGradient(
-                                colors: [Color.luxuryTeal, Color.luxuryPurple],
+                                colors: [Color.accentMint, Color.accentMint],
                                 startPoint: .topLeading,
                                 endPoint: .bottomTrailing
                             )
@@ -420,7 +420,7 @@ struct TrialProtectionPromoBanner: View {
                         .foregroundStyle(.white)
                         .padding(.horizontal, 10)
                         .padding(.vertical, 4)
-                        .background(Color.luxuryTeal)
+                        .background(Color.accentMint)
                         .clipShape(Capsule())
                 }
 
@@ -436,7 +436,7 @@ struct TrialProtectionPromoBanner: View {
                         RoundedRectangle(cornerRadius: 16)
                             .stroke(
                                 LinearGradient(
-                                    colors: [Color.luxuryTeal.opacity(0.5), Color.luxuryPurple.opacity(0.3)],
+                                    colors: [Color.accentMint.opacity(0.5), Color.accentMint.opacity(0.3)],
                                     startPoint: .topLeading,
                                     endPoint: .bottomTrailing
                                 ),
@@ -548,7 +548,7 @@ struct PerkCard: View {
                         DifficultyBadge(difficulty: perk.difficulty)
                         Text("Save \(CurrencyManager.shared.format(Decimal(perk.estimatedSavings)))/year")
                             .font(.caption.weight(.bold))
-                            .foregroundStyle(Color.luxuryGold)
+                            .foregroundStyle(Color.accentMint)
                     }
                 }
                 Spacer()
@@ -568,13 +568,13 @@ struct PerkCard: View {
     
     private func colorFor(_ colorName: String) -> Color {
         switch colorName {
-        case "gold": return Color.luxuryGold
+        case "gold": return Color.accentMint
         case "blue": return .blue
         case "green": return .green
         case "orange": return .orange
         case "pink": return .pink
-        case "teal": return Color.luxuryTeal
-        default: return Color.luxuryGold
+        case "teal": return Color.accentMint
+        default: return Color.accentMint
         }
     }
 }
@@ -600,7 +600,7 @@ struct ActivePerkCard: View {
                     .lineLimit(1)
                 Text("Saving \(CurrencyManager.shared.format(Decimal(perk.estimatedAnnualSavings)))/year")
                     .font(.caption.weight(.bold))
-                    .foregroundStyle(Color.luxuryGold)
+                    .foregroundStyle(Color.accentMint)
             }
 
             Spacer()
@@ -615,13 +615,13 @@ struct ActivePerkCard: View {
     
     private func colorFor(_ colorName: String) -> Color {
         switch colorName {
-        case "gold": return Color.luxuryGold
+        case "gold": return Color.accentMint
         case "blue": return .blue
         case "green": return .green
         case "orange": return .orange
         case "pink": return .pink
-        case "teal": return Color.luxuryTeal
-        default: return Color.luxuryGold
+        case "teal": return Color.accentMint
+        default: return Color.accentMint
         }
     }
 }
@@ -633,7 +633,7 @@ struct ActionCard: View {
         HStack(spacing: 12) {
             Image(systemName: "checkmark.circle.fill")
                 .font(.title3)
-                .foregroundStyle(Color.luxuryGold)
+                .foregroundStyle(Color.accentMint)
 
             VStack(alignment: .leading, spacing: 2) {
                 Text(action.title)
@@ -649,7 +649,7 @@ struct ActionCard: View {
 
             Text("+\(Int(action.moneySaved))")
                 .font(.headline.weight(.bold))
-                .foregroundStyle(Color.luxuryGold)
+                .foregroundStyle(Color.accentMint)
         }
         .padding()
         .glass(intensity: 0.06, tint: .white)
@@ -697,7 +697,7 @@ struct PerkActionSheet: View {
 
                         Text(CurrencyManager.shared.format(Decimal(perk.estimatedSavings)))
                             .font(.largeTitle.bold())
-                            .foregroundStyle(Color.luxuryGold)
+                            .foregroundStyle(Color.accentMint)
 
                         DifficultyBadge(difficulty: perk.difficulty)
                     }
@@ -732,7 +732,7 @@ struct PerkActionSheet: View {
                                 .foregroundStyle(.white)
                                 .frame(maxWidth: .infinity)
                                 .padding()
-                                .background(RoundedRectangle(cornerRadius: 14).fill(Color.luxuryGold))
+                                .background(RoundedRectangle(cornerRadius: 14).fill(Color.accentMint))
                             }
                         } else if !isCompleted {
                             Button(action: completePerk) {
@@ -744,7 +744,7 @@ struct PerkActionSheet: View {
                                 .foregroundStyle(.white)
                                 .frame(maxWidth: .infinity)
                                 .padding()
-                                .background(RoundedRectangle(cornerRadius: 14).fill(Color.luxuryTeal))
+                                .background(RoundedRectangle(cornerRadius: 14).fill(Color.accentMint))
                             }
                         } else {
                             HStack(spacing: 8) {
@@ -779,13 +779,13 @@ struct PerkActionSheet: View {
     
     private func colorFor(_ colorName: String) -> Color {
         switch colorName {
-        case "gold": return Color.luxuryGold
+        case "gold": return Color.accentMint
         case "blue": return .blue
         case "green": return .green
         case "orange": return .orange
         case "pink": return .pink
-        case "teal": return Color.luxuryTeal
-        default: return Color.luxuryGold
+        case "teal": return Color.accentMint
+        default: return Color.accentMint
         }
     }
 }
@@ -799,13 +799,13 @@ struct PerkStepRow: View {
         HStack(spacing: 16) {
             ZStack {
                 Circle()
-                    .fill(isCompleted ? Color.luxuryTeal.opacity(0.2) : .white.opacity(0.1))
+                    .fill(isCompleted ? Color.accentMint.opacity(0.2) : .white.opacity(0.1))
                     .frame(width: 36, height: 36)
                 
                 if isCompleted {
                     Image(systemName: "checkmark")
                         .font(.subheadline.weight(.bold))
-                        .foregroundStyle(Color.luxuryTeal)
+                        .foregroundStyle(Color.accentMint)
                 } else {
                     Text("\(number)")
                         .font(.subheadline.weight(.bold))
@@ -891,7 +891,7 @@ struct TabButton: View {
             .padding(.vertical, 10)
             .background(
                 RoundedRectangle(cornerRadius: 12)
-                    .fill(isSelected ? Color.luxuryGold : Color.clear)
+                    .fill(isSelected ? Color.accentMint : Color.clear)
             )
             .scaleEffect(pressed ? 0.95 : 1.0)
         }

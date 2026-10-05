@@ -11,7 +11,7 @@ struct StepProgressView: View {
                     // Step circle
                     ZStack {
                         Circle()
-                            .fill(index <= currentStep ? BrandColors.primary : BackgroundColors.tertiary)
+                            .fill(index <= currentStep ? Color.accentMint : Color.obsidianElevated)
                             .frame(width: 32, height: 32)
 
                         if index < currentStep {
@@ -21,13 +21,13 @@ struct StepProgressView: View {
                         } else {
                             Text("\(index + 1)")
                                 .font(.footnote.weight(.bold))
-                                .foregroundColor(index == currentStep ? .white : TextColors.tertiary)
+                                .foregroundColor(index == currentStep ? .white : Color.obsidianTextTertiary)
                         }
                     }
 
                     if index < steps.count - 1 {
                         Rectangle()
-                            .fill(index < currentStep ? BrandColors.primary : BackgroundColors.tertiary)
+                            .fill(index < currentStep ? Color.accentMint : Color.obsidianElevated)
                             .frame(height: 2)
                     }
                 }

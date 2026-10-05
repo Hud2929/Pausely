@@ -101,7 +101,7 @@ struct SmartURLInputView: View {
             VStack(spacing: 8) {
                 Image(systemName: "link.circle.fill")
                     .font(AppTypography.displayLarge)
-                    .foregroundStyle(Color.luxuryGold)
+                    .foregroundStyle(Color.accentMint)
 
                 Text("Paste Subscription URL")
                     .font(AppTypography.headlineLarge)
@@ -140,7 +140,7 @@ struct SmartURLInputView: View {
                     } else {
                         Image(systemName: "arrow.right.circle.fill")
                             .font(.title2)
-                            .foregroundStyle(Color.luxuryGold)
+                            .foregroundStyle(Color.accentMint)
                     }
                 }
                 .accessibilityLabel("Parse URL")
@@ -157,7 +157,7 @@ struct SmartURLInputView: View {
                     Text("Paste from Clipboard")
                 }
                 .font(AppTypography.bodySmall)
-                .foregroundStyle(Color.luxuryGold)
+                .foregroundStyle(Color.accentMint)
             }
             .accessibilityIdentifier("pasteFromClipboardButton")
             .accessibilityLabel("Paste URL from clipboard")
@@ -183,7 +183,7 @@ struct SmartURLInputView: View {
                 EnhancedFormField(title: "Amount") {
                     HStack {
                         Text(currencyManager.currencySymbol(for: selectedCurrency))
-                            .foregroundStyle(Color.luxuryGold)
+                            .foregroundStyle(Color.accentMint)
                         TextField("0.00", text: $amount)
                             .foregroundStyle(.white)
                             .keyboardType(.decimalPad)
@@ -270,7 +270,7 @@ struct SmartURLInputView: View {
                     .foregroundStyle(.white)
                     .frame(maxWidth: .infinity)
                     .padding()
-                    .background(Color.luxuryPurple.opacity(0.3))
+                    .background(Color.accentMint.opacity(0.3))
                     .cornerRadius(12)
                 }
             }
@@ -286,7 +286,7 @@ struct SmartURLInputView: View {
                 .padding()
                 .background(
                     LinearGradient(
-                        colors: [Color.luxuryPurple, Color.luxuryPink],
+                        colors: [Color.accentMint, Color.accentMint],
                         startPoint: .leading,
                         endPoint: .trailing
                     )

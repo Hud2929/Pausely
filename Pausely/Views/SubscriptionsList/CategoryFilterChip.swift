@@ -20,7 +20,7 @@ struct CategoryFilterChip: View {
                 .padding(.vertical, 8)
                 .background(
                     Capsule()
-                        .fill(isSelected ? Color.luxuryPurple : Color.white.opacity(0.1))
+                        .fill(isSelected ? Color.accentMint : Color.white.opacity(0.1))
                 )
                 .scaleEffect(pressed ? 0.92 : 1.0)
         }

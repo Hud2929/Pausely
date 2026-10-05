@@ -30,12 +30,8 @@ struct ActionsSection: View {
                 )
             }
 
-            if paymentManager.canPauseSubscriptions && actionManager.canPause(subscription) {
-                if subscription.isPaused {
-                    RevolutionaryResumeButton(subscription: subscription)
-                } else {
-                    RevolutionaryPauseButton(subscription: subscription)
-                }
+            if subscription.isPaused {
+                RevolutionaryResumeButton(subscription: subscription)
             }
 
             if !alternatives.isEmpty {

@@ -6,10 +6,17 @@ import TipKit
 @main
 struct PauselyApp: App {
     @UIApplicationDelegateAdaptor(AppDelegate.self) var appDelegate
+    @AppStorage("app_language") private var appLanguage = "system"
+
+    private var resolvedLocale: Locale {
+        if appLanguage == "system" { return .current }
+        return Locale(identifier: appLanguage)
+    }
 
     var body: some Scene {
         WindowGroup {
             RootView()
+                .environment(\.locale, resolvedLocale)
         }
     }
 }
@@ -227,7 +234,7 @@ struct PremiumSplashScreen: View {
 
                     Text("Smart Subscription Manager")
                         .font(.system(.body, design: .rounded).weight(.medium))
-                        .foregroundColor(TextColors.secondary)
+                        .foregroundColor(Color.obsidianTextSecondary)
                 }
                 .opacity(opacity)
                 
@@ -311,7 +318,7 @@ struct PremiumWelcomeFlow: View {
                 }) {
                     Text("Skip")
                         .font(.system(.subheadline, design: .rounded).weight(.medium))
-                        .foregroundColor(TextColors.secondary)
+                        .foregroundColor(Color.obsidianTextSecondary)
                 }
                 .padding(.top, 16)
                 .padding(.trailing, 24)
@@ -400,7 +407,7 @@ struct PremiumWelcomeFlow: View {
                 }) {
                     Text("I already have an account")
                         .font(.system(.subheadline, design: .rounded).weight(.medium))
-                        .foregroundColor(TextColors.secondary)
+                        .foregroundColor(Color.obsidianTextSecondary)
                 }
                 .accessibilityIdentifier("alreadyHaveAccountButton")
             }
@@ -441,7 +448,7 @@ struct PremiumWelcomeFlow: View {
 
                     Text("Take control of your subscriptions")
                         .font(.system(.body, design: .rounded).weight(.medium))
-                        .foregroundColor(TextColors.secondary)
+                        .foregroundColor(Color.obsidianTextSecondary)
                 }
             }
             .padding(.bottom, 48)
@@ -519,7 +526,7 @@ struct OnboardingPreviewPage: View {
 
                 Text(description)
                     .font(.system(.body, design: .rounded).weight(.medium))
-                    .foregroundColor(TextColors.secondary)
+                    .foregroundColor(Color.obsidianTextSecondary)
                     .multilineTextAlignment(.center)
                     .padding(.horizontal, 32)
             }
@@ -550,7 +557,7 @@ struct DashboardPreviewCard: View {
 
                         Text("Good morning")
                             .font(.system(.footnote, design: .rounded).weight(.medium))
-                            .foregroundColor(TextColors.secondary)
+                            .foregroundColor(Color.obsidianTextSecondary)
                     }
 
                     Spacer()
@@ -575,7 +582,7 @@ struct DashboardPreviewCard: View {
 
                     Text("/month")
                         .font(.system(.subheadline, design: .rounded).weight(.medium))
-                        .foregroundColor(TextColors.secondary)
+                        .foregroundColor(Color.obsidianTextSecondary)
                 }
                 .frame(maxWidth: .infinity)
                 .padding(.vertical, 24)
@@ -677,7 +684,7 @@ struct PreviewSubscriptionRow: View {
 
                 Text("Monthly")
                     .font(.system(.caption, design: .rounded).weight(.medium))
-                    .foregroundColor(TextColors.secondary)
+                    .foregroundColor(Color.obsidianTextSecondary)
             }
 
             Spacer()
@@ -725,12 +732,12 @@ struct InsightsPreviewCard: View {
                 HStack(spacing: 16) {
                     ZStack {
                         Circle()
-                            .stroke(Color.luxuryTeal.opacity(0.2), lineWidth: 8)
+                            .stroke(Color.accentMint.opacity(0.2), lineWidth: 8)
                             .frame(width: 70, height: 70)
 
                         Circle()
                             .trim(from: 0, to: 0.72)
-                            .stroke(Color.luxuryTeal, style: StrokeStyle(lineWidth: 8, lineCap: .round))
+                            .stroke(Color.accentMint, style: StrokeStyle(lineWidth: 8, lineCap: .round))
                             .frame(width: 70, height: 70)
                             .rotationEffect(.degrees(-90))
 
@@ -746,17 +753,17 @@ struct InsightsPreviewCard: View {
 
                         Text("Great! You're actively managing your subscriptions.")
                             .font(.system(.footnote, design: .rounded).weight(.medium))
-                            .foregroundColor(TextColors.secondary)
+                            .foregroundColor(Color.obsidianTextSecondary)
                             .lineLimit(2)
                     }
                 }
                 .padding(16)
                 .background(
                     RoundedRectangle(cornerRadius: 16, style: .continuous)
-                        .fill(Color.luxuryTeal.opacity(0.08))
+                        .fill(Color.accentMint.opacity(0.08))
                         .overlay(
                             RoundedRectangle(cornerRadius: 16, style: .continuous)
-                                .stroke(Color.luxuryTeal.opacity(0.2), lineWidth: 1)
+                                .stroke(Color.accentMint.opacity(0.2), lineWidth: 1)
                         )
                 )
                 .padding(.horizontal, 20)
@@ -765,7 +772,7 @@ struct InsightsPreviewCard: View {
                 HStack(spacing: 12) {
                     Image(systemName: "lightbulb.fill")
                         .font(.system(.title2, design: .rounded))
-                        .foregroundColor(Color.luxuryGold)
+                        .foregroundColor(Color.semanticWarning)
 
                     VStack(alignment: .leading, spacing: 2) {
                         Text("Save $48/year")
@@ -774,22 +781,22 @@ struct InsightsPreviewCard: View {
 
                         Text("Switch to annual billing for Netflix")
                             .font(.system(.footnote, design: .rounded).weight(.medium))
-                            .foregroundColor(TextColors.secondary)
+                            .foregroundColor(Color.obsidianTextSecondary)
                     }
 
                     Spacer()
 
                     Image(systemName: "chevron.right")
                         .font(.system(.footnote, design: .rounded).weight(.semibold))
-                        .foregroundColor(TextColors.secondary)
+                        .foregroundColor(Color.obsidianTextSecondary)
                 }
                 .padding(16)
                 .background(
                     RoundedRectangle(cornerRadius: 16, style: .continuous)
-                        .fill(Color.luxuryGold.opacity(0.08))
+                        .fill(Color.semanticWarning.opacity(0.08))
                         .overlay(
                             RoundedRectangle(cornerRadius: 16, style: .continuous)
-                                .stroke(Color.luxuryGold.opacity(0.2), lineWidth: 1)
+                                .stroke(Color.semanticWarning.opacity(0.2), lineWidth: 1)
                         )
                 )
                 .padding(.horizontal, 20)
@@ -881,7 +888,7 @@ struct PremiumSignUpView: View {
 
                             Text("Start your subscription journey")
                                 .font(.system(.body, design: .rounded))
-                                .foregroundColor(TextColors.secondary)
+                                .foregroundColor(Color.obsidianTextSecondary)
                         }
                         .padding(.top, 20)
 
@@ -892,14 +899,14 @@ struct PremiumSignUpView: View {
                                 VStack(alignment: .leading, spacing: 8) {
                                     Text("First Name")
                                         .font(.system(.subheadline, design: .rounded).weight(.medium))
-                                        .foregroundColor(TextColors.secondary)
+                                        .foregroundColor(Color.obsidianTextSecondary)
                                     PremiumTextField(placeholder: "Jane", text: $firstName)
                                         .accessibilityIdentifier("firstNameTextField")
                                 }
                                 VStack(alignment: .leading, spacing: 8) {
                                     Text("Last Name")
                                         .font(.system(.subheadline, design: .rounded).weight(.medium))
-                                        .foregroundColor(TextColors.secondary)
+                                        .foregroundColor(Color.obsidianTextSecondary)
                                     PremiumTextField(placeholder: "Smith", text: $lastName)
                                         .accessibilityIdentifier("lastNameTextField")
                                 }
@@ -909,7 +916,7 @@ struct PremiumSignUpView: View {
                             VStack(alignment: .leading, spacing: 8) {
                                 Text("Email")
                                     .font(.system(.subheadline, design: .rounded).weight(.medium))
-                                    .foregroundColor(TextColors.secondary)
+                                    .foregroundColor(Color.obsidianTextSecondary)
 
                                 PremiumTextField(
                                     placeholder: "your@email.com",
@@ -924,7 +931,7 @@ struct PremiumSignUpView: View {
                             VStack(alignment: .leading, spacing: 8) {
                                 Text("Password")
                                     .font(.system(.subheadline, design: .rounded).weight(.medium))
-                                    .foregroundColor(TextColors.secondary)
+                                    .foregroundColor(Color.obsidianTextSecondary)
 
                                 PremiumTextField(
                                     placeholder: "Min. 8 characters",
@@ -1008,7 +1015,7 @@ struct PremiumSignUpView: View {
             .toolbar {
                 ToolbarItem(placement: .navigationBarLeading) {
                     Button("Cancel") { dismiss() }
-                        .foregroundColor(TextColors.secondary)
+                        .foregroundColor(Color.obsidianTextSecondary)
                         .accessibilityIdentifier("cancelButton")
                 }
             }
@@ -1120,7 +1127,7 @@ struct PremiumSignInView: View {
 
                             Text("Sign in to continue")
                                 .font(.system(.body, design: .rounded))
-                                .foregroundColor(TextColors.secondary)
+                                .foregroundColor(Color.obsidianTextSecondary)
                         }
                         .padding(.top, 20)
 
@@ -1129,7 +1136,7 @@ struct PremiumSignInView: View {
                             VStack(alignment: .leading, spacing: 8) {
                                 Text("Email")
                                     .font(.system(.subheadline, design: .rounded).weight(.medium))
-                                    .foregroundColor(TextColors.secondary)
+                                    .foregroundColor(Color.obsidianTextSecondary)
 
                                 PremiumTextField(
                                     placeholder: "your@email.com",
@@ -1143,7 +1150,7 @@ struct PremiumSignInView: View {
                             VStack(alignment: .leading, spacing: 8) {
                                 Text("Password")
                                     .font(.system(.subheadline, design: .rounded).weight(.medium))
-                                    .foregroundColor(TextColors.secondary)
+                                    .foregroundColor(Color.obsidianTextSecondary)
 
                                 PremiumTextField(
                                     placeholder: "••••••••",
@@ -1189,7 +1196,7 @@ struct PremiumSignInView: View {
                             showPasswordReset = true
                         }
                         .font(.system(.subheadline, design: .rounded))
-                        .foregroundColor(TextColors.secondary)
+                        .foregroundColor(Color.obsidianTextSecondary)
                         .accessibilityIdentifier("forgotPasswordButton")
 
                         // Divider
@@ -1222,7 +1229,7 @@ struct PremiumSignInView: View {
             .toolbar {
                 ToolbarItem(placement: .navigationBarLeading) {
                     Button("Cancel") { dismiss() }
-                        .foregroundColor(TextColors.secondary)
+                        .foregroundColor(Color.obsidianTextSecondary)
                         .accessibilityIdentifier("signInCancelButton")
                 }
             }

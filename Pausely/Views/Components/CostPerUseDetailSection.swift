@@ -70,7 +70,7 @@ struct CostPerUseDetailSection: View {
             HStack(spacing: 8) {
                 Image(systemName: "chart.bar.fill")
                     .font(AppTypography.headlineMedium)
-                    .foregroundStyle(Color.luxuryPurple)
+                    .foregroundStyle(Color.accentMint)
 
                 Text(LocalizedStringKey("Cost Per Use"))
                     .font(AppTypography.headlineLarge)
@@ -170,12 +170,12 @@ struct CostPerUseDetailSection: View {
         HStack(spacing: 14) {
             ZStack {
                 Circle()
-                    .fill(Color.luxuryTeal.opacity(0.15))
+                    .fill(Color.accentMint.opacity(0.15))
                     .frame(width: 48, height: 48)
 
                 Image(systemName: "clock.arrow.circlepath")
                     .font(.callout.weight(.semibold))
-                    .foregroundStyle(Color.luxuryTeal)
+                    .foregroundStyle(Color.accentMint)
             }
 
             VStack(alignment: .leading, spacing: 3) {
@@ -191,7 +191,7 @@ struct CostPerUseDetailSection: View {
             Spacer()
         }
         .padding(14)
-        .glassBackground(cornerRadius: 16, strokeColor: Color.luxuryTeal.opacity(0.2), strokeWidth: 1)
+        .glassBackground(cornerRadius: 16, strokeColor: Color.accentMint.opacity(0.2), strokeWidth: 1)
     }
 
     // MARK: - Similar Subscriptions Comparison
@@ -221,7 +221,7 @@ struct CostPerUseDetailSection: View {
                             HStack(spacing: 10) {
                                 Image(systemName: "arrow.left.arrow.right")
                                     .font(AppTypography.labelMedium)
-                                    .foregroundStyle(Color.luxuryTeal)
+                                    .foregroundStyle(Color.accentMint)
 
                                 Text("You use \(subscription.name)")
                                     .font(AppTypography.bodySmall)
@@ -229,7 +229,7 @@ struct CostPerUseDetailSection: View {
 
                                 + Text(" \(String(format: "%.1f", ratio))x ")
                                     .font(AppTypography.bodySmall)
-                                    .foregroundStyle(Color.luxuryTeal)
+                                    .foregroundStyle(Color.accentMint)
                                     .fontWeight(.semibold)
 
                                 + Text("more than \(other.name)")
@@ -239,7 +239,7 @@ struct CostPerUseDetailSection: View {
                                 Spacer()
                             }
                             .padding(12)
-                            .glassBackground(cornerRadius: 12, strokeColor: Color.luxuryTeal.opacity(0.15), strokeWidth: 0.5)
+                            .glassBackground(cornerRadius: 12, strokeColor: Color.accentMint.opacity(0.15), strokeWidth: 0.5)
                         }
                     }
                 }

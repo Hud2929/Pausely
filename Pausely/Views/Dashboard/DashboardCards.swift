@@ -117,7 +117,7 @@ struct RecentSubscriptionsCarousel: View {
                 } label: {
                     Text("See All")
                         .font(.system(.subheadline, design: .rounded).weight(.medium))
-                        .foregroundStyle(Color.luxuryPurple)
+                        .foregroundStyle(Color.accentMint)
                 }
             }
             .padding(.horizontal, 20)
@@ -150,7 +150,7 @@ struct RecentSubCard: View {
                 Circle()
                     .fill(
                         LinearGradient(
-                            colors: [.luxuryPurple.opacity(0.3), .luxuryPink.opacity(0.2)],
+                            colors: [.accentMint.opacity(0.3), .accentMint.opacity(0.2)],
                             startPoint: .topLeading,
                             endPoint: .bottomTrailing
                         )
@@ -200,12 +200,12 @@ struct EmptySubscriptionsCard: View {
         VStack(spacing: 16) {
             ZStack {
                 Circle()
-                    .fill(Color.luxuryPurple.opacity(0.1))
+                    .fill(Color.accentMint.opacity(0.1))
                     .frame(width: 64, height: 64)
 
                 Image(systemName: "plus.circle")
                     .font(.title.weight(.regular))
-                    .foregroundStyle(Color.luxuryPurple)
+                    .foregroundStyle(Color.accentMint)
             }
 
             VStack(spacing: 4) {
@@ -282,7 +282,7 @@ struct UsageHighlightRow: View {
                         .fill(Color(.systemGray5))
 
                     RoundedRectangle(cornerRadius: 3)
-                        .fill(LinearGradient(colors: [.luxuryPurple, .luxuryPink], startPoint: .leading, endPoint: .trailing))
+                        .fill(LinearGradient(colors: [.accentMint, .accentMint], startPoint: .leading, endPoint: .trailing))
                         .frame(width: geo.size.width * usageProgress)
                 }
             }
@@ -390,7 +390,7 @@ struct PausedCard: View {
         }
         .padding(14)
         .frame(width: 140, height: 120)
-        .glassBackground(cornerRadius: 20, strokeColor: Color.orange.opacity(0.3), strokeWidth: 1)
+        .surfaceCard(cornerRadius: 20)
         .accessibilityElement(children: .combine)
         .accessibilityLabel("\(subscription.name), paused for \(daysUntilResume) more days, saving \(currencyManager.format(converted)) per month")
         .accessibilityHint("Double-tap to view details and resume")

@@ -54,11 +54,19 @@ struct RevolutionaryCancelButton: View {
 struct CancelSubscriptionFlow: View {
     let subscription: Subscription
     @Environment(\.dismiss) private var dismiss
+    @ObservedObject private var currencyManager = CurrencyManager.shared
 
     @State private var isShowingSafari = false
     @State private var showConfirmDelete = false
     @State private var isDeleting = false
     @State private var errorMessage: String? = nil
+    @State private var showingCelebration = false
+    @State private var showingDifficultyRating = false
+
+    private var annualSavingsFormatted: String {
+        let converted = currencyManager.convertToSelected(subscription.annualCost, from: subscription.currency)
+        return currencyManager.format(converted)
+    }
 
     private var service: SubscriptionService? {
         SubscriptionActionManager.shared.getService(for: subscription.name)
@@ -98,7 +106,7 @@ struct CancelSubscriptionFlow: View {
                         Text("YOU'LL SAVE")
                             .font(STFont.labelSmall)
                             .foregroundStyle(Color.obsidianTextTertiary)
-                        Text(subscription.displayAnnualCost)
+                        Text(annualSavingsFormatted)
                             .font(STFont.displayMedium)
                             .foregroundStyle(Color.semanticSuccess)
                         Text("per year")
@@ -212,6 +220,18 @@ struct CancelSubscriptionFlow: View {
                 Text("This will remove \(subscription.name) from your Pausely dashboard. Your actual subscription is managed by \(subscription.name).")
             }
             .errorBanner($errorMessage)
+            .fullScreenCover(isPresented: $showingCelebration) {
+                CancelCelebrationView(subscription: subscription) {
+                    showingCelebration = false
+                    showingDifficultyRating = true
+                }
+            }
+            .sheet(isPresented: $showingDifficultyRating) {
+                CancelDifficultyRatingView(serviceName: subscription.name) {
+                    showingDifficultyRating = false
+                    dismiss()
+                }
+            }
         }
     }
 
@@ -222,8 +242,8 @@ struct CancelSubscriptionFlow: View {
             NotificationManager.shared.cancelReminder(for: subscription.id)
             await MainActor.run {
                 isDeleting = false
-                dismiss()
                 Haptic.success()
+                showingCelebration = true
             }
         } catch {
             await MainActor.run {
@@ -235,95 +255,8 @@ struct CancelSubscriptionFlow: View {
     }
 }
 
-// MARK: - Revolutionary Pause Button
-struct RevolutionaryPauseButton: View {
-    let subscription: Subscription
-    @State private var showingDurationPicker = false
-    @State private var isProcessing = false
-    @State private var result: PauseResult?
-    @State private var showSuccess = false
-    @State private var errorMessage: String? = nil
 
-    var body: some View {
-        Button(action: {
-            showingDurationPicker = true
-        }) {
-            HStack(spacing: 12) {
-                Image(systemName: "pause.circle.fill")
-                    .font(.title3)
-                    .foregroundStyle(Color.accentMint)
-                
-                VStack(alignment: .leading, spacing: 2) {
-                    Text("Remind Me to Pause")
-                        .font(STFont.labelLarge)
-
-                    Text("Get a reminder to pause on their site")
-                        .font(STFont.bodySmall)
-                        .foregroundStyle(Color.obsidianTextSecondary)
-                }
-                
-                Spacer()
-                
-                Image(systemName: "chevron.right")
-                    .foregroundStyle(Color.obsidianTextTertiary)
-            }
-            .padding()
-            .background(
-                RoundedRectangle(cornerRadius: STRadius.md)
-                    .fill(Color.obsidianSurface)
-                    .overlay(
-                        RoundedRectangle(cornerRadius: STRadius.md)
-                            .stroke(Color.obsidianBorder, lineWidth: 1)
-                    )
-            )
-        }
-        .buttonStyle(.plain)
-        .sheet(isPresented: $showingDurationPicker) {
-            RevolutionaryPauseSheet(
-                subscription: subscription,
-                onPause: performPause,
-                onDismiss: { showingDurationPicker = false }
-            )
-        }
-        .overlay {
-            if showSuccess, let result = result {
-                PauseSuccessOverlay(result: result, isPresented: $showSuccess)
-            }
-        }
-        .errorBanner($errorMessage)
-    }
-
-    private func performPause(duration: RevolutionaryPauseDuration) async {
-        isProcessing = true
-        errorMessage = nil
-
-        let reminderDate = Calendar.current.date(
-            byAdding: duration.calendarComponent,
-            value: duration.value,
-            to: Date()
-        ) ?? Date()
-
-        do {
-            // Schedule a local reminder notification instead of fake-pausing
-            let pauseURL = SubscriptionActionManager.shared.getService(for: subscription.name)?.pauseURL
-            NotificationManager.shared.schedulePauseReminder(
-                for: subscription,
-                reminderDate: reminderDate,
-                pauseURL: pauseURL
-            )
-
-            let pauseResult = PauseResult.reminderSet(reminderDate: reminderDate)
-            await MainActor.run {
-                self.result = pauseResult
-                self.isProcessing = false
-                self.showSuccess = true
-                Haptic.success()
-            }
-        }
-    }
-}
-
-// MARK: - Cancel Confirmation Sheet (REVOLUTIONARY - No Steps!)
+// MARK: - Cancel Confirmation Sheet
 struct RevolutionaryCancelConfirmationSheet: View {
     let subscription: Subscription
     let onConfirm: () async -> Void
@@ -448,225 +381,6 @@ struct RevolutionaryCancelConfirmationSheet: View {
     }
 }
 
-// MARK: - Pause Sheet (REVOLUTIONARY - Instant!)
-struct RevolutionaryPauseSheet: View {
-    let subscription: Subscription
-    let onPause: (RevolutionaryPauseDuration) async -> Void
-    let onDismiss: () -> Void
-
-    @State private var isProcessing = false
-    @State private var showingSafari = false
-    @Environment(\.dismiss) private var dismiss
-
-    // MARK: - Service Lookup
-
-    private var serviceInfo: SubscriptionService? {
-        SubscriptionActionManager.shared.getService(for: subscription.name)
-    }
-
-    /// Direct link to the service's pause page (only if known)
-    private var pausePageURL: URL? {
-        guard let pauseURL = serviceInfo?.pauseURL, !pauseURL.isEmpty else { return nil }
-        return URL(string: pauseURL)
-    }
-
-    /// General visit link: support page first, then domain homepage.
-    /// Never uses cancelURL — we don't want to trick users into cancelling.
-    private var visitURL: URL? {
-        guard let service = serviceInfo else { return nil }
-        if !service.supportURL.isEmpty,
-           let url = URL(string: service.supportURL) { return url }
-        if !service.domain.isEmpty,
-           let url = URL(string: "https://\(service.domain)") { return url }
-        return nil
-    }
-
-    var body: some View {
-        NavigationStack {
-            VStack(spacing: 24) {
-                // Header
-                VStack(spacing: 16) {
-                    ZStack {
-                        Circle()
-                            .fill(Color.accentMint.opacity(0.2))
-                            .frame(width: 100, height: 100)
-
-                        Image(systemName: "pause.circle.fill")
-                            .font(.largeTitle)
-                            .foregroundStyle(Color.accentMint)
-                    }
-
-                    Text("Remind Me to Pause \(subscription.name)")
-                        .font(STFont.headlineLarge)
-                        .foregroundStyle(Color.obsidianText)
-
-                    Text("We'll send you a reminder to pause \(subscription.name) on their website.")
-                        .font(STFont.bodyMedium)
-                        .foregroundStyle(Color.obsidianTextSecondary)
-                        .multilineTextAlignment(.center)
-                }
-
-                // Duration options
-                VStack(spacing: 12) {
-                    ForEach(RevolutionaryPauseDuration.allCases, id: \.self) { duration in
-                        PauseDurationButton(
-                            duration: duration,
-                            savings: subscription.monthlyCost * Decimal(duration.fractionOfMonth),
-                            isProcessing: isProcessing
-                        ) {
-                            Task {
-                                isProcessing = true
-                                await onPause(duration)
-                                isProcessing = false
-                                dismiss()
-                            }
-                        }
-                    }
-                }
-
-                // Direct link to pause page (only if we have a real pause URL)
-                if let url = pausePageURL {
-                    Button(action: { showingSafari = true }) {
-                        HStack(spacing: 12) {
-                            Image(systemName: "pause.circle")
-                                .font(.title3)
-                                .foregroundStyle(Color.accentMint)
-
-                            VStack(alignment: .leading, spacing: 2) {
-                                Text("Go to Pause Page")
-                                    .font(STFont.labelLarge)
-                                    .foregroundStyle(Color.obsidianText)
-
-                                Text(url.host ?? "Open in Safari")
-                                    .font(STFont.bodySmall)
-                                    .foregroundStyle(Color.obsidianTextSecondary)
-                                    .lineLimit(1)
-                            }
-
-                            Spacer()
-
-                            Image(systemName: "arrow.up.forward")
-                                .foregroundStyle(Color.accentMint)
-                        }
-                        .padding()
-                        .background(Color.obsidianSurface)
-                        .clipShape(RoundedRectangle(cornerRadius: STRadius.md))
-                        .overlay(
-                            RoundedRectangle(cornerRadius: STRadius.md)
-                                .stroke(Color.accentMint.opacity(0.3), lineWidth: 1)
-                        )
-                    }
-                    .buttonStyle(.plain)
-                    .sheet(isPresented: $showingSafari) {
-                        SafariView(url: url)
-                            .ignoresSafeArea()
-                    }
-                } else if let url = visitURL {
-                    // Honest fallback: we don't have a pause page, but we can send them
-                    // to the support page or main website to figure it out themselves.
-                    Button(action: { showingSafari = true }) {
-                        HStack(spacing: 12) {
-                            Image(systemName: "arrow.up.right.square")
-                                .font(.title3)
-                                .foregroundStyle(Color.obsidianTextSecondary)
-
-                            VStack(alignment: .leading, spacing: 2) {
-                                Text("Visit \(subscription.name) Website")
-                                    .font(STFont.labelLarge)
-                                    .foregroundStyle(Color.obsidianText)
-
-                                Text(url.host ?? "Open in Safari")
-                                    .font(STFont.bodySmall)
-                                    .foregroundStyle(Color.obsidianTextSecondary)
-                                    .lineLimit(1)
-                            }
-
-                            Spacer()
-
-                            Image(systemName: "arrow.up.forward")
-                                .foregroundStyle(Color.obsidianTextSecondary)
-                        }
-                        .padding()
-                        .background(Color.obsidianSurface)
-                        .clipShape(RoundedRectangle(cornerRadius: STRadius.md))
-                        .overlay(
-                            RoundedRectangle(cornerRadius: STRadius.md)
-                                .stroke(Color.white.opacity(0.1), lineWidth: 1)
-                        )
-                    }
-                    .buttonStyle(.plain)
-                    .sheet(isPresented: $showingSafari) {
-                        SafariView(url: url)
-                            .ignoresSafeArea()
-                    }
-                }
-
-                Spacer()
-
-                Button(action: { dismiss() }) {
-                    Text("Cancel")
-                        .font(STFont.labelLarge)
-                        .foregroundStyle(Color.obsidianTextSecondary)
-                }
-                .disabled(isProcessing)
-                .accessibilityHint(isProcessing ? "Please wait, setting reminder" : "")
-            }
-            .padding()
-            .background(Color.obsidianBlack)
-            .navigationTitle("Remind Me to Pause")
-            .navigationBarTitleDisplayMode(.inline
-            )
-            .toolbar {
-                ToolbarItem(placement: .navigationBarTrailing) {
-                    Button(action: { dismiss() }) {
-                        Image(systemName: "xmark")
-                            .foregroundStyle(Color.obsidianText)
-                    }
-                    .accessibilityLabel("Close")
-                }
-            }
-        }
-    }
-}
-
-// MARK: - Pause Duration Button
-struct PauseDurationButton: View {
-    let duration: RevolutionaryPauseDuration
-    let savings: Decimal
-    let isProcessing: Bool
-    let action: () -> Void
-    
-    var body: some View {
-        Button(action: action) {
-            HStack {
-                VStack(alignment: .leading, spacing: 4) {
-                    Text("Remind me in \(duration.displayName)")
-                        .font(STFont.labelLarge)
-                        .foregroundStyle(Color.obsidianText)
-
-                    Text("Potential savings: \(CurrencyManager.shared.format(savings))")
-                        .font(STFont.bodySmall)
-                        .foregroundStyle(Color.semanticSuccess)
-                }
-                
-                Spacer()
-                
-                Image(systemName: "chevron.right")
-                    .foregroundStyle(Color.accentMint)
-            }
-            .padding()
-            .background(Color.obsidianSurface)
-            .clipShape(RoundedRectangle(cornerRadius: STRadius.md))
-            .overlay(
-                RoundedRectangle(cornerRadius: STRadius.md)
-                    .stroke(Color.accentMint.opacity(0.3), lineWidth: 1)
-            )
-        }
-        .buttonStyle(.plain)
-        .disabled(isProcessing)
-        .accessibilityHint(isProcessing ? "Please wait, setting reminder" : "")
-    }
-}
 
 // MARK: - Success Overlays
 struct CancellationSuccessOverlay: View {
@@ -719,45 +433,6 @@ struct CancellationSuccessOverlay: View {
     }
 }
 
-struct PauseSuccessOverlay: View {
-    let result: PauseResult
-    @Binding var isPresented: Bool
-    
-    var body: some View {
-        VStack(spacing: 20) {
-            Spacer()
-            
-            VStack(spacing: 16) {
-                Image(systemName: "pause.circle.fill")
-                    .font(.largeTitle)
-                    .foregroundStyle(Color.accentMint)
-                
-                Text("Reminder Set!")
-                    .font(STFont.headlineLarge)
-                    .foregroundStyle(Color.obsidianText)
-
-                Text(result.message)
-                    .font(STFont.bodyMedium)
-                    .foregroundStyle(Color.obsidianTextSecondary)
-                    .multilineTextAlignment(.center)
-            }
-            .padding(40)
-            .background(Color.obsidianSurface)
-            .clipShape(RoundedRectangle(cornerRadius: STRadius.lg))
-            
-            Spacer()
-        }
-        .background(Color.obsidianBlack.opacity(0.9))
-        .ignoresSafeArea()
-        .onAppear {
-            DispatchQueue.main.asyncAfter(deadline: .now() + 2) {
-                withAnimation {
-                    isPresented = false
-                }
-            }
-        }
-    }
-}
 
 // MARK: - Revolutionary Resume Button
 struct RevolutionaryResumeButton: View {
@@ -887,12 +562,6 @@ struct ResumeSuccessOverlay: View {
 #Preview {
     VStack(spacing: 16) {
         RevolutionaryCancelButton(subscription: Subscription(
-            name: "Netflix",
-            amount: 15.99,
-            billingFrequency: .monthly
-        ))
-
-        RevolutionaryPauseButton(subscription: Subscription(
             name: "Netflix",
             amount: 15.99,
             billingFrequency: .monthly

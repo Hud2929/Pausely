@@ -83,7 +83,15 @@
                 <string>pausely</string>
             </array>
         </dict>
+        <dict>
+            <key>CFBundleURLSchemes</key>
+            <array>
+                <string>com.googleusercontent.apps.732559079146-52e72urbp4pm2ao75or3csn4nc23b0lm</string>
+            </array>
+        </dict>
     </array>
+    <key>GMAIL_CLIENT_ID</key>
+    <string>732559079146-52e72urbp4pm2ao75or3csn4nc23b0lm.apps.googleusercontent.com</string>
     <key>ITSAppUsesNonExemptEncryption</key>
     <false/>
     <key>UIApplicationSupportsRightToLeftLayout</key>

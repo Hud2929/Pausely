@@ -25,7 +25,7 @@ struct SubscriptionHealthScoreSection: View {
     private var scoreColor: Color {
         switch healthScore {
         case 80...100: return .semanticSuccess
-        case 60..<80: return Color.luxuryTeal
+        case 60..<80: return Color.accentMint
         case 40..<60: return .semanticWarning
         case 20..<40: return Color(hex: "F97316")
         default: return .semanticDestructive

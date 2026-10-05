@@ -137,7 +137,7 @@ struct AlternativeDetailView: View {
                             .padding()
                             .background(
                                 LinearGradient(
-                                    colors: [.luxuryGold, .luxuryPink],
+                                    colors: [.accentMint, .accentMint],
                                     startPoint: .leading,
                                     endPoint: .trailing
                                 )

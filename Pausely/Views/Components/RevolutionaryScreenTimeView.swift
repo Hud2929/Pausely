@@ -229,7 +229,7 @@ struct RevolutionaryScreenTimeDashboard: View {
                 value: CurrencyManager.shared.format(Decimal(averageCostPerHour)),
                 subtitle: "Across all subs",
                 icon: "dollarsign.circle.fill",
-                color: .purple
+                color: Color.accentMint
             )
             
             SummaryCard(
@@ -623,7 +623,7 @@ struct ScreenTimeAuthorizationSheet: View {
                           title: "Waste Detection", description: "Identify unused subscriptions that are draining your wallet")
                 STBenefitRow(icon: "lightbulb.fill", color: .orange,
                           title: "Smart Suggestions", description: "Get personalized recommendations on when to pause or cancel")
-                STBenefitRow(icon: "chart.pie.fill", color: .purple,
+                STBenefitRow(icon: "chart.pie.fill", color: Color.accentMint,
                           title: "Visual Reports", description: "Beautiful charts showing your subscription ROI")
             }
         }
@@ -777,7 +777,7 @@ struct STInsightDetailSheet: View {
                         }
                         
                         LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 12) {
-                            STStatBox(title: "Monthly Cost", value: CurrencyManager.shared.format(insight.monthlyCost), color: .purple)
+                            STStatBox(title: "Monthly Cost", value: CurrencyManager.shared.format(insight.monthlyCost), color: Color.accentMint)
                             VStack(spacing: 4) {
                                 STStatBox(title: "Time Used", value: ScreenTimeManager.shared.formatMinutes(insight.monthlyMinutesUsed), color: .mint)
                                 EstimateBadge(isEstimated: insight.isEstimated)

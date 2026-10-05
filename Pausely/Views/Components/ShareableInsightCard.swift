@@ -70,7 +70,7 @@ struct ShareableInsightCard: View {
                     Circle()
                         .fill(
                             RadialGradient(
-                                colors: [Color.luxuryPurple.opacity(0.4), .clear],
+                                colors: [Color.accentMint.opacity(0.4), .clear],
                                 center: .center,
                                 startRadius: 0,
                                 endRadius: geo.size.width * 0.5
@@ -83,7 +83,7 @@ struct ShareableInsightCard: View {
                     Circle()
                         .fill(
                             RadialGradient(
-                                colors: [Color.luxuryPink.opacity(0.3), .clear],
+                                colors: [Color.accentMint.opacity(0.3), .clear],
                                 center: .center,
                                 startRadius: 0,
                                 endRadius: geo.size.width * 0.4
@@ -101,9 +101,9 @@ struct ShareableInsightCard: View {
                 .stroke(
                     LinearGradient(
                         colors: [
-                            Color.luxuryGold.opacity(0.4),
-                            Color.luxuryPurple.opacity(0.2),
-                            Color.luxuryPink.opacity(0.1)
+                            Color.accentMint.opacity(0.4),
+                            Color.accentMint.opacity(0.2),
+                            Color.accentMint.opacity(0.1)
                         ],
                         startPoint: .topLeading,
                         endPoint: .bottomTrailing
@@ -128,13 +128,13 @@ struct ShareableInsightCard: View {
                 Circle()
                     .fill(
                         LinearGradient(
-                            colors: [Color.luxuryPurple, Color.luxuryPink],
+                            colors: [Color.accentMint, Color.accentMint],
                             startPoint: .topLeading,
                             endPoint: .bottomTrailing
                         )
                     )
                     .frame(width: 64, height: 64)
-                    .shadow(color: Color.luxuryPurple.opacity(0.4), radius: 20, x: 0, y: 10)
+                    .shadow(color: Color.accentMint.opacity(0.4), radius: 20, x: 0, y: 10)
 
                 Image(systemName: "chart.pie.fill")
                     .font(.title2.weight(.semibold))
@@ -148,7 +148,7 @@ struct ShareableInsightCard: View {
 
             Text(LocalizedStringKey("Tracked with Pausely"))
                 .font(.system(.footnote, design: .rounded).weight(.medium))
-                .foregroundStyle(Color.luxuryGold)
+                .foregroundStyle(Color.accentMint)
         }
         .frame(maxWidth: .infinity)
     }
@@ -167,7 +167,7 @@ struct ShareableInsightCard: View {
                     .font(.system(.largeTitle, design: .rounded).weight(.bold))
                     .foregroundStyle(
                         LinearGradient(
-                            colors: [Color.luxuryGold, Color.luxuryPink],
+                            colors: [Color.accentMint, Color.accentMint],
                             startPoint: .leading,
                             endPoint: .trailing
                         )
@@ -180,7 +180,7 @@ struct ShareableInsightCard: View {
                     .fill(.ultraThinMaterial)
                     .overlay(
                         RoundedRectangle(cornerRadius: 20, style: .continuous)
-                            .stroke(Color.luxuryGold.opacity(0.2), lineWidth: 1)
+                            .stroke(Color.accentMint.opacity(0.2), lineWidth: 1)
                     )
             )
         }
@@ -266,7 +266,7 @@ struct ShareableInsightCard: View {
                     .trim(from: 0, to: CGFloat(score) / 100)
                     .stroke(
                         LinearGradient(
-                            colors: [Color.luxuryPurple, Color.luxuryPink],
+                            colors: [Color.accentMint, Color.accentMint],
                             startPoint: .leading,
                             endPoint: .trailing
                         ),
@@ -303,11 +303,11 @@ struct ShareableInsightCard: View {
         HStack(spacing: 8) {
             Image(systemName: "link")
                 .font(.caption2)
-                .foregroundStyle(Color.luxuryGold)
+                .foregroundStyle(Color.accentMint)
 
             Text("pausely.app")
                 .font(.system(.footnote, design: .rounded).weight(.semibold))
-                .foregroundStyle(Color.luxuryGold)
+                .foregroundStyle(Color.accentMint)
 
             Spacer()
 
@@ -342,7 +342,7 @@ struct ShareableInsightCard: View {
     private func efficiencyColor(score: Double) -> Color {
         switch score {
         case 80...100: return .semanticSuccess
-        case 60..<80:  return Color.luxuryTeal
+        case 60..<80:  return Color.accentMint
         case 40..<60:  return .semanticWarning
         case 20..<40:  return Color(hex: "F97316")
         default:       return .semanticDestructive
@@ -434,7 +434,7 @@ struct ShareableInsightSheet: View {
                         .frame(height: 56)
                         .background(
                             LinearGradient(
-                                colors: [Color.luxuryPurple, Color.luxuryPink],
+                                colors: [Color.accentMint, Color.accentMint],
                                 startPoint: .leading,
                                 endPoint: .trailing
                             )
@@ -446,7 +446,7 @@ struct ShareableInsightSheet: View {
                     Spacer(minLength: 40)
                 }
             }
-            .background(Color.deepBlack.ignoresSafeArea())
+            .background(Color.obsidianBlack.ignoresSafeArea())
             .navigationTitle("Share Insights")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {

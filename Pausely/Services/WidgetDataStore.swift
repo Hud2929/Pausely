@@ -58,6 +58,25 @@ final class WidgetDataStore {
             defaults.set(firstActive.billingFrequency.displayName, forKey: "liveActivity_frequency")
         }
 
+        // Publish trial subscriptions sorted by urgency
+        let trialInfos = subscriptions
+            .filter { $0.status == .trial }
+            .compactMap { sub -> WidgetTrialInfo? in
+                guard let trialEnd = sub.trialEndsAt else { return nil }
+                return WidgetTrialInfo(
+                    id: sub.id.uuidString,
+                    name: sub.name,
+                    trialEndsAt: trialEnd,
+                    monthlyAmount: Double(truncating: sub.monthlyCost as NSNumber),
+                    currencyCode: CurrencyManager.shared.currentCurrency.code,
+                    billingFrequency: sub.billingFrequency.displayName
+                )
+            }
+            .sorted { $0.trialEndsAt < $1.trialEndsAt }
+        if let data = try? JSONEncoder().encode(trialInfos) {
+            defaults.set(data, forKey: "widget_trials")
+        }
+
         defaults.synchronize()
     }
 
@@ -74,6 +93,15 @@ final class WidgetDataStore {
             currencyCode: defaults.string(forKey: "widget_currencyCode") ?? "USD",
             topInsight: defaults.string(forKey: "widget_topInsight") ?? "Track your subscriptions"
         )
+    }
+
+    func readTrials() -> [WidgetTrialInfo] {
+        guard let defaults,
+              let data = defaults.data(forKey: "widget_trials"),
+              let trials = try? JSONDecoder().decode([WidgetTrialInfo].self, from: data) else {
+            return []
+        }
+        return trials.filter { $0.trialEndsAt > Date() }
     }
 
     func readLiveActivityData() -> LiveActivityData {
@@ -114,8 +142,10 @@ struct WidgetSummary {
     let currencyCode: String
     let topInsight: String
 
-    var currencySymbol: String {
-        switch currencyCode {
+    var currencySymbol: String { WidgetSummary.symbol(for: currencyCode) }
+
+    static func symbol(for code: String) -> String {
+        switch code {
         case "USD": return "$"
         case "EUR": return "€"
         case "GBP": return "£"
@@ -213,6 +243,25 @@ struct WidgetSummary {
         self.upcomingCount = upcomingCount
         self.currencyCode = currencyCode
         self.topInsight = topInsight
+    }
+}
+
+// MARK: - Trial Info (shared with widget extension)
+
+struct WidgetTrialInfo: Codable, Identifiable {
+    let id: String
+    let name: String
+    let trialEndsAt: Date
+    let monthlyAmount: Double
+    let currencyCode: String
+    let billingFrequency: String
+
+    var daysRemaining: Int {
+        max(0, Calendar.current.dateComponents([.day], from: Date(), to: trialEndsAt).day ?? 0)
+    }
+
+    var currencySymbol: String {
+        WidgetSummary.symbol(for: currencyCode)
     }
 }
 
