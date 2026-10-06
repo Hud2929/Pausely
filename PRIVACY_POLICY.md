@@ -216,7 +216,7 @@ We may disclose information if required to:
 
 ## Children's Privacy
 
-Pausely is not intended for children under 13 years of age. We do not knowingly collect personal information from children under 13. If we discover that a child under 13 has provided us with personal information, we will delete it immediately.
+Pausely is not intended for anyone under 16 years of age. When you create an account, we ask you to confirm your date of birth so we can check you meet this minimum age. We use the date only to check eligibility and do not store it. We keep a record that you confirmed you are 16 or older, the time you confirmed it, and the version of our policies and app at that time. We do not knowingly collect personal information from anyone under 16. If we discover that a person under 16 has provided us with personal information, we will delete it promptly.
 
 If you are a parent or guardian and believe your child has provided us with personal information, please contact us at privacy@pausely.app.
 

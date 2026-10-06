@@ -87,7 +87,7 @@ When running, check Xcode console for these messages:
 🛒 Loading StoreKit products...
 ✅ Loaded 2 products:
    - Pausely Pro Monthly: $7.99 (ID: com.pausely.premium.monthly)
-   - Pausely Pro Annual: $69.99 (ID: com.pausely.premium.annual)
+   - Pausely Pro Annual: $79.99 (ID: com.pausely.premium.annual)
 ```
 
 If you see:

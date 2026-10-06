@@ -194,8 +194,8 @@ CREATE POLICY "Users can only see their own subscriptions"
 ### In-App Purchases
 
 Configure in App Store Connect:
-- `com.pausely.premium.monthly` - $7.99/month
-- `com.pausely.premium.annual` - $69.99/year
+- `com.pausely.premium.monthly` - $9.99/month
+- `com.pausely.premium.annual` - $79.99/year
 
 ### Info.plist
 

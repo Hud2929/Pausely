@@ -71,6 +71,7 @@ class AppDelegate: NSObject, UIApplicationDelegate {
 // MARK: - Root View
 struct RootView: View {
     @ObservedObject private var authManager = RevolutionaryAuthManager.shared
+    @ObservedObject private var ageConsent = AgeConsentManager.shared
     @State private var supabaseManager = SupabaseManager.shared
     @State private var showSplash = true
     @State private var splashAnimation = false
@@ -93,10 +94,24 @@ struct RootView: View {
         ProcessInfo.processInfo.arguments.contains("--reset-state")
     }
 
+    /// Signed-in users (existing accounts, Apple sign-ins) who haven't confirmed their age yet.
+    private var needsAgeGate: Bool {
+        guard !isDemoMode, !isUITesting, authManager.isAuthenticated,
+              let uid = authManager.currentUser?.id else { return false }
+        return ageConsent.needsConsent(userId: uid) && !ageConsent.hasPassedDeviceGate
+    }
+
     var body: some View {
         ZStack {
             Group {
-                if isDemoMode || authManager.isAuthenticated {
+                if needsAgeGate, let uid = authManager.currentUser?.id {
+                    AgeGateView(
+                        onPassed: { Task { await ageConsent.recordConsent(userId: uid) } },
+                        onCancel: { Task { await authManager.signOut() } },
+                        cancelTitle: "Sign Out"
+                    )
+                    .transition(.opacity)
+                } else if isDemoMode || authManager.isAuthenticated {
                     // Authenticated: show main app
                     VStack(spacing: 0) {
                         if supabaseManager.isUsingDemoMode {
@@ -148,6 +163,16 @@ struct RootView: View {
         }
         .onDisappear {
             splashWorkItem?.cancel()
+        }
+        .task(id: authManager.currentUser?.id) {
+            // Users who passed the age gate before sign-up get their consent recorded automatically;
+            // anyone with an unsynced record retries the upload.
+            guard let uid = authManager.currentUser?.id else { return }
+            if ageConsent.needsConsent(userId: uid) && ageConsent.hasPassedDeviceGate {
+                await ageConsent.recordConsent(userId: uid)
+            } else {
+                await ageConsent.syncPendingConsent(userId: uid)
+            }
         }
         .task {
             // Initialize StoreKit: starts the transaction listener and checks
@@ -854,6 +879,8 @@ struct PremiumFeatureRow: View {
 struct PremiumSignUpView: View {
     @Environment(\.dismiss) private var dismiss
     @ObservedObject private var authManager = RevolutionaryAuthManager.shared
+    @ObservedObject private var ageConsent = AgeConsentManager.shared
+    @State private var showAgeGate = false
     @State private var firstName = ""
     @State private var lastName = ""
     @State private var email = ""
@@ -1021,6 +1048,19 @@ struct PremiumSignUpView: View {
             }
             .sheet(isPresented: $showEmailConfirmation) {
                 EmailConfirmationView(email: pendingEmail)
+            }
+            .fullScreenCover(isPresented: $showAgeGate) {
+                AgeGateView(
+                    onPassed: { showAgeGate = false },
+                    onCancel: {
+                        showAgeGate = false
+                        dismiss()
+                    }
+                )
+            }
+            .onAppear {
+                // Age is confirmed BEFORE any account can be created.
+                if !ageConsent.hasPassedDeviceGate { showAgeGate = true }
             }
         }
     }

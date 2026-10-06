@@ -13,8 +13,8 @@ A complete LemonSqueezy-integrated payment flow that elegantly handles the 3-sub
 - **Circular progress indicator** showing subscription usage (3/3)
 - **Premium icon** with gold crown and glowing effect
 - **Plan selection cards**:
-  - Monthly: $7.99/month
-  - Annual: $69.99/year (BEST VALUE badge + 27% savings)
+  - Monthly: $9.99/month
+  - Annual: $79.99/year (BEST VALUE badge + 33% savings)
 - **Feature comparison list**:
   - Unlimited subscriptions
   - Smart Pause feature
@@ -148,8 +148,8 @@ if checkoutHandled {
 ### 1. LemonSqueezy Dashboard
 
 Create products:
-- **Monthly Plan**: $7.99/month
-- **Annual Plan**: $69.99/year (27% savings)
+- **Monthly Plan**: $9.99/month
+- **Annual Plan**: $79.99/year (33% savings)
 
 Get these values from your dashboard:
 - Variant ID for Monthly

@@ -28,7 +28,7 @@ Click "Create Subscription"
    - Group Level: `2`
 
 3. **Pricing**
-   - Price: `$7.99` (Tier 60)
+   - Price: `$9.99` (Tier 65)
    - Select all territories
 
 4. **Introductory Offer**
@@ -42,7 +42,7 @@ Click "Create Subscription"
    - Reference Name: `Annual Pro`
    - Product ID: `com.pausely.premium.annual` ⚠️ EXACT MATCH REQUIRED
    - Display Name: `Pausely Pro Annual`
-   - Description: `Save 27% with annual billing`
+   - Description: `Save 33% with annual billing`
 
 2. **Subscription Details**
    - Duration: `1 Year`
@@ -50,7 +50,7 @@ Click "Create Subscription"
    - Group Level: `1`
 
 3. **Pricing**
-   - Price: `$69.99` (Tier 85)
+   - Price: `$79.99` (Tier 85)
    - Select all territories
 
 4. **Introductory Offer**

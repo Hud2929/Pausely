@@ -104,8 +104,8 @@ All lead to the **same StoreKit purchase flow**.
 │                             │
 │   Unlock unlimited...        │
 │                             │
-│   ◉ Monthly $7.99           │
-│   ○ Annual $69.99           │
+│   ◉ Monthly $9.99           │
+│   ○ Annual $79.99           │
 │                             │
 │   ┌─────────────────────┐   │
 │   │ 🛒 Start Free Trial │   │ ← TAP HERE
@@ -125,7 +125,7 @@ Apple's official purchase sheet appears:
 │  Pausely Pro Monthly        │
 │  7-Day Free Trial           │
 │                             │
-│  Then $7.99/month           │
+│  Then $9.99/month           │
 │                             │
 │  [Confirm with Face ID]     │ ← AUTHENTICATE
 │                             │

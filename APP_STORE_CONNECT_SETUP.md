@@ -62,7 +62,7 @@ Group Level: 2 (lower priority than annual)
 
 #### Pricing
 ```
-Price: $7.99 USD (Tier 60)
+Price: $9.99 USD (Tier 65)
 ```
 
 #### Introductory Offer (Free Trial)
@@ -82,7 +82,7 @@ Duration: 1 Week
 Reference Name: Annual Pro
 Product ID: com.pausely.premium.annual
 Display Name: Pausely Pro Annual
-Description: Save 27% with annual billing
+Description: Save 33% with annual billing
 ```
 
 #### Subscription Details
@@ -94,7 +94,7 @@ Group Level: 1 (highest priority - shown first)
 
 #### Pricing
 ```
-Price: $69.99 USD (Tier 85)
+Price: $79.99 USD (Tier 85)
 ```
 
 #### Introductory Offer (Free Trial)
@@ -227,13 +227,13 @@ Test subscription purchases can be made using Sandbox accounts.
 
 | Tier | USD | Description |
 |------|-----|-------------|
-| 60 | $7.99 | Monthly Pro |
-| 85 | $69.99 | Annual Pro |
+| 65 | $9.99 | Monthly Pro |
+| 85 | $79.99 | Annual Pro |
 
-**Annual Discount:** 27% savings vs monthly
-- Monthly: $7.99 × 12 = $83.88/year
-- Annual: $69.99/year
-- Savings: $28.89/year
+**Annual Discount:** 33% savings vs monthly
+- Monthly: $9.99 × 12 = $119.88/year
+- Annual: $79.99/year
+- Savings: $39.89/year
 
 ---
 

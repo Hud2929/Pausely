@@ -8,8 +8,8 @@ Your app is already configured with these product IDs (in `StoreKitConfig.swift`
 
 | Product ID | Type | Purpose |
 |------------|------|---------|
-| `com.pausely.premium.monthly` | Auto-Renewable Subscription | Monthly Pro ($7.99/month) |
-| `com.pausely.premium.annual` | Auto-Renewable Subscription | Annual Pro ($69.99/year) |
+| `com.pausely.premium.monthly` | Auto-Renewable Subscription | Monthly Pro ($9.99/month) |
+| `com.pausely.premium.annual` | Auto-Renewable Subscription | Annual Pro ($79.99/year) |
 
 ## Prerequisites
 
@@ -77,12 +77,12 @@ Your app is already configured with these product IDs (in `StoreKitConfig.swift`
 - **Free Trial:** 7 Days (optional but recommended)
 
 **Pricing:**
-- **Price:** $69.99 USD (~27% savings vs monthly)
+- **Price:** $79.99 USD (33% savings vs monthly)
 - Configure prices for other regions
 
 **Localization (English US):**
 - **Display Name:** `Pausely Pro Annual`
-- **Description:** `Save 27% with annual billing`
+- **Description:** `Save 33% with annual billing`
 
 ---
 

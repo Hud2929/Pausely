@@ -301,6 +301,7 @@ class RevolutionaryAuthManager: ObservableObject {
     
     func signUp(email: String, password: String,
                 firstName: String? = nil, lastName: String? = nil) async throws {
+        guard AgeConsentManager.shared.hasPassedDeviceGate else { throw PauselyAuthError.ageConsentRequired }
         state = .loading
 
         do {
@@ -358,6 +359,7 @@ class RevolutionaryAuthManager: ObservableObject {
     /// Sends a 6-digit code to the user's email for verification.
     func signUpWithOTP(email: String, password: String,
                        firstName: String? = nil, lastName: String? = nil) async throws {
+        guard AgeConsentManager.shared.hasPassedDeviceGate else { throw PauselyAuthError.ageConsentRequired }
         state = .loading
 
         do {

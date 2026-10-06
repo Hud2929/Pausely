@@ -4,7 +4,7 @@
 
 ### 1. Optimized Tier Structure
 - **Free Tier**: 2 subscriptions max (sweet spot for conversion)
-- **Pro ($7.99/mo or $69.99/yr)**: Unlimited + all features
+- **Pro ($9.99/mo or $79.99/yr)**: Unlimited + all features
 - **Bank Sync**: Optional Pro feature (not forced)
 
 ### 2. Screen Time API - PROPERLY IMPLEMENTED

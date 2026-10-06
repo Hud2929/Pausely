@@ -74,8 +74,8 @@ Ensure your `Info.plist` includes the URL scheme for deep linking:
 2. Click on a product
 3. Look for **Variants** section
 4. Copy the Variant ID for each product:
-   - Monthly: `$7.99/month`
-   - Annual: `$69.99/year`
+   - Monthly: `$9.99/month`
+   - Annual: `$79.99/year`
 
 ### Webhook Secret
 

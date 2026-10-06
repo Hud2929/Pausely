@@ -47,7 +47,7 @@ To fix this:
 - ✅ Basic tracking
 - ✅ Manual entry
 
-### PRO Tier ($7.99/month):
+### PRO Tier ($9.99/month):
 - ✅ **Unlimited subscriptions**
 - ✅ **Full pause functionality**
 - ✅ Smart Pause suggestions
@@ -99,7 +99,7 @@ The app uses adaptive colors throughout:
 3. Shows:
    - "3/3 subscriptions used" progress circle
    - Feature comparison (Free vs Pro)
-   - Plan selection (Monthly $7.99 / Annual $69.99)
+   - Plan selection (Monthly $9.99 / Annual $79.99)
    - "Upgrade to Pro" button
 
 ### Checkout Flow:
@@ -223,7 +223,7 @@ Cmd+B        # Build
 
 ### Step 3: Configure LemonSqueezy (Optional for now)
 1. Create account at lemonsqueezy.com
-2. Add products (Monthly $7.99, Annual $69.99)
+2. Add products (Monthly $9.99, Annual $79.99)
 3. Configure webhook
 4. Update API keys in `LemonSqueezyManager.swift`
 

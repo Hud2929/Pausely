@@ -63,7 +63,7 @@ We mapped 200+ services' cancellation flows so you don't have to:
 - Basic cost tracking
 - Manual usage entry
 
-**Pro Version ($7.99/month or $69.99/year):**
+**Pro Version ($9.99/month or $79.99/year):**
 - ✅ **Unlimited subscriptions**
 - ✅ **Full Smart Pause functionality** with Screen Time integration
 - ✅ **Cost-per-hour calculations** for every service
@@ -305,7 +305,7 @@ $0 forever
 ---
 
 **Pro Tier**
-$7.99/month or $69.99/year (Save 27%)
+$9.99/month or $79.99/year (Save 33%)
 - Unlimited subscriptions
 - Full Smart Pause with Screen Time
 - Cost-per-hour calculations

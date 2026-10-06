@@ -53,8 +53,8 @@ Build Time: ~60 seconds
 **Products Configured:**
 | Product ID | Type | Price | Trial |
 |------------|------|-------|-------|
-| `com.pausely.premium.monthly` | Recurring | $7.99 | 7-day free |
-| `com.pausely.premium.annual` | Recurring | $69.99 | 7-day free |
+| `com.pausely.premium.monthly` | Recurring | $9.99 | 7-day free |
+| `com.pausely.premium.annual` | Recurring | $79.99 | 7-day free |
 
 **Code-Side Product IDs:**
 ```swift

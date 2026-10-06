@@ -179,8 +179,8 @@ FEATURES:
 PREMIUM FEATURES:
 Upgrade to Pausely Premium for unlimited subscriptions, advanced analytics, bank connection (coming soon), and priority support.
 
-• Monthly: $7.99
-• Annual: $69.99 (Save 27%)
+• Monthly: $9.99
+• Annual: $79.99 (Save 33%)
 
 Take a pause. Save more. Live better.
 
@@ -337,8 +337,8 @@ Recommended tools for creating screenshots:
 The app uses StoreKit 2 for subscriptions. Ensure:
 
 1. **Products are created** in App Store Connect:
-   - `com.pausely.premium.monthly` - $7.99/month
-   - `com.pausely.premium.annual` - $69.99/year
+   - `com.pausely.premium.monthly` - $9.99/month
+   - `com.pausely.premium.annual` - $79.99/year
 
 2. **Subscription Group**: Create a group called "Premium"
 

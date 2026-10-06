@@ -113,7 +113,7 @@ TestPaywallButton()
 
 | Test | Expected Result | Status |
 |------|----------------|--------|
-| Load paywall | Shows Monthly ($7.99) & Annual ($69.99) | ⏳ TEST |
+| Load paywall | Shows Monthly ($7.99) & Annual ($79.99) | ⏳ TEST |
 | Select Monthly | Product highlighted, price shows | ⏳ TEST |
 | Select Annual | Product highlighted, "BEST VALUE" badge | ⏳ TEST |
 | Tap purchase | System purchase sheet appears | ⏳ TEST |
@@ -135,7 +135,7 @@ TestPaywallButton()
 #### Scenario 2: Successful Annual Purchase
 1. Open paywall
 2. Select "Annual Pro" (pre-selected)
-3. Tap "Start Free Trial • $69.99"
+3. Tap "Start Free Trial • $79.99"
 4. System dialog appears
 5. Confirm
 6. ✅ Success animation with confetti
@@ -166,7 +166,7 @@ When testing, watch the Xcode console for these messages:
 🛒 Loading StoreKit products...
 ✅ Loaded 2 products:
    - Pausely Pro Monthly: $7.99 (ID: com.pausely.premium.monthly)
-   - Pausely Pro Annual: $69.99 (ID: com.pausely.premium.annual)
+   - Pausely Pro Annual: $79.99 (ID: com.pausely.premium.annual)
 ```
 
 ### Purchase Flow

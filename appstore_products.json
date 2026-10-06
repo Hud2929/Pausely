@@ -72,37 +72,37 @@
         {
           "locale": "en-US",
           "display_name": "Pausely Pro Annual",
-          "description": "Save 27% with annual billing"
+          "description": "Save 33% with annual billing"
         },
         {
           "locale": "es-MX",
           "display_name": "Pausely Pro Anual",
-          "description": "Ahorra 34% con facturación anual"
+          "description": "Ahorra 33% con facturación anual"
         },
         {
           "locale": "fr-CA",
           "display_name": "Pausely Pro Annuel",
-          "description": "Économisez 34% avec la facturation annuelle"
+          "description": "Économisez 33% avec la facturation annuelle"
         },
         {
           "locale": "de-DE",
           "display_name": "Pausely Pro Jährlich",
-          "description": "Sparen Sie 34% mit jährlicher Abrechnung"
+          "description": "Sparen Sie 33% mit jährlicher Abrechnung"
         }
       ],
       "subscription_duration": "1 Year",
       "pricing": {
         "default": {
           "tier": 89,
-          "usd": 69.99
+          "usd": 79.99
         },
         "territories": [
-          {"country": "US", "tier": 89, "price": "69.99"},
-          {"country": "CA", "tier": 89, "price": "69.99"},
+          {"country": "US", "tier": 89, "price": "79.99"},
+          {"country": "CA", "tier": 89, "price": "79.99"},
           {"country": "GB", "tier": 89, "price": "44.99"},
           {"country": "AU", "tier": 89, "price": "79.99"},
-          {"country": "DE", "tier": 89, "price": "69.99"},
-          {"country": "FR", "tier": 89, "price": "69.99"},
+          {"country": "DE", "tier": 89, "price": "79.99"},
+          {"country": "FR", "tier": 89, "price": "79.99"},
           {"country": "JP", "tier": 89, "price": "6000"},
           {"country": "MX", "tier": 89, "price": "999"}
         ]
@@ -115,7 +115,7 @@
       },
       "marketing_highlight": {
         "enabled": true,
-        "text": "BEST VALUE - Save 27%"
+        "text": "BEST VALUE - Save 33%"
       }
     }
   ],

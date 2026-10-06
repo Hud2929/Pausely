@@ -53,8 +53,8 @@ This audit assessed the Pausely iOS codebase to identify which features are full
 - `Pausely/Products.storekit` - Updated subscription group ID from `com.pausely.pro` to `com.pausely.premium`
 
 **App Store Connect expects:**
-- `com.pausely.premium.monthly` - $7.99/month
-- `com.pausely.premium.annual` - $69.99/year
+- `com.pausely.premium.monthly` - $9.99/month
+- `com.pausely.premium.annual` - $79.99/year
 
 ### 2. Referral Deep Link Handler Wired ✅
 **Problem:** `ReferralManager.handleReferralDeepLink()` existed but was never called from `onOpenURL`.
@@ -115,8 +115,8 @@ This audit assessed the Pausely iOS codebase to identify which features are full
 
 | Product | Product ID | Price | Type |
 |---------|------------|-------|------|
-| Pro Monthly | `com.pausely.premium.monthly` | $7.99 | Auto-renewable (7-day free trial) |
-| Pro Annual | `com.pausely.premium.annual` | $69.99 | Auto-renewable (7-day free trial) |
+| Pro Monthly | `com.pausely.premium.monthly` | $9.99 | Auto-renewable (7-day free trial) |
+| Pro Annual | `com.pausely.premium.annual` | $79.99 | Auto-renewable (7-day free trial) |
 
 **Files referencing these IDs:**
 - `Pausely/Services/PaymentManager.swift`

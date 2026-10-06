@@ -45,7 +45,7 @@ struct PrivacyPolicyView: View {
                         }
 
                         PolicySection(title: "8. Children's Privacy") {
-                            Text("Our app is not intended for users under 13 years of age. We do not knowingly collect information from children under 13.")
+                            Text("Our app is not intended for anyone under 16 years of age. When you create an account we ask for your date of birth only to check you meet this minimum age. We do not store the date. We keep a record that you confirmed you are 16 or older, when you confirmed it, and which version of our policies applied. We do not knowingly collect information from anyone under 16.")
                         }
 
                         PolicySection(title: "9. Changes to This Policy") {

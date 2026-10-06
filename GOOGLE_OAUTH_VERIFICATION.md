@@ -9,10 +9,10 @@ Use this file when submitting Pausely for Google OAuth app verification at:
 Pausely
 
 ## App Homepage URL
-https://www.pausely.app
+https://pausely.pro
 
 ## Privacy Policy URL
-https://www.pausely.app/privacy
+https://pausely.pro/privacy.html
 
 ---
 

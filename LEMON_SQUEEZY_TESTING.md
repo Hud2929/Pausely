@@ -8,7 +8,7 @@ Complete testing guide for validating the LemonSqueezy integration in Pausely.
 
 Ensure you have:
 - [ ] LemonSqueezy test account created
-- [ ] Test products set up (Monthly $7.99, Annual $69.99)
+- [ ] Test products set up (Monthly $9.99, Annual $79.99)
 - [ ] Test API key configured in app
 - [ ] Test webhook secret configured
 - [ ] ngrok installed for local webhook testing (optional)

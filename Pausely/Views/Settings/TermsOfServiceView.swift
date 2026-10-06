@@ -25,7 +25,7 @@ struct TermsOfServiceView: View {
                         }
 
                         PolicySection(title: "3. User Accounts") {
-                            Text("• You must provide accurate information when creating an account\n• You are responsible for maintaining the security of your account\n• You must be at least 13 years old to use our service\n• You are responsible for all activity under your account")
+                            Text("• You must provide accurate information when creating an account\n• You are responsible for maintaining the security of your account\n• You must be at least 16 years old to use our service and confirm your age when you sign up\n• You are responsible for all activity under your account")
                         }
 
                         PolicySection(title: "4. Subscription Management") {

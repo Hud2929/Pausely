@@ -43,7 +43,7 @@ else
                 </dict>
                 <dict>
                     <key>displayPrice</key>
-                    <string>$69.99</string>
+                    <string>$79.99</string>
                     <key>identifier</key>
                     <string>com.pausely.premium.annual</string>
                     <key>period</key>

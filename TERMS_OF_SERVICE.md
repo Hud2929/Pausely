@@ -33,12 +33,12 @@ If you do not agree to the modified Terms, you must stop using the Service.
 
 To use the Service, you must:
 
-- Be at least 13 years of age (or the minimum age of digital consent in your jurisdiction)
+- Be at least 16 years of age, and confirm your age when you create an account
 - Have the legal capacity to enter into a binding contract
 - Not be barred from using the Service under applicable laws
 - Provide accurate and complete registration information
 
-**Age Restriction:** The Service is not intended for children under 13. If we discover a user under 13, we will terminate their account and delete their data.
+**Age Restriction:** The Service is not intended for anyone under 16. If we discover a user under 16, we will terminate their account and delete their data.
 
 ---
 
@@ -499,7 +499,7 @@ For questions about these Terms, contact us:
 
 ## Summary of Key Points
 
-- **You must be 13+ to use the Service**
+- **You must be 16+ to use the Service**
 - **Keep your account credentials secure**
 - **Free tier: 3 subscriptions max; Pro: unlimited**
 - **Payments processed by LemonSqueezy; we don't store card data**

@@ -14,7 +14,7 @@ Your app is **100% production ready** and configured. Here's what's been impleme
 - Manual subscription entry
 - View alternatives (locked)
 
-### Premium Tier - **$7.99/month** or **$69.99/year** (27% savings)
+### Premium Tier - **$9.99/month** or **$79.99/year** (33% savings)
 - **Unlimited** subscriptions
 - **One-tap cancel** with direct URLs
 - **Pause** subscriptions (where supported)
@@ -106,8 +106,8 @@ Paste email receipts or bank statements to auto-detect:
 
 ### StoreKit (In-App Purchases)
 - Product IDs configured:
-  - `com.pausely.premium.monthly` - $7.99
-  - `com.pausely.premium.annual` - $69.99
+  - `com.pausely.premium.monthly` - $9.99
+  - `com.pausely.premium.annual` - $79.99
 
 ### Lemon Squeezy (Web Payments)
 - Web checkout at pausely.com
@@ -151,8 +151,8 @@ Paste email receipts or bank statements to auto-detect:
 3. Features → Subscriptions
 4. Create Subscription Group: "Premium"
 5. Add two subscriptions:
-   - ID: com.pausely.premium.monthly - $7.99/month
-   - ID: com.pausely.premium.annual - $69.99/year
+   - ID: com.pausely.premium.monthly - $9.99/month
+   - ID: com.pausely.premium.annual - $79.99/year
 6. Submit for review
 ```
 
@@ -211,7 +211,7 @@ xcodebuild -project Pausely.xcodeproj -scheme Pausely -destination 'platform=iOS
 
 ## ✨ Key Features Summary
 
-✅ **Premium Tiers** - Free vs $7.99/month or $69.99/year
+✅ **Premium Tiers** - Free vs $9.99/month or $79.99/year
 ✅ **One-Tap Cancel** - Direct URLs to 20+ services
 ✅ **Pause Subscriptions** - Where supported
 ✅ **Alternatives Finder** - Cheaper options with savings calc

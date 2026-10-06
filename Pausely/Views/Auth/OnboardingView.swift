@@ -345,7 +345,9 @@ struct EnhancedLoginView: View {
     @State private var isSignUp = false
     @State private var showEmailConfirmation = false
     @State private var showPasswordReset = false
+    @State private var showAgeGate = false
     @State private var rememberMe = true
+    @ObservedObject private var ageConsent = AgeConsentManager.shared
     
     @Environment(\.dismiss) private var dismiss
     @StateObject private var authManager = RevolutionaryAuthManager.shared
@@ -391,6 +393,15 @@ struct EnhancedLoginView: View {
         }
         .sheet(isPresented: $showEmailConfirmation) {
             EmailConfirmationView(email: email)
+        }
+        .fullScreenCover(isPresented: $showAgeGate) {
+            AgeGateView(
+                onPassed: {
+                    showAgeGate = false
+                    signUp()
+                },
+                onCancel: { showAgeGate = false }
+            )
         }
         .sheet(isPresented: $showPasswordReset) {
             PasswordResetView(email: email)
@@ -626,6 +637,11 @@ struct EnhancedLoginView: View {
     }
     
     private func signUp() {
+        // Age is confirmed BEFORE any account can be created.
+        guard ageConsent.hasPassedDeviceGate else {
+            showAgeGate = true
+            return
+        }
         isLoading = true
         errorMessage = ""
         HapticStyle.medium.trigger()

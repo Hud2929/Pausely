@@ -177,6 +177,7 @@ enum PauselyAuthError: LocalizedError {
     case networkError
     case biometricFailed
     case invalidResponse
+    case ageConsentRequired
     case unknown(Error)
     
     var errorDescription: String? {
@@ -193,6 +194,8 @@ enum PauselyAuthError: LocalizedError {
             return "Biometric authentication failed. Please use your password."
         case .invalidResponse:
             return "Invalid response from server. Please try again."
+        case .ageConsentRequired:
+            return "Please confirm your age before creating an account."
         case .unknown(let error):
             return error.localizedDescription
         }
