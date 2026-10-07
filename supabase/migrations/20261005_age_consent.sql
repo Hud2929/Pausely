@@ -22,8 +22,6 @@ EXCEPTION WHEN duplicate_object THEN
     NULL;
 END $$;
 
-CREATE INDEX IF NOT EXISTS idx_profiles_age_confirmed ON profiles(age_confirmed_at);
-
 -- Existing RLS on profiles already limits SELECT/INSERT/UPDATE to auth.uid() = id,
 -- so a user can only write their own consent record. No new policies needed.
 
