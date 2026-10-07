@@ -28,11 +28,15 @@ final class GmailSubscriptionScanner: NSObject, ObservableObject {
     @Published var error: String?
     @Published var connectedEmail: String?
     @Published var scanStats: ScanStats = ScanStats()
+    /// Full result of the last analysis: tiers, evidence, lifecycle insights.
+    @Published var report: IntelligenceReport?
 
     struct ScanStats {
         var emailsScanned = 0
         var receiptsFound = 0
         var unknownServicesFound = 0
+        var purchasesIgnored = 0
+        var confirmed = 0
         var isIncremental = false
     }
 
@@ -106,7 +110,9 @@ final class GmailSubscriptionScanner: NSObject, ObservableObject {
         refreshToken = nil
         connectedEmail = nil
         foundSubscriptions = []
+        report = nil
         lastHistoryId = nil
+        ReceiptLedger.clear()
         KeychainManager.shared.delete(key: "gmail_access_token")
         KeychainManager.shared.delete(key: "gmail_refresh_token")
         isConnected = false
@@ -142,14 +148,14 @@ final class GmailSubscriptionScanner: NSObject, ObservableObject {
             scanProgress = 0.25
             scanStats.emailsScanned = messageIds.count
 
-            // Process in batches of 20 (parallel fetches)
-            var extracted: [SmartImportManager.ImportSubscription] = []
+            // Process in batches of 20 (parallel fetches). Each email becomes a tiny on-device "signal";
+            // the intelligence engine then decides what is truly a recurring subscription.
+            var newSignals: [ReceiptSignal] = []
             let batches = stride(from: 0, to: messageIds.count, by: 20).map {
                 Array(messageIds[$0..<min($0 + 20, messageIds.count)])
             }
 
             for (batchIdx, batch) in batches.enumerated() {
-                // Fetch details concurrently (network I/O), then extract on MainActor
                 var details: [GmailMessageDetail] = []
                 await withTaskGroup(of: GmailMessageDetail?.self) { group in
                     for msgId in batch {
@@ -159,20 +165,8 @@ final class GmailSubscriptionScanner: NSObject, ObservableObject {
                         if let d = detail { details.append(d) }
                     }
                 }
-                let batchResults = details.compactMap { self.extractSubscription(from: $0) }
-
-                for sub in batchResults {
-                    // Deduplicate by name — keep highest-confidence version
-                    if let existingIdx = extracted.firstIndex(where: { $0.name.lowercased() == sub.name.lowercased() }) {
-                        if sub.confidence == .high && extracted[existingIdx].confidence != .high {
-                            extracted[existingIdx] = sub
-                        }
-                    } else {
-                        extracted.append(sub)
-                    }
-                }
-
-                scanProgress = 0.25 + (Double(batchIdx + 1) / Double(max(batches.count, 1))) * 0.70
+                newSignals.append(contentsOf: details.compactMap { self.extractSignal(from: $0) })
+                scanProgress = 0.25 + (Double(batchIdx + 1) / Double(max(batches.count, 1))) * 0.65
             }
 
             // Save historyId from the latest message for next incremental sync
@@ -180,13 +174,27 @@ final class GmailSubscriptionScanner: NSObject, ObservableObject {
                 lastHistoryId = newHistoryId
             }
 
-            scanProgress = 1.0
-            scanStats.receiptsFound = extracted.filter { $0.confidence == .high }.count
-            scanStats.unknownServicesFound = extracted.filter { $0.source == "Gmail (unknown)" }.count
-            foundSubscriptions = extracted.sorted { $0.amount > $1.amount }
+            // Merge with on-device history so recurrence can be proven across the whole mailbox, then analyze.
+            let ledger = ReceiptLedger.merge(newSignals, into: ReceiptLedger.load())
+            ReceiptLedger.save(ledger)
+            scanProgress = 0.95
 
-            if extracted.isEmpty {
-                error = "No subscription emails found."
+            let catalogExtras = SubscriptionCatalogService.shared.catalog.map {
+                (name: $0.name, category: $0.category.rawValue, cancelURL: $0.cancellationURL)
+            }
+            let engine = SubscriptionIntelligenceEngine(catalog: MerchantCatalog.builtin.extending(with: catalogExtras))
+            let analysis = engine.analyze(signals: ledger, now: Date(),
+                                          defaultCurrency: CurrencyManager.shared.selectedCurrency)
+            report = analysis
+            foundSubscriptions = analysis.subscriptions.map(Self.makeImport)
+
+            scanProgress = 1.0
+            scanStats.confirmed = analysis.subscriptions.filter { $0.tier == .confirmed }.count
+            scanStats.receiptsFound = scanStats.confirmed
+            scanStats.purchasesIgnored = analysis.ignoredPurchaseGroups
+
+            if analysis.subscriptions.isEmpty {
+                error = "No recurring subscriptions found in your emails."
             }
 
         } catch {
@@ -208,10 +216,13 @@ final class GmailSubscriptionScanner: NSObject, ObservableObject {
 
     /// Paginates through ALL matching emails (no cap) — returns up to 500 for performance
     private func fetchAllMessageIds(token: String) async throws -> [String] {
+        // Layered searches. The first uses Gmail's OWN receipt classifier; the rest catch billing language,
+        // lifecycle emails (trials, price changes, cancellations) and the biggest known billers.
         let queries = [
-            "subject:(subscription OR receipt OR renewal OR billing OR invoice) newer_than:12m",
-            "from:(billing OR receipts OR noreply OR no-reply OR payments OR invoices) newer_than:12m",
-            "subject:(\"your subscription\" OR \"payment confirmation\" OR \"order confirmation\" OR \"trial ends\" OR \"free trial\") newer_than:12m",
+            "category:purchases newer_than:2y",
+            "(subscription OR membership OR renewal OR \"auto-renew\" OR \"billing statement\" OR invoice OR receipt) -category:promotions newer_than:2y",
+            "(\"your trial\" OR \"free trial\" OR \"trial ends\" OR \"price increase\" OR \"price change\" OR \"subscription has been cancelled\" OR \"subscription has been canceled\" OR \"cancellation\") newer_than:1y",
+            "from:(netflix.com OR spotify.com OR apple.com OR google.com OR amazon.com OR openai.com OR anthropic.com OR adobe.com OR microsoft.com OR youtube.com OR disneyplus.com OR hulu.com OR max.com OR paramountplus.com OR dropbox.com OR notion.so OR github.com) (receipt OR invoice OR subscription OR billing OR renewal) newer_than:2y",
         ]
         var allIds: [String] = []
         var seen = Set<String>()
@@ -232,7 +243,7 @@ final class GmailSubscriptionScanner: NSObject, ObservableObject {
                 pageToken = nextPageToken
                 pagesForQuery += 1
                 // Hard cap: max 500 unique emails total to keep scan fast
-                if allIds.count >= 500 { return allIds }
+                if allIds.count >= 800 { return allIds }
             } while pageToken != nil && pagesForQuery < 5
         }
 
@@ -312,32 +323,82 @@ final class GmailSubscriptionScanner: NSObject, ObservableObject {
         return try JSONDecoder().decode(GmailMessageDetail.self, from: data)
     }
 
-    // MARK: - Receipt Parsing (Platform-Specific)
+    // MARK: - Signal Extraction (feeds the intelligence engine)
 
-    /// Main extraction entry point — tries platform parsers first, falls back to heuristics
-    private func extractSubscription(from detail: GmailMessageDetail) -> SmartImportManager.ImportSubscription? {
+    /// Reduces ONE email to a handful of facts. Nothing from the email text is kept beyond this function.
+    private func extractSignal(from detail: GmailMessageDetail) -> ReceiptSignal? {
         let headers = detail.payload.headers
-        let from = headers.first(where: { $0.name.lowercased() == "from" })?.value ?? ""
-        let subject = headers.first(where: { $0.name.lowercased() == "subject" })?.value ?? ""
-        let body = detail.bodyText // decoded from MIME parts
+        func header(_ name: String) -> String { headers.first { $0.name.lowercased() == name }?.value ?? "" }
+        guard let date = detail.emailDate else { return nil }
 
-        let emailDate = detail.emailDate
+        let from = header("from")
+        let subject = header("subject")
+        let body = detail.bodyText
+        let promotional = (detail.labelIds ?? []).contains("CATEGORY_PROMOTIONS") // Gmail's own classifier
+        let sender = Self.parseSender(from)
 
-        // 1. Try platform-specific parsers (highest accuracy)
-        if let sub = parseStripeBillingEmail(from: from, subject: subject, body: body, date: emailDate) { return sub }
-        if let sub = parseAppleReceipt(from: from, subject: subject, body: body, date: emailDate) { return sub }
-        if let sub = parseGooglePlayReceipt(from: from, subject: subject, body: body, date: emailDate) { return sub }
-        if let sub = parsePayPalReceipt(from: from, subject: subject, body: body, date: emailDate) { return sub }
-        if let sub = parsePaddleReceipt(from: from, subject: subject, body: body, date: emailDate) { return sub }
+        let analysis = ReceiptTextAnalyzer.analyze(subject: subject, body: body, promotional: promotional)
+        var hint = analysis.productHint
+        var amount = analysis.money?.amount
+        var currency = analysis.money?.currency
+        var cadence = analysis.frequency
+        var platform = "direct"
+        var kind = analysis.kind
 
-        // 2. Known service dictionary (matches sender domain or subject keyword)
-        if let sub = matchKnownService(from: from, subject: subject, body: body, date: emailDate) { return sub }
+        // Platform receipts (Apple, Google Play, Stripe, PayPal, Paddle) carry precise merchant/app names.
+        let parsers: [(String, () -> SmartImportManager.ImportSubscription?)] = [
+            ("stripe", { self.parseStripeBillingEmail(from: from, subject: subject, body: body, date: date) }),
+            ("apple", { self.parseAppleReceipt(from: from, subject: subject, body: body, date: date) }),
+            ("googleplay", { self.parseGooglePlayReceipt(from: from, subject: subject, body: body, date: date) }),
+            ("paypal", { self.parsePayPalReceipt(from: from, subject: subject, body: body, date: date) }),
+            ("paddle", { self.parsePaddleReceipt(from: from, subject: subject, body: body, date: date) }),
+        ]
+        for (name, parse) in parsers {
+            if let parsed = parse() {
+                platform = name
+                hint = hint ?? parsed.name
+                if amount == nil { amount = parsed.amount; currency = currency ?? parsed.currency }
+                if cadence == nil { cadence = parsed.billingFrequency }
+                if kind == .other, amount != nil { kind = .charge }
+                break
+            }
+        }
 
-        // 3. Unknown service detection — sender is a billing-style email with a detectable amount
-        if let sub = detectUnknownService(from: from, subject: subject, body: body, date: emailDate) { return sub }
+        // Keep only emails that say something useful: a charge, or a lifecycle event.
+        let lifecycle: Set<EmailKind> = [.trialStarted, .trialEnding, .priceChange, .cancellation]
+        guard amount != nil || lifecycle.contains(kind) else { return nil }
 
-        return nil
+        return ReceiptSignal(
+            id: detail.id, date: date, senderDomain: sender.domain, senderName: sender.name, merchantHint: hint,
+            platform: platform, kind: kind, amount: amount, currency: currency, cadenceHint: cadence,
+            trialDays: analysis.trialDays, renewalLanguage: analysis.flags.renewal,
+            oneTimeLanguage: analysis.flags.oneTime, promotional: promotional || analysis.flags.marketing)
     }
+
+    private static func parseSender(_ header: String) -> (name: String, domain: String) {
+        var name = header
+        var address = header
+        if let open = header.firstIndex(of: "<"), let close = header.firstIndex(of: ">"), open < close {
+            name = String(header[..<open]).trimmingCharacters(in: CharacterSet(charactersIn: " \"'"))
+            address = String(header[header.index(after: open)..<close])
+        }
+        let domain = address.split(separator: "@").last.map { String($0).lowercased() } ?? ""
+        return (name, domain)
+    }
+
+    private static func makeImport(from sub: ProvenSubscription) -> SmartImportManager.ImportSubscription {
+        let confidence: SmartImportManager.ImportSubscription.Confidence
+        switch sub.tier {
+        case .confirmed: confidence = .high
+        case .likely: confidence = .medium
+        default: confidence = .low
+        }
+        return SmartImportManager.ImportSubscription(
+            name: sub.name, amount: sub.amount, currency: sub.currency, billingFrequency: sub.frequency,
+            nextBillingDate: sub.nextBillingDate, confidence: confidence, source: "Gmail", proven: sub)
+    }
+
+    // MARK: - Receipt Parsing (Platform-Specific)
 
     // MARK: Platform Parser: Stripe
 
@@ -479,140 +540,6 @@ final class GmailSubscriptionScanner: NSObject, ObservableObject {
             nextBillingDate: nextBilling,
             confidence: .high,
             source: "Gmail (Paddle)"
-        )
-    }
-
-    // MARK: Known Service Dictionary
-
-    private let knownServices: [String: (category: String, defaultAmount: Decimal)] = [
-        "netflix": ("Entertainment", 15.99),
-        "spotify": ("Music", 10.99),
-        "apple": ("Productivity", 9.99),
-        "hulu": ("Entertainment", 7.99),
-        "disney": ("Entertainment", 7.99),
-        "hbo": ("Entertainment", 15.99),
-        "max": ("Entertainment", 15.99),
-        "youtube": ("Entertainment", 13.99),
-        "amazon prime": ("Shopping", 14.99),
-        "amazon": ("Shopping", 14.99),
-        "adobe": ("Productivity", 54.99),
-        "microsoft": ("Productivity", 9.99),
-        "dropbox": ("Cloud Storage", 11.99),
-        "notion": ("Productivity", 10.00),
-        "slack": ("Productivity", 7.25),
-        "zoom": ("Productivity", 13.33),
-        "canva": ("Design", 12.99),
-        "figma": ("Design", 12.00),
-        "chatgpt": ("AI Tools", 20.00),
-        "openai": ("AI Tools", 20.00),
-        "claude": ("AI Tools", 20.00),
-        "anthropic": ("AI Tools", 20.00),
-        "grammarly": ("Productivity", 12.00),
-        "nordvpn": ("Utilities", 12.99),
-        "expressvpn": ("Utilities", 12.95),
-        "surfshark": ("Utilities", 3.99),
-        "1password": ("Utilities", 2.99),
-        "lastpass": ("Utilities", 3.00),
-        "headspace": ("Health & Fitness", 12.99),
-        "calm": ("Health & Fitness", 14.99),
-        "peloton": ("Health & Fitness", 44.00),
-        "duolingo": ("Education", 6.99),
-        "masterclass": ("Education", 10.00),
-        "audible": ("Entertainment", 14.95),
-        "kindle": ("Entertainment", 11.99),
-        "icloud": ("Cloud Storage", 2.99),
-        "google one": ("Cloud Storage", 2.99),
-        "linear": ("Productivity", 8.00),
-        "github": ("Productivity", 4.00),
-        "vercel": ("Productivity", 20.00),
-        "heroku": ("Productivity", 7.00),
-        "cloudflare": ("Productivity", 20.00),
-        "twitch": ("Entertainment", 4.99),
-        "patreon": ("Entertainment", 5.00),
-        "substack": ("Entertainment", 5.00),
-        "medium": ("Entertainment", 5.00),
-        "nytimes": ("News", 17.00),
-        "wsj": ("News", 38.99),
-        "washington post": ("News", 9.99),
-        "paramount": ("Entertainment", 5.99),
-        "peacock": ("Entertainment", 5.99),
-        "crunchyroll": ("Entertainment", 7.99),
-        "apple music": ("Music", 10.99),
-        "tidal": ("Music", 10.99),
-        "deezer": ("Music", 10.99),
-        "noom": ("Health & Fitness", 70.00),
-        "weight watchers": ("Health & Fitness", 23.00),
-        "strava": ("Health & Fitness", 11.99),
-        "myfitnesspal": ("Health & Fitness", 9.99),
-        "skillshare": ("Education", 32.00),
-        "coursera": ("Education", 49.00),
-        "udemy": ("Education", 30.00),
-        "linkedin": ("Productivity", 39.99),
-        "monday": ("Productivity", 9.00),
-        "asana": ("Productivity", 10.99),
-        "trello": ("Productivity", 5.00),
-        "atlassian": ("Productivity", 7.75),
-        "jira": ("Productivity", 7.75),
-        "confluence": ("Productivity", 5.75),
-        "hubspot": ("Productivity", 45.00),
-        "salesforce": ("Productivity", 25.00),
-        "quickbooks": ("Productivity", 15.00),
-        "freshbooks": ("Productivity", 17.00),
-    ]
-
-    private func matchKnownService(from: String, subject: String, body: String, date: Date?) -> SmartImportManager.ImportSubscription? {
-        let searchText = "\(from) \(subject)".lowercased()
-
-        for (service, info) in knownServices {
-            guard searchText.contains(service) else { continue }
-
-            // Only match if this looks like a billing email, not a marketing email
-            let isBillingEmail = isBillingRelated(subject: subject, body: body)
-            guard isBillingEmail else { continue }
-
-            let extractedAmount = extractAmount(from: body) ?? extractAmount(from: subject)
-            let amount = extractedAmount ?? info.defaultAmount
-            let nextBilling = date.map { Calendar.current.date(byAdding: .month, value: 1, to: $0) } ?? nil
-
-            return SmartImportManager.ImportSubscription(
-                name: service.split(separator: " ").map { $0.prefix(1).uppercased() + $0.dropFirst() }.joined(separator: " "),
-                amount: amount,
-                currency: extractCurrencyCode(from: body) ?? CurrencyManager.shared.selectedCurrency,
-                billingFrequency: detectBillingFrequency(from: subject + " " + body),
-                nextBillingDate: nextBilling,
-                confidence: extractedAmount != nil ? .high : .medium,
-                source: "Gmail"
-            )
-        }
-        return nil
-    }
-
-    // MARK: Unknown Service Detection
-
-    private func detectUnknownService(from: String, subject: String, body: String, date: Date?) -> SmartImportManager.ImportSubscription? {
-        guard isBillingRelated(subject: subject, body: body) else { return nil }
-
-        let amount = extractAmount(from: body) ?? extractAmount(from: subject)
-        guard let amount, amount > 0 else { return nil }
-
-        // Extract merchant name from sender domain or subject line
-        guard let merchantName = extractDomainName(from: from) ?? extractMerchantFromReceiptSubject(subject) else { return nil }
-        guard merchantName.count >= 2 else { return nil }
-
-        // Reject obviously non-subscription domains
-        let skipDomains = ["gmail", "yahoo", "hotmail", "outlook", "icloud", "me", "mac", "proton", "tutanota"]
-        guard !skipDomains.contains(merchantName.lowercased()) else { return nil }
-
-        let nextBilling = date.map { Calendar.current.date(byAdding: .month, value: 1, to: $0) } ?? nil
-
-        return SmartImportManager.ImportSubscription(
-            name: merchantName,
-            amount: amount,
-            currency: extractCurrencyCode(from: body) ?? "USD",
-            billingFrequency: detectBillingFrequency(from: subject + " " + body),
-            nextBillingDate: nextBilling,
-            confidence: .low,
-            source: "Gmail (unknown)"
         )
     }
 
@@ -843,6 +770,7 @@ final class GmailSubscriptionScanner: NSObject, ObservableObject {
     private struct GmailMessageDetail: Decodable {
         let id: String
         let internalDate: String?
+        let labelIds: [String]?
         let payload: Payload
 
         struct Payload: Decodable {

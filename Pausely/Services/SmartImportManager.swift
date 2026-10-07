@@ -52,6 +52,8 @@ final class SmartImportManager: ObservableObject {
         let nextBillingDate: Date?
         let confidence: Confidence
         let source: String
+        /// Evidence, score, lifecycle status and reasons from the intelligence engine (Gmail scans).
+        var proven: ProvenSubscription? = nil
         
         enum Confidence: String, Codable {
             case high = "High"
