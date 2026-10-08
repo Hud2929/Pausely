@@ -37,6 +37,10 @@ final class GmailSubscriptionScanner: NSObject, ObservableObject {
         var unknownServicesFound = 0
         var purchasesIgnored = 0
         var confirmed = 0
+        /// Emails read in full (the rest were skipped after a cheap header check).
+        var bodiesRead = 0
+        /// Receipts decided with help from the on-device model.
+        var aiAssisted = 0
         var isIncremental = false
     }
 
@@ -59,6 +63,9 @@ final class GmailSubscriptionScanner: NSObject, ObservableObject {
         get { UserDefaults.standard.string(forKey: "gmail_last_history_id") }
         set { UserDefaults.standard.set(newValue, forKey: "gmail_last_history_id") }
     }
+
+    /// Apple's on-device model, when this iPhone supports it. Nil otherwise; the rules work without it.
+    private let ambiguousClassifier: AmbiguousReceiptClassifier? = OnDeviceReceiptClassifier.makeIfAvailable()
 
     private override init() {
         super.init()
@@ -141,31 +148,36 @@ final class GmailSubscriptionScanner: NSObject, ObservableObject {
                 scanStats.isIncremental = true
                 messageIds = try await fetchIncrementalMessageIds(sinceHistoryId: historyId, token: token)
             } else {
-                // Full scan: last 12 months, paginate all results
+                // Full scan: last 2 years, paginate all results
                 messageIds = try await fetchAllMessageIds(token: token)
             }
 
             scanProgress = 0.25
             scanStats.emailsScanned = messageIds.count
 
-            // Process in batches of 20 (parallel fetches). Each email becomes a tiny on-device "signal";
-            // the intelligence engine then decides what is truly a recurring subscription.
+            // Each email becomes a tiny on-device "signal"; the intelligence engine decides what truly recurs.
+            let catalog = Self.buildCatalog()
             var newSignals: [ReceiptSignal] = []
+            var aiBudget = 40
             let batches = stride(from: 0, to: messageIds.count, by: 20).map {
                 Array(messageIds[$0..<min($0 + 20, messageIds.count)])
             }
 
             for (batchIdx, batch) in batches.enumerated() {
-                var details: [GmailMessageDetail] = []
-                await withTaskGroup(of: GmailMessageDetail?.self) { group in
-                    for msgId in batch {
-                        group.addTask { try? await self.fetchMessageDetail(id: msgId, token: token) }
+                let outcome = await readBatch(batch, token: token, catalog: catalog)
+                scanStats.bodiesRead += outcome.bodiesRead
+
+                for result in outcome.results {
+                    var signal = result.signal
+                    if let excerpt = result.ambiguousExcerpt, let classifier = ambiguousClassifier, aiBudget > 0 {
+                        aiBudget -= 1
+                        let verdict = await classifier.classify(merchantGuess: result.merchantGuess,
+                                                                subject: result.subject, excerpt: excerpt)
+                        if verdict != .unsure { scanStats.aiAssisted += 1 }
+                        signal = signal.applying(verdict)
                     }
-                    for await detail in group {
-                        if let d = detail { details.append(d) }
-                    }
+                    newSignals.append(signal)
                 }
-                newSignals.append(contentsOf: details.compactMap { self.extractSignal(from: $0) })
                 scanProgress = 0.25 + (Double(batchIdx + 1) / Double(max(batches.count, 1))) * 0.65
             }
 
@@ -179,21 +191,10 @@ final class GmailSubscriptionScanner: NSObject, ObservableObject {
             ReceiptLedger.save(ledger)
             scanProgress = 0.95
 
-            let catalogExtras = SubscriptionCatalogService.shared.catalog.map {
-                (name: $0.name, category: $0.category.rawValue, cancelURL: $0.cancellationURL)
-            }
-            let engine = SubscriptionIntelligenceEngine(catalog: MerchantCatalog.builtin.extending(with: catalogExtras))
-            let analysis = engine.analyze(signals: ledger, now: Date(),
-                                          defaultCurrency: CurrencyManager.shared.selectedCurrency)
-            report = analysis
-            foundSubscriptions = analysis.subscriptions.map(Self.makeImport)
-
+            analyzeLedger(ledger, catalog: catalog)
             scanProgress = 1.0
-            scanStats.confirmed = analysis.subscriptions.filter { $0.tier == .confirmed }.count
-            scanStats.receiptsFound = scanStats.confirmed
-            scanStats.purchasesIgnored = analysis.ignoredPurchaseGroups
 
-            if analysis.subscriptions.isEmpty {
+            if foundSubscriptions.isEmpty {
                 error = "No recurring subscriptions found in your emails."
             }
 
@@ -203,7 +204,42 @@ final class GmailSubscriptionScanner: NSObject, ObservableObject {
         }
     }
 
+    // MARK: - Analysis & learning
+
+    private static func buildCatalog() -> MerchantCatalog {
+        let extras = SubscriptionCatalogService.shared.catalog.map {
+            (name: $0.name, category: $0.category.rawValue, cancelURL: $0.cancellationURL)
+        }
+        return MerchantCatalog.builtin.extending(with: extras)
+    }
+
+    private func analyzeLedger(_ ledger: [ReceiptSignal], catalog: MerchantCatalog) {
+        let engine = SubscriptionIntelligenceEngine(catalog: catalog)
+        let analysis = engine.analyze(signals: ledger, now: Date(),
+                                      defaultCurrency: CurrencyManager.shared.selectedCurrency,
+                                      corrections: UserCorrections.load())
+        report = analysis
+        foundSubscriptions = analysis.subscriptions.map(Self.makeImport)
+        scanStats.confirmed = analysis.subscriptions.filter { $0.tier == .confirmed }.count
+        scanStats.receiptsFound = scanStats.confirmed
+        scanStats.purchasesIgnored = analysis.ignoredPurchaseGroups
+    }
+
+    /// Re-runs detection on the on-device history only. Instant, offline, no email access.
+    func reanalyze() {
+        analyzeLedger(ReceiptLedger.load(), catalog: Self.buildCatalog())
+    }
+
+    /// "This isn't a subscription": remembered forever on this device and applied to every future scan.
+    func markNotSubscription(_ subscription: SmartImportManager.ImportSubscription) {
+        guard let key = subscription.proven?.merchantKey else { return }
+        UserCorrections.set(key, .notSubscription)
+        reanalyze()
+    }
+
     func importSubscriptions(_ selected: [SmartImportManager.ImportSubscription]) async -> (added: Int, duplicates: Int) {
+        // Importing something confirms it: future scans will always rank it as a subscription.
+        for sub in selected { if let key = sub.proven?.merchantKey { UserCorrections.set(key, .trusted) } }
         let result = SmartImportManager.ImportResult(subscriptions: selected, errors: [])
         await SmartImportManager.shared.processImports(from: [result])
         return (
@@ -303,9 +339,12 @@ final class GmailSubscriptionScanner: NSObject, ObservableObject {
 
     // MARK: - Message Detail (Full Body)
 
-    private func fetchMessageDetail(id: String, token: String) async throws -> GmailMessageDetail {
-        // format=full gives us the complete MIME body — needed for receipt parsing
-        guard let url = URL(string: "https://www.googleapis.com/gmail/v1/users/me/messages/\(id)?format=full") else {
+    private func fetchMessageDetail(id: String, token: String, metadataOnly: Bool = false) async throws -> GmailMessageDetail {
+        // metadata = headers + snippet + labels only (cheap triage); full = complete MIME body for real receipts.
+        let format = metadataOnly
+            ? "format=metadata&metadataHeaders=From&metadataHeaders=Subject&metadataHeaders=Date"
+            : "format=full"
+        guard let url = URL(string: "https://www.googleapis.com/gmail/v1/users/me/messages/\(id)?\(format)") else {
             throw ScanError.invalidURL
         }
         var request = URLRequest(url: url)
@@ -315,7 +354,7 @@ final class GmailSubscriptionScanner: NSObject, ObservableObject {
 
         if let http = response as? HTTPURLResponse, http.statusCode == 401 {
             if await refreshAccessToken() {
-                return try await fetchMessageDetail(id: id, token: accessToken ?? "")
+                return try await fetchMessageDetail(id: id, token: accessToken ?? "", metadataOnly: metadataOnly)
             }
             throw ScanError.authExpired
         }
@@ -323,70 +362,49 @@ final class GmailSubscriptionScanner: NSObject, ObservableObject {
         return try JSONDecoder().decode(GmailMessageDetail.self, from: data)
     }
 
-    // MARK: - Signal Extraction (feeds the intelligence engine)
+    // MARK: - Reading emails (metadata first, then only what matters)
 
-    /// Reduces ONE email to a handful of facts. Nothing from the email text is kept beyond this function.
-    private func extractSignal(from detail: GmailMessageDetail) -> ReceiptSignal? {
-        let headers = detail.payload.headers
-        func header(_ name: String) -> String { headers.first { $0.name.lowercased() == name }?.value ?? "" }
-        guard let date = detail.emailDate else { return nil }
-
-        let from = header("from")
-        let subject = header("subject")
-        let body = detail.bodyText
-        let promotional = (detail.labelIds ?? []).contains("CATEGORY_PROMOTIONS") // Gmail's own classifier
-        let sender = Self.parseSender(from)
-
-        let analysis = ReceiptTextAnalyzer.analyze(subject: subject, body: body, promotional: promotional)
-        var hint = analysis.productHint
-        var amount = analysis.money?.amount
-        var currency = analysis.money?.currency
-        var cadence = analysis.frequency
-        var platform = "direct"
-        var kind = analysis.kind
-
-        // Platform receipts (Apple, Google Play, Stripe, PayPal, Paddle) carry precise merchant/app names.
-        let parsers: [(String, () -> SmartImportManager.ImportSubscription?)] = [
-            ("stripe", { self.parseStripeBillingEmail(from: from, subject: subject, body: body, date: date) }),
-            ("apple", { self.parseAppleReceipt(from: from, subject: subject, body: body, date: date) }),
-            ("googleplay", { self.parseGooglePlayReceipt(from: from, subject: subject, body: body, date: date) }),
-            ("paypal", { self.parsePayPalReceipt(from: from, subject: subject, body: body, date: date) }),
-            ("paddle", { self.parsePaddleReceipt(from: from, subject: subject, body: body, date: date) }),
-        ]
-        for (name, parse) in parsers {
-            if let parsed = parse() {
-                platform = name
-                hint = hint ?? parsed.name
-                if amount == nil { amount = parsed.amount; currency = currency ?? parsed.currency }
-                if cadence == nil { cadence = parsed.billingFrequency }
-                if kind == .other, amount != nil { kind = .charge }
-                break
+    /// Fetches cheap metadata for a batch, reads full bodies only for emails that look financial,
+    /// and reduces each to a signal. Email text never outlives this function.
+    private func readBatch(_ ids: [String], token: String, catalog: MerchantCatalog) async -> (results: [ExtractionResult], bodiesRead: Int) {
+        var metas: [GmailMessageDetail] = []
+        await withTaskGroup(of: GmailMessageDetail?.self) { group in
+            for id in ids {
+                group.addTask { try? await self.fetchMessageDetail(id: id, token: token, metadataOnly: true) }
             }
+            for await meta in group { if let meta { metas.append(meta) } }
         }
 
-        // Keep only emails that say something useful: a charge, or a lifecycle event.
-        let lifecycle: Set<EmailKind> = [.trialStarted, .trialEnding, .priceChange, .cancellation]
-        guard amount != nil || lifecycle.contains(kind) else { return nil }
+        let wanted = metas.filter { meta in
+            let headers = meta.headerMap
+            return EmailTriage.shouldReadBody(from: headers["from"] ?? "", subject: headers["subject"] ?? "",
+                                              snippet: meta.snippet ?? "", labelIds: meta.labelIds ?? [], catalog: catalog)
+        }.map(\.id)
 
-        return ReceiptSignal(
-            id: detail.id, date: date, senderDomain: sender.domain, senderName: sender.name, merchantHint: hint,
-            platform: platform, kind: kind, amount: amount, currency: currency, cadenceHint: cadence,
-            trialDays: analysis.trialDays, renewalLanguage: analysis.flags.renewal,
-            oneTimeLanguage: analysis.flags.oneTime, promotional: promotional || analysis.flags.marketing)
-    }
-
-    private static func parseSender(_ header: String) -> (name: String, domain: String) {
-        var name = header
-        var address = header
-        if let open = header.firstIndex(of: "<"), let close = header.firstIndex(of: ">"), open < close {
-            name = String(header[..<open]).trimmingCharacters(in: CharacterSet(charactersIn: " \"'"))
-            address = String(header[header.index(after: open)..<close])
+        var fulls: [GmailMessageDetail] = []
+        await withTaskGroup(of: GmailMessageDetail?.self) { group in
+            for id in wanted {
+                group.addTask { try? await self.fetchMessageDetail(id: id, token: token) }
+            }
+            for await full in group { if let full { fulls.append(full) } }
         }
-        let domain = address.split(separator: "@").last.map { String($0).lowercased() } ?? ""
-        return (name, domain)
+
+        let results = fulls.compactMap { detail -> ExtractionResult? in
+            guard let raw = Self.rawEmail(from: detail) else { return nil }
+            return EmailSignalExtractor.extract(raw, catalog: catalog)
+        }
+        return (results, fulls.count)
     }
 
-    private static func makeImport(from sub: ProvenSubscription) -> SmartImportManager.ImportSubscription {
+    private static func rawEmail(from detail: GmailMessageDetail) -> RawEmail? {
+        guard let date = detail.emailDate else { return nil }
+        let headers = detail.headerMap
+        return RawEmail(id: detail.id, date: date, from: headers["from"] ?? "", subject: headers["subject"] ?? "",
+                        bodyText: detail.bodyText, bodyHTML: detail.bodyHTML, headers: headers,
+                        labelIds: detail.labelIds ?? [])
+    }
+
+    static func makeImport(from sub: ProvenSubscription) -> SmartImportManager.ImportSubscription {
         let confidence: SmartImportManager.ImportSubscription.Confidence
         switch sub.tier {
         case .confirmed: confidence = .high
@@ -396,256 +414,6 @@ final class GmailSubscriptionScanner: NSObject, ObservableObject {
         return SmartImportManager.ImportSubscription(
             name: sub.name, amount: sub.amount, currency: sub.currency, billingFrequency: sub.frequency,
             nextBillingDate: sub.nextBillingDate, confidence: confidence, source: "Gmail", proven: sub)
-    }
-
-    // MARK: - Receipt Parsing (Platform-Specific)
-
-    // MARK: Platform Parser: Stripe
-
-    private func parseStripeBillingEmail(from: String, subject: String, body: String, date: Date?) -> SmartImportManager.ImportSubscription? {
-        // Stripe sends receipts from: receipt@stripe.com or <merchant>@stripe.com
-        // Subject: "Your receipt from <Company>" or "Invoice from <Company>"
-        guard from.lowercased().contains("stripe.com") ||
-              subject.lowercased().contains("receipt from") ||
-              subject.lowercased().contains("invoice from") else { return nil }
-
-        // Extract merchant name from subject: "Your receipt from Notion" → "Notion"
-        let name = extractMerchantFromReceiptSubject(subject) ?? extractDomainName(from: from)
-        guard let merchantName = name, !merchantName.isEmpty else { return nil }
-
-        let amount = extractAmount(from: body) ?? extractAmount(from: subject)
-        guard let amount, amount > 0 else { return nil }
-
-        let nextBilling = date.map { Calendar.current.date(byAdding: .month, value: 1, to: $0) } ?? nil
-
-        return SmartImportManager.ImportSubscription(
-            name: merchantName,
-            amount: amount,
-            currency: extractCurrencyCode(from: body) ?? "USD",
-            billingFrequency: detectBillingFrequency(from: subject + " " + body),
-            nextBillingDate: nextBilling,
-            confidence: .high,
-            source: "Gmail (Stripe)"
-        )
-    }
-
-    // MARK: Platform Parser: Apple
-
-    private func parseAppleReceipt(from: String, subject: String, body: String, date: Date?) -> SmartImportManager.ImportSubscription? {
-        guard from.lowercased().contains("apple.com") || from.lowercased().contains("@email.apple.com") else { return nil }
-
-        // Apple receipt subjects: "Your receipt from Apple.", "Your subscription receipt"
-        let isReceipt = subject.lowercased().contains("receipt") || subject.lowercased().contains("subscription")
-        guard isReceipt else { return nil }
-
-        // Apple receipts list items like: "iCloud+ (50 GB)\n$0.99 per month"
-        let amount = extractAmount(from: body) ?? extractAmount(from: subject)
-        guard let amount, amount > 0 else { return nil }
-
-        // Try to extract the app/service name from body
-        let name = extractAppleSubscriptionName(from: body) ?? "Apple Subscription"
-        let nextBilling = date.map { Calendar.current.date(byAdding: .month, value: 1, to: $0) } ?? nil
-
-        return SmartImportManager.ImportSubscription(
-            name: name,
-            amount: amount,
-            currency: "USD",
-            billingFrequency: detectBillingFrequency(from: body),
-            nextBillingDate: nextBilling,
-            confidence: .high,
-            source: "Gmail (Apple)"
-        )
-    }
-
-    // MARK: Platform Parser: Google Play
-
-    private func parseGooglePlayReceipt(from: String, subject: String, body: String, date: Date?) -> SmartImportManager.ImportSubscription? {
-        guard from.lowercased().contains("google.com") || from.lowercased().contains("payments.google.com") else { return nil }
-
-        let isSubscription = subject.lowercased().contains("subscription") ||
-                             subject.lowercased().contains("google play") ||
-                             subject.lowercased().contains("google one") ||
-                             body.lowercased().contains("google play")
-        guard isSubscription else { return nil }
-
-        let amount = extractAmount(from: body) ?? extractAmount(from: subject)
-        guard let amount, amount > 0 else { return nil }
-
-        // Extract app name from "Your [App Name] subscription"
-        let name: String
-        if let match = subject.range(of: #"Your (.+?) subscription"#, options: .regularExpression) {
-            name = String(subject[match]).replacingOccurrences(of: "Your ", with: "").replacingOccurrences(of: " subscription", with: "")
-        } else if subject.lowercased().contains("google one") {
-            name = "Google One"
-        } else {
-            name = "Google Play"
-        }
-
-        let nextBilling = date.map { Calendar.current.date(byAdding: .month, value: 1, to: $0) } ?? nil
-
-        return SmartImportManager.ImportSubscription(
-            name: name,
-            amount: amount,
-            currency: extractCurrencyCode(from: body) ?? "USD",
-            billingFrequency: detectBillingFrequency(from: body),
-            nextBillingDate: nextBilling,
-            confidence: .high,
-            source: "Gmail (Google)"
-        )
-    }
-
-    // MARK: Platform Parser: PayPal
-
-    private func parsePayPalReceipt(from: String, subject: String, body: String, date: Date?) -> SmartImportManager.ImportSubscription? {
-        guard from.lowercased().contains("paypal.com") else { return nil }
-
-        let isSubscription = subject.lowercased().contains("subscription") ||
-                             subject.lowercased().contains("recurring") ||
-                             subject.lowercased().contains("automatic payment")
-        guard isSubscription else { return nil }
-
-        let amount = extractAmount(from: body) ?? extractAmount(from: subject)
-        guard let amount, amount > 0 else { return nil }
-
-        let name = extractMerchantFromReceiptSubject(subject) ?? extractPayPalMerchant(from: body) ?? "PayPal Subscription"
-        let nextBilling = date.map { Calendar.current.date(byAdding: .month, value: 1, to: $0) } ?? nil
-
-        return SmartImportManager.ImportSubscription(
-            name: name,
-            amount: amount,
-            currency: extractCurrencyCode(from: body) ?? "USD",
-            billingFrequency: detectBillingFrequency(from: body),
-            nextBillingDate: nextBilling,
-            confidence: .high,
-            source: "Gmail (PayPal)"
-        )
-    }
-
-    // MARK: Platform Parser: Paddle
-
-    private func parsePaddleReceipt(from: String, subject: String, body: String, date: Date?) -> SmartImportManager.ImportSubscription? {
-        guard from.lowercased().contains("paddle.com") || from.lowercased().contains("paddle.net") || body.lowercased().contains("paddle.com") else { return nil }
-
-        let amount = extractAmount(from: body) ?? extractAmount(from: subject)
-        guard let amount, amount > 0 else { return nil }
-
-        let name = extractMerchantFromReceiptSubject(subject) ?? extractDomainName(from: from) ?? "Paddle Subscription"
-        let nextBilling = date.map { Calendar.current.date(byAdding: .month, value: 1, to: $0) } ?? nil
-
-        return SmartImportManager.ImportSubscription(
-            name: name,
-            amount: amount,
-            currency: extractCurrencyCode(from: body) ?? "USD",
-            billingFrequency: detectBillingFrequency(from: body),
-            nextBillingDate: nextBilling,
-            confidence: .high,
-            source: "Gmail (Paddle)"
-        )
-    }
-
-    // MARK: - Temporal State Detection (Trial / Price Change)
-
-    /// Returns a hint about the subscription lifecycle state detected in this email
-    private func detectLifecycleState(subject: String, body: String) -> LifecycleState {
-        let text = (subject + " " + body).lowercased()
-        if text.contains("trial ends") || text.contains("free trial") || text.contains("trial period") { return .trialEnding }
-        if text.contains("price will change") || text.contains("price is changing") || text.contains("new price") { return .priceChange }
-        if text.contains("cancelled") || text.contains("canceled") || text.contains("cancellation confirmed") { return .cancelled }
-        if text.contains("reactivated") || text.contains("resumed") { return .reactivated }
-        return .active
-    }
-
-    enum LifecycleState { case active, trialEnding, priceChange, cancelled, reactivated }
-
-    // MARK: - Extraction Helpers
-
-    private func extractMerchantFromReceiptSubject(_ subject: String) -> String? {
-        // "Your receipt from Notion" → "Notion"
-        // "Invoice from Adobe Inc." → "Adobe Inc."
-        // "Payment to Spotify" → "Spotify"
-        let patterns = [
-            #"(?:receipt|invoice|statement)\s+from\s+([A-Za-z0-9][A-Za-z0-9\s\-\.]+?)(?:\.|,|$)"#,
-            #"payment\s+to\s+([A-Za-z0-9][A-Za-z0-9\s\-\.]+?)(?:\.|,|$)"#,
-            #"^([A-Za-z0-9][A-Za-z0-9\s]{1,30}?)[\s\-–:]+(?:subscription|invoice|receipt|billing|renewal)"#,
-        ]
-        for pattern in patterns {
-            guard let regex = try? NSRegularExpression(pattern: pattern, options: .caseInsensitive),
-                  let match = regex.firstMatch(in: subject, range: NSRange(subject.startIndex..., in: subject)),
-                  let range = Range(match.range(at: 1), in: subject) else { continue }
-            let name = String(subject[range]).trimmingCharacters(in: .whitespacesAndNewlines)
-            if name.count >= 2 { return name }
-        }
-        return nil
-    }
-
-    /// Extracts the domain name from an email address like "billing@notion.so" → "Notion"
-    private func extractDomainName(from emailHeader: String) -> String? {
-        // Parse the email address out of "Notion <billing@notion.so>"
-        let emailRegex = #"[\w.+-]+@([\w\-]+)\.([\w.]+)"#
-        guard let regex = try? NSRegularExpression(pattern: emailRegex),
-              let match = regex.firstMatch(in: emailHeader, range: NSRange(emailHeader.startIndex..., in: emailHeader)),
-              let domainRange = Range(match.range(at: 1), in: emailHeader) else { return nil }
-
-        let domain = String(emailHeader[domainRange])
-
-        // Filter out known billing platform domains — they're not the merchant
-        let platformDomains = ["stripe", "paypal", "paddle", "braintree", "recurly", "chargebee", "zuora", "fastspring", "gumroad", "lemon", "squeezy"]
-        if platformDomains.contains(domain.lowercased()) { return nil }
-
-        return domain.prefix(1).uppercased() + domain.dropFirst()
-    }
-
-    private func extractAppleSubscriptionName(from body: String) -> String? {
-        // Apple receipts contain the app name followed by price details
-        // Pattern: "App Name\n$X.XX / month" or "App Name (in-app)"
-        let pattern = #"([A-Za-z][A-Za-z0-9\s\-\+]{2,40})\s*\n\s*\$[\d.]+"#
-        guard let regex = try? NSRegularExpression(pattern: pattern),
-              let match = regex.firstMatch(in: body, range: NSRange(body.startIndex..., in: body)),
-              let range = Range(match.range(at: 1), in: body) else { return nil }
-        return String(body[range]).trimmingCharacters(in: .whitespacesAndNewlines)
-    }
-
-    private func extractPayPalMerchant(from body: String) -> String? {
-        let pattern = #"(?:automatic payment to|subscription to|payment to)\s+([A-Za-z0-9][A-Za-z0-9\s\-\.]{1,40}?)(?:\s+has been|\s+was|\s+for|\.|\n)"#
-        guard let regex = try? NSRegularExpression(pattern: pattern, options: .caseInsensitive),
-              let match = regex.firstMatch(in: body, range: NSRange(body.startIndex..., in: body)),
-              let range = Range(match.range(at: 1), in: body) else { return nil }
-        return String(body[range]).trimmingCharacters(in: .whitespacesAndNewlines)
-    }
-
-    private func isBillingRelated(subject: String, body: String) -> Bool {
-        let text = (subject + " " + body).lowercased()
-        let billingKeywords = ["receipt", "invoice", "payment", "billing", "charged", "renewal", "subscription", "billed", "paid", "charge", "amount due"]
-        return billingKeywords.contains(where: { text.contains($0) })
-    }
-
-    private func detectBillingFrequency(from text: String) -> BillingFrequency {
-        let lower = text.lowercased()
-        if lower.contains("per week") || lower.contains("/week") || lower.contains("weekly") { return .weekly }
-        if lower.contains("per year") || lower.contains("/year") || lower.contains("annual") || lower.contains("yearly") { return .yearly }
-        if lower.contains("per quarter") || lower.contains("quarterly") || lower.contains("every 3 months") { return .quarterly }
-        if lower.contains("semi-annual") || lower.contains("every 6 months") { return .semiannual }
-        return .monthly
-    }
-
-    private func extractCurrencyCode(from text: String) -> String? {
-        let codes = ["USD", "EUR", "GBP", "CAD", "AUD", "JPY", "CHF", "NZD", "SEK", "NOK", "DKK", "MXN", "BRL", "INR"]
-        let upper = text.uppercased()
-        return codes.first { upper.contains($0) }
-    }
-
-    /// Extracts a dollar amount handling: $14.99, C$14.99, CAD 14.99, USD 20.00, €9.99, £8.99, AU$12.99
-    private func extractAmount(from text: String) -> Decimal? {
-        let codePattern = #"(?:USD|CAD|AUD|GBP|EUR|JPY|CHF|NZD|SEK|NOK|DKK|MXN|BRL|INR)\s*(\d{1,4}[.,]\d{2})"#
-        let symbolPattern = #"[A-Z]{0,2}[\$€£¥₹]\s*(\d{1,4}[.,]\d{2})"#
-        for pattern in [codePattern, symbolPattern] {
-            guard let regex = try? NSRegularExpression(pattern: pattern),
-                  let match = regex.firstMatch(in: text, range: NSRange(text.startIndex..., in: text)),
-                  let range = Range(match.range(at: 1), in: text) else { continue }
-            let amountStr = text[range].replacingOccurrences(of: ",", with: ".")
-            if let value = Decimal(string: amountStr), value > 0, value < 10000 { return value }
-        }
-        return nil
     }
 
     // MARK: - OAuth Helpers
@@ -771,9 +539,11 @@ final class GmailSubscriptionScanner: NSObject, ObservableObject {
         let id: String
         let internalDate: String?
         let labelIds: [String]?
+        let snippet: String?
         let payload: Payload
 
         struct Payload: Decodable {
+            let mimeType: String?
             let headers: [Header]
             let body: Body?
             let parts: [Part]?
@@ -792,64 +562,50 @@ final class GmailSubscriptionScanner: NSObject, ObservableObject {
             return Date(timeIntervalSince1970: msInt / 1000)
         }
 
-        /// Recursively extracts plain-text body from MIME structure
-        var bodyText: String {
-            extractText(from: payload)
+        /// Lower-cased header name → first value.
+        var headerMap: [String: String] {
+            var map: [String: String] = [:]
+            for header in payload.headers {
+                let key = header.name.lowercased()
+                if map[key] == nil { map[key] = header.value }
+            }
+            return map
         }
 
-        private func extractText(from payload: Payload) -> String {
-            // Direct body
-            if let data = payload.body?.data, !data.isEmpty,
-               let decoded = decodeBase64URL(data) {
-                return decoded
-            }
-            // Recurse into parts — prefer text/plain, fall back to text/html
-            if let parts = payload.parts {
-                // Try text/plain first
-                for part in parts {
-                    if part.mimeType == "text/plain",
-                       let data = part.body?.data,
-                       let decoded = decodeBase64URL(data) {
-                        return decoded
-                    }
-                }
-                // Fall back to text/html or nested multipart
-                for part in parts {
-                    if part.mimeType == "text/html",
-                       let data = part.body?.data,
-                       let decoded = decodeBase64URL(data) {
-                        return stripHTML(decoded)
-                    }
-                    // Recurse into nested multipart
-                    if let nestedParts = part.parts {
-                        let nested = Payload(headers: [], body: nil, parts: nestedParts)
-                        let text = extractText(from: nested)
-                        if !text.isEmpty { return text }
-                    }
-                }
-            }
+        /// Readable text: the text/plain part when there is one, otherwise the HTML converted to text.
+        var bodyText: String {
+            if let plain = firstPart(mimeType: "text/plain") { return plain }
+            if let html = bodyHTML { return HTMLText.plain(html) }
             return ""
         }
 
-        private func decodeBase64URL(_ base64url: String) -> String? {
+        /// Raw HTML part, used to read structured receipt markup.
+        var bodyHTML: String? { firstPart(mimeType: "text/html") }
+
+        private func firstPart(mimeType wanted: String) -> String? {
+            if payload.mimeType == wanted, let data = payload.body?.data, let decoded = Self.decodeBase64URL(data) { return decoded }
+            if payload.mimeType == nil, payload.parts == nil, let data = payload.body?.data, let decoded = Self.decodeBase64URL(data) {
+                // Single-part message with no declared type: treat as plain text.
+                return wanted == "text/plain" ? decoded : nil
+            }
+            return Self.search(parts: payload.parts, mimeType: wanted)
+        }
+
+        private static func search(parts: [Payload.Part]?, mimeType wanted: String) -> String? {
+            guard let parts else { return nil }
+            for part in parts {
+                if part.mimeType == wanted, let data = part.body?.data, let decoded = decodeBase64URL(data) { return decoded }
+                if let nested = search(parts: part.parts, mimeType: wanted) { return nested }
+            }
+            return nil
+        }
+
+        private static func decodeBase64URL(_ base64url: String) -> String? {
             // Gmail uses URL-safe base64 (- instead of +, _ instead of /)
             var base64 = base64url.replacingOccurrences(of: "-", with: "+").replacingOccurrences(of: "_", with: "/")
-            // Pad to multiple of 4
             while base64.count % 4 != 0 { base64 += "=" }
             guard let data = Data(base64Encoded: base64) else { return nil }
             return String(data: data, encoding: .utf8)
-        }
-
-        private func stripHTML(_ html: String) -> String {
-            // Basic HTML tag stripping for receipt content
-            let tagless = html.replacingOccurrences(of: "<[^>]+>", with: " ", options: .regularExpression)
-            let decoded = tagless
-                .replacingOccurrences(of: "&amp;", with: "&")
-                .replacingOccurrences(of: "&lt;", with: "<")
-                .replacingOccurrences(of: "&gt;", with: ">")
-                .replacingOccurrences(of: "&nbsp;", with: " ")
-                .replacingOccurrences(of: "&#39;", with: "'")
-            return decoded.components(separatedBy: .whitespacesAndNewlines).filter { !$0.isEmpty }.joined(separator: " ")
         }
     }
 }

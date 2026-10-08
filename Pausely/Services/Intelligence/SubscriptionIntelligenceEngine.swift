@@ -18,6 +18,10 @@ struct ReceiptSignal: Codable, Equatable, Identifiable {
     var renewalLanguage: Bool
     var oneTimeLanguage: Bool
     var promotional: Bool
+    /// Structured (schema.org) receipt data found in the email, when present.
+    var markup: StructuredReceiptParser.Kind? = nil
+    var hasUnsubscribe: Bool? = nil
+    var bulkMail: Bool? = nil
 }
 
 // MARK: - Output Models
@@ -139,7 +143,8 @@ struct SubscriptionIntelligenceEngine {
     func analyze(signals: [ReceiptSignal],
                  now: Date = Date(),
                  calendar: Calendar = .current,
-                 defaultCurrency: String = "USD") -> IntelligenceReport {
+                 defaultCurrency: String = "USD",
+                 corrections: [String: UserVerdict] = [:]) -> IntelligenceReport {
 
         // 1. Dedupe by message id
         var seen = Set<String>()
@@ -158,9 +163,22 @@ struct SubscriptionIntelligenceEngine {
         var insights: [IntelligenceInsight] = []
         var ignored = 0
 
-        for (_, group) in groups {
-            let results = analyzeGroup(merchant: group.merchant, signals: group.signals.sorted { $0.date < $1.date },
+        for (key, group) in groups {
+            let verdict = corrections[key]
+            // The user said "not a subscription": respect it silently and forever.
+            if verdict == .notSubscription { continue }
+
+            var results = analyzeGroup(merchant: group.merchant, signals: group.signals.sorted { $0.date < $1.date },
                                        now: now, calendar: calendar, defaultCurrency: defaultCurrency)
+            if verdict == .trusted {
+                results = results.map { sub in
+                    var boosted = sub
+                    boosted.score = min(100, sub.score + 30)
+                    boosted.reasons.insert("You told Pausely this is a subscription", at: 0)
+                    boosted.tier = max(tier(for: boosted.score, status: boosted.status), .likely)
+                    return boosted
+                }
+            }
             if results.isEmpty { if group.signals.contains(where: { $0.amount != nil }) { ignored += 1 } }
             detected.append(contentsOf: results)
         }
@@ -341,6 +359,9 @@ struct SubscriptionIntelligenceEngine {
             if merchant.kind == .pureSubscription { score += 20; reasons.append("\(merchant.displayName) is a known subscription service") }
             else { score += 4 }
         }
+        if charges.contains(where: { $0.markup == .subscription }) {
+            score += 12; reasons.append("The receipts carry structured subscription data")
+        }
         if charges.contains(where: { $0.platform == "apple" || $0.platform == "googleplay" }) {
             score += 15; reasons.append("Billed through an app-store subscription")
         }
@@ -354,7 +375,12 @@ struct SubscriptionIntelligenceEngine {
         if needsStrongProof {
             let membershipEvidence = renewalCount >= 1 && allSame && n >= 2
             let strong = (n >= 3 && sequence.regularity >= 0.8 && coefficient <= 0.06) || membershipEvidence
-            if !strong { score = min(score, 49); reasons.append("Not enough proof of a recurring plan yet") }
+            if !strong {
+                // Steady, same-amount charges deserve a look. Varying amounts never surface: they are orders, not plans.
+                let plausible = sequence.regularity >= 0.8 && (allSame || coefficient <= 0.06) && (n >= 3 || renewalCount >= 1)
+                score = min(score, plausible ? 49 : 35)
+                reasons.append("Not enough proof of a recurring plan yet")
+            }
         }
         score = max(0, min(100, score))
 
@@ -425,11 +451,14 @@ struct SubscriptionIntelligenceEngine {
         guard let signal = eligible.last, let amount = signal.amount else { return nil }
         let explicit = signal.renewalLanguage || signal.platform == "apple" || signal.platform == "googleplay"
         guard explicit else { return nil }
-        guard merchant.isKnown, merchant.kind == .pureSubscription else { return nil }
+        let structured = signal.markup == .subscription
+        let knownPure = merchant.isKnown && merchant.kind == .pureSubscription
+        guard knownPure || (structured && merchant.nameQuality >= 55) else { return nil }
 
         let frequency = signal.cadenceHint ?? .monthly
-        var score = 30 + 20 + 12
-        var reasons = ["\(merchant.displayName) is a known subscription service", "The receipt says it renews on a schedule"]
+        var score = 30 + 12 + (knownPure ? 20 : 0) + (structured ? 25 : 0)
+        var reasons = [knownPure ? "\(merchant.displayName) is a known subscription service" : "The receipt includes structured subscription data",
+                       "The receipt says it renews on a schedule"]
         if signal.cadenceHint == nil { reasons.append("Billing period assumed monthly until a second charge confirms it") ; score -= 6 }
         if signal.platform == "apple" || signal.platform == "googleplay" { score += 10 }
         if amount < 1 { score -= 18 }
@@ -628,12 +657,7 @@ struct SubscriptionIntelligenceEngine {
     }
 
     private func format(_ amount: Decimal, _ currency: String) -> String {
-        let formatter = NumberFormatter()
-        formatter.numberStyle = .currency
-        formatter.currencyCode = currency
-        formatter.maximumFractionDigits = 2
-        formatter.minimumFractionDigits = 2
-        return formatter.string(from: amount as NSDecimalNumber) ?? "\(amount)"
+        MoneyFormat.string(amount, currency)
     }
 
     private func shortDate(_ date: Date) -> String {

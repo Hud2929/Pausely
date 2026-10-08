@@ -89,6 +89,15 @@ struct RootView: View {
         ProcessInfo.processInfo.arguments.contains("--demo-mode")
     }
 
+    /// DEBUG only: open the Gmail results screen with a synthetic mailbox (no Google sign-in needed).
+    private var isDemoGmailResults: Bool {
+        #if DEBUG
+        return ProcessInfo.processInfo.arguments.contains("--demo-gmail-results")
+        #else
+        return false
+        #endif
+    }
+
     /// Detects if app should reset state for testing
     private var shouldResetState: Bool {
         ProcessInfo.processInfo.arguments.contains("--reset-state")
@@ -104,7 +113,12 @@ struct RootView: View {
     var body: some View {
         ZStack {
             Group {
-                if needsAgeGate, let uid = authManager.currentUser?.id {
+                if isDemoGmailResults {
+                    #if DEBUG
+                    GmailImportView()
+                        .onAppear { GmailSubscriptionScanner.shared.loadDemoResults() }
+                    #endif
+                } else if needsAgeGate, let uid = authManager.currentUser?.id {
                     AgeGateView(
                         onPassed: { Task { await ageConsent.recordConsent(userId: uid) } },
                         onCancel: { Task { await authManager.signOut() } },

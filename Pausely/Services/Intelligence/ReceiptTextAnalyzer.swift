@@ -41,7 +41,9 @@ enum ReceiptTextAnalyzer {
         let money = extractChargeAmount(subject: subject, body: cappedBody)
         let frequency = explicitFrequency(subject: subject, body: cappedBody)
         let trialDays = extractTrialDays(subject + " " + cappedBody)
-        let product = productHint(subject: subject, body: cappedBody)
+        var product = productHint(subject: subject, body: cappedBody)
+        // A brand mentioned only in passing (e.g. "DashPass savings" on an order) must not rename that order.
+        if product != nil, productHint(subject: subject, body: "") == nil, flags.oneTime || !flags.renewal { product = nil }
         let kind = classify(flags: flags, hasAmount: money != nil)
         return Analysis(money: money, flags: flags, frequency: frequency,
                         trialDays: trialDays, productHint: product, kind: kind)
@@ -68,11 +70,22 @@ enum ReceiptTextAnalyzer {
         var flags = LanguageFlags()
 
         flags.renewal = containsAny(text, [
-            "auto-renew", "auto renew", "autorenew", "automatically renew", "will renew", "renews on", "renews automatically",
+            "auto-renew", "auto renew", "autorenew", "automatically renew", "will renew", "renews", "renewed on", "renews automatically",
             "renewal date", "next billing date", "next payment", "next charge", "your next bill", "billing period",
             "your subscription", "your membership", "recurring", "billed monthly", "billed annually", "billed yearly",
             "subscription receipt", "membership fee", "subscription renewal", "plan renews", "per month", "/month", "/mo ",
             "per year", "/year", "monthly plan", "annual plan", "monthly subscription", "annual subscription"
+        ]) || containsAny(text, [
+            // Français
+            "renouvelle", "renouvellement", "votre abonnement", "abonnement mensuel", "abonnement annuel", "par mois", "/mois",
+            "par an", "/an ", "prochain paiement", "prochaine facturation", "facturé mensuellement", "facturé annuellement",
+            "paiement récurrent", "votre adhésion",
+            // Español
+            "se renovará", "renovación", "tu suscripción", "su suscripción", "suscripción mensual", "suscripción anual",
+            "por mes", "al mes", "por año", "próximo pago", "próxima factura", "pago recurrente", "tu membresía",
+            // Deutsch
+            "verlängert sich", "automatische verlängerung", "ihr abonnement", "dein abonnement", "monatlich", "pro monat",
+            "pro jahr", "jährlich", "nächste zahlung", "nächste abrechnung", "ihre mitgliedschaft"
         ])
 
         flags.oneTime = containsAny(text, [
@@ -80,18 +93,29 @@ enum ReceiptTextAnalyzer {
             "out for delivery", "has been delivered", "was delivered", "thanks for your order", "thank you for your order",
             "pickup", "pick-up", "item(s)", "qty", "quantity", "e-ticket", "your tickets", "ticket order", "reservation",
             "booking confirmation", "itinerary", "boarding", "check-in", "gift card", "donation", "tip for", "your tip",
-            "your ride", "trip receipt", "your trip", "delivery fee", "driver", "your parking", "parking session",
-            "your delivery", "order from"
+            "your ride", "trip receipt", "your trip", "trip with", "thanks for riding", "delivery fee", "driver", "your parking", "parking session",
+            "your delivery", "order from",
+            // Money transfers and payouts are not subscriptions
+            "e-transfer", "etransfer", "sent you", "you received", "money request", "has deposited", "direct deposit", "payout",
+            // Français
+            "numéro de commande", "votre commande", "livraison", "expédié", "billets", "réservation", "merci pour votre achat",
+            // Español
+            "número de pedido", "tu pedido", "su pedido", "envío", "entradas", "reserva", "gracias por tu compra",
+            // Deutsch
+            "bestellnummer", "ihre bestellung", "deine bestellung", "versandt", "lieferung", "buchungsbestätigung"
         ])
 
         flags.trialEnding = containsAny(text, [
-            "trial ends", "trial is ending", "trial will end", "trial expires", "trial ending", "last day of your trial",
-            "before your trial", "your free trial ends", "free trial is ending", "trial is almost over"
+            "trial ends in", "trial ends on", "trial ends tomorrow", "trial ends today", "trial is ending", "trial will end",
+            "trial expires", "trial ending", "last day of your trial", "free trial ends", "free trial is ending",
+            "trial is almost over", "trial is about to end", "trial ends soon",
+            "l'essai se termine", "votre essai gratuit se termine", "tu prueba gratuita termina", "ihre testphase endet"
         ])
 
         flags.trialStart = flags.trialEnding || containsAny(text, [
             "free trial", "trial has started", "your trial", "trial begins", "start your trial", "trial period",
-            "welcome to your trial", "trial started", "days free"
+            "welcome to your trial", "trial started", "days free",
+            "essai gratuit", "prueba gratuita", "kostenlose testphase", "kostenloser test"
         ])
 
         flags.priceChange = containsAny(text, [
@@ -106,10 +130,12 @@ enum ReceiptTextAnalyzer {
             "you've cancelled", "you've canceled", "your cancellation", "membership has ended", "subscription has ended",
             "subscription expired", "won't be charged again", "will not be charged again", "membership has been cancelled",
             "membership has been canceled", "your plan has been cancelled", "your plan has been canceled",
-            "sorry to see you go", "we're sorry to see you go"
+            "sorry to see you go", "we're sorry to see you go",
+            "abonnement a été annulé", "votre abonnement est annulé", "tu suscripción ha sido cancelada",
+            "su suscripción ha sido cancelada", "ihr abonnement wurde gekündigt", "dein abonnement wurde gekündigt"
         ])
 
-        flags.refund = containsAny(text, ["refund", "refunded", "credit issued", "chargeback", "reversal"])
+        flags.refund = containsAny(text, ["refund", "refunded", "credit issued", "chargeback", "reversal", "remboursement", "remboursé", "reembolso", "erstattung", "rückerstattung"])
 
         flags.marketing = promotional || containsAny(subjectLower, [
             "% off", "sale", "limited time", "special offer", "exclusive offer", "newsletter", "deal of", "save up to",
@@ -136,20 +162,23 @@ enum ReceiptTextAnalyzer {
     }()
 
     private static let euroCommaRegex: NSRegularExpression? =
-        try? NSRegularExpression(pattern: "(\\d{1,3}(?:\\.\\d{3})*,\\d{2})\\s?(€|EUR)", options: [.caseInsensitive])
+        try? NSRegularExpression(pattern: "(\\d{1,3}(?:[. \\x{00A0}]\\d{3})*,\\d{2})\\s?(€|EUR|\\$|CAD|USD)", options: [.caseInsensitive])
 
     private static let positiveContext: [(String, Int)] = [
         ("amount charged", 4), ("amount paid", 4), ("amount due", 3), ("you paid", 4), ("you were charged", 4),
         ("you've been charged", 4), ("we charged", 4), ("charged", 3), ("billed", 3), ("payment of", 3), ("your payment", 2),
         ("total", 2), ("price", 1), ("per month", 2), ("/month", 2), ("/mo", 2), ("per year", 2), ("/year", 2),
-        ("monthly", 1), ("annual", 1), ("subscription", 1), ("plan", 1), ("renew", 1), ("membership", 1)
+        ("monthly", 1), ("annual", 1), ("subscription", 1), ("plan", 1), ("renew", 1), ("membership", 1),
+        ("montant", 3), ("facturé", 3), ("payé", 3), ("abonnement", 1), ("importe", 3), ("cobrado", 3), ("pagado", 3),
+        ("suscripción", 1), ("betrag", 3), ("gesamt", 2), ("abgerechnet", 3), ("abonnement", 1)
     ]
 
     private static let negativeContext: [(String, Int)] = [
         ("subtotal", 3), ("save", 4), (" off", 3), ("discount", 3), ("coupon", 3), ("was ", 3), ("regularly", 3),
         ("list price", 3), ("gift card", 3), ("credit", 2), ("points", 3), ("tax", 3), ("shipping", 3), ("refund", 5),
-        ("up to", 3), ("starting at", 3), ("starts at", 3), ("from $", 3), ("limit", 2), ("fee", 1), ("tip", 2),
-        ("balance", 2), ("rewards", 3), ("cashback", 3), ("minimum", 2), ("spend $", 4), ("spend", 2), ("over $", 3)
+        ("up to", 3), ("starting at", 3), ("starts at", 3), ("from $", 3), ("limit", 2), ("delivery fee", 2), ("service fee", 2), ("booking fee", 2), ("processing fee", 2), ("tip", 2),
+        ("balance", 2), ("rewards", 3), ("cashback", 3), ("minimum", 2), ("spend $", 4), ("spend", 2), ("over $", 3),
+        ("rabais", 3), ("économ", 3), ("livraison", 2), ("descuento", 3), ("ahorra", 3), ("rabatt", 3), ("sparen", 3)
     ]
 
     /// Picks the amount that was actually charged, not the first dollar figure in the email.
@@ -161,7 +190,8 @@ enum ReceiptTextAnalyzer {
         func consider(amountString: String, currency: String?, range: NSRange, decimalComma: Bool = false) {
             var cleaned = amountString
             if decimalComma {
-                cleaned = cleaned.replacingOccurrences(of: ".", with: "").replacingOccurrences(of: ",", with: ".")
+                cleaned = cleaned.replacingOccurrences(of: ".", with: "").replacingOccurrences(of: " ", with: "")
+                    .replacingOccurrences(of: "\u{00A0}", with: "").replacingOccurrences(of: ",", with: ".")
             } else {
                 cleaned = cleaned.replacingOccurrences(of: ",", with: "")
             }
@@ -179,7 +209,12 @@ enum ReceiptTextAnalyzer {
             // "total" inside "subtotal" must not count as positive
             if context.contains("subtotal") { score -= 2 }
 
-            candidates.append((Money(amount: value, currency: currency), score, range.location))
+            var resolvedCurrency = currency
+            if resolvedCurrency == nil {
+                let trailing = after.trimmingCharacters(in: .whitespaces).prefix(4).uppercased()
+                for code in ["USD", "CAD", "AUD", "GBP", "EUR", "NZD", "CHF"] where trailing.hasPrefix(code) { resolvedCurrency = code }
+            }
+            candidates.append((Money(amount: value, currency: resolvedCurrency), score, range.location))
         }
 
         let full = NSRange(location: 0, length: ns.length)
@@ -199,7 +234,9 @@ enum ReceiptTextAnalyzer {
 
         euroCommaRegex?.enumerateMatches(in: text, range: full) { match, _, _ in
             guard let match, match.range(at: 1).location != NSNotFound else { return }
-            consider(amountString: ns.substring(with: match.range(at: 1)), currency: "EUR", range: match.range, decimalComma: true)
+            let symbol = ns.substring(with: match.range(at: 2)).uppercased()
+            let code: String? = (symbol == "€" || symbol == "EUR") ? "EUR" : (symbol == "$" ? nil : symbol)
+            consider(amountString: ns.substring(with: match.range(at: 1)), currency: code, range: match.range, decimalComma: true)
         }
 
         guard !candidates.isEmpty else { return nil }

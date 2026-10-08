@@ -302,6 +302,17 @@ struct GmailImportView: View {
                     .font(.system(.caption, design: .rounded))
                     .foregroundStyle(Color.obsidianTextTertiary)
             }
+            if scanner.scanStats.emailsScanned > 0 {
+                let stats = scanner.scanStats
+                Label("Checked \(stats.emailsScanned) emails, read \(stats.bodiesRead) in full. All on your phone.", systemImage: "lock.shield")
+                    .font(.system(.caption, design: .rounded))
+                    .foregroundStyle(Color.obsidianTextTertiary)
+                if stats.aiAssisted > 0 {
+                    Label("On-device AI helped with \(stats.aiAssisted) tricky receipt\(stats.aiAssisted == 1 ? "" : "s")", systemImage: "sparkles")
+                        .font(.system(.caption, design: .rounded))
+                        .foregroundStyle(Color.obsidianTextTertiary)
+                }
+            }
         }
         .frame(maxWidth: .infinity, alignment: .leading)
         .padding(18)
@@ -402,6 +413,11 @@ struct GmailImportView: View {
                             withAnimation(.easeInOut(duration: 0.2)) {
                                 if expandedIds.contains(sub.id) { expandedIds.remove(sub.id) } else { expandedIds.insert(sub.id) }
                             }
+                        },
+                        onReject: {
+                            HapticStyle.medium.trigger()
+                            selectedSubscriptions.remove(sub.id)
+                            withAnimation(.easeInOut(duration: 0.25)) { scanner.markNotSubscription(sub) }
                         }
                     )
                 }
@@ -438,12 +454,7 @@ struct GmailImportView: View {
     }
 
     static func money(_ amount: Decimal, _ currency: String) -> String {
-        let formatter = NumberFormatter()
-        formatter.numberStyle = .currency
-        formatter.currencyCode = currency
-        formatter.maximumFractionDigits = 2
-        formatter.minimumFractionDigits = 2
-        return formatter.string(from: amount as NSDecimalNumber) ?? "\(amount)"
+        MoneyFormat.string(amount, currency)
     }
 
     // MARK: - Import Complete
@@ -518,6 +529,7 @@ private struct GmailSubscriptionRow: View {
     let isExpanded: Bool
     let onToggle: () -> Void
     let onExpand: () -> Void
+    let onReject: () -> Void
 
     private var proven: ProvenSubscription? { subscription.proven }
 
@@ -577,6 +589,8 @@ private struct GmailSubscriptionRow: View {
                             Text(evidenceLine)
                                 .font(.system(.caption2, design: .rounded))
                                 .foregroundStyle(Color.obsidianTextTertiary)
+                                .lineLimit(1)
+                                .minimumScaleFactor(0.8)
                             if let badge = statusBadge {
                                 Text(badge.text)
                                     .font(.system(.caption2, design: .rounded).weight(.semibold))
@@ -674,6 +688,16 @@ private struct GmailSubscriptionRow: View {
                     }
                 }
             }
+            Button(action: onReject) {
+                Label("This isn't a subscription", systemImage: "hand.thumbsdown")
+                    .font(.system(.caption, design: .rounded).weight(.semibold))
+                    .foregroundStyle(Color.obsidianTextSecondary)
+                    .padding(.vertical, 8)
+                    .padding(.horizontal, 12)
+                    .background(Capsule().fill(Color.obsidianTextTertiary.opacity(0.18)))
+            }
+            .buttonStyle(PlainButtonStyle())
+            .accessibilityHint("Removes it and Pausely will remember, so it won't appear again")
         }
         .frame(maxWidth: .infinity, alignment: .leading)
         .padding(.horizontal, 16)

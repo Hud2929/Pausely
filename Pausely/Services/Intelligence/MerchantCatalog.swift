@@ -66,6 +66,13 @@ struct MerchantCatalog {
         return merged
     }
 
+    // MARK: Domain knowledge
+
+    func isKnownDomain(_ domain: String) -> Bool {
+        let lower = domain.lowercased()
+        return domainIndex[MerchantCatalog.registrableDomain(lower)] != nil || domainIndex[lower] != nil
+    }
+
     // MARK: Resolution
 
     func resolve(hint: String?, senderName: String, senderDomain: String) -> ResolvedMerchant? {
