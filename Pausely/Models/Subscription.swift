@@ -215,8 +215,8 @@ struct Subscription: Identifiable, Codable, Equatable {
     var daysUntilRenewal: Int? {
         guard let nextDate = calculatedNextBillingDate else { return nil }
         let calendar = Calendar.current
-        let components = calendar.dateComponents([.day], from: Date(), to: nextDate)
-        return components.day
+        // Compare calendar days, not elapsed hours: 9 days away at 3pm must not read as "in 8 days".
+        return calendar.calendarDays(from: Date(), to: nextDate)
     }
     
     var renewalStatus: RenewalStatus {

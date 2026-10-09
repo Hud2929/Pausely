@@ -117,7 +117,7 @@ struct UpcomingBillRow: View {
 
     private var daysUntilBilling: Int? {
         guard let date = subscription.nextBillingDate else { return nil }
-        return Calendar.current.dateComponents([.day], from: Date(), to: date).day
+        return Calendar.current.calendarDays(from: Date(), to: date)
     }
 
     private var urgencyColor: Color {

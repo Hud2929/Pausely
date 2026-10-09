@@ -36,7 +36,7 @@ struct NeuralSubscription: Identifiable, Codable, Equatable {
     }
     
     var daysUntilRenewal: Int {
-        Calendar.current.dateComponents([.day], from: Date(), to: nextBillingDate).day ?? 0
+        Calendar.current.calendarDays(from: Date(), to: nextBillingDate)
     }
     
     var urgencyLevel: UrgencyLevel {

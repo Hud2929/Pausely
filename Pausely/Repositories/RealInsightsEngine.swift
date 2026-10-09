@@ -330,8 +330,7 @@ final class RealInsightsEngine: ObservableObject {
 
         for sub in subscriptions {
             if let nextRenewal = sub.nextBillingDate {
-                let components = calendar.dateComponents([.day], from: today, to: nextRenewal)
-                dates[sub.id] = max(0, components.day ?? 0)
+                dates[sub.id] = max(0, calendar.calendarDays(from: today, to: nextRenewal))
             }
         }
         return dates

@@ -89,6 +89,15 @@ struct RootView: View {
         ProcessInfo.processInfo.arguments.contains("--demo-mode")
     }
 
+    /// DEBUG only: open a single screen directly via launch argument.
+    private func isDemoScreen(_ argument: String) -> Bool {
+        #if DEBUG
+        return ProcessInfo.processInfo.arguments.contains(argument)
+        #else
+        return false
+        #endif
+    }
+
     /// DEBUG only: open the Gmail results screen with a synthetic mailbox (no Google sign-in needed).
     private var isDemoGmailResults: Bool {
         #if DEBUG
@@ -117,6 +126,14 @@ struct RootView: View {
                     #if DEBUG
                     GmailImportView()
                         .onAppear { GmailSubscriptionScanner.shared.loadDemoResults() }
+                    #endif
+                } else if isDemoScreen("--demo-subscription") {
+                    #if DEBUG
+                    SubscriptionManagementView(subscription: DemoSubscriptions.netflix)
+                    #endif
+                } else if isDemoScreen("--demo-subscription-edit") {
+                    #if DEBUG
+                    SubscriptionEditView(subscription: DemoSubscriptions.netflix)
                     #endif
                 } else if needsAgeGate, let uid = authManager.currentUser?.id {
                     AgeGateView(

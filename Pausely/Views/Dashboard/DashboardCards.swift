@@ -360,8 +360,7 @@ struct PausedCard: View {
 
     var daysUntilResume: Int {
         guard let pausedUntil = subscription.pausedUntil else { return 0 }
-        let components = Calendar.current.dateComponents([.day], from: Date(), to: pausedUntil)
-        return components.day ?? 0
+        return Calendar.current.calendarDays(from: Date(), to: pausedUntil)
     }
 
     var body: some View {

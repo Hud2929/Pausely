@@ -7,7 +7,6 @@ struct UsageTrackingSection: View {
     let costPerHour: Decimal?
     let usageStats: AppUsageStats?
     let onEditUsage: () -> Void
-    let onViewInsights: () -> Void
 
     private var usageColor: Color {
         if currentUsageMinutes < 30 { return .red }
@@ -37,13 +36,6 @@ struct UsageTrackingSection: View {
                     .foregroundColor(.secondary)
                     .cornerRadius(8)
                 }
-
-                Button(action: onViewInsights) {
-                    Image(systemName: "chart.bar.fill")
-                        .font(.title3)
-                        .foregroundColor(.accentColor)
-                }
-                .accessibilityLabel("View usage insights")
 
                 Button(action: onEditUsage) {
                     Image(systemName: "pencil.circle")
@@ -221,11 +213,9 @@ struct UsageTrackingSection: View {
 
             Spacer()
 
-            Button(action: { }) {
-                Image(systemName: "info.circle")
-                    .foregroundColor(.blue)
-            }
-            .accessibilityLabel("Screen time info")
+            Image(systemName: "info.circle")
+                .foregroundColor(.blue)
+                .accessibilityHidden(true)
         }
         .padding()
         .background(Color.blue.opacity(0.1))

@@ -250,7 +250,7 @@ struct SubscriptionDetailView: View {
             Text("This will permanently remove \(subscription.name) from your subscriptions.")
         }
         .sheet(isPresented: $showingEditSheet) {
-            SubscriptionManagementView(subscription: subscription)
+            SubscriptionEditView(subscription: subscription)
         }
         .sheet(isPresented: $showingCancelFlow) {
             CancelSubscriptionFlow(subscription: subscription)
@@ -309,7 +309,7 @@ private struct CancelTimingCard: View {
 
     private var daysRemaining: Int {
         guard let next = subscription.nextBillingDate else { return 0 }
-        return max(0, Calendar.current.dateComponents([.day], from: Date(), to: next).day ?? 0)
+        return max(0, Calendar.current.calendarDays(from: Date(), to: next))
     }
 
     private var progress: Double {
