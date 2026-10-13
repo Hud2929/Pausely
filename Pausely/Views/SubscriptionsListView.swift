@@ -177,6 +177,7 @@ struct SubscriptionsListView: View {
                                         .listRowEntrance(index: index)
                                 }
                                 .buttonStyle(PlainButtonStyle())
+                                .accessibilityIdentifier("subscriptionRow_\(subscription.name)")
                                 .swipeActions(edge: .trailing, allowsFullSwipe: false) {
                                     Button(role: .destructive) {
                                         HapticStyle.medium.trigger()

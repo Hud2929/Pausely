@@ -317,6 +317,12 @@ struct SubscriptionEditView: View {
 
     // MARK: - Save
 
+    private func finishSaving(_ updated: Subscription) {
+        HapticStyle.success.trigger()
+        onSaved?(updated)
+        dismiss()
+    }
+
     private func save() async {
         focus = nil
         guard let updated = draft.applied(to: original) else {
@@ -329,12 +335,16 @@ struct SubscriptionEditView: View {
         defer { isSaving = false }
         do {
             try await SubscriptionStore.shared.updateSubscription(updated)
-            HapticStyle.success.trigger()
-            onSaved?(updated)
-            dismiss()
+            finishSaving(updated)
         } catch {
-            HapticStyle.error.trigger()
-            saveError = "Your changes weren't saved. \(error.localizedDescription)"
+            // The store is offline-first: it applies the edit locally, queues the cloud write for retry,
+            // then reports the network error. If the edit is in the local store, it IS saved.
+            if SubscriptionStore.shared.subscriptions.contains(where: { $0.id == updated.id && $0.updatedAt == updated.updatedAt }) {
+                finishSaving(updated)
+            } else {
+                HapticStyle.error.trigger()
+                saveError = "Your changes weren't saved. \(error.localizedDescription)"
+            }
         }
     }
 }
