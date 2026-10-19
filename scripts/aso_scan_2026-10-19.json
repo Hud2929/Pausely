@@ -1,0 +1,4743 @@
+{
+ "us|en_us|subscription tracker": [
+  {
+   "id": 1130616675,
+   "name": "Rocket Money - Bills & Budgets",
+   "seller": "Rocket Money",
+   "ratings": 400406,
+   "avg": 4.47,
+   "genre": "Finance",
+   "price": 0.0
+  },
+  {
+   "id": 6751181747,
+   "name": "Subpilot - Cancel Subscription",
+   "seller": "LINERIOS LIMITED",
+   "ratings": 5274,
+   "avg": 4.55,
+   "genre": "Finance",
+   "price": 0.0
+  },
+  {
+   "id": 1059152023,
+   "name": "Bobby - Track subscriptions",
+   "seller": "Yummygum",
+   "ratings": 8014,
+   "avg": 4.75,
+   "genre": "Finance",
+   "price": 0.0
+  },
+  {
+   "id": 1502336248,
+   "name": "Subscription Tracker",
+   "seller": "Ali Alhady",
+   "ratings": 258,
+   "avg": 4.61,
+   "genre": "Finance",
+   "price": 0.0
+  },
+  {
+   "id": 6692620188,
+   "name": "Subscription Manager: Orbit",
+   "seller": "Flooben Ltd",
+   "ratings": 127,
+   "avg": 4.7,
+   "genre": "Finance",
+   "price": 0.0
+  },
+  {
+   "id": 6781251166,
+   "name": "Subtle: Subscription Tracker",
+   "seller": "NORTH STUDIO LLC",
+   "ratings": 6,
+   "avg": 5,
+   "genre": "Finance",
+   "price": 0.0
+  },
+  {
+   "id": 6771250519,
+   "name": "Postpone: Subscription Tracker",
+   "seller": "MatchedCV, LLC",
+   "ratings": 0,
+   "avg": 0,
+   "genre": "Finance",
+   "price": 0.0
+  },
+  {
+   "id": 6740202306,
+   "name": "MonoBoost Cancel Subscriptions",
+   "seller": "Mnboost Corp",
+   "ratings": 6008,
+   "avg": 4.36,
+   "genre": "Utilities",
+   "price": 0.0
+  },
+  {
+   "id": 6746950605,
+   "name": "Subscription Tracker\u3164",
+   "seller": "Jack Furness",
+   "ratings": 47,
+   "avg": 4.06,
+   "genre": "Finance",
+   "price": 0.0
+  },
+  {
+   "id": 6755901499,
+   "name": "SubSynk: Subscription Manager",
+   "seller": "Twinkle Makwana",
+   "ratings": 0,
+   "avg": 0,
+   "genre": "Finance",
+   "price": 0.0
+  }
+ ],
+ "us|en_us|subscription manager": [
+  {
+   "id": 1130616675,
+   "name": "Rocket Money - Bills & Budgets",
+   "seller": "Rocket Money",
+   "ratings": 400406,
+   "avg": 4.47,
+   "genre": "Finance",
+   "price": 0.0
+  },
+  {
+   "id": 6751181747,
+   "name": "Subpilot - Cancel Subscription",
+   "seller": "LINERIOS LIMITED",
+   "ratings": 5274,
+   "avg": 4.55,
+   "genre": "Finance",
+   "price": 0.0
+  },
+  {
+   "id": 1160481993,
+   "name": "Apple Wallet",
+   "seller": "Apple Inc.",
+   "ratings": 7499798,
+   "avg": 4.77,
+   "genre": "Finance",
+   "price": 0.0
+  },
+  {
+   "id": 1259029889,
+   "name": "Subscription Manager - Bills",
+   "seller": "Kango Studios LLC",
+   "ratings": 1665,
+   "avg": 4.46,
+   "genre": "Finance",
+   "price": 0.0
+  },
+  {
+   "id": 6769329967,
+   "name": "SubSeek: Subscription Manager",
+   "seller": "BEGAMOB GLOBAL LIMITED",
+   "ratings": 591,
+   "avg": 4.03,
+   "genre": "Finance",
+   "price": 0.0
+  },
+  {
+   "id": 6448767732,
+   "name": "Subscription Stopper & Manager",
+   "seller": "inMarket Media, LLC",
+   "ratings": 682,
+   "avg": 4.49,
+   "genre": "Finance",
+   "price": 0.0
+  },
+  {
+   "id": 6778323362,
+   "name": "Cancely: Subscription Manager",
+   "seller": "Sergei Nikonenko",
+   "ratings": 10,
+   "avg": 4.6,
+   "genre": "Finance",
+   "price": 0.0
+  },
+  {
+   "id": 1059152023,
+   "name": "Bobby - Track subscriptions",
+   "seller": "Yummygum",
+   "ratings": 8014,
+   "avg": 4.75,
+   "genre": "Finance",
+   "price": 0.0
+  },
+  {
+   "id": 6740202306,
+   "name": "MonoBoost Cancel Subscriptions",
+   "seller": "Mnboost Corp",
+   "ratings": 6008,
+   "avg": 4.36,
+   "genre": "Utilities",
+   "price": 0.0
+  },
+  {
+   "id": 1174471607,
+   "name": "NerdWallet: Smart Money App",
+   "seller": "Nerdwallet, Inc.",
+   "ratings": 125385,
+   "avg": 4.83,
+   "genre": "Finance",
+   "price": 0.0
+  }
+ ],
+ "us|en_us|track subscriptions": [
+  {
+   "id": 1130616675,
+   "name": "Rocket Money - Bills & Budgets",
+   "seller": "Rocket Money",
+   "ratings": 400406,
+   "avg": 4.47,
+   "genre": "Finance",
+   "price": 0.0
+  },
+  {
+   "id": 1059152023,
+   "name": "Bobby - Track subscriptions",
+   "seller": "Yummygum",
+   "ratings": 8014,
+   "avg": 4.75,
+   "genre": "Finance",
+   "price": 0.0
+  },
+  {
+   "id": 1174471607,
+   "name": "NerdWallet: Smart Money App",
+   "seller": "Nerdwallet, Inc.",
+   "ratings": 125385,
+   "avg": 4.83,
+   "genre": "Finance",
+   "price": 0.0
+  },
+  {
+   "id": 6757757235,
+   "name": "Subwise: Track Subscriptions",
+   "seller": "PAUL JAMES SABANDAL",
+   "ratings": 2,
+   "avg": 5,
+   "genre": "Finance",
+   "price": 0.0
+  },
+  {
+   "id": 1259029889,
+   "name": "Subscription Manager - Bills",
+   "seller": "Kango Studios LLC",
+   "ratings": 1665,
+   "avg": 4.46,
+   "genre": "Finance",
+   "price": 0.0
+  },
+  {
+   "id": 1577082754,
+   "name": "Subscriptions - Track Expenses",
+   "seller": "Touchbits Inc.",
+   "ratings": 172,
+   "avg": 4.7,
+   "genre": "Finance",
+   "price": 0.0
+  },
+  {
+   "id": 1507248426,
+   "name": "Skaffer - Track subscriptions",
+   "seller": "Yahor Iskrankou",
+   "ratings": 90,
+   "avg": 4.69,
+   "genre": "Finance",
+   "price": 0.0
+  },
+  {
+   "id": 6743495252,
+   "name": "Recurroo - Track Subscriptions",
+   "seller": "Whimseed Studio Private Limited",
+   "ratings": 0,
+   "avg": 0,
+   "genre": "Finance",
+   "price": 0.0
+  },
+  {
+   "id": 6751181747,
+   "name": "Subpilot - Cancel Subscription",
+   "seller": "LINERIOS LIMITED",
+   "ratings": 5274,
+   "avg": 4.55,
+   "genre": "Finance",
+   "price": 0.0
+  },
+  {
+   "id": 6760020976,
+   "name": "SubscHub: Track Subscriptions",
+   "seller": "akira kawata",
+   "ratings": 0,
+   "avg": 0,
+   "genre": "Finance",
+   "price": 0.0
+  }
+ ],
+ "us|en_us|cancel subscriptions": [
+  {
+   "id": 1130616675,
+   "name": "Rocket Money - Bills & Budgets",
+   "seller": "Rocket Money",
+   "ratings": 400406,
+   "avg": 4.47,
+   "genre": "Finance",
+   "price": 0.0
+  },
+  {
+   "id": 6807352178,
+   "name": "Cancel Subscriptions - Saver",
+   "seller": "Tim Klugman",
+   "ratings": 0,
+   "avg": 0,
+   "genre": "Finance",
+   "price": 0.0
+  },
+  {
+   "id": 6751181747,
+   "name": "Subpilot - Cancel Subscription",
+   "seller": "LINERIOS LIMITED",
+   "ratings": 5274,
+   "avg": 4.55,
+   "genre": "Finance",
+   "price": 0.0
+  },
+  {
+   "id": 1160481993,
+   "name": "Apple Wallet",
+   "seller": "Apple Inc.",
+   "ratings": 7499798,
+   "avg": 4.77,
+   "genre": "Finance",
+   "price": 0.0
+  },
+  {
+   "id": 6762061120,
+   "name": "Cancel Subscriptions: Gravity",
+   "seller": "Viral App Labs LLC",
+   "ratings": 55,
+   "avg": 4.67,
+   "genre": "Finance",
+   "price": 0.0
+  },
+  {
+   "id": 375380948,
+   "name": "Apple Store",
+   "seller": "Apple Inc.",
+   "ratings": 171278,
+   "avg": 3.51,
+   "genre": "Shopping",
+   "price": 0.0
+  },
+  {
+   "id": 6740202306,
+   "name": "MonoBoost Cancel Subscriptions",
+   "seller": "Mnboost Corp",
+   "ratings": 6008,
+   "avg": 4.36,
+   "genre": "Utilities",
+   "price": 0.0
+  },
+  {
+   "id": 1130498044,
+   "name": "Apple Support",
+   "seller": "Apple Inc.",
+   "ratings": 33542,
+   "avg": 3.88,
+   "genre": "Utilities",
+   "price": 0.0
+  },
+  {
+   "id": 6479920412,
+   "name": "Cancel Subscriptions & Refund",
+   "seller": "VUNYO BILGI TEKNOLOJILERI LIMITED SIRKETI",
+   "ratings": 844,
+   "avg": 4.1,
+   "genre": "Finance",
+   "price": 0.0
+  },
+  {
+   "id": 6778644371,
+   "name": "Cancel Subscriptions & Bills",
+   "seller": "Chengdu Qiuyue Hanjiang Network Technology Co., Ltd.",
+   "ratings": 1,
+   "avg": 4,
+   "genre": "Utilities",
+   "price": 0.0
+  }
+ ],
+ "us|en_us|subscription cancel": [
+  {
+   "id": 6751181747,
+   "name": "Subpilot - Cancel Subscription",
+   "seller": "LINERIOS LIMITED",
+   "ratings": 5274,
+   "avg": 4.55,
+   "genre": "Finance",
+   "price": 0.0
+  },
+  {
+   "id": 1130616675,
+   "name": "Rocket Money - Bills & Budgets",
+   "seller": "Rocket Money",
+   "ratings": 400406,
+   "avg": 4.47,
+   "genre": "Finance",
+   "price": 0.0
+  },
+  {
+   "id": 1160481993,
+   "name": "Apple Wallet",
+   "seller": "Apple Inc.",
+   "ratings": 7499798,
+   "avg": 4.77,
+   "genre": "Finance",
+   "price": 0.0
+  },
+  {
+   "id": 375380948,
+   "name": "Apple Store",
+   "seller": "Apple Inc.",
+   "ratings": 171278,
+   "avg": 3.51,
+   "genre": "Shopping",
+   "price": 0.0
+  },
+  {
+   "id": 6740202306,
+   "name": "MonoBoost Cancel Subscriptions",
+   "seller": "Mnboost Corp",
+   "ratings": 6008,
+   "avg": 4.36,
+   "genre": "Utilities",
+   "price": 0.0
+  },
+  {
+   "id": 6762061120,
+   "name": "Cancel Subscriptions: Gravity",
+   "seller": "Viral App Labs LLC",
+   "ratings": 55,
+   "avg": 4.67,
+   "genre": "Finance",
+   "price": 0.0
+  },
+  {
+   "id": 6448767732,
+   "name": "Subscription Stopper & Manager",
+   "seller": "inMarket Media, LLC",
+   "ratings": 682,
+   "avg": 4.49,
+   "genre": "Finance",
+   "price": 0.0
+  },
+  {
+   "id": 6763575456,
+   "name": "Cancel Subscriptions - Subko",
+   "seller": "PulseApps LLC",
+   "ratings": 2,
+   "avg": 5,
+   "genre": "Utilities",
+   "price": 0.0
+  },
+  {
+   "id": 1259029889,
+   "name": "Subscription Manager - Bills",
+   "seller": "Kango Studios LLC",
+   "ratings": 1665,
+   "avg": 4.46,
+   "genre": "Finance",
+   "price": 0.0
+  },
+  {
+   "id": 6770239924,
+   "name": "Cancel Subscription Fast",
+   "seller": "Kiran Gajjar",
+   "ratings": 2,
+   "avg": 5,
+   "genre": "Utilities",
+   "price": 0.0
+  }
+ ],
+ "us|en_us|recurring payments": [
+  {
+   "id": 1130616675,
+   "name": "Rocket Money - Bills & Budgets",
+   "seller": "Rocket Money",
+   "ratings": 400406,
+   "avg": 4.47,
+   "genre": "Finance",
+   "price": 0.0
+  },
+  {
+   "id": 1059152023,
+   "name": "Bobby - Track subscriptions",
+   "seller": "Yummygum",
+   "ratings": 8014,
+   "avg": 4.75,
+   "genre": "Finance",
+   "price": 0.0
+  },
+  {
+   "id": 1259029889,
+   "name": "Subscription Manager - Bills",
+   "seller": "Kango Studios LLC",
+   "ratings": 1665,
+   "avg": 4.46,
+   "genre": "Finance",
+   "price": 0.0
+  },
+  {
+   "id": 6743909628,
+   "name": "Recurring Payment Lists",
+   "seller": "Cesar Ibarra",
+   "ratings": 1,
+   "avg": 1,
+   "genre": "Finance",
+   "price": 0.0
+  },
+  {
+   "id": 1103374458,
+   "name": "ChargeStripe: Stripe Payments",
+   "seller": "SureSwift Worldwide Inc.",
+   "ratings": 2088,
+   "avg": 4.61,
+   "genre": "Finance",
+   "price": 0.0
+  },
+  {
+   "id": 663338402,
+   "name": "Payoneer - Business Payments",
+   "seller": "Payoneer Inc",
+   "ratings": 5301,
+   "avg": 4.45,
+   "genre": "Finance",
+   "price": 0.0
+  },
+  {
+   "id": 1549027048,
+   "name": "Rocket League Sideswipe",
+   "seller": "Psyonix LLC",
+   "ratings": 110729,
+   "avg": 4.29,
+   "genre": "Games",
+   "price": 0.0
+  },
+  {
+   "id": 1160481993,
+   "name": "Apple Wallet",
+   "seller": "Apple Inc.",
+   "ratings": 7499798,
+   "avg": 4.77,
+   "genre": "Finance",
+   "price": 0.0
+  },
+  {
+   "id": 1375356662,
+   "name": "Coinhop \u2014 Get paid on time",
+   "seller": "Coinhop, Inc.",
+   "ratings": 25,
+   "avg": 4.4,
+   "genre": "Finance",
+   "price": 0.0
+  },
+  {
+   "id": 1229265627,
+   "name": "DivDat Mobile Payments App",
+   "seller": "Diversified Data Processing & Consulting, Inc.",
+   "ratings": 5673,
+   "avg": 4.79,
+   "genre": "Finance",
+   "price": 0.0
+  }
+ ],
+ "us|en_us|recurring bills": [
+  {
+   "id": 1259029889,
+   "name": "Subscription Manager - Bills",
+   "seller": "Kango Studios LLC",
+   "ratings": 1665,
+   "avg": 4.46,
+   "genre": "Finance",
+   "price": 0.0
+  },
+  {
+   "id": 6793947843,
+   "name": "Recurring Bills",
+   "seller": "Prashant jha",
+   "ratings": 0,
+   "avg": 0,
+   "genre": "Finance",
+   "price": 0.0
+  },
+  {
+   "id": 473477150,
+   "name": "Bills Monitor - Bill Reminder",
+   "seller": "\u5029 \u8d75",
+   "ratings": 570,
+   "avg": 4.41,
+   "genre": "Finance",
+   "price": 0.0
+  },
+  {
+   "id": 468993411,
+   "name": "Bills Monitor Pro",
+   "seller": "\u5029 \u8d75",
+   "ratings": 1701,
+   "avg": 4.62,
+   "genre": "Finance",
+   "price": 0.99
+  },
+  {
+   "id": 6775287342,
+   "name": "Bill Check: Monthly Bills",
+   "seller": "IGOR TARAN",
+   "ratings": 14,
+   "avg": 4.71,
+   "genre": "Finance",
+   "price": 0.0
+  },
+  {
+   "id": 6772711619,
+   "name": "Recurring Bill SubTracker",
+   "seller": "SleepyBytes SIA",
+   "ratings": 0,
+   "avg": 0,
+   "genre": "Finance",
+   "price": 0.0
+  },
+  {
+   "id": 572561420,
+   "name": "Chronicle - Bill Organizer",
+   "seller": "LittleFin LLC",
+   "ratings": 3848,
+   "avg": 4.83,
+   "genre": "Finance",
+   "price": 0.0
+  },
+  {
+   "id": 419248567,
+   "name": "doxo: All-in-One Bill Pay",
+   "seller": "doxo, Inc",
+   "ratings": 1072,
+   "avg": 4.21,
+   "genre": "Finance",
+   "price": 0.0
+  },
+  {
+   "id": 1482139568,
+   "name": "Sahl \u0633\u0647\u0644 - Payments Made Easy",
+   "seller": "Egypt Pay",
+   "ratings": 11163,
+   "avg": 4.75,
+   "genre": "Finance",
+   "price": 0.0
+  },
+  {
+   "id": 1617722252,
+   "name": "Bill Calendar",
+   "seller": "Bumjin Park",
+   "ratings": 14,
+   "avg": 3.64,
+   "genre": "Finance",
+   "price": 0.0
+  }
+ ],
+ "us|en_us|bill reminder": [
+  {
+   "id": 1352782733,
+   "name": "Bills Organizer & Reminder",
+   "seller": "Dennis Kruta",
+   "ratings": 24861,
+   "avg": 4.69,
+   "genre": "Finance",
+   "price": 0.0
+  },
+  {
+   "id": 6737248419,
+   "name": "Bill Organizer + Reminders",
+   "seller": "Anastasia Kovba",
+   "ratings": 333,
+   "avg": 4.85,
+   "genre": "Finance",
+   "price": 0.0
+  },
+  {
+   "id": 6782811082,
+   "name": "Bill Reminder: Credit Cards",
+   "seller": "\u6c49\u897f \u6492",
+   "ratings": 2,
+   "avg": 5,
+   "genre": "Utilities",
+   "price": 0.0
+  },
+  {
+   "id": 834370671,
+   "name": "Bills Manager",
+   "seller": "Jose Fabian Pena",
+   "ratings": 8102,
+   "avg": 4.77,
+   "genre": "Finance",
+   "price": 0.0
+  },
+  {
+   "id": 514301848,
+   "name": "Bill Organizer",
+   "seller": "Space-O Digicom Private Limited",
+   "ratings": 4893,
+   "avg": 4.35,
+   "genre": "Finance",
+   "price": 0.0
+  },
+  {
+   "id": 6757410072,
+   "name": "Bill Keeper: Bill Reminders",
+   "seller": "Race Young",
+   "ratings": 1,
+   "avg": 5,
+   "genre": "Productivity",
+   "price": 0.0
+  },
+  {
+   "id": 1059461492,
+   "name": "Bill Tracker Pro: Budget Saver",
+   "seller": "Bill Tracker Pro, Inc.",
+   "ratings": 5062,
+   "avg": 4.6,
+   "genre": "Finance",
+   "price": 0.0
+  },
+  {
+   "id": 1609633170,
+   "name": "RemindPay: Bills & Warranties",
+   "seller": "Rinto Andrews",
+   "ratings": 33,
+   "avg": 4.64,
+   "genre": "Finance",
+   "price": 0.0
+  },
+  {
+   "id": 1130616675,
+   "name": "Rocket Money - Bills & Budgets",
+   "seller": "Rocket Money",
+   "ratings": 400406,
+   "avg": 4.47,
+   "genre": "Finance",
+   "price": 0.0
+  }
+ ],
+ "us|en_us|bill tracker": [
+  {
+   "id": 1352782733,
+   "name": "Bills Organizer & Reminder",
+   "seller": "Dennis Kruta",
+   "ratings": 24861,
+   "avg": 4.69,
+   "genre": "Finance",
+   "price": 0.0
+  },
+  {
+   "id": 1059461492,
+   "name": "Bill Tracker Pro: Budget Saver",
+   "seller": "Bill Tracker Pro, Inc.",
+   "ratings": 5062,
+   "avg": 4.6,
+   "genre": "Finance",
+   "price": 0.0
+  },
+  {
+   "id": 6788912799,
+   "name": "Bill Organizer & Tracker Plus",
+   "seller": "East Frisia LLC",
+   "ratings": 15,
+   "avg": 4.47,
+   "genre": "Productivity",
+   "price": 0.0
+  },
+  {
+   "id": 6447707197,
+   "name": "What's Due: Bill Tracker",
+   "seller": "Semper Phoenix LLC",
+   "ratings": 321,
+   "avg": 4.84,
+   "genre": "Finance",
+   "price": 0.0
+  },
+  {
+   "id": 1621020173,
+   "name": "Fleur - Budget Planner App",
+   "seller": "Akash Jain",
+   "ratings": 13058,
+   "avg": 4.8,
+   "genre": "Finance",
+   "price": 0.0
+  },
+  {
+   "id": 834370671,
+   "name": "Bills Manager",
+   "seller": "Jose Fabian Pena",
+   "ratings": 8102,
+   "avg": 4.77,
+   "genre": "Finance",
+   "price": 0.0
+  },
+  {
+   "id": 1130616675,
+   "name": "Rocket Money - Bills & Budgets",
+   "seller": "Rocket Money",
+   "ratings": 400406,
+   "avg": 4.47,
+   "genre": "Finance",
+   "price": 0.0
+  },
+  {
+   "id": 6775578198,
+   "name": "Bill Reminder & Tracker",
+   "seller": "S M Moinur Rahman",
+   "ratings": 12,
+   "avg": 4.33,
+   "genre": "Finance",
+   "price": 0.0
+  },
+  {
+   "id": 936422955,
+   "name": "Buddy: Budget Planner App",
+   "seller": "Buddy Budgeting AB",
+   "ratings": 9573,
+   "avg": 4.7,
+   "genre": "Finance",
+   "price": 0.0
+  }
+ ],
+ "us|en_us|free trial reminder": [
+  {
+   "id": 6756620728,
+   "name": "Free Trial Killer",
+   "seller": "prathyush nallamothu",
+   "ratings": 1,
+   "avg": 5,
+   "genre": "Utilities",
+   "price": 0.0
+  },
+  {
+   "id": 1232651315,
+   "name": "Remind Me: ToDo reminder",
+   "seller": "Yuma Ikeda",
+   "ratings": 2448,
+   "avg": 4.47,
+   "genre": "Productivity",
+   "price": 0.0
+  },
+  {
+   "id": 395529341,
+   "name": "RE.minder",
+   "seller": "postmechanical, LLC",
+   "ratings": 799,
+   "avg": 4.69,
+   "genre": "Productivity",
+   "price": 0.0
+  },
+  {
+   "id": 6739868277,
+   "name": "Trial Alert: Avoid Auto Bills",
+   "seller": "Benjamin Rhodes-Kropf",
+   "ratings": 1,
+   "avg": 3,
+   "genre": "Productivity",
+   "price": 0.0
+  },
+  {
+   "id": 733049800,
+   "name": "To Do Reminder with Alarm",
+   "seller": "Balpreet Patil",
+   "ratings": 2719,
+   "avg": 4.59,
+   "genre": "Productivity",
+   "price": 0.0
+  },
+  {
+   "id": 6785028758,
+   "name": "TrialBell: Free Trial Reminder",
+   "seller": "PRAVEENKUMAR MURUGESAN",
+   "ratings": 0,
+   "avg": 0,
+   "genre": "Finance",
+   "price": 0.0
+  },
+  {
+   "id": 1565445945,
+   "name": "Reminder Notifications",
+   "seller": "Martin Schurmann",
+   "ratings": 1361,
+   "avg": 4.71,
+   "genre": "Utilities",
+   "price": 0.0
+  },
+  {
+   "id": 471570365,
+   "name": "Reminder & Countdown",
+   "seller": "PERSAPPS (PERSEPS), TOO",
+   "ratings": 16519,
+   "avg": 4.76,
+   "genre": "Productivity",
+   "price": 0.0
+  },
+  {
+   "id": 6762180214,
+   "name": "SubGuard AI: Subscription Log",
+   "seller": "\u5fd7\u521a \u5218",
+   "ratings": 0,
+   "avg": 0,
+   "genre": "Finance",
+   "price": 0.0
+  },
+  {
+   "id": 1071899483,
+   "name": "Reminder, Reminders with Voice",
+   "seller": "Sergio Licea",
+   "ratings": 20716,
+   "avg": 4.68,
+   "genre": "Productivity",
+   "price": 0.0
+  }
+ ],
+ "us|en_us|trial tracker": [
+  {
+   "id": 1367983640,
+   "name": "ET Grow - Trial Tracker",
+   "seller": "ET Grow Inc",
+   "ratings": 0,
+   "avg": 0,
+   "genre": "Business",
+   "price": 0.0
+  },
+  {
+   "id": 6798929229,
+   "name": "Trial Tracker: Renewal Alerts",
+   "seller": "Soluciones Tecnologicas en Fletes SA de CV",
+   "ratings": 0,
+   "avg": 0,
+   "genre": "Finance",
+   "price": 0.0
+  },
+  {
+   "id": 6792602816,
+   "name": "Trial Guard: Trial Tracker",
+   "seller": "Steven Patrick Nash",
+   "ratings": 0,
+   "avg": 0,
+   "genre": "Utilities",
+   "price": 0.0
+  },
+  {
+   "id": 636875425,
+   "name": "TrailLink: Bike, Run, Walk",
+   "seller": "Rails to Trails Conservancy",
+   "ratings": 8109,
+   "avg": 4.58,
+   "genre": "Health & Fitness",
+   "price": 0.0
+  },
+  {
+   "id": 300235330,
+   "name": "ASICS Runkeeper\u2014Run Tracker",
+   "seller": "ASICS Runner App, Inc.",
+   "ratings": 380605,
+   "avg": 4.83,
+   "genre": "Health & Fitness",
+   "price": 0.0
+  },
+  {
+   "id": 893687399,
+   "name": "Ride with GPS: Bike Navigation",
+   "seller": "Ride with GPS LLC",
+   "ratings": 40013,
+   "avg": 4.72,
+   "genre": "Health & Fitness",
+   "price": 0.0
+  },
+  {
+   "id": 6795395518,
+   "name": "Bill Reminder: Trial Tracker",
+   "seller": "Ahmed Shalakamy",
+   "ratings": 0,
+   "avg": 0,
+   "genre": "Finance",
+   "price": 0.0
+  },
+  {
+   "id": 6447958086,
+   "name": "SubGuard: Private Sub Tracker",
+   "seller": "MEGAMOBI LIMITED",
+   "ratings": 9,
+   "avg": 4.56,
+   "genre": "Utilities",
+   "price": 0.0
+  },
+  {
+   "id": 382233851,
+   "name": "Flightradar24 | Flight Tracker",
+   "seller": "Flightradar24 AB",
+   "ratings": 672332,
+   "avg": 4.84,
+   "genre": "Travel",
+   "price": 0.0
+  }
+ ],
+ "us|en_us|subscription reminder": [
+  {
+   "id": 1059152023,
+   "name": "Bobby - Track subscriptions",
+   "seller": "Yummygum",
+   "ratings": 8014,
+   "avg": 4.75,
+   "genre": "Finance",
+   "price": 0.0
+  },
+  {
+   "id": 1259029889,
+   "name": "Subscription Manager - Bills",
+   "seller": "Kango Studios LLC",
+   "ratings": 1665,
+   "avg": 4.46,
+   "genre": "Finance",
+   "price": 0.0
+  },
+  {
+   "id": 6746835094,
+   "name": "whatsub- subscription reminder",
+   "seller": "woogle inc",
+   "ratings": 0,
+   "avg": 0,
+   "genre": "Finance",
+   "price": 0.0
+  },
+  {
+   "id": 6755901499,
+   "name": "SubSynk: Subscription Manager",
+   "seller": "Twinkle Makwana",
+   "ratings": 0,
+   "avg": 0,
+   "genre": "Finance",
+   "price": 0.0
+  },
+  {
+   "id": 6760253704,
+   "name": "Subscription Reminder AU",
+   "seller": "Shehar Yar",
+   "ratings": 0,
+   "avg": 0,
+   "genre": "Utilities",
+   "price": 0.0
+  },
+  {
+   "id": 6745758809,
+   "name": "Subscription-Reminder, Tracker",
+   "seller": "Pranshu Patidar",
+   "ratings": 0,
+   "avg": 0,
+   "genre": "Utilities",
+   "price": 0.0
+  },
+  {
+   "id": 6769329967,
+   "name": "SubSeek: Subscription Manager",
+   "seller": "BEGAMOB GLOBAL LIMITED",
+   "ratings": 591,
+   "avg": 4.03,
+   "genre": "Finance",
+   "price": 0.0
+  },
+  {
+   "id": 6756604906,
+   "name": "Subsly - Subscription Reminder",
+   "seller": "James Jowett",
+   "ratings": 0,
+   "avg": 0,
+   "genre": "Finance",
+   "price": 0.0
+  },
+  {
+   "id": 6762199144,
+   "name": "Reminder: Subscription Tracker",
+   "seller": "Hai Nam Trinh",
+   "ratings": 2,
+   "avg": 5,
+   "genre": "Finance",
+   "price": 0.0
+  },
+  {
+   "id": 6763424910,
+   "name": "Zuko: Subscription Reminder",
+   "seller": "abiodun oyetomi",
+   "ratings": 1,
+   "avg": 5,
+   "genre": "Finance",
+   "price": 0.0
+  }
+ ],
+ "us|en_us|subscription cost": [
+  {
+   "id": 6769329967,
+   "name": "SubSeek: Subscription Manager",
+   "seller": "BEGAMOB GLOBAL LIMITED",
+   "ratings": 591,
+   "avg": 4.03,
+   "genre": "Finance",
+   "price": 0.0
+  },
+  {
+   "id": 6759666790,
+   "name": "Subscription Tracker - Value",
+   "seller": "kaisei watanabe",
+   "ratings": 1,
+   "avg": 5,
+   "genre": "Utilities",
+   "price": 0.99
+  },
+  {
+   "id": 6759223571,
+   "name": "Subscription Cost Tracker",
+   "seller": "Seth Baugh",
+   "ratings": 0,
+   "avg": 0,
+   "genre": "Utilities",
+   "price": 0.0
+  },
+  {
+   "id": 6820045507,
+   "name": "Subscription Cost",
+   "seller": "BAO TRAM THI",
+   "ratings": 0,
+   "avg": 0,
+   "genre": "Lifestyle",
+   "price": 0.0
+  },
+  {
+   "id": 6771394250,
+   "name": "Subscription Cost Radar",
+   "seller": "minchul kim",
+   "ratings": 0,
+   "avg": 0,
+   "genre": "Finance",
+   "price": 0.0
+  },
+  {
+   "id": 6769324050,
+   "name": "SubTracker: Subscription Cost",
+   "seller": "ryuya matsuo",
+   "ratings": 0,
+   "avg": 0,
+   "genre": "Finance",
+   "price": 0.0
+  },
+  {
+   "id": 1059152023,
+   "name": "Bobby - Track subscriptions",
+   "seller": "Yummygum",
+   "ratings": 8014,
+   "avg": 4.75,
+   "genre": "Finance",
+   "price": 0.0
+  },
+  {
+   "id": 6740202306,
+   "name": "MonoBoost Cancel Subscriptions",
+   "seller": "Mnboost Corp",
+   "ratings": 6008,
+   "avg": 4.36,
+   "genre": "Utilities",
+   "price": 0.0
+  },
+  {
+   "id": 6450825850,
+   "name": "Simple Subscription Manager",
+   "seller": "NAOYA ONO",
+   "ratings": 0,
+   "avg": 0,
+   "genre": "Finance",
+   "price": 0.0
+  },
+  {
+   "id": 6757722167,
+   "name": "SubPocket Subscription Tracker",
+   "seller": "Afriwan Ahda",
+   "ratings": 0,
+   "avg": 0,
+   "genre": "Finance",
+   "price": 0.0
+  }
+ ],
+ "us|en_us|hidden subscriptions": [
+  {
+   "id": 6751181747,
+   "name": "Subpilot - Cancel Subscription",
+   "seller": "LINERIOS LIMITED",
+   "ratings": 5274,
+   "avg": 4.55,
+   "genre": "Finance",
+   "price": 0.0
+  },
+  {
+   "id": 1259029889,
+   "name": "Subscription Manager - Bills",
+   "seller": "Kango Studios LLC",
+   "ratings": 1665,
+   "avg": 4.46,
+   "genre": "Finance",
+   "price": 0.0
+  },
+  {
+   "id": 6740202306,
+   "name": "MonoBoost Cancel Subscriptions",
+   "seller": "Mnboost Corp",
+   "ratings": 6008,
+   "avg": 4.36,
+   "genre": "Utilities",
+   "price": 0.0
+  },
+  {
+   "id": 1502336248,
+   "name": "Subscription Tracker",
+   "seller": "Ali Alhady",
+   "ratings": 258,
+   "avg": 4.61,
+   "genre": "Finance",
+   "price": 0.0
+  },
+  {
+   "id": 1160481993,
+   "name": "Apple Wallet",
+   "seller": "Apple Inc.",
+   "ratings": 7499798,
+   "avg": 4.77,
+   "genre": "Finance",
+   "price": 0.0
+  },
+  {
+   "id": 6769329967,
+   "name": "SubSeek: Subscription Manager",
+   "seller": "BEGAMOB GLOBAL LIMITED",
+   "ratings": 591,
+   "avg": 4.03,
+   "genre": "Finance",
+   "price": 0.0
+  },
+  {
+   "id": 1059152023,
+   "name": "Bobby - Track subscriptions",
+   "seller": "Yummygum",
+   "ratings": 8014,
+   "avg": 4.75,
+   "genre": "Finance",
+   "price": 0.0
+  },
+  {
+   "id": 6781251166,
+   "name": "Subtle: Subscription Tracker",
+   "seller": "NORTH STUDIO LLC",
+   "ratings": 6,
+   "avg": 5,
+   "genre": "Finance",
+   "price": 0.0
+  },
+  {
+   "id": 6443916412,
+   "name": "Hidden Grounds Coffee",
+   "seller": "Per Diem Subscriptions, Inc.",
+   "ratings": 173,
+   "avg": 4.95,
+   "genre": "Food & Drink",
+   "price": 0.0
+  },
+  {
+   "id": 6776005049,
+   "name": "Glacier App",
+   "seller": "Security App LLC",
+   "ratings": 294,
+   "avg": 4.31,
+   "genre": "Productivity",
+   "price": 0.0
+  }
+ ],
+ "us|en_us|forgotten subscriptions": [
+  {
+   "id": 6740202306,
+   "name": "MonoBoost Cancel Subscriptions",
+   "seller": "Mnboost Corp",
+   "ratings": 6008,
+   "avg": 4.36,
+   "genre": "Utilities",
+   "price": 0.0
+  },
+  {
+   "id": 1059152023,
+   "name": "Bobby - Track subscriptions",
+   "seller": "Yummygum",
+   "ratings": 8014,
+   "avg": 4.75,
+   "genre": "Finance",
+   "price": 0.0
+  },
+  {
+   "id": 6769329967,
+   "name": "SubSeek: Subscription Manager",
+   "seller": "BEGAMOB GLOBAL LIMITED",
+   "ratings": 591,
+   "avg": 4.03,
+   "genre": "Finance",
+   "price": 0.0
+  },
+  {
+   "id": 6758654066,
+   "name": "Subscriptions Tracker - Subio",
+   "seller": "Unlock Futurix Ltd",
+   "ratings": 8,
+   "avg": 4.25,
+   "genre": "Finance",
+   "price": 0.0
+  },
+  {
+   "id": 1259029889,
+   "name": "Subscription Manager - Bills",
+   "seller": "Kango Studios LLC",
+   "ratings": 1665,
+   "avg": 4.46,
+   "genre": "Finance",
+   "price": 0.0
+  },
+  {
+   "id": 1507248426,
+   "name": "Skaffer - Track subscriptions",
+   "seller": "Yahor Iskrankou",
+   "ratings": 90,
+   "avg": 4.69,
+   "genre": "Finance",
+   "price": 0.0
+  },
+  {
+   "id": 1551697409,
+   "name": "Subscriptions: Manage Subs",
+   "seller": "Alexander Feist",
+   "ratings": 65,
+   "avg": 4.06,
+   "genre": "Finance",
+   "price": 0.0
+  },
+  {
+   "id": 1577082754,
+   "name": "Subscriptions - Track Expenses",
+   "seller": "Touchbits Inc.",
+   "ratings": 172,
+   "avg": 4.7,
+   "genre": "Finance",
+   "price": 0.0
+  },
+  {
+   "id": 6781251166,
+   "name": "Subtle: Subscription Tracker",
+   "seller": "NORTH STUDIO LLC",
+   "ratings": 6,
+   "avg": 5,
+   "genre": "Finance",
+   "price": 0.0
+  },
+  {
+   "id": 1632853914,
+   "name": "SubManager: Subscriptions",
+   "seller": "Ahnaf Mahmud",
+   "ratings": 68,
+   "avg": 4.76,
+   "genre": "Finance",
+   "price": 0.0
+  }
+ ],
+ "us|en_us|find subscriptions": [
+  {
+   "id": 6751181747,
+   "name": "Subpilot - Cancel Subscription",
+   "seller": "LINERIOS LIMITED",
+   "ratings": 5274,
+   "avg": 4.55,
+   "genre": "Finance",
+   "price": 0.0
+  },
+  {
+   "id": 1130616675,
+   "name": "Rocket Money - Bills & Budgets",
+   "seller": "Rocket Money",
+   "ratings": 400406,
+   "avg": 4.47,
+   "genre": "Finance",
+   "price": 0.0
+  },
+  {
+   "id": 6448767732,
+   "name": "Subscription Stopper & Manager",
+   "seller": "inMarket Media, LLC",
+   "ratings": 682,
+   "avg": 4.49,
+   "genre": "Finance",
+   "price": 0.0
+  },
+  {
+   "id": 6746950605,
+   "name": "Subscription Tracker\u3164",
+   "seller": "Jack Furness",
+   "ratings": 47,
+   "avg": 4.06,
+   "genre": "Finance",
+   "price": 0.0
+  },
+  {
+   "id": 6772289193,
+   "name": "Cancel Subscriptions & Find",
+   "seller": "Youssef Ait ouchaour",
+   "ratings": 0,
+   "avg": 0,
+   "genre": "Finance",
+   "price": 0.0
+  },
+  {
+   "id": 6740202306,
+   "name": "MonoBoost Cancel Subscriptions",
+   "seller": "Mnboost Corp",
+   "ratings": 6008,
+   "avg": 4.36,
+   "genre": "Utilities",
+   "price": 0.0
+  },
+  {
+   "id": 6479920412,
+   "name": "Cancel Subscriptions & Refund",
+   "seller": "VUNYO BILGI TEKNOLOJILERI LIMITED SIRKETI",
+   "ratings": 844,
+   "avg": 4.1,
+   "genre": "Finance",
+   "price": 0.0
+  },
+  {
+   "id": 1059152023,
+   "name": "Bobby - Track subscriptions",
+   "seller": "Yummygum",
+   "ratings": 8014,
+   "avg": 4.75,
+   "genre": "Finance",
+   "price": 0.0
+  },
+  {
+   "id": 6692620188,
+   "name": "Subscription Manager: Orbit",
+   "seller": "Flooben Ltd",
+   "ratings": 127,
+   "avg": 4.7,
+   "genre": "Finance",
+   "price": 0.0
+  },
+  {
+   "id": 6771250519,
+   "name": "Postpone: Subscription Tracker",
+   "seller": "MatchedCV, LLC",
+   "ratings": 0,
+   "avg": 0,
+   "genre": "Finance",
+   "price": 0.0
+  }
+ ],
+ "us|en_us|expense tracker": [
+  {
+   "id": 548615579,
+   "name": "Spending Tracker",
+   "seller": "MH Riley Ltd",
+   "ratings": 19473,
+   "avg": 4.78,
+   "genre": "Finance",
+   "price": 0.0
+  },
+  {
+   "id": 1525179720,
+   "name": "Budget app - spending tracker",
+   "seller": "Inner Grow Limited",
+   "ratings": 16200,
+   "avg": 4.72,
+   "genre": "Finance",
+   "price": 0.0
+  },
+  {
+   "id": 471713959,
+   "name": "Expensify - Travel & Expense",
+   "seller": "Expensify, Inc.",
+   "ratings": 157726,
+   "avg": 4.63,
+   "genre": "Business",
+   "price": 0.0
+  },
+  {
+   "id": 6804068903,
+   "name": "Budget app - GoodMoney",
+   "seller": "BRAVESET LTD",
+   "ratings": 59,
+   "avg": 4.66,
+   "genre": "Finance",
+   "price": 0.0
+  },
+  {
+   "id": 1492055171,
+   "name": "Expenses: Spending Tracker",
+   "seller": "BLUE COMET LABS LLC",
+   "ratings": 1830,
+   "avg": 4.8,
+   "genre": "Finance",
+   "price": 0.0
+  },
+  {
+   "id": 560481810,
+   "name": "Money Manager Expense & Budget",
+   "seller": "Realbyte Inc.",
+   "ratings": 19562,
+   "avg": 4.82,
+   "genre": "Finance",
+   "price": 0.0
+  },
+  {
+   "id": 932322041,
+   "name": "Expenses OK - expenses tracker",
+   "seller": "Mobion OOO",
+   "ratings": 4946,
+   "avg": 4.76,
+   "genre": "Finance",
+   "price": 0.0
+  },
+  {
+   "id": 1510760825,
+   "name": "Money+ Cute Expense Tracker",
+   "seller": "Chongqing Zhouhu Technology Co.,Ltd",
+   "ratings": 4098,
+   "avg": 4.7,
+   "genre": "Productivity",
+   "price": 0.0
+  },
+  {
+   "id": 942571931,
+   "name": "EveryDollar: Budget Management",
+   "seller": "The Lampo Group Incorporated",
+   "ratings": 84158,
+   "avg": 4.73,
+   "genre": "Finance",
+   "price": 0.0
+  }
+ ],
+ "us|en_us|spending tracker": [
+  {
+   "id": 548615579,
+   "name": "Spending Tracker",
+   "seller": "MH Riley Ltd",
+   "ratings": 19473,
+   "avg": 4.78,
+   "genre": "Finance",
+   "price": 0.0
+  },
+  {
+   "id": 1525179720,
+   "name": "Budget app - spending tracker",
+   "seller": "Inner Grow Limited",
+   "ratings": 16200,
+   "avg": 4.72,
+   "genre": "Finance",
+   "price": 0.0
+  },
+  {
+   "id": 932322041,
+   "name": "Expenses OK - expenses tracker",
+   "seller": "Mobion OOO",
+   "ratings": 4946,
+   "avg": 4.76,
+   "genre": "Finance",
+   "price": 0.0
+  },
+  {
+   "id": 942571931,
+   "name": "EveryDollar: Budget Management",
+   "seller": "The Lampo Group Incorporated",
+   "ratings": 84158,
+   "avg": 4.73,
+   "genre": "Finance",
+   "price": 0.0
+  },
+  {
+   "id": 1492055171,
+   "name": "Expenses: Spending Tracker",
+   "seller": "BLUE COMET LABS LLC",
+   "ratings": 1830,
+   "avg": 4.8,
+   "genre": "Finance",
+   "price": 0.0
+  },
+  {
+   "id": 635861140,
+   "name": "Expense & Budget App: Spendee",
+   "seller": "CLEEVIO s.r.o.",
+   "ratings": 6260,
+   "avg": 4.61,
+   "genre": "Finance",
+   "price": 0.0
+  },
+  {
+   "id": 1621020173,
+   "name": "Fleur - Budget Planner App",
+   "seller": "Akash Jain",
+   "ratings": 13058,
+   "avg": 4.8,
+   "genre": "Finance",
+   "price": 0.0
+  },
+  {
+   "id": 1130616675,
+   "name": "Rocket Money - Bills & Budgets",
+   "seller": "Rocket Money",
+   "ratings": 400406,
+   "avg": 4.47,
+   "genre": "Finance",
+   "price": 0.0
+  },
+  {
+   "id": 1459319842,
+   "name": "Monarch: Budget & Track Money",
+   "seller": "Monarch Money, Inc.",
+   "ratings": 114604,
+   "avg": 4.89,
+   "genre": "Finance",
+   "price": 0.0
+  }
+ ],
+ "us|en_us|budget tracker": [
+  {
+   "id": 1525179720,
+   "name": "Budget app - spending tracker",
+   "seller": "Inner Grow Limited",
+   "ratings": 16200,
+   "avg": 4.72,
+   "genre": "Finance",
+   "price": 0.0
+  },
+  {
+   "id": 1621020173,
+   "name": "Fleur - Budget Planner App",
+   "seller": "Akash Jain",
+   "ratings": 13058,
+   "avg": 4.8,
+   "genre": "Finance",
+   "price": 0.0
+  },
+  {
+   "id": 548615579,
+   "name": "Spending Tracker",
+   "seller": "MH Riley Ltd",
+   "ratings": 19473,
+   "avg": 4.78,
+   "genre": "Finance",
+   "price": 0.0
+  },
+  {
+   "id": 942571931,
+   "name": "EveryDollar: Budget Management",
+   "seller": "The Lampo Group Incorporated",
+   "ratings": 84158,
+   "avg": 4.73,
+   "genre": "Finance",
+   "price": 0.0
+  },
+  {
+   "id": 1459319842,
+   "name": "Monarch: Budget & Track Money",
+   "seller": "Monarch Money, Inc.",
+   "ratings": 114604,
+   "avg": 4.89,
+   "genre": "Finance",
+   "price": 0.0
+  },
+  {
+   "id": 936422955,
+   "name": "Buddy: Budget Planner App",
+   "seller": "Buddy Budgeting AB",
+   "ratings": 9573,
+   "avg": 4.7,
+   "genre": "Finance",
+   "price": 0.0
+  },
+  {
+   "id": 1130616675,
+   "name": "Rocket Money - Bills & Budgets",
+   "seller": "Rocket Money",
+   "ratings": 400406,
+   "avg": 4.47,
+   "genre": "Finance",
+   "price": 0.0
+  },
+  {
+   "id": 635861140,
+   "name": "Expense & Budget App: Spendee",
+   "seller": "CLEEVIO s.r.o.",
+   "ratings": 6260,
+   "avg": 4.61,
+   "genre": "Finance",
+   "price": 0.0
+  },
+  {
+   "id": 1447330651,
+   "name": "Copilot: Track & Budget Money",
+   "seller": "Copilot Money, Inc.",
+   "ratings": 30679,
+   "avg": 4.75,
+   "genre": "Finance",
+   "price": 0.0
+  }
+ ],
+ "us|en_us|save money": [
+  {
+   "id": 1525179720,
+   "name": "Budget app - spending tracker",
+   "seller": "Inner Grow Limited",
+   "ratings": 16200,
+   "avg": 4.72,
+   "genre": "Finance",
+   "price": 0.0
+  },
+  {
+   "id": 1099997174,
+   "name": "Upside: Gas & Food Cash Back",
+   "seller": "Upside Services Inc.",
+   "ratings": 687487,
+   "avg": 4.79,
+   "genre": "Travel",
+   "price": 0.0
+  },
+  {
+   "id": 1489821186,
+   "name": "Loot - Savings Goal & Tracker",
+   "seller": "Polybit Studio Pty Ltd",
+   "ratings": 9081,
+   "avg": 4.78,
+   "genre": "Finance",
+   "price": 0.0
+  },
+  {
+   "id": 1182474649,
+   "name": "Fetch: Earn Rewards Every Day",
+   "seller": "Fetch Rewards, LLC",
+   "ratings": 7775521,
+   "avg": 4.85,
+   "genre": "Shopping",
+   "price": 0.0
+  },
+  {
+   "id": 1011935076,
+   "name": "Oportun: Savings & Loans",
+   "seller": "Oportun, Inc.",
+   "ratings": 289207,
+   "avg": 4.74,
+   "genre": "Finance",
+   "price": 0.0
+  },
+  {
+   "id": 1130616675,
+   "name": "Rocket Money - Bills & Budgets",
+   "seller": "Rocket Money",
+   "ratings": 400406,
+   "avg": 4.47,
+   "genre": "Finance",
+   "price": 0.0
+  },
+  {
+   "id": 883324671,
+   "name": "Acorns: Save & Invest Money",
+   "seller": "Acorns Grow Incorporated",
+   "ratings": 959816,
+   "avg": 4.75,
+   "genre": "Finance",
+   "price": 0.0
+  },
+  {
+   "id": 6746079977,
+   "name": "Savings Challenge: Savvy Goals",
+   "seller": "East Frisia LLC",
+   "ratings": 115,
+   "avg": 4.73,
+   "genre": "Finance",
+   "price": 0.0
+  },
+  {
+   "id": 1438730963,
+   "name": "Free Stuff Finder - Save Money",
+   "seller": "Simple Life Media, LLC",
+   "ratings": 2869,
+   "avg": 4.57,
+   "genre": "Shopping",
+   "price": 0.0
+  },
+  {
+   "id": 969977669,
+   "name": "Qapital: The Money Saving App",
+   "seller": "Qapital, LLC",
+   "ratings": 85871,
+   "avg": 4.8,
+   "genre": "Finance",
+   "price": 0.0
+  }
+ ],
+ "us|en_us|renewal reminder": [
+  {
+   "id": 6468871479,
+   "name": "Renewal Reminder App",
+   "seller": "GOLDEN SAVE PTY LTD",
+   "ratings": 0,
+   "avg": 0,
+   "genre": "Utilities",
+   "price": 0.0
+  },
+  {
+   "id": 6783293009,
+   "name": "Ototo: Car Renewal Reminder",
+   "seller": "Ben Basha",
+   "ratings": 0,
+   "avg": 0,
+   "genre": "Utilities",
+   "price": 0.0
+  },
+  {
+   "id": 6760253828,
+   "name": "Licence Renewal Reminder AU",
+   "seller": "Shehar Yar",
+   "ratings": 0,
+   "avg": 0,
+   "genre": "Utilities",
+   "price": 0.0
+  },
+  {
+   "id": 1232651315,
+   "name": "Remind Me: ToDo reminder",
+   "seller": "Yuma Ikeda",
+   "ratings": 2448,
+   "avg": 4.47,
+   "genre": "Productivity",
+   "price": 0.0
+  },
+  {
+   "id": 6784153316,
+   "name": "Renewa: UAE Renewal Reminder",
+   "seller": "Ahmed Al Hashmi",
+   "ratings": 0,
+   "avg": 0,
+   "genre": "Utilities",
+   "price": 0.0
+  },
+  {
+   "id": 6784379276,
+   "name": "DueNudge Renewal Reminder",
+   "seller": "Alisson Bento",
+   "ratings": 0,
+   "avg": 0,
+   "genre": "Productivity",
+   "price": 0.0
+  },
+  {
+   "id": 395529341,
+   "name": "RE.minder",
+   "seller": "postmechanical, LLC",
+   "ratings": 799,
+   "avg": 4.69,
+   "genre": "Productivity",
+   "price": 0.0
+  },
+  {
+   "id": 6756815516,
+   "name": "Renew Reminder: Sub Tracker",
+   "seller": "Onda Software Solutions LLC",
+   "ratings": 0,
+   "avg": 0,
+   "genre": "Finance",
+   "price": 0.0
+  },
+  {
+   "id": 471570365,
+   "name": "Reminder & Countdown",
+   "seller": "PERSAPPS (PERSEPS), TOO",
+   "ratings": 16519,
+   "avg": 4.76,
+   "genre": "Productivity",
+   "price": 0.0
+  },
+  {
+   "id": 6759526334,
+   "name": "Residence Renewal Reminder",
+   "seller": "TAKAHITO CHUJO",
+   "ratings": 0,
+   "avg": 0,
+   "genre": "Utilities",
+   "price": 0.0
+  }
+ ],
+ "us|en_us|subscription organizer": [
+  {
+   "id": 6745878617,
+   "name": "Subscription Organizer",
+   "seller": "Doreen Kroemer",
+   "ratings": 1,
+   "avg": 5,
+   "genre": "Productivity",
+   "price": 1.99
+  },
+  {
+   "id": 1259029889,
+   "name": "Subscription Manager - Bills",
+   "seller": "Kango Studios LLC",
+   "ratings": 1665,
+   "avg": 4.46,
+   "genre": "Finance",
+   "price": 0.0
+  },
+  {
+   "id": 6769329967,
+   "name": "SubSeek: Subscription Manager",
+   "seller": "BEGAMOB GLOBAL LIMITED",
+   "ratings": 591,
+   "avg": 4.03,
+   "genre": "Finance",
+   "price": 0.0
+  },
+  {
+   "id": 6740202306,
+   "name": "MonoBoost Cancel Subscriptions",
+   "seller": "Mnboost Corp",
+   "ratings": 6008,
+   "avg": 4.36,
+   "genre": "Utilities",
+   "price": 0.0
+  },
+  {
+   "id": 572561420,
+   "name": "Chronicle - Bill Organizer",
+   "seller": "LittleFin LLC",
+   "ratings": 3848,
+   "avg": 4.83,
+   "genre": "Finance",
+   "price": 0.0
+  },
+  {
+   "id": 6448767732,
+   "name": "Subscription Stopper & Manager",
+   "seller": "inMarket Media, LLC",
+   "ratings": 682,
+   "avg": 4.49,
+   "genre": "Finance",
+   "price": 0.0
+  },
+  {
+   "id": 6807352178,
+   "name": "Cancel Subscriptions - Saver",
+   "seller": "Tim Klugman",
+   "ratings": 0,
+   "avg": 0,
+   "genre": "Finance",
+   "price": 0.0
+  },
+  {
+   "id": 1632853914,
+   "name": "SubManager: Subscriptions",
+   "seller": "Ahnaf Mahmud",
+   "ratings": 68,
+   "avg": 4.76,
+   "genre": "Finance",
+   "price": 0.0
+  },
+  {
+   "id": 6692620188,
+   "name": "Subscription Manager: Orbit",
+   "seller": "Flooben Ltd",
+   "ratings": 127,
+   "avg": 4.7,
+   "genre": "Finance",
+   "price": 0.0
+  },
+  {
+   "id": 6786820661,
+   "name": "SubGuard Subscription Manager",
+   "seller": "MAPI PROJEKTAI, MB",
+   "ratings": 4,
+   "avg": 5,
+   "genre": "Finance",
+   "price": 0.0
+  }
+ ],
+ "us|en_us|monthly bills": [
+  {
+   "id": 1352782733,
+   "name": "Bills Organizer & Reminder",
+   "seller": "Dennis Kruta",
+   "ratings": 24861,
+   "avg": 4.69,
+   "genre": "Finance",
+   "price": 0.0
+  },
+  {
+   "id": 834370671,
+   "name": "Bills Manager",
+   "seller": "Jose Fabian Pena",
+   "ratings": 8102,
+   "avg": 4.77,
+   "genre": "Finance",
+   "price": 0.0
+  },
+  {
+   "id": 6775287342,
+   "name": "Bill Check: Monthly Bills",
+   "seller": "IGOR TARAN",
+   "ratings": 14,
+   "avg": 4.71,
+   "genre": "Finance",
+   "price": 0.0
+  },
+  {
+   "id": 936422955,
+   "name": "Buddy: Budget Planner App",
+   "seller": "Buddy Budgeting AB",
+   "ratings": 9573,
+   "avg": 4.7,
+   "genre": "Finance",
+   "price": 0.0
+  },
+  {
+   "id": 1621020173,
+   "name": "Fleur - Budget Planner App",
+   "seller": "Akash Jain",
+   "ratings": 13058,
+   "avg": 4.8,
+   "genre": "Finance",
+   "price": 0.0
+  },
+  {
+   "id": 1059461492,
+   "name": "Bill Tracker Pro: Budget Saver",
+   "seller": "Bill Tracker Pro, Inc.",
+   "ratings": 5062,
+   "avg": 4.6,
+   "genre": "Finance",
+   "price": 0.0
+  },
+  {
+   "id": 1130616675,
+   "name": "Rocket Money - Bills & Budgets",
+   "seller": "Rocket Money",
+   "ratings": 400406,
+   "avg": 4.47,
+   "genre": "Finance",
+   "price": 0.0
+  },
+  {
+   "id": 6764664154,
+   "name": "Bill Reminder: DueMinder",
+   "seller": "Grishna Hirapara",
+   "ratings": 1,
+   "avg": 5,
+   "genre": "Finance",
+   "price": 0.0
+  },
+  {
+   "id": 942571931,
+   "name": "EveryDollar: Budget Management",
+   "seller": "The Lampo Group Incorporated",
+   "ratings": 84158,
+   "avg": 4.73,
+   "genre": "Finance",
+   "price": 0.0
+  },
+  {
+   "id": 6772553753,
+   "name": "Bills Due - Payment Tracker",
+   "seller": "Vasilii Polovnikov",
+   "ratings": 0,
+   "avg": 0,
+   "genre": "Finance",
+   "price": 0.0
+  }
+ ],
+ "us|en_us|subscription alerts": [
+  {
+   "id": 1632853914,
+   "name": "SubManager: Subscriptions",
+   "seller": "Ahnaf Mahmud",
+   "ratings": 68,
+   "avg": 4.76,
+   "genre": "Finance",
+   "price": 0.0
+  },
+  {
+   "id": 6760088649,
+   "name": "Cancel Subscription Alert",
+   "seller": "TrafficABC Technology LIMITED",
+   "ratings": 0,
+   "avg": 0,
+   "genre": "Finance",
+   "price": 0.0
+  },
+  {
+   "id": 6789850180,
+   "name": "Subscription Manager: SubIQ",
+   "seller": "Tran Duc Binh",
+   "ratings": 21,
+   "avg": 4.76,
+   "genre": "Finance",
+   "price": 0.0
+  },
+  {
+   "id": 6757347320,
+   "name": "SubAlert: Subscription Tracker",
+   "seller": "Nanjing Shitu Cloud Technology Co., Ltd.",
+   "ratings": 0,
+   "avg": 0,
+   "genre": "Finance",
+   "price": 0.0
+  },
+  {
+   "id": 6762199144,
+   "name": "Reminder: Subscription Tracker",
+   "seller": "Hai Nam Trinh",
+   "ratings": 2,
+   "avg": 5,
+   "genre": "Finance",
+   "price": 0.0
+  },
+  {
+   "id": 6803668427,
+   "name": "Subnudge - Subscription Alerts",
+   "seller": "gangsan kim",
+   "ratings": 0,
+   "avg": 0,
+   "genre": "Finance",
+   "price": 0.0
+  },
+  {
+   "id": 6755717606,
+   "name": "Subby - Subscription Manager",
+   "seller": "Mikolaj Piech",
+   "ratings": 4,
+   "avg": 4,
+   "genre": "Finance",
+   "price": 0.0
+  },
+  {
+   "id": 6740202306,
+   "name": "MonoBoost Cancel Subscriptions",
+   "seller": "Mnboost Corp",
+   "ratings": 6008,
+   "avg": 4.36,
+   "genre": "Utilities",
+   "price": 0.0
+  },
+  {
+   "id": 6769329967,
+   "name": "SubSeek: Subscription Manager",
+   "seller": "BEGAMOB GLOBAL LIMITED",
+   "ratings": 591,
+   "avg": 4.03,
+   "genre": "Finance",
+   "price": 0.0
+  },
+  {
+   "id": 6791883670,
+   "name": "Subscription Sentinel",
+   "seller": "YIDONG LI",
+   "ratings": 1,
+   "avg": 5,
+   "genre": "Finance",
+   "price": 0.0
+  }
+ ],
+ "us|en_us|unsubscribe": [
+  {
+   "id": 1028103039,
+   "name": "Unroll.Me - Email Cleanup",
+   "seller": "UNROLLME INC",
+   "ratings": 132211,
+   "avg": 4.66,
+   "genre": "Productivity",
+   "price": 0.0
+  },
+  {
+   "id": 1130616675,
+   "name": "Rocket Money - Bills & Budgets",
+   "seller": "Rocket Money",
+   "ratings": 400406,
+   "avg": 4.47,
+   "genre": "Finance",
+   "price": 0.0
+  },
+  {
+   "id": 6751181747,
+   "name": "Subpilot - Cancel Subscription",
+   "seller": "LINERIOS LIMITED",
+   "ratings": 5274,
+   "avg": 4.55,
+   "genre": "Finance",
+   "price": 0.0
+  },
+  {
+   "id": 1136298377,
+   "name": "Cleanfox - Email Cleaner",
+   "seller": "FOXINTEL",
+   "ratings": 27214,
+   "avg": 4.78,
+   "genre": "Productivity",
+   "price": 0.0
+  },
+  {
+   "id": 6503105531,
+   "name": "Cancel Subscriptions Refund +",
+   "seller": "PERIZADE ERBAS",
+   "ratings": 35,
+   "avg": 3.94,
+   "genre": "Productivity",
+   "price": 0.0
+  },
+  {
+   "id": 1219660920,
+   "name": "Clean Email: Inbox Cleaner",
+   "seller": "Clean Email, LLC",
+   "ratings": 3808,
+   "avg": 4.47,
+   "genre": "Productivity",
+   "price": 0.0
+  },
+  {
+   "id": 6756683547,
+   "name": "UnsubscribeMe",
+   "seller": "LAVORO GROUP LLC",
+   "ratings": 4,
+   "avg": 5,
+   "genre": "Lifestyle",
+   "price": 0.0
+  },
+  {
+   "id": 6466923521,
+   "name": "Trimbox: Email Cleaner",
+   "seller": "Trimbox LLC",
+   "ratings": 5989,
+   "avg": 4.74,
+   "genre": "Productivity",
+   "price": 0.0
+  },
+  {
+   "id": 1163872233,
+   "name": "Chuck \u2013 Email with Superpowers",
+   "seller": "410 Labs",
+   "ratings": 15038,
+   "avg": 4.76,
+   "genre": "Productivity",
+   "price": 0.0
+  },
+  {
+   "id": 6739703718,
+   "name": "Subscription Tracker: Subby",
+   "seller": "Abhaya Chandra G P",
+   "ratings": 18,
+   "avg": 4.78,
+   "genre": "Finance",
+   "price": 0.0
+  }
+ ],
+ "us|en_us|subscription budget": [
+  {
+   "id": 1130616675,
+   "name": "Rocket Money - Bills & Budgets",
+   "seller": "Rocket Money",
+   "ratings": 400406,
+   "avg": 4.47,
+   "genre": "Finance",
+   "price": 0.0
+  },
+  {
+   "id": 6740202306,
+   "name": "MonoBoost Cancel Subscriptions",
+   "seller": "Mnboost Corp",
+   "ratings": 6008,
+   "avg": 4.36,
+   "genre": "Utilities",
+   "price": 0.0
+  },
+  {
+   "id": 1259029889,
+   "name": "Subscription Manager - Bills",
+   "seller": "Kango Studios LLC",
+   "ratings": 1665,
+   "avg": 4.46,
+   "genre": "Finance",
+   "price": 0.0
+  },
+  {
+   "id": 977040079,
+   "name": "Hiatus - Subscriptions & Bills",
+   "seller": "Hiatus Inc.",
+   "ratings": 6917,
+   "avg": 4.16,
+   "genre": "Finance",
+   "price": 0.0
+  },
+  {
+   "id": 936422955,
+   "name": "Buddy: Budget Planner App",
+   "seller": "Buddy Budgeting AB",
+   "ratings": 9573,
+   "avg": 4.7,
+   "genre": "Finance",
+   "price": 0.0
+  },
+  {
+   "id": 1057771088,
+   "name": "Albert: Budgeting and Banking",
+   "seller": "Albert Corporation",
+   "ratings": 338852,
+   "avg": 4.65,
+   "genre": "Finance",
+   "price": 0.0
+  },
+  {
+   "id": 1300458193,
+   "name": "Budget Planner: Budget, Bills",
+   "seller": "Pretty View LLC",
+   "ratings": 2323,
+   "avg": 4.29,
+   "genre": "Finance",
+   "price": 0.0
+  },
+  {
+   "id": 6760261229,
+   "name": "Subscription Tracker & Budget",
+   "seller": "Eyup Inan",
+   "ratings": 0,
+   "avg": 0,
+   "genre": "Finance",
+   "price": 0.0
+  },
+  {
+   "id": 1459319842,
+   "name": "Monarch: Budget & Track Money",
+   "seller": "Monarch Money, Inc.",
+   "ratings": 114604,
+   "avg": 4.89,
+   "genre": "Finance",
+   "price": 0.0
+  },
+  {
+   "id": 1637693312,
+   "name": "Origin: AI Budget and Track",
+   "seller": "Blend Financial Inc",
+   "ratings": 3964,
+   "avg": 4.62,
+   "genre": "Finance",
+   "price": 0.0
+  }
+ ],
+ "us|en_us|subscriptions": [
+  {
+   "id": 1160481993,
+   "name": "Apple Wallet",
+   "seller": "Apple Inc.",
+   "ratings": 7499798,
+   "avg": 4.77,
+   "genre": "Finance",
+   "price": 0.0
+  },
+  {
+   "id": 375380948,
+   "name": "Apple Store",
+   "seller": "Apple Inc.",
+   "ratings": 171278,
+   "avg": 3.51,
+   "genre": "Shopping",
+   "price": 0.0
+  },
+  {
+   "id": 1130616675,
+   "name": "Rocket Money - Bills & Budgets",
+   "seller": "Rocket Money",
+   "ratings": 400406,
+   "avg": 4.47,
+   "genre": "Finance",
+   "price": 0.0
+  },
+  {
+   "id": 6751181747,
+   "name": "Subpilot - Cancel Subscription",
+   "seller": "LINERIOS LIMITED",
+   "ratings": 5274,
+   "avg": 4.55,
+   "genre": "Finance",
+   "price": 0.0
+  },
+  {
+   "id": 6746950605,
+   "name": "Subscription Tracker\u3164",
+   "seller": "Jack Furness",
+   "ratings": 47,
+   "avg": 4.06,
+   "genre": "Finance",
+   "price": 0.0
+  },
+  {
+   "id": 1577082754,
+   "name": "Subscriptions - Track Expenses",
+   "seller": "Touchbits Inc.",
+   "ratings": 172,
+   "avg": 4.7,
+   "genre": "Finance",
+   "price": 0.0
+  },
+  {
+   "id": 6479920412,
+   "name": "Cancel Subscriptions & Refund",
+   "seller": "VUNYO BILGI TEKNOLOJILERI LIMITED SIRKETI",
+   "ratings": 844,
+   "avg": 4.1,
+   "genre": "Finance",
+   "price": 0.0
+  },
+  {
+   "id": 1059152023,
+   "name": "Bobby - Track subscriptions",
+   "seller": "Yummygum",
+   "ratings": 8014,
+   "avg": 4.75,
+   "genre": "Finance",
+   "price": 0.0
+  },
+  {
+   "id": 6740202306,
+   "name": "MonoBoost Cancel Subscriptions",
+   "seller": "Mnboost Corp",
+   "ratings": 6008,
+   "avg": 4.36,
+   "genre": "Utilities",
+   "price": 0.0
+  },
+  {
+   "id": 6778323362,
+   "name": "Cancely: Subscription Manager",
+   "seller": "Sergei Nikonenko",
+   "ratings": 10,
+   "avg": 4.6,
+   "genre": "Finance",
+   "price": 0.0
+  }
+ ],
+ "us|en_us|email receipts": [
+  {
+   "id": 1239290959,
+   "name": "Receipts: create, print & mail",
+   "seller": "H2 Software Ltd UK",
+   "ratings": 482,
+   "avg": 4.61,
+   "genre": "Business",
+   "price": 0.0
+  },
+  {
+   "id": 1155470386,
+   "name": "Canary Mail \u2013 AI Email",
+   "seller": "Cartasec Pte. Ltd.",
+   "ratings": 8789,
+   "avg": 4.49,
+   "genre": "Productivity",
+   "price": 0.0
+  },
+  {
+   "id": 1506603805,
+   "name": "HEY Email",
+   "seller": "37Signals LLC",
+   "ratings": 4325,
+   "avg": 4.65,
+   "genre": "Productivity",
+   "price": 0.0
+  },
+  {
+   "id": 922793622,
+   "name": "Email - Edison Mail",
+   "seller": "Edison Software Inc.",
+   "ratings": 78806,
+   "avg": 4.52,
+   "genre": "Productivity",
+   "price": 0.0
+  },
+  {
+   "id": 997102246,
+   "name": "Spark Mail: AI Email Assistant",
+   "seller": "Readdle Technologies Limited",
+   "ratings": 82688,
+   "avg": 4.62,
+   "genre": "Productivity",
+   "price": 0.0
+  },
+  {
+   "id": 1573878629,
+   "name": "Receipt Maker - Sign & Send",
+   "seller": "SVG Apps",
+   "ratings": 8115,
+   "avg": 4.84,
+   "genre": "Business",
+   "price": 0.0
+  },
+  {
+   "id": 1450157256,
+   "name": "ReceiptJar",
+   "seller": "THE U GROUP & CO LIMITED",
+   "ratings": 65326,
+   "avg": 4.74,
+   "genre": "Shopping",
+   "price": 0.0
+  },
+  {
+   "id": 1254940903,
+   "name": "Mail Tracer - Email Tracking",
+   "seller": "Vaibhav Narula",
+   "ratings": 216,
+   "avg": 3.92,
+   "genre": "Productivity",
+   "price": 0.0
+  },
+  {
+   "id": 412650768,
+   "name": "EZ Receipts",
+   "seller": "HealthEquity Inc.",
+   "ratings": 78026,
+   "avg": 4.63,
+   "genre": "Productivity",
+   "price": 0.0
+  },
+  {
+   "id": 322143854,
+   "name": "Shoeboxed: Mileage Tracker",
+   "seller": "Shoeboxed, Inc.",
+   "ratings": 1821,
+   "avg": 4.52,
+   "genre": "Finance",
+   "price": 0.0
+  }
+ ],
+ "us|en_us|price increase alert": [
+  {
+   "id": 1518541385,
+   "name": "Keepa \u00b7 Price Tracker",
+   "seller": "Keepa GmbH",
+   "ratings": 1539,
+   "avg": 4.8,
+   "genre": "Shopping",
+   "price": 0.0
+  },
+  {
+   "id": 1257690900,
+   "name": "HotStock - in-stock alerts",
+   "seller": "Litebox Ltd",
+   "ratings": 15010,
+   "avg": 4.69,
+   "genre": "Shopping",
+   "price": 0.0
+  },
+  {
+   "id": 804021137,
+   "name": "Pricena - Price Comparison",
+   "seller": "Pricena",
+   "ratings": 2265,
+   "avg": 4.6,
+   "genre": "Shopping",
+   "price": 0.0
+  },
+  {
+   "id": 6744467712,
+   "name": "PriceLasso: Price Tracker",
+   "seller": "PriceLasso LLC",
+   "ratings": 25,
+   "avg": 4.36,
+   "genre": "Shopping",
+   "price": 0.0
+  },
+  {
+   "id": 1051261630,
+   "name": "Gold : Gold Price & Gold Live",
+   "seller": "\u58eb\u660c \u82d1",
+   "ratings": 2078,
+   "avg": 4.71,
+   "genre": "Finance",
+   "price": 0.0
+  },
+  {
+   "id": 6737151631,
+   "name": "Warehouse Runner",
+   "seller": "Danielle Jackson",
+   "ratings": 625,
+   "avg": 4.69,
+   "genre": "Shopping",
+   "price": 0.0
+  },
+  {
+   "id": 1514804661,
+   "name": "PriceNotify: Price Tracker",
+   "seller": "Manuel Schuler",
+   "ratings": 17,
+   "avg": 3.18,
+   "genre": "Shopping",
+   "price": 0.0
+  },
+  {
+   "id": 6621245639,
+   "name": "Price Drop: Price Tracker",
+   "seller": "Arnaud D'angelosante",
+   "ratings": 0,
+   "avg": 0,
+   "genre": "Shopping",
+   "price": 0.0
+  },
+  {
+   "id": 6505131517,
+   "name": "Market Price Pro",
+   "seller": "Khaing Myo Win",
+   "ratings": 22,
+   "avg": 4.36,
+   "genre": "Finance",
+   "price": 0.0
+  }
+ ],
+ "us|en_us|cancel trial": [
+  {
+   "id": 6739868277,
+   "name": "Trial Alert: Avoid Auto Bills",
+   "seller": "Benjamin Rhodes-Kropf",
+   "ratings": 1,
+   "avg": 3,
+   "genre": "Productivity",
+   "price": 0.0
+  },
+  {
+   "id": 6760088649,
+   "name": "Cancel Subscription Alert",
+   "seller": "TrafficABC Technology LIMITED",
+   "ratings": 0,
+   "avg": 0,
+   "genre": "Finance",
+   "price": 0.0
+  },
+  {
+   "id": 6756620728,
+   "name": "Free Trial Killer",
+   "seller": "prathyush nallamothu",
+   "ratings": 1,
+   "avg": 5,
+   "genre": "Utilities",
+   "price": 0.0
+  },
+  {
+   "id": 6802936052,
+   "name": "Don't Charge Me Bro: Cancel",
+   "seller": "Don Collins",
+   "ratings": 1,
+   "avg": 5,
+   "genre": "Finance",
+   "price": 0.0
+  },
+  {
+   "id": 6466220185,
+   "name": "Mock Trial Timekeeper",
+   "seller": "Matan Kotler-Berkowitz",
+   "ratings": 12,
+   "avg": 5,
+   "genre": "Utilities",
+   "price": 0.0
+  },
+  {
+   "id": 6783674801,
+   "name": "Subtracker AI",
+   "seller": "APPLABTECH LIMITED",
+   "ratings": 26,
+   "avg": 3.73,
+   "genre": "Utilities",
+   "price": 0.0
+  },
+  {
+   "id": 6762180214,
+   "name": "SubGuard AI: Subscription Log",
+   "seller": "\u5fd7\u521a \u5218",
+   "ratings": 0,
+   "avg": 0,
+   "genre": "Finance",
+   "price": 0.0
+  },
+  {
+   "id": 6786779615,
+   "name": "Suberry : Cancel Subscriptions",
+   "seller": "RLAM FZCO",
+   "ratings": 6,
+   "avg": 4.33,
+   "genre": "Finance",
+   "price": 0.0
+  },
+  {
+   "id": 6778323362,
+   "name": "Cancely: Subscription Manager",
+   "seller": "Sergei Nikonenko",
+   "ratings": 10,
+   "avg": 4.6,
+   "genre": "Finance",
+   "price": 0.0
+  },
+  {
+   "id": 6805662698,
+   "name": "Trial Clock",
+   "seller": "BRADFORD MICHAEL LINDLEY",
+   "ratings": 0,
+   "avg": 0,
+   "genre": "Utilities",
+   "price": 0.0
+  }
+ ],
+ "us|en_us|subscription app": [
+  {
+   "id": 1130616675,
+   "name": "Rocket Money - Bills & Budgets",
+   "seller": "Rocket Money",
+   "ratings": 400406,
+   "avg": 4.47,
+   "genre": "Finance",
+   "price": 0.0
+  },
+  {
+   "id": 1259029889,
+   "name": "Subscription Manager - Bills",
+   "seller": "Kango Studios LLC",
+   "ratings": 1665,
+   "avg": 4.46,
+   "genre": "Finance",
+   "price": 0.0
+  },
+  {
+   "id": 6479920412,
+   "name": "Cancel Subscriptions & Refund",
+   "seller": "VUNYO BILGI TEKNOLOJILERI LIMITED SIRKETI",
+   "ratings": 844,
+   "avg": 4.1,
+   "genre": "Finance",
+   "price": 0.0
+  },
+  {
+   "id": 1059152023,
+   "name": "Bobby - Track subscriptions",
+   "seller": "Yummygum",
+   "ratings": 8014,
+   "avg": 4.75,
+   "genre": "Finance",
+   "price": 0.0
+  },
+  {
+   "id": 1502336248,
+   "name": "Subscription Tracker",
+   "seller": "Ali Alhady",
+   "ratings": 258,
+   "avg": 4.61,
+   "genre": "Finance",
+   "price": 0.0
+  },
+  {
+   "id": 1459319842,
+   "name": "Monarch: Budget & Track Money",
+   "seller": "Monarch Money, Inc.",
+   "ratings": 114604,
+   "avg": 4.89,
+   "genre": "Finance",
+   "price": 0.0
+  },
+  {
+   "id": 1569230951,
+   "name": "Envy: Envelope Budget Planner",
+   "seller": "Chimpanzee, LLC",
+   "ratings": 831,
+   "avg": 4.77,
+   "genre": "Finance",
+   "price": 0.0
+  },
+  {
+   "id": 977040079,
+   "name": "Hiatus - Subscriptions & Bills",
+   "seller": "Hiatus Inc.",
+   "ratings": 6917,
+   "avg": 4.16,
+   "genre": "Finance",
+   "price": 0.0
+  },
+  {
+   "id": 6751181747,
+   "name": "Subpilot - Cancel Subscription",
+   "seller": "LINERIOS LIMITED",
+   "ratings": 5274,
+   "avg": 4.55,
+   "genre": "Finance",
+   "price": 0.0
+  },
+  {
+   "id": 6692620188,
+   "name": "Subscription Manager: Orbit",
+   "seller": "Flooben Ltd",
+   "ratings": 127,
+   "avg": 4.7,
+   "genre": "Finance",
+   "price": 0.0
+  }
+ ],
+ "us|en_us|manage subscriptions": [
+  {
+   "id": 1130616675,
+   "name": "Rocket Money - Bills & Budgets",
+   "seller": "Rocket Money",
+   "ratings": 400406,
+   "avg": 4.47,
+   "genre": "Finance",
+   "price": 0.0
+  },
+  {
+   "id": 1059152023,
+   "name": "Bobby - Track subscriptions",
+   "seller": "Yummygum",
+   "ratings": 8014,
+   "avg": 4.75,
+   "genre": "Finance",
+   "price": 0.0
+  },
+  {
+   "id": 6448767732,
+   "name": "Subscription Stopper & Manager",
+   "seller": "inMarket Media, LLC",
+   "ratings": 682,
+   "avg": 4.49,
+   "genre": "Finance",
+   "price": 0.0
+  },
+  {
+   "id": 6453171889,
+   "name": "Manage Subscriptions - Subpay",
+   "seller": "Senol Cagir",
+   "ratings": 8,
+   "avg": 4,
+   "genre": "Utilities",
+   "price": 0.0
+  },
+  {
+   "id": 6752722752,
+   "name": "Subscription Manager - Subpli",
+   "seller": "Josip Valcic",
+   "ratings": 126,
+   "avg": 4.81,
+   "genre": "Finance",
+   "price": 0.0
+  },
+  {
+   "id": 6746950605,
+   "name": "Subscription Tracker\u3164",
+   "seller": "Jack Furness",
+   "ratings": 47,
+   "avg": 4.06,
+   "genre": "Finance",
+   "price": 0.0
+  },
+  {
+   "id": 6791034748,
+   "name": "Subscription Tracker: Subwize",
+   "seller": "Brijkumar Savani",
+   "ratings": 0,
+   "avg": 0,
+   "genre": "Finance",
+   "price": 0.0
+  },
+  {
+   "id": 6769329967,
+   "name": "SubSeek: Subscription Manager",
+   "seller": "BEGAMOB GLOBAL LIMITED",
+   "ratings": 591,
+   "avg": 4.03,
+   "genre": "Finance",
+   "price": 0.0
+  },
+  {
+   "id": 6740202306,
+   "name": "MonoBoost Cancel Subscriptions",
+   "seller": "Mnboost Corp",
+   "ratings": 6008,
+   "avg": 4.36,
+   "genre": "Utilities",
+   "price": 0.0
+  },
+  {
+   "id": 1259029889,
+   "name": "Subscription Manager - Bills",
+   "seller": "Kango Studios LLC",
+   "ratings": 1665,
+   "avg": 4.46,
+   "genre": "Finance",
+   "price": 0.0
+  }
+ ],
+ "us|en_us|subscription saver": [
+  {
+   "id": 6807352178,
+   "name": "Cancel Subscriptions - Saver",
+   "seller": "Tim Klugman",
+   "ratings": 0,
+   "avg": 0,
+   "genre": "Finance",
+   "price": 0.0
+  },
+  {
+   "id": 6780188139,
+   "name": "Expiria: Subscription Saver",
+   "seller": "Vidmantas Kajokas",
+   "ratings": 0,
+   "avg": 0,
+   "genre": "Finance",
+   "price": 0.0
+  },
+  {
+   "id": 6762339263,
+   "name": "SubSaver: Subscription Tracker",
+   "seller": "WELTRON TECHNOLOGY Ltd. Co.",
+   "ratings": 2,
+   "avg": 5,
+   "genre": "Lifestyle",
+   "price": 0.0
+  },
+  {
+   "id": 6740202306,
+   "name": "MonoBoost Cancel Subscriptions",
+   "seller": "Mnboost Corp",
+   "ratings": 6008,
+   "avg": 4.36,
+   "genre": "Utilities",
+   "price": 0.0
+  },
+  {
+   "id": 6769329967,
+   "name": "SubSeek: Subscription Manager",
+   "seller": "BEGAMOB GLOBAL LIMITED",
+   "ratings": 591,
+   "avg": 4.03,
+   "genre": "Finance",
+   "price": 0.0
+  },
+  {
+   "id": 6743495252,
+   "name": "Recurroo - Track Subscriptions",
+   "seller": "Whimseed Studio Private Limited",
+   "ratings": 0,
+   "avg": 0,
+   "genre": "Finance",
+   "price": 0.0
+  },
+  {
+   "id": 1259029889,
+   "name": "Subscription Manager - Bills",
+   "seller": "Kango Studios LLC",
+   "ratings": 1665,
+   "avg": 4.46,
+   "genre": "Finance",
+   "price": 0.0
+  },
+  {
+   "id": 949414211,
+   "name": "PocketGuard - Budget App",
+   "seller": "PocketGuard, Inc.",
+   "ratings": 7679,
+   "avg": 4.58,
+   "genre": "Finance",
+   "price": 0.0
+  },
+  {
+   "id": 6760205452,
+   "name": "SubBot - Subscription Manager",
+   "seller": "Qimo Software (Hangzhou) Co., Ltd.",
+   "ratings": 8,
+   "avg": 4.25,
+   "genre": "Finance",
+   "price": 0.0
+  },
+  {
+   "id": 6448767732,
+   "name": "Subscription Stopper & Manager",
+   "seller": "inMarket Media, LLC",
+   "ratings": 682,
+   "avg": 4.49,
+   "genre": "Finance",
+   "price": 0.0
+  }
+ ],
+ "us|en_us|bill manager": [
+  {
+   "id": 834370671,
+   "name": "Bills Manager",
+   "seller": "Jose Fabian Pena",
+   "ratings": 8102,
+   "avg": 4.77,
+   "genre": "Finance",
+   "price": 0.0
+  },
+  {
+   "id": 6797415579,
+   "name": "Bill Manager: Due Date Tracker",
+   "seller": "David Long",
+   "ratings": 4,
+   "avg": 5,
+   "genre": "Finance",
+   "price": 0.0
+  },
+  {
+   "id": 1352782733,
+   "name": "Bills Organizer & Reminder",
+   "seller": "Dennis Kruta",
+   "ratings": 24861,
+   "avg": 4.69,
+   "genre": "Finance",
+   "price": 0.0
+  },
+  {
+   "id": 1130616675,
+   "name": "Rocket Money - Bills & Budgets",
+   "seller": "Rocket Money",
+   "ratings": 400406,
+   "avg": 4.47,
+   "genre": "Finance",
+   "price": 0.0
+  },
+  {
+   "id": 1059461492,
+   "name": "Bill Tracker Pro: Budget Saver",
+   "seller": "Bill Tracker Pro, Inc.",
+   "ratings": 5062,
+   "avg": 4.6,
+   "genre": "Finance",
+   "price": 0.0
+  },
+  {
+   "id": 6788912799,
+   "name": "Bill Organizer & Tracker Plus",
+   "seller": "East Frisia LLC",
+   "ratings": 15,
+   "avg": 4.47,
+   "genre": "Productivity",
+   "price": 0.0
+  },
+  {
+   "id": 514301848,
+   "name": "Bill Organizer",
+   "seller": "Space-O Digicom Private Limited",
+   "ratings": 4893,
+   "avg": 4.35,
+   "genre": "Finance",
+   "price": 0.0
+  },
+  {
+   "id": 1621020173,
+   "name": "Fleur - Budget Planner App",
+   "seller": "Akash Jain",
+   "ratings": 13058,
+   "avg": 4.8,
+   "genre": "Finance",
+   "price": 0.0
+  },
+  {
+   "id": 572561420,
+   "name": "Chronicle - Bill Organizer",
+   "seller": "LittleFin LLC",
+   "ratings": 3848,
+   "avg": 4.83,
+   "genre": "Finance",
+   "price": 0.0
+  }
+ ],
+ "ca|en_ca|subscription tracker": [
+  {
+   "id": 1059152023,
+   "name": "Bobby - Track subscriptions",
+   "seller": "Yummygum",
+   "ratings": 1012,
+   "avg": 4.69,
+   "genre": "Finance",
+   "price": 0.0
+  },
+  {
+   "id": 6751181747,
+   "name": "Subpilot - Cancel Subscription",
+   "seller": "LINERIOS LIMITED",
+   "ratings": 332,
+   "avg": 4.37,
+   "genre": "Finance",
+   "price": 0.0
+  },
+  {
+   "id": 6692620188,
+   "name": "Subscription Manager: Orbit",
+   "seller": "Flooben Ltd",
+   "ratings": 46,
+   "avg": 4.76,
+   "genre": "Finance",
+   "price": 0.0
+  },
+  {
+   "id": 1502336248,
+   "name": "Subscription Tracker",
+   "seller": "Ali Alhady",
+   "ratings": 7,
+   "avg": 4.14,
+   "genre": "Finance",
+   "price": 0.0
+  },
+  {
+   "id": 1577082754,
+   "name": "Subscriptions - Track Expenses",
+   "seller": "Touchbits Inc.",
+   "ratings": 58,
+   "avg": 4.67,
+   "genre": "Finance",
+   "price": 0.0
+  },
+  {
+   "id": 936422955,
+   "name": "Buddy: Budget Planner",
+   "seller": "Buddy Budgeting AB",
+   "ratings": 8304,
+   "avg": 4.6,
+   "genre": "Finance",
+   "price": 0.0
+  },
+  {
+   "id": 6766050298,
+   "name": "Subscription Tracker: Subflo",
+   "seller": "OneRack",
+   "ratings": 0,
+   "avg": 0,
+   "genre": "Finance",
+   "price": 0.0
+  },
+  {
+   "id": 6593692260,
+   "name": "Subscription Tracker",
+   "seller": "Eren Berkay Dinc",
+   "ratings": 17,
+   "avg": 4.88,
+   "genre": "Finance",
+   "price": 0.0
+  },
+  {
+   "id": 6746950605,
+   "name": "Subscription Tracker\u3164",
+   "seller": "Jack Furness",
+   "ratings": 5,
+   "avg": 3,
+   "genre": "Finance",
+   "price": 0.0
+  }
+ ],
+ "ca|en_ca|subscription manager": [
+  {
+   "id": 1160481993,
+   "name": "Apple Wallet",
+   "seller": "Apple Canada, Inc.",
+   "ratings": 480001,
+   "avg": 4.82,
+   "genre": "Finance",
+   "price": 0.0
+  },
+  {
+   "id": 1059152023,
+   "name": "Bobby - Track subscriptions",
+   "seller": "Yummygum",
+   "ratings": 1012,
+   "avg": 4.69,
+   "genre": "Finance",
+   "price": 0.0
+  },
+  {
+   "id": 6751181747,
+   "name": "Subpilot - Cancel Subscription",
+   "seller": "LINERIOS LIMITED",
+   "ratings": 332,
+   "avg": 4.37,
+   "genre": "Finance",
+   "price": 0.0
+  },
+  {
+   "id": 6479920412,
+   "name": "Cancel Subscriptions & Refund",
+   "seller": "VUNYO BILGI TEKNOLOJILERI LIMITED SIRKETI",
+   "ratings": 394,
+   "avg": 3.92,
+   "genre": "Finance",
+   "price": 0.0
+  },
+  {
+   "id": 6692620188,
+   "name": "Subscription Manager: Orbit",
+   "seller": "Flooben Ltd",
+   "ratings": 46,
+   "avg": 4.76,
+   "genre": "Finance",
+   "price": 0.0
+  },
+  {
+   "id": 936422955,
+   "name": "Buddy: Budget Planner",
+   "seller": "Buddy Budgeting AB",
+   "ratings": 8304,
+   "avg": 4.6,
+   "genre": "Finance",
+   "price": 0.0
+  },
+  {
+   "id": 6769329967,
+   "name": "SubSeek: Subscription Manager",
+   "seller": "BEGAMOB GLOBAL LIMITED",
+   "ratings": 10,
+   "avg": 2.9,
+   "genre": "Finance",
+   "price": 0.0
+  },
+  {
+   "id": 1259029889,
+   "name": "Subscription Manager - Bills",
+   "seller": "Kango Studios LLC",
+   "ratings": 243,
+   "avg": 4.36,
+   "genre": "Finance",
+   "price": 0.0
+  },
+  {
+   "id": 6789850180,
+   "name": "Subscription Manager: SubIQ",
+   "seller": "Tran Duc Binh",
+   "ratings": 2,
+   "avg": 5,
+   "genre": "Finance",
+   "price": 0.0
+  },
+  {
+   "id": 6752722752,
+   "name": "Subscription Manager - Subpli",
+   "seller": "Josip Valcic",
+   "ratings": 39,
+   "avg": 4.38,
+   "genre": "Finance",
+   "price": 0.0
+  }
+ ],
+ "ca|en_ca|track subscriptions": [
+  {
+   "id": 1059152023,
+   "name": "Bobby - Track subscriptions",
+   "seller": "Yummygum",
+   "ratings": 1012,
+   "avg": 4.69,
+   "genre": "Finance",
+   "price": 0.0
+  },
+  {
+   "id": 1567041154,
+   "name": "Track Subscriptions - DuesX",
+   "seller": "Satnam Singh",
+   "ratings": 0,
+   "avg": 0,
+   "genre": "Finance",
+   "price": 0.0
+  },
+  {
+   "id": 1577082754,
+   "name": "Subscriptions - Track Expenses",
+   "seller": "Touchbits Inc.",
+   "ratings": 58,
+   "avg": 4.67,
+   "genre": "Finance",
+   "price": 0.0
+  },
+  {
+   "id": 1507248426,
+   "name": "Skaffer - Track subscriptions",
+   "seller": "Yahor Iskrankou",
+   "ratings": 11,
+   "avg": 4.64,
+   "genre": "Finance",
+   "price": 0.0
+  },
+  {
+   "id": 6751181747,
+   "name": "Subpilot - Cancel Subscription",
+   "seller": "LINERIOS LIMITED",
+   "ratings": 332,
+   "avg": 4.37,
+   "genre": "Finance",
+   "price": 0.0
+  },
+  {
+   "id": 1259029889,
+   "name": "Subscription Manager - Bills",
+   "seller": "Kango Studios LLC",
+   "ratings": 243,
+   "avg": 4.36,
+   "genre": "Finance",
+   "price": 0.0
+  },
+  {
+   "id": 6741497228,
+   "name": "Subflow | Track subscriptions",
+   "seller": "Jessal",
+   "ratings": 6,
+   "avg": 4.83,
+   "genre": "Finance",
+   "price": 0.0
+  },
+  {
+   "id": 6743495252,
+   "name": "Recurroo - Track Subscriptions",
+   "seller": "Whimseed Studio Private Limited",
+   "ratings": 0,
+   "avg": 0,
+   "genre": "Finance",
+   "price": 0.0
+  },
+  {
+   "id": 1499253615,
+   "name": "Subsee - Subs Tracking",
+   "seller": "Tabee Networking Limited",
+   "ratings": 16,
+   "avg": 3.81,
+   "genre": "Finance",
+   "price": 0.0
+  }
+ ],
+ "ca|en_ca|cancel subscriptions": [
+  {
+   "id": 1160481993,
+   "name": "Apple Wallet",
+   "seller": "Apple Canada, Inc.",
+   "ratings": 480001,
+   "avg": 4.82,
+   "genre": "Finance",
+   "price": 0.0
+  },
+  {
+   "id": 375380948,
+   "name": "Apple Store",
+   "seller": "Apple Canada, Inc.",
+   "ratings": 12933,
+   "avg": 3.55,
+   "genre": "Shopping",
+   "price": 0.0
+  },
+  {
+   "id": 6751181747,
+   "name": "Subpilot - Cancel Subscription",
+   "seller": "LINERIOS LIMITED",
+   "ratings": 332,
+   "avg": 4.37,
+   "genre": "Finance",
+   "price": 0.0
+  },
+  {
+   "id": 6479920412,
+   "name": "Cancel Subscriptions & Refund",
+   "seller": "VUNYO BILGI TEKNOLOJILERI LIMITED SIRKETI",
+   "ratings": 394,
+   "avg": 3.92,
+   "genre": "Finance",
+   "price": 0.0
+  },
+  {
+   "id": 6747262759,
+   "name": "Feenko: Cancel Subscriptions",
+   "seller": "GotYourBack Technologies LTD",
+   "ratings": 126,
+   "avg": 3.68,
+   "genre": "Lifestyle",
+   "price": 0.0
+  },
+  {
+   "id": 1569230951,
+   "name": "Envy: Envelope Budget Planner",
+   "seller": "Chimpanzee, LLC",
+   "ratings": 63,
+   "avg": 4.73,
+   "genre": "Finance",
+   "price": 0.0
+  },
+  {
+   "id": 1130498044,
+   "name": "Apple Support",
+   "seller": "Apple Canada, Inc.",
+   "ratings": 2527,
+   "avg": 3.69,
+   "genre": "Utilities",
+   "price": 0.0
+  },
+  {
+   "id": 6692620188,
+   "name": "Subscription Manager: Orbit",
+   "seller": "Flooben Ltd",
+   "ratings": 46,
+   "avg": 4.76,
+   "genre": "Finance",
+   "price": 0.0
+  },
+  {
+   "id": 6746950605,
+   "name": "Subscription Tracker\u3164",
+   "seller": "Jack Furness",
+   "ratings": 5,
+   "avg": 3,
+   "genre": "Finance",
+   "price": 0.0
+  },
+  {
+   "id": 6759456590,
+   "name": "Cancel Subscriptions App",
+   "seller": "Brite Technologies LLC",
+   "ratings": 0,
+   "avg": 0,
+   "genre": "Finance",
+   "price": 0.0
+  }
+ ],
+ "ca|en_ca|subscription cancel": [
+  {
+   "id": 6751181747,
+   "name": "Subpilot - Cancel Subscription",
+   "seller": "LINERIOS LIMITED",
+   "ratings": 332,
+   "avg": 4.37,
+   "genre": "Finance",
+   "price": 0.0
+  },
+  {
+   "id": 6763575456,
+   "name": "Subscription Tracker - Subko",
+   "seller": "PulseApps LLC",
+   "ratings": 0,
+   "avg": 0,
+   "genre": "Utilities",
+   "price": 0.0
+  },
+  {
+   "id": 1160481993,
+   "name": "Apple Wallet",
+   "seller": "Apple Canada, Inc.",
+   "ratings": 480001,
+   "avg": 4.82,
+   "genre": "Finance",
+   "price": 0.0
+  },
+  {
+   "id": 6479920412,
+   "name": "Cancel Subscriptions & Refund",
+   "seller": "VUNYO BILGI TEKNOLOJILERI LIMITED SIRKETI",
+   "ratings": 394,
+   "avg": 3.92,
+   "genre": "Finance",
+   "price": 0.0
+  },
+  {
+   "id": 6759456590,
+   "name": "Cancel Subscriptions App",
+   "seller": "Brite Technologies LLC",
+   "ratings": 0,
+   "avg": 0,
+   "genre": "Finance",
+   "price": 0.0
+  },
+  {
+   "id": 6747262759,
+   "name": "Feenko: Cancel Subscriptions",
+   "seller": "GotYourBack Technologies LTD",
+   "ratings": 126,
+   "avg": 3.68,
+   "genre": "Lifestyle",
+   "price": 0.0
+  },
+  {
+   "id": 6757536385,
+   "name": "Stop Subscription : JustCancel",
+   "seller": "Julien Le Ber",
+   "ratings": 0,
+   "avg": 0,
+   "genre": "Finance",
+   "price": 0.0
+  },
+  {
+   "id": 6760088649,
+   "name": "Cancel Subscription Alert",
+   "seller": "TrafficABC Technology LIMITED",
+   "ratings": 0,
+   "avg": 0,
+   "genre": "Finance",
+   "price": 0.0
+  },
+  {
+   "id": 1259029889,
+   "name": "Subscription Manager - Bills",
+   "seller": "Kango Studios LLC",
+   "ratings": 243,
+   "avg": 4.36,
+   "genre": "Finance",
+   "price": 0.0
+  }
+ ],
+ "ca|en_ca|recurring payments": [
+  {
+   "id": 6768056272,
+   "name": "Recurring Payments",
+   "seller": "KAZUNORI HARADA",
+   "ratings": 0,
+   "avg": 0,
+   "genre": "Finance",
+   "price": 0.0
+  },
+  {
+   "id": 6743909628,
+   "name": "Recurring Payment Lists",
+   "seller": "Cesar Ibarra",
+   "ratings": 0,
+   "avg": 0,
+   "genre": "Finance",
+   "price": 0.0
+  },
+  {
+   "id": 1259029889,
+   "name": "Subscription Manager - Bills",
+   "seller": "Kango Studios LLC",
+   "ratings": 243,
+   "avg": 4.36,
+   "genre": "Finance",
+   "price": 0.0
+  },
+  {
+   "id": 6759227121,
+   "name": "Outflows - Recurring Payments",
+   "seller": "Paulo Cristo",
+   "ratings": 0,
+   "avg": 0,
+   "genre": "Finance",
+   "price": 0.0
+  },
+  {
+   "id": 6789639257,
+   "name": "Subby - Recurring Payments",
+   "seller": "Akingbade Kayode",
+   "ratings": 0,
+   "avg": 0,
+   "genre": "Finance",
+   "price": 0.0
+  },
+  {
+   "id": 6593692260,
+   "name": "Subscription Tracker",
+   "seller": "Eren Berkay Dinc",
+   "ratings": 17,
+   "avg": 4.88,
+   "genre": "Finance",
+   "price": 0.0
+  },
+  {
+   "id": 1627530551,
+   "name": "Everyday Payments",
+   "seller": "DirectCash Bank",
+   "ratings": 2161,
+   "avg": 2.83,
+   "genre": "Finance",
+   "price": 0.0
+  },
+  {
+   "id": 663338402,
+   "name": "Payoneer",
+   "seller": "Payoneer Inc",
+   "ratings": 522,
+   "avg": 4.55,
+   "genre": "Finance",
+   "price": 0.0
+  },
+  {
+   "id": 6772262736,
+   "name": "Bill Reminder: Due Dates",
+   "seller": "Phuc Pham",
+   "ratings": 0,
+   "avg": 0,
+   "genre": "Finance",
+   "price": 0.0
+  }
+ ],
+ "ca|en_ca|recurring bills": [
+  {
+   "id": 1259029889,
+   "name": "Subscription Manager - Bills",
+   "seller": "Kango Studios LLC",
+   "ratings": 243,
+   "avg": 4.36,
+   "genre": "Finance",
+   "price": 0.0
+  },
+  {
+   "id": 6793947843,
+   "name": "Recurring Bills",
+   "seller": "Prashant jha",
+   "ratings": 0,
+   "avg": 0,
+   "genre": "Finance",
+   "price": 0.0
+  },
+  {
+   "id": 473477150,
+   "name": "Bills Monitor - Bill Reminder",
+   "seller": "\u5029 \u8d75",
+   "ratings": 133,
+   "avg": 4.53,
+   "genre": "Finance",
+   "price": 0.0
+  },
+  {
+   "id": 349866256,
+   "name": "tricount: Split & Settle Bills",
+   "seller": "Tricount SA",
+   "ratings": 8367,
+   "avg": 4.85,
+   "genre": "Finance",
+   "price": 0.0
+  },
+  {
+   "id": 468993411,
+   "name": "Bills Monitor Pro",
+   "seller": "\u5029 \u8d75",
+   "ratings": 202,
+   "avg": 4.52,
+   "genre": "Finance",
+   "price": 0.99
+  },
+  {
+   "id": 6743909628,
+   "name": "Recurring Payment Lists",
+   "seller": "Cesar Ibarra",
+   "ratings": 0,
+   "avg": 0,
+   "genre": "Finance",
+   "price": 0.0
+  },
+  {
+   "id": 6742742115,
+   "name": "Bills: Organizer & Tracker",
+   "seller": "Natalia Alekseenko",
+   "ratings": 5,
+   "avg": 4.8,
+   "genre": "Finance",
+   "price": 0.0
+  },
+  {
+   "id": 6450401175,
+   "name": "Bill Panda",
+   "seller": "Sunny Orlando Devs LLC",
+   "ratings": 0,
+   "avg": 0,
+   "genre": "Finance",
+   "price": 0.0
+  },
+  {
+   "id": 6762368608,
+   "name": "Soger Bill Tracker",
+   "seller": "Sergiy Rekun",
+   "ratings": 0,
+   "avg": 0,
+   "genre": "Finance",
+   "price": 0.0
+  },
+  {
+   "id": 1571148960,
+   "name": "Reoccur: Subscriptions & Bills",
+   "seller": "Them Rhinos, LLC",
+   "ratings": 0,
+   "avg": 0,
+   "genre": "Productivity",
+   "price": 0.0
+  }
+ ],
+ "ca|en_ca|bill reminder": [
+  {
+   "id": 1352782733,
+   "name": "Bills Organizer & Reminder",
+   "seller": "Dennis Kruta",
+   "ratings": 468,
+   "avg": 4.6,
+   "genre": "Finance",
+   "price": 0.0
+  },
+  {
+   "id": 6737248419,
+   "name": "Bill Organizer",
+   "seller": "Anastasia Kovba",
+   "ratings": 48,
+   "avg": 4.62,
+   "genre": "Finance",
+   "price": 0.0
+  },
+  {
+   "id": 936422955,
+   "name": "Buddy: Budget Planner",
+   "seller": "Buddy Budgeting AB",
+   "ratings": 8304,
+   "avg": 4.6,
+   "genre": "Finance",
+   "price": 0.0
+  },
+  {
+   "id": 572561420,
+   "name": "Chronicle - Bill Organizer",
+   "seller": "LittleFin LLC",
+   "ratings": 212,
+   "avg": 4.83,
+   "genre": "Finance",
+   "price": 0.0
+  },
+  {
+   "id": 834370671,
+   "name": "Bills Manager",
+   "seller": "Jose Fabian Pena",
+   "ratings": 84,
+   "avg": 4.6,
+   "genre": "Finance",
+   "price": 0.0
+  },
+  {
+   "id": 473477150,
+   "name": "Bills Monitor - Bill Reminder",
+   "seller": "\u5029 \u8d75",
+   "ratings": 133,
+   "avg": 4.53,
+   "genre": "Finance",
+   "price": 0.0
+  },
+  {
+   "id": 6754604358,
+   "name": "Bill Organizer : Reminder",
+   "seller": "Save Apps LLC",
+   "ratings": 0,
+   "avg": 0,
+   "genre": "Finance",
+   "price": 0.0
+  },
+  {
+   "id": 6744859977,
+   "name": "Bill Reminder - Billster",
+   "seller": "BOLDSCAP",
+   "ratings": 0,
+   "avg": 0,
+   "genre": "Finance",
+   "price": 0.0
+  },
+  {
+   "id": 6766489905,
+   "name": "Remidue - Due Reminder",
+   "seller": "VIACHESLAV NIGMATULLIN",
+   "ratings": 2,
+   "avg": 5,
+   "genre": "Finance",
+   "price": 0.0
+  },
+  {
+   "id": 6775578198,
+   "name": "Bill Reminder & Tracker",
+   "seller": "S M Moinur Rahman",
+   "ratings": 0,
+   "avg": 0,
+   "genre": "Finance",
+   "price": 0.0
+  }
+ ],
+ "ca|en_ca|bill tracker": [
+  {
+   "id": 6737248419,
+   "name": "Bill Organizer",
+   "seller": "Anastasia Kovba",
+   "ratings": 48,
+   "avg": 4.62,
+   "genre": "Finance",
+   "price": 0.0
+  },
+  {
+   "id": 936422955,
+   "name": "Buddy: Budget Planner",
+   "seller": "Buddy Budgeting AB",
+   "ratings": 8304,
+   "avg": 4.6,
+   "genre": "Finance",
+   "price": 0.0
+  },
+  {
+   "id": 1621020173,
+   "name": "Budget Planner App - Fleur",
+   "seller": "Akash Jain",
+   "ratings": 1758,
+   "avg": 4.78,
+   "genre": "Finance",
+   "price": 0.0
+  },
+  {
+   "id": 1352782733,
+   "name": "Bills Organizer & Reminder",
+   "seller": "Dennis Kruta",
+   "ratings": 468,
+   "avg": 4.6,
+   "genre": "Finance",
+   "price": 0.0
+  },
+  {
+   "id": 473477150,
+   "name": "Bills Monitor - Bill Reminder",
+   "seller": "\u5029 \u8d75",
+   "ratings": 133,
+   "avg": 4.53,
+   "genre": "Finance",
+   "price": 0.0
+  },
+  {
+   "id": 1525179720,
+   "name": "Spending Tracker - Budget App",
+   "seller": "Inner Grow Limited",
+   "ratings": 3285,
+   "avg": 4.72,
+   "genre": "Finance",
+   "price": 0.0
+  },
+  {
+   "id": 1059461492,
+   "name": "Bill Tracker Pro: Budget Saver",
+   "seller": "Bill Tracker Pro, Inc.",
+   "ratings": 563,
+   "avg": 4.48,
+   "genre": "Finance",
+   "price": 0.0
+  },
+  {
+   "id": 6797824934,
+   "name": "Lumori Bill Tracker & Reminder",
+   "seller": "Chenwen GE",
+   "ratings": 0,
+   "avg": 0,
+   "genre": "Finance",
+   "price": 0.0
+  },
+  {
+   "id": 1457021397,
+   "name": "Billiant: AI Bill Tracker",
+   "seller": "Elliot Levin",
+   "ratings": 16,
+   "avg": 4.69,
+   "genre": "Finance",
+   "price": 0.0
+  },
+  {
+   "id": 6447707197,
+   "name": "What's Due: Bill Tracker",
+   "seller": "Semper Phoenix LLC",
+   "ratings": 18,
+   "avg": 4.39,
+   "genre": "Finance",
+   "price": 0.0
+  }
+ ],
+ "ca|en_ca|free trial reminder": [
+  {
+   "id": 6785028758,
+   "name": "TrialBell: Free Trial Reminder",
+   "seller": "PRAVEENKUMAR MURUGESAN",
+   "ratings": 0,
+   "avg": 0,
+   "genre": "Finance",
+   "price": 0.0
+  },
+  {
+   "id": 6739868277,
+   "name": "Trial Alert: Avoid Auto Bills",
+   "seller": "Benjamin Rhodes-Kropf",
+   "ratings": 0,
+   "avg": 0,
+   "genre": "Productivity",
+   "price": 0.0
+  },
+  {
+   "id": 471570365,
+   "name": "Reminder & Countdown",
+   "seller": "PERSAPPS (PERSEPS), TOO",
+   "ratings": 1970,
+   "avg": 4.69,
+   "genre": "Productivity",
+   "price": 0.0
+  },
+  {
+   "id": 1071899483,
+   "name": "Reminder, Reminders with Voice",
+   "seller": "Sergio Licea",
+   "ratings": 4222,
+   "avg": 4.61,
+   "genre": "Productivity",
+   "price": 0.0
+  },
+  {
+   "id": 371886784,
+   "name": "Alarmed ~ Reminders + Timers",
+   "seller": "David Mandell",
+   "ratings": 1141,
+   "avg": 4.51,
+   "genre": "Productivity",
+   "price": 0.0
+  },
+  {
+   "id": 469454389,
+   "name": "Reminder with Voice Reminders",
+   "seller": "Sergio Licea",
+   "ratings": 1351,
+   "avg": 4.61,
+   "genre": "Productivity",
+   "price": 0.0
+  },
+  {
+   "id": 1232651315,
+   "name": "Remind Me: ToDo reminder",
+   "seller": "Yuma Ikeda",
+   "ratings": 114,
+   "avg": 4.37,
+   "genre": "Productivity",
+   "price": 0.0
+  },
+  {
+   "id": 395529341,
+   "name": "RE.minder",
+   "seller": "postmechanical, LLC",
+   "ratings": 118,
+   "avg": 4.72,
+   "genre": "Productivity",
+   "price": 0.0
+  },
+  {
+   "id": 6756620728,
+   "name": "Free Trial Killer",
+   "seller": "prathyush nallamothu",
+   "ratings": 0,
+   "avg": 0,
+   "genre": "Utilities",
+   "price": 0.0
+  },
+  {
+   "id": 401949944,
+   "name": "hip: Birthday Calendar & Cards",
+   "seller": "Celebrate Labs Inc.",
+   "ratings": 1567,
+   "avg": 4.56,
+   "genre": "Utilities",
+   "price": 0.0
+  }
+ ],
+ "ca|en_ca|trial tracker": [
+  {
+   "id": 1367983640,
+   "name": "ET Grow - Trial Tracker",
+   "seller": "ET Grow Inc",
+   "ratings": 0,
+   "avg": 0,
+   "genre": "Business",
+   "price": 0.0
+  },
+  {
+   "id": 6798929229,
+   "name": "Trial Tracker: Renewal Alerts",
+   "seller": "Soluciones Tecnologicas en Fletes SA de CV",
+   "ratings": 0,
+   "avg": 0,
+   "genre": "Finance",
+   "price": 0.0
+  },
+  {
+   "id": 6792602816,
+   "name": "Trial Guard: Trial Tracker",
+   "seller": "Steven Patrick Nash",
+   "ratings": 0,
+   "avg": 0,
+   "genre": "Utilities",
+   "price": 0.0
+  },
+  {
+   "id": 382233851,
+   "name": "Flight Tracker | Flightradar24",
+   "seller": "Flightradar24 AB",
+   "ratings": 98400,
+   "avg": 4.79,
+   "genre": "Travel",
+   "price": 0.0
+  },
+  {
+   "id": 723795263,
+   "name": "Trivia Crack Premium Quiz Game",
+   "seller": "Etermax",
+   "ratings": 7495,
+   "avg": 4.6,
+   "genre": "Games",
+   "price": 9.99
+  },
+  {
+   "id": 1462556749,
+   "name": "Followers Reports+",
+   "seller": "Nemdori Tech Limited",
+   "ratings": 11895,
+   "avg": 4.1,
+   "genre": "Social Networking",
+   "price": 0.0
+  },
+  {
+   "id": 6795395518,
+   "name": "Bill Reminder: Trial Tracker",
+   "seller": "Ahmed Shalakamy",
+   "ratings": 0,
+   "avg": 0,
+   "genre": "Finance",
+   "price": 0.0
+  },
+  {
+   "id": 651309421,
+   "name": "FollowMeter for Instagram",
+   "seller": "Followmeter LLC",
+   "ratings": 3360,
+   "avg": 3.92,
+   "genre": "Social Networking",
+   "price": 0.0
+  },
+  {
+   "id": 1457761131,
+   "name": "Sportstats Tracker",
+   "seller": "Dilltree Inc",
+   "ratings": 1303,
+   "avg": 4.89,
+   "genre": "Sports",
+   "price": 0.0
+  }
+ ],
+ "ca|en_ca|subscription reminder": [
+  {
+   "id": 1059152023,
+   "name": "Bobby - Track subscriptions",
+   "seller": "Yummygum",
+   "ratings": 1012,
+   "avg": 4.69,
+   "genre": "Finance",
+   "price": 0.0
+  },
+  {
+   "id": 1259029889,
+   "name": "Subscription Manager - Bills",
+   "seller": "Kango Studios LLC",
+   "ratings": 243,
+   "avg": 4.36,
+   "genre": "Finance",
+   "price": 0.0
+  },
+  {
+   "id": 6745758809,
+   "name": "Subscription-Reminder, Tracker",
+   "seller": "Pranshu Patidar",
+   "ratings": 0,
+   "avg": 0,
+   "genre": "Utilities",
+   "price": 0.0
+  },
+  {
+   "id": 6746835094,
+   "name": "whatsub- subscription reminder",
+   "seller": "woogle inc",
+   "ratings": 0,
+   "avg": 0,
+   "genre": "Finance",
+   "price": 0.0
+  },
+  {
+   "id": 6760253704,
+   "name": "Subscription Reminder AU",
+   "seller": "Shehar Yar",
+   "ratings": 0,
+   "avg": 0,
+   "genre": "Utilities",
+   "price": 0.0
+  },
+  {
+   "id": 6761238279,
+   "name": "SubSave: Subscription Reminder",
+   "seller": "\u5efa\u6625 \u5f20",
+   "ratings": 1,
+   "avg": 5,
+   "genre": "Finance",
+   "price": 0.0
+  },
+  {
+   "id": 6756604906,
+   "name": "Subsly - Subscription Reminder",
+   "seller": "James Jowett",
+   "ratings": 0,
+   "avg": 0,
+   "genre": "Finance",
+   "price": 0.0
+  },
+  {
+   "id": 6769869468,
+   "name": "Subscription Tracker: Subly",
+   "seller": "EMMANUEL KIPKEMOI",
+   "ratings": 0,
+   "avg": 0,
+   "genre": "Utilities",
+   "price": 0.0
+  },
+  {
+   "id": 6763424910,
+   "name": "Zuko: Subscription Reminder",
+   "seller": "abiodun oyetomi",
+   "ratings": 0,
+   "avg": 0,
+   "genre": "Finance",
+   "price": 0.0
+  },
+  {
+   "id": 6752399847,
+   "name": "Subscription Tracker - Submind",
+   "seller": "Indie Goodies LLC",
+   "ratings": 0,
+   "avg": 0,
+   "genre": "Utilities",
+   "price": 0.0
+  }
+ ],
+ "ca|en_ca|subscription cost": [
+  {
+   "id": 6820045507,
+   "name": "Subscription Cost",
+   "seller": "BAO TRAM THI",
+   "ratings": 0,
+   "avg": 0,
+   "genre": "Lifestyle",
+   "price": 0.0
+  },
+  {
+   "id": 6759666790,
+   "name": "Subscription Tracker - Value",
+   "seller": "kaisei watanabe",
+   "ratings": 0,
+   "avg": 0,
+   "genre": "Utilities",
+   "price": 0.99
+  },
+  {
+   "id": 6769329967,
+   "name": "SubSeek: Subscription Manager",
+   "seller": "BEGAMOB GLOBAL LIMITED",
+   "ratings": 10,
+   "avg": 2.9,
+   "genre": "Finance",
+   "price": 0.0
+  },
+  {
+   "id": 1059152023,
+   "name": "Bobby - Track subscriptions",
+   "seller": "Yummygum",
+   "ratings": 1012,
+   "avg": 4.69,
+   "genre": "Finance",
+   "price": 0.0
+  },
+  {
+   "id": 6759223571,
+   "name": "Subscription Cost Tracker",
+   "seller": "Seth Baugh",
+   "ratings": 0,
+   "avg": 0,
+   "genre": "Utilities",
+   "price": 0.0
+  },
+  {
+   "id": 1524236599,
+   "name": "Sparky: Subscriptions Tracker",
+   "seller": "Ryan Rook",
+   "ratings": 2,
+   "avg": 5,
+   "genre": "Finance",
+   "price": 0.0
+  },
+  {
+   "id": 6771394250,
+   "name": "Subscription Cost Radar",
+   "seller": "minchul kim",
+   "ratings": 0,
+   "avg": 0,
+   "genre": "Finance",
+   "price": 0.0
+  },
+  {
+   "id": 6747663809,
+   "name": "Subscription Manager - Reko",
+   "seller": "Playground Studio LLC",
+   "ratings": 7,
+   "avg": 4.86,
+   "genre": "Finance",
+   "price": 0.0
+  },
+  {
+   "id": 6769324050,
+   "name": "SubTracker: Subscription Cost",
+   "seller": "ryuya matsuo",
+   "ratings": 0,
+   "avg": 0,
+   "genre": "Finance",
+   "price": 0.0
+  },
+  {
+   "id": 6760305461,
+   "name": "Subscription Tracker:Cost/Hour",
+   "seller": "KOTARO OMORI",
+   "ratings": 0,
+   "avg": 0,
+   "genre": "Finance",
+   "price": 0.0
+  }
+ ],
+ "ca|en_ca|hidden subscriptions": [
+  {
+   "id": 6751181747,
+   "name": "Subpilot - Cancel Subscription",
+   "seller": "LINERIOS LIMITED",
+   "ratings": 332,
+   "avg": 4.37,
+   "genre": "Finance",
+   "price": 0.0
+  },
+  {
+   "id": 1259029889,
+   "name": "Subscription Manager - Bills",
+   "seller": "Kango Studios LLC",
+   "ratings": 243,
+   "avg": 4.36,
+   "genre": "Finance",
+   "price": 0.0
+  },
+  {
+   "id": 1502336248,
+   "name": "Subscription Tracker",
+   "seller": "Ali Alhady",
+   "ratings": 7,
+   "avg": 4.14,
+   "genre": "Finance",
+   "price": 0.0
+  },
+  {
+   "id": 1059152023,
+   "name": "Bobby - Track subscriptions",
+   "seller": "Yummygum",
+   "ratings": 1012,
+   "avg": 4.69,
+   "genre": "Finance",
+   "price": 0.0
+  },
+  {
+   "id": 6758894751,
+   "name": "SubRadar: Subscription Manager",
+   "seller": "Yagel Oshri",
+   "ratings": 1,
+   "avg": 5,
+   "genre": "Finance",
+   "price": 0.0
+  },
+  {
+   "id": 6779691937,
+   "name": "Outflow: Subscription Tracker",
+   "seller": "Andy Mesa",
+   "ratings": 0,
+   "avg": 0,
+   "genre": "Finance",
+   "price": 0.0
+  },
+  {
+   "id": 6761034583,
+   "name": "SubFind: Subscription Tracker",
+   "seller": "ELMOND TECHNOLOGIES L.L.C",
+   "ratings": 9,
+   "avg": 3.56,
+   "genre": "Finance",
+   "price": 0.0
+  },
+  {
+   "id": 1577082754,
+   "name": "Subscriptions - Track Expenses",
+   "seller": "Touchbits Inc.",
+   "ratings": 58,
+   "avg": 4.67,
+   "genre": "Finance",
+   "price": 0.0
+  },
+  {
+   "id": 6766199892,
+   "name": "Spara - Subscription Tracker",
+   "seller": "Ilman Nafian Darajat",
+   "ratings": 0,
+   "avg": 0,
+   "genre": "Finance",
+   "price": 0.0
+  },
+  {
+   "id": 6795091979,
+   "name": "Duefolio: Manage Subscriptions",
+   "seller": "CYNQ VENTURES (OPC) PRIVATE LIMITED",
+   "ratings": 0,
+   "avg": 0,
+   "genre": "Finance",
+   "price": 0.0
+  }
+ ],
+ "ca|fr_ca|suivi abonnements": [
+  {
+   "id": 6593692260,
+   "name": "Suivi abonnements",
+   "seller": "Eren Berkay Dinc",
+   "ratings": 17,
+   "avg": 4.88,
+   "genre": "Finance",
+   "price": 0.0
+  },
+  {
+   "id": 1632853914,
+   "name": "SubManager: Suivi abonnements",
+   "seller": "Ahnaf Mahmud",
+   "ratings": 10,
+   "avg": 4.8,
+   "genre": "Finance",
+   "price": 0.0
+  },
+  {
+   "id": 6754086277,
+   "name": "Suivi Abonnements: SubTrack",
+   "seller": "Srinivas Ramakrishna",
+   "ratings": 0,
+   "avg": 0,
+   "genre": "Finance",
+   "price": 0.0
+  },
+  {
+   "id": 6760305461,
+   "name": "Suivi Abonnements: Co\u00fbt/Heure",
+   "seller": "KOTARO OMORI",
+   "ratings": 0,
+   "avg": 0,
+   "genre": "Finance",
+   "price": 0.0
+  },
+  {
+   "id": 6797437772,
+   "name": "Rennly: Suivi Abonnements",
+   "seller": "Alina Berezhnyuk",
+   "ratings": 0,
+   "avg": 0,
+   "genre": "Productivity",
+   "price": 0.0
+  },
+  {
+   "id": 6793693106,
+   "name": "Suivi abonnements: SubTrack",
+   "seller": "Elvira Latypova",
+   "ratings": 0,
+   "avg": 0,
+   "genre": "Finance",
+   "price": 0.0
+  },
+  {
+   "id": 6758069380,
+   "name": "Suivi Abonnements: ManageSubs",
+   "seller": "Vladimirs Matusevics",
+   "ratings": 0,
+   "avg": 0,
+   "genre": "Finance",
+   "price": 0.0
+  },
+  {
+   "id": 6746773081,
+   "name": "Suivi abonnements \u2013 SubZero",
+   "seller": "APPSOLUTELY LTDA",
+   "ratings": 0,
+   "avg": 0,
+   "genre": "Finance",
+   "price": 0.0
+  },
+  {
+   "id": 6762519439,
+   "name": "Suivi Abonnements - Subly",
+   "seller": "Hicham Badri",
+   "ratings": 0,
+   "avg": 0,
+   "genre": "Finance",
+   "price": 0.0
+  },
+  {
+   "id": 6762475711,
+   "name": "Suivi abonnements : SubAxe",
+   "seller": "Yasir Gasim Hamid Hassan",
+   "ratings": 0,
+   "avg": 0,
+   "genre": "Finance",
+   "price": 0.0
+  }
+ ],
+ "ca|fr_ca|gestionnaire abonnements": [
+  {
+   "id": 6695762458,
+   "name": "Gestionnaire d'Abonnements",
+   "seller": "Andrei Kazmin",
+   "ratings": 2,
+   "avg": 5,
+   "genre": "Utilities",
+   "price": 0.0
+  },
+  {
+   "id": 1233244667,
+   "name": "Mot du jour\u2014linguee d\u00e9finition",
+   "seller": "Vocabulous US, Inc.",
+   "ratings": 578,
+   "avg": 4.63,
+   "genre": "Reference",
+   "price": 0.0
+  },
+  {
+   "id": 1669592916,
+   "name": "Compo Collectes",
+   "seller": "Compo-Haut-Richelieu inc.",
+   "ratings": 796,
+   "avg": 4.84,
+   "genre": "Reference",
+   "price": 0.0
+  },
+  {
+   "id": 6738048353,
+   "name": "Gestionnaire d'Annulation",
+   "seller": "Tolganai Askarova",
+   "ratings": 0,
+   "avg": 0,
+   "genre": "Utilities",
+   "price": 0.0
+  },
+  {
+   "id": 1635556895,
+   "name": "D\u00e9fi sans auto solo",
+   "seller": "Jeu vert inc.",
+   "ratings": 54,
+   "avg": 2.19,
+   "genre": "Lifestyle",
+   "price": 0.0
+  },
+  {
+   "id": 6746950605,
+   "name": "Suivi Des Abonnements\u3164",
+   "seller": "Jack Furness",
+   "ratings": 5,
+   "avg": 3,
+   "genre": "Finance",
+   "price": 0.0
+  },
+  {
+   "id": 6741823650,
+   "name": "Subo - Abonnements et d\u00e9penses",
+   "seller": "Gestalt Labs",
+   "ratings": 14,
+   "avg": 4.57,
+   "genre": "Finance",
+   "price": 0.0
+  },
+  {
+   "id": 1523543874,
+   "name": "Billbot - Abonnement & forfait",
+   "seller": "CRAVY APP, S.L",
+   "ratings": 9,
+   "avg": 4.33,
+   "genre": "Finance",
+   "price": 0.0
+  },
+  {
+   "id": 1597141092,
+   "name": "Bilbird: g\u00e9rer les abonnements",
+   "seller": "Gauravkumar Patel",
+   "ratings": 2,
+   "avg": 5,
+   "genre": "Finance",
+   "price": 0.0
+  },
+  {
+   "id": 6759149326,
+   "name": "SubTracker: Suivi Abonnements",
+   "seller": "Saroar Khandoker",
+   "ratings": 3,
+   "avg": 2.33,
+   "genre": "Finance",
+   "price": 0.0
+  }
+ ],
+ "ca|fr_ca|annuler abonnement": [
+  {
+   "id": 6479920412,
+   "name": "Annuler: G\u00e9rer mes abonnements",
+   "seller": "VUNYO BILGI TEKNOLOJILERI LIMITED SIRKETI",
+   "ratings": 394,
+   "avg": 3.92,
+   "genre": "Finance",
+   "price": 0.0
+  },
+  {
+   "id": 6759665390,
+   "name": "Annuler; G\u00e9rer mes abonnements",
+   "seller": "Ibrahim Kahraman",
+   "ratings": 0,
+   "avg": 0,
+   "genre": "Finance",
+   "price": 0.0
+  },
+  {
+   "id": 6759456590,
+   "name": "Annuler & G\u00e9rer Abonnements",
+   "seller": "Brite Technologies LLC",
+   "ratings": 0,
+   "avg": 0,
+   "genre": "Finance",
+   "price": 0.0
+  },
+  {
+   "id": 6740457603,
+   "name": "ReSubs - Gestion Abonnements",
+   "seller": "Christian Krueger",
+   "ratings": 11,
+   "avg": 3.91,
+   "genre": "Finance",
+   "price": 0.0
+  },
+  {
+   "id": 6503105531,
+   "name": "Subs: Suivi Des Abonnements",
+   "seller": "PERIZADE ERBAS",
+   "ratings": 1,
+   "avg": 3,
+   "genre": "Productivity",
+   "price": 0.0
+  },
+  {
+   "id": 551782765,
+   "name": "RFI - L'actualit\u00e9 en direct",
+   "seller": "France Medias Monde",
+   "ratings": 56,
+   "avg": 3.43,
+   "genre": "News",
+   "price": 0.0
+  },
+  {
+   "id": 1233244667,
+   "name": "Mot du jour\u2014linguee d\u00e9finition",
+   "seller": "Vocabulous US, Inc.",
+   "ratings": 578,
+   "avg": 4.63,
+   "genre": "Reference",
+   "price": 0.0
+  },
+  {
+   "id": 6789850180,
+   "name": "Gestion d\u2019abonnements : SubIQ",
+   "seller": "Tran Duc Binh",
+   "ratings": 2,
+   "avg": 5,
+   "genre": "Finance",
+   "price": 0.0
+  },
+  {
+   "id": 1669592916,
+   "name": "Compo Collectes",
+   "seller": "Compo-Haut-Richelieu inc.",
+   "ratings": 796,
+   "avg": 4.84,
+   "genre": "Reference",
+   "price": 0.0
+  },
+  {
+   "id": 6737910715,
+   "name": "TrackMySub: Suivi Abonnement",
+   "seller": "Firat Onurcan Polat",
+   "ratings": 1,
+   "avg": 4,
+   "genre": "Finance",
+   "price": 0.0
+  }
+ ],
+ "ca|fr_ca|rappel facture": [
+  {
+   "id": 1604493670,
+   "name": "Rappel de factures | Avizo",
+   "seller": "ABEX Technologies inc.",
+   "ratings": 0,
+   "avg": 0,
+   "genre": "Finance",
+   "price": 0.0
+  },
+  {
+   "id": 6755009082,
+   "name": "Rappel de Factures - BillSnap",
+   "seller": "Richard Machemehl",
+   "ratings": 0,
+   "avg": 0,
+   "genre": "Finance",
+   "price": 0.0
+  },
+  {
+   "id": 6761281637,
+   "name": "Organiseur de Factures: Rappel",
+   "seller": "DixonAppStudio LLC",
+   "ratings": 0,
+   "avg": 0,
+   "genre": "Utilities",
+   "price": 0.0
+  },
+  {
+   "id": 468993411,
+   "name": "Moniteur de Factures Pro",
+   "seller": "\u5029 \u8d75",
+   "ratings": 202,
+   "avg": 4.52,
+   "genre": "Finance",
+   "price": 0.99
+  },
+  {
+   "id": 6748648630,
+   "name": "Billwise: Rappel Factures",
+   "seller": "El ghali khalid",
+   "ratings": 1,
+   "avg": 3,
+   "genre": "Finance",
+   "price": 0.0
+  },
+  {
+   "id": 6779454945,
+   "name": "Rappel de Factures: \u00c9ch\u00e9ances",
+   "seller": "Cloud Motion Lab LLC",
+   "ratings": 0,
+   "avg": 0,
+   "genre": "Finance",
+   "price": 0.0
+  },
+  {
+   "id": 6759362362,
+   "name": "Rappel Factures & Abonnements",
+   "seller": "LetUsBake, LLC",
+   "ratings": 0,
+   "avg": 0,
+   "genre": "Finance",
+   "price": 0.0
+  },
+  {
+   "id": 1637341476,
+   "name": "Fizl - Facture sur le terrain",
+   "seller": "Ludditech Inc.",
+   "ratings": 39,
+   "avg": 5,
+   "genre": "Business",
+   "price": 0.0
+  },
+  {
+   "id": 6448975056,
+   "name": "Billpad: Rappel de Factures",
+   "seller": "Oscar De Moya",
+   "ratings": 1,
+   "avg": 5,
+   "genre": "Finance",
+   "price": 6.99
+  }
+ ],
+ "ca|fr_ca|abonnements": [
+  {
+   "id": 6479920412,
+   "name": "Annuler: G\u00e9rer mes abonnements",
+   "seller": "VUNYO BILGI TEKNOLOJILERI LIMITED SIRKETI",
+   "ratings": 394,
+   "avg": 3.92,
+   "genre": "Finance",
+   "price": 0.0
+  },
+  {
+   "id": 6692620188,
+   "name": "Abonnement: Orbit",
+   "seller": "Flooben Ltd",
+   "ratings": 46,
+   "avg": 4.76,
+   "genre": "Finance",
+   "price": 0.0
+  },
+  {
+   "id": 6747262759,
+   "name": "Feenko: Cancel Subscription",
+   "seller": "GotYourBack Technologies LTD",
+   "ratings": 126,
+   "avg": 3.68,
+   "genre": "Lifestyle",
+   "price": 0.0
+  },
+  {
+   "id": 6741823650,
+   "name": "Subo - Abonnements et d\u00e9penses",
+   "seller": "Gestalt Labs",
+   "ratings": 14,
+   "avg": 4.57,
+   "genre": "Finance",
+   "price": 0.0
+  },
+  {
+   "id": 313904711,
+   "name": "PressReader : Revues, Journaux",
+   "seller": "PressReader Inc",
+   "ratings": 23070,
+   "avg": 4.62,
+   "genre": "News",
+   "price": 0.0
+  },
+  {
+   "id": 6474301740,
+   "name": "Abonnements - Abot",
+   "seller": "Kinokode",
+   "ratings": 0,
+   "avg": 0,
+   "genre": "Finance",
+   "price": 0.0
+  },
+  {
+   "id": 6745022704,
+   "name": "Spliiit : partage d'abonnement",
+   "seller": "Spliiit",
+   "ratings": 4,
+   "avg": 4.75,
+   "genre": "Utilities",
+   "price": 0.0
+  },
+  {
+   "id": 1523543874,
+   "name": "Billbot - Abonnement & forfait",
+   "seller": "CRAVY APP, S.L",
+   "ratings": 9,
+   "avg": 4.33,
+   "genre": "Finance",
+   "price": 0.0
+  },
+  {
+   "id": 1591020291,
+   "name": "SubsCrab gestion d'abonnements",
+   "seller": "Kaspersky Lab Switzerland GmbH",
+   "ratings": 2,
+   "avg": 3,
+   "genre": "Finance",
+   "price": 0.0
+  }
+ ]
+}
