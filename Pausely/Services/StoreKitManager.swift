@@ -330,17 +330,31 @@ enum StoreKitError: Error {
 
 // MARK: - Derived pricing (always from the real App Store prices)
 extension StoreKitManager {
-    /// Percentage saved by paying yearly instead of 12 monthly payments; nil if either price is unknown.
-    var annualSavingsPercent: Int? {
-        guard let monthly = product(for: .pro), let annual = product(for: .proAnnual), monthly.price > 0 else { return nil }
-        let twelveMonths = monthly.price * 12
-        let percent = NSDecimalNumber(decimal: (twelveMonths - annual.price) / twelveMonths * 100).doubleValue.rounded()
+    /// Percentage saved by paying yearly instead of twelve monthly payments; nil when there is no saving.
+    nonisolated static func annualSavingsPercent(monthly: Decimal, annual: Decimal) -> Int? {
+        guard monthly > 0 else { return nil }
+        let twelveMonths = monthly * 12
+        let percent = NSDecimalNumber(decimal: (twelveMonths - annual) / twelveMonths * 100).doubleValue.rounded()
         return percent > 0 ? Int(percent) : nil
     }
 
-    /// The yearly price spread over 12 months, formatted for this storefront; nil until products load.
+    /// The yearly price spread over twelve months, rounded to cents.
+    nonisolated static func perMonth(annual: Decimal) -> Decimal {
+        var value = annual / 12
+        var rounded = Decimal()
+        NSDecimalRound(&rounded, &value, 2, .plain)
+        return rounded
+    }
+
+    /// Percentage saved by the yearly plan, from the loaded products; nil until both are loaded.
+    var annualSavingsPercent: Int? {
+        guard let monthly = product(for: .pro), let annual = product(for: .proAnnual) else { return nil }
+        return Self.annualSavingsPercent(monthly: monthly.price, annual: annual.price)
+    }
+
+    /// The yearly price per month, formatted for this storefront; nil until products load.
     var annualPricePerMonth: String? {
         guard let annual = product(for: .proAnnual) else { return nil }
-        return (annual.price / 12).formatted(annual.priceFormatStyle)
+        return Self.perMonth(annual: annual.price).formatted(annual.priceFormatStyle)
     }
 }

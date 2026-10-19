@@ -366,13 +366,13 @@ struct PrivacySettingsView: View {
     }
     
     private func openPrivacyPolicy() {
-        if let url = URL(string: "https://pausely.app/privacy") {
+        if let url = URL(string: AppConfig.privacyPolicyURL) {
             UIApplication.shared.open(url)
         }
     }
     
     private func openTerms() {
-        if let url = URL(string: "https://pausely.app/terms") {
+        if let url = URL(string: AppConfig.termsOfServiceURL) {
             UIApplication.shared.open(url)
         }
     }

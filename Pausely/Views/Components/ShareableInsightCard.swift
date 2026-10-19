@@ -305,7 +305,7 @@ struct ShareableInsightCard: View {
                 .font(.caption2)
                 .foregroundStyle(Color.accentMint)
 
-            Text("pausely.app")
+            Text("pausely.pro")
                 .font(.system(.footnote, design: .rounded).weight(.semibold))
                 .foregroundStyle(Color.accentMint)
 

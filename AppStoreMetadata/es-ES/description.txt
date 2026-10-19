@@ -1,4 +1,4 @@
-Sabe exactamente por qué pagas y cuándo se renueva.
+Conoce exactamente lo que pagas y cuándo se renueva.
 
 Pausely reúne todas tus suscripciones en un solo lugar, de forma sencilla. Te avisa antes de que termine una prueba gratuita, suba un precio o llegue una renovación inesperada.
 
@@ -17,7 +17,7 @@ LO QUE OBTIENES
 • Exporta tus datos cuando quieras
 
 GRATIS Y PRO
-Controla hasta 2 suscripciones gratis. Pausely Pro desbloquea suscripciones ilimitadas, análisis de ahorro, alternativas más baratas y el flujo guiado para cancelar.
+Controla hasta 5 suscripciones gratis. Pausely Pro desbloquea suscripciones ilimitadas, análisis de ahorro, alternativas más baratas y el flujo guiado para cancelar.
 
 PRIVACIDAD ANTE TODO
 Sin anuncios, sin rastreadores de terceros y nunca vendemos tus datos.
@@ -25,7 +25,7 @@ Sin anuncios, sin rastreadores de terceros y nunca vendemos tus datos.
 Disponible en inglés, francés, español, alemán, japonés y árabe.
 
 INFORMACIÓN DE LA SUSCRIPCIÓN
-Pausely Pro es una suscripción de renovación automática, con cobro mensual o anual. El pago se carga a tu cuenta de Apple ID al confirmar la compra. La suscripción se renueva automáticamente salvo que se cancele al menos 24 horas antes del final del periodo en curso. Puedes gestionarla o cancelarla en los ajustes de tu cuenta de Apple ID después de la compra.
+Pausely Pro es una suscripción de renovación automática, con cobro mensual o anual. El pago se carga a tu cuenta de Apple al confirmar la compra. La suscripción se renueva automáticamente salvo que se cancele al menos 24 horas antes del final del periodo en curso. Puedes gestionarla o cancelarla en los ajustes de tu cuenta de Apple después de la compra.
 
 Términos de uso: https://pausely.pro/terms.html
 Política de privacidad: https://pausely.pro/privacy.html

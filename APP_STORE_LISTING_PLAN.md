@@ -34,11 +34,11 @@ Check everything: `python3 scripts/store_copy.py --check` (11 locales, 0 problem
 3. Sign in to https://appstoreconnect.apple.com, then **Business** (Agreements, Tax, and Banking). Accept anything marked "New Terms". Under Paid Apps Agreement, complete: contact roles, bank account, tax forms. **Subscriptions cannot be sold without an active Paid Apps Agreement.**
 4. Re-run `asc apps list`. When it returns the app instead of the error, the block is cleared.
 
-**What I will do next once it is clear** (and only with the owner's OK, since it changes a live account):
+**Once it is clear, one command does the rest:** `scripts/asc_apply.sh` (read-only by default: it checks access, diffs the live listing against `metadata/`, and dry-runs every change). After reading its output, `scripts/asc_apply.sh --apply` performs them. It has not been run against the live API yet because the account was blocked, so treat the read-only run as its first test. What it does:
 
-1. `asc apps list`, then `asc metadata pull` to see what is currently in App Store Connect and diff it against `metadata/`.
-2. `asc metadata push --dry-run`, review the plan, then push.
-3. Create or fix the subscription group, localizations, prices and the 7-day introductory offer (section 5).
+1. Finds the app, pulls the live metadata and diffs it against `metadata/`.
+2. Pushes the listing for 11 locales, and sets the subscription names and descriptions for all 11.
+3. Sets the US base price ($4.99 monthly, $29.99 yearly), lets Apple equalize every other country, and adds the 7-day free trial if missing.
 
 ---
 
@@ -57,7 +57,7 @@ The old `APP_STORE_LISTING.md`, `AppStoreMetadata.md` and `PromotionalText.md` p
 | `pausely.app` URLs, support@pausely.app | Wrong domain | `pausely.pro` pages that exist (privacy, terms, support) |
 | Review password in a public repo | Security leak | Removed. **Rotate it** (section 9, decision 3) |
 
-Claims that remain are each backed by code: 1,000+ catalog services, 900+ cancel links with difficulty ratings, 140+ currencies, renewal reminders, trial tracking, price history, cheaper alternatives, cost per hour, widgets, Shortcuts, Face ID, Subscription Wrapped, data export, and a free tier of 2 subscriptions.
+Claims that remain are each backed by code: 1,000+ catalog services, 900+ cancel links with difficulty ratings, 140+ currencies, renewal reminders, trial tracking, price history, cheaper alternatives, cost per hour, widgets, Shortcuts, Face ID, Subscription Wrapped, data export, and a free tier of 5 subscriptions.
 
 ---
 
@@ -148,13 +148,15 @@ Rules: real in-app screens with demo data (use the DEBUG demo launch flags, neve
 - **Public repository:** it contains internal strategy and, historically, the review password. See decision 3.
 - **"Scan from App Store" in the app** (Apple Subscriptions import) could never see other apps' subscriptions, because iOS does not allow it. **Removed from the Subscriptions tab on 2026-10-19.** The unused screens (`AutoDetectView`, `AppleSubscriptionScanner`, `ForgottenSubscriptionsSection`) remain as dead code and can be deleted.
 - **Remaining in-app copy** that over-promises (separate from metadata): Help FAQ says data is "encrypted end-to-end"; Profile and Help mention pausing. Audit before submission. Dead screens that still mention Smart Pause or AI (`SmartPauseAlertView`, `FinancialAdvisorView`, `ReferralSuccessView`, `PerksView`, `MVFeaturesScene`) are unreachable but should be deleted.
-- **Gmail:** do not market it until Google approves the `gmail.readonly` scope (under review since early October; a security assessment may be required).
-- **Prices:** StoreKit returned $9.99 monthly and $39.99 yearly to a clean simulator on 2026-10-19 (older repo docs said $79.99 yearly, which was wrong). Confirm in App Store Connect; the launch price is still the owner's decision (recommended: $4.99 / $29.99).
+- **Gmail:** do not market it until Google approves the `gmail.readonly` scope (under review since early October; a security assessment may be required). Release builds now hide the Gmail import row (`FeatureFlags.gmailImportEnabled` in `Pausely/Core/FeatureFlags.swift`); flip it to `true` the day Google approves.
+- **Prices:** StoreKit returned $9.99 monthly and $39.99 yearly twice on 2026-10-19 (a clean simulator and a test run), so that is what App Store Connect holds today. The repo, sandbox files, product config and Terms page now say the launch prices, $4.99 and $29.99; `scripts/asc_apply.sh` changes App Store Connect to match once the account allows it.
 - **Machine-translated copy:** native review needed in five languages.
 
 ---
 
 ## 7. Apply commands (after section 1 is cleared and the owner says go)
+
+Easiest: `scripts/asc_apply.sh` (read-only first, then `--apply`). The manual equivalents are below.
 
 ```bash
 asc apps list --output table
@@ -182,4 +184,7 @@ Regenerate any time with `python3 scripts/store_copy.py --write`. Never edit the
 3. **Public repository:** a scan on 2026-10-19 found no live API keys or tokens in tracked files or history (the Supabase anon key in the project file is public by design). The only leak is the old review password in 3 old commits, with 0 forks and 0 stars. Fix: delete or reset the `review@pausely.app` user in Supabase Auth, and create the real review account in App Store Connect only. Keep the repo public (the website and the Google verification pages are served from it); rewriting history would not add protection once the account is gone.
 4. **Seller name:** an individual membership shows a personal name on the App Store. If a company name is wanted, plan an organization enrollment (needs a D-U-N-S number).
 5. ~~"Scan from App Store" feature~~ **Resolved:** removed.
-6. **Pricing:** the owner picks the launch price (recommendation: $4.99/month and $29.99/year, raising yearly to about $39.99 when automatic detection ships). The paywall now reads real StoreKit prices, so a price change needs no code change, only App Store Connect.
+6. ~~Pricing~~ **Done (owner delegated, 2026-10-19):** $4.99/month and $29.99/year, 7-day trial kept; raise yearly to about $39.99 when automatic detection ships (+33% / +$10 is inside Apple's no-consent window). The paywall reads real StoreKit prices, so later price changes need no code change.
+7. ~~Free tier~~ **Done:** 5 subscriptions (`FreeTier.subscriptionLimit`; `scripts/store_copy.py --check` fails if the store copy and the app disagree).
+8. ~~Gmail import visible before Google approval~~ **Done:** hidden in Release builds.
+9. **Still the owner's:** the Terms page promises a 14-day refund on annual plans and the privacy page still mentions "Smart Pause" (see the report). Both are legal wording, so they are left for the owner.

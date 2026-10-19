@@ -23,69 +23,62 @@
           "description": "Unlimited subscriptions and all Pro features"
         },
         {
-          "locale": "es-MX",
-          "display_name": "Pausely Pro Mensual",
-          "description": "Suscripciones ilimitadas y todas las funciones Pro"
+          "locale": "en-CA",
+          "display_name": "Pausely Pro Monthly",
+          "description": "Unlimited subscriptions and all Pro features"
+        },
+        {
+          "locale": "en-GB",
+          "display_name": "Pausely Pro Monthly",
+          "description": "Unlimited subscriptions and all Pro features"
+        },
+        {
+          "locale": "en-AU",
+          "display_name": "Pausely Pro Monthly",
+          "description": "Unlimited subscriptions and all Pro features"
         },
         {
           "locale": "fr-CA",
           "display_name": "Pausely Pro Mensuel",
-          "description": "Abonnements illimités et toutes les fonctions Pro"
+          "description": "Abonnements illimités et fonctions Pro"
+        },
+        {
+          "locale": "fr-FR",
+          "display_name": "Pausely Pro Mensuel",
+          "description": "Abonnements illimités et fonctions Pro"
+        },
+        {
+          "locale": "es-MX",
+          "display_name": "Pausely Pro Mensual",
+          "description": "Suscripciones ilimitadas y todo Pro"
+        },
+        {
+          "locale": "es-ES",
+          "display_name": "Pausely Pro Mensual",
+          "description": "Suscripciones ilimitadas y todo Pro"
         },
         {
           "locale": "de-DE",
           "display_name": "Pausely Pro Monatlich",
-          "description": "Unbegrenzte Abonnements und alle Pro-Funktionen"
+          "description": "Unbegrenzte Abos und alle Pro-Funktionen"
+        },
+        {
+          "locale": "ja",
+          "display_name": "Pausely Pro 月額",
+          "description": "無制限のサブスクとすべてのPro機能"
+        },
+        {
+          "locale": "ar-SA",
+          "display_name": "Pausely Pro شهري",
+          "description": "اشتراكات غير محدودة وكل ميزات Pro"
         }
       ],
       "subscription_duration": "1 Month",
       "pricing": {
-        "default": {
-          "tier": 65,
-          "usd": 9.99
-        },
-        "territories": [
-          {
-            "country": "US",
-            "tier": 65,
-            "price": "9.99"
-          },
-          {
-            "country": "CA",
-            "tier": 65,
-            "price": "9.99"
-          },
-          {
-            "country": "GB",
-            "tier": 65,
-            "price": "6.99"
-          },
-          {
-            "country": "AU",
-            "tier": 65,
-            "price": "12.99"
-          },
-          {
-            "country": "DE",
-            "tier": 65,
-            "price": "9.99"
-          },
-          {
-            "country": "FR",
-            "tier": 65,
-            "price": "9.99"
-          },
-          {
-            "country": "JP",
-            "tier": 62,
-            "price": "800"
-          },
-          {
-            "country": "MX",
-            "tier": 62,
-            "price": "129"
-          }
-        ]
+        "base_territory": "USA",
+        "base_price_usd": "4.99",
+        "method": "asc subscriptions pricing equalize --subscription-id <ID> --base-price 4.99",
+        "note": "Set only the US base price; Apple's equalization fills every other territory. Do not hand-pick per-country prices."
       },
       "introductory_offer": {
         "enabled": true,
@@ -104,72 +97,65 @@
         {
           "locale": "en-US",
           "display_name": "Pausely Pro Annual",
-          "description": "Save 33% with annual billing"
+          "description": "Save 50% with annual billing"
         },
         {
-          "locale": "es-MX",
-          "display_name": "Pausely Pro Anual",
-          "description": "Ahorra 33% con facturación anual"
+          "locale": "en-CA",
+          "display_name": "Pausely Pro Annual",
+          "description": "Save 50% with annual billing"
+        },
+        {
+          "locale": "en-GB",
+          "display_name": "Pausely Pro Annual",
+          "description": "Save 50% with annual billing"
+        },
+        {
+          "locale": "en-AU",
+          "display_name": "Pausely Pro Annual",
+          "description": "Save 50% with annual billing"
         },
         {
           "locale": "fr-CA",
           "display_name": "Pausely Pro Annuel",
-          "description": "Économisez 33% avec la facturation annuelle"
+          "description": "Économisez 50 % avec l'abonnement annuel"
+        },
+        {
+          "locale": "fr-FR",
+          "display_name": "Pausely Pro Annuel",
+          "description": "Économisez 50 % avec l'abonnement annuel"
+        },
+        {
+          "locale": "es-MX",
+          "display_name": "Pausely Pro Anual",
+          "description": "Ahorra 50% con facturación anual"
+        },
+        {
+          "locale": "es-ES",
+          "display_name": "Pausely Pro Anual",
+          "description": "Ahorra 50% con facturación anual"
         },
         {
           "locale": "de-DE",
           "display_name": "Pausely Pro Jährlich",
-          "description": "Sparen Sie 33% mit jährlicher Abrechnung"
+          "description": "Sparen Sie 50% mit jährlicher Abrechnung"
+        },
+        {
+          "locale": "ja",
+          "display_name": "Pausely Pro 年額",
+          "description": "年額プランで50%お得"
+        },
+        {
+          "locale": "ar-SA",
+          "display_name": "Pausely Pro سنوي",
+          "description": "وفّر 50% مع الدفع السنوي"
         }
       ],
       "subscription_duration": "1 Year",
       "pricing": {
-        "default": {
-          "tier": 89,
-          "usd": 79.99
-        },
-        "territories": [
-          {
-            "country": "US",
-            "tier": 89,
-            "price": "79.99"
-          },
-          {
-            "country": "CA",
-            "tier": 89,
-            "price": "79.99"
-          },
-          {
-            "country": "GB",
-            "tier": 89,
-            "price": "44.99"
-          },
-          {
-            "country": "AU",
-            "tier": 89,
-            "price": "79.99"
-          },
-          {
-            "country": "DE",
-            "tier": 89,
-            "price": "79.99"
-          },
-          {
-            "country": "FR",
-            "tier": 89,
-            "price": "79.99"
-          },
-          {
-            "country": "JP",
-            "tier": 89,
-            "price": "6000"
-          },
-          {
-            "country": "MX",
-            "tier": 89,
-            "price": "999"
-          }
-        ]
+        "base_territory": "USA",
+        "base_price_usd": "29.99",
+        "method": "asc subscriptions pricing equalize --subscription-id <ID> --base-price 29.99",
+        "note": "Set only the US base price; Apple's equalization fills every other territory. Do not hand-pick per-country prices."
       },
       "introductory_offer": {
         "enabled": true,
@@ -179,7 +165,7 @@
       },
       "marketing_highlight": {
         "enabled": true,
-        "text": "BEST VALUE - Save 33%"
+        "text": "BEST VALUE - Save 50%"
       }
     }
   ],
@@ -206,7 +192,7 @@
     ]
   },
   "app_review_info": {
-    "notes": "Pausely helps people keep track of their subscriptions and avoid surprise renewals. FREE: track up to 2 subscriptions with renewal reminders. PRO (auto-renewing subscription): unlimited subscriptions, savings insights, cheaper-alternative suggestions and the guided cancel flow. Subscription auto-renews unless cancelled at least 24 hours before the end of the period; manage or cancel in Settings > Apple ID > Subscriptions. Sign in with Apple or email is available; a review account is provided in the App Review Information section of App Store Connect (credentials are NOT stored in this repository).",
+    "notes": "Pausely helps people keep track of their subscriptions and avoid surprise renewals. FREE: track up to 5 subscriptions with renewal reminders. PRO (auto-renewing subscription): unlimited subscriptions, savings insights, cheaper-alternative suggestions and the guided cancel flow. Subscription auto-renews unless cancelled at least 24 hours before the end of the period; manage or cancel in Settings > [your name] > Subscriptions. Sign in with Apple or email is available; a review account is provided in the App Review Information section of App Store Connect (credentials are NOT stored in this repository).",
     "demo_account": {
       "username": "SET_IN_APP_STORE_CONNECT_ONLY",
       "password": "SET_IN_APP_STORE_CONNECT_ONLY"

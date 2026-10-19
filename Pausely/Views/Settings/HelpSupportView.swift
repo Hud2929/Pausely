@@ -32,11 +32,12 @@ struct HelpSupportView: View {
     }
 
     let faqs = [
-        ("How do I add a subscription?", "Tap the + button on the Subscriptions tab and enter the details."),
-        ("Can I pause a subscription?", "Yes, Pro members can pause subscriptions they're not using."),
-        ("How do I change currency?", "Go to Profile > Currency and select your preferred currency."),
-        ("Is my data secure?", "Yes, all your data is encrypted end-to-end and stored securely."),
-        ("How do I cancel my subscription?", "Go to Profile > Subscriptions and swipe left on any item.")
+        ("How do I add a subscription?", "Tap the + button on the Subscriptions tab, pick a service from the catalog or paste a link, then check the price and renewal date."),
+        ("How many subscriptions can I track for free?", "Up to \(FreeTier.subscriptionLimit). Pausely Pro removes the limit."),
+        ("How do I stop a subscription I no longer want?", "Open it from the Subscriptions tab and tap Cancel subscription. Pausely Pro guides you to the service's cancellation page. You always cancel with the service itself."),
+        ("How do I change currency?", "Go to Profile > Settings > Currency and select your preferred currency."),
+        ("Is my data secure?", "Your subscriptions are stored in your account and sent over encrypted connections. We never sell your data. See the Privacy Policy for details."),
+        ("How do I cancel Pausely Pro?", "Pausely Pro is billed by Apple. Open Settings on your iPhone, tap your name, then Subscriptions, and choose Pausely Pro.")
     ]
 
     var filteredFAQs: [(String, String)] {

@@ -17,7 +17,7 @@ WHAT YOU GET
 • Export your data whenever you like
 
 FREE AND PRO
-Track up to 2 subscriptions for free. Pausely Pro unlocks unlimited subscriptions, savings insights, cheaper alternatives and the guided cancel flow.
+Track up to 5 subscriptions for free. Pausely Pro unlocks unlimited subscriptions, savings insights, cheaper alternatives and the guided cancel flow.
 
 PRIVATE BY DESIGN
 No ads, no third-party trackers, and we never sell your data.
@@ -25,7 +25,7 @@ No ads, no third-party trackers, and we never sell your data.
 Available in English, French, Spanish, German, Japanese and Arabic.
 
 SUBSCRIPTION INFO
-Pausely Pro is an auto-renewing subscription, billed monthly or yearly. Payment is charged to your Apple ID account at confirmation of purchase. The subscription renews automatically unless it is canceled at least 24 hours before the end of the current period. You can manage or cancel it in your Apple ID account settings after purchase.
+Pausely Pro is an auto-renewing subscription, billed monthly or yearly. Payment is charged to your Apple Account at confirmation of purchase. The subscription renews automatically unless it is canceled at least 24 hours before the end of the current period. You can manage or cancel it in your Apple Account settings after purchase.
 
 Terms of Use: https://pausely.pro/terms.html
 Privacy Policy: https://pausely.pro/privacy.html

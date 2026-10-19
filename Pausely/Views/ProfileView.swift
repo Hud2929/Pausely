@@ -520,14 +520,16 @@ struct SettingsSection: View {
                     }
                 })
                 .accessibilityIdentifier("importFromAppStoreButton")
-                SettingsRow(
-                    icon: "envelope.fill",
-                    title: GmailSubscriptionScanner.shared.isConnected ? "Gmail Connected" : "Import from Gmail",
-                    value: GmailSubscriptionScanner.shared.connectedEmail,
-                    color: Color.accentMint,
-                    action: { onGmailImport?() }
-                )
-                .accessibilityIdentifier("gmailImportButton")
+                if FeatureFlags.gmailImportEnabled {
+                    SettingsRow(
+                        icon: "envelope.fill",
+                        title: GmailSubscriptionScanner.shared.isConnected ? "Gmail Connected" : "Import from Gmail",
+                        value: GmailSubscriptionScanner.shared.connectedEmail,
+                        color: Color.accentMint,
+                        action: { onGmailImport?() }
+                    )
+                    .accessibilityIdentifier("gmailImportButton")
+                }
                 SettingsRow(icon: "bell.fill", title: "Notifications", color: Color.semanticWarning, action: onNotifications)
                     .accessibilityIdentifier("notificationsSettingsButton")
                 SettingsRow(icon: "dollarsign.circle.fill", title: "Currency", value: currencyManager.selectedCurrency, color: Color.semanticSuccess, action: onCurrency)
@@ -613,15 +615,15 @@ struct AboutSection: View {
                 .padding(.horizontal, 4)
 
             VStack(spacing: 1) {
-                AboutRow(title: "Version", value: "2.0.1")
-                AboutRow(title: "Build", value: "2024.02")
+                AboutRow(title: "Version", value: Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "")
+                AboutRow(title: "Build", value: Bundle.main.infoDictionary?["CFBundleVersion"] as? String ?? "")
                 AboutRow(title: "Terms of Service", action: {
-                    if let url = URL(string: "https://pausely.app/terms") {
+                    if let url = URL(string: AppConfig.termsOfServiceURL) {
                         UIApplication.shared.open(url)
                     }
                 })
                 AboutRow(title: "Privacy Policy", action: {
-                    if let url = URL(string: "https://pausely.app/privacy") {
+                    if let url = URL(string: AppConfig.privacyPolicyURL) {
                         UIApplication.shared.open(url)
                     }
                 })
@@ -1217,7 +1219,7 @@ private struct WrappedStory5_Personality: View {
 
                 Spacer()
 
-                Text("Track & optimize at pausely.app")
+                Text("Track & optimize at pausely.pro")
                     .font(.system(size: 12, design: .rounded))
                     .foregroundStyle(Color.white.opacity(0.25))
                     .padding(.horizontal, 32)
@@ -1310,7 +1312,7 @@ struct WrappedCard: View {
                         .font(.system(size: 11, design: .rounded))
                         .foregroundStyle(Color.white.opacity(0.3))
                     Spacer()
-                    Text("pausely.app")
+                    Text("pausely.pro")
                         .font(.system(size: 11, weight: .semibold, design: .rounded))
                         .foregroundStyle(Color.accentMint.opacity(0.6))
                 }

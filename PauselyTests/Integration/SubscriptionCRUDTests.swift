@@ -7,8 +7,12 @@ final class SubscriptionCRUDTests: XCTestCase {
 
     var store: SubscriptionStore!
 
-    override func setUp() {
-        super.setUp()
+    override func setUpWithError() throws {
+        try super.setUpWithError()
+        // These are integration tests against the live database: they need a signed-in session on the
+        // test simulator (open the app once and sign in). Without one they skip instead of failing.
+        try XCTSkipUnless(SupabaseManager.shared.client.auth.currentSession != nil,
+                          "Needs a signed-in session on the test simulator")
         store = SubscriptionStore.shared
         // Clear local state for clean tests
         store.subscriptions = []
@@ -17,7 +21,7 @@ final class SubscriptionCRUDTests: XCTestCase {
     }
 
     override func tearDown() {
-        store.subscriptions = []
+        store?.subscriptions = []
         super.tearDown()
     }
 

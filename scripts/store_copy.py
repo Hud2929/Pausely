@@ -11,13 +11,14 @@ Canonical layout, consumed by `asc metadata validate|push` (see .claude/skills/a
 
 Rules enforced: no word repeated across name+subtitle+keywords, no competitor/trademark terms, URLs on pausely.pro,
 claims only for features the app really ships (1,000+ catalog services, 900+ cancel links, 140+ currencies,
-2-subscription free tier). Translations are drafts: have a native speaker review before submitting.
+5-subscription free tier). Translations are drafts: have a native speaker review before submitting.
 """
 import argparse, os, re, sys
 
 LIMITS = {"name": 30, "subtitle": 30, "keywords": 100, "promotional_text": 170, "description": 4000, "whats_new": 4000}
 BANNED = {"rocket", "truebill", "trim", "bobby", "netflix", "spotify", "gmail", "google", "apple", "free", "app", "gratis", "gratuit"}
 
+FREE_LIMIT = 5   # must equal FreeTier.subscriptionLimit in Pausely/Services/PaymentManager.swift (checked by --check)
 URLS = {"terms": "https://pausely.pro/terms.html", "privacy": "https://pausely.pro/privacy.html", "support": "pausely@proton.me"}
 SITE = {"marketing": "https://pausely.pro", "support": "https://pausely.pro/support.html", "privacy": "https://pausely.pro/privacy.html"}
 VERSION = "1.0.3"   # MARKETING_VERSION in Pausely.xcodeproj; keep in sync with the version being submitted
@@ -44,7 +45,7 @@ WHAT YOU GET
 • Export your data whenever you like
 
 FREE AND PRO
-Track up to 2 subscriptions for free. Pausely Pro unlocks unlimited subscriptions, savings insights, cheaper alternatives and the guided cancel flow.
+Track up to {free} subscriptions for free. Pausely Pro unlocks unlimited subscriptions, savings insights, cheaper alternatives and the guided cancel flow.
 
 PRIVATE BY DESIGN
 No ads, no third-party trackers, and we never sell your data.
@@ -52,7 +53,7 @@ No ads, no third-party trackers, and we never sell your data.
 Available in English, French, Spanish, German, Japanese and Arabic.
 
 SUBSCRIPTION INFO
-Pausely Pro is an auto-renewing subscription, billed monthly or yearly. Payment is charged to your Apple ID account at confirmation of purchase. The subscription renews automatically unless it is canceled at least 24 hours before the end of the current period. You can manage or cancel it in your Apple ID account settings after purchase.
+Pausely Pro is an auto-renewing subscription, billed monthly or yearly. Payment is charged to your Apple Account at confirmation of purchase. The subscription renews automatically unless it is canceled at least 24 hours before the end of the current period. You can manage or cancel it in your Apple Account settings after purchase.
 
 Terms of Use: {terms}
 Privacy Policy: {privacy}
@@ -77,7 +78,7 @@ CE QUE VOUS OBTENEZ
 • Exportez vos données quand vous voulez
 
 GRATUIT ET PRO
-Suivez jusqu'à 2 abonnements gratuitement. Pausely Pro débloque les abonnements illimités, les analyses d'économies, les alternatives moins chères et le parcours guidé de résiliation.
+Suivez jusqu'à {free} abonnements gratuitement. Pausely Pro débloque les abonnements illimités, les analyses d'économies, les alternatives moins chères et le parcours guidé de résiliation.
 
 CONFIDENTIALITÉ D'ABORD
 Aucune publicité, aucun traceur tiers, et nous ne vendons jamais vos données.
@@ -85,13 +86,13 @@ Aucune publicité, aucun traceur tiers, et nous ne vendons jamais vos données.
 Disponible en anglais, français, espagnol, allemand, japonais et arabe.
 
 INFORMATIONS SUR L'ABONNEMENT
-Pausely Pro est un abonnement à renouvellement automatique, facturé chaque mois ou chaque année. Le paiement est débité de votre compte Apple ID à la confirmation de l'achat. L'abonnement se renouvelle automatiquement, sauf s'il est annulé au moins 24 heures avant la fin de la période en cours. Vous pouvez le gérer ou l'annuler dans les réglages de votre compte Apple ID après l'achat.
+Pausely Pro est un abonnement à renouvellement automatique, facturé chaque mois ou chaque année. Le paiement est débité de votre compte Apple à la confirmation de l'achat. L'abonnement se renouvelle automatiquement, sauf s'il est annulé au moins 24 heures avant la fin de la période en cours. Vous pouvez le gérer ou l'annuler dans les réglages de votre compte Apple après l'achat.
 
 Conditions d'utilisation : {terms}
 Politique de confidentialité : {privacy}
 Assistance : {support}"""
 
-DESC["es"] = """Sabe exactamente por qué pagas y cuándo se renueva.
+DESC["es"] = """Conoce exactamente lo que pagas y cuándo se renueva.
 
 Pausely reúne todas tus suscripciones en un solo lugar, de forma sencilla. Te avisa antes de que termine una prueba gratuita, suba un precio o llegue una renovación inesperada.
 
@@ -110,7 +111,7 @@ LO QUE OBTIENES
 • Exporta tus datos cuando quieras
 
 GRATIS Y PRO
-Controla hasta 2 suscripciones gratis. Pausely Pro desbloquea suscripciones ilimitadas, análisis de ahorro, alternativas más baratas y el flujo guiado para cancelar.
+Controla hasta {free} suscripciones gratis. Pausely Pro desbloquea suscripciones ilimitadas, análisis de ahorro, alternativas más baratas y el flujo guiado para cancelar.
 
 PRIVACIDAD ANTE TODO
 Sin anuncios, sin rastreadores de terceros y nunca vendemos tus datos.
@@ -118,7 +119,7 @@ Sin anuncios, sin rastreadores de terceros y nunca vendemos tus datos.
 Disponible en inglés, francés, español, alemán, japonés y árabe.
 
 INFORMACIÓN DE LA SUSCRIPCIÓN
-Pausely Pro es una suscripción de renovación automática, con cobro mensual o anual. El pago se carga a tu cuenta de Apple ID al confirmar la compra. La suscripción se renueva automáticamente salvo que se cancele al menos 24 horas antes del final del periodo en curso. Puedes gestionarla o cancelarla en los ajustes de tu cuenta de Apple ID después de la compra.
+Pausely Pro es una suscripción de renovación automática, con cobro mensual o anual. El pago se carga a tu cuenta de Apple al confirmar la compra. La suscripción se renueva automáticamente salvo que se cancele al menos 24 horas antes del final del periodo en curso. Puedes gestionarla o cancelarla en los ajustes de tu cuenta de Apple después de la compra.
 
 Términos de uso: {terms}
 Política de privacidad: {privacy}
@@ -143,7 +144,7 @@ DAS BEKOMMEN SIE
 • Daten jederzeit exportieren
 
 KOSTENLOS UND PRO
-Verwalten Sie bis zu 2 Abos kostenlos. Pausely Pro schaltet unbegrenzte Abos, Spar-Einblicke, günstigere Alternativen und den geführten Kündigungsablauf frei.
+Verwalten Sie bis zu {free} Abos kostenlos. Pausely Pro schaltet unbegrenzte Abos, Sparanalysen, günstigere Alternativen und den geführten Kündigungsablauf frei.
 
 PRIVATSPHÄRE ZUERST
 Keine Werbung, keine Tracker von Drittanbietern, und wir verkaufen niemals Ihre Daten.
@@ -151,7 +152,7 @@ Keine Werbung, keine Tracker von Drittanbietern, und wir verkaufen niemals Ihre 
 Verfügbar auf Englisch, Französisch, Spanisch, Deutsch, Japanisch und Arabisch.
 
 ABO-INFORMATIONEN
-Pausely Pro ist ein automatisch verlängerndes Abonnement mit monatlicher oder jährlicher Abrechnung. Die Zahlung wird bei Kaufbestätigung Ihrem Apple-ID-Account belastet. Das Abonnement verlängert sich automatisch, sofern es nicht mindestens 24 Stunden vor Ablauf des aktuellen Zeitraums gekündigt wird. Nach dem Kauf können Sie es in den Einstellungen Ihres Apple-ID-Accounts verwalten oder kündigen.
+Pausely Pro ist ein automatisch verlängerndes Abonnement mit monatlicher oder jährlicher Abrechnung. Die Zahlung wird bei Kaufbestätigung Ihrem Apple-Account belastet. Das Abonnement verlängert sich automatisch, sofern es nicht mindestens 24 Stunden vor Ablauf des aktuellen Zeitraums gekündigt wird. Nach dem Kauf können Sie es in den Einstellungen Ihres Apple-Accounts verwalten oder kündigen.
 
 Nutzungsbedingungen: {terms}
 Datenschutzerklärung: {privacy}
@@ -176,7 +177,7 @@ Pauselyはすべてのサブスクリプションをひとつの画面にまと�
 • データはいつでもエクスポート可能
 
 無料版とPro版
-無料で2件までのサブスクを管理できます。Pausely Proでは、無制限の登録、節約インサイト、より安い代替案、ガイド付きの解約フローが使えます。
+無料で{free}件までのサブスクを管理できます。Pausely Proでは、無制限の登録、節約インサイト、より安い代替案、ガイド付きの解約フローが使えます。
 
 プライバシー重視
 広告なし、第三者のトラッカーなし。データを販売することは決してありません。
@@ -184,7 +185,7 @@ Pauselyはすべてのサブスクリプションをひとつの画面にまと�
 対応言語：英語、フランス語、スペイン語、ドイツ語、日本語、アラビア語。
 
 サブスクリプション情報
-Pausely Proは自動更新サブスクリプション（月額または年額）です。お支払いは購入確認時にApple IDアカウントに請求されます。現在の期間が終了する24時間前までに解約しない限り、サブスクリプションは自動的に更新されます。購入後は、Apple IDアカウント設定から管理・解約できます。
+Pausely Proは自動更新サブスクリプション（月額または年額）です。お支払いは購入確認時にAppleアカウントに請求されます。現在の期間が終了する24時間前までに解約しない限り、サブスクリプションは自動的に更新されます。購入後は、Appleアカウント設定から管理・解約できます。
 
 利用規約：{terms}
 プライバシーポリシー：{privacy}
@@ -204,12 +205,12 @@ DESC["ar"] = """اعرف بالضبط ما تدفعه ومتى يتجدد.
 • بدائل أرخص للخدمات التي تدفع ثمنها بالفعل
 • التكلفة لكل ساعة استخدام لتعرف ما يستحق الاحتفاظ به
 • أكثر من 140 عملة مع تحويل تلقائي
-• ودجات للشاشة الرئيسية وإجراءات الاختصارات وتسجيل الدخول بـ Face ID
+• أدوات الشاشة الرئيسية وإجراءات الاختصارات وتسجيل الدخول بـ Face ID
 • ملخص سنتك في الاشتراكات في نظرة واحدة
 • صدّر بياناتك متى شئت
 
 مجاني وPro
-تابع حتى اشتراكين مجانًا. يتيح Pausely Pro اشتراكات غير محدودة ورؤى توفير وبدائل أرخص ومسار إلغاء موجّهًا.
+تابع حتى {free} اشتراكات مجانًا. يتيح Pausely Pro اشتراكات غير محدودة وتحليلات التوفير وبدائل أرخص ومسار إلغاء موجّهًا.
 
 الخصوصية أولًا
 لا إعلانات ولا متتبعات من أطراف خارجية، ولا نبيع بياناتك أبدًا.
@@ -217,7 +218,7 @@ DESC["ar"] = """اعرف بالضبط ما تدفعه ومتى يتجدد.
 متوفر بالإنجليزية والفرنسية والإسبانية والألمانية واليابانية والعربية.
 
 معلومات الاشتراك
-Pausely Pro اشتراك يتجدد تلقائيًا ويُفوتر شهريًا أو سنويًا. يُخصم المبلغ من حساب Apple ID عند تأكيد الشراء. يتجدد الاشتراك تلقائيًا ما لم يُلغَ قبل 24 ساعة على الأقل من نهاية الفترة الحالية. يمكنك إدارته أو إلغاؤه من إعدادات حساب Apple ID بعد الشراء.
+Pausely Pro اشتراك يتجدد تلقائيًا ويُفوتر شهريًا أو سنويًا. يُخصم المبلغ من حساب Apple عند تأكيد الشراء. يتجدد الاشتراك تلقائيًا ما لم يُلغَ قبل 24 ساعة على الأقل من نهاية الفترة الحالية. يمكنك إدارته أو إلغاؤه من إعدادات حساب Apple بعد الشراء.
 
 شروط الاستخدام: {terms}
 سياسة الخصوصية: {privacy}
@@ -261,7 +262,7 @@ def variants():
 def render(locale):
     meta = LOCALES[locale]
     lang = meta["lang"]
-    desc = DESC[lang].format(**URLS)
+    desc = DESC[lang].format(free=FREE_LIMIT, **URLS)
     for old, new in variants().get(locale, []):
         desc = desc.replace(old, new)
     return {
@@ -275,6 +276,19 @@ def words(s):
 
 def check():
     problems = []
+    swift = os.path.join(os.path.dirname(__file__), "..", "Pausely", "Services", "PaymentManager.swift")
+    m = re.search(r"enum FreeTier\s*\{\s*static let subscriptionLimit = (\d+)", open(swift, encoding="utf-8").read())
+    if not m: problems.append("could not find FreeTier.subscriptionLimit in PaymentManager.swift")
+    elif int(m.group(1)) != FREE_LIMIT: problems.append(f"free limit mismatch: store copy {FREE_LIMIT} vs app {m.group(1)}")
+    import json
+    prods = json.load(open(os.path.join(os.path.dirname(__file__), "..", "appstore_products.json"), encoding="utf-8"))
+    for prod in prods["products"]:
+        have = {l["locale"] for l in prod["localization"]}
+        for loc in LOCALES:
+            if loc not in have: problems.append(f"{prod['product_id']}: missing subscription localization for {loc}")
+        for l in prod["localization"]:
+            if len(l["display_name"]) > 30: problems.append(f"{prod['product_id']} {l['locale']}: display name over 30")
+            if len(l["description"]) > 45: problems.append(f"{prod['product_id']} {l['locale']}: description {len(l['description'])}/45")
     for loc in LOCALES:
         c = render(loc)
         for field, limit in LIMITS.items():

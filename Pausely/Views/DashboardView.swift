@@ -373,7 +373,7 @@ struct DashboardEmptyState: View {
 
                 // Free tier limit
                 if isFree {
-                    Text("Free plan: track up to 2 subscriptions. Upgrade for unlimited.")
+                    Text("Free plan: track up to \(FreeTier.subscriptionLimit) subscriptions. Upgrade for unlimited.")
                         .font(.system(.caption2, design: .rounded))
                         .foregroundStyle(Color.obsidianTextTertiary)
                         .multilineTextAlignment(.center)

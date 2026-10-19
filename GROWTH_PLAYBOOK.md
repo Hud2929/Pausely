@@ -41,7 +41,7 @@ and reminds you before free trials end.
 
 In the first week it found $94/month in forgotten subscriptions.
 
-It's called Pausely. Free tier tracks up to 2 subscriptions.
+It's called Pausely. Free tier tracks up to 5 subscriptions.
 Just wanted to share because I know I'm not the only idiot here.
 
 [iOS App Store link]
@@ -246,7 +246,7 @@ Text: "I built a free app that tracks every subscription and shows cost-per-use.
 
 **Slide 5:** "4. Annual plans that doubled in price\n5. Duplicate services (Spotify AND Apple Music)\n6. Gym memberships\n7. Cloud storage you don't need"
 
-**Slide 6 (CTA):** "I built Pausely to catch all of these. Free for 2 subscriptions. Link in bio."
+**Slide 6 (CTA):** "I built Pausely to catch all of these. Free for up to 5 subscriptions. Link in bio."
 
 ---
 
@@ -291,7 +291,7 @@ videos can be the exact same content — post to both.
 
 **Description:**
 ```
-The average person has 12 subscriptions and thinks they have 5.
+Americans spend about $133 a month more on subscriptions than they think they do (C+R Research survey, 2022; cite the source if you use this).
 
 Pausely is the subscription manager Apple should have built.
 
@@ -302,7 +302,7 @@ What it does:
 - Tracks billing dates so you never get surprised
 - Finds subscriptions you forgot about
 
-Free tier: Track 2 subscriptions forever
+Free tier: Track up to 5 subscriptions forever
 Premium: Unlimited + all features
 
 I built this after realizing I'd paid Adobe $635 for 18 months
@@ -329,7 +329,7 @@ I built Pausely — a subscription tracker that:
 - Reminds you before trials end
 - Shows category breakdown (43% streaming, 28% phone, etc.)
 
-Free tier tracks 2 subscriptions. No signup required to try.
+Free tier tracks up to 5 subscriptions. Free to try, no card needed.
 
 Built with SwiftUI + Supabase. Happy to answer technical questions.
 
@@ -385,8 +385,8 @@ So I built Pausely. It:
 - Finds Apple subscriptions you forgot about
 - Reminds you before free trials end
 
-Free tier covers 2 subscriptions. Premium is $9.99/month, which pays
-for itself if it finds even one subscription you forgot about.
+Free tier covers up to 5 subscriptions. Pro is under $5 a month, which pays
+for itself if it helps you drop even one subscription you forgot about.
 
 [iOS link]
 

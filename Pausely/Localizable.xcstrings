@@ -4318,6 +4318,176 @@
         }
       }
     },
+    "Deep savings analysis": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tiefenanalyse für Einsparungen"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Análisis profundo de ahorro"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Analyse approfondie des économies"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "節約のための詳細分析"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "تحليل معمّق للتوفير"
+          }
+        }
+      }
+    },
+    "Guided cancel flow": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Geführte Kündigung"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cancelación guiada"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Résiliation guidée"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ガイド付き解約フロー"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "إلغاء موجّه خطوة بخطوة"
+          }
+        }
+      }
+    },
+    "SAVINGS IDEAS": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "SPARTIPPS"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "IDEAS PARA AHORRAR"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "IDÉES D'ÉCONOMIES"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "節約のヒント"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "أفكار للتوفير"
+          }
+        }
+      }
+    },
+    "Free plan: track up to %lld subscriptions. Upgrade for unlimited.": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kostenloser Plan: Bis zu %lld Abos verfolgen. Upgrade für unbegrenzte."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Plan gratuito: rastrea hasta %lld suscripciones. Actualiza para ilimitadas."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Plan gratuit : suivez jusqu'à %lld abonnements. Passez à Pro pour un nombre illimité."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "無料プラン：最大%lld件のサブスクリプションを追跡。無制限はアップグレードへ。"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "الخطة المجانية: تتبع حتى %lld اشتراكات. رقّ للحصول على عدد غير محدود."
+          }
+        }
+      }
+    },
+    "Track & optimize at pausely.pro": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Verfolgen & optimieren auf pausely.pro"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Rastrear y optimizar en pausely.pro"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Suivre et optimiser sur pausely.pro"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "pausely.proで追跡・最適化"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "تتبع وتحسين على pausely.pro"
+          }
+        }
+      }
+    },
     "AI Insights": {
       "localizations": {
         "de": {

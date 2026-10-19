@@ -46,7 +46,7 @@ WHAT YOU GET
 • Export your data whenever you like
 
 FREE AND PRO
-Track up to 2 subscriptions for free. Pausely Pro unlocks unlimited subscriptions, savings insights, cheaper alternatives and the guided cancel flow.
+Track up to 5 subscriptions for free. Pausely Pro unlocks unlimited subscriptions, savings insights, cheaper alternatives and the guided cancel flow.
 
 PRIVATE BY DESIGN
 No ads, no third-party trackers, and we never sell your data.
@@ -54,7 +54,7 @@ No ads, no third-party trackers, and we never sell your data.
 Available in English, French, Spanish, German, Japanese and Arabic.
 
 SUBSCRIPTION INFO
-Pausely Pro is an auto-renewing subscription, billed monthly or yearly. Payment is charged to your Apple ID account at confirmation of purchase. The subscription renews automatically unless it is canceled at least 24 hours before the end of the current period. You can manage or cancel it in your Apple ID account settings after purchase.
+Pausely Pro is an auto-renewing subscription, billed monthly or yearly. Payment is charged to your Apple Account at confirmation of purchase. The subscription renews automatically unless it is canceled at least 24 hours before the end of the current period. You can manage or cancel it in your Apple Account settings after purchase.
 
 Terms of Use: https://pausely.pro/terms.html
 Privacy Policy: https://pausely.pro/privacy.html
@@ -85,7 +85,7 @@ The 7-day free trial is configured as an introductory offer in `appstore_product
 
 ## App Review notes (paste into App Store Connect; credentials go ONLY in the App Review Information fields there)
 ```
-Pausely helps people keep track of their subscriptions and avoid surprise renewals. FREE: track up to 2 subscriptions with renewal reminders. PRO (auto-renewing subscription): unlimited subscriptions, savings insights, cheaper-alternative suggestions and the guided cancel flow. Subscription auto-renews unless cancelled at least 24 hours before the end of the period; manage or cancel in Settings > Apple ID > Subscriptions. Sign in with Apple or email is available; a review account is provided in the App Review Information section of App Store Connect (credentials are NOT stored in this repository).
+Pausely helps people keep track of their subscriptions and avoid surprise renewals. FREE: track up to 5 subscriptions with renewal reminders. PRO (auto-renewing subscription): unlimited subscriptions, savings insights, cheaper-alternative suggestions and the guided cancel flow. Subscription auto-renews unless cancelled at least 24 hours before the end of the period; manage or cancel in Settings > [your name] > Subscriptions. Sign in with Apple or email is available; a review account is provided in the App Review Information section of App Store Connect (credentials are NOT stored in this repository).
 ```
 
 ## What this listing must never claim

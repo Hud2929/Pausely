@@ -119,7 +119,7 @@ class SubscriptionStore: ObservableObject {
         var errorDescription: String? {
             switch self {
             case .freeTierLimitReached:
-                return "You've reached the free tier limit of 2 subscriptions. Upgrade to Pro for unlimited subscriptions."
+                return "You've reached the free tier limit of \(FreeTier.subscriptionLimit) subscriptions. Upgrade to Pro for unlimited subscriptions."
             }
         }
     }

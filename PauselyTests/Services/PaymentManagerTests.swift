@@ -20,24 +20,30 @@ final class PaymentManagerTests: XCTestCase {
 
     // MARK: - roundTo99 (via priceInUserCurrency / monthlyPriceInUserCurrency)
 
-    func testProMonthlyPrice_endsIn99() {
-        // USD and CAD both $9.99
+    /// True if `text` contains the amount in either decimal style ("4.99" or "4,99").
+    private func containsAmount(_ text: String, _ amount: Decimal) -> Bool {
+        let dot = "\(amount)"
+        return text.contains(dot) || text.contains(dot.replacingOccurrences(of: ".", with: ","))
+    }
+
+    func testProMonthlyPrice_matchesLaunchPrice() {
+        // The estimate shown before StoreKit loads follows ProPricing. USD and CAD use the same number.
         CurrencyManager.shared.selectedCurrency = "USD"
         let usdResult = SubscriptionTier.pro.priceInUserCurrency()
-        XCTAssertTrue(usdResult.contains("9.99") || usdResult.contains("9,99"),
-                      "Pro monthly USD price should be 9.99, got: \(usdResult)")
+        XCTAssertTrue(containsAmount(usdResult, ProPricing.monthlyUSD),
+                      "Pro monthly USD price should be \(ProPricing.monthlyUSD), got: \(usdResult)")
 
         CurrencyManager.shared.selectedCurrency = "CAD"
         let cadResult = SubscriptionTier.pro.priceInUserCurrency()
-        XCTAssertTrue(cadResult.contains("9.99") || cadResult.contains("9,99"),
-                      "Pro monthly CAD price should be 9.99, got: \(cadResult)")
+        XCTAssertTrue(containsAmount(cadResult, ProPricing.monthlyUSD),
+                      "Pro monthly CAD price should be \(ProPricing.monthlyUSD), got: \(cadResult)")
     }
 
-    func testProAnnualPrice_endsIn99() {
-        // baseUSDPrice = 79.99 → roundTo99 → floor(79.99) + 0.99 = 79.99
+    func testProAnnualPrice_matchesLaunchPrice() {
+        CurrencyManager.shared.selectedCurrency = "USD"
         let result = SubscriptionTier.proAnnual.priceInUserCurrency()
-        XCTAssertTrue(result.contains("79.99") || result.contains("79,99"),
-                      "Pro annual price should contain 79.99, got: \(result)")
+        XCTAssertTrue(containsAmount(result, ProPricing.annualUSD),
+                      "Pro annual price should contain \(ProPricing.annualUSD), got: \(result)")
     }
 
     func testFreePrice_isZeroNotRoundedUp() {
@@ -48,7 +54,7 @@ final class PaymentManagerTests: XCTestCase {
     }
 
     func testProAnnualMonthlyEquivalent_nonEmpty_nonNaN() {
-        // 79.99/12 ≈ 6.67 → roundTo99 → 6.99
+        // Annual price / 12 is only an estimate; it must never be empty or NaN.
         let result = SubscriptionTier.proAnnual.monthlyPriceInUserCurrency()
         XCTAssertFalse(result.isEmpty)
         XCTAssertFalse(result.lowercased().contains("nan"),
@@ -57,18 +63,16 @@ final class PaymentManagerTests: XCTestCase {
 
     // MARK: - convertToUserCurrency: USD/CAD parity
 
-    func testCAD_andUSD_samePriceOf999() {
-        // USD and CAD both fixed at $9.99 — all other currencies convert from USD base
+    func testCAD_andUSD_samePrice() {
+        // USD and CAD share the base number; all other currencies convert from the USD base.
         CurrencyManager.shared.selectedCurrency = "USD"
         let usdResult = SubscriptionTier.pro.priceInUserCurrency()
 
         CurrencyManager.shared.selectedCurrency = "CAD"
         let cadResult = SubscriptionTier.pro.priceInUserCurrency()
 
-        XCTAssertTrue(usdResult.contains("9.99") || usdResult.contains("9,99"),
-                      "USD price should be 9.99, got: \(usdResult)")
-        XCTAssertTrue(cadResult.contains("9.99") || cadResult.contains("9,99"),
-                      "CAD price should be 9.99, got: \(cadResult)")
+        XCTAssertTrue(containsAmount(usdResult, ProPricing.monthlyUSD), "USD price, got: \(usdResult)")
+        XCTAssertTrue(containsAmount(cadResult, ProPricing.monthlyUSD), "CAD price, got: \(cadResult)")
     }
 
     // MARK: - convertToUserCurrency: missing rate falls back to 1.0

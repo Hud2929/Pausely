@@ -34,19 +34,6 @@ enum StoreKitConfig {
         }
     }
     
-    // MARK: - Pricing (for display when StoreKit hasn't loaded yet)
-    struct FallbackPricing {
-        static var monthlyDisplay: String {
-            CurrencyManager.shared.format(monthlyValue)
-        }
-        static var annualDisplay: String {
-            CurrencyManager.shared.format(annualValue)
-        }
-        static let monthlyValue: Decimal = 9.99
-        static let annualValue = Decimal(79.99)
-        static let savingsPercent = 17
-    }
-    
     // MARK: - Trial Configuration
     struct TrialConfig {
         static let enabled = true
@@ -63,32 +50,6 @@ enum StoreKitConfig {
         static var showTrialUI: Bool {
             enabled && !userOptedOut
         }
-    }
-    
-    // MARK: - Features List
-    static let proFeatures: [ProFeature] = [
-        ProFeature(icon: "infinity", title: "Unlimited Subscriptions", description: "Track as many subscriptions as you want"),
-        ProFeature(icon: "pause.circle.fill", title: "Smart Pause", description: "Pause instead of canceling subscriptions"),
-        ProFeature(icon: "sparkles", title: "Subscription Genius AI", description: "Your 24/7 AI subscription advisor"),
-        ProFeature(icon: "dollarsign.circle.fill", title: "Auto Refund Hunter", description: "Find & claim refunds for unused time"),
-        ProFeature(icon: "wand.and.stars", title: "Bundle Finder", description: "Discover cheaper bundle alternatives"),
-        ProFeature(icon: "chart.line.uptrend.xyaxis", title: "Cost Per Hour", description: "See the true value of each service"),
-        ProFeature(icon: "brain.head.profile", title: "AI Financial Advisor", description: "Personalized optimization recommendations"),
-        ProFeature(icon: "heart.text.square.fill", title: "Health Score", description: "Track your subscription optimization progress"),
-        ProFeature(icon: "bell.badge.fill", title: "Price Alerts", description: "Get notified before prices increase"),
-        ProFeature(icon: "arrow.left.arrow.right.circle.fill", title: "Smart Alternatives", description: "AI finds cheaper substitutes automatically"),
-        ProFeature(icon: "calendar.badge.clock", title: "Renewal Calendar", description: "Visual timeline of upcoming charges"),
-        ProFeature(icon: "link.circle.fill", title: "1-Tap Cancel/Pause", description: "Direct links to manage subscriptions"),
-        ProFeature(icon: "gift.fill", title: "Referral Rewards", description: "Earn free months by sharing"),
-        ProFeature(icon: "chart.bar.fill", title: "Advanced Analytics", description: "Detailed spending insights"),
-        ProFeature(icon: "arrow.down.doc.fill", title: "Export Data", description: "Download your data anytime"),
-        ProFeature(icon: "envelope.fill", title: "Priority Support", description: "Faster response times")
-    ]
-    
-    struct ProFeature {
-        let icon: String
-        let title: String
-        let description: String
     }
     
     // MARK: - UserDefaults Keys
@@ -128,23 +89,22 @@ final class ReviewPromptManager: ObservableObject {
     func requestReviewIfAppropriate(after trigger: ReviewTrigger) {
         guard canRequestReview() else { return }
 
+        // A trigger only counts as "used" once the system prompt has really been shown, so a request that
+        // is skipped because a sheet is open can fire again on the next opportunity.
         switch trigger {
         case .onboardingCompleted:
             guard !UserDefaults.standard.bool(forKey: hasPromptedAfterOnboardingKey) else { return }
-            UserDefaults.standard.set(true, forKey: hasPromptedAfterOnboardingKey)
-            presentReviewRequest()
+            presentReviewRequest { UserDefaults.standard.set(true, forKey: self.hasPromptedAfterOnboardingKey) }
 
         case .firstSubscriptionAdded:
             guard !UserDefaults.standard.bool(forKey: hasPromptedAfterFirstSubKey) else { return }
-            UserDefaults.standard.set(true, forKey: hasPromptedAfterFirstSubKey)
-            presentReviewRequest()
+            presentReviewRequest { UserDefaults.standard.set(true, forKey: self.hasPromptedAfterFirstSubKey) }
 
         case .savingsMilestone(let amount):
             let milestone = Int(truncating: amount as NSNumber) / 50
             let lastMilestone = UserDefaults.standard.integer(forKey: savingsMilestoneKey)
             guard milestone > lastMilestone, milestone >= 1 else { return }
-            UserDefaults.standard.set(milestone, forKey: savingsMilestoneKey)
-            presentReviewRequest()
+            presentReviewRequest { UserDefaults.standard.set(milestone, forKey: self.savingsMilestoneKey) }
         }
     }
 
@@ -180,20 +140,26 @@ final class ReviewPromptManager: ObservableObject {
         return true
     }
 
-    private func presentReviewRequest() {
-        let currentYear = Calendar.current.component(.year, from: Date())
-        let storedYear = UserDefaults.standard.integer(forKey: currentYearKey)
-        let requestsThisYear = (storedYear == currentYear)
-            ? UserDefaults.standard.integer(forKey: requestsThisYearKey)
-            : 0
+    /// Shows the system rating prompt after a short pause, but only if the customer is on a main screen:
+    /// never on top of the paywall, the add-subscription sheet or any other modal.
+    private func presentReviewRequest(markUsed: @escaping () -> Void) {
+        DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) { [weak self] in
+            guard let self,
+                  let windowScene = UIApplication.shared.connectedScenes
+                    .first(where: { $0.activationState == .foregroundActive }) as? UIWindowScene,
+                  let root = windowScene.windows.first(where: { $0.isKeyWindow })?.rootViewController,
+                  root.presentedViewController == nil else { return }
 
-        UserDefaults.standard.set(currentYear, forKey: currentYearKey)
-        UserDefaults.standard.set(requestsThisYear + 1, forKey: requestsThisYearKey)
-        UserDefaults.standard.set(Date(), forKey: lastRequestDateKey)
+            markUsed()
+            let currentYear = Calendar.current.component(.year, from: Date())
+            let storedYear = UserDefaults.standard.integer(forKey: self.currentYearKey)
+            let requestsThisYear = (storedYear == currentYear)
+                ? UserDefaults.standard.integer(forKey: self.requestsThisYearKey)
+                : 0
+            UserDefaults.standard.set(currentYear, forKey: self.currentYearKey)
+            UserDefaults.standard.set(requestsThisYear + 1, forKey: self.requestsThisYearKey)
+            UserDefaults.standard.set(Date(), forKey: self.lastRequestDateKey)
 
-        DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
-            guard let windowScene = UIApplication.shared.connectedScenes
-                .first(where: { $0.activationState == .foregroundActive }) as? UIWindowScene else { return }
             AppStore.requestReview(in: windowScene)
         }
     }

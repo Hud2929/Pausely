@@ -171,7 +171,7 @@ struct AnalysisView: View {
                 .fill(Color.white.opacity(0.08))
                 .frame(height: 1)
 
-            Text("AI RECOMMENDATIONS")
+            Text("SAVINGS IDEAS")
                 .font(.system(size: 10, weight: .semibold, design: .rounded))
                 .foregroundStyle(Color.obsidianTextTertiary)
                 .tracking(1.5)

@@ -9,6 +9,18 @@ import Foundation
 import StoreKit
 
 // MARK: - Payment Source (Backward Compatibility)
+/// The free tier. One value, used by the store limit, the paywall and the copy in the listing.
+enum FreeTier {
+    static let subscriptionLimit = 5
+}
+
+/// Launch prices in USD. Only used for estimates before StoreKit has loaded; once it has, the paywall
+/// shows Apple's real price for the customer's storefront.
+enum ProPricing {
+    static let monthlyUSD = Decimal(string: "4.99")!
+    static let annualUSD = Decimal(string: "29.99")!
+}
+
 enum PaymentSource: String, Codable {
     case storeKitMonthly = "storekit_monthly"
     case storeKitAnnual = "storekit_annual"
@@ -60,8 +72,8 @@ enum SubscriptionTier: String, CaseIterable, Comparable, Codable {
     var monthlyPrice: Decimal {
         switch self {
         case .free:        return 0
-        case .pro:         return 9.99
-        case .proAnnual:   return Decimal(79.99) / 12
+        case .pro:         return ProPricing.monthlyUSD
+        case .proAnnual:   return ProPricing.annualUSD / 12
         }
     }
 
@@ -71,8 +83,8 @@ enum SubscriptionTier: String, CaseIterable, Comparable, Codable {
     private var baseUSDPrice: Decimal {
         switch self {
         case .free:        return 0
-        case .pro:         return 9.99
-        case .proAnnual:   return 79.99
+        case .pro:         return ProPricing.monthlyUSD
+        case .proAnnual:   return ProPricing.annualUSD
         }
     }
 
@@ -130,11 +142,11 @@ enum SubscriptionTier: String, CaseIterable, Comparable, Codable {
     
     // MARK: - STRATEGIC LIMITS (Drives Conversion)
     
-    /// FREE: Limited to 2 subscriptions to demonstrate core features.
+    /// FREE: up to `FreeTier.subscriptionLimit` subscriptions, enough for most people's real list.
     /// PRO: Unlimited
     var subscriptionLimit: Int {
         switch self {
-        case .free:        return 2
+        case .free:        return FreeTier.subscriptionLimit
         case .pro, .proAnnual: return Int.max
         }
     }
@@ -203,75 +215,6 @@ enum SubscriptionTier: String, CaseIterable, Comparable, Codable {
         self >= .pro
     }
     
-    // MARK: - Feature Lists (Optimized for Conversion)
-    
-    var features: [String] {
-        switch self {
-        case .free:
-            return [
-                "✓ Track 2 subscriptions",
-                "✓ Manual entry only",
-                "✓ Basic spend view",
-                "✗ No cancellation help",
-                "✗ No waste score",
-                "✗ No bank sync"
-            ]
-        case .pro, .proAnnual:
-            return [
-                "✓ Unlimited subscriptions",
-                "✓ Bank sync (optional)",
-                "✓ 1-tap cancellation",
-                "✓ Waste score AI",
-                "✓ Smart insights",
-                "✓ Price alerts",
-                "✓ Export data",
-                "✓ Advanced reminders"
-            ]
-        }
-    }
-    
-    /// Features that show in paywall highlights
-    var highlightedFeatures: [String] {
-        switch self {
-        case .free:
-            return ["2 Subscriptions", "Manual Only"]
-        case .pro, .proAnnual:
-            return [
-                "Cancel for Me 🎯",
-                "Find Hidden Subs 🔍",
-                "Waste Score AI 📊",
-                "Save $100s/yr 💰"
-            ]
-        }
-    }
-    
-    /// Conversion-optimized marketing copy - personalized, no generic stats
-    var marketingCopy: String {
-        switch self {
-        case .free:
-            return "Track up to 2 subscriptions free. Upgrade for unlimited tracking, Smart Import, and cancellation tools."
-        case .pro, .proAnnual:
-            return "Unlock unlimited subscriptions, Smart Import from bank statements, and instant cancellation assistance."
-        }
-    }
-    
-    /// Paywall title
-    var paywallTitle: String {
-        switch self {
-        case .free:        return ""
-        case .pro:         return "Unlock Pro"
-        case .proAnnual:   return "Unlock Pro"
-        }
-    }
-    
-    /// Paywall subtitle
-    var paywallSubtitle: String {
-        switch self {
-        case .free:        return ""
-        case .pro:         return "Save money by canceling unused subscriptions"
-        case .proAnnual:   return "Save money by canceling unused subscriptions"
-        }
-    }
 }
 
 // MARK: - Payment Manager (OPTIMIZED)
@@ -334,7 +277,7 @@ final class PaymentManager: ObservableObject {
     var canPauseSubscriptions: Bool { isPremium }
 
     /// Legacy property - free tier is now 2 subs
-    static let freeTierLimit: Int = 2
+    static let freeTierLimit: Int = FreeTier.subscriptionLimit
     var freeTierLimit: Int { Self.freeTierLimit }
 
     /// Can pause subscriptions

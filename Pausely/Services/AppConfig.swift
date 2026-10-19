@@ -45,11 +45,14 @@ enum AppConfig {
     static let marketingEmail = "hello@pausely.app"
     
     // MARK: - Social & Web
-    // All legal URLs use pausely.app domain — must match App Store Connect
-    static let websiteURL = "https://pausely.app"
-    static let supportURL = "https://pausely.app/support"
-    static let privacyPolicyURL = "https://pausely.app/privacy"
-    static let termsOfServiceURL = "https://pausely.app/terms"
+    // The website is pausely.pro (served from the gh-pages branch). These URLs must match the ones in
+    // App Store Connect (see scripts/store_copy.py) and must always resolve: a dead Terms or Privacy
+    // link on the paywall is an App Review rejection.
+    static let websiteURL = "https://pausely.pro"
+    static let supportURL = "https://pausely.pro/support.html"
+    static let privacyPolicyURL = "https://pausely.pro/privacy.html"
+    static let termsOfServiceURL = "https://pausely.pro/terms.html"
+    static let refundPolicyURL = "https://pausely.pro/refunds.html"
     static let twitterURL = "https://twitter.com/pausely"
     static let instagramURL = "https://instagram.com/pausely.app"
     

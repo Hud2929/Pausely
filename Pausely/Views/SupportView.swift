@@ -79,8 +79,8 @@ struct SupportView: View {
                                         title: "FAQ",
                                         color: Color.accentMint
                                     ) {
-                                        // Open FAQ
-                                        if let url = URL(string: AppConfig.websiteURL + "/faq") {
+                                        // Open the help and support page (there is no separate FAQ page)
+                                        if let url = URL(string: AppConfig.supportURL) {
                                             UIApplication.shared.open(url)
                                         }
                                     }

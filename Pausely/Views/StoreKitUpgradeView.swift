@@ -22,7 +22,7 @@ struct StoreKitUpgradeView: View {
     @AccessibilityFocusState private var focusedElement: FocusElement?
 
     let currentSubscriptionCount: Int
-    let maxFreeSubscriptions = 2
+    let maxFreeSubscriptions = FreeTier.subscriptionLimit
 
     enum FocusElement {
         case title
@@ -464,8 +464,8 @@ struct StoreKitUpgradeView: View {
                             .foregroundColor(.green)
                     }
 
-                    if selectedPlan == .annual {
-                        Text("\(storeManager.annualPricePerMonth ?? SubscriptionTier.proAnnual.monthlyPriceInUserCurrency())/mo equivalent")
+                    if selectedPlan == .annual, let perMonth = storeManager.annualPricePerMonth {
+                        Text("\(perMonth)/mo equivalent")
                             .font(AppTypography.labelMedium)
                             .foregroundStyle(Color.obsidianTextTertiary)
                     }
@@ -495,10 +495,9 @@ struct StoreKitUpgradeView: View {
 
             VStack(spacing: 12) {
                 TrialFeatureRow(icon: "infinity", text: NSLocalizedString("Unlimited subscriptions", comment: ""))
-                TrialFeatureRow(icon: "chart.bar.fill", text: NSLocalizedString("Cost-per-use analytics", comment: ""))
-                TrialFeatureRow(icon: "chart.line.uptrend.xyaxis", text: NSLocalizedString("Advanced Insights", comment: ""))
-                TrialFeatureRow(icon: "bell.badge.fill", text: NSLocalizedString("Smart renewal alerts", comment: ""))
-                TrialFeatureRow(icon: "clock.arrow.circlepath", text: NSLocalizedString("Usage tracking", comment: ""))
+                TrialFeatureRow(icon: "chart.line.uptrend.xyaxis", text: NSLocalizedString("Deep savings analysis", comment: ""))
+                TrialFeatureRow(icon: "arrow.triangle.swap", text: NSLocalizedString("Cheaper Alternatives", comment: ""))
+                TrialFeatureRow(icon: "arrow.right.circle.fill", text: NSLocalizedString("Guided cancel flow", comment: ""))
                 TrialFeatureRow(icon: "xmark.circle.fill", text: NSLocalizedString("Cancel anytime", comment: ""))
             }
         }
@@ -625,15 +624,15 @@ struct StoreKitUpgradeView: View {
                 .multilineTextAlignment(.center)
             HStack(spacing: 12) {
                 Button("Terms of Service") {
-                    if let url = URL(string: "https://pausely.app/terms") { UIApplication.shared.open(url) }
+                    if let url = URL(string: AppConfig.termsOfServiceURL) { UIApplication.shared.open(url) }
                 }
                 Text("·").foregroundStyle(Color.obsidianTextTertiary)
                 Button("Privacy Policy") {
-                    if let url = URL(string: "https://pausely.app/privacy") { UIApplication.shared.open(url) }
+                    if let url = URL(string: AppConfig.privacyPolicyURL) { UIApplication.shared.open(url) }
                 }
                 Text("·").foregroundStyle(Color.obsidianTextTertiary)
                 Button("Refund Policy") {
-                    if let url = URL(string: "https://pausely.app/refunds") { UIApplication.shared.open(url) }
+                    if let url = URL(string: AppConfig.refundPolicyURL) { UIApplication.shared.open(url) }
                 }
             }
             .font(.system(.caption2, design: .rounded))

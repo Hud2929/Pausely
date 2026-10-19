@@ -5,7 +5,7 @@
 
 ## Current Model (Baseline)
 
-Freemium: free tier (2 subscriptions), premium ($9.99/mo or $99/yr) for unlimited + features.
+Freemium: free tier (5 subscriptions), Pro ($4.99/mo or $29.99/yr at launch; raise yearly to about $39.99 when automatic detection ships) for unlimited subscriptions + savings analysis, cheaper alternatives and the guided cancel flow. See PRICING notes in APP_STORE_LISTING_PLAN.md.
 
 **Problem:** Subscription management apps have a ceiling. Most users won't pay $10/mo to save $10/mo. The math only works for power users.
 
