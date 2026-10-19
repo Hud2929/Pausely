@@ -21,8 +21,8 @@ enum StoreKitConfig {
         
         var description: String {
             switch self {
-            case .monthlyPro: return "Unlimited subscriptions + AI features"
-            case .annualPro: return "Save 17% with annual billing"
+            case .monthlyPro: return "Unlimited subscriptions and all Pro features"
+            case .annualPro: return "Best value with annual billing"
             }
         }
         

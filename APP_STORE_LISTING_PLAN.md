@@ -107,7 +107,7 @@ Exact keyword strings are in `scripts/store_locales.py` and `metadata/version/1.
 |---|---|---|
 | App icon | 1024 x 1024, no transparency, no text. Check it reads at small size next to competitors | Exists; re-check |
 | Screenshots, iPhone 6.9" | 1320 x 2868, up to 10 per locale; the first three show in search, so they carry the pitch. Order and captions: see below | To produce |
-| Screenshots, iPad 13" | Required only if the app supports iPad | **Decision** (section 9) |
+| Screenshots, iPad 13" | Not needed: 1.0 is **iPhone-only** (decided 2026-10-19; `TARGETED_DEVICE_FAMILY = 1`). iPad owners can still install it in compatibility mode | Done |
 | App Preview video | 15 to 30 s, in-app footage only (guideline 2.3.4). Script already corrected in `AppStoreScreenshots/PreviewVideoScript.md` | To record |
 | Promotional text | 170 chars, per locale, seasonal | Done |
 | Description | Per locale, no unsupported claims, Terms and Privacy links, auto-renew disclosure | Done |
@@ -146,7 +146,7 @@ Rules: real in-app screens with demo data (use the DEBUG demo launch flags, neve
 
 - **Account block** (section 1): critical.
 - **Public repository:** it contains internal strategy and, historically, the review password. See decision 3.
-- **"Scan from App Store" in the app** (Apple Subscriptions import) cannot see other apps' subscriptions, because iOS does not allow it. It must be hidden or relabelled before review, or it risks a "does not work as described" rejection.
+- **"Scan from App Store" in the app** (Apple Subscriptions import) could never see other apps' subscriptions, because iOS does not allow it. **Removed from the Subscriptions tab on 2026-10-19.** The unused screens (`AutoDetectView`, `AppleSubscriptionScanner`, `ForgottenSubscriptionsSection`) remain as dead code and can be deleted.
 - **Remaining in-app copy** that over-promises (separate from metadata): Help FAQ says data is "encrypted end-to-end"; Profile and Help mention pausing. Audit before submission. Dead screens that still mention Smart Pause or AI (`SmartPauseAlertView`, `FinancialAdvisorView`, `ReferralSuccessView`, `PerksView`, `MVFeaturesScene`) are unreachable but should be deleted.
 - **Gmail:** do not market it until Google approves the `gmail.readonly` scope (under review since early October; a security assessment may be required).
 - **Prices:** intended $9.99 monthly and $79.99 yearly; App Store Connect was last seen at $4.99 with a scheduled change. Verify.
@@ -177,8 +177,9 @@ Regenerate any time with `python3 scripts/store_copy.py --write`. Never edit the
 
 ## 9. Decisions needed from the owner
 
-1. **Who is the Account Holder, and are you them?** If someone else, they must accept the agreements (section 1).
-2. **iPad:** the target supports iPad but its layout is not designed for it. Recommended: make 1.0 iPhone-only (iPad still runs it in compatibility mode); otherwise iPad screenshots and layout fixes are required.
-3. **Public repository:** make it private (but the website is served from a branch, and free GitHub Pages needs a public repo, so the site would need to move) or accept that internal docs are public. Either way, change the review password and keep it out of the repo.
+1. ~~Who is the Account Holder?~~ **Resolved:** a family member. The owner must ask them to sign in and accept the agreements (section 1), or to add the owner as an Admin / Finance role so the owner can help. Only the Account Holder can accept the legal agreements.
+2. ~~iPad~~ **Resolved:** iPhone-only for 1.0.
+3. **Public repository:** a scan on 2026-10-19 found no live API keys or tokens in tracked files or history (the Supabase anon key in the project file is public by design). The only leak is the old review password in 3 old commits, with 0 forks and 0 stars. Fix: delete or reset the `review@pausely.app` user in Supabase Auth, and create the real review account in App Store Connect only. Keep the repo public (the website and the Google verification pages are served from it); rewriting history would not add protection once the account is gone.
 4. **Seller name:** an individual membership shows a personal name on the App Store. If a company name is wanted, plan an organization enrollment (needs a D-U-N-S number).
-5. **"Scan from App Store" feature:** hide or relabel before submission (recommended).
+5. ~~"Scan from App Store" feature~~ **Resolved:** removed.
+6. **Pricing:** see `PRICING_PLAN.md` once the owner picks a launch price. The paywall's "Save 17%" badge is computed from hard-coded numbers and must read real StoreKit prices.

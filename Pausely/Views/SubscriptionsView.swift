@@ -19,14 +19,12 @@ struct PremiumSubscriptionsView: View {
     enum ActiveSheet: Identifiable {
         case add
         case browser
-        case autoDetect
         case detail(Subscription)
 
         var id: String {
             switch self {
             case .add: return "add"
             case .browser: return "browser"
-            case .autoDetect: return "autoDetect"
             case .detail(let sub): return "detail-\(sub.id)"
             }
         }
@@ -82,10 +80,6 @@ struct PremiumSubscriptionsView: View {
                     .padding(.horizontal, 20)
                     .padding(.top, 16)
 
-                // Apple Subscription Scanner Button
-                appleScannerButton
-                    .padding(.top, 12)
-
                 // Search & Filter
                 searchAndFilterSection
                     .padding(.horizontal, 20)
@@ -140,11 +134,6 @@ struct PremiumSubscriptionsView: View {
                 ArtisticAddSubscriptionView()
             case .browser:
                 SubscriptionBrowserView()
-            case .autoDetect:
-                AutoDetectView(isPresented: Binding(
-                    get: { true },
-                    set: { if !$0 { activeSheet = nil } }
-                ))
             case .detail(let subscription):
                 SubscriptionDetailView(
                     subscription: subscription,
@@ -217,52 +206,6 @@ struct PremiumSubscriptionsView: View {
             .accessibilityLabel("Add subscription")
             .accessibilityIdentifier("addSubscriptionButton")
         }
-    }
-
-    // MARK: - Apple Subscription Scanner Button
-    private var appleScannerButton: some View {
-        HStack(spacing: 0) {
-            Button(action: { activeSheet = .autoDetect }) {
-                HStack(spacing: 10) {
-                    ZStack {
-                        Circle()
-                            .fill(Color.accentMint.opacity(0.2))
-                            .frame(width: 36, height: 36)
-
-                        Image(systemName: "apple.logo")
-                            .font(.callout.weight(.semibold))
-                            .foregroundColor(Color.accentMint)
-                    }
-
-                    VStack(alignment: .leading, spacing: 2) {
-                        Text("Apple Subscriptions")
-                            .font(.subheadline.weight(.semibold))
-                            .foregroundColor(.white)
-
-                        Text("Scan from App Store")
-                            .font(.caption2)
-                            .foregroundColor(.white.opacity(0.6))
-                    }
-
-                    Spacer()
-
-                    Image(systemName: "chevron.right")
-                        .font(.caption2.weight(.semibold))
-                        .foregroundColor(.white.opacity(0.4))
-                }
-                .padding(14)
-                .background(
-                    RoundedRectangle(cornerRadius: 14)
-                        .fill(.ultraThinMaterial)
-                        .overlay(
-                            RoundedRectangle(cornerRadius: 14)
-                                .stroke(Color.accentMint.opacity(0.3), lineWidth: 1)
-                        )
-                )
-            }
-            .buttonStyle(PlainButtonStyle())
-        }
-        .padding(.horizontal, 20)
     }
 
     private var searchAndFilterSection: some View {
