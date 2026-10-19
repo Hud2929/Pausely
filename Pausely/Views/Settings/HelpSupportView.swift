@@ -36,8 +36,7 @@ struct HelpSupportView: View {
         ("Can I pause a subscription?", "Yes, Pro members can pause subscriptions they're not using."),
         ("How do I change currency?", "Go to Profile > Currency and select your preferred currency."),
         ("Is my data secure?", "Yes, all your data is encrypted end-to-end and stored securely."),
-        ("How do I cancel my subscription?", "Go to Profile > Subscriptions and swipe left on any item."),
-        ("What is Smart Pause?", "Smart Pause analyzes your usage and suggests subscriptions to pause.")
+        ("How do I cancel my subscription?", "Go to Profile > Subscriptions and swipe left on any item.")
     ]
 
     var filteredFAQs: [(String, String)] {

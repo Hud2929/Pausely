@@ -20,7 +20,7 @@ Click "Create Subscription"
    - Reference Name: `Monthly Pro`
    - Product ID: `com.pausely.premium.monthly` ⚠️ EXACT MATCH REQUIRED
    - Display Name: `Pausely Pro Monthly`
-   - Description: `Unlimited subscriptions + AI features`
+   - Description: `Unlimited subscriptions and all Pro features`
 
 2. **Subscription Details**
    - Duration: `1 Month`

@@ -23,8 +23,8 @@ Strategy: Use a two-stage prompt (in-app pre-prompt + system prompt) with intell
 **Delay after action:** 1.5 seconds
 **Max reviews/week from this trigger:** 2
 
-### 3. Successful Pause/Cancel Action
-**Trigger:** User taps a cancel or pause link and returns to the app
+### 3. Successful Cancel Action
+**Trigger:** User taps a cancel link and returns to the app
 **Why:** The app directly saved them money - peak satisfaction moment
 **Pre-prompt:** "Taking control of your subscriptions feels great, doesn't it? Mind sharing the love with a quick rating?"
 **Delay after action:** 3 seconds (allow time to process the action)
@@ -58,7 +58,7 @@ Buttons: [Yes, I love it!] [Not yet]
 ### Contextual Pre-Prompt (After savings discovery)
 ```
 Title: Finding value in Pausely?
-Body: Insights like cost-per-hour help users save an average of $240/year. Mind sharing your experience?
+Body: Insights like cost-per-hour help you spot subscriptions that aren't worth it. Mind sharing your experience?
 Buttons: [Absolutely!] [Ask me later]
 ```
 
@@ -162,7 +162,7 @@ struct ReviewPromptManager {
 
 ### Template 1: "Too expensive / Not worth the price"
 ```
-Hi [Name], thanks for trying Pausely! We offer a free tier with up to 3 subscriptions so you can experience core features before upgrading. If you'd like to explore Pro, we have a 7-day free trial. Feel free to reach out at pausely@proton.me - we'd love to help find the right fit for you.
+Hi [Name], thanks for trying Pausely! We offer a free tier with up to 2 subscriptions so you can experience core features before upgrading. If you'd like to explore Pro, you'll find the current offer in the app. Feel free to reach out at pausely@proton.me - we'd love to help find the right fit for you.
 ```
 
 ### Template 2: "App crashes / Bugs"
@@ -172,7 +172,7 @@ Hi [Name], sorry to hear you're experiencing issues. We take stability seriously
 
 ### Template 3: "Can't find my subscription / Missing service"
 ```
-Hi [Name], Pausely supports thousands of services and we're adding more every week. You can add any subscription manually with custom names and amounts. If you'd like us to add a specific service to our catalog, let us know at pausely@proton.me!
+Hi [Name], Pausely includes 1,000+ services and we keep adding more. You can add any subscription manually with custom names and amounts. If you'd like us to add a specific service to our catalog, let us know at pausely@proton.me!
 ```
 
 ### Template 4: "Screen Time tracking doesn't work"

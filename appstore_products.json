@@ -2,7 +2,7 @@
   "app_info": {
     "bundle_id": "com.pausely.app.Pausely",
     "app_name": "Pausely",
-    "version": "1.0.1"
+    "version": "1.0.3"
   },
   "subscription_group": {
     "reference_name": "Pausely Pro Subscriptions",
@@ -20,22 +20,22 @@
         {
           "locale": "en-US",
           "display_name": "Pausely Pro Monthly",
-          "description": "Unlimited subscriptions + AI features"
+          "description": "Unlimited subscriptions and all Pro features"
         },
         {
           "locale": "es-MX",
           "display_name": "Pausely Pro Mensual",
-          "description": "Suscripciones ilimitadas + funciones de IA"
+          "description": "Suscripciones ilimitadas y todas las funciones Pro"
         },
         {
           "locale": "fr-CA",
           "display_name": "Pausely Pro Mensuel",
-          "description": "Abonnements illimités + fonctions IA"
+          "description": "Abonnements illimités et toutes les fonctions Pro"
         },
         {
           "locale": "de-DE",
           "display_name": "Pausely Pro Monatlich",
-          "description": "Unbegrenzte Abonnements + KI-Funktionen"
+          "description": "Unbegrenzte Abonnements und alle Pro-Funktionen"
         }
       ],
       "subscription_duration": "1 Month",
@@ -45,14 +45,46 @@
           "usd": 9.99
         },
         "territories": [
-          {"country": "US", "tier": 65, "price": "9.99"},
-          {"country": "CA", "tier": 65, "price": "9.99"},
-          {"country": "GB", "tier": 65, "price": "6.99"},
-          {"country": "AU", "tier": 65, "price": "12.99"},
-          {"country": "DE", "tier": 65, "price": "9.99"},
-          {"country": "FR", "tier": 65, "price": "9.99"},
-          {"country": "JP", "tier": 62, "price": "800"},
-          {"country": "MX", "tier": 62, "price": "129"}
+          {
+            "country": "US",
+            "tier": 65,
+            "price": "9.99"
+          },
+          {
+            "country": "CA",
+            "tier": 65,
+            "price": "9.99"
+          },
+          {
+            "country": "GB",
+            "tier": 65,
+            "price": "6.99"
+          },
+          {
+            "country": "AU",
+            "tier": 65,
+            "price": "12.99"
+          },
+          {
+            "country": "DE",
+            "tier": 65,
+            "price": "9.99"
+          },
+          {
+            "country": "FR",
+            "tier": 65,
+            "price": "9.99"
+          },
+          {
+            "country": "JP",
+            "tier": 62,
+            "price": "800"
+          },
+          {
+            "country": "MX",
+            "tier": 62,
+            "price": "129"
+          }
         ]
       },
       "introductory_offer": {
@@ -97,14 +129,46 @@
           "usd": 79.99
         },
         "territories": [
-          {"country": "US", "tier": 89, "price": "79.99"},
-          {"country": "CA", "tier": 89, "price": "79.99"},
-          {"country": "GB", "tier": 89, "price": "44.99"},
-          {"country": "AU", "tier": 89, "price": "79.99"},
-          {"country": "DE", "tier": 89, "price": "79.99"},
-          {"country": "FR", "tier": 89, "price": "79.99"},
-          {"country": "JP", "tier": 89, "price": "6000"},
-          {"country": "MX", "tier": 89, "price": "999"}
+          {
+            "country": "US",
+            "tier": 89,
+            "price": "79.99"
+          },
+          {
+            "country": "CA",
+            "tier": 89,
+            "price": "79.99"
+          },
+          {
+            "country": "GB",
+            "tier": 89,
+            "price": "44.99"
+          },
+          {
+            "country": "AU",
+            "tier": 89,
+            "price": "79.99"
+          },
+          {
+            "country": "DE",
+            "tier": 89,
+            "price": "79.99"
+          },
+          {
+            "country": "FR",
+            "tier": 89,
+            "price": "79.99"
+          },
+          {
+            "country": "JP",
+            "tier": 89,
+            "price": "6000"
+          },
+          {
+            "country": "MX",
+            "tier": 89,
+            "price": "999"
+          }
         ]
       },
       "introductory_offer": {
@@ -142,10 +206,10 @@
     ]
   },
   "app_review_info": {
-    "notes": "This app helps users track and optimize their subscription spending. FREE FEATURES: Track up to 5 subscriptions, basic cost analysis, manual usage tracking, referral program. PREMIUM FEATURES (Subscription): Unlimited subscriptions, smart pause suggestions, AI financial insights, cost per hour calculation, alternative service recommendations. Subscription auto-renews unless cancelled 24 hours before renewal. Users can cancel anytime in Settings > Apple ID > Subscriptions.",
+    "notes": "Pausely helps people keep track of their subscriptions and avoid surprise renewals. FREE: track up to 2 subscriptions with renewal reminders. PRO (auto-renewing subscription): unlimited subscriptions, savings insights, cheaper-alternative suggestions and the guided cancel flow. Subscription auto-renews unless cancelled at least 24 hours before the end of the period; manage or cancel in Settings > Apple ID > Subscriptions. Sign in with Apple or email is available; a review account is provided in the App Review Information section of App Store Connect (credentials are NOT stored in this repository).",
     "demo_account": {
-      "username": "demo@pausely.app",
-      "password": "Demo123!"
+      "username": "SET_IN_APP_STORE_CONNECT_ONLY",
+      "password": "SET_IN_APP_STORE_CONNECT_ONLY"
     },
     "contact": {
       "first_name": "[YOUR_FIRST_NAME]",
@@ -155,9 +219,9 @@
     }
   },
   "urls": {
-    "privacy_policy": "https://www.pausely.app/privacy",
-    "terms_of_service": "https://www.pausely.app/terms",
-    "support": "https://www.pausely.app/support",
-    "marketing": "https://www.pausely.app"
+    "privacy_policy": "https://pausely.pro/privacy.html",
+    "terms_of_service": "https://pausely.pro/terms.html",
+    "support": "https://pausely.pro/support.html",
+    "marketing": "https://pausely.pro"
   }
 }

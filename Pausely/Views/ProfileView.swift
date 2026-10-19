@@ -282,7 +282,7 @@ struct PremiumStatusCard: View {
             
             HStack(spacing: 24) {
                 ProFeatureItem(icon: "infinity", text: "Unlimited")
-                ProFeatureItem(icon: "pause.circle", text: "Smart Pause")
+                ProFeatureItem(icon: "arrow.triangle.swap", text: "Alternatives")
                 ProFeatureItem(icon: "chart.bar", text: "Insights")
             }
         }

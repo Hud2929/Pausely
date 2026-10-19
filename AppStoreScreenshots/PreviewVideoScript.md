@@ -73,7 +73,7 @@
 - Netflix detail view slides up
 - Usage ring animates to 69%
 - Daily bar chart grows
-- Action buttons (Cancel, Pause, Edit) slide in from bottom
+- The Edit button and the tools rows (Price history, Alternatives) slide in
 
 **Text Overlay:**
 - "Track usage and find savings" (appears at 0:11)
@@ -95,7 +95,7 @@
 
 **Text Overlay:**
 - "Unlock premium features" (appears at 0:13)
-- "7-day free trial" badge sparkles at 0:14
+- (Only if the 7-day introductory offer is live in App Store Connect) "7-day free trial" badge sparkles at 0:14
 
 **End Card:**
 - App icon + "Pausely" logo centers at 0:14.5

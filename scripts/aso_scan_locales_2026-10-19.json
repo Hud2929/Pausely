@@ -1,0 +1,5314 @@
+{
+ "mx|es_mx|control de suscripciones": [
+  {
+   "id": 6744532763,
+   "name": "Kelo: Control de Gastos",
+   "ratings": 46,
+   "avg": 4.83
+  },
+  {
+   "id": 389801252,
+   "name": "Instagram",
+   "ratings": 4297436,
+   "avg": 4.81
+  },
+  {
+   "id": 6787686922,
+   "name": "Rata y Fina: Control de Gastos",
+   "ratings": 7,
+   "avg": 3.86
+  },
+  {
+   "id": 6761388691,
+   "name": "Control de suscripciones: Subi",
+   "ratings": 0,
+   "avg": 0
+  },
+  {
+   "id": 6741823650,
+   "name": "Subo: Control de suscripciones",
+   "ratings": 17,
+   "avg": 4.88
+  },
+  {
+   "id": 1492055171,
+   "name": "Expenses: Control de gastos",
+   "ratings": 304,
+   "avg": 4.81
+  },
+  {
+   "id": 1451776066,
+   "name": "Control de Gastos: NEKO",
+   "ratings": 638,
+   "avg": 4.8
+  },
+  {
+   "id": 6463662930,
+   "name": "Cashew—Control de gastos",
+   "ratings": 129,
+   "avg": 4.92
+  },
+  {
+   "id": 6758282310,
+   "name": "Control de Suscripciones",
+   "ratings": 0,
+   "avg": 0
+  },
+  {
+   "id": 1567080447,
+   "name": "Mis Deudas - Control de Deudas",
+   "ratings": 50,
+   "avg": 4.22
+  }
+ ],
+ "mx|es_mx|gestor de suscripciones": [
+  {
+   "id": 6760239029,
+   "name": "Gestor de suscripciones — Dime",
+   "ratings": 0,
+   "avg": 0
+  },
+  {
+   "id": 6751438405,
+   "name": "Subvia Gestor de Suscripciones",
+   "ratings": 0,
+   "avg": 0
+  },
+  {
+   "id": 6753764940,
+   "name": "Gestor de Suscripciones .",
+   "ratings": 0,
+   "avg": 0
+  },
+  {
+   "id": 6759714795,
+   "name": "Modero - Gestor de Gastos",
+   "ratings": 5,
+   "avg": 5
+  },
+  {
+   "id": 6463366735,
+   "name": "Gestor de gastos - SpendWave",
+   "ratings": 9,
+   "avg": 4.56
+  },
+  {
+   "id": 6755717606,
+   "name": "Subby - Gestor suscripciones",
+   "ratings": 0,
+   "avg": 0
+  },
+  {
+   "id": 1506783728,
+   "name": "IA Gestor de Gastos y Alcancía",
+   "ratings": 0,
+   "avg": 0
+  },
+  {
+   "id": 6804473742,
+   "name": "Cuentio: Gestor de Gastos",
+   "ratings": 0,
+   "avg": 0
+  },
+  {
+   "id": 6760123459,
+   "name": "gSub: Gestor de suscripciones",
+   "ratings": 0,
+   "avg": 0
+  },
+  {
+   "id": 6747262759,
+   "name": "Feenko: Cancel Subscription",
+   "ratings": 132,
+   "avg": 3.85
+  }
+ ],
+ "mx|es_mx|cancelar suscripciones": [
+  {
+   "id": 6747262759,
+   "name": "Feenko: Cancel Subscription",
+   "ratings": 132,
+   "avg": 3.85
+  },
+  {
+   "id": 1519946553,
+   "name": "Suscripciones: Subtrack",
+   "ratings": 16,
+   "avg": 4.25
+  },
+  {
+   "id": 6740457603,
+   "name": "ReSubs - Gestor Suscripciones",
+   "ratings": 1,
+   "avg": 5
+  },
+  {
+   "id": 6479920412,
+   "name": "Cancelar Suscripciones, Ahorro",
+   "ratings": 12,
+   "avg": 3.75
+  },
+  {
+   "id": 6738048353,
+   "name": "Gestor Cancelación Suscripción",
+   "ratings": 1,
+   "avg": 5
+  },
+  {
+   "id": 1160481993,
+   "name": "Apple Wallet",
+   "ratings": 125476,
+   "avg": 4.92
+  },
+  {
+   "id": 6747663809,
+   "name": "Gestor suscripciones: Reko",
+   "ratings": 2,
+   "avg": 5
+  },
+  {
+   "id": 6751181747,
+   "name": "Subpilot: Cancelar suscripción",
+   "ratings": 14,
+   "avg": 4.07
+  },
+  {
+   "id": 6769329967,
+   "name": "SubSeek: Mis Suscripciones",
+   "ratings": 5,
+   "avg": 4.8
+  },
+  {
+   "id": 1536420851,
+   "name": "Suscripciones bajo control",
+   "ratings": 3,
+   "avg": 3.33
+  }
+ ],
+ "mx|es_mx|suscripciones": [
+  {
+   "id": 1160481993,
+   "name": "Apple Wallet",
+   "ratings": 125476,
+   "avg": 4.92
+  },
+  {
+   "id": 389801252,
+   "name": "Instagram",
+   "ratings": 4297436,
+   "avg": 4.81
+  },
+  {
+   "id": 1174078549,
+   "name": "Apple TV",
+   "ratings": 157587,
+   "avg": 4.83
+  },
+  {
+   "id": 1059152023,
+   "name": "Bobby - Track subscriptions",
+   "ratings": 2314,
+   "avg": 4.82
+  },
+  {
+   "id": 6769329967,
+   "name": "SubSeek: Mis Suscripciones",
+   "ratings": 5,
+   "avg": 4.8
+  },
+  {
+   "id": 6741823650,
+   "name": "Subo: Control de suscripciones",
+   "ratings": 17,
+   "avg": 4.88
+  },
+  {
+   "id": 6692620188,
+   "name": "Subscription Tracker: Orbit",
+   "ratings": 57,
+   "avg": 4.86
+  },
+  {
+   "id": 283646709,
+   "name": "PayPal",
+   "ratings": 76758,
+   "avg": 4.73
+  },
+  {
+   "id": 1632853914,
+   "name": "SubManager: Suscripciones",
+   "ratings": 2,
+   "avg": 5
+  },
+  {
+   "id": 6479920412,
+   "name": "Cancelar Suscripciones, Ahorro",
+   "ratings": 12,
+   "avg": 3.75
+  }
+ ],
+ "mx|es_mx|recordatorio de pagos": [
+  {
+   "id": 1567080447,
+   "name": "Mis Deudas - Control de Deudas",
+   "ratings": 50,
+   "avg": 4.22
+  },
+  {
+   "id": 1071899483,
+   "name": "Recordatorios con Despertador",
+   "ratings": 4239,
+   "avg": 4.7
+  },
+  {
+   "id": 1108187841,
+   "name": "Recordatorios",
+   "ratings": 82507,
+   "avg": 4.9
+  },
+  {
+   "id": 1204316311,
+   "name": "Control de gastos y dinero",
+   "ratings": 9952,
+   "avg": 4.74
+  },
+  {
+   "id": 1352782733,
+   "name": "Organizador de las Facturas",
+   "ratings": 57,
+   "avg": 4.58
+  },
+  {
+   "id": 608834326,
+   "name": "Calendario: Mi Agenda y Tareas",
+   "ratings": 8060,
+   "avg": 4.79
+  },
+  {
+   "id": 6757211908,
+   "name": "NoSeMePasa: Control de Pagos",
+   "ratings": 1,
+   "avg": 5
+  },
+  {
+   "id": 6804168885,
+   "name": "Billio: Recordatorios de pago",
+   "ratings": 1,
+   "avg": 5
+  },
+  {
+   "id": 557745942,
+   "name": "24me Asistente Personal",
+   "ratings": 1706,
+   "avg": 4.62
+  },
+  {
+   "id": 469454389,
+   "name": "Recordatorio Aida. Despertador",
+   "ratings": 1774,
+   "avg": 4.75
+  }
+ ],
+ "mx|es_mx|recordatorio de renovación": [
+  {
+   "id": 6811979261,
+   "name": "Sublet: Suscripciones y Pagos",
+   "ratings": 0,
+   "avg": 0
+  },
+  {
+   "id": 6751438405,
+   "name": "Subvia Gestor de Suscripciones",
+   "ratings": 0,
+   "avg": 0
+  },
+  {
+   "id": 6478255369,
+   "name": "Vencimiento Documento RemindMe",
+   "ratings": 0,
+   "avg": 0
+  },
+  {
+   "id": 1632853914,
+   "name": "SubManager: Suscripciones",
+   "ratings": 2,
+   "avg": 5
+  },
+  {
+   "id": 6741918947,
+   "name": "Monabo: Control de gastos",
+   "ratings": 1,
+   "avg": 1
+  },
+  {
+   "id": 6740457603,
+   "name": "ReSubs - Gestor Suscripciones",
+   "ratings": 1,
+   "avg": 5
+  },
+  {
+   "id": 6761618982,
+   "name": "Gestor Suscripciones - Censo",
+   "ratings": 0,
+   "avg": 0
+  },
+  {
+   "id": 6758765733,
+   "name": "Subcut: Control Suscripciones",
+   "ratings": 0,
+   "avg": 0
+  },
+  {
+   "id": 1494919087,
+   "name": "ReScribe Subscription Manager",
+   "ratings": 1,
+   "avg": 5
+  }
+ ],
+ "mx|es_mx|prueba gratuita": [
+  {
+   "id": 378722461,
+   "name": "Prueba Clásica de CI",
+   "ratings": 95,
+   "avg": 3.91
+  },
+  {
+   "id": 1102415991,
+   "name": "RealmCraft: mine & craft world",
+   "ratings": 13004,
+   "avg": 4.46
+  },
+  {
+   "id": 1196524622,
+   "name": "Minecraft Education",
+   "ratings": 2923,
+   "avg": 3.58
+  },
+  {
+   "id": 981633844,
+   "name": "Block Craft 3D: Crafting Game",
+   "ratings": 84145,
+   "avg": 4.58
+  },
+  {
+   "id": 6673897269,
+   "name": "Mejorador de Calidad Fotos IA",
+   "ratings": 95,
+   "avg": 4.69
+  },
+  {
+   "id": 505864483,
+   "name": "Embarazo + | Semana a semana",
+   "ratings": 13417,
+   "avg": 4.88
+  },
+  {
+   "id": 1589920505,
+   "name": "Mods y Skins para Minecraft PE",
+   "ratings": 1151,
+   "avg": 4.41
+  },
+  {
+   "id": 898735886,
+   "name": "¡Verdad o Reto!",
+   "ratings": 4573,
+   "avg": 4.86
+  },
+  {
+   "id": 300704847,
+   "name": "Speedtest by Ookla",
+   "ratings": 2032,
+   "avg": 4.33
+  }
+ ],
+ "mx|es_mx|pagos recurrentes": [
+  {
+   "id": 6742025463,
+   "name": "Recurrente",
+   "ratings": 0,
+   "avg": 0
+  },
+  {
+   "id": 6766050298,
+   "name": "Suscripciones y pagos: Subflo",
+   "ratings": 0,
+   "avg": 0
+  },
+  {
+   "id": 1613079936,
+   "name": "Subscrible - Manejo de Pagos",
+   "ratings": 25,
+   "avg": 4.24
+  },
+  {
+   "id": 6775287342,
+   "name": "Bill Check: pagos y facturas",
+   "ratings": 0,
+   "avg": 0
+  },
+  {
+   "id": 6755439531,
+   "name": "Control de Pagos - BillRadar",
+   "ratings": 0,
+   "avg": 0
+  },
+  {
+   "id": 6779705923,
+   "name": "Calendario de Pagos y Cuotas",
+   "ratings": 0,
+   "avg": 0
+  },
+  {
+   "id": 6751181747,
+   "name": "Subpilot: Cancelar suscripción",
+   "ratings": 14,
+   "avg": 4.07
+  },
+  {
+   "id": 6762788355,
+   "name": "Perezoso: Suscripciones",
+   "ratings": 1,
+   "avg": 5
+  },
+  {
+   "id": 6741823650,
+   "name": "Subo: Control de suscripciones",
+   "ratings": 17,
+   "avg": 4.88
+  },
+  {
+   "id": 6475526197,
+   "name": "Control de Gastos: WalletPal",
+   "ratings": 2,
+   "avg": 5
+  }
+ ],
+ "mx|es_mx|rastreador de suscripciones": [
+  {
+   "id": 6754924506,
+   "name": "Control de Gastos - Walletee",
+   "ratings": 0,
+   "avg": 0
+  },
+  {
+   "id": 1508253873,
+   "name": "Mysu",
+   "ratings": 5,
+   "avg": 4.2
+  },
+  {
+   "id": 6760442051,
+   "name": "Honey Money: Finanzas",
+   "ratings": 1,
+   "avg": 5
+  },
+  {
+   "id": 6756968738,
+   "name": "Wallety: Gestor de Gastos",
+   "ratings": 1,
+   "avg": 5
+  },
+  {
+   "id": 6738048353,
+   "name": "Gestor Cancelación Suscripción",
+   "ratings": 1,
+   "avg": 5
+  },
+  {
+   "id": 6759074108,
+   "name": "Paylio: Gestor Suscripción",
+   "ratings": 1,
+   "avg": 5
+  },
+  {
+   "id": 1475098830,
+   "name": "Pockity: Gastos y Presupuesto",
+   "ratings": 1,
+   "avg": 5
+  },
+  {
+   "id": 6776364112,
+   "name": "GGz - Juegos Nuevos y Ofertas",
+   "ratings": 0,
+   "avg": 0
+  },
+  {
+   "id": 1580451214,
+   "name": "Be Close Rastreador Telefónico",
+   "ratings": 0,
+   "avg": 0
+  }
+ ],
+ "mx|es_mx|administrar suscripciones": [
+  {
+   "id": 6747663809,
+   "name": "Gestor suscripciones: Reko",
+   "ratings": 2,
+   "avg": 5
+  },
+  {
+   "id": 6479920412,
+   "name": "Cancelar Suscripciones, Ahorro",
+   "ratings": 12,
+   "avg": 3.75
+  },
+  {
+   "id": 1613079936,
+   "name": "Subscrible - Manejo de Pagos",
+   "ratings": 25,
+   "avg": 4.24
+  },
+  {
+   "id": 1672868778,
+   "name": "Control de Gastos y Ahorro",
+   "ratings": 8,
+   "avg": 5
+  },
+  {
+   "id": 960191892,
+   "name": "Adif",
+   "ratings": 1,
+   "avg": 1
+  },
+  {
+   "id": 6751852727,
+   "name": "AI Control de gastos: CoinBox",
+   "ratings": 9,
+   "avg": 5
+  },
+  {
+   "id": 6748036338,
+   "name": "BudgetCheck: Control de gastos",
+   "ratings": 0,
+   "avg": 0
+  },
+  {
+   "id": 6759714795,
+   "name": "Modero - Gestor de Gastos",
+   "ratings": 5,
+   "avg": 5
+  },
+  {
+   "id": 6783097672,
+   "name": "cardMai - Control de Gastos AI",
+   "ratings": 0,
+   "avg": 0
+  },
+  {
+   "id": 6796619200,
+   "name": "Control de Gastos: Boti",
+   "ratings": 0,
+   "avg": 0
+  }
+ ],
+ "mx|es_mx|gastos mensuales": [
+  {
+   "id": 1204316311,
+   "name": "Control de gastos y dinero",
+   "ratings": 9952,
+   "avg": 4.74
+  },
+  {
+   "id": 1510997753,
+   "name": "Gestor de gastos, ingresos",
+   "ratings": 12213,
+   "avg": 4.94
+  },
+  {
+   "id": 1212024409,
+   "name": "Monefy - Budget Planner",
+   "ratings": 4118,
+   "avg": 4.79
+  },
+  {
+   "id": 1621020173,
+   "name": "Control de Gastos - Fleur",
+   "ratings": 1617,
+   "avg": 4.84
+  },
+  {
+   "id": 560481810,
+   "name": "Registro Contable : Gastos",
+   "ratings": 10433,
+   "avg": 4.89
+  },
+  {
+   "id": 1414523287,
+   "name": "Gastos Diarios: Finanzas",
+   "ratings": 2586,
+   "avg": 4.76
+  },
+  {
+   "id": 1249678565,
+   "name": "Finanzas personales MoneyStats",
+   "ratings": 5147,
+   "avg": 4.85
+  },
+  {
+   "id": 635861140,
+   "name": "Spendee: Presupuesto y Gastos",
+   "ratings": 2764,
+   "avg": 4.73
+  },
+  {
+   "id": 936422955,
+   "name": "Budget Money Planner | Buddy",
+   "ratings": 2553,
+   "avg": 4.85
+  },
+  {
+   "id": 6444122615,
+   "name": "Mis Gastos: Gestor de gastos",
+   "ratings": 420,
+   "avg": 4.85
+  }
+ ],
+ "mx|es_mx|ahorrar dinero": [
+  {
+   "id": 1582043582,
+   "name": "Savings Goal",
+   "ratings": 69,
+   "avg": 4.49
+  },
+  {
+   "id": 6757161204,
+   "name": "Ahorrar dinero",
+   "ratings": 13,
+   "avg": 4.92
+  },
+  {
+   "id": 6751985294,
+   "name": "Metas de Ahorro Fácil",
+   "ratings": 17,
+   "avg": 4.82
+  },
+  {
+   "id": 1510997753,
+   "name": "Gestor de gastos, ingresos",
+   "ratings": 12213,
+   "avg": 4.94
+  },
+  {
+   "id": 1510760825,
+   "name": "Money+ Asistente Dinero Lindo",
+   "ratings": 1047,
+   "avg": 4.83
+  },
+  {
+   "id": 1458428639,
+   "name": "Puerquito: Alcancía de ahorros",
+   "ratings": 1344,
+   "avg": 4.85
+  },
+  {
+   "id": 1438255096,
+   "name": "CashCounter: The cash manager",
+   "ratings": 110,
+   "avg": 4.69
+  },
+  {
+   "id": 6753981467,
+   "name": "Objetivo de Ahorro",
+   "ratings": 5,
+   "avg": 2.6
+  },
+  {
+   "id": 1422523462,
+   "name": "Desafío: 52 Semanas de Ahorro",
+   "ratings": 1143,
+   "avg": 4.85
+  },
+  {
+   "id": 6762198669,
+   "name": "Turbo Piggy: Metas de ahorro",
+   "ratings": 1,
+   "avg": 5
+  }
+ ],
+ "es|es_es|control de suscripciones": [
+  {
+   "id": 6787686922,
+   "name": "Rata y Fina: Control de Gastos",
+   "ratings": 214,
+   "avg": 3.47
+  },
+  {
+   "id": 6744532763,
+   "name": "Kelo: Control de Gastos",
+   "ratings": 31,
+   "avg": 4.23
+  },
+  {
+   "id": 6820237269,
+   "name": "Control de suscripciones",
+   "ratings": 0,
+   "avg": 0
+  },
+  {
+   "id": 6796619200,
+   "name": "Control de Gastos: Boti",
+   "ratings": 7,
+   "avg": 4.43
+  },
+  {
+   "id": 6743198415,
+   "name": "Subbie: control de gastos",
+   "ratings": 2,
+   "avg": 5
+  },
+  {
+   "id": 1492055171,
+   "name": "Expenses: Control de gastos",
+   "ratings": 119,
+   "avg": 4.76
+  },
+  {
+   "id": 6463662930,
+   "name": "Cashew—Control de gastos",
+   "ratings": 130,
+   "avg": 4.92
+  },
+  {
+   "id": 6692620188,
+   "name": "Suscripciones - Orbit",
+   "ratings": 11,
+   "avg": 4.27
+  },
+  {
+   "id": 389801252,
+   "name": "Instagram",
+   "ratings": 2061750,
+   "avg": 4.63
+  },
+  {
+   "id": 6741048901,
+   "name": "Fluxi: Control de gastos",
+   "ratings": 4,
+   "avg": 5
+  }
+ ],
+ "es|es_es|gestor de suscripciones": [
+  {
+   "id": 6815963267,
+   "name": "Gestor de Suscripciones: Subd",
+   "ratings": 0,
+   "avg": 0
+  },
+  {
+   "id": 6741823650,
+   "name": "Subo - Gestor de Suscripciones",
+   "ratings": 20,
+   "avg": 4.65
+  },
+  {
+   "id": 6748356798,
+   "name": "Tile - Gestor de suscripciones",
+   "ratings": 10,
+   "avg": 5
+  },
+  {
+   "id": 6793098783,
+   "name": "Subby Gestor de Suscripciones",
+   "ratings": 0,
+   "avg": 0
+  },
+  {
+   "id": 6761440795,
+   "name": "Gastos y Suscripciones",
+   "ratings": 5,
+   "avg": 5
+  },
+  {
+   "id": 6760496300,
+   "name": "Duly: Gestor de Suscripciones",
+   "ratings": 4,
+   "avg": 5
+  },
+  {
+   "id": 6760239029,
+   "name": "Gestor de suscripciones — Dime",
+   "ratings": 0,
+   "avg": 0
+  },
+  {
+   "id": 6774905278,
+   "name": "Gestor de Suscripciones: Glint",
+   "ratings": 0,
+   "avg": 0
+  },
+  {
+   "id": 6751438405,
+   "name": "Subvia Gestor de Suscripciones",
+   "ratings": 0,
+   "avg": 0
+  }
+ ],
+ "es|es_es|cancelar suscripciones": [
+  {
+   "id": 1160481993,
+   "name": "Apple Wallet",
+   "ratings": 267128,
+   "avg": 4.81
+  },
+  {
+   "id": 6747663809,
+   "name": "Gestor suscripciones: Reko",
+   "ratings": 1,
+   "avg": 5
+  },
+  {
+   "id": 6479920412,
+   "name": "Cancelar Suscripciones, Ahorro",
+   "ratings": 9,
+   "avg": 3.22
+  },
+  {
+   "id": 6738048353,
+   "name": "Gestor Cancelación Suscripción",
+   "ratings": 2,
+   "avg": 3
+  },
+  {
+   "id": 6762142477,
+   "name": "Cancelar Suscripciones-SubLess",
+   "ratings": 0,
+   "avg": 0
+  },
+  {
+   "id": 6740457603,
+   "name": "ReSubs - Gestor Suscripciones",
+   "ratings": 2,
+   "avg": 4.5
+  },
+  {
+   "id": 1536420851,
+   "name": "Suscripciones bajo control",
+   "ratings": 28,
+   "avg": 4.79
+  },
+  {
+   "id": 1519946553,
+   "name": "Suscripciones & Bill: Subtrack",
+   "ratings": 10,
+   "avg": 4.3
+  },
+  {
+   "id": 6769329967,
+   "name": "SubSeek: Mis Suscripciones",
+   "ratings": 0,
+   "avg": 0
+  },
+  {
+   "id": 6757860829,
+   "name": "SubList: Gestor suscripciones",
+   "ratings": 0,
+   "avg": 0
+  }
+ ],
+ "es|es_es|suscripciones": [
+  {
+   "id": 1160481993,
+   "name": "Apple Wallet",
+   "ratings": 267128,
+   "avg": 4.81
+  },
+  {
+   "id": 389801252,
+   "name": "Instagram",
+   "ratings": 2061750,
+   "avg": 4.63
+  },
+  {
+   "id": 6741823650,
+   "name": "Subo - Gestor de Suscripciones",
+   "ratings": 20,
+   "avg": 4.65
+  },
+  {
+   "id": 1174078549,
+   "name": "Apple TV",
+   "ratings": 51436,
+   "avg": 4.66
+  },
+  {
+   "id": 1059152023,
+   "name": "Bobby - Track subscriptions",
+   "ratings": 2055,
+   "avg": 4.62
+  },
+  {
+   "id": 283646709,
+   "name": "PayPal",
+   "ratings": 94659,
+   "avg": 4.73
+  },
+  {
+   "id": 1536420851,
+   "name": "Suscripciones bajo control",
+   "ratings": 28,
+   "avg": 4.79
+  },
+  {
+   "id": 6479920412,
+   "name": "Cancelar Suscripciones, Ahorro",
+   "ratings": 9,
+   "avg": 3.22
+  },
+  {
+   "id": 6593692260,
+   "name": "Rastreador de Suscripciones",
+   "ratings": 7,
+   "avg": 4.57
+  },
+  {
+   "id": 915061235,
+   "name": "iTunes Store",
+   "ratings": 39096,
+   "avg": 4.72
+  }
+ ],
+ "es|es_es|recordatorio de pagos": [
+  {
+   "id": 1071899483,
+   "name": "Recordatorios con Despertador",
+   "ratings": 2651,
+   "avg": 4.49
+  },
+  {
+   "id": 6757211908,
+   "name": "NoSeMePasa: Control de Pagos",
+   "ratings": 0,
+   "avg": 0
+  },
+  {
+   "id": 6804168885,
+   "name": "Billio: Recordatorios de pago",
+   "ratings": 0,
+   "avg": 0
+  },
+  {
+   "id": 1108187841,
+   "name": "Recordatorios",
+   "ratings": 59598,
+   "avg": 4.78
+  },
+  {
+   "id": 608834326,
+   "name": "Calendars: Agenda y Calendario",
+   "ratings": 18291,
+   "avg": 4.58
+  },
+  {
+   "id": 1352782733,
+   "name": "Organizador de las Facturas",
+   "ratings": 16,
+   "avg": 3.94
+  },
+  {
+   "id": 469454389,
+   "name": "Recordatorio Aida. Despertador",
+   "ratings": 2387,
+   "avg": 4.57
+  },
+  {
+   "id": 573916946,
+   "name": "Recordatorios de Medicina",
+   "ratings": 2979,
+   "avg": 4.58
+  },
+  {
+   "id": 572688855,
+   "name": "Todoist: To do list–Calendario",
+   "ratings": 7595,
+   "avg": 4.71
+  },
+  {
+   "id": 820210381,
+   "name": "Recordatorio de pago",
+   "ratings": 1,
+   "avg": 4
+  }
+ ],
+ "es|es_es|recordatorio de renovación": [
+  {
+   "id": 6744532763,
+   "name": "Kelo: Control de Gastos",
+   "ratings": 31,
+   "avg": 4.23
+  },
+  {
+   "id": 6751438405,
+   "name": "Subvia Gestor de Suscripciones",
+   "ratings": 0,
+   "avg": 0
+  },
+  {
+   "id": 6760496300,
+   "name": "Duly: Gestor de Suscripciones",
+   "ratings": 4,
+   "avg": 5
+  },
+  {
+   "id": 6820237269,
+   "name": "Control de suscripciones",
+   "ratings": 0,
+   "avg": 0
+  },
+  {
+   "id": 6793098783,
+   "name": "Subby Gestor de Suscripciones",
+   "ratings": 0,
+   "avg": 0
+  },
+  {
+   "id": 6815963267,
+   "name": "Gestor de Suscripciones: Subd",
+   "ratings": 0,
+   "avg": 0
+  },
+  {
+   "id": 6478255369,
+   "name": "Caducidad Documento RemindMe",
+   "ratings": 0,
+   "avg": 0
+  },
+  {
+   "id": 1632853914,
+   "name": "SubManager: Suscripciones",
+   "ratings": 1,
+   "avg": 4
+  },
+  {
+   "id": 6761864422,
+   "name": "Blips - Suscripciones y Gastos",
+   "ratings": 0,
+   "avg": 0
+  }
+ ],
+ "es|es_es|prueba gratuita": [
+  {
+   "id": 378722461,
+   "name": "Prueba Clásica de CI",
+   "ratings": 45,
+   "avg": 4.11
+  },
+  {
+   "id": 981633844,
+   "name": "Block Craft 3D: Mejores Juegos",
+   "ratings": 35927,
+   "avg": 4.6
+  },
+  {
+   "id": 505864483,
+   "name": "Embarazo + | Semana a semana",
+   "ratings": 17737,
+   "avg": 4.78
+  },
+  {
+   "id": 1102415991,
+   "name": "RealmCraft 3D: Survival Craft",
+   "ratings": 2458,
+   "avg": 4.46
+  },
+  {
+   "id": 1196524622,
+   "name": "Minecraft Education",
+   "ratings": 1036,
+   "avg": 3.66
+  },
+  {
+   "id": 898735886,
+   "name": "¡Verdad o Reto!",
+   "ratings": 2057,
+   "avg": 4.77
+  },
+  {
+   "id": 1590304931,
+   "name": "Calalarm Calendar",
+   "ratings": 15,
+   "avg": 4.53
+  },
+  {
+   "id": 300704847,
+   "name": "Speedtest - Test De Velocidad",
+   "ratings": 666,
+   "avg": 4.18
+  },
+  {
+   "id": 933135994,
+   "name": "Akinator",
+   "ratings": 10375,
+   "avg": 4.42
+  }
+ ],
+ "es|es_es|pagos recurrentes": [
+  {
+   "id": 6742025463,
+   "name": "Recurrente",
+   "ratings": 0,
+   "avg": 0
+  },
+  {
+   "id": 6779705923,
+   "name": "Calendario de Pagos y Cuotas",
+   "ratings": 0,
+   "avg": 0
+  },
+  {
+   "id": 6762788355,
+   "name": "Perezoso: Suscripciones",
+   "ratings": 9,
+   "avg": 4.56
+  },
+  {
+   "id": 1470560916,
+   "name": "Pandora - Gestor Suscripciones",
+   "ratings": 0,
+   "avg": 0
+  },
+  {
+   "id": 6744532763,
+   "name": "Kelo: Control de Gastos",
+   "ratings": 31,
+   "avg": 4.23
+  },
+  {
+   "id": 6793098783,
+   "name": "Subby Gestor de Suscripciones",
+   "ratings": 0,
+   "avg": 0
+  },
+  {
+   "id": 6789850180,
+   "name": "Gestiona suscripciones: SubIQ",
+   "ratings": 1,
+   "avg": 5
+  },
+  {
+   "id": 6754086277,
+   "name": "Gestor Suscripciones: SubTrack",
+   "ratings": 0,
+   "avg": 0
+  },
+  {
+   "id": 6751181747,
+   "name": "Subpilot: Cancelar suscripción",
+   "ratings": 4,
+   "avg": 2.75
+  },
+  {
+   "id": 6816024990,
+   "name": "Budgy: Gastos y ahorro",
+   "ratings": 1,
+   "avg": 5
+  }
+ ],
+ "es|es_es|rastreador de suscripciones": [
+  {
+   "id": 6593692260,
+   "name": "Rastreador de Suscripciones",
+   "ratings": 7,
+   "avg": 4.57
+  },
+  {
+   "id": 6746950605,
+   "name": "Seguimiento de Suscripciones",
+   "ratings": 0,
+   "avg": 0
+  },
+  {
+   "id": 6752489184,
+   "name": "Gestionar mi Suscripciones",
+   "ratings": 0,
+   "avg": 0
+  },
+  {
+   "id": 6740457603,
+   "name": "ReSubs - Gestor Suscripciones",
+   "ratings": 2,
+   "avg": 4.5
+  },
+  {
+   "id": 1508253873,
+   "name": "Mysu",
+   "ratings": 0,
+   "avg": 0
+  },
+  {
+   "id": 6756968738,
+   "name": "Wallety: Gestor de Gastos",
+   "ratings": 0,
+   "avg": 0
+  },
+  {
+   "id": 1475098830,
+   "name": "Pockity: Gastos y Presupuesto",
+   "ratings": 3,
+   "avg": 3.33
+  },
+  {
+   "id": 6738048353,
+   "name": "Gestor Cancelación Suscripción",
+   "ratings": 2,
+   "avg": 3
+  },
+  {
+   "id": 6799219569,
+   "name": "Subsfriend - Maestro",
+   "ratings": 0,
+   "avg": 0
+  }
+ ],
+ "es|es_es|administrar suscripciones": [
+  {
+   "id": 960191892,
+   "name": "Adif",
+   "ratings": 578,
+   "avg": 1.61
+  },
+  {
+   "id": 6752489184,
+   "name": "Gestionar mi Suscripciones",
+   "ratings": 0,
+   "avg": 0
+  },
+  {
+   "id": 6479920412,
+   "name": "Cancelar Suscripciones, Ahorro",
+   "ratings": 9,
+   "avg": 3.22
+  },
+  {
+   "id": 6746950605,
+   "name": "Seguimiento de Suscripciones",
+   "ratings": 0,
+   "avg": 0
+  },
+  {
+   "id": 6749389469,
+   "name": "SubTracker",
+   "ratings": 3,
+   "avg": 5
+  },
+  {
+   "id": 6738005972,
+   "name": "Subz - Gestor Suscripciones",
+   "ratings": 0,
+   "avg": 0
+  },
+  {
+   "id": 6811557078,
+   "name": "Controlar suscripciones",
+   "ratings": 0,
+   "avg": 0
+  },
+  {
+   "id": 6753764940,
+   "name": "Gestor de Suscripciones .",
+   "ratings": 0,
+   "avg": 0
+  },
+  {
+   "id": 6787681917,
+   "name": "Mis Suscripciones: Submetric",
+   "ratings": 0,
+   "avg": 0
+  }
+ ],
+ "es|es_es|gastos mensuales": [
+  {
+   "id": 1510997753,
+   "name": "Gestor de gastos, ingresos",
+   "ratings": 5361,
+   "avg": 4.9
+  },
+  {
+   "id": 6739777905,
+   "name": "Control de Gastos - Soldi",
+   "ratings": 1201,
+   "avg": 4.77
+  },
+  {
+   "id": 1621020173,
+   "name": "Gestor de Gastos - Fleur",
+   "ratings": 375,
+   "avg": 4.73
+  },
+  {
+   "id": 1212024409,
+   "name": "Monefy: Control de gastos",
+   "ratings": 3805,
+   "avg": 4.6
+  },
+  {
+   "id": 1204316311,
+   "name": "Control de gastos y dinero",
+   "ratings": 2339,
+   "avg": 4.49
+  },
+  {
+   "id": 560481810,
+   "name": "Registro Contable : Gastos",
+   "ratings": 2403,
+   "avg": 4.78
+  },
+  {
+   "id": 6444122615,
+   "name": "Mis Gastos: Gestor de gastos",
+   "ratings": 158,
+   "avg": 4.8
+  },
+  {
+   "id": 6754984723,
+   "name": "Flowfy: Control de Gastos",
+   "ratings": 71,
+   "avg": 3.66
+  },
+  {
+   "id": 672220319,
+   "name": "Fintonic | Ahorra y finánciate",
+   "ratings": 25871,
+   "avg": 4.31
+  },
+  {
+   "id": 1249678565,
+   "name": "Finanzas personales MoneyStats",
+   "ratings": 2647,
+   "avg": 4.72
+  }
+ ],
+ "es|es_es|ahorrar dinero": [
+  {
+   "id": 1510997753,
+   "name": "Gestor de gastos, ingresos",
+   "ratings": 5361,
+   "avg": 4.9
+  },
+  {
+   "id": 1438255096,
+   "name": "CashCounter: The euro counter",
+   "ratings": 1608,
+   "avg": 4.69
+  },
+  {
+   "id": 6757161204,
+   "name": "Ahorrar dinero",
+   "ratings": 6,
+   "avg": 4.5
+  },
+  {
+   "id": 1621020173,
+   "name": "Gestor de Gastos - Fleur",
+   "ratings": 375,
+   "avg": 4.73
+  },
+  {
+   "id": 1582043582,
+   "name": "Meta de Ahorro",
+   "ratings": 6,
+   "avg": 3.5
+  },
+  {
+   "id": 1212024409,
+   "name": "Monefy: Control de gastos",
+   "ratings": 3805,
+   "avg": 4.6
+  },
+  {
+   "id": 1204316311,
+   "name": "Control de gastos y dinero",
+   "ratings": 2339,
+   "avg": 4.49
+  },
+  {
+   "id": 1510760825,
+   "name": "Money+ Asistente Dinero Lindo",
+   "ratings": 95,
+   "avg": 4.74
+  },
+  {
+   "id": 1458428639,
+   "name": "Puerquito: Alcancía de ahorros",
+   "ratings": 139,
+   "avg": 4.74
+  },
+  {
+   "id": 1622364940,
+   "name": "La Cuponera: Cashback y Ahorro",
+   "ratings": 17108,
+   "avg": 4.69
+  }
+ ],
+ "fr|fr_fr|suivi abonnements": [
+  {
+   "id": 6757351568,
+   "name": "SnapSub: Suivi Abonnements",
+   "ratings": 1,
+   "avg": 5
+  },
+  {
+   "id": 6738005972,
+   "name": "Subz - Suivi Abonnements",
+   "ratings": 5,
+   "avg": 5
+  },
+  {
+   "id": 1485509764,
+   "name": "Reports +for Followers Tracker",
+   "ratings": 1518,
+   "avg": 4.48
+  },
+  {
+   "id": 6767483589,
+   "name": "Reports+: Suivi de Followers",
+   "ratings": 0,
+   "avg": 0
+  },
+  {
+   "id": 6762475711,
+   "name": "Suivi abonnements : SubAxe",
+   "ratings": 0,
+   "avg": 0
+  },
+  {
+   "id": 6748385943,
+   "name": "papernest - mes abonnements",
+   "ratings": 30,
+   "avg": 4.73
+  },
+  {
+   "id": 1632853914,
+   "name": "SubManager: Suivi abonnements",
+   "ratings": 3,
+   "avg": 3.67
+  },
+  {
+   "id": 6744271488,
+   "name": "Recent Follow - Tracker Suivis",
+   "ratings": 42,
+   "avg": 3.48
+  },
+  {
+   "id": 1492055171,
+   "name": "Expenses : Suivi des dépenses",
+   "ratings": 290,
+   "avg": 4.78
+  },
+  {
+   "id": 6738631871,
+   "name": "Subdash: Suivi des Abonnements",
+   "ratings": 5,
+   "avg": 5
+  }
+ ],
+ "fr|fr_fr|gestionnaire abonnements": [
+  {
+   "id": 6695762458,
+   "name": "Gestionnaire d'Abonnements",
+   "ratings": 0,
+   "avg": 0
+  },
+  {
+   "id": 6738048353,
+   "name": "Gestionnaire d'Annulation",
+   "ratings": 1,
+   "avg": 4
+  },
+  {
+   "id": 6741497228,
+   "name": "Subflow",
+   "ratings": 641,
+   "avg": 4.88
+  },
+  {
+   "id": 6741823650,
+   "name": "Subo - Abonnements et dépenses",
+   "ratings": 33,
+   "avg": 4.88
+  },
+  {
+   "id": 1523543874,
+   "name": "Billbot - Abonnement & forfait",
+   "ratings": 26,
+   "avg": 4.73
+  },
+  {
+   "id": 6746950605,
+   "name": "Suivi des Abonnementsㅤ",
+   "ratings": 0,
+   "avg": 0
+  },
+  {
+   "id": 6759074108,
+   "name": "Pay: Gestionnaire d'Annulation",
+   "ratings": 0,
+   "avg": 0
+  },
+  {
+   "id": 1597141092,
+   "name": "Bilbird: gérer les abonnements",
+   "ratings": 0,
+   "avg": 0
+  },
+  {
+   "id": 1548193451,
+   "name": "Recur - Suivi des Abonnements",
+   "ratings": 0,
+   "avg": 0
+  },
+  {
+   "id": 6793098783,
+   "name": "Subby: Gestion Abonnements",
+   "ratings": 0,
+   "avg": 0
+  }
+ ],
+ "fr|fr_fr|annuler abonnement": [
+  {
+   "id": 6479920412,
+   "name": "Annuler: Gérer mes abonnements",
+   "ratings": 11,
+   "avg": 4.18
+  },
+  {
+   "id": 6759665390,
+   "name": "Annuler; Gérer mes abonnements",
+   "ratings": 0,
+   "avg": 0
+  },
+  {
+   "id": 6503105531,
+   "name": "Subs: Suivi Des Abonnements",
+   "ratings": 0,
+   "avg": 0
+  },
+  {
+   "id": 6789850180,
+   "name": "Gestion d’abonnement: SubIQ",
+   "ratings": 1,
+   "avg": 5
+  },
+  {
+   "id": 6752722752,
+   "name": "Abonnements - Subpli",
+   "ratings": 9,
+   "avg": 5
+  },
+  {
+   "id": 6737910715,
+   "name": "TrackMySub: Suivi Abonnement",
+   "ratings": 0,
+   "avg": 0
+  },
+  {
+   "id": 6757105265,
+   "name": "Calendrier d'abonnement",
+   "ratings": 0,
+   "avg": 0
+  },
+  {
+   "id": 6759074108,
+   "name": "Pay: Gestionnaire d'Annulation",
+   "ratings": 0,
+   "avg": 0
+  },
+  {
+   "id": 6466980694,
+   "name": "Abonnement Manager: Budget",
+   "ratings": 0,
+   "avg": 0
+  },
+  {
+   "id": 1597141092,
+   "name": "Bilbird: gérer les abonnements",
+   "ratings": 0,
+   "avg": 0
+  }
+ ],
+ "fr|fr_fr|gérer abonnements": [
+  {
+   "id": 6806204374,
+   "name": "Finerz : gérer ses abonnements",
+   "ratings": 2,
+   "avg": 5
+  },
+  {
+   "id": 1064733638,
+   "name": "Orange Pro, espace client pro",
+   "ratings": 7569,
+   "avg": 4.36
+  },
+  {
+   "id": 6479920412,
+   "name": "Annuler: Gérer mes abonnements",
+   "ratings": 11,
+   "avg": 4.18
+  },
+  {
+   "id": 1597141092,
+   "name": "Bilbird: gérer les abonnements",
+   "ratings": 0,
+   "avg": 0
+  },
+  {
+   "id": 6748385943,
+   "name": "papernest - mes abonnements",
+   "ratings": 30,
+   "avg": 4.73
+  },
+  {
+   "id": 6814776483,
+   "name": "Spook : Gérer ses abonnements",
+   "ratings": 0,
+   "avg": 0
+  },
+  {
+   "id": 6759665390,
+   "name": "Annuler; Gérer mes abonnements",
+   "ratings": 0,
+   "avg": 0
+  },
+  {
+   "id": 1591020291,
+   "name": "SubsCrab gestion d'abonnements",
+   "ratings": 7,
+   "avg": 3.29
+  },
+  {
+   "id": 6468365494,
+   "name": "Suivi des abonnements",
+   "ratings": 0,
+   "avg": 0
+  },
+  {
+   "id": 900890647,
+   "name": "Gestion de budget - Money Flow",
+   "ratings": 342,
+   "avg": 4.57
+  }
+ ],
+ "fr|fr_fr|rappel facture": [
+  {
+   "id": 1604493670,
+   "name": "Rappel de factures | Avizo",
+   "ratings": 0,
+   "avg": 0
+  },
+  {
+   "id": 6755009082,
+   "name": "Rappel de Factures - BillSnap",
+   "ratings": 0,
+   "avg": 0
+  },
+  {
+   "id": 1454624499,
+   "name": "Factures, budget et dépenses",
+   "ratings": 5,
+   "avg": 4.8
+  },
+  {
+   "id": 1090844612,
+   "name": "Calcul TVA HT TTC Facture",
+   "ratings": 9,
+   "avg": 4.22
+  },
+  {
+   "id": 1519946553,
+   "name": "Abonnement & Facture: Subtrack",
+   "ratings": 141,
+   "avg": 4.49
+  },
+  {
+   "id": 6466276725,
+   "name": "Facture Devis Reçu Facturation",
+   "ratings": 2,
+   "avg": 5
+  },
+  {
+   "id": 6738703020,
+   "name": "Bill up - Facture éléctronique",
+   "ratings": 17,
+   "avg": 5
+  },
+  {
+   "id": 468993411,
+   "name": "Moniteur de Factures Pro",
+   "ratings": 2,
+   "avg": 4.5
+  },
+  {
+   "id": 1593868439,
+   "name": "Today's Budget",
+   "ratings": 74,
+   "avg": 4.66
+  },
+  {
+   "id": 6796624122,
+   "name": "Ownli : Garanties & Factures",
+   "ratings": 0,
+   "avg": 0
+  }
+ ],
+ "fr|fr_fr|rappel essai gratuit": [
+  {
+   "id": 1519946553,
+   "name": "Abonnement & Facture: Subtrack",
+   "ratings": 141,
+   "avg": 4.49
+  },
+  {
+   "id": 6789850180,
+   "name": "Gestion d’abonnement: SubIQ",
+   "ratings": 1,
+   "avg": 5
+  },
+  {
+   "id": 6738005972,
+   "name": "Subz - Suivi Abonnements",
+   "ratings": 5,
+   "avg": 5
+  },
+  {
+   "id": 6755717606,
+   "name": "Subby - Gestion abonnements",
+   "ratings": 0,
+   "avg": 0
+  },
+  {
+   "id": 6747663809,
+   "name": "Gestion abonnements: Reko",
+   "ratings": 3,
+   "avg": 5
+  },
+  {
+   "id": 6793098783,
+   "name": "Subby: Gestion Abonnements",
+   "ratings": 0,
+   "avg": 0
+  },
+  {
+   "id": 6794481193,
+   "name": "Recurry: Gestion d'abonnements",
+   "ratings": 0,
+   "avg": 0
+  },
+  {
+   "id": 6758155488,
+   "name": "SubFlow - Suivi d'abonnements",
+   "ratings": 0,
+   "avg": 0
+  },
+  {
+   "id": 1548193451,
+   "name": "Recur - Suivi des Abonnements",
+   "ratings": 0,
+   "avg": 0
+  },
+  {
+   "id": 6777347570,
+   "name": "Kern : retenir vos lectures",
+   "ratings": 0,
+   "avg": 0
+  }
+ ],
+ "fr|fr_fr|abonnements": [
+  {
+   "id": 6692620188,
+   "name": "Abonnement: Orbit",
+   "ratings": 58,
+   "avg": 4.69
+  },
+  {
+   "id": 6741823650,
+   "name": "Subo - Abonnements et dépenses",
+   "ratings": 33,
+   "avg": 4.88
+  },
+  {
+   "id": 6745022704,
+   "name": "Spliiit : partage d'abonnement",
+   "ratings": 684,
+   "avg": 4.47
+  },
+  {
+   "id": 6479920412,
+   "name": "Annuler: Gérer mes abonnements",
+   "ratings": 11,
+   "avg": 4.18
+  },
+  {
+   "id": 1059152023,
+   "name": "Bobby - Track subscriptions",
+   "ratings": 908,
+   "avg": 4.64
+  },
+  {
+   "id": 1523543874,
+   "name": "Billbot - Abonnement & forfait",
+   "ratings": 26,
+   "avg": 4.73
+  },
+  {
+   "id": 1519946553,
+   "name": "Abonnement & Facture: Subtrack",
+   "ratings": 141,
+   "avg": 4.49
+  },
+  {
+   "id": 6754086277,
+   "name": "Gestion Abonnements: SubTrack",
+   "ratings": 0,
+   "avg": 0
+  },
+  {
+   "id": 6474301740,
+   "name": "Abonnements - Abot",
+   "ratings": 10,
+   "avg": 4.7
+  },
+  {
+   "id": 6747663809,
+   "name": "Gestion abonnements: Reko",
+   "ratings": 3,
+   "avg": 5
+  }
+ ],
+ "fr|fr_fr|dépenses récurrentes": [
+  {
+   "id": 6463662930,
+   "name": "Cashew—Suivi dépenses & budget",
+   "ratings": 83,
+   "avg": 4.9
+  },
+  {
+   "id": 6806970079,
+   "name": "Skurda - Suivi des Dépenses",
+   "ratings": 0,
+   "avg": 0
+  },
+  {
+   "id": 6744532763,
+   "name": "Kelo: Suivi des dépenses",
+   "ratings": 5,
+   "avg": 5
+  },
+  {
+   "id": 6547839073,
+   "name": "Gestion abonnements · Budget",
+   "ratings": 1,
+   "avg": 5
+  },
+  {
+   "id": 6756816856,
+   "name": "Expensia – Suivi des Dépenses",
+   "ratings": 0,
+   "avg": 0
+  },
+  {
+   "id": 305418178,
+   "name": "CashTrails+: Frais et revenus",
+   "ratings": 3,
+   "avg": 3.33
+  },
+  {
+   "id": 6757228128,
+   "name": "Finoria – Finances & budget",
+   "ratings": 5,
+   "avg": 5
+  },
+  {
+   "id": 6759523889,
+   "name": "heap : Suivi des dépenses IA",
+   "ratings": 0,
+   "avg": 0
+  },
+  {
+   "id": 1475098830,
+   "name": "Pockity : Dépenses & Budget",
+   "ratings": 0,
+   "avg": 0
+  },
+  {
+   "id": 6779892758,
+   "name": "dueday - coûts récurrents",
+   "ratings": 3,
+   "avg": 5
+  }
+ ],
+ "fr|fr_fr|suivi dépenses": [
+  {
+   "id": 1510997753,
+   "name": "Gestion des dépenses et budget",
+   "ratings": 5892,
+   "avg": 4.83
+  },
+  {
+   "id": 936422955,
+   "name": "Buddy: Budget & Money Planner",
+   "ratings": 4270,
+   "avg": 4.66
+  },
+  {
+   "id": 1204316311,
+   "name": "Gestion des dépenses",
+   "ratings": 2284,
+   "avg": 4.36
+  },
+  {
+   "id": 1621020173,
+   "name": "Gestion Budget - Fleur",
+   "ratings": 1716,
+   "avg": 4.76
+  },
+  {
+   "id": 1507625362,
+   "name": "Suivi Dépenses",
+   "ratings": 5,
+   "avg": 4
+  },
+  {
+   "id": 6740523902,
+   "name": "Livre Vert: Suivi des Dépenses",
+   "ratings": 4,
+   "avg": 4.75
+  },
+  {
+   "id": 625887028,
+   "name": "Budget & Dépenses - Moneyboard",
+   "ratings": 1977,
+   "avg": 4.57
+  },
+  {
+   "id": 467936485,
+   "name": "Weple Money: Suivi Dépenses",
+   "ratings": 100,
+   "avg": 4.81
+  },
+  {
+   "id": 1185488696,
+   "name": "Money-Budget & Suivi Dépenses",
+   "ratings": 230,
+   "avg": 4.43
+  },
+  {
+   "id": 1584657093,
+   "name": "Budget et suivi de dépenses",
+   "ratings": 1148,
+   "avg": 4.86
+  }
+ ],
+ "fr|fr_fr|économiser argent": [
+  {
+   "id": 1489821186,
+   "name": "Loot - Tirelire d'argent",
+   "ratings": 330,
+   "avg": 4.6
+  },
+  {
+   "id": 1458428639,
+   "name": "Piggy: Tirelire d'argent",
+   "ratings": 241,
+   "avg": 4.64
+  },
+  {
+   "id": 1486850213,
+   "name": "Naomi I Cashback & Réductions",
+   "ratings": 4557,
+   "avg": 4.54
+  },
+  {
+   "id": 625887028,
+   "name": "Budget & Dépenses - Moneyboard",
+   "ratings": 1977,
+   "avg": 4.57
+  },
+  {
+   "id": 6768168368,
+   "name": "Florine: Budget Dépenses",
+   "ratings": 437,
+   "avg": 4.61
+  },
+  {
+   "id": 1553613188,
+   "name": "Économiser de L'argent: Calcul",
+   "ratings": 8,
+   "avg": 4.75
+  },
+  {
+   "id": 6756943126,
+   "name": "Capito : Apprendre la finance",
+   "ratings": 108,
+   "avg": 4.7
+  },
+  {
+   "id": 1422523462,
+   "name": "Jeu d'épargne d'argent",
+   "ratings": 247,
+   "avg": 4.63
+  }
+ ],
+ "de|de_de|abo manager": [
+  {
+   "id": 6741823650,
+   "name": "Subo - Abonnement Tracker",
+   "ratings": 46,
+   "avg": 4.85
+  },
+  {
+   "id": 1425151793,
+   "name": "Contract - Verträge & Abos",
+   "ratings": 512,
+   "avg": 4.52
+  },
+  {
+   "id": 6752722752,
+   "name": "Abo Manager - Subpli",
+   "ratings": 3,
+   "avg": 5
+  },
+  {
+   "id": 6747663809,
+   "name": "Abo-Manager: Reko",
+   "ratings": 6,
+   "avg": 5
+  },
+  {
+   "id": 6547839073,
+   "name": "Abo-Manager · Budget & Kosten",
+   "ratings": 0,
+   "avg": 0
+  },
+  {
+   "id": 6753790149,
+   "name": "OctoSubs: Abo-Manager",
+   "ratings": 5,
+   "avg": 4
+  },
+  {
+   "id": 6755255227,
+   "name": "Abos: Ausgaben & Kosten teilen",
+   "ratings": 6,
+   "avg": 4.33
+  },
+  {
+   "id": 6766050298,
+   "name": "Abo Manager: Subflo",
+   "ratings": 0,
+   "avg": 0
+  },
+  {
+   "id": 6740457603,
+   "name": "ReSubs - Abo Manager",
+   "ratings": 7,
+   "avg": 4.43
+  },
+  {
+   "id": 1006663287,
+   "name": "Volders: Der Kündigungsservice",
+   "ratings": 11660,
+   "avg": 4.78
+  }
+ ],
+ "de|de_de|abos verwalten": [
+  {
+   "id": 1551697409,
+   "name": "Subscriptions: Abos verwalten",
+   "ratings": 176,
+   "avg": 4.73
+  },
+  {
+   "id": 1425151793,
+   "name": "Contract - Verträge & Abos",
+   "ratings": 512,
+   "avg": 4.52
+  },
+  {
+   "id": 6770244083,
+   "name": "AboFalle – Abos verwalten",
+   "ratings": 3,
+   "avg": 5
+  },
+  {
+   "id": 1214803607,
+   "name": "Finanzguru - Konten & Verträge",
+   "ratings": 128126,
+   "avg": 4.67
+  },
+  {
+   "id": 6744294199,
+   "name": "Fixkosten Kalender",
+   "ratings": 3,
+   "avg": 3.67
+  },
+  {
+   "id": 1519946553,
+   "name": "Abos verwalten: Subtrack",
+   "ratings": 71,
+   "avg": 4.39
+  },
+  {
+   "id": 6789850180,
+   "name": "Abos verwalten: SubIQ",
+   "ratings": 2,
+   "avg": 4.5
+  },
+  {
+   "id": 6452469438,
+   "name": "Abonnements Verwalten",
+   "ratings": 2,
+   "avg": 1
+  },
+  {
+   "id": 6795576888,
+   "name": "Folder Tube: Abos verwalten",
+   "ratings": 0,
+   "avg": 0
+  },
+  {
+   "id": 6747472194,
+   "name": "Shaggle  - Abos teilen",
+   "ratings": 2,
+   "avg": 5
+  }
+ ],
+ "de|de_de|abo kündigen": [
+  {
+   "id": 409993189,
+   "name": "aboalarm - Verträge kündigen",
+   "ratings": 4426,
+   "avg": 4.33
+  },
+  {
+   "id": 1006663287,
+   "name": "Volders: Der Kündigungsservice",
+   "ratings": 11660,
+   "avg": 4.78
+  },
+  {
+   "id": 6479920412,
+   "name": "Abonnement Verwalten, Kündigen",
+   "ratings": 5,
+   "avg": 3.2
+  },
+  {
+   "id": 1425151793,
+   "name": "Contract - Verträge & Abos",
+   "ratings": 512,
+   "avg": 4.52
+  },
+  {
+   "id": 1136591708,
+   "name": "Kündigung - Verträge kündigen",
+   "ratings": 807,
+   "avg": 4.48
+  },
+  {
+   "id": 1609494732,
+   "name": "LIV - Persönlicher Organizer",
+   "ratings": 38,
+   "avg": 4.42
+  },
+  {
+   "id": 6740457603,
+   "name": "ReSubs - Abo Manager",
+   "ratings": 7,
+   "avg": 4.43
+  },
+  {
+   "id": 6751181747,
+   "name": "Subpilot - Abo kündigen",
+   "ratings": 10,
+   "avg": 4.5
+  },
+  {
+   "id": 465909912,
+   "name": "Haushaltsbuch MoneyControl",
+   "ratings": 6987,
+   "avg": 4.55
+  },
+  {
+   "id": 1212024409,
+   "name": "Monefy: Ausgaben Manager",
+   "ratings": 4801,
+   "avg": 4.52
+  }
+ ],
+ "de|de_de|abonnements verwalten": [
+  {
+   "id": 1160481993,
+   "name": "Apple Wallet",
+   "ratings": 349693,
+   "avg": 4.8
+  },
+  {
+   "id": 6692620188,
+   "name": "Abonnements Verwalten: Orbit",
+   "ratings": 34,
+   "avg": 4.21
+  },
+  {
+   "id": 1551697409,
+   "name": "Subscriptions: Abos verwalten",
+   "ratings": 176,
+   "avg": 4.73
+  },
+  {
+   "id": 6479920412,
+   "name": "Abonnement Verwalten, Kündigen",
+   "ratings": 5,
+   "avg": 3.2
+  },
+  {
+   "id": 283646709,
+   "name": "PayPal: Geld senden, verwalten",
+   "ratings": 1810165,
+   "avg": 4.81
+  },
+  {
+   "id": 6741823650,
+   "name": "Subo - Abonnement Tracker",
+   "ratings": 46,
+   "avg": 4.85
+  },
+  {
+   "id": 6758082982,
+   "name": "Spendia: Abonnements Verwalten",
+   "ratings": 0,
+   "avg": 0
+  },
+  {
+   "id": 6770244083,
+   "name": "AboFalle – Abos verwalten",
+   "ratings": 3,
+   "avg": 5
+  },
+  {
+   "id": 6738048353,
+   "name": "Kündigen Abonnement Manager",
+   "ratings": 0,
+   "avg": 0
+  },
+  {
+   "id": 6468365494,
+   "name": "Abonnement verfolgung",
+   "ratings": 0,
+   "avg": 0
+  }
+ ],
+ "de|de_de|abo tracker": [
+  {
+   "id": 6789870943,
+   "name": "Subs Abo Tracker",
+   "ratings": 7,
+   "avg": 4.86
+  },
+  {
+   "id": 6741823650,
+   "name": "Subo - Abonnement Tracker",
+   "ratings": 46,
+   "avg": 4.85
+  },
+  {
+   "id": 6793646780,
+   "name": "SubTrack - Abo Tracker",
+   "ratings": 0,
+   "avg": 0
+  },
+  {
+   "id": 1425151793,
+   "name": "Contract - Verträge & Abos",
+   "ratings": 512,
+   "avg": 4.52
+  },
+  {
+   "id": 6797443105,
+   "name": "Abo-Tracker: Kelora",
+   "ratings": 0,
+   "avg": 0
+  },
+  {
+   "id": 6753790149,
+   "name": "OctoSubs: Abo-Manager",
+   "ratings": 5,
+   "avg": 4
+  },
+  {
+   "id": 1492055171,
+   "name": "Expenses: Ausgaben-Tracker",
+   "ratings": 304,
+   "avg": 4.7
+  },
+  {
+   "id": 6740457603,
+   "name": "ReSubs - Abo Manager",
+   "ratings": 7,
+   "avg": 4.43
+  },
+  {
+   "id": 6751438405,
+   "name": "Subvia Abo-Tracker",
+   "ratings": 0,
+   "avg": 0
+  }
+ ],
+ "de|de_de|abos": [
+  {
+   "id": 6755255227,
+   "name": "Abos: Ausgaben & Kosten teilen",
+   "ratings": 6,
+   "avg": 4.33
+  },
+  {
+   "id": 1214803607,
+   "name": "Finanzguru - Konten & Verträge",
+   "ratings": 128126,
+   "avg": 4.67
+  },
+  {
+   "id": 6741823650,
+   "name": "Subo - Abonnement Tracker",
+   "ratings": 46,
+   "avg": 4.85
+  },
+  {
+   "id": 1130498044,
+   "name": "Apple Support",
+   "ratings": 2867,
+   "avg": 3.74
+  },
+  {
+   "id": 1671807047,
+   "name": "ABOS IM VBN",
+   "ratings": 118,
+   "avg": 1.75
+  },
+  {
+   "id": 1551697409,
+   "name": "Subscriptions: Abos verwalten",
+   "ratings": 176,
+   "avg": 4.73
+  },
+  {
+   "id": 6760183749,
+   "name": "Monthly: Budget Planer",
+   "ratings": 23,
+   "avg": 4.78
+  },
+  {
+   "id": 6740403312,
+   "name": "FoxyTrack: Abonnement Tracker",
+   "ratings": 1,
+   "avg": 5
+  },
+  {
+   "id": 1425151793,
+   "name": "Contract - Verträge & Abos",
+   "ratings": 512,
+   "avg": 4.52
+  },
+  {
+   "id": 6752722752,
+   "name": "Abo Manager - Subpli",
+   "ratings": 3,
+   "avg": 5
+  }
+ ],
+ "de|de_de|abo erinnerung": [
+  {
+   "id": 6761618982,
+   "name": "Censo Abo Manager: Verwalten",
+   "ratings": 1,
+   "avg": 5
+  },
+  {
+   "id": 6758649306,
+   "name": "Tabletten-Erinnerung: Cadence",
+   "ratings": 4,
+   "avg": 5
+  },
+  {
+   "id": 6815365971,
+   "name": "Rollo - Abo Verwaltung",
+   "ratings": 0,
+   "avg": 0
+  },
+  {
+   "id": 6757860829,
+   "name": "SubList: Abo-Tracker",
+   "ratings": 1,
+   "avg": 4
+  },
+  {
+   "id": 6789284358,
+   "name": "Hisabi: Abo-Tracker",
+   "ratings": 6,
+   "avg": 4.67
+  },
+  {
+   "id": 6793098783,
+   "name": "Subby: Abo-Manager & Tracker",
+   "ratings": 0,
+   "avg": 0
+  },
+  {
+   "id": 6740457603,
+   "name": "ReSubs - Abo Manager",
+   "ratings": 7,
+   "avg": 4.43
+  },
+  {
+   "id": 6789870943,
+   "name": "Subs Abo Tracker",
+   "ratings": 7,
+   "avg": 4.86
+  },
+  {
+   "id": 6747663809,
+   "name": "Abo-Manager: Reko",
+   "ratings": 6,
+   "avg": 5
+  },
+  {
+   "id": 6751438405,
+   "name": "Subvia Abo-Tracker",
+   "ratings": 0,
+   "avg": 0
+  }
+ ],
+ "de|de_de|wiederkehrende zahlungen": [
+  {
+   "id": 6766050298,
+   "name": "Abo Manager: Subflo",
+   "ratings": 0,
+   "avg": 0
+  },
+  {
+   "id": 6475526197,
+   "name": "Ausgaben-Tracker: WalletPal",
+   "ratings": 4,
+   "avg": 5
+  },
+  {
+   "id": 6504433140,
+   "name": "LaxtTime - Remember Last Time",
+   "ratings": 6,
+   "avg": 4.83
+  },
+  {
+   "id": 6593692260,
+   "name": "Abonnement-Tracker: Subtracky",
+   "ratings": 16,
+   "avg": 4.81
+  },
+  {
+   "id": 6744532763,
+   "name": "Kelo: Ausgaben-Tracker & Abos",
+   "ratings": 3,
+   "avg": 4
+  },
+  {
+   "id": 6802406882,
+   "name": "Paylendar: Zahlungskalender",
+   "ratings": 0,
+   "avg": 0
+  },
+  {
+   "id": 6806970079,
+   "name": "Skurda - Haushaltsbuch Budget",
+   "ratings": 0,
+   "avg": 0
+  },
+  {
+   "id": 6452469438,
+   "name": "Abonnements Verwalten",
+   "ratings": 2,
+   "avg": 1
+  },
+  {
+   "id": 1613079936,
+   "name": "Subscrible - Payments Tracker",
+   "ratings": 2,
+   "avg": 5
+  }
+ ],
+ "de|de_de|probeabo erinnerung": [
+  {
+   "id": 6747663809,
+   "name": "Abo-Manager: Reko",
+   "ratings": 6,
+   "avg": 5
+  },
+  {
+   "id": 6740457603,
+   "name": "ReSubs - Abo Manager",
+   "ratings": 7,
+   "avg": 4.43
+  },
+  {
+   "id": 6815365971,
+   "name": "Rollo - Abo Verwaltung",
+   "ratings": 0,
+   "avg": 0
+  },
+  {
+   "id": 6757408961,
+   "name": "Abo Tracker & Verträge: Mori",
+   "ratings": 0,
+   "avg": 0
+  },
+  {
+   "id": 6801977043,
+   "name": "Abo Tracker & Kosten: QuietSub",
+   "ratings": 0,
+   "avg": 0
+  },
+  {
+   "id": 6794894667,
+   "name": "AboPilot – Abos & Verträge",
+   "ratings": 0,
+   "avg": 0
+  },
+  {
+   "id": 1548193451,
+   "name": "Recur - Abonnement Tracker",
+   "ratings": 0,
+   "avg": 0
+  },
+  {
+   "id": 6759149326,
+   "name": "SubTracker: Abo-Verwaltung",
+   "ratings": 0,
+   "avg": 0
+  },
+  {
+   "id": 6786329336,
+   "name": "Abo Manager & Tracker: Prism",
+   "ratings": 6,
+   "avg": 5
+  },
+  {
+   "id": 6759991817,
+   "name": "TrialHero: Abo-Tracker",
+   "ratings": 1,
+   "avg": 5
+  }
+ ],
+ "de|de_de|kosten abos": [
+  {
+   "id": 6755255227,
+   "name": "Abos: Ausgaben & Kosten teilen",
+   "ratings": 6,
+   "avg": 4.33
+  },
+  {
+   "id": 6807318621,
+   "name": "Frizio – Verträge & Abos",
+   "ratings": 2,
+   "avg": 5
+  },
+  {
+   "id": 6770244083,
+   "name": "AboFalle – Abos verwalten",
+   "ratings": 3,
+   "avg": 5
+  },
+  {
+   "id": 1551697409,
+   "name": "Subscriptions: Abos verwalten",
+   "ratings": 176,
+   "avg": 4.73
+  },
+  {
+   "id": 6547839073,
+   "name": "Abo-Manager · Budget & Kosten",
+   "ratings": 0,
+   "avg": 0
+  },
+  {
+   "id": 6801977043,
+   "name": "Abo Tracker & Kosten: QuietSub",
+   "ratings": 0,
+   "avg": 0
+  },
+  {
+   "id": 6794894667,
+   "name": "AboPilot – Abos & Verträge",
+   "ratings": 0,
+   "avg": 0
+  },
+  {
+   "id": 6741823650,
+   "name": "Subo - Abonnement Tracker",
+   "ratings": 46,
+   "avg": 4.85
+  },
+  {
+   "id": 1214803607,
+   "name": "Finanzguru - Konten & Verträge",
+   "ratings": 128126,
+   "avg": 4.67
+  },
+  {
+   "id": 6758313288,
+   "name": "Moneto: Haushaltsbuch & Abos",
+   "ratings": 0,
+   "avg": 0
+  }
+ ],
+ "de|de_de|fixkosten": [
+  {
+   "id": 6760183749,
+   "name": "Monthly: Budget Planer",
+   "ratings": 23,
+   "avg": 4.78
+  },
+  {
+   "id": 1214803607,
+   "name": "Finanzguru - Konten & Verträge",
+   "ratings": 128126,
+   "avg": 4.67
+  },
+  {
+   "id": 1621020173,
+   "name": "Ausgaben Budget Planner Fleur",
+   "ratings": 2023,
+   "avg": 4.7
+  },
+  {
+   "id": 1565109843,
+   "name": "Ausgaben Manager Haushaltsbuch",
+   "ratings": 2765,
+   "avg": 4.76
+  },
+  {
+   "id": 465909912,
+   "name": "Haushaltsbuch MoneyControl",
+   "ratings": 6987,
+   "avg": 4.55
+  },
+  {
+   "id": 6744294199,
+   "name": "Fixkosten Kalender",
+   "ratings": 3,
+   "avg": 3.67
+  },
+  {
+   "id": 6759832763,
+   "name": "fixo – Fixkosten Tracker",
+   "ratings": 1,
+   "avg": 5
+  },
+  {
+   "id": 1510997753,
+   "name": "Haushaltsbuch, Kosten Mánager",
+   "ratings": 2787,
+   "avg": 4.86
+  },
+  {
+   "id": 6444774571,
+   "name": "PigMe. | Dein Haushaltsbuch",
+   "ratings": 5,
+   "avg": 4.8
+  },
+  {
+   "id": 6757201533,
+   "name": "Payment Calendar: Fixkosten",
+   "ratings": 0,
+   "avg": 0
+  }
+ ],
+ "de|de_de|geld sparen": [
+  {
+   "id": 1438255096,
+   "name": "CashCounter: Der Geldmanager",
+   "ratings": 14508,
+   "avg": 4.72
+  },
+  {
+   "id": 1621020173,
+   "name": "Ausgaben Budget Planner Fleur",
+   "ratings": 2023,
+   "avg": 4.7
+  },
+  {
+   "id": 1489821186,
+   "name": "Loot - Sparschwein Geld Sparen",
+   "ratings": 823,
+   "avg": 4.63
+  },
+  {
+   "id": 1249678565,
+   "name": "Haushaltsbuch MoneyStats",
+   "ratings": 22565,
+   "avg": 4.39
+  },
+  {
+   "id": 1214803607,
+   "name": "Finanzguru - Konten & Verträge",
+   "ratings": 128126,
+   "avg": 4.67
+  },
+  {
+   "id": 6448125092,
+   "name": "CashCounter - Money Counting",
+   "ratings": 778,
+   "avg": 4.72
+  },
+  {
+   "id": 1212024409,
+   "name": "Monefy: Ausgaben Manager",
+   "ratings": 4801,
+   "avg": 4.52
+  },
+  {
+   "id": 6445799595,
+   "name": "Sparschwein: Sparziele",
+   "ratings": 46,
+   "avg": 4.87
+  },
+  {
+   "id": 635861140,
+   "name": "Geld Zähler & Sparen: Spendee",
+   "ratings": 1120,
+   "avg": 4.45
+  },
+  {
+   "id": 1422523462,
+   "name": "52-wöchige Geldspar-Challenge",
+   "ratings": 398,
+   "avg": 4.7
+  }
+ ],
+ "jp|ja_jp|サブスク管理": [
+  {
+   "id": 1506451600,
+   "name": "サブスク管理【サブスクリプション・固定費をお得に管理】",
+   "ratings": 1217,
+   "avg": 4.53
+  },
+  {
+   "id": 6763571602,
+   "name": "サブスクBox",
+   "ratings": 286,
+   "avg": 4.4
+  },
+  {
+   "id": 6605935725,
+   "name": "支払い・サブスク管理 〜 まねかん",
+   "ratings": 124,
+   "avg": 4.56
+  },
+  {
+   "id": 6755330982,
+   "name": "サブスク管理 - 1日いくら使っている？",
+   "ratings": 28,
+   "avg": 4.82
+  },
+  {
+   "id": 594145971,
+   "name": "家計簿マネーフォワード ME - 資産管理もこれ一つで",
+   "ratings": 180893,
+   "avg": 4.38
+  },
+  {
+   "id": 6804267953,
+   "name": "サブスク管理 「サブスクラップ」｜月額課金の節約",
+   "ratings": 1,
+   "avg": 5
+  },
+  {
+   "id": 6547839073,
+   "name": "サブスク管理-サブスクリプションや月額固定費を計算して節約",
+   "ratings": 50,
+   "avg": 4.66
+  },
+  {
+   "id": 6474628995,
+   "name": "SubsHub サブスク支払日管理 サブスクリプション 支出",
+   "ratings": 77,
+   "avg": 4.65
+  },
+  {
+   "id": 6743011710,
+   "name": "finerd 家計簿 - 共有・資産管理・割り勘",
+   "ratings": 0,
+   "avg": 0
+  }
+ ],
+ "jp|ja_jp|サブスク": [
+  {
+   "id": 6763571602,
+   "name": "サブスクBox",
+   "ratings": 286,
+   "avg": 4.4
+  },
+  {
+   "id": 1506451600,
+   "name": "サブスク管理【サブスクリプション・固定費をお得に管理】",
+   "ratings": 1217,
+   "avg": 4.53
+  },
+  {
+   "id": 363590051,
+   "name": "Netflix",
+   "ratings": 1337172,
+   "avg": 4.67
+  },
+  {
+   "id": 324684580,
+   "name": "Spotify: 音楽とポッドキャスト",
+   "ratings": 5115962,
+   "avg": 4.58
+  },
+  {
+   "id": 389801252,
+   "name": "Instagram",
+   "ratings": 4201562,
+   "avg": 4.54
+  },
+  {
+   "id": 1108187390,
+   "name": "Apple Music",
+   "ratings": 459557,
+   "avg": 4.68
+  },
+  {
+   "id": 336353151,
+   "name": "SoundCloud: 音楽＆オーディオ",
+   "ratings": 92138,
+   "avg": 4.79
+  },
+  {
+   "id": 6449421897,
+   "name": "Spotifyめざまし時計 - 好きな曲でアラーム",
+   "ratings": 1099,
+   "avg": 4.01
+  },
+  {
+   "id": 6757893401,
+   "name": "サブスク解約",
+   "ratings": 0,
+   "avg": 0
+  },
+  {
+   "id": 966142320,
+   "name": "音楽 LINE MUSIC 最新の歌や曲・ミュージック多数！",
+   "ratings": 721312,
+   "avg": 4.43
+  }
+ ],
+ "jp|ja_jp|サブスク 解約": [
+  {
+   "id": 6757893401,
+   "name": "サブスク解約",
+   "ratings": 0,
+   "avg": 0
+  },
+  {
+   "id": 1589665139,
+   "name": "サブスク管理・解約忘れ防止 SUBCAN",
+   "ratings": 44,
+   "avg": 4.59
+  },
+  {
+   "id": 1506451600,
+   "name": "サブスク管理【サブスクリプション・固定費をお得に管理】",
+   "ratings": 1217,
+   "avg": 4.53
+  },
+  {
+   "id": 6785125934,
+   "name": "サブスク管理 - 固定費＆解約忘れ防止",
+   "ratings": 0,
+   "avg": 0
+  },
+  {
+   "id": 6762142477,
+   "name": "サブスク解約管理・節約: SubLess",
+   "ratings": 0,
+   "avg": 0
+  },
+  {
+   "id": 6740457603,
+   "name": "ReSubs - サブスク管理",
+   "ratings": 1,
+   "avg": 5
+  },
+  {
+   "id": 6776014241,
+   "name": "Subbi: サブスク管理・解約",
+   "ratings": 0,
+   "avg": 0
+  },
+  {
+   "id": 1470560916,
+   "name": "Pandora - サブスク管理＆支出追跡",
+   "ratings": 6,
+   "avg": 4.33
+  },
+  {
+   "id": 1635222257,
+   "name": "サブスク管理 | 固定費の把握！",
+   "ratings": 39,
+   "avg": 4.26
+  },
+  {
+   "id": 6746084960,
+   "name": "Subby-サブスク管理アプリ-",
+   "ratings": 1,
+   "avg": 5
+  }
+ ],
+ "jp|ja_jp|定額サービス 管理": [
+  {
+   "id": 6775141733,
+   "name": "サブスクメモ - 定額サービス管理",
+   "ratings": 0,
+   "avg": 0
+  },
+  {
+   "id": 6759514457,
+   "name": "マイサブスク管理 - 定額サービスの料金管理と解約忘れ防止",
+   "ratings": 0,
+   "avg": 0
+  },
+  {
+   "id": 6738356072,
+   "name": "Costly - サブスク管理 固定費の請求日をまとめて追跡",
+   "ratings": 30,
+   "avg": 4.5
+  },
+  {
+   "id": 1661226530,
+   "name": "サブリス - サブスクと固定費をリストで管理",
+   "ratings": 14,
+   "avg": 4.79
+  },
+  {
+   "id": 6757752927,
+   "name": "サブスク手帳｜月額サービスをまとめて管理",
+   "ratings": 0,
+   "avg": 0
+  },
+  {
+   "id": 6755717606,
+   "name": "Subby - サブスク管理",
+   "ratings": 0,
+   "avg": 0
+  },
+  {
+   "id": 6770971014,
+   "name": "サブスガード - サブスク管理",
+   "ratings": 0,
+   "avg": 0
+  },
+  {
+   "id": 6737581703,
+   "name": "サブスク簡単管理",
+   "ratings": 1,
+   "avg": 4
+  }
+ ],
+ "jp|ja_jp|固定費": [
+  {
+   "id": 1536249059,
+   "name": "かんたん固定費計算",
+   "ratings": 475,
+   "avg": 4.64
+  },
+  {
+   "id": 6756572025,
+   "name": "固定費管理 - 毎月の支払いまとめ",
+   "ratings": 8,
+   "avg": 4.62
+  },
+  {
+   "id": 1320730220,
+   "name": "シンプル家計簿 - 人気の家計簿アプリ（かけいぼ）",
+   "ratings": 459399,
+   "avg": 4.6
+  },
+  {
+   "id": 6788685702,
+   "name": "かんたん固定費ノート",
+   "ratings": 0,
+   "avg": 0
+  },
+  {
+   "id": 6450825850,
+   "name": "固定費管理",
+   "ratings": 0,
+   "avg": 0
+  },
+  {
+   "id": 1474572891,
+   "name": "固定費を賢く管理して支出を節約 − 固定費チェッカー",
+   "ratings": 179,
+   "avg": 3.94
+  },
+  {
+   "id": 862914097,
+   "name": "爆速家計簿 Zeny 人気のシンプルかけいぼ・おこづかい帳",
+   "ratings": 14629,
+   "avg": 4.5
+  },
+  {
+   "id": 6497714175,
+   "name": "支出管理 - シンプル家計簿・サブスク固定費も",
+   "ratings": 146,
+   "avg": 4.58
+  },
+  {
+   "id": 895466496,
+   "name": "簡単！家計簿（かんたん！かけいぼ）",
+   "ratings": 25353,
+   "avg": 4.36
+  },
+  {
+   "id": 1598027056,
+   "name": "Kotekan【サブスク・固定費管理】",
+   "ratings": 127,
+   "avg": 4.33
+  }
+ ],
+ "jp|ja_jp|無料トライアル 通知": [
+  {
+   "id": 291676451,
+   "name": "Yahoo!乗換案内",
+   "ratings": 205380,
+   "avg": 4.41
+  },
+  {
+   "id": 6820833805,
+   "name": "無料トライアル通知 Trial Radar",
+   "ratings": 0,
+   "avg": 0
+  },
+  {
+   "id": 1630700243,
+   "name": "ヴァーナル公式アプリ",
+   "ratings": 8,
+   "avg": 4.12
+  },
+  {
+   "id": 1462556749,
+   "name": "Instaチェックー：インスタ フォローチェック",
+   "ratings": 83425,
+   "avg": 4.13
+  },
+  {
+   "id": 6775012071,
+   "name": "Renewly: サブスク管理",
+   "ratings": 0,
+   "avg": 0
+  },
+  {
+   "id": 6819730388,
+   "name": "サブスクカルテ - サブスク管理・解約忘れ防止",
+   "ratings": 3,
+   "avg": 5
+  },
+  {
+   "id": 6790142349,
+   "name": "つきいくら",
+   "ratings": 2,
+   "avg": 4
+  },
+  {
+   "id": 6792523889,
+   "name": "サブスク管理 トケサブ｜解約と固定費の見直し",
+   "ratings": 2,
+   "avg": 2.5
+  },
+  {
+   "id": 6758705712,
+   "name": "Monli - サブスク管理・解約忘れ防止",
+   "ratings": 0,
+   "avg": 0
+  },
+  {
+   "id": 6766543029,
+   "name": "HubWallet（ハブウォレット） - スマート家計簿",
+   "ratings": 0,
+   "avg": 0
+  }
+ ],
+ "jp|ja_jp|解約 リマインダー": [
+  {
+   "id": 6788997767,
+   "name": "サブスク見張り番 - 解約リマインダー",
+   "ratings": 0,
+   "avg": 0
+  },
+  {
+   "id": 6803668427,
+   "name": "Subnudge - サブスク管理・解約リマインダー",
+   "ratings": 0,
+   "avg": 0
+  },
+  {
+   "id": 6804373892,
+   "name": "カイヤクン - サブスク管理・解約忘れ防止",
+   "ratings": 0,
+   "avg": 0
+  },
+  {
+   "id": 6819730388,
+   "name": "サブスクカルテ - サブスク管理・解約忘れ防止",
+   "ratings": 3,
+   "avg": 5
+  },
+  {
+   "id": 6761438616,
+   "name": "サブスクカット - サブスク管理で固定費・月額を解約して節約",
+   "ratings": 0,
+   "avg": 0
+  },
+  {
+   "id": 6808686436,
+   "name": "更新・解約期限管理",
+   "ratings": 0,
+   "avg": 0
+  },
+  {
+   "id": 6762142477,
+   "name": "サブスク解約管理・節約: SubLess",
+   "ratings": 0,
+   "avg": 0
+  },
+  {
+   "id": 6818529868,
+   "name": "消耗品の交換リマインダー＆サブスク管理",
+   "ratings": 0,
+   "avg": 0
+  },
+  {
+   "id": 6792523889,
+   "name": "サブスク管理 トケサブ｜解約と固定費の見直し",
+   "ratings": 2,
+   "avg": 2.5
+  },
+  {
+   "id": 6801220299,
+   "name": "Unsub ~サブスク解約忘れ防止アプリ ~",
+   "ratings": 0,
+   "avg": 0
+  }
+ ],
+ "jp|ja_jp|サブスク 家計簿": [
+  {
+   "id": 6799400490,
+   "name": "サブスク家計簿",
+   "ratings": 3,
+   "avg": 5
+  },
+  {
+   "id": 6497714175,
+   "name": "支出管理 - シンプル家計簿・サブスク固定費も",
+   "ratings": 146,
+   "avg": 4.58
+  },
+  {
+   "id": 6443769856,
+   "name": "クラウド家計簿 - サブスクもおこずかいも楽々管理で大人気",
+   "ratings": 16,
+   "avg": 4.44
+  },
+  {
+   "id": 1506451600,
+   "name": "サブスク管理【サブスクリプション・固定費をお得に管理】",
+   "ratings": 1217,
+   "avg": 4.53
+  },
+  {
+   "id": 6505046898,
+   "name": "うさまる家計簿(かけいぼ) かわいい&人気の家計簿アプリ",
+   "ratings": 3026,
+   "avg": 4.66
+  },
+  {
+   "id": 6743011710,
+   "name": "finerd 家計簿 - 共有・資産管理・割り勘",
+   "ratings": 0,
+   "avg": 0
+  },
+  {
+   "id": 6759412545,
+   "name": "SaveSmart-今日使える額がわかる家計簿アプリ",
+   "ratings": 16,
+   "avg": 4.69
+  },
+  {
+   "id": 6784196006,
+   "name": "サブスク管理｜固定費・家計簿・支出管理",
+   "ratings": 4,
+   "avg": 5
+  },
+  {
+   "id": 6763571602,
+   "name": "サブスクBox",
+   "ratings": 286,
+   "avg": 4.4
+  },
+  {
+   "id": 6813899989,
+   "name": "Yohaku - 家計簿とサブスク管理・無駄づかい対策",
+   "ratings": 0,
+   "avg": 0
+  }
+ ],
+ "jp|ja_jp|支払い 管理": [
+  {
+   "id": 6605935725,
+   "name": "支払い・サブスク管理 〜 まねかん",
+   "ratings": 124,
+   "avg": 4.56
+  },
+  {
+   "id": 6803200553,
+   "name": "はらった｜振込・支払い忘れ防止",
+   "ratings": 0,
+   "avg": 0
+  },
+  {
+   "id": 1320730220,
+   "name": "シンプル家計簿 - 人気の家計簿アプリ（かけいぼ）",
+   "ratings": 459399,
+   "avg": 4.6
+  },
+  {
+   "id": 1486062142,
+   "name": "paymemo – 支払い管理・家計簿",
+   "ratings": 75,
+   "avg": 3.81
+  },
+  {
+   "id": 1059224316,
+   "name": "家計簿!簡単お小遣い帳　人気の家計簿(かけいぼ)",
+   "ratings": 632771,
+   "avg": 4.63
+  },
+  {
+   "id": 6816390336,
+   "name": "クレカ管理 - 支払い・サブスク管理",
+   "ratings": 4,
+   "avg": 4.5
+  },
+  {
+   "id": 895466496,
+   "name": "簡単！家計簿（かんたん！かけいぼ）",
+   "ratings": 25353,
+   "avg": 4.36
+  },
+  {
+   "id": 1515137279,
+   "name": "シンプル「支出管理」",
+   "ratings": 965,
+   "avg": 4.28
+  },
+  {
+   "id": 1339088901,
+   "name": "超シンプル！！「支出管理」",
+   "ratings": 1211,
+   "avg": 4.44
+  }
+ ],
+ "jp|ja_jp|契約 管理": [
+  {
+   "id": 6771189794,
+   "name": "モバ管 - スマホ契約管理",
+   "ratings": 1,
+   "avg": 5
+  },
+  {
+   "id": 1571085213,
+   "name": "契約と返済 – 借用書作成・金利計算・借金返済管理アプリ",
+   "ratings": 132,
+   "avg": 4.39
+  },
+  {
+   "id": 1557198586,
+   "name": "電子印鑑GMOサイン",
+   "ratings": 106,
+   "avg": 4.19
+  },
+  {
+   "id": 1273697509,
+   "name": "勤怠管理クラウド　ＯＢＣ Ｍｙタイムレコーダ",
+   "ratings": 160,
+   "avg": 2.09
+  },
+  {
+   "id": 6769324050,
+   "name": "サブスク管理帳",
+   "ratings": 1,
+   "avg": 5
+  },
+  {
+   "id": 6769683941,
+   "name": "大家賃貸ノート 家賃・経費・確定申告の管理",
+   "ratings": 3,
+   "avg": 4.67
+  },
+  {
+   "id": 6764560923,
+   "name": "アカウントマネージャー(アカマネ) - アカウント管理アプリ",
+   "ratings": 0,
+   "avg": 0
+  },
+  {
+   "id": 6753060422,
+   "name": "サブすけ - オフラインで固定費・サブスクをかんたん管理",
+   "ratings": 0,
+   "avg": 0
+  },
+  {
+   "id": 6786194974,
+   "name": "Keepy",
+   "ratings": 17,
+   "avg": 4.71
+  },
+  {
+   "id": 6763954131,
+   "name": "PayLog: 固定費・サブスク管理",
+   "ratings": 3,
+   "avg": 5
+  }
+ ],
+ "sa|ar_sa|إدارة الاشتراكات": [
+  {
+   "id": 6768123778,
+   "name": "إدارة الاشتراكات - مصفوف",
+   "ratings": 4,
+   "avg": 5
+  },
+  {
+   "id": 6811557078,
+   "name": "إدارة الاشتراكات",
+   "ratings": 0,
+   "avg": 0
+  },
+  {
+   "id": 6796983012,
+   "name": "إدارة الاشتراكات: SubTracks",
+   "ratings": 0,
+   "avg": 0
+  },
+  {
+   "id": 6786784419,
+   "name": "إدارة الاشتراكات :  RenewBell",
+   "ratings": 0,
+   "avg": 0
+  },
+  {
+   "id": 6790950951,
+   "name": "إدارة الاشتراكات: SubClock",
+   "ratings": 0,
+   "avg": 0
+  },
+  {
+   "id": 6771217083,
+   "name": "إدارة الاشتراكات: SubscSmart",
+   "ratings": 0,
+   "avg": 0
+  },
+  {
+   "id": 6772775291,
+   "name": "إدارة الاشتراكات - Bills44",
+   "ratings": 0,
+   "avg": 0
+  },
+  {
+   "id": 6791034748,
+   "name": "إدارة الاشتراكات: Subwize",
+   "ratings": 0,
+   "avg": 0
+  },
+  {
+   "id": 6802049185,
+   "name": "إدارة الاشتراكات — Eluna",
+   "ratings": 0,
+   "avg": 0
+  },
+  {
+   "id": 6453171889,
+   "name": "Subpay - إدارة الاشتراكات",
+   "ratings": 0,
+   "avg": 0
+  }
+ ],
+ "sa|ar_sa|الاشتراكات": [
+  {
+   "id": 6453171889,
+   "name": "Subpay - إدارة الاشتراكات",
+   "ratings": 0,
+   "avg": 0
+  },
+  {
+   "id": 879915134,
+   "name": "MBC شاهد",
+   "ratings": 106980,
+   "avg": 3.26
+  },
+  {
+   "id": 6449362725,
+   "name": "Chat Ai - شات جي بي تي عربي",
+   "ratings": 3140,
+   "avg": 4.34
+  },
+  {
+   "id": 6738048353,
+   "name": "مدير إلغاء الاشتراك",
+   "ratings": 4,
+   "avg": 3.75
+  },
+  {
+   "id": 1499253615,
+   "name": "تعقب الاشتراكات - Subsee",
+   "ratings": 19,
+   "avg": 4.53
+  },
+  {
+   "id": 6762142477,
+   "name": "إلغاء الاشتراكات: SubLess",
+   "ratings": 0,
+   "avg": 0
+  },
+  {
+   "id": 6695762458,
+   "name": "مدير إلغاء الاشتراكات",
+   "ratings": 0,
+   "avg": 0
+  },
+  {
+   "id": 6761289742,
+   "name": "اشتراك - تتبع اشتراكاتك",
+   "ratings": 3,
+   "avg": 5
+  },
+  {
+   "id": 6479920412,
+   "name": "Expense & Spending Management",
+   "ratings": 3,
+   "avg": 5
+  }
+ ],
+ "sa|ar_sa|تتبع الاشتراكات": [
+  {
+   "id": 6741325579,
+   "name": "تتبع الاشتراكات: SubSense",
+   "ratings": 0,
+   "avg": 0
+  },
+  {
+   "id": 6775404394,
+   "name": "مصاريف — تتبع المصروف تلقائياً",
+   "ratings": 2,
+   "avg": 5
+  },
+  {
+   "id": 6791565138,
+   "name": "تتبع الاشتراكات: SubTrack",
+   "ratings": 0,
+   "avg": 0
+  },
+  {
+   "id": 6746819738,
+   "name": "SpendRadar: تتبع الاشتراكات",
+   "ratings": 0,
+   "avg": 0
+  },
+  {
+   "id": 6761289742,
+   "name": "اشتراك - تتبع اشتراكاتك",
+   "ratings": 3,
+   "avg": 5
+  },
+  {
+   "id": 6759410461,
+   "name": "0+: تتبع المصاريف والاشتراكات",
+   "ratings": 0,
+   "avg": 0
+  },
+  {
+   "id": 6782616108,
+   "name": "Recura: تتبع وإدارة الاشتراكات",
+   "ratings": 0,
+   "avg": 0
+  },
+  {
+   "id": 6754086277,
+   "name": "مدير الاشتراكات: SubTrack",
+   "ratings": 0,
+   "avg": 0
+  },
+  {
+   "id": 6479640056,
+   "name": "تتبع الاشتراكات والفواتير",
+   "ratings": 0,
+   "avg": 0
+  },
+  {
+   "id": 6737910715,
+   "name": "TrackMySub: تتبع الاشتراكات",
+   "ratings": 0,
+   "avg": 0
+  }
+ ],
+ "sa|ar_sa|إلغاء الاشتراكات": [
+  {
+   "id": 6695762458,
+   "name": "مدير إلغاء الاشتراكات",
+   "ratings": 0,
+   "avg": 0
+  },
+  {
+   "id": 6762142477,
+   "name": "إلغاء الاشتراكات: SubLess",
+   "ratings": 0,
+   "avg": 0
+  },
+  {
+   "id": 6738048353,
+   "name": "مدير إلغاء الاشتراك",
+   "ratings": 4,
+   "avg": 3.75
+  },
+  {
+   "id": 6769869468,
+   "name": "اشتراكاتي: إلغاء الاشتراكات",
+   "ratings": 0,
+   "avg": 0
+  },
+  {
+   "id": 6813771467,
+   "name": "Subvia: إلغاء الاشتراكات",
+   "ratings": 0,
+   "avg": 0
+  },
+  {
+   "id": 6740457603,
+   "name": "ReSubs - مدير الاشتراكات",
+   "ratings": 0,
+   "avg": 0
+  },
+  {
+   "id": 6754086277,
+   "name": "مدير الاشتراكات: SubTrack",
+   "ratings": 0,
+   "avg": 0
+  },
+  {
+   "id": 6746950605,
+   "name": "متعقب الاشتراكات",
+   "ratings": 0,
+   "avg": 0
+  },
+  {
+   "id": 6782616108,
+   "name": "Recura: تتبع وإدارة الاشتراكات",
+   "ratings": 0,
+   "avg": 0
+  },
+  {
+   "id": 6761618982,
+   "name": "متابعة الاشتراكات - Censo",
+   "ratings": 0,
+   "avg": 0
+  }
+ ],
+ "sa|ar_sa|تذكير الفواتير": [
+  {
+   "id": 6761325211,
+   "name": "Bill Reminder: تذكير الفواتير",
+   "ratings": 0,
+   "avg": 0
+  },
+  {
+   "id": 6773414241,
+   "name": "BillNest: منظم الفواتير",
+   "ratings": 0,
+   "avg": 0
+  },
+  {
+   "id": 6772262736,
+   "name": "تذكير الفواتير ومواعيد السداد",
+   "ratings": 0,
+   "avg": 0
+  },
+  {
+   "id": 6760188190,
+   "name": "تذكير الفواتير والمصاريف",
+   "ratings": 0,
+   "avg": 0
+  },
+  {
+   "id": 6787374083,
+   "name": "MAJA: تذكير الفواتير",
+   "ratings": 0,
+   "avg": 0
+  },
+  {
+   "id": 6822912068,
+   "name": "تذكر وادفع: تذكير الفواتير",
+   "ratings": 0,
+   "avg": 0
+  },
+  {
+   "id": 6772255674,
+   "name": "تذكير الفواتير ومواعيد الدفع",
+   "ratings": 0,
+   "avg": 0
+  },
+  {
+   "id": 6787216542,
+   "name": "قسطي: الفواتير والأقساط",
+   "ratings": 0,
+   "avg": 0
+  },
+  {
+   "id": 6448206280,
+   "name": "مدير المال:الفواتير والميزانية",
+   "ratings": 9,
+   "avg": 4.44
+  }
+ ],
+ "sa|ar_sa|تجربة مجانية": [
+  {
+   "id": 1615299838,
+   "name": "عداد التسبيح - التسبيح والذكر",
+   "ratings": 450,
+   "avg": 4.44
+  },
+  {
+   "id": 6742022224,
+   "name": "تجربة الملابس والأحذية بالذكاء",
+   "ratings": 0,
+   "avg": 0
+  },
+  {
+   "id": 1578154605,
+   "name": "محاكي ذكي للقصات: جرب الشعر",
+   "ratings": 23,
+   "avg": 3.96
+  },
+  {
+   "id": 1606429630,
+   "name": "Fedni - فدني",
+   "ratings": 6,
+   "avg": 4.67
+  },
+  {
+   "id": 6740768797,
+   "name": "HaircutAI: قصات شعر بالذكاء",
+   "ratings": 5,
+   "avg": 2.4
+  },
+  {
+   "id": 6761591823,
+   "name": "HairTry: تجربة تسريحات الشعر",
+   "ratings": 0,
+   "avg": 0
+  },
+  {
+   "id": 6670394055,
+   "name": "Yoho eSIM: بيانات/اتصالات",
+   "ratings": 0,
+   "avg": 0
+  },
+  {
+   "id": 1217076835,
+   "name": "Lingocard - شبكة تعلم اللغة",
+   "ratings": 0,
+   "avg": 0
+  },
+  {
+   "id": 6502877993,
+   "name": "مذكرة الصورة / IMEMO",
+   "ratings": 0,
+   "avg": 0
+  }
+ ],
+ "sa|ar_sa|مصاريف شهرية": [
+  {
+   "id": 1462286908,
+   "name": "هكبه | Hakbah",
+   "ratings": 35773,
+   "avg": 4.66
+  },
+  {
+   "id": 1401126213,
+   "name": "مصاريف الشهر - تتبع المصاريف",
+   "ratings": 5,
+   "avg": 5
+  },
+  {
+   "id": 6800371944,
+   "name": "مدريس: ميزانية، تتبع مصاريف",
+   "ratings": 7,
+   "avg": 5
+  },
+  {
+   "id": 6806298730,
+   "name": "Walti: تتبع المصاريف",
+   "ratings": 0,
+   "avg": 0
+  },
+  {
+   "id": 6806792927,
+   "name": "مصاريف - اداره المحفظة الشخصية",
+   "ratings": 0,
+   "avg": 0
+  },
+  {
+   "id": 1613883157,
+   "name": "مصاريف - Money Manager Budget",
+   "ratings": 2,
+   "avg": 3
+  },
+  {
+   "id": 1234088654,
+   "name": "نقود - برنامج ادارة صاريف و ميزانية شهرية",
+   "ratings": 4,
+   "avg": 3
+  },
+  {
+   "id": 1170797647,
+   "name": "مصاريف وميزانية: Money Gone",
+   "ratings": 4,
+   "avg": 4.75
+  },
+  {
+   "id": 486312413,
+   "name": "Money Lover: Expense Manager",
+   "ratings": 229,
+   "avg": 4.6
+  },
+  {
+   "id": 6746440646,
+   "name": "Money Manager: مصاريف وميزانية",
+   "ratings": 3,
+   "avg": 4.67
+  }
+ ],
+ "sa|ar_sa|ادخار المال": [
+  {
+   "id": 1613480345,
+   "name": "أبيان المالية: ادخر واستثمر",
+   "ratings": 11823,
+   "avg": 4.64
+  },
+  {
+   "id": 6757161204,
+   "name": "ادخار المال - باستخدام الجداول",
+   "ratings": 0,
+   "avg": 0
+  },
+  {
+   "id": 1672321079,
+   "name": "تمرة المالية: ادخار واستثمار",
+   "ratings": 6028,
+   "avg": 4.74
+  },
+  {
+   "id": 1224588436,
+   "name": "Circlys | سيركليز",
+   "ratings": 84745,
+   "avg": 4.69
+  },
+  {
+   "id": 1491121903,
+   "name": "ملاءة: تابع مصاريفك واستثمر",
+   "ratings": 4002,
+   "avg": 4.56
+  },
+  {
+   "id": 1462286908,
+   "name": "هكبه | Hakbah",
+   "ratings": 35773,
+   "avg": 4.66
+  },
+  {
+   "id": 6445799595,
+   "name": "حصالة: أهداف ادخار",
+   "ratings": 21,
+   "avg": 4.57
+  },
+  {
+   "id": 1505752740,
+   "name": "SpendNotes - Budget Tracker",
+   "ratings": 2550,
+   "avg": 4.65
+  },
+  {
+   "id": 6754965234,
+   "name": "جياد المالية",
+   "ratings": 75,
+   "avg": 4.55
+  },
+  {
+   "id": 6756964732,
+   "name": "جمعيتي - ادخار ذكي",
+   "ratings": 28,
+   "avg": 4.39
+  }
+ ],
+ "gb|en_gb|subscription tracker": [
+  {
+   "id": 1270062373,
+   "name": "Emma - Budget Planner Tracker",
+   "ratings": 26961,
+   "avg": 4.66
+  },
+  {
+   "id": 6692620188,
+   "name": "Subscription Tracker: Orbit",
+   "ratings": 79,
+   "avg": 4.7
+  },
+  {
+   "id": 1059152023,
+   "name": "Bobby - Track subscriptions",
+   "ratings": 1003,
+   "avg": 4.7
+  },
+  {
+   "id": 1495077102,
+   "name": "Budget Planner l Snoop Money",
+   "ratings": 7307,
+   "avg": 4.63
+  },
+  {
+   "id": 6781251166,
+   "name": "Subtle: Subscription Tracker",
+   "ratings": 6,
+   "avg": 4.17
+  },
+  {
+   "id": 6746950605,
+   "name": "Subscription Trackerㅤ",
+   "ratings": 5,
+   "avg": 3.4
+  },
+  {
+   "id": 6739703718,
+   "name": "Subscription Tracker: Subby",
+   "ratings": 6,
+   "avg": 5
+  },
+  {
+   "id": 1502336248,
+   "name": "Subscription Tracker",
+   "ratings": 4,
+   "avg": 4.75
+  },
+  {
+   "id": 6741823650,
+   "name": "Subo - Subscription Tracker",
+   "ratings": 17,
+   "avg": 4.88
+  },
+  {
+   "id": 6771250519,
+   "name": "Postpone: Subscription Tracker",
+   "ratings": 0,
+   "avg": 0
+  }
+ ],
+ "gb|en_gb|subscription manager": [
+  {
+   "id": 1270062373,
+   "name": "Emma - Budget Planner Tracker",
+   "ratings": 26961,
+   "avg": 4.66
+  },
+  {
+   "id": 6751181747,
+   "name": "Subpilot - Cancel Subscription",
+   "ratings": 25,
+   "avg": 4.16
+  },
+  {
+   "id": 1160481993,
+   "name": "Apple Wallet",
+   "ratings": 950090,
+   "avg": 4.82
+  },
+  {
+   "id": 6692620188,
+   "name": "Subscription Tracker: Orbit",
+   "ratings": 79,
+   "avg": 4.7
+  },
+  {
+   "id": 1059152023,
+   "name": "Bobby - Track subscriptions",
+   "ratings": 1003,
+   "avg": 4.7
+  },
+  {
+   "id": 1259029889,
+   "name": "Subscription Manager - Bills",
+   "ratings": 82,
+   "avg": 4.34
+  },
+  {
+   "id": 6752722752,
+   "name": "Subscription Manager - Subpli",
+   "ratings": 12,
+   "avg": 4.83
+  },
+  {
+   "id": 6479920412,
+   "name": "Cancel Subscriptions - Subee",
+   "ratings": 66,
+   "avg": 3.82
+  },
+  {
+   "id": 6752123162,
+   "name": "Subscription Manager: Nexpend",
+   "ratings": 1,
+   "avg": 5
+  },
+  {
+   "id": 6769329967,
+   "name": "SubSeek: Subscription Manager",
+   "ratings": 14,
+   "avg": 4.5
+  }
+ ],
+ "gb|en_gb|track subscriptions": [
+  {
+   "id": 1270062373,
+   "name": "Emma - Budget Planner Tracker",
+   "ratings": 26961,
+   "avg": 4.66
+  },
+  {
+   "id": 1059152023,
+   "name": "Bobby - Track subscriptions",
+   "ratings": 1003,
+   "avg": 4.7
+  },
+  {
+   "id": 1577082754,
+   "name": "Subscriptions - Track Expenses",
+   "ratings": 27,
+   "avg": 4.96
+  },
+  {
+   "id": 6743495252,
+   "name": "Recurroo - Track Subscriptions",
+   "ratings": 2,
+   "avg": 5
+  },
+  {
+   "id": 6759550619,
+   "name": "Substract: Track Subscriptions",
+   "ratings": 0,
+   "avg": 0
+  },
+  {
+   "id": 1567041154,
+   "name": "Track Subscriptions - DuesX",
+   "ratings": 4,
+   "avg": 4.25
+  },
+  {
+   "id": 1507248426,
+   "name": "Skaffer - Track subscriptions",
+   "ratings": 15,
+   "avg": 4.33
+  },
+  {
+   "id": 6751181747,
+   "name": "Subpilot - Cancel Subscription",
+   "ratings": 25,
+   "avg": 4.16
+  },
+  {
+   "id": 1499253615,
+   "name": "Subsee - Subs Tracking",
+   "ratings": 27,
+   "avg": 4.11
+  },
+  {
+   "id": 1259029889,
+   "name": "Subscription Manager - Bills",
+   "ratings": 82,
+   "avg": 4.34
+  }
+ ],
+ "gb|en_gb|cancel subscriptions": [
+  {
+   "id": 1160481993,
+   "name": "Apple Wallet",
+   "ratings": 950090,
+   "avg": 4.82
+  },
+  {
+   "id": 375380948,
+   "name": "Apple Store",
+   "ratings": 17057,
+   "avg": 3.46
+  },
+  {
+   "id": 6692620188,
+   "name": "Subscription Tracker: Orbit",
+   "ratings": 79,
+   "avg": 4.7
+  },
+  {
+   "id": 6479920412,
+   "name": "Cancel Subscriptions - Subee",
+   "ratings": 66,
+   "avg": 3.82
+  },
+  {
+   "id": 6759456590,
+   "name": "Cancel Subscriptions App",
+   "ratings": 2,
+   "avg": 3
+  },
+  {
+   "id": 1130498044,
+   "name": "Apple Support",
+   "ratings": 3297,
+   "avg": 3.75
+  },
+  {
+   "id": 6747262759,
+   "name": "Feenko: Cancel Subscriptions",
+   "ratings": 111,
+   "avg": 3.76
+  },
+  {
+   "id": 6751181747,
+   "name": "Subpilot - Cancel Subscription",
+   "ratings": 25,
+   "avg": 4.16
+  },
+  {
+   "id": 6746950605,
+   "name": "Subscription Trackerㅤ",
+   "ratings": 5,
+   "avg": 3.4
+  },
+  {
+   "id": 6503105531,
+   "name": "Cancel Subscriptions Refund +",
+   "ratings": 1,
+   "avg": 5
+  }
+ ],
+ "gb|en_gb|bill reminder": [
+  {
+   "id": 1352782733,
+   "name": "Bills Organizer & Reminder",
+   "ratings": 412,
+   "avg": 4.66
+  },
+  {
+   "id": 6737248419,
+   "name": "Bill Organiser",
+   "ratings": 58,
+   "avg": 4.83
+  },
+  {
+   "id": 6764664154,
+   "name": "Bill Reminder: DueMinder",
+   "ratings": 0,
+   "avg": 0
+  },
+  {
+   "id": 1561575664,
+   "name": "BillOut - Bill reminder",
+   "ratings": 35,
+   "avg": 4.89
+  },
+  {
+   "id": 6744859977,
+   "name": "Bill Reminder - Billster",
+   "ratings": 0,
+   "avg": 0
+  },
+  {
+   "id": 6755053026,
+   "name": "Bill Organizer & Subscriptions",
+   "ratings": 0,
+   "avg": 0
+  },
+  {
+   "id": 1609633170,
+   "name": "RemindPay: Bills & Warranties",
+   "ratings": 4,
+   "avg": 2.75
+  },
+  {
+   "id": 608834326,
+   "name": "Calendars・Daily Planner, To do",
+   "ratings": 25238,
+   "avg": 4.67
+  },
+  {
+   "id": 6757410072,
+   "name": "Bill Keeper: Bill Reminders",
+   "ratings": 0,
+   "avg": 0
+  },
+  {
+   "id": 6754604358,
+   "name": "Bill Organizer : Reminder",
+   "ratings": 0,
+   "avg": 0
+  }
+ ],
+ "gb|en_gb|free trial reminder": [
+  {
+   "id": 471570365,
+   "name": "Reminder & Countdown",
+   "ratings": 5636,
+   "avg": 4.74
+  },
+  {
+   "id": 6785028758,
+   "name": "TrialBell: Free Trial Reminder",
+   "ratings": 0,
+   "avg": 0
+  },
+  {
+   "id": 1071899483,
+   "name": "Reminder, Reminders with Voice",
+   "ratings": 6241,
+   "avg": 4.63
+  },
+  {
+   "id": 401949944,
+   "name": "hip: Birthday Reminder & Cards",
+   "ratings": 2644,
+   "avg": 4.57
+  },
+  {
+   "id": 371886784,
+   "name": "Alarmed ~ Reminders + Timers",
+   "ratings": 1693,
+   "avg": 4.55
+  },
+  {
+   "id": 469454389,
+   "name": "Reminder with Voice Reminders",
+   "ratings": 1626,
+   "avg": 4.63
+  },
+  {
+   "id": 395529341,
+   "name": "RE.minder",
+   "ratings": 181,
+   "avg": 4.7
+  },
+  {
+   "id": 733049800,
+   "name": "To Do Reminder with Alarm",
+   "ratings": 412,
+   "avg": 4.56
+  },
+  {
+   "id": 6761238279,
+   "name": "SubSave: Subscription Reminder",
+   "ratings": 0,
+   "avg": 0
+  },
+  {
+   "id": 647750636,
+   "name": "CountDown Tracker to Christmas Birthday Date Event",
+   "ratings": 101,
+   "avg": 4.3
+  }
+ ],
+ "gb|en_gb|trial tracker": [
+  {
+   "id": 6798929229,
+   "name": "Trial Tracker: Renewal Alerts",
+   "ratings": 0,
+   "avg": 0
+  },
+  {
+   "id": 1367983640,
+   "name": "ET Grow - Trial Tracker",
+   "ratings": 0,
+   "avg": 0
+  },
+  {
+   "id": 382233851,
+   "name": "Flightradar24 | Flight Tracker",
+   "ratings": 378082,
+   "avg": 4.79
+  },
+  {
+   "id": 1462556749,
+   "name": "Followers Reports+",
+   "ratings": 13181,
+   "avg": 4.13
+  },
+  {
+   "id": 6792602816,
+   "name": "Trial Guard: Trial Tracker",
+   "ratings": 0,
+   "avg": 0
+  },
+  {
+   "id": 651309421,
+   "name": "FollowMeter for Instagram",
+   "ratings": 3518,
+   "avg": 3.72
+  },
+  {
+   "id": 723795263,
+   "name": "Trivia Crack Premium Quiz Game",
+   "ratings": 777,
+   "avg": 4.63
+  },
+  {
+   "id": 6447958086,
+   "name": "SubGuard: Private Sub Tracker",
+   "ratings": 2,
+   "avg": 5
+  },
+  {
+   "id": 1527770686,
+   "name": "Adventure Trivia Crack",
+   "ratings": 3212,
+   "avg": 4.66
+  },
+  {
+   "id": 6759149326,
+   "name": "SubTracker: Subscriptions",
+   "ratings": 0,
+   "avg": 0
+  }
+ ],
+ "gb|en_gb|subscription reminder": [
+  {
+   "id": 6745758809,
+   "name": "Subscription-Reminder, Tracker",
+   "ratings": 0,
+   "avg": 0
+  },
+  {
+   "id": 1259029889,
+   "name": "Subscription Manager - Bills",
+   "ratings": 82,
+   "avg": 4.34
+  },
+  {
+   "id": 1059152023,
+   "name": "Bobby - Track subscriptions",
+   "ratings": 1003,
+   "avg": 4.7
+  },
+  {
+   "id": 6761238279,
+   "name": "SubSave: Subscription Reminder",
+   "ratings": 0,
+   "avg": 0
+  },
+  {
+   "id": 6755901499,
+   "name": "SubSynk: Subscription Tracker",
+   "ratings": 0,
+   "avg": 0
+  },
+  {
+   "id": 6759149326,
+   "name": "SubTracker: Subscriptions",
+   "ratings": 0,
+   "avg": 0
+  },
+  {
+   "id": 6769329967,
+   "name": "SubSeek: Subscription Manager",
+   "ratings": 14,
+   "avg": 4.5
+  },
+  {
+   "id": 6741823650,
+   "name": "Subo - Subscription Tracker",
+   "ratings": 17,
+   "avg": 4.88
+  },
+  {
+   "id": 6761034583,
+   "name": "SubFind: Subscription Tracker",
+   "ratings": 8,
+   "avg": 4.75
+  },
+  {
+   "id": 6769869468,
+   "name": "Subscription Tracker: Subly",
+   "ratings": 0,
+   "avg": 0
+  }
+ ],
+ "gb|en_gb|renewal reminder": [
+  {
+   "id": 6468871479,
+   "name": "Renewal Reminder App",
+   "ratings": 0,
+   "avg": 0
+  },
+  {
+   "id": 6817769314,
+   "name": "Kavvi: Renewal Reminders",
+   "ratings": 0,
+   "avg": 0
+  },
+  {
+   "id": 471570365,
+   "name": "Reminder & Countdown",
+   "ratings": 5636,
+   "avg": 4.74
+  },
+  {
+   "id": 1562164202,
+   "name": "Renewal from Go.Compare",
+   "ratings": 395,
+   "avg": 4.74
+  },
+  {
+   "id": 6760253828,
+   "name": "Licence Renewal Reminder AU",
+   "ratings": 0,
+   "avg": 0
+  },
+  {
+   "id": 6783293009,
+   "name": "Ototo: MOT & Car Reminder",
+   "ratings": 0,
+   "avg": 0
+  },
+  {
+   "id": 6760433928,
+   "name": "DocDue: Expiry & Bill Reminder",
+   "ratings": 0,
+   "avg": 0
+  },
+  {
+   "id": 6784379276,
+   "name": "DueNudge Renewal Reminder",
+   "ratings": 0,
+   "avg": 0
+  },
+  {
+   "id": 1071899483,
+   "name": "Reminder, Reminders with Voice",
+   "ratings": 6241,
+   "avg": 4.63
+  },
+  {
+   "id": 469454389,
+   "name": "Reminder with Voice Reminders",
+   "ratings": 1626,
+   "avg": 4.63
+  }
+ ],
+ "gb|en_gb|hidden subscriptions": [
+  {
+   "id": 6751181747,
+   "name": "Subpilot - Cancel Subscription",
+   "ratings": 25,
+   "avg": 4.16
+  },
+  {
+   "id": 1259029889,
+   "name": "Subscription Manager - Bills",
+   "ratings": 82,
+   "avg": 4.34
+  },
+  {
+   "id": 1502336248,
+   "name": "Subscription Tracker",
+   "ratings": 4,
+   "avg": 4.75
+  },
+  {
+   "id": 6758765733,
+   "name": "Subcut: Subscription Tracker",
+   "ratings": 2,
+   "avg": 5
+  },
+  {
+   "id": 1551697409,
+   "name": "Subscriptions: Manage Subs",
+   "ratings": 37,
+   "avg": 4.41
+  },
+  {
+   "id": 1059152023,
+   "name": "Bobby - Track subscriptions",
+   "ratings": 1003,
+   "avg": 4.7
+  },
+  {
+   "id": 6779691937,
+   "name": "Outflow: Subscription Tracker",
+   "ratings": 4,
+   "avg": 5
+  },
+  {
+   "id": 6761034583,
+   "name": "SubFind: Subscription Tracker",
+   "ratings": 8,
+   "avg": 4.75
+  },
+  {
+   "id": 6759149326,
+   "name": "SubTracker: Subscriptions",
+   "ratings": 0,
+   "avg": 0
+  },
+  {
+   "id": 6479920412,
+   "name": "Cancel Subscriptions - Subee",
+   "ratings": 66,
+   "avg": 3.82
+  }
+ ],
+ "gb|en_gb|recurring payments": [
+  {
+   "id": 6768056272,
+   "name": "Recurring Payments",
+   "ratings": 0,
+   "avg": 0
+  },
+  {
+   "id": 6743909628,
+   "name": "Recurring Payment Lists",
+   "ratings": 0,
+   "avg": 0
+  },
+  {
+   "id": 1259029889,
+   "name": "Subscription Manager - Bills",
+   "ratings": 82,
+   "avg": 4.34
+  },
+  {
+   "id": 1565369434,
+   "name": "Lopay: Payments & POS",
+   "ratings": 10730,
+   "avg": 4.81
+  },
+  {
+   "id": 663338402,
+   "name": "Payoneer",
+   "ratings": 890,
+   "avg": 4.31
+  },
+  {
+   "id": 1102876178,
+   "name": "Go Mobon",
+   "ratings": 14038,
+   "avg": 4.62
+  },
+  {
+   "id": 1103374458,
+   "name": "ChargeStripe: Stripe Payments",
+   "ratings": 803,
+   "avg": 4.8
+  },
+  {
+   "id": 1474022186,
+   "name": "Clearpay - Buy Now, Pay Later",
+   "ratings": 156249,
+   "avg": 4.93
+  },
+  {
+   "id": 1375356662,
+   "name": "Coinhop — Get paid on time",
+   "ratings": 0,
+   "avg": 0
+  },
+  {
+   "id": 6759335043,
+   "name": "Netto: Payments & POS",
+   "ratings": 16,
+   "avg": 4.12
+  }
+ ],
+ "gb|en_gb|find subscriptions": [
+  {
+   "id": 6751181747,
+   "name": "Subpilot - Cancel Subscription",
+   "ratings": 25,
+   "avg": 4.16
+  },
+  {
+   "id": 6479920412,
+   "name": "Cancel Subscriptions - Subee",
+   "ratings": 66,
+   "avg": 3.82
+  },
+  {
+   "id": 6759149326,
+   "name": "SubTracker: Subscriptions",
+   "ratings": 0,
+   "avg": 0
+  },
+  {
+   "id": 1059152023,
+   "name": "Bobby - Track subscriptions",
+   "ratings": 1003,
+   "avg": 4.7
+  },
+  {
+   "id": 6747262759,
+   "name": "Feenko: Cancel Subscriptions",
+   "ratings": 111,
+   "avg": 3.76
+  },
+  {
+   "id": 6692620188,
+   "name": "Subscription Tracker: Orbit",
+   "ratings": 79,
+   "avg": 4.7
+  },
+  {
+   "id": 6746950605,
+   "name": "Subscription Trackerㅤ",
+   "ratings": 5,
+   "avg": 3.4
+  },
+  {
+   "id": 6761034583,
+   "name": "SubFind: Subscription Tracker",
+   "ratings": 8,
+   "avg": 4.75
+  },
+  {
+   "id": 1551697409,
+   "name": "Subscriptions: Manage Subs",
+   "ratings": 37,
+   "avg": 4.41
+  }
+ ],
+ "au|en_au|subscription tracker": [
+  {
+   "id": 6781251166,
+   "name": "Subtle: Subscription Tracker",
+   "ratings": 2,
+   "avg": 5
+  },
+  {
+   "id": 6751181747,
+   "name": "Subpilot - Cancel Subscription",
+   "ratings": 110,
+   "avg": 4.49
+  },
+  {
+   "id": 1059152023,
+   "name": "Bobby - Track subscriptions",
+   "ratings": 557,
+   "avg": 4.71
+  },
+  {
+   "id": 6692620188,
+   "name": "Subscriptions: Orbit",
+   "ratings": 13,
+   "avg": 4.54
+  },
+  {
+   "id": 6760834143,
+   "name": "Subscription Tracker – Subs",
+   "ratings": 2,
+   "avg": 4.5
+  },
+  {
+   "id": 936422955,
+   "name": "Buddy: Money & Budget Planner",
+   "ratings": 3620,
+   "avg": 4.64
+  },
+  {
+   "id": 6739703718,
+   "name": "Subscription Tracker: Subby",
+   "ratings": 2,
+   "avg": 5
+  },
+  {
+   "id": 6783674801,
+   "name": "Subtracker AI",
+   "ratings": 1,
+   "avg": 1
+  },
+  {
+   "id": 6752399847,
+   "name": "Subscription Tracker - Submind",
+   "ratings": 2,
+   "avg": 3
+  },
+  {
+   "id": 6761424117,
+   "name": "SubCaddy: Subscription Tracker",
+   "ratings": 2,
+   "avg": 5
+  }
+ ],
+ "au|en_au|subscription manager": [
+  {
+   "id": 1059152023,
+   "name": "Bobby - Track subscriptions",
+   "ratings": 557,
+   "avg": 4.71
+  },
+  {
+   "id": 1160481993,
+   "name": "Apple Wallet",
+   "ratings": 366188,
+   "avg": 4.8
+  },
+  {
+   "id": 6751181747,
+   "name": "Subpilot - Cancel Subscription",
+   "ratings": 110,
+   "avg": 4.49
+  },
+  {
+   "id": 6769329967,
+   "name": "SubSeek: Subscription Manager",
+   "ratings": 11,
+   "avg": 4
+  },
+  {
+   "id": 6692620188,
+   "name": "Subscriptions: Orbit",
+   "ratings": 13,
+   "avg": 4.54
+  },
+  {
+   "id": 1259029889,
+   "name": "Subscription Manager - Bills",
+   "ratings": 97,
+   "avg": 4.29
+  },
+  {
+   "id": 6479920412,
+   "name": "Cancel Subscriptions & Refund",
+   "ratings": 119,
+   "avg": 3.75
+  },
+  {
+   "id": 936422955,
+   "name": "Buddy: Money & Budget Planner",
+   "ratings": 3620,
+   "avg": 4.64
+  },
+  {
+   "id": 6749508923,
+   "name": "Subscription Manager Pro",
+   "ratings": 0,
+   "avg": 0
+  },
+  {
+   "id": 6752722752,
+   "name": "Subscription Manager - Subpli",
+   "ratings": 11,
+   "avg": 4.18
+  }
+ ],
+ "au|en_au|track subscriptions": [
+  {
+   "id": 1059152023,
+   "name": "Bobby - Track subscriptions",
+   "ratings": 557,
+   "avg": 4.71
+  },
+  {
+   "id": 6743495252,
+   "name": "Recurroo - Track Subscriptions",
+   "ratings": 0,
+   "avg": 0
+  },
+  {
+   "id": 6746950605,
+   "name": "Subscription Trackerㅤ",
+   "ratings": 3,
+   "avg": 3
+  },
+  {
+   "id": 1567041154,
+   "name": "Track Subscriptions - DuesX",
+   "ratings": 0,
+   "avg": 0
+  },
+  {
+   "id": 1577082754,
+   "name": "Subscriptions - Track Expenses",
+   "ratings": 27,
+   "avg": 4.85
+  },
+  {
+   "id": 1507248426,
+   "name": "Skaffer - Track subscriptions",
+   "ratings": 4,
+   "avg": 4
+  },
+  {
+   "id": 6751181747,
+   "name": "Subpilot - Cancel Subscription",
+   "ratings": 110,
+   "avg": 4.49
+  },
+  {
+   "id": 6593692260,
+   "name": "Subscriptions: SubTracky",
+   "ratings": 7,
+   "avg": 4.43
+  },
+  {
+   "id": 1259029889,
+   "name": "Subscription Manager - Bills",
+   "ratings": 97,
+   "avg": 4.29
+  },
+  {
+   "id": 1499253615,
+   "name": "Subsee - Subs Tracking",
+   "ratings": 4,
+   "avg": 2.5
+  }
+ ],
+ "au|en_au|cancel subscriptions": [
+  {
+   "id": 375380948,
+   "name": "Apple Store",
+   "ratings": 10917,
+   "avg": 3.36
+  },
+  {
+   "id": 6751181747,
+   "name": "Subpilot - Cancel Subscription",
+   "ratings": 110,
+   "avg": 4.49
+  },
+  {
+   "id": 1160481993,
+   "name": "Apple Wallet",
+   "ratings": 366188,
+   "avg": 4.8
+  },
+  {
+   "id": 6447087374,
+   "name": "蓝色漂流瓶信-同城社交聊天交友约会",
+   "ratings": 8,
+   "avg": 4.5
+  },
+  {
+   "id": 6479920412,
+   "name": "Cancel Subscriptions & Refund",
+   "ratings": 119,
+   "avg": 3.75
+  },
+  {
+   "id": 1126574990,
+   "name": "Alou App",
+   "ratings": 0,
+   "avg": 0
+  },
+  {
+   "id": 6747262759,
+   "name": "Feenko: Cancel Subscriptions",
+   "ratings": 187,
+   "avg": 3.13
+  },
+  {
+   "id": 6692620188,
+   "name": "Subscriptions: Orbit",
+   "ratings": 13,
+   "avg": 4.54
+  },
+  {
+   "id": 1130498044,
+   "name": "Apple Support",
+   "ratings": 1728,
+   "avg": 3.58
+  },
+  {
+   "id": 6746950605,
+   "name": "Subscription Trackerㅤ",
+   "ratings": 3,
+   "avg": 3
+  }
+ ],
+ "au|en_au|bill reminder": [
+  {
+   "id": 1352782733,
+   "name": "Bills Organizer & Reminder",
+   "ratings": 386,
+   "avg": 4.57
+  },
+  {
+   "id": 1457021397,
+   "name": "Billiant: AI Bill Tracker",
+   "ratings": 96,
+   "avg": 4.62
+  },
+  {
+   "id": 1561575664,
+   "name": "BillOut - Bill Reminder",
+   "ratings": 150,
+   "avg": 4.77
+  },
+  {
+   "id": 936422955,
+   "name": "Buddy: Money & Budget Planner",
+   "ratings": 3620,
+   "avg": 4.64
+  },
+  {
+   "id": 6761325211,
+   "name": "Bill Reminder: Bill Organiser",
+   "ratings": 0,
+   "avg": 0
+  },
+  {
+   "id": 6757410072,
+   "name": "Bill Keeper: Bill Reminders",
+   "ratings": 0,
+   "avg": 0
+  },
+  {
+   "id": 1483024444,
+   "name": "喵喵记账-超可爱的萌宠记账app",
+   "ratings": 417,
+   "avg": 4.85
+  },
+  {
+   "id": 834370671,
+   "name": "Bills Manager",
+   "ratings": 48,
+   "avg": 4.69
+  },
+  {
+   "id": 473477150,
+   "name": "Bills Monitor - Bill Reminder",
+   "ratings": 76,
+   "avg": 4.62
+  },
+  {
+   "id": 6782811082,
+   "name": "Bill Reminder: Credit Cards",
+   "ratings": 0,
+   "avg": 0
+  }
+ ],
+ "au|en_au|free trial reminder": [
+  {
+   "id": 6785028758,
+   "name": "TrialBell: Free Trial Reminder",
+   "ratings": 0,
+   "avg": 0
+  },
+  {
+   "id": 471570365,
+   "name": "Reminder & Countdown",
+   "ratings": 2146,
+   "avg": 4.64
+  },
+  {
+   "id": 1071899483,
+   "name": "Reminder, Reminders with Voice",
+   "ratings": 2547,
+   "avg": 4.6
+  },
+  {
+   "id": 371886784,
+   "name": "Alarmed ~ Reminders + Timers",
+   "ratings": 1017,
+   "avg": 4.52
+  },
+  {
+   "id": 401949944,
+   "name": "hip: Birthday Reminder App",
+   "ratings": 2113,
+   "avg": 4.56
+  },
+  {
+   "id": 395529341,
+   "name": "RE.minder",
+   "ratings": 109,
+   "avg": 4.71
+  },
+  {
+   "id": 469454389,
+   "name": "Reminder with Voice Reminders",
+   "ratings": 887,
+   "avg": 4.58
+  },
+  {
+   "id": 647750636,
+   "name": "CountDown Tracker to Christmas Birthday Date Event",
+   "ratings": 69,
+   "avg": 4.26
+  },
+  {
+   "id": 733049800,
+   "name": "To Do Reminder with Alarm",
+   "ratings": 176,
+   "avg": 4.49
+  }
+ ],
+ "au|en_au|trial tracker": [
+  {
+   "id": 6798929229,
+   "name": "Trial Tracker: Renewal Alerts",
+   "ratings": 0,
+   "avg": 0
+  },
+  {
+   "id": 1367983640,
+   "name": "ET Grow - Trial Tracker",
+   "ratings": 0,
+   "avg": 0
+  },
+  {
+   "id": 382233851,
+   "name": "Flightradar24 | Flight Tracker",
+   "ratings": 138334,
+   "avg": 4.77
+  },
+  {
+   "id": 6792602816,
+   "name": "Trial Guard: Trial Tracker",
+   "ratings": 0,
+   "avg": 0
+  },
+  {
+   "id": 723795263,
+   "name": "Trivia Crack Premium Quiz Game",
+   "ratings": 2609,
+   "avg": 4.63
+  },
+  {
+   "id": 651309421,
+   "name": "FollowMeter for Instagram",
+   "ratings": 2367,
+   "avg": 3.97
+  },
+  {
+   "id": 6447958086,
+   "name": "SubGuard: Private Sub Tracker",
+   "ratings": 0,
+   "avg": 0
+  },
+  {
+   "id": 6751626547,
+   "name": "EAT AI: Calorie & Food Tracker",
+   "ratings": 0,
+   "avg": 0
+  },
+  {
+   "id": 1462556749,
+   "name": "Followers Reports+",
+   "ratings": 1041,
+   "avg": 4.22
+  }
+ ],
+ "au|en_au|subscription reminder": [
+  {
+   "id": 1259029889,
+   "name": "Subscription Manager - Bills",
+   "ratings": 97,
+   "avg": 4.29
+  },
+  {
+   "id": 1059152023,
+   "name": "Bobby - Track subscriptions",
+   "ratings": 557,
+   "avg": 4.71
+  },
+  {
+   "id": 6761034583,
+   "name": "SubFind: Subscription Tracker",
+   "ratings": 3,
+   "avg": 5
+  },
+  {
+   "id": 6769329967,
+   "name": "SubSeek: Subscription Manager",
+   "ratings": 11,
+   "avg": 4
+  },
+  {
+   "id": 6741823650,
+   "name": "Subo - Subscription Tracker",
+   "ratings": 11,
+   "avg": 5
+  },
+  {
+   "id": 6466980694,
+   "name": "Subscription Manager: Bills",
+   "ratings": 0,
+   "avg": 0
+  },
+  {
+   "id": 6773747807,
+   "name": "SubTrack Subscription Reminder",
+   "ratings": 0,
+   "avg": 0
+  },
+  {
+   "id": 6448650961,
+   "name": "Subscription Manager & Tracker",
+   "ratings": 0,
+   "avg": 0
+  },
+  {
+   "id": 6752399847,
+   "name": "Subscription Tracker - Submind",
+   "ratings": 2,
+   "avg": 3
+  },
+  {
+   "id": 6760834143,
+   "name": "Subscription Tracker – Subs",
+   "ratings": 2,
+   "avg": 4.5
+  }
+ ],
+ "au|en_au|renewal reminder": [
+  {
+   "id": 6468871479,
+   "name": "Renewal Reminder App",
+   "ratings": 3,
+   "avg": 3.67
+  },
+  {
+   "id": 471570365,
+   "name": "Reminder & Countdown",
+   "ratings": 2146,
+   "avg": 4.64
+  },
+  {
+   "id": 6783293009,
+   "name": "Ototo: MOT & Car Reminder",
+   "ratings": 0,
+   "avg": 0
+  },
+  {
+   "id": 6752631319,
+   "name": "PocketSubs - Renewal Reminders",
+   "ratings": 1,
+   "avg": 5
+  },
+  {
+   "id": 6784379276,
+   "name": "DueNudge Renewal Reminder",
+   "ratings": 0,
+   "avg": 0
+  },
+  {
+   "id": 1071899483,
+   "name": "Reminder, Reminders with Voice",
+   "ratings": 2547,
+   "avg": 4.6
+  },
+  {
+   "id": 1205113085,
+   "name": "Absolute Reminder",
+   "ratings": 0,
+   "avg": 0
+  },
+  {
+   "id": 401949944,
+   "name": "hip: Birthday Reminder App",
+   "ratings": 2113,
+   "avg": 4.56
+  },
+  {
+   "id": 6760217734,
+   "name": "CTP Reminder Australia",
+   "ratings": 0,
+   "avg": 0
+  }
+ ],
+ "au|en_au|hidden subscriptions": [
+  {
+   "id": 6751181747,
+   "name": "Subpilot - Cancel Subscription",
+   "ratings": 110,
+   "avg": 4.49
+  },
+  {
+   "id": 1259029889,
+   "name": "Subscription Manager - Bills",
+   "ratings": 97,
+   "avg": 4.29
+  },
+  {
+   "id": 1502336248,
+   "name": "Subscription Tracker",
+   "ratings": 3,
+   "avg": 4.33
+  },
+  {
+   "id": 6758765733,
+   "name": "Subcut: Subscription Manager",
+   "ratings": 1,
+   "avg": 5
+  },
+  {
+   "id": 1551697409,
+   "name": "Subscriptions: Manage Subs",
+   "ratings": 16,
+   "avg": 4.56
+  },
+  {
+   "id": 6769329967,
+   "name": "SubSeek: Subscription Manager",
+   "ratings": 11,
+   "avg": 4
+  },
+  {
+   "id": 6795091979,
+   "name": "Duefolio: Manage Subscriptions",
+   "ratings": 0,
+   "avg": 0
+  },
+  {
+   "id": 6479920412,
+   "name": "Cancel Subscriptions & Refund",
+   "ratings": 119,
+   "avg": 3.75
+  },
+  {
+   "id": 6761034583,
+   "name": "SubFind: Subscription Tracker",
+   "ratings": 3,
+   "avg": 5
+  },
+  {
+   "id": 6747262759,
+   "name": "Feenko: Cancel Subscriptions",
+   "ratings": 187,
+   "avg": 3.13
+  }
+ ],
+ "au|en_au|recurring payments": [
+  {
+   "id": 6768056272,
+   "name": "Recurring Payments",
+   "ratings": 0,
+   "avg": 0
+  },
+  {
+   "id": 1259029889,
+   "name": "Subscription Manager - Bills",
+   "ratings": 97,
+   "avg": 4.29
+  },
+  {
+   "id": 1411824359,
+   "name": "Zip - Get what you NEEDWANT™",
+   "ratings": 357236,
+   "avg": 4.89
+  },
+  {
+   "id": 1230286588,
+   "name": "Afterpay. Pay over time",
+   "ratings": 435919,
+   "avg": 4.89
+  },
+  {
+   "id": 6789639257,
+   "name": "Subby - Recurring Payments",
+   "ratings": 0,
+   "avg": 0
+  },
+  {
+   "id": 283646709,
+   "name": "PayPal - Send, Manage, Pay",
+   "ratings": 190021,
+   "avg": 4.71
+  },
+  {
+   "id": 1375356662,
+   "name": "Coinhop — Get paid on time",
+   "ratings": 0,
+   "avg": 0
+  },
+  {
+   "id": 663338402,
+   "name": "Payoneer",
+   "ratings": 242,
+   "avg": 4.54
+  },
+  {
+   "id": 1103374458,
+   "name": "ChargeStripe: Stripe Payments",
+   "ratings": 402,
+   "avg": 4.77
+  },
+  {
+   "id": 1351301966,
+   "name": "Paytm for Business",
+   "ratings": 69,
+   "avg": 4.2
+  }
+ ],
+ "au|en_au|find subscriptions": [
+  {
+   "id": 6751181747,
+   "name": "Subpilot - Cancel Subscription",
+   "ratings": 110,
+   "avg": 4.49
+  },
+  {
+   "id": 6692620188,
+   "name": "Subscriptions: Orbit",
+   "ratings": 13,
+   "avg": 4.54
+  },
+  {
+   "id": 6479920412,
+   "name": "Cancel Subscriptions & Refund",
+   "ratings": 119,
+   "avg": 3.75
+  },
+  {
+   "id": 6761034583,
+   "name": "SubFind: Subscription Tracker",
+   "ratings": 3,
+   "avg": 5
+  },
+  {
+   "id": 1059152023,
+   "name": "Bobby - Track subscriptions",
+   "ratings": 557,
+   "avg": 4.71
+  },
+  {
+   "id": 6747262759,
+   "name": "Feenko: Cancel Subscriptions",
+   "ratings": 187,
+   "avg": 3.13
+  },
+  {
+   "id": 6746950605,
+   "name": "Subscription Trackerㅤ",
+   "ratings": 3,
+   "avg": 3
+  },
+  {
+   "id": 6759149326,
+   "name": "SubTracker: Subscriptions",
+   "ratings": 1,
+   "avg": 5
+  },
+  {
+   "id": 6772289193,
+   "name": "Cancel Subscriptions & Find",
+   "ratings": 0,
+   "avg": 0
+  }
+ ]
+}

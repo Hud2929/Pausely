@@ -1,3 +1,5 @@
+> **OUTDATED: do not copy claims from this file.** It predates the removal of Smart Pause, the $9.99/$79.99 pricing, and the accuracy audit of 2026-10-19. Use `APP_STORE_LISTING.md` and `AppStoreMetadata/` as the source of truth.
+
 # App Store Connect - Subscription Products Setup
 **For:** Pausely iOS App  
 **Date:** March 5, 2026  

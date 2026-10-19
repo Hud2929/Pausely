@@ -404,16 +404,16 @@ struct PremiumWelcomeFlow: View {
 
                 OnboardingPreviewPage(
                     icon: "list.bullet.rectangle.fill",
-                    title: "Smart Detection",
-                    description: "Automatically find and organize all your subscriptions in one place.",
+                    title: "Add in Seconds",
+                    description: "Pick from 1,000+ services or paste a link, and keep every subscription in one place.",
                     preview: AnyView(SubscriptionListPreviewCard())
                 )
                 .tag(1)
 
                 OnboardingPreviewPage(
-                    icon: "sparkles",
-                    title: "AI Insights",
-                    description: "Get personalized recommendations to optimize your subscriptions and save money.",
+                    icon: "chart.bar.fill",
+                    title: "Spending Insights",
+                    description: "See what each subscription really costs and where your money goes.",
                     preview: AnyView(InsightsPreviewCard())
                 )
                 .tag(2)
