@@ -135,6 +135,10 @@ struct RootView: View {
                     #if DEBUG
                     SubscriptionEditView(subscription: DemoSubscriptions.netflix)
                     #endif
+                } else if isDemoScreen("--demo-paywall") {
+                    #if DEBUG
+                    StoreKitUpgradeView(currentSubscriptionCount: 3)
+                    #endif
                 } else if needsAgeGate, let uid = authManager.currentUser?.id {
                     AgeGateView(
                         onPassed: { Task { await ageConsent.recordConsent(userId: uid) } },

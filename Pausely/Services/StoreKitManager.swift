@@ -327,3 +327,20 @@ enum StoreKitError: Error {
 
 // MARK: - Payment Source Extension
 // Add StoreKit cases to the existing PaymentSource enum in PaymentManager.swift
+
+// MARK: - Derived pricing (always from the real App Store prices)
+extension StoreKitManager {
+    /// Percentage saved by paying yearly instead of 12 monthly payments; nil if either price is unknown.
+    var annualSavingsPercent: Int? {
+        guard let monthly = product(for: .pro), let annual = product(for: .proAnnual), monthly.price > 0 else { return nil }
+        let twelveMonths = monthly.price * 12
+        let percent = NSDecimalNumber(decimal: (twelveMonths - annual.price) / twelveMonths * 100).doubleValue.rounded()
+        return percent > 0 ? Int(percent) : nil
+    }
+
+    /// The yearly price spread over 12 months, formatted for this storefront; nil until products load.
+    var annualPricePerMonth: String? {
+        guard let annual = product(for: .proAnnual) else { return nil }
+        return (annual.price / 12).formatted(annual.priceFormatStyle)
+    }
+}

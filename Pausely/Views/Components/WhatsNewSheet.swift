@@ -5,7 +5,8 @@ import SwiftUI
 struct WhatsNewSheet: View {
     @Environment(\.dismiss) private var dismiss
 
-    private let currentVersion = "1.05"
+    /// The version the customer is actually running (not the content id below).
+    private let displayVersion = Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? ""
 
     var body: some View {
         ZStack {
@@ -30,7 +31,7 @@ struct WhatsNewSheet: View {
                             .foregroundStyle(Color.accentMint)
                     }
 
-                    Text("What's New in \(currentVersion)")
+                    Text(displayVersion.isEmpty ? "What's New" : "What's New in \(displayVersion)")
                         .font(.system(.title2, design: .rounded).weight(.bold))
                         .foregroundColor(.white)
                         .multilineTextAlignment(.center)
@@ -156,12 +157,17 @@ struct WhatsNewSheetModifier: ViewModifier {
     @AppStorage("lastSeenVersion") private var lastSeenVersion: String = ""
     @State private var showSheet = false
 
+    /// Identifies the current What's New content. Bump it only when the sheet's content changes.
     private let currentVersion = "1.05"
 
     func body(content: Content) -> some View {
         content
             .onAppear {
-                if lastSeenVersion != currentVersion {
+                if lastSeenVersion.isEmpty {
+                    // Brand-new install: nothing is "new" yet, so do not greet a first-time
+                    // customer with release notes before they have seen any value.
+                    lastSeenVersion = currentVersion
+                } else if lastSeenVersion != currentVersion {
                     // Small delay so it doesn't clash with splash/onboarding
                     DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
                         showSheet = true

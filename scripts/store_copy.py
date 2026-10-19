@@ -353,12 +353,12 @@ LISTING_TEMPLATE = """# Pausely - App Store Listing (English master)
 
 ## Pausely Pro (auto-renewing subscription group `com.pausely.premium`)
 
-| Product | ID | Period | Price (USD, intended) |
+| Product | ID | Period | Price (USD) |
 |---|---|---|---|
-| Monthly | `com.pausely.premium.monthly` | 1 month | 9.99 |
-| Annual | `com.pausely.premium.annual` | 1 year | 79.99 |
+| Monthly | `com.pausely.premium.monthly` | 1 month | 9.99 (as returned by StoreKit on 2026-10-19) |
+| Annual | `com.pausely.premium.annual` | 1 year | 39.99 (as returned by StoreKit on 2026-10-19; older repo docs said 79.99) |
 
-The 7-day free trial is configured as an introductory offer in `appstore_products.json`. **Whether it exists in App Store Connect is unverified**; check before using the word "trial" in screenshots or the description's offer wording. Verify the live prices in App Store Connect (an earlier check found $4.99 monthly with a scheduled change to $9.99).
+The 7-day free trial is configured as an introductory offer in `appstore_products.json`. **Whether it exists in App Store Connect is unverified**; check before using the word "trial" in screenshots or the description's offer wording. The prices above were observed live through StoreKit in a clean simulator; confirm them in App Store Connect once the agreement block is cleared. The launch price is still being decided (see `PRICING_PLAN` notes in `APP_STORE_LISTING_PLAN.md`).
 
 ## App Review notes (paste into App Store Connect; credentials go ONLY in the App Review Information fields there)
 ```

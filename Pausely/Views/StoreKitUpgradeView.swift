@@ -60,18 +60,23 @@ struct StoreKitUpgradeView: View {
             }
         }
 
-        var savings: String? {
+        /// "Save N%" computed from the real App Store prices; nil until StoreKit has loaded them.
+        @MainActor var savings: String? {
             switch self {
             case .monthly: return nil
             case .annual:
-                let monthly = SubscriptionTier.pro.monthlyPrice   // $7.99
-                let annual = Decimal(79.99)                        // $79.99/yr
-                let pct = ((monthly * 12 - annual) / (monthly * 12) * 100)
-                return "Save \(Int((pct as NSDecimalNumber).doubleValue.rounded()))%"
+                guard let percent = StoreKitManager.shared.annualSavingsPercent else { return nil }
+                return "Save \(percent)%"
             }
         }
 
-        var badge: String? { savings }
+        @MainActor var badge: String? { savings }
+    }
+
+    /// The price Apple will actually charge in this storefront. Until StoreKit has loaded the products
+    /// (the purchase button stays disabled meanwhile) it falls back to an estimate.
+    private func priceText(_ tier: SubscriptionTier) -> String {
+        storeManager.product(for: tier)?.displayPrice ?? tier.priceInUserCurrency()
     }
 
     var body: some View {
@@ -208,7 +213,7 @@ struct StoreKitUpgradeView: View {
             // Subtitle with pricing (always uses our pricing — StoreKit sandbox prices differ from production)
             VStack(spacing: 4) {
                 if isTrialEnabled {
-                    Text("Then \(SubscriptionTier.pro.priceInUserCurrency())/month or \(SubscriptionTier.proAnnual.priceInUserCurrency())/year")
+                    Text("Then \(priceText(.pro))/month or \(priceText(.proAnnual))/year")
                         .font(AppTypography.bodyLarge)
                         .foregroundStyle(.white.opacity(0.8))
                         .multilineTextAlignment(.center)
@@ -217,7 +222,7 @@ struct StoreKitUpgradeView: View {
                         .font(AppTypography.bodySmall)
                         .foregroundColor(.accentMint)
                 } else {
-                    Text("\(SubscriptionTier.pro.priceInUserCurrency())/month or \(SubscriptionTier.proAnnual.priceInUserCurrency())/year")
+                    Text("\(priceText(.pro))/month or \(priceText(.proAnnual))/year")
                         .font(AppTypography.bodyLarge)
                         .foregroundStyle(.white.opacity(0.8))
                         .multilineTextAlignment(.center)
@@ -300,12 +305,12 @@ struct StoreKitUpgradeView: View {
                 Spacer()
                 if isTrialEnabled {
                     VStack(spacing: 2) {
-                        Text("Then \(selectedPlan == .monthly ? SubscriptionTier.pro.priceInUserCurrency() : SubscriptionTier.proAnnual.priceInUserCurrency())\(selectedPlan.period)")
+                        Text("Then \(selectedPlan == .monthly ? priceText(.pro) : priceText(.proAnnual))\(selectedPlan.period)")
                             .font(AppTypography.bodySmall)
                             .foregroundStyle(.white.opacity(0.6))
                     }
                 } else {
-                    Text("\(selectedPlan == .monthly ? SubscriptionTier.pro.priceInUserCurrency() : SubscriptionTier.proAnnual.priceInUserCurrency())\(selectedPlan.period)")
+                    Text("\(selectedPlan == .monthly ? priceText(.pro) : priceText(.proAnnual))\(selectedPlan.period)")
                         .font(AppTypography.bodySmall)
                         .foregroundStyle(.white.opacity(0.6))
                 }
@@ -430,7 +435,7 @@ struct StoreKitUpgradeView: View {
                             .font(AppTypography.bodySmall)
                             .foregroundStyle(Color.accentMint)
                     } else {
-                        Text(selectedPlan == .monthly ? SubscriptionTier.pro.priceInUserCurrency() : SubscriptionTier.proAnnual.priceInUserCurrency())
+                        Text(selectedPlan == .monthly ? priceText(.pro) : priceText(.proAnnual))
                             .font(.title2.bold())
                             .foregroundStyle(.white)
 
@@ -460,7 +465,7 @@ struct StoreKitUpgradeView: View {
                     }
 
                     if selectedPlan == .annual {
-                        Text("\(SubscriptionTier.pro.monthlyPriceInUserCurrency())/mo equivalent")
+                        Text("\(storeManager.annualPricePerMonth ?? SubscriptionTier.proAnnual.monthlyPriceInUserCurrency())/mo equivalent")
                             .font(AppTypography.labelMedium)
                             .foregroundStyle(Color.obsidianTextTertiary)
                     }
@@ -609,7 +614,7 @@ struct StoreKitUpgradeView: View {
     private var legalDisclosureSection: some View {
         VStack(spacing: 8) {
             if isTrialEnabled {
-                Text("After your free trial, you'll be charged \(selectedPlan == .monthly ? SubscriptionTier.pro.priceInUserCurrency() + "/month" : SubscriptionTier.proAnnual.priceInUserCurrency() + "/year") unless you cancel at least 24 hours before the trial ends.")
+                Text("After your free trial, you'll be charged \(selectedPlan == .monthly ? priceText(.pro) + "/month" : priceText(.proAnnual) + "/year") unless you cancel at least 24 hours before the trial ends.")
                     .font(.system(.caption2, design: .rounded))
                     .foregroundStyle(Color.obsidianTextTertiary)
                     .multilineTextAlignment(.center)

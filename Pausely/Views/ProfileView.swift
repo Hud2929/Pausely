@@ -514,7 +514,7 @@ struct SettingsSection: View {
                 .padding(.horizontal, 4)
 
             VStack(spacing: 1) {
-                SettingsRow(icon: "arrow.down.circle.fill", title: "Import from App Store", color: Color.accentMint, action: {
+                SettingsRow(icon: "arrow.up.forward.app.fill", title: "Apple Subscriptions", color: Color.accentMint, action: {
                     if let url = URL(string: "https://apps.apple.com/account/subscriptions") {
                         openURL(url)
                     }

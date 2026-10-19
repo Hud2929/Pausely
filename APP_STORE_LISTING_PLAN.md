@@ -149,7 +149,7 @@ Rules: real in-app screens with demo data (use the DEBUG demo launch flags, neve
 - **"Scan from App Store" in the app** (Apple Subscriptions import) could never see other apps' subscriptions, because iOS does not allow it. **Removed from the Subscriptions tab on 2026-10-19.** The unused screens (`AutoDetectView`, `AppleSubscriptionScanner`, `ForgottenSubscriptionsSection`) remain as dead code and can be deleted.
 - **Remaining in-app copy** that over-promises (separate from metadata): Help FAQ says data is "encrypted end-to-end"; Profile and Help mention pausing. Audit before submission. Dead screens that still mention Smart Pause or AI (`SmartPauseAlertView`, `FinancialAdvisorView`, `ReferralSuccessView`, `PerksView`, `MVFeaturesScene`) are unreachable but should be deleted.
 - **Gmail:** do not market it until Google approves the `gmail.readonly` scope (under review since early October; a security assessment may be required).
-- **Prices:** intended $9.99 monthly and $79.99 yearly; App Store Connect was last seen at $4.99 with a scheduled change. Verify.
+- **Prices:** StoreKit returned $9.99 monthly and $39.99 yearly to a clean simulator on 2026-10-19 (older repo docs said $79.99 yearly, which was wrong). Confirm in App Store Connect; the launch price is still the owner's decision (recommended: $4.99 / $29.99).
 - **Machine-translated copy:** native review needed in five languages.
 
 ---
@@ -182,4 +182,4 @@ Regenerate any time with `python3 scripts/store_copy.py --write`. Never edit the
 3. **Public repository:** a scan on 2026-10-19 found no live API keys or tokens in tracked files or history (the Supabase anon key in the project file is public by design). The only leak is the old review password in 3 old commits, with 0 forks and 0 stars. Fix: delete or reset the `review@pausely.app` user in Supabase Auth, and create the real review account in App Store Connect only. Keep the repo public (the website and the Google verification pages are served from it); rewriting history would not add protection once the account is gone.
 4. **Seller name:** an individual membership shows a personal name on the App Store. If a company name is wanted, plan an organization enrollment (needs a D-U-N-S number).
 5. ~~"Scan from App Store" feature~~ **Resolved:** removed.
-6. **Pricing:** see `PRICING_PLAN.md` once the owner picks a launch price. The paywall's "Save 17%" badge is computed from hard-coded numbers and must read real StoreKit prices.
+6. **Pricing:** the owner picks the launch price (recommendation: $4.99/month and $29.99/year, raising yearly to about $39.99 when automatic detection ships). The paywall now reads real StoreKit prices, so a price change needs no code change, only App Store Connect.
