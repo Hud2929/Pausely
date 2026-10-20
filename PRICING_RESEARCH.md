@@ -18,15 +18,16 @@ Value the app really delivers without Gmail: one place for every subscription, t
 alternatives, and cancellation links for 900+ services.
 
 Value it **cannot** deliver without automatic detection: finding subscriptions the user forgot. You cannot type in
-what you have forgotten. That is the biggest reason people want a tracker (42% say they pay for a service they no
-longer use; about 55% have at least one unused subscription), and it is exactly what Gmail detection adds. Two
+what you have forgotten. That is the biggest reason people want a tracker (42% say they pay for a service they no longer use per the NerdWallet survey above; about 55% have at least one unused subscription per [Self](https://self.inc/info/cost-of-unused-paid-subscriptions)), and it is exactly what Gmail detection adds. Two
 claims in the old copy implied detection or automatic price-hike alerts. Both were removed on 2026-10-20: the
 price alert only compares the number the user typed last time with the number they type now.
 
 ## The consumer test (role-play: "Jordan", average American, about 6 subscriptions)
-| Moment | Reaction | Worth |
+The dollar values and the "what I would pay" figures are my judgment from the evidence below, not measured Pausely data.
+
+| Moment | Reaction | Worth (my estimate) |
 |---|---|---|
-| Sees "this year you'll spend $2,339 on subscriptions" | A real "whoa"; about 4 in 10 people drop a subscription after seeing their total | the app's strongest moment |
+| Sees "this year you'll spend $2,339 on subscriptions" | A real "whoa". People badly underestimate this number, and 42% say they pay for something they no longer use | the app's strongest moment |
 | Renewal and trial reminders | Prevents roughly one surprise charge a year | about $20-50 a year |
 | Cancel links and difficulty ratings | Saves 10-15 minutes per cancellation | small, real |
 | Has to type each subscription in | Friction. Apps that need manual entry lose users about 3x faster (vendor claim, treat as directional) | negative |
