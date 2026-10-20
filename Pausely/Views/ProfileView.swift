@@ -934,7 +934,7 @@ private struct WrappedStory1_TotalSpent: View {
                 Spacer()
 
                 VStack(alignment: .leading, spacing: 16) {
-                    Text("\(stats.year) WRAPPED")
+                    Text("\(String(stats.year)) WRAPPED")
                         .font(.system(size: 13, weight: .bold, design: .rounded))
                         .foregroundStyle(Color.white.opacity(0.5))
                         .tracking(2)
@@ -1258,7 +1258,7 @@ struct WrappedCard: View {
                             .font(.system(size: 13, weight: .bold, design: .rounded))
                             .foregroundStyle(Color.accentMint)
                             .tracking(1)
-                        Text("\(stats.year) WRAPPED")
+                        Text("\(String(stats.year)) WRAPPED")
                             .font(.system(size: 22, weight: .black, design: .rounded))
                             .foregroundStyle(.white)
                     }

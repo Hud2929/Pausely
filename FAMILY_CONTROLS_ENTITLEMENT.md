@@ -42,7 +42,6 @@ Removed the entitlement from `Pausely.entitlements`:
 | Manual usage entry | ✅ Works | ✅ Works |
 | Usage insights | ✅ Works | ✅ Works |
 | Cost per hour | ✅ Works | ✅ Works |
-| Pause suggestions | ✅ Works | ✅ Works |
 | Automatic Screen Time sync | ❌ Not available | ✅ Available |
 
 **User Experience:** 95% identical - users can still track usage manually
@@ -108,7 +107,6 @@ The app uses **manual tracking mode** which provides:
 2. **Full Feature Set**
    - Cost-per-hour calculations
    - Usage insights and recommendations
-   - Pause suggestions
    - Savings projections
 
 3. **Better Than Nothing**

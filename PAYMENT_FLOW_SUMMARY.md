@@ -17,7 +17,6 @@ A complete LemonSqueezy-integrated payment flow that elegantly handles the 3-sub
   - Annual: $79.99/year (BEST VALUE badge + 33% savings)
 - **Feature comparison list**:
   - Unlimited subscriptions
-  - Smart Pause feature
   - Cost per hour tracking
   - Referral rewards
   - Cancel/pause links

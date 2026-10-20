@@ -178,7 +178,7 @@ let wasteReport = familyControls.getWasteReport(for: subscriptions)
 1. DeviceActivityMonitor extension collects data in background
 2. User sees live stats in app (today/weekly usage)
 3. Cost-per-hour calculated automatically
-4. Smart pause suggestions appear for unused subscriptions
+4. Subscriptions with very little use are flagged for review
 
 ### Privacy
 - All data stays on device

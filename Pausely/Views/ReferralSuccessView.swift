@@ -306,7 +306,6 @@ struct ReferralSuccessView: View {
             // Benefits list
             VStack(alignment: .leading, spacing: 12) {
                 ReferralBenefitRow(icon: "infinity", text: "Unlimited Subscriptions")
-                ReferralBenefitRow(icon: "pause.circle.fill", text: "Smart Pause Feature")
                 ReferralBenefitRow(icon: "chart.line.uptrend.xyaxis", text: "Advanced Analytics")
                 ReferralBenefitRow(icon: "headset", text: "Priority Support")
             }

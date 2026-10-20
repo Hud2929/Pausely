@@ -68,7 +68,7 @@
           },
           "localizations" : [
             {
-              "description" : "Save 50% with annual billing",
+              "description" : "Best value with yearly billing",
               "displayName" : "Pro Annual",
               "locale" : "en_US"
             }

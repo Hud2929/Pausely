@@ -97,57 +97,57 @@
         {
           "locale": "en-US",
           "display_name": "Pausely Pro Annual",
-          "description": "Save 50% with annual billing"
+          "description": "Best value with yearly billing"
         },
         {
           "locale": "en-CA",
           "display_name": "Pausely Pro Annual",
-          "description": "Save 50% with annual billing"
+          "description": "Best value with yearly billing"
         },
         {
           "locale": "en-GB",
           "display_name": "Pausely Pro Annual",
-          "description": "Save 50% with annual billing"
+          "description": "Best value with yearly billing"
         },
         {
           "locale": "en-AU",
           "display_name": "Pausely Pro Annual",
-          "description": "Save 50% with annual billing"
+          "description": "Best value with yearly billing"
         },
         {
           "locale": "fr-CA",
           "display_name": "Pausely Pro Annuel",
-          "description": "Économisez 50 % avec l'abonnement annuel"
+          "description": "Meilleur prix avec la facturation annuelle"
         },
         {
           "locale": "fr-FR",
           "display_name": "Pausely Pro Annuel",
-          "description": "Économisez 50 % avec l'abonnement annuel"
+          "description": "Meilleur prix avec la facturation annuelle"
         },
         {
           "locale": "es-MX",
           "display_name": "Pausely Pro Anual",
-          "description": "Ahorra 50% con facturación anual"
+          "description": "El mejor precio con pago anual"
         },
         {
           "locale": "es-ES",
           "display_name": "Pausely Pro Anual",
-          "description": "Ahorra 50% con facturación anual"
+          "description": "El mejor precio con pago anual"
         },
         {
           "locale": "de-DE",
           "display_name": "Pausely Pro Jährlich",
-          "description": "Sparen Sie 50% mit jährlicher Abrechnung"
+          "description": "Bestpreis bei jährlicher Abrechnung"
         },
         {
           "locale": "ja",
           "display_name": "Pausely Pro 年額",
-          "description": "年額プランで50%お得"
+          "description": "年額プランがいちばんお得"
         },
         {
           "locale": "ar-SA",
           "display_name": "Pausely Pro سنوي",
-          "description": "وفّر 50% مع الدفع السنوي"
+          "description": "أفضل قيمة مع الدفع السنوي"
         }
       ],
       "subscription_duration": "1 Year",
@@ -165,7 +165,7 @@
       },
       "marketing_highlight": {
         "enabled": true,
-        "text": "BEST VALUE - Save 50%"
+        "text": "BEST VALUE"
       }
     }
   ],

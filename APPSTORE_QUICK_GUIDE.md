@@ -42,7 +42,7 @@ Click "Create Subscription"
    - Reference Name: `Annual Pro`
    - Product ID: `com.pausely.premium.annual` ⚠️ EXACT MATCH REQUIRED
    - Display Name: `Pausely Pro Annual`
-   - Description: `Save 50% with annual billing`
+   - Description: `Best value with yearly billing`
 
 2. **Subscription Details**
    - Duration: `1 Year`

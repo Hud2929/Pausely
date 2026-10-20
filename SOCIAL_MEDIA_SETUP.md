@@ -114,7 +114,7 @@ Stop overpaying. Start saving. Free on the App Store.
 ### Instagram Story Highlights (Launch Set)
 
 1. **How It Works** - 5-7 story slides showing app onboarding
-2. **Features** - Smart Pause, Cost Per Hour, One-Tap Cancel
+2. **Features** - Cost Per Hour, Cheaper Alternatives, Cancel Links
 3. **Reviews** - Screenshot testimonials from beta users
 4. **Referrals** - "Refer 3, Get Pro FREE" explainer
 5. **Tips** - Money-saving subscription tips
@@ -142,7 +142,7 @@ Stop overpaying. Start saving. Free on the App Store.
 | 1 | Launch announcement | Carousel (3-5 slides) | "It's here. Pausely is live." |
 | 2 | App walkthrough | Reel (15-30s) | "How to add your first subscription" |
 | 3 | Subscription trap stat | Static post | "The average person wastes $500+/year..." |
-| 4 | Smart Pause demo | Reel | "This feature caught a subscription I forgot 8 months ago" |
+| 4 | Yearly total reveal | Reel | "I added my subscriptions and saw what they cost per year" |
 | 5 | Meme / relatable | Static or Reel | "Me checking my bank account after 5 free trials" |
 | 6 | Cost Per Hour explainer | Carousel | "That $15/month service? It's costing you $60/hour" |
 | 7 | User testimonial | Static (quote card) | "Saved $340 in my first month" |
@@ -151,7 +151,7 @@ Stop overpaying. Start saving. Free on the App Store.
 | 10 | Subscription tip | Static carousel | "5 subscriptions you're probably overpaying for" |
 | 11 | Behind the scenes | Reel or Stories | "Why we built Pausely" |
 | 12 | Meme / relatable | Reel | "When you realize you've been paying for Adobe for 2 years" |
-| 13 | Feature deep-dive | Carousel | "How Smart Pause calculates cost-per-hour" |
+| 13 | Feature deep-dive | Carousel | "How cost-per-hour is calculated" |
 | 14 | User-generated content repost | Static or Reel | Reshare a beta user's story |
 | 15 | Mid-month savings check | Reel | "How much have you saved this month?" |
 | 16 | Dark pattern expose | Carousel | "Companies make cancellation hard. We make it easy." |
@@ -186,7 +186,7 @@ Stop overpaying. Start saving. Free on the App Store.
 | 10 | Before/after savings | 15-30s | "My monthly spending before and after Pausely" |
 | 11 | Trending audio + app | 15-30s | Use trending sound with app screen recording |
 | 12 | "Types of subscriptions" | 30-60s | "POV: You have 47 subscriptions" |
-| 13 | Tutorial: Smart Pause | 30-60s | "How to know when you're wasting money" |
+| 13 | Tutorial: Cost per hour | 30-60s | "How to know when you're wasting money" |
 | 14 | Reaction video | 30-60s | React to someone's subscription spending |
 | 15 | Mid-month check-in | 15-30s | "How much did you save this month?" |
 | 16 | "Subscription audit" | 30-60s | "Let's audit my subscriptions together" |

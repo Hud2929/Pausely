@@ -1,47 +1,35 @@
-# 🚀 PAUSELY
+# PAUSELY
 
-**The Revolutionary Subscription Manager**  
-[![Build Status](https://img.shields.io/badge/build-passing-brightgreen)]()
-[![Swift Version](https://img.shields.io/badge/swift-6.0-orange)]()
+**A calm subscription tracker for iPhone**
 [![Platform](https://img.shields.io/badge/platform-iOS%2018+-blue)]()
-[![Grade](https://img.shields.io/badge/grade-1000%2F10-red)]()
 
-> Take control of your subscriptions with AI-powered insights, Screen Time integration, and intelligent savings recommendations.
+> Know what you pay for and when it renews. Reminders before free trials end and renewals hit, your true yearly total, cheaper alternatives, and direct links to cancel.
 
 ---
 
-## ✨ Features
+## Features
 
-### 🤖 AI-Powered Intelligence
-- **Waste Detection** - Identify unused subscriptions automatically
-- **Smart Pause Suggestions** - AI recommends optimal pause times
-- **Alternative Finder** - Discover cheaper alternatives
-- **Cancellation Prediction** - ML-powered churn analysis
+### Track
+- One dashboard with your weekly, monthly and yearly spend and the payments due this week
+- 1,000+ services to add in seconds, or paste a link
+- 140+ currencies with automatic conversion
 
-### 📱 Screen Time Integration
-- **Automatic Tracking** - 500+ subscription apps monitored
-- **Usage Analytics** - Cost-per-hour calculations
-- **Hidden Subscription Detection** - Find forgotten subscriptions
-- **Real-time Insights** - Live usage data
+### Get reminded
+- Renewal reminders 1, 3 or 7 days before
+- Free-trial end dates, with an alert before you are charged
 
-### 🏦 Banking Integration (Plaid)
-- **Auto-Detection** - Discover subscriptions from bank transactions
-- **Smart Categorization** - ML-powered transaction analysis
-- **Recurring Payment Detection** - Identify all recurring charges
+### Understand
+- Cost per year, and cost per hour of use (the hourly figure uses optional Screen Time access)
+- Price history for every subscription
+- Cheaper alternatives for the services you already pay for
+- Subscription Wrapped: a year in subscriptions
 
-### 🔔 Smart Notifications
-- **Renewal Reminders** - Never miss a renewal date
-- **Waste Alerts** - Get notified about unused subscriptions
-- **Trial Ending Warnings** - Cancel before being charged
-- **AI Insights** - Personalized recommendations
+### Act
+- Direct links to the cancellation page of 900+ services, with difficulty ratings from other users
 
-### 💎 Premium Features
-- Unlimited subscriptions tracking
-- Full AI analytics
-- Screen Time integration
-- Banking sync
-- Advanced reports
-- Data export
+### Free and Pro
+- Free: up to 5 subscriptions
+- Pro: unlimited subscriptions, deep savings analysis, cheaper alternatives and the guided cancel flow
 
 ---
 

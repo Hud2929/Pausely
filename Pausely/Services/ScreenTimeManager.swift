@@ -540,7 +540,7 @@ final class ScreenTimeManager: ObservableObject {
             recommendation = .cancel("You haven't used this app in the last 30 days. Consider canceling to save \(subscription.displayMonthlyCostInUserCurrency)/month.")
         } else if monthlyHours < 2 {
             let potentialSavings = subscription.displayMonthlyCostInUserCurrency
-            recommendation = .pause("Very low usage detected. Pause for a month and save \(potentialSavings).")
+            recommendation = .review("Very low usage detected. Is it still worth \(potentialSavings) a month?")
         } else if let cph = costPerHour, cph > 10 {
             let formattedCph = CurrencyManager.shared.format(Decimal(cph))
             recommendation = .highCost("Your cost per hour is \(formattedCph) - quite expensive!")
@@ -666,29 +666,6 @@ final class ScreenTimeManager: ObservableObject {
     func getWasteReport(for subscriptions: [Subscription]) -> [SubscriptionInsight] {
         let insights = getAllInsights(for: subscriptions)
         return insights.sorted { $0.wasteScore > $1.wasteScore }
-    }
-    
-    /// Check if should suggest pause
-    func shouldSuggestPause(for subscription: Subscription, thresholdHours: Double = 2) -> PauseSuggestion? {
-        let insight = generateInsight(for: subscription)
-        
-        guard insight.monthlyHoursUsed < thresholdHours else { return nil }
-        
-        return PauseSuggestion(
-            subscription: subscription,
-            currentUsageMinutes: insight.monthlyMinutesUsed,
-            monthlyCost: subscription.monthlyCost,
-            costPerHour: insight.costPerHour.map { Decimal($0) } ?? 0,
-            suggestedDuration: insight.monthlyHoursUsed == 0 ? .threeMonths : .oneMonth,
-            potentialSavings: subscription.monthlyCost,
-            reason: insight.recommendation.description,
-            dataSource: insight.isManualEntry ? .manual : .screenTime
-        )
-    }
-    
-    /// Legacy method with threshold in minutes
-    func shouldSuggestPause(for subscription: Subscription, thresholdMinutes: Int) -> PauseSuggestion? {
-        return shouldSuggestPause(for: subscription, thresholdHours: Double(thresholdMinutes) / 60.0)
     }
     
     // MARK: - Manual Entry Support
@@ -874,13 +851,13 @@ enum UsageCategory: String, Codable, CaseIterable {
 
 enum InsightRecommendation: Codable {
     case cancel(String)
-    case pause(String)
+    case review(String)
     case highCost(String)
     case goodValue(String)
     
     var description: String {
         switch self {
-        case .cancel(let msg), .pause(let msg), .highCost(let msg), .goodValue(let msg):
+        case .cancel(let msg), .review(let msg), .highCost(let msg), .goodValue(let msg):
             return msg
         }
     }
@@ -888,7 +865,7 @@ enum InsightRecommendation: Codable {
     var type: String {
         switch self {
         case .cancel:    return "cancel"
-        case .pause:     return "pause"
+        case .review:    return "review"
         case .highCost:  return "warning"
         case .goodValue: return "success"
         }
@@ -897,7 +874,7 @@ enum InsightRecommendation: Codable {
     var icon: String {
         switch self {
         case .cancel:    return "xmark.circle.fill"
-        case .pause:     return "pause.circle.fill"
+        case .review:    return "questionmark.circle.fill"
         case .highCost:  return "dollarsign.circle.fill"
         case .goodValue: return "checkmark.seal.fill"
         }
@@ -906,17 +883,12 @@ enum InsightRecommendation: Codable {
     var color: Color {
         switch self {
         case .cancel:    return .red
-        case .pause:     return .orange
+        case .review:    return .orange
         case .highCost:  return .yellow
         case .goodValue: return .green
         }
     }
 }
-
-// MARK: - Pause Suggestion
-
-// Using existing PauseSuggestion and PauseDuration from SubscriptionActionManager
-// These are shared types across the app
 
 // MARK: - Supporting Types
 

@@ -184,11 +184,9 @@ struct Screenshot5View: View {
 
                         VStack(spacing: 12) {
                             ScreenshotPaywallFeatureRow(icon: "infinity", title: "Unlimited Subscriptions", subtitle: "Track as many subscriptions as you want")
-                            ScreenshotPaywallFeatureRow(icon: "pause.circle.fill", title: "Smart Pause", subtitle: "Pause instead of canceling subscriptions")
-                            ScreenshotPaywallFeatureRow(icon: "sparkles", title: "Subscription Genius AI", subtitle: "Your 24/7 AI subscription advisor")
-                            ScreenshotPaywallFeatureRow(icon: "chart.line.uptrend.xyaxis", title: "Cost Per Hour", subtitle: "See the true value of each service")
-                            ScreenshotPaywallFeatureRow(icon: "bell.badge.fill", title: "Price Alerts", subtitle: "Get notified before prices increase")
-                            ScreenshotPaywallFeatureRow(icon: "arrow.left.arrow.right.circle.fill", title: "Smart Alternatives", subtitle: "AI finds cheaper substitutes automatically")
+                            ScreenshotPaywallFeatureRow(icon: "chart.line.uptrend.xyaxis", title: "Deep Savings Analysis", subtitle: "See which subscriptions you barely use")
+                            ScreenshotPaywallFeatureRow(icon: "arrow.triangle.swap", title: "Cheaper Alternatives", subtitle: "Compare options for what you already pay for")
+                            ScreenshotPaywallFeatureRow(icon: "arrow.right.circle.fill", title: "Guided Cancel Flow", subtitle: "Direct links to cancel, step by step")
                         }
                     }
                     .padding(20)

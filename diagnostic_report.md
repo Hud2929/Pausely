@@ -122,7 +122,6 @@ Auth: Anonymous Key configured
 - ✅ Simulator-compatible mock mode
 - ✅ Usage tracking (manual entry)
 - ✅ Cost-per-hour calculations
-- ✅ Pause suggestions
 - ✅ 50+ known subscription apps database
 
 **UI Components:**

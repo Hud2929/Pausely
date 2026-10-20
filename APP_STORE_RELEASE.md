@@ -58,11 +58,11 @@ KEY FEATURES:
 • We never sell your information
 
 WHY PAUSELY?
-The average person wastes $273/year on unused subscriptions. Pausely's smart algorithms analyze your usage patterns and suggest the optimal pause schedule to maximize savings without missing out.
+Many people pay for subscriptions they no longer use. Pausely shows what each one costs per year and per hour of use, so you can decide what is worth keeping.
 
 SUBSCRIPTION:
 • Free: Track up to 3 subscriptions
-• Pro: Unlimited subscriptions, smart pause, perks discovery
+• Pro: Unlimited subscriptions, deep savings analysis, cheaper alternatives, guided cancel flow
 
 Download now and start saving today!
 ```
@@ -79,7 +79,6 @@ Download now and start saving today!
 ### iPhone 6.7" Display (1290×2796 pixels) - 4-6 screenshots
 1. **Home Dashboard** - Show subscription list with totals
 2. **Add Subscription** - Smart input with suggestions
-3. **Pause Suggestions** - Smart recommendations
 4. **Screen Time Integration** - Usage stats
 5. **Referral Program** - Share and earn
 6. **Dark Mode** - Beautiful dark theme
@@ -179,7 +178,6 @@ Pausely helps users track and manage their subscriptions.
 Key features to test:
 1. Smart subscription tracking with cost-per-use analysis
 2. Screen Time integration for usage insights (requires device)
-3. Pause suggestions based on usage patterns
 4. Referral system with discount codes
 
 Demo account provided above has Pro features enabled.

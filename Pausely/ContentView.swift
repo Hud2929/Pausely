@@ -139,6 +139,14 @@ struct RootView: View {
                     #if DEBUG
                     StoreKitUpgradeView(currentSubscriptionCount: 3)
                     #endif
+                } else if isDemoScreen("--demo-wrapped") {
+                    #if DEBUG
+                    SubscriptionWrappedView(subscriptions: SubscriptionStore.makeDemoSubscriptions())
+                    #endif
+                } else if isDemoScreen("--demo-browser") {
+                    #if DEBUG
+                    SubscriptionBrowserView()
+                    #endif
                 } else if needsAgeGate, let uid = authManager.currentUser?.id {
                     AgeGateView(
                         onPassed: { Task { await ageConsent.recordConsent(userId: uid) } },

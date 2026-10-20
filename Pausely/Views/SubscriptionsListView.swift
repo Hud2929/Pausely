@@ -329,12 +329,6 @@ struct EnhancedSubscriptionRow: View {
                 HStack(spacing: 8) {
                     StatusBadge(status: subscription.status)
                     
-                    if subscription.canPause {
-                        Image(systemName: "pause.circle")
-                            .font(AppTypography.labelMedium)
-                            .foregroundStyle(.orange)
-                    }
-                    
                     if subscription.currency != currencyManager.selectedCurrency {
                         Text(currencyManager.currencyFlag(for: subscription.currency))
                             .font(AppTypography.labelMedium)

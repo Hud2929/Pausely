@@ -60,9 +60,6 @@ struct ParsedResultCard: View {
                 if result.directCancelURL != nil {
                     ActionChip(icon: "xmark.circle", text: "Cancel", color: .red)
                 }
-                if result.directPauseURL != nil {
-                    ActionChip(icon: "pause.circle", text: "Pause", color: .orange)
-                }
                 if result.supportURL != nil {
                     ActionChip(icon: "questionmark.circle", text: "Support", color: .blue)
                 }

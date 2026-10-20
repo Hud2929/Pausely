@@ -90,13 +90,13 @@ The Free Tier includes:
 - Manual usage entry
 - Standard customer support
 
-**Limitations:** Free users cannot access Smart Pause functionality, unlimited subscriptions, or referral rewards beyond the free tier capabilities.
+**Limitations:** Free users can track up to 5 subscriptions. Unlimited subscriptions, deep savings analysis, cheaper alternatives and the guided cancel flow require Pro.
 
 ### 5.2 Pro Tier
 
 Pro Tier features include:
 - Unlimited subscription tracking
-- Full Smart Pause functionality with Screen Time integration
+- Deep savings analysis using optional Screen Time usage
 - Cost-per-hour calculations
 - Direct cancel/pause links for 200+ services
 - Referral program rewards (discounts and free Pro)
@@ -246,7 +246,7 @@ Initiating a chargeback without first contacting us constitutes a breach of thes
 
 You agree to use the Service only for lawful purposes and in accordance with these Terms. Acceptable use includes:
 - Managing your personal subscriptions
-- Using Smart Pause for your own accounts
+- Using the app for your own accounts
 - Participating in the referral program honestly
 - Providing feedback and suggestions
 

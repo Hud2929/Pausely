@@ -10,7 +10,7 @@ The Account Holder accepted the agreements, so App Store Connect now works.
 - A **7-day free trial** on both subscriptions for the two countries they are sold in (USA, CAN). Before this, no trial existed in App Store Connect even though the paywall promised one.
 
 **Facts the first live read revealed (the plan had assumed otherwise):**
-- **Pausely 1.0.1 is live** on the public App Store since 2026-04-14, with 0 ratings. Its listing **still contains the old false claims** (Smart Pause, "AI", "12+ subscriptions"). Only a new version can replace the description, so submitting 1.0.3 is the fix.
+- **Pausely 1.0.1 is live** on the public App Store since 2026-04-14, with 0 ratings. Its listing **still contains the old false claims** (a pause feature, "AI", "12+ subscriptions"). Only a new version can replace the description, so submitting 1.0.3 is the fix.
 - Both subscriptions are **approved and on sale at $9.99 and $39.99**, sold only in **USA and CAN**. So UK, Australia, Germany, France, Spain, Mexico, Japan and Saudi Arabia can download the app but cannot buy Pro.
 - App Store Connect's readiness check for 1.0.3: **0 blockers**, 2 optional warnings (no subscription promo images). Build 6 is the only 1.0.3 build and predates all of this work.
 
@@ -66,7 +66,7 @@ The old `APP_STORE_LISTING.md`, `AppStoreMetadata.md` and `PromotionalText.md` p
 
 | Old claim | Reality | Now |
 |---|---|---|
-| "Smart Pause", pause recommendations | Not shipped | Removed everywhere, including in-app text (Pro card, Help FAQ) |
+| A pause feature and pause recommendations | Not shipped | Removed everywhere: store copy, in-app text, the screens, the Screen Time suggestion, the website, the database column (migration provided) |
 | "Join thousands of users" | No users or ratings to count | Removed |
 | Testimonials (named people) | Fabricated | Removed |
 | "AI-powered" alternatives, "AI insights" | Rule-based | Removed from metadata, onboarding and the sandbox StoreKit file |
@@ -165,7 +165,7 @@ Rules: real in-app screens with demo data (use the DEBUG demo launch flags, neve
 - **Account block** (section 1): critical.
 - **Public repository:** it contains internal strategy and, historically, the review password. See decision 3.
 - **"Scan from App Store" in the app** (Apple Subscriptions import) could never see other apps' subscriptions, because iOS does not allow it. **Removed from the Subscriptions tab on 2026-10-19.** The unused screens (`AutoDetectView`, `AppleSubscriptionScanner`, `ForgottenSubscriptionsSection`) remain as dead code and can be deleted.
-- **Remaining in-app copy** that over-promises (separate from metadata): Help FAQ says data is "encrypted end-to-end"; Profile and Help mention pausing. Audit before submission. Dead screens that still mention Smart Pause or AI (`SmartPauseAlertView`, `FinancialAdvisorView`, `ReferralSuccessView`, `PerksView`, `MVFeaturesScene`) are unreachable but should be deleted.
+- **In-app copy:** the Help FAQ was rewritten on 2026-10-19, and the unreachable screens with false claims were deleted on 2026-10-20. `ReferralSuccessView`, `PerksView` and `MVFeaturesScene` are unreachable and still contain old wording.
 - **Gmail:** do not market it until Google approves the `gmail.readonly` scope (under review since early October; a security assessment may be required). Release builds now hide the Gmail import row (`FeatureFlags.gmailImportEnabled` in `Pausely/Core/FeatureFlags.swift`); flip it to `true` the day Google approves.
 - **Prices:** StoreKit returned $9.99 monthly and $39.99 yearly twice on 2026-10-19 (a clean simulator and a test run), so that is what App Store Connect holds today. The repo, sandbox files, product config and Terms page now say the launch prices, $4.99 and $29.99; `scripts/asc_apply.sh` changes App Store Connect to match once the account allows it.
 - **Machine-translated copy:** native review needed in five languages.
@@ -192,7 +192,7 @@ Regenerate any time with `python3 scripts/store_copy.py --write`. Never edit the
 
 - 11 locales of store copy written, limit-checked and validated by Apple's own tool.
 - Old English listing, metadata and promo files replaced; outdated docs flagged or corrected.
-- In-app Smart Pause and AI claims removed from the Pro card, Help FAQ and onboarding; app builds.
+- The pause feature and AI claims removed from the Pro card, Help FAQ and onboarding; app builds.
 - Keyword and competitor evidence saved (`scripts/aso_scan_locales_2026-10-19.json`).
 
 ## 9. Decisions needed from the owner
@@ -205,4 +205,4 @@ Regenerate any time with `python3 scripts/store_copy.py --write`. Never edit the
 6. ~~Pricing~~ **Done (owner delegated, 2026-10-19):** $4.99/month and $29.99/year, 7-day trial kept; raise yearly to about $39.99 when automatic detection ships (+33% / +$10 is inside Apple's no-consent window). The paywall reads real StoreKit prices, so later price changes need no code change.
 7. ~~Free tier~~ **Done:** 5 subscriptions (`FreeTier.subscriptionLimit`; `scripts/store_copy.py --check` fails if the store copy and the app disagree).
 8. ~~Gmail import visible before Google approval~~ **Done:** hidden in Release builds.
-9. **Still the owner's:** the Terms page promises a 14-day refund on annual plans and the privacy page still mentions "Smart Pause" (see the report). Both are legal wording, so they are left for the owner.
+9. **Still the owner's:** the Terms page promises a 14-day refund on annual plans and the privacy page wording about Screen Time data was corrected on 2026-10-20. Both are legal wording, so they are left for the owner.

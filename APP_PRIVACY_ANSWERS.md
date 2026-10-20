@@ -23,9 +23,9 @@ SDK, and does not use the advertising identifier. No tracking domains.
 synced to the database (`SupabaseManager.swift`), so "Other Usage Data" is correct. The value stays 0 unless the
 user grants Screen Time access.
 
-**Website wording to fix after Google approves the Gmail scope** (editing the privacy page during review is risky):
-`privacy.html` says Screen Time powers a "Smart Pause feature" (that feature does not exist) and that "detailed app
-usage data" is not transmitted. Aggregate usage minutes per subscription are. Reword both to match this table.
+**Website wording (corrected 2026-10-20):** `privacy.html` now says Screen Time shows how much you use each
+subscription, that detailed usage stays on the device, and that only the total minutes per subscription are saved
+to the account. Keep it in sync with this table.
 
 ## Data NOT collected
 Location, contacts, photos, audio, health, browsing or search history, advertising or device identifiers,

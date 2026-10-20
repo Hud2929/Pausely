@@ -26,7 +26,7 @@ Pausely ("we," "our," or "us") is committed to protecting your privacy. This Pri
 **Subscription Data:**
 - Subscription names and details you enter
 - Billing amounts and frequencies
-- Usage data you provide (for Smart Pause feature)
+- Usage data you provide (to calculate cost per hour)
 - Categories and tags you assign
 
 **Referral Information:**
@@ -52,7 +52,7 @@ Pausely ("we," "our," or "us") is committed to protecting your privacy. This Pri
 - Unique device identifiers (for authentication and security)
 
 **Screen Time Data (Optional):**
-- With your explicit permission only, we access Screen Time data to power the Smart Pause feature
+- With your explicit permission only, we access Screen Time data to show how much you use each subscription
 - This data is processed locally on your device
 - We do not transmit detailed app usage data to our servers
 
@@ -105,7 +105,7 @@ We use your information for the following purposes:
 ### Core Service Delivery
 - **Authentication:** Verifying your identity and maintaining secure sessions
 - **Subscription Management:** Storing and organizing your subscription data
-- **Smart Pause:** Calculating cost-per-hour and providing pause suggestions
+- **Usage insights:** Calculating cost per hour from your Screen Time usage
 - **Currency Conversion:** Converting subscription costs using real-time exchange rates
 - **Referral Program:** Tracking referrals and applying rewards
 

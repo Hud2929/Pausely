@@ -350,7 +350,6 @@ CREATE TABLE user_settings (
     -- Notification preferences
     email_notifications BOOLEAN NOT NULL DEFAULT true,
     push_notifications BOOLEAN NOT NULL DEFAULT true,
-    smart_pause_alerts BOOLEAN NOT NULL DEFAULT true,
     
     -- Feature preferences
     screen_time_tracking BOOLEAN NOT NULL DEFAULT true,
@@ -371,9 +370,8 @@ COMMENT ON TABLE user_settings IS 'Stores user preferences and app configuration
 COMMENT ON COLUMN user_settings.preferred_currency IS 'Default currency for displaying amounts (ISO 4217 code)';
 COMMENT ON COLUMN user_settings.email_notifications IS 'Whether user wants to receive email notifications';
 COMMENT ON COLUMN user_settings.push_notifications IS 'Whether user wants to receive push notifications';
-COMMENT ON COLUMN user_settings.smart_pause_alerts IS 'Whether to show smart pause suggestions';
 COMMENT ON COLUMN user_settings.screen_time_tracking IS 'Whether to enable automatic screen time tracking';
-COMMENT ON COLUMN user_settings.low_usage_threshold IS 'Minutes per month below which to suggest pausing (default 60)';
+COMMENT ON COLUMN user_settings.low_usage_threshold IS 'Minutes per month below which a subscription is flagged for review (default 60)';
 COMMENT ON COLUMN user_settings.referral_discount_used IS 'Whether the user has consumed their 30% referral discount (first month only)';
 
 -- Enable Row Level Security

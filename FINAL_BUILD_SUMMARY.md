@@ -83,7 +83,6 @@ var maxBankAccounts: Int {
 - Waste score calculation based on actual usage
 - Cost-per-hour metrics
 - Low usage alerts
-- Pause suggestions
 
 ---
 

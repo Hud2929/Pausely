@@ -1,4 +1,4 @@
-> **OUTDATED: do not copy claims from this file.** It predates the removal of Smart Pause, the $9.99/$79.99 pricing, and the accuracy audit of 2026-10-19. Use `APP_STORE_LISTING.md` and `AppStoreMetadata/` as the source of truth.
+> **OUTDATED: do not copy claims from this file.** It predates the removal of unsupported features, the $9.99/$79.99 pricing, and the accuracy audit of 2026-10-19. Use `APP_STORE_LISTING.md` and `AppStoreMetadata/` as the source of truth.
 
 # App Store Connect - Subscription Products Setup
 **For:** Pausely iOS App  
@@ -115,7 +115,6 @@ Duration: 1 Week
 ```
 Subscription Features:
 - Unlimited subscription tracking
-- Smart pause functionality
 - Cost per hour analysis
 - AI financial advisor
 - Subscription health score
@@ -188,7 +187,6 @@ FREE FEATURES:
 
 PREMIUM FEATURES (Subscription):
 - Unlimited subscriptions
-- Smart pause suggestions
 - AI financial insights
 - Cost per hour calculation
 - Alternative service recommendations

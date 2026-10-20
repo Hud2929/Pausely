@@ -380,7 +380,7 @@ The 7-day free trial is configured as an introductory offer in `appstore_product
 ```
 
 ## What this listing must never claim
-- "Smart Pause", automatic pausing, or "AI-powered" anything: the app does not do these.
+- Automatic or suggested pausing of subscriptions, or "AI-powered" anything: the app does not do these.
 - User counts, ratings, awards, press quotes, testimonials, or average-savings numbers: the app has no ratings yet and nothing is measured.
 - Gmail / email receipt scanning, until Google approves the restricted `gmail.readonly` scope and the feature ships to everyone.
 - Importing subscriptions "from the App Store": iOS does not allow one app to read another app's subscriptions.

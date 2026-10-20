@@ -454,9 +454,7 @@ struct ScreenshotAlertSettings: View {
 
             VStack(spacing: 12) {
                 ScreenshotAlertSettingRow(icon: "bell.fill", iconColor: .blue, title: "Renewal Reminders", subtitle: "3 days before", isOn: true)
-                ScreenshotAlertSettingRow(icon: "dollarsign.circle.fill", iconColor: .green, title: "Price Change Alerts", subtitle: "Instant", isOn: true)
-                ScreenshotAlertSettingRow(icon: "pause.circle.fill", iconColor: .orange, title: "Smart Pause Suggestions", subtitle: "Weekly", isOn: true)
-                ScreenshotAlertSettingRow(icon: "gift.fill", iconColor: Color.luxuryGold, title: "Perk Alerts", subtitle: "When available", isOn: false)
+                ScreenshotAlertSettingRow(icon: "hourglass", iconColor: .orange, title: "Free Trial Ending", subtitle: "1 day before", isOn: true)
             }
         }
         .padding(20)

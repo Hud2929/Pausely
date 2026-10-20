@@ -1,6 +1,6 @@
 # Pausely - App Store Metadata
 
-This file used to hold hand-written metadata that promised features the app does not have (Smart Pause, AI alternatives, user counts, savings averages) and used the wrong domain. It was removed so it cannot be copied into App Store Connect by mistake.
+This file used to hold hand-written metadata that promised features the app does not have (a pause feature, AI alternatives, user counts, savings averages) and used the wrong domain. It was removed so it cannot be copied into App Store Connect by mistake.
 
 Use these instead (all generated from `scripts/store_copy.py` + `scripts/store_locales.py`, limit-checked by `python3 scripts/store_copy.py --check`, and validated with `asc metadata validate --dir ./metadata --subscription-app`):
 

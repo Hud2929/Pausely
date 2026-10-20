@@ -47,7 +47,7 @@ struct UsageInputSheet: View {
                     }
                 }
 
-                Section(footer: Text("This helps Pausely calculate your cost per hour and suggest when to pause subscriptions to save money.")) {
+                Section(footer: Text("This helps Pausely calculate your cost per hour.")) {
                     Button(action: save) {
                         HStack {
                             Spacer()

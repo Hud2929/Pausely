@@ -212,7 +212,6 @@ let insight = familyControls.generateInsight(for: subscription)
 4. **Test Features**
    - Cost per hour calculations
    - Waste report generation
-   - Pause suggestions
 
 ---
 

@@ -88,7 +88,6 @@ CREATE TABLE IF NOT EXISTS user_settings (
     preferred_currency TEXT DEFAULT 'USD',
     email_notifications BOOLEAN DEFAULT true,
     push_notifications BOOLEAN DEFAULT true,
-    smart_pause_alerts BOOLEAN DEFAULT true,
     screen_time_tracking BOOLEAN DEFAULT true,
     low_usage_threshold INTEGER DEFAULT 60, -- minutes per month
     referral_discount_used BOOLEAN DEFAULT false, -- tracks if 30% referral discount was consumed

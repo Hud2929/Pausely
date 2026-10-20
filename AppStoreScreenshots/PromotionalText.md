@@ -2,7 +2,7 @@
 
 Promotional text (170 chars max) can be changed in App Store Connect at any time **without a new build or review**, so rotate it with the season. It is not indexed for search, so write it for people, not keywords.
 
-Rules: only claim what the app does today. No user counts, savings averages, testimonials, "AI", "Smart Pause" or Gmail scanning (see `APP_STORE_LISTING.md`, "What this listing must never claim"). Translate through `scripts/store_copy.py` and have a native speaker review before use.
+Rules: only claim what the app does today. No user counts, savings averages, testimonials, "AI", pause features or Gmail scanning (see `APP_STORE_LISTING.md`, "What this listing must never claim"). Translate through `scripts/store_copy.py` and have a native speaker review before use.
 
 ## Default (use at launch)  (135/170)
 ```

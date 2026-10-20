@@ -39,21 +39,6 @@ struct AddSubscriptionTip: Tip {
     }
 }
 
-// MARK: - Pause Tip
-struct PauseSubscriptionTip: Tip {
-    var title: Text {
-        Text("Save money with Pause")
-    }
-
-    var message: Text? {
-        Text("Temporarily pause subscriptions you aren't using. We'll remind you before they resume.")
-    }
-
-    var image: Image? {
-        Image(systemName: "pause.circle.fill")
-    }
-}
-
 // MARK: - Cost Per Use Tip
 struct CostPerUseTip: Tip {
     var title: Text {

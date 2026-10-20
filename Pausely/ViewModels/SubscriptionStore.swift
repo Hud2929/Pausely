@@ -600,9 +600,8 @@ class SubscriptionStore: ObservableObject {
                 amount: 10.00,
                 billingFrequency: .monthly,
                 nextBillingDate: calendar.date(byAdding: .day, value: 8, to: now),
-                status: .paused,
+                status: .active,
                 canPause: true,
-                pausedUntil: calendar.date(byAdding: .month, value: 2, to: now),
                 startDate: calendar.date(byAdding: .month, value: -4, to: now)
             ),
             Subscription(

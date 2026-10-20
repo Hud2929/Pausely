@@ -219,22 +219,6 @@ class PerkEngine: ObservableObject {
             ))
         }
         
-        if subscription.canPause {
-            perks.append(SmartPerk(
-                id: "\(subscription.id)-pause",
-                title: "Smart Pause Available",
-                description: "Pause during low-usage",
-                sourceSubscriptionId: subscription.id,
-                sourceName: subscription.name,
-                estimatedSavings: monthlyCost * 3,
-                difficulty: .easy,
-                steps: ["Tap Pause", "Select duration", "Confirm"],
-                provider: subscription.name,
-                icon: "pause.circle.fill",
-                color: "orange"
-            ))
-        }
-        
         return perks
     }
     

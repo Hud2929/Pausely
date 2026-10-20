@@ -90,7 +90,7 @@ Annual $29.99 to $44.99 and monthly $4.99 to $7.49 are both exactly +50%, so the
 
 ## Should we publish before Gmail?
 **Yes.**
-- The live listing (1.0.1) still says "Smart Pause" and "AI". Only a new version can replace it.
+- The live listing (1.0.1) still promises a pause feature and "AI" that the app does not have. Only a new version can replace it.
 - Ratings and search ranking take weeks to build. Waiting for Gmail means a blank, claim-ridden listing longer.
 - Gmail timing is outside your control: Google's review takes weeks and may require a paid security assessment.
 - A Gmail launch is stronger as a 1.1 update: new "What's New", new promo text, the price rise, and a reason for existing users to return.

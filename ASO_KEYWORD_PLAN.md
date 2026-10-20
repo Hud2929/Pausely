@@ -115,7 +115,7 @@ Plus budget/expense terms (`expense tracker` 16,200; `budget tracker` 19,473; `s
 
 ## Listing accuracy: fix before submitting
 
-- The description still sells **Smart Pause** and "one-tap pause & cancel". The pause feature was removed from the app. Apple rejects metadata that promises features the app lacks.
+- The old description still sold a pause feature ("one-tap pause & cancel"). The app does not have one. Apple rejects metadata that promises features the app lacks.
 - "Join thousands of users" and "$240/year average waste" are unsupported claims for an unreleased app. Remove or substantiate.
 - Do not market Gmail receipt scanning until Google finishes its OAuth review: the feature is limited until approval.
 - True headline features to lead with: trial and renewal reminders, price-increase alerts, 1,000-plus service catalog, cancel-difficulty ratings, cost-per-use, multi-currency (CAD), widgets.
