@@ -90,7 +90,7 @@ Pausely helps people keep track of their subscriptions and avoid surprise renewa
 
 ## What this listing must never claim
 - "Smart Pause", automatic pausing, or "AI-powered" anything: the app does not do these.
-- User counts, ratings, awards, press quotes, testimonials, or average-savings numbers: unreleased app, nothing is measured.
+- User counts, ratings, awards, press quotes, testimonials, or average-savings numbers: the app has no ratings yet and nothing is measured.
 - Gmail / email receipt scanning, until Google approves the restricted `gmail.readonly` scope and the feature ships to everyone.
 - Importing subscriptions "from the App Store": iOS does not allow one app to read another app's subscriptions.
 - Competitor or Apple trademarks in any field; the word "free" or "app" in the keyword field.

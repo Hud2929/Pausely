@@ -13,7 +13,11 @@ struct StoreKitUpgradeView: View {
     @ObservedObject private var currencyManager = CurrencyManager.shared
 
     @State private var selectedPlan: PlanOption = .annual
-    @State private var isTrialEnabled = true
+    /// True only when StoreKit offers THIS customer a 7-day free trial on the selected plan. It is never
+    /// assumed: the offer must exist in App Store Connect and the Apple Account must still be eligible
+    /// (Apple allows one trial per subscription group).
+    @State private var trialAvailable = false
+    private var isTrialEnabled: Bool { trialAvailable }
     @State private var appearAnimation = false
     @State private var showConfetti = false
     @State private var showErrorAlert = false
@@ -75,6 +79,24 @@ struct StoreKitUpgradeView: View {
 
     /// The price Apple will actually charge in this storefront. Until StoreKit has loaded the products
     /// (the purchase button stays disabled meanwhile) it falls back to an estimate.
+    private var trialCheckID: String {
+        "\(storeManager.products.map(\.id).sorted().joined(separator: ","))|\(selectedPlan == .monthly)"
+    }
+
+    /// Decides whether to advertise the free trial: the selected plan must carry a 7-day free-trial
+    /// introductory offer in App Store Connect and this Apple Account must still be eligible for it.
+    private func refreshTrialEligibility() async {
+        guard let subscription = storeManager.products.first(where: { $0.id == selectedPlan.productID })?.subscription,
+              let offer = subscription.introductoryOffer,
+              offer.paymentMode == .freeTrial else {
+            trialAvailable = false
+            return
+        }
+        let sevenDays = (offer.period.unit == .day && offer.period.value == 7)
+            || (offer.period.unit == .week && offer.period.value == 1)
+        trialAvailable = sevenDays ? await subscription.isEligibleForIntroOffer : false
+    }
+
     private func priceText(_ tier: SubscriptionTier) -> String {
         storeManager.product(for: tier)?.displayPrice ?? tier.priceInUserCurrency()
     }
@@ -92,10 +114,6 @@ struct StoreKitUpgradeView: View {
                     // Trial-first hero
                     trialHeroSection
                         .padding(.top, 16)
-
-                    // Free trial toggle
-                    trialToggleSection
-                        .padding(.top, 20)
 
                     // Plan selection
                     planSelectionSection
@@ -133,14 +151,12 @@ struct StoreKitUpgradeView: View {
             }
             focusedElement = .title
 
-            // Restore trial toggle preference (default to ON)
-            isTrialEnabled = !StoreKitConfig.TrialConfig.userOptedOut
-
             // Load StoreKit products
             Task {
                 await storeManager.loadProducts()
             }
         }
+        .task(id: trialCheckID) { await refreshTrialEligibility() }
         .alert("Purchase Successful!", isPresented: $showSuccessAlert) {
             Button("Continue", role: .cancel) {
                 dismiss()
@@ -186,22 +202,24 @@ struct StoreKitUpgradeView: View {
     // MARK: - Trial Hero Section
     private var trialHeroSection: some View {
         VStack(spacing: 12) {
-            // Trial badge
-            HStack(spacing: 6) {
-                Image(systemName: "gift.fill")
-                    .font(.system(.caption, design: .rounded).weight(.semibold))
-                Text(LocalizedStringKey("7-DAY FREE TRIAL"))
-                    .font(.system(.caption, design: .rounded).weight(.bold))
+            // Trial badge (only when a real trial is on offer)
+            if isTrialEnabled {
+                HStack(spacing: 6) {
+                    Image(systemName: "gift.fill")
+                        .font(.system(.caption, design: .rounded).weight(.semibold))
+                    Text(LocalizedStringKey("7-DAY FREE TRIAL"))
+                        .font(.system(.caption, design: .rounded).weight(.bold))
+                }
+                .foregroundColor(.black)
+                .padding(.horizontal, 14)
+                .padding(.vertical, 6)
+                .background(
+                    Capsule()
+                        .fill(Color.accentMint)
+                )
+                .scaleEffect(appearAnimation ? 1 : 0.8)
+                .animation(.spring(response: 0.4, dampingFraction: 0.6), value: appearAnimation)
             }
-            .foregroundColor(.black)
-            .padding(.horizontal, 14)
-            .padding(.vertical, 6)
-            .background(
-                Capsule()
-                    .fill(Color.accentMint)
-            )
-            .scaleEffect(appearAnimation ? 1 : 0.8)
-            .animation(.spring(response: 0.4, dampingFraction: 0.6), value: appearAnimation)
 
             // Main headline
             Text(LocalizedStringKey(isTrialEnabled ? "Start Your 7-Day Free Trial" : "Unlock Pausely Pro"))
@@ -231,90 +249,6 @@ struct StoreKitUpgradeView: View {
                         .font(AppTypography.bodySmall)
                         .foregroundColor(.accentMint)
                 }
-            }
-        }
-        .opacity(appearAnimation ? 1 : 0)
-        .offset(y: appearAnimation ? 0 : 20)
-    }
-
-    // MARK: - Trial Toggle Section
-    private var trialToggleSection: some View {
-        VStack(spacing: 12) {
-            Button(action: {
-                withAnimation(.spring(response: 0.35, dampingFraction: 0.7)) {
-                    isTrialEnabled.toggle()
-                    StoreKitConfig.TrialConfig.userOptedOut = !isTrialEnabled
-                    HapticStyle.medium.trigger()
-                }
-            }) {
-                HStack(spacing: 16) {
-                    // Icon
-                    ZStack {
-                        Circle()
-                            .fill(isTrialEnabled ? Color.accentMint.opacity(0.2) : Color.white.opacity(0.06))
-                            .frame(width: 48, height: 48)
-
-                        Image(systemName: isTrialEnabled ? "gift.fill" : "gift")
-                            .font(.system(.title3, design: .rounded))
-                            .foregroundColor(isTrialEnabled ? .accentMint : .white.opacity(0.5))
-                    }
-
-                    // Text
-                    VStack(alignment: .leading, spacing: 4) {
-                        Text("Start 7-Day Free Trial")
-                            .font(.system(.body, design: .rounded).weight(.semibold))
-                            .foregroundStyle(.white)
-
-                        Text(isTrialEnabled ? "Try Pro free for 7 days" : "Subscribe without trial")
-                            .font(AppTypography.bodySmall)
-                            .foregroundStyle(Color.obsidianTextSecondary)
-                    }
-
-                    Spacer()
-
-                    // Toggle indicator
-                    ZStack {
-                        Capsule()
-                            .fill(isTrialEnabled ? Color.accentMint : Color.white.opacity(0.15))
-                            .frame(width: 52, height: 32)
-
-                        Circle()
-                            .fill(.white)
-                            .frame(width: 26, height: 26)
-                            .offset(x: isTrialEnabled ? 10 : -10)
-                            .animation(.spring(response: 0.3, dampingFraction: 0.7), value: isTrialEnabled)
-                    }
-                }
-                .padding(.horizontal, 16)
-                .padding(.vertical, 14)
-                .background(
-                    RoundedRectangle(cornerRadius: 16, style: .continuous)
-                        .fill(isTrialEnabled ? Color.accentMint.opacity(0.1) : Color.white.opacity(0.04))
-                        .overlay(
-                            RoundedRectangle(cornerRadius: 16, style: .continuous)
-                                .stroke(isTrialEnabled ? Color.accentMint.opacity(0.4) : Color.white.opacity(0.08), lineWidth: 1.5)
-                        )
-                )
-            }
-            .buttonStyle(PlainButtonStyle())
-            .accessibilityLabel(isTrialEnabled ? "Free trial enabled" : "Free trial disabled")
-            .accessibilityHint("Double tap to toggle free trial")
-
-            // Price context below toggle (uses our pricing, not StoreKit sandbox prices)
-            HStack {
-                Spacer()
-                if isTrialEnabled {
-                    VStack(spacing: 2) {
-                        Text("Then \(selectedPlan == .monthly ? priceText(.pro) : priceText(.proAnnual))\(selectedPlan.period)")
-                            .font(AppTypography.bodySmall)
-                            .foregroundStyle(.white.opacity(0.6))
-                    }
-                } else {
-                    Text("\(selectedPlan == .monthly ? priceText(.pro) : priceText(.proAnnual))\(selectedPlan.period)")
-                        .font(AppTypography.bodySmall)
-                        .foregroundStyle(.white.opacity(0.6))
-                }
-                Spacer()
             }
         }
         .opacity(appearAnimation ? 1 : 0)

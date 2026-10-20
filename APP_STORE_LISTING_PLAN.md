@@ -1,8 +1,26 @@
 # Pausely: App Store Listing, UI and ASO Plan
 
-Status date: 2026-10-19. Scope: everything a visitor sees on the App Store product page, plus search (ASO) for every language, each tuned to its own country.
+Scope: everything a visitor sees on the App Store product page, plus search (ASO) for every language, each tuned to its own country.
 
-**Nothing in this plan has been applied to App Store Connect.** All copy lives in the repo and is validated locally. Applying it needs (1) the Apple account blocker below to be cleared and (2) the owner's OK.
+## Status 2026-10-20 (read this first)
+The Account Holder accepted the agreements, so App Store Connect now works.
+
+**Applied and verified:**
+- The 11-locale listing (name, subtitle, keywords, description, promo text, what's new, URLs) on the editable version **1.0.3**. Read back: 99 of 99 fields match.
+- A **7-day free trial** on both subscriptions for the two countries they are sold in (USA, CAN). Before this, no trial existed in App Store Connect even though the paywall promised one.
+
+**Facts the first live read revealed (the plan had assumed otherwise):**
+- **Pausely 1.0.1 is live** on the public App Store since 2026-04-14, with 0 ratings. Its listing **still contains the old false claims** (Smart Pause, "AI", "12+ subscriptions"). Only a new version can replace the description, so submitting 1.0.3 is the fix.
+- Both subscriptions are **approved and on sale at $9.99 and $39.99**, sold only in **USA and CAN**. So UK, Australia, Germany, France, Spain, Mexico, Japan and Saudi Arabia can download the app but cannot buy Pro.
+- App Store Connect's readiness check for 1.0.3: **0 blockers**, 2 optional warnings (no subscription promo images). Build 6 is the only 1.0.3 build and predates all of this work.
+
+**Not applied (needs the owner):**
+1. Prices ($4.99 / $29.99). A price decrease moves existing subscribers down automatically and cannot be undone. Check Sales and Trends for current subscribers first.
+2. Subscription names/descriptions in 11 locales (the "Save 50%" text is only true after the price change).
+3. Selling in more countries (`asc subscriptions pricing availability edit`, then `equalize`).
+4. A new build with the fixes, and submitting 1.0.3 for review.
+
+`scripts/asc_apply.sh` does items already applied (read-only by default). Prices need `--apply --with-prices`.
 
 Source files (single source of truth, do not hand-edit generated output):
 
@@ -49,7 +67,7 @@ The old `APP_STORE_LISTING.md`, `AppStoreMetadata.md` and `PromotionalText.md` p
 | Old claim | Reality | Now |
 |---|---|---|
 | "Smart Pause", pause recommendations | Not shipped | Removed everywhere, including in-app text (Pro card, Help FAQ) |
-| "Join thousands of users" | Unreleased app | Removed |
+| "Join thousands of users" | No users or ratings to count | Removed |
 | Testimonials (named people) | Fabricated | Removed |
 | "AI-powered" alternatives, "AI insights" | Rule-based | Removed from metadata, onboarding and the sandbox StoreKit file |
 | "$240/year average savings" | Never measured | Removed |
