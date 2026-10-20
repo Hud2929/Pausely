@@ -13,7 +13,7 @@ LOCALES.update({
                storefronts="Canada (also indexed with fr-CA)", notes="Primary market. Same English set as US; French carries the complementary vocabulary."),
  "en-GB": dict(lang="en", name="Pausely: Subscription Tracker", subtitle="Trial & Renewal Reminders", keywords=EN_A,
                storefronts="United Kingdom (also indexed with en-AU)", notes="Indexed together with en-AU: keep the two sets different."),
- "en-AU": dict(lang="en", name="Pausely: Subscription Manager", subtitle="Find & Stop Hidden Charges",
+ "en-AU": dict(lang="en", name="Pausely: Subscription Manager", subtitle="Reminders Before You're Billed",
                keywords="cheaper,alternative,monthly,yearly,spend,saver,unused,waste,payments,money,credit,card,direct,debit",
                storefronts="Australia (also indexed with en-GB)", notes="Complementary words to en-GB so both stores gain ~200 characters of English keywords."),
  # ----- French
@@ -35,7 +35,7 @@ LOCALES.update({
                keywords="erinnerung,probeabo,verlängerung,wiederkehrend,zahlung,kosten,preis,erhöhung,versteckt,vergessen",
                storefronts="Germany, Austria, Switzerland", notes="Germans say 'Abo'. Top-5 competitors have a median of 1 to 176 ratings."),
  # ----- Japanese
- "ja": dict(lang="ja", name="Pausely - サブスク管理・解約リマインダー", subtitle="更新日と値上げを通知・固定費を見える化",
+ "ja": dict(lang="ja", name="Pausely - サブスク管理・解約リマインダー", subtitle="更新日を通知・固定費を見える化",
             keywords="サブスクリプション,定額,固定費,解約,支払い,契約,家計簿,節約,トライアル,通知,値上げ,更新,忘れ防止,支出",
             storefronts="Japan", notes="'サブスク管理' is the dominant head term (30 of top-10 titles)."),
  # ----- Arabic

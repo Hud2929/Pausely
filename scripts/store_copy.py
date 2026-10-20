@@ -28,14 +28,14 @@ DESC = {}
 
 DESC["en"] = """Know exactly what you pay for, and when it renews.
 
-Pausely keeps every subscription in one calm, simple place. It warns you before free trials end, prices go up, or a renewal catches you off guard.
+Pausely keeps every subscription in one calm, simple place. It warns you before free trials end or a renewal catches you off guard.
 
 WHAT YOU GET
 • One clear dashboard with your weekly, monthly and yearly spend, your next payment and the bills due this week
 • 1,000+ popular services to add in seconds, or paste a link and Pausely recognizes the service
 • Renewal reminders 1, 3 or 7 days before, whichever you choose
 • Free-trial protection: track trial end dates and get alerted before you are charged
-• Price history for every subscription, with an alert when a price goes up
+• Price history for every subscription, so you can see how costs change over time
 • Direct links to the cancellation page for 900+ services, plus difficulty ratings from other users
 • Cheaper alternatives for the services you already pay for
 • Cost per hour of use, so you can see what is really worth keeping
@@ -61,14 +61,14 @@ Support: {support}"""
 
 DESC["fr"] = """Sachez exactement ce que vous payez et quand ça se renouvelle.
 
-Pausely réunit tous vos abonnements au même endroit, simplement. L'app vous prévient avant la fin d'un essai gratuit, avant une hausse de prix ou un renouvellement surprise.
+Pausely réunit tous vos abonnements au même endroit, simplement. L'app vous prévient avant la fin d'un essai gratuit ou d'un renouvellement surprise.
 
 CE QUE VOUS OBTENEZ
 • Un tableau de bord clair : dépenses par semaine, mois et année, prochain paiement et factures de la semaine
 • Plus de 1 000 services populaires à ajouter en quelques secondes, ou collez un lien et Pausely reconnaît le service
 • Rappels de renouvellement 1, 3 ou 7 jours à l'avance, selon votre choix
 • Protection des essais gratuits : suivez la date de fin et soyez alerté avant d'être facturé
-• Historique des prix de chaque abonnement, avec une alerte en cas de hausse
+• Historique des prix de chaque abonnement, pour voir comment les coûts évoluent
 • Liens directs vers la page de résiliation de plus de 900 services, et notes de difficulté des autres utilisateurs
 • Des alternatives moins chères aux services que vous payez déjà
 • Coût par heure d'utilisation, pour voir ce qui vaut vraiment la peine d'être gardé
@@ -94,14 +94,14 @@ Assistance : {support}"""
 
 DESC["es"] = """Conoce exactamente lo que pagas y cuándo se renueva.
 
-Pausely reúne todas tus suscripciones en un solo lugar, de forma sencilla. Te avisa antes de que termine una prueba gratuita, suba un precio o llegue una renovación inesperada.
+Pausely reúne todas tus suscripciones en un solo lugar, de forma sencilla. Te avisa antes de que termine una prueba gratuita o llegue una renovación inesperada.
 
 LO QUE OBTIENES
 • Un panel claro con tu gasto semanal, mensual y anual, tu próximo pago y los cobros de esta semana
 • Más de 1000 servicios populares para añadir en segundos, o pega un enlace y Pausely reconoce el servicio
 • Recordatorios de renovación 1, 3 o 7 días antes, como prefieras
 • Protección de pruebas gratuitas: sigue la fecha de fin y recibe un aviso antes de que te cobren
-• Historial de precios de cada suscripción, con una alerta cuando sube un precio
+• Historial de precios de cada suscripción, para ver cómo cambian los precios con el tiempo
 • Enlaces directos a la página de cancelación de más de 900 servicios, y valoraciones de dificultad de otros usuarios
 • Alternativas más baratas para los servicios que ya pagas
 • Coste por hora de uso, para ver qué merece la pena conservar
@@ -127,14 +127,14 @@ Soporte: {support}"""
 
 DESC["de"] = """Wissen Sie genau, wofür Sie zahlen und wann es sich verlängert.
 
-Pausely bündelt alle Ihre Abos an einem ruhigen, übersichtlichen Ort. Die App warnt Sie, bevor eine kostenlose Testphase endet, ein Preis steigt oder eine Verlängerung Sie überrascht.
+Pausely bündelt alle Ihre Abos an einem ruhigen, übersichtlichen Ort. Die App warnt Sie, bevor eine kostenlose Testphase endet oder eine Verlängerung Sie überrascht.
 
 DAS BEKOMMEN SIE
 • Eine klare Übersicht mit Ausgaben pro Woche, Monat und Jahr, Ihrer nächsten Zahlung und den Abbuchungen dieser Woche
 • Über 1.000 beliebte Dienste in Sekunden hinzufügen, oder einen Link einfügen, und Pausely erkennt den Dienst
 • Erinnerungen vor der Verlängerung: 1, 3 oder 7 Tage vorher, ganz nach Wahl
 • Schutz vor Testabos: Enddatum verfolgen und vor der Abbuchung benachrichtigt werden
-• Preisverlauf für jedes Abo, mit Hinweis bei Preiserhöhungen
+• Preisverlauf für jedes Abo, damit Sie sehen, wie sich die Kosten entwickeln
 • Direkte Links zur Kündigungsseite von über 900 Diensten, plus Schwierigkeitsbewertungen anderer Nutzer
 • Günstigere Alternativen zu den Diensten, die Sie schon bezahlen
 • Kosten pro Nutzungsstunde, damit Sie sehen, was sich wirklich lohnt
@@ -160,14 +160,14 @@ Support: {support}"""
 
 DESC["ja"] = """サブスクの支払いと更新日を、ひと目で把握。
 
-Pauselyはすべてのサブスクリプションをひとつの画面にまとめます。無料トライアルの終了前、値上げ、思いがけない更新を事前にお知らせします。
+Pauselyはすべてのサブスクリプションをひとつの画面にまとめます。無料トライアルの終了前や、思いがけない更新の前にお知らせします。
 
 主な機能
 • 週・月・年ごとの支出、次回の支払い、今週の請求がわかるシンプルなダッシュボード
 • 1,000以上の人気サービスを数秒で追加。リンクを貼るだけでサービスを自動認識
 • 更新の1日前・3日前・7日前から選べるリマインダー
 • 無料トライアル保護：終了日を管理し、課金前に通知
-• サブスクごとの価格履歴と、値上げ時のアラート
+• サブスクごとの価格履歴で、料金の変化がひと目でわかる
 • 900以上のサービスの解約ページへ直接リンク。他のユーザーによる解約のしやすさ評価つき
 • いま支払っているサービスのより安い代替案
 • 利用1時間あたりのコストで、続ける価値を判断
@@ -193,14 +193,14 @@ Pausely Proは自動更新サブスクリプション（月額または年額）
 
 DESC["ar"] = """اعرف بالضبط ما تدفعه ومتى يتجدد.
 
-يجمع Pausely جميع اشتراكاتك في مكان واحد بسيط وواضح، وينبهك قبل انتهاء التجربة المجانية أو ارتفاع السعر أو حلول تجديد غير متوقع.
+يجمع Pausely جميع اشتراكاتك في مكان واحد بسيط وواضح، وينبهك قبل انتهاء التجربة المجانية أو حلول تجديد غير متوقع.
 
 ما الذي ستحصل عليه
 • لوحة واضحة تعرض إنفاقك الأسبوعي والشهري والسنوي وموعد دفعتك القادمة وفواتير هذا الأسبوع
 • أكثر من 1000 خدمة شهيرة تضيفها في ثوانٍ، أو الصق رابطًا ليتعرف Pausely على الخدمة
 • تذكيرات بالتجديد قبل يوم أو 3 أيام أو 7 أيام حسب اختيارك
 • حماية التجارب المجانية: تابع تاريخ الانتهاء وتلقَّ تنبيهًا قبل الخصم
-• سجل أسعار لكل اشتراك مع تنبيه عند ارتفاع السعر
+• سجل أسعار لكل اشتراك لترى كيف تتغير التكاليف
 • روابط مباشرة لصفحة الإلغاء لأكثر من 900 خدمة، مع تقييمات صعوبة الإلغاء من مستخدمين آخرين
 • بدائل أرخص للخدمات التي تدفع ثمنها بالفعل
 • التكلفة لكل ساعة استخدام لتعرف ما يستحق الاحتفاظ به
@@ -226,12 +226,12 @@ Pausely Pro اشتراك يتجدد تلقائيًا ويُفوتر شهريًا
 
 # ----------------------------------------------------------------------------- promo text, what's new, captions
 PROMO = {
- "en": "Never be surprised by a renewal again. Track every subscription, get alerts before free trials end and prices rise, and see what each one really costs.",
- "fr": "Fini les renouvellements surprises. Suivez chaque abonnement, soyez alerté avant la fin des essais gratuits et les hausses de prix, et voyez ce que chacun coûte vraiment.",
- "es": "Que ninguna renovación te sorprenda. Controla cada suscripción, recibe avisos antes de que terminen las pruebas o suban los precios y descubre cuánto cuesta cada una.",
- "de": "Nie wieder von Verlängerungen überrascht. Behalten Sie jedes Abo im Blick, werden Sie vor Testende und Preiserhöhungen gewarnt und sehen Sie, was jedes wirklich kostet.",
- "ja": "更新で驚かない。サブスクをまとめて管理し、無料トライアルの終了や値上げを事前に通知。それぞれの本当のコストもひと目でわかります。",
- "ar": "لا مفاجآت في التجديد بعد اليوم. تابع كل اشتراك، وتلقَّ تنبيهًا قبل انتهاء التجارب المجانية وارتفاع الأسعار، واعرف التكلفة الحقيقية لكل اشتراك.",
+ "en": "Never be surprised by a renewal again. Track every subscription, get alerts before free trials end, and see what each one really costs.",
+ "fr": "Fini les renouvellements surprises. Suivez chaque abonnement, soyez alerté avant la fin des essais gratuits, et voyez ce que chacun coûte vraiment.",
+ "es": "Que ninguna renovación te sorprenda. Controla cada suscripción, recibe avisos antes de que terminen las pruebas y descubre cuánto cuesta cada una.",
+ "de": "Nie wieder von Verlängerungen überrascht. Behalten Sie jedes Abo im Blick, werden Sie vor Testende gewarnt und sehen Sie, was jedes wirklich kostet.",
+ "ja": "更新で驚かない。サブスクをまとめて管理し、無料トライアルの終了を事前に通知。それぞれの本当のコストもひと目でわかります。",
+ "ar": "لا مفاجآت في التجديد بعد اليوم. تابع كل اشتراك، وتلقَّ تنبيهًا قبل انتهاء التجارب المجانية، واعرف التكلفة الحقيقية لكل اشتراك.",
 }
 WHATS_NEW = {
  "en": "Welcome to Pausely. Track your subscriptions, get renewal and free-trial alerts, and see what each one really costs.",
@@ -242,12 +242,12 @@ WHATS_NEW = {
  "ar": "مرحبًا بك في Pausely. تابع اشتراكاتك وتلقَّ تنبيهات التجديد وانتهاء التجربة المجانية واعرف التكلفة الحقيقية لكل اشتراك.",
 }
 CAPTIONS = {
- "en": ["Every subscription in one calm place", "Alerts before trials end and prices rise", "See what each one really costs", "Add 1,000+ services in seconds", "Find cheaper alternatives", "Your year in subscriptions"],
- "fr": ["Tous vos abonnements au même endroit", "Alertes avant la fin des essais et les hausses", "Voyez ce que chacun coûte vraiment", "Plus de 1 000 services en quelques secondes", "Trouvez des alternatives moins chères", "Votre année en abonnements"],
- "es": ["Todas tus suscripciones en un solo lugar", "Avisos antes de que acaben las pruebas y suban los precios", "Descubre cuánto cuesta cada una", "Más de 1000 servicios en segundos", "Encuentra alternativas más baratas", "Tu año en suscripciones"],
- "de": ["Alle Abos an einem Ort", "Warnungen vor Testende und Preiserhöhung", "Sehen Sie, was jedes wirklich kostet", "Über 1.000 Dienste in Sekunden", "Günstigere Alternativen finden", "Ihr Abo-Jahr im Überblick"],
- "ja": ["すべてのサブスクをひとつに", "トライアル終了と値上げを事前に通知", "それぞれの本当のコストがわかる", "1,000以上のサービスを数秒で追加", "より安い代替案を見つける", "1年間のサブスクを振り返る"],
- "ar": ["كل اشتراكاتك في مكان واحد", "تنبيهات قبل انتهاء التجربة وارتفاع السعر", "اعرف التكلفة الحقيقية لكل اشتراك", "أكثر من 1000 خدمة في ثوانٍ", "اعثر على بدائل أرخص", "سنتك في الاشتراكات"],
+ "en": ["Every subscription in one calm place", "Alerts before trials end and renewals hit", "See what each one really costs", "Add 1,000+ services in seconds", "Find cheaper alternatives", "Your year in subscriptions"],
+ "fr": ["Tous vos abonnements au même endroit", "Alertes avant la fin des essais et les renouvellements", "Voyez ce que chacun coûte vraiment", "Plus de 1 000 services en quelques secondes", "Trouvez des alternatives moins chères", "Votre année en abonnements"],
+ "es": ["Todas tus suscripciones en un solo lugar", "Avisos antes de que acaben las pruebas y lleguen las renovaciones", "Descubre cuánto cuesta cada una", "Más de 1000 servicios en segundos", "Encuentra alternativas más baratas", "Tu año en suscripciones"],
+ "de": ["Alle Abos an einem Ort", "Warnungen vor Testende und Verlängerung", "Sehen Sie, was jedes wirklich kostet", "Über 1.000 Dienste in Sekunden", "Günstigere Alternativen finden", "Ihr Abo-Jahr im Überblick"],
+ "ja": ["すべてのサブスクをひとつに", "トライアル終了と更新を事前に通知", "それぞれの本当のコストがわかる", "1,000以上のサービスを数秒で追加", "より安い代替案を見つける", "1年間のサブスクを振り返る"],
+ "ar": ["كل اشتراكاتك في مكان واحد", "تنبيهات قبل انتهاء التجربة وحلول التجديد", "اعرف التكلفة الحقيقية لكل اشتراك", "أكثر من 1000 خدمة في ثوانٍ", "اعثر على بدائل أرخص", "سنتك في الاشتراكات"],
 }
 
 # ----------------------------------------------------------------------------- per-locale search metadata (filled from storefront research)
