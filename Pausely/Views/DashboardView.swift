@@ -1,55 +1,5 @@
 import SwiftUI
 
-@MainActor
-struct MainTabView: View {
-    @ObservedObject private var subscriptionStore = SubscriptionStore.shared
-    @State private var selectedTab = 0
-
-    var body: some View {
-        ZStack {
-            AnimatedGradientBackground()
-
-            TabView(selection: $selectedTab) {
-                DashboardView()
-                    .tabItem {
-                        Image(systemName: selectedTab == 0 ? "chart.pie.fill" : "chart.pie")
-                        Text("Dashboard")
-                    }
-                    .tag(0)
-
-                SubscriptionsListView()
-                    .tabItem {
-                        Image(systemName: selectedTab == 1 ? "list.bullet.rectangle.fill" : "list.bullet.rectangle")
-                        Text("Subscriptions")
-                    }
-                    .tag(1)
-
-                PerksView()
-                    .tabItem {
-                        Image(systemName: selectedTab == 2 ? "sparkles" : "sparkles")
-                        Text("Perks")
-                    }
-                    .tag(2)
-
-                NavigationStack {
-                    PremiumProfileView()
-                }
-                .tabItem {
-                    Image(systemName: selectedTab == 3 ? "person.fill" : "person")
-                    Text("Profile")
-                }
-                .tag(3)
-            }
-            .tint(Color.accentMint)
-            .onChange(of: selectedTab) { oldValue, newValue in
-                HapticStyle.light.trigger()
-            }
-        }
-        .task {
-            await subscriptionStore.fetchSubscriptions()
-        }
-    }
-}
 
 // MARK: - Dashboard View
 
@@ -474,6 +424,3 @@ struct NotificationButton: View {
 
 // MARK: - Preview
 
-#Preview {
-    MainTabView()
-}

@@ -828,8 +828,3 @@ class SubscriptionStore: ObservableObject {
 
 // MARK: - Notification Names
 
-extension Notification.Name {
-    static let subscriptionAdded = Notification.Name("subscriptionAdded")
-    static let subscriptionUpdated = Notification.Name("subscriptionUpdated")
-    static let subscriptionDeleted = Notification.Name("subscriptionDeleted")
-}

@@ -231,7 +231,6 @@ extension LinearGradient {
 
     // Compatibility aliases — new code should use .mintAccent
     static var premium: LinearGradient { .mintAccent }
-    static var premiumDiagonal: LinearGradient { .mintAccent }
 }
 
 // MARK: - Flexible Glass Modifier
@@ -281,65 +280,6 @@ struct AnimatedGradientBackground: View {
     }
 }
 
-// MARK: - Adaptive Text Color Helper
-struct AdaptiveText: View {
-    let lightModeColor: Color
-    let darkModeColor: Color
-    let opacity: Double
-    
-    @Environment(\.colorScheme) private var colorScheme
-    
-    init(color: Color, opacity: Double = 1.0) {
-        self.lightModeColor = color
-        self.darkModeColor = color
-        self.opacity = opacity
-    }
-    
-    init(light: Color, dark: Color, opacity: Double = 1.0) {
-        self.lightModeColor = light
-        self.darkModeColor = dark
-        self.opacity = opacity
-    }
-    
-    var body: some View {
-        colorScheme == .dark ? darkModeColor.opacity(opacity) : lightModeColor.opacity(opacity)
-    }
-}
-
-// MARK: - Glass Container with adaptive border
-struct AdaptiveGlassContainer<Content: View>: View {
-    let content: Content
-    let intensity: Double
-    let cornerRadius: CGFloat
-    
-    @Environment(\.colorScheme) private var colorScheme
-    
-    init(intensity: Double = 0.15, cornerRadius: CGFloat = 24, @ViewBuilder content: () -> Content) {
-        self.content = content()
-        self.intensity = intensity
-        self.cornerRadius = cornerRadius
-    }
-    
-    var body: some View {
-        content
-            .padding()
-            .background(
-                ZStack {
-                    RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
-                        .fill(Color(.systemBackground).opacity(colorScheme == .dark ? 0.1 : 0.5))
-                    
-                    RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
-                        .fill(.ultraThinMaterial)
-                    
-                    RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
-                        .stroke(
-                            colorScheme == .dark ? Color.white.opacity(0.2) : Color(.systemGray3),
-                            lineWidth: 1
-                        )
-                }
-            )
-    }
-}
 
 enum HapticStyle {
     case light, medium, heavy, success, warning, error
@@ -370,31 +310,4 @@ enum HapticStyle {
 
 // MARK: - Press Events Modifier
 
-struct PressEventsModifier: ViewModifier {
-    var onPress: () -> Void
-    var onRelease: () -> Void
-    @State private var isPressed = false
 
-    func body(content: Content) -> some View {
-        content
-            .simultaneousGesture(
-                DragGesture(minimumDistance: 3)
-                    .onChanged { _ in
-                        if !isPressed {
-                            isPressed = true
-                            onPress()
-                        }
-                    }
-                    .onEnded { _ in
-                        isPressed = false
-                        onRelease()
-                    }
-            )
-    }
-}
-
-extension View {
-    func pressEvents(onPress: @escaping () -> Void, onRelease: @escaping () -> Void) -> some View {
-        modifier(PressEventsModifier(onPress: onPress, onRelease: onRelease))
-    }
-}

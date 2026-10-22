@@ -214,32 +214,6 @@ struct SettingsNavRow: View {
     }
 }
 
-// NavigationButton kept for backwards compatibility with any remaining legacy callers
-struct NavigationButton: View {
-    let icon: String
-    let title: String
-    let glowColor: Color
-    let action: () -> Void
-
-    var body: some View {
-        SettingsNavRow(icon: icon, title: title, action: action)
-    }
-}
-
-// SecurityToggleRow kept for backwards compatibility
-struct SecurityToggleRow: View {
-    let icon: String
-    let title: String
-    let subtitle: String
-    @Binding var isOn: Bool
-    let glowColor: Color
-    var onToggle: ((Bool) -> Void)? = nil
-
-    var body: some View {
-        SettingsToggleRow(icon: icon, title: title, subtitle: subtitle, isOn: $isOn)
-            .onChange(of: isOn) { _, newValue in onToggle?(newValue) }
-    }
-}
 
 #Preview {
     PrivacySecurityView()

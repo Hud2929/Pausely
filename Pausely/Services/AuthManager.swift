@@ -865,6 +865,7 @@ class RevolutionaryAuthManager: ObservableObject {
 // MARK: - Notifications
 extension Notification.Name {
     static let passwordResetTokenReceived = Notification.Name("passwordResetTokenReceived")
+    static let biometricAuthSuccess = Notification.Name("biometricAuthSuccess")
     static let biometricAuthFailed = Notification.Name("biometricAuthFailed")
     static let emailConfirmationFailed = Notification.Name("emailConfirmationFailed")
 }

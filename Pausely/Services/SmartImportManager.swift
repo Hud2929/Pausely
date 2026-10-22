@@ -341,34 +341,10 @@ final class SmartImportManager: ObservableObject {
     }
 }
 
-// MARK: - Memory-Efficient Batch Processor
+
+
 extension Collection {
     subscript(safe index: Index) -> Element? {
         indices.contains(index) ? self[index] : nil
-    }
-}
-
-// MARK: - Memory-Efficient Batch Processor
-final class BatchProcessor<T> {
-    private let batchSize: Int
-    private let processDelay: UInt64
-    
-    init(batchSize: Int = 100, processDelayMs: Int = 10) {
-        self.batchSize = batchSize
-        self.processDelay = UInt64(processDelayMs) * 1_000_000
-    }
-    
-    func process(items: [T], operation: (T) async throws -> Void) async throws {
-        let batches = stride(from: 0, to: items.count, by: batchSize).map {
-            Array(items[$0..<min($0 + batchSize, items.count)])
-        }
-        
-        for batch in batches {
-            for item in batch {
-                try await operation(item)
-            }
-            // Prevent memory spikes
-            try await Task.sleep(nanoseconds: processDelay)
-        }
     }
 }

@@ -53,11 +53,6 @@ enum ConversionStatus: String, Codable {
     case cancelled = "cancelled"
 }
 
-struct ReferralValidationResponse: Codable {
-    let valid: Bool
-    let code: String?
-    let message: String?
-}
 
 // MARK: - Referral Manager
 
@@ -783,6 +778,4 @@ enum ReferralError: Error, LocalizedError {
 extension Notification.Name {
     static let referralCodeReceived = Notification.Name("referralCodeReceived")
     static let referralCodeInvalid = Notification.Name("referralCodeInvalid")
-    static let referralConversionsUpdated = Notification.Name("referralConversionsUpdated")
-    static let referralDiscountUsedNotification = Notification.Name("referralDiscountUsed")
 }

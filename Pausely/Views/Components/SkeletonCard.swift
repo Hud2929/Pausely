@@ -38,44 +38,6 @@ struct SkeletonCard: View {
     }
 }
 
-// MARK: - Skeleton Row (for list items)
-struct SkeletonRow: View {
-    var isLoading: Bool = true
-
-    var body: some View {
-        HStack(spacing: 16) {
-            Circle()
-                .fill(Color.white.opacity(0.05))
-                .frame(width: 56, height: 56)
-                .skeleton(isLoading: isLoading)
-
-            VStack(alignment: .leading, spacing: 8) {
-                RoundedRectangle(cornerRadius: 6, style: .continuous)
-                    .fill(Color.white.opacity(0.05))
-                    .frame(width: 140, height: 18)
-                    .skeleton(isLoading: isLoading)
-
-                RoundedRectangle(cornerRadius: 4, style: .continuous)
-                    .fill(Color.white.opacity(0.05))
-                    .frame(width: 90, height: 14)
-                    .skeleton(isLoading: isLoading)
-            }
-
-            Spacer()
-
-            RoundedRectangle(cornerRadius: 6, style: .continuous)
-                .fill(Color.white.opacity(0.05))
-                .frame(width: 60, height: 22)
-                .skeleton(isLoading: isLoading)
-        }
-        .padding(.vertical, 12)
-        .padding(.horizontal, 16)
-        .background(
-            RoundedRectangle(cornerRadius: 20, style: .continuous)
-                .fill(Color.white.opacity(0.03))
-        )
-    }
-}
 
 // MARK: - Shimmer Modifier (active flag)
 extension View {

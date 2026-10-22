@@ -271,6 +271,7 @@ class NotificationDelegate: NSObject, UNUserNotificationCenterDelegate {
     }
 }
 
+
 // MARK: - Notification Names
 extension Notification.Name {
     static let cancelSubscriptionRequested = Notification.Name("cancelSubscriptionRequested")

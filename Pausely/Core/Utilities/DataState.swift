@@ -36,31 +36,3 @@ enum DataState: Equatable {
     }
 }
 
-// MARK: - View State Helpers
-enum ListState<T> {
-    case idle
-    case loading
-    case loaded([T])
-    case empty
-    case error(String)
-    
-    var isLoading: Bool {
-        if case .loading = self { return true }
-        return false
-    }
-    
-    var isEmpty: Bool {
-        if case .empty = self { return true }
-        return false
-    }
-    
-    var hasData: Bool {
-        if case .loaded(let items) = self { return !items.isEmpty }
-        return false
-    }
-    
-    var items: [T] {
-        if case .loaded(let items) = self { return items }
-        return []
-    }
-}

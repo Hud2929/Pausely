@@ -2,66 +2,6 @@ import Foundation
 import UIKit
 import StoreKit
 
-// MARK: - StoreKit Configuration
-/// Central configuration for all StoreKit products
-enum StoreKitConfig {
-    
-    // MARK: - Product IDs
-    /// These MUST match exactly what's in App Store Connect
-    enum ProductID: String, CaseIterable {
-        case monthlyPro = "com.pausely.premium.monthly"
-        case annualPro = "com.pausely.premium.annual"
-        
-        var displayName: String {
-            switch self {
-            case .monthlyPro: return "Pausely Pro Monthly"
-            case .annualPro: return "Pausely Pro Annual"
-            }
-        }
-        
-        var description: String {
-            switch self {
-            case .monthlyPro: return "Unlimited subscriptions and all Pro features"
-            case .annualPro: return "Best value with annual billing"
-            }
-        }
-        
-        var tier: SubscriptionTier {
-            switch self {
-            case .monthlyPro: return .premium
-            case .annualPro: return .premiumAnnual
-            }
-        }
-    }
-    
-    // MARK: - Trial Configuration
-    struct TrialConfig {
-        static let enabled = true
-        static let days = 7
-        static let displayText = "7-Day Free Trial"
-
-        /// Whether user has explicitly opted out of the free trial UI
-        static var userOptedOut: Bool {
-            get { UserDefaults.standard.bool(forKey: Keys.trialToggleOptOut) }
-            set { UserDefaults.standard.set(newValue, forKey: Keys.trialToggleOptOut) }
-        }
-
-        /// Whether trial UI should be shown (enabled and not opted out)
-        static var showTrialUI: Bool {
-            enabled && !userOptedOut
-        }
-    }
-    
-    // MARK: - UserDefaults Keys
-    struct Keys {
-        static let purchasedProductIDs = "storekit_purchased_products"
-        static let pendingPurchases = "storekit_pending_purchases"
-        static let lastVerificationDate = "storekit_last_verification"
-        static let trialUsed = "storekit_trial_used"
-        static let originalPurchaseDate = "storekit_original_purchase_date"
-        static let trialToggleOptOut = "storekit_trial_toggle_opt_out"
-    }
-}
 
 // MARK: - Review Prompt Manager
 /// Manages strategic review prompts at positive user moments.
@@ -165,29 +105,3 @@ final class ReviewPromptManager: ObservableObject {
     }
 }
 
-// MARK: - StoreKit Product Info
-struct StoreKitProductInfo {
-    let id: String
-    let displayName: String
-    let displayPrice: String
-    let description: String
-    let price: Decimal
-    let currency: String
-    let period: String
-    let trialPeriod: String?
-    let isAnnual: Bool
-    
-    var formattedPrice: String {
-        return displayPrice
-    }
-    
-    var monthlyEquivalent: String? {
-        guard isAnnual else { return nil }
-        let monthly = (price / 12)
-        let formatter = NumberFormatter()
-        formatter.numberStyle = .currency
-        formatter.currencyCode = currency
-        formatter.maximumFractionDigits = 2
-        return formatter.string(from: monthly as NSNumber)
-    }
-}

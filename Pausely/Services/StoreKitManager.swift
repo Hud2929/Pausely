@@ -31,7 +31,6 @@ final class StoreKitManager: ObservableObject {
     
     // MARK: - Private
     private var updates: Task<Void, Never>?
-    private let entitlementManager = EntitlementManager.shared
     private var hasLoadedProducts = false
     
     private init() {
@@ -285,38 +284,6 @@ final class StoreKitManager: ObservableObject {
     }
 }
 
-// MARK: - Entitlement Manager
-/// Manages user entitlements based on purchases
-@MainActor
-final class EntitlementManager: ObservableObject {
-    static let shared = EntitlementManager()
-    
-    @Published var isPremium: Bool = false
-    @Published var subscriptionTier: SubscriptionTier = .free
-    
-    private init() {
-        // Load saved state
-        isPremium = UserDefaults.standard.bool(forKey: "is_premium")
-        if let tierString = UserDefaults.standard.string(forKey: "subscription_tier"),
-           let tier = SubscriptionTier(rawValue: tierString) {
-            subscriptionTier = tier
-        }
-    }
-    
-    func grantPremium(tier: SubscriptionTier) {
-        isPremium = true
-        subscriptionTier = tier
-        UserDefaults.standard.set(true, forKey: "is_premium")
-        UserDefaults.standard.set(tier.rawValue, forKey: "subscription_tier")
-    }
-    
-    func revokePremium() {
-        isPremium = false
-        subscriptionTier = .free
-        UserDefaults.standard.set(false, forKey: "is_premium")
-        UserDefaults.standard.removeObject(forKey: "subscription_tier")
-    }
-}
 
 // MARK: - Errors
 enum StoreKitError: Error {

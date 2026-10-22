@@ -254,18 +254,6 @@ struct HelpFAQItem: View {
     }
 }
 
-// Legacy ContactButton kept for backwards compat
-struct ContactButton: View {
-    let icon: String
-    let title: String
-    let subtitle: String
-    let glowColor: Color
-    let action: () -> Void
-
-    var body: some View {
-        ContactRow(icon: icon, title: title, subtitle: subtitle, action: action)
-    }
-}
 
 #Preview {
     HelpSupportView()

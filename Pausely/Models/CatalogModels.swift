@@ -318,25 +318,3 @@ struct CatalogEntry: Identifiable, Codable, Equatable {
 
 // MARK: - Subscription Info
 
-/// Subscription info wrapper for catalog entries used in detection and tracking
-struct SubscriptionInfo {
-    let bundleId: String
-    let name: String
-    let category: SubscriptionCategory
-    let appStoreProductId: String?
-    let iconName: String
-    let defaultPrice: Double
-    let frequency: BillingFrequency
-    let familyPlanAvailable: Bool
-
-    init?(from entry: CatalogEntry) {
-        self.bundleId = entry.bundleId
-        self.name = entry.name
-        self.category = entry.category
-        self.appStoreProductId = entry.appStoreProductId
-        self.iconName = entry.iconName
-        self.defaultPrice = entry.defaultIndividualPricing?.monthlyPriceUSD ?? 0
-        self.frequency = .monthly
-        self.familyPlanAvailable = entry.familyPlanAvailable
-    }
-}

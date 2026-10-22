@@ -167,9 +167,3 @@ struct LanguageRow: View {
     }
 }
 
-struct LanguageSettingsView_Previews: PreviewProvider {
-    static var previews: some View {
-        LanguageSettingsView()
-            .background(Color.black)
-    }
-}

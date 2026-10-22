@@ -446,11 +446,6 @@ extension Subscription {
         return converted
     }
     
-    mutating func updateLastUsed() {
-        // This would track usage for ROI calculations
-        // For now, just update the timestamp
-        updatedAt = Date()
-    }
     
     mutating func calculateROI(usageMinutes: Int) {
         monthlyUsageMinutes = usageMinutes

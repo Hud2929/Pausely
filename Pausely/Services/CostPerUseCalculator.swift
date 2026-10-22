@@ -330,15 +330,6 @@ struct CostPerUseResult: Identifiable {
     }
 }
 
-// MARK: - Monthly Usage History (for trend charts)
-struct MonthlyUsageRecord: Identifiable, Codable {
-    var id = UUID()
-    let month: String       // "2026-01"
-    let subscriptionName: String
-    let hoursUsed: Double
-    let costPerHour: Double?
-    let valueScore: Double?
-}
 
 // MARK: - Smart Alert Models
 struct CostPerUseAlert: Identifiable {

@@ -49,22 +49,3 @@ extension View {
     }
 }
 
-// MARK: - Shimmer Placeholder View
-struct ShimmerPlaceholder: View {
-    let width: CGFloat?
-    let height: CGFloat
-    let cornerRadius: CGFloat
-    
-    init(width: CGFloat? = nil, height: CGFloat, cornerRadius: CGFloat = 8) {
-        self.width = width
-        self.height = height
-        self.cornerRadius = cornerRadius
-    }
-    
-    var body: some View {
-        RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
-            .fill(Color.obsidianElevated)
-            .frame(width: width, height: height)
-            .shimmer()
-    }
-}

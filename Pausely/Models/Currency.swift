@@ -68,73 +68,9 @@ struct CurrencyAmount: Codable, Identifiable, Equatable {
 
 // MARK: - Currency Preference
 
-/// User's currency preferences
-struct CurrencyPreference: Codable {
-    var selectedCurrencyCode: String
-    var showOriginalCurrency: Bool
-    var autoUpdateRates: Bool
-    var preferredDecimalPlaces: Int?
-    
-    static let `default` = CurrencyPreference(
-        selectedCurrencyCode: Locale.current.currency?.identifier ?? "USD",
-        showOriginalCurrency: true,
-        autoUpdateRates: true,
-        preferredDecimalPlaces: nil
-    )
-}
 
 // MARK: - Currency Region
 
-/// Groups currencies by region for organized display
-enum CurrencyRegion: String, CaseIterable, Identifiable {
-    case all = "All Currencies"
-    case popular = "Popular"
-    case americas = "Americas"
-    case europe = "Europe"
-    case asiaPacific = "Asia & Pacific"
-    case middleEast = "Middle East & Africa"
-    case crypto = "Cryptocurrency"
-    
-    var id: String { rawValue }
-    
-    var icon: String {
-        switch self {
-        case .all: return "globe"
-        case .popular: return "star.fill"
-        case .americas: return "globe.americas.fill"
-        case .europe: return "globe.europe.africa.fill"
-        case .asiaPacific: return "globe.asia.australia.fill"
-        case .middleEast: return "building.columns.fill"
-        case .crypto: return "bitcoinsign.circle.fill"
-        }
-    }
-    
-    var regionCodes: [String] {
-        switch self {
-        case .all:
-            return []
-        case .popular:
-            return ["USD", "EUR", "GBP", "JPY", "CNY", "CAD", "AUD", "CHF", "SGD", "HKD", "KRW", "INR", "BRL", "MXN", "ZAR", "TRY", "IDR", "THB", "MYR", "PHP"]
-        case .americas:
-            return ["USD", "CAD", "MXN", "BRL", "ARS", "CLP", "COP", "PEN", "UYU", "DOP", "CRC", "GTQ", "HNL", "NIO", "PAB", "BOB", "PYG", "VES", "XCD", "TTD", "JMD", "BBD", "BSD", "BZD", "KYD", "BMD", "GYD", "SRD"]
-        case .europe:
-            return ["EUR", "GBP", "CHF", "SEK", "NOK", "DKK", "PLN", "CZK", "HUF", "RON", "BGN", "HRK", "RSD", "ISK", "UAH", "RUB", "BYN", "MDL", "GIP", "ALL", "BAM", "MKD", "GEL", "AZN", "AMD"]
-        case .asiaPacific:
-            return ["JPY", "CNY", "HKD", "SGD", "KRW", "INR", "IDR", "MYR", "THB", "PHP", "VND", "TWD", "PKR", "BDT", "LKR", "NPR", "MMK", "KHR", "LAK", "MOP", "BND", "PGK", "FJD", "WST", "TOP", "VUV", "SBD", "KID", "MVR", "BTN", "MNT", "KZT", "KGS", "TJS", "UZS", "AFN", "AUD", "NZD"]
-        case .middleEast:
-            return ["AED", "SAR", "QAR", "KWD", "BHD", "OMR", "ILS", "JOD", "LBP", "EGP", "ZAR", "NGN", "KES", "GHS", "MAD", "TND", "DZD", "ETB", "TZS", "UGX", "ZMW", "BWP", "MUR", "SCR", "XOF", "XAF", "ERN", "SZL", "LSL", "NAD", "MZN", "MWK", "RWF", "SLL", "SOS", "SDG", "TMT", "IRR", "IQD", "YER", "SYP"]
-        case .crypto:
-            return ["BTC", "ETH", "XAU", "XAG"]
-        }
-    }
-    
-    func currencies(in manager: CurrencyManager = .shared) -> [Currency] {
-        if regionCodes.isEmpty {
-            return manager.allCurrencies
-        }
-        return manager.allCurrencies.filter { regionCodes.contains($0.code) }
-    }
-}
 
 // MARK: - Historical Rate
 
@@ -162,28 +98,6 @@ struct HistoricalRate: Codable, Identifiable {
 
 // MARK: - Currency Trend
 
-/// Trend direction for exchange rates
-enum CurrencyTrend: String {
-    case up = "up"
-    case down = "down"
-    case stable = "stable"
-    
-    var icon: String {
-        switch self {
-        case .up: return "arrow.up.right"
-        case .down: return "arrow.down.right"
-        case .stable: return "arrow.right"
-        }
-    }
-    
-    var color: Color {
-        switch self {
-        case .up: return .green
-        case .down: return .red
-        case .stable: return .gray
-        }
-    }
-}
 
 // MARK: - Helper Extensions
 
@@ -197,17 +111,6 @@ extension Double {
 
 // MARK: - Sample Data
 
-extension Currency {
-    /// Sample currencies for previews and testing
-    static var samples: [Currency] {
-        [
-            Currency(code: "USD", name: "US Dollar", symbol: "$", flag: "🇺🇸", locale: "en_US"),
-            Currency(code: "EUR", name: "Euro", symbol: "€", flag: "🇪🇺", locale: "de_DE"),
-            Currency(code: "GBP", name: "British Pound", symbol: "£", flag: "🇬🇧", locale: "en_GB"),
-            Currency(code: "JPY", name: "Japanese Yen", symbol: "¥", flag: "🇯🇵", locale: "ja_JP"),
-        ]
-    }
-}
 
 // MARK: - Subscription Currency Extension
 
@@ -241,19 +144,5 @@ extension Subscription {
         return (try? manager.convert(yearlyAmount, from: currency, to: manager.selectedCurrency)) ?? yearlyAmount
     }
     
-    /// Formatted amount with optional conversion
-    func formattedAmount(showConversion: Bool = true) -> String {
-        let manager = CurrencyManager.shared
-        let amountValue = Double(truncating: amount as NSNumber)
-        
-        guard let sourceCurrency = currencyObject else {
-            return displayAmount
-        }
-        
-        if showConversion && currency != manager.selectedCurrency {
-            return manager.formatConverted(amountValue, from: sourceCurrency, showOriginal: true)
-        }
-        return sourceCurrency.format(amountValue)
-    }
     
 }

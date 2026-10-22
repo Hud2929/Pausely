@@ -716,50 +716,6 @@ struct CatalogEntryCard: View {
     }
 }
 
-// MARK: - Custom Subscription Card (no longer in grid — replaced by toolbar button)
-struct CustomSubscriptionCard: View {
-    let action: () -> Void
-    @State private var isPressed = false
-
-    var body: some View {
-        Button(action: {
-            STAnimation.impactLight()
-            action()
-        }) {
-            VStack(spacing: 12) {
-                ZStack {
-                    RoundedRectangle(cornerRadius: 16, style: .continuous)
-                        .fill(LinearGradient(colors: [Color.accentMint.opacity(0.25), Color.accentMint.opacity(0.15)],
-                                             startPoint: .topLeading, endPoint: .bottomTrailing))
-                        .frame(height: 80)
-                    Image(systemName: "plus.circle.fill")
-                        .font(.system(size: 32))
-                        .foregroundStyle(Color.accentMint)
-                }
-                VStack(spacing: 4) {
-                    Text("Custom").font(.system(.subheadline, design: .rounded).weight(.semibold)).foregroundStyle(.white)
-                    Text("Add your own").font(.system(.caption, design: .rounded).weight(.medium)).foregroundStyle(.white.opacity(0.55))
-                }
-            }
-            .padding(12)
-            .background(
-                RoundedRectangle(cornerRadius: 20, style: .continuous)
-                    .fill(.ultraThinMaterial)
-                    .overlay(
-                        RoundedRectangle(cornerRadius: 20, style: .continuous)
-                            .stroke(Color.accentMint.opacity(0.4), lineWidth: 1.5)
-                    )
-            )
-            .scaleEffect(isPressed ? 0.96 : 1)
-        }
-        .buttonStyle(PlainButtonStyle())
-        .simultaneousGesture(
-            DragGesture(minimumDistance: 0)
-                .onChanged { _ in withAnimation(.easeInOut(duration: 0.1)) { isPressed = true } }
-                .onEnded   { _ in withAnimation(.easeInOut(duration: 0.1)) { isPressed = false } }
-        )
-    }
-}
 
 #Preview {
     NavigationStack { SubscriptionBrowserView() }

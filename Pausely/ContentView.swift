@@ -339,14 +339,6 @@ struct PremiumSplashScreen: View {
     }
 }
 
-// MARK: - Onboarding Carousel Page
-struct OnboardingPage: Identifiable {
-    let id = UUID()
-    let icon: String
-    let title: String
-    let description: String
-    let preview: AnyView
-}
 
 // MARK: - Premium Welcome Flow
 struct PremiumWelcomeFlow: View {
