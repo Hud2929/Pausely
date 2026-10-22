@@ -60,7 +60,7 @@ private struct TabBarButton: View {
         switch item.tag {
         case 0: return "Dashboard"
         case 1: return "Subscriptions"
-        case 2: return "Insights"
+        case 2: return "Analysis"
         case 3: return "Profile"
         default: return "Tab \(item.tag + 1)"
         }
@@ -106,6 +106,8 @@ private struct TabBarButton: View {
         .buttonStyle(PlainButtonStyle())
         .accessibilityLabel(badgeCount > 0 ? "\(accessLabel), \(badgeCount) alert\(badgeCount == 1 ? "" : "s")" : accessLabel)
         .accessibilityHint("Double tap to navigate")
+        .accessibilityAddTraits(isSelected ? .isSelected : [])
+        .accessibilityIdentifier(["tabHome", "tabSubscriptions", "tabAnalysis", "tabProfile"][min(item.tag, 3)])
         .animation(.spring(response: 0.3, dampingFraction: 0.72), value: isSelected)
         .animation(.spring(response: 0.3, dampingFraction: 0.7), value: badgeCount)
     }

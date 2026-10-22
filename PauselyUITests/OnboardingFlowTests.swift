@@ -20,14 +20,12 @@ final class OnboardingFlowTests: XCTestCase {
             getStarted.tap()
         }
 
-        // After tapping Get Started, we should see the auth flow or main UI
-        // (since --uitesting without --demo-mode still shows auth)
-        let loginButton = app.buttons["Sign In"]
-        let homeTab = app.tabBars.buttons["tabHome"]
-
+        // "Get Started" goes straight to creating an account, which starts with the age check (16+).
+        let ageCheck = app.staticTexts["Confirm your age"]
+        let signIn = app.buttons["signInButton"]
         XCTAssertTrue(
-            loginButton.waitForExistence(timeout: 5) || homeTab.waitForExistence(timeout: 5),
-            "App should reach auth or main UI after onboarding"
+            ageCheck.waitForExistence(timeout: 10) || signIn.waitForExistence(timeout: 2),
+            "Get Started should lead to the age check and sign-up, not another carousel"
         )
     }
 
