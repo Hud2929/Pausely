@@ -148,7 +148,5 @@
     <string>$(SUPABASE_URL)</string>
     <key>SUPABASE_ANON_KEY</key>
     <string>$(SUPABASE_ANON_KEY)</string>
-    <key>SUPABASE_SERVICE_ROLE_KEY</key>
-    <string>$(SUPABASE_SERVICE_ROLE_KEY)</string>
 </dict>
 </plist>

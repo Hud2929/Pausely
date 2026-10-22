@@ -48,14 +48,6 @@ final class ReviewPromptManager: ObservableObject {
         }
     }
 
-    func resetState() {
-        UserDefaults.standard.removeObject(forKey: requestsThisYearKey)
-        UserDefaults.standard.removeObject(forKey: lastRequestDateKey)
-        UserDefaults.standard.removeObject(forKey: currentYearKey)
-        UserDefaults.standard.removeObject(forKey: hasPromptedAfterOnboardingKey)
-        UserDefaults.standard.removeObject(forKey: hasPromptedAfterFirstSubKey)
-        UserDefaults.standard.removeObject(forKey: savingsMilestoneKey)
-    }
 
     private func canRequestReview() -> Bool {
         let calendar = Calendar.current

@@ -61,9 +61,6 @@ final class PriceIncreaseMonitor: ObservableObject {
         alerts.removeAll { $0.id == id }
     }
 
-    func dismissAll() {
-        alerts.removeAll()
-    }
 
     private func loadPriceHistory() -> [String: Decimal] {
         guard let data = UserDefaults.standard.data(forKey: priceHistoryKey),

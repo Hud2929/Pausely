@@ -230,28 +230,6 @@ struct LuxuryAddSubscriptionView: View {
         return error.localizedDescription
     }
 
-    /// Checks if error is a "table not found" error
-    private func isTableNotFoundError(_ error: Error) -> Bool {
-        if let dbError = error as? SubscriptionStore.DatabaseError {
-            return dbError.isTableNotFound
-        }
-
-        let errorString = String(describing: error).lowercased()
-        let tableNotFoundPatterns = [
-            "could not find the table",
-            "does not exist",
-            "42p01",
-            "relation",
-            "schema cache"
-        ]
-
-        for pattern in tableNotFoundPatterns {
-            if errorString.contains(pattern) {
-                return true
-            }
-        }
-        return false
-    }
 }
 
 struct LuxuryAddSubscriptionView_Previews: PreviewProvider {

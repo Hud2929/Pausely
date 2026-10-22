@@ -10,20 +10,6 @@ import SafariServices
 import MessageUI
 
 
-// MARK: - Supporting Types
-enum CancellationMethod {
-    case website
-    case email
-    case phone
-    case inApp
-}
-
-struct CancellationEmail {
-    let to: String
-    let subject: String
-    let body: String
-}
-
 // MARK: - Safari View
 struct SafariView: UIViewControllerRepresentable {
     let url: URL

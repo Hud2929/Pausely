@@ -29,27 +29,17 @@ extension Color {
 // All spacing, radius, and animation values live here.
 
 struct Spacing {
-    static let xs: CGFloat = 4
     static let sm: CGFloat = 8
     static let md: CGFloat = 16
-    static let lg: CGFloat = 24
-    static let xl: CGFloat = 32
-    static let xxl: CGFloat = 48
 }
 
 struct Radius {
-    static let sm: CGFloat = 8
     static let md: CGFloat = 12
-    static let lg: CGFloat = 16
-    static let xl: CGFloat = 24
-    static let full: CGFloat = 999
 }
 
 struct PremiumAnimations {
-    static let spring = Animation.spring(response: 0.4, dampingFraction: 0.8)
     static let smooth = Animation.easeInOut(duration: 0.3)
     static let fast = Animation.easeOut(duration: 0.2)
-    static let slow = Animation.easeInOut(duration: 0.5)
 }
 
 
@@ -187,7 +177,6 @@ struct LoadingDots: View {
 }
 
 struct PremiumLoadingIndicator: View {
-    @State private var isAnimating = false
 
     var body: some View {
         LoadingDots()
@@ -205,10 +194,7 @@ struct PremiumDivider: View {
 
 // MARK: - Haptic Feedback
 enum Haptic {
-    static func light() { UIImpactFeedbackGenerator(style: .light).impactOccurred() }
-    static func medium() { UIImpactFeedbackGenerator(style: .medium).impactOccurred() }
     static func success() { UINotificationFeedbackGenerator().notificationOccurred(.success) }
-    static func warning() { UINotificationFeedbackGenerator().notificationOccurred(.warning) }
     static func error() { UINotificationFeedbackGenerator().notificationOccurred(.error) }
 }
 
@@ -223,9 +209,7 @@ struct BrandColors {
 }
 
 struct BackgroundColors {
-    static var primary: Color { .obsidianBlack }
     static var secondary: Color { .obsidianSurface }
-    static var tertiary: Color { .obsidianElevated }
 }
 
 

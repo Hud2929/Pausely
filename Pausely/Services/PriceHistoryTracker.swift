@@ -44,11 +44,6 @@ struct PriceChangeAlert: Identifiable {
     let percentageChange: Double
     let date: Date
 
-    var isIncrease: Bool { newAmount > oldAmount }
-    var formattedChange: String {
-        let sign = isIncrease ? "+" : ""
-        return "\(sign)\(String(format: "%.1f", percentageChange))%"
-    }
 }
 
 @MainActor
@@ -154,12 +149,6 @@ final class PriceHistoryTracker: ObservableObject {
         return percentageIncrease(for: subscriptionId) / Double(years)
     }
 
-    func yearlySpentOnIncreases(for subscriptions: [Subscription]) -> Decimal {
-        subscriptions.reduce(0) { total, sub in
-            let increase = totalPriceIncrease(for: sub.id)
-            return total + (increase * sub.billingFrequency.multiplierToYearly)
-        }
-    }
 
     // MARK: - Projections
 
@@ -206,19 +195,5 @@ enum PriceTrend: String {
     case decreasing = "decreasing"
     case stable = "stable"
 
-    var icon: String {
-        switch self {
-        case .increasing: return "arrow.up.forward"
-        case .decreasing: return "arrow.down.forward"
-        case .stable: return "minus"
-        }
-    }
 
-    var color: String {
-        switch self {
-        case .increasing: return "red"
-        case .decreasing: return "green"
-        case .stable: return "gray"
-        }
-    }
 }

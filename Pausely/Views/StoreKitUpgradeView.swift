@@ -26,7 +26,6 @@ struct StoreKitUpgradeView: View {
     @AccessibilityFocusState private var focusedElement: FocusElement?
 
     let currentSubscriptionCount: Int
-    let maxFreeSubscriptions = FreeTier.subscriptionLimit
 
     enum FocusElement {
         case title
@@ -256,52 +255,6 @@ struct StoreKitUpgradeView: View {
     }
 
     // MARK: - Usage Section
-    private var usageSection: some View {
-        VStack(spacing: 10) {
-            // Circular progress indicator
-            ZStack {
-                // Background circle
-                Circle()
-                    .stroke(Color.white.opacity(0.1), lineWidth: 10)
-                    .frame(width: 120, height: 120)
-
-                // Progress arc
-                Circle()
-                    .trim(from: 0, to: CGFloat(min(currentSubscriptionCount, maxFreeSubscriptions)) / CGFloat(maxFreeSubscriptions))
-                    .stroke(
-                        AngularGradient(
-                            colors: [.accentMint, .accentMint, .accentMint],
-                            center: .center,
-                            startAngle: .degrees(-90),
-                            endAngle: .degrees(270)
-                        ),
-                        style: StrokeStyle(lineWidth: 10, lineCap: .round)
-                    )
-                    .frame(width: 120, height: 120)
-                    .rotationEffect(.degrees(-90))
-                    .animation(.easeInOut(duration: 1), value: appearAnimation)
-
-                // Crown icon
-                Image(systemName: "crown.fill")
-                    .font(.system(.title, design: .rounded).weight(.semibold))
-                    .foregroundStyle(
-                        LinearGradient(
-                            colors: [.accentMint, .accentMint],
-                            startPoint: .topLeading,
-                            endPoint: .bottomTrailing
-                        )
-                    )
-                    .shadow(color: .accentMint.opacity(0.5), radius: 15)
-            }
-
-            // Usage text
-            Text("\(currentSubscriptionCount)/\(maxFreeSubscriptions) subscriptions used")
-                .font(AppTypography.bodyMedium)
-                .foregroundStyle(.white.opacity(0.7))
-        }
-        .opacity(appearAnimation ? 1 : 0)
-        .offset(y: appearAnimation ? 0 : 20)
-    }
 
     // MARK: - Plan Selection Section
     private var planSelectionSection: some View {

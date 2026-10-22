@@ -57,39 +57,6 @@ final class NotificationManager {
 
     // MARK: - Cancellation
     
-    func schedulePauseResumeReminder(for subscription: Subscription, resumeDate: Date) {
-        guard isAuthorized else { return }
-
-        cancelPauseReminder(for: subscription.id)
-
-        guard resumeDate > Date() else { return }
-
-        let content = UNMutableNotificationContent()
-        content.title = "\(subscription.name) pause ending"
-        content.body = "Your subscription will automatically resume tomorrow. Tap to review or resume now."
-        content.sound = .default
-        content.categoryIdentifier = "PAUSE_RESUME"
-        content.userInfo = [
-            "subscription_id": subscription.id.uuidString,
-            "type": "pause_resume"
-        ]
-
-        // Notify 1 day before resume at 10 AM
-        guard let reminderDate = Calendar.current.date(byAdding: .day, value: -1, to: resumeDate) else { return }
-        var dateComponents = Calendar.current.dateComponents([.year, .month, .day], from: reminderDate)
-        dateComponents.hour = 10
-        dateComponents.minute = 0
-
-        let trigger = UNCalendarNotificationTrigger(dateMatching: dateComponents, repeats: false)
-
-        let request = UNNotificationRequest(
-            identifier: "pause-\(subscription.id.uuidString)",
-            content: content,
-            trigger: trigger
-        )
-
-        center.add(request)
-    }
 
     func schedulePauseReminder(for subscription: Subscription, reminderDate: Date, pauseURL: String?) {
         guard isAuthorized else { return }
@@ -134,9 +101,6 @@ final class NotificationManager {
         }
     }
     
-    func cancelAllReminders() {
-        center.removeAllPendingNotificationRequests()
-    }
     
     // MARK: - Private Methods
     

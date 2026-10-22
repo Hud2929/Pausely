@@ -21,12 +21,6 @@ final class StoreKitManager: ObservableObject {
         case monthly = "com.pausely.premium.monthly"
         case annual = "com.pausely.premium.annual"
         
-        var displayName: String {
-            switch self {
-            case .monthly: return "Monthly Pro"
-            case .annual: return "Annual Pro"
-            }
-        }
     }
     
     // MARK: - Private
@@ -273,15 +267,7 @@ final class StoreKitManager: ObservableObject {
         }
     }
     
-    /// Checks if user has active subscription
-    var hasActiveSubscription: Bool {
-        !purchasedProductIDs.isEmpty
-    }
     
-    /// Gets formatted price for a product (uses our pricing, not StoreKit sandbox prices)
-    func price(for tier: SubscriptionTier) -> String {
-        return tier.priceInUserCurrency()
-    }
 }
 
 

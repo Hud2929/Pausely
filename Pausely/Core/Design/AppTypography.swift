@@ -4,8 +4,6 @@ import SwiftUI
 /// Accessibility-first typography using Dynamic Type with the app's rounded design.
 /// All sizes scale automatically with the user's text size preferences.
 enum AppTypography {
-    // Display
-    static let displayLarge   = Font.system(.largeTitle, design: .rounded, weight: .bold)
     static let displayMedium  = Font.system(.title, design: .rounded, weight: .bold)
     static let displaySmall   = Font.system(.title2, design: .rounded, weight: .bold)
 
@@ -24,8 +22,4 @@ enum AppTypography {
     static let labelMedium    = Font.system(.caption, design: .rounded, weight: .medium)
     static let labelSmall     = Font.system(.caption2, design: .rounded, weight: .medium)
 
-    // Special
-    static let numericLarge   = Font.system(.title, design: .rounded, weight: .bold).monospacedDigit()
-    static let numericMedium  = Font.system(.headline, design: .rounded, weight: .semibold).monospacedDigit()
-    static let numericSmall   = Font.system(.body, design: .rounded, weight: .regular).monospacedDigit()
 }

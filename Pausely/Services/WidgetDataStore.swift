@@ -95,14 +95,6 @@ final class WidgetDataStore {
         )
     }
 
-    func readTrials() -> [WidgetTrialInfo] {
-        guard let defaults,
-              let data = defaults.data(forKey: "widget_trials"),
-              let trials = try? JSONDecoder().decode([WidgetTrialInfo].self, from: data) else {
-            return []
-        }
-        return trials.filter { $0.trialEndsAt > Date() }
-    }
 
     func readLiveActivityData() -> LiveActivityData {
         guard let defaults else {
@@ -142,7 +134,6 @@ struct WidgetSummary {
     let currencyCode: String
     let topInsight: String
 
-    var currencySymbol: String { WidgetSummary.symbol(for: currencyCode) }
 
     static func symbol(for code: String) -> String {
         switch code {

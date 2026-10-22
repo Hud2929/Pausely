@@ -44,8 +44,6 @@ enum SubscriptionTier: String, CaseIterable, Comparable, Codable {
     // MARK: - Backward Compatibility
     static let premium = pro
     static let premiumAnnual = proAnnual
-    static let plus = pro
-    static let plusAnnual = proAnnual
     
     var displayName: String {
         switch self {
@@ -161,7 +159,6 @@ final class PaymentManager: ObservableObject {
             }
         }
     }
-    private(set) var isLoading = false
     private(set) var products: [Product] = []
 
     // MARK: - Debug Override
@@ -200,14 +197,8 @@ final class PaymentManager: ObservableObject {
         }
         set { /* No-op - tier is managed by StoreKit */ }
     }
-    var isPro: Bool { isPremium }
-    var canPauseSubscriptions: Bool { isPremium }
 
-    static let freeTierLimit: Int = FreeTier.subscriptionLimit
-    var freeTierLimit: Int { Self.freeTierLimit }
 
-    /// Can pause subscriptions
-    var canPause: Bool { resolvedTier > .free }
     
     // MARK: - Initialization
     private init() {
@@ -245,38 +236,7 @@ final class PaymentManager: ObservableObject {
         }
     }
     
-    func purchase(_ product: Product) async throws -> Transaction? {
-        isLoading = true
-        defer { isLoading = false }
-        
-        let result = try await product.purchase()
-        
-        switch result {
-        case .success(let verification):
-            let transaction = try checkVerified(verification)
-            await updateCurrentEntitlements()
-            await transaction.finish()
-            STAnimation.success()
-            return transaction
-            
-        case .userCancelled:
-            return nil
-            
-        case .pending:
-            return nil
-            
-        @unknown default:
-            return nil
-        }
-    }
     
-    func restorePurchases() async {
-        isLoading = true
-        defer { isLoading = false }
-        
-        try? await AppStore.sync()
-        await updateCurrentEntitlements()
-    }
     
     // MARK: - Entitlements
     
@@ -344,10 +304,6 @@ final class PaymentManager: ObservableObject {
         }
     }
 
-    /// Legacy method for granting free Pro (referrals)
-    func grantFreeProForReferrals() {
-        activatePremium(source: .referral)
-    }
 
     // MARK: - Auto-Add Pausely Pro Subscription
 

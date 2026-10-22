@@ -259,14 +259,6 @@ enum ValueTier: String, CaseIterable {
     case poor
     case unknown
 
-    var color: String {
-        switch self {
-        case .great:   return "green"
-        case .fair:    return "yellow"
-        case .poor:    return "red"
-        case .unknown: return "gray"
-        }
-    }
 
     var swiftUIColor: SwiftUI.Color {
         switch self {
@@ -307,15 +299,6 @@ struct CostPerUseResult: Identifiable {
     let sessions: Int
     let hasUsageData: Bool
 
-    var displayCostPerHour: String {
-        guard let cph = costPerHour else { return "—" }
-        return CostPerUseCalculator.formatCostPerHour(cph, currencyCode: subscription.currency)
-    }
-
-    var displayValueScore: String {
-        guard let score = valueScore else { return "—" }
-        return CostPerUseCalculator.formatValueScore(score)
-    }
 
     var displayHoursUsed: String {
         CostPerUseCalculator.formatHours(monthlyHoursUsed)
@@ -325,25 +308,6 @@ struct CostPerUseResult: Identifiable {
         monthlyHoursUsed == 0 && subscription.monthlyCost > 0 && hasUsageData
     }
 
-    var wastedAmount: Decimal {
-        isWasted ? subscription.monthlyCost : 0
-    }
 }
 
 
-// MARK: - Smart Alert Models
-struct CostPerUseAlert: Identifiable {
-    let id = UUID()
-    let type: AlertType
-    let subscription: Subscription
-    let message: String
-    let detail: String
-    let actionLabel: String?
-
-    enum AlertType {
-        case unused         // "You haven't used X in 2 weeks"
-        case costIncreased  // "Your cost-per-use increased"
-        case zeroWaste      // "You used X for 0 hours this month"
-        case poorValue      // "Poor value detected"
-    }
-}

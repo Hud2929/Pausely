@@ -35,7 +35,6 @@ final class SubscriptionCatalogService: ObservableObject {
 
     private let cacheKey = "subscription_catalog_cache"
     private let cacheDateKey = "subscription_catalog_date"
-    private let currencyManager = CurrencyManager.shared
 
     // MARK: - Dictionary Indexes (O(1) lookups for 500+ entries)
     private var entryByBundleId: [String: CatalogEntry] = [:]
@@ -68,19 +67,6 @@ final class SubscriptionCatalogService: ObservableObject {
         catalog.map { CatalogSubscription(from: $0) }
     }
 
-    /// Find bundle ID for a subscription name (O(1) exact, O(n) partial fallback)
-    func findBundleId(for name: String) -> String? {
-        let lowercased = name.lowercased()
-        // Try exact match first (O(1))
-        if let exact = entryByName[lowercased] {
-            return exact.bundleId
-        }
-        // Try partial match (O(n) fallback)
-        if let partial = catalog.first(where: { $0.name.lowercased().contains(lowercased) }) {
-            return partial.bundleId
-        }
-        return nil
-    }
 
     /// Returns all bundle IDs in the catalog
     var allBundleIds: [String] {
@@ -258,24 +244,6 @@ final class SubscriptionCatalogService: ObservableObject {
 
     // MARK: - Search
 
-    func search(_ query: String, category: SubscriptionCategory?) -> [CatalogEntry] {
-        var results = catalog
-
-        if let cat = category {
-            results = results.filter { $0.category == cat }
-        }
-
-        if !query.isEmpty {
-            let q = query.lowercased()
-            results = results.filter {
-                $0.name.lowercased().contains(q) ||
-                $0.category.rawValue.lowercased().contains(q) ||
-                $0.description.lowercased().contains(q)
-            }
-        }
-
-        return results
-    }
 
     func entry(for bundleId: String) -> CatalogEntry? {
         entryByBundleId[bundleId]

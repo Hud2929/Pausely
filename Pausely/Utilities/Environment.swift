@@ -17,9 +17,6 @@ enum EnvironmentConfig {
         CredentialsManager.shared.get(.supabaseAnonKey) ?? ""
     }
 
-    static var supabaseServiceRoleKey: String {
-        CredentialsManager.shared.get(.supabaseServiceRoleKey) ?? ""
-    }
 
     static func validate() -> Bool {
         return !supabaseURL.isEmpty && !supabaseAnonKey.isEmpty

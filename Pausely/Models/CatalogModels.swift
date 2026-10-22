@@ -226,22 +226,7 @@ struct TierPricing: Codable, Equatable, Identifiable {
         return monthlyPriceUSD / Double(max)
     }
 
-    /// Returns the monthly price in the requested currency, converting from the tier's true currency if needed.
-    func monthlyPrice(in targetCurrency: String, rates: [String: Double]) -> Double {
-        guard targetCurrency != currencyCode else { return monthlyPriceUSD }
-        guard let sourceRate = rates[currencyCode], let targetRate = rates[targetCurrency] else { return monthlyPriceUSD }
-        let amountInUSD = monthlyPriceUSD / sourceRate
-        return amountInUSD * targetRate
-    }
 
-    /// Returns the annual price in the requested currency, converting from the tier's true currency if needed.
-    func annualPrice(in targetCurrency: String, rates: [String: Double]) -> Double? {
-        guard let annual = annualPriceUSD else { return nil }
-        guard targetCurrency != currencyCode else { return annual }
-        guard let sourceRate = rates[currencyCode], let targetRate = rates[targetCurrency] else { return annual }
-        let amountInUSD = annual / sourceRate
-        return amountInUSD * targetRate
-    }
 }
 
 // MARK: - Catalog Entry

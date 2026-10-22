@@ -20,11 +20,8 @@ class SubscriptionStore: ObservableObject {
     private var fetchTask: Task<Void, Never>?
 
     // MARK: - Performance Optimizations for Scale
-    private var backgroundQueue = DispatchQueue(label: "com.pausely.store", qos: .userInitiated)
     private var calculationTask: Task<Void, Never>?
     private var lastCalculationHash: Int?
-    private var cachedSubscriptions: [Subscription]?
-    private var cacheTimestamp: Date?
     private var currencyCancellable: AnyCancellable?
 
     private init() {
@@ -110,9 +107,6 @@ class SubscriptionStore: ObservableObject {
         }
     }
     
-    func refresh() async {
-        await fetchSubscriptions(force: true)
-    }
     
     // MARK: - CRUD Operations
     
@@ -194,49 +188,7 @@ class SubscriptionStore: ObservableObject {
             }
         }
         
-        var isTableNotFound: Bool {
-            if case .tableNotFound = self { return true }
-            return false
-        }
         
-        static func from(_ error: Error) -> DatabaseError {
-            let errorString = String(describing: error).lowercased()
-            let localizedError = error.localizedDescription.lowercased()
-            
-            // Check for table not found
-            let tableNotFoundPatterns = [
-                "could not find the table",
-                "does not exist",
-                "42p01",
-                "relation",
-                "schema cache",
-                "postgrest error"
-            ]
-            
-            for pattern in tableNotFoundPatterns {
-                if errorString.contains(pattern) || localizedError.contains(pattern) {
-                    return .tableNotFound
-                }
-            }
-            
-            // Check for network errors
-            let networkPatterns = ["network", "connection", "offline", "timeout", "host", "dns"]
-            for pattern in networkPatterns {
-                if errorString.contains(pattern) || localizedError.contains(pattern) {
-                    return .networkError
-                }
-            }
-            
-            // Check for auth errors
-            let authPatterns = ["jwt", "not authenticated", "unauthorized", "auth"]
-            for pattern in authPatterns {
-                if errorString.contains(pattern) || localizedError.contains(pattern) {
-                    return .notAuthenticated
-                }
-            }
-            
-            return .unknown(error)
-        }
     }
     
     /// Adds a subscription. Always updates local state first, then attempts cloud sync.
@@ -620,10 +572,6 @@ class SubscriptionStore: ObservableObject {
     }
     #endif
 
-    /// Process any pending sync operations with the cloud
-    func processPendingSync() async {
-        await SyncQueue.shared.processQueue()
-    }
     
     // MARK: - Batch Operations for Scale
     

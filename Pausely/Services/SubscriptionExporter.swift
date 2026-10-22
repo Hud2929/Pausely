@@ -14,21 +14,7 @@ enum ExportFormat: String, CaseIterable {
     case pdf = "PDF"
     case json = "JSON"
 
-    var fileExtension: String {
-        switch self {
-        case .csv: return "csv"
-        case .pdf: return "pdf"
-        case .json: return "json"
-        }
-    }
 
-    var mimeType: String {
-        switch self {
-        case .csv: return "text/csv"
-        case .pdf: return "application/pdf"
-        case .json: return "application/json"
-        }
-    }
 }
 
 struct ExportOptions {

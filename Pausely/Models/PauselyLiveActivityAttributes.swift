@@ -74,15 +74,6 @@ final class LiveActivityManager {
 
     // MARK: - Update
 
-    func updateLiveActivity() {
-        guard let activity = currentActivity else { return }
-
-        let newState = calculateState(for: activity.attributes.renewalDate)
-
-        Task {
-            await activity.update(using: newState)
-        }
-    }
 
     // MARK: - End
 
@@ -95,14 +86,6 @@ final class LiveActivityManager {
         }
     }
 
-    func endAllActivities() {
-        Task {
-            for activity in Activity<PauselyLiveActivityAttributes>.activities {
-                await activity.end(nil, dismissalPolicy: .immediate)
-            }
-            currentActivity = nil
-        }
-    }
 
     // MARK: - Private
 

@@ -26,7 +26,4 @@ enum PauselyLogger {
         logger(for: category).error("\(message)")
     }
 
-    static func fault(_ message: String, category: String = "default") {
-        logger(for: category).fault("\(message)")
-    }
 }

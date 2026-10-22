@@ -19,14 +19,6 @@ class SupabaseManager: ObservableObject {
         return isDemoMode
     }
 
-    /// Returns a user-friendly message if Supabase is not properly configured
-    func configurationErrorMessage() -> String? {
-        guard !isConfigured else { return nil }
-        if isDemoMode {
-            return "Running in offline mode. Some features may be limited."
-        }
-        return "Supabase is not configured. Please check your settings."
-    }
 
     private init() {
         // Use EnvironmentConfig for secure credential management
@@ -275,17 +267,7 @@ class CurrencyManager: ObservableObject {
     }()
     
     // MARK: - Compatibility Properties
-    var lastUpdateTime: Date? { lastUpdated }
-    var isOffline: Bool { error != nil }
-    var isRateStale: Bool {
-        guard let lastUpdated = lastUpdated else { return true }
-        return Date().timeIntervalSince(lastUpdated) > 3600 * 24 // 24 hours
-    }
     
-    /// Get currently selected currency object
-    var selectedCurrencyObject: Currency {
-        currencies.first { $0.code == selectedCurrency } ?? Currency(code: "USD", name: "US Dollar", symbol: "$", flag: "🇺🇸", locale: "en_US")
-    }
     
     let currencies: [Currency] = [
         // Major Global Currencies
@@ -625,13 +607,6 @@ class CurrencyManager: ObservableObject {
         NotificationCenter.default.post(name: .currencyChanged, object: code)
     }
     
-    /// Detect currency from device locale
-    static func detectCurrencyFromLocale() -> Currency {
-        let locale = Locale.current
-        let currencyCode = locale.currency?.identifier ?? "USD"
-        return CurrencyManager.shared.currencies.first { $0.code == currencyCode }
-            ?? Currency(code: "USD", name: "US Dollar", symbol: "$", flag: "🇺🇸", locale: "en_US")
-    }
     
     /// Get currency by code
     func currency(for code: String) -> Currency? {
@@ -656,17 +631,6 @@ class CurrencyManager: ObservableObject {
         return amountInUSD * targetRate
     }
     
-    /// Format with showing original
-    func formatConverted(_ amount: Double, from sourceCurrency: Currency, showOriginal: Bool) -> String {
-        let converted = (try? convert(amount, from: sourceCurrency.code, to: selectedCurrency)) ?? amount
-        let roundedConverted = roundToMarketingPrice(converted)
-        let convertedStr = format(Decimal(roundedConverted))
-        if showOriginal && sourceCurrency.code != selectedCurrency {
-            let originalStr = sourceCurrency.format(amount)
-            return "\(convertedStr) (\(originalStr))"
-        }
-        return convertedStr
-    }
     
     /// Rounds prices to marketing-friendly amounts (.99, .00, etc.)
     func roundToMarketingPrice(_ amount: Double) -> Double {
@@ -684,19 +648,6 @@ class CurrencyManager: ObservableObject {
         return max(marketingPrice, 0.99) // Minimum price $0.99
     }
     
-    /// Convert with marketing rounding
-    func convertWithRounding(_ amount: Double, from sourceCurrency: String, to targetCurrency: String) throws -> Double {
-        guard sourceCurrency != targetCurrency else { return amount }
-        guard let sourceRate = exchangeRates[sourceCurrency] else {
-            throw CurrencyError.rateNotAvailable
-        }
-        guard let targetRate = exchangeRates[targetCurrency] else {
-            throw CurrencyError.rateNotAvailable
-        }
-        let amountInUSD = amount / sourceRate
-        let converted = amountInUSD * targetRate
-        return roundToMarketingPrice(converted)
-    }
 
     /// Get exchange rate between two currencies
     func getRate(from sourceCode: String, to targetCode: String) throws -> Double {

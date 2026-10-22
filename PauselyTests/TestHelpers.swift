@@ -41,78 +41,14 @@ enum TestFactories {
         )
     }
 
-    static func makeUser(
-        id: String = "test-user-id",
-        email: String? = "test@example.com",
-        firstName: String? = "Test",
-        lastName: String? = "User"
-    ) -> User {
-        User(
-            id: id,
-            email: email,
-            firstName: firstName,
-            lastName: lastName
-        )
-    }
 
-    static func makeTierPricing(
-        tier: PricingTier = .individual,
-        region: Region = .us,
-        monthlyPriceUSD: Double = 9.99,
-        annualPriceUSD: Double? = 99.99,
-        isBestValue: Bool = false
-    ) -> TierPricing {
-        TierPricing(
-            tier: tier,
-            region: region,
-            monthlyPriceUSD: monthlyPriceUSD,
-            annualPriceUSD: annualPriceUSD,
-            isBestValue: isBestValue
-        )
-    }
-
-    static func makeCatalogEntry(
-        name: String = "Test Service",
-        bundleId: String = "com.test.service",
-        category: SubscriptionCategory = .entertainment,
-        supportedTiers: [TierPricing] = []
-    ) -> CatalogEntry {
-        CatalogEntry(
-            bundleId: bundleId,
-            name: name,
-            category: category,
-            description: "Test description",
-            iconName: "star",
-            websiteURL: "https://example.com",
-            supportedTiers: supportedTiers.isEmpty ? [makeTierPricing()] : supportedTiers
-        )
-    }
 }
 
 // MARK: - Async Test Helpers
 
 extension XCTestCase {
 
-    func awaitAsync<T>(
-        timeout: TimeInterval = 5.0,
-        _ operation: @escaping () async throws -> T
-    ) async throws -> T {
-        try await operation()
-    }
 
-    func assertThrowsAsync<T>(
-        _ expression: @escaping () async throws -> T,
-        _ message: @autoclosure () -> String = "",
-        file: StaticString = #filePath,
-        line: UInt = #line
-    ) async {
-        do {
-            _ = try await expression()
-            XCTFail(message() + " - Expected error but got success", file: file, line: line)
-        } catch {
-            // Expected
-        }
-    }
 }
 
 // MARK: - Date Helpers

@@ -1070,16 +1070,6 @@ enum AlternativeDatabase {
 // MARK: - Helper Extensions
 
 
-enum QuickActionType {
-    case cancel
-    case pause
-    case call
-    case chat
-    case email
-    case support
-}
-
-
 // MARK: - Additional Service Categories
 
 extension ServiceDatabase {
@@ -1828,13 +1818,6 @@ struct ParsedSubscription: Identifiable {
         case medium = "Medium"
         case low = "Low"
         
-        var color: Color {
-            switch self {
-            case .high: return .green
-            case .medium: return .orange
-            case .low: return .red
-            }
-        }
     }
 }
 

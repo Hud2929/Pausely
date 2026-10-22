@@ -65,7 +65,6 @@ class ReferralManager: ObservableObject {
     @Published var referralData: ReferralData?
     @Published var conversions: [ReferralConversion] = []
     @Published var isLoading = false
-    @Published var errorMessage: String?
     @Published var pendingReferralCode: String? {
         didSet {
             UserDefaults.standard.set(pendingReferralCode, forKey: Self.pendingReferralCodeKey)
@@ -98,8 +97,6 @@ class ReferralManager: ObservableObject {
     static let appliedDiscountKey = "applied_referral_discount"
     static let referrerCodeKey = "referrer_code_used"
     static let referralDiscountUsedKey = "referral_discount_used"
-    static let freeProThreshold = 3
-    static let referralDiscountPercentage: Double = 0.30 // 30%
     
     // MARK: - Private Properties
     private var client: SupabaseClient { SupabaseManager.shared.client }
@@ -136,61 +133,7 @@ class ReferralManager: ObservableObject {
     
     // MARK: - Referral Code Generation
     
-    func generateReferralCode(for userId: String) async throws -> String {
-        // Generate a unique 8-character code
-        let code = generateUniqueCode()
-        
-        let referralData = ReferralData(
-            code: code,
-            referrerUserId: userId,
-            conversions: 0,
-            pendingConversions: 0,
-            totalEarnings: 0,
-            createdAt: Date(),
-            isEligibleForFreePro: false
-        )
-        
-        // Store in Supabase
-        try await client
-            .from("referral_codes")
-            .insert(referralData)
-            .execute()
-        
-        self.currentUserReferralCode = code
-        self.referralData = referralData
-        
-        return code
-    }
     
-    func getOrCreateReferralCode(for userId: String) async throws -> String {
-        // First check if user already has a code
-        if let existingCode = currentUserReferralCode {
-            return existingCode
-        }
-        
-        // Try to fetch existing code from database
-        do {
-            let response: [ReferralData] = try await client
-                .from("referral_codes")
-                .select()
-                .eq("referrer_user_id", value: userId)
-                .execute()
-                .value
-            
-            if let existing = response.first {
-                self.currentUserReferralCode = existing.code
-                self.referralData = existing
-                return existing.code
-            }
-        } catch {
-            #if DEBUG
-            os_log("No existing referral code found, creating new one", log: .default, type: .info)
-            #endif
-        }
-        
-        // Create new code
-        return try await generateReferralCode(for: userId)
-    }
     
     // MARK: - Referral Code Validation
     
@@ -300,126 +243,16 @@ class ReferralManager: ObservableObject {
     
     // MARK: - Conversion Tracking
     
-    func markConversionAsPaid(referredUserId: String) async throws {
-        // Update conversion status
-        try await client
-            .from("referral_conversions")
-            .update([
-                "status": ConversionStatus.converted.rawValue,
-                "converted_at": ISO8601DateFormatter().string(from: Date())
-            ])
-            .eq("referred_user_id", value: referredUserId)
-            .execute()
-        
-        // Get the conversion to find the referrer
-        let conversions: [ReferralConversion] = try await client
-            .from("referral_conversions")
-            .select()
-            .eq("referred_user_id", value: referredUserId)
-            .eq("status", value: ConversionStatus.converted.rawValue)
-            .execute()
-            .value
-        
-        guard let conversion = conversions.first else { return }
-
-        // Read current referrer stats
-        let referrerData: [ReferralData] = try await client
-            .from("referral_codes")
-            .select()
-            .eq("code", value: conversion.referrerCode)
-            .execute()
-            .value
-
-        guard let data = referrerData.first else { return }
-
-        // Update referrer stats (read-modify-write)
-        let commissionCents = 500 // $5.00 = 500 cents
-        let newEarnings = data.totalEarnings + Decimal(commissionCents)
-
-        try await client
-            .from("referral_codes")
-            .update([
-                "conversions": data.conversions + 1,
-                "pending_conversions": max(0, data.pendingConversions - 1),
-                "total_earnings": NSDecimalNumber(decimal: newEarnings).intValue
-            ])
-            .eq("code", value: conversion.referrerCode)
-            .execute()
-        
-        // Check if referrer qualifies for free Pro
-        try await checkAndUpdateFreeProEligibility(code: conversion.referrerCode)
-        
-        await loadCurrentUserReferralData()
-    }
     
     // MARK: - Free Pro Eligibility
     
-    func checkAndUpdateFreeProEligibility(code: String) async throws {
-        let response: [ReferralData] = try await client
-            .from("referral_codes")
-            .select()
-            .eq("code", value: code)
-            .execute()
-            .value
-        
-        guard let data = response.first else { return }
-        
-        let isEligible = data.conversions >= Self.freeProThreshold
-        
-        if isEligible && !data.isEligibleForFreePro {
-            try await client
-                .from("referral_codes")
-                .update(["is_eligible_for_free_pro": true])
-                .eq("code", value: code)
-                .execute()
-            
-            // Grant free Pro to referrer
-            grantFreeProToReferrer(userId: data.referrerUserId)
-        }
-    }
     
-    func grantFreeProToReferrer(userId: String) {
-        // Update payment manager to grant free Pro
-        PaymentManager.shared.grantFreeProForReferrals()
-    }
     
     // MARK: - Referral Discount Management (First Month Only)
     
-    /// Checks if the user has an active referral discount that hasn't been used yet
-    func hasActiveReferralDiscount() -> Bool {
-        return appliedReferralDiscount && !referralDiscountUsed && referrerCodeUsed != nil
-    }
     
-    /// Marks the referral discount as used (called after first successful payment)
-    func markReferralDiscountAsUsed() {
-        guard !referralDiscountUsed else { return }
-        
-        referralDiscountUsed = true
-        #if DEBUG
-        os_log("✅ Referral discount marked as used - will not apply to future payments", log: .default, type: .info)
-        #endif
-        
-        // Sync to database
-        Task { [weak self] in
-            guard let self = self else { return }
-            await self.syncReferralDiscountUsedToDatabase()
-        }
-    }
     
-    /// Clears the referral discount (used for testing or if purchase fails)
-    func clearReferralDiscount() {
-        appliedReferralDiscount = false
-        referralDiscountUsed = false
-        UserDefaults.standard.removeObject(forKey: Self.appliedDiscountKey)
-        UserDefaults.standard.removeObject(forKey: Self.referralDiscountUsedKey)
-    }
     
-    /// Gets the discounted price if referral discount is active and unused
-    func getDiscountedPrice(originalPrice: Decimal) -> Decimal {
-        guard hasActiveReferralDiscount() else { return originalPrice }
-        let discountMultiplier = Decimal(1.0 - Self.referralDiscountPercentage)
-        return originalPrice * discountMultiplier
-    }
     
     // MARK: - Database Sync for Referral Discount Used
     
@@ -627,17 +460,7 @@ class ReferralManager: ObservableObject {
     
     // MARK: - Referral Share URL
     
-    func getReferralShareURL() -> URL? {
-        guard let code = currentUserReferralCode else { return nil }
-        return URL(string: "https://pausely.pro/r/\(code)")
-    }
     
-    func getReferralShareText() -> String {
-        guard let code = currentUserReferralCode else {
-            return "Check out Pausely - the smart subscription manager!"
-        }
-        return "Get 30% off your first month of Pausely Pro! Use my referral code: \(code)\n\nhttps://pausely.pro/r/\(code)"
-    }
     
     // MARK: - Helper Methods
     
@@ -650,93 +473,11 @@ class ReferralManager: ObservableObject {
         return code
     }
     
-    func clearPendingReferralCode() {
-        pendingReferralCode = nil
-        UserDefaults.standard.removeObject(forKey: Self.pendingReferralCodeKey)
-    }
     
-    func hasReferralDiscount() -> Bool {
-        return hasActiveReferralDiscount()
-    }
 
     // MARK: - Share Helpers
 
-    /// Returns the full referral link string
-    func referralLinkString() -> String {
-        guard let code = currentUserReferralCode else {
-            return "https://pausely.pro/download"
-        }
-        return "https://pausely.pro/r/\(code)"
-    }
 
-    /// Returns the display code or a fallback
-    func displayCode() -> String {
-        currentUserReferralCode ?? "Loading..."
-    }
-
-    /// Opens Messages with a pre-filled referral message
-    func shareViaMessages() {
-        let code = displayCode()
-        let link = referralLinkString()
-        let message = "Get Pausely and manage your subscriptions smarter! Use my code \(code) for 30% off. Get Pro FREE when you refer 3 friends! \(link)"
-
-        guard let encodedBody = message.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed),
-              let url = URL(string: "sms:&body=\(encodedBody)") else { return }
-
-        UIApplication.shared.open(url)
-    }
-
-    /// Opens Mail with a pre-filled referral message
-    func shareViaEmail() {
-        let code = displayCode()
-        let link = referralLinkString()
-        let subject = "Get 30% off Pausely - Subscription Manager"
-        let body = "Hey!\n\nI've been using Pausely to track and manage my subscriptions. It's saved me hundreds!\n\nUse my referral code \(code) to get 30% off. Plus, if you refer 3 friends, you get Pro FREE forever!\n\n\(link)"
-
-        guard let encodedSubject = subject.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed),
-              let encodedBody = body.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed),
-              let url = URL(string: "mailto:?subject=\(encodedSubject)&body=\(encodedBody)") else { return }
-
-        UIApplication.shared.open(url)
-    }
-
-    /// Copies the referral message to the clipboard
-    func copyToClipboard() -> String {
-        let text = "Use my code \(displayCode()) to get 30% off Pausely! \(referralLinkString())"
-        UIPasteboard.general.string = text
-        return text
-    }
-
-    /// Presents a system share sheet with the referral content
-    func shareViaSystem(presentingFrom rootVC: UIViewController?) {
-        let code = displayCode()
-        let link = referralLinkString()
-        let text = "Get Pausely and manage your subscriptions smarter! Use my code \(code) for 30% off. Get Pro FREE when you refer 3 friends!"
-
-        var shareItems: [Any] = [text]
-
-        if let url = URL(string: link), link != "https://pausely.pro/download" {
-            shareItems.append(url)
-        } else {
-            shareItems.append("Download at: https://pausely.pro")
-        }
-
-        let activityVC = UIActivityViewController(activityItems: shareItems, applicationActivities: nil)
-        activityVC.excludedActivityTypes = [
-            .addToReadingList,
-            .assignToContact,
-            .openInIBooks,
-            .saveToCameraRoll
-        ]
-
-        if let popover = activityVC.popoverPresentationController {
-            popover.sourceView = rootVC?.view
-            popover.sourceRect = CGRect(x: rootVC?.view.bounds.midX ?? 0, y: rootVC?.view.bounds.midY ?? 0, width: 0, height: 0)
-            popover.permittedArrowDirections = []
-        }
-
-        rootVC?.present(activityVC, animated: true)
-    }
 }
 
 // MARK: - User Settings Model for Database

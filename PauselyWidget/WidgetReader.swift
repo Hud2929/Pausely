@@ -52,7 +52,4 @@ enum WidgetReader {
         UserDefaults(suiteName: suiteName)?.double(forKey: "liveActivity_amount") ?? 0
     }
 
-    static func readLiveActivityFrequency() -> String {
-        UserDefaults(suiteName: suiteName)?.string(forKey: "liveActivity_frequency") ?? "Monthly"
-    }
 }

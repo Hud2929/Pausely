@@ -53,13 +53,6 @@ final class RealInsightsEngine: ObservableObject {
 
     // MARK: - Formatting Helpers
 
-    private func formatDecimal(_ value: Decimal) -> String {
-        let formatter = NumberFormatter()
-        formatter.numberStyle = .decimal
-        formatter.maximumFractionDigits = 2
-        formatter.minimumFractionDigits = 0
-        return formatter.string(from: NSDecimalNumber(decimal: value)) ?? "0"
-    }
 
     private func formatCurrency(_ value: Decimal) -> String {
         CurrencyManager.shared.format(value)
@@ -470,39 +463,6 @@ final class RealInsightsEngine: ObservableObject {
 
     // MARK: - Annual Savings
 
-    struct AnnualSavingsResult {
-        let insights: [RealInsight]
-    }
-
-    func findAnnualSavingsOpportunities(subscriptions: [Subscription]) -> AnnualSavingsResult {
-        var insights: [RealInsight] = []
-
-        let active = subscriptions.filter { $0.status == .active }
-
-        for sub in active {
-            // If paying monthly and cost > $8/month, suggest annual
-            if sub.billingFrequency == .monthly && monthly(sub) >= 8 {
-                let annualCost = monthly(sub) * 12
-                // Assume 20% annual discount
-                let estimatedAnnual = annualCost * Decimal(0.80)
-                let savings = annualCost - estimatedAnnual
-
-                insights.append(RealInsight(
-                    type: .annualSavings,
-                    title: "Annual Plan: \(sub.name)",
-                    description: "Switch to annual billing to save ~\(formatCurrency(savings))/year on \(sub.name).",
-                    icon: "calendar.badge.clock",
-                    iconColor: .blue,
-                    priority: 50,
-                    potentialSavings: savings,
-                    subscriptionId: sub.id,
-                    action: .switchToAnnual
-                ))
-            }
-        }
-
-        return AnnualSavingsResult(insights: insights)
-    }
 
     // MARK: - ROI Analysis
 
@@ -633,27 +593,6 @@ final class RealInsightsEngine: ObservableObject {
 
     // MARK: - Spending Trend
 
-    func analyzeSpendingTrend(subscriptions: [Subscription]) -> [RealInsight] {
-        var insights: [RealInsight] = []
-
-        let active = subscriptions.filter { $0.status == .active }
-        let totalMonthly = active.reduce(Decimal(0)) { $0 + monthly($1) }
-
-        // Spending summary
-        insights.append(RealInsight(
-            type: .spendingTrend,
-            title: "Monthly Spending",
-            description: "You're spending \(formatCurrency(totalMonthly))/month on \(active.count) active \(active.count == 1 ? "subscription" : "subscriptions").",
-            icon: "dollarsign.circle.fill",
-            iconColor: .blue,
-            priority: 30,
-            potentialSavings: nil,
-            subscriptionId: nil,
-            action: .none
-        ))
-
-        return insights
-    }
 }
 
 // MARK: - Real Insight Model

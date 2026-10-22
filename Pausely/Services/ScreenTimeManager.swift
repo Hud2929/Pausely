@@ -28,23 +28,16 @@ final class ScreenTimeManager: ObservableObject {
     // MARK: - Optimized Storage for 1000s of Users
     // Use simple dictionary for memory management (NSCache issues with @Observable)
     private var usageCache: [String: CacheEntry] = [:]
-    private var subscriptionInsights: [String: SubscriptionInsight] = [:]
-    private var insightCache: [String: InsightCacheEntry] = [:]
     
     // MARK: - Private Properties
     private let center = AuthorizationCenter.shared
     private let userDefaultsKey = "screen_time_authorized_v2"
-    private let manualTrackingEnabledKey = "screen_time_manual_tracking_enabled"
     private let lastSyncKey = "screen_time_last_sync_v2"
     private let usageCacheKey = "screen_time_usage_cache_v3" // Version bump for new format
     private let compressionKey = "screen_time_compressed"
     
     // MARK: - Performance Optimizations
-    private let processingQueue = DispatchQueue(label: "com.pausely.screentime", qos: .utility)
-    private var syncTask: Task<Void, Never>?
-    private var calculationTasks: [String: Task<SubscriptionInsight, Never>] = [:]
     private let maxCacheAge: TimeInterval = 3600 // 1 hour
-    private let maxCacheSize = 200 // Maximum entries to prevent memory bloat
     private var refreshTimer: Timer?
     
     struct CacheEntry {
@@ -52,10 +45,6 @@ final class ScreenTimeManager: ObservableObject {
         let timestamp: Date
     }
     
-    struct InsightCacheEntry {
-        let insight: SubscriptionInsight
-        let timestamp: Date
-    }
     
     // MARK: - Authorization Status
     enum AuthorizationStatus: String {
@@ -64,14 +53,6 @@ final class ScreenTimeManager: ObservableObject {
         case authorized = "authorized"
         case restricted = "restricted"
         
-        var displayText: String {
-            switch self {
-            case .notDetermined: return "Connect Screen Time"
-            case .denied:        return "Access Denied"
-            case .authorized:    return "✓ Connected"
-            case .restricted:    return "Restricted"
-            }
-        }
         
         var description: String {
             switch self {
@@ -82,23 +63,7 @@ final class ScreenTimeManager: ObservableObject {
             }
         }
         
-        var icon: String {
-            switch self {
-            case .notDetermined: return "chart.bar"
-            case .denied:        return "xmark.circle.fill"
-            case .authorized:    return "checkmark.shield.fill"
-            case .restricted:    return "exclamationmark.triangle.fill"
-            }
-        }
         
-        var color: Color {
-            switch self {
-            case .notDetermined: return .accentMint
-            case .denied:        return .red
-            case .authorized:    return .green
-            case .restricted:    return .orange
-            }
-        }
     }
     
     // MARK: - Initialization (Optimized)
@@ -394,96 +359,10 @@ final class ScreenTimeManager: ObservableObject {
         )
     }
     
-    /// Automatically track all subscriptions - REVOLUTIONARY FEATURE
-    func autoTrackSubscriptions(_ subscriptions: [Subscription]) async {
-        guard authorizationStatus == .authorized else {
-            PauselyLogger.debug("Cannot auto-track: Screen Time not authorized", category: "ScreenTime")
-            return
-        }
-
-        PauselyLogger.debug("Auto-tracking \(subscriptions.count) subscriptions...", category: "ScreenTime")
-
-        // Fetch latest data for all subscriptions
-        let _ = try? await fetchDeviceActivity()
-
-        // Generate insights for each subscription automatically
-        for subscription in subscriptions {
-            let insight = generateInsight(for: subscription)
-
-            // Log the tracking
-            if insight.monthlyMinutesUsed > 0 {
-                PauselyLogger.debug("Tracked: \(subscription.name) - \(formatMinutes(insight.monthlyMinutesUsed)) this month", category: "ScreenTime")
-            } else {
-                PauselyLogger.debug("No usage data for: \(subscription.name)", category: "ScreenTime")
-            }
-        }
-
-        PauselyLogger.debug("Auto-tracking complete", category: "ScreenTime")
-    }
     
-    /// Check if a subscription can be automatically tracked
-    func canAutoTrack(_ subscription: Subscription) -> Bool {
-        return SubscriptionCatalogService.shared.findBundleId(for: subscription.name) != nil
-    }
     
-    /// Get list of auto-trackable subscriptions
-    func getAutoTrackableSubscriptions(from subscriptions: [Subscription]) -> [Subscription] {
-        return subscriptions.filter { canAutoTrack($0) }
-    }
     
-    /// Get tracking status for a subscription
-    func getTrackingStatus(for subscription: Subscription) -> TrackingStatus {
-        guard isAuthorized else { return .notAuthorized }
-        
-        if canAutoTrack(subscription) {
-            let usage = getUsage(for: subscription.name)
-            if let usage = usage, usage.minutesUsed > 0 {
-                return .tracking(usage.minutesUsed)
-            } else {
-                return .trackableButNoData
-            }
-        } else {
-            return .notSupported
-        }
-    }
     
-    enum TrackingStatus {
-        case notAuthorized
-        case trackableButNoData
-        case tracking(Int) // minutes tracked
-        case notSupported
-        
-        var description: String {
-            switch self {
-            case .notAuthorized:
-                return "Enable Screen Time to track automatically"
-            case .trackableButNoData:
-                return "Waiting for usage data..."
-            case .tracking(let minutes):
-                return "Tracked \(minutes) minutes this month"
-            case .notSupported:
-                return "Enter usage manually"
-            }
-        }
-        
-        var icon: String {
-            switch self {
-            case .notAuthorized: return "clock.badge.questionmark"
-            case .trackableButNoData: return "clock.badge.exclamationmark"
-            case .tracking: return "clock.badge.checkmark"
-            case .notSupported: return "hand.tap"
-            }
-        }
-        
-        var color: Color {
-            switch self {
-            case .notAuthorized: return .orange
-            case .trackableButNoData: return .yellow
-            case .tracking: return .green
-            case .notSupported: return .blue
-            }
-        }
-    }
     
     /// Sync all usage data
     func syncUsageData() async {
@@ -496,75 +375,6 @@ final class ScreenTimeManager: ObservableObject {
     
     // MARK: - Smart Insights (REVOLUTIONARY)
     
-    /// Generate comprehensive insight for a subscription
-    func generateInsight(for subscription: Subscription) -> SubscriptionInsight {
-        let usage = getUsage(for: subscription.name)
-        let monthlyMinutes = usage?.minutesUsed ?? 0
-        let monthlyHours = Double(monthlyMinutes) / 60.0
-        
-        // Calculate cost per hour
-        let costPerHour: Double?
-        if monthlyHours > 0 {
-            costPerHour = Double(truncating: subscription.monthlyCost as NSNumber) / monthlyHours
-        } else {
-            costPerHour = nil
-        }
-        
-        // Determine usage category
-        let usageCategory: UsageCategory
-        if monthlyHours == 0 {
-            usageCategory = .unused
-        } else if monthlyHours < 2 {
-            usageCategory = .veryLow
-        } else if monthlyHours < 10 {
-            usageCategory = .low
-        } else if monthlyHours < 30 {
-            usageCategory = .moderate
-        } else {
-            usageCategory = .high
-        }
-        
-        // Calculate waste score (0-100, lower is more wasteful)
-        let wasteScore: Int
-        switch usageCategory {
-        case .unused:    wasteScore = 100
-        case .veryLow:   wasteScore = 80
-        case .low:       wasteScore = 50
-        case .moderate:  wasteScore = 25
-        case .high:      wasteScore = 10
-        }
-        
-        // Generate recommendation
-        let recommendation: InsightRecommendation
-        if monthlyHours == 0 {
-            recommendation = .cancel("You haven't used this app in the last 30 days. Consider canceling to save \(subscription.displayMonthlyCostInUserCurrency)/month.")
-        } else if monthlyHours < 2 {
-            let potentialSavings = subscription.displayMonthlyCostInUserCurrency
-            recommendation = .review("Very low usage detected. Is it still worth \(potentialSavings) a month?")
-        } else if let cph = costPerHour, cph > 10 {
-            let formattedCph = CurrencyManager.shared.format(Decimal(cph))
-            recommendation = .highCost("Your cost per hour is \(formattedCph) - quite expensive!")
-        } else {
-            recommendation = .goodValue("Great value! You're getting good use from this subscription.")
-        }
-        
-        let insight = SubscriptionInsight(
-            subscriptionId: subscription.id,
-            subscriptionName: subscription.name,
-            monthlyCost: subscription.monthlyCost,
-            monthlyMinutesUsed: monthlyMinutes,
-            monthlyHoursUsed: monthlyHours,
-            costPerHour: costPerHour,
-            launches: usage?.launches ?? 0,
-            usageCategory: usageCategory,
-            wasteScore: wasteScore,
-            recommendation: recommendation,
-            lastUpdated: Date()
-        )
-        
-        subscriptionInsights[subscription.id.uuidString] = insight
-        return insight
-    }
     
     /// Get usage for a subscription by name (NEW - returns AppUsageData)
     func getUsage(for subscriptionName: String) -> AppUsageData? {
@@ -641,32 +451,9 @@ final class ScreenTimeManager: ObservableObject {
         }
     }
     
-    /// Format hours with decimal
-    func formatHours(_ hours: Double) -> String {
-        if hours < 1 {
-            return "\(Int(hours * 60))m"
-        } else if hours == floor(hours) {
-            return "\(Int(hours))h"
-        } else {
-            return String(format: "%.1fh", hours)
-        }
-    }
     
-    /// Get total monthly usage across all tracked apps
-    func getTotalMonthlyUsage() -> Int {
-        return usageData.values.reduce(0) { $0 + $1.minutesUsed }
-    }
     
-    /// Get all insights for subscriptions
-    func getAllInsights(for subscriptions: [Subscription]) -> [SubscriptionInsight] {
-        return subscriptions.map { generateInsight(for: $0) }
-    }
     
-    /// Get waste report (subscriptions sorted by waste score)
-    func getWasteReport(for subscriptions: [Subscription]) -> [SubscriptionInsight] {
-        let insights = getAllInsights(for: subscriptions)
-        return insights.sorted { $0.wasteScore > $1.wasteScore }
-    }
     
     // MARK: - Manual Entry Support
     
@@ -691,29 +478,13 @@ final class ScreenTimeManager: ObservableObject {
     
     // MARK: - Helpers
     
-    var hasAnyUsageData: Bool {
-        !usageData.isEmpty || UserDefaults.standard.dictionaryRepresentation().keys.contains(where: { $0.hasPrefix("usage_") })
-    }
     
     var isTrackingEnabled: Bool {
         authorizationStatus == .authorized
     }
     
-    func openSettings() {
-        if let url = URL(string: UIApplication.openSettingsURLString) {
-            UIApplication.shared.open(url)
-        }
-    }
     
-    func openScreenTimeSettings() {
-        openSettings()
-    }
     
-    func enableManualTracking() {
-        // Manual tracking does not require FamilyControls authorization
-        // Use a separate flag so the UI distinguishes between API and manual mode
-        UserDefaults.standard.set(true, forKey: manualTrackingEnabledKey)
-    }
     
     func setMonthlyUsage(minutes: Int, for subscriptionName: String) {
         setManualUsage(minutes: minutes, for: subscriptionName)
@@ -723,13 +494,6 @@ final class ScreenTimeManager: ObservableObject {
         setManualUsage(minutes: minutes, for: subscriptionName)
     }
     
-    func clearAllData() {
-        usageCache.removeAll()
-        subscriptionInsights.removeAll()
-        UserDefaults.standard.removeObject(forKey: usageCacheKey)
-        UserDefaults.standard.removeObject(forKey: lastSyncKey)
-        // Don't remove authorization - just the data
-    }
 }
 
 // MARK: - Data Models
@@ -1058,26 +822,4 @@ enum ScreenTimeError: LocalizedError {
             return "Screen Time features require iOS 15+ and proper entitlement setup."
         }
     }
-}
-
-// MARK: - SwiftUI Preview Helpers
-
-#Preview {
-    let manager = ScreenTimeManager.shared
-    
-    VStack(spacing: 16) {
-        Text("Screen Time Manager")
-            .font(.headline)
-        
-        HStack {
-            Image(systemName: manager.authorizationStatus.icon)
-            Text(manager.authorizationStatus.displayText)
-        }
-        .foregroundColor(manager.authorizationStatus.color)
-        
-        Text(manager.authorizationStatus.description)
-            .font(.caption)
-            .multilineTextAlignment(.center)
-    }
-    .padding()
 }

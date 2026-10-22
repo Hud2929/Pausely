@@ -83,41 +83,6 @@ struct PauselyLiveActivityView: View {
 
 // MARK: - Expanded / Compact Views
 
-struct PauselyLiveActivityCompactLeadingView: View {
-    let context: ActivityViewContext<PauselyLiveActivityAttributes>
-
-    var body: some View {
-        HStack(spacing: 4) {
-            Image(systemName: "creditcard.fill")
-                .foregroundStyle(context.state.isUrgent ? .red : .indigo)
-            Text("\(context.state.daysUntilRenewal)d")
-                .font(.caption.weight(.bold))
-        }
-    }
-}
-
-struct PauselyLiveActivityCompactTrailingView: View {
-    let context: ActivityViewContext<PauselyLiveActivityAttributes>
-
-    var body: some View {
-        Text(context.attributes.subscriptionName)
-            .font(.caption)
-            .lineLimit(1)
-    }
-}
-
-struct PauselyLiveActivityMinimalView: View {
-    let context: ActivityViewContext<PauselyLiveActivityAttributes>
-
-    var body: some View {
-        VStack {
-            Image(systemName: "creditcard.fill")
-                .foregroundStyle(context.state.isUrgent ? .red : .indigo)
-            Text("\(context.state.daysUntilRenewal)")
-                .font(.caption2.weight(.bold))
-        }
-    }
-}
 
 // MARK: - Widget Configuration with Live Activity
 // This would be added to the @main struct in PauselyWidget.swift:

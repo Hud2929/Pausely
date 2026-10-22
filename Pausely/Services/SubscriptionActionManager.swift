@@ -179,9 +179,6 @@ struct SupportContact: Codable, Identifiable {
         SupportContact(type: .email, value: address, label: label, hours: nil)
     }
     
-    static func webForm(_ url: String, label: String = "Contact Form") -> SupportContact {
-        SupportContact(type: .webForm, value: url, label: label, hours: nil)
-    }
 }
 
 /// Represents a subscription service with all management details

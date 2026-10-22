@@ -6,38 +6,10 @@ import Foundation
 @MainActor
 final class AppleSignInCoordinator: NSObject, ObservableObject {
 
-    private var currentNonce: String?
     private var continuation: CheckedContinuation<ASAuthorization, Error>?
 
     // MARK: - Public API
 
-    /// Presents the Apple sign-in sheet and returns the data needed to authenticate with Supabase.
-    func signIn() async throws -> (idToken: String, rawNonce: String, fullName: PersonNameComponents?) {
-        let nonce = Self.generateNonce()
-        currentNonce = nonce
-
-        let request = ASAuthorizationAppleIDProvider().createRequest()
-        request.requestedScopes = [.fullName, .email]
-        request.nonce = Self.sha256(nonce)
-
-        let authorization = try await withCheckedThrowingContinuation { (cont: CheckedContinuation<ASAuthorization, Error>) in
-            self.continuation = cont
-            let controller = ASAuthorizationController(authorizationRequests: [request])
-            controller.delegate = self
-            controller.presentationContextProvider = self
-            controller.performRequests()
-        }
-
-        guard
-            let credential = authorization.credential as? ASAuthorizationAppleIDCredential,
-            let tokenData = credential.identityToken,
-            let idToken = String(data: tokenData, encoding: .utf8)
-        else {
-            throw AppleSignInError.missingToken
-        }
-
-        return (idToken: idToken, rawNonce: nonce, fullName: credential.fullName)
-    }
 
     // MARK: - Helpers (also exposed as static for use with SignInWithAppleButton)
 
@@ -114,14 +86,3 @@ extension AppleSignInCoordinator: ASAuthorizationControllerPresentationContextPr
 
 // MARK: - Error
 
-enum AppleSignInError: LocalizedError {
-    case missingToken
-    case cancelled
-
-    var errorDescription: String? {
-        switch self {
-        case .missingToken:  return "Could not get Apple identity token."
-        case .cancelled:     return "Sign in was cancelled."
-        }
-    }
-}

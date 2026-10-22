@@ -267,25 +267,7 @@ struct Subscription: Identifiable, Codable, Equatable {
             }
         }
         
-        var color: String {
-            switch self {
-            case .unknown: return "gray"
-            case .overdue: return "red"
-            case .today: return "orange"
-            case .soon: return "yellow"
-            case .thisWeek: return "blue"
-            case .upcoming: return "green"
-            }
-        }
         
-        var isUrgent: Bool {
-            switch self {
-            case .overdue, .today, .soon:
-                return true
-            default:
-                return false
-            }
-        }
     }
     
     // MARK: - Helper Methods
@@ -528,27 +510,7 @@ extension Subscription {
 enum WasteLevel: String, CaseIterable {
     case critical, high, moderate, low, none, unknown
     
-    var color: Color {
-        switch self {
-        case .critical:  return .semanticDestructive
-        case .high:      return .semanticWarning
-        case .moderate:  return Color(hex: "#F59E0B").opacity(0.7)
-        case .low:       return .semanticSuccess.opacity(0.7)
-        case .none:      return .semanticSuccess
-        case .unknown:   return .obsidianTextTertiary
-        }
-    }
     
-    var label: String {
-        switch self {
-        case .critical:  return "Unused"
-        case .high:      return "Barely Used"
-        case .moderate:  return "Light Use"
-        case .low:       return "Regular Use"
-        case .none:      return "Great Value"
-        case .unknown:   return "Unknown"
-        }
-    }
 }
 
 // MARK: - Waste Recommendation
@@ -560,31 +522,5 @@ enum WasteRecommendation: String {
     case excellentValue
     case insufficientData
     
-    var title: String {
-        switch self {
-        case .cancelImmediately:  return "💡 Cancel Immediately"
-        case .considerPausing:    return "⏸️ Consider Pausing"
-        case .reviewUsage:        return "📊 Review Usage"
-        case .goodValue:          return "✅ Good Value"
-        case .excellentValue:     return "🔥 Excellent Value"
-        case .insufficientData:   return "📈 Track Usage"
-        }
-    }
     
-    var message: String {
-        switch self {
-        case .cancelImmediately:
-            return "You haven't used this in weeks. Cancel and save money."
-        case .considerPausing:
-            return "Low usage detected. Consider pausing until you need it."
-        case .reviewUsage:
-            return "Moderate usage. Track for another month to decide."
-        case .goodValue:
-            return "You're getting good value from this subscription."
-        case .excellentValue:
-            return "Great investment! You use this regularly."
-        case .insufficientData:
-            return "Add usage data to see your waste score."
-        }
-    }
 }

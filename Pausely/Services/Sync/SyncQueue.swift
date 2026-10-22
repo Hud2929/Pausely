@@ -10,7 +10,6 @@ final class SyncQueue: ObservableObject {
     @Published var lastSyncError: Error?
 
     private let client = SupabaseManager.shared.client
-    private var processTask: Task<Void, Never>?
     private let maxRetries = 3
 
     private init() {
@@ -162,13 +161,5 @@ final class SyncQueue: ObservableObject {
 
     // MARK: - Helpers
 
-    func clearQueue() {
-        pendingOperations.removeAll()
-        savePendingOperations()
-    }
 
-    func cancelProcessing() {
-        processTask?.cancel()
-        isSyncing = false
-    }
 }

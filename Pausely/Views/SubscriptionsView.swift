@@ -9,7 +9,6 @@ struct PremiumSubscriptionsView: View {
     @State private var selectedFilter: FilterType = .all
     @State private var searchText = ""
     @State private var activeSheet: ActiveSheet?
-    @State private var cardOffset: CGFloat = 0
     @Binding var deepLinkedSubscription: Subscription?
 
     init(deepLinkedSubscription: Binding<Subscription?> = .constant(nil)) {
@@ -43,7 +42,6 @@ struct PremiumSubscriptionsView: View {
     }
 
     @State private var sortOrder: SortOrder = .renewalDate
-    @State private var showingSortPicker = false
 
     var filteredSubscriptions: [Subscription] {
         var result = store.subscriptions

@@ -9,7 +9,6 @@ struct PrivacySecurityView: View {
     @State private var showingDeleteAccountConfirmation = false
     @State private var showingPrivacyPolicy = false
     @State private var showingTermsOfService = false
-    @State private var changePasswordActive = false
 
     var body: some View {
         ZStack {

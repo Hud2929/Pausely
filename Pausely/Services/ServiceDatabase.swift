@@ -1152,10 +1152,6 @@ enum ServiceDatabase {
         )
     ]
     
-    // Combine all services
-    static var allServices: [SubscriptionService] {
-        streamingServices + musicServices + productivityServices
-    }
 }
 
 
@@ -3357,12 +3353,9 @@ class SubscriptionActionManager: ObservableObject {
     
     // Published properties for UI binding
     @Published var activePauses: [PauseRecord] = []
-    @Published var isLoading = false
-    @Published var errorMessage: String?
     
     // Storage for pause records
     private let pauseStorageKey = "com.pausely.pauseRecords"
-    private var cancellables = Set<AnyCancellable>()
     
     // MARK: - Service Lookup
     
@@ -3371,10 +3364,6 @@ class SubscriptionActionManager: ObservableObject {
         ServiceDatabase.services
     }
     
-    /// Get services by category
-    func services(in category: ServiceCategory) -> [SubscriptionService] {
-        allServices.filter { $0.category == category }
-    }
     
     /// Get a specific service by ID
     func service(withId id: String) -> SubscriptionService? {
@@ -3454,57 +3443,6 @@ class SubscriptionActionManager: ObservableObject {
         return findService(for: subscriptionName)
     }
     
-    /// Get service with confidence score for fuzzy matching
-    func findServiceWithConfidence(for subscriptionName: String) -> (service: SubscriptionService, confidence: Double)? {
-        let normalizedName = subscriptionName.lowercased().trimmingCharacters(in: .whitespacesAndNewlines)
-        
-        // Exact match = 100% confidence
-        if let service = allServices.first(where: { $0.name.lowercased() == normalizedName }) {
-            return (service, 1.0)
-        }
-        
-        // Alias match = 95% confidence
-        if let service = allServices.first(where: {
-            $0.aliases.contains(where: { $0.lowercased() == normalizedName })
-        }) {
-            return (service, 0.95)
-        }
-        
-        // Contains match = 80% confidence
-        if let service = allServices.first(where: {
-            normalizedName.contains($0.name.lowercased()) ||
-            $0.name.lowercased().contains(normalizedName)
-        }) {
-            return (service, 0.8)
-        }
-        
-        // Partial word match = variable confidence
-        let nameWords = normalizedName.split(separator: " ")
-        var bestMatch: SubscriptionService?
-        var bestScore = 0
-        
-        for service in allServices {
-            let serviceWords = service.name.lowercased().split(separator: " ")
-            let aliasWords = service.aliases.flatMap { $0.lowercased().split(separator: " ") }
-            let allWords = Set(serviceWords + aliasWords)
-            
-            let matchCount = nameWords.filter { word in
-                allWords.contains(where: { $0.hasPrefix(word) || word.hasPrefix($0) })
-            }.count
-            
-            if matchCount > bestScore {
-                bestScore = matchCount
-                bestMatch = service
-            }
-        }
-        
-        if bestScore >= 1, let match = bestMatch {
-            let confidence = min(0.7, Double(bestScore) / Double(nameWords.count))
-            return (match, confidence)
-        }
-        
-        return nil
-    }
     
     // MARK: - URL Generation
     
@@ -3520,23 +3458,7 @@ class SubscriptionActionManager: ObservableObject {
         return URL(string: "https://www.google.com/search?q=\(encodedQuery)")
     }
     
-    /// Generate the pause URL for a subscription
-    func generatePauseURL(for subscription: Subscription) -> URL? {
-        guard let service = findService(for: subscription.name),
-              service.canPause,
-              let pauseURL = service.pauseURL else {
-            return nil
-        }
-        return URL(string: pauseURL)
-    }
     
-    /// Generate the support URL for a subscription
-    func generateSupportURL(for subscription: Subscription) -> URL? {
-        if let service = findService(for: subscription.name) {
-            return URL(string: service.supportURL)
-        }
-        return nil
-    }
     
     /// Get support contact information
     func getSupportContacts(for subscription: Subscription) -> [SupportContact] {
@@ -3548,111 +3470,18 @@ class SubscriptionActionManager: ObservableObject {
     
     // MARK: - Cancellation Info
     
-    /// Get cancellation instructions for a subscription
-    func getCancellationInstructions(for subscription: Subscription) -> [CancellationStep] {
-        guard let service = findService(for: subscription.name) else {
-            return [CancellationStep(
-                order: 1,
-                title: "Search Online",
-                description: "Search for 'how to cancel \(subscription.name)' for specific instructions",
-                actionURL: generateCancelURL(for: subscription)?.absoluteString,
-                isCritical: true
-            )]
-        }
-        return service.instructions
-    }
     
-    /// Get cancellation difficulty
-    func getCancellationDifficulty(for subscription: Subscription) -> CancellationDifficulty {
-        guard let service = findService(for: subscription.name) else {
-            return .medium
-        }
-        return service.difficulty
-    }
     
-    /// Get estimated time to cancel
-    func getEstimatedCancellationTime(for subscription: Subscription) -> Int {
-        return getCancellationDifficulty(for: subscription).estimatedMinutes
-    }
     
     // MARK: - Pause Management
     
-    /// Check if a subscription can be paused
-    func canPause(_ subscription: Subscription) -> Bool {
-        guard let service = findService(for: subscription.name) else {
-            return false
-        }
-        return service.canPause
-    }
     
-    /// Get available pause durations for a subscription
-    func getPauseDurations(for subscription: Subscription) -> [PauseDuration] {
-        guard let service = findService(for: subscription.name), service.canPause else {
-            return []
-        }
-        return service.pauseDurations
-    }
     
-    /// Create a pause record
-    func createPause(for subscription: Subscription, duration: PauseDuration, setReminder: Bool = true) -> PauseRecord {
-        let calendar = Calendar.current
-        let endsAt = calendar.date(byAdding: .day, value: duration.rawValue, to: Date()) ?? Date()
-        let reminderDate = calendar.date(byAdding: .day, value: duration.rawValue - 2, to: Date())
-        
-        let record = PauseRecord(
-            id: UUID(),
-            subscriptionId: subscription.id,
-            serviceId: findService(for: subscription.name)?.id ?? "",
-            startedAt: Date(),
-            endsAt: endsAt,
-            reminderSet: setReminder,
-            reminderDate: setReminder ? reminderDate : nil,
-            status: .active
-        )
-        
-        activePauses.append(record)
-        savePauseRecords()
-        
-        // Schedule notification if needed
-        if setReminder, let reminder = reminderDate {
-            schedulePauseReminder(for: record, at: reminder)
-        }
-        
-        return record
-    }
     
-    /// End a pause early
-    func endPause(_ pause: PauseRecord) {
-        if let index = activePauses.firstIndex(where: { $0.id == pause.id }) {
-            activePauses[index].status = .ended
-            savePauseRecords()
-        }
-    }
     
-    /// Cancel a pause
-    func cancelPause(_ pause: PauseRecord) {
-        if let index = activePauses.firstIndex(where: { $0.id == pause.id }) {
-            activePauses[index].status = .cancelled
-            savePauseRecords()
-        }
-    }
     
-    /// Get active pause for a subscription
-    func getActivePause(for subscription: Subscription) -> PauseRecord? {
-        return activePauses.first { 
-            $0.subscriptionId == subscription.id && $0.status == .active 
-        }
-    }
     
-    /// Check if subscription is currently paused
-    func isPaused(_ subscription: Subscription) -> Bool {
-        return getActivePause(for: subscription) != nil
-    }
     
-    /// Get all active pauses
-    func getAllActivePauses() -> [PauseRecord] {
-        return activePauses.filter { $0.status == .active }
-    }
     
     /// Clean up expired pauses
     func cleanupExpiredPauses() {
@@ -3756,15 +3585,6 @@ class SubscriptionActionManager: ObservableObject {
         return alternative.calculateSavings(comparedTo: currentMonthly)
     }
     
-    /// Get best alternative with highest savings
-    func getBestAlternative(for subscription: Subscription) -> AlternativeService? {
-        let alternatives = findAlternatives(for: subscription)
-        let currentMonthly = NSDecimalNumber(decimal: subscription.amount).doubleValue
-        
-        return alternatives.max { a, b in
-            a.calculateSavings(comparedTo: currentMonthly) < b.calculateSavings(comparedTo: currentMonthly)
-        }
-    }
     
     // MARK: - Private Helpers
     
@@ -3783,10 +3603,6 @@ class SubscriptionActionManager: ObservableObject {
         cleanupExpiredPauses()
     }
     
-    private func schedulePauseReminder(for pause: PauseRecord, at date: Date) {
-        // Implementation would use UNUserNotificationCenter
-        // This is a placeholder for the notification scheduling logic
-    }
     
     // MARK: - Initialization
     

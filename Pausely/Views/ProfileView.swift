@@ -1085,9 +1085,6 @@ private struct WrappedStory3_VsAverage: View {
 private struct WrappedStory4_CouldBuy: View {
     let stats: WrappedStats
 
-    private var annual: Double {
-        NSDecimalNumber(decimal: stats.totalSpent).doubleValue
-    }
     private var localAnnual: Double {
         NSDecimalNumber(decimal: CurrencyManager.shared.convertToSelected(stats.totalSpent, from: CurrencyManager.shared.currentCurrency.code)).doubleValue
     }

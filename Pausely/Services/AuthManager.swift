@@ -18,9 +18,7 @@ class RevolutionaryAuthManager: ObservableObject {
     @Published var isAuthenticated = false
     @Published var currentUser: User?
     @Published var isBiometricEnabled = false
-    @Published var isCheckingEmailConfirmation = false
     
-    private var confirmationPollingTask: Task<Void, Never>?
     private var verifyTask: Task<Void, Never>?
 
     // MARK: - Private Properties
@@ -31,9 +29,7 @@ class RevolutionaryAuthManager: ObservableObject {
     private var pendingPassword: String?
 
     // MARK: - Scale Optimizations
-    private let authQueue = DispatchQueue(label: "com.pausely.auth", qos: .userInitiated)
     private var pendingRequests: [String: Task<Any, Error>] = [:]
-    private let requestLock = NSLock()
     private var lastTokenRefresh: Date?
     private let minRefreshInterval: TimeInterval = 60 // Minimum 60 seconds between refresh
     
@@ -53,10 +49,6 @@ class RevolutionaryAuthManager: ObservableObject {
             requests.removeValue(forKey: key)
         }
         
-        func cancelAll() {
-            requests.values.forEach { $0.cancel() }
-            requests.removeAll()
-        }
     }
     private let requestManager = RequestManager()
 
@@ -277,20 +269,6 @@ class RevolutionaryAuthManager: ObservableObject {
     
     // MARK: - Secure Token Storage (Using KeychainManager)
 
-    private func saveTokensToKeychain(accessToken: String?, refreshToken: String?) {
-        if let access = accessToken {
-            KeychainManager.shared.save(access, forKey: Self.keychainAccessTokenKey)
-        }
-        if let refresh = refreshToken {
-            KeychainManager.shared.save(refresh, forKey: Self.keychainRefreshTokenKey)
-        }
-    }
-
-    private func loadTokensFromKeychain() -> (access: String?, refresh: String?) {
-        let access = KeychainManager.shared.get(Self.keychainAccessTokenKey)
-        let refresh = KeychainManager.shared.get(Self.keychainRefreshTokenKey)
-        return (access, refresh)
-    }
 
     private func clearKeychainTokens() {
         KeychainManager.shared.delete(key: Self.keychainAccessTokenKey)
@@ -299,59 +277,6 @@ class RevolutionaryAuthManager: ObservableObject {
     
     // MARK: - Sign Up with Pausely-branded Email
     
-    func signUp(email: String, password: String,
-                firstName: String? = nil, lastName: String? = nil) async throws {
-        guard AgeConsentManager.shared.hasPassedDeviceGate else { throw PauselyAuthError.ageConsentRequired }
-        state = .loading
-
-        do {
-            var userMetadata: [String: AnyJSON] = ["app_name": .string("Pausely")]
-            if let fn = firstName, !fn.isEmpty { userMetadata["first_name"] = .string(fn) }
-            if let ln = lastName,  !ln.isEmpty { userMetadata["last_name"]  = .string(ln) }
-
-            let authResponse = try await client.auth.signUp(
-                email: email,
-                password: password,
-                data: userMetadata
-            )
-
-            UserDefaults.standard.set(email, forKey: lastEmailKey)
-
-            if let session = authResponse.session {
-                let uid = session.user.id.uuidString
-                saveProfile(userId: uid, firstName: firstName, lastName: lastName)
-                cacheSession(userId: uid, email: session.user.email,
-                             createdAt: session.user.createdAt)
-                let user = makeUser(from: session.user,
-                                    firstName: firstName, lastName: lastName)
-                currentUser = user
-                isAuthenticated = true
-                state = .authenticated(user)
-                startSessionRefresh()
-                postAuthSetup(user: user)
-
-                #if DEBUG
-                PauselyLogger.info("Sign up successful - user auto-confirmed and signed in", category: "auth")
-                #endif
-            } else {
-                // Stash name so it's available after email confirmation
-                let uid = authResponse.user.id.uuidString
-                saveProfile(userId: uid, firstName: firstName, lastName: lastName)
-                state = .emailConfirmationRequired(email)
-                #if DEBUG
-                PauselyLogger.info("Sign up successful - email confirmation required for: \(email)", category: "auth")
-                #endif
-            }
-
-        } catch let error as PauselyAuthError {
-            state = .error(error)
-            throw error
-        } catch {
-            let authError = PauselyAuthError.unknown(error)
-            state = .error(authError)
-            throw authError
-        }
-    }
 
     // MARK: - OTP-based Email Verification (REVOLUTIONARY)
 
@@ -512,44 +437,8 @@ class RevolutionaryAuthManager: ObservableObject {
         }
     }
 
-    /// Sign in with remember me option
-    func signIn(email: String, password: String, rememberMe: Bool) async throws {
-        // Store remember me preference
-        UserDefaults.standard.set(rememberMe, forKey: "remember_me_enabled")
-        
-        // Call regular sign in
-        try await signIn(email: email, password: password)
-    }
     
-    /// Resend confirmation email to the user
-    func resendConfirmationEmail(email: String) async throws {
-        do {
-            // Supabase doesn't have a direct "resend confirmation" API
-            // We need to sign up again with the same email to trigger a new confirmation email
-            // The user will get a new confirmation link
-            try await client.auth.resend(
-                email: email,
-                type: .signup
-            )
-        } catch {
-            throw PauselyAuthError.unknown(error)
-        }
-    }
     
-    /// Check if there's an active session
-    func checkSession() async {
-        if let session = client.auth.currentSession {
-            let user = makeUser(from: session.user)
-            cacheSession(userId: session.user.id.uuidString,
-                         email: session.user.email,
-                         createdAt: session.user.createdAt)
-            currentUser = user
-            isAuthenticated = true
-            state = .authenticated(user)
-            startSessionRefresh()
-            postAuthSetup(user: user)
-        }
-    }
 
     // MARK: - Sign in with Apple
 
@@ -594,60 +483,10 @@ class RevolutionaryAuthManager: ObservableObject {
 
     // MARK: - Magic Link Sign In
     
-    func signInWithMagicLink(email: String) async throws {
-        state = .loading
-        
-        do {
-            try await client.auth.signInWithOTP(
-                email: email,
-                shouldCreateUser: false
-            )
-            
-            state = .emailConfirmationRequired(email)
-
-        } catch {
-            let authError = PauselyAuthError.unknown(error)
-            state = .error(authError)
-            throw authError
-        }
-    }
 
     // MARK: - Email Confirmation Polling
     
-    func startEmailConfirmationPolling() {
-        isCheckingEmailConfirmation = true
-        confirmationPollingTask?.cancel()
-        confirmationPollingTask = Task { [weak self] in
-            guard let self = self else { return }
-            while !Task.isCancelled && self.isCheckingEmailConfirmation {
-                // Check session every 3 seconds
-                try? await Task.sleep(nanoseconds: 3 * 1_000_000_000)
-
-                if Task.isCancelled { break }
-
-                // Try to get current session - if email is confirmed, this will succeed
-                if let session = client.auth.currentSession {
-                    let user = makeUser(from: session.user)
-                    cacheSession(userId: session.user.id.uuidString,
-                                 email: session.user.email,
-                                 createdAt: session.user.createdAt)
-                    currentUser = user
-                    isAuthenticated = true
-                    state = .authenticated(user)
-                    isCheckingEmailConfirmation = false
-                    startSessionRefresh()
-                    postAuthSetup(user: user)
-                    break
-                }
-            }
-        }
-    }
     
-    func stopEmailConfirmationPolling() {
-        isCheckingEmailConfirmation = false
-        confirmationPollingTask?.cancel()
-        confirmationPollingTask = nil
-    }
     
     // MARK: - Deep Link Email Confirmation
     
@@ -687,30 +526,6 @@ class RevolutionaryAuthManager: ObservableObject {
         }
     }
 
-    /// Handles password reset confirmation from deep link
-    /// URL format: pausely://auth/reset-password?token=xxx&email=xxx
-    func confirmPasswordReset(token: String, email: String, newPassword: String) async throws {
-        state = .loading
-        
-        do {
-            // First verify the token
-            _ = try await client.auth.verifyOTP(
-                email: email,
-                token: token,
-                type: .recovery
-            )
-            
-            // Then update password
-            _ = try await client.auth.update(user: UserAttributes(password: newPassword))
-            
-            state = .unauthenticated
-
-        } catch {
-            let authError = PauselyAuthError.unknown(error)
-            state = .error(authError)
-            throw authError
-        }
-    }
 
     // MARK: - Password Reset
     
@@ -756,58 +571,7 @@ class RevolutionaryAuthManager: ObservableObject {
     
     // MARK: - Biometric Authentication
     
-    func toggleBiometricAuthentication(enabled: Bool) async throws {
-        guard enabled else {
-            UserDefaults.standard.set(false, forKey: biometricKey)
-            isBiometricEnabled = false
-            return
-        }
-        
-        let context = LAContext()
-        var error: NSError?
-        
-        guard context.canEvaluatePolicy(.deviceOwnerAuthenticationWithBiometrics, error: &error) else {
-            throw PauselyAuthError.biometricFailed
-        }
-        
-        do {
-            let success = try await context.evaluatePolicy(
-                .deviceOwnerAuthenticationWithBiometrics,
-                localizedReason: "Enable Face ID to quickly sign in to Pausely"
-            )
-            
-            if success {
-                UserDefaults.standard.set(true, forKey: biometricKey)
-                isBiometricEnabled = true
-            }
-        } catch {
-            throw PauselyAuthError.biometricFailed
-        }
-    }
     
-    func attemptBiometricAuth() async {
-        let context = LAContext()
-        
-        do {
-            let success = try await context.evaluatePolicy(
-                .deviceOwnerAuthenticationWithBiometrics,
-                localizedReason: "Sign in to Pausely"
-            )
-            
-            if success, let lastEmail = UserDefaults.standard.string(forKey: lastEmailKey) {
-                NotificationCenter.default.post(
-                    name: .biometricAuthSuccess,
-                    object: lastEmail
-                )
-            }
-        } catch {
-            os_log("Biometric auth failed: %{public}@", log: .default, type: .error, error.localizedDescription)
-            NotificationCenter.default.post(
-                name: .biometricAuthFailed,
-                object: error.localizedDescription
-            )
-        }
-    }
     
     // MARK: - Deep Link Handler
     
@@ -865,8 +629,6 @@ class RevolutionaryAuthManager: ObservableObject {
 // MARK: - Notifications
 extension Notification.Name {
     static let passwordResetTokenReceived = Notification.Name("passwordResetTokenReceived")
-    static let biometricAuthSuccess = Notification.Name("biometricAuthSuccess")
-    static let biometricAuthFailed = Notification.Name("biometricAuthFailed")
     static let emailConfirmationFailed = Notification.Name("emailConfirmationFailed")
 }
 

@@ -517,20 +517,8 @@ struct GeniusInsight: Identifiable {
         case high
         case critical
 
-        var color: Color {
-            switch self {
-            case .none: return .gray
-            case .low: return .blue
-            case .medium: return .yellow
-            case .high: return .orange
-            case .critical: return .red
-            }
-        }
     }
 
-    var confidencePercent: Int {
-        Int(confidence * 100)
-    }
 }
 
 struct GeniusReport {

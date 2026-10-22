@@ -108,10 +108,6 @@ struct RootView: View {
         #endif
     }
 
-    /// Detects if app should reset state for testing
-    private var shouldResetState: Bool {
-        ProcessInfo.processInfo.arguments.contains("--reset-state")
-    }
 
     /// Signed-in users (existing accounts, Apple sign-ins) who haven't confirmed their age yet.
     private var needsAgeGate: Bool {
@@ -245,7 +241,6 @@ struct RootView: View {
 struct PremiumSplashScreen: View {
     @Binding var animation: Bool
     @State private var rotation = 0.0
-    @State private var scale = 0.8
     @State private var opacity = 0.0
     
     var body: some View {
