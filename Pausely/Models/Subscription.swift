@@ -311,35 +311,35 @@ enum BillingFrequency: String, Codable, CaseIterable, Identifiable {
     
     var displayName: String {
         switch self {
-        case .weekly: return "Weekly"
-        case .biweekly: return "Every 2 Weeks"
-        case .monthly: return "Monthly"
-        case .quarterly: return "Every 3 Months"
-        case .semiannual: return "Every 6 Months"
-        case .yearly: return "Yearly"
+        case .weekly: return String(localized: "Weekly")
+        case .biweekly: return String(localized: "Every 2 Weeks")
+        case .monthly: return String(localized: "Monthly")
+        case .quarterly: return String(localized: "Every 3 Months")
+        case .semiannual: return String(localized: "Every 6 Months")
+        case .yearly: return String(localized: "Yearly")
         }
     }
     
     var shortDisplay: String {
         switch self {
-        case .weekly: return "/wk"
-        case .biweekly: return "/2wk"
-        case .monthly: return "/mo"
-        case .quarterly: return "/3mo"
-        case .semiannual: return "/6mo"
-        case .yearly: return "/yr"
+        case .weekly: return String(localized: "/wk")
+        case .biweekly: return String(localized: "/2wk")
+        case .monthly: return String(localized: "/mo")
+        case .quarterly: return String(localized: "/3mo")
+        case .semiannual: return String(localized: "/6mo")
+        case .yearly: return String(localized: "/yr")
         }
     }
 
     /// Grammatically correct billing period label, e.g. "per month", "per year"
     var billingPeriodLabel: String {
         switch self {
-        case .weekly:     return "per week"
-        case .biweekly:   return "every 2 weeks"
-        case .monthly:    return "per month"
-        case .quarterly:  return "every 3 months"
-        case .semiannual: return "every 6 months"
-        case .yearly:     return "per year"
+        case .weekly:     return String(localized: "per week")
+        case .biweekly:   return String(localized: "every 2 weeks")
+        case .monthly:    return String(localized: "per month")
+        case .quarterly:  return String(localized: "every 3 months")
+        case .semiannual: return String(localized: "every 6 months")
+        case .yearly:     return String(localized: "per year")
         }
     }
     
