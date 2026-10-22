@@ -539,49 +539,6 @@ struct AppUsageData: Codable, Identifiable {
     }
 }
 
-struct SubscriptionInsight: Identifiable, Codable {
-    var id = UUID()
-    let subscriptionId: UUID
-    let subscriptionName: String
-    let monthlyCost: Decimal
-    let monthlyMinutesUsed: Int
-    let monthlyHoursUsed: Double
-    let costPerHour: Double?
-    let launches: Int
-    let usageCategory: UsageCategory
-    let wasteScore: Int // 0-100, higher = more wasteful
-    let recommendation: InsightRecommendation
-    let lastUpdated: Date
-
-    /// Returns true if usage data is estimated from session counts (Screen Time API)
-    /// Returns false if manually entered by user
-    /// Note: Apple Screen Time API provides session events (app opened/closed), not exact minutes.
-    /// Usage shown is ESTIMATED based on session frequency when using Screen Time.
-    var isEstimated: Bool {
-        // If launches > 0, it came from Screen Time (estimated)
-        // If launches == 0 and monthlyMinutesUsed > 0, it was manually entered
-        return launches > 0
-    }
-
-    var isManualEntry: Bool {
-        monthlyMinutesUsed > 0 && launches == 0
-    }
-
-    var formattedCostPerHour: String {
-        guard let cph = costPerHour else { return "N/A" }
-        return String(format: "%.2f", cph)
-    }
-
-    var wasteLevel: WasteLevel {
-        switch wasteScore {
-        case 80...100: return .critical
-        case 50...79:  return .high
-        case 25...49:  return .moderate
-        case 1...24:   return .low
-        default:       return .none
-        }
-    }
-}
 
 enum UsageCategory: String, Codable, CaseIterable {
     case unused = "Unused"
