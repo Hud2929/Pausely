@@ -1,0 +1,76 @@
+# Engineering rules
+
+Short rules that keep Pausely's numbers, dates and promises correct. Most of them come from
+how Lago (an open-source billing engine) avoids billing bugs; see `LAGO_TAKEAWAYS.md`.
+
+## Money
+
+- Amounts are `Decimal` and always travel with a currency code. Convert to `Double` only for
+  display math or charts, never before storing or comparing.
+- Prices shown on the paywall come from StoreKit for the customer's storefront. `ProPricing`
+  holds only the USD launch prices used before StoreKit loads.
+- The annual "Save N%" badge is computed from the real StoreKit prices
+  (`StoreKitManager.annualSavingsPercent`). Never hardcode a percentage.
+
+## Renewal dates
+
+- `Subscription.nextBillingDate` is the **anchor**: the date the user entered or confirmed.
+  Never overwrite it with a computed date.
+- Read upcoming renewals through `calculatedNextBillingDate` or `nextRenewal(onOrAfter:)`.
+  Both roll the anchor forward for active and trial subscriptions, and leave cancelled and
+  paused ones alone.
+- Compute the k-th renewal from the anchor (`anchor + k × period`), never by adding a month to
+  the previous result. This keeps the 31st on the 31st (or the last day of short months) and
+  Feb 29 on Feb 28 in other years. `RenewalSchedule` does this. Do not reimplement it.
+- Store dates at local noon (`Calendar.noon(of:)`) so time zone and DST changes cannot move
+  them to another day.
+
+## Reminders
+
+- Never schedule a renewal or trial notification directly. Change the data, then call
+  `ReminderScheduler.shared.reschedule(_:)`. `SubscriptionStore` already does this after
+  add, edit, delete, cancel, pause and resume.
+- The scheduler removes every pending Pausely reminder and adds `ReminderPlanner.plan(...)`.
+  The plan is a pure function of the subscriptions and the time, so a stale reminder can't
+  survive a change.
+- iOS keeps 64 pending notifications per app. The planner keeps the soonest 60.
+- "Remind me: Off" (`notifyBeforeDays == 0`) means no renewal reminders of any kind.
+
+## Things that happen over time
+
+- Changes that happen without a user action (a trial ends, a renewal passes) go in
+  `SubscriptionLifecycle.changes(for:since:now:)`, which is pure and tested, and are applied
+  in `run()`. It runs when subscriptions load and when the app comes to the foreground.
+- Record what happened in `LifecycleEventLog`. The log stays on the device and is the source
+  for price history and measured savings. Don't infer history from the current state.
+
+## What Pro unlocks
+
+- `ProFeature` is the list. The paywall rows are generated from it, and screens check
+  `PaymentManager.isUnlocked(_:)`.
+- Use `isPremium` only to show membership status (badges, profile), never to gate a feature.
+- The free limit is `FreeTier.subscriptionLimit`. Copy that mentions the limit reads that value.
+- The App Store listing (`metadata/`) must promise exactly what `ProFeature` lists. Update both
+  together.
+
+## Links and configuration
+
+- Support, privacy, terms and website URLs come from `AppConfig`. Don't hardcode a domain in a view.
+- No secrets in the repo, in `Info.plist` committed values, or in memory notes.
+
+## Database migrations
+
+- Two steps for removing a column: first ship an app version that no longer reads or writes it,
+  then drop the column (for example `20261020_drop_smart_pause_alerts.sql`).
+- Migrations are additive and idempotent (`if not exists` / `if exists`).
+
+## Tests
+
+- Logic that depends on time takes `now` and `calendar` parameters. Tests pass a fixed date and
+  a calendar with DST (`America/Toronto`) instead of reading the clock.
+- Run the suite serially. Parallel simulator clones sometimes fail to boot:
+
+  ```
+  xcodebuild test -scheme Pausely -destination "id=<simulator>" \
+    -only-testing:PauselyTests -parallel-testing-enabled NO
+  ```

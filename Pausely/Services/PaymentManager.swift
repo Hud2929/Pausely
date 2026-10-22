@@ -2,7 +2,7 @@
 //  PaymentManager.swift
 //  Pausely
 //
-//  OPTIMIZED Tier Structure - 2-Sub Limit Drives Conversion
+//  Free tier, Pro tiers and StoreKit purchases. What Pro unlocks lives in ProFeature.swift.
 //
 
 import Foundation
@@ -28,8 +28,7 @@ enum PaymentSource: String, Codable {
     case promoCode = "promo_code"
 }
 
-// MARK: - Subscription Tier (OPTIMIZED FOR CONVERSION)
-/// Strategic tier structure: 2-sub limit creates urgency, killer features drive upgrade
+// MARK: - Subscription Tier
 enum SubscriptionTier: String, CaseIterable, Comparable, Codable {
     case free = "free"
     case pro = "pro"
@@ -132,15 +131,7 @@ enum SubscriptionTier: String, CaseIterable, Comparable, Codable {
         return CurrencyManager.shared.format(price, currencyCode: currencyCode)
     }
     
-    var savingsPercent: String {
-        switch self {
-        case .free:        return ""
-        case .pro:         return ""
-        case .proAnnual:   return "Save 17%"
-        }
-    }
-    
-    // MARK: - STRATEGIC LIMITS (Drives Conversion)
+    // MARK: - Limits
     
     /// FREE: up to `FreeTier.subscriptionLimit` subscriptions, enough for most people's real list.
     /// PRO: Unlimited
@@ -151,73 +142,9 @@ enum SubscriptionTier: String, CaseIterable, Comparable, Codable {
         }
     }
     
-    /// FREE: No bank sync (manual friction drives upgrade)
-    /// PRO: Bank sync enabled
-    var maxBankAccounts: Int {
-        switch self {
-        case .free:        return 0
-        case .pro, .proAnnual: return Int.max
-        }
-    }
-    
-    /// Bank sync is optional feature (not forced)
-    var hasBankSync: Bool {
-        self >= .pro
-    }
-    
-    /// Cancellation concierge - PREMIUM feature
-    var hasCancellationAssist: Bool {
-        self >= .pro
-    }
-    
-    /// Pre-filled cancellation forms - PREMIUM
-    var hasPreFilledCancellation: Bool {
-        self >= .pro
-    }
-    
-    /// Analytics and insights - PREMIUM
-    var hasAnalytics: Bool {
-        self >= .pro
-    }
-    
-    /// Waste score - PREMIUM (the "aha" moment)
-    var hasWasteScore: Bool {
-        self >= .pro
-    }
-    
-    /// Price increase alerts - PREMIUM
-    var hasPriceAlerts: Bool {
-        self >= .pro
-    }
-    
-    /// CSV/PDF export - PREMIUM
-    var hasExport: Bool {
-        self >= .pro
-    }
-    
-    /// Smart reminders (customizable) - PREMIUM
-    var hasSmartReminders: Bool {
-        self >= .pro
-    }
-    
-    /// Duplicate detection - PREMIUM
-    var hasDuplicateDetection: Bool {
-        self >= .pro
-    }
-    
-    /// Annual savings calculator - PREMIUM
-    var hasSavingsCalculator: Bool {
-        self >= .pro
-    }
-    
-    /// Unlimited categories - PREMIUM
-    var hasUnlimitedCategories: Bool {
-        self >= .pro
-    }
-    
 }
 
-// MARK: - Payment Manager (OPTIMIZED)
+// MARK: - Payment Manager
 @MainActor
 final class PaymentManager: ObservableObject {
     static let shared = PaymentManager()
@@ -276,7 +203,6 @@ final class PaymentManager: ObservableObject {
     var isPro: Bool { isPremium }
     var canPauseSubscriptions: Bool { isPremium }
 
-    /// Legacy property - free tier is now 2 subs
     static let freeTierLimit: Int = FreeTier.subscriptionLimit
     var freeTierLimit: Int { Self.freeTierLimit }
 
@@ -393,52 +319,17 @@ final class PaymentManager: ObservableObject {
         }
     }
     
-    // MARK: - Feature Checks (OPTIMIZED)
+    // MARK: - Feature Checks
     
     /// Check if user can add more subscriptions
     func canAddSubscription(currentCount: Int) -> Bool {
-        isPremium || currentCount < resolvedTier.subscriptionLimit
+        ProFeature.canAddSubscription(currentCount: currentCount, isPro: isPremium)
     }
 
     func hasReachedSubscriptionLimit(currentCount: Int) -> Bool {
-        !isPremium && resolvedTier == .free && currentCount >= Self.freeTierLimit
+        !canAddSubscription(currentCount: currentCount)
     }
 
-    /// Check if user can use bank sync (optional feature)
-    var canUseBankSync: Bool {
-        resolvedTier.hasBankSync
-    }
-
-    /// Check if user can connect bank accounts
-    func canConnectBankAccount(currentCount: Int) -> Bool {
-        currentCount < resolvedTier.maxBankAccounts
-    }
-
-    /// Check if cancellation assist is available
-    var canUseCancellationAssist: Bool {
-        resolvedTier.hasCancellationAssist
-    }
-
-    /// Check if waste score is available
-    var canUseWasteScore: Bool {
-        resolvedTier.hasWasteScore
-    }
-
-    /// Check if analytics are available
-    var canUseAnalytics: Bool {
-        resolvedTier.hasAnalytics
-    }
-
-    /// Check if export is available
-    var canUseExport: Bool {
-        resolvedTier.hasExport
-    }
-
-    /// Check if smart reminders available
-    var canUseSmartReminders: Bool {
-        resolvedTier.hasSmartReminders
-    }
-    
     // MARK: - Backward Compatibility Methods
     
     /// Legacy method for activating premium (now maps to Pro)
@@ -515,8 +406,4 @@ final class PaymentManager: ObservableObject {
         }
     }
 
-    /// Check if export is available
-    var canUseExportFeature: Bool {
-        resolvedTier.hasExport
-    }
 }

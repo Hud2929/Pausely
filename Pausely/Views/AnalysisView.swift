@@ -54,7 +54,7 @@ struct AnalysisView: View {
         .task(id: store.subscriptions.count) {
             await insightsEngine.analyze(subscriptions: store.subscriptions)
             // Auto-run genius for Pro users once when subscriptions are available
-            if paymentManager.isPremium, !store.subscriptions.isEmpty, case .idle = aiState {
+            if canAnalyze, !store.subscriptions.isEmpty, case .idle = aiState {
                 await runAIAnalysis()
             }
         }
@@ -186,10 +186,12 @@ struct AnalysisView: View {
 
     // MARK: - AI Section
 
+    private var canAnalyze: Bool { paymentManager.isUnlocked(.deepAnalysis) }
+
     private var showRunButton: Bool {
         // Hide the button for small sets (≤5 subs) — auto-runs on load for Pro users
         // Always show for free users (paywall) or when user wants to re-run >5 subs
-        if !paymentManager.isPremium { return true }
+        if !canAnalyze { return true }
         return store.subscriptions.count > 5
     }
 
@@ -198,7 +200,7 @@ struct AnalysisView: View {
             // Run button — only shown for large sets or non-pro users
             if showRunButton {
                 Button {
-                    if paymentManager.isPremium {
+                    if canAnalyze {
                         Task { await runAIAnalysis() }
                     } else {
                         HapticStyle.medium.trigger()
@@ -211,7 +213,7 @@ struct AnalysisView: View {
                                 .progressViewStyle(CircularProgressViewStyle(tint: .black))
                                 .scaleEffect(0.85)
                         } else {
-                            Image(systemName: paymentManager.isPremium ? "wand.and.stars" : "crown.fill")
+                            Image(systemName: canAnalyze ? "wand.and.stars" : "crown.fill")
                                 .font(.system(size: 16, weight: .semibold))
                         }
                         Text(aiButtonLabel)
@@ -222,8 +224,8 @@ struct AnalysisView: View {
                     .frame(height: 52)
                     .background(
                         RoundedRectangle(cornerRadius: 16, style: .continuous)
-                            .fill(paymentManager.isPremium ? Color.accentMint : Color.orange)
-                            .shadow(color: (paymentManager.isPremium ? Color.accentMint : Color.orange).opacity(0.3), radius: 12, x: 0, y: 6)
+                            .fill(canAnalyze ? Color.accentMint : Color.orange)
+                            .shadow(color: (canAnalyze ? Color.accentMint : Color.orange).opacity(0.3), radius: 12, x: 0, y: 6)
                     )
                 }
                 .buttonStyle(PlainButtonStyle())
@@ -256,7 +258,7 @@ struct AnalysisView: View {
 
     private var aiButtonLabel: String {
         if case .analyzing = aiState { return "Analyzing…" }
-        return paymentManager.isPremium ? "Run Deep Analysis" : "Unlock Pro to Analyze"
+        return canAnalyze ? "Run Deep Analysis" : "Unlock Pro to Analyze"
     }
 
     // MARK: - AI Idle State

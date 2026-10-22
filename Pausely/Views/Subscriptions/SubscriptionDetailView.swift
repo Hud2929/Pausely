@@ -11,6 +11,7 @@ struct SubscriptionDetailView: View {
     @State private var showingPaywall = false
     @State private var communityScore: (score: Double, count: Int)? = nil
     @ObservedObject private var paymentManager = PaymentManager.shared
+    private var canGuidedCancel: Bool { paymentManager.isUnlocked(.guidedCancel) }
 
     var cardColor: Color {
         Color.accentMint
@@ -153,18 +154,18 @@ struct SubscriptionDetailView: View {
                         // Cancel Subscription — destructive-tinted style
                         Button(action: {
                             HapticStyle.medium.trigger()
-                            if paymentManager.isPremium {
+                            if canGuidedCancel {
                                 showingCancelFlow = true
                             } else {
                                 showingPaywall = true
                             }
                         }) {
                             HStack {
-                                Image(systemName: paymentManager.isPremium ? "xmark.circle" : "lock.fill")
+                                Image(systemName: canGuidedCancel ? "xmark.circle" : "lock.fill")
                                     .font(.system(size: 15, weight: .semibold, design: .rounded))
                                 Text("Cancel Subscription")
                                 Spacer()
-                                if paymentManager.isPremium, let cs = communityScore {
+                                if canGuidedCancel, let cs = communityScore {
                                     HStack(spacing: 3) {
                                         Image(systemName: "person.2.fill")
                                             .font(.system(.caption2, design: .rounded))
@@ -178,7 +179,7 @@ struct SubscriptionDetailView: View {
                                     .padding(.vertical, 3)
                                     .background(Color.red.opacity(0.1))
                                     .clipShape(Capsule())
-                                } else if !paymentManager.isPremium {
+                                } else if !canGuidedCancel {
                                     Text("Pro")
                                         .font(.system(.caption, design: .rounded).weight(.bold))
                                         .foregroundStyle(Color.accentMint)
@@ -189,16 +190,16 @@ struct SubscriptionDetailView: View {
                                 }
                             }
                             .font(.system(.callout, design: .rounded).weight(.semibold))
-                            .foregroundStyle(paymentManager.isPremium ? Color.red : Color.white)
+                            .foregroundStyle(canGuidedCancel ? Color.red : Color.white)
                             .frame(maxWidth: .infinity)
                             .frame(height: 52)
                             .padding(.horizontal, 16)
                             .background(
                                 RoundedRectangle(cornerRadius: 16, style: .continuous)
-                                    .fill(paymentManager.isPremium ? Color.red.opacity(0.12) : Color.obsidianElevated)
+                                    .fill(canGuidedCancel ? Color.red.opacity(0.12) : Color.obsidianElevated)
                                     .overlay(
                                         RoundedRectangle(cornerRadius: 16, style: .continuous)
-                                            .stroke(paymentManager.isPremium ? Color.red.opacity(0.25) : Color.white.opacity(0.08), lineWidth: 1)
+                                            .stroke(canGuidedCancel ? Color.red.opacity(0.25) : Color.white.opacity(0.08), lineWidth: 1)
                                     )
                             )
                         }

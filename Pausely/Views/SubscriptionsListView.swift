@@ -128,10 +128,10 @@ struct SubscriptionsListView: View {
                     }
 
                     // Upgrade banner for free users approaching or at limit
-                    if !paymentManager.isPremium && store.subscriptions.count >= PaymentManager.freeTierLimit - 1 {
+                    if !paymentManager.isUnlocked(.unlimitedSubscriptions) && store.subscriptions.count >= FreeTier.subscriptionLimit - 1 {
                         UpgradeBannerView(
                             currentCount: store.subscriptions.count,
-                            limit: PaymentManager.freeTierLimit,
+                            limit: FreeTier.subscriptionLimit,
                             onUpgrade: { showingPaywall = true }
                         )
                         .padding(.horizontal, 20)

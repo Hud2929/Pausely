@@ -93,7 +93,6 @@ final class PaymentManagerTests: XCTestCase {
         CurrencyTestHelpers.withRates(["EUR": 0.92]) {
             CurrencyManager.shared.selectedCurrency = "EUR"
             let result = SubscriptionTier.pro.priceInUserCurrency()
-            // USD 9.99 * 0.92 = 9.1908 → roundTo99 → floor(9.1908) + 0.99 = 9.99
             XCTAssertFalse(result.isEmpty)
             XCTAssertFalse(result.lowercased().contains("nan"))
         }
@@ -103,7 +102,6 @@ final class PaymentManagerTests: XCTestCase {
         CurrencyTestHelpers.withRates(["JPY": 150.0]) {
             CurrencyManager.shared.selectedCurrency = "JPY"
             let result = SubscriptionTier.pro.priceInUserCurrency()
-            // USD 9.99 * 150 = 1498.5 → roundTo99 → floor(1498.5) + 0.99 = 1498.99
             XCTAssertFalse(result.isEmpty)
             XCTAssertFalse(result.lowercased().contains("nan"))
         }
@@ -120,25 +118,38 @@ final class PaymentManagerTests: XCTestCase {
         }
     }
 
-    // MARK: - savingsPercent
+    // MARK: - Entitlements
 
-    func testSavingsPercent_free_empty() {
-        XCTAssertEqual(SubscriptionTier.free.savingsPercent, "")
+    func testProFeatures_haveTitlesAndDistinctIcons() {
+        let features = ProFeature.allCases
+        XCTAssertFalse(features.isEmpty)
+        XCTAssertTrue(features.allSatisfy { !$0.title.isEmpty })
+        XCTAssertEqual(Set(features.map(\.icon)).count, features.count)
     }
 
-    func testSavingsPercent_pro_empty() {
-        XCTAssertEqual(SubscriptionTier.pro.savingsPercent, "")
+    func testFreeTier_locksProFeaturesAndStopsAtTheLimit() {
+        let limit = FreeTier.subscriptionLimit
+        XCTAssertTrue(ProFeature.canAddSubscription(currentCount: limit - 1, isPro: false))
+        XCTAssertFalse(ProFeature.canAddSubscription(currentCount: limit, isPro: false))
+        for feature in ProFeature.allCases {
+            XCTAssertFalse(feature.isUnlocked(isPro: false), "\(feature) should be locked on the free tier")
+        }
     }
 
-    func testSavingsPercent_proAnnual_containsPercentSign() {
-        XCTAssertTrue(SubscriptionTier.proAnnual.savingsPercent.contains("%"),
-                      "Annual savings badge must include a % sign")
+    func testPro_unlocksEveryFeatureAndHasNoLimit() {
+        XCTAssertTrue(ProFeature.canAddSubscription(currentCount: 500, isPro: true))
+        for feature in ProFeature.allCases {
+            XCTAssertTrue(feature.isUnlocked(isPro: true), "\(feature) should be unlocked for Pro")
+        }
     }
 
-    func testSavingsPercent_proAnnual_approximately17() {
-        // Monthly USD $9.99 × 12 = $119.88, annual $79.99
-        // Savings = (95.88 - 79.99) / 95.88 ≈ 16.6% → displayed as "17%"
-        XCTAssertTrue(SubscriptionTier.proAnnual.savingsPercent.contains("17"),
-                      "Annual savings should be ~17%, got: \(SubscriptionTier.proAnnual.savingsPercent)")
+    @MainActor
+    func testPaymentManager_usesTheSameRule() {
+        let payments = PaymentManager.shared
+        for feature in ProFeature.allCases {
+            XCTAssertEqual(payments.isUnlocked(feature), feature.isUnlocked(isPro: payments.isPremium))
+        }
+        XCTAssertEqual(payments.hasReachedSubscriptionLimit(currentCount: FreeTier.subscriptionLimit),
+                       !ProFeature.canAddSubscription(currentCount: FreeTier.subscriptionLimit, isPro: payments.isPremium))
     }
 }

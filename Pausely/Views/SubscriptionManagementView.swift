@@ -10,6 +10,7 @@ struct SubscriptionManagementView: View {
     @ObservedObject private var store = SubscriptionStore.shared
     @ObservedObject private var actionManager = SubscriptionActionManager.shared
     @ObservedObject private var paymentManager = PaymentManager.shared
+    private var canGuidedCancel: Bool { paymentManager.isUnlocked(.guidedCancel) }
     @ObservedObject private var screenTimeManager = ScreenTimeManager.shared
     @ObservedObject private var currencyManager = CurrencyManager.shared
 
@@ -223,8 +224,8 @@ struct SubscriptionManagementView: View {
                 divider
                 toolRow(icon: "arrow.left.arrow.right", title: "Cheaper alternatives",
                         subtitle: "\(alternatives.count) option\(alternatives.count == 1 ? "" : "s")",
-                        isPro: !paymentManager.isPremium) {
-                    route = paymentManager.isPremium ? .alternatives : .paywall
+                        isPro: !paymentManager.isUnlocked(.cheaperAlternatives)) {
+                    route = paymentManager.isUnlocked(.cheaperAlternatives) ? .alternatives : .paywall
                 }
             }
 
@@ -323,13 +324,13 @@ struct SubscriptionManagementView: View {
             if current.status != .cancelled {
                 Button {
                     HapticStyle.medium.trigger()
-                    route = paymentManager.isPremium ? .cancel : .paywall
+                    route = canGuidedCancel ? .cancel : .paywall
                 } label: {
                     HStack(spacing: 8) {
-                        Image(systemName: paymentManager.isPremium ? "xmark.circle" : "lock.fill")
+                        Image(systemName: canGuidedCancel ? "xmark.circle" : "lock.fill")
                             .font(.system(size: 15, weight: .semibold))
                         Text("Cancel subscription")
-                        if !paymentManager.isPremium {
+                        if !canGuidedCancel {
                             Text("Pro")
                                 .font(.system(.caption2, design: .rounded).weight(.bold))
                                 .foregroundStyle(Color.accentMint)
@@ -339,12 +340,12 @@ struct SubscriptionManagementView: View {
                         }
                     }
                     .font(.system(.body, design: .rounded).weight(.semibold))
-                    .foregroundStyle(paymentManager.isPremium ? Color.red : .white)
+                    .foregroundStyle(canGuidedCancel ? Color.red : .white)
                     .frame(maxWidth: .infinity)
                     .frame(height: 52)
                     .background(
                         RoundedRectangle(cornerRadius: 16, style: .continuous)
-                            .fill(paymentManager.isPremium ? Color.red.opacity(0.12) : Color.obsidianSurface)
+                            .fill(canGuidedCancel ? Color.red.opacity(0.12) : Color.obsidianSurface)
                     )
                 }
                 .buttonStyle(PlainButtonStyle())

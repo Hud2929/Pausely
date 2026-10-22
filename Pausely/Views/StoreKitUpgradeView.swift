@@ -428,10 +428,9 @@ struct StoreKitUpgradeView: View {
                 .frame(maxWidth: .infinity, alignment: .leading)
 
             VStack(spacing: 12) {
-                TrialFeatureRow(icon: "infinity", text: NSLocalizedString("Unlimited subscriptions", comment: ""))
-                TrialFeatureRow(icon: "chart.line.uptrend.xyaxis", text: NSLocalizedString("Deep savings analysis", comment: ""))
-                TrialFeatureRow(icon: "arrow.triangle.swap", text: NSLocalizedString("Cheaper Alternatives", comment: ""))
-                TrialFeatureRow(icon: "arrow.right.circle.fill", text: NSLocalizedString("Guided cancel flow", comment: ""))
+                ForEach(ProFeature.allCases) { feature in
+                    TrialFeatureRow(icon: feature.icon, text: feature.title)
+                }
                 TrialFeatureRow(icon: "xmark.circle.fill", text: NSLocalizedString("Cancel anytime", comment: ""))
             }
         }

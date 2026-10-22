@@ -17,13 +17,13 @@ struct AlternativesSection: View {
 
                 Spacer()
 
-                if !paymentManager.isPremium {
+                if !paymentManager.isUnlocked(.cheaperAlternatives) {
                     Image(systemName: "lock.fill")
                         .foregroundStyle(.yellow)
                 }
             }
 
-            if paymentManager.isPremium {
+            if paymentManager.isUnlocked(.cheaperAlternatives) {
                 LazyVStack(spacing: 12) {
                     ForEach(alternatives.prefix(3)) { alternative in
                         AlternativeCard(
