@@ -242,17 +242,17 @@ final class RealInsightsEngine: ObservableObject {
                 }
             }
 
-            // 3. Overpriced detection: subscription active 3+ months with very high cost-per-day
-            if cost >= 15 {
-                let costPerDay = cost / 30
-                if costPerDay > 1 {
-                    alerts.append(WasteAlert(
-                        subscription: sub,
-                        wasteType: .overpriced,
-                        potentialSavings: 0, // advisory, not a direct savings
-                        reason: "\(sub.name) costs \(formatCurrency(costPerDay))/day — consider if cheaper alternatives exist."
-                    ))
-                }
+            // Costing a lot is not waste on its own. Waste needs evidence: a forgotten entry (above),
+            // a duplicate in the same category (detectDuplicateCategories) or low measured usage.
+            if let minutes = screenTimeManager.getUsage(for: sub.name)?.minutesUsed, minutes < 30, cost >= 5 {
+                alerts.append(WasteAlert(
+                    subscription: sub,
+                    wasteType: .overpriced,
+                    potentialSavings: cost,
+                    reason: minutes == 0
+                        ? "Not used this month, but it costs \(formatCurrency(cost)) a month."
+                        : "Used \(minutes) minutes this month for \(formatCurrency(cost))."
+                ))
             }
         }
 
@@ -294,15 +294,12 @@ final class RealInsightsEngine: ObservableObject {
             optimizedMonthly = usageOptimized
             aggressiveMonthly = usageAggressive
         } else {
-            // No usage data: derive from available savings recommendations + essentials estimate
+            // No usage data: only the savings Pausely can actually point to. No invented "minimal" plan.
             optimizedMonthly = max(0, currentMonthly - totalMonthlySavings)
-            var half = currentMonthly * Decimal(0.5)
-            var rounded = Decimal()
-            NSDecimalRound(&rounded, &half, 2, .plain)
-            aggressiveMonthly = rounded
+            aggressiveMonthly = optimizedMonthly
         }
 
-        // Use subscription.annualCost (×12.03) to match detail view calculation, converted to display currency
+        // subscription.annualCost (price × charges per year), converted to display currency
         let trueAnnual = active.reduce(Decimal(0)) { $0 + annual($1) }
 
         return SpendingForecast(
@@ -433,32 +430,57 @@ final class RealInsightsEngine: ObservableObject {
 
         let totalMonthly = active.reduce(Decimal(0)) { $0 + monthly($1) }
 
-        return grouped.map { category, subs in
-            let amount = subs.reduce(Decimal(0)) { $0 + monthly($1) }
-            let percentage = totalMonthly > 0 ? NSDecimalNumber(decimal: amount / totalMonthly).doubleValue : 0
+        let sorted = grouped.map { category, subs in
+            (category: category, subs: subs, amount: subs.reduce(Decimal(0)) { $0 + monthly($1) })
+        }.sorted { ($0.amount, $1.category) > ($1.amount, $0.category) }
 
+        // Every slice gets its own colour: the category's usual colour if it's free, else the next unused one.
+        var used: Set<String> = []
+        return sorted.map { item in
+            let percentage = totalMonthly > 0 ? NSDecimalNumber(decimal: item.amount / totalMonthly).doubleValue : 0
+            let color = Self.distinctColor(for: item.category, used: &used)
             return CategoryInsight(
-                category: category.capitalized,
-                amount: amount,
+                category: Self.displayName(for: item.category),
+                amount: item.amount,
                 percentage: percentage,
-                count: subs.count,
-                color: categoryColor(for: category)
+                count: item.subs.count,
+                color: color
             )
-        }.sorted { $0.amount > $1.amount }
+        }
     }
 
-    private func categoryColor(for category: String) -> Color {
-        switch category.lowercased() {
-        case "entertainment": return .red
-        case "productivity": return .blue
-        case "health", "fitness": return .green
-        case "news": return .yellow
-        case "social": return .purple
-        case "utilities": return .gray
-        case "education": return .orange
-        case "shopping": return .pink
-        default: return .gray
-        }
+    /// Keeps names people typed ("AI Tools", "Health & Fitness") and tidies all-lowercase ones.
+    static func displayName(for category: String) -> String {
+        category == category.lowercased() ? category.capitalized : category
+    }
+
+    private static let palette: [(name: String, color: Color)] = [
+        ("red", .red), ("blue", .blue), ("green", .green), ("orange", .orange), ("purple", .purple),
+        ("teal", .teal), ("pink", .pink), ("yellow", .yellow), ("indigo", .indigo), ("mint", .mint),
+        ("cyan", .cyan), ("brown", .brown)
+    ]
+
+    private static func preferredColor(for category: String) -> String {
+        let c = category.lowercased()
+        if c.contains("entertain") || c.contains("stream") || c.contains("video") { return "red" }
+        if c.contains("product") || c.contains("work") { return "blue" }
+        if c.contains("health") || c.contains("fitness") { return "green" }
+        if c.contains("music") || c.contains("audio") { return "pink" }
+        if c.contains("ai") { return "purple" }
+        if c.contains("news") || c.contains("read") { return "yellow" }
+        if c.contains("educat") || c.contains("learn") { return "orange" }
+        if c.contains("cloud") || c.contains("storage") || c.contains("util") { return "teal" }
+        if c.contains("food") || c.contains("meal") { return "brown" }
+        if c.contains("shop") { return "indigo" }
+        if c.contains("game") { return "cyan" }
+        return "mint"
+    }
+
+    private static func distinctColor(for category: String, used: inout Set<String>) -> Color {
+        let preferred = preferredColor(for: category)
+        let name = used.contains(preferred) ? (palette.first { !used.contains($0.name) }?.name ?? preferred) : preferred
+        used.insert(name)
+        return palette.first { $0.name == name }?.color ?? .gray
     }
 
     // MARK: - Annual Savings

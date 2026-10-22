@@ -348,13 +348,18 @@ class SubscriptionStore: ObservableObject {
         // 1. Update local state immediately (offline-first)
         await MainActor.run {
             if let index = self.subscriptions.firstIndex(where: { $0.id == id }) {
+                let before = self.subscriptions[index]
+                // The charge this cancellation avoids, worked out while it still renews.
+                let avoided = RenewalDecisions.upcomingCharge(for: before, now: Date())?.date
                 self.subscriptions[index].status = status
                 self.calculateTotals()
                 self.saveToCache()
                 WidgetDataStore.shared.publish(subscriptions: self.subscriptions)
                 SpotlightManager.shared.index(subscriptions: self.subscriptions)
-                if status == .cancelled {
-                    LifecycleEventLog.shared.record(.cancelled, for: self.subscriptions[index])
+                if status == .cancelled, before.status != .cancelled {
+                    LifecycleEventLog.shared.record(.cancelled, for: before, renewalDate: avoided)
+                } else if before.status == .cancelled, status == .active || status == .trial {
+                    LifecycleEventLog.shared.record(.reactivated, for: self.subscriptions[index])
                 }
             }
         }

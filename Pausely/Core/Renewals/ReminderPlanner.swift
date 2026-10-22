@@ -29,22 +29,32 @@ enum ReminderPlanner {
     /// iOS keeps at most 64 pending local notifications per app; leave room for the others.
     static let defaultBudget = 60
 
+    /// Which reminders the user wants (Settings → Notifications).
+    struct Preferences: Equatable {
+        var renewals = true
+        var trials = true
+    }
+
     /// - Parameters:
     ///   - cyclesAhead: how many upcoming renewals per subscription get reminders, so reminders keep
     ///     coming even if the app is not opened for a whole cycle.
     ///   - budget: the soonest reminders win when there are more than iOS allows.
+    ///   - kept: renewals the user already decided to keep (`RenewalDecisions.keptKeys`); no more
+    ///     reminders about those.
     static func plan(for subscriptions: [Subscription], now: Date, calendar: Calendar = .current,
-                     cyclesAhead: Int = 2, budget: Int = defaultBudget) -> [Reminder] {
+                     cyclesAhead: Int = 2, budget: Int = defaultBudget,
+                     preferences: Preferences = Preferences(), kept: Set<String> = []) -> [Reminder] {
         var all: [Reminder] = []
         for sub in subscriptions where sub.notifyBeforeDays > 0 {   // 0 means "Remind me: Off"
             let trialEnd = sub.status == .trial ? sub.trialEndsAt.map { calendar.startOfDay(for: $0) } : nil
 
-            if sub.renewsAutomatically, let anchor = sub.nextBillingDate {
+            if preferences.renewals, sub.renewsAutomatically, let anchor = sub.nextBillingDate {
                 let renewals = RenewalSchedule.upcomingRenewals(anchor: anchor, frequency: sub.billingFrequency,
                                                                 onOrAfter: now, count: cyclesAhead, calendar: calendar)
                 for renewal in renewals {
                     // The trial reminder already covers a first charge that falls when the trial ends.
                     if let trialEnd, calendar.calendarDays(from: trialEnd, to: renewal) <= 1 { continue }
+                    if kept.contains(RenewalDecisions.key(sub.id, renewal, calendar)) { continue }
                     if sub.notifyBeforeDays > 1,
                        let r = make(.renewalHeadsUp, sub, renewal, daysBefore: sub.notifyBeforeDays, hour: 9, now, calendar) {
                         all.append(r)
@@ -54,7 +64,8 @@ enum ReminderPlanner {
                 }
             }
 
-            if let trialEnd, let r = make(.trialEnding, sub, calendar.noon(of: trialEnd), daysBefore: 1, hour: 10, now, calendar) {
+            if preferences.trials, let trialEnd, !kept.contains(RenewalDecisions.key(sub.id, trialEnd, calendar)),
+               let r = make(.trialEnding, sub, calendar.noon(of: trialEnd), daysBefore: 1, hour: 10, now, calendar) {
                 all.append(r)
             }
         }

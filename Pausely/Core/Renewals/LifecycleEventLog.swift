@@ -8,6 +8,7 @@ struct LifecycleEvent: Codable, Equatable, Identifiable {
         case trialEnded     // a free trial ran out and it started charging
         case priceChanged   // the user changed the amount
         case cancelled      // the user marked it cancelled
+        case reactivated    // a cancelled subscription became active again
         case deleted        // the user removed it from Pausely
         case kept           // the user decided to keep it at a renewal check
     }
@@ -21,8 +22,14 @@ struct LifecycleEvent: Codable, Equatable, Identifiable {
     let currency: String
     let frequency: BillingFrequency
     let previousAmount: Decimal?
+    /// The renewal this event is about: the one kept, or the next charge a cancellation avoids.
+    let renewalDate: Date?
+    /// The subscription's billing anchor when the event happened, so the charges a cancellation
+    /// avoids can be computed even after the subscription is deleted.
+    let anchorDate: Date?
 
-    init(id: UUID = UUID(), kind: Kind, subscription: Subscription, date: Date, previousAmount: Decimal? = nil) {
+    init(id: UUID = UUID(), kind: Kind, subscription: Subscription, date: Date,
+         previousAmount: Decimal? = nil, renewalDate: Date? = nil) {
         self.id = id
         self.kind = kind
         self.subscriptionId = subscription.id
@@ -32,6 +39,8 @@ struct LifecycleEvent: Codable, Equatable, Identifiable {
         self.currency = subscription.currency
         self.frequency = subscription.billingFrequency
         self.previousAmount = previousAmount
+        self.renewalDate = renewalDate
+        self.anchorDate = subscription.nextBillingDate
     }
 }
 
@@ -52,8 +61,9 @@ final class LifecycleEventLog: ObservableObject {
     }
 
     func record(_ kind: LifecycleEvent.Kind, for subscription: Subscription, date: Date = Date(),
-                previousAmount: Decimal? = nil) {
-        events.append(LifecycleEvent(kind: kind, subscription: subscription, date: date, previousAmount: previousAmount))
+                previousAmount: Decimal? = nil, renewalDate: Date? = nil) {
+        events.append(LifecycleEvent(kind: kind, subscription: subscription, date: date,
+                                     previousAmount: previousAmount, renewalDate: renewalDate))
         if events.count > Self.maxEvents {
             events.removeFirst(events.count - Self.maxEvents)
         }

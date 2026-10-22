@@ -34,10 +34,10 @@ struct OnboardingCarouselView: View {
                     DashboardPreviewPage(animate: animateContent || currentPage == 0)
                         .tag(0)
 
-                    SmartDetectionPreviewPage(animate: animateContent || currentPage == 1)
+                    DecisionPreviewPage(animate: animateContent || currentPage == 1)
                         .tag(1)
 
-                    InsightsPreviewPage(animate: animateContent || currentPage == 2)
+                    ReceiptPreviewPage(animate: animateContent || currentPage == 2)
                         .tag(2)
                 }
                 .tabViewStyle(PageTabViewStyle(indexDisplayMode: .never))
@@ -225,25 +225,10 @@ struct DashboardPreviewPage: View {
             .opacity(localAnimate ? 1 : 0)
             .animation(.spring(response: 0.5, dampingFraction: 0.8), value: localAnimate)
 
-            // Text content
-            VStack(spacing: 12) {
-                HStack(spacing: 12) {
-                    Image(systemName: "chart.pie.fill")
-                        .font(.system(.title2, design: .rounded).weight(.semibold))
-                        .foregroundStyle(
-                            LinearGradient(
-                                colors: [Color.accentMint, Color.accentMint],
-                                startPoint: .topLeading,
-                                endPoint: .bottomTrailing
-                            )
-                        )
-
-                    Text("Track all your subscriptions in one place")
-                        .font(.system(.title2, design: .rounded).weight(.bold))
-                        .foregroundColor(.white)
-                        .multilineTextAlignment(.center)
-                }
-            }
+            OnboardingHeadline(
+                title: "Know every renewal before it hits",
+                subtitle: "Everything you subscribe to, what it costs, and the day each one charges you."
+            )
             .padding(.horizontal, 32)
             .opacity(localAnimate ? 1 : 0)
             .offset(y: localAnimate ? 0 : 16)
@@ -266,332 +251,211 @@ struct DashboardPreviewPage: View {
     }
 }
 
-// MARK: - Page 2: Smart Detection Preview
-struct SmartDetectionPreviewPage: View {
+// MARK: - Headline
+
+/// Title and one line of explanation under each onboarding preview.
+struct OnboardingHeadline: View {
+    let title: LocalizedStringKey
+    let subtitle: LocalizedStringKey
+
+    var body: some View {
+        VStack(spacing: 10) {
+            Text(title)
+                .font(.system(.title2, design: .rounded).weight(.bold))
+                .foregroundColor(.white)
+                .multilineTextAlignment(.center)
+                .accessibilityAddTraits(.isHeader)
+            Text(subtitle)
+                .font(.system(.body, design: .rounded))
+                .foregroundColor(Color.obsidianTextSecondary)
+                .multilineTextAlignment(.center)
+                .fixedSize(horizontal: false, vertical: true)
+        }
+        .padding(.horizontal, 32)
+    }
+}
+
+// MARK: - Page 2: Renewal Verdict Preview
+
+struct DecisionPreviewPage: View {
     let animate: Bool
     @State private var localAnimate = false
 
-    private let subs = [
-        (name: "Netflix", price: "$15.99", color: Color.red, icon: "play.rectangle.fill"),
-        (name: "Spotify", price: "$10.99", color: Color.green, icon: "music.note"),
-        (name: "Apple One", price: "$32.95", color: Color.blue, icon: "apple.logo"),
-        (name: "Disney+", price: "$7.99", color: Color.cyan, icon: "star.fill")
+    var body: some View {
+        VStack(spacing: 24) {
+            VStack(spacing: 14) {
+                // The reminder
+                HStack(spacing: 12) {
+                    RoundedRectangle(cornerRadius: 9, style: .continuous)
+                        .fill(Color.accentMint)
+                        .frame(width: 38, height: 38)
+                        .overlay(Image(systemName: "pause.fill").foregroundColor(.black).font(.system(size: 16, weight: .bold)))
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text("Netflix renews in 2 days")
+                            .font(.system(.subheadline, design: .rounded).weight(.semibold))
+                            .foregroundColor(.white)
+                        Text("$17.99 on Thursday. Keep it or cancel it?")
+                            .font(.system(.caption, design: .rounded))
+                            .foregroundColor(Color.obsidianTextSecondary)
+                    }
+                    Spacer(minLength: 0)
+                }
+                .padding(14)
+                .background(RoundedRectangle(cornerRadius: 18, style: .continuous).fill(Color.white.opacity(0.08)))
+                .offset(y: localAnimate ? 0 : -14)
+                .opacity(localAnimate ? 1 : 0)
+                .animation(UIAccessibility.isReduceMotionEnabled ? .none : .spring(response: 0.5, dampingFraction: 0.75), value: localAnimate)
+
+                // The decision
+                VStack(spacing: 12) {
+                    Text("Keep Netflix?")
+                        .font(.system(.title3, design: .rounded).weight(.bold))
+                        .foregroundColor(.white)
+                    VStack(alignment: .leading, spacing: 8) {
+                        previewFact("calendar", "That's $215.88 a year")
+                        previewFact("hourglass", "Used 2 hours this month · $9.00 an hour")
+                        previewFact("clock", "Cancel now and you keep it until Thursday")
+                    }
+                    HStack(spacing: 10) {
+                        Text("Keep it")
+                            .font(.system(.subheadline, design: .rounded).weight(.semibold))
+                            .foregroundColor(.black)
+                            .frame(maxWidth: .infinity)
+                            .frame(height: 40)
+                            .background(RoundedRectangle(cornerRadius: 12, style: .continuous).fill(Color.accentMint))
+                        Text("Cancel it")
+                            .font(.system(.subheadline, design: .rounded).weight(.semibold))
+                            .foregroundColor(.red)
+                            .frame(maxWidth: .infinity)
+                            .frame(height: 40)
+                            .background(RoundedRectangle(cornerRadius: 12, style: .continuous).fill(Color.red.opacity(0.15)))
+                    }
+                }
+                .padding(16)
+                .background(
+                    RoundedRectangle(cornerRadius: 22, style: .continuous)
+                        .fill(Color.white.opacity(0.05))
+                        .overlay(RoundedRectangle(cornerRadius: 22, style: .continuous).stroke(Color.accentMint.opacity(0.2), lineWidth: 1))
+                )
+                .scaleEffect(localAnimate ? 1 : 0.94)
+                .opacity(localAnimate ? 1 : 0)
+                .animation(UIAccessibility.isReduceMotionEnabled ? .none : .spring(response: 0.5, dampingFraction: 0.8).delay(0.12), value: localAnimate)
+            }
+            .padding(.horizontal, 24)
+            .accessibilityElement(children: .ignore)
+            .accessibilityLabel("Example: a reminder that Netflix renews in 2 days, with Keep it and Cancel it buttons")
+
+            OnboardingHeadline(
+                title: "Keep it or cancel it, in one tap",
+                subtitle: "Before every renewal Pausely asks, with the facts that help you decide."
+            )
+            .opacity(localAnimate ? 1 : 0)
+            .animation(.easeOut(duration: 0.5).delay(0.2), value: localAnimate)
+
+            Spacer()
+        }
+        .onAppear { triggerAnimation() }
+        .onChange(of: animate) { _, _ in triggerAnimation() }
+    }
+
+    private func previewFact(_ icon: String, _ text: LocalizedStringKey) -> some View {
+        HStack(spacing: 10) {
+            Image(systemName: icon)
+                .font(.system(size: 13, weight: .semibold))
+                .foregroundColor(Color.accentMint)
+                .frame(width: 18)
+            Text(text)
+                .font(.system(.footnote, design: .rounded))
+                .foregroundColor(.white)
+            Spacer(minLength: 0)
+        }
+    }
+
+    private func triggerAnimation() {
+        guard !UIAccessibility.isReduceMotionEnabled else {
+            localAnimate = true
+            return
+        }
+        withAnimation(.easeOut(duration: 0.5).delay(0.1)) {
+            localAnimate = true
+        }
+    }
+}
+
+// MARK: - Page 3: Savings Receipt Preview
+
+struct ReceiptPreviewPage: View {
+    let animate: Bool
+    @State private var localAnimate = false
+
+    private let lines: [(name: String, detail: LocalizedStringKey, amount: String)] = [
+        ("Hulu", "Cancelled · 12 charges avoided", "$227.88"),
+        ("Gym app", "Free trial cancelled in time", "$29.99"),
+        ("Cloud storage", "Duplicate cancelled · 4 charges", "$11.96")
     ]
 
     var body: some View {
         VStack(spacing: 24) {
-            // Preview Card
-            ZStack {
-                RoundedRectangle(cornerRadius: 28, style: .continuous)
-                    .fill(Color.white.opacity(0.05))
-                    .overlay(
-                        RoundedRectangle(cornerRadius: 28, style: .continuous)
-                            .stroke(Color.accentMint.opacity(0.2), lineWidth: 1)
-                    )
-
-                VStack(spacing: 12) {
-                    // Header
-                    HStack {
-                        Text("Your Subscriptions")
-                            .font(.system(.title2, design: .rounded).weight(.bold))
-                            .foregroundColor(.white)
-
-                        Spacer()
-
-                        Circle()
-                            .fill(Color.accentMint.opacity(0.2))
-                            .frame(width: 36, height: 36)
-                            .overlay(
-                                Image(systemName: "plus")
-                                    .font(.system(.subheadline, design: .rounded))
-                                    .foregroundColor(Color.accentMint)
-                            )
-                    }
-                    .padding(.horizontal, 20)
-                    .padding(.top, 20)
-
-                    // Subscription rows
-                    VStack(spacing: 10) {
-                        ForEach(Array(subs.enumerated()), id: \.offset) { index, sub in
-                            HStack(spacing: 12) {
-                                ZStack {
-                                    Circle()
-                                        .fill(sub.color.opacity(0.2))
-                                        .frame(width: 40, height: 40)
-
-                                    Image(systemName: sub.icon)
-                                        .font(.subheadline.weight(.semibold))
-                                        .foregroundColor(sub.color)
-                                }
-
-                                VStack(alignment: .leading, spacing: 2) {
-                                    HStack(spacing: 6) {
-                                        Text(sub.name)
-                                            .font(.system(.subheadline, design: .rounded).weight(.semibold))
-                                            .foregroundColor(.white)
-
-                                        if index == 1 {
-                                            // Smart Detect badge
-                                            Text("Smart Detect")
-                                                .font(.system(.caption2, design: .rounded).weight(.bold))
-                                                .foregroundColor(.white)
-                                                .padding(.horizontal, 8)
-                                                .padding(.vertical, 3)
-                                                .background(
-                                                    Capsule()
-                                                        .fill(
-                                                            LinearGradient(
-                                                                colors: [Color.accentMint, Color.accentMint],
-                                                                startPoint: .leading,
-                                                                endPoint: .trailing
-                                                            )
-                                                        )
-                                                )
-                                        }
-                                    }
-
-                                    Text("Monthly")
-                                        .font(.system(.caption, design: .rounded).weight(.medium))
-                                        .foregroundColor(Color.obsidianTextSecondary)
-                                }
-
-                                Spacer()
-
-                                Text(sub.price)
-                                    .font(.system(.subheadline, design: .rounded).weight(.bold))
+            VStack(spacing: 14) {
+                VStack(spacing: 4) {
+                    Text("SAVED WITH PAUSELY")
+                        .font(.system(.caption2, design: .rounded).weight(.semibold))
+                        .tracking(2)
+                        .foregroundColor(Color.obsidianTextTertiary)
+                    Text("$269.83")
+                        .font(.system(size: 40, weight: .black, design: .rounded))
+                        .foregroundColor(Color.accentMint)
+                    Text("Pausely paid for itself 9×")
+                        .font(.system(.footnote, design: .rounded).weight(.semibold))
+                        .foregroundColor(.white)
+                        .padding(.horizontal, 10)
+                        .padding(.vertical, 4)
+                        .background(Capsule().fill(Color.accentMint.opacity(0.15)))
+                }
+                VStack(spacing: 0) {
+                    ForEach(Array(lines.enumerated()), id: \.offset) { index, line in
+                        if index > 0 { Divider().background(Color.white.opacity(0.08)) }
+                        HStack {
+                            VStack(alignment: .leading, spacing: 2) {
+                                Text(line.name)
+                                    .font(.system(.subheadline, design: .rounded).weight(.semibold))
                                     .foregroundColor(.white)
+                                Text(line.detail)
+                                    .font(.system(.caption, design: .rounded))
+                                    .foregroundColor(Color.obsidianTextSecondary)
                             }
-                            .padding(12)
-                            .background(
-                                RoundedRectangle(cornerRadius: 14, style: .continuous)
-                                    .fill(Color.white.opacity(0.05))
-                                    .overlay(
-                                        RoundedRectangle(cornerRadius: 14, style: .continuous)
-                                            .stroke(
-                                                index == 1
-                                                    ? Color.accentMint.opacity(0.3)
-                                                    : Color.white.opacity(0.06),
-                                                lineWidth: index == 1 ? 1.5 : 1
-                                            )
-                                    )
-                            )
-                            .offset(y: localAnimate ? 0 : CGFloat(15 - index * 3))
-                            .opacity(localAnimate ? 1 : 0)
-                            .animation(
-                                UIAccessibility.isReduceMotionEnabled
-                                    ? .none
-                                    : .spring(response: 0.5, dampingFraction: 0.7).delay(Double(index) * 0.08),
-                                value: localAnimate
-                            )
+                            Spacer()
+                            Text(line.amount)
+                                .font(.system(.subheadline, design: .rounded).weight(.bold))
+                                .foregroundColor(Color.accentMint)
                         }
+                        .padding(.vertical, 10)
+                        .opacity(localAnimate ? 1 : 0)
+                        .offset(y: localAnimate ? 0 : 10)
+                        .animation(UIAccessibility.isReduceMotionEnabled ? .none : .spring(response: 0.5, dampingFraction: 0.8).delay(0.15 + Double(index) * 0.08), value: localAnimate)
                     }
-                    .padding(.horizontal, 20)
-
-                    Spacer()
                 }
+                .padding(.horizontal, 16)
+                .background(RoundedRectangle(cornerRadius: 18, style: .continuous).fill(Color.white.opacity(0.05)))
             }
-            .frame(height: 340)
+            .padding(18)
+            .background(
+                RoundedRectangle(cornerRadius: 26, style: .continuous)
+                    .fill(Color.white.opacity(0.04))
+                    .overlay(RoundedRectangle(cornerRadius: 26, style: .continuous).stroke(Color.accentMint.opacity(0.2), lineWidth: 1))
+            )
             .padding(.horizontal, 24)
-            .scaleEffect(localAnimate ? 1 : 0.92)
+            .scaleEffect(localAnimate ? 1 : 0.94)
             .opacity(localAnimate ? 1 : 0)
             .animation(.spring(response: 0.5, dampingFraction: 0.8), value: localAnimate)
+            .accessibilityElement(children: .ignore)
+            .accessibilityLabel("Example Savings Receipt: $269.83 saved, Pausely paid for itself 9 times")
 
-            // Text content
-            VStack(spacing: 12) {
-                HStack(spacing: 12) {
-                    Image(systemName: "list.bullet.rectangle.fill")
-                        .font(.system(.title2, design: .rounded).weight(.semibold))
-                        .foregroundStyle(
-                            LinearGradient(
-                                colors: [Color.accentMint, Color.accentMint],
-                                startPoint: .topLeading,
-                                endPoint: .bottomTrailing
-                            )
-                        )
-
-                    Text("We automatically find and categorize your subscriptions")
-                        .font(.system(.title2, design: .rounded).weight(.bold))
-                        .foregroundColor(.white)
-                        .multilineTextAlignment(.center)
-                }
-            }
-            .padding(.horizontal, 32)
+            OnboardingHeadline(
+                title: "See exactly what you saved",
+                subtitle: "Every cancellation lands on your Savings Receipt, with the charges it avoided."
+            )
             .opacity(localAnimate ? 1 : 0)
-            .offset(y: localAnimate ? 0 : 16)
-            .animation(.easeOut(duration: 0.5).delay(0.2), value: localAnimate)
-
-            Spacer()
-        }
-        .onAppear { triggerAnimation() }
-        .onChange(of: animate) { _, _ in triggerAnimation() }
-    }
-
-    private func triggerAnimation() {
-        guard !UIAccessibility.isReduceMotionEnabled else {
-            localAnimate = true
-            return
-        }
-        withAnimation(.easeOut(duration: 0.5).delay(0.1)) {
-            localAnimate = true
-        }
-    }
-}
-
-// MARK: - Page 3: Insights Preview
-struct InsightsPreviewPage: View {
-    let animate: Bool
-    @State private var localAnimate = false
-
-    var body: some View {
-        VStack(spacing: 24) {
-            // Preview Card
-            ZStack {
-                RoundedRectangle(cornerRadius: 28, style: .continuous)
-                    .fill(Color.white.opacity(0.05))
-                    .overlay(
-                        RoundedRectangle(cornerRadius: 28, style: .continuous)
-                            .stroke(Color.accentMint.opacity(0.2), lineWidth: 1)
-                    )
-
-                VStack(spacing: 16) {
-                    // Header
-                    HStack {
-                        Text("Smart Insights")
-                            .font(.system(.title2, design: .rounded).weight(.bold))
-                            .foregroundColor(.white)
-
-                        Spacer()
-
-                        Image(systemName: "sparkles")
-                            .font(.system(.title3, design: .rounded))
-                            .foregroundColor(Color.accentMint)
-                    }
-                    .padding(.horizontal, 20)
-                    .padding(.top, 20)
-
-                    // Waste score card with circular progress
-                    HStack(spacing: 16) {
-                        ZStack {
-                            Circle()
-                                .stroke(Color.accentMint.opacity(0.2), lineWidth: 8)
-                                .frame(width: 70, height: 70)
-
-                            Circle()
-                                .trim(from: 0, to: localAnimate ? 0.72 : 0)
-                                .stroke(
-                                    Color.accentMint,
-                                    style: StrokeStyle(lineWidth: 8, lineCap: .round)
-                                )
-                                .frame(width: 70, height: 70)
-                                .rotationEffect(.degrees(-90))
-                                .animation(
-                                    UIAccessibility.isReduceMotionEnabled
-                                        ? .none
-                                        : .easeOut(duration: 1.0).delay(0.3),
-                                    value: localAnimate
-                                )
-
-                            Text("B+")
-                                .font(.system(.title3, design: .rounded).weight(.bold))
-                                .foregroundColor(.white)
-                        }
-
-                        VStack(alignment: .leading, spacing: 4) {
-                            Text("Waste Score")
-                                .font(.system(.body, design: .rounded).weight(.semibold))
-                                .foregroundColor(.white)
-
-                            Text("Great! You're actively managing your subscriptions.")
-                                .font(.system(.footnote, design: .rounded).weight(.medium))
-                                .foregroundColor(Color.obsidianTextSecondary)
-                                .lineLimit(2)
-                        }
-                    }
-                    .padding(16)
-                    .background(
-                        ZStack {
-                            RoundedRectangle(cornerRadius: 16, style: .continuous)
-                                .fill(Color.accentMint.opacity(0.08))
-                            RoundedRectangle(cornerRadius: 16, style: .continuous)
-                                .fill(.ultraThinMaterial.opacity(0.3))
-                            RoundedRectangle(cornerRadius: 16, style: .continuous)
-                                .stroke(Color.accentMint.opacity(0.25), lineWidth: 1)
-                        }
-                    )
-                    .padding(.horizontal, 20)
-                    .opacity(localAnimate ? 1 : 0)
-                    .offset(y: localAnimate ? 0 : 12)
-                    .animation(.easeOut(duration: 0.5).delay(0.15), value: localAnimate)
-
-                    // Savings insight card
-                    HStack(spacing: 12) {
-                        Image(systemName: "lightbulb.fill")
-                            .font(.system(.title2, design: .rounded))
-                            .foregroundColor(Color.accentMint)
-
-                        VStack(alignment: .leading, spacing: 2) {
-                            Text("You could save $42/month")
-                                .font(.system(.subheadline, design: .rounded).weight(.semibold))
-                                .foregroundColor(.white)
-
-                            Text("Switch to annual billing for 3 subscriptions")
-                                .font(.system(.footnote, design: .rounded).weight(.medium))
-                                .foregroundColor(Color.obsidianTextSecondary)
-                        }
-
-                        Spacer()
-
-                        Image(systemName: "chevron.right")
-                            .font(.system(.footnote, design: .rounded).weight(.semibold))
-                            .foregroundColor(Color.obsidianTextSecondary)
-                    }
-                    .padding(16)
-                    .background(
-                        ZStack {
-                            RoundedRectangle(cornerRadius: 16, style: .continuous)
-                                .fill(Color.accentMint.opacity(0.08))
-                            RoundedRectangle(cornerRadius: 16, style: .continuous)
-                                .fill(.ultraThinMaterial.opacity(0.3))
-                            RoundedRectangle(cornerRadius: 16, style: .continuous)
-                                .stroke(Color.accentMint.opacity(0.25), lineWidth: 1)
-                        }
-                    )
-                    .padding(.horizontal, 20)
-                    .opacity(localAnimate ? 1 : 0)
-                    .offset(y: localAnimate ? 0 : 12)
-                    .animation(.easeOut(duration: 0.5).delay(0.3), value: localAnimate)
-
-                    Spacer()
-                }
-            }
-            .frame(height: 340)
-            .padding(.horizontal, 24)
-            .scaleEffect(localAnimate ? 1 : 0.92)
-            .opacity(localAnimate ? 1 : 0)
-            .animation(.spring(response: 0.5, dampingFraction: 0.8), value: localAnimate)
-
-            // Text content
-            VStack(spacing: 12) {
-                HStack(spacing: 12) {
-                    Image(systemName: "sparkles")
-                        .font(.system(.title2, design: .rounded).weight(.semibold))
-                        .foregroundStyle(
-                            LinearGradient(
-                                colors: [Color.accentMint, Color.accentMint],
-                                startPoint: .topLeading,
-                                endPoint: .bottomTrailing
-                            )
-                        )
-
-                    Text("Get personalized insights to save money")
-                        .font(.system(.title2, design: .rounded).weight(.bold))
-                        .foregroundColor(.white)
-                        .multilineTextAlignment(.center)
-                }
-            }
-            .padding(.horizontal, 32)
-            .opacity(localAnimate ? 1 : 0)
-            .offset(y: localAnimate ? 0 : 16)
             .animation(.easeOut(duration: 0.5).delay(0.2), value: localAnimate)
 
             Spacer()

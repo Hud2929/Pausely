@@ -249,6 +249,11 @@ final class SubscriptionCatalogService: ObservableObject {
         entryByBundleId[bundleId]
     }
 
+    /// The catalog entry with this exact name (case-insensitive).
+    func entry(named name: String) -> CatalogEntry? {
+        entryByName[name.trimmingCharacters(in: .whitespaces).lowercased()]
+    }
+
     // MARK: - Helpers
 
     private func getTeenybaseURL() -> String? {

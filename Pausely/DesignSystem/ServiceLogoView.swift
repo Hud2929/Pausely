@@ -1,21 +1,26 @@
 import SwiftUI
+import UIKit
 
 // MARK: - Service Logo View
 //
-// Fetches brand logos via Clearbit Logo API for ~120 known services.
-// Falls back gracefully to a category-colored initial circle if the
-// service is unknown or if the network request fails.
+// Shows the service's own icon: its apple-touch-icon first, then Google's favicon service, cached
+// on disk for 30 days. Only the service's domain is sent, never anything about the customer.
+// Falls back to a category-coloured initial when there's no domain or no usable icon.
 
 struct ServiceLogoView: View {
     let name: String
     let category: String?
     let size: CGFloat
 
+    @State private var image: UIImage?
+
     init(name: String, category: String? = nil, size: CGFloat = 48) {
         self.name = name
         self.category = category
         self.size = size
     }
+
+    private var domain: String? { ServiceDomains.domain(for: name) }
 
     var body: some View {
         ZStack {
@@ -31,32 +36,29 @@ struct ServiceLogoView: View {
                 .overlay(Circle().stroke(categoryColor.opacity(0.45), lineWidth: 1))
                 .frame(width: size, height: size)
 
-            if let domain = ServiceDomains.domain(for: name) {
-                AsyncImage(url: URL(string: "https://logo.clearbit.com/\(domain)?size=\(Int(size * 3))")) { phase in
-                    switch phase {
-                    case .success(let image):
-                        image
-                            .resizable()
-                            .scaledToFit()
-                            .frame(width: size * 0.62, height: size * 0.62)
-                            .clipShape(RoundedRectangle(cornerRadius: size * 0.16, style: .continuous))
-                    case .failure:
-                        initialView
-                    case .empty:
-                        // Still loading — pulse placeholder
-                        Circle()
-                            .fill(categoryColor.opacity(0.12))
-                            .frame(width: size * 0.62, height: size * 0.62)
-                    @unknown default:
-                        initialView
-                    }
-                }
+            if let image {
+                Image(uiImage: image)
+                    .resizable()
+                    .interpolation(.high)
+                    .scaledToFill()
+                    .frame(width: size * 0.66, height: size * 0.66)
+                    .clipShape(RoundedRectangle(cornerRadius: size * 0.17, style: .continuous))
+                    .transition(.opacity)
             } else {
                 initialView
             }
         }
         .frame(width: size, height: size)
         .clipShape(Circle())
+        .task(id: domain) {
+            guard let domain else { image = nil; return }
+            if let cached = LogoStore.shared.cachedImage(for: domain) {
+                image = cached
+                return
+            }
+            let loaded = await LogoStore.shared.image(for: domain)
+            withAnimation(.easeOut(duration: 0.2)) { image = loaded }
+        }
     }
 
     private var initialView: some View {
@@ -71,6 +73,95 @@ struct ServiceLogoView: View {
                   $0.rawValue.lowercased() == cat.lowercased()
               }) else { return .purple }
         return sc.color
+    }
+}
+
+// MARK: - Logo Store
+
+/// Loads and caches service icons. One request per domain at a time; failures are remembered for
+/// the session so a missing icon isn't fetched again on every scroll.
+@MainActor
+final class LogoStore {
+    static let shared = LogoStore()
+
+    private var memory: [String: UIImage] = [:]
+    private var missing: Set<String> = []
+    private var inFlight: [String: Task<UIImage?, Never>] = [:]
+
+    func cachedImage(for domain: String) -> UIImage? {
+        if let image = memory[domain] { return image }
+        if let image = Self.readDisk(domain) {
+            memory[domain] = image
+            return image
+        }
+        return nil
+    }
+
+    func image(for domain: String) async -> UIImage? {
+        if let image = cachedImage(for: domain) { return image }
+        if missing.contains(domain) { return nil }
+        if let task = inFlight[domain] { return await task.value }
+        let task = Task.detached(priority: .utility) { await Self.download(domain) }
+        inFlight[domain] = task
+        let image = await task.value
+        inFlight[domain] = nil
+        if let image { memory[domain] = image } else { missing.insert(domain) }
+        return image
+    }
+
+    // MARK: Network
+
+    /// The service's own touch icon (180px, made for home screens), then Google's favicon service.
+    nonisolated static func sources(for domain: String) -> [URL] {
+        let host = domain.hasPrefix("www.") ? String(domain.dropFirst(4)) : domain
+        return [
+            "https://\(host)/apple-touch-icon.png",
+            "https://www.\(host)/apple-touch-icon.png",
+            "https://www.google.com/s2/favicons?domain=\(host)&sz=128"
+        ].compactMap(URL.init(string:))
+    }
+
+    nonisolated private static func download(_ domain: String) async -> UIImage? {
+        let config = URLSessionConfiguration.ephemeral
+        config.timeoutIntervalForRequest = 8
+        config.httpCookieStorage = nil
+        let session = URLSession(configuration: config)
+        defer { session.finishTasksAndInvalidate() }
+
+        for url in sources(for: domain) {
+            guard let (data, response) = try? await session.data(from: url),
+                  (response as? HTTPURLResponse)?.statusCode == 200,
+                  let image = UIImage(data: data),
+                  min(image.size.width * image.scale, image.size.height * image.scale) >= 48 else { continue }
+            writeDisk(data, domain)
+            return image
+        }
+        return nil
+    }
+
+    // MARK: Disk cache
+
+    nonisolated private static let maxAge: TimeInterval = 30 * 24 * 3600
+
+    nonisolated private static func fileURL(_ domain: String) -> URL? {
+        guard let caches = FileManager.default.urls(for: .cachesDirectory, in: .userDomainMask).first else { return nil }
+        let safe = domain.replacingOccurrences(of: "/", with: "_")
+        return caches.appendingPathComponent("ServiceLogos", isDirectory: true).appendingPathComponent(safe + ".img")
+    }
+
+    nonisolated private static func readDisk(_ domain: String) -> UIImage? {
+        guard let url = fileURL(domain),
+              let attributes = try? FileManager.default.attributesOfItem(atPath: url.path),
+              let modified = attributes[.modificationDate] as? Date,
+              Date().timeIntervalSince(modified) < maxAge,
+              let data = try? Data(contentsOf: url) else { return nil }
+        return UIImage(data: data)
+    }
+
+    nonisolated private static func writeDisk(_ data: Data, _ domain: String) {
+        guard let url = fileURL(domain) else { return }
+        try? FileManager.default.createDirectory(at: url.deletingLastPathComponent(), withIntermediateDirectories: true)
+        try? data.write(to: url, options: .atomic)
     }
 }
 
@@ -282,7 +373,13 @@ enum ServiceDomains {
         "zendesk": "zendesk.com",
     ]
 
+    /// The known domain for a service: the list above, then the website in the subscription catalog.
+    @MainActor
     static func domain(for serviceName: String) -> String? {
-        domains[serviceName.trimmingCharacters(in: .whitespaces).lowercased()]
+        let key = serviceName.trimmingCharacters(in: .whitespaces).lowercased()
+        if let known = domains[key] { return known }
+        guard let website = SubscriptionCatalogService.shared.entry(named: key)?.websiteURL,
+              let host = URL(string: website.hasPrefix("http") ? website : "https://\(website)")?.host else { return nil }
+        return host.hasPrefix("www.") ? String(host.dropFirst(4)) : host
     }
 }

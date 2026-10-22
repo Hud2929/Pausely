@@ -2,6 +2,7 @@ import SwiftUI
 import AuthenticationServices
 import os.log
 import TipKit
+import UserNotifications
 
 @main
 struct PauselyApp: App {
@@ -32,8 +33,16 @@ class AppDelegate: NSObject, UIApplicationDelegate {
             .foregroundColor: UIColor.label
         ]
 
-        UINavigationBar.appearance().standardAppearance = appearance
-        UINavigationBar.appearance().compactAppearance = appearance
+        // Once content scrolls under the bar it gets a solid background, so text never runs
+        // under the buttons; at the top it stays transparent.
+        let scrolledAppearance = UINavigationBarAppearance()
+        scrolledAppearance.configureWithDefaultBackground()
+        scrolledAppearance.backgroundColor = UIColor(Color.obsidianBlack).withAlphaComponent(0.92)
+        scrolledAppearance.shadowColor = .clear
+        scrolledAppearance.titleTextAttributes = appearance.titleTextAttributes
+
+        UINavigationBar.appearance().standardAppearance = scrolledAppearance
+        UINavigationBar.appearance().compactAppearance = scrolledAppearance
         UINavigationBar.appearance().scrollEdgeAppearance = appearance
 
         // Configure tab bar appearance
@@ -46,6 +55,11 @@ class AppDelegate: NSObject, UIApplicationDelegate {
 
         // Configure TipKit for contextual tips
         TipKitConfiguration.configure()
+
+        // Reminder taps and their Keep / Review buttons. Set before launch finishes so a tap that
+        // launched the app is delivered.
+        UNUserNotificationCenter.current().delegate = NotificationDelegate.shared
+        ReminderActions.registerCategories()
 
         // Handle URL if app was launched via deep link
         if let url = launchOptions?[.url] as? URL {
@@ -78,6 +92,7 @@ struct RootView: View {
     @State private var showAuth = false
     @State private var splashWorkItem: DispatchWorkItem?
     @AppStorage("hasCompletedOnboarding") private var hasCompletedOnboarding = false
+    @State private var authStart: PremiumWelcomeFlow.Start = .welcome
     @Environment(\.scenePhase) private var scenePhase
 
     /// Detects if app was launched for UI testing
@@ -140,6 +155,14 @@ struct RootView: View {
                     #if DEBUG
                     SubscriptionWrappedView(subscriptions: SubscriptionStore.makeDemoSubscriptions())
                     #endif
+                } else if isDemoScreen("--demo-verdict") {
+                    #if DEBUG
+                    RenewalVerdictView(subscriptionId: SubscriptionStore.shared.subscriptions.first?.id ?? UUID())
+                    #endif
+                } else if isDemoScreen("--demo-receipt") {
+                    #if DEBUG
+                    SavingsReceiptView()
+                    #endif
                 } else if isDemoScreen("--demo-browser") {
                     #if DEBUG
                     SubscriptionBrowserView()
@@ -164,12 +187,14 @@ struct RootView: View {
                     // New user: show value-first onboarding BEFORE auth wall
                     OnboardingCarouselView(
                         onGetStarted: {
+                            authStart = .signUp
                             withAnimation(.easeInOut(duration: 0.4)) {
                                 showAuth = true
                                 hasCompletedOnboarding = true
                             }
                         },
                         onSignIn: {
+                            authStart = .signIn
                             withAnimation(.easeInOut(duration: 0.4)) {
                                 showAuth = true
                                 hasCompletedOnboarding = true
@@ -179,7 +204,7 @@ struct RootView: View {
                     .transition(.opacity.combined(with: .move(edge: .bottom)))
                 } else {
                     // Onboarding completed but not authenticated: show auth
-                    PremiumWelcomeFlow()
+                    PremiumWelcomeFlow(start: authStart)
                         .transition(.opacity.combined(with: .move(edge: .bottom)))
                 }
             }
@@ -219,11 +244,19 @@ struct RootView: View {
             // existing entitlements so returning subscribers are recognized immediately.
             await StoreKitManager.shared.loadProductsIfNeeded()
         }
+        .onAppear {
+            #if DEBUG
+            if isDemoScreen("--demo-savings") || isDemoScreen("--demo-receipt") { DemoSavings.seed() }
+            #endif
+        }
         .onChange(of: scenePhase) { _, phase in
             // Time-driven changes (renewals passing, trials ending) and a fresh set of reminders
             // every time the app comes back to the foreground.
             if phase == .active {
-                Task { await SubscriptionLifecycle.shared.run() }
+                Task {
+                    await NotificationManager.shared.refreshStatus()
+                    await SubscriptionLifecycle.shared.run()
+                }
             }
         }
         .onOpenURL { url in
@@ -336,27 +369,21 @@ struct PremiumSplashScreen: View {
 
 
 // MARK: - Premium Welcome Flow
+/// The sign-up / sign-in screen. The carousel before it already explained the app, so this goes
+/// straight to the account step; `start` opens the form the customer asked for.
 struct PremiumWelcomeFlow: View {
+    enum Start { case welcome, signUp, signIn }
+    var start: Start = .welcome
+
     @State private var showSignUp = false
     @State private var showSignIn = false
-    @State private var currentPage = 0
-    @State private var showAuth = false
-    private let totalPages = 3
+    @State private var didApplyStart = false
 
     var body: some View {
         NavigationStack {
             ZStack {
                 PremiumBackground()
-
-                VStack(spacing: 0) {
-                    if showAuth {
-                        authWallContent
-                            .transition(.opacity.combined(with: .move(edge: .bottom)))
-                    } else {
-                        onboardingCarousel
-                            .transition(.opacity)
-                    }
-                }
+                authWallContent
             }
             .navigationBarHidden(true)
             .sheet(isPresented: $showSignUp) {
@@ -366,116 +393,14 @@ struct PremiumWelcomeFlow: View {
                 PremiumSignInView()
             }
         }
-    }
-
-    // MARK: - Onboarding Carousel
-    private var onboardingCarousel: some View {
-        VStack(spacing: 0) {
-            // Skip button
-            HStack {
-                Spacer()
-                Button(action: {
-                    withAnimation(.easeInOut(duration: 0.4)) {
-                        showAuth = true
-                    }
-                }) {
-                    Text("Skip")
-                        .font(.system(.subheadline, design: .rounded).weight(.medium))
-                        .foregroundColor(Color.obsidianTextSecondary)
-                }
-                .padding(.top, 16)
-                .padding(.trailing, 24)
-                .accessibilityIdentifier("skipButton")
+        .onAppear {
+            guard !didApplyStart else { return }
+            didApplyStart = true
+            switch start {
+            case .signUp: showSignUp = true
+            case .signIn: showSignIn = true
+            case .welcome: break
             }
-
-            // Page indicator
-            HStack(spacing: 8) {
-                ForEach(0..<totalPages, id: \.self) { index in
-                    Capsule()
-                        .fill(currentPage == index ? BrandColors.primary : BrandColors.primary.opacity(0.2))
-                        .frame(width: currentPage == index ? 24 : 8, height: 8)
-                        .animation(.easeInOut(duration: 0.2), value: currentPage)
-                }
-            }
-            .padding(.top, 16)
-
-            // Carousel
-            TabView(selection: $currentPage) {
-                OnboardingPreviewPage(
-                    icon: "chart.pie.fill",
-                    title: "Track Your Spending",
-                    description: "See exactly where your money goes with a beautiful dashboard and spending breakdown.",
-                    preview: AnyView(DashboardPreviewCard())
-                )
-                .tag(0)
-
-                OnboardingPreviewPage(
-                    icon: "list.bullet.rectangle.fill",
-                    title: "Add in Seconds",
-                    description: "Pick from 1,000+ services or paste a link, and keep every subscription in one place.",
-                    preview: AnyView(SubscriptionListPreviewCard())
-                )
-                .tag(1)
-
-                OnboardingPreviewPage(
-                    icon: "chart.bar.fill",
-                    title: "Spending Insights",
-                    description: "See what each subscription really costs and where your money goes.",
-                    preview: AnyView(InsightsPreviewCard())
-                )
-                .tag(2)
-            }
-            .tabViewStyle(PageTabViewStyle(indexDisplayMode: .never))
-            .padding(.top, 24)
-
-            Spacer()
-
-            // Continue button
-            VStack(spacing: 16) {
-                Button(action: {
-                    if currentPage < totalPages - 1 {
-                        withAnimation {
-                            currentPage += 1
-                        }
-                    } else {
-                        withAnimation(.easeInOut(duration: 0.4)) {
-                            showAuth = true
-                        }
-                    }
-                }) {
-                    Text(currentPage < totalPages - 1 ? "Next" : "Get Started")
-                        .font(.system(.body, design: .rounded).weight(.semibold))
-                        .foregroundColor(.white)
-                        .frame(maxWidth: .infinity)
-                        .frame(height: 56)
-                        .background(
-                            RoundedRectangle(cornerRadius: 16, style: .continuous)
-                                .fill(
-                                    LinearGradient(
-                                        colors: [BrandColors.primary, BrandColors.secondary],
-                                        startPoint: .topLeading,
-                                        endPoint: .bottomTrailing
-                                    )
-                                )
-                        )
-                        .shadow(color: BrandColors.primary.opacity(0.4), radius: 15, x: 0, y: 8)
-                }
-                .padding(.horizontal, 24)
-                .accessibilityIdentifier("onboardingNextButton")
-
-                Button(action: {
-                    withAnimation(.easeInOut(duration: 0.4)) {
-                        showAuth = true
-                    }
-                }) {
-                    Text("I already have an account")
-                        .font(.system(.subheadline, design: .rounded).weight(.medium))
-                        .foregroundColor(Color.obsidianTextSecondary)
-                }
-                .accessibilityIdentifier("alreadyHaveAccountButton")
-            }
-            .padding(.bottom, 48)
-            .padding(.top, 24)
         }
     }
 
@@ -519,21 +444,21 @@ struct PremiumWelcomeFlow: View {
             // Features
             VStack(spacing: 16) {
                 PremiumFeatureRow(
-                    icon: "chart.pie.fill",
-                    title: "Track Everything",
-                    description: "All your subscriptions in one beautiful place"
+                    icon: "calendar.badge.clock",
+                    title: "Every renewal, before it hits",
+                    description: "What each subscription costs and the day it charges you"
                 )
 
                 PremiumFeatureRow(
-                    icon: "bell.badge.fill",
-                    title: "Smart Reminders",
-                    description: "Never miss a renewal or free trial ending"
+                    icon: "hand.tap.fill",
+                    title: "Keep it or cancel it",
+                    description: "A reminder before each charge, with the facts to decide"
                 )
 
                 PremiumFeatureRow(
-                    icon: "dollarsign.circle.fill",
-                    title: "Find Savings",
-                    description: "Discover unused subscriptions and save money"
+                    icon: "doc.text.fill",
+                    title: "Your Savings Receipt",
+                    description: "Exactly what your cancellations saved you"
                 )
             }
             .padding(.horizontal, 24)
@@ -557,315 +482,6 @@ struct PremiumWelcomeFlow: View {
                 .accessibilityIdentifier("signInButton")
             }
             .padding(.bottom, 48)
-        }
-    }
-}
-
-// MARK: - Onboarding Preview Page
-struct OnboardingPreviewPage: View {
-    let icon: String
-    let title: String
-    let description: String
-    let preview: AnyView
-
-    var body: some View {
-        VStack(spacing: 24) {
-            // Preview card
-            preview
-                .frame(height: 360)
-                .padding(.horizontal, 24)
-
-            // Text content
-            VStack(spacing: 12) {
-                HStack(spacing: 12) {
-                    Image(systemName: icon)
-                        .font(.system(.title2, design: .rounded).weight(.semibold))
-                        .foregroundColor(BrandColors.primary)
-
-                    Text(title)
-                        .font(.system(.title2, design: .rounded).weight(.bold))
-                        .foregroundColor(.white)
-                }
-
-                Text(description)
-                    .font(.system(.body, design: .rounded).weight(.medium))
-                    .foregroundColor(Color.obsidianTextSecondary)
-                    .multilineTextAlignment(.center)
-                    .padding(.horizontal, 32)
-            }
-
-            Spacer()
-        }
-    }
-}
-
-// MARK: - Dashboard Preview Card
-struct DashboardPreviewCard: View {
-    var body: some View {
-        ZStack {
-            RoundedRectangle(cornerRadius: 24, style: .continuous)
-                .fill(Color(.systemBackground).opacity(0.1))
-                .overlay(
-                    RoundedRectangle(cornerRadius: 24, style: .continuous)
-                        .stroke(BrandColors.primary.opacity(0.2), lineWidth: 1)
-                )
-
-            VStack(spacing: 16) {
-                // Header
-                HStack {
-                    VStack(alignment: .leading, spacing: 4) {
-                        Text("Dashboard")
-                            .font(.system(.title2, design: .rounded).weight(.bold))
-                            .foregroundColor(.white)
-
-                        Text("Good morning")
-                            .font(.system(.footnote, design: .rounded).weight(.medium))
-                            .foregroundColor(Color.obsidianTextSecondary)
-                    }
-
-                    Spacer()
-
-                    Circle()
-                        .fill(BrandColors.primary.opacity(0.2))
-                        .frame(width: 36, height: 36)
-                        .overlay(
-                            Image(systemName: "bell")
-                                .font(.system(.subheadline, design: .rounded))
-                                .foregroundColor(BrandColors.primary)
-                        )
-                }
-                .padding(.horizontal, 20)
-                .padding(.top, 20)
-
-                // Hero spend card
-                VStack(spacing: 8) {
-                    Text("$247")
-                        .font(.system(.largeTitle, design: .rounded).weight(.bold))
-                        .foregroundColor(.white)
-
-                    Text("/month")
-                        .font(.system(.subheadline, design: .rounded).weight(.medium))
-                        .foregroundColor(Color.obsidianTextSecondary)
-                }
-                .frame(maxWidth: .infinity)
-                .padding(.vertical, 24)
-                .background(
-                    RoundedRectangle(cornerRadius: 20, style: .continuous)
-                        .fill(
-                            LinearGradient(
-                                colors: [BrandColors.primary.opacity(0.3), BrandColors.secondary.opacity(0.1)],
-                                startPoint: .topLeading,
-                                endPoint: .bottomTrailing
-                            )
-                        )
-                )
-                .padding(.horizontal, 20)
-
-                // Mini chart
-                HStack(spacing: 8) {
-                    ForEach([0.4, 0.7, 0.5, 0.9, 0.6, 0.8, 0.5], id: \.self) { height in
-                        RoundedRectangle(cornerRadius: 4, style: .continuous)
-                            .fill(BrandColors.primary.opacity(0.6))
-                            .frame(width: 24, height: CGFloat(height * 60))
-                    }
-                }
-                .frame(height: 60)
-                .padding(.horizontal, 20)
-
-                Spacer()
-            }
-        }
-    }
-}
-
-// MARK: - Subscription List Preview Card
-struct SubscriptionListPreviewCard: View {
-    var body: some View {
-        ZStack {
-            RoundedRectangle(cornerRadius: 24, style: .continuous)
-                .fill(Color(.systemBackground).opacity(0.1))
-                .overlay(
-                    RoundedRectangle(cornerRadius: 24, style: .continuous)
-                        .stroke(BrandColors.primary.opacity(0.2), lineWidth: 1)
-                )
-
-            VStack(spacing: 12) {
-                // Header
-                HStack {
-                    Text("Your Subscriptions")
-                        .font(.system(.title2, design: .rounded).weight(.bold))
-                        .foregroundColor(.white)
-
-                    Spacer()
-
-                    Circle()
-                        .fill(BrandColors.primary.opacity(0.2))
-                        .frame(width: 36, height: 36)
-                        .overlay(
-                            Image(systemName: "plus")
-                                .font(.system(.subheadline, design: .rounded))
-                                .foregroundColor(BrandColors.primary)
-                        )
-                }
-                .padding(.horizontal, 20)
-                .padding(.top, 20)
-
-                // Subscription rows
-                VStack(spacing: 10) {
-                    PreviewSubscriptionRow(name: "Netflix", price: "$15.99", color: .red)
-                    PreviewSubscriptionRow(name: "Spotify", price: "$10.99", color: .green)
-                    PreviewSubscriptionRow(name: "Apple One", price: "$32.95", color: .blue)
-                }
-                .padding(.horizontal, 20)
-
-                Spacer()
-            }
-        }
-    }
-}
-
-struct PreviewSubscriptionRow: View {
-    let name: String
-    let price: String
-    let color: Color
-
-    var body: some View {
-        HStack(spacing: 12) {
-            Circle()
-                .fill(color.opacity(0.2))
-                .frame(width: 40, height: 40)
-                .overlay(
-                    Text(String(name.prefix(1)))
-                        .font(.system(.subheadline, design: .rounded).weight(.bold))
-                        .foregroundColor(color)
-                )
-
-            VStack(alignment: .leading, spacing: 2) {
-                Text(name)
-                    .font(.system(.subheadline, design: .rounded).weight(.semibold))
-                    .foregroundColor(.white)
-
-                Text("Monthly")
-                    .font(.system(.caption, design: .rounded).weight(.medium))
-                    .foregroundColor(Color.obsidianTextSecondary)
-            }
-
-            Spacer()
-
-            Text(price)
-                .font(.system(.subheadline, design: .rounded).weight(.bold))
-                .foregroundColor(.white)
-        }
-        .padding(12)
-        .background(
-            RoundedRectangle(cornerRadius: 14, style: .continuous)
-                .fill(Color.white.opacity(0.05))
-        )
-    }
-}
-
-// MARK: - Insights Preview Card
-struct InsightsPreviewCard: View {
-    var body: some View {
-        ZStack {
-            RoundedRectangle(cornerRadius: 24, style: .continuous)
-                .fill(Color(.systemBackground).opacity(0.1))
-                .overlay(
-                    RoundedRectangle(cornerRadius: 24, style: .continuous)
-                        .stroke(BrandColors.primary.opacity(0.2), lineWidth: 1)
-                )
-
-            VStack(spacing: 16) {
-                // Header
-                HStack {
-                    Text("Smart Insights")
-                        .font(.system(.title2, design: .rounded).weight(.bold))
-                        .foregroundColor(.white)
-
-                    Spacer()
-
-                    Image(systemName: "sparkles")
-                        .font(.system(.title3, design: .rounded))
-                        .foregroundColor(BrandColors.primary)
-                }
-                .padding(.horizontal, 20)
-                .padding(.top, 20)
-
-                // Waste score card
-                HStack(spacing: 16) {
-                    ZStack {
-                        Circle()
-                            .stroke(Color.accentMint.opacity(0.2), lineWidth: 8)
-                            .frame(width: 70, height: 70)
-
-                        Circle()
-                            .trim(from: 0, to: 0.72)
-                            .stroke(Color.accentMint, style: StrokeStyle(lineWidth: 8, lineCap: .round))
-                            .frame(width: 70, height: 70)
-                            .rotationEffect(.degrees(-90))
-
-                        Text("72")
-                            .font(.system(.title3, design: .rounded).weight(.bold))
-                            .foregroundColor(.white)
-                    }
-
-                    VStack(alignment: .leading, spacing: 4) {
-                        Text("Health Score")
-                            .font(.system(.body, design: .rounded).weight(.semibold))
-                            .foregroundColor(.white)
-
-                        Text("Great! You're actively managing your subscriptions.")
-                            .font(.system(.footnote, design: .rounded).weight(.medium))
-                            .foregroundColor(Color.obsidianTextSecondary)
-                            .lineLimit(2)
-                    }
-                }
-                .padding(16)
-                .background(
-                    RoundedRectangle(cornerRadius: 16, style: .continuous)
-                        .fill(Color.accentMint.opacity(0.08))
-                        .overlay(
-                            RoundedRectangle(cornerRadius: 16, style: .continuous)
-                                .stroke(Color.accentMint.opacity(0.2), lineWidth: 1)
-                        )
-                )
-                .padding(.horizontal, 20)
-
-                // Recommendation card
-                HStack(spacing: 12) {
-                    Image(systemName: "lightbulb.fill")
-                        .font(.system(.title2, design: .rounded))
-                        .foregroundColor(Color.semanticWarning)
-
-                    VStack(alignment: .leading, spacing: 2) {
-                        Text("Save $48/year")
-                            .font(.system(.subheadline, design: .rounded).weight(.semibold))
-                            .foregroundColor(.white)
-
-                        Text("Switch to annual billing for Netflix")
-                            .font(.system(.footnote, design: .rounded).weight(.medium))
-                            .foregroundColor(Color.obsidianTextSecondary)
-                    }
-
-                    Spacer()
-
-                    Image(systemName: "chevron.right")
-                        .font(.system(.footnote, design: .rounded).weight(.semibold))
-                        .foregroundColor(Color.obsidianTextSecondary)
-                }
-                .padding(16)
-                .background(
-                    RoundedRectangle(cornerRadius: 16, style: .continuous)
-                        .fill(Color.semanticWarning.opacity(0.08))
-                        .overlay(
-                            RoundedRectangle(cornerRadius: 16, style: .continuous)
-                                .stroke(Color.semanticWarning.opacity(0.2), lineWidth: 1)
-                        )
-                )
-                .padding(.horizontal, 20)
-
-                Spacer()
-            }
         }
     }
 }

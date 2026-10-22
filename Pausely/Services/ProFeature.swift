@@ -3,6 +3,8 @@ import Foundation
 /// Everything Pro unlocks, in one list. The paywall shows these rows, gated screens ask
 /// `PaymentManager.isUnlocked(_:)`, and the App Store listing should promise exactly these.
 /// Adding a Pro feature means adding a case here, not another `isPremium` check.
+/// Reminders, Renewal Verdicts, cancel help and the Savings Receipt are free on purpose: the core
+/// promise is never behind the paywall.
 enum ProFeature: String, CaseIterable, Identifiable {
     /// Tracking more than `FreeTier.subscriptionLimit` subscriptions.
     case unlimitedSubscriptions
@@ -10,8 +12,6 @@ enum ProFeature: String, CaseIterable, Identifiable {
     case deepAnalysis
     /// Cheaper alternatives to a subscription.
     case cheaperAlternatives
-    /// Step-by-step cancel instructions for a subscription.
-    case guidedCancel
 
     var id: String { rawValue }
 
@@ -20,7 +20,6 @@ enum ProFeature: String, CaseIterable, Identifiable {
         case .unlimitedSubscriptions: return NSLocalizedString("Unlimited subscriptions", comment: "Pro feature")
         case .deepAnalysis: return NSLocalizedString("Deep savings analysis", comment: "Pro feature")
         case .cheaperAlternatives: return NSLocalizedString("Cheaper Alternatives", comment: "Pro feature")
-        case .guidedCancel: return NSLocalizedString("Guided cancel flow", comment: "Pro feature")
         }
     }
 
@@ -29,7 +28,6 @@ enum ProFeature: String, CaseIterable, Identifiable {
         case .unlimitedSubscriptions: return "infinity"
         case .deepAnalysis: return "chart.line.uptrend.xyaxis"
         case .cheaperAlternatives: return "arrow.triangle.swap"
-        case .guidedCancel: return "arrow.right.circle.fill"
         }
     }
 }
@@ -39,7 +37,7 @@ extension ProFeature {
     /// moving a single feature between free and Pro a one-line change.
     func isUnlocked(isPro: Bool) -> Bool {
         switch self {
-        case .unlimitedSubscriptions, .deepAnalysis, .cheaperAlternatives, .guidedCancel:
+        case .unlimitedSubscriptions, .deepAnalysis, .cheaperAlternatives:
             return isPro
         }
     }

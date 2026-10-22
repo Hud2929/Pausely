@@ -154,24 +154,10 @@ struct Subscription: Identifiable, Codable, Equatable {
         return formatCurrency(annualCost)
     }
     
+    /// What it costs over a year: the price times the number of charges in a year (a monthly plan
+    /// charges 12 times). One definition, so every screen shows the same yearly number.
     var annualCost: Decimal {
-        switch billingFrequency {
-        case .weekly:
-            // Use precise multiplier: 52.14 weeks per year (365.25/7)
-            return amount * Decimal(52.14)
-        case .biweekly:
-            // 26.07 biweekly periods per year
-            return amount * Decimal(26.07)
-        case .monthly:
-            // 12.03 months per year
-            return amount * Decimal(12.03)
-        case .quarterly:
-            return amount * 4
-        case .semiannual:
-            return amount * 2
-        case .yearly:
-            return amount
-        }
+        amount * ProvenSubscription.periodsPerYear(billingFrequency)
     }
     
     var lifetimeSpend: Decimal {

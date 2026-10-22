@@ -16,6 +16,7 @@ struct PremiumMainTabView: View {
     @State private var deepLinkedSubscription: Subscription?
     @ObservedObject private var subscriptionStore = SubscriptionStore.shared
     @ObservedObject private var insightsEngine = RealInsightsEngine.shared
+    @ObservedObject private var verdictCenter = VerdictCenter.shared
 
     var body: some View {
         ZStack(alignment: .bottom) {
@@ -48,6 +49,7 @@ struct PremiumMainTabView: View {
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity)
             .ignoresSafeArea()
+            .statusBarBackdrop()
 
             // Custom floating tab bar
             PauselyTabBar(
@@ -75,7 +77,12 @@ struct PremiumMainTabView: View {
             }
         }
         .task {
+            await NotificationManager.shared.refreshStatus()
             await subscriptionStore.fetchSubscriptions()
+        }
+        // A reminder tap (or "Review") opens the keep-or-cancel decision for that subscription.
+        .sheet(item: $verdictCenter.presented) { request in
+            RenewalVerdictView(subscriptionId: request.subscriptionId)
         }
         .whatsNewSheet()
     }

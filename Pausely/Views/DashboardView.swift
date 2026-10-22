@@ -10,6 +10,7 @@ struct DashboardView: View {
     @ObservedObject private var currencyManager = CurrencyManager.shared
     @ObservedObject private var screenTimeManager = ScreenTimeManager.shared
     @ObservedObject private var referralManager = ReferralManager.shared
+    @ObservedObject private var eventLog = LifecycleEventLog.shared
     @State private var appear = false
     @State private var showingPaywall = false
     @State private var showingAddSubscription = false
@@ -57,6 +58,20 @@ struct DashboardView: View {
                     .padding(.horizontal, 20)
                     .padding(.top, 40)
                 } else {
+                    // 0. Reminders are the core promise: ask for permission here, in context.
+                    if !NotificationManager.shared.isAuthorized {
+                        RemindersPermissionCard(nextCharge: store.upcomingRenewals.first ?? store.activeSubscriptions.first)
+                            .padding(.horizontal, 20)
+                            .padding(.top, 20)
+                    }
+
+                    // 0b. Renewals waiting for a keep-or-cancel decision
+                    if !VerdictCenter.shared.pendingDecisions().isEmpty {
+                        PendingDecisionsCard()
+                            .padding(.horizontal, 20)
+                            .padding(.top, 16)
+                    }
+
                     // 1. Next upcoming payment — most urgent item
                     NextPaymentCard(subscription: store.upcomingRenewals.first ?? store.activeSubscriptions.first)
                         .padding(.horizontal, 20)
@@ -64,6 +79,11 @@ struct DashboardView: View {
 
                     // 2. Upcoming bills this week
                     BillsThisWeekCard(subscriptions: store.activeSubscriptions)
+                        .padding(.horizontal, 20)
+                        .padding(.top, 16)
+
+                    // 2a. What Pausely has saved (the Savings Receipt)
+                    SavingsReceiptCard()
                         .padding(.horizontal, 20)
                         .padding(.top, 16)
 
@@ -97,13 +117,15 @@ struct DashboardView: View {
                             .padding(.top, 16)
                     }
 
-                    // 6. Lifetime spend
-                    LifetimeSpendCard(
-                        lifetimeSpend: store.totalLifetimeSpend,
-                        currencyManager: currencyManager
-                    )
-                    .padding(.horizontal, 20)
-                    .padding(.top, 16)
+                    // 6. Lifetime spend (only once there's a month of history; $0.00 just looks broken)
+                    if store.totalLifetimeSpend >= 1 {
+                        LifetimeSpendCard(
+                            lifetimeSpend: store.totalLifetimeSpend,
+                            currencyManager: currencyManager
+                        )
+                        .padding(.horizontal, 20)
+                        .padding(.top, 16)
+                    }
 
                     Spacer(minLength: 100)
                 }

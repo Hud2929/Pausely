@@ -130,7 +130,7 @@ struct CategoryBreakdownCard: View {
                             Circle()
                                 .fill(cat.color)
                                 .frame(width: 7, height: 7)
-                            Text(cat.category.capitalized)
+                            Text(cat.category)
                                 .font(.system(.caption, design: .rounded))
                                 .foregroundStyle(Color.obsidianTextSecondary)
                                 .lineLimit(1)
@@ -154,13 +154,13 @@ struct SpendingForecastCard: View {
     let forecast: RealInsightsEngine.SpendingForecast
     @State private var appeared = false
 
-    private var allEqual: Bool {
-        forecast.currentMonthly == forecast.optimizedMonthly &&
-        forecast.currentMonthly == forecast.aggressiveMonthly
-    }
+    /// Only worth showing when Pausely can point to real savings.
+    private var hasSavings: Bool { forecast.optimizedMonthly < forecast.currentMonthly }
+    /// A lower "minimal" figure exists only when measured usage supports it.
+    private var hasMinimal: Bool { forecast.aggressiveMonthly < forecast.optimizedMonthly }
 
     var body: some View {
-        if allEqual {
+        if !hasSavings {
             EmptyView()
         } else {
             VStack(alignment: .leading, spacing: 14) {
@@ -173,7 +173,7 @@ struct SpendingForecastCard: View {
 
                 HStack(alignment: .bottom, spacing: 0) {
                     ForecastBar(
-                        label: "Current",
+                        label: "Now",
                         monthly: forecast.currentMonthly,
                         maxAmount: maxAmount,
                         maxHeight: maxHeight,
@@ -181,21 +181,23 @@ struct SpendingForecastCard: View {
                         appeared: appeared
                     )
                     ForecastBar(
-                        label: "Optimized",
+                        label: "With suggested changes",
                         monthly: forecast.optimizedMonthly,
                         maxAmount: maxAmount,
                         maxHeight: maxHeight,
-                        color: Color.semanticWarning,
+                        color: hasMinimal ? Color.semanticWarning : Color.accentMint,
                         appeared: appeared
                     )
-                    ForecastBar(
-                        label: "Minimal",
-                        monthly: forecast.aggressiveMonthly,
-                        maxAmount: maxAmount,
-                        maxHeight: maxHeight,
-                        color: Color.accentMint,
-                        appeared: appeared
-                    )
+                    if hasMinimal {
+                        ForecastBar(
+                            label: "Only what you use",
+                            monthly: forecast.aggressiveMonthly,
+                            maxAmount: maxAmount,
+                            maxHeight: maxHeight,
+                            color: Color.accentMint,
+                            appeared: appeared
+                        )
+                    }
                 }
             }
             .padding(16)

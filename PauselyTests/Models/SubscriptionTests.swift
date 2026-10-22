@@ -42,7 +42,7 @@ final class SubscriptionTests: XCTestCase {
 
     func testAnnualCost_monthly() {
         let sub = TestFactories.makeSubscription(amount: 10, billingFrequency: .monthly)
-        XCTAssertEqual(sub.annualCost, Decimal(10) * Decimal(12.03))
+        XCTAssertEqual(sub.annualCost, 120, "A monthly plan charges 12 times a year")
     }
 
     func testAnnualCost_yearly() {
@@ -52,12 +52,12 @@ final class SubscriptionTests: XCTestCase {
 
     func testAnnualCost_weekly() {
         let sub = TestFactories.makeSubscription(amount: 10, billingFrequency: .weekly)
-        XCTAssertEqual(sub.annualCost, Decimal(10) * Decimal(52.14))
+        XCTAssertEqual(sub.annualCost, 520)
     }
 
     func testAnnualCost_biweekly() {
         let sub = TestFactories.makeSubscription(amount: 20, billingFrequency: .biweekly)
-        XCTAssertEqual(sub.annualCost, Decimal(20) * Decimal(26.07))
+        XCTAssertEqual(sub.annualCost, 520)
     }
 
     func testAnnualCost_quarterly() {
@@ -371,7 +371,6 @@ final class SubscriptionTests: XCTestCase {
         // 52 weeks / 12 months = ~4.33 weeks per month
         let expectedMonthly = Decimal(10) * Decimal(52) / 12
         XCTAssertEqual(sub.monthlyCost, expectedMonthly)
-        let expectedYearly = Decimal(10) * Decimal(52.14)
-        XCTAssertEqual(sub.annualCost, expectedYearly)
+        XCTAssertEqual(sub.annualCost, 520)
     }
 }

@@ -133,13 +133,7 @@ struct PremiumSubscriptionsView: View {
             case .browser:
                 SubscriptionBrowserView()
             case .detail(let subscription):
-                SubscriptionDetailView(
-                    subscription: subscription,
-                    isPresented: Binding(
-                        get: { true },
-                        set: { if !$0 { activeSheet = nil } }
-                    )
-                )
+                SubscriptionManagementView(subscription: subscription)
             }
         }
         .onChange(of: deepLinkedSubscription) { oldValue, newValue in

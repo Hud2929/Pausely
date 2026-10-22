@@ -10,7 +10,7 @@ struct SubscriptionManagementView: View {
     @ObservedObject private var store = SubscriptionStore.shared
     @ObservedObject private var actionManager = SubscriptionActionManager.shared
     @ObservedObject private var paymentManager = PaymentManager.shared
-    private var canGuidedCancel: Bool { paymentManager.isUnlocked(.guidedCancel) }
+    @ObservedObject private var eventLog = LifecycleEventLog.shared
     @ObservedObject private var screenTimeManager = ScreenTimeManager.shared
     @ObservedObject private var currencyManager = CurrencyManager.shared
 
@@ -20,7 +20,7 @@ struct SubscriptionManagementView: View {
     @State private var errorMessage: String?
 
     private enum Route: String, Identifiable {
-        case edit, paywall, cancel, priceHistory, annualSavings, alternatives, usage
+        case edit, paywall, cancel, priceHistory, annualSavings, alternatives, usage, verdict, receipt
         var id: String { rawValue }
     }
 
@@ -40,8 +40,13 @@ struct SubscriptionManagementView: View {
                 ScrollView {
                     VStack(spacing: 24) {
                         hero
+                        decisionGroup
                         factsCard
+                        if current.calculatedNextBillingDate != nil, current.renewsAutomatically {
+                            CancelTimingCard(subscription: current)
+                        }
                         toolsGroup
+                        LifetimeCostCard(subscription: current)
                         supportGroup
                         actions
                     }
@@ -208,6 +213,36 @@ struct SubscriptionManagementView: View {
         Divider().overlay(Color.white.opacity(0.06)).padding(.leading, 16)
     }
 
+    // MARK: - Decision
+
+    /// Keep it or cancel it, when a charge is coming; the receipt line once it's cancelled.
+    @ViewBuilder
+    private var decisionGroup: some View {
+        if let pending = RenewalDecisions.pending(for: current, kept: RenewalDecisions.keptKeys(in: eventLog.events), now: Date()) {
+            let days = Calendar.current.calendarDays(from: Date(), to: pending.date)
+            let when = days == 0 ? String(localized: "today") : days == 1 ? String(localized: "tomorrow") : String(localized: "in \(days) days")
+            VStack(spacing: 0) {
+                toolRow(icon: "questionmark.circle",
+                        title: String(localized: "Keep it or cancel it?"),
+                        subtitle: pending.isTrialEnd ? String(localized: "Free trial ends \(when)") : String(localized: "Renews \(when)")) {
+                    route = .verdict
+                }
+            }
+            .background(RoundedRectangle(cornerRadius: 16, style: .continuous).fill(Color.obsidianSurface))
+            .overlay(RoundedRectangle(cornerRadius: 16, style: .continuous).stroke(Color.orange.opacity(0.35), lineWidth: 1))
+        } else if current.status == .cancelled,
+                  let line = SavingsSummary.current().lines.last(where: { $0.subscriptionId == current.id }) {
+            VStack(spacing: 0) {
+                toolRow(icon: "doc.text",
+                        title: String(localized: "On your Savings Receipt"),
+                        subtitle: String(localized: "\(MoneyFormat.string(line.onTrack, line.currency)) avoided over 12 months")) {
+                    route = .receipt
+                }
+            }
+            .background(RoundedRectangle(cornerRadius: 16, style: .continuous).fill(Color.obsidianSurface))
+        }
+    }
+
     // MARK: - Tools
 
     @ViewBuilder
@@ -322,30 +357,23 @@ struct SubscriptionManagementView: View {
             }
 
             if current.status != .cancelled {
+                // Cancelling is never behind the paywall.
                 Button {
                     HapticStyle.medium.trigger()
-                    route = canGuidedCancel ? .cancel : .paywall
+                    route = .cancel
                 } label: {
                     HStack(spacing: 8) {
-                        Image(systemName: canGuidedCancel ? "xmark.circle" : "lock.fill")
+                        Image(systemName: "xmark.circle")
                             .font(.system(size: 15, weight: .semibold))
                         Text("Cancel subscription")
-                        if !canGuidedCancel {
-                            Text("Pro")
-                                .font(.system(.caption2, design: .rounded).weight(.bold))
-                                .foregroundStyle(Color.accentMint)
-                                .padding(.horizontal, 7)
-                                .padding(.vertical, 3)
-                                .background(Capsule().fill(Color.accentMint.opacity(0.15)))
-                        }
                     }
                     .font(.system(.body, design: .rounded).weight(.semibold))
-                    .foregroundStyle(canGuidedCancel ? Color.red : .white)
+                    .foregroundStyle(Color.red)
                     .frame(maxWidth: .infinity)
                     .frame(height: 52)
                     .background(
                         RoundedRectangle(cornerRadius: 16, style: .continuous)
-                            .fill(canGuidedCancel ? Color.red.opacity(0.12) : Color.obsidianSurface)
+                            .fill(Color.red.opacity(0.12))
                     )
                 }
                 .buttonStyle(PlainButtonStyle())
@@ -400,6 +428,10 @@ struct SubscriptionManagementView: View {
             AlternativesSheet(subscription: current, alternatives: alternatives) { self.route = .paywall }
         case .usage:
             UsageSheet(subscription: current)
+        case .verdict:
+            RenewalVerdictView(subscriptionId: current.id)
+        case .receipt:
+            SavingsReceiptView()
         }
     }
 }

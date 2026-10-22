@@ -10,7 +10,7 @@ struct ArtisticSubscriptionCard: View {
 
     private var cardAccessibilityLabel: String {
         let amount = currencyManager.format(currencyManager.convertToSelected(subscription.amount, from: subscription.currency))
-        var parts = [subscription.name, amount + " per " + subscription.billingFrequency.displayName.lowercased()]
+        var parts = [subscription.name, amount + " " + subscription.billingFrequency.billingPeriodLabel]
         if subscription.isPaused { parts.append("paused") }
         if let days = subscription.daysUntilRenewal, days >= 0, days <= 7 {
             parts.append(days == 0 ? "renews today" : "renews in \(days) \(days == 1 ? "day" : "days")")

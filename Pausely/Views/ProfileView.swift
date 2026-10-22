@@ -7,6 +7,7 @@ struct PremiumProfileView: View {
     @ObservedObject private var store = SubscriptionStore.shared
     @State private var showingPaywall = false
     @State private var showingNotifications = false
+    @State private var showingReceipt = false
     @State private var showingCurrency = false
     @State private var showingPrivacy = false
     @State private var showingHelp = false
@@ -78,7 +79,8 @@ struct PremiumProfileView: View {
                         onHelp: { showingHelp = true },
                         onExport: { showingExport = true },
                         onGmailImport: { showingGmailImport = true },
-                        onLanguage: { showingLanguage = true }
+                        onLanguage: { showingLanguage = true },
+                        onReceipt: { showingReceipt = true }
                     )
                     .padding(.horizontal, 20)
                     .padding(.top, 24)
@@ -144,6 +146,9 @@ struct PremiumProfileView: View {
         }
         .sheet(isPresented: $showingNotifications) {
             NotificationsSettingsView()
+        }
+        .sheet(isPresented: $showingReceipt) {
+            SavingsReceiptView()
         }
         .sheet(isPresented: $showingCurrency) {
             CurrencySettingsView()
@@ -384,7 +389,7 @@ struct ProfileStatsGrid: View {
 
                 ProfileStatBox(
                     value: "\(store.upcomingRenewals.count)",
-                    label: "renewing soon",
+                    label: "renew in 30 days",
                     icon: "checkmark.shield",
                     color: Color.semanticSuccess
                 )
@@ -488,6 +493,7 @@ struct SettingsSection: View {
     let onExport: () -> Void
     var onGmailImport: (() -> Void)? = nil
     var onLanguage: (() -> Void)? = nil
+    var onReceipt: (() -> Void)? = nil
     @AppStorage("app_language") private var appLanguage = "system"
 
     var body: some View {
@@ -498,6 +504,8 @@ struct SettingsSection: View {
                 .padding(.horizontal, 4)
 
             VStack(spacing: 1) {
+                SettingsRow(icon: "doc.text.fill", title: "Savings Receipt", color: Color.accentMint, action: { onReceipt?() })
+                    .accessibilityIdentifier("savingsReceiptButton")
                 SettingsRow(icon: "arrow.up.forward.app.fill", title: "Apple Subscriptions", color: Color.accentMint, action: {
                     if let url = URL(string: "https://apps.apple.com/account/subscriptions") {
                         openURL(url)

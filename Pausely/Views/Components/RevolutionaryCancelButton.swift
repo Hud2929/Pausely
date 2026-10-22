@@ -16,7 +16,6 @@ struct CancelSubscriptionFlow: View {
     @ObservedObject private var currencyManager = CurrencyManager.shared
 
     @State private var isShowingSafari = false
-    @State private var showConfirmDelete = false
     @State private var isDeleting = false
     @State private var errorMessage: String? = nil
     @State private var showingCelebration = false
@@ -133,11 +132,11 @@ struct CancelSubscriptionFlow: View {
                             .padding()
                     }
 
-                    // Done button
-                    Button(action: { showConfirmDelete = true }) {
+                    // Done: marks it cancelled (kept in the list, counted on the Savings Receipt)
+                    Button(action: { Task { await markCancelled() } }) {
                         HStack {
                             Image(systemName: "checkmark.circle.fill")
-                            Text("I Cancelled — Remove from Tracking")
+                            Text(isDeleting ? "Saving…" : "I cancelled it")
                                 .font(STFont.labelLarge)
                             Spacer()
                         }
@@ -152,6 +151,12 @@ struct CancelSubscriptionFlow: View {
                     }
                     .buttonStyle(.plain)
                     .disabled(isDeleting)
+                    .accessibilityIdentifier("iCancelledItButton")
+
+                    Text("Pausely keeps it in your list as cancelled and adds the charges you avoid to your Savings Receipt.")
+                        .font(STFont.bodySmall)
+                        .foregroundStyle(Color.obsidianTextTertiary)
+                        .multilineTextAlignment(.center)
                 }
                 .padding()
             }
@@ -170,14 +175,6 @@ struct CancelSubscriptionFlow: View {
                         .ignoresSafeArea()
                 }
             }
-            .alert("Remove from tracking?", isPresented: $showConfirmDelete) {
-                Button("Remove", role: .destructive) {
-                    Task { await removeSubscription() }
-                }
-                Button("Keep", role: .cancel) { }
-            } message: {
-                Text("This will remove \(subscription.name) from your Pausely dashboard. Your actual subscription is managed by \(subscription.name).")
-            }
             .errorBanner($errorMessage)
             .fullScreenCover(isPresented: $showingCelebration) {
                 CancelCelebrationView(subscription: subscription) {
@@ -194,11 +191,10 @@ struct CancelSubscriptionFlow: View {
         }
     }
 
-    private func removeSubscription() async {
+    private func markCancelled() async {
         isDeleting = true
         do {
-            try await SubscriptionStore.shared.deleteSubscription(id: subscription.id)
-            NotificationManager.shared.cancelReminder(for: subscription.id)
+            try await SubscriptionStore.shared.updateSubscriptionStatus(id: subscription.id, status: .cancelled)
             await MainActor.run {
                 isDeleting = false
                 Haptic.success()
@@ -206,7 +202,7 @@ struct CancelSubscriptionFlow: View {
             }
         } catch {
             await MainActor.run {
-                errorMessage = "Could not remove: \(error.localizedDescription)"
+                errorMessage = "Couldn't save: \(error.localizedDescription)"
                 isDeleting = false
                 Haptic.error()
             }

@@ -2,71 +2,81 @@
 //  NotificationManager.swift
 //  Pausely
 //
-//  Local Notifications for Renewal Reminders
+//  Notification permission, categories and the delegate that turns a reminder tap into a decision.
+//  Which reminders exist is decided by ReminderPlanner and applied by ReminderScheduler.
 //
 
 import Foundation
 @preconcurrency import UserNotifications
 import UIKit
 
+/// The buttons on Pausely's notifications.
+enum ReminderActions {
+    /// Every renewal and trial reminder: decide right from the notification.
+    static let decisionCategory = "RENEWAL_DECISION"
+    static let keep = "KEEP"
+    static let review = "REVIEW"
+
+    /// Reminders created by the "Pause" Shortcut.
+    static let pauseCategory = "PAUSE_REMINDER"
+    static let openPausePage = "OPEN_PAUSE_PAGE"
+
+    /// Registered on every launch; iOS forgets categories that aren't re-registered.
+    static func registerCategories(on center: UNUserNotificationCenter = .current()) {
+        let keepAction = UNNotificationAction(identifier: keep, title: String(localized: "Keep it"), options: [])
+        let reviewAction = UNNotificationAction(identifier: review, title: String(localized: "Review"), options: [.foreground])
+        let decision = UNNotificationCategory(identifier: decisionCategory, actions: [keepAction, reviewAction],
+                                              intentIdentifiers: [], options: [])
+        let openPause = UNNotificationAction(identifier: openPausePage, title: String(localized: "Open Pause Page"), options: [.foreground])
+        let pause = UNNotificationCategory(identifier: pauseCategory, actions: [openPause], intentIdentifiers: [], options: [])
+        center.setNotificationCategories([decision, pause])
+    }
+}
+
 @Observable
 @MainActor
 final class NotificationManager {
     static let shared = NotificationManager()
-    
-    // MARK: - State
-    private(set) var isAuthorized = false
-    private(set) var pendingNotifications: [UNNotificationRequest] = []
-    
-    // MARK: - Private Properties
-    private let center = UNUserNotificationCenter.current()
-    
-    // MARK: - Initialization
-    private init() {
-        Task {
-            await requestAuthorization()
-            await loadPendingNotifications()
-        }
-    }
-    
-    // MARK: - Authorization
-    
-    func requestAuthorization() async {
-        let settings = await center.notificationSettings()
-        
-        guard settings.authorizationStatus == .notDetermined else {
-            isAuthorized = settings.authorizationStatus == .authorized
-            return
-        }
-        
-        do {
-            isAuthorized = try await center.requestAuthorization(
-                options: [.alert, .sound, .badge, .provisional]
-            )
-            if isAuthorized {
-                registerCategories()
-            }
-        } catch {
-            isAuthorized = false
-        }
-    }
-    
-    // MARK: - Subscription Reminders
-    // Renewal and trial reminders are planned by ReminderPlanner and applied by ReminderScheduler,
-    // which rebuilds them all after every change. This class keeps authorization and the pause reminders.
 
-    // MARK: - Cancellation
-    
+    /// What iOS currently allows. Refreshed on launch and whenever the app becomes active.
+    private(set) var status: UNAuthorizationStatus = .notDetermined
+
+    var isAuthorized: Bool { [.authorized, .provisional, .ephemeral].contains(status) }
+
+    private let center = UNUserNotificationCenter.current()
+
+    private init() {}
+
+    func refreshStatus() async {
+        status = await center.notificationSettings().authorizationStatus
+    }
+
+    /// Shows the system prompt (iOS only shows it once), then rebuilds reminders so they start now.
+    @discardableResult
+    func requestPermission() async -> Bool {
+        let granted = (try? await center.requestAuthorization(options: [.alert, .sound, .badge])) ?? false
+        await refreshStatus()
+        ReminderActions.registerCategories(on: center)
+        await ReminderScheduler.shared.reschedule(SubscriptionStore.shared.subscriptions)
+        return granted
+    }
+
+    /// For people who said no earlier: iOS Settings is the only place to turn reminders back on.
+    func openSystemSettings() {
+        guard let url = URL(string: UIApplication.openNotificationSettingsURLString) else { return }
+        UIApplication.shared.open(url)
+    }
+
+    // MARK: - Pause reminders (Shortcuts)
 
     func schedulePauseReminder(for subscription: Subscription, reminderDate: Date, pauseURL: String?) {
-        guard isAuthorized else { return }
         cancelPauseReminder(for: subscription.id)
         guard reminderDate > Date() else { return }
         let content = UNMutableNotificationContent()
         content.title = "Reminder: Pause \(subscription.name)"
         content.body = "Tap to open \(subscription.name)'s pause page."
         content.sound = .default
-        content.categoryIdentifier = "PAUSE_REMINDER"
+        content.categoryIdentifier = ReminderActions.pauseCategory
         content.userInfo = [
             "subscription_id": subscription.id.uuidString,
             "type": "pause_reminder",
@@ -75,13 +85,16 @@ final class NotificationManager {
         var dateComponents = Calendar.current.dateComponents([.year, .month, .day], from: reminderDate)
         dateComponents.hour = 9
         dateComponents.minute = 0
-        let trigger = UNCalendarNotificationTrigger(dateMatching: dateComponents, repeats: false)
         let request = UNNotificationRequest(
             identifier: "pause-reminder-\(subscription.id.uuidString)",
             content: content,
-            trigger: trigger
+            trigger: UNCalendarNotificationTrigger(dateMatching: dateComponents, repeats: false)
         )
-        center.add(request)
+        Task {
+            await refreshStatus()
+            guard isAuthorized else { return }
+            try? await center.add(request)
+        }
     }
 
     func cancelPauseReminder(for subscriptionId: UUID) {
@@ -100,144 +113,41 @@ final class NotificationManager {
             center.removePendingNotificationRequests(withIdentifiers: matching)
         }
     }
-    
-    
-    // MARK: - Private Methods
-    
-    private func registerCategories() {
-        // Renewal reminder actions
-        let cancelAction = UNNotificationAction(
-            identifier: "CANCEL_SUB",
-            title: "Help Me Cancel",
-            options: .foreground
-        )
-        
-        let snoozeAction = UNNotificationAction(
-            identifier: "SNOOZE",
-            title: "Remind Tomorrow",
-            options: []
-        )
-        
-        let renewalCategory = UNNotificationCategory(
-            identifier: "RENEWAL_REMINDER",
-            actions: [cancelAction, snoozeAction],
-            intentIdentifiers: [],
-            options: []
-        )
-        
-        // Trial ending actions
-        let keepAction = UNNotificationAction(
-            identifier: "KEEP_TRIAL",
-            title: "Keep Subscription",
-            options: .foreground
-        )
-        
-        let cancelTrialAction = UNNotificationAction(
-            identifier: "CANCEL_TRIAL",
-            title: "Cancel Before Billing",
-            options: .destructive
-        )
-        
-        let trialCategory = UNNotificationCategory(
-            identifier: "TRIAL_ENDING",
-            actions: [keepAction, cancelTrialAction],
-            intentIdentifiers: [],
-            options: []
-        )
-        
-        // Pause resume actions
-        let resumeNowAction = UNNotificationAction(
-            identifier: "RESUME_NOW",
-            title: "Resume Now",
-            options: .foreground
-        )
-
-        let pauseCategory = UNNotificationCategory(
-            identifier: "PAUSE_RESUME",
-            actions: [resumeNowAction],
-            intentIdentifiers: [],
-            options: []
-        )
-
-        let pauseReminderAction = UNNotificationAction(
-            identifier: "OPEN_PAUSE_PAGE",
-            title: "Open Pause Page",
-            options: .foreground
-        )
-
-        let pauseReminderCategory = UNNotificationCategory(
-            identifier: "PAUSE_REMINDER",
-            actions: [pauseReminderAction],
-            intentIdentifiers: [],
-            options: []
-        )
-
-        center.setNotificationCategories([renewalCategory, trialCategory, pauseCategory, pauseReminderCategory])
-    }
-    
-    private func loadPendingNotifications() async {
-        pendingNotifications = await center.pendingNotificationRequests()
-    }
 }
 
-// MARK: - App Delegate Extension
-class NotificationDelegate: NSObject, UNUserNotificationCenterDelegate {
+// MARK: - Delegate
+
+/// Set as the notification center's delegate at launch (see AppDelegate).
+final class NotificationDelegate: NSObject, UNUserNotificationCenterDelegate {
     static let shared = NotificationDelegate()
 
-    func userNotificationCenter(
-        _ center: UNUserNotificationCenter,
-        willPresent notification: UNNotification,
-        withCompletionHandler completionHandler: @escaping (UNNotificationPresentationOptions) -> Void
-    ) {
-        // Show notification even when app is in foreground
-        completionHandler([.banner, .sound, .badge])
+    /// Reminders still show while Pausely is open.
+    func userNotificationCenter(_ center: UNUserNotificationCenter,
+                                willPresent notification: UNNotification) async -> UNNotificationPresentationOptions {
+        [.banner, .list, .sound]
     }
 
-    func userNotificationCenter(
-        _ center: UNUserNotificationCenter,
-        didReceive response: UNNotificationResponse,
-        withCompletionHandler completionHandler: @escaping () -> Void
-    ) {
-        let userInfo = response.notification.request.content.userInfo
+    func userNotificationCenter(_ center: UNUserNotificationCenter,
+                                didReceive response: UNNotificationResponse) async {
+        let info = response.notification.request.content.userInfo
+        let subscriptionId = (info["subscription_id"] as? String).flatMap(UUID.init(uuidString:))
+        let pauseURL = (info["pause_url"] as? String).flatMap { $0.isEmpty ? nil : URL(string: $0) }
 
-        // Handle actions
         switch response.actionIdentifier {
-        case "CANCEL_SUB":
-            if let subId = userInfo["subscription_id"] as? String {
-                NotificationCenter.default.post(
-                    name: .cancelSubscriptionRequested,
-                    object: nil,
-                    userInfo: ["subscription_id": subId]
-                )
+        case ReminderActions.keep:
+            // Handled without opening the app: record the decision and drop the remaining reminders.
+            if let subscriptionId { await VerdictCenter.shared.keep(subscriptionId: subscriptionId) }
+        case ReminderActions.openPausePage:
+            if let pauseURL {
+                await MainActor.run { UIApplication.shared.open(pauseURL) }
+            } else if let subscriptionId {
+                await VerdictCenter.shared.showSubscription(subscriptionId)
             }
-        case "SNOOZE":
-            // Reschedule for tomorrow
+        case UNNotificationDismissActionIdentifier:
             break
-        case "OPEN_PAUSE_PAGE":
-            if let pauseURL = userInfo["pause_url"] as? String, !pauseURL.isEmpty,
-               let url = URL(string: pauseURL) {
-                Task { @MainActor in
-                    await UIApplication.shared.open(url)
-                }
-            } else if let subId = userInfo["subscription_id"] as? String {
-                // Fallback: navigate to subscription detail so user can find cancel link
-                NotificationCenter.default.post(
-                    name: .openPausePageRequested,
-                    object: nil,
-                    userInfo: ["subscription_id": subId]
-                )
-            }
         default:
-            break
+            // A tap on the reminder, or "Review": open the decision for that subscription.
+            if let subscriptionId { await VerdictCenter.shared.open(subscriptionId: subscriptionId) }
         }
-
-        completionHandler()
     }
-}
-
-
-// MARK: - Notification Names
-extension Notification.Name {
-    static let cancelSubscriptionRequested = Notification.Name("cancelSubscriptionRequested")
-    static let openPausePageRequested = Notification.Name("openPausePageRequested")
 }

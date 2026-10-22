@@ -3,7 +3,7 @@ import StoreKit
 
 // MARK: - StoreKit Upgrade View
 /// Trial-first paywall optimized for conversion.
-/// Leads with free trial, shows social proof, and makes annual savings prominent.
+/// Leads with the free trial, states the Pausely Promise, and makes annual savings prominent.
 struct StoreKitUpgradeView: View {
     @Environment(\.dismiss) private var dismiss
     @ObservedObject private var storeManager = StoreKitManager.shared
@@ -144,6 +144,7 @@ struct StoreKitUpgradeView: View {
                     .allowsHitTesting(false)
             }
         }
+        .statusBarBackdrop()
         .onAppear {
             withAnimation(.easeOut(duration: 0.6)) {
                 appearAnimation = true
@@ -335,20 +336,11 @@ struct StoreKitUpgradeView: View {
                 Spacer()
 
                 VStack(alignment: .trailing, spacing: 4) {
+                    // The discount is already on the Annual toggle; here, what happens after the trial.
                     if isTrialEnabled {
-                        Text("7 days free")
+                        Text("then \(selectedPlan == .monthly ? priceText(.pro) : priceText(.proAnnual))\(selectedPlan.period)")
                             .font(.subheadline.bold())
-                            .foregroundColor(.accentMint)
-                            .padding(.horizontal, 10)
-                            .padding(.vertical, 4)
-                            .background(Color.accentMint.opacity(0.15))
-                            .cornerRadius(8)
-                    }
-
-                    if let savings = selectedPlan.savings {
-                        Text(savings)
-                            .font(.subheadline.bold())
-                            .foregroundColor(.green)
+                            .foregroundColor(.white)
                     }
 
                     if selectedPlan == .annual, let perMonth = storeManager.annualPricePerMonth {
@@ -384,7 +376,6 @@ struct StoreKitUpgradeView: View {
                 ForEach(ProFeature.allCases) { feature in
                     TrialFeatureRow(icon: feature.icon, text: feature.title)
                 }
-                TrialFeatureRow(icon: "xmark.circle.fill", text: NSLocalizedString("Cancel anytime", comment: ""))
             }
         }
         .padding(20)
@@ -395,40 +386,29 @@ struct StoreKitUpgradeView: View {
 
     // MARK: - Social Proof Section
     private var socialProofSection: some View {
-        VStack(spacing: 12) {
-            // Social proof
-            HStack(spacing: 8) {
-                // Avatar stack
-                HStack(spacing: -8) {
-                    ForEach(0..<3) { i in
-                        Circle()
-                            .fill([
-                                Color.accentMint,
-                                Color.accentMint,
-                                Color.accentMint
-                            ][i])
-                            .frame(width: 28, height: 28)
-                            .overlay(
-                                Image(systemName: ["person.fill", "person.fill", "person.fill"][i])
-                                    .font(.system(.caption2, design: .rounded))
-                                    .foregroundColor(.white)
-                            )
-                            .overlay(
-                                Circle()
-                                    .stroke(Color.obsidianBlack, lineWidth: 2)
-                            )
-                    }
-                }
-
-                Text(LocalizedStringKey("Take control of your subscription spending"))
+        // No invented social proof: the promise Pausely holds itself to.
+        HStack(alignment: .top, spacing: 12) {
+            Image(systemName: "seal.fill")
+                .font(.system(size: 20, weight: .semibold))
+                .foregroundColor(.accentMint)
+                .accessibilityHidden(true)
+            VStack(alignment: .leading, spacing: 4) {
+                Text(LocalizedStringKey("The Pausely Promise"))
+                    .font(AppTypography.labelMedium)
+                    .foregroundStyle(.white)
+                Text(LocalizedStringKey("Pausely keeps a receipt of what it saves you. If it doesn't save you more than it costs, it will tell you to cancel it."))
                     .font(AppTypography.bodySmall)
                     .foregroundStyle(.white.opacity(0.7))
-                    .multilineTextAlignment(.leading)
-
-                Spacer()
+                    .fixedSize(horizontal: false, vertical: true)
             }
-
+            Spacer(minLength: 0)
         }
+        .padding(16)
+        .background(
+            RoundedRectangle(cornerRadius: 16, style: .continuous)
+                .fill(Color.accentMint.opacity(0.08))
+                .overlay(RoundedRectangle(cornerRadius: 16, style: .continuous).stroke(Color.accentMint.opacity(0.2), lineWidth: 1))
+        )
         .opacity(appearAnimation ? 1 : 0)
         .offset(y: appearAnimation ? 0 : 20)
     }

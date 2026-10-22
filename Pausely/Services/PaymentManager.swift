@@ -311,6 +311,23 @@ final class PaymentManager: ObservableObject {
 
     /// Automatically adds Pausely Pro to the user's subscription list when they upgrade.
     /// Uses a UserDefaults flag to prevent duplicate additions.
+    /// What Pausely itself costs this customer, from StoreKit: the storefront's price and currency,
+    /// whether the free trial is running, and when the next charge happens.
+    static func pauselyEntry(for tier: SubscriptionTier) async -> (amount: Decimal, currency: String, frequency: BillingFrequency, nextCharge: Date?, isTrial: Bool) {
+        let frequency: BillingFrequency = tier == .proAnnual ? .yearly : .monthly
+        let product = StoreKitManager.shared.product(for: tier)
+        var amount = product?.price ?? (tier == .proAnnual ? ProPricing.annualUSD : ProPricing.monthlyUSD)
+        let currency = product?.priceFormatStyle.currencyCode ?? "USD"
+        var nextCharge = Calendar.current.date(byAdding: frequency == .yearly ? .year : .month, value: 1, to: Date())
+        var isTrial = false
+        if let product, let latest = await Transaction.latest(for: product.id), case .verified(let transaction) = latest {
+            if let expires = transaction.expirationDate { nextCharge = expires }
+            isTrial = transaction.offer?.type == .introductory
+        }
+        if amount <= 0 { amount = tier == .proAnnual ? ProPricing.annualUSD : ProPricing.monthlyUSD }
+        return (amount, currency, frequency, nextCharge, isTrial)
+    }
+
     func autoAddPauselyProIfNeeded() async {
         guard !UserDefaults.standard.bool(forKey: pauselyProAutoAddedKey) else { return }
 
@@ -326,30 +343,18 @@ final class PaymentManager: ObservableObject {
             return
         }
 
-        let amount: Decimal
-        let frequency: BillingFrequency
-        switch currentTier {
-        case .proAnnual:
-            amount = 79.99
-            frequency = .yearly
-        case .pro:
-            amount = 9.99
-            frequency = .monthly
-        case .free:
-            return
-        }
-
-        let nextBilling = Calendar.current.date(byAdding: frequency == .yearly ? .year : .month, value: 1, to: Date())
-
+        guard currentTier > .free else { return }
+        let entry = await Self.pauselyEntry(for: currentTier)
         let subscription = Subscription(
             name: "Pausely Pro",
             bundleIdentifier: "com.pausely.app.Pausely",
             category: SubscriptionCategory.productivity.rawValue,
-            amount: amount,
-            currency: "USD",
-            billingFrequency: frequency,
-            nextBillingDate: nextBilling,
-            status: .active,
+            amount: entry.amount,
+            currency: entry.currency,
+            billingFrequency: entry.frequency,
+            nextBillingDate: entry.nextCharge,
+            trialEndsAt: entry.isTrial ? entry.nextCharge : nil,
+            status: entry.isTrial ? .trial : .active,
             isDetected: true
         )
 
