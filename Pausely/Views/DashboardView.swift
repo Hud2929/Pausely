@@ -60,7 +60,7 @@ struct DashboardView: View {
                     .padding(.top, 40)
                 } else {
                     // 0. Reminders are the core promise: ask for permission here, in context.
-                    if !NotificationManager.shared.isAuthorized {
+                    if !NotificationManager.shared.isAuthorized && !DemoSavings.isScreenshotRun {
                         RemindersPermissionCard(nextCharge: store.upcomingRenewals.first ?? store.activeSubscriptions.first)
                             .padding(.horizontal, 20)
                             .padding(.top, 20)

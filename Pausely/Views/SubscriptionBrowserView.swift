@@ -495,7 +495,7 @@ struct SearchResultRow: View {
                     Text(entry.name)
                         .font(.callout.weight(.semibold))
                         .foregroundColor(.white)
-                    Text(entry.category.rawValue)
+                    Text(entry.category.displayName)
                         .font(.caption2.weight(.medium))
                         .foregroundColor(.white.opacity(0.45))
                 }
@@ -631,7 +631,7 @@ struct CatalogEntryCard: View {
                         .font(.callout.weight(.semibold))
                         .foregroundColor(.white)
                         .lineLimit(1)
-                    Text(entry.category.rawValue)
+                    Text(entry.category.displayName)
                         .font(.caption2.weight(.medium))
                         .foregroundColor(.white.opacity(0.45))
                 }

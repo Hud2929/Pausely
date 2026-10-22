@@ -141,7 +141,7 @@ struct RootView: View {
                     #endif
                 } else if isDemoScreen("--demo-subscription") {
                     #if DEBUG
-                    SubscriptionManagementView(subscription: DemoSubscriptions.netflix)
+                    SubscriptionManagementView(subscription: SubscriptionStore.shared.subscriptions.first { $0.name == "Netflix" } ?? DemoSubscriptions.netflix)
                     #endif
                 } else if isDemoScreen("--demo-subscription-edit") {
                     #if DEBUG

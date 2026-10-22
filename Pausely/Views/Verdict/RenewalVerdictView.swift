@@ -164,7 +164,9 @@ struct RenewalVerdictView: View {
                 divider
                 if paymentManager.isUnlocked(.cheaperAlternatives) {
                     factRow("arrow.left.arrow.right",
-                            String(localized: "Cheaper: \(cheaper.name) at \(currencyManager.format(cheaper.monthly)) a month"),
+                            cheaper.monthly == 0
+                                ? String(localized: "Free alternative: \(cheaper.name)")
+                                : String(localized: "Cheaper: \(cheaper.name) at \(currencyManager.format(cheaper.monthly)) a month"),
                             tint: Color.accentMint)
                 } else {
                     Button {
