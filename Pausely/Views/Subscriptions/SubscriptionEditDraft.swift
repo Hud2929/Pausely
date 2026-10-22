@@ -20,7 +20,8 @@ struct SubscriptionEditDraft: Equatable {
         amountText = SubscriptionEditDraft.text(for: subscription.amount)
         currency = subscription.currency
         frequency = subscription.billingFrequency
-        nextBillingDate = subscription.nextBillingDate
+        // Show the upcoming renewal, not an anchor that may be months in the past.
+        nextBillingDate = subscription.calculatedNextBillingDate
         category = subscription.category
         reminderDays = subscription.notifyBeforeDays
     }
@@ -106,7 +107,7 @@ struct SubscriptionEditDraft: Equatable {
             || frequency != original.billingFrequency
             || category != original.category
             || reminderDays != original.notifyBeforeDays
-            || !sameDay(nextBillingDate, original.nextBillingDate)
+            || !sameDay(nextBillingDate, original.calculatedNextBillingDate)
     }
 
     private func sameDay(_ a: Date?, _ b: Date?) -> Bool {
@@ -125,7 +126,11 @@ struct SubscriptionEditDraft: Equatable {
         updated.amount = amount
         updated.currency = currency
         updated.billingFrequency = frequency
-        updated.nextBillingDate = nextBillingDate
+        // The stored date is the renewal anchor. Keep it unless the user picked a different day, so a
+        // subscription that renews on the 31st keeps doing so (see RenewalSchedule).
+        if !sameDay(nextBillingDate, original.calculatedNextBillingDate) {
+            updated.nextBillingDate = nextBillingDate.map { Calendar.current.noon(of: $0) }
+        }
         updated.category = category
         updated.notifyBeforeDays = reminderDays
         updated.updatedAt = now

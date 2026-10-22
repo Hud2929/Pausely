@@ -93,6 +93,7 @@ class SubscriptionStore: ObservableObject {
 
             // Process pending sync operations after successful fetch
             await SyncQueue.shared.processQueue()
+            await SubscriptionLifecycle.shared.run()
 
         } catch {
             os_log("Error fetching subscriptions: %{public}@", log: .default, type: .error, error.localizedDescription)
@@ -104,6 +105,8 @@ class SubscriptionStore: ObservableObject {
                     }
                 }
             }
+            // Offline: reminders still come from the cached subscriptions.
+            await SubscriptionLifecycle.shared.run()
         }
     }
     
@@ -246,6 +249,8 @@ class SubscriptionStore: ObservableObject {
 
         var localSub = subscription
         localSub.id = subscription.id ?? UUID()
+        // A renewal date is a calendar day, not a moment: store it at local noon (see RenewalSchedule).
+        localSub.nextBillingDate = localSub.nextBillingDate.map { Calendar.current.noon(of: $0) }
 
         // 1. Update local state immediately (offline-first)
         await MainActor.run {
@@ -259,13 +264,9 @@ class SubscriptionStore: ObservableObject {
             }
         }
 
-        // Schedule 3-tier renewal notifications + trial notifications
-        NotificationManager.shared.scheduleRenewalReminder(for: localSub)
-        NotificationManager.shared.scheduleUrgentRenewalReminder(for: localSub)
-        NotificationManager.shared.scheduleDayOfRenewalAlert(for: localSub)
-        if localSub.status == .trial {
-            NotificationManager.shared.scheduleTrialEndingReminder(for: localSub)
-        }
+        LifecycleEventLog.shared.record(.added, for: localSub)
+        // Rebuild every reminder from the current list (heads-up, day before, day of, trial ending).
+        await ReminderScheduler.shared.reschedule(self.subscriptions)
 
         // 2. Attempt Supabase write
         do {
@@ -313,23 +314,13 @@ class SubscriptionStore: ObservableObject {
                 WidgetDataStore.shared.publish(subscriptions: self.subscriptions)
                 SpotlightManager.shared.index(subscriptions: self.subscriptions)
                 PriceHistoryTracker.shared.recordPriceIfChanged(subscription)
-                if subscription.amount > oldAmount {
-                    NotificationManager.shared.schedulePriceIncreaseAlert(
-                        subscription: subscription,
-                        oldPrice: oldAmount,
-                        newPrice: subscription.amount
-                    )
+                if subscription.amount != oldAmount {
+                    LifecycleEventLog.shared.record(.priceChanged, for: subscription, previousAmount: oldAmount)
                 }
             }
         }
 
-        // Reschedule 3-tier renewal notifications after update
-        NotificationManager.shared.scheduleRenewalReminder(for: subscription)
-        NotificationManager.shared.scheduleUrgentRenewalReminder(for: subscription)
-        NotificationManager.shared.scheduleDayOfRenewalAlert(for: subscription)
-        if subscription.status == .trial {
-            NotificationManager.shared.scheduleTrialEndingReminder(for: subscription)
-        }
+        await ReminderScheduler.shared.reschedule(self.subscriptions)
 
         // 2. Attempt Supabase write
         do {
@@ -373,12 +364,16 @@ class SubscriptionStore: ObservableObject {
     func deleteSubscription(id: UUID) async throws {
         // 1. Update local state immediately (offline-first)
         await MainActor.run {
+            if let removed = self.subscriptions.first(where: { $0.id == id }) {
+                LifecycleEventLog.shared.record(.deleted, for: removed)
+            }
             self.subscriptions.removeAll { $0.id == id }
             self.calculateTotals()
             self.saveToCache()
             WidgetDataStore.shared.publish(subscriptions: self.subscriptions)
             SpotlightManager.shared.index(subscriptions: self.subscriptions)
         }
+        await ReminderScheduler.shared.reschedule(self.subscriptions)
 
         // 2. Attempt Supabase write
         do {
@@ -406,8 +401,12 @@ class SubscriptionStore: ObservableObject {
                 self.saveToCache()
                 WidgetDataStore.shared.publish(subscriptions: self.subscriptions)
                 SpotlightManager.shared.index(subscriptions: self.subscriptions)
+                if status == .cancelled {
+                    LifecycleEventLog.shared.record(.cancelled, for: self.subscriptions[index])
+                }
             }
         }
+        await ReminderScheduler.shared.reschedule(self.subscriptions)
         if status != .active {
             checkSavingsMilestone()
         }
@@ -441,6 +440,7 @@ class SubscriptionStore: ObservableObject {
                 SpotlightManager.shared.index(subscriptions: self.subscriptions)
             }
         }
+        await ReminderScheduler.shared.reschedule(self.subscriptions)
 
         // 2. Attempt Supabase write
         do {
@@ -473,6 +473,7 @@ class SubscriptionStore: ObservableObject {
                 SpotlightManager.shared.index(subscriptions: self.subscriptions)
             }
         }
+        await ReminderScheduler.shared.reschedule(self.subscriptions)
 
         // 2. Attempt Supabase write
         struct ResumePayload: Encodable {
@@ -791,8 +792,8 @@ class SubscriptionStore: ObservableObject {
 
         return activeSubscriptions
             .filter { sub in
-                guard let nextBilling = sub.calculatedNextBillingDate else { return false }
-                return nextBilling >= now && nextBilling <= thirtyDaysFromNow
+                guard sub.calculatedNextBillingDate != nil, let days = sub.daysUntilRenewal else { return false }
+                return days >= 0 && days <= calendar.calendarDays(from: now, to: thirtyDaysFromNow)
             }
             .sorted { ($0.calculatedNextBillingDate ?? now) < ($1.calculatedNextBillingDate ?? now) }
     }

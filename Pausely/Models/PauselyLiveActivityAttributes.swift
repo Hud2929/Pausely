@@ -51,7 +51,7 @@ final class LiveActivityManager {
 
         let attributes = PauselyLiveActivityAttributes(
             subscriptionName: subscription.name,
-            renewalDate: subscription.nextBillingDate ?? Date().addingTimeInterval(86400 * 7),
+            renewalDate: subscription.calculatedNextBillingDate ?? Date().addingTimeInterval(86400 * 7),
             amount: amount,
             currencySymbol: currencySymbol,
             frequency: subscription.billingFrequency.displayName

@@ -206,10 +206,23 @@ struct Subscription: Identifiable, Codable, Equatable {
         return pausedUntil > Date()
     }
 
-    /// Returns the user's actual next billing date if set, otherwise nil.
-    /// No heuristic guessing — we only show dates the user has explicitly entered.
+    /// Whether this subscription keeps charging on its own. Only these roll forward to the next cycle.
+    var renewsAutomatically: Bool {
+        (status == .active || status == .trial) && !isPaused
+    }
+
+    /// The next renewal. `nextBillingDate` is the anchor the user entered and is never overwritten;
+    /// for a subscription that renews on its own, the next renewal is computed from that anchor, so a
+    /// date that has passed rolls forward to the next cycle instead of sitting "overdue" forever.
+    /// Paused, cancelled and expired subscriptions show the date exactly as entered.
     var calculatedNextBillingDate: Date? {
-        nextBillingDate
+        nextRenewal(onOrAfter: Date())
+    }
+
+    func nextRenewal(onOrAfter day: Date, calendar: Calendar = .current) -> Date? {
+        guard let anchor = nextBillingDate else { return nil }
+        guard renewsAutomatically else { return anchor }
+        return RenewalSchedule.nextRenewal(anchor: anchor, frequency: billingFrequency, onOrAfter: day, calendar: calendar)
     }
 
     var daysUntilRenewal: Int? {

@@ -78,6 +78,7 @@ struct RootView: View {
     @State private var showAuth = false
     @State private var splashWorkItem: DispatchWorkItem?
     @AppStorage("hasCompletedOnboarding") private var hasCompletedOnboarding = false
+    @Environment(\.scenePhase) private var scenePhase
 
     /// Detects if app was launched for UI testing
     private var isUITesting: Bool {
@@ -221,6 +222,13 @@ struct RootView: View {
             // Initialize StoreKit: starts the transaction listener and checks
             // existing entitlements so returning subscribers are recognized immediately.
             await StoreKitManager.shared.loadProductsIfNeeded()
+        }
+        .onChange(of: scenePhase) { _, phase in
+            // Time-driven changes (renewals passing, trials ending) and a fresh set of reminders
+            // every time the app comes back to the foreground.
+            if phase == .active {
+                Task { await SubscriptionLifecycle.shared.run() }
+            }
         }
         .onOpenURL { url in
             // Handle deep links (referral codes, auth callbacks, subscription management, etc.)

@@ -264,7 +264,7 @@ struct SubscriptionDetailView: View {
     }
 
     var renewalDateText: String {
-        guard let date = subscription.nextBillingDate else { return "Unknown" }
+        guard let date = subscription.calculatedNextBillingDate else { return "Unknown" }
         let formatter = DateFormatter()
         formatter.dateStyle = .medium
         return formatter.string(from: date)
@@ -299,7 +299,7 @@ private struct CancelTimingCard: View {
     }
 
     private var lastBillingDate: Date? {
-        guard let next = subscription.nextBillingDate else { return nil }
+        guard let next = subscription.calculatedNextBillingDate else { return nil }
         return Calendar.current.date(byAdding: .day, value: -cycleDays, to: next)
     }
 
@@ -308,7 +308,7 @@ private struct CancelTimingCard: View {
     }
 
     private var daysRemaining: Int {
-        guard let next = subscription.nextBillingDate else { return 0 }
+        guard let next = subscription.calculatedNextBillingDate else { return 0 }
         return max(0, Calendar.current.calendarDays(from: Date(), to: next))
     }
 

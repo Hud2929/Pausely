@@ -329,7 +329,7 @@ final class RealInsightsEngine: ObservableObject {
         let today = Date()
 
         for sub in subscriptions {
-            if let nextRenewal = sub.nextBillingDate {
+            if let nextRenewal = sub.calculatedNextBillingDate {
                 dates[sub.id] = max(0, calendar.calendarDays(from: today, to: nextRenewal))
             }
         }

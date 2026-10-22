@@ -34,10 +34,10 @@ struct GetUpcomingRenewalsIntent: AppIntent {
         let upcoming = store.subscriptions
             .filter { $0.status == .active }
             .filter { sub in
-                guard let nextDate = sub.nextBillingDate else { return false }
+                guard let nextDate = sub.calculatedNextBillingDate else { return false }
                 return nextDate <= cutoff
             }
-            .sorted { ($0.nextBillingDate ?? .distantFuture) < ($1.nextBillingDate ?? .distantFuture) }
+            .sorted { ($0.calculatedNextBillingDate ?? .distantFuture) < ($1.calculatedNextBillingDate ?? .distantFuture) }
 
         guard !upcoming.isEmpty else {
             return .result(value: "No subscriptions renewing in the next \(daysAhead) days.")

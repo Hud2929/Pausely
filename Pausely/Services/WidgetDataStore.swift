@@ -33,7 +33,7 @@ final class WidgetDataStore {
         let active = subscriptions.filter { $0.status == .active }
         let monthlySpend = active.reduce(0.0) { $0 + (Double(truncating: $1.monthlyCost as NSNumber) ) }
         let upcoming = active.filter { sub in
-            guard let next = sub.nextBillingDate else { return false }
+            guard let next = sub.calculatedNextBillingDate else { return false }
             return next <= Calendar.current.date(byAdding: .day, value: 7, to: Date())!
         }
 

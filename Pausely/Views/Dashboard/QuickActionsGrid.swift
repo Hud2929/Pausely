@@ -68,7 +68,7 @@ struct UpcomingBillsSheet: View {
     private var sortedByBillingDate: [Subscription] {
         store.subscriptions
             .filter { $0.nextBillingDate != nil }
-            .sorted { ($0.nextBillingDate ?? .distantFuture) < ($1.nextBillingDate ?? .distantFuture) }
+            .sorted { ($0.calculatedNextBillingDate ?? .distantFuture) < ($1.calculatedNextBillingDate ?? .distantFuture) }
     }
 
     var body: some View {
@@ -116,7 +116,7 @@ struct UpcomingBillRow: View {
     let subscription: Subscription
 
     private var daysUntilBilling: Int? {
-        guard let date = subscription.nextBillingDate else { return nil }
+        guard let date = subscription.calculatedNextBillingDate else { return nil }
         return Calendar.current.calendarDays(from: Date(), to: date)
     }
 
@@ -151,7 +151,7 @@ struct UpcomingBillRow: View {
                 Text(subscription.name)
                     .font(.system(.body, design: .rounded).weight(.semibold))
                     .foregroundStyle(.white)
-                if let date = subscription.nextBillingDate {
+                if let date = subscription.calculatedNextBillingDate {
                     Text(date.formatted(date: .abbreviated, time: .omitted))
                         .font(.system(.caption, design: .rounded))
                         .foregroundStyle(.secondary)

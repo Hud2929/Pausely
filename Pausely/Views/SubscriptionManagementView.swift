@@ -160,7 +160,7 @@ struct SubscriptionManagementView: View {
 
     private var renewalLine: (text: String, tint: Color)? {
         guard current.status == .active || current.status == .trial,
-              let date = current.nextBillingDate, let days = current.daysUntilRenewal else { return nil }
+              let date = current.calculatedNextBillingDate, let days = current.daysUntilRenewal else { return nil }
         let dateText = date.formatted(.dateTime.month(.abbreviated).day())
         if days < 0 { return ("Payment was due \(-days) day\(-days == 1 ? "" : "s") ago", .orange) }
         if days == 0 { return ("Renews today", .orange) }
@@ -175,7 +175,7 @@ struct SubscriptionManagementView: View {
         return VStack(spacing: 0) {
             fact("Billing cycle", current.billingFrequency.displayName)
             divider
-            fact("Next payment", current.nextBillingDate.map { $0.formatted(.dateTime.month(.abbreviated).day().year()) } ?? "Not set")
+            fact("Next payment", current.calculatedNextBillingDate.map { $0.formatted(.dateTime.month(.abbreviated).day().year()) } ?? "Not set")
             divider
             fact("Category", current.category ?? "Other")
             divider

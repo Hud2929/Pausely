@@ -102,8 +102,10 @@ final class SubscriptionTests: XCTestCase {
     }
 
     func testDaysUntilRenewal_pastDate() {
+        // Only a subscription that no longer renews keeps a date in the past; active ones roll forward
+        // (see RenewalEngineTests).
         let past = Calendar.current.date(byAdding: .day, value: -3, to: Date())!
-        let sub = TestFactories.makeSubscription(nextBillingDate: past)
+        let sub = TestFactories.makeSubscription(status: .cancelled, nextBillingDate: past)
         let days = sub.daysUntilRenewal
         XCTAssertNotNil(days)
         // Allow -3 to -4 due to time-of-day boundary
@@ -123,7 +125,7 @@ final class SubscriptionTests: XCTestCase {
 
     func testRenewalStatus_overdue() {
         let past = Calendar.current.date(byAdding: .day, value: -1, to: Date())!
-        let sub = TestFactories.makeSubscription(nextBillingDate: past)
+        let sub = TestFactories.makeSubscription(status: .cancelled, nextBillingDate: past)
         if case .overdue = sub.renewalStatus {
             // pass
         } else {
@@ -333,7 +335,10 @@ final class SubscriptionTests: XCTestCase {
             nextBillingDate: next,
             createdAt: start
         )
-        XCTAssertEqual(sub.daysUntilRenewal, Calendar.current.dateComponents([.day], from: Date(), to: next).day)
+        // The anchor (Feb 15, 2024) is in the past, so the subscription renews on the 15th of an upcoming month.
+        let upcoming = sub.calculatedNextBillingDate!
+        XCTAssertEqual(Calendar.current.component(.day, from: upcoming), 15)
+        XCTAssertTrue((0...31).contains(sub.daysUntilRenewal ?? -1))
     }
 
     func testNextBillingDateYearly() {
