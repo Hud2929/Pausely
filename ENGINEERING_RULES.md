@@ -35,6 +35,11 @@ how Lago (an open-source billing engine) avoids billing bugs; see `LAGO_TAKEAWAY
   survive a change.
 - iOS keeps 64 pending notifications per app. The planner keeps the soonest 60.
 - "Remind me: Off" (`notifyBeforeDays == 0`) means no renewal reminders of any kind.
+- Decisions change reminders: a "Keep it" (`LifecycleEvent.kept` with its `renewalDate`) removes the
+  remaining reminders for that charge; subscriptions in a Pause Plan get the plan's reminders instead
+  of renewal ones. Both go through `ReminderPlanner`, never around it.
+- Ask for notification permission in context (the dashboard card, Settings → Notifications), never
+  with `.provisional` and never at launch.
 
 ## Things that happen over time
 
@@ -53,9 +58,29 @@ how Lago (an open-source billing engine) avoids billing bugs; see `LAGO_TAKEAWAY
 - The App Store listing (`metadata/`) must promise exactly what `ProFeature` lists. Update both
   together.
 
+## Savings
+
+- The Savings Receipt is derived from the event log (`SavingsLedger`), never stored. Only charges the
+  renewal engine says would have happened count, for 12 months after a cancellation, and they stop
+  on reactivation. Pausely's own subscription never counts.
+- "I cancelled it" marks a subscription cancelled; it doesn't delete it.
+
+## Settings and claims
+
+- Every switch in Settings must change behaviour. If a feature doesn't exist, it has no switch.
+- Every claim on a screen, in the paywall or in the App Store listing must be true of the shipped
+  build (no "end-to-end encryption", no Face ID that isn't there). Check the code before writing copy.
+
+## Private data on the device
+
+- Local history (event log, Pause Plan, cached list) belongs to one account: `LocalUserData.claim`
+  wipes it when a different account signs in, and account deletion wipes it with the server data.
+
 ## Links and configuration
 
 - Support, privacy, terms and website URLs come from `AppConfig`. Don't hardcode a domain in a view.
+- Route deep links with `URL.routeSegments`: in `pausely://auth/confirm` "auth" is the host, not a
+  path component.
 - No secrets in the repo, in `Info.plist` committed values, or in memory notes.
 
 ## Database migrations
@@ -63,6 +88,13 @@ how Lago (an open-source billing engine) avoids billing bugs; see `LAGO_TAKEAWAY
 - Two steps for removing a column: first ship an app version that no longer reads or writes it,
   then drop the column (for example `20261020_drop_smart_pause_alerts.sql`).
 - Migrations are additive and idempotent (`if not exists` / `if exists`).
+
+## Localization and builds
+
+- New user-facing strings get all five translations (ar, de, es, fr, ja) in `Localizable.xcstrings`,
+  using the exact keys from the build's `.stringsdata`; keep format placeholders identical and use
+  positional ones (`%1$@`) when word order changes.
+- DEBUG-only types and flags must not be referenced from release code; build Release before shipping.
 
 ## Tests
 

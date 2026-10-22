@@ -79,7 +79,8 @@ final class ScreenTourTests: XCTestCase {
     }
 
     func testSingleScreens() throws {
-        for (flag, name) in [("--demo-paywall", "paywall"), ("--demo-browser", "browser"),
+        for (flag, name) in [("--demo-verdict", "verdict"), ("--demo-receipt", "receipt"), ("--demo-pause-plan", "pauseplan"),
+                             ("--demo-paywall", "paywall"), ("--demo-browser", "browser"),
                              ("--demo-subscription", "manage"), ("--demo-subscription-edit", "edit"),
                              ("--demo-gmail-results", "gmail-results"), ("--demo-wrapped", "wrapped")] {
             let app = XCUIApplication()

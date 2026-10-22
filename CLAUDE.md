@@ -4,75 +4,93 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-Pausely is an iOS SwiftUI app for subscription management. Users track, pause, and analyze their recurring subscriptions with cost-per-hour ROI scoring. Backend is Supabase (auth + database) with Lemon Squeezy (web checkout) or StoreKit as the payment provider.
+Pausely is an iPhone app (SwiftUI, iOS 18+) that tracks subscriptions and reminds people before every
+renewal. Its core loop: a reminder before each charge opens a **Renewal Verdict** (keep it or cancel
+it), every cancellation lands on a **Savings Receipt**, and **Pause Plan** rotates streaming services
+one month at a time. Pausely also tracks its own subscription and tells people to cancel it if it
+isn't saving them more than it costs (the **Pausely Promise**).
 
-## Building
+Backend: Supabase (auth + database). Payments: StoreKit 2, Pausely Pro monthly ($4.99) and yearly
+($29.99) with a 7-day free trial. Bundle id `com.pausely.app.Pausely`, App Store Connect app 6759973158.
 
-Build and run exclusively through Xcode — open `Pausely.xcodeproj`. There is no CLI build system configured. Deep links (`pausely://`) require a real device; they do not work in the simulator.
+Read `ENGINEERING_RULES.md` before changing money, dates, reminders or what Pro unlocks.
+
+## Building and testing
+
+Open `Pausely.xcodeproj`, scheme `Pausely`. From the command line:
+
+```bash
+xcodebuild build -scheme Pausely -destination "id=<simulator id>" -derivedDataPath /tmp/PauselyBuild
+xcodebuild test -scheme Pausely -destination "id=<simulator id>" -derivedDataPath /tmp/PauselyBuild \
+  -only-testing:PauselyTests -parallel-testing-enabled NO
+```
+
+Run tests serially; parallel simulator clones sometimes fail to boot. Check Release builds too:
+DEBUG-only code must not be referenced from release code paths.
+
+DEBUG launch arguments open single screens with demo data (see `RootView` in `ContentView.swift`):
+`--demo-mode`, `--demo-tab=N`, `--demo-verdict`, `--demo-receipt`, `--demo-savings`,
+`--demo-pause-plan` (`--demo-plan-active`), `--demo-subscription`, `--demo-subscription-edit`,
+`--demo-paywall`, `--demo-browser`, `--demo-gmail-results`, `--demo-wrapped`, and `--screenshots`
+for App Store captures. `PauselyUITests/ScreenTourTests` captures every screen when
+`TEST_RUNNER_PAUSELY_TOUR_DIR` is set.
 
 ## Architecture
 
-### App Entry & State Machine
+### Entry and navigation
+`Pausely/ContentView.swift` holds `PauselyApp`, the `AppDelegate` (sets the notification delegate and
+categories at launch) and `RootView`: splash → `OnboardingCarouselView` (3 pages) →
+`PremiumWelcomeFlow` (sign up / sign in) → `AgeGateView` when needed → `PremiumMainTabView`
+(Dashboard, Subscriptions, Analysis, Profile). Deep links go through `DeepLinkManager`
+(`URL.routeSegments` treats `pausely://auth/confirm` and `https://pausely.pro/r/CODE` alike).
 
-`Pausely/PauselyApp.swift` is the root. It switches on `RevolutionaryAuthManager.shared.state` (an `AuthState` enum) to show one of: `LoadingView`, `MainTabView`, `EmailConfirmationView`, or `EnhancedLoginView`. Deep links for auth, checkout returns, and referral codes are dispatched from `handleDeepLink(url:)` here.
+### Renewals and decisions (`Pausely/Core/Renewals/`)
+All pure and unit-tested; they take `now` and a `Calendar`.
+- `RenewalSchedule`: next renewals from the billing anchor (`Subscription.nextBillingDate`).
+- `ReminderPlanner`: every pending reminder (renewal, trial, Pause Plan); `ReminderScheduler` applies it.
+- `SubscriptionLifecycle`: trials that ended, renewals that passed; runs on load and on foreground.
+- `LifecycleEventLog`: on-device event history (added, kept, cancelled, reactivated, price changes).
+- `RenewalDecisions`, `VerdictFacts`: what's waiting for a keep-or-cancel decision, and its facts.
+- `SavingsLedger`: the Savings Receipt (charges each cancellation avoided over 12 months).
+- `PausePlan`: rotation schedule, savings estimate and its reminders.
 
-### Services Layer (Singletons)
-
-All business logic lives in `Pausely/Services/` as `@MainActor` `ObservableObject` singletons:
-
-- **`RevolutionaryAuthManager`** — primary auth manager. Supports magic link (OTP) and email/password. Handles deep link verification for email confirmation and password reset. The legacy `AuthManager` class is deprecated; always use `RevolutionaryAuthManager.shared`.
-- **`SupabaseManager`** — wraps `SupabaseClient`. Supabase project: `ddaotwyaowspwspyddzs.supabase.co`. Also defines `AuthState`, `AuthError`, and `CurrencyManager`.
-- **`PaymentManager`** — subscription tier management (`SubscriptionTier`: free / premium / premiumAnnual). Controls `activatePremium(source:)` / `deactivatePremium()`.
-- **`LemonSqueezyManager`** — web checkout via Lemon Squeezy. Reads credentials from `Info.plist` keys: `LEMON_SQUEEZY_API_KEY`, `LEMON_SQUEEZY_STORE_ID`, `LEMON_SQUEEZY_WEBHOOK_SECRET`, `LEMON_SQUEEZY_MONTHLY_VARIANT_ID`, `LEMON_SQUEEZY_ANNUAL_VARIANT_ID`. Falls back to demo mode (simulated purchases) when keys are absent.
-- **`AppConfiguration`** — selects payment provider (`lemonSqueezy` vs `storekit`), configured at launch.
-- **`ReferralManager`** — referral code validation, application, and deep link handling (`pausely://r/CODE` and `https://pausely.app/r/CODE`).
-- **`ScreenTimeManager`** — Screen Time / Family Controls integration for usage tracking.
-- **`ThemeManager`** — light/dark theme preference stored in `UserDefaults`.
-- **`KeychainManager`** — secure credential storage.
-
-### ViewModels
-
-`Pausely/ViewModels/` contains three `ObservableObject` stores:
-- **`SubscriptionStore`** — fetches/caches subscriptions from Supabase table `subscriptions`, with local storage fallback.
-- **`TrialProtectionStore`** — trial state management.
-- **`VirtualCardStore`** — privacy virtual card management.
+### Services (`Pausely/Services/`)
+- `RevolutionaryAuthManager` (AuthManager.swift): auth, sign out, `deleteAccount()`.
+- `SubscriptionStore` (ViewModels): offline-first list, synced to the Supabase `subscriptions` table.
+- `PaymentManager`, `StoreKitManager`, `ProFeature`: tiers and the single list of what Pro unlocks.
+- `VerdictCenter`, `SavingsSummary`, `PausePlanStore`, `LocalUserData`: the decision flow, receipt
+  totals in the user's currency, the saved Pause Plan, and wiping on-device data.
+- `NotificationManager` (Core/Utilities): permission, categories, delegate.
+- `SupabaseManager` (also `CurrencyManager`), `GmailSubscriptionScanner` (off in release via
+  `FeatureFlags`), `ScreenTimeManager` (manual usage), `ReferralManager`, `KeychainManager`, `AppConfig`.
 
 ### Views
+- `Views/Verdict/`: `RenewalVerdictView`, `SavingsReceiptView`, `PausePlanView`, dashboard cards.
+- `SubscriptionManagementView`: the subscription screen (tools, cancel timing, lifetime cost).
+- `SubscriptionEditView`, `SubscriptionBrowserView` (catalog), `StoreKitUpgradeView` (paywall),
+  `Settings/` (notifications, privacy and account deletion, help).
 
-`Pausely/Views/` contains all SwiftUI screens. Navigation root after auth is `MainTabView` (Dashboard → Subscriptions → Perks → Profile tabs).
+### Design
+Dark only. Colours `Color.obsidianBlack`, `obsidianSurface`, `accentMint`; rounded system fonts.
+`ServiceLogoView` loads logos (touch icon, then favicon, cached). `.statusBarBackdrop()` for full-screen
+scroll views.
 
-### Models
-
-`Pausely/Models/`: `Subscription` (core model with `BillingFrequency`, `SubscriptionStatus`, ROI calculation), `User`, `VirtualCard`, `UserPerk`, `Currency` (lives in `SupabaseManager.swift`).
-
-### Design System
-
-`Pausely/DesignSystem/GlassModifier.swift` provides the glass morphism UI components. Custom colors used throughout: `Color.luxuryGold`, `Color.luxuryPurple`, `Color.luxuryPink`. Key reusable modifiers: `.glass(intensity:tint:)`, `GlassCard`. Background: `AnimatedGradientBackground()`. Haptics: `HapticStyle.light.trigger()` / `.medium.trigger()`.
-
-## Deep Link URL Scheme
-
-URL scheme: `pausely://`
-
-| Path | Purpose |
-|------|---------|
-| `pausely://auth/confirm` | Email confirmation |
-| `pausely://auth/reset-password` | Password reset |
-| `pausely://auth/callback` | Auth callback |
-| `pausely://checkout/success` | Lemon Squeezy checkout return |
-| `pausely://r/CODE` | Referral code |
-
-Supabase redirect URLs must match: `pausely://auth/confirm`, `pausely://auth/reset-password`, `pausely://auth/callback`.
+### Localization
+`Pausely/Localizable.xcstrings`: English plus Arabic, German, Spanish, French and Japanese. New
+strings need all five translations; take the exact keys from the build's `.stringsdata` files.
 
 ## Backend
 
-- **Supabase**: Auth (magic link + email/password), database (`subscriptions` table, referral tables). SQL migrations in `supabase/migrations/`.
-- **Supabase Edge Functions**: `supabase/functions/lemon-squeezy-webhook/` — processes Lemon Squeezy webhook events server-side.
-- **MissionControl/**: Companion web app (`app.js`, `index.html`) for admin/revenue dashboard.
+Supabase project `ddaotwyaowspwspyddzs`. Migrations live in `supabase/migrations/` and are applied by
+hand in the Supabase SQL editor (the app needs `20261022_delete_my_account.sql` for account deletion).
+Edge function: `supabase/functions/waitlist-signup`. Website and policies: `pausely.pro/` (GitHub Pages).
 
-## Configuration Notes
+## App Store
 
-- Lemon Squeezy credentials go in `Info.plist` (not hardcoded). Demo mode activates automatically if keys are missing, enabling simulated purchases for development.
-- `AppConfig.swift` contains app-wide constants (support email, URL scheme, deep link paths). Credentials should not be added to `AppConfig.swift` directly — it reads `SUPPORT_EMAIL_PASSWORD` from environment variables or `Info.plist` at runtime.
+Listing text in `metadata/` (push with `asc metadata push`), screenshots in
+`AppStoreScreenshots/iphone-6.9`, products and review notes in `appstore_products.json`,
+`scripts/asc_apply.sh` for pricing and subscription text. Never submit for review without the
+owner's explicit go-ahead.
 
 ## Autonomy
 

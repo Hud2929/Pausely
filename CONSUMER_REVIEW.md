@@ -68,3 +68,29 @@ the Gmail results screen, cancel timing, lifetime cost, a correct renewal engine
 event log. What's missing is the moment that turns information into a saved charge, and a
 receipt that proves it. With the fixes and the standout feature in `PRODUCT_PLAN.md` I'd
 expect **8.5/10**: the app pays for itself in the first month and *shows* me that it did.
+
+---
+
+## After the fixes (same day, re-run of the screen tour on a fresh install)
+
+| What I hit as a customer | Before | Now |
+|---|---|---|
+| Onboarding | Six intro pages, "We automatically find…", "$42/month" | Three true pages, then the age check and sign-up |
+| Reminders | Never asked for permission, so nothing fired | Dashboard asks in context, naming my next charge; Settings shows the real status |
+| Tapping a reminder | Did nothing | Opens the Renewal Verdict; "Keep it" works from the notification |
+| Settings → Notifications | Six placebo switches | Two real switches and the real permission state |
+| Tapping a subscription | Old screen, cancel locked behind Pro | Redesigned screen with cancel timing, lifetime cost, tools; cancel help free |
+| Logos | Letters everywhere | Real service icons |
+| "Waste" | My most expensive subscription | Only with evidence (forgotten, duplicate, unused) |
+| Privacy & Security | "End-to-End Encryption" switch, Delete did nothing | Plain facts about where data lives; Delete Account works (after the server function is applied) |
+| What Pausely saved me | Nothing to show | Savings Receipt with every avoided charge and its date |
+| Streaming | Pay for all of them | Pause Plan: about $180–360 a year back for two or three services |
+
+**Value for the price now: 8 / 10.** The core promise works, every claim is true, and the app shows
+its own return: the Savings Receipt, and the Pausely Promise telling me to cancel Pausely if it isn't
+worth it. For someone with two or more streaming services, Pause Plan alone covers the $29.99 a year
+several times over.
+
+**Why not 9 or 10 yet:** adding subscriptions is still manual (Gmail import is waiting on Google's
+review), the reminders need a check on a real iPhone over a real renewal cycle, and account deletion
+needs the `delete_my_account` migration applied before release.

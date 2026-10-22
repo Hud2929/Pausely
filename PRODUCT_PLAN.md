@@ -1,5 +1,10 @@
 # Product plan: from 4/10 to "it pays for itself"
 
+**Status 2026-10-22: all of Parts A, B and C are built, tested and pushed** (commits af99dd8, eaa8104,
+1421c04, 8f05e58 and the deep-link fix). Re-rated 8/10 in `CONSUMER_REVIEW.md`. Still open:
+Gmail import (waiting on Google), a real-device reminder test, applying
+`supabase/migrations/20261022_delete_my_account.sql`, and shipping build 1.0.3.
+
 Based on `CONSUMER_REVIEW.md` (2026-10-22). Three parts: fix what breaks the core promise,
 fix what costs trust, then build the feature that makes Pausely different from every other
 subscription tracker.

@@ -363,8 +363,8 @@ class ReferralManager: ObservableObject {
         let components = URLComponents(url: url, resolvingAgainstBaseURL: false)
         let queryItems = components?.queryItems ?? []
 
-        // Get path components (removing empty strings from leading/trailing slashes)
-        let pathComponents = url.pathComponents.filter { !$0.isEmpty }
+        // ["r", "CODE"] for both pausely://r/CODE (where "r" is the host) and https://pausely.pro/r/CODE
+        let pathComponents = url.routeSegments
         #if DEBUG
         os_log("   - filtered pathComponents: %{public}@", log: .default, type: .info, String(describing: pathComponents))
         #endif
@@ -392,7 +392,7 @@ class ReferralManager: ObservableObject {
         }
 
         // Handle legacy format: pausely://referral?code=CODE (no path, just query)
-        if pathComponents.isEmpty {
+        if pathComponents.isEmpty || pathComponents == ["referral"] {
             if let code = queryItems.first(where: { $0.name.lowercased() == "code" })?.value {
                 #if DEBUG
                 os_log("   ✅ Found code in query (legacy format): %{public}@", log: .default, type: .info, code)
