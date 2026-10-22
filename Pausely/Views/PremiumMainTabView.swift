@@ -77,12 +77,17 @@ struct PremiumMainTabView: View {
             }
         }
         .task {
+            // Someone else's history must never show up after a different account signs in.
+            await LocalUserData.claim(for: RevolutionaryAuthManager.shared.currentUser?.id)
             await NotificationManager.shared.refreshStatus()
             await subscriptionStore.fetchSubscriptions()
         }
         // A reminder tap (or "Review") opens the keep-or-cancel decision for that subscription.
         .sheet(item: $verdictCenter.presented) { request in
             RenewalVerdictView(subscriptionId: request.subscriptionId)
+        }
+        .sheet(isPresented: $verdictCenter.showingPausePlan) {
+            PausePlanView()
         }
         .whatsNewSheet()
     }

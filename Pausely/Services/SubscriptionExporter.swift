@@ -73,9 +73,22 @@ final class SubscriptionExporter {
 
     // MARK: - JSON
 
+    /// Everything Pausely holds about the customer, including the history that only lives on the device.
+    private struct FullExport: Encodable {
+        let subscriptions: [Subscription]
+        let history: [LifecycleEvent]
+        let pausePlan: PausePlan?
+    }
+
     private func exportJSON(subscriptions: [Subscription]) -> URL? {
         do {
-            let data = try JSONEncoder().encode(subscriptions)
+            let encoder = JSONEncoder()
+            encoder.dateEncodingStrategy = .iso8601
+            encoder.outputFormatting = [.prettyPrinted, .sortedKeys]
+            let export = FullExport(subscriptions: subscriptions,
+                                    history: LifecycleEventLog.shared.events,
+                                    pausePlan: PausePlanStore.shared.plan)
+            let data = try encoder.encode(export)
             guard let json = String(data: data, encoding: .utf8) else { return nil }
             return writeToFile(content: json, extension: "json")
         } catch {

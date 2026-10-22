@@ -12,6 +12,8 @@ enum ReminderPlanner {
         case renewalTomorrow    // the day before
         case renewalToday       // the morning of the renewal
         case trialEnding        // the day before a free trial ends
+        case planCancel         // Pause Plan: cancel this one before it renews
+        case planStart          // Pause Plan: this one's month starts today
     }
 
     struct Reminder: Equatable {
@@ -43,9 +45,16 @@ enum ReminderPlanner {
     ///     reminders about those.
     static func plan(for subscriptions: [Subscription], now: Date, calendar: Calendar = .current,
                      cyclesAhead: Int = 2, budget: Int = defaultBudget,
-                     preferences: Preferences = Preferences(), kept: Set<String> = []) -> [Reminder] {
+                     preferences: Preferences = Preferences(), kept: Set<String> = [],
+                     pausePlan: PausePlan? = nil) -> [Reminder] {
         var all: [Reminder] = []
+        // Subscriptions in a Pause Plan get the plan's reminders instead of the usual renewal ones.
+        let rotating = pausePlan.map { Set($0.subscriptionIds) } ?? []
+        if let pausePlan, preferences.renewals {
+            all += PausePlanSchedule.reminders(pausePlan, subscriptions: subscriptions, now: now, calendar: calendar)
+        }
         for sub in subscriptions where sub.notifyBeforeDays > 0 {   // 0 means "Remind me: Off"
+            if rotating.contains(sub.id) { continue }
             let trialEnd = sub.status == .trial ? sub.trialEndsAt.map { calendar.startOfDay(for: $0) } : nil
 
             if preferences.renewals, sub.renewsAutomatically, let anchor = sub.nextBillingDate {

@@ -11,6 +11,7 @@ struct DashboardView: View {
     @ObservedObject private var screenTimeManager = ScreenTimeManager.shared
     @ObservedObject private var referralManager = ReferralManager.shared
     @ObservedObject private var eventLog = LifecycleEventLog.shared
+    @ObservedObject private var pausePlanStore = PausePlanStore.shared
     @State private var appear = false
     @State private var showingPaywall = false
     @State private var showingAddSubscription = false
@@ -86,6 +87,13 @@ struct DashboardView: View {
                     SavingsReceiptCard()
                         .padding(.horizontal, 20)
                         .padding(.top, 16)
+
+                    // 2b'. A running Pause Plan: who's on and until when
+                    if PausePlanStore.shared.activePlan != nil {
+                        PausePlanCard()
+                            .padding(.horizontal, 20)
+                            .padding(.top, 16)
+                    }
 
                     // 2b. Top Opportunity Card — waste / savings / healthy
                     TopOpportunityCard()

@@ -118,6 +118,11 @@ struct AnalysisView: View {
                     AnnualSpendRealityCard(annualSpend: forecast.annualCurrent)
                 }
 
+                // Rotating streaming services is the biggest saving most people have.
+                if PausePlanCard.isRelevant() {
+                    PausePlanCard()
+                }
+
                 HealthScoreCard(score: insightsEngine.healthScore)
 
                 if !insightsEngine.categoryBreakdown.isEmpty {

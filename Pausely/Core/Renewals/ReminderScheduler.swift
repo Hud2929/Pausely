@@ -40,7 +40,8 @@ final class ReminderScheduler {
 
         let byId = Dictionary(subscriptions.map { ($0.id, $0) }, uniquingKeysWith: { first, _ in first })
         let kept = RenewalDecisions.keptKeys(in: LifecycleEventLog.shared.events)
-        for reminder in ReminderPlanner.plan(for: subscriptions, now: now, preferences: Self.preferences, kept: kept) {
+        for reminder in ReminderPlanner.plan(for: subscriptions, now: now, preferences: Self.preferences, kept: kept,
+                                             pausePlan: PausePlanStore.shared.activePlan) {
             guard let sub = byId[reminder.subscriptionId] else { continue }
             let components = Calendar.current.dateComponents([.year, .month, .day, .hour, .minute], from: reminder.fireDate)
             let request = UNNotificationRequest(
@@ -85,8 +86,17 @@ final class ReminderScheduler {
         case .trialEnding:
             content.title = String(localized: "\(sub.name) trial ends tomorrow")
             content.body = String(localized: "After that it costs \(amount) \(sub.billingFrequency.billingPeriodLabel). Keep it or cancel it?")
+        case .planCancel:
+            content.title = String(localized: "Pause Plan: cancel \(sub.name) today")
+            content.body = String(localized: "It renews tomorrow for \(amount). Cancel today and it comes back on its turn.")
+        case .planStart:
+            content.title = String(localized: "Pause Plan: \(sub.name) is on")
+            content.body = String(localized: "Its month starts today. Start it again whenever you're ready to watch.")
         }
-        content.categoryIdentifier = ReminderActions.decisionCategory
+        switch reminder.kind {
+        case .planCancel, .planStart: content.categoryIdentifier = ReminderActions.pausePlanCategory
+        default: content.categoryIdentifier = ReminderActions.decisionCategory
+        }
         content.sound = .default
         content.userInfo = [
             "subscription_id": sub.id.uuidString,
@@ -105,6 +115,8 @@ extension ReminderPlanner.Kind {
         case .renewalTomorrow: return "renewal_urgent"
         case .renewalToday: return "renewal_day_of"
         case .trialEnding: return "trial_ending"
+        case .planCancel: return "pause_plan_cancel"
+        case .planStart: return "pause_plan_start"
         }
     }
 }

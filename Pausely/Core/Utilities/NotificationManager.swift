@@ -17,6 +17,9 @@ enum ReminderActions {
     static let keep = "KEEP"
     static let review = "REVIEW"
 
+    /// Pause Plan handoffs: a tap opens the plan.
+    static let pausePlanCategory = "PAUSE_PLAN"
+
     /// Reminders created by the "Pause" Shortcut.
     static let pauseCategory = "PAUSE_REMINDER"
     static let openPausePage = "OPEN_PAUSE_PAGE"
@@ -29,7 +32,8 @@ enum ReminderActions {
                                               intentIdentifiers: [], options: [])
         let openPause = UNNotificationAction(identifier: openPausePage, title: String(localized: "Open Pause Page"), options: [.foreground])
         let pause = UNNotificationCategory(identifier: pauseCategory, actions: [openPause], intentIdentifiers: [], options: [])
-        center.setNotificationCategories([decision, pause])
+        let plan = UNNotificationCategory(identifier: pausePlanCategory, actions: [], intentIdentifiers: [], options: [])
+        center.setNotificationCategories([decision, pause, plan])
     }
 }
 
@@ -145,6 +149,8 @@ final class NotificationDelegate: NSObject, UNUserNotificationCenterDelegate {
             }
         case UNNotificationDismissActionIdentifier:
             break
+        case _ where (info["type"] as? String)?.hasPrefix("pause_plan") == true:
+            await VerdictCenter.shared.openPausePlan()
         default:
             // A tap on the reminder, or "Review": open the decision for that subscription.
             if let subscriptionId { await VerdictCenter.shared.open(subscriptionId: subscriptionId) }

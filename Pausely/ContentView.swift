@@ -159,6 +159,15 @@ struct RootView: View {
                     #if DEBUG
                     RenewalVerdictView(subscriptionId: SubscriptionStore.shared.subscriptions.first?.id ?? UUID())
                     #endif
+                } else if isDemoScreen("--demo-pause-plan") {
+                    #if DEBUG
+                    PausePlanView()
+                        .task {
+                            guard isDemoScreen("--demo-plan-active"), PausePlanStore.shared.activePlan == nil else { return }
+                            let eligible = SubscriptionStore.shared.subscriptions.filter(PausePlanSchedule.isEligible)
+                            await PausePlanStore.shared.start(order: PausePlanSchedule.suggestedOrder(eligible, now: Date()))
+                        }
+                    #endif
                 } else if isDemoScreen("--demo-receipt") {
                     #if DEBUG
                     SavingsReceiptView()

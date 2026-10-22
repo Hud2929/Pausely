@@ -14,6 +14,12 @@ final class VerdictCenter: ObservableObject {
 
     /// The verdict the main screen should show. Set by a notification tap; cleared on dismiss.
     @Published var presented: Request?
+    /// Set by a Pause Plan reminder tap.
+    @Published var showingPausePlan = false
+
+    func openPausePlan() {
+        showingPausePlan = true
+    }
 
     func open(subscriptionId: UUID) {
         presented = Request(subscriptionId: subscriptionId)
@@ -35,9 +41,10 @@ final class VerdictCenter: ObservableObject {
         await ReminderScheduler.shared.reschedule(store.subscriptions, now: now)
     }
 
-    /// Decisions waiting right now, soonest first.
+    /// Decisions waiting right now, soonest first. Subscriptions in a Pause Plan follow the plan instead.
     func pendingDecisions(now: Date = Date()) -> [RenewalDecisions.Pending] {
-        RenewalDecisions.pending(in: SubscriptionStore.shared.subscriptions,
-                                 events: LifecycleEventLog.shared.events, now: now)
+        let rotating = Set(PausePlanStore.shared.activePlan?.subscriptionIds ?? [])
+        return RenewalDecisions.pending(in: SubscriptionStore.shared.subscriptions.filter { !rotating.contains($0.id) },
+                                        events: LifecycleEventLog.shared.events, now: now)
     }
 }

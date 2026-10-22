@@ -2,11 +2,9 @@ import SwiftUI
 
 struct PrivacySecurityView: View {
     @Environment(\.dismiss) private var dismiss
-    @AppStorage("biometricEnabled") private var biometricEnabled = true
-    @AppStorage("faceIDEnabled") private var faceIDEnabled = true
-    @AppStorage("dataEncryption") private var dataEncryption = true
-    @AppStorage("analyticsEnabled") private var analyticsEnabled = false
     @State private var showingDeleteAccountConfirmation = false
+    @State private var isDeleting = false
+    @State private var deleteError: String?
     @State private var showingPrivacyPolicy = false
     @State private var showingTermsOfService = false
 
@@ -51,20 +49,24 @@ struct PrivacySecurityView: View {
                             .foregroundColor(Color.accentMint)
                     }
 
-                    // Security Section
-                    settingsGroup(title: "SECURITY") {
-                        SettingsToggleRow(icon: "touchid", title: "Biometric Authentication", subtitle: "Use Face ID or Touch ID", isOn: $biometricEnabled)
+                    // How data is kept: facts, not switches.
+                    settingsGroup(title: "YOUR DATA") {
+                        SettingsInfoRow(icon: "lock.icloud.fill", title: "Your subscription list",
+                                        detail: "Synced to Pausely's servers over an encrypted connection and encrypted at rest. Other accounts can't read it.")
                         settingsDivider()
-                        SettingsToggleRow(icon: "faceid", title: "Face ID", subtitle: "Enable Face ID for app access", isOn: $faceIDEnabled)
+                        SettingsInfoRow(icon: "iphone", title: "History, receipt and Pause Plan",
+                                        detail: "Stay on this iPhone, protected by iOS data protection.")
                         settingsDivider()
-                        SettingsToggleRow(icon: "lock.fill", title: "End-to-End Encryption", subtitle: "Your data is always encrypted", isOn: $dataEncryption)
+                        SettingsInfoRow(icon: "envelope.fill", title: "Gmail import",
+                                        detail: "Emails are read on this iPhone. Only the subscriptions you choose are saved.")
+                        settingsDivider()
+                        SettingsInfoRow(icon: "hand.raised.fill", title: "No ads, no selling data",
+                                        detail: "Pausely has no ad or tracking SDKs and never sells your data.")
                     }
                     .padding(.horizontal, 20)
 
                     // Privacy Section
                     settingsGroup(title: "PRIVACY") {
-                        SettingsToggleRow(icon: "chart.bar.fill", title: "Analytics", subtitle: "Help improve the app with usage data", isOn: $analyticsEnabled)
-                        settingsDivider()
                         SettingsNavRow(icon: "doc.text.fill", title: "Privacy Policy") { showingPrivacyPolicy = true }
                         settingsDivider()
                         SettingsNavRow(icon: "doc.fill", title: "Terms of Service") { showingTermsOfService = true }
@@ -84,24 +86,32 @@ struct PrivacySecurityView: View {
                                         .foregroundColor(Color.semanticDestructive)
                                 }
                                 VStack(alignment: .leading, spacing: 2) {
-                                    Text("Delete Account")
+                                    Text(isDeleting ? "Deleting…" : "Delete Account")
                                         .font(.callout.weight(.semibold))
                                         .foregroundColor(Color.semanticDestructive)
-                                    Text("Permanently remove all data")
+                                    Text("Permanently remove your account and all its data")
                                         .font(.footnote)
                                         .foregroundColor(Color.obsidianTextSecondary)
                                 }
                                 Spacer()
+                                if isDeleting { ProgressView().tint(Color.semanticDestructive) }
                             }
                             .padding(.horizontal, 16)
                             .padding(.vertical, 12)
                         }
                         .buttonStyle(PlainButtonStyle())
+                        .disabled(isDeleting)
+                        .accessibilityIdentifier("deleteAccountButton")
                         .alert("Delete Account?", isPresented: $showingDeleteAccountConfirmation) {
                             Button("Cancel", role: .cancel) {}
-                            Button("Delete", role: .destructive) {}
+                            Button("Delete", role: .destructive) { Task { await deleteAccount() } }
                         } message: {
-                            Text("This will permanently delete all your data. This action cannot be undone.")
+                            Text("This permanently deletes your account, your subscription list and your history from Pausely's servers and this iPhone. It doesn't cancel any subscriptions, including Pausely Pro; Apple manages those in Settings → Apple ID → Subscriptions.")
+                        }
+                        .alert("Couldn't delete your account", isPresented: Binding(get: { deleteError != nil }, set: { if !$0 { deleteError = nil } })) {
+                            Button("OK", role: .cancel) {}
+                        } message: {
+                            Text(deleteError ?? "")
                         }
                     }
                     .padding(.horizontal, 20)
@@ -115,6 +125,19 @@ struct PrivacySecurityView: View {
         }
         .sheet(isPresented: $showingTermsOfService) {
             TermsOfServiceView()
+        }
+    }
+
+    private func deleteAccount() async {
+        isDeleting = true
+        defer { isDeleting = false }
+        do {
+            try await RevolutionaryAuthManager.shared.deleteAccount()
+            HapticStyle.success.trigger()
+            dismiss()
+        } catch {
+            HapticStyle.error.trigger()
+            deleteError = "Check your connection and try again. If it keeps failing, email \(AppConfig.supportEmail) and we'll delete it within 30 days. (\(error.localizedDescription))"
         }
     }
 
@@ -148,14 +171,14 @@ struct PrivacySecurityView: View {
     }
 }
 
-struct SettingsToggleRow: View {
+/// A fact about how data is handled (no switch, because nothing here is optional).
+struct SettingsInfoRow: View {
     let icon: String
     let title: String
-    let subtitle: String
-    @Binding var isOn: Bool
+    let detail: String
 
     var body: some View {
-        HStack(spacing: 14) {
+        HStack(alignment: .top, spacing: 14) {
             ZStack {
                 RoundedRectangle(cornerRadius: 10)
                     .fill(Color.accentMint.opacity(0.12))
@@ -164,21 +187,21 @@ struct SettingsToggleRow: View {
                     .font(.callout)
                     .foregroundColor(Color.accentMint)
             }
+            .accessibilityHidden(true)
             VStack(alignment: .leading, spacing: 2) {
                 Text(title)
                     .font(.callout.weight(.semibold))
                     .foregroundColor(.white)
-                Text(subtitle)
+                Text(detail)
                     .font(.footnote)
                     .foregroundColor(Color.obsidianTextSecondary)
+                    .fixedSize(horizontal: false, vertical: true)
             }
-            Spacer()
-            Toggle("", isOn: $isOn)
-                .tint(Color.accentMint)
-                .labelsHidden()
+            Spacer(minLength: 0)
         }
         .padding(.horizontal, 16)
         .padding(.vertical, 12)
+        .accessibilityElement(children: .combine)
     }
 }
 

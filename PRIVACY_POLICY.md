@@ -137,10 +137,10 @@ We use **Supabase** as our primary database and authentication provider:
 We implement multiple layers of security:
 
 **Technical Safeguards:**
-- End-to-end encryption for sensitive data
+- Encryption in transit (TLS) and at rest
 - Row-level security (RLS) policies ensuring you only access your own data
 - Secure API endpoints with authentication required
-- Regular security audits and penetration testing
+- Event history and Pause Plan stored only on your device, with iOS data protection
 
 **Access Controls:**
 - Strict internal access controls (principle of least privilege)

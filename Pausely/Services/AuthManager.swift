@@ -547,6 +547,17 @@ class RevolutionaryAuthManager: ObservableObject {
         }
     }
     
+    // MARK: - Delete Account
+
+    /// Deletes the account and everything stored with it: on the server (supabase function
+    /// `delete_my_account`, which cascades to every table) and on this iPhone. Subscriptions billed by
+    /// Apple, including Pausely Pro, are not cancelled; Apple manages those.
+    func deleteAccount() async throws {
+        try await client.rpc("delete_my_account").execute()
+        await LocalUserData.wipe()
+        await signOut()
+    }
+
     // MARK: - Sign Out
     
     func signOut() async {

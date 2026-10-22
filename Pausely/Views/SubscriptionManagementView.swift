@@ -20,7 +20,7 @@ struct SubscriptionManagementView: View {
     @State private var errorMessage: String?
 
     private enum Route: String, Identifiable {
-        case edit, paywall, cancel, priceHistory, annualSavings, alternatives, usage, verdict, receipt
+        case edit, paywall, cancel, priceHistory, annualSavings, alternatives, usage, verdict, receipt, pausePlan
         var id: String { rawValue }
     }
 
@@ -264,6 +264,16 @@ struct SubscriptionManagementView: View {
                 }
             }
 
+            if PausePlanSchedule.isEligible(current) {
+                divider
+                if PausePlanStore.shared.contains(current.id) {
+                    toolRow(icon: "arrow.triangle.2.circlepath", title: String(localized: "In your Pause Plan"), subtitle: nil) { route = .pausePlan }
+                } else {
+                    toolRow(icon: "arrow.triangle.2.circlepath", title: String(localized: "Rotate with your other streaming"),
+                            subtitle: String(localized: "Pause Plan"), isPro: !paymentManager.isUnlocked(.pausePlan)) { route = .pausePlan }
+                }
+            }
+
             divider
             toolRow(icon: "gauge.with.dots.needle.33percent", title: "Usage and value", subtitle: nil) { route = .usage }
         }
@@ -432,6 +442,8 @@ struct SubscriptionManagementView: View {
             RenewalVerdictView(subscriptionId: current.id)
         case .receipt:
             SavingsReceiptView()
+        case .pausePlan:
+            PausePlanView()
         }
     }
 }

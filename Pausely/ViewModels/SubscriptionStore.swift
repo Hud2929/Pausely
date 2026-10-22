@@ -452,6 +452,17 @@ class SubscriptionStore: ObservableObject {
         }
     }
     
+    /// Removes every subscription from this device (account deletion, or a different person signing in).
+    /// The server copy is not touched.
+    func removeAllLocalData() {
+        subscriptions = []
+        calculateTotals()
+        AppSettings.shared.cachedSubscriptions = Data()
+        WidgetDataStore.shared.publish(subscriptions: [])
+        SpotlightManager.shared.index(subscriptions: [])
+        lastFetchDate = nil
+    }
+
     // MARK: - Caching
 
     private func saveToCache() {
