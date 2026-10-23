@@ -14,6 +14,7 @@ Backend: Supabase (auth + database). Payments: StoreKit 2, Pausely Pro monthly (
 ($29.99) with a 7-day free trial. Bundle id `com.pausely.app.Pausely`, App Store Connect app 6759973158.
 
 Read `ENGINEERING_RULES.md` before changing money, dates, reminders or what Pro unlocks.
+Where the product is going: `REVOLUTION_PLAN.md` (positioning, roadmap, $10M model, makeover).
 
 ## Building and testing
 
@@ -32,7 +33,7 @@ DEBUG launch arguments open single screens with demo data (see `RootView` in `Co
 `--demo-mode`, `--demo-tab=N`, `--demo-verdict`, `--demo-receipt`, `--demo-savings`,
 `--demo-pause-plan` (`--demo-plan-active`), `--demo-subscription`, `--demo-subscription-edit`,
 `--demo-paywall`, `--demo-browser`, `--demo-gmail-results`, `--demo-wrapped`, and `--screenshots`
-for App Store captures. `PauselyUITests/ScreenTourTests` captures every screen when
+for App Store captures. `--reset-state` (UI tests) starts signed out with onboarding not yet seen. `PauselyUITests/ScreenTourTests` captures every screen when
 `TEST_RUNNER_PAUSELY_TOUR_DIR` is set.
 
 ## Architecture
@@ -71,7 +72,9 @@ All pure and unit-tested; they take `now` and a `Calendar`.
   `Settings/` (notifications, privacy and account deletion, help).
 
 ### Design
-Dark only. Colours `Color.obsidianBlack`, `obsidianSurface`, `accentMint`; rounded system fonts.
+iPhone and iPad (`TARGETED_DEVICE_FAMILY = "1,2"`; 1.0.1 shipped on iPad, so Apple rejects any
+update that drops it). On iPad, `.readableWidth()` keeps the app at phone width, centred; apply it
+to any new `fullScreenCover`. Dark only. Colours `Color.obsidianBlack`, `obsidianSurface`, `accentMint`; rounded system fonts.
 `ServiceLogoView` loads logos (touch icon, then favicon, cached). `.statusBarBackdrop()` for full-screen
 scroll views.
 
@@ -89,7 +92,7 @@ Edge function: `supabase/functions/waitlist-signup`. Website and policies: `paus
 ## App Store
 
 Listing text in `metadata/` (push with `asc metadata push`), screenshots in
-`AppStoreScreenshots/iphone-6.9`, products and review notes in `appstore_products.json`,
+`AppStoreScreenshots/iphone-6.9` and `AppStoreScreenshots/ipad-13` (captured in the `en_CA` locale), products and review notes in `appstore_products.json`,
 `scripts/asc_apply.sh` for pricing and subscription text. Never submit for review without the
 owner's explicit go-ahead.
 
