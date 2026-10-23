@@ -1,0 +1,13 @@
+{
+  "applinks": {
+    "details": [
+      {
+        "appIDs": ["5LV4LWYXGD.com.pausely.app.Pausely"],
+        "components": [
+          { "/": "/r/*", "comment": "Referral links: pausely.pro/r/CODE" },
+          { "/": "/referral", "?": { "code": "?*" }, "comment": "Referral links: pausely.pro/referral?code=CODE" }
+        ]
+      }
+    ]
+  }
+}
