@@ -68,6 +68,13 @@ class RevolutionaryAuthManager: ObservableObject {
         isBiometricEnabled = UserDefaults.standard.bool(forKey: biometricKey)
 
         #if DEBUG
+        // UI tests pass --reset-state to start signed out, whatever a previous run left behind.
+        if ProcessInfo.processInfo.arguments.contains("--reset-state") {
+            Self.forgetSessionForUITests()
+            Task { [client] in try? await client.auth.signOut(scope: .local) }
+            return
+        }
+
         // Debug bypass for simulator testing — set via:
         // defaults write com.pausely.app.Pausely debug_auth_bypass -bool true
         if UserDefaults.standard.bool(forKey: "debug_auth_bypass") {
@@ -118,6 +125,16 @@ class RevolutionaryAuthManager: ObservableObject {
         KeychainManager.shared.delete(key: Self.cachedCreatedAtKey)
         clearKeychainTokens()
     }
+
+    #if DEBUG
+    /// UI tests (`--reset-state`): forget any session a previous run left, before it's restored.
+    static func forgetSessionForUITests() {
+        for key in [cachedUserIdKey, cachedEmailKey, cachedCreatedAtKey, keychainAccessTokenKey, keychainRefreshTokenKey] {
+            KeychainManager.shared.delete(key: key)
+        }
+        UserDefaults.standard.removeObject(forKey: "debug_auth_bypass")
+    }
+    #endif
 
     // MARK: - Profile Persistence
 

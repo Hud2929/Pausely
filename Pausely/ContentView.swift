@@ -14,10 +14,20 @@ struct PauselyApp: App {
         return Locale(identifier: appLanguage)
     }
 
+    init() {
+        #if DEBUG
+        // UI tests pass --reset-state to start from a first launch, whatever an earlier run left behind.
+        if ProcessInfo.processInfo.arguments.contains("--reset-state") {
+            UserDefaults.standard.removeObject(forKey: "hasCompletedOnboarding")
+        }
+        #endif
+    }
+
     var body: some Scene {
         WindowGroup {
             RootView()
                 .environment(\.locale, resolvedLocale)
+                .readableWidth()
         }
     }
 }
@@ -720,6 +730,7 @@ struct PremiumSignUpView: View {
                         dismiss()
                     }
                 )
+                .readableWidth()
             }
             .onAppear {
                 // Age is confirmed BEFORE any account can be created.

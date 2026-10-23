@@ -16,7 +16,9 @@ final class OnboardingFlowTests: XCTestCase {
         // Onboarding carousel has a "Get Started" button
         let getStarted = app.buttons["getStartedButton"]
 
-        if getStarted.waitForExistence(timeout: 5) {
+        // The carousel is in the hierarchy under the splash screen; wait until the button can be tapped.
+        let hittable = expectation(for: NSPredicate(format: "isHittable == true"), evaluatedWith: getStarted)
+        if XCTWaiter.wait(for: [hittable], timeout: 10) == .completed {
             getStarted.tap()
         }
 

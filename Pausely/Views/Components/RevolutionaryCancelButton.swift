@@ -181,6 +181,7 @@ struct CancelSubscriptionFlow: View {
                     showingCelebration = false
                     showingDifficultyRating = true
                 }
+                .readableWidth()
             }
             .sheet(isPresented: $showingDifficultyRating) {
                 CancelDifficultyRatingView(serviceName: subscription.name) {

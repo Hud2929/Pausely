@@ -206,4 +206,14 @@ final class VerdictAndSavingsTests: XCTestCase {
         let netflix = sub(anchor: day(2026, 1, 31))
         XCTAssertEqual(VerdictFacts.renewal(after: day(2026, 10, 31), for: netflix, calendar: cal).map(ymd), "2026-11-30")
     }
+
+    /// The rating prompt waits until Pausely has saved money: the 1st, 3rd and 10th cancellation.
+    func testRatingPromptMilestonesFollowTheReceipt() {
+        XCTAssertEqual(ReviewPromptManager.milestone(forReceiptLines: 0), 0)
+        XCTAssertEqual(ReviewPromptManager.milestone(forReceiptLines: 1), 1)
+        XCTAssertEqual(ReviewPromptManager.milestone(forReceiptLines: 2), 1)
+        XCTAssertEqual(ReviewPromptManager.milestone(forReceiptLines: 3), 3)
+        XCTAssertEqual(ReviewPromptManager.milestone(forReceiptLines: 9), 3)
+        XCTAssertEqual(ReviewPromptManager.milestone(forReceiptLines: 25), 10)
+    }
 }

@@ -8,9 +8,8 @@
 	</array>
 	<key>com.apple.developer.associated-domains</key>
 	<array>
-		<string>applinks:pausely.app</string>
-		<string>applinks:*.pausely.app</string>
-		<string>applinks:www.pausely.app</string>
+		<string>applinks:pausely.pro</string>
+		<string>applinks:www.pausely.pro</string>
 	</array>
 	<key>com.apple.developer.family-controls</key>
 	<true/>

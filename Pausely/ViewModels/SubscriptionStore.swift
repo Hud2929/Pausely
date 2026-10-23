@@ -211,9 +211,6 @@ class SubscriptionStore: ObservableObject {
             self.saveToCache()
             WidgetDataStore.shared.publish(subscriptions: self.subscriptions)
             SpotlightManager.shared.index(subscriptions: self.subscriptions)
-            if self.subscriptions.count == 1 {
-                ReviewPromptManager.shared.requestReviewIfAppropriate(after: .firstSubscriptionAdded)
-            }
         }
 
         LifecycleEventLog.shared.record(.added, for: localSub)
@@ -293,26 +290,6 @@ class SubscriptionStore: ObservableObject {
         }
     }
 
-    // MARK: - Savings Tracking for Review Prompts
-
-    /// Tracks potential savings from cancelled/paused subscriptions for review milestone prompts
-    private var totalSavingsTracked: Decimal {
-        // Calculate savings from paused or cancelled subscriptions
-        // This is a simplified heuristic: sum of monthly costs of non-active subscriptions
-        let saved = subscriptions
-            .filter { $0.status != .active }
-            .reduce(Decimal(0)) { total, sub in
-                total + monthlyEquivalent(for: sub)
-            }
-        return saved
-    }
-
-    func checkSavingsMilestone() {
-        let savings = totalSavingsTracked
-        guard savings >= 50 else { return }
-        ReviewPromptManager.shared.requestReviewIfAppropriate(after: .savingsMilestone(amount: savings))
-    }
-
     func deleteSubscription(id: UUID) async throws {
         // 1. Update local state immediately (offline-first)
         await MainActor.run {
@@ -364,8 +341,8 @@ class SubscriptionStore: ObservableObject {
             }
         }
         await ReminderScheduler.shared.reschedule(self.subscriptions)
-        if status != .active {
-            checkSavingsMilestone()
+        if status == .cancelled {
+            await MainActor.run { ReviewPromptManager.shared.askAfterMoneyKept() }
         }
 
         // 2. Attempt Supabase write

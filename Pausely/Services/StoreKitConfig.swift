@@ -13,38 +13,41 @@ final class ReviewPromptManager: ObservableObject {
     private let requestsThisYearKey = "review_requests_this_year"
     private let lastRequestDateKey = "review_last_request_date"
     private let currentYearKey = "review_current_year"
-    private let hasPromptedAfterOnboardingKey = "review_prompted_after_onboarding"
-    private let hasPromptedAfterFirstSubKey = "review_prompted_after_first_sub"
-    private let savingsMilestoneKey = "review_savings_milestone_last"
+    private let receiptMilestoneKey = "review_receipt_milestone_last"
     private let maxRequestsPerYear = 3
 
+    /// Pausely asks for a rating only after it has visibly saved money, never before.
     enum ReviewTrigger {
-        case onboardingCompleted
-        case firstSubscriptionAdded
-        case savingsMilestone(amount: Decimal)
+        /// A cancellation is on the Savings Receipt. Asks at the 1st, 3rd and 10th cancellation.
+        case moneyKept(receiptLines: Int)
+    }
+
+    static let receiptMilestones = [1, 3, 10]
+
+    /// The highest milestone a receipt with this many cancellations has reached (0 when none).
+    nonisolated static func milestone(forReceiptLines lines: Int) -> Int {
+        receiptMilestones.last { lines >= $0 } ?? 0
     }
 
     private init() {}
 
+    /// Asks once the Savings Receipt reaches the next milestone. Safe to call often.
+    func askAfterMoneyKept() {
+        requestReviewIfAppropriate(after: .moneyKept(receiptLines: SavingsSummary.current().lines.count))
+    }
+
     func requestReviewIfAppropriate(after trigger: ReviewTrigger) {
-        guard canRequestReview() else { return }
+        guard !ProcessInfo.processInfo.arguments.contains("--uitesting"), !DemoSavings.isScreenshotRun,
+              canRequestReview() else { return }
 
         // A trigger only counts as "used" once the system prompt has really been shown, so a request that
         // is skipped because a sheet is open can fire again on the next opportunity.
         switch trigger {
-        case .onboardingCompleted:
-            guard !UserDefaults.standard.bool(forKey: hasPromptedAfterOnboardingKey) else { return }
-            presentReviewRequest { UserDefaults.standard.set(true, forKey: self.hasPromptedAfterOnboardingKey) }
-
-        case .firstSubscriptionAdded:
-            guard !UserDefaults.standard.bool(forKey: hasPromptedAfterFirstSubKey) else { return }
-            presentReviewRequest { UserDefaults.standard.set(true, forKey: self.hasPromptedAfterFirstSubKey) }
-
-        case .savingsMilestone(let amount):
-            let milestone = Int(truncating: amount as NSNumber) / 50
-            let lastMilestone = UserDefaults.standard.integer(forKey: savingsMilestoneKey)
-            guard milestone > lastMilestone, milestone >= 1 else { return }
-            presentReviewRequest { UserDefaults.standard.set(milestone, forKey: self.savingsMilestoneKey) }
+        case .moneyKept(let receiptLines):
+            let reached = Self.milestone(forReceiptLines: receiptLines)
+            let lastAsked = UserDefaults.standard.integer(forKey: receiptMilestoneKey)
+            guard reached > lastAsked else { return }
+            presentReviewRequest { UserDefaults.standard.set(reached, forKey: self.receiptMilestoneKey) }
         }
     }
 

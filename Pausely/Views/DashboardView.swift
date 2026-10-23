@@ -161,6 +161,7 @@ struct DashboardView: View {
                 await screenTimeManager.syncUsageData()
             }
             checkPendingReferralCode()
+            ReviewPromptManager.shared.askAfterMoneyKept()
         }
         .onReceive(NotificationCenter.default.publisher(for: .referralCodeReceived)) { _ in
             checkPendingReferralCode()

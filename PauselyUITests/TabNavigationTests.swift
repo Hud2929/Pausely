@@ -25,7 +25,9 @@ final class TabNavigationTests: XCTestCase {
         XCTAssertTrue(tab("tabHome").waitForExistence(timeout: 10))
         for id in ["tabSubscriptions", "tabAnalysis", "tabProfile", "tabHome"] {
             tab(id).tap()
-            XCTAssertTrue(tab(id).isSelected, "\(id) should be selected after tapping it")
+            let selected = NSPredicate(format: "isSelected == true")
+            let wait = expectation(for: selected, evaluatedWith: tab(id))
+            XCTAssertEqual(XCTWaiter.wait(for: [wait], timeout: 3), .completed, "\(id) should be selected after tapping it")
         }
     }
 }
