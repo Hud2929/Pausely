@@ -82,7 +82,8 @@ strings need all five translations; take the exact keys from the build's `.strin
 ## Backend
 
 Supabase project `ddaotwyaowspwspyddzs`. Migrations live in `supabase/migrations/` and are applied by
-hand in the Supabase SQL editor (the app needs `20261022_delete_my_account.sql` for account deletion).
+hand in the Supabase SQL editor. Pending as of 2026-10-22: paste `supabase/APPLY_2026-10-22.sql`
+(account deletion and cancel-difficulty ratings need it).
 Edge function: `supabase/functions/waitlist-signup`. Website and policies: `pausely.pro/` (GitHub Pages).
 
 ## App Store

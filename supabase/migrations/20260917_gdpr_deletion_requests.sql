@@ -16,10 +16,11 @@ CREATE TABLE IF NOT EXISTS deletion_requests (
 -- Only service-role can read deletion requests (admin use only)
 ALTER TABLE deletion_requests ENABLE ROW LEVEL SECURITY;
 
+DROP POLICY IF EXISTS "No public access to deletion_requests" ON deletion_requests;
 CREATE POLICY "No public access to deletion_requests"
   ON deletion_requests FOR ALL
   USING (false);
 
 -- Index for compliance queries
-CREATE INDEX idx_deletion_requests_requested_at ON deletion_requests (requested_at);
-CREATE INDEX idx_deletion_requests_user_id ON deletion_requests (user_id);
+CREATE INDEX IF NOT EXISTS idx_deletion_requests_requested_at ON deletion_requests (requested_at);
+CREATE INDEX IF NOT EXISTS idx_deletion_requests_user_id ON deletion_requests (user_id);
