@@ -86,8 +86,7 @@ struct NextPaymentCard: View {
 
     private func cardAmountAndDate(for sub: Subscription) -> some View {
         VStack(alignment: .leading, spacing: 4) {
-            let converted = currencyManager.convertToSelected(sub.amount, from: sub.currency)
-            Text(currencyManager.format(converted))
+            Text(sub.chargeText)  // the charge itself, in what it's billed in
                 .font(.system(.subheadline, design: .rounded).weight(.semibold))
                 .foregroundStyle(urgencyColor)
                 .lineLimit(1)
@@ -160,7 +159,7 @@ struct NextPaymentCard: View {
 
     private var accessibilityLabelText: String {
         guard let sub = subscription else { return "Next payment" }
-        let amount = currencyManager.format(currencyManager.convertToSelected(sub.amount, from: sub.currency))
+        let amount = sub.chargeText
         if sub.calculatedNextBillingDate != nil {
             return "Next payment: \(sub.name), \(amount), \(renewalDateText), \(daysUntilText)"
         } else {

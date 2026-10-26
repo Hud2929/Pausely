@@ -5,10 +5,17 @@ how Lago (an open-source billing engine) avoids billing bugs; see `LAGO_TAKEAWAY
 
 ## Money
 
+Full rules, recipes and checks: the `pausely-currency` skill (`.claude/skills/pausely-currency/`).
+`CurrencyGuardTests` fails the tests when code goes around them.
+
 - Amounts are `Decimal` and always travel with a currency code. Convert to `Double` only for
   display math or charts, never before storing or comparing.
-- Prices shown on the paywall come from StoreKit for the customer's storefront. `ProPricing`
-  holds only the USD launch prices used before StoreKit loads.
+- All money text comes from `MoneyFormat` (Core/Money); the reader's locale picks the symbol.
+- A subscription's price shows in its own currency; anything added up, compared or ranked is in the
+  display currency, every item converted first (`monthlyTotal(in:)`, `MoneyMath.total`).
+- Conversion returns nil for an unknown currency; never fall back to the unconverted number.
+- Prices shown on the paywall come only from StoreKit for the customer's storefront ("…" while
+  loading). `ProPricing` holds the USD launch prices for internal use, never for display.
 - The annual "Save N%" badge is computed from the real StoreKit prices
   (`StoreKitManager.annualSavingsPercent`). Never hardcode a percentage.
 

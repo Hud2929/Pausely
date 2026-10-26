@@ -13,7 +13,9 @@ isn't saving them more than it costs (the **Pausely Promise**).
 Backend: Supabase (auth + database). Payments: StoreKit 2, Pausely Pro monthly ($4.99) and yearly
 ($29.99) with a 7-day free trial. Bundle id `com.pausely.app.Pausely`, App Store Connect app 6759973158.
 
-Read `ENGINEERING_RULES.md` before changing money, dates, reminders or what Pro unlocks.
+Read `ENGINEERING_RULES.md` before changing money, dates, reminders or what Pro unlocks. For
+anything that shows, adds or converts an amount, use the `pausely-currency` skill: all money goes
+through `Pausely/Core/Money` and `CurrencyGuardTests` enforces it.
 Where the product is going: `REVOLUTION_PLAN.md` (positioning, roadmap, $10M model, makeover).
 
 ## Building and testing
@@ -62,7 +64,10 @@ All pure and unit-tested; they take `now` and a `Calendar`.
 - `VerdictCenter`, `SavingsSummary`, `PausePlanStore`, `LocalUserData`: the decision flow, receipt
   totals in the user's currency, the saved Pause Plan, and wiping on-device data.
 - `NotificationManager` (Core/Utilities): permission, categories, delegate.
-- `SupabaseManager` (also `CurrencyManager`), `GmailSubscriptionScanner` (off in release via
+- `Core/Money`: `MoneyFormat` (all money text), `CurrencyRates` (conversion, built-in rates),
+  `MoneyMath` (totals across currencies). `CurrencyManager` (in SupabaseManager.swift) holds the
+  display currency and live rates.
+- `SupabaseManager`, `GmailSubscriptionScanner` (off in release via
   `FeatureFlags`), `ScreenTimeManager` (manual usage), `ReferralManager`, `KeychainManager`, `AppConfig`.
 
 ### Views

@@ -23,7 +23,7 @@ struct SavingsReceiptView: View {
                         VStack(spacing: 0) {
                             ForEach(Array(summary.lines.reversed().enumerated()), id: \.element.id) { index, line in
                                 if index > 0 { Divider().overlay(Color.white.opacity(0.06)).padding(.leading, 16) }
-                                lineRow(line)
+                                lineRow(line, in: summary)
                             }
                         }
                         .background(RoundedRectangle(cornerRadius: 16, style: .continuous).fill(Color.obsidianSurface))
@@ -69,14 +69,14 @@ struct SavingsReceiptView: View {
         .accessibilityElement(children: .combine)
     }
 
-    private func lineRow(_ line: SavingsLedger.Line) -> some View {
+    private func lineRow(_ line: SavingsLedger.Line, in summary: SavingsSummary) -> some View {
         VStack(alignment: .leading, spacing: 6) {
             HStack(alignment: .firstTextBaseline) {
                 Text(line.name)
                     .font(.system(.body, design: .rounded).weight(.semibold))
                     .foregroundStyle(.white)
                 Spacer(minLength: 8)
-                Text(MoneyFormat.string(line.savedSoFar, line.currency))
+                Text(summary.formatted(line.savedSoFar, from: line.currency))
                     .font(.system(.body, design: .rounded).weight(.bold))
                     .foregroundStyle(Color.accentMint)
             }

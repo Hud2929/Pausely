@@ -219,44 +219,20 @@ class CurrencyManager: ObservableObject {
     static let shared = CurrencyManager()
 
     @Published var selectedCurrency: String
-    @Published var exchangeRates: [String: Double] = [:]
+    /// Live rates per USD as loaded from the API. Conversions use `rates`, which fills any gaps
+    /// from `CurrencyRates.fallback` so every currency in the picker always converts.
+    @Published var exchangeRates: [String: Double] = [:] {
+        didSet { ratesTable = CurrencyRates(apiRates: exchangeRates).fillingGaps() }
+    }
+    private(set) var ratesTable: CurrencyRates = .fallback
     @Published var lastUpdated: Date?
     @Published var isLoadingRates = false
     @Published var error: Error?
 
-    /// Fallback rates for major currencies — used when API is unreachable.
-    /// Rates are vs USD (1 USD = X currency). Updated April 2026.
-    private let fallbackRates: [String: Double] = [
-        "USD": 1.0, "EUR": 0.92, "GBP": 0.79, "JPY": 149.50,
-        "CAD": 1.38, "AUD": 1.53, "CHF": 0.88, "CNY": 7.24,
-        "INR": 83.50, "BRL": 5.05, "KRW": 1330.0, "MXN": 16.80,
-        "SGD": 1.35, "HKD": 7.82, "NOK": 10.65, "SEK": 10.50,
-        "DKK": 6.88, "NZD": 1.66, "ZAR": 18.50, "RUB": 92.0,
-        "TRY": 32.0, "PLN": 4.0, "THB": 36.0, "IDR": 15800.0,
-        "MYR": 4.75, "PHP": 56.0, "CZK": 23.5, "ILS": 3.65,
-        "AED": 3.67, "SAR": 3.75, "TWD": 31.5, "VND": 24800.0,
-        "EGP": 47.0, "PKR": 278.0, "NGN": 1450.0, "BDT": 109.5,
-        "RON": 4.6, "HUF": 360.0, "UAH": 39.5, "CLP": 965.0,
-        "COP": 3920.0, "PEN": 3.72, "ARS": 860.0, "MAD": 10.0,
-        "QAR": 3.64, "KWD": 0.307, "BHD": 0.376, "OMR": 0.385,
-        "JOD": 0.709, "LKR": 299.0, "NPR": 133.0, "KES": 132.0,
-        "GHS": 14.5, "TZS": 2570.0, "UGX": 3820.0, "ISK": 138.0,
-        "HRK": 6.9, "BGN": 1.8, "RSD": 108.0, "GEL": 2.7,
-        "AMD": 389.0, "AZN": 1.7, "KZT": 500.0, "UZS": 12500.0,
-        "TJS": 10.9, "KGS": 88.5, "MNT": 3370.0, "MMK": 2090.0,
-        "KHR": 4050.0, "LAK": 20800.0, "BND": 1.35, "BWP": 13.5,
-        "MUR": 46.5, "SCR": 13.5, "ZMW": 26.0, "MWK": 1730.0,
-        "MZN": 63.5, "NAD": 18.5, "SZL": 18.5, "LSL": 18.5,
-        "AOA": 830.0, "CDF": 2780.0, "RWF": 1310.0, "BIF": 2870.0,
-        "DJF": 177.0, "ETB": 57.0, "SOS": 571.0, "GMD": 67.5,
-        "GNF": 8600.0, "LRD": 193.0, "SLL": 22600.0, "MRU": 39.5,
-        "STN": 22.5, "XOF": 605.0, "XAF": 605.0, "XCD": 2.7,
-        "AWG": 1.79, "ANG": 1.79, "TTD": 6.78, "BBD": 2.0,
-        "BSD": 1.0, "BZD": 2.0, "JMD": 155.0, "HTG": 132.0,
-        "DOP": 58.5, "CUP": 24.0, "GTQ": 7.75, "HNL": 24.7,
-        "NIO": 36.7, "CRC": 512.0, "PAB": 1.0, "UYU": 39.0,
-        "PYG": 7300.0, "BOB": 6.91, "VES": 36.5
-    ]
+    /// Built-in rates (see `CurrencyRates.fallback`) as the API's `Double`s.
+    private var fallbackRates: [String: Double] {
+        CurrencyRates.fallback.perUSD.mapValues { NSDecimalNumber(decimal: $0).doubleValue }
+    }
 
     private let session: URLSession = {
         let config = URLSessionConfiguration.default
@@ -271,153 +247,145 @@ class CurrencyManager: ObservableObject {
     
     let currencies: [Currency] = [
         // Major Global Currencies
-        Currency(code: "USD", name: "US Dollar", symbol: "$", flag: "🇺🇸", locale: "en_US"),
-        Currency(code: "EUR", name: "Euro", symbol: "€", flag: "🇪🇺", locale: "de_DE"),
-        Currency(code: "GBP", name: "British Pound", symbol: "£", flag: "🇬🇧", locale: "en_GB"),
-        Currency(code: "JPY", name: "Japanese Yen", symbol: "¥", flag: "🇯🇵", locale: "ja_JP"),
-        Currency(code: "CNY", name: "Chinese Yuan", symbol: "¥", flag: "🇨🇳", locale: "zh_CN"),
+        Currency(code: "USD", name: "US Dollar", flag: "🇺🇸", locale: "en_US"),
+        Currency(code: "EUR", name: "Euro", flag: "🇪🇺", locale: "de_DE"),
+        Currency(code: "GBP", name: "British Pound", flag: "🇬🇧", locale: "en_GB"),
+        Currency(code: "JPY", name: "Japanese Yen", flag: "🇯🇵", locale: "ja_JP"),
+        Currency(code: "CNY", name: "Chinese Yuan", flag: "🇨🇳", locale: "zh_CN"),
         
         // Americas
-        Currency(code: "CAD", name: "Canadian Dollar", symbol: "C$", flag: "🇨🇦", locale: "en_CA"),
-        Currency(code: "MXN", name: "Mexican Peso", symbol: "$", flag: "🇲🇽", locale: "es_MX"),
-        Currency(code: "BRL", name: "Brazilian Real", symbol: "R$", flag: "🇧🇷", locale: "pt_BR"),
-        Currency(code: "ARS", name: "Argentine Peso", symbol: "$", flag: "🇦🇷", locale: "es_AR"),
-        Currency(code: "CLP", name: "Chilean Peso", symbol: "$", flag: "🇨🇱", locale: "es_CL"),
-        Currency(code: "COP", name: "Colombian Peso", symbol: "$", flag: "🇨🇴", locale: "es_CO"),
-        Currency(code: "PEN", name: "Peruvian Sol", symbol: "S/", flag: "🇵🇪", locale: "es_PE"),
-        Currency(code: "UYU", name: "Uruguayan Peso", symbol: "$", flag: "🇺🇾", locale: "es_UY"),
-        Currency(code: "DOP", name: "Dominican Peso", symbol: "RD$", flag: "🇩🇴", locale: "es_DO"),
-        Currency(code: "CRC", name: "Costa Rican Colón", symbol: "₡", flag: "🇨🇷", locale: "es_CR"),
-        Currency(code: "GTQ", name: "Guatemalan Quetzal", symbol: "Q", flag: "🇬🇹", locale: "es_GT"),
-        Currency(code: "HNL", name: "Honduran Lempira", symbol: "L", flag: "🇭🇳", locale: "es_HN"),
-        Currency(code: "NIO", name: "Nicaraguan Córdoba", symbol: "C$", flag: "🇳🇮", locale: "es_NI"),
-        Currency(code: "PAB", name: "Panamanian Balboa", symbol: "B/.", flag: "🇵🇦", locale: "es_PA"),
-        Currency(code: "BOB", name: "Bolivian Boliviano", symbol: "Bs", flag: "🇧🇴", locale: "es_BO"),
-        Currency(code: "PYG", name: "Paraguayan Guaraní", symbol: "₲", flag: "🇵🇾", locale: "es_PY"),
-        Currency(code: "VES", name: "Venezuelan Bolívar", symbol: "Bs", flag: "🇻🇪", locale: "es_VE"),
-        Currency(code: "XCD", name: "Eastern Caribbean Dollar", symbol: "EC$", flag: "🇦🇬", locale: "en_AG"),
-        Currency(code: "TTD", name: "Trinidad & Tobago Dollar", symbol: "TT$", flag: "🇹🇹", locale: "en_TT"),
-        Currency(code: "JMD", name: "Jamaican Dollar", symbol: "J$", flag: "🇯🇲", locale: "en_JM"),
-        Currency(code: "BBD", name: "Barbadian Dollar", symbol: "Bds$", flag: "🇧🇧", locale: "en_BB"),
-        Currency(code: "BSD", name: "Bahamian Dollar", symbol: "B$", flag: "🇧🇸", locale: "en_BS"),
-        Currency(code: "BZD", name: "Belize Dollar", symbol: "BZ$", flag: "🇧🇿", locale: "en_BZ"),
-        Currency(code: "KYD", name: "Cayman Islands Dollar", symbol: "CI$", flag: "🇰🇾", locale: "en_KY"),
-        Currency(code: "BMD", name: "Bermudian Dollar", symbol: "BD$", flag: "🇧🇲", locale: "en_BM"),
-        Currency(code: "GYD", name: "Guyanese Dollar", symbol: "G$", flag: "🇬🇾", locale: "en_GY"),
-        Currency(code: "SRD", name: "Surinamese Dollar", symbol: "SRD", flag: "🇸🇷", locale: "nl_SR"),
+        Currency(code: "CAD", name: "Canadian Dollar", flag: "🇨🇦", locale: "en_CA"),
+        Currency(code: "MXN", name: "Mexican Peso", flag: "🇲🇽", locale: "es_MX"),
+        Currency(code: "BRL", name: "Brazilian Real", flag: "🇧🇷", locale: "pt_BR"),
+        Currency(code: "ARS", name: "Argentine Peso", flag: "🇦🇷", locale: "es_AR"),
+        Currency(code: "CLP", name: "Chilean Peso", flag: "🇨🇱", locale: "es_CL"),
+        Currency(code: "COP", name: "Colombian Peso", flag: "🇨🇴", locale: "es_CO"),
+        Currency(code: "PEN", name: "Peruvian Sol", flag: "🇵🇪", locale: "es_PE"),
+        Currency(code: "UYU", name: "Uruguayan Peso", flag: "🇺🇾", locale: "es_UY"),
+        Currency(code: "DOP", name: "Dominican Peso", flag: "🇩🇴", locale: "es_DO"),
+        Currency(code: "CRC", name: "Costa Rican Colón", flag: "🇨🇷", locale: "es_CR"),
+        Currency(code: "GTQ", name: "Guatemalan Quetzal", flag: "🇬🇹", locale: "es_GT"),
+        Currency(code: "HNL", name: "Honduran Lempira", flag: "🇭🇳", locale: "es_HN"),
+        Currency(code: "NIO", name: "Nicaraguan Córdoba", flag: "🇳🇮", locale: "es_NI"),
+        Currency(code: "PAB", name: "Panamanian Balboa", flag: "🇵🇦", locale: "es_PA"),
+        Currency(code: "BOB", name: "Bolivian Boliviano", flag: "🇧🇴", locale: "es_BO"),
+        Currency(code: "PYG", name: "Paraguayan Guaraní", flag: "🇵🇾", locale: "es_PY"),
+        Currency(code: "VES", name: "Venezuelan Bolívar", flag: "🇻🇪", locale: "es_VE"),
+        Currency(code: "XCD", name: "Eastern Caribbean Dollar", flag: "🇦🇬", locale: "en_AG"),
+        Currency(code: "TTD", name: "Trinidad & Tobago Dollar", flag: "🇹🇹", locale: "en_TT"),
+        Currency(code: "JMD", name: "Jamaican Dollar", flag: "🇯🇲", locale: "en_JM"),
+        Currency(code: "BBD", name: "Barbadian Dollar", flag: "🇧🇧", locale: "en_BB"),
+        Currency(code: "BSD", name: "Bahamian Dollar", flag: "🇧🇸", locale: "en_BS"),
+        Currency(code: "BZD", name: "Belize Dollar", flag: "🇧🇿", locale: "en_BZ"),
+        Currency(code: "KYD", name: "Cayman Islands Dollar", flag: "🇰🇾", locale: "en_KY"),
+        Currency(code: "BMD", name: "Bermudian Dollar", flag: "🇧🇲", locale: "en_BM"),
+        Currency(code: "GYD", name: "Guyanese Dollar", flag: "🇬🇾", locale: "en_GY"),
+        Currency(code: "SRD", name: "Surinamese Dollar", flag: "🇸🇷", locale: "nl_SR"),
         
         // Europe
-        Currency(code: "CHF", name: "Swiss Franc", symbol: "Fr", flag: "🇨🇭", locale: "de_CH"),
-        Currency(code: "SEK", name: "Swedish Krona", symbol: "kr", flag: "🇸🇪", locale: "sv_SE"),
-        Currency(code: "NOK", name: "Norwegian Krone", symbol: "kr", flag: "🇳🇴", locale: "nb_NO"),
-        Currency(code: "DKK", name: "Danish Krone", symbol: "kr", flag: "🇩🇰", locale: "da_DK"),
-        Currency(code: "PLN", name: "Polish Złoty", symbol: "zł", flag: "🇵🇱", locale: "pl_PL"),
-        Currency(code: "CZK", name: "Czech Koruna", symbol: "Kč", flag: "🇨🇿", locale: "cs_CZ"),
-        Currency(code: "HUF", name: "Hungarian Forint", symbol: "Ft", flag: "🇭🇺", locale: "hu_HU"),
-        Currency(code: "RON", name: "Romanian Leu", symbol: "lei", flag: "🇷🇴", locale: "ro_RO"),
-        Currency(code: "BGN", name: "Bulgarian Lev", symbol: "лв", flag: "🇧🇬", locale: "bg_BG"),
-        Currency(code: "HRK", name: "Croatian Kuna", symbol: "kn", flag: "🇭🇷", locale: "hr_HR"),
-        Currency(code: "RSD", name: "Serbian Dinar", symbol: "дин", flag: "🇷🇸", locale: "sr_RS"),
-        Currency(code: "ISK", name: "Icelandic Króna", symbol: "kr", flag: "🇮🇸", locale: "is_IS"),
-        Currency(code: "UAH", name: "Ukrainian Hryvnia", symbol: "₴", flag: "🇺🇦", locale: "uk_UA"),
-        Currency(code: "RUB", name: "Russian Ruble", symbol: "₽", flag: "🇷🇺", locale: "ru_RU"),
-        Currency(code: "BYN", name: "Belarusian Ruble", symbol: "Br", flag: "🇧🇾", locale: "be_BY"),
-        Currency(code: "MDL", name: "Moldovan Leu", symbol: "L", flag: "🇲🇩", locale: "ro_MD"),
-        Currency(code: "GIP", name: "Gibraltar Pound", symbol: "£", flag: "🇬🇮", locale: "en_GI"),
-        Currency(code: "ALL", name: "Albanian Lek", symbol: "L", flag: "🇦🇱", locale: "sq_AL"),
-        Currency(code: "BAM", name: "Bosnia Mark", symbol: "KM", flag: "🇧🇦", locale: "bs_BA"),
-        Currency(code: "MKD", name: "Macedonian Denar", symbol: "ден", flag: "🇲🇰", locale: "mk_MK"),
-        Currency(code: "GEL", name: "Georgian Lari", symbol: "₾", flag: "🇬🇪", locale: "ka_GE"),
-        Currency(code: "AZN", name: "Azerbaijani Manat", symbol: "₼", flag: "🇦🇿", locale: "az_AZ"),
-        Currency(code: "AMD", name: "Armenian Dram", symbol: "֏", flag: "🇦🇲", locale: "hy_AM"),
+        Currency(code: "CHF", name: "Swiss Franc", flag: "🇨🇭", locale: "de_CH"),
+        Currency(code: "SEK", name: "Swedish Krona", flag: "🇸🇪", locale: "sv_SE"),
+        Currency(code: "NOK", name: "Norwegian Krone", flag: "🇳🇴", locale: "nb_NO"),
+        Currency(code: "DKK", name: "Danish Krone", flag: "🇩🇰", locale: "da_DK"),
+        Currency(code: "PLN", name: "Polish Złoty", flag: "🇵🇱", locale: "pl_PL"),
+        Currency(code: "CZK", name: "Czech Koruna", flag: "🇨🇿", locale: "cs_CZ"),
+        Currency(code: "HUF", name: "Hungarian Forint", flag: "🇭🇺", locale: "hu_HU"),
+        Currency(code: "RON", name: "Romanian Leu", flag: "🇷🇴", locale: "ro_RO"),
+        Currency(code: "BGN", name: "Bulgarian Lev", flag: "🇧🇬", locale: "bg_BG"),
+        Currency(code: "RSD", name: "Serbian Dinar", flag: "🇷🇸", locale: "sr_RS"),
+        Currency(code: "ISK", name: "Icelandic Króna", flag: "🇮🇸", locale: "is_IS"),
+        Currency(code: "UAH", name: "Ukrainian Hryvnia", flag: "🇺🇦", locale: "uk_UA"),
+        Currency(code: "RUB", name: "Russian Ruble", flag: "🇷🇺", locale: "ru_RU"),
+        Currency(code: "BYN", name: "Belarusian Ruble", flag: "🇧🇾", locale: "be_BY"),
+        Currency(code: "MDL", name: "Moldovan Leu", flag: "🇲🇩", locale: "ro_MD"),
+        Currency(code: "GIP", name: "Gibraltar Pound", flag: "🇬🇮", locale: "en_GI"),
+        Currency(code: "ALL", name: "Albanian Lek", flag: "🇦🇱", locale: "sq_AL"),
+        Currency(code: "BAM", name: "Bosnia Mark", flag: "🇧🇦", locale: "bs_BA"),
+        Currency(code: "MKD", name: "Macedonian Denar", flag: "🇲🇰", locale: "mk_MK"),
+        Currency(code: "GEL", name: "Georgian Lari", flag: "🇬🇪", locale: "ka_GE"),
+        Currency(code: "AZN", name: "Azerbaijani Manat", flag: "🇦🇿", locale: "az_AZ"),
+        Currency(code: "AMD", name: "Armenian Dram", flag: "🇦🇲", locale: "hy_AM"),
         
         // Asia Pacific
-        Currency(code: "AUD", name: "Australian Dollar", symbol: "A$", flag: "🇦🇺", locale: "en_AU"),
-        Currency(code: "NZD", name: "New Zealand Dollar", symbol: "NZ$", flag: "🇳🇿", locale: "en_NZ"),
-        Currency(code: "SGD", name: "Singapore Dollar", symbol: "S$", flag: "🇸🇬", locale: "en_SG"),
-        Currency(code: "HKD", name: "Hong Kong Dollar", symbol: "HK$", flag: "🇭🇰", locale: "zh_HK"),
-        Currency(code: "KRW", name: "South Korean Won", symbol: "₩", flag: "🇰🇷", locale: "ko_KR"),
-        Currency(code: "INR", name: "Indian Rupee", symbol: "₹", flag: "🇮🇳", locale: "hi_IN"),
-        Currency(code: "IDR", name: "Indonesian Rupiah", symbol: "Rp", flag: "🇮🇩", locale: "id_ID"),
-        Currency(code: "MYR", name: "Malaysian Ringgit", symbol: "RM", flag: "🇲🇾", locale: "ms_MY"),
-        Currency(code: "THB", name: "Thai Baht", symbol: "฿", flag: "🇹🇭", locale: "th_TH"),
-        Currency(code: "PHP", name: "Philippine Peso", symbol: "₱", flag: "🇵🇭", locale: "fil_PH"),
-        Currency(code: "VND", name: "Vietnamese Dong", symbol: "₫", flag: "🇻🇳", locale: "vi_VN"),
-        Currency(code: "TWD", name: "Taiwan Dollar", symbol: "NT$", flag: "🇹🇼", locale: "zh_TW"),
-        Currency(code: "PKR", name: "Pakistani Rupee", symbol: "₨", flag: "🇵🇰", locale: "ur_PK"),
-        Currency(code: "BDT", name: "Bangladeshi Taka", symbol: "৳", flag: "🇧🇩", locale: "bn_BD"),
-        Currency(code: "LKR", name: "Sri Lankan Rupee", symbol: "Rs", flag: "🇱🇰", locale: "si_LK"),
-        Currency(code: "NPR", name: "Nepalese Rupee", symbol: "₨", flag: "🇳🇵", locale: "ne_NP"),
-        Currency(code: "MMK", name: "Myanmar Kyat", symbol: "K", flag: "🇲🇲", locale: "my_MM"),
-        Currency(code: "KHR", name: "Cambodian Riel", symbol: "៛", flag: "🇰🇭", locale: "km_KH"),
-        Currency(code: "LAK", name: "Lao Kip", symbol: "₭", flag: "🇱🇦", locale: "lo_LA"),
-        Currency(code: "MOP", name: "Macanese Pataca", symbol: "MOP$", flag: "🇲🇴", locale: "zh_MO"),
-        Currency(code: "BND", name: "Brunei Dollar", symbol: "B$", flag: "🇧🇳", locale: "ms_BN"),
-        Currency(code: "PGK", name: "Papua New Guinean Kina", symbol: "K", flag: "🇵🇬", locale: "en_PG"),
-        Currency(code: "FJD", name: "Fijian Dollar", symbol: "FJ$", flag: "🇫🇯", locale: "en_FJ"),
-        Currency(code: "WST", name: "Samoan Tala", symbol: "T", flag: "🇼🇸", locale: "en_WS"),
-        Currency(code: "TOP", name: "Tongan Paʻanga", symbol: "T$", flag: "🇹🇴", locale: "to_TO"),
-        Currency(code: "VUV", name: "Vanuatu Vatu", symbol: "VT", flag: "🇻🇺", locale: "bi_VU"),
-        Currency(code: "SBD", name: "Solomon Islands Dollar", symbol: "SI$", flag: "🇸🇧", locale: "en_SB"),
-        Currency(code: "KID", name: "Kiribati Dollar", symbol: "$", flag: "🇰🇮", locale: "en_KI"),
-        Currency(code: "MVR", name: "Maldivian Rufiyaa", symbol: "Rf", flag: "🇲🇻", locale: "dv_MV"),
-        Currency(code: "BTN", name: "Bhutanese Ngultrum", symbol: "Nu.", flag: "🇧🇹", locale: "dz_BT"),
-        Currency(code: "MNT", name: "Mongolian Tugrik", symbol: "₮", flag: "🇲🇳", locale: "mn_MN"),
-        Currency(code: "KZT", name: "Kazakhstani Tenge", symbol: "₸", flag: "🇰🇿", locale: "kk_KZ"),
-        Currency(code: "KGS", name: "Kyrgyzstani Som", symbol: "с", flag: "🇰🇬", locale: "ky_KG"),
-        Currency(code: "TJS", name: "Tajikistani Somoni", symbol: "ЅМ", flag: "🇹🇯", locale: "tg_TJ"),
-        Currency(code: "UZS", name: "Uzbekistani Som", symbol: "so'm", flag: "🇺🇿", locale: "uz_UZ"),
-        Currency(code: "AFN", name: "Afghan Afghani", symbol: "؋", flag: "🇦🇫", locale: "ps_AF"),
+        Currency(code: "AUD", name: "Australian Dollar", flag: "🇦🇺", locale: "en_AU"),
+        Currency(code: "NZD", name: "New Zealand Dollar", flag: "🇳🇿", locale: "en_NZ"),
+        Currency(code: "SGD", name: "Singapore Dollar", flag: "🇸🇬", locale: "en_SG"),
+        Currency(code: "HKD", name: "Hong Kong Dollar", flag: "🇭🇰", locale: "zh_HK"),
+        Currency(code: "KRW", name: "South Korean Won", flag: "🇰🇷", locale: "ko_KR"),
+        Currency(code: "INR", name: "Indian Rupee", flag: "🇮🇳", locale: "hi_IN"),
+        Currency(code: "IDR", name: "Indonesian Rupiah", flag: "🇮🇩", locale: "id_ID"),
+        Currency(code: "MYR", name: "Malaysian Ringgit", flag: "🇲🇾", locale: "ms_MY"),
+        Currency(code: "THB", name: "Thai Baht", flag: "🇹🇭", locale: "th_TH"),
+        Currency(code: "PHP", name: "Philippine Peso", flag: "🇵🇭", locale: "fil_PH"),
+        Currency(code: "VND", name: "Vietnamese Dong", flag: "🇻🇳", locale: "vi_VN"),
+        Currency(code: "TWD", name: "Taiwan Dollar", flag: "🇹🇼", locale: "zh_TW"),
+        Currency(code: "PKR", name: "Pakistani Rupee", flag: "🇵🇰", locale: "ur_PK"),
+        Currency(code: "BDT", name: "Bangladeshi Taka", flag: "🇧🇩", locale: "bn_BD"),
+        Currency(code: "LKR", name: "Sri Lankan Rupee", flag: "🇱🇰", locale: "si_LK"),
+        Currency(code: "NPR", name: "Nepalese Rupee", flag: "🇳🇵", locale: "ne_NP"),
+        Currency(code: "MMK", name: "Myanmar Kyat", flag: "🇲🇲", locale: "my_MM"),
+        Currency(code: "KHR", name: "Cambodian Riel", flag: "🇰🇭", locale: "km_KH"),
+        Currency(code: "LAK", name: "Lao Kip", flag: "🇱🇦", locale: "lo_LA"),
+        Currency(code: "MOP", name: "Macanese Pataca", flag: "🇲🇴", locale: "zh_MO"),
+        Currency(code: "BND", name: "Brunei Dollar", flag: "🇧🇳", locale: "ms_BN"),
+        Currency(code: "PGK", name: "Papua New Guinean Kina", flag: "🇵🇬", locale: "en_PG"),
+        Currency(code: "FJD", name: "Fijian Dollar", flag: "🇫🇯", locale: "en_FJ"),
+        Currency(code: "WST", name: "Samoan Tala", flag: "🇼🇸", locale: "en_WS"),
+        Currency(code: "TOP", name: "Tongan Paʻanga", flag: "🇹🇴", locale: "to_TO"),
+        Currency(code: "VUV", name: "Vanuatu Vatu", flag: "🇻🇺", locale: "bi_VU"),
+        Currency(code: "SBD", name: "Solomon Islands Dollar", flag: "🇸🇧", locale: "en_SB"),
+        Currency(code: "MVR", name: "Maldivian Rufiyaa", flag: "🇲🇻", locale: "dv_MV"),
+        Currency(code: "BTN", name: "Bhutanese Ngultrum", flag: "🇧🇹", locale: "dz_BT"),
+        Currency(code: "MNT", name: "Mongolian Tugrik", flag: "🇲🇳", locale: "mn_MN"),
+        Currency(code: "KZT", name: "Kazakhstani Tenge", flag: "🇰🇿", locale: "kk_KZ"),
+        Currency(code: "KGS", name: "Kyrgyzstani Som", flag: "🇰🇬", locale: "ky_KG"),
+        Currency(code: "TJS", name: "Tajikistani Somoni", flag: "🇹🇯", locale: "tg_TJ"),
+        Currency(code: "UZS", name: "Uzbekistani Som", flag: "🇺🇿", locale: "uz_UZ"),
+        Currency(code: "AFN", name: "Afghan Afghani", flag: "🇦🇫", locale: "ps_AF"),
         
         // Middle East & Africa
-        Currency(code: "AED", name: "UAE Dirham", symbol: "د.إ", flag: "🇦🇪", locale: "ar_AE"),
-        Currency(code: "SAR", name: "Saudi Riyal", symbol: "﷼", flag: "🇸🇦", locale: "ar_SA"),
-        Currency(code: "QAR", name: "Qatari Riyal", symbol: "﷼", flag: "🇶🇦", locale: "ar_QA"),
-        Currency(code: "KWD", name: "Kuwaiti Dinar", symbol: "د.ك", flag: "🇰🇼", locale: "ar_KW"),
-        Currency(code: "BHD", name: "Bahraini Dinar", symbol: "د.ب", flag: "🇧🇭", locale: "ar_BH"),
-        Currency(code: "OMR", name: "Omani Rial", symbol: "﷼", flag: "🇴🇲", locale: "ar_OM"),
-        Currency(code: "ILS", name: "Israeli Shekel", symbol: "₪", flag: "🇮🇱", locale: "he_IL"),
-        Currency(code: "JOD", name: "Jordanian Dinar", symbol: "د.ا", flag: "🇯🇴", locale: "ar_JO"),
-        Currency(code: "LBP", name: "Lebanese Pound", symbol: "ل.ل", flag: "🇱🇧", locale: "ar_LB"),
-        Currency(code: "EGP", name: "Egyptian Pound", symbol: "£", flag: "🇪🇬", locale: "ar_EG"),
-        Currency(code: "ZAR", name: "South African Rand", symbol: "R", flag: "🇿🇦", locale: "en_ZA"),
-        Currency(code: "NGN", name: "Nigerian Naira", symbol: "₦", flag: "🇳🇬", locale: "en_NG"),
-        Currency(code: "KES", name: "Kenyan Shilling", symbol: "KSh", flag: "🇰🇪", locale: "en_KE"),
-        Currency(code: "GHS", name: "Ghanaian Cedi", symbol: "₵", flag: "🇬🇭", locale: "en_GH"),
-        Currency(code: "MAD", name: "Moroccan Dirham", symbol: "د.م.", flag: "🇲🇦", locale: "ar_MA"),
-        Currency(code: "TND", name: "Tunisian Dinar", symbol: "د.ت", flag: "🇹🇳", locale: "ar_TN"),
-        Currency(code: "DZD", name: "Algerian Dinar", symbol: "د.ج", flag: "🇩🇿", locale: "ar_DZ"),
-        Currency(code: "ETB", name: "Ethiopian Birr", symbol: "Br", flag: "🇪🇹", locale: "am_ET"),
-        Currency(code: "TZS", name: "Tanzanian Shilling", symbol: "TSh", flag: "🇹🇿", locale: "sw_TZ"),
-        Currency(code: "UGX", name: "Ugandan Shilling", symbol: "USh", flag: "🇺🇬", locale: "en_UG"),
-        Currency(code: "ZMW", name: "Zambian Kwacha", symbol: "K", flag: "🇿🇲", locale: "en_ZM"),
-        Currency(code: "BWP", name: "Botswana Pula", symbol: "P", flag: "🇧🇼", locale: "en_BW"),
-        Currency(code: "MUR", name: "Mauritian Rupee", symbol: "₨", flag: "🇲🇺", locale: "en_MU"),
-        Currency(code: "SCR", name: "Seychellois Rupee", symbol: "₨", flag: "🇸🇨", locale: "en_SC"),
-        Currency(code: "XOF", name: "West African CFA Franc", symbol: "Fr", flag: "🇸🇳", locale: "fr_SN"),
-        Currency(code: "XAF", name: "Central African CFA Franc", symbol: "Fr", flag: "🇨🇲", locale: "fr_CM"),
-        Currency(code: "ERN", name: "Eritrean Nakfa", symbol: "Nfk", flag: "🇪🇷", locale: "ti_ER"),
-        Currency(code: "SZL", name: "Eswatini Lilangeni", symbol: "L", flag: "🇸🇿", locale: "en_SZ"),
-        Currency(code: "LSL", name: "Lesotho Loti", symbol: "L", flag: "🇱🇸", locale: "en_LS"),
-        Currency(code: "NAD", name: "Namibian Dollar", symbol: "N$", flag: "🇳🇦", locale: "en_NA"),
-        Currency(code: "MZN", name: "Mozambican Metical", symbol: "MT", flag: "🇲🇿", locale: "pt_MZ"),
-        Currency(code: "MWK", name: "Malawian Kwacha", symbol: "MK", flag: "🇲🇼", locale: "en_MW"),
-        Currency(code: "RWF", name: "Rwandan Franc", symbol: "Fr", flag: "🇷🇼", locale: "rw_RW"),
-        Currency(code: "SLL", name: "Sierra Leonean Leone", symbol: "Le", flag: "🇸🇱", locale: "en_SL"),
-        Currency(code: "SOS", name: "Somali Shilling", symbol: "Sh", flag: "🇸🇴", locale: "so_SO"),
-        Currency(code: "SDG", name: "Sudanese Pound", symbol: "ج.س.", flag: "🇸🇩", locale: "ar_SD"),
-        Currency(code: "TMT", name: "Turkmenistani Manat", symbol: "m", flag: "🇹🇲", locale: "tk_TM"),
-        Currency(code: "IRR", name: "Iranian Rial", symbol: "﷼", flag: "🇮🇷", locale: "fa_IR"),
-        Currency(code: "IQD", name: "Iraqi Dinar", symbol: "د.ع", flag: "🇮🇶", locale: "ar_IQ"),
-        Currency(code: "YER", name: "Yemeni Rial", symbol: "﷼", flag: "🇾🇪", locale: "ar_YE"),
-        Currency(code: "SYP", name: "Syrian Pound", symbol: "£", flag: "🇸🇾", locale: "ar_SY"),
-        Currency(code: "TRY", name: "Turkish Lira", symbol: "₺", flag: "🇹🇷", locale: "tr_TR"),
-
-        // Cryptocurrencies & Special
-        Currency(code: "BTC", name: "Bitcoin", symbol: "₿", flag: "🪙", locale: "en_US"),
-        Currency(code: "ETH", name: "Ethereum", symbol: "Ξ", flag: "💎", locale: "en_US"),
-        Currency(code: "XAU", name: "Gold", symbol: "Au", flag: "🥇", locale: "en_US"),
-        Currency(code: "XAG", name: "Silver", symbol: "Ag", flag: "🥈", locale: "en_US"),
+        Currency(code: "AED", name: "UAE Dirham", flag: "🇦🇪", locale: "ar_AE"),
+        Currency(code: "SAR", name: "Saudi Riyal", flag: "🇸🇦", locale: "ar_SA"),
+        Currency(code: "QAR", name: "Qatari Riyal", flag: "🇶🇦", locale: "ar_QA"),
+        Currency(code: "KWD", name: "Kuwaiti Dinar", flag: "🇰🇼", locale: "ar_KW"),
+        Currency(code: "BHD", name: "Bahraini Dinar", flag: "🇧🇭", locale: "ar_BH"),
+        Currency(code: "OMR", name: "Omani Rial", flag: "🇴🇲", locale: "ar_OM"),
+        Currency(code: "ILS", name: "Israeli Shekel", flag: "🇮🇱", locale: "he_IL"),
+        Currency(code: "JOD", name: "Jordanian Dinar", flag: "🇯🇴", locale: "ar_JO"),
+        Currency(code: "LBP", name: "Lebanese Pound", flag: "🇱🇧", locale: "ar_LB"),
+        Currency(code: "EGP", name: "Egyptian Pound", flag: "🇪🇬", locale: "ar_EG"),
+        Currency(code: "ZAR", name: "South African Rand", flag: "🇿🇦", locale: "en_ZA"),
+        Currency(code: "NGN", name: "Nigerian Naira", flag: "🇳🇬", locale: "en_NG"),
+        Currency(code: "KES", name: "Kenyan Shilling", flag: "🇰🇪", locale: "en_KE"),
+        Currency(code: "GHS", name: "Ghanaian Cedi", flag: "🇬🇭", locale: "en_GH"),
+        Currency(code: "MAD", name: "Moroccan Dirham", flag: "🇲🇦", locale: "ar_MA"),
+        Currency(code: "TND", name: "Tunisian Dinar", flag: "🇹🇳", locale: "ar_TN"),
+        Currency(code: "DZD", name: "Algerian Dinar", flag: "🇩🇿", locale: "ar_DZ"),
+        Currency(code: "ETB", name: "Ethiopian Birr", flag: "🇪🇹", locale: "am_ET"),
+        Currency(code: "TZS", name: "Tanzanian Shilling", flag: "🇹🇿", locale: "sw_TZ"),
+        Currency(code: "UGX", name: "Ugandan Shilling", flag: "🇺🇬", locale: "en_UG"),
+        Currency(code: "ZMW", name: "Zambian Kwacha", flag: "🇿🇲", locale: "en_ZM"),
+        Currency(code: "BWP", name: "Botswana Pula", flag: "🇧🇼", locale: "en_BW"),
+        Currency(code: "MUR", name: "Mauritian Rupee", flag: "🇲🇺", locale: "en_MU"),
+        Currency(code: "SCR", name: "Seychellois Rupee", flag: "🇸🇨", locale: "en_SC"),
+        Currency(code: "XOF", name: "West African CFA Franc", flag: "🇸🇳", locale: "fr_SN"),
+        Currency(code: "XAF", name: "Central African CFA Franc", flag: "🇨🇲", locale: "fr_CM"),
+        Currency(code: "ERN", name: "Eritrean Nakfa", flag: "🇪🇷", locale: "ti_ER"),
+        Currency(code: "SZL", name: "Eswatini Lilangeni", flag: "🇸🇿", locale: "en_SZ"),
+        Currency(code: "LSL", name: "Lesotho Loti", flag: "🇱🇸", locale: "en_LS"),
+        Currency(code: "NAD", name: "Namibian Dollar", flag: "🇳🇦", locale: "en_NA"),
+        Currency(code: "MZN", name: "Mozambican Metical", flag: "🇲🇿", locale: "pt_MZ"),
+        Currency(code: "MWK", name: "Malawian Kwacha", flag: "🇲🇼", locale: "en_MW"),
+        Currency(code: "RWF", name: "Rwandan Franc", flag: "🇷🇼", locale: "rw_RW"),
+        Currency(code: "SLL", name: "Sierra Leonean Leone", flag: "🇸🇱", locale: "en_SL"),
+        Currency(code: "SOS", name: "Somali Shilling", flag: "🇸🇴", locale: "so_SO"),
+        Currency(code: "SDG", name: "Sudanese Pound", flag: "🇸🇩", locale: "ar_SD"),
+        Currency(code: "TMT", name: "Turkmenistani Manat", flag: "🇹🇲", locale: "tk_TM"),
+        Currency(code: "IRR", name: "Iranian Rial", flag: "🇮🇷", locale: "fa_IR"),
+        Currency(code: "IQD", name: "Iraqi Dinar", flag: "🇮🇶", locale: "ar_IQ"),
+        Currency(code: "YER", name: "Yemeni Rial", flag: "🇾🇪", locale: "ar_YE"),
+        Currency(code: "SYP", name: "Syrian Pound", flag: "🇸🇾", locale: "ar_SY"),
+        Currency(code: "TRY", name: "Turkish Lira", flag: "🇹🇷", locale: "tr_TR"),
     ]
     
     private let userDefaultsKey = "selected_currency"
@@ -425,19 +393,20 @@ class CurrencyManager: ObservableObject {
     private let ratesDateKey = "exchange_rates_date"
     
     var currentCurrency: Currency {
-        currencies.first { $0.code == selectedCurrency } ?? Currency(code: "USD", name: "US Dollar", symbol: "$", flag: "🇺🇸", locale: "en_US")
+        currencies.first { $0.code == selectedCurrency } ?? Currency(code: "USD", name: "US Dollar", flag: "🇺🇸", locale: "en_US")
     }
     
     private init() {
-        if let saved = UserDefaults.standard.string(forKey: userDefaultsKey) {
+        let deviceCurrency = Locale.current.currency?.identifier ?? "USD"
+        let offered = Set(currencies.map(\.code))
+        if let saved = UserDefaults.standard.string(forKey: userDefaultsKey), offered.contains(saved) {
             selectedCurrency = saved
         } else {
-            let locale = Locale.current
-            let currencyCode = locale.currency?.identifier ?? "USD"
-            selectedCurrency = currencies.contains { $0.code == currencyCode } ? currencyCode : "USD"
+            selectedCurrency = offered.contains(deviceCurrency) ? deviceCurrency : "USD"
         }
-        
+
         self.exchangeRates = loadCachedRates() ?? fallbackRates
+        self.ratesTable = CurrencyRates(apiRates: exchangeRates).fillingGaps()
 
         Task {
             try? await fetchExchangeRates()
@@ -509,92 +478,54 @@ class CurrencyManager: ObservableObject {
     }
 
     func convert(_ amount: Decimal, from sourceCurrency: String, to targetCurrency: String) throws -> Decimal {
-        guard sourceCurrency != targetCurrency else { return amount }
-
-        guard let sourceRate = exchangeRates[sourceCurrency] else {
+        guard let converted = rates.convert(amount, from: sourceCurrency, to: targetCurrency) else {
             throw CurrencyError.rateNotAvailable
         }
-        guard let targetRate = exchangeRates[targetCurrency] else {
-            throw CurrencyError.rateNotAvailable
-        }
-
-        let amountInUSD = Double(truncating: amount as NSNumber) / sourceRate
-        let converted = amountInUSD * targetRate
-
-        return Decimal(converted)
+        return converted
     }
-    
+
+    /// `amount` in the user's display currency. A currency Pausely can't convert (not an ISO code it
+    /// knows) comes back unchanged and is logged; every currency in the picker always converts.
     func convertToSelected(_ amount: Decimal, from sourceCurrency: String) -> Decimal {
-        (try? convert(amount, from: sourceCurrency, to: selectedCurrency)) ?? amount
+        if let converted = rates.convert(amount, from: sourceCurrency, to: selectedCurrency) { return converted }
+        os_log("CurrencyManager: no rate for %{public}@", log: .default, type: .error, sourceCurrency)
+        return amount
     }
 
-    // MARK: - Catalog Price Helpers (Revolutionary Database)
+    // MARK: - Catalog Price Helpers
 
-    /// Convert a USD catalog price to the user's selected currency
+    /// A catalog price (catalog prices are in US dollars) in the user's display currency.
     func convertFromUSD(_ priceUSD: Double) -> Double {
-        let rate = exchangeRates[selectedCurrency] ?? 1.0
-        return priceUSD * rate
+        convertCrossCurrency(priceUSD, from: "USD", to: selectedCurrency)
     }
 
-    /// Format a catalog price in the user's selected currency.
-    /// If the price's source currency matches the user's selected currency, shows it directly.
-    /// Otherwise converts using exchange rates.
+    /// A catalog price in the user's display currency, converted when it is in another currency.
     func formatCatalogPrice(_ price: Double, sourceCurrency: String = "USD") -> String {
-        if sourceCurrency == selectedCurrency {
-            // Price is already in user's currency — show directly
-            let formatter = NumberFormatter()
-            formatter.numberStyle = .currency
-            formatter.currencyCode = selectedCurrency
-            return formatter.string(from: NSNumber(value: price)) ?? "\(selectedCurrency) \(price)"
-        }
-        // Different currency — convert via exchange rates
         let converted = convertCrossCurrency(price, from: sourceCurrency, to: selectedCurrency)
-        let formatter = NumberFormatter()
-        formatter.numberStyle = .currency
-        formatter.currencyCode = selectedCurrency
-        return formatter.string(from: NSNumber(value: converted)) ?? "\(selectedCurrency) \(converted)"
+        return MoneyFormat.string(converted, selectedCurrency)
     }
 
-    /// Convert between two currencies using the exchange rate table (both vs USD)
+    /// Converts between two currencies; an amount Pausely can't convert comes back unchanged.
     func convertCrossCurrency(_ amount: Double, from sourceCurrency: String, to targetCurrency: String) -> Double {
-        guard sourceCurrency != targetCurrency else { return amount }
-        let sourceRate = exchangeRates[sourceCurrency] ?? 1.0
-        let targetRate = exchangeRates[targetCurrency] ?? 1.0
-        let amountInUSD = amount / sourceRate
-        return amountInUSD * targetRate
+        guard let converted = rates.convert(MoneyFormat.decimal(amount), from: sourceCurrency, to: targetCurrency) else {
+            return amount
+        }
+        return NSDecimalNumber(decimal: converted).doubleValue
     }
 
-    /// Indicator prefix for non-USD prices (shows ≈ when converting)
+    /// "≈" in front of catalog prices shown in a currency other than the catalog's US dollars.
     var priceIndicator: String {
         selectedCurrency == "USD" ? "" : "≈"
     }
 
-    func format(_ amount: Decimal, currencyCode: String? = nil, psychologicalPricing: Bool = false) -> String {
-        let code = currencyCode ?? selectedCurrency
-        let currency = currencies.first { $0.code == code } ?? Currency(code: "USD", name: "US Dollar", symbol: "$", flag: "🇺🇸", locale: "en_US")
-
-        // NOTE: Psychological pricing rounds to .99 — disabled by default as it manipulates displayed prices
-        // Only enable explicitly for marketing display purposes
-        let finalAmount = psychologicalPricing ? roundToPsychologicalPricing(amount) : amount
-
-        let formatter = NumberFormatter()
-        formatter.numberStyle = .currency
-        formatter.currencyCode = code
-        formatter.currencySymbol = currency.symbol
-
-        return formatter.string(from: finalAmount as NSDecimalNumber) ?? "\(currency.symbol)\(finalAmount)"
+    /// `amount` in `currencyCode` (the display currency when nil). Goes through `MoneyFormat`.
+    func format(_ amount: Decimal, currencyCode: String? = nil) -> String {
+        MoneyFormat.string(amount, currencyCode ?? selectedCurrency)
     }
     
-    /// Rounds price to psychological pricing (X.99)
-    /// Example: $6.84 CAD → $6.99 CAD
-    private func roundToPsychologicalPricing(_ amount: Decimal) -> Decimal {
-        let doubleValue = Double(truncating: amount as NSNumber)
-        let integerPart = floor(doubleValue)
-        return Decimal(integerPart + 0.99)
-    }
-    
+    /// The symbol the user's locale shows for `code` ("$", "US$", "€"). Unknown codes show as the code.
     func currencySymbol(for code: String) -> String {
-        currencies.first { $0.code == code }?.symbol ?? "$"
+        MoneyFormat.symbol(for: code)
     }
     
     func currencyFlag(for code: String) -> String {
@@ -620,55 +551,23 @@ class CurrencyManager: ObservableObject {
     
     /// Convert Double amount (overload for convenience)
     func convert(_ amount: Double, from sourceCurrency: String, to targetCurrency: String) throws -> Double {
-        guard sourceCurrency != targetCurrency else { return amount }
-        guard let sourceRate = exchangeRates[sourceCurrency] else {
-            throw CurrencyError.rateNotAvailable
-        }
-        guard let targetRate = exchangeRates[targetCurrency] else {
-            throw CurrencyError.rateNotAvailable
-        }
-        let amountInUSD = amount / sourceRate
-        return amountInUSD * targetRate
+        let converted = try convert(MoneyFormat.decimal(amount), from: sourceCurrency, to: targetCurrency)
+        return NSDecimalNumber(decimal: converted).doubleValue
     }
-    
-    
-    /// Rounds prices to marketing-friendly amounts (.99, .00, etc.)
-    func roundToMarketingPrice(_ amount: Double) -> Double {
-        // Round to nearest dollar, then subtract 1 cent for .99 pricing
-        // Examples: $6.84 → $6.99, $4.99 → $4.99, $7.01 → $6.99
-        let roundedUp = ceil(amount)
-        let marketingPrice = roundedUp - 0.01
-        
-        // Ensure we don't go below the original amount (don't undercut too much)
-        if marketingPrice < amount * 0.9 {
-            // If rounding would discount more than 10%, use different logic
-            return (floor(amount) + 0.99)
-        }
-        
-        return max(marketingPrice, 0.99) // Minimum price $0.99
-    }
-    
 
     /// Get exchange rate between two currencies
     func getRate(from sourceCode: String, to targetCode: String) throws -> Double {
-        guard sourceCode != targetCode else { return 1.0 }
-        guard let sourceRate = exchangeRates[sourceCode] else {
-            throw CurrencyError.rateNotAvailable
-        }
-        guard let targetRate = exchangeRates[targetCode] else {
-            throw CurrencyError.rateNotAvailable
-        }
-        guard sourceRate > 0 else { throw CurrencyError.rateNotAvailable }
-        return targetRate / sourceRate
+        try convert(1.0, from: sourceCode, to: targetCode)
     }
 }
 
 // MARK: - Supporting Types
+/// A currency someone can choose. Its symbol isn't stored: it depends on who reads it, so it comes
+/// from `MoneyFormat.symbol(for:)`.
 struct Currency: Identifiable, Codable, Hashable {
     var id = UUID()
     let code: String
     let name: String
-    let symbol: String
     let flag: String
     let locale: String
     
@@ -677,11 +576,7 @@ struct Currency: Identifiable, Codable, Hashable {
     }
     
     func format(_ amount: Double) -> String {
-        let formatter = NumberFormatter()
-        formatter.numberStyle = .currency
-        formatter.currencyCode = code
-        formatter.currencySymbol = symbol
-        return formatter.string(from: NSNumber(value: amount)) ?? "\(symbol)\(amount)"
+        MoneyFormat.string(amount, code)
     }
 }
 

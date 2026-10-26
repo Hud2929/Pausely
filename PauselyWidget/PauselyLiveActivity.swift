@@ -41,7 +41,7 @@ struct PauselyLiveActivityView: View {
                         .font(.headline.weight(.semibold))
                         .lineLimit(1)
 
-                    Text("\(context.attributes.currencySymbol)\(String(format: "%.2f", context.attributes.amount)) / \(context.attributes.frequency)")
+                    Text("\(context.attributes.amountText) / \(context.attributes.frequency)")
                         .font(.subheadline)
                         .foregroundStyle(.secondary)
                 }

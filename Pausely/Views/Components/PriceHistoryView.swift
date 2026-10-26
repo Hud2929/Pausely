@@ -59,8 +59,7 @@ struct PriceHistoryView: View {
                         .textCase(.uppercase)
 
                     HStack(spacing: 6) {
-                        let converted = currencyManager.convertToSelected(subscription.amount, from: subscription.currency)
-                        Text(currencyManager.format(converted))
+                        Text(subscription.chargeText)
                             .font(.system(.largeTitle, design: .rounded).weight(.black))
                             .foregroundStyle(.primary)
 
@@ -101,8 +100,7 @@ struct PriceHistoryView: View {
                         Text("Originally")
                             .font(.system(.caption, design: .rounded))
                             .foregroundStyle(.secondary)
-                        let originalConverted = currencyManager.convertToSelected(first.amount, from: first.currency)
-                        Text(currencyManager.format(originalConverted))
+                        Text(MoneyFormat.string(first.amount, first.currency))
                             .font(.system(.subheadline, design: .rounded).weight(.semibold))
                             .foregroundStyle(.secondary)
                             .strikethrough(trend == .increasing)
@@ -115,8 +113,7 @@ struct PriceHistoryView: View {
                             .font(.system(.caption, design: .rounded))
                             .foregroundStyle(.secondary)
                         let totalIncrease = tracker.totalPriceIncrease(for: subscription.id)
-                        let converted = currencyManager.convertToSelected(totalIncrease, from: subscription.currency)
-                        Text(currencyManager.format(converted))
+                        Text(MoneyFormat.string(totalIncrease, subscription.currency))
                             .font(.system(.subheadline, design: .rounded).weight(.bold))
                             .foregroundStyle(trend == .increasing ? Color.semanticDestructive : Color.semanticSuccess)
                     }
@@ -178,13 +175,11 @@ struct PriceHistoryView: View {
                 Spacer()
             }
 
-            let projectedConverted = currencyManager.convertToSelected(projected, from: subscription.currency)
-            Text(currencyManager.format(projectedConverted))
+            Text(MoneyFormat.string(projected, subscription.currency))
                 .font(.system(.title2, design: .rounded).weight(.bold))
 
             if diff > 0 {
-                let diffConverted = currencyManager.convertToSelected(diff, from: subscription.currency)
-                Text("+\(currencyManager.format(diffConverted)) more than current annual cost")
+                Text("+\(MoneyFormat.string(diff, subscription.currency)) more than current annual cost")
                     .font(.system(.caption, design: .rounded).weight(.medium))
                     .foregroundStyle(Color.semanticDestructive)
             }
@@ -260,8 +255,7 @@ struct HistoryEntryRow: View {
     var body: some View {
         HStack(spacing: 12) {
             VStack(alignment: .leading, spacing: 4) {
-                let converted = currencyManager.convertToSelected(entry.amount, from: entry.currency)
-                Text(currencyManager.format(converted))
+                Text(MoneyFormat.string(entry.amount, entry.currency))
                     .font(.system(.subheadline, design: .rounded).weight(.semibold))
 
                 Text(entry.date, style: .date)

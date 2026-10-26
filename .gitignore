@@ -81,7 +81,11 @@ logs/
 .agents/
 .asc/
 .blitz/
-.claude/
+# .claude/ is local, except the project's own skills (pausely-*), which are shared.
+.claude/*
+!.claude/skills/
+.claude/skills/*
+!.claude/skills/pausely-*/
 .codex/
 .sourcekit-lsp/
 .mcp.json

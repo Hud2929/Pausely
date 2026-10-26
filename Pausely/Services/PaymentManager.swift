@@ -61,11 +61,6 @@ enum SubscriptionTier: String, CaseIterable, Comparable, Codable {
         }
     }
     
-    var price: String {
-        let currencyCode = CurrencyManager.shared.selectedCurrency
-        return formatPrice(priceDecimal, currencyCode: currencyCode)
-    }
-
     var monthlyPrice: Decimal {
         switch self {
         case .free:        return 0
@@ -74,61 +69,6 @@ enum SubscriptionTier: String, CaseIterable, Comparable, Codable {
         }
     }
 
-    // MARK: - Currency-Aware Pricing (rounded to .99)
-
-    /// Base USD prices for Pro tier
-    private var baseUSDPrice: Decimal {
-        switch self {
-        case .free:        return 0
-        case .pro:         return ProPricing.monthlyUSD
-        case .proAnnual:   return ProPricing.annualUSD
-        }
-    }
-
-    private var priceDecimal: Decimal {
-        baseUSDPrice
-    }
-
-    /// Get price formatted in user's selected currency, rounded to .99
-    func priceInUserCurrency() -> String {
-        let currencyCode = CurrencyManager.shared.selectedCurrency
-        let price = convertToUserCurrency(baseUSDPrice)
-        let rounded = roundTo99(price)
-        return formatPrice(rounded, currencyCode: currencyCode)
-    }
-
-    /// Get monthly price in user's selected currency, rounded to .99
-    func monthlyPriceInUserCurrency() -> String {
-        let currencyCode = CurrencyManager.shared.selectedCurrency
-        let monthly = monthlyPrice
-        if monthly == 0 { return formatPrice(0, currencyCode: currencyCode) }
-        let price = convertToUserCurrency(monthly)
-        let rounded = roundTo99(price)
-        return formatPrice(rounded, currencyCode: currencyCode)
-    }
-
-    /// Convert USD price to user's selected currency
-    /// USD: $9.99/mo · CAD: $9.99/mo (same as USD) · Other currencies: converted from $9.99 USD base.
-    private func convertToUserCurrency(_ usdPrice: Decimal) -> Decimal {
-        let currencyCode = CurrencyManager.shared.selectedCurrency
-        guard currencyCode != "USD", currencyCode != "CAD" else { return usdPrice }
-
-        let rate = CurrencyManager.shared.exchangeRates[currencyCode] ?? 1.0
-        return usdPrice * Decimal(rate)
-    }
-
-    /// Round price to nearest .99
-    private func roundTo99(_ price: Decimal) -> Decimal {
-        let doublePrice = NSDecimalNumber(decimal: price).doubleValue
-        let dollars = floor(doublePrice)
-        return Decimal(dollars + 0.99)
-    }
-
-    /// Format price with proper currency formatting
-    private func formatPrice(_ price: Decimal, currencyCode: String) -> String {
-        return CurrencyManager.shared.format(price, currencyCode: currencyCode)
-    }
-    
     // MARK: - Limits
     
     /// FREE: up to `FreeTier.subscriptionLimit` subscriptions, enough for most people's real list.

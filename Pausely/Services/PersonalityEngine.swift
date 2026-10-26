@@ -63,7 +63,7 @@ enum PersonalityEngine {
     static func compute(subscriptions: [Subscription]) -> SubscriptionPersonality {
         let active = subscriptions.filter { $0.status == .active || $0.status == .trial }
         let total = active.count
-        let monthly = active.reduce(Decimal(0)) { $0 + $1.monthlyCost }
+        let monthly = active.monthlyTotal()  // display currency, for the text
         let trials = subscriptions.filter { $0.status == .trial }.count
 
         // Count by category
@@ -73,7 +73,8 @@ enum PersonalityEngine {
         let health    = active.filter { matches($0, keywords: healthKeywords) }.count
         let vpnCloud  = active.filter { matches($0, keywords: vpnCloudKeywords) }.count
 
-        let monthlyDouble = NSDecimalNumber(decimal: monthly).doubleValue
+        // The spend thresholds below (50, 200) are in US dollars, whatever the display currency.
+        let monthlyDouble = NSDecimalNumber(decimal: active.monthlyTotal(in: "USD")).doubleValue
 
         // Trial Hopper — majority are trials
         if trials >= 3 || (total > 0 && Double(trials) / Double(max(1, total)) >= 0.5) {

@@ -18,11 +18,7 @@ final class PriceIncreaseMonitor: ObservableObject {
 
         var formattedIncrease: String {
             let diff = newPrice - oldPrice
-            let formatter = NumberFormatter()
-            formatter.numberStyle = .currency
-            formatter.currencyCode = currency
-            formatter.maximumFractionDigits = 2
-            return formatter.string(from: diff as NSDecimalNumber) ?? "+\(diff)"
+            return MoneyFormat.string(diff, currency)
         }
     }
 

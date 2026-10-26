@@ -34,6 +34,17 @@ struct SavingsSummary {
 
     func formatted(_ amount: Decimal) -> String { MoneyFormat.string(amount, currency) }
 
+    /// An amount from one receipt line, in the receipt's currency so the lines add up to the total.
+    /// Marked "≈" when it was converted; left in its own currency only if it can't be converted.
+    func formatted(_ amount: Decimal, from lineCurrency: String,
+                   rates: CurrencyRates = CurrencyManager.shared.rates) -> String {
+        if lineCurrency == currency { return formatted(amount) }
+        guard let converted = rates.convert(amount, from: lineCurrency, to: currency) else {
+            return MoneyFormat.string(amount, lineCurrency)
+        }
+        return "≈" + formatted(converted)
+    }
+
     @MainActor
     static func current(now: Date = Date()) -> SavingsSummary {
         let store = SubscriptionStore.shared

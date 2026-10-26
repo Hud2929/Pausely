@@ -38,9 +38,6 @@ final class AppSettings: ObservableObject {
 
     private init() {}
 
-    @AppSetting("selected_currency", defaultValue: "USD")
-    var selectedCurrency: String
-
     @AppSetting("is_biometric_enabled", defaultValue: false)
     var isBiometricEnabled: Bool
 

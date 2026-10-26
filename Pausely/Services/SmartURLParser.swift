@@ -178,7 +178,7 @@ class SmartURLParser: ObservableObject {
             name: extractDomainName(from: host),
             url: url,
             price: nil,
-            currency: "USD",
+            currency: CurrencyManager.shared.selectedCurrency,
             billingFrequency: .monthly,
             logoURL: URL(string: "https://logo.clearbit.com/\(host)"),
             description: nil,

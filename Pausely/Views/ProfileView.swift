@@ -1242,13 +1242,12 @@ struct WrappedStats {
         totalCount = active.count
         cancelledCount = cancelled.count
         let monthsThisYear = max(1, Calendar.current.component(.month, from: Date()))
-        let monthly = active.reduce(Decimal(0)) { $0 + $1.monthlyCost }
+        // In the display currency, so subscriptions in different currencies add up and compare fairly.
+        let monthly = active.monthlyTotal()
         totalSpent = monthly * Decimal(monthsThisYear)
-        topService = active.max(by: { $0.monthlyCost < $1.monthlyCost })?.name ?? "–"
+        topService = active.max(by: { [$0].monthlyTotal() < [$1].monthlyTotal() })?.name ?? "–"
         let grouped = Dictionary(grouping: active) { $0.category ?? "Other" }
-        topCategory = grouped.max(by: { a, b in
-            a.value.reduce(Decimal(0)) { $0 + $1.monthlyCost } < b.value.reduce(Decimal(0)) { $0 + $1.monthlyCost }
-        })?.key ?? "–"
+        topCategory = grouped.max(by: { $0.value.monthlyTotal() < $1.value.monthlyTotal() })?.key ?? "–"
     }
 }
 

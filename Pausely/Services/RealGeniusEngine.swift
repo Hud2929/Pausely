@@ -126,10 +126,10 @@ final class RealGeniusEngine: ObservableObject {
                 insights.append(GeniusInsight(
                     type: .trajectoryWarning,
                     title: "Low usage: \(sub.name)",
-                    description: "Only \(screenTimeManager.getCurrentMonthUsage(for: sub.name)) minutes used this month. Consider pausing to save \(formatCurrency(sub.monthlyCost))/mo.",
+                    description: "Only \(screenTimeManager.getCurrentMonthUsage(for: sub.name)) minutes used this month. Consider pausing to save \(formatCurrency(monthlyInDisplay(sub)))/mo.",
                     icon: "chart.line.downtrend.xyaxis",
                     iconColor: .red,
-                    potentialSavings: sub.monthlyCost,
+                    potentialSavings: monthlyInDisplay(sub),
                     confidence: 0.75,
                     subscriptionId: sub.id,
                     action: .review,
@@ -190,15 +190,15 @@ final class RealGeniusEngine: ObservableObject {
             // Only alert if conversion is within 14 days
             guard daysUntil >= 0 && daysUntil <= 14 else { continue }
 
-            let valueAtRisk = sub.monthlyCost * Decimal(max(1, daysUntil / 30))
+            let valueAtRisk = monthlyInDisplay(sub) * Decimal(max(1, daysUntil / 30))
 
             insights.append(GeniusInsight(
                 type: .trialExpiring,
                 title: "\(sub.name) trial ends in \(daysUntil) days",
-                description: "You'll be charged \(formatCurrency(sub.monthlyCost))/mo unless you cancel. Value at risk: \(formatCurrency(valueAtRisk))/mo",
+                description: "You'll be charged \(formatCurrency(monthlyInDisplay(sub)))/mo unless you cancel. Value at risk: \(formatCurrency(valueAtRisk))/mo",
                 icon: "clock.badge.exclamationmark",
                 iconColor: .orange,
-                potentialSavings: sub.monthlyCost,
+                potentialSavings: monthlyInDisplay(sub),
                 confidence: 0.95,
                 subscriptionId: sub.id,
                 action: .cancelTrial,
@@ -229,10 +229,10 @@ final class RealGeniusEngine: ObservableObject {
                 insights.append(GeniusInsight(
                     type: .waste,
                     title: "Ghost: \(sub.name)",
-                    description: "No iOS app usage detected this month. Consider cancelling to save \(formatCurrency(sub.monthlyCost))/month.",
+                    description: "No iOS app usage detected this month. Consider cancelling to save \(formatCurrency(monthlyInDisplay(sub)))/month.",
                     icon: "exclamationmark.triangle.fill",
                     iconColor: .red,
-                    potentialSavings: sub.monthlyCost,
+                    potentialSavings: monthlyInDisplay(sub),
                     confidence: 0.85,
                     subscriptionId: sub.id,
                     action: .cancel,
@@ -241,15 +241,15 @@ final class RealGeniusEngine: ObservableObject {
             }
             // Very low usage with high cost
             else if minutes < 60 && sub.monthlyCost > 5 {
-                let costPerHour = NSDecimalNumber(decimal: sub.monthlyCost / Decimal(minutes) * 60).doubleValue
+                let costPerHour = monthlyInDisplay(sub) / Decimal(minutes) * 60
                 if costPerHour > 5 {
                     insights.append(GeniusInsight(
                         type: .waste,
                         title: "Low value: \(sub.name)",
-                        description: "\(minutes) min used but costing \(formatCurrency(sub.monthlyCost))/mo (~\(CurrencyManager.shared.format(Decimal(costPerHour)))/hr)",
+                        description: "\(minutes) min used but costing \(formatCurrency(monthlyInDisplay(sub)))/mo (~\(formatCurrency(costPerHour))/hr)",
                         icon: "exclamationmark.triangle.fill",
                         iconColor: .orange,
-                        potentialSavings: sub.monthlyCost,
+                        potentialSavings: monthlyInDisplay(sub),
                         confidence: 0.88,
                         subscriptionId: sub.id,
                         action: .pause,

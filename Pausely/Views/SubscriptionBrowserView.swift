@@ -364,18 +364,10 @@ struct SubscriptionBrowserView: View {
 
     private func addSubscription(entry: CatalogEntry, tier: PricingTier, billingFrequency: BillingFrequency,
                                   isOverridden: Bool, userPrice: Decimal?, nextBillingDate: Date, trialEndDate: Date?) {
-        // Resolve region from user's selected currency so stored price matches displayed price
-        let userRegion: Region = {
-            switch currencyManager.selectedCurrency {
-            case "CAD": return .ca
-            case "GBP": return .uk
-            case "EUR": return .eu
-            case "AUD": return .au
-            default:    return .us
-            }
-        }()
-        let tierPricing = entry.pricing(for: tier, in: userRegion)
-        let storedCurrency = tierPricing?.currencyCode ?? currencyManager.selectedCurrency
+        // The same price the tier sheet showed, in the currency it showed it in.
+        let tierPricing = entry.pricing(for: tier, payingIn: currencyManager.selectedCurrency)
+            ?? entry.defaultIndividualPricing
+        let storedCurrency = tierPricing?.currencyCode ?? "USD"
 
         let price: Double
         if isOverridden, let override = userPrice {
@@ -383,14 +375,14 @@ struct SubscriptionBrowserView: View {
         } else if billingFrequency == .yearly, let annual = tierPricing?.annualPriceUSD, annual > 0 {
             price = annual
         } else {
-            price = tierPricing?.monthlyPriceUSD ?? entry.defaultIndividualPricing?.monthlyPriceUSD ?? 0
+            price = tierPricing?.monthlyPriceUSD ?? 0
         }
 
         let subscription = Subscription(
             name: entry.name,
             bundleIdentifier: entry.bundleId,
             category: entry.category.rawValue,
-            amount: Decimal(price),
+            amount: MoneyFormat.decimal(price),
             currency: isOverridden ? currencyManager.selectedCurrency : storedCurrency,
             billingFrequency: billingFrequency,
             nextBillingDate: nextBillingDate,

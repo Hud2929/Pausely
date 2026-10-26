@@ -3580,9 +3580,15 @@ class SubscriptionActionManager: ObservableObject {
     }
     
     /// Calculate potential savings
+    /// What switching saves a year, in the display currency: the current subscription's yearly cost
+    /// converted from its own currency, against the alternative's US list price converted the same
+    /// way. Zero when the current currency can't be converted, so nothing is claimed.
     func calculateSavings(current: Subscription, alternative: AlternativeService) -> Double {
-        let currentMonthly = NSDecimalNumber(decimal: current.amount).doubleValue
-        return alternative.calculateSavings(comparedTo: currentMonthly)
+        let manager = CurrencyManager.shared
+        let display = manager.selectedCurrency
+        guard let currentAnnual = current.annualCost(in: display, rates: manager.rates) else { return 0 }
+        let alternativeAnnual = manager.convertCrossCurrency(alternative.annualCost, from: "USD", to: display)
+        return NSDecimalNumber(decimal: currentAnnual).doubleValue - alternativeAnnual
     }
     
     

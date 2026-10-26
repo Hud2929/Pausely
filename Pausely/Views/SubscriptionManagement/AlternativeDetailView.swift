@@ -57,7 +57,7 @@ struct AlternativeDetailView: View {
                                 Text(alternative.name)
                                     .font(.caption)
                                     .foregroundStyle(.secondary)
-                                Text("\(CurrencyManager.shared.format(Decimal(alternative.monthlyPrice)))/mo")
+                                Text("\(alternative.monthlyPriceText)/mo")
                                     .font(.title3)
                                     .foregroundStyle(.green)
                             }

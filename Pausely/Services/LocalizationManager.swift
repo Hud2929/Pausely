@@ -122,23 +122,4 @@ final class LocalizationManager: ObservableObject {
 
         return regionMap[region] ?? "USD"
     }
-
-    /// Formats a Decimal amount into a localized currency string.
-    /// - Parameters:
-    ///   - amount: The monetary value.
-    ///   - currencyCode: ISO 4217 currency code (e.g. "USD", "EUR", "JPY").
-    /// - Returns: A localized currency string.
-    func formattedCurrency(_ amount: Decimal, currencyCode: String) -> String {
-        let formatter = NumberFormatter()
-        formatter.numberStyle = .currency
-        formatter.currencyCode = currencyCode
-        formatter.locale = Locale.current
-        // JPY and KRW typically have no decimal places
-        if currencyCode == "JPY" || currencyCode == "KRW" || currencyCode == "VND" || currencyCode == "IDR" {
-            formatter.maximumFractionDigits = 0
-        } else {
-            formatter.maximumFractionDigits = 2
-        }
-        return formatter.string(from: amount as NSDecimalNumber) ?? "\(amount)"
-    }
 }

@@ -225,12 +225,8 @@ struct CostPerUseCalculator {
     // MARK: - Formatting Helpers
 
     /// Format a cost-per-hour value for display
-    static func formatCostPerHour(_ value: Decimal, currencyCode: String = "USD") -> String {
-        let formatter = NumberFormatter()
-        formatter.numberStyle = .currency
-        formatter.currencyCode = currencyCode
-        formatter.maximumFractionDigits = 2
-        return formatter.string(from: value as NSDecimalNumber) ?? "\(value)"
+    static func formatCostPerHour(_ value: Decimal, currencyCode: String) -> String {
+        MoneyFormat.string(value, currencyCode)
     }
 
     /// Format hours for display

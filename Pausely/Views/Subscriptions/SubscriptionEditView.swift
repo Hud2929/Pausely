@@ -30,8 +30,9 @@ struct SubscriptionEditView: View {
         return options
     }
 
-    private var currencySymbol: String {
-        currencyManager.currencies.first { $0.code == draft.currency }?.symbol ?? draft.currency
+    /// The symbol in front of the amount field, as this person's locale writes it ("$", "US$", "€").
+    private var amountPrefix: String {
+        MoneyFormat.symbol(for: draft.currency)
     }
 
     var body: some View {
@@ -143,7 +144,7 @@ struct SubscriptionEditView: View {
                     }
                 } label: {
                     HStack(spacing: 3) {
-                        Text(currencySymbol)
+                        Text(amountPrefix)
                             .font(.system(size: 30, weight: .bold, design: .rounded))
                         Image(systemName: "chevron.up.chevron.down")
                             .font(.system(size: 10, weight: .bold))

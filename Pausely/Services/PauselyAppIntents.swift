@@ -10,8 +10,7 @@ struct GetMonthlySpendIntent: AppIntent {
     @MainActor
     func perform() async throws -> some IntentResult & ReturnsValue<String> {
         let store = SubscriptionStore.shared
-        let currencyCode = CurrencyManager.shared.currentCurrency.code
-        let formatted = LocalizationManager.shared.formattedCurrency(store.totalMonthlySpend, currencyCode: currencyCode)
+        let formatted = MoneyFormat.string(store.totalMonthlySpend, CurrencyManager.shared.selectedCurrency)
 
         return .result(value: "Your monthly subscription spend is \(formatted)")
     }
@@ -43,10 +42,9 @@ struct GetUpcomingRenewalsIntent: AppIntent {
             return .result(value: "No subscriptions renewing in the next \(daysAhead) days.")
         }
 
-        let currencyCode = CurrencyManager.shared.currentCurrency.code
         let lines = upcoming.map { sub in
             let days = sub.daysUntilRenewal ?? 0
-            let amount = LocalizationManager.shared.formattedCurrency(sub.monthlyCost, currencyCode: currencyCode)
+            let amount = sub.chargeText  // the real charge, in its own currency
             let dayText = days == 0 ? "today" : days == 1 ? "tomorrow" : "in \(days) days"
             return "\(sub.name): \(amount) \(dayText)"
         }
@@ -85,15 +83,14 @@ struct GetBestValueSubscriptionIntent: AppIntent {
         }
 
         let bestValue = activeSubs.min { a, b in
-            a.monthlyCost < b.monthlyCost
+            [a].monthlyTotal() < [b].monthlyTotal()  // compared in one currency
         }
 
         guard let best = bestValue else {
             return .result(value: "Could not determine best value subscription.")
         }
 
-        let currencyCode = CurrencyManager.shared.currentCurrency.code
-        let amount = LocalizationManager.shared.formattedCurrency(best.monthlyCost, currencyCode: currencyCode)
+        let amount = MoneyFormat.string(best.monthlyCost, best.currency)
 
         return .result(value: "Your best value subscription is \(best.name) at \(amount) per month.")
     }
@@ -119,8 +116,8 @@ struct AddSubscriptionIntent: AppIntent {
             bundleIdentifier: nil,
             description: nil,
             category: SubscriptionCategory.other.rawValue,
-            amount: Decimal(monthlyCost),
-            currency: CurrencyManager.shared.currentCurrency.code,
+            amount: MoneyFormat.decimal(monthlyCost),
+            currency: CurrencyManager.shared.selectedCurrency,
             billingFrequency: .monthly,
             nextBillingDate: Calendar.current.date(byAdding: .month, value: 1, to: Date()),
             status: .active,
@@ -131,8 +128,7 @@ struct AddSubscriptionIntent: AppIntent {
 
         try await store.addSubscription(sub)
 
-        let currencyCode = CurrencyManager.shared.currentCurrency.code
-        let amount = LocalizationManager.shared.formattedCurrency(Decimal(monthlyCost), currencyCode: currencyCode)
+        let amount = sub.chargeText
 
         return .result(value: "Added \(name) at \(amount) per month.")
     }
@@ -155,8 +151,7 @@ struct GetSubscriptionDetailIntent: AppIntent {
             return .result(value: "No subscription found matching '\(name)'.")
         }
 
-        let currencyCode = CurrencyManager.shared.currentCurrency.code
-        let amount = LocalizationManager.shared.formattedCurrency(sub.monthlyCost, currencyCode: currencyCode)
+        let amount = MoneyFormat.string(sub.monthlyCost, sub.currency)
         let status = sub.status == .active ? "Active" : "Paused"
         let renewal = sub.daysUntilRenewal.map { "Renews in \($0) day\($0 == 1 ? "" : "s")" } ?? "No renewal date"
 

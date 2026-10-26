@@ -9,7 +9,7 @@ struct ArtisticSubscriptionCard: View {
     @State private var appear = false
 
     private var cardAccessibilityLabel: String {
-        let amount = currencyManager.format(currencyManager.convertToSelected(subscription.amount, from: subscription.currency))
+        let amount = subscription.chargeText
         var parts = [subscription.name, amount + " " + subscription.billingFrequency.billingPeriodLabel]
         if subscription.isPaused { parts.append("paused") }
         if let days = subscription.daysUntilRenewal, days >= 0, days <= 7 {
@@ -70,11 +70,8 @@ struct ArtisticSubscriptionCard: View {
 
                 // Amount + countdown
                 VStack(alignment: .trailing, spacing: 3) {
-                    let converted = currencyManager.convertToSelected(
-                        subscription.amount,
-                        from: subscription.currency
-                    )
-                    Text(currencyManager.format(converted))
+                    // What it's billed in; totals elsewhere are in the display currency.
+                    Text(subscription.chargeText)
                         .font(.system(.callout, design: .rounded).weight(.bold))
                         .foregroundStyle(cardColor)
 

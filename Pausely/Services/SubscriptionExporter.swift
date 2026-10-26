@@ -57,7 +57,7 @@ final class SubscriptionExporter {
         for sub in subscriptions {
             let nextDate = sub.nextBillingDate.map { formatter.string(from: $0) } ?? "N/A"
             let createdDate = formatter.string(from: sub.createdAt)
-            csv += "\(escapeCSV(sub.name)),\(escapeCSV(sub.category ?? "")),\(sub.amount),\(sub.currency),\(sub.billingFrequency.displayName),\(sub.status.displayName),\(sub.monthlyCost),\(sub.annualCost),\(nextDate),\(createdDate)\n"
+            csv += "\(escapeCSV(sub.name)),\(escapeCSV(sub.category ?? "")),\(MoneyFormat.plainNumber(sub.amount, sub.currency)),\(sub.currency),\(sub.billingFrequency.displayName),\(sub.status.displayName),\(MoneyFormat.plainNumber(sub.monthlyCost, sub.currency)),\(MoneyFormat.plainNumber(sub.annualCost, sub.currency)),\(nextDate),\(createdDate)\n"
         }
 
         return writeToFile(content: csv, extension: "csv")
@@ -112,8 +112,11 @@ final class SubscriptionExporter {
         let pageHeight: CGFloat = 792
         let renderer = UIGraphicsPDFRenderer(bounds: CGRect(x: 0, y: 0, width: pageWidth, height: pageHeight), format: format)
 
-        let totalMonthly = subscriptions.filter { $0.status == .active }.reduce(Decimal(0)) { $0 + $1.monthlyCost }
-        let totalAnnual = subscriptions.filter { $0.status == .active }.reduce(Decimal(0)) { $0 + $1.annualCost }
+        // Totals in the display currency, each subscription converted from its own currency.
+        let active = subscriptions.filter { $0.status == .active }
+        let displayCurrency = CurrencyManager.shared.selectedCurrency
+        let totalMonthly = MoneyFormat.string(active.monthlyTotal(in: displayCurrency), displayCurrency)
+        let totalAnnual = MoneyFormat.string(active.annualTotal(in: displayCurrency), displayCurrency)
 
         let data = renderer.pdfData { context in
             context.beginPage()
@@ -151,9 +154,9 @@ final class SubscriptionExporter {
             ]
             NSAttributedString(string: "Active Subscriptions: \(subscriptions.filter { $0.isActive }.count)", attributes: bodyAttr).draw(at: CGPoint(x: 40, y: y))
             y += 20
-            NSAttributedString(string: "Total Monthly Spend: $\(totalMonthly)", attributes: bodyAttr).draw(at: CGPoint(x: 40, y: y))
+            NSAttributedString(string: "Total Monthly Spend: \(totalMonthly)", attributes: bodyAttr).draw(at: CGPoint(x: 40, y: y))
             y += 20
-            NSAttributedString(string: "Total Annual Spend: $\(totalAnnual)", attributes: bodyAttr).draw(at: CGPoint(x: 40, y: y))
+            NSAttributedString(string: "Total Annual Spend: \(totalAnnual)", attributes: bodyAttr).draw(at: CGPoint(x: 40, y: y))
             y += 40
 
             // Table header
@@ -171,7 +174,7 @@ final class SubscriptionExporter {
                 drawTableRow(context: context, y: y, columns: [
                     sub.name,
                     sub.category ?? "—",
-                    "\(sub.currency) \(sub.amount)",
+                    MoneyFormat.string(sub.amount, sub.currency),
                     sub.billingFrequency.shortDisplay,
                     sub.status.displayName
                 ], isHeader: false)

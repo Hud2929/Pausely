@@ -21,7 +21,7 @@ struct AlternativeCard: View {
                         .font(.caption)
                         .foregroundStyle(.yellow)
 
-                    Text("\(CurrencyManager.shared.format(Decimal(alternative.monthlyPrice)))/mo")
+                    Text("\(alternative.monthlyPriceText)/mo")
                         .font(.caption)
                         .foregroundStyle(.green)
                 }

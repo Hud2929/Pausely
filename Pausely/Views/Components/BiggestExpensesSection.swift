@@ -7,7 +7,7 @@ struct BiggestExpensesSection: View {
 
     private var topExpenses: [Subscription] {
         store.activeSubscriptions
-            .sorted { $0.monthlyCost > $1.monthlyCost }
+            .sorted { [$0].monthlyTotal() > [$1].monthlyTotal() }  // compare in one currency
             .prefix(3)
             .map { $0 }
     }
@@ -35,7 +35,7 @@ struct BiggestExpensesSection: View {
             }
 
             if store.activeSubscriptions.count > 3 {
-                let totalTop = topExpenses.reduce(Decimal(0)) { $0 + $1.monthlyCost }
+                let totalTop = topExpenses.monthlyTotal()
                 let percentage = store.totalMonthlySpend > 0
                     ? Int(Double(truncating: (totalTop / store.totalMonthlySpend * 100) as NSNumber))
                     : 0

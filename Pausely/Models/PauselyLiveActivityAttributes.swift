@@ -21,8 +21,8 @@ struct PauselyLiveActivityAttributes: ActivityAttributes {
     // Static data set when starting the activity
     var subscriptionName: String
     var renewalDate: Date
-    var amount: Double
-    var currencySymbol: String
+    /// The next charge in the subscription's own currency, formatted by the app ("$129.99").
+    var amountText: String
     var frequency: String
 }
 
@@ -46,14 +46,10 @@ final class LiveActivityManager {
         // End any existing activity first
         endCurrentActivity()
 
-        let currencySymbol = CurrencyManager.shared.currentCurrency.symbol
-        let amount = Double(truncating: subscription.monthlyCost as NSNumber)
-
         let attributes = PauselyLiveActivityAttributes(
             subscriptionName: subscription.name,
             renewalDate: subscription.calculatedNextBillingDate ?? Date().addingTimeInterval(86400 * 7),
-            amount: amount,
-            currencySymbol: currencySymbol,
+            amountText: subscription.chargeText,
             frequency: subscription.billingFrequency.displayName
         )
 

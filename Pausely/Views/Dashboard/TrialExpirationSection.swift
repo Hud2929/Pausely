@@ -73,7 +73,7 @@ private struct TrialExpirationRow: View {
             Spacer()
 
             VStack(alignment: .trailing, spacing: 2) {
-                Text(CurrencyManager.shared.format(subscription.monthlyCost))
+                Text(MoneyFormat.string(subscription.monthlyCost, subscription.currency))
                     .font(.system(.subheadline, design: .rounded).weight(.semibold))
                     .foregroundStyle(.white)
 

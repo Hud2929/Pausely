@@ -31,7 +31,10 @@ final class WidgetDataStore {
         }
 
         let active = subscriptions.filter { $0.status == .active }
-        let monthlySpend = active.reduce(0.0) { $0 + (Double(truncating: $1.monthlyCost as NSNumber) ) }
+        // Totals in the display currency, every subscription converted from its own currency.
+        let displayCurrency = CurrencyManager.shared.selectedCurrency
+        let monthlyTotal = active.monthlyTotal(in: displayCurrency)
+        let monthlySpend = NSDecimalNumber(decimal: monthlyTotal).doubleValue
         let upcoming = active.filter { sub in
             guard let next = sub.calculatedNextBillingDate else { return false }
             return next <= Calendar.current.date(byAdding: .day, value: 7, to: Date())!
@@ -40,21 +43,27 @@ final class WidgetDataStore {
         defaults.set(monthlySpend, forKey: "widget_monthlySpend")
         defaults.set(active.count, forKey: "widget_activeCount")
         defaults.set(upcoming.count, forKey: "widget_upcomingCount")
-        defaults.set(CurrencyManager.shared.currentCurrency.code, forKey: "widget_currencyCode")
+        defaults.set(displayCurrency, forKey: "widget_currencyCode")
+        // The widget shows these exactly as written; it never formats money itself.
+        defaults.set(MoneyFormat.string(monthlyTotal, displayCurrency), forKey: "widget_monthlySpendText")
+        defaults.set(MoneyFormat.string(monthlyTotal, displayCurrency, wholeUnits: true), forKey: "widget_monthlySpendWholeText")
+        defaults.set(MoneyFormat.string(monthlyTotal * 12, displayCurrency, wholeUnits: true), forKey: "widget_yearlySpendWholeText")
 
-        let insight = generateInsight(for: active, monthlySpend: monthlySpend)
+        let insight = generateInsight(for: active, monthlyTotal: monthlyTotal, currency: displayCurrency)
         defaults.set(insight, forKey: "widget_topInsight")
 
         // Publish upcoming renewal details for Live Activities
         if let firstUpcoming = upcoming.first {
             defaults.set(firstUpcoming.name, forKey: "liveActivity_subscriptionName")
             defaults.set(firstUpcoming.nextBillingDate?.timeIntervalSince1970 ?? 0, forKey: "liveActivity_renewalDate")
-            defaults.set(Double(truncating: firstUpcoming.monthlyCost as NSNumber), forKey: "liveActivity_amount")
+            defaults.set(NSDecimalNumber(decimal: firstUpcoming.amount).doubleValue, forKey: "liveActivity_amount")
+            defaults.set(firstUpcoming.chargeText, forKey: "liveActivity_amountText")
             defaults.set(firstUpcoming.billingFrequency.displayName, forKey: "liveActivity_frequency")
         } else if let firstActive = active.first {
             defaults.set(firstActive.name, forKey: "liveActivity_subscriptionName")
             defaults.set(firstActive.nextBillingDate?.timeIntervalSince1970 ?? 0, forKey: "liveActivity_renewalDate")
-            defaults.set(Double(truncating: firstActive.monthlyCost as NSNumber), forKey: "liveActivity_amount")
+            defaults.set(NSDecimalNumber(decimal: firstActive.amount).doubleValue, forKey: "liveActivity_amount")
+            defaults.set(firstActive.chargeText, forKey: "liveActivity_amountText")
             defaults.set(firstActive.billingFrequency.displayName, forKey: "liveActivity_frequency")
         }
 
@@ -68,8 +77,9 @@ final class WidgetDataStore {
                     name: sub.name,
                     trialEndsAt: trialEnd,
                     monthlyAmount: Double(truncating: sub.monthlyCost as NSNumber),
-                    currencyCode: CurrencyManager.shared.currentCurrency.code,
-                    billingFrequency: sub.billingFrequency.displayName
+                    currencyCode: sub.currency,
+                    billingFrequency: sub.billingFrequency.displayName,
+                    amountText: sub.chargeText
                 )
             }
             .sorted { $0.trialEndsAt < $1.trialEndsAt }
@@ -91,7 +101,9 @@ final class WidgetDataStore {
             activeCount: defaults.integer(forKey: "widget_activeCount"),
             upcomingCount: defaults.integer(forKey: "widget_upcomingCount"),
             currencyCode: defaults.string(forKey: "widget_currencyCode") ?? "USD",
-            topInsight: defaults.string(forKey: "widget_topInsight") ?? "Track your subscriptions"
+            topInsight: defaults.string(forKey: "widget_topInsight") ?? "Track your subscriptions",
+            monthlySpendText: defaults.string(forKey: "widget_monthlySpendText") ?? "",
+            yearlySpendWholeText: defaults.string(forKey: "widget_yearlySpendWholeText") ?? ""
         )
     }
 
@@ -104,18 +116,19 @@ final class WidgetDataStore {
             subscriptionName: defaults.string(forKey: "liveActivity_subscriptionName") ?? "Subscription",
             renewalDate: Date(timeIntervalSince1970: defaults.double(forKey: "liveActivity_renewalDate")),
             amount: defaults.double(forKey: "liveActivity_amount"),
+            amountText: defaults.string(forKey: "liveActivity_amountText") ?? "",
             frequency: defaults.string(forKey: "liveActivity_frequency") ?? "Monthly"
         )
     }
 
     // MARK: - Insights
 
-    private func generateInsight(for subscriptions: [Subscription], monthlySpend: Double) -> String {
+    private func generateInsight(for subscriptions: [Subscription], monthlyTotal: Decimal, currency: String) -> String {
         if subscriptions.isEmpty {
             return "Add your first subscription to start tracking"
         }
-        if monthlySpend > 200 {
-            return "You're spending \(String(format: "%.0f", monthlySpend))/month — review for savings"
+        if subscriptions.monthlyTotal(in: "USD") > 200 {
+            return "You're spending \(MoneyFormat.string(monthlyTotal, currency, wholeUnits: true))/month — review for savings"
         }
         let paused = subscriptions.filter { $0.isPaused }.count
         if paused > 0 {
@@ -133,112 +146,25 @@ struct WidgetSummary {
     let upcomingCount: Int
     let currencyCode: String
     let topInsight: String
+    /// Formatted by the app with MoneyFormat; the widget shows them as they are.
+    let monthlySpendText: String
+    let yearlySpendWholeText: String
 
-
-    static func symbol(for code: String) -> String {
-        switch code {
-        case "USD": return "$"
-        case "EUR": return "€"
-        case "GBP": return "£"
-        case "JPY", "CNY": return "¥"
-        case "CAD": return "C$"
-        case "AUD": return "A$"
-        case "CHF": return "Fr"
-        case "INR": return "₹"
-        case "KRW": return "₩"
-        case "BRL": return "R$"
-        case "MXN", "ARS", "CLP", "COP", "UYU", "CUP", "DOP", "NIO", "NAD", "BZD", "BSD", "BBD", "TTD", "XCD", "LRD": return "$"
-        case "SGD": return "S$"
-        case "HKD": return "HK$"
-        case "NOK", "SEK", "DKK", "ISK": return "kr"
-        case "NZD": return "NZ$"
-        case "ZAR": return "R"
-        case "RUB": return "₽"
-        case "TRY": return "₺"
-        case "PLN": return "zł"
-        case "THB": return "฿"
-        case "IDR": return "Rp"
-        case "MYR": return "RM"
-        case "PHP": return "₱"
-        case "CZK": return "Kč"
-        case "ILS": return "₪"
-        case "AED": return "د.إ"
-        case "SAR", "QAR", "OMR", "YER": return "﷼"
-        case "TWD": return "NT$"
-        case "VND": return "₫"
-        case "EGP": return "£"
-        case "PKR", "MUR", "SCR", "NPR", "LKR": return "₨"
-        case "NGN": return "₦"
-        case "BDT": return "৳"
-        case "RON": return "lei"
-        case "HUF": return "Ft"
-        case "UAH": return "₴"
-        case "PEN": return "S/"
-        case "MAD": return "د.م."
-        case "KWD": return "د.ك"
-        case "BHD": return ".د.ب"
-        case "JOD": return "د.ا"
-        case "KES": return "KSh"
-        case "GHS": return "₵"
-        case "TZS": return "TSh"
-        case "UGX": return "USh"
-        case "HRK": return "kn"
-        case "BGN": return "лв"
-        case "RSD": return "дин"
-        case "GEL": return "₾"
-        case "AMD": return "֏"
-        case "AZN": return "₼"
-        case "KZT": return "₸"
-        case "UZS": return "so'm"
-        case "TJS": return "SM"
-        case "KGS": return "с"
-        case "MNT": return "₮"
-        case "MMK": return "K"
-        case "KHR": return "៛"
-        case "LAK": return "₭"
-        case "BND": return "$"
-        case "BWP": return "P"
-        case "ZMW": return "ZK"
-        case "MWK": return "MK"
-        case "MZN": return "MT"
-        case "SZL", "LSL": return "L"
-        case "AOA": return "Kz"
-        case "CDF": return "FC"
-        case "RWF": return "FRw"
-        case "BIF": return "FBu"
-        case "DJF": return "Fdj"
-        case "ETB": return "Br"
-        case "SOS": return "Sh"
-        case "GMD": return "D"
-        case "GNF": return "FG"
-        case "SLL": return "Le"
-        case "MRU": return "UM"
-        case "STN": return "Db"
-        case "XOF": return "CFA"
-        case "XAF": return "FCFA"
-        case "AWG", "ANG": return "ƒ"
-        case "HTG": return "G"
-        case "GTQ": return "Q"
-        case "HNL": return "L"
-        case "CRC": return "₡"
-        case "PAB": return "B/."
-        case "PYG": return "₲"
-        case "BOB", "VES": return "Bs"
-        default: return "$"
-        }
-    }
-
-    init(monthlySpend: Double = 0, activeCount: Int = 0, upcomingCount: Int = 0, currencyCode: String = "USD", topInsight: String = "Loading...") {
+    init(monthlySpend: Double = 0, activeCount: Int = 0, upcomingCount: Int = 0, currencyCode: String = "USD",
+         topInsight: String = "Loading...", monthlySpendText: String = "", yearlySpendWholeText: String = "") {
         self.monthlySpend = monthlySpend
         self.activeCount = activeCount
         self.upcomingCount = upcomingCount
         self.currencyCode = currencyCode
         self.topInsight = topInsight
+        self.monthlySpendText = monthlySpendText
+        self.yearlySpendWholeText = yearlySpendWholeText
     }
 }
 
 // MARK: - Trial Info (shared with widget extension)
 
+/// Must match `WidgetTrialInfo` in the widget extension field for field.
 struct WidgetTrialInfo: Codable, Identifiable {
     let id: String
     let name: String
@@ -246,26 +172,28 @@ struct WidgetTrialInfo: Codable, Identifiable {
     let monthlyAmount: Double
     let currencyCode: String
     let billingFrequency: String
+    /// What the first charge will be, in the subscription's own currency ("$15.49").
+    let amountText: String?
 
     var daysRemaining: Int {
         max(0, Calendar.current.dateComponents([.day], from: Date(), to: trialEndsAt).day ?? 0)
-    }
-
-    var currencySymbol: String {
-        WidgetSummary.symbol(for: currencyCode)
     }
 }
 
 struct LiveActivityData {
     let subscriptionName: String
     let renewalDate: Date
+    /// The next charge, in the subscription's own currency.
     let amount: Double
+    let amountText: String
     let frequency: String
 
-    init(subscriptionName: String = "", renewalDate: Date = Date(), amount: Double = 0, frequency: String = "Monthly") {
+    init(subscriptionName: String = "", renewalDate: Date = Date(), amount: Double = 0, amountText: String = "",
+         frequency: String = "Monthly") {
         self.subscriptionName = subscriptionName
         self.renewalDate = renewalDate
         self.amount = amount
+        self.amountText = amountText
         self.frequency = frequency
     }
 

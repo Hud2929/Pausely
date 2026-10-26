@@ -19,21 +19,23 @@ class SubscriptionStore: ObservableObject {
     private let client = SupabaseManager.shared.client
     private var fetchTask: Task<Void, Never>?
 
-    // MARK: - Performance Optimizations for Scale
-    private var calculationTask: Task<Void, Never>?
-    private var lastCalculationHash: Int?
-    private var currencyCancellable: AnyCancellable?
+    private var currencyCancellables: Set<AnyCancellable> = []
 
     private init() {
         loadFromCache()
-        // Recalculate totals whenever the user switches display currency
-        currencyCancellable = CurrencyManager.shared.$selectedCurrency
+        // Totals are in the display currency: redo them when it changes or when live rates arrive.
+        // @Published sends before the new value is stored, so take the new code from the event and
+        // let rate updates finish before reading them.
+        CurrencyManager.shared.$selectedCurrency
             .dropFirst()
-            .sink { [weak self] _ in
-                guard let self else { return }
-                self.lastCalculationHash = nil // invalidate hash so recalc runs
-                self.performCalculation(activeSubscriptions: self.subscriptions.filter { $0.status == .active })
-            }
+            .receive(on: DispatchQueue.main)
+            .sink { [weak self] code in self?.calculateTotals(in: code) }
+            .store(in: &currencyCancellables)
+        CurrencyManager.shared.$exchangeRates
+            .dropFirst()
+            .receive(on: DispatchQueue.main)
+            .sink { [weak self] _ in self?.calculateTotals() }
+            .store(in: &currencyCancellables)
     }
     
     // MARK: - Data Fetching
@@ -609,109 +611,21 @@ class SubscriptionStore: ObservableObject {
         return result
     }
     
-    // MARK: - Optimized Calculation (Async for Large Datasets)
-    
-    private func calculateTotals() {
-        // Cancel previous calculation to prevent UI lag
-        calculationTask?.cancel()
-        
-        let currentSubscriptions = subscriptions
-        // Simple hash based on count and total amount for change detection
-        let currentHash = currentSubscriptions.count &+ Int(truncating: totalMonthlySpend as NSNumber)
-        
-        // Skip if data hasn't changed
-        if lastCalculationHash == currentHash { return }
-        lastCalculationHash = currentHash
-        
-        // For small datasets, calculate immediately
-        if currentSubscriptions.count < 100 {
-            performCalculation(activeSubscriptions: currentSubscriptions.filter { $0.status == .active })
-            return
-        }
-        
-        // For large datasets, calculate in background
-        // Capture currency context on main actor before entering background task
-        let exchangeRates = CurrencyManager.shared.exchangeRates
-        let selectedCurrency = CurrencyManager.shared.selectedCurrency
+    // MARK: - Totals
 
-        calculationTask = Task { [weak self] in
-            guard let self = self else { return }
-
-            let active = currentSubscriptions.filter { $0.status == .active }
-
-            // Process in chunks to prevent blocking
-            let chunkSize = 50
-            let chunks = stride(from: 0, to: active.count, by: chunkSize).map {
-                Array(active[$0..<min($0 + chunkSize, active.count)])
-            }
-
-            var monthlyTotal: Decimal = 0
-
-            for chunk in chunks {
-                if Task.isCancelled { return }
-
-                let chunkTotal = chunk.reduce(Decimal(0)) { total, sub in
-                    let rawMonthly = self.monthlyEquivalent(for: sub)
-                    // Convert from subscription's stored currency to user's display currency
-                    guard sub.currency != selectedCurrency,
-                          let srcRate = exchangeRates[sub.currency],
-                          let dstRate = exchangeRates[selectedCurrency],
-                          srcRate > 0 else {
-                        return total + rawMonthly
-                    }
-                    let converted = Decimal(Double(truncating: rawMonthly as NSDecimalNumber) / srcRate * dstRate)
-                    return total + converted
-                }
-                monthlyTotal += chunkTotal
-
-                // Yield to prevent blocking
-                try? await Task.sleep(nanoseconds: 1_000)
-            }
-
-            let lifetimeTotal = currentSubscriptions.reduce(0) { $0 + $1.lifetimeSpend }
-            await MainActor.run {
-                self.totalMonthlySpend = monthlyTotal
-                self.totalAnnualSpend = monthlyTotal * 12
-                self.totalLifetimeSpend = lifetimeTotal
-            }
-        }
+    /// Monthly, yearly and lifetime totals of active subscriptions in the display currency. Every
+    /// subscription is converted from its own currency first (see MoneyMath); cheap enough to redo
+    /// on every change, so there's no cache to go stale.
+    private func calculateTotals(in currency: String = CurrencyManager.shared.selectedCurrency) {
+        let active = subscriptions.filter { $0.status == .active }
+        let rates = CurrencyManager.shared.rates
+        let monthly = active.monthlyTotal(in: currency, rates: rates)
+        totalMonthlySpend = monthly
+        totalAnnualSpend = monthly * 12
+        totalLifetimeSpend = MoneyMath.total(active, in: currency, rates: rates,
+                                             amount: \.lifetimeSpend, currencyOf: \.currency)
     }
-    
-    nonisolated private func monthlyEquivalent(for sub: Subscription) -> Decimal {
-        guard sub.status == .active else { return 0 }
-        
-        switch sub.billingFrequency {
-        case .monthly:
-            return sub.amount
-        case .yearly:
-            return sub.amount / 12
-        case .weekly:
-            return sub.amount * Decimal(52) / 12
-        case .biweekly:
-            return sub.amount * Decimal(26) / 12
-        case .quarterly:
-            return sub.amount / 3
-        case .semiannual:
-            return sub.amount / 6
-        }
-    }
-    
-    private func performCalculation(activeSubscriptions: [Subscription]) {
-        var monthlyTotal: Decimal = 0
-        var lifetimeTotal: Decimal = 0
-        let cm = CurrencyManager.shared
-        for sub in activeSubscriptions {
-            let rawMonthly = monthlyEquivalent(for: sub)
-            // Convert from subscription's stored currency to user's display currency
-            let convertedMonthly = cm.convertToSelected(rawMonthly, from: sub.currency)
-            monthlyTotal += convertedMonthly
-            lifetimeTotal += sub.lifetimeSpend
-        }
-        totalMonthlySpend = monthlyTotal
-        totalAnnualSpend = monthlyTotal * 12
-        totalLifetimeSpend = lifetimeTotal
-    }
-    
+
     // MARK: - Computed Properties
     
     var activeSubscriptions: [Subscription] {
@@ -745,8 +659,9 @@ class SubscriptionStore: ObservableObject {
             .sorted { $0.total > $1.total }
     }
     
+    /// Monthly total of these subscriptions in the display currency.
     private func calculateCategoryTotal(_ subscriptions: [Subscription]) -> Decimal {
-        subscriptions.reduce(Decimal(0)) { $0 + monthlyEquivalent(for: $1) }
+        subscriptions.monthlyTotal()
     }
 
     // MARK: - Live Activity

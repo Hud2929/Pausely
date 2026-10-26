@@ -277,9 +277,10 @@ struct GmailImportView: View {
 
     private func summaryCard(count: Int) -> some View {
         let report = scanner.report
-        let monthly = report?.monthlyTotal ?? 0
-        let annual = report?.annualTotal ?? 0
-        let currency = scanner.foundSubscriptions.first?.currency ?? CurrencyManager.shared.selectedCurrency
+        // In the display currency: a mailbox can have receipts in several currencies.
+        let currency = CurrencyManager.shared.selectedCurrency
+        let monthly = report?.monthlyTotal(in: currency) ?? 0
+        let annual = monthly * 12
         let ignored = scanner.scanStats.purchasesIgnored
 
         return VStack(alignment: .leading, spacing: 10) {

@@ -12,14 +12,10 @@ struct PauselyWidgetProvider: TimelineProvider {
     func placeholder(in context: Context) -> PauselyWidgetEntry {
         PauselyWidgetEntry(
             date: Date(),
-            monthlySpend: 0,
-            activeSubscriptions: 0,
-            upcomingRenewals: 0,
-            currencySymbol: "$",
-            topInsight: "Loading...",
+            summary: WidgetSummaryData(),
             nextChargeName: "–",
             nextChargeDate: nil,
-            nextChargeAmount: 0
+            nextChargeText: ""
         )
     }
 
@@ -27,14 +23,10 @@ struct PauselyWidgetProvider: TimelineProvider {
         let summary = WidgetReader.readSummary()
         let entry = PauselyWidgetEntry(
             date: Date(),
-            monthlySpend: summary.monthlySpend,
-            activeSubscriptions: summary.activeCount,
-            upcomingRenewals: summary.upcomingCount,
-            currencySymbol: summary.currencySymbol,
-            topInsight: summary.topInsight,
+            summary: summary,
             nextChargeName: WidgetReader.readLiveActivityName(),
             nextChargeDate: WidgetReader.readLiveActivityDate(),
-            nextChargeAmount: WidgetReader.readLiveActivityAmount()
+            nextChargeText: WidgetReader.readLiveActivityAmountText()
         )
         completion(entry)
     }
@@ -56,14 +48,10 @@ struct PauselyWidgetProvider: TimelineProvider {
         let summary = WidgetReader.readSummary()
         return PauselyWidgetEntry(
             date: Date(),
-            monthlySpend: summary.monthlySpend,
-            activeSubscriptions: summary.activeCount,
-            upcomingRenewals: summary.upcomingCount,
-            currencySymbol: summary.currencySymbol,
-            topInsight: summary.topInsight,
+            summary: summary,
             nextChargeName: WidgetReader.readLiveActivityName(),
             nextChargeDate: WidgetReader.readLiveActivityDate(),
-            nextChargeAmount: WidgetReader.readLiveActivityAmount()
+            nextChargeText: WidgetReader.readLiveActivityAmountText()
         )
     }
 }
@@ -71,15 +59,16 @@ struct PauselyWidgetProvider: TimelineProvider {
 // MARK: - Widget Entry
 struct PauselyWidgetEntry: TimelineEntry {
     let date: Date
-    let monthlySpend: Double
-    let activeSubscriptions: Int
-    let upcomingRenewals: Int
-    let currencySymbol: String
-    let topInsight: String
+    let summary: WidgetSummaryData
     // Next charge details (for small widget)
     let nextChargeName: String
     let nextChargeDate: Date?
-    let nextChargeAmount: Double
+    /// Formatted by the app in the subscription's own currency; "" when there is none.
+    let nextChargeText: String
+
+    var activeSubscriptions: Int { summary.activeCount }
+    var upcomingRenewals: Int { summary.upcomingCount }
+    var topInsight: String { summary.topInsight }
 
     var nextChargeDays: Int {
         guard let d = nextChargeDate else { return 0 }
@@ -134,7 +123,7 @@ struct SmallWidgetView: View {
     }
 
     private var hasData: Bool {
-        entry.nextChargeAmount > 0 && entry.nextChargeName != "–" && entry.nextChargeName != "Subscription"
+        !entry.nextChargeText.isEmpty && entry.nextChargeName != "–" && entry.nextChargeName != "Subscription"
     }
 
     var body: some View {
@@ -158,14 +147,11 @@ struct SmallWidgetView: View {
                         .foregroundStyle(.primary)
                         .lineLimit(1)
 
-                    HStack(alignment: .firstTextBaseline, spacing: 1) {
-                        Text(entry.currencySymbol)
-                            .font(.system(.caption, design: .rounded))
-                            .foregroundStyle(.secondary)
-                        Text(String(format: "%.2f", entry.nextChargeAmount))
-                            .font(.system(.title2, design: .rounded).weight(.black))
-                            .foregroundStyle(.primary)
-                    }
+                    Text(entry.nextChargeText)
+                        .font(.system(.title2, design: .rounded).weight(.black))
+                        .foregroundStyle(.primary)
+                        .minimumScaleFactor(0.6)
+                        .lineLimit(1)
 
                     Spacer()
 
@@ -208,12 +194,10 @@ struct MediumWidgetView: View {
                     .font(.caption)
                     .foregroundStyle(.secondary)
                 
-                HStack(alignment: .firstTextBaseline, spacing: 0) {
-                    Text(entry.currencySymbol)
-                        .font(.title3)
-                    Text(String(format: "%.2f", entry.monthlySpend))
-                        .font(.title.bold())
-                }
+                Text(entry.summary.monthlyText)
+                    .font(.title.bold())
+                    .minimumScaleFactor(0.6)
+                    .lineLimit(1)
                 
                 Text("\(entry.upcomingRenewals) renewing soon")
                     .font(.caption2)
@@ -278,8 +262,7 @@ struct LargeWidgetView: View {
             HStack(spacing: 20) {
                 LargeStatCard(
                     title: "Monthly",
-                    value: String(format: "%.2f", entry.monthlySpend),
-                    prefix: entry.currencySymbol
+                    value: entry.summary.monthlyText
                 )
                 
                 LargeStatCard(
@@ -290,8 +273,7 @@ struct LargeWidgetView: View {
                 
                 LargeStatCard(
                     title: "Yearly",
-                    value: String(format: "%.0f", entry.monthlySpend * 12),
-                    prefix: entry.currencySymbol
+                    value: entry.summary.yearlyWholeText
                 )
             }
             
@@ -328,12 +310,10 @@ struct AccessoryCircularView: View {
         ZStack {
             AccessoryWidgetBackground()
             
-            VStack {
-                Text(entry.currencySymbol)
-                    .font(.caption)
-                Text(String(format: "%.0f", entry.monthlySpend))
-                    .font(.headline)
-            }
+            Text(entry.summary.monthlyWholeText)
+                .font(.headline)
+                .minimumScaleFactor(0.5)
+                .lineLimit(1)
         }
     }
 }
@@ -344,9 +324,7 @@ struct AccessoryRectangularView: View {
     var body: some View {
         HStack {
             Image(systemName: "creditcard.fill")
-            Text(entry.currencySymbol)
-                .font(.caption) +
-            Text(String(format: "%.2f", entry.monthlySpend))
+            Text(entry.summary.monthlyText)
                 .font(.headline)
             Spacer()
             Text("\(entry.activeSubscriptions) subs")
@@ -359,9 +337,7 @@ struct AccessoryInlineView: View {
     let entry: PauselyWidgetEntry
     
     var body: some View {
-        Text(entry.currencySymbol)
-            .font(.caption) +
-        Text(String(format: "%.2f", entry.monthlySpend))
+        Text(entry.summary.monthlyText)
             .font(.headline)
     }
 }
@@ -510,11 +486,11 @@ struct PauselyWidget: Widget {
 #Preview(as: .systemSmall) {
     PauselyWidget()
 } timeline: {
-    PauselyWidgetEntry(date: Date(), monthlySpend: 142.99, activeSubscriptions: 12, upcomingRenewals: 2, currencySymbol: "$", topInsight: "Save $45 by pausing", nextChargeName: "Netflix", nextChargeDate: Calendar.current.date(byAdding: .day, value: 2, to: Date()), nextChargeAmount: 15.99)
+    PauselyWidgetEntry(date: Date(), summary: WidgetSummaryData(activeCount: 12, upcomingCount: 2, topInsight: "Save $45 by pausing", monthlyText: "$142.99", monthlyWholeText: "$143", yearlyWholeText: "$1,716"), nextChargeName: "Netflix", nextChargeDate: Calendar.current.date(byAdding: .day, value: 2, to: Date()), nextChargeText: "$15.99")  // money-guard: sample
 }
 
 #Preview(as: .systemMedium) {
     PauselyWidget()
 } timeline: {
-    PauselyWidgetEntry(date: Date(), monthlySpend: 142.99, activeSubscriptions: 12, upcomingRenewals: 2, currencySymbol: "$", topInsight: "Save $45 by pausing unused subscriptions", nextChargeName: "Netflix", nextChargeDate: Calendar.current.date(byAdding: .day, value: 2, to: Date()), nextChargeAmount: 15.99)
+    PauselyWidgetEntry(date: Date(), summary: WidgetSummaryData(activeCount: 12, upcomingCount: 2, topInsight: "Save $45 by pausing unused subscriptions", monthlyText: "$142.99", monthlyWholeText: "$143", yearlyWholeText: "$1,716"), nextChargeName: "Netflix", nextChargeDate: Calendar.current.date(byAdding: .day, value: 2, to: Date()), nextChargeText: "$15.99")  // money-guard: sample
 }

@@ -24,7 +24,6 @@ final class CurrencyManagerTests: XCTestCase {
         let usd = manager.currency(for: "USD")
         XCTAssertNotNil(usd)
         XCTAssertEqual(usd?.code, "USD")
-        XCTAssertEqual(usd?.symbol, "$")
     }
 
     func testCurrencyForUnknownCode() {
@@ -40,14 +39,16 @@ final class CurrencyManagerTests: XCTestCase {
 
     // MARK: - Symbol & Flag
 
+    /// Symbols follow the reader's locale: "$" in the US, "US$" in Canada (see MoneyFormatTests).
     func testCurrencySymbol() {
-        XCTAssertEqual(manager.currencySymbol(for: "USD"), "$")
-        XCTAssertEqual(manager.currencySymbol(for: "GBP"), "£")
+        XCTAssertTrue(manager.currencySymbol(for: "USD").hasSuffix("$"))
+        XCTAssertTrue(manager.currencySymbol(for: "GBP").hasSuffix("£"))
         XCTAssertEqual(manager.currencySymbol(for: "EUR"), "€")
     }
 
+    /// A currency Pausely doesn't know shows as its code, never as a borrowed "$".
     func testCurrencySymbolUnknown() {
-        XCTAssertEqual(manager.currencySymbol(for: "ZZZ"), "$")
+        XCTAssertEqual(manager.currencySymbol(for: "ZZZ"), "ZZZ")
     }
 
     func testCurrencyFlag() {
@@ -71,9 +72,9 @@ final class CurrencyManagerTests: XCTestCase {
         XCTAssertEqual(result, Decimal(85))
     }
 
-    func testConvertMissingSourceRateThrows() {
+    func testConvertUnknownSourceThrows() {
         manager.exchangeRates = ["EUR": 0.85]
-        XCTAssertThrowsError(try manager.convert(Decimal(100), from: "USD", to: "EUR")) { error in
+        XCTAssertThrowsError(try manager.convert(Decimal(100), from: "ZZZ", to: "EUR")) { error in
             guard case CurrencyError.rateNotAvailable = error else {
                 XCTFail("Expected rateNotAvailable")
                 return
@@ -81,9 +82,9 @@ final class CurrencyManagerTests: XCTestCase {
         }
     }
 
-    func testConvertMissingTargetRateThrows() {
+    func testConvertUnknownTargetThrows() {
         manager.exchangeRates = ["USD": 1.0]
-        XCTAssertThrowsError(try manager.convert(Decimal(100), from: "USD", to: "EUR")) { error in
+        XCTAssertThrowsError(try manager.convert(Decimal(100), from: "USD", to: "ZZZ")) { error in
             guard case CurrencyError.rateNotAvailable = error else {
                 XCTFail("Expected rateNotAvailable")
                 return
@@ -98,11 +99,19 @@ final class CurrencyManagerTests: XCTestCase {
         XCTAssertEqual(result, Decimal(85))
     }
 
-    func testConvertToSelectedFallback() {
+    /// Without live rates, conversions use the built-in table instead of returning dollars as euros.
+    func testConvertToSelectedUsesBuiltInRatesWhenOffline() {
         manager.selectedCurrency = "EUR"
         manager.exchangeRates = [:]
         let result = manager.convertToSelected(Decimal(100), from: "USD")
-        XCTAssertEqual(result, Decimal(100))
+        XCTAssertEqual(result, 100 * CurrencyRates.fallback.rate("EUR")!)
+        XCTAssertNotEqual(result, 100)
+    }
+
+    /// Live rates win over the built-in table.
+    func testLiveRatesOverrideBuiltInRates() throws {
+        manager.exchangeRates = ["CAD": 1.25]
+        XCTAssertEqual(try manager.convert(Decimal(100), from: "USD", to: "CAD"), 125)
     }
 
     // MARK: - Formatting
@@ -149,53 +158,14 @@ final class CurrencyManagerTests: XCTestCase {
         XCTAssertEqual(rate, 1.0)
     }
 
-    func testGetRateMissingThrows() {
+    func testGetRateUnknownThrows() {
         manager.exchangeRates = [:]
-        XCTAssertThrowsError(try manager.getRate(from: "USD", to: "EUR")) { error in
+        XCTAssertThrowsError(try manager.getRate(from: "USD", to: "ZZZ")) { error in
             guard case CurrencyError.rateNotAvailable = error else {
                 XCTFail("Expected rateNotAvailable")
                 return
             }
         }
-    }
-
-    // MARK: - Marketing Price Rounding
-
-    func testRoundToMarketingPrice() {
-        let result = manager.roundToMarketingPrice(6.84)
-        XCTAssertEqual(result, 6.99)
-    }
-
-    func testRoundToMarketingPriceAlready99() {
-        let result = manager.roundToMarketingPrice(4.99)
-        XCTAssertEqual(result, 4.99)
-    }
-
-    func testRoundToMarketingPriceMinimum() {
-        let result = manager.roundToMarketingPrice(0.01)
-        XCTAssertEqual(result, 0.99)
-    }
-
-    // MARK: - Currency Amount
-
-    func testCurrencyAmountFormatted() {
-        let amount = CurrencyAmount(amount: 50.0, currencyCode: "USD")
-        XCTAssertFalse(amount.formatted.isEmpty)
-    }
-
-    func testCurrencyAmountConverted() {
-        manager.exchangeRates = ["USD": 1.0, "GBP": 0.75]
-        let amount = CurrencyAmount(amount: 100.0, currencyCode: "USD")
-        let converted = amount.converted(to: "GBP")
-        XCTAssertNotNil(converted)
-        XCTAssertEqual(converted?.amount, 75.0)
-    }
-
-    func testCurrencyAmountConvertedSameCurrency() {
-        let amount = CurrencyAmount(amount: 100.0, currencyCode: "USD")
-        let converted = amount.converted(to: "USD")
-        XCTAssertNotNil(converted)
-        XCTAssertEqual(converted?.amount, 100.0)
     }
 
     // MARK: - Historical Rate

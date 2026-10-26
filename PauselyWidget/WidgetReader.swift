@@ -18,11 +18,12 @@ enum WidgetReader {
             return WidgetSummaryData()
         }
         return WidgetSummaryData(
-            monthlySpend: defaults.double(forKey: "widget_monthlySpend"),
             activeCount: defaults.integer(forKey: "widget_activeCount"),
             upcomingCount: defaults.integer(forKey: "widget_upcomingCount"),
-            currencyCode: defaults.string(forKey: "widget_currencyCode") ?? "USD",
-            topInsight: defaults.string(forKey: "widget_topInsight") ?? "Track your subscriptions"
+            topInsight: defaults.string(forKey: "widget_topInsight") ?? "Track your subscriptions",
+            monthlyText: defaults.string(forKey: "widget_monthlySpendText") ?? "–",
+            monthlyWholeText: defaults.string(forKey: "widget_monthlySpendWholeText") ?? "–",
+            yearlyWholeText: defaults.string(forKey: "widget_yearlySpendWholeText") ?? "–"
         )
     }
 
@@ -48,8 +49,9 @@ enum WidgetReader {
         return Date(timeIntervalSince1970: ts)
     }
 
-    static func readLiveActivityAmount() -> Double {
-        UserDefaults(suiteName: suiteName)?.double(forKey: "liveActivity_amount") ?? 0
+    /// The next charge as the app formatted it, or "" when there is none.
+    static func readLiveActivityAmountText() -> String {
+        UserDefaults(suiteName: suiteName)?.string(forKey: "liveActivity_amountText") ?? ""
     }
 
 }

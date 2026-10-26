@@ -186,7 +186,7 @@ final class SubscriptionIntelligenceEngineTests: XCTestCase {
     func testTotalsOnlyCountLikelyOrBetter() {
         var signals = monthly("netflix.com", name: "Netflix", amount: 14.99, months: [(6, 12), (7, 12), (8, 12), (9, 12)])
         signals.append(signal("honk.com", name: "Honkmobile", on: date(2026, 9, 14), amount: 500))
-        XCTAssertEqual(analyze(signals).monthlyTotal, 14.99)
+        XCTAssertEqual(analyze(signals).monthlyTotal(in: "CAD", rates: .fallback), 14.99)  // signals are in CAD
     }
 
     // MARK: Text analyzer

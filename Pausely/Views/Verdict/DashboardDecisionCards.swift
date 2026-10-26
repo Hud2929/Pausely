@@ -131,8 +131,8 @@ struct PendingDecisionsCard: View {
                         .foregroundStyle(Color.obsidianTextSecondary)
                 }
                 Spacer(minLength: 8)
-                // The customer's currency, like every other card on the dashboard.
-                Text(currencyManager.format(currencyManager.convertToSelected(sub.amount, from: sub.currency)))
+                // The charge being decided on, in what it's billed in (as in the reminder and the verdict).
+                Text(sub.chargeText)
                     .font(.system(.subheadline, design: .rounded).weight(.semibold))
                     .foregroundStyle(.white)
                 Text("Decide")

@@ -12,112 +12,23 @@ import ActivityKit
 // MARK: - Widget Summary
 
 struct WidgetSummaryData: Codable {
-    let monthlySpend: Double
     let activeCount: Int
     let upcomingCount: Int
-    let currencyCode: String
     let topInsight: String
+    /// Amounts arrive formatted by the app (MoneyFormat): the widget never formats money itself,
+    /// so it always matches the app's currency, symbol and decimals.
+    let monthlyText: String
+    let monthlyWholeText: String
+    let yearlyWholeText: String
 
-    init(monthlySpend: Double = 0, activeCount: Int = 0, upcomingCount: Int = 0,
-         currencyCode: String = "USD", topInsight: String = "Loading...") {
-        self.monthlySpend = monthlySpend
+    init(activeCount: Int = 0, upcomingCount: Int = 0, topInsight: String = "Loading...",
+         monthlyText: String = "–", monthlyWholeText: String = "–", yearlyWholeText: String = "–") {
         self.activeCount = activeCount
         self.upcomingCount = upcomingCount
-        self.currencyCode = currencyCode
         self.topInsight = topInsight
-    }
-
-    var currencySymbol: String {
-        switch currencyCode {
-        case "USD": return "$"
-        case "EUR": return "€"
-        case "GBP": return "£"
-        case "JPY", "CNY": return "¥"
-        case "CAD": return "C$"
-        case "AUD": return "A$"
-        case "CHF": return "Fr"
-        case "INR": return "₹"
-        case "KRW": return "₩"
-        case "BRL": return "R$"
-        case "MXN", "ARS", "CLP", "COP", "UYU", "CUP", "DOP", "NIO", "NAD", "BZD", "BSD", "BBD", "TTD", "XCD", "LRD": return "$"
-        case "SGD": return "S$"
-        case "HKD": return "HK$"
-        case "NOK", "SEK", "DKK", "ISK": return "kr"
-        case "NZD": return "NZ$"
-        case "ZAR": return "R"
-        case "RUB": return "₽"
-        case "TRY": return "₺"
-        case "PLN": return "zł"
-        case "THB": return "฿"
-        case "IDR": return "Rp"
-        case "MYR": return "RM"
-        case "PHP": return "₱"
-        case "CZK": return "Kč"
-        case "ILS": return "₪"
-        case "AED": return "د.إ"
-        case "SAR", "QAR", "OMR", "YER": return "﷼"
-        case "TWD": return "NT$"
-        case "VND": return "₫"
-        case "EGP": return "£"
-        case "PKR", "MUR", "SCR", "NPR", "LKR": return "₨"
-        case "NGN": return "₦"
-        case "BDT": return "৳"
-        case "RON": return "lei"
-        case "HUF": return "Ft"
-        case "UAH": return "₴"
-        case "PEN": return "S/"
-        case "MAD": return "د.م."
-        case "KWD": return "د.ك"
-        case "BHD": return ".د.ب"
-        case "JOD": return "د.ا"
-        case "KES": return "KSh"
-        case "GHS": return "₵"
-        case "TZS": return "TSh"
-        case "UGX": return "USh"
-        case "HRK": return "kn"
-        case "BGN": return "лв"
-        case "RSD": return "дин"
-        case "GEL": return "₾"
-        case "AMD": return "֏"
-        case "AZN": return "₼"
-        case "KZT": return "₸"
-        case "UZS": return "so'm"
-        case "TJS": return "SM"
-        case "KGS": return "с"
-        case "MNT": return "₮"
-        case "MMK": return "K"
-        case "KHR": return "៛"
-        case "LAK": return "₭"
-        case "BND": return "$"
-        case "BWP": return "P"
-        case "ZMW": return "ZK"
-        case "MWK": return "MK"
-        case "MZN": return "MT"
-        case "SZL", "LSL": return "L"
-        case "AOA": return "Kz"
-        case "CDF": return "FC"
-        case "RWF": return "FRw"
-        case "BIF": return "FBu"
-        case "DJF": return "Fdj"
-        case "ETB": return "Br"
-        case "SOS": return "Sh"
-        case "GMD": return "D"
-        case "GNF": return "FG"
-        case "SLL": return "Le"
-        case "MRU": return "UM"
-        case "STN": return "Db"
-        case "XOF": return "CFA"
-        case "XAF": return "FCFA"
-        case "AWG", "ANG": return "ƒ"
-        case "HTG": return "G"
-        case "GTQ": return "Q"
-        case "HNL": return "L"
-        case "CRC": return "₡"
-        case "PAB": return "B/."
-        case "PYG": return "₲"
-        case "BOB", "VES": return "Bs"
-        default: return "$"
-        }
+        self.monthlyText = monthlyText
+        self.monthlyWholeText = monthlyWholeText
+        self.yearlyWholeText = yearlyWholeText
     }
 }
 
@@ -130,13 +41,11 @@ struct WidgetTrialInfo: Codable, Identifiable {
     let monthlyAmount: Double
     let currencyCode: String
     let billingFrequency: String
+    /// The first charge after the trial, formatted by the app in the subscription's currency.
+    let amountText: String?
 
     var daysRemaining: Int {
         max(0, Calendar.current.dateComponents([.day], from: Date(), to: trialEndsAt).day ?? 0)
-    }
-
-    var currencySymbol: String {
-        WidgetSummaryData(currencyCode: currencyCode).currencySymbol
     }
 }
 
@@ -152,7 +61,7 @@ struct PauselyLiveActivityAttributes: ActivityAttributes {
 
     var subscriptionName: String
     var renewalDate: Date
-    var amount: Double
-    var currencySymbol: String
+    /// The next charge in the subscription's own currency, formatted by the app ("$129.99").
+    var amountText: String
     var frequency: String
 }

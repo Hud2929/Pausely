@@ -45,7 +45,8 @@ struct PausedCard: View {
     }
 
     var body: some View {
-        let converted = currencyManager.convertToSelected(subscription.amount, from: subscription.currency)
+        // A pause saves the monthly cost, in what the subscription is billed in.
+        let monthlySaving = MoneyFormat.string(subscription.monthlyCost, subscription.currency)
         VStack(alignment: .leading, spacing: 12) {
             HStack {
                 Text("\(daysUntilResume)d")
@@ -64,7 +65,7 @@ struct PausedCard: View {
                 .foregroundStyle(.primary)
                 .lineLimit(1)
 
-            Text("Saving \(currencyManager.format(converted))/mo")
+            Text("Saving \(monthlySaving)/mo")
                 .font(.system(.footnote, design: .rounded).weight(.medium))
                 .foregroundStyle(.orange)
         }
@@ -72,7 +73,7 @@ struct PausedCard: View {
         .frame(width: 140, height: 120)
         .surfaceCard(cornerRadius: 20)
         .accessibilityElement(children: .combine)
-        .accessibilityLabel("\(subscription.name), paused for \(daysUntilResume) more days, saving \(currencyManager.format(converted)) per month")
+        .accessibilityLabel("\(subscription.name), paused for \(daysUntilResume) more days, saving \(monthlySaving) per month")
         .accessibilityHint("Double-tap to view details and resume")
     }
 }

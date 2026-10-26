@@ -29,7 +29,8 @@ struct TrialCountdownProvider: TimelineProvider {
                 trialEndsAt: Calendar.current.date(byAdding: .day, value: 2, to: Date())!,
                 monthlyAmount: 15.99,
                 currencyCode: "USD",
-                billingFrequency: "Monthly"
+                billingFrequency: "Monthly",
+                amountText: "$15.99"  // money-guard: sample
             )
         ])
     }
@@ -116,7 +117,7 @@ struct TrialSmallView: View {
                         .font(.system(.subheadline, design: .rounded).weight(.semibold))
                         .foregroundStyle(.primary)
                         .lineLimit(1)
-                    Text("\(trial.currencySymbol)\(String(format: "%.2f", trial.monthlyAmount))/\(shortFrequency(trial.billingFrequency)) after")
+                    Text("\(trial.amountText ?? "")/\(shortFrequency(trial.billingFrequency)) after")
                         .font(.system(.caption2, design: .rounded))
                         .foregroundStyle(.secondary)
                         .lineLimit(1)
@@ -187,7 +188,7 @@ struct TrialRowView: View {
                 .foregroundStyle(urgencyColor(for: trial.daysRemaining))
                 .frame(minWidth: 24, alignment: .trailing)
 
-            Text("\(trial.currencySymbol)\(String(format: "%.2f", trial.monthlyAmount))")
+            Text(trial.amountText ?? "")
                 .font(.system(.caption2, design: .rounded))
                 .foregroundStyle(.secondary)
                 .frame(minWidth: 44, alignment: .trailing)
@@ -244,7 +245,8 @@ private func shortFrequency(_ frequency: String) -> String {
             trialEndsAt: Calendar.current.date(byAdding: .day, value: 1, to: Date())!,
             monthlyAmount: 9.99,
             currencyCode: "USD",
-            billingFrequency: "Monthly"
+            billingFrequency: "Monthly",
+            amountText: "$9.99"  // money-guard: sample
         )
     ])
     TrialCountdownEntry(date: Date(), trials: [])
@@ -254,8 +256,8 @@ private func shortFrequency(_ frequency: String) -> String {
     TrialCountdownWidget()
 } timeline: {
     TrialCountdownEntry(date: Date(), trials: [
-        WidgetTrialInfo(id: "1", name: "Spotify", trialEndsAt: Calendar.current.date(byAdding: .day, value: 1, to: Date())!, monthlyAmount: 9.99, currencyCode: "USD", billingFrequency: "Monthly"),
-        WidgetTrialInfo(id: "2", name: "Hulu", trialEndsAt: Calendar.current.date(byAdding: .day, value: 3, to: Date())!, monthlyAmount: 17.99, currencyCode: "USD", billingFrequency: "Monthly"),
-        WidgetTrialInfo(id: "3", name: "Disney+", trialEndsAt: Calendar.current.date(byAdding: .day, value: 6, to: Date())!, monthlyAmount: 13.99, currencyCode: "USD", billingFrequency: "Monthly")
+        WidgetTrialInfo(id: "1", name: "Spotify", trialEndsAt: Calendar.current.date(byAdding: .day, value: 1, to: Date())!, monthlyAmount: 9.99, currencyCode: "USD", billingFrequency: "Monthly", amountText: "$9.99"),  // money-guard: sample
+        WidgetTrialInfo(id: "2", name: "Hulu", trialEndsAt: Calendar.current.date(byAdding: .day, value: 3, to: Date())!, monthlyAmount: 17.99, currencyCode: "USD", billingFrequency: "Monthly", amountText: "$17.99"),  // money-guard: sample
+        WidgetTrialInfo(id: "3", name: "Disney+", trialEndsAt: Calendar.current.date(byAdding: .day, value: 6, to: Date())!, monthlyAmount: 13.99, currencyCode: "USD", billingFrequency: "Monthly", amountText: "$13.99")  // money-guard: sample
     ])
 }

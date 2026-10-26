@@ -193,11 +193,7 @@ struct CostPerUseCard: View {
 
     private var subtitleText: String {
         if result.isWasted {
-            let formatter = NumberFormatter()
-            formatter.numberStyle = .currency
-            formatter.currencyCode = result.subscription.currency
-            formatter.maximumFractionDigits = 2
-            let wasted = formatter.string(from: result.subscription.monthlyCost as NSDecimalNumber) ?? "\(result.subscription.monthlyCost)"
+            let wasted = MoneyFormat.string(result.subscription.monthlyCost, result.subscription.currency)
             return "You're paying \(wasted) — no usage data available"
         }
         guard let cph = result.costPerHour else {

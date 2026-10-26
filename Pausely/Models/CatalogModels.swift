@@ -27,6 +27,17 @@ enum Region: String, Codable, CaseIterable {
         }
     }
 
+    /// The catalog region whose prices are in `currency`, or `.us` when the catalog has none.
+    static func forCurrency(_ currency: String) -> Region {
+        switch MoneyFormat.normalizedCode(currency) {
+        case "CAD": return .ca
+        case "GBP": return .uk
+        case "EUR": return .eu
+        case "AUD": return .au
+        default:    return .us
+        }
+    }
+
     var displayName: String {
         switch self {
         case .us: return "United States"
@@ -275,6 +286,16 @@ struct CatalogEntry: Identifiable, Codable, Equatable {
         self.canPause = canPause
         self.supportedTiers = supportedTiers
         self.lastUpdated = lastUpdated
+    }
+
+    /// The price the add flow shows and saves for `tier` and someone paying in `currency`:
+    /// their region's price, else the global one, else the US one, else any.
+    func pricing(for tier: PricingTier, payingIn currency: String) -> TierPricing? {
+        let region = Region.forCurrency(currency)
+        return supportedTiers.first { $0.tier == tier && $0.region == region }
+            ?? supportedTiers.first { $0.tier == tier && $0.region == .global }
+            ?? supportedTiers.first { $0.tier == tier && $0.region == .us }
+            ?? supportedTiers.first { $0.tier == tier }
     }
 
     func pricing(for tier: PricingTier, in region: Region = .us) -> TierPricing? {

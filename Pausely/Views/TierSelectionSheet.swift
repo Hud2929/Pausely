@@ -46,28 +46,9 @@ struct TierSelectionSheet: View {
     }
 
     // MARK: - Region
-    private var userRegion: Region {
-        switch currencyManager.selectedCurrency {
-        case "USD": return .us
-        case "CAD": return .ca
-        case "GBP": return .uk
-        case "EUR": return .eu
-        case "AUD": return .au
-        default:    return .us
-        }
-    }
-
+    /// The same price the add flow saves (see `CatalogEntry.pricing(for:payingIn:)`).
     private var availableTierPricings: [TierPricing] {
-        // For EVERY tier type the entry has, find the best pricing for this user's region.
-        // Priority: user's region → global → US → any available.
-        // This ensures all plan types (Individual/Family/Student) appear even if only
-        // US pricing exists — non-US users get approximate pricing with the "≈" indicator.
-        entry.availableTiers.compactMap { tier in
-            entry.supportedTiers.first { $0.tier == tier && $0.region == userRegion }
-                ?? entry.supportedTiers.first { $0.tier == tier && $0.region == .global }
-                ?? entry.supportedTiers.first { $0.tier == tier && $0.region == .us }
-                ?? entry.supportedTiers.first { $0.tier == tier }
-        }
+        entry.availableTiers.compactMap { entry.pricing(for: $0, payingIn: currencyManager.selectedCurrency) }
     }
 
     private var uniqueTiers: [PricingTier] {
@@ -321,7 +302,7 @@ struct TierSelectionSheet: View {
                         HStack(spacing: 6) {
                             Image(systemName: "arrow.up.circle")
                                 .font(.caption2.weight(.semibold))
-                            Text("Switch to Annual, save \(currencyManager.formatCatalogPrice(savings * 12, sourceCurrency: pricing.currencyCode))/yr")
+                            Text("Switch to Annual, save \(MoneyFormat.string(savings * 12, pricing.currencyCode))/yr")
                                 .font(.caption.weight(.medium))
                         }
                         .foregroundStyle(.white.opacity(0.35))
@@ -485,7 +466,7 @@ struct TierSelectionSheet: View {
                             .onChange(of: priceOverrideText) { _, val in
                                 let clean = val.replacingOccurrences(of: ",", with: ".")
                                 if let d = Decimal(string: clean), d <= 0 {
-                                    priceError = "Enter an amount greater than $0"
+                                    priceError = "Enter an amount greater than zero"
                                 } else {
                                     priceError = nil
                                 }
@@ -565,7 +546,7 @@ struct TierSelectionSheet: View {
             Button {
                 guard canAdd else {
                     STAnimation.impactMedium()
-                    priceError = "Enter an amount greater than $0"
+                    priceError = "Enter an amount greater than zero"
                     return
                 }
                 STAnimation.success()
@@ -646,17 +627,19 @@ struct TierSelectionSheet: View {
         }
     }
 
+    /// The price that will be saved, in the currency it will be saved in ("US$15.49/mo"), so what
+    /// the sheet shows is exactly what the subscription list shows afterwards.
     private var effectivePriceText: String {
         guard let pricing = selectedTierPricing else { return "N/A" }
         let price: Double = selectedBillingFrequency == .yearly
             ? (pricing.annualPriceUSD ?? pricing.monthlyPriceUSD * 12)
             : pricing.monthlyPriceUSD
-        return "\(currencyManager.priceIndicator)\(currencyManager.formatCatalogPrice(price, sourceCurrency: pricing.currencyCode))/\(selectedBillingFrequency == .yearly ? "yr" : "mo")"
+        return "\(MoneyFormat.string(price, pricing.currencyCode))/\(selectedBillingFrequency == .yearly ? "yr" : "mo")"
     }
 
     private var annualTotalText: String {
         guard let pricing = selectedTierPricing, let annual = pricing.annualPriceUSD else { return "" }
-        return "\(currencyManager.priceIndicator)\(currencyManager.formatCatalogPrice(annual, sourceCurrency: pricing.currencyCode))/yr"
+        return "\(MoneyFormat.string(annual, pricing.currencyCode))/yr"
     }
 
     private func parsePriceOverride() -> Decimal? {

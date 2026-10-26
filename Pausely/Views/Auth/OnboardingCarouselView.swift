@@ -167,7 +167,7 @@ struct DashboardPreviewPage: View {
 
                     // Hero spend card with glass effect
                     VStack(spacing: 8) {
-                        Text("$247")
+                        Text(verbatim: OnboardingSample.money(247, wholeUnits: true))
                             .font(.system(.largeTitle, design: .rounded).weight(.bold))
                             .foregroundColor(.white)
 
@@ -294,7 +294,7 @@ struct DecisionPreviewPage: View {
                         Text("Netflix renews in 2 days")
                             .font(.system(.subheadline, design: .rounded).weight(.semibold))
                             .foregroundColor(.white)
-                        Text("$17.99 on Thursday. Keep it or cancel it?")
+                        Text("\(OnboardingSample.money(17.99)) on Thursday. Keep it or cancel it?")
                             .font(.system(.caption, design: .rounded))
                             .foregroundColor(Color.obsidianTextSecondary)
                     }
@@ -312,8 +312,8 @@ struct DecisionPreviewPage: View {
                         .font(.system(.title3, design: .rounded).weight(.bold))
                         .foregroundColor(.white)
                     VStack(alignment: .leading, spacing: 8) {
-                        previewFact("calendar", "That's $215.88 a year")
-                        previewFact("hourglass", "Used 2 hours this month · $9.00 an hour")
+                        previewFact("calendar", "That's \(OnboardingSample.money(215.88)) a year")
+                        previewFact("hourglass", "Used 2 hours this month · \(OnboardingSample.money(9)) an hour")
                         previewFact("clock", "Cancel now and you keep it until Thursday")
                     }
                     HStack(spacing: 10) {
@@ -388,10 +388,10 @@ struct ReceiptPreviewPage: View {
     let animate: Bool
     @State private var localAnimate = false
 
-    private let lines: [(name: String, detail: LocalizedStringKey, amount: String)] = [
-        ("Hulu", "Cancelled · 12 charges avoided", "$227.88"),
-        ("Gym app", "Free trial cancelled in time", "$29.99"),
-        ("Cloud storage", "Duplicate cancelled · 4 charges", "$11.96")
+    private let lines: [(name: String, detail: LocalizedStringKey, amount: Decimal)] = [
+        ("Hulu", "Cancelled · 12 charges avoided", 227.88),
+        ("Gym app", "Free trial cancelled in time", 29.99),
+        ("Cloud storage", "Duplicate cancelled · 4 charges", 11.96)
     ]
 
     var body: some View {
@@ -402,7 +402,7 @@ struct ReceiptPreviewPage: View {
                         .font(.system(.caption2, design: .rounded).weight(.semibold))
                         .tracking(2)
                         .foregroundColor(Color.obsidianTextTertiary)
-                    Text("$269.83")
+                    Text(verbatim: OnboardingSample.money(269.83))
                         .font(.system(size: 40, weight: .black, design: .rounded))
                         .foregroundColor(Color.accentMint)
                     Text("Pausely paid for itself 9×")
@@ -425,7 +425,7 @@ struct ReceiptPreviewPage: View {
                                     .foregroundColor(Color.obsidianTextSecondary)
                             }
                             Spacer()
-                            Text(line.amount)
+                            Text(verbatim: OnboardingSample.money(line.amount))
                                 .font(.system(.subheadline, design: .rounded).weight(.bold))
                                 .foregroundColor(Color.accentMint)
                         }
@@ -449,7 +449,7 @@ struct ReceiptPreviewPage: View {
             .opacity(localAnimate ? 1 : 0)
             .animation(.spring(response: 0.5, dampingFraction: 0.8), value: localAnimate)
             .accessibilityElement(children: .ignore)
-            .accessibilityLabel("Example Savings Receipt: $269.83 saved, Pausely paid for itself 9 times")
+            .accessibilityLabel("Example Savings Receipt: \(OnboardingSample.money(269.83)) saved, Pausely paid for itself 9 times")
 
             OnboardingHeadline(
                 title: "See exactly what you saved",
@@ -481,4 +481,17 @@ struct ReceiptPreviewPage: View {
         onGetStarted: {},
         onSignIn: {}
     )
+}
+
+/// Amounts in the onboarding mockups, in the reader's own currency (converted from the US prices
+/// they were written in), so nobody outside the US meets a dollar sign before they start.
+enum OnboardingSample {
+    static func money(_ usd: Decimal, wholeUnits: Bool = false) -> String {
+        let manager = CurrencyManager.shared
+        let currency = manager.selectedCurrency
+        guard let amount = manager.rates.convert(usd, from: "USD", to: currency) else {
+            return MoneyFormat.string(usd, "USD", wholeUnits: wholeUnits)
+        }
+        return MoneyFormat.string(amount, currency, wholeUnits: wholeUnits)
+    }
 }

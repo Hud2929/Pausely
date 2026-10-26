@@ -223,11 +223,7 @@ struct UsageTrackingSection: View {
     }
 
     private func formatCostPerHour(_ value: Decimal) -> String {
-        let formatter = NumberFormatter()
-        formatter.numberStyle = .currency
-        formatter.currencyCode = subscription.currency
-        formatter.maximumFractionDigits = 2
-        return formatter.string(from: value as NSDecimalNumber) ?? "\(value)"
+        MoneyFormat.string(value, subscription.currency)
     }
 
     private func costPerHourColor(_ value: Decimal) -> Color {

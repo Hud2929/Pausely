@@ -79,7 +79,7 @@ struct CategoryBreakdownCard: View {
     @ObservedObject private var currencyManager = CurrencyManager.shared
 
     private var totalMonthly: Decimal {
-        categories.reduce(into: Decimal(0)) { $0 += $1.amount }
+        categories.reduce(into: Decimal(0)) { $0 += $1.amount }  // money-guard: amounts are already in the display currency
     }
 
     var body: some View {

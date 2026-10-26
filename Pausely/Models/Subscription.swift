@@ -57,7 +57,7 @@ struct Subscription: Identifiable, Codable, Equatable {
         logoUrl: String? = nil,
         category: String? = nil,
         amount: Decimal,
-        currency: String = "USD",
+        currency: String = CurrencyManager.shared.selectedCurrency,  // what the user pays in, unless told otherwise
         billingFrequency: BillingFrequency = .monthly,
         nextBillingDate: Date? = nil,
         monthlyUsageMinutes: Int = 0,
@@ -131,12 +131,12 @@ struct Subscription: Identifiable, Codable, Equatable {
     /// Amount formatted in the user's currently selected currency
     var displayAmountInUserCurrency: String {
         let manager = CurrencyManager.shared
-        guard currency != manager.selectedCurrency else {
+        guard currency != manager.selectedCurrency,
+              let converted = manager.rates.convert(amount, from: currency, to: manager.selectedCurrency) else {
+            // Same currency, or one Pausely can't convert: show what is really charged.
             return displayAmount
         }
-        let amountValue = Double(truncating: amount as NSNumber)
-        let converted = (try? manager.convert(amountValue, from: currency, to: manager.selectedCurrency)) ?? amountValue
-        return manager.format(Decimal(converted))
+        return manager.format(converted)
     }
 
     /// Monthly cost formatted in the user's currently selected currency
@@ -145,9 +145,10 @@ struct Subscription: Identifiable, Codable, Equatable {
         guard currency != manager.selectedCurrency else {
             return formatCurrency(monthlyCost)
         }
-        let amountValue = Double(truncating: monthlyCost as NSNumber)
-        let converted = (try? manager.convert(amountValue, from: currency, to: manager.selectedCurrency)) ?? amountValue
-        return manager.format(Decimal(converted))
+        guard let converted = manager.rates.convert(monthlyCost, from: currency, to: manager.selectedCurrency) else {
+            return formatCurrency(monthlyCost)
+        }
+        return manager.format(converted)
     }
 
     var displayAnnualCost: String {
@@ -259,11 +260,7 @@ struct Subscription: Identifiable, Codable, Equatable {
     // MARK: - Helper Methods
     
     private func formatCurrency(_ value: Decimal) -> String {
-        let formatter = NumberFormatter()
-        formatter.numberStyle = .currency
-        formatter.currencyCode = currency
-        formatter.maximumFractionDigits = 2
-        return formatter.string(from: value as NSDecimalNumber) ?? "\(currency) \(value)"
+        MoneyFormat.string(value, currency)
     }
 
     // MARK: - StoreKit Integration

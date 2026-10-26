@@ -103,8 +103,12 @@ struct IntelligenceReport: Equatable {
     var active: [ProvenSubscription] {
         subscriptions.filter { $0.status != .likelyEnded && $0.status != .cancelled }
     }
-    var monthlyTotal: Decimal { active.filter { $0.tier >= .likely }.reduce(0) { $0 + $1.monthlyCost } }
-    var annualTotal: Decimal { monthlyTotal * 12 }
+    /// What the likely-or-better subscriptions cost a month in `currency`. A mailbox can hold
+    /// receipts in several currencies, so each one is converted before adding.
+    func monthlyTotal(in currency: String, rates: CurrencyRates = CurrencyManager.shared.rates) -> Decimal {
+        MoneyMath.total(active.filter { $0.tier >= .likely }, in: currency, rates: rates,
+                        amount: \.monthlyCost, currencyOf: \.currency)
+    }
 }
 
 // MARK: - Engine

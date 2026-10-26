@@ -96,8 +96,10 @@ struct StoreKitUpgradeView: View {
         trialAvailable = sevenDays ? await subscription.isEligibleForIntroOffer : false
     }
 
+    /// The App Store's own price for this storefront. Until it loads, "…": Pausely never shows a
+    /// price it worked out itself, because Apple sets each country's price.
     private func priceText(_ tier: SubscriptionTier) -> String {
-        storeManager.product(for: tier)?.displayPrice ?? tier.priceInUserCurrency()
+        storeManager.product(for: tier)?.displayPrice ?? "…"
     }
 
     var body: some View {
