@@ -47,7 +47,7 @@ subscriber (10× its price). Guardrail: under 2% wrong detections.
 
 | # | Feature | What it does | Status |
 |---|---|---|---|
-| 1 | **Find Everything** | Screenshot Import (Settings › Subscriptions or any card app, read on device with Vision), then Gmail, Outlook and iCloud mail import, then Apple Card via FinanceKit (US/UK, if eligible). | Gmail built, waiting on Google; the rest is new |
+| 1 | **Find Everything** | Screenshot Import (Settings › Subscriptions or any card app, read on device with Vision), then Gmail, Outlook and iCloud mail import, then Apple Card via FinanceKit (US/UK, if eligible). Full plan: `INBOX_PLAN.md`. | Gmail built, waiting on Google; the rest is new |
 | 2 | **Renewal Verdict + Trial Guard** | A decision before every charge; a "safe to cancel now?" flag per service, a last-day alert and a Live Activity for the final hours of a trial or renewal. | Verdict shipped in 1.0.3 |
 | 3 | **Cancel Concierge** | Step-by-step guides (164 today), drafted cancellation emails you send yourself, confirmation detected from your inbox, and crowd results ("worked, 2 min, offered 50% off"). Never stores passwords, never cancels Apple subscriptions for you. | Guides shipped; rest is new |
 | 4 | **Proof: Savings Receipt + Refund Finder + Promise** | Receipt with evidence levels (confirmation found / next charge didn't appear / self-reported); Refund Finder for charges after cancelling (deadlines, prefilled requests, outcome on the receipt). | Receipt and Promise shipped |
