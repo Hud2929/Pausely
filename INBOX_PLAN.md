@@ -16,6 +16,33 @@ strict multi-pass "find everything" protocol behind release gates, and keep watc
 v2 7.2 → v3 8.2 → v4 8.8 → **v5 9.3**. About 12 weeks of work and under $1,000 a year in fees.
 **Verdict: worth it.** It's the highest-return item on the roadmap.
 
+## Build status (2026-10-28)
+
+**Built and tested, still off in release builds** (`FeatureFlags`):
+- One engine (`Pausely/Services/Mailbox/`) with Gmail, Microsoft Graph and IMAP adapters, several
+  inboxes at once, receipts counted once across inboxes, disconnect removes that inbox's facts.
+- IMAP presets checked against the live servers (TLS, capabilities, clean wrong-password handling):
+  iCloud, Yahoo, AOL, Gmail app password, GMX (two), WEB.DE, Zoho, Fastmail, Xfinity. Mail.com and
+  Yandex were dropped (unreachable).
+- Real-data run: 27 real emails from a real Gmail inbox (kept outside the repository), through the
+  app's own scanner over IMAP. It finds every live subscription in the sample with the right amount
+  and billing period (monthly SaaS on Stripe, a yearly Play subscription with an intro price ending,
+  a yearly direct plan, a membership from an expired free trial) and none of the orders, rentals,
+  rides, promos or cancelled channels. The Gmail queries return the same messages in the real
+  mailbox. Read-only confirmed in the server log (EXAMINE, SEARCH, FETCH with BODY.PEEK).
+- Bugs that real mail exposed and that are now fixed and pinned in `RealWorldReceiptShapesTests`:
+  Stripe "Qty 1" read as an order; service periods ("Oct 20–Nov 20") ignored; "cancellation policy"
+  read as a cancellation; "then $269.99/year" picked over the price charged; "Amazon Prime Video"
+  read as Prime; channel cancellations attached to Prime Video; footers ("You received this email",
+  "Refund Policy") flipping the meaning; declined cards counted as charges; gaps in receipt history
+  hiding a monthly plan; App Store and Play apps lumped under "Apple"/"Google".
+
+**Before turning any provider on in release:** the Microsoft app's client ID in `MS_CLIENT_ID`;
+one real sign-in per provider on a device (`LiveMailboxTests.testRealConnectedInboxes`); the gates
+in section 5; Google's decision for Gmail; and translations. The whole feature is English-only
+today: the inbox screens, the app-password steps in `IMAPPreset`, scan status lines, `MailboxError`
+messages and the engine's reasons and insights (about 150 strings, five languages).
+
 ---
 
 ## 1. The "10": what the ideal inbox scanner does

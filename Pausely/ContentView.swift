@@ -146,8 +146,16 @@ struct RootView: View {
             Group {
                 if isDemoGmailResults {
                     #if DEBUG
-                    GmailImportView()
-                        .onAppear { GmailSubscriptionScanner.shared.loadDemoResults() }
+                    InboxImportView()
+                        .onAppear { InboxScanner.shared.loadDemoResults() }
+                    #endif
+                } else if isDemoScreen("--demo-inbox") {
+                    #if DEBUG
+                    InboxImportView()
+                    #endif
+                } else if isDemoScreen("--demo-imap-connect") {
+                    #if DEBUG
+                    IMAPConnectView(preset: IMAPPreset.find("icloud"))
                     #endif
                 } else if isDemoScreen("--demo-subscription") {
                     #if DEBUG

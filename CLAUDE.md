@@ -34,7 +34,8 @@ DEBUG-only code must not be referenced from release code paths.
 DEBUG launch arguments open single screens with demo data (see `RootView` in `ContentView.swift`):
 `--demo-mode`, `--demo-tab=N`, `--demo-verdict`, `--demo-receipt`, `--demo-savings`,
 `--demo-pause-plan` (`--demo-plan-active`), `--demo-subscription`, `--demo-subscription-edit`,
-`--demo-paywall`, `--demo-browser`, `--demo-gmail-results`, `--demo-wrapped`, and `--screenshots`
+`--demo-paywall`, `--demo-browser`, `--demo-gmail-results`, `--demo-inbox`, `--demo-imap-connect`,
+`--demo-wrapped`, and `--screenshots`
 for App Store captures. `--reset-state` (UI tests) starts signed out with onboarding not yet seen. `PauselyUITests/ScreenTourTests` captures every screen when
 `TEST_RUNNER_PAUSELY_TOUR_DIR` is set.
 
@@ -67,8 +68,25 @@ All pure and unit-tested; they take `now` and a `Calendar`.
 - `Core/Money`: `MoneyFormat` (all money text), `CurrencyRates` (conversion, built-in rates),
   `MoneyMath` (totals across currencies). `CurrencyManager` (in SupabaseManager.swift) holds the
   display currency and live rates.
-- `SupabaseManager`, `GmailSubscriptionScanner` (off in release via
-  `FeatureFlags`), `ScreenTimeManager` (manual usage), `ReferralManager`, `KeychainManager`, `AppConfig`.
+- `SupabaseManager`, `ScreenTimeManager` (manual usage), `ReferralManager`, `KeychainManager`, `AppConfig`.
+
+### Finding subscriptions in email (`Pausely/Services/Mailbox/`, plan in `INBOX_PLAN.md`)
+One engine, one adapter per kind of inbox, all read-only and on-device:
+- `MailboxProvider` (open → candidates → summaries → raw message → close/revoke) with three adapters:
+  `GmailMailboxProvider` (Gmail API, `gmail.readonly`), `MicrosoftGraphProvider` (Outlook, Hotmail,
+  Live, MSN, Microsoft 365; needs `MS_CLIENT_ID` in Info.plist) and `IMAP/IMAPMailboxProvider`
+  (iCloud, Yahoo, AOL, GMX, WEB.DE, Zoho, Fastmail, Xfinity, any server; app passwords; EXAMINE and
+  BODY.PEEK only, TLS 1.2+). Presets live in `MailboxAccount.swift`.
+- `MIMEParser` turns raw RFC 822 into a `RawEmail`; `Intelligence/EmailSignalExtractor` +
+  `ReceiptTextAnalyzer` reduce it to a `ReceiptSignal`; `ReceiptLedger` keeps the facts (never the
+  mail) tagged by inbox; `SubscriptionIntelligenceEngine` proves subscriptions from charge patterns.
+- `InboxScanner` runs it all for every connected inbox; `Views/InboxImportView` and `Views/Inbox/`
+  are the screens. Each provider is gated in `FeatureFlags` (on in DEBUG, off in release).
+- Tests: `PauselyTests/Services/Mailbox/` and `RealWorldReceiptShapesTests` (shapes from real inboxes,
+  rewritten with made-up details). `LiveMailboxTests` only run with `TEST_RUNNER_` variables:
+  `PAUSELY_LOCAL_IMAP` / `PAUSELY_LOCAL_IMAP_APP` (a local IMAP server), `PAUSELY_REAL_MAIL_DIR` (a
+  folder of .eml files), `PAUSELY_LIVE_SERVERS=1` (real provider servers), `PAUSELY_REAL_ACCOUNTS=1`
+  (inboxes connected in the app on that simulator). Never commit real email.
 
 ### Views
 - `Views/Verdict/`: `RenewalVerdictView`, `SavingsReceiptView`, `PausePlanView`, dashboard cards.

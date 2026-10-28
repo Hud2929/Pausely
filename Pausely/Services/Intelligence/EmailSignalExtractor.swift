@@ -57,23 +57,59 @@ extension ReceiptSignal {
 struct HeaderIntel: Equatable {
     var hasUnsubscribe: Bool
     var bulk: Bool
-    /// Domain that DKIM-signed the message. Reveals the real sender behind relay/ESP "From" addresses.
+    /// Domain whose DKIM signature the receiving server verified. Reveals the real sender behind relay/ESP
+    /// "From" addresses. Only the receiver's Authentication-Results is trusted, never a bare DKIM-Signature
+    /// header, which anyone can write.
     var authenticatedDomain: String?
+    /// The receiving server's verdicts, when it recorded them.
+    var hasAuthenticationResults = false
+    var dkimPassDomains: [String] = []
+    var spfPassDomain: String?
+    var dmarcFailed = false
+    var dmarcPassed = false
+    var dkimFailed = false
+    var spfFailed = false
 
     static func analyze(headers: [String: String]) -> HeaderIntel {
         let unsubscribe = headers["list-unsubscribe"] != nil
         let precedence = (headers["precedence"] ?? "").lowercased()
         let bulk = precedence == "bulk" || precedence == "list" || precedence == "junk" || headers["list-id"] != nil
 
-        var domain: String?
+        var intel = HeaderIntel(hasUnsubscribe: unsubscribe, bulk: bulk, authenticatedDomain: nil)
         if let results = headers["authentication-results"] {
-            domain = firstMatch(in: results, pattern: "dkim=pass[^;]*?header\\.(?:d|i)=@?([A-Za-z0-9.\\-]+)")
+            intel.hasAuthenticationResults = true
+            intel.dkimPassDomains = allMatches(in: results, pattern: "dkim=pass[^;]*?header\\.(?:d|i)=@?([A-Za-z0-9.\\-]+)")
+                .map { MerchantCatalog.registrableDomain($0) }
+            intel.authenticatedDomain = intel.dkimPassDomains.first
+            intel.spfPassDomain = firstMatch(in: results, pattern: "spf=pass[^;]*?smtp\\.mailfrom=(?:[^@;\\s]*@)?([A-Za-z0-9.\\-]+)")
+                .map { MerchantCatalog.registrableDomain($0) }
+            intel.dmarcFailed = firstMatch(in: results, pattern: "(dmarc=fail)") != nil
+            intel.dmarcPassed = firstMatch(in: results, pattern: "(dmarc=pass)") != nil
+            intel.dkimFailed = firstMatch(in: results, pattern: "(dkim=fail)") != nil
+            intel.spfFailed = firstMatch(in: results, pattern: "(spf=(?:soft)?fail)") != nil
         }
-        if domain == nil, let signature = headers["dkim-signature"] {
-            domain = firstMatch(in: signature, pattern: "(?:^|[;\\s])d=([A-Za-z0-9.\\-]+)")
+        return intel
+    }
+
+    /// The receiving server says the sender isn't who it claims: DMARC failed, or (with no DMARC verdict)
+    /// DKIM or SPF failed and nothing passed for the From domain. Conservative on purpose: when the server
+    /// recorded nothing, or passed DMARC, the message is not treated as forged.
+    func isSpoofed(fromDomain: String) -> Bool {
+        guard hasAuthenticationResults, !fromDomain.isEmpty else { return false }
+        if dmarcFailed { return true }
+        if dmarcPassed { return false }
+        let from = MerchantCatalog.registrableDomain(fromDomain)
+        let aligned = dkimPassDomains.contains(from) || spfPassDomain == from
+        return !aligned && (dkimFailed || spfFailed)
+    }
+
+    private static func allMatches(in text: String, pattern: String) -> [String] {
+        guard let regex = try? NSRegularExpression(pattern: pattern, options: [.caseInsensitive]) else { return [] }
+        let ns = text as NSString
+        return regex.matches(in: text, range: NSRange(location: 0, length: ns.length)).compactMap { match in
+            guard match.numberOfRanges > 1, match.range(at: 1).location != NSNotFound else { return nil }
+            return ns.substring(with: match.range(at: 1)).lowercased()
         }
-        return HeaderIntel(hasUnsubscribe: unsubscribe, bulk: bulk,
-                           authenticatedDomain: domain.map { MerchantCatalog.registrableDomain($0) })
     }
 
     private static func firstMatch(in text: String, pattern: String) -> String? {
@@ -108,9 +144,10 @@ enum PlatformHints {
         let subjectLower = subject.lowercased()
         let bodyLower = body.prefix(8_000).lowercased()
 
-        if registrable == "stripe.com" || subjectLower.contains("receipt from") || subjectLower.contains("invoice from") {
+        if registrable == "stripe.com" {
             return Hint(platform: "stripe", merchant: merchantFromSubject(subject))
         }
+        // Apple and Google come before the generic "receipt from" check: "Your receipt from Apple." is Apple's.
         if registrable == "apple.com" || fromDomain.hasSuffix("apple.com") {
             guard subjectLower.contains("receipt") || subjectLower.contains("subscription") || subjectLower.contains("invoice") else { return nil }
             return Hint(platform: "apple", merchant: appleItemName(from: body))
@@ -130,6 +167,9 @@ enum PlatformHints {
         }
         if registrable == "paddle.com" || registrable == "paddle.net" || bodyLower.contains("paddle.com") {
             return Hint(platform: "paddle", merchant: merchantFromSubject(subject))
+        }
+        if subjectLower.contains("receipt from") || subjectLower.contains("invoice from") {
+            return Hint(platform: "stripe", merchant: merchantFromSubject(subject))
         }
         return nil
     }
@@ -277,15 +317,20 @@ enum EmailSignalExtractor {
         if markupProvesReceipt, amount != nil, !flags.cancelled, !flags.refund { kind = .charge }
 
         // Keep only emails that say something useful: a charge or a lifecycle event.
-        let lifecycle: Set<EmailKind> = [.trialStarted, .trialEnding, .priceChange, .cancellation]
+        let lifecycle: Set<EmailKind> = [.trialStarted, .trialEnding, .priceChange, .cancellation, .paymentFailed]
         guard amount != nil || lifecycle.contains(kind) else { return nil }
+
+        // A "Netflix receipt" that Netflix didn't send must never become proof of a subscription.
+        let claimsKnownMerchant = catalog.isKnownDomain(sender.domain)
+        let spoofed = claimsKnownMerchant && intel.isSpoofed(fromDomain: sender.domain)
 
         let signal = ReceiptSignal(
             id: email.id, date: email.date, senderDomain: domain, senderName: sender.name, merchantHint: hint,
             platform: platform?.platform ?? "direct", kind: kind, amount: amount, currency: currency,
             cadenceHint: cadence, trialDays: analysis.trialDays, renewalLanguage: flags.renewal,
             oneTimeLanguage: flags.oneTime, promotional: promotional,
-            markup: markup?.kind, hasUnsubscribe: intel.hasUnsubscribe, bulkMail: intel.bulk)
+            markup: markup?.kind, hasUnsubscribe: intel.hasUnsubscribe, bulkMail: intel.bulk,
+            spoofSuspected: spoofed ? true : nil, nextAmount: analysis.nextAmount)
 
         // Ambiguous: a charge from a merchant we do not know, with no recurring or one-time language at all.
         var excerpt: String?

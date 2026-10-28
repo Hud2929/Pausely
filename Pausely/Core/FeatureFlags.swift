@@ -13,4 +13,27 @@ enum FeatureFlags {
         return false
         #endif
     }()
+
+    /// Outlook, Hotmail, Live, MSN and Microsoft 365 through Microsoft Graph. Needs the app registration's
+    /// client id (Info.plist MS_CLIENT_ID). Release builds stay off until real-account checks pass.
+    static let microsoftImportEnabled: Bool = {
+        #if DEBUG
+        return true
+        #else
+        return false
+        #endif
+    }()
+
+    /// iCloud, Yahoo, AOL, Gmail (app password), GMX, WEB.DE, Zoho, Fastmail and other IMAP inboxes.
+    /// Release builds stay off until real-account checks pass.
+    static let imapImportEnabled: Bool = {
+        #if DEBUG
+        return true
+        #else
+        return false
+        #endif
+    }()
+
+    /// Any way of finding subscriptions in email is available.
+    static var inboxImportEnabled: Bool { gmailImportEnabled || microsoftImportEnabled || imapImportEnabled }
 }

@@ -81,6 +81,17 @@ struct MerchantCatalog {
         // 1. Product/merchant hint from a parser (Stripe merchant, Apple app, "Amazon Prime", …)
         if let hint, let profile = profile(forName: hint) { return known(profile) }
 
+        // A store selling someone else's subscription (an App Store app, a Prime Video channel): the product named
+        // in the email is the merchant, not the store whose domain sent it.
+        if let hint, MerchantCatalog.marketplaceDomains.contains(registrable) {
+            let cleaned = MerchantCatalog.cleanDisplayName(hint)
+            let key = MerchantCatalog.normalize(cleaned)
+            if MerchantCatalog.isPlausibleMerchantName(cleaned), !key.isEmpty {
+                return ResolvedMerchant(key: key, displayName: MerchantCatalog.prettify(cleaned), category: nil,
+                                        kind: nil, isKnown: false, cancelURL: nil, nameQuality: 70)
+            }
+        }
+
         // 2. Sender domain
         if let index = domainIndex[registrable] ?? domainIndex[senderDomain.lowercased()] {
             // Mixed-commerce brands need a product hint to count as a subscription; otherwise stay "mixed".
@@ -219,6 +230,12 @@ struct MerchantCatalog {
         "brevo.com", "mktomail.com", "marketo.com", "e2ma.net", "stripe.com", "paddle.com", "paypal.com", "paypal.ca",
         "shopify.com", "squarespace.com", "substack.com", "typeform.com", "fastspring.com", "chargebee.com", "recurly.com",
         "zuora.com", "gumroad.com", "lemonsqueezy.com", "bounces.google.com", "google.com", "apple.com", "amazon.com"
+    ]
+
+    /// Stores and billing platforms that send receipts for other companies' subscriptions.
+    static let marketplaceDomains: Set<String> = [
+        "apple.com", "itunes.com", "google.com", "googleplay.com", "primevideo.com", "amazon.com", "amazon.ca",
+        "amazon.co.uk", "roku.com", "paypal.com", "paypal.ca", "stripe.com", "paddle.com", "paddle.net"
     ]
 
     private static let twoLevelTLDs: Set<String> = [

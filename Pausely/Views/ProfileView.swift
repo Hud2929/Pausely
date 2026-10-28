@@ -169,7 +169,7 @@ struct PremiumProfileView: View {
             SubscriptionWrappedView(subscriptions: store.subscriptions)
         }
         .sheet(isPresented: $showingGmailImport) {
-            GmailImportView()
+            InboxImportView()
         }
         .sheet(isPresented: $showingLanguage) {
             NavigationStack {
@@ -512,15 +512,16 @@ struct SettingsSection: View {
                     }
                 })
                 .accessibilityIdentifier("importFromAppStoreButton")
-                if FeatureFlags.gmailImportEnabled {
+                if FeatureFlags.inboxImportEnabled {
+                    let inboxes = InboxScanner.shared.accounts
                     SettingsRow(
                         icon: "envelope.fill",
-                        title: GmailSubscriptionScanner.shared.isConnected ? "Gmail Connected" : "Import from Gmail",
-                        value: GmailSubscriptionScanner.shared.connectedEmail,
+                        title: inboxes.isEmpty ? "Find subscriptions in email" : "Email inboxes",
+                        value: inboxes.isEmpty ? nil : (inboxes.count == 1 ? inboxes[0].address : "\(inboxes.count) connected"),
                         color: Color.accentMint,
                         action: { onGmailImport?() }
                     )
-                    .accessibilityIdentifier("gmailImportButton")
+                    .accessibilityIdentifier("inboxImportButton")
                 }
                 SettingsRow(icon: "bell.fill", title: "Notifications", color: Color.semanticWarning, action: onNotifications)
                     .accessibilityIdentifier("notificationsSettingsButton")

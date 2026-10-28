@@ -109,9 +109,10 @@ final class EmailPlumbingTests: XCTestCase {
         XCTAssertNil(intel.authenticatedDomain)
     }
 
-    func testDKIM_fallsBackToSignatureHeader() {
+    /// A DKIM-Signature header is just text the sender wrote; only the receiving server's verified result counts.
+    func testDKIM_signatureHeaderAloneIsNotTrusted() {
         let intel = HeaderIntel.analyze(headers: ["dkim-signature": "v=1; a=rsa-sha256; d=billing.acme.io; s=k1; h=from"])
-        XCTAssertEqual(intel.authenticatedDomain, "acme.io")
+        XCTAssertNil(intel.authenticatedDomain)
     }
 
     func testEffectiveDomain_prefersAuthenticatedDomainBehindRelays() {

@@ -23,7 +23,7 @@ enum LocalUserData {
         SubscriptionStore.shared.removeAllLocalData()
         LifecycleEventLog.shared.removeAll()
         PausePlanStore.shared.removeAll()
-        GmailSubscriptionScanner.shared.disconnect()
+        await InboxScanner.shared.disconnectAll()
         UserDefaults.standard.removeObject(forKey: "lifecycle_last_run")
         UserDefaults.standard.removeObject(forKey: ownerKey)
         UNUserNotificationCenter.current().removeAllPendingNotificationRequests()

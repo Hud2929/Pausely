@@ -1,7 +1,7 @@
 #if DEBUG
 import Foundation
 
-extension GmailSubscriptionScanner {
+extension InboxScanner {
     /// DEBUG only. Fills the results screen with a synthetic mailbox so the experience can be reviewed
     /// without a Google sign-in. Launch the app with `--demo-gmail-results`. Compiled out of release builds.
     func loadDemoResults() {
@@ -52,14 +52,9 @@ extension GmailSubscriptionScanner {
         add("frontgatetickets.com", "Frontgate Tickets", monthsAgo: 4, daysAgo: 1, amount: 394.99, renewal: false, oneTime: true)
 
         let analysis = SubscriptionIntelligenceEngine().analyze(signals: signals, now: now, defaultCurrency: "CAD")
-        isConnected = true
-        connectedEmail = "demo@pausely.app"
-        report = analysis
-        foundSubscriptions = analysis.subscriptions.map(Self.makeImport)
-        scanStats.emailsScanned = 312
-        scanStats.bodiesRead = 87
-        scanStats.confirmed = analysis.subscriptions.filter { $0.tier == .confirmed }.count
-        scanStats.purchasesIgnored = analysis.ignoredPurchaseGroups
+        presentDemo(analysis, account: MailboxAccount(id: "demo", kind: .imap, address: "demo@pausely.app",
+                                                      presetID: "icloud", host: "imap.mail.me.com", addedAt: now),
+                    checked: 312, read: 87)
     }
 }
 #endif

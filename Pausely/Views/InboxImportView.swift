@@ -1,20 +1,24 @@
 //
-//  GmailImportView.swift
+//  InboxImportView.swift
 //  Pausely
 //
-//  Connect Gmail to scan for subscription emails and auto-import.
+//  Connect email inboxes (Gmail, Outlook, iCloud, Yahoo, AOL and any IMAP inbox), find subscriptions in
+//  their receipts on this iPhone, and import them.
 //
 
 import SwiftUI
 
-struct GmailImportView: View {
-    @ObservedObject private var scanner = GmailSubscriptionScanner.shared
+struct InboxImportView: View {
+    @ObservedObject private var scanner = InboxScanner.shared
     @Environment(\.dismiss) private var dismiss
     @State private var selectedSubscriptions: Set<UUID> = []
     @State private var importing = false
     @State private var importResult: (added: Int, duplicates: Int)?
     @State private var expandedIds: Set<UUID> = []
     @State private var didPreselect = false
+    @State private var imapPreset: IMAPPreset?
+    @State private var showingIMAP = false
+    @State private var showingProviders = false
 
     var body: some View {
         NavigationStack {
@@ -23,7 +27,7 @@ struct GmailImportView: View {
 
                 ScrollView(showsIndicators: false) {
                     VStack(spacing: 20) {
-                        if !scanner.isConnected {
+                        if !scanner.hasAccounts {
                             connectSection
                         } else if scanner.isScanning {
                             scanningSection
@@ -40,27 +44,42 @@ struct GmailImportView: View {
                     .padding(.bottom, 100)
                 }
             }
-            .navigationTitle("Gmail Import")
+            .navigationTitle("Find in Email")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .topBarLeading) {
                     Button("Close") { dismiss() }
                         .foregroundStyle(Color.accentMint)
                 }
-                if scanner.isConnected {
+                if scanner.hasAccounts && !scanner.isScanning {
                     ToolbarItem(placement: .topBarTrailing) {
-                        Menu {
-                            Button(role: .destructive) {
-                                scanner.disconnect()
-                            } label: {
-                                Label("Disconnect Gmail", systemImage: "xmark.circle")
-                            }
-                        } label: {
-                            Image(systemName: "ellipsis.circle")
+                        Button { showingProviders = true } label: {
+                            Image(systemName: "plus.circle")
                                 .foregroundStyle(Color.obsidianTextSecondary)
+                        }
+                        .accessibilityLabel("Add another inbox")
+                    }
+                }
+            }
+            .sheet(isPresented: $showingIMAP) {
+                IMAPConnectView(preset: imapPreset)
+            }
+            .sheet(isPresented: $showingProviders) {
+                NavigationStack {
+                    ScrollView {
+                        providerButtons
+                            .padding(20)
+                    }
+                    .background(PremiumBackground())
+                    .navigationTitle("Add an inbox")
+                    .navigationBarTitleDisplayMode(.inline)
+                    .toolbar {
+                        ToolbarItem(placement: .topBarLeading) {
+                            Button("Cancel") { showingProviders = false }.foregroundStyle(Color.accentMint)
                         }
                     }
                 }
+                .presentationDetents([.large])
             }
         }
     }
@@ -69,7 +88,6 @@ struct GmailImportView: View {
 
     private var connectSection: some View {
         VStack(spacing: 24) {
-            // Hero icon
             ZStack {
                 Circle()
                     .fill(Color.accentMint.opacity(0.12))
@@ -78,69 +96,22 @@ struct GmailImportView: View {
                     .font(.system(size: 40, weight: .semibold))
                     .foregroundStyle(Color.accentMint)
             }
-            .padding(.top, 40)
+            .padding(.top, 24)
 
             VStack(spacing: 8) {
-                Text("Find Subscriptions in Gmail")
+                Text("Find subscriptions in your email")
                     .font(.system(.title3, design: .rounded).weight(.bold))
                     .foregroundStyle(.white)
                     .multilineTextAlignment(.center)
-
-                Text("We'll scan your email for subscription receipts and billing confirmations to automatically detect your services.")
+                Text("Pausely reads the receipts in your inbox and finds what you pay for, including trials and price changes.")
                     .font(.system(.subheadline, design: .rounded))
                     .foregroundStyle(Color.obsidianTextSecondary)
                     .multilineTextAlignment(.center)
                     .lineSpacing(3)
             }
 
-            // Privacy notice
-            VStack(alignment: .leading, spacing: 8) {
-                HStack(spacing: 10) {
-                    Image(systemName: "lock.shield.fill")
-                        .font(.system(.caption, design: .rounded))
-                        .foregroundStyle(Color.accentMint)
-                    Text("Your emails never leave your phone.")
-                        .font(.system(.caption, design: .rounded).weight(.semibold))
-                        .foregroundStyle(Color.accentMint)
-                }
-                Text("Receipts are read and processed on-device. Only the subscription name, amount, and date are saved to your account — never the email content itself. Read-only access, we cannot send or delete emails.")
-                    .font(.system(.caption, design: .rounded))
-                    .foregroundStyle(Color.obsidianTextSecondary)
-                    .lineSpacing(2)
-            }
-            .padding(12)
-            .background(
-                RoundedRectangle(cornerRadius: 12, style: .continuous)
-                    .fill(Color.accentMint.opacity(0.06))
-                    .overlay(
-                        RoundedRectangle(cornerRadius: 12, style: .continuous)
-                            .stroke(Color.accentMint.opacity(0.15), lineWidth: 1)
-                    )
-            )
-
-            // Connect button
-            Button {
-                HapticStyle.medium.trigger()
-                if let scene = UIApplication.shared.connectedScenes.first as? UIWindowScene,
-                   let window = scene.windows.first {
-                    scanner.connect(from: window)
-                }
-            } label: {
-                HStack(spacing: 10) {
-                    Image(systemName: "envelope.fill")
-                        .font(.system(size: 16, weight: .semibold))
-                    Text("Connect Gmail")
-                        .font(.system(.body, design: .rounded).weight(.semibold))
-                }
-                .foregroundStyle(Color.black)
-                .frame(maxWidth: .infinity)
-                .frame(height: 52)
-                .background(
-                    RoundedRectangle(cornerRadius: 16, style: .continuous)
-                        .fill(Color.accentMint)
-                )
-            }
-            .buttonStyle(PlainButtonStyle())
+            privacyNotice
+            providerButtons
 
             if let error = scanner.error {
                 Text(error)
@@ -151,6 +122,94 @@ struct GmailImportView: View {
         }
         .padding(24)
         .surfaceCard(cornerRadius: 24)
+    }
+
+    private var privacyNotice: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            HStack(spacing: 10) {
+                Image(systemName: "lock.shield.fill")
+                    .font(.system(.caption, design: .rounded))
+                    .foregroundStyle(Color.accentMint)
+                Text("Your email never leaves your iPhone.")
+                    .font(.system(.caption, design: .rounded).weight(.semibold))
+                    .foregroundStyle(Color.accentMint)
+            }
+            Text("Pausely connects straight to your email provider with read-only access, reads receipts on this iPhone and keeps only the name, amount and date of each charge. It can't send, change or delete email.")
+                .font(.system(.caption, design: .rounded))
+                .foregroundStyle(Color.obsidianTextSecondary)
+                .lineSpacing(2)
+        }
+        .padding(12)
+        .background(
+            RoundedRectangle(cornerRadius: 12, style: .continuous)
+                .fill(Color.accentMint.opacity(0.06))
+                .overlay(RoundedRectangle(cornerRadius: 12, style: .continuous).stroke(Color.accentMint.opacity(0.15), lineWidth: 1))
+        )
+    }
+
+    private var providerButtons: some View {
+        VStack(spacing: 10) {
+            if FeatureFlags.gmailImportEnabled && GmailMailboxProvider.isConfigured {
+                providerButton("Gmail", detail: "Sign in with Google", icon: "envelope.fill", id: "connectGmail") {
+                    showingProviders = false
+                    Task { await scanner.connectGmail() }
+                }
+            }
+            if FeatureFlags.microsoftImportEnabled && MicrosoftGraphProvider.isConfigured {
+                providerButton("Outlook, Hotmail, Live, MSN", detail: "Sign in with Microsoft", icon: "envelope.badge.fill", id: "connectMicrosoft") {
+                    showingProviders = false
+                    Task { await scanner.connectMicrosoft() }
+                }
+            }
+            if FeatureFlags.imapImportEnabled {
+                ForEach(["icloud", "yahoo", "aol", "gmail-imap"], id: \.self) { id in
+                    if let preset = IMAPPreset.find(id) {
+                        providerButton(preset.name, detail: "With an app password", icon: "envelope", id: "connect-\(id)") {
+                            openIMAP(preset)
+                        }
+                    }
+                }
+                providerButton("Other email", detail: "GMX, WEB.DE, Zoho, Fastmail and more", icon: "tray.full", id: "connect-other") {
+                    openIMAP(nil)
+                }
+            }
+        }
+    }
+
+    private func openIMAP(_ preset: IMAPPreset?) {
+        imapPreset = preset
+        showingProviders = false
+        showingIMAP = true
+    }
+
+    private func providerButton(_ title: String, detail: String, icon: String, id: String, action: @escaping () -> Void) -> some View {
+        Button {
+            HapticStyle.light.trigger()
+            action()
+        } label: {
+            HStack(spacing: 12) {
+                Image(systemName: icon)
+                    .font(.system(size: 16, weight: .semibold))
+                    .foregroundStyle(Color.accentMint)
+                    .frame(width: 28)
+                VStack(alignment: .leading, spacing: 2) {
+                    Text(title)
+                        .font(.system(.body, design: .rounded).weight(.semibold))
+                        .foregroundStyle(.white)
+                    Text(detail)
+                        .font(.system(.caption, design: .rounded))
+                        .foregroundStyle(Color.obsidianTextSecondary)
+                }
+                Spacer()
+                Image(systemName: "chevron.right")
+                    .font(.system(.caption).weight(.semibold))
+                    .foregroundStyle(Color.obsidianTextTertiary)
+            }
+            .padding(14)
+            .background(RoundedRectangle(cornerRadius: 14, style: .continuous).fill(Color.obsidianSurface))
+        }
+        .buttonStyle(PlainButtonStyle())
+        .accessibilityIdentifier(id)
     }
 
     // MARK: - Scanning Section
@@ -167,16 +226,21 @@ struct GmailImportView: View {
                     .symbolEffect(.pulse)
             }
 
-            Text("Scanning your emails...")
+            Text(scanner.statusLine.isEmpty ? "Scanning your email…" : scanner.statusLine)
                 .font(.system(.headline, design: .rounded))
                 .foregroundStyle(.white)
+                .multilineTextAlignment(.center)
 
-            ProgressView(value: scanner.scanProgress)
+            ProgressView(value: scanner.progress)
                 .tint(Color.accentMint)
                 .padding(.horizontal, 40)
 
-            Text("\(Int(scanner.scanProgress * 100))%")
+            Text("\(Int(scanner.progress * 100))%")
                 .font(.system(.caption, design: .rounded).monospacedDigit())
+                .foregroundStyle(Color.obsidianTextSecondary)
+
+            Button("Stop") { scanner.cancelScan() }
+                .font(.system(.subheadline, design: .rounded).weight(.semibold))
                 .foregroundStyle(Color.obsidianTextSecondary)
         }
         .padding(32)
@@ -186,55 +250,79 @@ struct GmailImportView: View {
     // MARK: - Connected Section (ready to scan)
 
     private var connectedSection: some View {
-        VStack(spacing: 20) {
-            // Connected status
-            HStack(spacing: 12) {
-                Image(systemName: "checkmark.circle.fill")
-                    .font(.system(.title3))
-                    .foregroundStyle(.green)
-                VStack(alignment: .leading, spacing: 2) {
-                    Text("Gmail Connected")
-                        .font(.system(.subheadline, design: .rounded).weight(.semibold))
-                        .foregroundStyle(.white)
-                    if let email = scanner.connectedEmail {
-                        Text(email)
-                            .font(.system(.caption, design: .rounded))
-                            .foregroundStyle(Color.obsidianTextSecondary)
-                    }
-                }
-                Spacer()
+        VStack(spacing: 16) {
+            ForEach(scanner.accounts) { account in
+                accountRow(account)
             }
-            .padding(16)
-            .surfaceCard(cornerRadius: 16)
 
-            // Scan button
             Button {
                 HapticStyle.medium.trigger()
-                Task { await scanner.scan() }
+                Task { await scanner.scanAll() }
             } label: {
                 HStack(spacing: 10) {
                     Image(systemName: "magnifyingglass")
                         .font(.system(size: 16, weight: .semibold))
-                    Text("Scan for Subscriptions")
+                    Text(scanner.accounts.count == 1 ? "Find subscriptions" : "Search \(scanner.accounts.count) inboxes")
                         .font(.system(.body, design: .rounded).weight(.semibold))
                 }
                 .foregroundStyle(Color.black)
                 .frame(maxWidth: .infinity)
                 .frame(height: 52)
-                .background(
-                    RoundedRectangle(cornerRadius: 16, style: .continuous)
-                        .fill(Color.accentMint)
-                )
+                .background(RoundedRectangle(cornerRadius: 16, style: .continuous).fill(Color.accentMint))
             }
             .buttonStyle(PlainButtonStyle())
+            .accessibilityIdentifier("scanInboxesButton")
 
             if let error = scanner.error {
                 Text(error)
                     .font(.system(.caption, design: .rounded))
-                    .foregroundStyle(Color.semanticDestructive)
+                    .foregroundStyle(Color.obsidianTextSecondary)
                     .multilineTextAlignment(.center)
             }
+            privacyNotice
         }
+    }
+
+    private func accountRow(_ account: MailboxAccount) -> some View {
+        HStack(spacing: 12) {
+            Image(systemName: scanner.accountErrors[account.id] == nil ? "checkmark.circle.fill" : "exclamationmark.triangle.fill")
+                .font(.system(.title3))
+                .foregroundStyle(scanner.accountErrors[account.id] == nil ? Color.green : Color.semanticWarning)
+            VStack(alignment: .leading, spacing: 2) {
+                Text(account.address)
+                    .font(.system(.subheadline, design: .rounded).weight(.semibold))
+                    .foregroundStyle(.white)
+                    .lineLimit(1)
+                Text(accountDetail(account))
+                    .font(.system(.caption, design: .rounded))
+                    .foregroundStyle(Color.obsidianTextSecondary)
+                    .lineLimit(2)
+            }
+            Spacer()
+            Menu {
+                Button(role: .destructive) {
+                    Task { await scanner.disconnect(account) }
+                } label: {
+                    Label("Disconnect", systemImage: "xmark.circle")
+                }
+            } label: {
+                Image(systemName: "ellipsis.circle").foregroundStyle(Color.obsidianTextSecondary)
+            }
+            .accessibilityLabel("Options for \(account.address)")
+        }
+        .padding(16)
+        .surfaceCard(cornerRadius: 16)
+    }
+
+    private func accountDetail(_ account: MailboxAccount) -> String {
+        if let error = scanner.accountErrors[account.id] { return error }
+        if let stats = scanner.stats.perAccount[account.id] {
+            return "\(account.providerName) · checked \(stats.checked), read \(stats.read)"
+        }
+        if let last = account.lastScan {
+            return "\(account.providerName) · searched \(last.formatted(.relative(presentation: .named)))"
+        }
+        return account.providerName
     }
 
     // MARK: - Results Section
@@ -281,21 +369,21 @@ struct GmailImportView: View {
         let currency = CurrencyManager.shared.selectedCurrency
         let monthly = report?.monthlyTotal(in: currency) ?? 0
         let annual = monthly * 12
-        let ignored = scanner.scanStats.purchasesIgnored
+        let ignored = scanner.stats.purchasesIgnored
 
         return VStack(alignment: .leading, spacing: 10) {
             Text(count == 1 ? "We found 1 subscription" : "We found \(count) subscriptions")
                 .font(.system(.headline, design: .rounded))
                 .foregroundStyle(.white)
             HStack(alignment: .firstTextBaseline, spacing: 8) {
-                Text(GmailImportView.money(monthly, currency))
+                Text(InboxImportView.money(monthly, currency))
                     .font(.system(.largeTitle, design: .rounded).weight(.black))
                     .foregroundStyle(Color.accentMint)
                 Text("per month")
                     .font(.system(.subheadline, design: .rounded))
                     .foregroundStyle(Color.obsidianTextSecondary)
             }
-            Text("\(GmailImportView.money(annual, currency)) a year")
+            Text("\(InboxImportView.money(annual, currency)) a year")
                 .font(.system(.footnote, design: .rounded))
                 .foregroundStyle(Color.obsidianTextSecondary)
             if ignored > 0 {
@@ -303,9 +391,9 @@ struct GmailImportView: View {
                     .font(.system(.caption, design: .rounded))
                     .foregroundStyle(Color.obsidianTextTertiary)
             }
-            if scanner.scanStats.emailsScanned > 0 {
-                let stats = scanner.scanStats
-                Label("Checked \(stats.emailsScanned) emails, read \(stats.bodiesRead) in full. All on your phone.", systemImage: "lock.shield")
+            if scanner.stats.emailsChecked > 0 {
+                let stats = scanner.stats
+                Label("Checked \(stats.emailsChecked) emails, read \(stats.bodiesRead) in full. All on your phone.", systemImage: "lock.shield")
                     .font(.system(.caption, design: .rounded))
                     .foregroundStyle(Color.obsidianTextTertiary)
                 if stats.aiAssisted > 0 {
@@ -362,12 +450,13 @@ struct GmailImportView: View {
         case .renewalSoon: return "calendar.badge.clock"
         case .likelyEnded: return "questionmark.circle.fill"
         case .chargedAfterCancel: return "exclamationmark.triangle.fill"
+        case .paymentFailed: return "creditcard.trianglebadge.exclamationmark"
         }
     }
 
     private func color(for kind: IntelligenceInsight.Kind) -> Color {
         switch kind {
-        case .chargedAfterCancel: return .red
+        case .chargedAfterCancel, .paymentFailed: return .red
         case .priceIncrease, .priceChangeNotice, .trialEnding, .renewalSoon: return .orange
         case .likelyEnded: return Color.obsidianTextSecondary
         }
@@ -568,7 +657,7 @@ private struct GmailSubscriptionRow: View {
     }
 
     private var accessibilitySummary: String {
-        var parts = ["\(subscription.name)", GmailImportView.money(subscription.amount, subscription.currency) + " " + subscription.billingFrequency.displayName.lowercased(), evidenceLine]
+        var parts = ["\(subscription.name)", InboxImportView.money(subscription.amount, subscription.currency) + " " + subscription.billingFrequency.displayName.lowercased(), evidenceLine]
         if let badge = statusBadge { parts.append(badge.text) }
         parts.append(isSelected ? "selected" : "not selected")
         return parts.joined(separator: ", ")
@@ -602,7 +691,7 @@ private struct GmailSubscriptionRow: View {
                         Spacer(minLength: 8)
 
                         VStack(alignment: .trailing, spacing: 1) {
-                            Text(GmailImportView.money(subscription.amount, subscription.currency))
+                            Text(InboxImportView.money(subscription.amount, subscription.currency))
                                 .font(.system(.subheadline, design: .rounded).weight(.bold))
                                 .foregroundStyle(Color.accentMint)
                             Text(frequencySuffix)
@@ -683,7 +772,7 @@ private struct GmailSubscriptionRow: View {
                             .font(.system(.caption2, design: .rounded))
                             .foregroundStyle(Color.obsidianTextTertiary)
                         Spacer()
-                        Text(GmailImportView.money(charge.amount, charge.currency))
+                        Text(InboxImportView.money(charge.amount, charge.currency))
                             .font(.system(.caption2, design: .rounded).weight(.semibold))
                             .foregroundStyle(Color.obsidianTextSecondary)
                     }
