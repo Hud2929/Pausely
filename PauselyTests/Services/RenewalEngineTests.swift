@@ -91,21 +91,6 @@ final class RenewalEngineTests: XCTestCase {
 
     // MARK: - Subscription
 
-    func testActiveSubscriptionRollsForwardInsteadOfOverdue() {
-        let anchor = Calendar.current.date(byAdding: .month, value: -3, to: Date())!
-        let sub = TestFactories.makeSubscription(billingFrequency: .monthly, status: .active, nextBillingDate: anchor)
-        let days = sub.daysUntilRenewal ?? -1
-        XCTAssertTrue((0...31).contains(days), "got \(days)")
-        if case .overdue = sub.renewalStatus { XCTFail("an active subscription is never overdue") }
-        XCTAssertEqual(sub.nextBillingDate, anchor, "the stored anchor is never overwritten")
-    }
-
-    func testCancelledSubscriptionKeepsItsDate() {
-        let past = Calendar.current.date(byAdding: .day, value: -3, to: Date())!
-        let sub = TestFactories.makeSubscription(status: .cancelled, nextBillingDate: past)
-        XCTAssertEqual(sub.calculatedNextBillingDate, past)
-        if case .overdue = sub.renewalStatus {} else { XCTFail("expected overdue") }
-    }
 
     func testPausedSubscriptionDoesNotRoll() {
         let past = Calendar.current.date(byAdding: .day, value: -3, to: Date())!
@@ -234,5 +219,20 @@ final class RenewalEngineTests: XCTestCase {
         XCTAssertNotNil(saved)
         XCTAssertTrue(Calendar.current.isDate(saved!, inSameDayAs: picked))
         XCTAssertEqual(Calendar.current.component(.hour, from: saved!), 12)
+    }
+
+    func testActiveSubscriptionRollsForwardInsteadOfOverdue() {
+        let anchor = Calendar.current.date(byAdding: .month, value: -3, to: Date())!
+        let sub = TestFactories.makeSubscription(billingFrequency: .monthly, status: .active, nextBillingDate: anchor)
+        let days = sub.daysUntilRenewal ?? -1
+        XCTAssertTrue((0...31).contains(days), "an active subscription is never overdue; got \(days)")
+        XCTAssertEqual(sub.nextBillingDate, anchor, "the stored anchor is never overwritten")
+    }
+
+    func testCancelledSubscriptionKeepsItsDate() {
+        let past = Calendar.current.date(byAdding: .day, value: -3, to: Date())!
+        let sub = TestFactories.makeSubscription(status: .cancelled, nextBillingDate: past)
+        XCTAssertEqual(sub.calculatedNextBillingDate, past)
+        XCTAssertEqual(sub.daysUntilRenewal, -3)
     }
 }

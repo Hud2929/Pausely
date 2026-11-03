@@ -31,12 +31,19 @@ xcodebuild test -scheme Pausely -destination "id=<simulator id>" -derivedDataPat
 Run tests serially; parallel simulator clones sometimes fail to boot. Check Release builds too:
 DEBUG-only code must not be referenced from release code paths.
 
+Tests must be able to fail: assert exact outcomes (not "not nil" or "didn't crash"), never test code the
+app doesn't call (delete the dead code instead), and never skip on every run. Tests that use the shared
+`SubscriptionStore` wrap themselves in `StoreSandbox` (TestHelpers.swift): cloud writes off, and the list,
+sync queue, history, widget data, Spotlight and reminders put back afterwards. Nothing touches the live
+database from tests.
+
 DEBUG launch arguments open single screens with demo data (see `RootView` in `ContentView.swift`):
 `--demo-mode`, `--demo-tab=N`, `--demo-verdict`, `--demo-receipt`, `--demo-savings`,
 `--demo-pause-plan` (`--demo-plan-active`), `--demo-subscription`, `--demo-subscription-edit`,
 `--demo-paywall`, `--demo-browser`, `--demo-gmail-results`, `--demo-inbox`, `--demo-imap-connect` (`=yahoo`, `=aol`, `=other`…),
 `--demo-wrapped`, and `--screenshots`
-for App Store captures. `--reset-state` (UI tests) starts signed out with onboarding not yet seen. `PauselyUITests/ScreenTourTests` captures every screen when
+for App Store captures. `--reset-state` (UI tests) starts signed out with onboarding not yet seen;
+`--fresh-demo-data` starts the subscription list from the demo set on every launch, with cloud writes off. `PauselyUITests/ScreenTourTests` captures every screen when
 `TEST_RUNNER_PAUSELY_TOUR_DIR` is set.
 
 ## Architecture

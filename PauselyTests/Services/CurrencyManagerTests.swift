@@ -128,12 +128,6 @@ final class CurrencyManagerTests: XCTestCase {
 
     // MARK: - Catalog Price Helpers
 
-    func testConvertFromUSD() {
-        manager.exchangeRates = ["EUR": 0.85]
-        manager.selectedCurrency = "EUR"
-        let converted = manager.convertFromUSD(10.0)
-        XCTAssertEqual(converted, 8.5)
-    }
 
     func testPriceIndicatorUSD() {
         manager.selectedCurrency = "USD"
@@ -147,26 +141,6 @@ final class CurrencyManagerTests: XCTestCase {
 
     // MARK: - Rate Calculation
 
-    func testGetRate() throws {
-        manager.exchangeRates = ["USD": 1.0, "EUR": 0.85]
-        let rate = try manager.getRate(from: "USD", to: "EUR")
-        XCTAssertEqual(rate, 0.85)
-    }
-
-    func testGetRateSameCurrency() throws {
-        let rate = try manager.getRate(from: "USD", to: "USD")
-        XCTAssertEqual(rate, 1.0)
-    }
-
-    func testGetRateUnknownThrows() {
-        manager.exchangeRates = [:]
-        XCTAssertThrowsError(try manager.getRate(from: "USD", to: "ZZZ")) { error in
-            guard case CurrencyError.rateNotAvailable = error else {
-                XCTFail("Expected rateNotAvailable")
-                return
-            }
-        }
-    }
 
     // MARK: - Historical Rate
 
@@ -178,17 +152,7 @@ final class CurrencyManagerTests: XCTestCase {
         XCTAssertEqual(change ?? 0, 6.25, accuracy: 0.01)
     }
 
-    func testHistoricalRateFormattedChange() {
-        let previous = HistoricalRate(date: Date(), fromCurrency: "USD", toCurrency: "EUR", rate: 0.80)
-        let current = HistoricalRate(date: Date(), fromCurrency: "USD", toCurrency: "EUR", rate: 0.85)
-        let formatted = current.formattedChange(from: previous)
-        XCTAssertEqual(formatted, "↑ 6.25%")
-    }
 
     // MARK: - Double Rounding
 
-    func testDoubleRoundedToCurrency() {
-        XCTAssertEqual(10.555.roundedToCurrency(decimals: 2), 10.56)
-        XCTAssertEqual(10.554.roundedToCurrency(decimals: 2), 10.55)
-    }
 }

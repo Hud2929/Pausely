@@ -2323,6 +2323,40 @@
         }
       }
     },
+    "Couldn't load subscriptions. Pull to refresh.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "تعذّر تحميل الاشتراكات. اسحب للأسفل للتحديث."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Abonnements konnten nicht geladen werden. Zum Aktualisieren nach unten ziehen."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No se pudieron cargar las suscripciones. Desliza hacia abajo para actualizar."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Impossible de charger les abonnements. Tirez vers le bas pour actualiser."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "サブスクリプションを読み込めませんでした。下に引っ張って更新してください。"
+          }
+        }
+      }
+    },
     "Couldn't open the sign-in page.": {
       "localizations": {
         "ar": {
@@ -5365,6 +5399,40 @@
         }
       }
     },
+    "Removed from this iPhone. It will sync when you're back online.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "تمت الإزالة من هذا الـ iPhone. ستتم المزامنة عند عودتك إلى الإنترنت."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Von diesem iPhone entfernt. Die Synchronisierung folgt, sobald Sie wieder online sind."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Eliminado de este iPhone. Se sincronizará cuando vuelvas a estar en línea."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Supprimé de cet iPhone. La synchronisation se fera dès que vous serez de nouveau en ligne."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "このiPhoneから削除しました。オンラインに戻ると同期されます。"
+          }
+        }
+      }
+    },
     "Same amount each time (%@)": {
       "localizations": {
         "ar": {
@@ -5395,6 +5463,40 @@
           "stringUnit": {
             "state": "translated",
             "value": "毎回同じ金額（%@）"
+          }
+        }
+      }
+    },
+    "Saved on this iPhone. It will sync when you're back online.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "تم الحفظ على هذا الـ iPhone. ستتم المزامنة عند عودتك إلى الإنترنت."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Auf diesem iPhone gespeichert. Die Synchronisierung folgt, sobald Sie wieder online sind."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Guardado en este iPhone. Se sincronizará cuando vuelvas a estar en línea."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Enregistré sur cet iPhone. La synchronisation se fera dès que vous serez de nouveau en ligne."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "このiPhoneに保存しました。オンラインに戻ると同期されます。"
           }
         }
       }

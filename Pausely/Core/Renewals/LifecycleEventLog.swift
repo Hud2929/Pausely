@@ -80,6 +80,12 @@ final class LifecycleEventLog: ObservableObject {
         save()
     }
 
+    /// Puts back a saved history (tests restore what they changed).
+    func restore(_ saved: [LifecycleEvent]) {
+        events = saved
+        save()
+    }
+
     // MARK: - Persistence
 
     private func save() {

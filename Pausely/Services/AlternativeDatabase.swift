@@ -1805,20 +1805,7 @@ struct ParsedSubscription: Identifiable {
     var supportURL: URL?
     var metadata: [String: String]
     
-    var confidenceLevel: ConfidenceLevel {
-        switch confidence {
-        case 0.8...1.0: return .high
-        case 0.5..<0.8: return .medium
-        default: return .low
-        }
-    }
     
-    enum ConfidenceLevel: String {
-        case high = "High"
-        case medium = "Medium"
-        case low = "Low"
-        
-    }
 }
 
 // MARK: - Service Detection Pattern

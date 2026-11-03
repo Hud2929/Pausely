@@ -67,6 +67,9 @@ final class MoneyFormatTests: XCTestCase {
         XCTAssertEqual(MoneyFormat.plainNumber(Decimal(string: "1500.4")!, "JPY"), "1500")
         XCTAssertEqual(MoneyFormat.plainNumber(Decimal(string: "1.25")!, "KWD"), "1.250")
         XCTAssertEqual(MoneyFormat.plainNumber(1234.5, "EUR"), "1234.50")
+        // Half-way amounts round up, as on a receipt.
+        XCTAssertEqual(MoneyFormat.plainNumber(Decimal(string: "15.495")!, "USD"), "15.50")
+        XCTAssertEqual(MoneyFormat.plainNumber(Decimal(string: "1500.5")!, "JPY"), "1501")
     }
 
     func testDoublesBecomeDecimalsWithoutBinaryNoise() {

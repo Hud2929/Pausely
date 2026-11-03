@@ -5,15 +5,15 @@ import XCTest
 @MainActor
 final class PauselyAppIntentsTests: XCTestCase {
 
-    override func setUp() {
-        super.setUp()
-        // Ensure store is in known state
-        SubscriptionStore.shared.subscriptions = []
+    private var sandbox: StoreSandbox!
+
+    override func setUp() async throws {
+        sandbox = StoreSandbox()   // an empty list, offline, put back afterwards
     }
 
-    override func tearDown() {
-        SubscriptionStore.shared.subscriptions = []
-        super.tearDown()
+    override func tearDown() async throws {
+        await sandbox.restore()
+        sandbox = nil
     }
 
     // MARK: - GetMonthlySpendIntent

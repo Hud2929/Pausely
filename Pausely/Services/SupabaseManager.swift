@@ -494,10 +494,6 @@ class CurrencyManager: ObservableObject {
 
     // MARK: - Catalog Price Helpers
 
-    /// A catalog price (catalog prices are in US dollars) in the user's display currency.
-    func convertFromUSD(_ priceUSD: Double) -> Double {
-        convertCrossCurrency(priceUSD, from: "USD", to: selectedCurrency)
-    }
 
     /// A catalog price in the user's display currency, converted when it is in another currency.
     func formatCatalogPrice(_ price: Double, sourceCurrency: String = "USD") -> String {
@@ -555,10 +551,6 @@ class CurrencyManager: ObservableObject {
         return NSDecimalNumber(decimal: converted).doubleValue
     }
 
-    /// Get exchange rate between two currencies
-    func getRate(from sourceCode: String, to targetCode: String) throws -> Double {
-        try convert(1.0, from: sourceCode, to: targetCode)
-    }
 }
 
 // MARK: - Supporting Types

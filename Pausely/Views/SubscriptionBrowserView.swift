@@ -257,6 +257,7 @@ struct SubscriptionBrowserView: View {
                 .keyboardType(.default)
                 .submitLabel(.search)
                 .tint(.accentMint)
+                .accessibilityIdentifier("catalogSearchField")
 
             if !searchText.isEmpty {
                 Button { withAnimation(STAnimation.snappy) { searchText = "" } } label: {

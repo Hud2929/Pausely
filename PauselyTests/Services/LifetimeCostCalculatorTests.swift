@@ -64,25 +64,5 @@ final class LifetimeCostCalculatorTests: XCTestCase {
 
     // MARK: - dailyCost
 
-    func testDailyCost_monthly30() {
-        // $30/mo ÷ 30 = $1.00/day
-        XCTAssertEqual(LifetimeCostCalculator.dailyCost(monthly: Decimal(30)), Decimal(1))
-    }
 
-    func testDailyCost_monthly10() {
-        // $10/mo ÷ 30 = 1/3 per day — test exact Decimal equality
-        let daily = LifetimeCostCalculator.dailyCost(monthly: Decimal(10))
-        XCTAssertEqual(daily, Decimal(10) / 30)
-    }
-
-    func testDailyCost_zero() {
-        XCTAssertEqual(LifetimeCostCalculator.dailyCost(monthly: Decimal(0)), 0)
-    }
-
-    func testDailyCost_isConsistentWithMonthly() {
-        // daily × 30 should round-trip back to monthly
-        let monthly = Decimal(string: "9.99")!
-        let daily = LifetimeCostCalculator.dailyCost(monthly: monthly)
-        XCTAssertEqual(daily * 30, monthly)
-    }
 }

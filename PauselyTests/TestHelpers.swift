@@ -86,3 +86,58 @@ enum CurrencyTestHelpers {
         manager.exchangeRates = originalRates
     }
 }
+
+// MARK: - Subscription store sandbox
+
+/// Lets a test use the shared subscription store without touching the live database or leaving anything
+/// behind on the simulator: cloud writes are off (changes are queued exactly as when offline), and the
+/// list, its cache and totals, the sync queue, the event history, the widget data, Spotlight, reminders
+/// and the review-prompt milestone are put back by `restore()`.
+@MainActor
+final class StoreSandbox {
+    private static let defaultsKeys = ["debug_premium_override", "debug_free_pro", "review_receipt_milestone_last"]
+    private let subscriptions: [Subscription]
+    private let totals: (monthly: Decimal, annual: Decimal, lifetime: Decimal)
+    private let cache: Data
+    private let cacheDate: Date
+    private let queue: [SyncOperation]
+    private let queueData: Data
+    private let events: [LifecycleEvent]
+    private let currency: String
+    private let defaults: [String: Any]
+
+    init() {
+        let store = SubscriptionStore.shared
+        subscriptions = store.subscriptions
+        totals = (store.totalMonthlySpend, store.totalAnnualSpend, store.totalLifetimeSpend)
+        cache = AppSettings.shared.cachedSubscriptions
+        cacheDate = AppSettings.shared.subscriptionsCacheDate
+        queue = SyncQueue.shared.pendingOperations
+        queueData = AppSettings.shared.syncQueueOperations
+        events = LifecycleEventLog.shared.events
+        currency = CurrencyManager.shared.selectedCurrency
+        defaults = Dictionary(uniqueKeysWithValues: Self.defaultsKeys.compactMap { key in
+            UserDefaults.standard.object(forKey: key).map { (key, $0) }
+        })
+        SubscriptionStore.cloudWritesEnabled = false
+        store.subscriptions = []
+        (store.totalMonthlySpend, store.totalAnnualSpend, store.totalLifetimeSpend) = (0, 0, 0)
+    }
+
+    func restore() async {
+        let store = SubscriptionStore.shared
+        store.subscriptions = subscriptions
+        (store.totalMonthlySpend, store.totalAnnualSpend, store.totalLifetimeSpend) = totals
+        AppSettings.shared.cachedSubscriptions = cache
+        AppSettings.shared.subscriptionsCacheDate = cacheDate
+        SyncQueue.shared.pendingOperations = queue
+        AppSettings.shared.syncQueueOperations = queueData
+        LifecycleEventLog.shared.restore(events)
+        CurrencyManager.shared.selectedCurrency = currency
+        for key in Self.defaultsKeys { UserDefaults.standard.set(defaults[key], forKey: key) }
+        WidgetDataStore.shared.publish(subscriptions: subscriptions)
+        await SpotlightManager.shared.index(subscriptions: subscriptions).value
+        await ReminderScheduler.shared.reschedule(subscriptions)
+        SubscriptionStore.cloudWritesEnabled = true
+    }
+}

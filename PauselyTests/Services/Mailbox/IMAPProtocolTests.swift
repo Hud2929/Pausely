@@ -106,8 +106,10 @@ final class IMAPProtocolTests: XCTestCase {
     }
 
     func testInternalDate() {
-        XCTAssertNotNil(IMAPParser.parseInternalDate("17-Jul-1996 02:44:25 -0700"))
-        XCTAssertNotNil(IMAPParser.parseInternalDate(" 7-Jul-2026 02:44:25 +0000"))
+        // The exact moment, time zone included (RFC 3501 date-time; a single-digit day starts with a space).
+        XCTAssertEqual(IMAPParser.parseInternalDate("17-Jul-1996 02:44:25 -0700")?.timeIntervalSince1970, 837596665)
+        XCTAssertEqual(IMAPParser.parseInternalDate(" 7-Jul-2026 02:44:25 +0000")?.timeIntervalSince1970, 1783392265)
+        XCTAssertNil(IMAPParser.parseInternalDate("not a date"))
     }
 
     // MARK: Commands
@@ -199,7 +201,9 @@ final class IMAPProtocolTests: XCTestCase {
 
     /// A wrong server name or port is reported at once, in words a person can act on.
     func testUnreachableServersFailFastWithAPlainMessage() async throws {
-        for (host, port) in [("127.0.0.1", UInt16(1)), ("imap.pausely-check.invalid", UInt16(993))] {
+        let cases: [(String, UInt16, String)] = [("127.0.0.1", 1, "turned the connection away"),
+                                                 ("imap.pausely-check.invalid", 993, "No server by that name")]
+        for (host, port, says) in cases {
             let start = Date()
             let client = IMAPClient(IMAPClient.Configuration(host: host, port: port, commandTimeout: 20))
             do {
@@ -210,6 +214,7 @@ final class IMAPProtocolTests: XCTestCase {
                 print("UNREACHABLE \(host):\(port) after \(Date().timeIntervalSince(start))s: \(message)")
                 XCTAssertFalse(message.contains("POSIX") || message.contains("NWError") || message.contains("rawValue"), message)
                 XCTAssertTrue(message.hasPrefix("Couldn't reach the mail server."), message)
+                XCTAssertTrue(message.contains(says), "\(host):\(port) should say what to check: \(message)")
             }
             XCTAssertLessThan(Date().timeIntervalSince(start), 8, "\(host):\(port) should fail fast")
             await client.cancel()

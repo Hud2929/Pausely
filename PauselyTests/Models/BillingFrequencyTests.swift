@@ -26,23 +26,6 @@ final class BillingFrequencyTests: XCTestCase {
 
     // MARK: - Multipliers
 
-    func testMultiplierToMonthly() {
-        XCTAssertEqual(BillingFrequency.weekly.multiplierToMonthly, Decimal(52) / 12)
-        XCTAssertEqual(BillingFrequency.biweekly.multiplierToMonthly, Decimal(26) / 12)
-        XCTAssertEqual(BillingFrequency.monthly.multiplierToMonthly, 1)
-        XCTAssertEqual(BillingFrequency.quarterly.multiplierToMonthly, Decimal(1) / 3)
-        XCTAssertEqual(BillingFrequency.semiannual.multiplierToMonthly, Decimal(1) / 6)
-        XCTAssertEqual(BillingFrequency.yearly.multiplierToMonthly, Decimal(1) / 12)
-    }
-
-    func testMultiplierToYearly() {
-        XCTAssertEqual(BillingFrequency.weekly.multiplierToYearly, 52)
-        XCTAssertEqual(BillingFrequency.biweekly.multiplierToYearly, 26)
-        XCTAssertEqual(BillingFrequency.monthly.multiplierToYearly, 12)
-        XCTAssertEqual(BillingFrequency.quarterly.multiplierToYearly, 4)
-        XCTAssertEqual(BillingFrequency.semiannual.multiplierToYearly, 2)
-        XCTAssertEqual(BillingFrequency.yearly.multiplierToYearly, 1)
-    }
 
     // MARK: - Identifiable
 
@@ -107,28 +90,6 @@ final class SubscriptionStatusTests: XCTestCase {
 
     // MARK: - Transitions
 
-    func testActiveCanTransitionToPaused() {
-        var sub = TestFactories.makeSubscription(status: .active)
-        sub.markAsPaused(until: TestDates.addDays(30, to: Date()))
-        XCTAssertEqual(sub.status, .active)
-        XCTAssertTrue(sub.isPaused)
-        XCTAssertNotNil(sub.pausedUntil)
-    }
-
-    func testPausedCanTransitionToActive() {
-        var sub = TestFactories.makeSubscription(status: .active)
-        sub.pausedUntil = TestDates.addDays(30, to: Date())
-        sub.resume()
-        XCTAssertEqual(sub.status, .active)
-        XCTAssertFalse(sub.isPaused)
-        XCTAssertNil(sub.pausedUntil)
-    }
-
-    func testActiveCanTransitionToCancelled() {
-        var sub = TestFactories.makeSubscription(status: .active)
-        sub.markAsCancelled()
-        XCTAssertEqual(sub.status, .cancelled)
-    }
 
     func testTrialCanTransitionToActive() {
         var sub = TestFactories.makeSubscription(status: .trial)
@@ -136,10 +97,4 @@ final class SubscriptionStatusTests: XCTestCase {
         XCTAssertEqual(sub.status, .active)
     }
 
-    func testExpiredCannotBePaused() {
-        var sub = TestFactories.makeSubscription(status: .expired)
-        sub.markAsPaused(until: TestDates.addDays(7, to: Date()))
-        XCTAssertEqual(sub.status, .expired)
-        XCTAssertTrue(sub.isPaused)
-    }
 }

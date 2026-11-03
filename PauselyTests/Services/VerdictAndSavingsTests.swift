@@ -134,19 +134,6 @@ final class VerdictAndSavingsTests: XCTestCase {
         XCTAssertEqual(lines[0].avoidedSoFar.map(ymd), ["2026-11-30"])
     }
 
-    func testReactivationStopsTheSavings() {
-        let netflix = sub(amount: 20, anchor: day(2026, 10, 31))
-        let events = [
-            event(.cancelled, netflix, on: day(2026, 10, 29)),
-            event(.reactivated, netflix, on: day(2026, 12, 31))
-        ]
-        let lines = SavingsLedger.lines(from: events, now: day(2027, 6, 1), calendar: cal)
-        XCTAssertEqual(lines.count, 1)
-        XCTAssertEqual(lines[0].avoidedCharges.map(ymd), ["2026-10-31", "2026-11-30"],
-                       "the Dec 31 charge happened because it started again that day")
-        XCTAssertEqual(lines[0].savedSoFar, 40)
-        XCTAssertFalse(lines[0].isOngoing)
-    }
 
     func testCancelAgainAfterReactivatingStartsANewLine() {
         let netflix = sub(amount: 20, anchor: day(2026, 10, 31))
@@ -215,5 +202,19 @@ final class VerdictAndSavingsTests: XCTestCase {
         XCTAssertEqual(ReviewPromptManager.milestone(forReceiptLines: 3), 3)
         XCTAssertEqual(ReviewPromptManager.milestone(forReceiptLines: 9), 3)
         XCTAssertEqual(ReviewPromptManager.milestone(forReceiptLines: 25), 10)
+    }
+
+    func testReactivationStopsTheSavings() {
+        let netflix = sub(amount: 20, anchor: day(2026, 10, 31))
+        let events = [
+            event(.cancelled, netflix, on: day(2026, 10, 29)),
+            event(.reactivated, netflix, on: day(2026, 12, 31))
+        ]
+        let lines = SavingsLedger.lines(from: events, now: day(2027, 6, 1), calendar: cal)
+        XCTAssertEqual(lines.count, 1)
+        XCTAssertEqual(lines[0].avoidedCharges.map(ymd), ["2026-10-31", "2026-11-30"],
+                       "the Dec 31 charge happened because it started again that day")
+        XCTAssertEqual(lines[0].savedSoFar, 40)
+        XCTAssertEqual(lines[0].endedOn.map(ymd), "2026-12-31")
     }
 }

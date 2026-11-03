@@ -253,12 +253,15 @@ final class FakeMailAPI: URLProtocol {
 
     // MARK: Microsoft Graph
 
+    /// Real Graph ids are base64 and contain "/", "+" and "=".
+    static func graphID(_ m: FixtureMessage) -> String { "AAMkAD\(m.id)/Zx+Q==" }
+
     private static func graphMessage(_ m: FixtureMessage) -> [String: Any] {
         let headers = MIMEParser.parseHeaders(m.raw)
         let from = headers["from"] ?? ""
         let address = from.range(of: #"<([^>]+)>"#, options: .regularExpression).map { String(from[$0].dropFirst().dropLast()) } ?? from
         let name = from.components(separatedBy: "<").first?.trimmingCharacters(in: CharacterSet(charactersIn: " \"")) ?? ""
-        return ["id": m.id, "subject": headers["subject"] ?? "", "bodyPreview": "",
+        return ["id": graphID(m), "subject": headers["subject"] ?? "", "bodyPreview": "",
                 "from": ["emailAddress": ["name": name, "address": address]],
                 "receivedDateTime": ISO8601DateFormatter().string(from: m.date),
                 "internetMessageId": headers["message-id"] ?? "", "parentFolderId": m.folder]
@@ -282,9 +285,12 @@ final class FakeMailAPI: URLProtocol {
             }
             return json(object)
         }
-        if path.hasPrefix("/me/messages/"), path.hasSuffix("/$value") {
-            let id = String(path.dropFirst("/me/messages/".count).dropLast("/$value".count))
-            guard let message = s.messages.first(where: { $0.id == id }) else { return json(["error": ["code": "ErrorItemNotFound"]], status: 404) }
+        // Routed by path segment, as Graph does: an id whose "/" isn't encoded splits into two segments.
+        let segments = (URLComponents(url: url, resolvingAgainstBaseURL: false)?.percentEncodedPath ?? "")
+            .replacingOccurrences(of: "/v1.0", with: "").split(separator: "/", omittingEmptySubsequences: false).map(String.init)
+        if segments.count == 5, segments[1] == "me", segments[2] == "messages", segments[4] == "$value" {
+            let id = segments[3].removingPercentEncoding ?? ""
+            guard let message = s.messages.first(where: { graphID($0) == id }) else { return json(["error": ["code": "ErrorItemNotFound"]], status: 404) }
             return (200, ["Content-Type": "text/plain"], message.raw)
         }
         if path == "/me/mailFolders/inbox/messages/delta" {
@@ -446,6 +452,17 @@ final class ProviderWorkflowTests: XCTestCase {
         XCTAssertNil(OAuthSession.load(for: account.id))
         XCTAssertTrue(ReceiptLedger.load().isEmpty, "no receipts from a disconnected inbox")
         XCTAssertTrue(scanner.foundSubscriptions.isEmpty)
+    }
+
+    /// The rule behind both tests above: saving scan progress never brings back a removed inbox.
+    func testUpdatingARemovedInboxDoesNotBringItBack() {
+        let account = MailboxAccount(id: UUID().uuidString, kind: .imap, address: "gone@example.test", addedAt: Date())
+        MailboxAccountStore.upsert(account)
+        MailboxAccountStore.remove(account.id)
+        var later = account
+        later.lastScan = Date()
+        XCTAssertFalse(MailboxAccountStore.update(later))
+        XCTAssertFalse(MailboxAccountStore.all().contains { $0.id == account.id })
     }
 
     func testDeletingTheAccountDuringScan_forgetsEveryInbox() async throws {

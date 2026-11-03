@@ -29,7 +29,6 @@ enum SavingsLedger {
 
         var savedSoFar: Decimal { amountPerCharge * Decimal(avoidedSoFar.count) }
         var onTrack: Decimal { amountPerCharge * Decimal(avoidedCharges.count) }
-        var isOngoing: Bool { endedOn == nil }
     }
 
     /// Lines in the order the cancellations happened.

@@ -33,9 +33,6 @@ struct Subscription: Identifiable, Codable, Equatable {
     var userPriceUSD: Decimal?
     var isPriceOverridden: Bool = false
 
-    var effectivePriceUSD: Decimal {
-        isPriceOverridden ? (userPriceUSD ?? amount) : amount
-    }
 
     // MARK: - Coding Keys
     enum CodingKeys: String, CodingKey {
@@ -219,43 +216,7 @@ struct Subscription: Identifiable, Codable, Equatable {
         return calendar.calendarDays(from: Date(), to: nextDate)
     }
     
-    var renewalStatus: RenewalStatus {
-        guard let days = daysUntilRenewal else { return .unknown }
-        
-        if days < 0 {
-            return .overdue
-        } else if days == 0 {
-            return .today
-        } else if days <= 3 {
-            return .soon(days: days)
-        } else if days <= 7 {
-            return .thisWeek(days: days)
-        } else {
-            return .upcoming(days: days)
-        }
-    }
     
-    enum RenewalStatus {
-        case unknown
-        case overdue
-        case today
-        case soon(days: Int)
-        case thisWeek(days: Int)
-        case upcoming(days: Int)
-        
-        var description: String {
-            switch self {
-            case .unknown: return "Unknown"
-            case .overdue: return "Overdue"
-            case .today: return "Today"
-            case .soon(let days): return "\(days) day\(days == 1 ? "" : "s")"
-            case .thisWeek(let days): return "\(days) days"
-            case .upcoming(let days): return "\(days) days"
-            }
-        }
-        
-        
-    }
     
     // MARK: - Helper Methods
     
@@ -340,27 +301,7 @@ enum BillingFrequency: String, Codable, CaseIterable, Identifiable {
         }
     }
     
-    var multiplierToMonthly: Decimal {
-        switch self {
-        case .weekly: return Decimal(52) / 12
-        case .biweekly: return Decimal(26) / 12
-        case .monthly: return 1
-        case .quarterly: return Decimal(1) / 3
-        case .semiannual: return Decimal(1) / 6
-        case .yearly: return Decimal(1) / 12
-        }
-    }
     
-    var multiplierToYearly: Decimal {
-        switch self {
-        case .weekly: return 52
-        case .biweekly: return 26
-        case .monthly: return 12
-        case .quarterly: return 4
-        case .semiannual: return 2
-        case .yearly: return 1
-        }
-    }
 }
 
 // MARK: - Subscription Status
@@ -404,106 +345,14 @@ enum SubscriptionStatus: String, Codable, CaseIterable {
 
 // MARK: - Subscription Extensions
 extension Subscription {
-    func convertedTo(currency: String, rate: Decimal) -> Subscription {
-        var converted = self
-        converted.amount = amount * rate
-        converted.currency = currency
-        return converted
-    }
     
     
-    mutating func calculateROI(usageMinutes: Int) {
-        monthlyUsageMinutes = usageMinutes
-        
-        let monthlyHours = Decimal(usageMinutes) / 60
-        if monthlyHours > 0 {
-            costPerHour = monthlyCost / monthlyHours
-            
-            // Value Score: a normalized 0-100 score where lower cost-per-hour yields higher scores.
-            // Formula: max(0, 100 - costPerHour * 10)
-            // This is NOT a real financial ROI calculation. It is an approximation designed to
-            // surface cost-per-use insights. True ROI = (value_received - cost) / cost requires
-            // subjective value quantification not possible from screen time alone.
-            let costPerHourDouble = Double(truncating: (costPerHour ?? 0) as NSDecimalNumber)
-            let baseScore = max(0, 100 - (costPerHourDouble * 10))
-            roiScore = Decimal(baseScore)
-        }
-        
-        // Calculate waste score: usage relative to expected usage based on cost
-        // Baseline: $1/month = 10 minutes expected usage.
-        // NOTE: This 10 min/$ baseline is an industry approximation for casual app engagement.
-        // It is not a universal truth — actual "reasonable" usage varies significantly by app
-        // category (e.g., streaming vs. utility) and individual user behavior.
-        let monthlyCostDouble = Double(truncating: monthlyCost as NSNumber)
-        guard monthlyCostDouble > 0 else {
-            // Free subscription has no waste
-            wasteScore = 0
-            return
-        }
-        let expectedMinutes = monthlyCostDouble * 10
-        let score = min(Double(usageMinutes) / expectedMinutes, 1.0)
-        wasteScore = Decimal(score)
-    }
     
-    /// Mark as cancelled (one-tap)
-    mutating func markAsCancelled() {
-        status = .cancelled
-        updatedAt = Date()
-    }
     
-    /// Set a pause reminder (one-tap). Does NOT actually pause the real subscription.
-    mutating func markAsPaused(until date: Date) {
-        pausedUntil = date
-        updatedAt = Date()
-    }
 
-    /// Clear the pause reminder (one-tap)
-    mutating func resume() {
-        pausedUntil = nil
-        updatedAt = Date()
-    }
     
     // MARK: - Waste Level
-    var wasteLevel: WasteLevel {
-        guard let score = wasteScore else { return .unknown }
-        let scoreDouble = Double(truncating: score as NSNumber)
-        switch scoreDouble {
-        case 0.0..<0.2:   return .critical
-        case 0.2..<0.4:   return .high
-        case 0.4..<0.6:   return .moderate
-        case 0.6..<0.8:   return .low
-        case 0.8...1.0:   return .none
-        default:          return .unknown
-        }
-    }
-    
-    var wasteRecommendation: WasteRecommendation {
-        switch wasteLevel {
-        case .critical:  return .cancelImmediately
-        case .high:      return .considerPausing
-        case .moderate:  return .reviewUsage
-        case .low:       return .goodValue
-        case .none:      return .excellentValue
-        case .unknown:   return .insufficientData
-        }
-    }
-}
-
-// MARK: - Waste Level
-enum WasteLevel: String, CaseIterable {
-    case critical, high, moderate, low, none, unknown
-    
     
 }
 
-// MARK: - Waste Recommendation
-enum WasteRecommendation: String {
-    case cancelImmediately
-    case considerPausing
-    case reviewUsage
-    case goodValue
-    case excellentValue
-    case insufficientData
-    
-    
-}
+

@@ -18,9 +18,4 @@ struct LifetimeCostCalculator {
         projectedCost(monthly: monthly, years: retirementYears)
     }
 
-    /// Approximate daily cost using the ÷30 convention used throughout Pausely.
-    /// Not calendar-accurate — intentionally consistent with `monthlyCost` display.
-    static func dailyCost(monthly: Decimal) -> Decimal {
-        monthly / 30
-    }
 }

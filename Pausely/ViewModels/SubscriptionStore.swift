@@ -19,10 +19,27 @@ class SubscriptionStore: ObservableObject {
     private let client = SupabaseManager.shared.client
     private var fetchTask: Task<Void, Never>?
 
+    /// Tests switch this off: every change still lands on the device and is queued for sync, exactly as
+    /// when offline, and the live database is never touched.
+    static var cloudWritesEnabled = true
+
+    private func requireCloud() throws {
+        guard Self.cloudWritesEnabled else { throw DatabaseError.offlineMode }
+    }
+
     private var currencyCancellables: Set<AnyCancellable> = []
 
     private init() {
         loadFromCache()
+        #if DEBUG
+        // UI tests: start from the demo list on every launch and never write to the cloud.
+        if ProcessInfo.processInfo.arguments.contains("--fresh-demo-data") {
+            Self.cloudWritesEnabled = false
+            subscriptions = Self.makeDemoSubscriptions()
+            calculateTotals()
+            saveToCache()
+        }
+        #endif
         // Totals are in the display currency: redo them when it changes or when live rates arrive.
         // @Published sends before the new value is stored, so take the new code from the event and
         // let rate updates finish before reading them.
@@ -100,7 +117,7 @@ class SubscriptionStore: ObservableObject {
                 if self.subscriptions.isEmpty {
                     self.loadFromCache()
                     if self.subscriptions.isEmpty {
-                        self.lastErrorMessage = "Couldn't load subscriptions. Pull to refresh."
+                        self.lastErrorMessage = L10n.string("Couldn't load subscriptions. Pull to refresh.")
                     }
                 }
             }
@@ -193,7 +210,9 @@ class SubscriptionStore: ObservableObject {
         
     }
     
-    /// Adds a subscription. Always updates local state first, then attempts cloud sync.
+    /// Adds a subscription. Always updates local state first, then attempts cloud sync. A cloud failure
+    /// isn't an error for the caller: the change is kept on the device and queued for sync (returns
+    /// false). Only a refusal, like the free tier's limit, throws.
     @discardableResult
     func addSubscription(_ subscription: Subscription) async throws -> Bool {
         let paymentManager = PaymentManager.shared
@@ -221,6 +240,7 @@ class SubscriptionStore: ObservableObject {
 
         // 2. Attempt Supabase write
         do {
+            try requireCloud()
             guard let session = client.auth.currentSession else {
                 throw DatabaseError.notAuthenticated
             }
@@ -250,7 +270,8 @@ class SubscriptionStore: ObservableObject {
                 let op = SyncOperation(type: .create, subscriptionId: localSub.id, payload: payload)
                 SyncQueue.shared.enqueue(op)
             }
-            throw error
+            self.lastErrorMessage = L10n.string("Saved on this iPhone. It will sync when you're back online.")
+            return false
         }
     }
     
@@ -275,6 +296,7 @@ class SubscriptionStore: ObservableObject {
 
         // 2. Attempt Supabase write
         do {
+            try requireCloud()
             let record = SubscriptionRecord(from: subscription)
             _ = try await client
                 .from("subscriptions")
@@ -288,7 +310,7 @@ class SubscriptionStore: ObservableObject {
                 let op = SyncOperation(type: .update, subscriptionId: subscription.id, payload: payload)
                 SyncQueue.shared.enqueue(op)
             }
-            throw error
+            self.lastErrorMessage = L10n.string("Saved on this iPhone. It will sync when you're back online.")
         }
     }
 
@@ -308,6 +330,7 @@ class SubscriptionStore: ObservableObject {
 
         // 2. Attempt Supabase write
         do {
+            try requireCloud()
             try await client
                 .from("subscriptions")
                 .delete()
@@ -318,8 +341,7 @@ class SubscriptionStore: ObservableObject {
             // 3. Enqueue for retry
             let op = SyncOperation(type: .delete, subscriptionId: id, payload: Data())
             SyncQueue.shared.enqueue(op)
-            self.lastErrorMessage = "Couldn't delete — will retry when online"
-            throw error
+            self.lastErrorMessage = L10n.string("Removed from this iPhone. It will sync when you're back online.")
         }
     }
 
@@ -349,6 +371,7 @@ class SubscriptionStore: ObservableObject {
 
         // 2. Attempt Supabase write
         do {
+            try requireCloud()
             try await client
                 .from("subscriptions")
                 .update(["status": status.rawValue])
@@ -356,7 +379,7 @@ class SubscriptionStore: ObservableObject {
                 .execute()
         } catch {
             os_log("Error updating subscription status in cloud: %{public}@", log: .default, type: .error, error.localizedDescription)
-            self.lastErrorMessage = "Saved locally, will sync when back online"
+            self.lastErrorMessage = L10n.string("Saved on this iPhone. It will sync when you're back online.")
             // 3. Enqueue for retry
             if let payload = try? JSONEncoder().encode(["status": status.rawValue]) {
                 let op = SyncOperation(type: .updateStatus, subscriptionId: id, payload: payload)
@@ -380,6 +403,7 @@ class SubscriptionStore: ObservableObject {
 
         // 2. Attempt Supabase write
         do {
+            try requireCloud()
             let dateFormatter = ISO8601DateFormatter()
             try await client
                 .from("subscriptions")
@@ -388,7 +412,7 @@ class SubscriptionStore: ObservableObject {
                 .execute()
         } catch {
             os_log("Error pausing subscription in cloud: %{public}@", log: .default, type: .error, error.localizedDescription)
-            self.lastErrorMessage = "Saved locally, will sync when back online"
+            self.lastErrorMessage = L10n.string("Saved on this iPhone. It will sync when you're back online.")
             // 3. Enqueue for retry
             let dateFormatter = ISO8601DateFormatter()
             if let payload = try? JSONEncoder().encode(["paused_until": dateFormatter.string(from: date)]) {
@@ -416,6 +440,7 @@ class SubscriptionStore: ObservableObject {
             let paused_until: String?
         }
         do {
+            try requireCloud()
             try await client
                 .from("subscriptions")
                 .update(ResumePayload(paused_until: nil))
@@ -570,26 +595,6 @@ class SubscriptionStore: ObservableObject {
     
     // MARK: - Batch Operations for Scale
     
-    /// Efficiently add multiple subscriptions in batch
-    func batchAddSubscriptions(_ newSubscriptions: [Subscription]) async -> (added: Int, failed: Int) {
-        var added = 0
-        var failed = 0
-        
-        // Deduplication check
-        let existingNames = Set(subscriptions.map { $0.name.lowercased() })
-        let uniqueSubs = newSubscriptions.filter { !existingNames.contains($0.name.lowercased()) }
-        
-        for sub in uniqueSubs {
-            do {
-                _ = try await addSubscription(sub)
-                added += 1
-            } catch {
-                failed += 1
-            }
-        }
-        
-        return (added, failed)
-    }
     
     /// Memory-efficient filtering for large subscription lists
     func filteredSubscriptions(
@@ -636,9 +641,6 @@ class SubscriptionStore: ObservableObject {
         subscriptions.filter { $0.isPaused }
     }
 
-    var pausableSubscriptions: [Subscription] {
-        subscriptions.filter { $0.canPause && $0.status == .active && !$0.isPaused }
-    }
     
     var upcomingRenewals: [Subscription] {
         let calendar = Calendar.current
@@ -653,16 +655,7 @@ class SubscriptionStore: ObservableObject {
             .sorted { ($0.calculatedNextBillingDate ?? now) < ($1.calculatedNextBillingDate ?? now) }
     }
     
-    func subscriptionsByCategory() -> [(category: String, subscriptions: [Subscription], total: Decimal)] {
-        let grouped = Dictionary(grouping: activeSubscriptions) { $0.category ?? "Other" }
-        return grouped.map { (category: $0.key, subscriptions: $0.value, total: calculateCategoryTotal($0.value)) }
-            .sorted { $0.total > $1.total }
-    }
     
-    /// Monthly total of these subscriptions in the display currency.
-    private func calculateCategoryTotal(_ subscriptions: [Subscription]) -> Decimal {
-        subscriptions.monthlyTotal()
-    }
 
     // MARK: - Live Activity
 

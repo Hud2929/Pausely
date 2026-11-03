@@ -81,13 +81,20 @@ final class InboxWorkflowUITests: XCTestCase {
         XCTAssertTrue(scan.waitForExistence(timeout: 30), "connected inboxes show the search button")
         XCTAssertTrue(app.staticTexts[user].exists)
 
-        // 4. Scan: results with the expected subscriptions, confirmed ones preselected.
+        // 4. Scan: results list the expected subscriptions. Confirmed ones come preselected; "likely" ones
+        // wait for the person to pick them, so pick any expected one that isn't selected yet.
         scan.tap()
-        let importButton = app.buttons["importSelectedButton"]
-        XCTAssertTrue(importButton.waitForExistence(timeout: 120), "the scan should end with subscriptions to import")
+        let firstExpected = row(app, startingWith: expected.first ?? "")
+        XCTAssertTrue(firstExpected.waitForExistence(timeout: 120), "the scan should list \(expected)")
         for name in expected {
-            XCTAssertTrue(row(app, startingWith: name).exists, "\(name) should be listed")
+            let item = row(app, startingWith: name)
+            XCTAssertTrue(item.exists, "\(name) should be listed")
+            if item.label.hasSuffix(", not selected") { item.tap() }
+            let selected = expectation(for: NSPredicate(format: "label ENDSWITH ', selected'"), evaluatedWith: item)
+            XCTAssertEqual(XCTWaiter.wait(for: [selected], timeout: 5), .completed, "\(name) should be selected: \(item.label)")
         }
+        let importButton = app.buttons["importSelectedButton"]
+        XCTAssertTrue(importButton.waitForExistence(timeout: 5), "selected subscriptions can be imported")
         XCTAssertTrue(importButton.label.hasPrefix("Import "), importButton.label)
 
         // 5. Import.

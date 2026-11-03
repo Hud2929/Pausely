@@ -99,6 +99,11 @@ final class LiveMailboxTests: XCTestCase {
         print(text)
         if let path = environment("PAUSELY_REPORT_PATH") { try text.write(toFile: path, atomically: true, encoding: .utf8) }
         XCTAssertTrue(scanner.accountErrors.isEmpty, "\(scanner.accountErrors)")
+        // PAUSELY_REAL_MAIL_EXPECT / _REJECT="Name A,Name B": what this mailbox must and must not show.
+        let names = Set(scanner.report?.subscriptions.map(\.name) ?? [])
+        func list(_ key: String) -> [String] { (environment(key) ?? "").split(separator: ",").map(String.init) }
+        for expected in list("PAUSELY_REAL_MAIL_EXPECT") { XCTAssertTrue(names.contains(expected), "missing \(expected) in \(names)") }
+        for rejected in list("PAUSELY_REAL_MAIL_REJECT") { XCTAssertFalse(names.contains { $0.contains(rejected) }, "\(rejected) in \(names)") }
 
         // Second scan: only mail that arrived since the first.
         await scanner.scanAll()
@@ -154,6 +159,14 @@ final class LiveMailboxTests: XCTestCase {
         let text = lines.joined(separator: "\n")
         print(text)
         if let path = environment("PAUSELY_REPORT_PATH") { try text.write(toFile: path, atomically: true, encoding: .utf8) }
+
+        // What this mailbox must and must not show comes from the environment (never real names in the
+        // repository): PAUSELY_REAL_MAIL_EXPECT / _REJECT="Name A,Name B".
+        XCTAssertFalse(lines.contains { $0.hasPrefix("UNPARSED") }, "every message should parse")
+        let names = Set(report.subscriptions.map(\.name))
+        func list(_ key: String) -> [String] { (environment(key) ?? "").split(separator: ",").map(String.init) }
+        for expected in list("PAUSELY_REAL_MAIL_EXPECT") { XCTAssertTrue(names.contains(expected), "missing \(expected) in \(names)") }
+        for rejected in list("PAUSELY_REAL_MAIL_REJECT") { XCTAssertFalse(names.contains { $0.contains(rejected) }, "\(rejected) in \(names)") }
     }
 
     // MARK: 2. Real providers: TLS, greeting, capabilities, and a rejected sign-in handled cleanly

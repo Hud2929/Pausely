@@ -123,53 +123,26 @@ final class WidgetDataStoreTests: XCTestCase {
 
     // MARK: - Live Activity Data
 
-    /// A yearly plan's Live Activity shows the real charge in its own currency, not a monthly share.
-    func testLiveActivityShowsTheRealChargeInItsOwnCurrency() {
-        let future = Calendar.current.date(byAdding: .day, value: 3, to: Date())!
-        let sub = TestFactories.makeSubscription(name: "Crave", amount: 99.99, currency: "CAD",
-                                                 billingFrequency: .yearly, status: .active, nextBillingDate: future)
-        sut.publish(subscriptions: [sub])
-        let data = sut.readLiveActivityData()
+    // MARK: - Live Activity (PauselyWidget/WidgetReader reads these values exactly as written)
 
-        XCTAssertEqual(data.amount, 99.99, accuracy: 0.001)
-        XCTAssertEqual(data.amountText, MoneyFormat.string(Decimal(string: "99.99")!, "CAD"))
+    func testLiveActivityShowsTheNextRenewalInItsOwnCurrency() {
+        let soon = Calendar.current.date(byAdding: .day, value: 3, to: Date())!
+        let later = Calendar.current.date(byAdding: .day, value: 20, to: Date())!
+        let netflix = TestFactories.makeSubscription(name: "Netflix", amount: 15.49, status: .active, nextBillingDate: later)
+        let crave = TestFactories.makeSubscription(name: "Crave", amount: 99.99, currency: "CAD",
+                                                   billingFrequency: .yearly, status: .active, nextBillingDate: soon)
+        sut.publish(subscriptions: [netflix, crave])
+
+        XCTAssertEqual(testDefaults.string(forKey: "liveActivity_subscriptionName"), "Crave")
+        XCTAssertEqual(testDefaults.string(forKey: "liveActivity_amountText"), MoneyFormat.string(Decimal(string: "99.99")!, "CAD"))
+        XCTAssertEqual(testDefaults.double(forKey: "liveActivity_renewalDate"), soon.timeIntervalSince1970, accuracy: 1)
     }
 
-    func testReadLiveActivityData_withUpcomingRenewal() {
-        let future = Calendar.current.date(byAdding: .day, value: 3, to: Date())!
-        let sub = TestFactories.makeSubscription(
-            name: "Hulu",
-            amount: 12.99,
-            billingFrequency: .monthly,
-            status: .active,
-            nextBillingDate: future
-        )
-        sut.publish(subscriptions: [sub])
-        let data = sut.readLiveActivityData()
-
-        XCTAssertEqual(data.subscriptionName, "Hulu")
-        XCTAssertEqual(data.amount, 12.99, accuracy: 0.01)
-        XCTAssertEqual(data.frequency, "Monthly")
-        // Allow 2-3 days due to time-of-day boundary
-        XCTAssertTrue(data.daysUntilRenewal == 2 || data.daysUntilRenewal == 3)
-    }
-
-    func testReadLiveActivityData_fallbackToFirstActive() {
-        let sub = TestFactories.makeSubscription(
-            name: "Disney+",
-            amount: 7.99,
-            status: .active
-        )
-        sut.publish(subscriptions: [sub])
-        let data = sut.readLiveActivityData()
-
-        XCTAssertEqual(data.subscriptionName, "Disney+")
-        XCTAssertEqual(data.amount, 7.99, accuracy: 0.01)
-    }
-
-    func testReadLiveActivityData_defaultsWhenEmpty() {
-        let data = sut.readLiveActivityData()
-        XCTAssertEqual(data.subscriptionName, "Subscription")
-        XCTAssertEqual(data.frequency, "Monthly")
+    func testLiveActivityFallsBackToTheFirstActiveSubscription() {
+        let later = Calendar.current.date(byAdding: .day, value: 20, to: Date())!
+        let disney = TestFactories.makeSubscription(name: "Disney+", amount: 7.99, status: .active, nextBillingDate: later)
+        sut.publish(subscriptions: [disney])
+        XCTAssertEqual(testDefaults.string(forKey: "liveActivity_subscriptionName"), "Disney+")
+        XCTAssertEqual(testDefaults.string(forKey: "liveActivity_amountText"), disney.chargeText)
     }
 }

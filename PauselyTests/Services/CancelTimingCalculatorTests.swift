@@ -29,7 +29,7 @@ final class CancelTimingCalculatorTests: XCTestCase {
         // Future billing date (shouldn't happen in practice) must not go negative
         let today = Date()
         let future = Calendar.current.date(byAdding: .day, value: 5, to: today)!
-        XCTAssertGreaterThanOrEqual(CancelTimingCalculator.daysUsed(from: future, today: today), 0)
+        XCTAssertEqual(CancelTimingCalculator.daysUsed(from: future, today: today), 0)
     }
 
     // MARK: - progress

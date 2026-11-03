@@ -108,19 +108,6 @@ final class WidgetDataStore {
     }
 
 
-    func readLiveActivityData() -> LiveActivityData {
-        guard let defaults else {
-            return LiveActivityData()
-        }
-        return LiveActivityData(
-            subscriptionName: defaults.string(forKey: "liveActivity_subscriptionName") ?? "Subscription",
-            renewalDate: Date(timeIntervalSince1970: defaults.double(forKey: "liveActivity_renewalDate")),
-            amount: defaults.double(forKey: "liveActivity_amount"),
-            amountText: defaults.string(forKey: "liveActivity_amountText") ?? "",
-            frequency: defaults.string(forKey: "liveActivity_frequency") ?? "Monthly"
-        )
-    }
-
     // MARK: - Insights
 
     private func generateInsight(for subscriptions: [Subscription], monthlyTotal: Decimal, currency: String) -> String {
@@ -180,24 +167,3 @@ struct WidgetTrialInfo: Codable, Identifiable {
     }
 }
 
-struct LiveActivityData {
-    let subscriptionName: String
-    let renewalDate: Date
-    /// The next charge, in the subscription's own currency.
-    let amount: Double
-    let amountText: String
-    let frequency: String
-
-    init(subscriptionName: String = "", renewalDate: Date = Date(), amount: Double = 0, amountText: String = "",
-         frequency: String = "Monthly") {
-        self.subscriptionName = subscriptionName
-        self.renewalDate = renewalDate
-        self.amount = amount
-        self.amountText = amountText
-        self.frequency = frequency
-    }
-
-    var daysUntilRenewal: Int {
-        Calendar.current.dateComponents([.day], from: Date(), to: renewalDate).day ?? 0
-    }
-}

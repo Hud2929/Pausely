@@ -114,63 +114,6 @@ final class SubscriptionTests: XCTestCase {
 
     // MARK: - Renewal Status
 
-    func testRenewalStatus_unknown() {
-        let sub = TestFactories.makeSubscription(nextBillingDate: nil)
-        if case .unknown = sub.renewalStatus {
-            // pass
-        } else {
-            XCTFail("Expected unknown")
-        }
-    }
-
-    func testRenewalStatus_overdue() {
-        let past = Calendar.current.date(byAdding: .day, value: -1, to: Date())!
-        let sub = TestFactories.makeSubscription(status: .cancelled, nextBillingDate: past)
-        if case .overdue = sub.renewalStatus {
-            // pass
-        } else {
-            XCTFail("Expected overdue")
-        }
-    }
-
-    func testRenewalStatus_today() {
-        let sub = TestFactories.makeSubscription(nextBillingDate: Date())
-        if case .today = sub.renewalStatus {
-            // pass
-        } else {
-            XCTFail("Expected today")
-        }
-    }
-
-    func testRenewalStatus_soon() {
-        let soon = Calendar.current.date(byAdding: .day, value: 2, to: Date())!
-        let sub = TestFactories.makeSubscription(nextBillingDate: soon)
-        if case .soon = sub.renewalStatus {
-            // pass
-        } else {
-            XCTFail("Expected soon")
-        }
-    }
-
-    func testRenewalStatus_thisWeek() {
-        let thisWeek = Calendar.current.date(byAdding: .day, value: 5, to: Date())!
-        let sub = TestFactories.makeSubscription(nextBillingDate: thisWeek)
-        if case .thisWeek = sub.renewalStatus {
-            // pass
-        } else {
-            XCTFail("Expected thisWeek")
-        }
-    }
-
-    func testRenewalStatus_upcoming() {
-        let upcoming = Calendar.current.date(byAdding: .day, value: 14, to: Date())!
-        let sub = TestFactories.makeSubscription(nextBillingDate: upcoming)
-        if case .upcoming = sub.renewalStatus {
-            // pass
-        } else {
-            XCTFail("Expected upcoming")
-        }
-    }
 
     // MARK: - Equatable
 
@@ -189,131 +132,18 @@ final class SubscriptionTests: XCTestCase {
 
     // MARK: - Conversion
 
-    func testConvertedTo() {
-        let sub = TestFactories.makeSubscription(amount: 10, currency: "USD")
-        let converted = sub.convertedTo(currency: "EUR", rate: Decimal(0.85))
-        XCTAssertEqual(converted.amount, Decimal(8.5))
-        XCTAssertEqual(converted.currency, "EUR")
-    }
 
     // MARK: - Mutations
 
-    func testMarkAsCancelled() {
-        var sub = TestFactories.makeSubscription(status: .active)
-        sub.markAsCancelled()
-        XCTAssertEqual(sub.status, .cancelled)
-    }
-
-    func testMarkAsPaused() {
-        var sub = TestFactories.makeSubscription(status: .active)
-        let pauseDate = TestDates.addDays(30, to: Date())
-        sub.markAsPaused(until: pauseDate)
-        XCTAssertEqual(sub.status, .active)
-        XCTAssertTrue(sub.isPaused)
-        XCTAssertEqual(sub.pausedUntil, pauseDate)
-    }
-
-    func testResume() {
-        var sub = TestFactories.makeSubscription(status: .active)
-        sub.pausedUntil = TestDates.addDays(30, to: Date())
-        sub.resume()
-        XCTAssertEqual(sub.status, .active)
-        XCTAssertFalse(sub.isPaused)
-        XCTAssertNil(sub.pausedUntil)
-    }
 
     // MARK: - ROI / Waste Score
 
-    func testCalculateROI_withUsage() {
-        var sub = TestFactories.makeSubscription(amount: 12, billingFrequency: .monthly)
-        sub.calculateROI(usageMinutes: 120)
-        XCTAssertNotNil(sub.costPerHour)
-        XCTAssertNotNil(sub.roiScore)
-        XCTAssertNotNil(sub.wasteScore)
-    }
-
-    func testCalculateROI_zeroUsage() {
-        var sub = TestFactories.makeSubscription(amount: 10, billingFrequency: .monthly)
-        sub.calculateROI(usageMinutes: 0)
-        // monthlyHours = 0, so costPerHour should not be set
-        XCTAssertNil(sub.costPerHour)
-    }
-
-    func testWasteLevel_unknown() {
-        let sub = TestFactories.makeSubscription()
-        XCTAssertEqual(sub.wasteLevel, .unknown)
-    }
-
-    func testWasteLevel_critical() {
-        var sub = TestFactories.makeSubscription(amount: 10)
-        sub.wasteScore = Decimal(0.1)
-        XCTAssertEqual(sub.wasteLevel, .critical)
-    }
-
-    func testWasteLevel_none() {
-        var sub = TestFactories.makeSubscription(amount: 10)
-        sub.wasteScore = Decimal(0.9)
-        XCTAssertEqual(sub.wasteLevel, .none)
-    }
-
-    func testWasteRecommendation() {
-        var sub = TestFactories.makeSubscription(amount: 10)
-        sub.wasteScore = Decimal(0.1)
-        XCTAssertEqual(sub.wasteRecommendation, .cancelImmediately)
-
-        sub.wasteScore = Decimal(0.9)
-        XCTAssertEqual(sub.wasteRecommendation, .excellentValue)
-    }
 
     // MARK: - Effective Price
 
-    func testEffectivePrice_notOverridden() {
-        let sub = TestFactories.makeSubscription(amount: 10, isPriceOverridden: false)
-        XCTAssertEqual(sub.effectivePriceUSD, 10)
-    }
-
-    func testEffectivePrice_overridden() {
-        let sub = TestFactories.makeSubscription(amount: 10, userPriceUSD: Decimal(5), isPriceOverridden: true)
-        XCTAssertEqual(sub.effectivePriceUSD, 5)
-    }
-
-    func testEffectivePrice_overriddenNil() {
-        let sub = TestFactories.makeSubscription(amount: 10, userPriceUSD: nil, isPriceOverridden: true)
-        XCTAssertEqual(sub.effectivePriceUSD, 10)
-    }
 
     // MARK: - ROI / Waste Score Edge Cases
 
-    func testCalculateROI_zeroCost_noWaste() {
-        // Free subscription has no waste by definition — wasteScore should be 0 (not nil)
-        var sub = TestFactories.makeSubscription(amount: 0, billingFrequency: .monthly)
-        sub.calculateROI(usageMinutes: 0)
-        XCTAssertEqual(sub.wasteScore, Decimal(0), "Zero-cost subscription should have wasteScore = 0")
-    }
-
-    func testCalculateROI_zeroUsage_nonZeroCost_isMaxWaste() {
-        // No usage at all: min(0/expected, 1.0) = 0 → wasteScore = 0 (complete waste)
-        var sub = TestFactories.makeSubscription(amount: 10, billingFrequency: .monthly)
-        sub.calculateROI(usageMinutes: 0)
-        // monthlyHours = 0, so costPerHour block is skipped; wasteScore = 0
-        XCTAssertEqual(sub.wasteScore, Decimal(0), "Zero usage with non-zero cost should yield wasteScore = 0")
-        XCTAssertEqual(sub.wasteLevel, .critical)
-    }
-
-    func testCalculateROI_veryHighUsage_capsAt1() {
-        // 10,000 minutes on a $10/mo sub: expected = 10*10 = 100 min, score = min(10000/100, 1) = 1.0
-        var sub = TestFactories.makeSubscription(amount: 10, billingFrequency: .monthly)
-        sub.calculateROI(usageMinutes: 10_000)
-        XCTAssertEqual(sub.wasteScore, Decimal(1), "Very high usage should cap wasteScore at 1.0")
-        XCTAssertEqual(sub.wasteLevel, .none)
-    }
-
-    func testCalculateROI_zeroCost_noDivisionByZero() {
-        // Must not crash on zero-cost subscription regardless of usage
-        var sub = TestFactories.makeSubscription(amount: 0, billingFrequency: .monthly)
-        XCTAssertNoThrow(sub.calculateROI(usageMinutes: 120))
-        XCTAssertEqual(sub.wasteScore, Decimal(0))
-    }
 
     func testIsPaused_pausedUntilExactlyNow_isNotPaused() {
         // pausedUntil <= Date() → isPaused must return false (boundary: > not >=)

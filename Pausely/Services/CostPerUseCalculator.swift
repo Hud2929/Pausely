@@ -62,35 +62,9 @@ struct CostPerUseCalculator {
         }
     }
 
-    /// Get a human-readable label for the value tier
-    static func valueTierLabel(_ tier: ValueTier) -> String {
-        switch tier {
-        case .great:   return "Great Value"
-        case .fair:    return "Fair Value"
-        case .poor:    return "Poor Value"
-        case .unknown: return "No Data"
-        }
-    }
 
     // MARK: - Subscription Efficiency Score
 
-    /// Calculate overall subscription efficiency score across all subscriptions
-    /// - Parameters:
-    ///   - subscriptions: Array of subscriptions with usage data
-    ///   - usageProvider: Closure that returns monthly hours for a subscription name
-    /// - Returns: Average value score (0-100), or nil if no valid data
-    static func efficiencyScore(
-        for subscriptions: [Subscription],
-        usageProvider: (String) -> Double?
-    ) -> Double? {
-        let scores = subscriptions.compactMap { sub -> Double? in
-            guard sub.status == .active else { return nil }
-            guard let hours = usageProvider(sub.name) else { return nil }
-            return valueScore(monthlyCost: sub.monthlyCost, monthlyHoursUsed: hours)
-        }
-        guard !scores.isEmpty else { return nil }
-        return scores.reduce(0, +) / Double(scores.count)
-    }
 
     // MARK: - Rankings
 
@@ -154,73 +128,15 @@ struct CostPerUseCalculator {
         Array(rankedByValue(subscriptions: subscriptions, usageProvider: usageProvider).prefix(limit))
     }
 
-    /// Get top N worst value subscriptions
-    static func worstValue(
-        subscriptions: [Subscription],
-        usageProvider: (String) -> Double?,
-        limit: Int = 3
-    ) -> [CostPerUseResult] {
-        Array(rankedByValue(subscriptions: subscriptions, usageProvider: usageProvider).suffix(limit).reversed())
-    }
 
     // MARK: - Comparison
 
-    /// Compare usage of two subscriptions
-    /// - Returns: Ratio of first to second (e.g., 2.0 means first is used 2x more)
-    static func usageRatio(
-        subscription1Name: String,
-        subscription2Name: String,
-        usageProvider: (String) -> Double?
-    ) -> Double? {
-        guard let hours1 = usageProvider(subscription1Name),
-              let hours2 = usageProvider(subscription2Name),
-              hours2 > 0 else { return nil }
-        return hours1 / hours2
-    }
 
     // MARK: - Trend Analysis
 
-    /// Calculate month-over-month change in cost-per-use
-    static func costPerUseChange(
-        currentCostPerHour: Decimal,
-        previousCostPerHour: Decimal
-    ) -> Double {
-        let current = Double(truncating: currentCostPerHour as NSNumber)
-        let previous = Double(truncating: previousCostPerHour as NSNumber)
-        guard previous > 0 else { return 0 }
-        return ((current - previous) / previous) * 100
-    }
 
     // MARK: - Smart Alert Triggers
 
-    /// Check if a subscription should trigger a "consider pausing" alert
-    static func shouldAlertPause(
-        subscription: Subscription,
-        monthlyHoursUsed: Double,
-        thresholdHours: Double = 2
-    ) -> Bool {
-        guard subscription.status == .active else { return false }
-        return monthlyHoursUsed < thresholdHours && subscription.monthlyCost > 0
-    }
-
-    /// Check if a subscription should trigger a "cost increased" alert
-    static func shouldAlertCostIncrease(
-        currentCostPerHour: Decimal,
-        previousCostPerHour: Decimal,
-        thresholdPercent: Double = 50
-    ) -> Bool {
-        let change = costPerUseChange(currentCostPerHour: currentCostPerHour, previousCostPerHour: previousCostPerHour)
-        return change > thresholdPercent
-    }
-
-    /// Check if a subscription should trigger a "zero usage waste" alert
-    static func shouldAlertZeroUsage(
-        subscription: Subscription,
-        monthlyHoursUsed: Double
-    ) -> Bool {
-        guard subscription.status == .active else { return false }
-        return monthlyHoursUsed == 0 && subscription.monthlyCost > 0
-    }
 
     // MARK: - Formatting Helpers
 
