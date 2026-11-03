@@ -29,8 +29,9 @@ https://pausely.pro/privacy.html
 > Pausely is a subscription management app that helps users track, analyze, and optimize their recurring subscriptions. The `gmail.readonly` scope is required to scan email receipts and billing confirmations from subscription services, so users don't have to enter subscriptions manually.
 >
 > **How we use Gmail data:**
-> - We read email headers (From, Subject, Date) and body content to identify subscription receipts
+> - We search only for likely billing mail (known billing senders and receipt words in the subject, last 2 years), read those messages' headers (From, Subject, Date), and open the full message only for the ones that look like receipts
 > - All email processing happens on the user's device — email content is never transmitted to Pausely's servers
+> - Spam and Trash are never read; nothing is marked as read, changed or deleted
 > - We extract only the subscription name, billing amount, and billing date, which are saved to the user's account
 > - We do not read, store, or process emails unrelated to subscription billing
 > - We do not use Gmail data for advertising, profiling, or any purpose beyond subscription detection
@@ -51,12 +52,13 @@ https://pausely.pro/privacy.html
 
 ## Demo Video / Steps to Reproduce (Google requires this for restricted scopes)
 
-Record a short screen recording showing:
-1. Open Pausely → Profile → Import from Gmail
-2. Tap "Connect Gmail" → OAuth consent screen appears
-3. Grant access → app scans and shows found subscriptions
-4. Show the privacy notice: "Your emails never leave your phone"
-5. Tap Disconnect → access revoked
+Record a short screen recording (current app, 1.0.4 or later with Gmail turned on) showing:
+1. Open Pausely → Profile → "Find subscriptions in email"
+2. Show the privacy notice: "Your email never leaves your iPhone."
+3. Tap "Gmail — Sign in with Google" → Google's consent screen shows the gmail.readonly scope
+4. Grant access → tap "Find subscriptions" → the results list each subscription with the receipts it came from ("Show why")
+5. Select some and tap "Import" → they appear in the subscription list
+6. Tap the inbox's options (…) → "Disconnect" → the token is revoked at Google and the inbox and its receipt facts are removed from the phone
 
 Upload to YouTube (unlisted) or Google Drive and paste the link in the verification form.
 
