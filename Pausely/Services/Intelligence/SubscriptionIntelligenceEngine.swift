@@ -185,7 +185,7 @@ struct SubscriptionIntelligenceEngine {
                 results = results.map { sub in
                     var boosted = sub
                     boosted.score = min(100, sub.score + 30)
-                    boosted.reasons.insert("You told Pausely this is a subscription", at: 0)
+                    boosted.reasons.insert(L10n.string("You told Pausely this is a subscription"), at: 0)
                     boosted.tier = max(tier(for: boosted.score, status: boosted.status), .likely)
                     return boosted
                 }
@@ -376,30 +376,30 @@ struct SubscriptionIntelligenceEngine {
         case (3..., _): score += 38
         default: score += 22
         }
-        reasons.append("Charged \(n) times, about every \(describeInterval(sequence.cadence.frequency))")
+        reasons.append(chargedTimes(n, sequence.cadence.frequency))
 
         let allSame = amounts.allSatisfy { closeAmounts($0, latestAmount, tolerance: 0.005) }
         let coefficient = variation(amounts)
-        if allSame { score += 10; reasons.append("Same amount each time (\(format(latestAmount, currency)))") }
+        if allSame { score += 10; reasons.append(L10n.string("Same amount each time (\(format(latestAmount, currency)))")) }
         else if coefficient <= 0.06 { score += 6 }
-        else if coefficient > 0.25 { score -= 30; reasons.append("Amount varies a lot, which looks more like orders than a plan") }
+        else if coefficient > 0.25 { score -= 30; reasons.append(L10n.string("Amount varies a lot, which looks more like orders than a plan")) }
 
         let renewalCount = allSignals.filter { $0.renewalLanguage && !$0.promotional }.count
-        if renewalCount >= 2 { score += 20; reasons.append("Emails mention renewing or a recurring plan") }
-        else if renewalCount == 1 { score += 12; reasons.append("An email mentions renewing or a recurring plan") }
+        if renewalCount >= 2 { score += 20; reasons.append(L10n.string("Emails mention renewing or a recurring plan")) }
+        else if renewalCount == 1 { score += 12; reasons.append(L10n.string("An email mentions renewing or a recurring plan")) }
 
         let oneTimeShare = Double(charges.filter { $0.oneTimeLanguage }.count) / Double(n)
-        if oneTimeShare > 0.5 { score -= 45; reasons.append("Receipts look like one-time orders") }
+        if oneTimeShare > 0.5 { score -= 45; reasons.append(L10n.string("Receipts look like one-time orders")) }
 
         if merchant.isKnown {
-            if merchant.kind == .pureSubscription { score += 20; reasons.append("\(merchant.displayName) is a known subscription service") }
+            if merchant.kind == .pureSubscription { score += 20; reasons.append(L10n.string("\(merchant.displayName) is a known subscription service")) }
             else { score += 4 }
         }
         if charges.contains(where: { $0.markup == .subscription }) {
-            score += 12; reasons.append("The receipts carry structured subscription data")
+            score += 12; reasons.append(L10n.string("The receipts carry structured subscription data"))
         }
         if charges.contains(where: { $0.platform == "apple" || $0.platform == "googleplay" }) {
-            score += 15; reasons.append("Billed through an app-store subscription")
+            score += 15; reasons.append(L10n.string("Billed through an app-store subscription"))
         }
 
         if latestAmount < 1 { score -= 18 }
@@ -415,7 +415,7 @@ struct SubscriptionIntelligenceEngine {
                 // Steady, same-amount charges deserve a look. Varying amounts never surface: they are orders, not plans.
                 let plausible = sequence.regularity >= 0.8 && (allSame || coefficient <= 0.06) && (n >= 3 || renewalCount >= 1)
                 score = min(score, plausible ? 49 : 35)
-                reasons.append("Not enough proof of a recurring plan yet")
+                reasons.append(L10n.string("Not enough proof of a recurring plan yet"))
             }
         }
         score = max(0, min(100, score))
@@ -432,18 +432,18 @@ struct SubscriptionIntelligenceEngine {
            now.timeIntervalSince(expected) / 86_400 > grace {
             status = .likelyEnded
             nextBillingDate = nil
-            reasons.append("No charge since \(shortDate(lastDate)), so it may have ended")
+            reasons.append(L10n.string("No charge since \(shortDate(lastDate)), so it may have ended"))
         }
 
         var chargedAfterCancel = false
         if let cancellation, cancellation.date > charges.first!.date {
             if latest.date > cancellation.date.addingTimeInterval(86_400) {
                 chargedAfterCancel = true
-                reasons.append("Charged again on \(shortDate(latest.date)) after a cancellation email on \(shortDate(cancellation.date))")
+                reasons.append(L10n.string("Charged again on \(shortDate(latest.date)) after a cancellation email on \(shortDate(cancellation.date))"))
             } else {
                 status = .cancelled
                 nextBillingDate = nil
-                reasons.append("Cancelled on \(shortDate(cancellation.date))")
+                reasons.append(L10n.string("Cancelled on \(shortDate(cancellation.date))"))
             }
         }
 
@@ -455,11 +455,11 @@ struct SubscriptionIntelligenceEngine {
                now.timeIntervalSince(latest.date) < 400 * 86_400 {
                 previousAmount = prior
                 if status == .active { status = .priceIncreased }
-                reasons.append("Price rose from \(format(prior, currency)) to \(format(latestAmount, currency))")
+                reasons.append(L10n.string("Price rose from \(format(prior, currency)) to \(format(latestAmount, currency))"))
             }
         }
 
-        if let next = nextBillingDate { reasons.append("Next charge expected around \(shortDate(next))") }
+        if let next = nextBillingDate { reasons.append(L10n.string("Next charge expected around \(shortDate(next))")) }
 
         let tier = tier(for: score, status: status)
         let evidence = charges.suffix(8).compactMap { signal -> ChargeEvidence? in
@@ -493,9 +493,9 @@ struct SubscriptionIntelligenceEngine {
 
         let frequency = signal.cadenceHint ?? .monthly
         var score = 30 + 12 + (knownPure ? 20 : 0) + (structured ? 25 : 0)
-        var reasons = [knownPure ? "\(merchant.displayName) is a known subscription service" : "The receipt includes structured subscription data",
-                       "The receipt says it renews on a schedule"]
-        if signal.cadenceHint == nil { reasons.append("Billing period assumed monthly until a second charge confirms it") ; score -= 6 }
+        var reasons = [knownPure ? L10n.string("\(merchant.displayName) is a known subscription service") : L10n.string("The receipt includes structured subscription data"),
+                       L10n.string("The receipt says it renews on a schedule")]
+        if signal.cadenceHint == nil { reasons.append(L10n.string("Billing period assumed monthly until a second charge confirms it")) ; score -= 6 }
         if signal.platform == "apple" || signal.platform == "googleplay" { score += 10 }
         if amount < 1 { score -= 18 }
 
@@ -505,9 +505,9 @@ struct SubscriptionIntelligenceEngine {
         if missed >= 1, let expected = nextExpected(after: signal.date, frequency: frequency, calendar: calendar),
            now.timeIntervalSince(expected) / 86_400 > graceDays(frequency) {
             status = .likelyEnded; nextDate = nil
-            reasons.append("No later charge found since \(shortDate(signal.date))")
+            reasons.append(L10n.string("No later charge found since \(shortDate(signal.date))"))
         }
-        if let cancellation, cancellation.date >= signal.date { status = .cancelled; nextDate = nil; reasons.append("Cancelled on \(shortDate(cancellation.date))") }
+        if let cancellation, cancellation.date >= signal.date { status = .cancelled; nextDate = nil; reasons.append(L10n.string("Cancelled on \(shortDate(cancellation.date))")) }
 
         score = max(0, min(100, score))
         return ProvenSubscription(
@@ -534,9 +534,9 @@ struct SubscriptionIntelligenceEngine {
         guard let endsOn, endsOn >= now.addingTimeInterval(-3 * 86_400) else { return nil }
 
         let amount = trialSignals.compactMap(\.amount).last ?? 0
-        var reasons = ["Free trial detected from your emails"]
-        if days == nil { reasons.append("Trial length estimated; check the date in the original email") }
-        reasons.append("Trial ends around \(shortDate(endsOn))")
+        var reasons = [L10n.string("Free trial detected from your emails")]
+        if days == nil { reasons.append(L10n.string("Trial length estimated; check the date in the original email")) }
+        reasons.append(L10n.string("Trial ends around \(shortDate(endsOn))"))
         let score = merchant.isKnown ? 62 : 52
         return ProvenSubscription(
             id: "\(merchant.key)|trial|\(currency)", name: merchant.displayName, merchantKey: merchant.key,
@@ -565,9 +565,9 @@ struct SubscriptionIntelligenceEngine {
         let frequency = trialSignals.compactMap(\.cadenceHint).last ?? .monthly
         let (next, _) = nextBilling(after: endsOn, frequency: frequency, now: now, calendar: calendar)
         let price = format(amount, latest.currency ?? currency)
-        var reasons = ["Free trial ended around \(shortDate(endsOn))",
-                       "No cancellation email found, so it most likely renewed at \(price) \(frequency.displayName.lowercased())"]
-        if let next { reasons.append("Next charge expected around \(shortDate(next))") }
+        var reasons = [L10n.string("Free trial ended around \(shortDate(endsOn))"),
+                       L10n.string("No cancellation email found, so it most likely renewed at \(price) \(frequency.billingPeriodLabel)")]
+        if let next { reasons.append(L10n.string("Next charge expected around \(shortDate(next))")) }
         return ProvenSubscription(
             id: "\(merchant.key)|\(frequency.rawValue)|\(currency)", name: merchant.displayName, merchantKey: merchant.key,
             category: merchant.category, cancelURL: merchant.cancelURL, amount: amount, currency: latest.currency ?? currency,
@@ -600,15 +600,15 @@ struct SubscriptionIntelligenceEngine {
             let impact = (sub.amount - old) * ProvenSubscription.periodsPerYear(sub.frequency)
             out.append(IntelligenceInsight(
                 id: "price|\(sub.id)", kind: .priceIncrease,
-                title: "\(sub.name) raised its price",
-                detail: "From \(format(old, sub.currency)) to \(format(sub.amount, sub.currency)). That's \(format(impact, sub.currency)) more per year.",
+                title: L10n.string("\(sub.name) raised its price"),
+                detail: L10n.string("From \(format(old, sub.currency)) to \(format(sub.amount, sub.currency)). That's \(format(impact, sub.currency)) more per year."),
                 subscriptionId: sub.id, annualImpact: impact))
         }
         if sub.status == .trial, let ends = sub.trialEndsOn {
             let days = max(0, calendar.dateComponents([.day], from: now, to: ends).day ?? 0)
             out.append(IntelligenceInsight(
-                id: "trial|\(sub.id)", kind: .trialEnding, title: "\(sub.name) trial ends in \(days) day\(days == 1 ? "" : "s")",
-                detail: "Cancel before \(shortDate(ends)) to avoid being charged.", subscriptionId: sub.id,
+                id: "trial|\(sub.id)", kind: .trialEnding, title: L10n.string("\(sub.name) trial ends \(whenPhrase(days))"),
+                detail: L10n.string("Cancel before \(shortDate(ends)) to avoid being charged."), subscriptionId: sub.id,
                 annualImpact: sub.amount > 0 ? sub.annualCost : nil))
         }
         if sub.status == .active || sub.status == .priceIncreased, let next = sub.nextBillingDate {
@@ -616,21 +616,22 @@ struct SubscriptionIntelligenceEngine {
             let window = sub.frequency == .yearly || sub.frequency == .semiannual ? 45 : 0
             if window > 0, days >= 0, days <= window {
                 out.append(IntelligenceInsight(
-                    id: "renew|\(sub.id)", kind: .renewalSoon, title: "\(sub.name) renews in \(days) day\(days == 1 ? "" : "s")",
-                    detail: "\(format(sub.amount, sub.currency)) \(sub.frequency.displayName.lowercased()) charge around \(shortDate(next)). Yearly renewals are the easiest to forget.",
+                    id: "renew|\(sub.id)", kind: .renewalSoon, title: L10n.string("\(sub.name) renews \(whenPhrase(days))"),
+                    detail: L10n.string("Expect a charge of \(format(sub.amount, sub.currency)) around \(shortDate(next)). Yearly renewals are the easiest to forget."),
                     subscriptionId: sub.id, annualImpact: sub.annualCost))
             }
         }
         if sub.status == .likelyEnded {
             out.append(IntelligenceInsight(
-                id: "ended|\(sub.id)", kind: .likelyEnded, title: "\(sub.name) looks like it ended",
-                detail: "No charge since \(sub.lastChargeDate.map(shortDate) ?? "a while"). Confirm it's really cancelled.",
+                id: "ended|\(sub.id)", kind: .likelyEnded, title: L10n.string("\(sub.name) looks like it ended"),
+                detail: sub.lastChargeDate.map { L10n.string("No charge since \(shortDate($0)). Confirm it's really cancelled.") }
+                    ?? L10n.string("No recent charge. Confirm it's really cancelled."),
                 subscriptionId: sub.id, annualImpact: nil))
         }
         if sub.chargedAfterCancel {
             out.append(IntelligenceInsight(
-                id: "afterCancel|\(sub.id)", kind: .chargedAfterCancel, title: "Charged by \(sub.name) after cancelling",
-                detail: "You received a cancellation email, then a later charge of \(format(sub.amount, sub.currency)). Worth disputing.",
+                id: "afterCancel|\(sub.id)", kind: .chargedAfterCancel, title: L10n.string("Charged by \(sub.name) after cancelling"),
+                detail: L10n.string("You received a cancellation email, then a later charge of \(format(sub.amount, sub.currency)). Worth disputing."),
                 subscriptionId: sub.id, annualImpact: sub.annualCost))
         }
         return out
@@ -643,8 +644,8 @@ struct SubscriptionIntelligenceEngine {
             guard let group = groups[sub.merchantKey], group.signals.contains(where: { $0.kind == .priceChange }) else { continue }
             if sub.status == .priceIncreased { continue } // already covered by an exact price insight
             out.append(IntelligenceInsight(
-                id: "notice|\(sub.id)", kind: .priceChangeNotice, title: "\(sub.name) announced a price change",
-                detail: "They emailed about new pricing. Check what you'll pay next billing.", subscriptionId: sub.id, annualImpact: nil))
+                id: "notice|\(sub.id)", kind: .priceChangeNotice, title: L10n.string("\(sub.name) announced a price change"),
+                detail: L10n.string("They emailed about new pricing. Check what you'll pay next billing."), subscriptionId: sub.id, annualImpact: nil))
         }
         return out
     }
@@ -661,11 +662,13 @@ struct SubscriptionIntelligenceEngine {
                   }),
                   let next = signal.nextAmount, next > sub.amount else { continue }
             let impact = (next - sub.amount) * ProvenSubscription.periodsPerYear(sub.frequency)
-            let when = sub.nextBillingDate.map { " on \(shortDate($0))" } ?? " at the next renewal"
+            let newPrice = format(next, sub.currency)
+            let title = sub.nextBillingDate.map { L10n.string("\(sub.name) goes up to \(newPrice) on \(shortDate($0))") }
+                ?? L10n.string("\(sub.name) goes up to \(newPrice) at the next renewal")
             out.append(IntelligenceInsight(
                 id: "intro|\(sub.id)", kind: .priceChangeNotice,
-                title: "\(sub.name) goes up to \(format(next, sub.currency))\(when)",
-                detail: "You're on an introductory price of \(format(sub.amount, sub.currency)). It renews at \(format(next, sub.currency)) unless you cancel or switch plans first.",
+                title: title,
+                detail: L10n.string("You're on an introductory price of \(format(sub.amount, sub.currency)). It renews at \(newPrice) unless you cancel or switch plans first."),
                 subscriptionId: sub.id, annualImpact: impact))
         }
         return out
@@ -681,8 +684,8 @@ struct SubscriptionIntelligenceEngine {
                   now.timeIntervalSince(failure.date) < 45 * 86_400 else { continue }
             if let lastCharge = sub.lastChargeDate, lastCharge >= failure.date { continue }
             out.append(IntelligenceInsight(
-                id: "failed|\(sub.id)", kind: .paymentFailed, title: "Payment to \(sub.name) failed",
-                detail: "Your card was declined on \(shortDate(failure.date)). Update it if you want to keep \(sub.name), or let it lapse if you don't.",
+                id: "failed|\(sub.id)", kind: .paymentFailed, title: L10n.string("Payment to \(sub.name) failed"),
+                detail: L10n.string("Your card was declined on \(shortDate(failure.date)). Update it if you want to keep \(sub.name), or let it lapse if you don't."),
                 subscriptionId: sub.id, annualImpact: nil))
         }
         return out
@@ -750,14 +753,24 @@ struct SubscriptionIntelligenceEngine {
         return counts.max { $0.value < $1.value }?.key
     }
 
-    private func describeInterval(_ frequency: BillingFrequency) -> String {
+    /// Whole sentences per period: "every month" can't be built from parts in every language.
+    private func chargedTimes(_ n: Int, _ frequency: BillingFrequency) -> String {
         switch frequency {
-        case .weekly: return "week"
-        case .biweekly: return "2 weeks"
-        case .monthly: return "month"
-        case .quarterly: return "3 months"
-        case .semiannual: return "6 months"
-        case .yearly: return "year"
+        case .weekly: return L10n.string("Charged \(n) times, about every week")
+        case .biweekly: return L10n.string("Charged \(n) times, about every 2 weeks")
+        case .monthly: return L10n.string("Charged \(n) times, about every month")
+        case .quarterly: return L10n.string("Charged \(n) times, about every 3 months")
+        case .semiannual: return L10n.string("Charged \(n) times, about every 6 months")
+        case .yearly: return L10n.string("Charged \(n) times, about every year")
+        }
+    }
+
+    /// "today", "tomorrow", "in 3 days": the time phrase in insight titles.
+    private func whenPhrase(_ days: Int) -> String {
+        switch days {
+        case ...0: return L10n.string("today")
+        case 1: return L10n.string("tomorrow")
+        default: return L10n.string("in \(days) days")
         }
     }
 
@@ -766,8 +779,6 @@ struct SubscriptionIntelligenceEngine {
     }
 
     private func shortDate(_ date: Date) -> String {
-        let formatter = DateFormatter()
-        formatter.dateFormat = "MMM d"
-        return formatter.string(from: date)
+        date.formatted(.dateTime.month(.abbreviated).day().locale(L10n.locale))
     }
 }

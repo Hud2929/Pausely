@@ -124,6 +124,17 @@ struct RootView: View {
         #endif
     }
 
+    /// DEBUG only: `--demo-imap-connect` (iCloud) or `--demo-imap-connect=<preset id>`; `=other` for any server.
+    private var demoIMAPPreset: String? {
+        #if DEBUG
+        for argument in ProcessInfo.processInfo.arguments {
+            if argument == "--demo-imap-connect" { return "icloud" }
+            if argument.hasPrefix("--demo-imap-connect=") { return String(argument.dropFirst("--demo-imap-connect=".count)) }
+        }
+        #endif
+        return nil
+    }
+
     /// DEBUG only: open the Gmail results screen with a synthetic mailbox (no Google sign-in needed).
     private var isDemoGmailResults: Bool {
         #if DEBUG
@@ -152,10 +163,11 @@ struct RootView: View {
                 } else if isDemoScreen("--demo-inbox") {
                     #if DEBUG
                     InboxImportView()
+                        .task { if isDemoScreen("--reset-inbox") { await InboxScanner.shared.disconnectAll() } }
                     #endif
-                } else if isDemoScreen("--demo-imap-connect") {
+                } else if let presetID = demoIMAPPreset {
                     #if DEBUG
-                    IMAPConnectView(preset: IMAPPreset.find("icloud"))
+                    IMAPConnectView(preset: IMAPPreset.find(presetID))
                     #endif
                 } else if isDemoScreen("--demo-subscription") {
                     #if DEBUG

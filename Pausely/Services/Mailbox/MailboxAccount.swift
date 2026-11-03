@@ -23,7 +23,7 @@ struct MailboxAccount: Codable, Identifiable, Hashable {
         switch kind {
         case .gmail: return "Gmail"
         case .microsoft: return "Outlook"
-        case .imap: return IMAPPreset.find(presetID)?.name ?? host ?? "Email"
+        case .imap: return IMAPPreset.find(presetID)?.name ?? host ?? L10n.string("Email")
         }
     }
 }
@@ -41,60 +41,69 @@ struct IMAPPreset: Identifiable, Hashable {
     /// Short, ordered steps shown while connecting.
     let steps: [String]
 
-    static let all: [IMAPPreset] = [
+    /// Computed each time so the steps follow the app's language.
+    static var all: [IMAPPreset] { [
         IMAPPreset(id: "icloud", name: "iCloud Mail", host: "imap.mail.me.com",
                    domains: ["icloud.com", "me.com", "mac.com"],
                    passwordPage: URL(string: "https://account.apple.com/account/manage"),
-                   steps: ["Open account.apple.com and sign in.",
-                           "Go to Sign-In and Security, then App-Specific Passwords.",
-                           "Create one named Pausely and paste it here."]),
+                   steps: [L10n.string("Open account.apple.com and sign in."),
+                           L10n.string("Go to Sign-In and Security, then App-Specific Passwords."),
+                           L10n.string("Create one named Pausely and paste it here.")]),
         IMAPPreset(id: "yahoo", name: "Yahoo Mail", host: "imap.mail.yahoo.com",
                    domains: ["yahoo.com", "ymail.com", "rocketmail.com", "yahoo.ca", "yahoo.co.uk", "yahoo.fr",
                              "yahoo.de", "yahoo.es", "yahoo.it", "yahoo.com.au", "yahoo.co.in", "yahoo.com.br"],
                    passwordPage: URL(string: "https://login.yahoo.com/account/security"),
-                   steps: ["Open Yahoo Account Security.", "Choose Generate app password and name it Pausely.",
-                           "Paste the password here."]),
+                   steps: [L10n.string("Open Yahoo Account Security."), L10n.string("Choose Generate app password and name it Pausely."),
+                           L10n.string("Paste the password here.")]),
         IMAPPreset(id: "aol", name: "AOL Mail", host: "imap.aol.com",
                    domains: ["aol.com", "aim.com", "verizon.net", "love.com", "wow.com", "games.com"],
                    passwordPage: URL(string: "https://login.aol.com/account/security"),
-                   steps: ["Open AOL Account Security.", "Choose Generate app password and name it Pausely.",
-                           "Paste the password here."]),
-        IMAPPreset(id: "gmail-imap", name: "Gmail (app password)", host: "imap.gmail.com",
+                   steps: [L10n.string("Open AOL Account Security."), L10n.string("Choose Generate app password and name it Pausely."),
+                           L10n.string("Paste the password here.")]),
+        IMAPPreset(id: "gmail-imap", name: L10n.string("Gmail (app password)"), host: "imap.gmail.com",
                    domains: [],
                    passwordPage: URL(string: "https://myaccount.google.com/apppasswords"),
-                   steps: ["Turn on 2-Step Verification for your Google Account if it isn't on.",
-                           "Open myaccount.google.com/apppasswords and create one named Pausely.",
-                           "Paste the 16-letter password here."]),
+                   steps: [L10n.string("Turn on 2-Step Verification for your Google Account if it isn't on."),
+                           L10n.string("Open myaccount.google.com/apppasswords and create one named Pausely."),
+                           L10n.string("Paste the 16-letter password here.")]),
         IMAPPreset(id: "gmx", name: "GMX", host: "imap.gmx.com",
                    domains: ["gmx.com", "gmx.us", "gmx.co.uk"],
                    passwordPage: URL(string: "https://www.gmx.com"),
-                   steps: ["In GMX settings, allow access through POP3 and IMAP.",
-                           "Use your GMX password, or an app password if you use two-factor sign-in."]),
+                   steps: [L10n.string("In GMX settings, allow access through POP3 and IMAP."),
+                           L10n.string("Use your GMX password, or an app password if you use two-factor sign-in.")]),
         IMAPPreset(id: "gmx-de", name: "GMX (gmx.net)", host: "imap.gmx.net",
                    domains: ["gmx.net", "gmx.de", "gmx.at", "gmx.ch"],
                    passwordPage: URL(string: "https://www.gmx.net"),
-                   steps: ["In GMX settings, allow access through POP3 and IMAP.",
-                           "Use your GMX password, or an app password if you use two-factor sign-in."]),
+                   steps: [L10n.string("In GMX settings, allow access through POP3 and IMAP."),
+                           L10n.string("Use your GMX password, or an app password if you use two-factor sign-in.")]),
         IMAPPreset(id: "webde", name: "WEB.DE", host: "imap.web.de",
                    domains: ["web.de"],
                    passwordPage: URL(string: "https://web.de"),
-                   steps: ["In WEB.DE settings, allow access through POP3 and IMAP.",
-                           "Use your WEB.DE password, or an app password if you use two-factor sign-in."]),
+                   steps: [L10n.string("In WEB.DE settings, allow access through POP3 and IMAP."),
+                           L10n.string("Use your WEB.DE password, or an app password if you use two-factor sign-in.")]),
         IMAPPreset(id: "zoho", name: "Zoho Mail", host: "imap.zoho.com",
                    domains: ["zoho.com", "zohomail.com"],
                    passwordPage: URL(string: "https://accounts.zoho.com/home#security/app_password"),
-                   steps: ["In Zoho, turn on IMAP access in Mail settings.",
-                           "Create an app-specific password and paste it here."]),
+                   steps: [L10n.string("In Zoho, turn on IMAP access in Mail settings."),
+                           L10n.string("Create an app-specific password and paste it here.")]),
         IMAPPreset(id: "fastmail", name: "Fastmail", host: "imap.fastmail.com",
                    domains: ["fastmail.com", "fastmail.fm"],
                    passwordPage: URL(string: "https://app.fastmail.com/settings/security/integrations"),
-                   steps: ["In Fastmail, open Settings, Privacy & Security, Integrations.",
-                           "Create a new app password with IMAP access and paste it here."]),
+                   steps: [L10n.string("In Fastmail, open Settings, Privacy & Security, Integrations."),
+                           L10n.string("Create a new app password with IMAP access and paste it here.")]),
         IMAPPreset(id: "xfinity", name: "Xfinity (Comcast)", host: "imap.comcast.net",
                    domains: ["comcast.net"],
                    passwordPage: URL(string: "https://www.xfinity.com"),
-                   steps: ["In Xfinity Connect settings, allow third-party access.", "Use your Xfinity password."])
-    ]
+                   steps: [L10n.string("In Xfinity Connect settings, allow third-party access."), L10n.string("Use your Xfinity password.")])
+    ] }
+
+    /// App passwords from these providers never contain spaces, but they're shown in groups of four
+    /// ("abcd efgh ijkl mnop"), so a pasted copy often does.
+    static func cleanPassword(_ password: String, for preset: IMAPPreset?) -> String {
+        let trimmed = password.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard let id = preset?.id, ["icloud", "yahoo", "aol", "gmail-imap"].contains(id) else { return trimmed }
+        return trimmed.filter { !$0.isWhitespace }
+    }
 
     static func find(_ id: String?) -> IMAPPreset? {
         guard let id else { return nil }
@@ -132,6 +141,15 @@ enum MailboxAccountStore {
         accounts.append(account)
         accounts.sort { $0.addedAt < $1.addedAt }
         if let data = try? JSONEncoder().encode(accounts) { UserDefaults.standard.set(data, forKey: accountsKey) }
+    }
+
+    /// Saves changes to an account that is still connected. A scan that finishes after its inbox was
+    /// disconnected must not bring it back.
+    @discardableResult
+    static func update(_ account: MailboxAccount) -> Bool {
+        guard all().contains(where: { $0.id == account.id }) else { return false }
+        upsert(account)
+        return true
     }
 
     /// Removes the account, its secrets and its sync position.

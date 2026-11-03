@@ -220,11 +220,11 @@ struct SubscriptionManagementView: View {
     private var decisionGroup: some View {
         if let pending = RenewalDecisions.pending(for: current, kept: RenewalDecisions.keptKeys(in: eventLog.events), now: Date()) {
             let days = Calendar.current.calendarDays(from: Date(), to: pending.date)
-            let when = days == 0 ? String(localized: "today") : days == 1 ? String(localized: "tomorrow") : String(localized: "in \(days) days")
+            let when = days == 0 ? L10n.string("today") : days == 1 ? L10n.string("tomorrow") : L10n.string("in \(days) days")
             VStack(spacing: 0) {
                 toolRow(icon: "questionmark.circle",
-                        title: String(localized: "Keep it or cancel it?"),
-                        subtitle: pending.isTrialEnd ? String(localized: "Free trial ends \(when)") : String(localized: "Renews \(when)")) {
+                        title: L10n.string("Keep it or cancel it?"),
+                        subtitle: pending.isTrialEnd ? L10n.string("Free trial ends \(when)") : L10n.string("Renews \(when)")) {
                     route = .verdict
                 }
             }
@@ -234,8 +234,8 @@ struct SubscriptionManagementView: View {
                   let line = SavingsSummary.current().lines.last(where: { $0.subscriptionId == current.id }) {
             VStack(spacing: 0) {
                 toolRow(icon: "doc.text",
-                        title: String(localized: "On your Savings Receipt"),
-                        subtitle: String(localized: "\(MoneyFormat.string(line.onTrack, line.currency)) avoided over 12 months")) {
+                        title: L10n.string("On your Savings Receipt"),
+                        subtitle: L10n.string("\(MoneyFormat.string(line.onTrack, line.currency)) avoided over 12 months")) {
                     route = .receipt
                 }
             }
@@ -267,10 +267,10 @@ struct SubscriptionManagementView: View {
             if PausePlanSchedule.isEligible(current) {
                 divider
                 if PausePlanStore.shared.contains(current.id) {
-                    toolRow(icon: "arrow.triangle.2.circlepath", title: String(localized: "In your Pause Plan"), subtitle: nil) { route = .pausePlan }
+                    toolRow(icon: "arrow.triangle.2.circlepath", title: L10n.string("In your Pause Plan"), subtitle: nil) { route = .pausePlan }
                 } else {
-                    toolRow(icon: "arrow.triangle.2.circlepath", title: String(localized: "Rotate with your other streaming"),
-                            subtitle: String(localized: "Pause Plan"), isPro: !paymentManager.isUnlocked(.pausePlan)) { route = .pausePlan }
+                    toolRow(icon: "arrow.triangle.2.circlepath", title: L10n.string("Rotate with your other streaming"),
+                            subtitle: L10n.string("Pause Plan"), isPro: !paymentManager.isUnlocked(.pausePlan)) { route = .pausePlan }
                 }
             }
 

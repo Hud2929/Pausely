@@ -26,7 +26,7 @@ struct RemindersPermissionCard: View {
                     .background(Circle().fill((denied ? Color.orange : Color.accentMint).opacity(0.15)))
                     .accessibilityHidden(true)
                 VStack(alignment: .leading, spacing: 3) {
-                    Text(denied ? String(localized: "Reminders are off") : String(localized: "Get a heads-up before you're charged"))
+                    Text(denied ? L10n.string("Reminders are off") : L10n.string("Get a heads-up before you're charged"))
                         .font(.system(.subheadline, design: .rounded).weight(.semibold))
                         .foregroundStyle(.white)
                     Text(detail(denied: denied))
@@ -47,7 +47,7 @@ struct RemindersPermissionCard: View {
                         }
                     }
                 } label: {
-                    Text(denied ? String(localized: "Settings") : String(localized: "Turn on"))
+                    Text(denied ? L10n.string("Settings") : L10n.string("Turn on"))
                         .font(.system(.subheadline, design: .rounded).weight(.semibold))
                         .foregroundStyle(.black)
                         .padding(.horizontal, 14)
@@ -66,11 +66,11 @@ struct RemindersPermissionCard: View {
     }
 
     private func detail(denied: Bool) -> String {
-        if denied { return String(localized: "Turn on notifications for Pausely in Settings so renewals don't surprise you.") }
+        if denied { return L10n.string("Turn on notifications for Pausely in Settings so renewals don't surprise you.") }
         if let sub = nextCharge, let date = sub.calculatedNextBillingDate {
-            return String(localized: "Pausely will remind you before \(sub.name) charges you on \(date.formatted(.dateTime.month(.abbreviated).day())).")
+            return L10n.string("Pausely will remind you before \(sub.name) charges you on \(date.formatted(.dateTime.month(.abbreviated).day())).")
         }
-        return String(localized: "Pausely reminds you before each renewal so you can keep it or cancel it.")
+        return L10n.string("Pausely reminds you before each renewal so you can keep it or cancel it.")
     }
 }
 
@@ -151,8 +151,8 @@ struct PendingDecisionsCard: View {
 
     private func whenText(_ item: RenewalDecisions.Pending) -> String {
         let days = Calendar.current.calendarDays(from: Date(), to: item.date)
-        let relative = days == 0 ? String(localized: "today") : days == 1 ? String(localized: "tomorrow") : String(localized: "in \(days) days")
-        return item.isTrialEnd ? String(localized: "Trial ends \(relative)") : String(localized: "Renews \(relative)")
+        let relative = days == 0 ? L10n.string("today") : days == 1 ? L10n.string("tomorrow") : L10n.string("in \(days) days")
+        return item.isTrialEnd ? L10n.string("Trial ends \(relative)") : L10n.string("Renews \(relative)")
     }
 }
 
@@ -211,8 +211,8 @@ struct SavingsReceiptCard: View {
 
     private func subtitle(_ summary: SavingsSummary) -> String {
         if let multiple = summary.returnMultiple, summary.paysForItself {
-            return String(localized: "\(summary.formatted(summary.onTrack)) on track this year · pays for Pausely \(multiple.formatted(.number.precision(.fractionLength(1))))×")
+            return L10n.string("\(summary.formatted(summary.onTrack)) on track this year · pays for Pausely \(multiple.formatted(.number.precision(.fractionLength(1))))×")
         }
-        return String(localized: "\(summary.formatted(summary.onTrack)) on track over 12 months")
+        return L10n.string("\(summary.formatted(summary.onTrack)) on track over 12 months")
     }
 }

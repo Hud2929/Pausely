@@ -26,11 +26,11 @@ enum ReminderActions {
 
     /// Registered on every launch; iOS forgets categories that aren't re-registered.
     static func registerCategories(on center: UNUserNotificationCenter = .current()) {
-        let keepAction = UNNotificationAction(identifier: keep, title: String(localized: "Keep it"), options: [])
-        let reviewAction = UNNotificationAction(identifier: review, title: String(localized: "Review"), options: [.foreground])
+        let keepAction = UNNotificationAction(identifier: keep, title: L10n.string("Keep it"), options: [])
+        let reviewAction = UNNotificationAction(identifier: review, title: L10n.string("Review"), options: [.foreground])
         let decision = UNNotificationCategory(identifier: decisionCategory, actions: [keepAction, reviewAction],
                                               intentIdentifiers: [], options: [])
-        let openPause = UNNotificationAction(identifier: openPausePage, title: String(localized: "Open Pause Page"), options: [.foreground])
+        let openPause = UNNotificationAction(identifier: openPausePage, title: L10n.string("Open Pause Page"), options: [.foreground])
         let pause = UNNotificationCategory(identifier: pauseCategory, actions: [openPause], intentIdentifiers: [], options: [])
         let plan = UNNotificationCategory(identifier: pausePlanCategory, actions: [], intentIdentifiers: [], options: [])
         center.setNotificationCategories([decision, pause, plan])

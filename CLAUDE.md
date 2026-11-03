@@ -34,7 +34,7 @@ DEBUG-only code must not be referenced from release code paths.
 DEBUG launch arguments open single screens with demo data (see `RootView` in `ContentView.swift`):
 `--demo-mode`, `--demo-tab=N`, `--demo-verdict`, `--demo-receipt`, `--demo-savings`,
 `--demo-pause-plan` (`--demo-plan-active`), `--demo-subscription`, `--demo-subscription-edit`,
-`--demo-paywall`, `--demo-browser`, `--demo-gmail-results`, `--demo-inbox`, `--demo-imap-connect`,
+`--demo-paywall`, `--demo-browser`, `--demo-gmail-results`, `--demo-inbox`, `--demo-imap-connect` (`=yahoo`, `=aol`, `=other`…),
 `--demo-wrapped`, and `--screenshots`
 for App Store captures. `--reset-state` (UI tests) starts signed out with onboarding not yet seen. `PauselyUITests/ScreenTourTests` captures every screen when
 `TEST_RUNNER_PAUSELY_TOUR_DIR` is set.
@@ -86,7 +86,10 @@ One engine, one adapter per kind of inbox, all read-only and on-device:
   rewritten with made-up details). `LiveMailboxTests` only run with `TEST_RUNNER_` variables:
   `PAUSELY_LOCAL_IMAP` / `PAUSELY_LOCAL_IMAP_APP` (a local IMAP server), `PAUSELY_REAL_MAIL_DIR` (a
   folder of .eml files), `PAUSELY_LIVE_SERVERS=1` (real provider servers), `PAUSELY_REAL_ACCOUNTS=1`
-  (inboxes connected in the app on that simulator). Never commit real email.
+  (inboxes connected in the app on that simulator). `ProviderWorkflowTests` run the Gmail and Outlook
+  adapters against stand-ins for their APIs (made-up mail, or `PAUSELY_REAL_MAIL_DIR`).
+  `PauselyUITests/InboxWorkflowUITests` drives the IMAP flow through the screens with
+  `PAUSELY_LOCAL_IMAP_UI=host:port:user:password`. Never commit real email.
 
 ### Views
 - `Views/Verdict/`: `RenewalVerdictView`, `SavingsReceiptView`, `PausePlanView`, dashboard cards.

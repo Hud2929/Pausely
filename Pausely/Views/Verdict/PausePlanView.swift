@@ -138,7 +138,7 @@ struct PausePlanView: View {
                     showPaywall = true
                 }
             } label: {
-                Label(paymentManager.isUnlocked(.pausePlan) ? String(localized: "Start Pause Plan") : String(localized: "Start Pause Plan with Pro"),
+                Label(paymentManager.isUnlocked(.pausePlan) ? L10n.string("Start Pause Plan") : L10n.string("Start Pause Plan with Pro"),
                       systemImage: paymentManager.isUnlocked(.pausePlan) ? "arrow.triangle.2.circlepath" : "lock.fill")
                     .font(.system(.body, design: .rounded).weight(.semibold))
                     .foregroundStyle(.black)
@@ -201,7 +201,7 @@ struct PausePlanView: View {
                     Text(sub.name)
                         .font(.system(.subheadline, design: .rounded).weight(.semibold))
                         .foregroundStyle(.white)
-                    Text(sub.status == .cancelled ? String(localized: "Paused now") : String(localized: "\(money(sub.amount, from: sub.currency)) a month"))
+                    Text(sub.status == .cancelled ? L10n.string("Paused now") : L10n.string("\(money(sub.amount, from: sub.currency)) a month"))
                         .font(.system(.caption, design: .rounded))
                         .foregroundStyle(Color.obsidianTextSecondary)
                 }
@@ -239,11 +239,11 @@ struct PausePlanView: View {
         let yearly = PausePlanSchedule.yearlySavings(monthlyCosts: costs)
         return VStack(spacing: 12) {
             HStack {
-                estimateColumn(String(localized: "All at once"), currencyManager.format(now), String(localized: "a month"))
+                estimateColumn(L10n.string("All at once"), currencyManager.format(now), L10n.string("a month"))
                 Image(systemName: "arrow.right")
                     .foregroundStyle(Color.obsidianTextTertiary)
                     .accessibilityHidden(true)
-                estimateColumn(String(localized: "One at a time"), currencyManager.format(rotating), String(localized: "a month on average"))
+                estimateColumn(L10n.string("One at a time"), currencyManager.format(rotating), L10n.string("a month on average"))
             }
             Divider().overlay(Color.white.opacity(0.08))
             HStack {
@@ -320,7 +320,7 @@ struct PausePlanView: View {
             Text(sub.name)
                 .font(.system(.title2, design: .rounded).weight(.bold))
                 .foregroundStyle(.white)
-            Text(next.map { String(localized: "Until \(short(end)). Then \($0.name).") } ?? String(localized: "Until \(short(end))."))
+            Text(next.map { L10n.string("Until \(short(end)). Then \($0.name).") } ?? L10n.string("Until \(short(end))."))
                 .font(.system(.subheadline, design: .rounded))
                 .foregroundStyle(Color.obsidianTextSecondary)
         }
@@ -346,21 +346,21 @@ struct PausePlanView: View {
         // Its month has started: it should be on.
         if !currentSub.renewsAutomatically, current.start != nil {
             items.append(Todo(id: "start-\(currentSub.id)", sub: currentSub,
-                              text: String(localized: "Start \(currentSub.name). Its month began \(short(current.start ?? today))."),
+                              text: L10n.string("Start \(currentSub.name). Its month began \(short(current.start ?? today))."),
                               action: .start))
         }
         for id in plan.subscriptionIds where id != current.subscriptionId {
             guard let sub = subs[id], sub.renewsAutomatically, let renewal = sub.nextRenewal(onOrAfter: today),
                   PausePlanSchedule.shouldPause(id, renewingOn: renewal, plan: plan, current: current) else { continue }
             items.append(Todo(id: "cancel-\(id)", sub: sub,
-                              text: String(localized: "Cancel \(sub.name) before it renews \(short(renewal))."),
+                              text: L10n.string("Cancel \(sub.name) before it renews \(short(renewal))."),
                               action: .cancel))
         }
         // The handoff is close: cancel the current one before its month ends.
         if let next, currentSub.renewsAutomatically, calendar.calendarDays(from: today, to: current.end) <= 3,
            let nextSub = subs[next.subscriptionId] {
             items.append(Todo(id: "handoff-\(currentSub.id)", sub: currentSub,
-                              text: String(localized: "Cancel \(currentSub.name) by \(short(calendar.date(byAdding: .day, value: -1, to: current.end) ?? current.end)). \(nextSub.name) starts \(short(current.end))."),
+                              text: L10n.string("Cancel \(currentSub.name) by \(short(calendar.date(byAdding: .day, value: -1, to: current.end) ?? current.end)). \(nextSub.name) starts \(short(current.end))."),
                               action: .cancel))
         }
         return items
@@ -375,8 +375,8 @@ struct PausePlanView: View {
                 .foregroundStyle(.white)
             if items.isEmpty {
                 Label {
-                    Text(next.flatMap { byId[$0.subscriptionId] }.map { String(localized: "You're all set. We'll remind you before \($0.name) starts.") }
-                         ?? String(localized: "You're all set."))
+                    Text(next.flatMap { byId[$0.subscriptionId] }.map { L10n.string("You're all set. We'll remind you before \($0.name) starts.") }
+                         ?? L10n.string("You're all set."))
                         .font(.system(.subheadline, design: .rounded))
                         .foregroundStyle(Color.obsidianTextSecondary)
                 } icon: {
@@ -399,7 +399,7 @@ struct PausePlanView: View {
                             case .start: Task { await planStore.markStarted(item.sub) }
                             }
                         } label: {
-                            Text(item.action == .cancel ? String(localized: "How") : String(localized: "I started it"))
+                            Text(item.action == .cancel ? L10n.string("How") : L10n.string("I started it"))
                                 .font(.system(.caption, design: .rounded).weight(.bold))
                                 .foregroundStyle(.black)
                                 .padding(.horizontal, 10)
@@ -528,14 +528,14 @@ struct PausePlanCard: View {
         if let plan = planStore.activePlan,
            let current = PausePlanSchedule.currentTurn(plan, subscriptions: byId, now: Date()),
            let sub = byId[current.subscriptionId] {
-            return String(localized: "\(sub.name) is on until \(current.end.formatted(.dateTime.month(.abbreviated).day())).")
+            return L10n.string("\(sub.name) is on until \(current.end.formatted(.dateTime.month(.abbreviated).day())).")
         }
         let eligible = store.subscriptions.filter { PausePlanSchedule.isEligible($0) && $0.status != .cancelled }
         let costs = eligible.map { currencyManager.convertToSelected($0.monthlyCost, from: $0.currency) }
         let savings = PausePlanSchedule.yearlySavings(monthlyCosts: costs)
         guard savings > 0 else {
-            return String(localized: "Rotate your streaming services and watch one at a time.")
+            return L10n.string("Rotate your streaming services and watch one at a time.")
         }
-        return String(localized: "Watch one streaming service at a time and get about \(currencyManager.format(savings)) a year back.")
+        return L10n.string("Watch one streaming service at a time and get about \(currencyManager.format(savings)) a year back.")
     }
 }

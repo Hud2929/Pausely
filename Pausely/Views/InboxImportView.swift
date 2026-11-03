@@ -150,13 +150,13 @@ struct InboxImportView: View {
     private var providerButtons: some View {
         VStack(spacing: 10) {
             if FeatureFlags.gmailImportEnabled && GmailMailboxProvider.isConfigured {
-                providerButton("Gmail", detail: "Sign in with Google", icon: "envelope.fill", id: "connectGmail") {
+                providerButton(Text(verbatim: "Gmail"), detail: Text("Sign in with Google"), icon: "envelope.fill", id: "connectGmail") {
                     showingProviders = false
                     Task { await scanner.connectGmail() }
                 }
             }
             if FeatureFlags.microsoftImportEnabled && MicrosoftGraphProvider.isConfigured {
-                providerButton("Outlook, Hotmail, Live, MSN", detail: "Sign in with Microsoft", icon: "envelope.badge.fill", id: "connectMicrosoft") {
+                providerButton(Text(verbatim: "Outlook, Hotmail, Live, MSN"), detail: Text("Sign in with Microsoft"), icon: "envelope.badge.fill", id: "connectMicrosoft") {
                     showingProviders = false
                     Task { await scanner.connectMicrosoft() }
                 }
@@ -164,12 +164,12 @@ struct InboxImportView: View {
             if FeatureFlags.imapImportEnabled {
                 ForEach(["icloud", "yahoo", "aol", "gmail-imap"], id: \.self) { id in
                     if let preset = IMAPPreset.find(id) {
-                        providerButton(preset.name, detail: "With an app password", icon: "envelope", id: "connect-\(id)") {
+                        providerButton(Text(verbatim: preset.name), detail: Text("With an app password"), icon: "envelope", id: "connect-\(id)") {
                             openIMAP(preset)
                         }
                     }
                 }
-                providerButton("Other email", detail: "GMX, WEB.DE, Zoho, Fastmail and more", icon: "tray.full", id: "connect-other") {
+                providerButton(Text("Other email"), detail: Text("GMX, WEB.DE, Zoho, Fastmail and more"), icon: "tray.full", id: "connect-other") {
                     openIMAP(nil)
                 }
             }
@@ -182,7 +182,7 @@ struct InboxImportView: View {
         showingIMAP = true
     }
 
-    private func providerButton(_ title: String, detail: String, icon: String, id: String, action: @escaping () -> Void) -> some View {
+    private func providerButton(_ title: Text, detail: Text, icon: String, id: String, action: @escaping () -> Void) -> some View {
         Button {
             HapticStyle.light.trigger()
             action()
@@ -193,10 +193,10 @@ struct InboxImportView: View {
                     .foregroundStyle(Color.accentMint)
                     .frame(width: 28)
                 VStack(alignment: .leading, spacing: 2) {
-                    Text(title)
+                    title
                         .font(.system(.body, design: .rounded).weight(.semibold))
                         .foregroundStyle(.white)
-                    Text(detail)
+                    detail
                         .font(.system(.caption, design: .rounded))
                         .foregroundStyle(Color.obsidianTextSecondary)
                 }
@@ -226,7 +226,7 @@ struct InboxImportView: View {
                     .symbolEffect(.pulse)
             }
 
-            Text(scanner.statusLine.isEmpty ? "Scanning your email…" : scanner.statusLine)
+            (scanner.statusLine.isEmpty ? Text("Scanning your email…") : Text(verbatim: scanner.statusLine))
                 .font(.system(.headline, design: .rounded))
                 .foregroundStyle(.white)
                 .multilineTextAlignment(.center)
@@ -235,7 +235,7 @@ struct InboxImportView: View {
                 .tint(Color.accentMint)
                 .padding(.horizontal, 40)
 
-            Text("\(Int(scanner.progress * 100))%")
+            Text(scanner.progress, format: .percent.precision(.fractionLength(0)))
                 .font(.system(.caption, design: .rounded).monospacedDigit())
                 .foregroundStyle(Color.obsidianTextSecondary)
 
@@ -262,7 +262,7 @@ struct InboxImportView: View {
                 HStack(spacing: 10) {
                     Image(systemName: "magnifyingglass")
                         .font(.system(size: 16, weight: .semibold))
-                    Text(scanner.accounts.count == 1 ? "Find subscriptions" : "Search \(scanner.accounts.count) inboxes")
+                    (scanner.accounts.count == 1 ? Text("Find subscriptions") : Text("Search \(scanner.accounts.count) inboxes"))
                         .font(.system(.body, design: .rounded).weight(.semibold))
                 }
                 .foregroundStyle(Color.black)
@@ -305,10 +305,16 @@ struct InboxImportView: View {
                 } label: {
                     Label("Disconnect", systemImage: "xmark.circle")
                 }
+                .accessibilityIdentifier("disconnectInbox")
             } label: {
-                Image(systemName: "ellipsis.circle").foregroundStyle(Color.obsidianTextSecondary)
+                Image(systemName: "ellipsis.circle")
+                    .font(.system(.title3))
+                    .foregroundStyle(Color.obsidianTextSecondary)
+                    .frame(minWidth: 44, minHeight: 44)
+                    .contentShape(Rectangle())
             }
             .accessibilityLabel("Options for \(account.address)")
+            .accessibilityIdentifier("inboxOptions")
         }
         .padding(16)
         .surfaceCard(cornerRadius: 16)
@@ -317,10 +323,10 @@ struct InboxImportView: View {
     private func accountDetail(_ account: MailboxAccount) -> String {
         if let error = scanner.accountErrors[account.id] { return error }
         if let stats = scanner.stats.perAccount[account.id] {
-            return "\(account.providerName) · checked \(stats.checked), read \(stats.read)"
+            return L10n.string("\(account.providerName) · checked \(stats.checked), read \(stats.read)")
         }
         if let last = account.lastScan {
-            return "\(account.providerName) · searched \(last.formatted(.relative(presentation: .named)))"
+            return L10n.string("\(account.providerName) · searched \(last.formatted(.relative(presentation: .named).locale(L10n.locale)))")
         }
         return account.providerName
     }
@@ -372,7 +378,7 @@ struct InboxImportView: View {
         let ignored = scanner.stats.purchasesIgnored
 
         return VStack(alignment: .leading, spacing: 10) {
-            Text(count == 1 ? "We found 1 subscription" : "We found \(count) subscriptions")
+            Text("We found \(count) subscriptions")
                 .font(.system(.headline, design: .rounded))
                 .foregroundStyle(.white)
             HStack(alignment: .firstTextBaseline, spacing: 8) {
@@ -387,17 +393,17 @@ struct InboxImportView: View {
                 .font(.system(.footnote, design: .rounded))
                 .foregroundStyle(Color.obsidianTextSecondary)
             if ignored > 0 {
-                Label("Ignored \(ignored) one-time purchase\(ignored == 1 ? "" : "s") so your list stays clean", systemImage: "line.3.horizontal.decrease.circle")
+                Label("Ignored \(ignored) one-time purchases so your list stays clean", systemImage: "line.3.horizontal.decrease.circle")
                     .font(.system(.caption, design: .rounded))
                     .foregroundStyle(Color.obsidianTextTertiary)
             }
             if scanner.stats.emailsChecked > 0 {
                 let stats = scanner.stats
-                Label("Checked \(stats.emailsChecked) emails, read \(stats.bodiesRead) in full. All on your phone.", systemImage: "lock.shield")
+                Label("Emails checked: \(stats.emailsChecked) · read in full: \(stats.bodiesRead) · all on your phone", systemImage: "lock.shield")
                     .font(.system(.caption, design: .rounded))
                     .foregroundStyle(Color.obsidianTextTertiary)
                 if stats.aiAssisted > 0 {
-                    Label("On-device AI helped with \(stats.aiAssisted) tricky receipt\(stats.aiAssisted == 1 ? "" : "s")", systemImage: "sparkles")
+                    Label("On-device AI helped with \(stats.aiAssisted) tricky receipts", systemImage: "sparkles")
                         .font(.system(.caption, design: .rounded))
                         .foregroundStyle(Color.obsidianTextTertiary)
                 }
@@ -462,7 +468,7 @@ struct InboxImportView: View {
         }
     }
 
-    private func listSection(title: String, subtitle: String, items: [SmartImportManager.ImportSubscription]) -> some View {
+    private func listSection(title: LocalizedStringKey, subtitle: LocalizedStringKey, items: [SmartImportManager.ImportSubscription]) -> some View {
         VStack(alignment: .leading, spacing: 10) {
             HStack(alignment: .firstTextBaseline) {
                 VStack(alignment: .leading, spacing: 2) {
@@ -475,12 +481,14 @@ struct InboxImportView: View {
                 }
                 Spacer()
                 let allSelected = items.allSatisfy { selectedSubscriptions.contains($0.id) }
-                Button(allSelected ? "Deselect all" : "Select all") {
+                Button {
                     if allSelected {
                         items.forEach { selectedSubscriptions.remove($0.id) }
                     } else {
                         items.forEach { selectedSubscriptions.insert($0.id) }
                     }
+                } label: {
+                    allSelected ? Text("Deselect all") : Text("Select all")
                 }
                 .font(.system(.caption, design: .rounded).weight(.semibold))
                 .foregroundStyle(Color.accentMint)
@@ -530,7 +538,7 @@ struct InboxImportView: View {
                         Image(systemName: "square.and.arrow.down")
                             .font(.system(size: 15, weight: .semibold))
                     }
-                    Text("Import \(selectedSubscriptions.count) Subscription\(selectedSubscriptions.count == 1 ? "" : "s")")
+                    Text("Import \(selectedSubscriptions.count) subscriptions")
                         .font(.system(.body, design: .rounded).weight(.semibold))
                 }
                 .foregroundStyle(Color.black)
@@ -540,6 +548,7 @@ struct InboxImportView: View {
             }
             .buttonStyle(PlainButtonStyle())
             .disabled(importing)
+            .accessibilityIdentifier("importSelectedButton")
         }
     }
 
@@ -560,13 +569,13 @@ struct InboxImportView: View {
                     .foregroundStyle(.green)
             }
 
-            Text("Import Complete!")
+            Text("Import complete")
                 .font(.system(.title3, design: .rounded).weight(.bold))
                 .foregroundStyle(.white)
 
             VStack(spacing: 6) {
                 if result.added > 0 {
-                    Text("\(result.added) subscription\(result.added == 1 ? "" : "s") added")
+                    Text("\(result.added) subscriptions added")
                         .font(.system(.subheadline, design: .rounded))
                         .foregroundStyle(Color.accentMint)
                 }
@@ -591,6 +600,7 @@ struct InboxImportView: View {
                     )
             }
             .buttonStyle(PlainButtonStyle())
+            .accessibilityIdentifier("importDoneButton")
         }
         .padding(24)
         .surfaceCard(cornerRadius: 24)
@@ -623,43 +633,34 @@ private struct GmailSubscriptionRow: View {
 
     private var proven: ProvenSubscription? { subscription.proven }
 
-    private var frequencySuffix: String {
-        switch subscription.billingFrequency {
-        case .weekly: return "/wk"
-        case .biweekly: return "/2wk"
-        case .monthly: return "/mo"
-        case .quarterly: return "/qtr"
-        case .semiannual: return "/6mo"
-        case .yearly: return "/yr"
-        }
-    }
+    private var frequencySuffix: String { subscription.billingFrequency.shortDisplay }
 
     private var statusBadge: (text: String, color: Color)? {
         switch proven?.status {
-        case .priceIncreased: return ("Price went up", .orange)
-        case .trial: return ("Free trial", Color.accentMint)
-        case .likelyEnded: return ("May have ended", Color.obsidianTextSecondary)
-        case .cancelled: return ("Cancelled", Color.obsidianTextSecondary)
+        case .priceIncreased: return (L10n.string("Price went up"), .orange)
+        case .trial: return (L10n.string("Free trial"), Color.accentMint)
+        case .likelyEnded: return (L10n.string("May have ended"), Color.obsidianTextSecondary)
+        case .cancelled: return (L10n.string("Cancelled"), Color.obsidianTextSecondary)
         default:
-            return proven?.chargedAfterCancel == true ? ("Charged after cancel", .red) : nil
+            return proven?.chargedAfterCancel == true ? (L10n.string("Charged after cancelling"), .red) : nil
         }
     }
 
     private var evidenceLine: String {
         guard let proven else { return subscription.source }
-        let formatter = DateFormatter()
-        formatter.dateFormat = "MMM d"
-        if proven.status == .trial, let ends = proven.trialEndsOn { return "Trial ends \(formatter.string(from: ends))" }
+        let day: (Date) -> String = { $0.formatted(.dateTime.month(.abbreviated).day().locale(L10n.locale)) }
+        if proven.status == .trial, let ends = proven.trialEndsOn { return L10n.string("Trial ends \(day(ends))") }
         let count = proven.evidence.count
-        let last = proven.lastChargeDate.map { formatter.string(from: $0) }
-        if let last { return count > 1 ? "Charged \(count)× · last \(last)" : "Charged once · \(last)" }
-        return "Detected from your emails"
+        if let last = proven.lastChargeDate.map(day) {
+            return count > 1 ? L10n.string("Charged \(count)× · last \(last)") : L10n.string("Charged once · \(last)")
+        }
+        return L10n.string("Detected from your emails")
     }
 
     private var accessibilitySummary: String {
-        var parts = ["\(subscription.name)", InboxImportView.money(subscription.amount, subscription.currency) + " " + subscription.billingFrequency.displayName.lowercased(), evidenceLine]
+        var parts = [subscription.name, InboxImportView.money(subscription.amount, subscription.currency) + " " + subscription.billingFrequency.billingPeriodLabel, evidenceLine]
         if let badge = statusBadge { parts.append(badge.text) }
-        parts.append(isSelected ? "selected" : "not selected")
+        parts.append(isSelected ? L10n.string("selected") : L10n.string("not selected"))
         return parts.joined(separator: ", ")
     }
 
@@ -679,8 +680,8 @@ private struct GmailSubscriptionRow: View {
                             Text(evidenceLine)
                                 .font(.system(.caption2, design: .rounded))
                                 .foregroundStyle(Color.obsidianTextTertiary)
-                                .lineLimit(1)
-                                .minimumScaleFactor(0.8)
+                                .lineLimit(2)
+                                .fixedSize(horizontal: false, vertical: true)
                             if let badge = statusBadge {
                                 Text(badge.text)
                                     .font(.system(.caption2, design: .rounded).weight(.semibold))
@@ -714,7 +715,7 @@ private struct GmailSubscriptionRow: View {
                             .frame(width: 32, height: 44)
                     }
                     .buttonStyle(PlainButtonStyle())
-                    .accessibilityLabel(isExpanded ? "Hide why" : "Show why we think this is a subscription")
+                    .accessibilityLabel(isExpanded ? Text("Hide why") : Text("Show why we think this is a subscription"))
                 }
             }
             .padding(.leading, 14)
@@ -745,9 +746,7 @@ private struct GmailSubscriptionRow: View {
     }
 
     private func evidenceDetail(_ proven: ProvenSubscription) -> some View {
-        let formatter = DateFormatter()
-        formatter.dateFormat = "MMM d, yyyy"
-        return VStack(alignment: .leading, spacing: 10) {
+        VStack(alignment: .leading, spacing: 10) {
             Text("Why we think so")
                 .font(.system(.caption, design: .rounded).weight(.semibold))
                 .foregroundStyle(.white)
@@ -768,7 +767,7 @@ private struct GmailSubscriptionRow: View {
                 Divider().overlay(Color.obsidianTextTertiary.opacity(0.3))
                 ForEach(proven.evidence.suffix(5).reversed()) { charge in
                     HStack {
-                        Text(formatter.string(from: charge.date))
+                        Text(charge.date, format: .dateTime.month(.abbreviated).day().year())
                             .font(.system(.caption2, design: .rounded))
                             .foregroundStyle(Color.obsidianTextTertiary)
                         Spacer()

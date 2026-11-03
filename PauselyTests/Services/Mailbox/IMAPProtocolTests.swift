@@ -186,4 +186,43 @@ final class IMAPProtocolTests: XCTestCase {
         XCTAssertNil(IMAPPreset.forAddress("me@mycompany.com"))
         XCTAssertTrue(IMAPPreset.all.allSatisfy { !$0.host.isEmpty && !$0.steps.isEmpty })
     }
+
+    func testPastedAppPasswordsLoseTheirDisplaySpaces() {
+        // Google and Yahoo show app passwords in groups of four; the spaces aren't part of them.
+        XCTAssertEqual(IMAPPreset.cleanPassword(" abcd efgh ijkl mnop\n", for: IMAPPreset.find("gmail-imap")), "abcdefghijklmnop")
+        XCTAssertEqual(IMAPPreset.cleanPassword("abcd efgh ijkl mnop", for: IMAPPreset.find("yahoo")), "abcdefghijklmnop")
+        XCTAssertEqual(IMAPPreset.cleanPassword("abcd-efgh-ijkl-mnop", for: IMAPPreset.find("icloud")), "abcd-efgh-ijkl-mnop")
+        // Elsewhere a password can really contain a space: only the ends are trimmed.
+        XCTAssertEqual(IMAPPreset.cleanPassword(" my pass word ", for: nil), "my pass word")
+        XCTAssertEqual(IMAPPreset.cleanPassword("my pass word", for: IMAPPreset.find("fastmail")), "my pass word")
+    }
+
+    /// A wrong server name or port is reported at once, in words a person can act on.
+    func testUnreachableServersFailFastWithAPlainMessage() async throws {
+        for (host, port) in [("127.0.0.1", UInt16(1)), ("imap.pausely-check.invalid", UInt16(993))] {
+            let start = Date()
+            let client = IMAPClient(IMAPClient.Configuration(host: host, port: port, commandTimeout: 20))
+            do {
+                try await client.connect()
+                XCTFail("\(host):\(port) should not connect")
+            } catch {
+                let message = error.localizedDescription
+                print("UNREACHABLE \(host):\(port) after \(Date().timeIntervalSince(start))s: \(message)")
+                XCTAssertFalse(message.contains("POSIX") || message.contains("NWError") || message.contains("rawValue"), message)
+                XCTAssertTrue(message.hasPrefix("Couldn't reach the mail server."), message)
+            }
+            XCTAssertLessThan(Date().timeIntervalSince(start), 8, "\(host):\(port) should fail fast")
+            await client.cancel()
+        }
+    }
+
+    func testPasswordPageLinksNameThePageTheyOpen() {
+        XCTAssertEqual(IMAPConnectView.pageName(URL(string: "https://account.apple.com/account/manage")!), "account.apple.com")
+        XCTAssertEqual(IMAPConnectView.pageName(URL(string: "https://www.gmx.com")!), "gmx.com")
+        for preset in IMAPPreset.all {
+            let page = try? XCTUnwrap(preset.passwordPage, preset.name)
+            XCTAssertEqual(page?.scheme, "https", preset.name)
+            XCTAssertNotNil(page.flatMap(IMAPConnectView.pageName), preset.name)
+        }
+    }
 }

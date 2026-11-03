@@ -16,32 +16,54 @@ strict multi-pass "find everything" protocol behind release gates, and keep watc
 v2 7.2 → v3 8.2 → v4 8.8 → **v5 9.3**. About 12 weeks of work and under $1,000 a year in fees.
 **Verdict: worth it.** It's the highest-return item on the roadmap.
 
-## Build status (2026-10-28)
+## Build status (2026-11-03)
 
 **Built and tested, still off in release builds** (`FeatureFlags`):
 - One engine (`Pausely/Services/Mailbox/`) with Gmail, Microsoft Graph and IMAP adapters, several
   inboxes at once, receipts counted once across inboxes, disconnect removes that inbox's facts.
+- Translated: every inbox screen, app-password step, status line, error and the engine's reasons and
+  insights in Arabic, German, Spanish, French and Japanese, with plurals (Arabic dual included).
+  `LocalizationGuardTests` fails the build's tests if a code-built string, screen literal or
+  `MailboxError` message has no translation, or a translation drops a format specifier.
 - IMAP presets checked against the live servers (TLS, capabilities, clean wrong-password handling):
   iCloud, Yahoo, AOL, Gmail app password, GMX (two), WEB.DE, Zoho, Fastmail, Xfinity. Mail.com and
   Yandex were dropped (unreachable).
-- Real-data run: 27 real emails from a real Gmail inbox (kept outside the repository), through the
-  app's own scanner over IMAP. It finds every live subscription in the sample with the right amount
-  and billing period (monthly SaaS on Stripe, a yearly Play subscription with an intro price ending,
-  a yearly direct plan, a membership from an expired free trial) and none of the orders, rentals,
-  rides, promos or cancelled channels. The Gmail queries return the same messages in the real
-  mailbox. Read-only confirmed in the server log (EXAMINE, SEARCH, FETCH with BODY.PEEK).
+- Real-data run: 27 real emails from a real inbox (kept outside the repository). It finds every live
+  subscription in the sample with the right amount and billing period and none of the orders,
+  rentals, rides, promos or cancelled channels, through each path:
+  - IMAP: the app's own scanner against a local IMAP server (`LiveMailboxTests`), and the whole
+    flow through the screens (`PauselyUITests/InboxWorkflowUITests`: suggested server, a server that
+    doesn't exist, a wrong password, connect, scan, import, relaunch, disconnect).
+  - Gmail and Outlook: `ProviderWorkflowTests` serve the same mail through stand-ins for the Gmail
+    and Graph APIs (paging, throttling, token refresh and revocation, expired history and delta
+    links, a next-page link to another server, Junk and Spam), so the real adapters run unchanged.
 - Bugs that real mail exposed and that are now fixed and pinned in `RealWorldReceiptShapesTests`:
   Stripe "Qty 1" read as an order; service periods ("Oct 20–Nov 20") ignored; "cancellation policy"
   read as a cancellation; "then $269.99/year" picked over the price charged; "Amazon Prime Video"
   read as Prime; channel cancellations attached to Prime Video; footers ("You received this email",
   "Refund Policy") flipping the meaning; declined cards counted as charges; gaps in receipt history
   hiding a monthly plan; App Store and Play apps lumped under "Apple"/"Google".
+- Workflow bugs fixed on 2026-11-03: deleting the account during a scan left the inboxes and their
+  receipts behind (a scan finishing late saved them again); a wrong server name or port waited out
+  the full timeout (up to 40 s) and said only "Timed out connecting" (now immediate, with what to
+  check); connection errors in English only; app passwords pasted with Google's and Yahoo's display
+  spaces; the help link named the wrong page; a 20-point options button.
+
+**Ratings (2026-11-03)**, seven dimensions (accuracy 30, UX 20, polish 15, copy 10, accessibility 10,
+errors 10, performance 5):
+
+| Workflow | Before this pass | Now | What stops a 9.5 |
+|---|---|---|---|
+| Gmail (Sign in with Google) | 8.8 | 9.1 | One real sign-in on a device; Google's restricted-scope verification before release |
+| iCloud Mail | 8.4 | 9.0 | One real sign-in; the app-password detour (Apple offers nothing else) |
+| Gmail (app password) | 8.4 | 9.0 | Same as iCloud |
+| Yahoo Mail, AOL Mail | 8.25 | 8.85 | One real sign-in each (their SEARCH has never seen a real mailbox); app-password detour |
+| Other email (any IMAP) | 8.05 | 8.85 | Servers vary; app-password detour |
+| Outlook, Hotmail, Microsoft 365 | 7.5 (capped) | 7.5 (capped) | Unusable until `MS_CLIENT_ID` is set; the code scores 9.1 like Gmail |
 
 **Before turning any provider on in release:** the Microsoft app's client ID in `MS_CLIENT_ID`;
 one real sign-in per provider on a device (`LiveMailboxTests.testRealConnectedInboxes`); the gates
-in section 5; Google's decision for Gmail; and translations. The whole feature is English-only
-today: the inbox screens, the app-password steps in `IMAPPreset`, scan status lines, `MailboxError`
-messages and the engine's reasons and insights (about 150 strings, five languages).
+in section 5; and Google's decision for Gmail.
 
 ---
 

@@ -43,9 +43,13 @@ final class MicrosoftGraphProvider: MailboxProvider {
     @MainActor
     static func connect() async throws -> MailboxAccount {
         guard isConfigured else {
-            throw MailboxError.notConfigured("Outlook sign-in isn't set up in this build yet.")
+            throw MailboxError.notConfigured(L10n.string("Outlook sign-in isn't set up in this build yet."))
         }
-        let tokens = try await OAuthSession.signIn(oauth)
+        return try await finishConnect(try await OAuthSession.signIn(oauth))
+    }
+
+    /// After sign-in: read the address, then save the account. The tokens are discarded if anything fails.
+    static func finishConnect(_ tokens: OAuthSession.Tokens) async throws -> MailboxAccount {
         let id = UUID().uuidString
         OAuthSession.store(tokens, for: id)
         do {
@@ -64,7 +68,7 @@ final class MicrosoftGraphProvider: MailboxProvider {
         let data = try await MailboxHTTP.data(request, token: { token }, refresh: { throw MailboxError.authExpired })
         struct Me: Decodable { let mail: String?; let userPrincipalName: String? }
         let me = try JSONDecoder().decode(Me.self, from: data)
-        guard let address = me.mail ?? me.userPrincipalName else { throw MailboxError.server("No email address on this account.") }
+        guard let address = me.mail ?? me.userPrincipalName else { throw MailboxError.server(L10n.string("No email address on this account.")) }
         return address
     }
 
@@ -84,9 +88,12 @@ final class MicrosoftGraphProvider: MailboxProvider {
     func candidates(plan: InboxSearchPlan, cursor: String?) async throws -> (refs: [MessageRef], cursor: String?) {
         var found: [GraphMessage] = []
         if let deltaLink = cursor, deltaLink.hasPrefix("https://graph.microsoft.com/") {
-            // Only mail that arrived since the last scan.
-            let changes = try await followDelta(deltaLink)
-            return (store(changes.messages, limit: plan.maxCandidates), changes.deltaLink ?? deltaLink)
+            // Only mail that arrived since the last scan. An expired sync position (410 Gone, or 404) falls
+            // back to a full search below.
+            do {
+                let changes = try await followDelta(deltaLink)
+                return (store(changes.messages, limit: plan.maxCandidates), changes.deltaLink ?? deltaLink)
+            } catch MailboxError.notFound {}
         }
         for query in Self.searchQueries(plan) {
             try Task.checkCancellation()
@@ -103,7 +110,10 @@ final class MicrosoftGraphProvider: MailboxProvider {
     }
 
     func rawMessage(_ ref: MessageRef) async throws -> Data? {
-        guard let encoded = ref.id.addingPercentEncoding(withAllowedCharacters: .urlPathAllowed) else { return nil }
+        // Message ids can contain "/", "+" and "=": encode everything but unreserved characters.
+        var allowed = CharacterSet.alphanumerics
+        allowed.insert(charactersIn: "-._~")
+        guard let encoded = ref.id.addingPercentEncoding(withAllowedCharacters: allowed) else { return nil }
         return try await get("/me/messages/\(encoded)/$value")
     }
 
@@ -211,12 +221,12 @@ final class MicrosoftGraphProvider: MailboxProvider {
     }
 
     private func get(_ path: String) async throws -> Data {
-        guard let url = URL(string: Self.graph.absoluteString + path) else { throw MailboxError.server("Bad address") }
+        guard let url = URL(string: Self.graph.absoluteString + path) else { throw MailboxError.server(L10n.string("Pausely built a request it couldn't send.")) }
         return try await getURL(url)
     }
 
     private func getURL(_ url: URL) async throws -> Data {
-        guard url.host == "graph.microsoft.com" else { throw MailboxError.insecure("Unexpected server in a Graph response.") }
+        guard url.host == "graph.microsoft.com" else { throw MailboxError.insecure(L10n.string("Pausely stopped because a reply came from an unexpected server.")) }
         var request = URLRequest(url: url)
         request.timeoutInterval = 40
         let accountID = account.id

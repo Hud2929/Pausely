@@ -18,7 +18,7 @@ final class IMAPMailboxProvider: MailboxProvider {
     }
 
     func open() async throws {
-        guard let host = account.host, !host.isEmpty else { throw MailboxError.notConfigured("No mail server for this inbox.") }
+        guard let host = account.host, !host.isEmpty else { throw MailboxError.notConfigured(L10n.string("No mail server for this inbox.")) }
         guard let password = passwordOverride ?? MailboxAccountStore.secret(.password, for: account.id), !password.isEmpty else {
             throw MailboxError.authExpired
         }

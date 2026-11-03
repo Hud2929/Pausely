@@ -44,19 +44,19 @@ enum OAuthSession {
         ]
         items += provider.extraAuthorizeParameters.sorted { $0.key < $1.key }.map { URLQueryItem(name: $0.key, value: $0.value) }
         components?.queryItems = items
-        guard let url = components?.url else { throw MailboxError.notConfigured("Couldn't build the sign-in address.") }
+        guard let url = components?.url else { throw MailboxError.notConfigured(L10n.string("Couldn't open the sign-in page.")) }
 
         let callback = try await present(url: url, callbackScheme: provider.callbackScheme)
         let query = URLComponents(url: callback, resolvingAgainstBaseURL: false)?.queryItems ?? []
         if let error = query.first(where: { $0.name == "error" })?.value {
             if error == "access_denied" { throw MailboxError.cancelled }
-            throw MailboxError.authFailed("Sign-in didn't finish (\(error)).")
+            throw MailboxError.authFailed(L10n.string("Sign-in didn't finish (\(error))."))
         }
         guard query.first(where: { $0.name == "state" })?.value == state else {
-            throw MailboxError.insecure("The sign-in response didn't match this request, so Pausely ignored it.")
+            throw MailboxError.insecure(L10n.string("The sign-in response didn't match this request, so Pausely ignored it."))
         }
         guard let code = query.first(where: { $0.name == "code" })?.value else {
-            throw MailboxError.authFailed("No sign-in code came back.")
+            throw MailboxError.authFailed(L10n.string("No sign-in code came back."))
         }
 
         var form = [
@@ -92,7 +92,7 @@ enum OAuthSession {
         let payload = try? JSONDecoder().decode(Payload.self, from: data)
         guard status == 200, let access = payload?.access_token else {
             if payload?.error == "invalid_grant" { throw MailboxError.authExpired }
-            throw MailboxError.authFailed("Sign-in couldn't be completed (\(payload?.error ?? "HTTP \(status)")).")
+            throw MailboxError.authFailed(L10n.string("Sign-in couldn't be completed (\(payload?.error ?? "HTTP \(status)"))."))
         }
         return Tokens(accessToken: access,
                       refreshToken: payload?.refresh_token ?? previousRefresh,
@@ -177,13 +177,13 @@ enum OAuthSession {
                 } else if let callback {
                     continuation.resume(returning: callback)
                 } else {
-                    continuation.resume(throwing: MailboxError.authFailed("No response from the sign-in page."))
+                    continuation.resume(throwing: MailboxError.authFailed(L10n.string("No response from the sign-in page.")))
                 }
             }
             session.presentationContextProvider = anchor
             session.prefersEphemeralWebBrowserSession = false
             if !session.start() {
-                continuation.resume(throwing: MailboxError.authFailed("The sign-in page couldn't open."))
+                continuation.resume(throwing: MailboxError.authFailed(L10n.string("Couldn't open the sign-in page.")))
             }
         }
     }
@@ -220,8 +220,8 @@ enum MailboxHTTP {
                 current = try await refresh()
             case 401, 403:
                 throw MailboxError.authExpired
-            case 404:
-                throw MailboxError.server("Not found")
+            case 404, 410:
+                throw MailboxError.notFound
             case 429 where throttles < 3, 503 where throttles < 3:  // `where` binds per pattern in Swift
                 throttles += 1
                 let wait = min(30, Double(http?.value(forHTTPHeaderField: "Retry-After") ?? "") ?? Double(2 << throttles))

@@ -67,15 +67,15 @@ final class InboxScanner: ObservableObject {
                      port customPort: Int? = nil) async throws -> MailboxAccount {
         let trimmed = address.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
         guard trimmed.contains("@"), trimmed.split(separator: "@").count == 2 else {
-            throw MailboxError.notConfigured("Enter your full email address.")
+            throw MailboxError.notConfigured(L10n.string("Enter your full email address."))
         }
-        let cleanPassword = password.trimmingCharacters(in: .whitespacesAndNewlines)
-        guard !cleanPassword.isEmpty else { throw MailboxError.notConfigured("Enter the app password.") }
+        let cleanPassword = IMAPPreset.cleanPassword(password, for: preset)
+        guard !cleanPassword.isEmpty else { throw MailboxError.notConfigured(L10n.string("Enter the app password.")) }
         guard let host = (customHost?.isEmpty == false ? customHost : preset?.host)?.lowercased() else {
-            throw MailboxError.notConfigured("Choose your email provider or enter its IMAP server.")
+            throw MailboxError.notConfigured(L10n.string("Choose your email provider or enter its IMAP server."))
         }
         if let existing = accounts.first(where: { $0.address == trimmed && $0.kind == .imap }) {
-            throw MailboxError.notConfigured("\(existing.address) is already connected.")
+            throw MailboxError.notConfigured(L10n.string("\(existing.address) is already connected."))
         }
 
         let account = MailboxAccount(id: UUID().uuidString, kind: .imap, address: trimmed, presetID: preset?.id,
@@ -84,14 +84,15 @@ final class InboxScanner: ObservableObject {
         try await provider.open()
         await provider.close()
         guard MailboxAccountStore.setSecret(cleanPassword, .password, for: account.id) else {
-            throw MailboxError.server("Couldn't save the password securely on this iPhone.")
+            throw MailboxError.server(L10n.string("Couldn't save the password securely on this iPhone."))
         }
         MailboxAccountStore.upsert(account)
         accounts = MailboxAccountStore.all()
         return account
     }
 
-    private func connect(_ action: () async throws -> MailboxAccount) async {
+    /// Runs a provider's connect step and keeps the result (the first account wins if it was already connected).
+    func connect(_ action: () async throws -> MailboxAccount) async {
         error = nil
         do {
             let account = try await action()
@@ -110,7 +111,7 @@ final class InboxScanner: ObservableObject {
     // MARK: - Disconnecting
 
     func disconnect(_ account: MailboxAccount) async {
-        if scanTask != nil { cancelScan() }
+        await stopScan()
         await makeProvider(account).revoke()
         MailboxAccountStore.remove(account.id)
         accounts = MailboxAccountStore.all()
@@ -128,6 +129,7 @@ final class InboxScanner: ObservableObject {
 
     /// Account deletion and sign-out: forget every inbox and every receipt fact.
     func disconnectAll() async {
+        await stopScan()
         for account in accounts { await makeProvider(account).revoke() }
         MailboxAccountStore.removeAll()
         ReceiptLedger.clear()
@@ -152,6 +154,13 @@ final class InboxScanner: ObservableObject {
         scanTask?.cancel()
     }
 
+    /// Cancels a running scan and waits for it to stop, so nothing it saves lands after a disconnect.
+    private func stopScan() async {
+        guard let task = scanTask else { return }
+        task.cancel()
+        await task.value
+    }
+
     private func runScan() async {
         isScanning = true
         progress = 0
@@ -167,7 +176,7 @@ final class InboxScanner: ObservableObject {
 
         for (index, account) in accounts.enumerated() {
             if Task.isCancelled { break }
-            statusLine = "Searching \(account.providerName)…"
+            statusLine = L10n.string("Searching \(account.providerName)…")
             do {
                 let (signals, accountStats) = try await scan(account, catalog: catalog, aiBudget: &aiBudget) { [weak self] fraction, line in
                     self?.progress = (Double(index) + fraction) / Double(total)
@@ -179,7 +188,7 @@ final class InboxScanner: ObservableObject {
                 stats.bodiesRead += accountStats.read
                 var updated = account
                 updated.lastScan = Date()
-                MailboxAccountStore.upsert(updated)
+                MailboxAccountStore.update(updated)
             } catch MailboxError.cancelled {
                 break
             } catch is CancellationError {
@@ -190,6 +199,9 @@ final class InboxScanner: ObservableObject {
             }
         }
         accounts = MailboxAccountStore.all()
+        // Receipts from an inbox disconnected during the scan are dropped with it.
+        let connected = Set(accounts.map(\.id))
+        newSignals.removeAll { !($0.sources ?? []).contains(where: connected.contains) }
 
         let ledger = ReceiptLedger.merge(newSignals, into: ReceiptLedger.load())
         ReceiptLedger.save(ledger)
@@ -197,7 +209,7 @@ final class InboxScanner: ObservableObject {
         analyze(ledger, catalog: catalog)
         stats.receipts = newSignals.count
         if foundSubscriptions.isEmpty && accountErrors.count < accounts.count {
-            error = "No recurring subscriptions found in your email yet."
+            error = L10n.string("No recurring subscriptions found in your email yet.")
         }
     }
 
@@ -214,12 +226,12 @@ final class InboxScanner: ObservableObject {
             accountStats.incremental = cursor != nil
             let (refs, nextCursor) = try await provider.candidates(plan: plan, cursor: cursor)
             accountStats.candidates = refs.count
-            report(0.2, "Checking \(refs.count) emails in \(account.providerName)…")
+            report(0.2, L10n.string("Checking \(L10n.string("\(refs.count) emails")) in \(account.providerName)…"))
 
             let summaries = try await provider.summaries(refs)
             accountStats.checked = summaries.count
             let wanted = Self.triage(summaries, catalog: catalog).prefix(Self.bodyBudget)
-            report(0.35, "Reading \(wanted.count) receipts from \(account.providerName)…")
+            report(0.35, L10n.string("Reading \(L10n.string("\(wanted.count) receipts")) from \(account.providerName)…"))
 
             var signals: [ReceiptSignal] = []
             for (offset, summary) in wanted.enumerated() {
@@ -240,11 +252,13 @@ final class InboxScanner: ObservableObject {
                 signals.append(signal)
                 if offset % 10 == 0 {
                     report(0.35 + 0.6 * Double(offset + 1) / Double(max(wanted.count, 1)),
-                           "Read \(offset + 1) of \(wanted.count) in \(account.providerName)")
+                           L10n.string("Read \(offset + 1) of \(wanted.count) in \(account.providerName)"))
                 }
             }
             accountStats.receipts = signals.count
-            MailboxAccountStore.setCursor(nextCursor, for: account.id)
+            if MailboxAccountStore.all().contains(where: { $0.id == account.id }) {
+                MailboxAccountStore.setCursor(nextCursor, for: account.id)
+            }
             await provider.close()
             return (signals, accountStats)
         } catch {

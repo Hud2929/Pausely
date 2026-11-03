@@ -117,10 +117,10 @@ struct RenewalVerdictView: View {
     private func whenText(_ charge: (date: Date, isTrialEnd: Bool)) -> String {
         let day = charge.date.formatted(.dateTime.weekday(.abbreviated).month(.abbreviated).day())
         let days = daysUntil(charge.date)
-        let relative = days == 0 ? String(localized: "today") : days == 1 ? String(localized: "tomorrow") : String(localized: "in \(days) days")
+        let relative = days == 0 ? L10n.string("today") : days == 1 ? L10n.string("tomorrow") : L10n.string("in \(days) days")
         return charge.isTrialEnd
-            ? String(localized: "Free trial ends \(day) · \(relative)")
-            : String(localized: "Renews \(day) · \(relative)")
+            ? L10n.string("Free trial ends \(day) · \(relative)")
+            : L10n.string("Renews \(day) · \(relative)")
     }
 
     private func daysUntil(_ date: Date) -> Int {
@@ -137,8 +137,8 @@ struct RenewalVerdictView: View {
                 let up = sub.amount > change.from
                 divider
                 factRow(up ? "arrow.up.right" : "arrow.down.right",
-                        up ? String(localized: "Up from \(MoneyFormat.string(change.from, sub.currency)) since \(change.since.formatted(.dateTime.month(.abbreviated).day()))")
-                           : String(localized: "Down from \(MoneyFormat.string(change.from, sub.currency)) since \(change.since.formatted(.dateTime.month(.abbreviated).day()))"),
+                        up ? L10n.string("Up from \(MoneyFormat.string(change.from, sub.currency)) since \(change.since.formatted(.dateTime.month(.abbreviated).day()))")
+                           : L10n.string("Down from \(MoneyFormat.string(change.from, sub.currency)) since \(change.since.formatted(.dateTime.month(.abbreviated).day()))"),
                         tint: up ? .orange : Color.accentMint)
             }
 
@@ -151,13 +151,13 @@ struct RenewalVerdictView: View {
                 divider
                 factRow("clock",
                         charge.isTrialEnd
-                            ? String(localized: "Cancel before \(charge.date.formatted(.dateTime.month(.abbreviated).day())) and you won't be charged.")
-                            : String(localized: "Cancel now and you usually keep it until \(charge.date.formatted(.dateTime.month(.abbreviated).day()))."))
+                            ? L10n.string("Cancel before \(charge.date.formatted(.dateTime.month(.abbreviated).day())) and you won't be charged.")
+                            : L10n.string("Cancel now and you usually keep it until \(charge.date.formatted(.dateTime.month(.abbreviated).day()))."))
             }
 
             if let kept = VerdictFacts.lastKept(for: sub.id, events: eventLog.events) {
                 divider
-                factRow("checkmark.circle", String(localized: "You kept it on \(kept.formatted(.dateTime.month(.abbreviated).day()))."))
+                factRow("checkmark.circle", L10n.string("You kept it on \(kept.formatted(.dateTime.month(.abbreviated).day()))."))
             }
 
             if !sub.isPausely, let cheaper = cheaperOption(sub) {
@@ -165,15 +165,15 @@ struct RenewalVerdictView: View {
                 if paymentManager.isUnlocked(.cheaperAlternatives) {
                     factRow("arrow.left.arrow.right",
                             cheaper.monthly == 0
-                                ? String(localized: "Free alternative: \(cheaper.name)")
-                                : String(localized: "Cheaper: \(cheaper.name) at \(currencyManager.format(cheaper.monthly)) a month"),
+                                ? L10n.string("Free alternative: \(cheaper.name)")
+                                : L10n.string("Cheaper: \(cheaper.name) at \(currencyManager.format(cheaper.monthly)) a month"),
                             tint: Color.accentMint)
                 } else {
                     Button {
                         HapticStyle.light.trigger()
                         showPaywall = true
                     } label: {
-                        factRow("lock.fill", String(localized: "Pro shows a cheaper option for this"), tint: Color.obsidianTextSecondary)
+                        factRow("lock.fill", L10n.string("Pro shows a cheaper option for this"), tint: Color.obsidianTextSecondary)
                     }
                     .buttonStyle(PlainButtonStyle())
                 }
@@ -185,10 +185,10 @@ struct RenewalVerdictView: View {
     private func yearlyText(_ sub: Subscription) -> String {
         let yearly = MoneyFormat.string(sub.annualCost, sub.currency)
         guard sub.currency != currencyManager.selectedCurrency else {
-            return String(localized: "That's \(yearly) a year")
+            return L10n.string("That's \(yearly) a year")
         }
         let converted = currencyManager.format(currencyManager.convertToSelected(sub.annualCost, from: sub.currency))
-        return String(localized: "That's \(yearly) a year (about \(converted))")
+        return L10n.string("That's \(yearly) a year (about \(converted))")
     }
 
     private func usageText(_ sub: Subscription) -> String? {
@@ -196,9 +196,9 @@ struct RenewalVerdictView: View {
         guard minutes > 0 else { return nil }
         let duration = Duration.seconds(minutes * 60).formatted(.units(allowed: [.hours, .minutes], width: .abbreviated))
         if let perHour = screenTime.calculateCostPerHour(monthlyCost: sub.monthlyCost, subscriptionName: sub.name) {
-            return String(localized: "Used \(duration) this month · \(MoneyFormat.string(perHour, sub.currency)) an hour")
+            return L10n.string("Used \(duration) this month · \(MoneyFormat.string(perHour, sub.currency)) an hour")
         }
-        return String(localized: "Used \(duration) this month")
+        return L10n.string("Used \(duration) this month")
     }
 
     private func cheaperOption(_ sub: Subscription) -> (name: String, monthly: Decimal)? {
@@ -239,7 +239,7 @@ struct RenewalVerdictView: View {
                 Button {
                     Task { await keep(sub) }
                 } label: {
-                    Label(isKeeping ? String(localized: "Keeping…") : String(localized: "Keep it"), systemImage: "checkmark")
+                    Label(isKeeping ? L10n.string("Keeping…") : L10n.string("Keep it"), systemImage: "checkmark")
                         .font(.system(.body, design: .rounded).weight(.semibold))
                         .foregroundStyle(Color.black)
                         .frame(maxWidth: .infinity)
@@ -308,8 +308,8 @@ struct RenewalVerdictView: View {
                 Text("Kept")
                     .font(.system(.title, design: .rounded).weight(.bold))
                     .foregroundStyle(.white)
-                Text(askAgain.map { String(localized: "No more reminders about this charge. We'll ask again before \($0.formatted(.dateTime.month(.abbreviated).day())).") }
-                     ?? String(localized: "No more reminders about this charge."))
+                Text(askAgain.map { L10n.string("No more reminders about this charge. We'll ask again before \($0.formatted(.dateTime.month(.abbreviated).day())).") }
+                     ?? L10n.string("No more reminders about this charge."))
                     .font(.system(.body, design: .rounded))
                     .foregroundStyle(Color.obsidianTextSecondary)
                     .multilineTextAlignment(.center)
@@ -319,8 +319,8 @@ struct RenewalVerdictView: View {
                     .font(.system(.title, design: .rounded).weight(.bold))
                     .foregroundStyle(.white)
                     .multilineTextAlignment(.center)
-                Text(line.map { String(localized: "That's \(MoneyFormat.string($0.onTrack, $0.currency)) you won't pay over the next 12 months. It's on your Savings Receipt.") }
-                     ?? String(localized: "It's on your Savings Receipt."))
+                Text(line.map { L10n.string("That's \(MoneyFormat.string($0.onTrack, $0.currency)) you won't pay over the next 12 months. It's on your Savings Receipt.") }
+                     ?? L10n.string("It's on your Savings Receipt."))
                     .font(.system(.body, design: .rounded))
                     .foregroundStyle(Color.obsidianTextSecondary)
                     .multilineTextAlignment(.center)
@@ -378,16 +378,16 @@ struct PauselyPromiseCard: View {
         guard let cost = summary.pauselyYearlyCost.map(summary.formatted) else {
             // Free customers: nothing to weigh yet, but the promise holds if they ever pay.
             return summary.isEmpty
-                ? String(localized: "If you ever pay for Pausely and it doesn't save you more than it costs, it will tell you to cancel it.")
-                : String(localized: "Pausely is free for you and on track to save you \(summary.formatted(summary.onTrack)) this year. If you ever pay for it, it has to save you more than it costs.")
+                ? L10n.string("If you ever pay for Pausely and it doesn't save you more than it costs, it will tell you to cancel it.")
+                : L10n.string("Pausely is free for you and on track to save you \(summary.formatted(summary.onTrack)) this year. If you ever pay for it, it has to save you more than it costs.")
         }
         if summary.isEmpty {
-            return String(localized: "Pausely hasn't saved you anything yet. If it doesn't save you more than its \(cost), we'd rather you cancel it.")
+            return L10n.string("Pausely hasn't saved you anything yet. If it doesn't save you more than its \(cost), we'd rather you cancel it.")
         }
         if summary.paysForItself, let multiple = summary.returnMultiple {
             let times = multiple.formatted(.number.precision(.fractionLength(1)))
-            return String(localized: "Pausely is on track to save you \(summary.formatted(summary.onTrack)) this year, \(times)× what it costs. Keeping it pays.")
+            return L10n.string("Pausely is on track to save you \(summary.formatted(summary.onTrack)) this year, \(times)× what it costs. Keeping it pays.")
         }
-        return String(localized: "So far Pausely is on track to save you \(summary.formatted(summary.onTrack)), less than its \(cost). We'd rather you cancel than pay for nothing.")
+        return L10n.string("So far Pausely is on track to save you \(summary.formatted(summary.onTrack)), less than its \(cost). We'd rather you cancel than pay for nothing.")
     }
 }

@@ -517,7 +517,7 @@ struct SettingsSection: View {
                     SettingsRow(
                         icon: "envelope.fill",
                         title: inboxes.isEmpty ? "Find subscriptions in email" : "Email inboxes",
-                        value: inboxes.isEmpty ? nil : (inboxes.count == 1 ? inboxes[0].address : "\(inboxes.count) connected"),
+                        value: inboxes.isEmpty ? nil : (inboxes.count == 1 ? inboxes[0].address : L10n.string("\(inboxes.count) connected")),
                         color: Color.accentMint,
                         action: { onGmailImport?() }
                     )
@@ -569,7 +569,7 @@ struct SettingsRow: View {
                         .foregroundColor(color)
                 }
 
-                Text(title)
+                Text(LocalizedStringKey(title))  // titles are catalog keys; Text(String) skips translation
                     .font(.body)
                     .foregroundColor(.white)
 
@@ -642,7 +642,7 @@ struct AboutRow: View {
             action?()
         }) {
             HStack {
-                Text(title)
+                Text(LocalizedStringKey(title))  // titles are catalog keys; Text(String) skips translation
                     .font(.body)
                     .foregroundColor(.white)
 

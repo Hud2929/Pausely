@@ -58,8 +58,8 @@ struct SavingsReceiptView: View {
                 .minimumScaleFactor(0.6)
                 .lineLimit(1)
             Text(summary.isEmpty
-                 ? String(localized: "Nothing yet")
-                 : String(localized: "\(summary.formatted(summary.onTrack)) over the 12 months after each cancellation"))
+                 ? L10n.string("Nothing yet")
+                 : L10n.string("\(summary.formatted(summary.onTrack)) over the 12 months after each cancellation"))
                 .font(.system(.subheadline, design: .rounded))
                 .foregroundStyle(Color.obsidianTextSecondary)
                 .multilineTextAlignment(.center)
@@ -80,16 +80,16 @@ struct SavingsReceiptView: View {
                     .font(.system(.body, design: .rounded).weight(.bold))
                     .foregroundStyle(Color.accentMint)
             }
-            Text(String(localized: "Cancelled \(line.cancelledOn.formatted(.dateTime.month(.abbreviated).day().year())) · \(line.avoidedSoFar.count) of \(line.avoidedCharges.count) charges avoided so far"))
+            Text(L10n.string("Cancelled \(line.cancelledOn.formatted(.dateTime.month(.abbreviated).day().year())) · \(line.avoidedSoFar.count) of \(line.avoidedCharges.count) charges avoided so far"))
                 .font(.system(.caption, design: .rounded))
                 .foregroundStyle(Color.obsidianTextSecondary)
             if let next = line.avoidedCharges.first(where: { !line.avoidedSoFar.contains($0) }) {
-                Text(String(localized: "Next avoided charge: \(MoneyFormat.string(line.amountPerCharge, line.currency)) on \(next.formatted(.dateTime.month(.abbreviated).day()))"))
+                Text(L10n.string("Next avoided charge: \(MoneyFormat.string(line.amountPerCharge, line.currency)) on \(next.formatted(.dateTime.month(.abbreviated).day()))"))
                     .font(.system(.caption, design: .rounded))
                     .foregroundStyle(Color.obsidianTextTertiary)
             }
             if let ended = line.endedOn {
-                Text(String(localized: "Started again \(ended.formatted(.dateTime.month(.abbreviated).day())). Savings stop there."))
+                Text(L10n.string("Started again \(ended.formatted(.dateTime.month(.abbreviated).day())). Savings stop there."))
                     .font(.system(.caption, design: .rounded))
                     .foregroundStyle(.orange)
             }

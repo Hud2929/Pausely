@@ -79,6 +79,9 @@ final class LiveMailboxTests: XCTestCase {
             throw XCTSkip("set PAUSELY_LOCAL_IMAP_APP=host:port:user:password")
         }
         let scanner = InboxScanner.shared
+        // Never touch inboxes someone connected for real; clear what earlier test runs left behind.
+        try XCTSkipIf(scanner.accounts.contains { !$0.address.hasSuffix(".test") }, "real inboxes are connected on this simulator")
+        await scanner.disconnectAll()
         let account = try await scanner.connectIMAP(address: spec[2], password: spec[3], preset: nil, host: spec[0], port: Int(spec[1]))
         defer { Task { @MainActor in await scanner.disconnect(account) } }
         XCTAssertNotNil(MailboxAccountStore.secret(.password, for: account.id), "password kept in the Keychain")

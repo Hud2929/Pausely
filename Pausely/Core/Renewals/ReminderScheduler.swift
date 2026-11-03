@@ -75,23 +75,23 @@ final class ReminderScheduler {
         let day = reminder.eventDate.formatted(.dateTime.month(.abbreviated).day())
         switch reminder.kind {
         case .renewalHeadsUp:
-            content.title = String(localized: "\(sub.name) renews in \(reminder.daysBefore) days")
-            content.body = String(localized: "\(amount) on \(day). Keep it or cancel it?")
+            content.title = L10n.string("\(sub.name) renews in \(reminder.daysBefore) days")
+            content.body = L10n.string("\(amount) on \(day). Keep it or cancel it?")
         case .renewalTomorrow:
-            content.title = String(localized: "\(sub.name) charges tomorrow")
-            content.body = String(localized: "\(amount) tomorrow. Cancel today if you don't want it to renew.")
+            content.title = L10n.string("\(sub.name) charges tomorrow")
+            content.body = L10n.string("\(amount) tomorrow. Cancel today if you don't want it to renew.")
         case .renewalToday:
-            content.title = String(localized: "\(sub.name) renews today")
-            content.body = String(localized: "\(amount) is due today.")
+            content.title = L10n.string("\(sub.name) renews today")
+            content.body = L10n.string("\(amount) is due today.")
         case .trialEnding:
-            content.title = String(localized: "\(sub.name) trial ends tomorrow")
-            content.body = String(localized: "After that it costs \(amount) \(sub.billingFrequency.billingPeriodLabel). Keep it or cancel it?")
+            content.title = L10n.string("\(sub.name) trial ends tomorrow")
+            content.body = L10n.string("After that it costs \(amount) \(sub.billingFrequency.billingPeriodLabel). Keep it or cancel it?")
         case .planCancel:
-            content.title = String(localized: "Pause Plan: cancel \(sub.name) today")
-            content.body = String(localized: "It renews tomorrow for \(amount). Cancel today and it comes back on its turn.")
+            content.title = L10n.string("Pause Plan: cancel \(sub.name) today")
+            content.body = L10n.string("It renews tomorrow for \(amount). Cancel today and it comes back on its turn.")
         case .planStart:
-            content.title = String(localized: "Pause Plan: \(sub.name) is on")
-            content.body = String(localized: "Its month starts today. Start it again whenever you're ready to watch.")
+            content.title = L10n.string("Pause Plan: \(sub.name) is on")
+            content.body = L10n.string("Its month starts today. Start it again whenever you're ready to watch.")
         }
         switch reminder.kind {
         case .planCancel, .planStart: content.categoryIdentifier = ReminderActions.pausePlanCategory

@@ -12,7 +12,7 @@ struct IMAPConnectView: View {
     @State private var address = ""
     @State private var password = ""
     @State private var customHost = ""
-    @State private var customPort = "993"
+    @State private var customPort = ""  // empty means the standard port, 993
     @State private var connecting = false
     @State private var error: String?
     @FocusState private var focused: Field?
@@ -26,8 +26,20 @@ struct IMAPConnectView: View {
 
     private var needsServer: Bool { effectivePreset == nil }
 
+    /// Most providers name their server imap.<domain>, so that's offered (and used) until one is typed.
+    private var suggestedHost: String? {
+        let parts = address.trimmingCharacters(in: .whitespaces).lowercased().split(separator: "@", omittingEmptySubsequences: false)
+        guard parts.count == 2, !parts[0].isEmpty, parts[1].contains("."), !parts[1].hasPrefix("."), !parts[1].hasSuffix(".") else { return nil }
+        return "imap." + parts[1]
+    }
+
+    private var serverHost: String {
+        let typed = customHost.trimmingCharacters(in: .whitespaces)
+        return typed.isEmpty ? (suggestedHost ?? "") : typed
+    }
+
     private var canConnect: Bool {
-        address.contains("@") && !password.isEmpty && (!needsServer || !customHost.isEmpty) && !connecting
+        address.contains("@") && !password.isEmpty && (!needsServer || !serverHost.isEmpty) && !connecting
     }
 
     var body: some View {
@@ -51,7 +63,7 @@ struct IMAPConnectView: View {
                 .padding(20)
             }
             .background(PremiumBackground())
-            .navigationTitle(effectivePreset?.name ?? "Other email")
+            .navigationTitle(effectivePreset.map { Text(verbatim: $0.name) } ?? Text("Other email"))
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .topBarLeading) {
@@ -63,16 +75,16 @@ struct IMAPConnectView: View {
     }
 
     private var header: some View {
-        Text(effectivePreset == nil
-             ? "Enter your email address, an app password and your provider's IMAP server."
-             : "Enter your email address and an app password. It's a separate password just for Pausely, so your main password stays private.")
+        (effectivePreset == nil
+             ? Text("Enter your email address, an app password and your provider's IMAP server.")
+             : Text("Enter your email address and an app password. It's a separate password just for Pausely, so your main password stays private."))
             .font(.system(.subheadline, design: .rounded))
             .foregroundStyle(Color.obsidianTextSecondary)
     }
 
     private var fields: some View {
         VStack(spacing: 10) {
-            TextField("you@example.com", text: $address)
+            TextField("Email address", text: $address, prompt: Text(verbatim: "you@example.com"))
                 .textContentType(.emailAddress)
                 .keyboardType(.emailAddress)
                 .textInputAutocapitalization(.never)
@@ -95,7 +107,7 @@ struct IMAPConnectView: View {
                 .accessibilityIdentifier("imapPassword")
             if needsServer {
                 HStack(spacing: 10) {
-                    TextField("imap.example.com", text: $customHost)
+                    TextField("IMAP server", text: $customHost, prompt: Text(verbatim: suggestedHost ?? "imap.example.com"))
                         .keyboardType(.URL)
                         .textInputAutocapitalization(.never)
                         .autocorrectionDisabled()
@@ -103,7 +115,7 @@ struct IMAPConnectView: View {
                         .padding(14)
                         .background(RoundedRectangle(cornerRadius: 12).fill(Color.obsidianSurface))
                         .accessibilityIdentifier("imapHost")
-                    TextField("993", text: $customPort)
+                    TextField("Port", text: $customPort, prompt: Text(verbatim: "993"))
                         .keyboardType(.numberPad)
                         .focused($focused, equals: .port)
                         .frame(width: 70)
@@ -126,7 +138,7 @@ struct IMAPConnectView: View {
                 .foregroundStyle(.white)
             ForEach(Array(preset.steps.enumerated()), id: \.offset) { index, step in
                 HStack(alignment: .top, spacing: 10) {
-                    Text("\(index + 1)")
+                    Text(index + 1, format: .number)
                         .font(.system(.caption, design: .rounded).weight(.bold))
                         .foregroundStyle(Color.accentMint)
                         .frame(width: 18, alignment: .leading)
@@ -139,7 +151,7 @@ struct IMAPConnectView: View {
                 Button {
                     openURL(page)
                 } label: {
-                    Label("Open \(preset.name) settings", systemImage: "arrow.up.right.square")
+                    Label("Open \(Self.pageName(page) ?? preset.name)", systemImage: "arrow.up.right.square")
                         .font(.system(.footnote, design: .rounded).weight(.semibold))
                         .foregroundStyle(Color.accentMint)
                 }
@@ -155,7 +167,7 @@ struct IMAPConnectView: View {
         Button(action: connect) {
             HStack {
                 if connecting { ProgressView().tint(.black) }
-                Text(connecting ? "Checking…" : "Connect")
+                (connecting ? Text("Checking…") : Text("Connect"))
                     .font(.system(.body, design: .rounded).weight(.semibold))
             }
             .foregroundStyle(Color.black)
@@ -175,7 +187,7 @@ struct IMAPConnectView: View {
         Task {
             do {
                 _ = try await scanner.connectIMAP(address: address, password: password, preset: effectivePreset,
-                                                  host: needsServer ? customHost.trimmingCharacters(in: .whitespaces) : nil,
+                                                  host: needsServer ? serverHost : nil,
                                                   port: needsServer ? port : nil)
                 password = ""
                 connecting = false
@@ -185,5 +197,11 @@ struct IMAPConnectView: View {
                 self.error = error.localizedDescription
             }
         }
+    }
+
+    /// The page the link opens, as people see it in the address bar ("account.apple.com").
+    static func pageName(_ url: URL) -> String? {
+        guard let host = url.host, !host.isEmpty else { return nil }
+        return host.hasPrefix("www.") ? String(host.dropFirst(4)) : host
     }
 }

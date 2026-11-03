@@ -42,18 +42,21 @@ enum MailboxError: LocalizedError, Equatable {
     case server(String)
     case throttled(retryAfter: TimeInterval)
     case insecure(String)
+    /// The provider says the item (or a sync position) no longer exists.
+    case notFound
     case cancelled
 
     var errorDescription: String? {
         switch self {
         case .notConfigured(let detail): return detail
         case .authFailed(let detail): return detail
-        case .authExpired: return "Your sign-in expired. Reconnect this inbox."
-        case .network(let detail): return "Couldn't reach the mail server. \(detail)"
-        case .server(let detail): return "The mail server said: \(detail)"
-        case .throttled: return "The mail server asked Pausely to slow down. Try again in a few minutes."
+        case .authExpired: return L10n.string("Your sign-in expired. Reconnect this inbox.")
+        case .network(let detail): return L10n.string("Couldn't reach the mail server. \(detail)")
+        case .server(let detail): return L10n.string("The mail server said: \(detail)")
+        case .throttled: return L10n.string("The mail server asked Pausely to slow down. Try again in a few minutes.")
         case .insecure(let detail): return detail
-        case .cancelled: return "Stopped."
+        case .notFound: return L10n.string("Not found.")
+        case .cancelled: return L10n.string("Stopped.")
         }
     }
 }

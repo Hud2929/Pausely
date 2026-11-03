@@ -46,7 +46,7 @@ actor IMAPClient {
             sec_protocol_options_set_min_tls_protocol_version(tls.securityProtocolOptions, .TLSv12)
             parameters = NWParameters(tls: tls, tcp: NWProtocolTCP.Options())
         }
-        guard let port = NWEndpoint.Port(rawValue: configuration.port) else { throw MailboxError.notConfigured("Invalid port") }
+        guard let port = NWEndpoint.Port(rawValue: configuration.port) else { throw MailboxError.notConfigured(L10n.string("That port number isn't valid.")) }
         let connection = NWConnection(host: NWEndpoint.Host(configuration.host), port: port, using: parameters)
         self.connection = connection
         try await Self.waitUntilReady(connection, timeout: configuration.commandTimeout)
@@ -54,8 +54,8 @@ actor IMAPClient {
         let greeting = try await readResponse()
         switch greeting.status {
         case "OK", "PREAUTH": break
-        case "BYE": throw MailboxError.server(greeting.text.isEmpty ? "The server closed the connection." : greeting.text)
-        default: throw MailboxError.server("Unexpected greeting from the mail server.")
+        case "BYE": throw MailboxError.server(greeting.text.isEmpty ? L10n.string("The server closed the connection.") : greeting.text)
+        default: throw MailboxError.server(L10n.string("Unexpected greeting from the mail server."))
         }
         if greeting.code.first?.uppercased() == "CAPABILITY" {
             capabilities = Set(greeting.code.dropFirst().map { $0.uppercased() })
@@ -76,7 +76,7 @@ actor IMAPClient {
         do {
             if capabilities.contains("LOGINDISABLED") {
                 guard capabilities.contains("AUTH=PLAIN"), capabilities.contains("SASL-IR") else {
-                    throw MailboxError.insecure("This server doesn't allow a secure password sign-in.")
+                    throw MailboxError.insecure(L10n.string("This server doesn't allow a secure password sign-in."))
                 }
                 let token = Data("\u{0}\(user)\u{0}\(password)".utf8).base64EncodedString()
                 let result = try await run([.raw("AUTHENTICATE PLAIN " + token)], sensitive: true)
@@ -159,10 +159,10 @@ actor IMAPClient {
     }
 
     private func run(_ arguments: [IMAPArgument], sensitive: Bool = false) async throws -> CommandResult {
-        guard !busy else { throw MailboxError.server("Another command is still running.") }
+        guard !busy else { throw MailboxError.server(L10n.string("Another command is still running.")) }
         busy = true
         defer { busy = false }
-        guard connection != nil else { throw MailboxError.network("Not connected.") }
+        guard connection != nil else { throw MailboxError.network(L10n.string("Not connected.")) }
 
         tagCounter += 1
         let tag = "P\(tagCounter)"
@@ -233,18 +233,30 @@ actor IMAPClient {
                 buffer.removeFirst(length)
                 return try IMAPParser.parseResponse(bytes)
             }
-            guard let connection else { throw MailboxError.network("Not connected.") }
-            let chunk = try await Self.receive(on: connection, timeout: configuration.commandTimeout)
-            if chunk.isEmpty { throw MailboxError.network("The connection closed.") }
+            guard let connection else { throw MailboxError.network(L10n.string("Not connected.")) }
+            try Task.checkCancellation()
+            let chunk: [UInt8]
+            do {
+                // Stopping a scan (or disconnecting) closes the connection at once instead of waiting out a read.
+                chunk = try await withTaskCancellationHandler {
+                    try await Self.receive(on: connection, timeout: configuration.commandTimeout)
+                } onCancel: {
+                    connection.cancel()
+                }
+            } catch {
+                if Task.isCancelled { throw MailboxError.cancelled }
+                throw error
+            }
+            if chunk.isEmpty { throw MailboxError.network(L10n.string("The connection closed.")) }
             buffer.append(contentsOf: chunk)
             if buffer.count > IMAPFraming.maxLiteral + 64 * 1024 {
-                throw MailboxError.server("The server sent more data than expected.")
+                throw MailboxError.server(L10n.string("The server sent more data than expected."))
             }
         }
     }
 
     private func send(_ data: Data) async throws {
-        guard let connection else { throw MailboxError.network("Not connected.") }
+        guard let connection else { throw MailboxError.network(L10n.string("Not connected.")) }
         try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<Void, Error>) in
             connection.send(content: data, completion: .contentProcessed { error in
                 if let error { continuation.resume(throwing: MailboxError.network(error.localizedDescription)) }
@@ -259,7 +271,7 @@ actor IMAPClient {
             let timer = DispatchWorkItem {
                 if once.claim() {
                     connection.cancel()
-                    continuation.resume(throwing: MailboxError.network("Timed out connecting."))
+                    continuation.resume(throwing: MailboxError.network(L10n.string("Timed out connecting.")))
                 }
             }
             connection.stateUpdateHandler = { state in
@@ -268,6 +280,10 @@ actor IMAPClient {
                     if once.claim() { timer.cancel(); continuation.resume() }
                 case .failed(let error):
                     if once.claim() { timer.cancel(); continuation.resume(throwing: Self.describe(error)) }
+                case .waiting(let error):
+                    // No such server, a port that turns the connection away, or no network: say so now
+                    // instead of waiting out the timeout for a network change.
+                    if once.claim() { timer.cancel(); connection.cancel(); continuation.resume(throwing: Self.describe(error)) }
                 case .cancelled:
                     if once.claim() { timer.cancel(); continuation.resume(throwing: MailboxError.cancelled) }
                 default:
@@ -285,7 +301,7 @@ actor IMAPClient {
             let timer = DispatchWorkItem {
                 if once.claim() {
                     connection.cancel()
-                    continuation.resume(throwing: MailboxError.network("The mail server stopped responding."))
+                    continuation.resume(throwing: MailboxError.network(L10n.string("The mail server stopped responding.")))
                 }
             }
             DispatchQueue.global().asyncAfter(deadline: .now() + timeout, execute: timer)
@@ -300,20 +316,30 @@ actor IMAPClient {
         }
     }
 
+    /// What went wrong, in words a person can act on (never the system's error codes).
     private static func describe(_ error: NWError) -> MailboxError {
         switch error {
-        case .tls: return .insecure("The mail server's security certificate couldn't be verified.")
-        case .dns: return .network("The mail server's address couldn't be found.")
-        default: return .network(error.localizedDescription)
+        case .tls:
+            return .insecure(L10n.string("The mail server's security certificate couldn't be verified, so Pausely didn't connect."))
+        case .dns:
+            return .network(L10n.string("No server by that name was found. Check the server name."))
+        case .posix(.ECONNREFUSED):
+            return .network(L10n.string("The server turned the connection away. Check the server name and port."))
+        case .posix(.ETIMEDOUT):
+            return .network(L10n.string("The server took too long to answer."))
+        case .posix(.ENETDOWN), .posix(.ENETUNREACH), .posix(.EHOSTUNREACH), .posix(.ENOTCONN):
+            return .network(L10n.string("Check that your iPhone is online and try again."))
+        default:
+            return .network(L10n.string("Check your connection and try again."))
         }
     }
 
     private static func friendlyAuthMessage(_ detail: String) -> String {
         let lower = detail.lowercased()
         if lower.contains("application-specific") || lower.contains("app password") || lower.contains("web login required") {
-            return "This provider needs an app password, not your regular password."
+            return L10n.string("This provider needs an app password, not your regular password.")
         }
-        return "The email or app password wasn't accepted. Check both and try again."
+        return L10n.string("The email or app password wasn't accepted. Check both and try again.")
     }
 
     /// "1:3,7,9:10" from UIDs.

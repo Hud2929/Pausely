@@ -36,8 +36,12 @@ final class GmailMailboxProvider: MailboxProvider {
 
     @MainActor
     static func connect() async throws -> MailboxAccount {
-        guard isConfigured else { throw MailboxError.notConfigured("Gmail sign-in isn't set up in this build.") }
-        let tokens = try await OAuthSession.signIn(oauth)
+        guard isConfigured else { throw MailboxError.notConfigured(L10n.string("Gmail sign-in isn't set up in this build.")) }
+        return try await finishConnect(try await OAuthSession.signIn(oauth))
+    }
+
+    /// After sign-in: read the address, then save the account. The tokens are discarded if anything fails.
+    static func finishConnect(_ tokens: OAuthSession.Tokens) async throws -> MailboxAccount {
         let id = UUID().uuidString
         OAuthSession.store(tokens, for: id)
         do {
@@ -176,7 +180,7 @@ final class GmailMailboxProvider: MailboxProvider {
             if let pageToken { items.append(URLQueryItem(name: "pageToken", value: pageToken)) }
             components.queryItems = items
             let data: Data
-            do { data = try await get(components.url!) } catch MailboxError.server(let detail) where detail == "Not found" { return nil }
+            do { data = try await get(components.url!) } catch MailboxError.notFound { return nil }
             let page = try JSONDecoder().decode(HistoryPage.self, from: data)
             for record in page.history ?? [] {
                 for added in record.messagesAdded ?? [] where !ids.contains(added.message.id) { ids.append(added.message.id) }
@@ -198,7 +202,7 @@ final class GmailMailboxProvider: MailboxProvider {
     }
 
     private func get(_ url: URL) async throws -> Data {
-        guard url.host == "gmail.googleapis.com" else { throw MailboxError.insecure("Unexpected server.") }
+        guard url.host == "gmail.googleapis.com" else { throw MailboxError.insecure(L10n.string("Pausely stopped because a reply came from an unexpected server.")) }
         var request = URLRequest(url: url)
         request.timeoutInterval = 40
         let accountID = account.id
