@@ -3,6 +3,7 @@ import XCTest
 /// The whole "Find in Email" workflow through the screens, against a real IMAP server (the local test server).
 /// Run with TEST_RUNNER_PAUSELY_LOCAL_IMAP_UI=host:port:user:password and, optionally,
 /// TEST_RUNNER_PAUSELY_LOCAL_IMAP_UI_EXPECT="Name A,Name B" (subscriptions the mailbox must show).
+/// It imports what it finds into the app on that simulator, so use a test simulator.
 final class InboxWorkflowUITests: XCTestCase {
 
     override func setUp() {
