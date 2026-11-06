@@ -204,6 +204,15 @@ struct StoreKitUpgradeView: View {
     // MARK: - Trial Hero Section
     private var trialHeroSection: some View {
         VStack(spacing: 12) {
+            // Opened by adding one too many: say why before selling anything.
+            if currentSubscriptionCount >= FreeTier.subscriptionLimit {
+                Text("Free covers \(FreeTier.subscriptionLimit) subscriptions. Pro tracks all of them.")
+                    .font(AppTypography.bodySmall)
+                    .foregroundStyle(.white.opacity(0.85))
+                    .multilineTextAlignment(.center)
+                    .accessibilityIdentifier("freeLimitNotice")
+            }
+
             // Trial badge (only when a real trial is on offer)
             if isTrialEnabled {
                 HStack(spacing: 6) {

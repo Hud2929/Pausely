@@ -10,7 +10,6 @@ final class SyncQueue: ObservableObject {
     @Published var lastSyncError: Error?
 
     private let client = SupabaseManager.shared.client
-    private let maxRetries = 3
 
     private init() {
         loadPendingOperations()
@@ -45,16 +44,13 @@ final class SyncQueue: ObservableObject {
                 try await execute(operation)
                 os_log("SyncQueue: Operation %{public}@ succeeded", log: .default, type: .info, operation.id.uuidString)
             } catch {
+                // Kept until it succeeds: dropping it would lose the change for good, because the
+                // next fetch takes the server's copy (see SubscriptionSyncMerge).
                 var updated = operation
                 updated.retryCount += 1
                 updated.lastError = error.localizedDescription
-
-                if updated.retryCount < maxRetries {
-                    remaining.append(updated)
-                    os_log("SyncQueue: Operation %{public}@ failed (retry %{public}d/%{public}d): %{public}@", log: .default, type: .error, operation.id.uuidString, updated.retryCount, maxRetries, error.localizedDescription)
-                } else {
-                    os_log("SyncQueue: Operation %{public}@ permanently failed after %{public}d retries: %{public}@", log: .default, type: .error, operation.id.uuidString, maxRetries, error.localizedDescription)
-                }
+                remaining.append(updated)
+                os_log("SyncQueue: Operation %{public}@ failed (attempt %{public}d): %{public}@", log: .default, type: .error, operation.id.uuidString, updated.retryCount, error.localizedDescription)
             }
         }
 
@@ -81,12 +77,15 @@ final class SyncQueue: ObservableObject {
         }
     }
 
+    /// A change made offline (or before sign-in) is saved under whoever is signed in now. Upsert, so
+    /// a retry after a create that did reach the server doesn't fail as a duplicate.
     private func executeCreate(_ operation: SyncOperation) async throws {
-        let record = try JSONDecoder().decode(SubscriptionRecord.self, from: operation.payload)
+        var record = try JSONDecoder().decode(SubscriptionRecord.self, from: operation.payload)
+        if record.user_id == nil { record.user_id = client.auth.currentSession?.user.id }
+        guard record.user_id != nil else { throw SubscriptionStore.DatabaseError.notAuthenticated }
         _ = try await client
             .from("subscriptions")
-            .insert(record)
-            .select()
+            .upsert(record)
             .execute()
     }
 
@@ -128,14 +127,17 @@ final class SyncQueue: ObservableObject {
     }
 
     private func executeResume(_ operation: SyncOperation) async throws {
-        struct ResumePayload: Encodable {
-            let paused_until: String?
-        }
         try await client
             .from("subscriptions")
-            .update(ResumePayload(paused_until: nil))
+            .update(ClearPausePayload())
             .eq("id", value: operation.subscriptionId)
             .execute()
+    }
+
+    /// Forgets every queued change (account deletion, or someone else signing in on this iPhone).
+    func removeAll() {
+        pendingOperations = []
+        savePendingOperations()
     }
 
     // MARK: - Persistence

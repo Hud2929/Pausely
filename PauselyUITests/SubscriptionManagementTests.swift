@@ -51,4 +51,39 @@ final class SubscriptionManagementTests: XCTestCase {
         XCTAssertTrue(waitUntilGone(netflix, timeout: 5), "Netflix leaves the list")
         XCTAssertTrue(card("Spotify").exists, "the rest of the list stays")
     }
+
+    func testSwipingLeftRemovesOnlyAfterAsking() {
+        let spotify = card("Spotify")
+        XCTAssertTrue(spotify.waitForExistence(timeout: 10))
+
+        // Keep: nothing changes.
+        spotify.swipeLeft()
+        let swipeRemove = app.buttons["Remove"].firstMatch
+        XCTAssertTrue(swipeRemove.waitForExistence(timeout: 3), "swiping left offers Remove")
+        swipeRemove.tap()
+        let keep = app.buttons["Keep"]
+        XCTAssertTrue(keep.waitForExistence(timeout: 3), "removing asks first")
+        keep.tap()
+        XCTAssertTrue(spotify.waitForExistence(timeout: 3), "Keep leaves it on the list")
+
+        // Remove: it leaves the list.
+        spotify.swipeLeft()
+        XCTAssertTrue(app.buttons["Remove"].firstMatch.waitForExistence(timeout: 3))
+        app.buttons["Remove"].firstMatch.tap()
+        XCTAssertTrue(keep.waitForExistence(timeout: 3))
+        let confirm = app.buttons.matching(NSPredicate(format: "label == 'Remove'")).allElementsBoundByIndex.last
+        XCTAssertNotNil(confirm)
+        confirm?.tap()
+        XCTAssertFalse(app.alerts["Something went wrong"].waitForExistence(timeout: 2))
+        XCTAssertTrue(waitUntilGone(spotify, timeout: 5), "Spotify leaves the list")
+    }
+
+    func testSwipingRightOpensTheDetails() {
+        let netflix = card("Netflix")
+        XCTAssertTrue(netflix.waitForExistence(timeout: 10))
+        netflix.swipeRight()
+        let details = app.buttons["Details"]
+        if details.waitForExistence(timeout: 2) { details.tap() }   // a short swipe shows the button; a long one opens it
+        XCTAssertTrue(app.buttons["removeSubscriptionButton"].waitForExistence(timeout: 5), "the subscription's screen opens")
+    }
 }

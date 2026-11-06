@@ -183,7 +183,7 @@ struct SubscriptionManagementView: View {
             divider
             fact("Next payment", current.calculatedNextBillingDate.map { $0.formatted(.dateTime.month(.abbreviated).day().year()) } ?? "Not set")
             divider
-            fact("Category", current.category ?? "Other")
+            fact("Category", SubscriptionCategory.label(for: current.category))
             divider
             fact("Per year", MoneyFormat.string(current.amount * ProvenSubscription.periodsPerYear(current.billingFrequency), current.currency))
             divider

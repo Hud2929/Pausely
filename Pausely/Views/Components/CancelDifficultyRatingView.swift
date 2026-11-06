@@ -42,7 +42,7 @@ struct CancelDifficultyRatingView: View {
         .padding(.horizontal, 24)
         .padding(.bottom, 40)
         .background(Color.obsidianSurface)
-        .presentationDetents([.medium])
+        .presentationDetents([.large])
         .presentationDragIndicator(.hidden)
     }
 

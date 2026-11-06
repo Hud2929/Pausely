@@ -126,11 +126,11 @@ struct TopOpportunityCard: View {
     private var title: String {
         switch cardState {
         case .waste(let alert):
-            return "\(alert.subscription.name): possible waste"
+            return L10n.string("\(alert.subscription.name): possible waste")
         case .saving(let insight):
             return insight.title
         case .healthy:
-            return "Subscriptions look healthy"
+            return L10n.string("Subscriptions look healthy")
         }
     }
 
@@ -141,7 +141,7 @@ struct TopOpportunityCard: View {
         case .saving(let insight):
             return insight.description
         case .healthy:
-            return "No waste or overspend detected right now."
+            return L10n.string("No waste or overspend detected right now.")
         }
     }
 
@@ -173,6 +173,11 @@ struct WasteScoreCalloutCard: View {
     private var wasteCount: Int { insightsEngine.wasteAlerts.count }
 
     var body: some View {
+        // Only when there is something to see: with no waste found, the card above already says so.
+        if wasteCount > 0 { callout }
+    }
+
+    private var callout: some View {
         Button {
             NotificationCenter.default.post(name: .switchToAnalysisTab, object: nil)
         } label: {
@@ -188,22 +193,13 @@ struct WasteScoreCalloutCard: View {
                 }
 
                 VStack(alignment: .leading, spacing: 3) {
-                    if wasteCount > 0 {
-                        Text("We found \(wasteCount) waste \(wasteCount == 1 ? "issue" : "issues") in your subs")
-                            .font(.system(.subheadline, design: .rounded).weight(.semibold))
-                            .foregroundStyle(.white)
-                        Text("Tap to see what you could cut")
-                            .font(.system(.caption, design: .rounded))
-                            .foregroundStyle(Color.obsidianTextSecondary)
-                            .lineLimit(2)
-                    } else {
-                        Text("Hidden waste adds up fast")
-                            .font(.system(.subheadline, design: .rounded).weight(.semibold))
-                            .foregroundStyle(.white)
-                        Text("Tap to run a waste scan on your subscriptions")
-                            .font(.system(.caption, design: .rounded))
-                            .foregroundStyle(Color.obsidianTextSecondary)
-                    }
+                    Text("We found \(wasteCount) waste issues in your subscriptions")
+                        .font(.system(.subheadline, design: .rounded).weight(.semibold))
+                        .foregroundStyle(.white)
+                    Text("Tap to see what you could cut")
+                        .font(.system(.caption, design: .rounded))
+                        .foregroundStyle(Color.obsidianTextSecondary)
+                        .lineLimit(2)
                 }
 
                 Spacer(minLength: 0)

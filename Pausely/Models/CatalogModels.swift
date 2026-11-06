@@ -53,6 +53,16 @@ enum Region: String, Codable, CaseIterable {
 // MARK: - Subscription Category
 
 enum SubscriptionCategory: String, Codable, CaseIterable, Identifiable {
+
+    /// What to show for a stored category, which may be a raw value ("entertainment", from the catalog)
+    /// or a display name ("Entertainment", from the edit screen).
+    static func label(for stored: String?) -> String {
+        guard let stored, !stored.isEmpty else { return SubscriptionCategory.other.displayName }
+        let match = allCases.first {
+            $0.rawValue.caseInsensitiveCompare(stored) == .orderedSame || $0.displayName.caseInsensitiveCompare(stored) == .orderedSame
+        }
+        return match?.displayName ?? stored
+    }
     case entertainment
     case music
     case productivity

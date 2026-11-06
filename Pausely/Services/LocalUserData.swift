@@ -24,6 +24,7 @@ enum LocalUserData {
         LifecycleEventLog.shared.removeAll()
         PausePlanStore.shared.removeAll()
         await InboxScanner.shared.disconnectAll()
+        await PaymentManager.shared.setProGrant(false)
         UserDefaults.standard.removeObject(forKey: "lifecycle_last_run")
         UserDefaults.standard.removeObject(forKey: ownerKey)
         UNUserNotificationCenter.current().removeAllPendingNotificationRequests()

@@ -188,12 +188,8 @@ class RevolutionaryAuthManager: ObservableObject {
                 .limit(1)
                 .execute()
                 .value
-            if let profile = rows.first, profile.is_pro == true {
-                // Honor admin-granted pro — only set if not already active via StoreKit
-                if !PaymentManager.shared.isPremium {
-                    PaymentManager.shared.activatePremium(source: .referral)
-                }
-            }
+            // Admin-granted Pro follows the account: granted, or taken away when the flag is cleared.
+            await PaymentManager.shared.setProGrant(rows.first?.is_pro == true)
         } catch {
             PauselyLogger.error("Failed to check lifetime pro: \(error)", category: "auth")
         }

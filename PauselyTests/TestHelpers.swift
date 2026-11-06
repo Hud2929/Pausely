@@ -119,7 +119,7 @@ final class StoreSandbox {
         defaults = Dictionary(uniqueKeysWithValues: Self.defaultsKeys.compactMap { key in
             UserDefaults.standard.object(forKey: key).map { (key, $0) }
         })
-        SubscriptionStore.cloudWritesEnabled = false
+        SubscriptionStore.cloudSyncEnabled = false
         store.subscriptions = []
         (store.totalMonthlySpend, store.totalAnnualSpend, store.totalLifetimeSpend) = (0, 0, 0)
     }
@@ -138,6 +138,6 @@ final class StoreSandbox {
         WidgetDataStore.shared.publish(subscriptions: subscriptions)
         await SpotlightManager.shared.index(subscriptions: subscriptions).value
         await ReminderScheduler.shared.reschedule(subscriptions)
-        SubscriptionStore.cloudWritesEnabled = true
+        SubscriptionStore.cloudSyncEnabled = true
     }
 }

@@ -147,9 +147,13 @@ struct TierSelectionSheet: View {
         }
         .onAppear {
             withAnimation(.spring(response: 0.6, dampingFraction: 0.85)) { appeared = true }
-            // Auto-select best value tier
-            if let best = availableTierPricings.first(where: { $0.isBestValue }) {
-                selectedTier = best.tier
+            // Start on the plan most people have: one priced where they live, Individual first.
+            // (Not the "best value" plan, which is usually the dearest.)
+            let local = availableTierPricings.filter { $0.currencyCode == currencyManager.selectedCurrency }
+            if local.contains(where: { $0.tier == .individual }) {
+                selectedTier = .individual
+            } else if let firstLocal = local.first {
+                selectedTier = firstLocal.tier
             } else if uniqueTiers.contains(.individual) {
                 selectedTier = .individual
             } else if let first = uniqueTiers.first {
@@ -578,6 +582,7 @@ struct TierSelectionSheet: View {
                 .animation(.easeInOut(duration: 0.18), value: canAdd)
                 .animation(.easeInOut(duration: 0.18), value: hasFreeTrial)
             }
+            .accessibilityIdentifier("tierAddButton")
             .padding(.horizontal, 20)
             .padding(.top, 12)
             .padding(.bottom, 20)
@@ -705,9 +710,18 @@ struct PremiumTierRow: View {
                 Spacer()
 
                 if let pricing = tierPricing {
-                    Text("\(currencyManager.priceIndicator)\(currencyManager.formatCatalogPrice(pricing.monthlyPriceUSD, sourceCurrency: pricing.currencyCode))/mo")
-                        .font(.subheadline.weight(.semibold))
-                        .foregroundColor(.white)
+                    // The price as it will be saved (and shown on the list), in its own currency; when
+                    // that isn't the person's currency, roughly what it is in theirs underneath.
+                    VStack(alignment: .trailing, spacing: 2) {
+                        Text("\(MoneyFormat.string(pricing.monthlyPriceUSD, pricing.currencyCode))/mo")
+                            .font(.subheadline.weight(.semibold))
+                            .foregroundColor(.white)
+                        if pricing.currencyCode != currencyManager.selectedCurrency {
+                            Text(verbatim: "≈ \(currencyManager.formatCatalogPrice(pricing.monthlyPriceUSD, sourceCurrency: pricing.currencyCode))")
+                                .font(.caption2.weight(.medium))
+                                .foregroundColor(.white.opacity(0.45))
+                        }
+                    }
                 }
             }
             .padding(16)

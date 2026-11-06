@@ -20,11 +20,11 @@ class SubscriptionStore: ObservableObject {
     private var fetchTask: Task<Void, Never>?
 
     /// Tests switch this off: every change still lands on the device and is queued for sync, exactly as
-    /// when offline, and the live database is never touched.
-    static var cloudWritesEnabled = true
+    /// when offline, nothing is fetched, and the live database is never touched.
+    static var cloudSyncEnabled = true
 
     private func requireCloud() throws {
-        guard Self.cloudWritesEnabled else { throw DatabaseError.offlineMode }
+        guard Self.cloudSyncEnabled else { throw DatabaseError.offlineMode }
     }
 
     private var currencyCancellables: Set<AnyCancellable> = []
@@ -34,8 +34,16 @@ class SubscriptionStore: ObservableObject {
         #if DEBUG
         // UI tests: start from the demo list on every launch and never write to the cloud.
         if ProcessInfo.processInfo.arguments.contains("--fresh-demo-data") {
-            Self.cloudWritesEnabled = false
+            Self.cloudSyncEnabled = false
             subscriptions = Self.makeDemoSubscriptions()
+            calculateTotals()
+            saveToCache()
+        } else if ProcessInfo.processInfo.arguments.contains("--empty-demo-data") {
+            // A new person's empty list (an empty array, so the demo data isn't loaded in its place)
+            // and no history from earlier runs.
+            Self.cloudSyncEnabled = false
+            LifecycleEventLog.shared.removeAll()
+            subscriptions = []
             calculateTotals()
             saveToCache()
         }
@@ -57,7 +65,19 @@ class SubscriptionStore: ObservableObject {
     
     // MARK: - Data Fetching
     
+    /// The account whose list was last fetched on this iPhone (see SubscriptionSyncMerge).
+    static let syncedUserKey = "subscriptions_synced_user"
+
+    private func enqueue(_ type: SyncOperationType, _ subscription: Subscription, userId: UUID?) {
+        var record = SubscriptionRecord(from: subscription)
+        record.user_id = userId
+        if let payload = try? JSONEncoder().encode(record) {
+            SyncQueue.shared.enqueue(SyncOperation(type: type, subscriptionId: subscription.id, payload: payload))
+        }
+    }
+
     func fetchSubscriptions(force: Bool = false) async {
+        guard Self.cloudSyncEnabled else { return }
         fetchTask?.cancel()
 
         if !force, let lastFetch = lastFetchDate,
@@ -80,6 +100,9 @@ class SubscriptionStore: ObservableObject {
             }
             let userId = session.user.id
 
+            // This iPhone's queued changes go up first, so the server copy below already has them.
+            await SyncQueue.shared.processQueue()
+
             let response: [SubscriptionRecord] = try await client
                 .from("subscriptions")
                 .select()
@@ -88,15 +111,14 @@ class SubscriptionStore: ObservableObject {
                 .execute()
                 .value
 
-            let fetchedSubscriptions = response.map { $0.toSubscription() }
+            let firstSync = UserDefaults.standard.string(forKey: Self.syncedUserKey) != userId.uuidString
+            let merge = SubscriptionSyncMerge.merge(server: response.map { $0.toSubscription() },
+                                                    local: self.subscriptions,
+                                                    pending: SyncQueue.shared.pendingOperations,
+                                                    firstSyncForUser: firstSync)
 
             await MainActor.run {
-                // Don't wipe locally-added subscriptions if Supabase returns empty
-                // (user may be in demo/offline mode with locally-tracked subs)
-                if fetchedSubscriptions.isEmpty && !self.subscriptions.isEmpty {
-                    return
-                }
-                self.subscriptions = fetchedSubscriptions
+                self.subscriptions = merge.subscriptions
                 self.calculateTotals()
                 self.lastFetchDate = Date()
                 self.lastErrorMessage = nil
@@ -107,8 +129,19 @@ class SubscriptionStore: ObservableObject {
                 PriceIncreaseMonitor.shared.checkForPriceChanges(subscriptions: self.subscriptions)
             }
 
-            // Process pending sync operations after successful fetch
-            await SyncQueue.shared.processQueue()
+            UserDefaults.standard.set(userId.uuidString, forKey: Self.syncedUserKey)
+
+            // Send up what only this iPhone had, and renewal dates the server was missing.
+            let queuedCreates = Set(SyncQueue.shared.pendingOperations.filter { $0.type == .create }.map(\.subscriptionId))
+            for sub in merge.upload where !queuedCreates.contains(sub.id) {
+                enqueue(.create, sub, userId: userId)
+            }
+            for sub in merge.backfill {
+                enqueue(.update, sub, userId: nil)
+            }
+            if !merge.upload.isEmpty || !merge.backfill.isEmpty {
+                await SyncQueue.shared.processQueue()
+            }
             await SubscriptionLifecycle.shared.run()
 
         } catch {
@@ -265,11 +298,8 @@ class SubscriptionStore: ObservableObject {
             return true
         } catch {
             os_log("Error adding subscription to cloud: %{public}@", log: .default, type: .error, error.localizedDescription)
-            // 3. Enqueue for retry
-            if let payload = try? JSONEncoder().encode(SubscriptionRecord(from: localSub)) {
-                let op = SyncOperation(type: .create, subscriptionId: localSub.id, payload: payload)
-                SyncQueue.shared.enqueue(op)
-            }
+            // 3. Enqueue for retry, under the signed-in person when there is one (else whoever signs in).
+            enqueue(.create, localSub, userId: client.auth.currentSession?.user.id)
             self.lastErrorMessage = L10n.string("Saved on this iPhone. It will sync when you're back online.")
             return false
         }
@@ -436,32 +466,28 @@ class SubscriptionStore: ObservableObject {
         await ReminderScheduler.shared.reschedule(self.subscriptions)
 
         // 2. Attempt Supabase write
-        struct ResumePayload: Encodable {
-            let paused_until: String?
-        }
         do {
             try requireCloud()
             try await client
                 .from("subscriptions")
-                .update(ResumePayload(paused_until: nil))
+                .update(ClearPausePayload())
                 .eq("id", value: id)
                 .execute()
         } catch {
             os_log("Error resuming subscription in cloud: %{public}@", log: .default, type: .error, error.localizedDescription)
-            // 3. Enqueue for retry
-            if let payload = try? JSONEncoder().encode(ResumePayload(paused_until: nil)) {
-                let op = SyncOperation(type: .resume, subscriptionId: id, payload: payload)
-                SyncQueue.shared.enqueue(op)
-            }
+            self.lastErrorMessage = L10n.string("Saved on this iPhone. It will sync when you're back online.")
+            SyncQueue.shared.enqueue(SyncOperation(type: .resume, subscriptionId: id, payload: Data()))
         }
     }
-    
+
     /// Removes every subscription from this device (account deletion, or a different person signing in).
     /// The server copy is not touched.
     func removeAllLocalData() {
         subscriptions = []
         calculateTotals()
         AppSettings.shared.cachedSubscriptions = Data()
+        SyncQueue.shared.removeAll()
+        UserDefaults.standard.removeObject(forKey: Self.syncedUserKey)
         WidgetDataStore.shared.publish(subscriptions: [])
         SpotlightManager.shared.index(subscriptions: [])
         lastFetchDate = nil

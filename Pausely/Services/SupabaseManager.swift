@@ -109,10 +109,41 @@ struct SubscriptionRecord: Codable {
         self.waste_score = subscription.wasteScore
         self.notify_before_days = subscription.notifyBeforeDays
         self.trial_ends_at = subscription.trialEndsAt?.iso8601String
+        self.next_billing_date = subscription.nextBillingDate?.iso8601String
+        self.paused_until = subscription.pausedUntil?.iso8601String
         self.status = subscription.status.rawValue
         self.is_detected = subscription.isDetected
         self.can_pause = subscription.canPause
         self.pause_url = subscription.pauseUrl
+    }
+
+    /// Dates that can be cleared are always sent, as null when empty, so clearing one on this iPhone
+    /// clears it on the server. Ids and timestamps the server owns are left out when empty.
+    func encode(to encoder: Encoder) throws {
+        var c = encoder.container(keyedBy: CodingKeys.self)
+        try c.encodeIfPresent(id, forKey: .id)
+        try c.encodeIfPresent(user_id, forKey: .user_id)
+        try c.encode(name, forKey: .name)
+        try c.encodeIfPresent(description, forKey: .description)
+        try c.encodeIfPresent(logo_url, forKey: .logo_url)
+        try c.encodeIfPresent(category, forKey: .category)
+        try c.encode(amount, forKey: .amount)
+        try c.encode(currency, forKey: .currency)
+        try c.encode(billing_frequency, forKey: .billing_frequency)
+        try c.encode(next_billing_date, forKey: .next_billing_date)
+        try c.encode(monthly_usage_minutes, forKey: .monthly_usage_minutes)
+        try c.encodeIfPresent(cost_per_hour, forKey: .cost_per_hour)
+        try c.encodeIfPresent(roi_score, forKey: .roi_score)
+        try c.encodeIfPresent(waste_score, forKey: .waste_score)
+        try c.encodeIfPresent(notify_before_days, forKey: .notify_before_days)
+        try c.encode(trial_ends_at, forKey: .trial_ends_at)
+        try c.encode(status, forKey: .status)
+        try c.encode(is_detected, forKey: .is_detected)
+        try c.encode(can_pause, forKey: .can_pause)
+        try c.encodeIfPresent(pause_url, forKey: .pause_url)
+        try c.encode(paused_until, forKey: .paused_until)
+        try c.encodeIfPresent(created_at, forKey: .created_at)
+        try c.encodeIfPresent(updated_at, forKey: .updated_at)
     }
     
     func toSubscription() -> Subscription {
@@ -133,6 +164,8 @@ struct SubscriptionRecord: Codable {
         sub.wasteScore = waste_score
         sub.notifyBeforeDays = notify_before_days ?? 3
         sub.trialEndsAt = trial_ends_at?.iso8601Date
+        sub.nextBillingDate = next_billing_date?.iso8601Date
+        sub.pausedUntil = paused_until?.iso8601Date
         sub.status = SubscriptionStatus(rawValue: status) ?? .active
         sub.isDetected = is_detected
         sub.canPause = can_pause
@@ -153,9 +186,23 @@ extension Date {
 }
 
 extension String {
+    /// Timestamps as the database returns them, with or without fractional seconds
+    /// ("2026-03-04T17:30:00+00:00", "2026-03-04T17:30:00.123456+00:00").
     var iso8601Date: Date? {
-        let formatter = ISO8601DateFormatter()
-        return formatter.date(from: self)
+        let plain = ISO8601DateFormatter()
+        if let date = plain.date(from: self) { return date }
+        let fractional = ISO8601DateFormatter()
+        fractional.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
+        return fractional.date(from: self)
+    }
+}
+
+/// `{"paused_until": null}`: resuming must send the null, which a plain optional would leave out.
+struct ClearPausePayload: Encodable {
+    private enum CodingKeys: String, CodingKey { case paused_until }
+    func encode(to encoder: Encoder) throws {
+        var c = encoder.container(keyedBy: CodingKeys.self)
+        try c.encodeNil(forKey: .paused_until)
     }
 }
 

@@ -5,7 +5,6 @@ struct ArtisticSubscriptionCard: View {
     let index: Int
     let onTap: () -> Void
     @ObservedObject private var currencyManager = CurrencyManager.shared
-    @State private var isPressed = false
     @State private var appear = false
 
     private var cardAccessibilityLabel: String {
@@ -102,21 +101,13 @@ struct ArtisticSubscriptionCard: View {
                             .stroke(Color.white.opacity(0.06), lineWidth: 1)
                     )
             )
-            .scaleEffect(isPressed ? 0.98 : 1)
             .opacity(appear ? 1 : 0)
             .offset(y: appear ? 0 : 16)
         }
-        .buttonStyle(PlainButtonStyle())
-        .simultaneousGesture(
-            DragGesture(minimumDistance: 0)
-                .onChanged { _ in
-                    withAnimation(.easeInOut(duration: 0.1)) { isPressed = true }
-                }
-                .onEnded { _ in
-                    withAnimation(.easeInOut(duration: 0.15)) { isPressed = false }
-                }
-        )
+        // A button style for the press effect: a drag gesture here fought the List's taps and swipes.
+        .buttonStyle(CardPressStyle())
         .accessibilityElement(children: .ignore)
+        .accessibilityAddTraits(.isButton)
         .accessibilityLabel(cardAccessibilityLabel)
         .accessibilityHint("Double tap to view details and manage")
         .onAppear {
@@ -124,5 +115,13 @@ struct ArtisticSubscriptionCard: View {
                 appear = true
             }
         }
+    }
+}
+
+private struct CardPressStyle: ButtonStyle {
+    func makeBody(configuration: Configuration) -> some View {
+        configuration.label
+            .scaleEffect(configuration.isPressed ? 0.98 : 1)
+            .animation(.easeInOut(duration: 0.12), value: configuration.isPressed)
     }
 }

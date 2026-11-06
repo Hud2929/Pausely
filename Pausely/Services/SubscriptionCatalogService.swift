@@ -44,7 +44,9 @@ final class SubscriptionCatalogService: ObservableObject {
 
     /// Set catalog and rebuild lookup indexes
     private func setCatalog(_ entries: [CatalogEntry]) {
-        catalog = entries
+        // One entry per service name: the sources overlap ("ChatGPT Plus" appeared under two categories).
+        var seen = Set<String>()
+        catalog = entries.filter { seen.insert($0.name.trimmingCharacters(in: .whitespaces).lowercased()).inserted }
         rebuildIndexes()
     }
 

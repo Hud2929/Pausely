@@ -377,6 +377,40 @@
         }
       }
     },
+    "%@: possible waste": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@: هدر محتمل"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@: möglicherweise verschwendet"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@: posible gasto innecesario"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ : gaspillage possible"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@：無駄の可能性"
+          }
+        }
+      }
+    },
     "%lld connected": {
       "localizations": {
         "ar": {
@@ -869,6 +903,40 @@
         }
       }
     },
+    "All": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "الكل"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Alle"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Todas"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tous"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "すべて"
+          }
+        }
+      }
+    },
     "Amount varies a lot, which looks more like orders than a plan": {
       "localizations": {
         "ar": {
@@ -1001,6 +1069,40 @@
           "stringUnit": {
             "state": "translated",
             "value": "アプリパスワード"
+          }
+        }
+      }
+    },
+    "A–Z": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "أ–ي"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A–Z"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A–Z"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A–Z"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A–Z"
           }
         }
       }
@@ -2799,6 +2901,40 @@
         }
       }
     },
+    "Enter a name and an amount.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "أدخل اسمًا ومبلغًا."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Geben Sie einen Namen und einen Betrag ein."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Escribe un nombre y un importe."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Saisissez un nom et un montant."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "名前と金額を入力してください。"
+          }
+        }
+      }
+    },
     "Enter the app password.": {
       "localizations": {
         "ar": {
@@ -3105,6 +3241,148 @@
         }
       }
     },
+    "Free covers %lld subscriptions. Pro tracks all of them.": {
+      "localizations": {
+        "en": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Free covers %lld subscription. Pro tracks all of them."
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Free covers %lld subscriptions. Pro tracks all of them."
+                }
+              }
+            }
+          }
+        },
+        "de": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Kostenlos: %lld Abo. Mit Pro verfolgst du alle."
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Kostenlos: %lld Abos. Mit Pro verfolgst du alle."
+                }
+              }
+            }
+          }
+        },
+        "es": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "La versión gratuita incluye %lld suscripción. Pro las sigue todas."
+                }
+              },
+              "many": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "La versión gratuita incluye %lld suscripciones. Pro las sigue todas."
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "La versión gratuita incluye %lld suscripciones. Pro las sigue todas."
+                }
+              }
+            }
+          }
+        },
+        "fr": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "La version gratuite couvre %lld abonnement. Pro les suit tous."
+                }
+              },
+              "many": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "La version gratuite couvre %lld abonnements. Pro les suit tous."
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "La version gratuite couvre %lld abonnements. Pro les suit tous."
+                }
+              }
+            }
+          }
+        },
+        "ja": {
+          "variations": {
+            "plural": {
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "無料プランは%lld件まで。Proならすべて管理できます。"
+                }
+              }
+            }
+          }
+        },
+        "ar": {
+          "variations": {
+            "plural": {
+              "zero": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "الخطة المجانية تشمل %lld اشتراك. Pro يتابعها كلها."
+                }
+              },
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "الخطة المجانية تشمل اشتراكًا واحدًا (%lld). Pro يتابعها كلها."
+                }
+              },
+              "two": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "الخطة المجانية تشمل اشتراكين (%lld). Pro يتابعها كلها."
+                }
+              },
+              "few": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "الخطة المجانية تشمل %lld اشتراكات. Pro يتابعها كلها."
+                }
+              },
+              "many": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "الخطة المجانية تشمل %lld اشتراكًا. Pro يتابعها كلها."
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "الخطة المجانية تشمل %lld اشتراك. Pro يتابعها كلها."
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "Free trial": {
       "localizations": {
         "ar": {
@@ -3373,6 +3651,40 @@
           "stringUnit": {
             "state": "translated",
             "value": "「サインインとセキュリティ」から「App用パスワード」を開きます。"
+          }
+        }
+      }
+    },
+    "Highest Cost": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "الأعلى تكلفة"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Höchste Kosten"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mayor costo"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Coût le plus élevé"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "高い順"
           }
         }
       }
@@ -4347,6 +4659,40 @@
           "stringUnit": {
             "state": "translated",
             "value": "サインインコードが返されませんでした。"
+          }
+        }
+      }
+    },
+    "No waste or overspend detected right now.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "لا يوجد هدر أو إنفاق زائد حاليًا."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Derzeit wurde keine Verschwendung und kein zu hoher Betrag erkannt."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Por ahora no hay gastos innecesarios ni excesivos."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aucun gaspillage ni dépense excessive détecté pour le moment."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "現在、無駄や使いすぎは見つかっていません。"
           }
         }
       }
@@ -5433,6 +5779,40 @@
         }
       }
     },
+    "Renewal Date": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "تاريخ التجديد"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Verlängerungsdatum"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fecha de renovación"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Date de renouvellement"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "更新日"
+          }
+        }
+      }
+    },
     "Same amount each time (%@)": {
       "localizations": {
         "ar": {
@@ -5881,6 +6261,40 @@
           "stringUnit": {
             "state": "translated",
             "value": "停止しました。"
+          }
+        }
+      }
+    },
+    "Subscriptions look healthy": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "اشتراكاتك تبدو سليمة"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ihre Abonnements sehen gut aus"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tus suscripciones están en orden"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Vos abonnements sont en bonne santé"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "サブスクリプションは健全です"
           }
         }
       }
@@ -6531,6 +6945,40 @@
         }
       }
     },
+    "TMR": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "غدًا"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "MORGEN"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "MAÑANA"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "DEMAIN"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "明日"
+          }
+        }
+      }
+    },
     "Trial ends around %@": {
       "localizations": {
         "ar": {
@@ -6799,6 +7247,136 @@
           "stringUnit": {
             "state": "translated",
             "value": "バージョン"
+          }
+        }
+      }
+    },
+    "We found %lld waste issues in your subscriptions": {
+      "localizations": {
+        "en": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "We found %lld waste issue in your subscriptions"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "We found %lld waste issues in your subscriptions"
+                }
+              }
+            }
+          }
+        },
+        "de": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Wir haben %lld Fall von Verschwendung in Ihren Abonnements gefunden"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Wir haben %lld Fälle von Verschwendung in Ihren Abonnements gefunden"
+                }
+              }
+            }
+          }
+        },
+        "es": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Encontramos %lld gasto innecesario en tus suscripciones"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Encontramos %lld gastos innecesarios en tus suscripciones"
+                }
+              }
+            }
+          }
+        },
+        "fr": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Nous avons trouvé %lld gaspillage dans vos abonnements"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Nous avons trouvé %lld gaspillages dans vos abonnements"
+                }
+              }
+            }
+          }
+        },
+        "ja": {
+          "variations": {
+            "plural": {
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "サブスクリプションに無駄が%lld件見つかりました"
+                }
+              }
+            }
+          }
+        },
+        "ar": {
+          "variations": {
+            "plural": {
+              "zero": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "لم نجد هدرًا في اشتراكاتك (%lld)"
+                }
+              },
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "وجدنا %lld حالة هدر في اشتراكاتك"
+                }
+              },
+              "two": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "وجدنا %lld حالتي هدر في اشتراكاتك"
+                }
+              },
+              "few": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "وجدنا %lld حالات هدر في اشتراكاتك"
+                }
+              },
+              "many": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "وجدنا %lld حالة هدر في اشتراكاتك"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "وجدنا %lld حالة هدر في اشتراكاتك"
+                }
+              }
+            }
           }
         }
       }
@@ -43622,48 +44200,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "لا نبيع أو نتاجر أو ننقل معلوماتك الشخصية إلى أطراف ثالثة، إلا:\n\n• بموافقتك الصريحة\n• للامتثال للالتزامات القانونية\n• لحماية حقوقنا ومنع الاحتيال"
-          }
-        }
-      }
-    },
-    "We found %lld waste %@ in your subs": {
-      "comment": "A subheading that describes the number of waste issues found in the user's subscriptions. The argument is the number of issues.",
-      "isCommentAutoGenerated": true,
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "new",
-            "value": "We found %1$lld waste %2$@ in your subs"
-          }
-        },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Wir haben %lld Verschwendung %@ in Ihren Abonnements gefunden"
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Encontramos %lld desperdicio %@ en sus suscripciones"
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Nous avons trouvé %lld gaspillage %@ dans vos abonnements"
-          }
-        },
-        "ja": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "サブスクリプションで%lld件の無駄%@を見つけました"
-          }
-        },
-        "ar": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "وجدنا %lld هدرًا %@ في اشتراكاتك"
           }
         }
       }

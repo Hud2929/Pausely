@@ -6,6 +6,8 @@ struct LuxuryAddSubscriptionView: View {
     @State private var amount = ""
     @State private var frequency: BillingFrequency = .monthly
     @State private var category: SubscriptionCategory = .other
+    @State private var nextPayment = LuxuryAddSubscriptionView.onePeriod(after: Date(), .monthly)
+    @State private var nextPaymentEdited = false
     @ObservedObject private var store = SubscriptionStore.shared
     @ObservedObject private var currencyManager = CurrencyManager.shared
     @FocusState private var focusedField: Field?
@@ -94,6 +96,26 @@ struct LuxuryAddSubscriptionView: View {
                             .pickerStyle(.segmented)
                             .padding()
                             .glass(intensity: 0.2, tint: .white)
+                            .onChange(of: frequency) { _, newValue in
+                                if !nextPaymentEdited { nextPayment = Self.onePeriod(after: Date(), newValue) }
+                            }
+                        }
+
+                        // Next payment: without a date there is nothing to remind about.
+                        VStack(alignment: .leading, spacing: 8) {
+                            Text("Next payment")
+                                .font(AppTypography.labelLarge)
+                                .foregroundStyle(.white.opacity(0.6))
+                                .textCase(.uppercase)
+
+                            DatePicker("Next payment", selection: Binding(get: { nextPayment }, set: { nextPayment = $0; nextPaymentEdited = true }),
+                                       in: Calendar.current.startOfDay(for: Date())..., displayedComponents: .date)
+                                .labelsHidden()
+                                .frame(maxWidth: .infinity, alignment: .leading)
+                                .padding()
+                                .glass(intensity: 0.2, tint: .white)
+                                .tint(.accentMint)
+                                .accessibilityIdentifier("nextPaymentPicker")
                         }
 
                         // Category
@@ -149,18 +171,37 @@ struct LuxuryAddSubscriptionView: View {
         }
     }
 
+    /// The same date one billing period later (the default next payment for a new subscription).
+    static func onePeriod(after date: Date, _ frequency: BillingFrequency, calendar: Calendar = .current) -> Date {
+        let step: DateComponents
+        switch frequency {
+        case .weekly:     step = DateComponents(day: 7)
+        case .biweekly:   step = DateComponents(day: 14)
+        case .monthly:    step = DateComponents(month: 1)
+        case .quarterly:  step = DateComponents(month: 3)
+        case .semiannual: step = DateComponents(month: 6)
+        case .yearly:     step = DateComponents(year: 1)
+        }
+        return calendar.date(byAdding: step, to: date) ?? date
+    }
+
     func saveSubscription() {
-        guard let price = Double(amount), !name.isEmpty else {
+        let trimmedName = name.trimmingCharacters(in: .whitespacesAndNewlines)
+        // "9,99" and "9.99" both work, and the amount stays an exact decimal.
+        guard !trimmedName.isEmpty, let price = SubscriptionEditDraft.parseAmount(amount), price > 0 else {
             HapticStyle.warning.trigger()
+            errorMessage = L10n.string("Enter a name and an amount.")
+            showError = true
             return
         }
         HapticStyle.success.trigger()
         let newSub = Subscription(
-            name: name,
+            name: trimmedName,
             category: category.rawValue,
-            amount: Decimal(price),
+            amount: price,
             currency: currencyManager.selectedCurrency,
-            billingFrequency: frequency
+            billingFrequency: frequency,
+            nextBillingDate: nextPayment
         )
         Task {
             do {

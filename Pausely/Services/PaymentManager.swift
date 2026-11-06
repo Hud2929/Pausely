@@ -195,11 +195,27 @@ final class PaymentManager: ObservableObject {
             }
         }
 
-        // Only override persisted tier if StoreKit has an active entitlement.
-        // If StoreKit is empty (e.g. referral Pro), keep the persisted tier.
-        if hasStoreKitEntitlement {
-            currentTier = storeKitTier
-        }
+        currentTier = Self.resolveTier(storeKit: hasStoreKitEntitlement ? storeKitTier : nil, hasGrant: hasProGrant)
+    }
+
+    /// Pro comes from an active App Store subscription (a billing grace period counts: StoreKit keeps
+    /// it in `currentEntitlements`) or from an admin grant on the account. A subscription that ended
+    /// or was refunded leaves only the grant; without one the tier is Free.
+    static func resolveTier(storeKit: SubscriptionTier?, hasGrant: Bool) -> SubscriptionTier {
+        if let storeKit, storeKit > .free { return storeKit }
+        return hasGrant ? .pro : .free
+    }
+
+    // MARK: - Admin grant (profiles.is_pro), kept apart from StoreKit
+
+    private let proGrantKey = "pausely_pro_grant"
+
+    private var hasProGrant: Bool { UserDefaults.standard.bool(forKey: proGrantKey) }
+
+    /// Called with the account's `is_pro` on sign-in, and with false on sign-out or account deletion.
+    func setProGrant(_ active: Bool) async {
+        UserDefaults.standard.set(active, forKey: proGrantKey)
+        await updateCurrentEntitlements()
     }
     
     private func tierForProduct(_ productID: String) -> SubscriptionTier {
@@ -239,7 +255,7 @@ final class PaymentManager: ObservableObject {
             case .storeKitMonthly, .storeKitAnnual:
                 await updateCurrentEntitlements()
             case .referral, .promoCode:
-                currentTier = .pro
+                await setProGrant(true)
             }
         }
     }

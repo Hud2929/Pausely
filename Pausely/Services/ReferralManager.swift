@@ -161,14 +161,11 @@ class ReferralManager: ObservableObject {
         
         // Try server validation
         do {
-            let response: [ReferralData] = try await client
-                .from("referral_codes")
-                .select()
-                .eq("code", value: uppercasedCode)
+            // Only whether the code exists: the referral table itself isn't readable.
+            let isValid: Bool = try await client
+                .rpc("referral_code_exists", params: ["p_code": uppercasedCode])
                 .execute()
                 .value
-            
-            let isValid = !response.isEmpty
             
             // Cache valid code locally for offline use
             if isValid {
@@ -206,7 +203,7 @@ class ReferralManager: ObservableObject {
             id: UUID().uuidString,
             referrerCode: code.uppercased(),
             referredUserId: userId,
-            referredUserEmail: email,
+            referredUserEmail: nil,   // never shared with the referrer
             status: .pending,
             createdAt: Date(),
             convertedAt: nil

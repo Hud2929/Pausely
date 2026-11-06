@@ -26,7 +26,7 @@ struct SubscriptionEditView: View {
 
     private var categoryOptions: [String] {
         var options = SubscriptionCategory.allCases.map(\.displayName)
-        if let current = draft.category, !options.contains(current) { options.insert(current, at: 0) }
+        if let current = draft.category, !options.contains(SubscriptionCategory.label(for: current)) { options.insert(current, at: 0) }
         return options
     }
 
@@ -232,7 +232,7 @@ struct SubscriptionEditView: View {
                         Button {
                             draft.category = option
                         } label: {
-                            if option == draft.category {
+                            if option == SubscriptionCategory.label(for: draft.category) {
                                 Label(option, systemImage: "checkmark")
                             } else {
                                 Text(option)
@@ -240,9 +240,9 @@ struct SubscriptionEditView: View {
                         }
                     }
                 } label: {
-                    valueLabel(draft.category ?? "Other")
+                    valueLabel(SubscriptionCategory.label(for: draft.category))
                 }
-                .accessibilityLabel("Category, \(draft.category ?? "Other")")
+                .accessibilityLabel("Category, \(SubscriptionCategory.label(for: draft.category))")
             }
 
             divider

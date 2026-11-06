@@ -30,18 +30,42 @@ struct PremiumSubscriptionsView: View {
     }
 
     enum FilterType: String, CaseIterable {
-        case all = "All"
-        case active = "Active"
-        case upcoming = "Upcoming"
+        case all, active, upcoming
+
+        var title: String {
+            switch self {
+            case .all: return L10n.string("All")
+            case .active: return L10n.string("Active")
+            case .upcoming: return L10n.string("Upcoming")
+            }
+        }
     }
 
     enum SortOrder: String, CaseIterable {
-        case renewalDate = "Renewal Date"
-        case highestCost = "Highest Cost"
-        case alphabetical = "A–Z"
+        case renewalDate, highestCost, alphabetical
+
+        var title: String {
+            switch self {
+            case .renewalDate: return L10n.string("Renewal Date")
+            case .highestCost: return L10n.string("Highest Cost")
+            case .alphabetical: return L10n.string("A–Z")
+            }
+        }
     }
 
     @State private var sortOrder: SortOrder = .renewalDate
+    @State private var pendingRemoval: Subscription?
+
+    /// Still charging: active or in a trial, and not paused. Cancelled and expired ones aren't "active".
+    static func isLive(_ subscription: Subscription) -> Bool {
+        (subscription.status == .active || subscription.status == .trial) && !subscription.isPaused
+    }
+
+    /// Renews within the next week (never a date already past).
+    static func isUpcoming(_ subscription: Subscription) -> Bool {
+        guard isLive(subscription), let days = subscription.daysUntilRenewal else { return false }
+        return (0...7).contains(days)
+    }
 
     var filteredSubscriptions: [Subscription] {
         var result = store.subscriptions
@@ -52,13 +76,18 @@ struct PremiumSubscriptionsView: View {
 
         switch selectedFilter {
         case .all: break
-        case .active: result = result.filter { !$0.isPaused }
-        case .upcoming: result = result.filter { ($0.daysUntilRenewal ?? 999) <= 7 }
+        case .active: result = result.filter(Self.isLive)
+        case .upcoming: result = result.filter(Self.isUpcoming)
         }
 
         switch sortOrder {
         case .renewalDate:
-            result.sort { ($0.daysUntilRenewal ?? 999) < ($1.daysUntilRenewal ?? 999) }
+            // Next renewal first; subscriptions that no longer renew go last.
+            let key: (Subscription) -> Int = { sub in
+                guard Self.isLive(sub), let days = sub.daysUntilRenewal, days >= 0 else { return Int.max }
+                return days
+            }
+            result.sort { key($0) < key($1) }
         case .highestCost:
             result.sort { $0.monthlyCost > $1.monthlyCost }
         case .alphabetical:
@@ -90,39 +119,48 @@ struct PremiumSubscriptionsView: View {
                     }
                     .padding(.top, 40)
                 } else {
-                    ScrollView(showsIndicators: false) {
-                        LazyVStack(spacing: 8) {
-                            ForEach(Array(filteredSubscriptions.enumerated()), id: \.element.id) { index, subscription in
-                                ArtisticSubscriptionCard(
-                                    subscription: subscription,
-                                    index: index,
-                                    onTap: { activeSheet = .detail(subscription) }
-                                )
-                                .padding(.horizontal, 20)
-                                .swipeActions(edge: .trailing, allowsFullSwipe: false) {
-                                    Button(role: .destructive) {
-                                        HapticStyle.heavy.trigger()
-                                        Task {
-                                            try? await SubscriptionStore.shared.deleteSubscription(id: subscription.id)
-                                        }
-                                    } label: {
-                                        Label("Delete", systemImage: "trash")
-                                    }
+                    // A List, not a ScrollView: swipe actions only work on List rows.
+                    List {
+                        ForEach(Array(filteredSubscriptions.enumerated()), id: \.element.id) { index, subscription in
+                            ArtisticSubscriptionCard(
+                                subscription: subscription,
+                                index: index,
+                                onTap: { activeSheet = .detail(subscription) }
+                            )
+                            .listRowInsets(EdgeInsets(top: 4, leading: 20, bottom: 4, trailing: 20))
+                            .listRowBackground(Color.clear)
+                            .listRowSeparator(.hidden)
+                            .swipeActions(edge: .trailing, allowsFullSwipe: false) {
+                                // Not role: .destructive, which would animate the row away before the
+                                // person confirms.
+                                Button {
+                                    HapticStyle.heavy.trigger()
+                                    pendingRemoval = subscription
+                                } label: {
+                                    Label("Remove", systemImage: "trash")
                                 }
-                                .swipeActions(edge: .leading, allowsFullSwipe: false) {
-                                    Button {
-                                        HapticStyle.medium.trigger()
-                                        activeSheet = .detail(subscription)
-                                    } label: {
-                                        Label("Details", systemImage: "info.circle")
-                                    }
-                                    .tint(Color.accentMint)
+                                .tint(Color.semanticDestructive)
+                            }
+                            .swipeActions(edge: .leading, allowsFullSwipe: true) {
+                                Button {
+                                    HapticStyle.medium.trigger()
+                                    activeSheet = .detail(subscription)
+                                } label: {
+                                    Label("Details", systemImage: "info.circle")
                                 }
+                                .tint(Color.accentMint)
                             }
                         }
-                        .padding(.top, 20)
-                        .padding(.bottom, 100)
+                        // Room above the floating tab bar.
+                        Color.clear
+                            .frame(height: 100)
+                            .listRowBackground(Color.clear)
+                            .listRowSeparator(.hidden)
                     }
+                    .listStyle(.plain)
+                    .scrollContentBackground(.hidden)
+                    .scrollIndicators(.hidden)
+                    .contentMargins(.top, 16, for: .scrollContent)
                 }
             }
         }
@@ -135,6 +173,17 @@ struct PremiumSubscriptionsView: View {
             case .detail(let subscription):
                 SubscriptionManagementView(subscription: subscription)
             }
+        }
+        .confirmationDialog(Text("Remove \"\(pendingRemoval?.name ?? "")\"?"),
+                            isPresented: Binding(get: { pendingRemoval != nil }, set: { if !$0 { pendingRemoval = nil } }),
+                            titleVisibility: .visible,
+                            presenting: pendingRemoval) { subscription in
+            Button("Remove", role: .destructive) {
+                Task { try? await store.deleteSubscription(id: subscription.id) }
+            }
+            Button("Keep", role: .cancel) {}
+        } message: { _ in
+            Text("This only removes it from Pausely. It won't cancel the subscription itself.")
         }
         .onChange(of: deepLinkedSubscription) { oldValue, newValue in
             if oldValue == nil, let subscription = newValue {
@@ -156,7 +205,7 @@ struct PremiumSubscriptionsView: View {
                     .font(.system(.title2, design: .rounded).weight(.bold))
                     .foregroundStyle(Color.accentMint)
 
-                let count = store.subscriptions.filter { !$0.isPaused }.count
+                let count = store.subscriptions.filter(Self.isLive).count
                 Text("\(count) active")
                     .font(.system(.caption, design: .rounded))
                     .foregroundStyle(Color.obsidianTextSecondary)
@@ -168,7 +217,11 @@ struct PremiumSubscriptionsView: View {
             Menu {
                 ForEach(SortOrder.allCases, id: \.self) { order in
                     Button(action: { withAnimation { sortOrder = order } }) {
-                        Label(order.rawValue, systemImage: sortOrder == order ? "checkmark" : "")
+                        if sortOrder == order {
+                            Label(order.title, systemImage: "checkmark")
+                        } else {
+                            Text(order.title)
+                        }
                     }
                 }
             } label: {
@@ -229,7 +282,7 @@ struct PremiumSubscriptionsView: View {
                 HStack(spacing: 10) {
                     ForEach(FilterType.allCases, id: \.self) { filter in
                         SubscriptionFilterPill(
-                            title: filter.rawValue,
+                            title: filter.title,
                             count: countForFilter(filter),
                             isSelected: selectedFilter == filter
                         ) {
@@ -249,9 +302,9 @@ struct PremiumSubscriptionsView: View {
         case .all:
             return store.subscriptions.count
         case .active:
-            return store.subscriptions.filter { !$0.isPaused }.count
+            return store.subscriptions.filter(Self.isLive).count
         case .upcoming:
-            return store.subscriptions.filter { ($0.daysUntilRenewal ?? 999) <= 7 }.count
+            return store.subscriptions.filter(Self.isUpcoming).count
         }
     }
 }

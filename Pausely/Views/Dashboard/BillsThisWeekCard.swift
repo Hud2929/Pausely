@@ -22,6 +22,7 @@ struct BillsThisWeekCard: View {
         let today = Date()
         let dayFormatter = DateFormatter()
         dayFormatter.dateFormat = "EEE"
+        dayFormatter.locale = L10n.locale
         let numFormatter = DateFormatter()
         numFormatter.dateFormat = "d"
 
@@ -34,9 +35,9 @@ struct BillsThisWeekCard: View {
 
             let label: String
             switch offset {
-            case 0: label = "TODAY"
-            case 1: label = "TMR"
-            default: label = dayFormatter.string(from: date).uppercased()
+            case 0: label = L10n.string("TODAY")
+            case 1: label = L10n.string("TMR")
+            default: label = dayFormatter.string(from: date).uppercased(with: L10n.locale)
             }
 
             return DayBill(

@@ -24,6 +24,7 @@ struct PremiumMainTabView: View {
             ZStack {
                 NavigationStack {
                     DashboardView().navigationBarHidden(true)
+                        .accessibilityHidden(selectedTab != 0)   // VoiceOver must not wander into a hidden tab
                 }
                 .opacity(selectedTab == 0 ? 1 : 0)
                 .allowsHitTesting(selectedTab == 0)
@@ -31,18 +32,21 @@ struct PremiumMainTabView: View {
                 NavigationStack {
                     PremiumSubscriptionsView(deepLinkedSubscription: $deepLinkedSubscription)
                         .navigationBarHidden(true)
+                        .accessibilityHidden(selectedTab != 1)
                 }
                 .opacity(selectedTab == 1 ? 1 : 0)
                 .allowsHitTesting(selectedTab == 1)
 
                 NavigationStack {
                     AnalysisView().navigationBarHidden(true)
+                        .accessibilityHidden(selectedTab != 2)
                 }
                 .opacity(selectedTab == 2 ? 1 : 0)
                 .allowsHitTesting(selectedTab == 2)
 
                 NavigationStack {
                     PremiumProfileView().navigationBarHidden(true)
+                        .accessibilityHidden(selectedTab != 3)
                 }
                 .opacity(selectedTab == 3 ? 1 : 0)
                 .allowsHitTesting(selectedTab == 3)

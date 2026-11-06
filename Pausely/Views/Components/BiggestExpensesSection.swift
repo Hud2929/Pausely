@@ -99,14 +99,8 @@ struct BiggestExpenseRow: View {
         .surfaceCard(cornerRadius: 14)
     }
 
-    private var rankColor: Color {
-        switch rank {
-        case 1: return .semanticDestructive
-        case 2: return .semanticWarning
-        case 3: return Color.accentMint
-        default: return .secondary
-        }
-    }
+    /// One quiet colour for every rank: red and orange read as alerts, and a rank isn't one.
+    private var rankColor: Color { Color.white.opacity(0.85) }
 }
 
 #Preview {

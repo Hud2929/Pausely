@@ -20,6 +20,7 @@ struct SubscriptionBrowserView: View {
     @State private var selectedEntry: CatalogEntry?
     @State private var showingTierSheet = false
     @State private var showingCustomAdd = false
+    @State private var showingPaywall = false
     @State private var contentAppeared = false
 
     // Popular service names shown in the featured row (shown before any filter)
@@ -160,8 +161,7 @@ struct SubscriptionBrowserView: View {
                                         justAdded: justAdded,
                                         currencyManager: currencyManager
                                     ) {
-                                        selectedEntry = entry
-                                        showingTierSheet = true
+                                        open(entry)
                                     }
                                 }
                             }
@@ -178,8 +178,7 @@ struct SubscriptionBrowserView: View {
                                         isAdded: isAlreadyAdded(entry),
                                         currencyManager: currencyManager
                                     ) {
-                                        selectedEntry = entry
-                                        showingTierSheet = true
+                                        open(entry)
                                     }
                                 }
                                 if filteredEntries.isEmpty {
@@ -209,6 +208,9 @@ struct SubscriptionBrowserView: View {
         .sheet(isPresented: $showingCustomAdd) {
             LuxuryAddSubscriptionView()
         }
+        .sheet(isPresented: $showingPaywall) {
+            StoreKitUpgradeView(currentSubscriptionCount: store.subscriptions.count)
+        }
         .task {
             await catalogService.loadCatalog()
         }
@@ -232,8 +234,7 @@ struct SubscriptionBrowserView: View {
                             entry: entry,
                             isAdded: isAlreadyAdded(entry)
                         ) {
-                            selectedEntry = entry
-                            showingTierSheet = true
+                            open(entry)
                         }
                     }
                 }
@@ -363,6 +364,16 @@ struct SubscriptionBrowserView: View {
         }
     }
 
+    /// On the free plan's limit, the upgrade screen says so before any plan is picked.
+    private func open(_ entry: CatalogEntry) {
+        if PaymentManager.shared.hasReachedSubscriptionLimit(currentCount: store.subscriptions.count) {
+            showingPaywall = true
+        } else {
+            selectedEntry = entry
+            showingTierSheet = true
+        }
+    }
+
     private func addSubscription(entry: CatalogEntry, tier: PricingTier, billingFrequency: BillingFrequency,
                                   isOverridden: Bool, userPrice: Decimal?, nextBillingDate: Date, trialEndDate: Date?) {
         // The same price the tier sheet showed, in the currency it showed it in.
@@ -396,7 +407,14 @@ struct SubscriptionBrowserView: View {
         )
 
         Task {
-            _ = try? await store.addSubscription(subscription)
+            do {
+                _ = try await store.addSubscription(subscription)
+            } catch {
+                // Only a refusal throws (the free plan's limit): never show it as added.
+                try? await Task.sleep(nanoseconds: 400_000_000)   // let the plan sheet close first
+                showingPaywall = true
+                return
+            }
             await MainActor.run {
                 addedIds.insert(entry.bundleId)
                 justAdded = entry.bundleId
