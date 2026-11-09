@@ -19,7 +19,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Welcome to Pausely</title>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+        @import url('https://pausely.pro/fonts/inter.css');
         
         body {
             margin: 0;
@@ -237,7 +237,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Reset Your Pausely Password</title>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+        @import url('https://pausely.pro/fonts/inter.css');
         
         body {
             margin: 0;
@@ -406,7 +406,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Your Magic Link to Pausely</title>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+        @import url('https://pausely.pro/fonts/inter.css');
         
         body {
             margin: 0;
