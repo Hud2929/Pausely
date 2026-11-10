@@ -35,25 +35,25 @@ struct ArtisticSubscriptionCard: View {
                         .frame(width: 40, height: 40)
 
                     Text(String(subscription.name.prefix(1)))
-                        .font(.system(.callout, design: .rounded).weight(.bold))
+                        .font(.system(.callout, design: .default).weight(.bold))
                         .foregroundStyle(cardColor)
                 }
 
                 // Name + frequency
                 VStack(alignment: .leading, spacing: 3) {
                     Text(subscription.name)
-                        .font(.system(.callout, design: .rounded).weight(.semibold))
+                        .font(.system(.callout, design: .default).weight(.semibold))
                         .foregroundStyle(.white)
                         .lineLimit(1)
 
                     HStack(spacing: 6) {
                         Text(subscription.billingFrequency.displayName)
-                            .font(.system(.caption2, design: .rounded))
+                            .font(.system(.caption2, design: .default))
                             .foregroundStyle(Color.obsidianTextTertiary)
 
                         if subscription.isPaused {
                             Text("Paused")
-                                .font(.system(size: 10, weight: .semibold, design: .rounded))
+                                .font(.system(size: 10, weight: .semibold, design: .default))
                                 .foregroundStyle(Color.semanticWarning)
                                 .padding(.horizontal, 6)
                                 .padding(.vertical, 2)
@@ -71,7 +71,7 @@ struct ArtisticSubscriptionCard: View {
                 VStack(alignment: .trailing, spacing: 3) {
                     // What it's billed in; totals elsewhere are in the display currency.
                     Text(subscription.chargeText)
-                        .font(.system(.callout, design: .rounded).weight(.bold))
+                        .font(.system(.callout, design: .default).weight(.bold))
                         .foregroundStyle(cardColor)
 
                     if let days = subscription.daysUntilRenewal {
@@ -82,11 +82,11 @@ struct ArtisticSubscriptionCard: View {
                             return L10n.string("in \(days) days")
                         }()
                         Text(countdownText)
-                            .font(.system(.caption2, design: .rounded))
+                            .font(.system(.caption2, design: .default))
                             .foregroundStyle(days <= 3 ? Color.semanticDestructive : Color.obsidianTextTertiary)
                     } else {
                         Text("No date")
-                            .font(.system(.caption2, design: .rounded))
+                            .font(.system(.caption2, design: .default))
                             .foregroundStyle(Color.obsidianTextTertiary)
                     }
                 }

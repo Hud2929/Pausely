@@ -57,7 +57,7 @@ struct CostPerUseCard: View {
                     .frame(width: 52, height: 52)
 
                 Text(String(result.subscription.name.prefix(1)))
-                    .font(.system(.title3, design: .rounded).weight(.bold))
+                    .font(.system(.title3, design: .default).weight(.bold))
                     .foregroundStyle(.white)
             }
 
@@ -97,11 +97,11 @@ struct CostPerUseCard: View {
             HStack(alignment: .lastTextBaseline, spacing: 8) {
                 if let cph = result.costPerHour {
                     Text(CostPerUseCalculator.formatCostPerHour(cph, currencyCode: result.subscription.currency))
-                        .font(.system(.largeTitle, design: .rounded).weight(.bold))
+                        .font(.system(.largeTitle, design: .default).weight(.bold))
                         .foregroundStyle(result.valueTier.swiftUIColor)
                 } else {
                     Text("—")
-                        .font(.system(.largeTitle, design: .rounded).weight(.bold))
+                        .font(.system(.largeTitle, design: .default).weight(.bold))
                         .foregroundStyle(.secondary)
                 }
 
@@ -281,7 +281,7 @@ struct DetailPill: View {
             .foregroundStyle(.secondary)
 
             Text(value)
-                .font(.system(.subheadline, design: .rounded).weight(.semibold))
+                .font(.system(.subheadline, design: .default).weight(.semibold))
                 .foregroundStyle(.primary)
         }
         .frame(maxWidth: .infinity)

@@ -12,14 +12,13 @@ struct TrialExpirationSection: View {
         VStack(alignment: .leading, spacing: 12) {
             HStack {
                 Text("Trials Ending Soon")
-                    .font(.system(.subheadline, design: .rounded).weight(.semibold))
+                    .font(.system(.subheadline, design: .default).weight(.semibold))
                     .foregroundStyle(Color.obsidianTextSecondary)
-                    .tracking(0.3)
 
                 Spacer()
 
                 Text("\(subscriptions.count) ending")
-                    .font(.system(.caption, design: .rounded).weight(.medium))
+                    .font(.system(.caption, design: .default).weight(.medium))
                     .foregroundStyle(Color.semanticWarning)
                     .padding(.horizontal, 8)
                     .padding(.vertical, 3)
@@ -62,11 +61,11 @@ private struct TrialExpirationRow: View {
 
             VStack(alignment: .leading, spacing: 2) {
                 Text(subscription.name)
-                    .font(.system(.subheadline, design: .rounded).weight(.semibold))
+                    .font(.system(.subheadline, design: .default).weight(.semibold))
                     .foregroundStyle(.white)
 
                 Text(urgencyLabel)
-                    .font(.system(.caption, design: .rounded))
+                    .font(.system(.caption, design: .default))
                     .foregroundStyle(urgencyColor)
             }
 
@@ -74,11 +73,11 @@ private struct TrialExpirationRow: View {
 
             VStack(alignment: .trailing, spacing: 2) {
                 Text(MoneyFormat.string(subscription.monthlyCost, subscription.currency))
-                    .font(.system(.subheadline, design: .rounded).weight(.semibold))
+                    .font(.system(.subheadline, design: .default).weight(.semibold))
                     .foregroundStyle(.white)
 
                 Text("then /\(subscription.billingFrequency.shortDisplay)")
-                    .font(.system(.caption2, design: .rounded))
+                    .font(.system(.caption2, design: .default))
                     .foregroundStyle(Color.obsidianTextTertiary)
             }
         }

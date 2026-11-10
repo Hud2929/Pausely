@@ -135,20 +135,19 @@ struct SmallWidgetView: View {
                             .fill(urgencyColor)
                             .frame(width: 6, height: 6)
                         Text("NEXT CHARGE")
-                            .font(.system(size: 9, weight: .bold, design: .rounded))
+                            .font(.system(size: 9, weight: .bold, design: .default))
                             .foregroundStyle(.secondary)
-                            .tracking(0.8)
                     }
 
                     Spacer()
 
                     Text(entry.nextChargeName)
-                        .font(.system(.headline, design: .rounded).weight(.semibold))
+                        .font(.system(.headline, design: .default).weight(.semibold))
                         .foregroundStyle(.primary)
                         .lineLimit(1)
 
                     Text(entry.nextChargeText)
-                        .font(.system(.title2, design: .rounded).weight(.black))
+                        .font(.system(.title2, design: .default).weight(.black))
                         .foregroundStyle(.primary)
                         .minimumScaleFactor(0.6)
                         .lineLimit(1)
@@ -156,7 +155,7 @@ struct SmallWidgetView: View {
                     Spacer()
 
                     Text(daysLabel)
-                        .font(.system(.caption2, design: .rounded).weight(.semibold))
+                        .font(.system(.caption2, design: .default).weight(.semibold))
                         .foregroundStyle(urgencyColor)
                         .padding(.horizontal, 8)
                         .padding(.vertical, 3)
@@ -170,7 +169,7 @@ struct SmallWidgetView: View {
                         .font(.title2)
                         .foregroundStyle(.secondary)
                     Text("Add subscriptions to track")
-                        .font(.system(.caption2, design: .rounded))
+                        .font(.system(.caption2, design: .default))
                         .foregroundStyle(.secondary)
                         .multilineTextAlignment(.center)
                 }

@@ -54,13 +54,13 @@ struct PriceHistoryView: View {
             HStack {
                 VStack(alignment: .leading, spacing: 4) {
                     Text("Price Trend")
-                        .font(.system(.caption, design: .rounded).weight(.semibold))
+                        .font(.system(.caption, design: .default).weight(.semibold))
                         .foregroundStyle(.secondary)
                         .textCase(.uppercase)
 
                     HStack(spacing: 6) {
                         Text(subscription.chargeText)
-                            .font(.system(.largeTitle, design: .rounded).weight(.black))
+                            .font(.system(.largeTitle, design: .default).weight(.black))
                             .foregroundStyle(.primary)
 
                         if percentageChange != 0 {
@@ -68,7 +68,7 @@ struct PriceHistoryView: View {
                                 Image(systemName: trend == .increasing ? "arrow.up" : "arrow.down")
                                 Text("\(String(format: "%.1f", abs(percentageChange)))%")
                             }
-                            .font(.system(.subheadline, design: .rounded).weight(.bold))
+                            .font(.system(.subheadline, design: .default).weight(.bold))
                             .foregroundStyle(trend == .increasing ? Color.semanticDestructive : Color.semanticSuccess)
                             .padding(.horizontal, 10)
                             .padding(.vertical, 4)
@@ -98,10 +98,10 @@ struct PriceHistoryView: View {
                 HStack {
                     VStack(alignment: .leading, spacing: 2) {
                         Text("Originally")
-                            .font(.system(.caption, design: .rounded))
+                            .font(.system(.caption, design: .default))
                             .foregroundStyle(.secondary)
                         Text(MoneyFormat.string(first.amount, first.currency))
-                            .font(.system(.subheadline, design: .rounded).weight(.semibold))
+                            .font(.system(.subheadline, design: .default).weight(.semibold))
                             .foregroundStyle(.secondary)
                             .strikethrough(trend == .increasing)
                     }
@@ -110,11 +110,11 @@ struct PriceHistoryView: View {
 
                     VStack(alignment: .trailing, spacing: 2) {
                         Text("Since Tracked")
-                            .font(.system(.caption, design: .rounded))
+                            .font(.system(.caption, design: .default))
                             .foregroundStyle(.secondary)
                         let totalIncrease = tracker.totalPriceIncrease(for: subscription.id)
                         Text(MoneyFormat.string(totalIncrease, subscription.currency))
-                            .font(.system(.subheadline, design: .rounded).weight(.bold))
+                            .font(.system(.subheadline, design: .default).weight(.bold))
                             .foregroundStyle(trend == .increasing ? Color.semanticDestructive : Color.semanticSuccess)
                     }
                 }
@@ -134,7 +134,7 @@ struct PriceHistoryView: View {
     private var historyList: some View {
         VStack(alignment: .leading, spacing: 12) {
             Text("Changes")
-                .font(.system(.headline, design: .rounded).weight(.bold))
+                .font(.system(.headline, design: .default).weight(.bold))
 
             VStack(spacing: 8) {
                 ForEach(Array(history.enumerated()), id: \.element.id) { index, entry in
@@ -166,9 +166,9 @@ struct PriceHistoryView: View {
 
                 VStack(alignment: .leading, spacing: 2) {
                     Text("Next Year Projection")
-                        .font(.system(.subheadline, design: .rounded).weight(.semibold))
+                        .font(.system(.subheadline, design: .default).weight(.semibold))
                     Text("Based on historical price changes")
-                        .font(.system(.caption, design: .rounded))
+                        .font(.system(.caption, design: .default))
                         .foregroundStyle(.secondary)
                 }
 
@@ -176,11 +176,11 @@ struct PriceHistoryView: View {
             }
 
             Text(MoneyFormat.string(projected, subscription.currency))
-                .font(.system(.title2, design: .rounded).weight(.bold))
+                .font(.system(.title2, design: .default).weight(.bold))
 
             if diff > 0 {
                 Text("+\(MoneyFormat.string(diff, subscription.currency)) more than current annual cost")
-                    .font(.system(.caption, design: .rounded).weight(.medium))
+                    .font(.system(.caption, design: .default).weight(.medium))
                     .foregroundStyle(Color.semanticDestructive)
             }
         }
@@ -208,9 +208,9 @@ struct PriceHistoryView: View {
 
             VStack(spacing: 8) {
                 Text("No Price History")
-                    .font(.system(.title3, design: .rounded).weight(.bold))
+                    .font(.system(.title3, design: .default).weight(.bold))
                 Text("Price changes will be tracked automatically when you edit a subscription's cost.")
-                    .font(.system(.subheadline, design: .rounded))
+                    .font(.system(.subheadline, design: .default))
                     .foregroundStyle(.secondary)
                     .multilineTextAlignment(.center)
                     .padding(.horizontal)
@@ -256,10 +256,10 @@ struct HistoryEntryRow: View {
         HStack(spacing: 12) {
             VStack(alignment: .leading, spacing: 4) {
                 Text(MoneyFormat.string(entry.amount, entry.currency))
-                    .font(.system(.subheadline, design: .rounded).weight(.semibold))
+                    .font(.system(.subheadline, design: .default).weight(.semibold))
 
                 Text(entry.date, style: .date)
-                    .font(.system(.caption, design: .rounded))
+                    .font(.system(.caption, design: .default))
                     .foregroundStyle(.secondary)
             }
 
@@ -271,7 +271,7 @@ struct HistoryEntryRow: View {
                         .font(.caption2)
                     Text("\(String(format: "%.1f", abs(change)))%")
                 }
-                .font(.system(.caption, design: .rounded).weight(.bold))
+                .font(.system(.caption, design: .default).weight(.bold))
                 .foregroundStyle(change > 0 ? Color.semanticDestructive : Color.semanticSuccess)
                 .padding(.horizontal, 8)
                 .padding(.vertical, 4)
@@ -281,7 +281,7 @@ struct HistoryEntryRow: View {
                 .clipShape(Capsule())
             } else {
                 Text("First Record")
-                    .font(.system(.caption, design: .rounded).weight(.medium))
+                    .font(.system(.caption, design: .default).weight(.medium))
                     .foregroundStyle(.secondary)
                     .padding(.horizontal, 8)
                     .padding(.vertical, 4)

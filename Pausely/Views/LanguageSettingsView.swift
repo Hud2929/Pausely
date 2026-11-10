@@ -44,11 +44,11 @@ struct LanguageSettingsView: View {
                         .foregroundStyle(Color.accentMint)
 
                     Text("Language")
-                        .font(.system(.title, design: .rounded).weight(.bold))
+                        .font(.system(.title, design: .default).weight(.bold))
                         .foregroundStyle(.white)
 
                     Text("Choose your preferred language")
-                        .font(.system(.subheadline, design: .rounded).weight(.medium))
+                        .font(.system(.subheadline, design: .default).weight(.medium))
                         .foregroundStyle(.white.opacity(0.6))
                 }
                 .padding(.top, 20)
@@ -60,7 +60,7 @@ struct LanguageSettingsView: View {
                             .foregroundStyle(.white.opacity(0.5))
 
                         TextField("Search languages...", text: $searchText)
-                            .font(.system(.callout, design: .rounded).weight(.medium))
+                            .font(.system(.callout, design: .default).weight(.medium))
                             .foregroundStyle(.white)
                             .keyboardType(.default)
                             .submitLabel(.search)
@@ -103,7 +103,7 @@ struct LanguageSettingsView: View {
                         .foregroundStyle(Color.accentMint)
 
                     Text("Language changes apply instantly. Some features may not be fully translated yet.")
-                        .font(.system(.footnote, design: .rounded).weight(.medium))
+                        .font(.system(.footnote, design: .default).weight(.medium))
                         .foregroundStyle(.white.opacity(0.6))
                         .multilineTextAlignment(.leading)
                 }
@@ -140,11 +140,11 @@ struct LanguageRow: View {
 
                 VStack(alignment: .leading, spacing: 2) {
                     Text(language.name)
-                        .font(.system(.callout, design: .rounded).weight(.semibold))
+                        .font(.system(.callout, design: .default).weight(.semibold))
                         .foregroundStyle(.white)
 
                     Text(language.code == "system" ? "Uses device language" : language.code.uppercased())
-                        .font(.system(.footnote, design: .rounded).weight(.medium))
+                        .font(.system(.footnote, design: .default).weight(.medium))
                         .foregroundStyle(.white.opacity(0.5))
                 }
 

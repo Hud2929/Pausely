@@ -251,33 +251,37 @@ in sequence, and seasonality (December, January) will blur it.
 
 ## 7. Build order
 
-**Reordered 2026-11-10 with the founder.** The honest reading of section 1 is that Pausely today is
-not worth paying for to most people: the user types everything in, and listing is free elsewhere.
-A redesign does not change that. What does is finding subscriptions automatically and showing the
-real number in the first 90 seconds. So value comes first and the visual work second.
+**Reordered again 2026-11-10: the founder asked for everything to be redesigned.** Value still
+leads, but nothing is built twice: the design system comes first, and the two screens that decide
+whether people pay (the Tally and the paywall) are the first screens built in it. Screenshot Import
+waits for real screenshots from the founder; its parser is done.
+
+The honest limit stays: a redesign alone does not make Pausely worth paying for. Automatic finding
+(Screenshot Import, mail import in release) does, and both are waiting on the founder.
 
 Branch `redesign`, one commit per step, each ending with new screenshots, a re-rating, Debug and
 Release builds and the serial test run.
 
 | Step | Work | Days | Status |
 |---|---|---|---|
-| 0 | Truth fixes: forecast, Wrapped, cancel timing, retirement line, paywall price prominence, untranslated strings | 1.5 | **Done 2026-11-10** (tour extension still open) |
-| 1 | **Screenshot Import**: a screenshot of Settings › Subscriptions (or any list of charges), read on device, turned into subscriptions to confirm | 4 | Next |
-| 2 | **First run: Tally and reveal**, reminder ask that names a real charge, account after value | 3 | |
-| 3 | **Paywall** from the user's own numbers, trial timeline, Pausely on its own slip, the free-limit choice, Promise meter | 3 | |
-| 4 | Outlook and iCloud mail import switched on in release (needs the owner's `MS_CLIENT_ID` and one real sign-in per provider) | 1 + owner | Blocked on owner |
-| 5 | Design system: tokens, type, motion, haptics, paper and slip components | 2 | |
-| 6 | Home | 2 | |
-| 7 | Verdict slip, tear to cancel, receipt roll, share image | 3 | |
-| 8 | Subscriptions list and detail | 2.5 | |
-| 9 | Insights, Profile, Pause Plan strip, Wrapped | 2.5 | |
-| 10 | Tab bar and glass, widgets, Live Activity, Sunday slip | 3 | |
-| 11 | Counters (if approved), share links | 1 | |
-| 12 | Full pass in five languages, right to left, largest text, VoiceOver, iPad; Release build | 2 | |
-| | **Total** | **30.5** | |
+| 0 | Truth fixes | 1.5 | **Done** (tour extension still open) |
+| 1 | **Design system**: Ink and Paper tokens, type, motion, haptics, paper slip, buttons; old tokens mapped onto the new ones so every screen shifts at once; letter-spacing removed | 2 | **Now** |
+| 2 | **First run**: Tally and reveal, reminder ask that names a real charge, account after value, splash under 0.6 s | 3 | |
+| 3 | **Paywall** from the user's own numbers, trial timeline, Pausely on its own slip, free-limit choice, Promise meter | 3 | |
+| 4 | Home: the number, next decision, 30-day horizon, kept | 2 | |
+| 5 | Verdict slip, tear to cancel, receipt roll, share image | 3 | |
+| 6 | Subscriptions list, detail, add and edit, catalog browser | 3 | |
+| 7 | Insights, Profile, Settings, Pause Plan strip, Wrapped | 3 | |
+| 8 | Sign in, sign up, age check, inbox import screens, empty and error states | 2 | |
+| 9 | Tab bar and glass, widgets, Live Activity, Sunday slip | 3 | |
+| 10 | Screenshot Import: text recognition and confirm screen (parser done) | 3 | Needs real screenshots |
+| 11 | Outlook and iCloud mail import in release | 1 + owner | Blocked on `MS_CLIENT_ID` |
+| 12 | Counters (if approved), share links | 1 | |
+| 13 | Full pass in five languages, right to left, largest text, VoiceOver, iPad; Release build | 2 | |
+| | **Total** | **32.5** | |
 
-**Cut line:** steps 0 to 3 (11.5 days) are the release that could change whether people pay. Ship
-them as 1.1. Steps 5 to 12 make it beautiful and ship as 1.2.
+**Cut line:** steps 1 to 5 (13 days) are a shippable release: new identity, new first run, new
+paywall, new core loop. Steps 6 to 9 finish every remaining screen.
 
 **What step 0 changed**
 - Forecast: a subscription with no usage logged is no longer treated as unused (it suggested an

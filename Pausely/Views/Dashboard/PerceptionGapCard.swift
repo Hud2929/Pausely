@@ -63,11 +63,11 @@ struct TopOpportunityCard: View {
                 // Text
                 VStack(alignment: .leading, spacing: 3) {
                     Text(title)
-                        .font(.system(.subheadline, design: .rounded).weight(.semibold))
+                        .font(.system(.subheadline, design: .default).weight(.semibold))
                         .foregroundStyle(.white)
                         .lineLimit(1)
                     Text(subtitle)
-                        .font(.system(.caption, design: .rounded))
+                        .font(.system(.caption, design: .default))
                         .foregroundStyle(Color.obsidianTextSecondary)
                         .lineLimit(2)
                 }
@@ -79,12 +79,12 @@ struct TopOpportunityCard: View {
                 if let savings = savingsAmount {
                     VStack(alignment: .trailing, spacing: 1) {
                         Text(currencyManager.format(savings))
-                            .font(.system(.callout, design: .rounded).weight(.bold))
+                            .font(.system(.callout, design: .default).weight(.bold))
                             .foregroundStyle(accentColor)
                             .lineLimit(1)
                             .minimumScaleFactor(0.8)
                         Text("/mo")
-                            .font(.system(.caption2, design: .rounded))
+                            .font(.system(.caption2, design: .default))
                             .foregroundStyle(Color.obsidianTextTertiary)
                     }
                     .padding(.trailing, 4)
@@ -194,10 +194,10 @@ struct WasteScoreCalloutCard: View {
 
                 VStack(alignment: .leading, spacing: 3) {
                     Text("We found \(wasteCount) waste issues in your subscriptions")
-                        .font(.system(.subheadline, design: .rounded).weight(.semibold))
+                        .font(.system(.subheadline, design: .default).weight(.semibold))
                         .foregroundStyle(.white)
                     Text("Tap to see what you could cut")
-                        .font(.system(.caption, design: .rounded))
+                        .font(.system(.caption, design: .default))
                         .foregroundStyle(Color.obsidianTextSecondary)
                         .lineLimit(2)
                 }

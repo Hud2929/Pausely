@@ -76,7 +76,7 @@ struct PasswordStrengthMeter: View {
             // Strength label
             HStack {
                 Text(strength.label)
-                    .font(.system(.caption2, design: .rounded).weight(.semibold))
+                    .font(.system(.caption2, design: .default).weight(.semibold))
                     .foregroundStyle(strength.color)
 
                 Spacer()
@@ -122,11 +122,11 @@ private struct RuleRow: View {
     var body: some View {
         HStack(spacing: 8) {
             Image(systemName: isMet ? "checkmark.circle.fill" : "circle")
-                .font(.system(.caption, design: .rounded))
+                .font(.system(.caption, design: .default))
                 .foregroundStyle(isMet ? Color.semanticSuccess : Color.white.opacity(0.3))
 
             Text(text)
-                .font(.system(.caption, design: .rounded).weight(.medium))
+                .font(.system(.caption, design: .default).weight(.medium))
                 .foregroundStyle(isMet ? .white : Color.white.opacity(0.5))
 
             Spacer()

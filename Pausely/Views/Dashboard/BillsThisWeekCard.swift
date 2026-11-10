@@ -92,11 +92,10 @@ struct BillsThisWeekCard: View {
                                 // Day header
                                 VStack(spacing: 2) {
                                     Text(day.dayLabel)
-                                        .font(.system(.caption2, design: .rounded).weight(.bold))
+                                        .font(.system(.caption2, design: .default).weight(.bold))
                                         .foregroundStyle(day.isEmpty ? Color.obsidianTextTertiary : color)
-                                        .tracking(0.3)
                                     Text(day.dayNumber)
-                                        .font(.system(.callout, design: .rounded).weight(.bold))
+                                        .font(.system(.callout, design: .default).weight(.bold))
                                         .foregroundStyle(day.isEmpty ? Color.obsidianTextTertiary : .white)
                                 }
                                 .frame(minWidth: 58, minHeight: 44)
@@ -127,23 +126,23 @@ struct BillsThisWeekCard: View {
                                                     .fill(color.opacity(0.18))
                                                     .frame(width: 26, height: 26)
                                                 Text("\(day.subscriptions.count)")
-                                                    .font(.system(.caption2, design: .rounded).weight(.bold))
+                                                    .font(.system(.caption2, design: .default).weight(.bold))
                                                     .foregroundStyle(color)
                                             }
                                         }
                                         Text(currencyManager.format(day.convertedTotal))
-                                            .font(.system(.caption2, design: .rounded).weight(.bold))
+                                            .font(.system(.caption2, design: .default).weight(.bold))
                                             .foregroundStyle(color)
                                             .lineLimit(1)
                                             .minimumScaleFactor(0.8)
                                         // Urgency label for all days with bills
                                         if day.daysAway == 0 {
                                             Text("TODAY")
-                                                .font(.system(.caption2, design: .rounded).weight(.bold))
+                                                .font(.system(.caption2, design: .default).weight(.bold))
                                                 .foregroundStyle(color)
                                         } else {
                                             Text(L10n.string("in \(day.daysAway) days"))
-                                                .font(.system(.caption2, design: .rounded).weight(.semibold))
+                                                .font(.system(.caption2, design: .default).weight(.semibold))
                                                 .foregroundStyle(color.opacity(0.8))
                                         }
                                     }

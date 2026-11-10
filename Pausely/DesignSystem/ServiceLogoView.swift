@@ -63,7 +63,7 @@ struct ServiceLogoView: View {
 
     private var initialView: some View {
         Text(String(name.prefix(1)).uppercased())
-            .font(.system(size: size * 0.40, weight: .bold, design: .rounded))
+            .font(.system(size: size * 0.40, weight: .bold, design: .default))
             .foregroundStyle(.white)
     }
 

@@ -61,7 +61,7 @@ struct EmailConfirmationView: View {
                         )
 
                     Image(systemName: "envelope.badge.shield.fill")
-                        .font(.system(.largeTitle, design: .rounded).weight(.light))
+                        .font(.system(.largeTitle, design: .default).weight(.light))
                         .foregroundStyle(
                             LinearGradient(
                                 colors: [Color.accentMint, .white],
@@ -74,15 +74,15 @@ struct EmailConfirmationView: View {
                 // Text
                 VStack(spacing: 16) {
                     Text("Verify Your Email")
-                        .font(.system(.title, design: .rounded).weight(.bold))
+                        .font(.system(.title, design: .default).weight(.bold))
                         .foregroundStyle(.white)
 
                     Text("Enter the 6-digit code we sent to")
-                        .font(.system(.body, design: .rounded))
+                        .font(.system(.body, design: .default))
                         .foregroundStyle(.white.opacity(0.7))
 
                     Text(email)
-                        .font(.system(.body, design: .rounded).weight(.semibold))
+                        .font(.system(.body, design: .default).weight(.semibold))
                         .foregroundStyle(Color.accentMint)
                 }
 
@@ -108,7 +108,7 @@ struct EmailConfirmationView: View {
                         Image(systemName: "exclamationmark.circle.fill")
                             .foregroundStyle(Color.semanticDestructive)
                         Text(error)
-                            .font(.system(.subheadline, design: .rounded))
+                            .font(.system(.subheadline, design: .default))
                             .foregroundStyle(Color.semanticDestructive)
                     }
                     .padding(.horizontal, 32)
@@ -134,7 +134,7 @@ struct EmailConfirmationView: View {
                             }
                             Text("Verify")
                         }
-                        .font(.system(.body, design: .rounded).weight(.semibold))
+                        .font(.system(.body, design: .default).weight(.semibold))
                         .foregroundStyle(.white)
                         .frame(maxWidth: .infinity)
                         .padding()
@@ -161,7 +161,7 @@ struct EmailConfirmationView: View {
                                     .foregroundStyle(.white)
                             }
                         }
-                        .font(.system(.body, design: .rounded).weight(.semibold))
+                        .font(.system(.body, design: .default).weight(.semibold))
                         .frame(maxWidth: .infinity)
                         .padding()
                         .glass(intensity: 0.2, tint: .white)
@@ -170,7 +170,7 @@ struct EmailConfirmationView: View {
 
                     Button(action: goBackToSignIn) {
                         Text("Use Different Email")
-                            .font(.system(.body, design: .rounded).weight(.medium))
+                            .font(.system(.body, design: .default).weight(.medium))
                             .foregroundStyle(.white.opacity(0.6))
                     }
                 }
@@ -313,7 +313,7 @@ struct OTPDigitBox: View {
                 )
 
             Text(text)
-                .font(.system(.title2, design: .rounded).weight(.bold))
+                .font(.system(.title2, design: .default).weight(.bold))
                 .foregroundStyle(.white)
 
             // Hidden text field for actual input
@@ -348,7 +348,7 @@ struct EnhancedTextField: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
             Text(title)
-                .font(.system(.caption, design: .rounded).weight(.semibold))
+                .font(.system(.caption, design: .default).weight(.semibold))
                 .foregroundStyle(.white.opacity(0.6))
                 .textCase(.uppercase)
             
@@ -387,7 +387,7 @@ struct ErrorMessageView: View {
             Image(systemName: "exclamationmark.triangle.fill")
                 .foregroundStyle(.orange)
             Text(message)
-                .font(.system(.subheadline, design: .rounded).weight(.medium))
+                .font(.system(.subheadline, design: .default).weight(.medium))
                 .foregroundStyle(.white)
             Spacer()
         }
@@ -433,16 +433,16 @@ struct PasswordResetView: View {
             Spacer()
             
             Image(systemName: "lock.rotation")
-                .font(.system(.largeTitle, design: .rounded))
+                .font(.system(.largeTitle, design: .default))
                 .foregroundStyle(Color.accentMint)
 
             VStack(spacing: 12) {
                 Text("Reset Password")
-                    .font(.system(.title, design: .rounded).weight(.bold))
+                    .font(.system(.title, design: .default).weight(.bold))
                     .foregroundStyle(.white)
 
                 Text("Enter your email address and we'll send you a link to reset your password.")
-                    .font(.system(.subheadline, design: .rounded))
+                    .font(.system(.subheadline, design: .default))
                     .foregroundStyle(.white.opacity(0.6))
                     .multilineTextAlignment(.center)
             }
@@ -465,7 +465,7 @@ struct PasswordResetView: View {
                         ProgressView().tint(.white)
                     }
                     Text("Send Reset Link")
-                        .font(.system(.body, design: .rounded).weight(.semibold))
+                        .font(.system(.body, design: .default).weight(.semibold))
                 }
                 .foregroundStyle(.white)
                 .frame(maxWidth: .infinity)
@@ -487,7 +487,7 @@ struct PasswordResetView: View {
                 dismiss()
             }
             .accessibilityIdentifier("cancelButton")
-            .font(.system(.body, design: .rounded).weight(.medium))
+            .font(.system(.body, design: .default).weight(.medium))
             .foregroundStyle(.white.opacity(0.6))
             
             Spacer()
@@ -499,27 +499,27 @@ struct PasswordResetView: View {
             Spacer()
             
             Image(systemName: "checkmark.circle.fill")
-                .font(.system(.largeTitle, design: .rounded))
+                .font(.system(.largeTitle, design: .default))
                 .foregroundStyle(Color.accentMint)
 
             VStack(spacing: 12) {
                 Text("Check Your Email")
-                    .font(.system(.title, design: .rounded).weight(.bold))
+                    .font(.system(.title, design: .default).weight(.bold))
                     .foregroundStyle(.white)
 
                 Text("We've sent a password reset link to")
-                    .font(.system(.subheadline, design: .rounded))
+                    .font(.system(.subheadline, design: .default))
                     .foregroundStyle(.white.opacity(0.6))
 
                 Text(resetEmail)
-                    .font(.system(.body, design: .rounded).weight(.semibold))
+                    .font(.system(.body, design: .default).weight(.semibold))
                     .foregroundStyle(Color.accentMint)
             }
             
             Button("Done") {
                 dismiss()
             }
-            .font(.system(.body, design: .rounded).weight(.semibold))
+            .font(.system(.body, design: .default).weight(.semibold))
             .foregroundStyle(.white)
             .frame(maxWidth: .infinity)
             .padding()
@@ -560,12 +560,12 @@ struct TipRow: View {
     var body: some View {
         HStack(spacing: 12) {
             Image(systemName: icon)
-                .font(.system(.subheadline, design: .rounded))
+                .font(.system(.subheadline, design: .default))
                 .foregroundColor(Color(hex: "00F0FF"))
                 .frame(width: 24)
 
             Text(text)
-                .font(.system(.subheadline, design: .rounded))
+                .font(.system(.subheadline, design: .default))
                 .foregroundColor(.white)
             
             Spacer()

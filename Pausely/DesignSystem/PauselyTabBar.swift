@@ -97,7 +97,7 @@ private struct TabBarButton: View {
                 Text(L10n.string(item.label))
                     .lineLimit(1)
                     .minimumScaleFactor(0.7)
-                    .font(.system(size: 10, weight: isSelected ? .semibold : .medium, design: .rounded))
+                    .font(.system(size: 10, weight: isSelected ? .semibold : .medium, design: .default))
                     .foregroundStyle(isSelected ? Color.accentMint : Color.obsidianTextTertiary)
                     .accessibilityHidden(true)
             }

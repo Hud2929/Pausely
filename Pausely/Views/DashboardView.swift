@@ -225,9 +225,8 @@ struct DashboardView: View {
             HStack(alignment: .top) {
                 // Timeframe label
                 Text(selectedTimeframe == .weekly ? "WEEKLY SPEND" : selectedTimeframe == .yearly ? "YEARLY SPEND" : "MONTHLY SPEND")
-                    .font(.system(size: 11, weight: .semibold, design: .rounded))
+                    .font(.system(size: 11, weight: .semibold, design: .default))
                     .foregroundStyle(Color.obsidianTextTertiary)
-                    .tracking(2)
                     .animation(.none, value: selectedTimeframe)
 
                 Spacer()
@@ -241,7 +240,7 @@ struct DashboardView: View {
             }
 
             Text(currencyManager.format(displayAmount))
-                .font(.system(.largeTitle, design: .rounded).weight(.black))
+                .font(.system(.largeTitle, design: .default).weight(.black))
                 .foregroundStyle(Color.accentMint)
                 .contentTransition(.numericText())
                 .scaleEffect(heroScale)
@@ -249,7 +248,7 @@ struct DashboardView: View {
             HStack(spacing: 12) {
                 let count = store.activeSubscriptions.count
                 Text("\(count) active")
-                    .font(.system(.caption, design: .rounded).weight(.medium))
+                    .font(.system(.caption, design: .default).weight(.medium))
                     .foregroundStyle(Color.obsidianTextSecondary)
 
                 // Timeframe picker — compact inline
@@ -260,7 +259,7 @@ struct DashboardView: View {
                             HapticStyle.light.trigger()
                         } label: {
                             Text(tf.shortLabel)
-                                .font(.system(size: 11, weight: selectedTimeframe == tf ? .bold : .medium, design: .rounded))
+                                .font(.system(size: 11, weight: selectedTimeframe == tf ? .bold : .medium, design: .default))
                                 .foregroundStyle(selectedTimeframe == tf ? Color.obsidianSurface : Color.obsidianTextTertiary)
                                 .padding(.horizontal, 8)
                                 .padding(.vertical, 4)
@@ -303,19 +302,19 @@ struct DashboardEmptyState: View {
                         .frame(width: 88, height: 88)
 
                     Image(systemName: "plus")
-                        .font(.system(size: 34, weight: .semibold, design: .rounded))
+                        .font(.system(size: 34, weight: .semibold, design: .default))
                         .foregroundStyle(Color.accentMint)
                 }
 
                 // Text content
                 Text("Track Your Subscriptions")
-                    .font(.system(.title3, design: .rounded).weight(.bold))
+                    .font(.system(.title3, design: .default).weight(.bold))
                     .foregroundStyle(.white)
                     .multilineTextAlignment(.center)
                     .padding(.top, 20)
 
                 Text("Add services to see your monthly spend, renewal dates, and savings opportunities.")
-                    .font(.system(.subheadline, design: .rounded))
+                    .font(.system(.subheadline, design: .default))
                     .foregroundStyle(Color.obsidianTextSecondary)
                     .multilineTextAlignment(.center)
                     .lineSpacing(3)
@@ -338,7 +337,7 @@ struct DashboardEmptyState: View {
                         Image(systemName: "plus")
                             .font(.system(size: 15, weight: .semibold))
                         Text("Add Subscription")
-                            .font(.system(.body, design: .rounded).weight(.semibold))
+                            .font(.system(.body, design: .default).weight(.semibold))
                     }
                     .foregroundStyle(Color.black)
                     .frame(maxWidth: .infinity)
@@ -355,7 +354,7 @@ struct DashboardEmptyState: View {
                 // Free tier limit
                 if isFree {
                     Text("Free plan: track up to \(FreeTier.subscriptionLimit) subscriptions. Upgrade for unlimited.")
-                        .font(.system(.caption2, design: .rounded))
+                        .font(.system(.caption2, design: .default))
                         .foregroundStyle(Color.obsidianTextTertiary)
                         .multilineTextAlignment(.center)
                         .padding(.top, 12)
@@ -380,7 +379,7 @@ private struct GuidanceBullet: View {
                 .foregroundStyle(Color.accentMint)
                 .frame(width: 20)
             Text(text)
-                .font(.system(.caption, design: .rounded))
+                .font(.system(.caption, design: .default))
                 .foregroundStyle(Color.obsidianTextSecondary)
         }
     }

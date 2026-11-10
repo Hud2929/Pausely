@@ -27,10 +27,10 @@ struct RemindersPermissionCard: View {
                     .accessibilityHidden(true)
                 VStack(alignment: .leading, spacing: 3) {
                     Text(denied ? L10n.string("Reminders are off") : L10n.string("Get a heads-up before you're charged"))
-                        .font(.system(.subheadline, design: .rounded).weight(.semibold))
+                        .font(.system(.subheadline, design: .default).weight(.semibold))
                         .foregroundStyle(.white)
                     Text(detail(denied: denied))
-                        .font(.system(.caption, design: .rounded))
+                        .font(.system(.caption, design: .default))
                         .foregroundStyle(Color.obsidianTextSecondary)
                         .fixedSize(horizontal: false, vertical: true)
                 }
@@ -48,7 +48,7 @@ struct RemindersPermissionCard: View {
                     }
                 } label: {
                     Text(denied ? L10n.string("Settings") : L10n.string("Turn on"))
-                        .font(.system(.subheadline, design: .rounded).weight(.semibold))
+                        .font(.system(.subheadline, design: .default).weight(.semibold))
                         .foregroundStyle(.black)
                         .padding(.horizontal, 14)
                         .frame(height: 36)
@@ -88,11 +88,11 @@ struct PendingDecisionsCard: View {
             VStack(alignment: .leading, spacing: 12) {
                 HStack {
                     Text("Decide before you're charged")
-                        .font(.system(.headline, design: .rounded))
+                        .font(.system(.headline, design: .default))
                         .foregroundStyle(.white)
                     Spacer()
                     Text("\(pending.count)")
-                        .font(.system(.caption, design: .rounded).weight(.bold))
+                        .font(.system(.caption, design: .default).weight(.bold))
                         .foregroundStyle(.black)
                         .padding(.horizontal, 8)
                         .padding(.vertical, 3)
@@ -124,19 +124,19 @@ struct PendingDecisionsCard: View {
                     .accessibilityHidden(true)
                 VStack(alignment: .leading, spacing: 2) {
                     Text(sub.name)
-                        .font(.system(.subheadline, design: .rounded).weight(.semibold))
+                        .font(.system(.subheadline, design: .default).weight(.semibold))
                         .foregroundStyle(.white)
                     Text(whenText(item))
-                        .font(.system(.caption, design: .rounded))
+                        .font(.system(.caption, design: .default))
                         .foregroundStyle(Color.obsidianTextSecondary)
                 }
                 Spacer(minLength: 8)
                 // The charge being decided on, in what it's billed in (as in the reminder and the verdict).
                 Text(sub.chargeText)
-                    .font(.system(.subheadline, design: .rounded).weight(.semibold))
+                    .font(.system(.subheadline, design: .default).weight(.semibold))
                     .foregroundStyle(.white)
                 Text("Decide")
-                    .font(.system(.caption, design: .rounded).weight(.bold))
+                    .font(.system(.caption, design: .default).weight(.bold))
                     .foregroundStyle(.black)
                     .padding(.horizontal, 10)
                     .frame(height: 28)
@@ -180,18 +180,18 @@ struct SavingsReceiptCard: View {
                     .accessibilityHidden(true)
                 VStack(alignment: .leading, spacing: 3) {
                     Text("Saved with Pausely")
-                        .font(.system(.caption, design: .rounded).weight(.semibold))
+                        .font(.system(.caption, design: .default).weight(.semibold))
                         .foregroundStyle(Color.obsidianTextSecondary)
                     if summary.isEmpty {
                         Text("Your Savings Receipt starts with your first cancel")
-                            .font(.system(.subheadline, design: .rounded).weight(.semibold))
+                            .font(.system(.subheadline, design: .default).weight(.semibold))
                             .foregroundStyle(.white)
                     } else {
                         Text(summary.formatted(summary.savedSoFar))
-                            .font(.system(.title2, design: .rounded).weight(.bold))
+                            .font(.system(.title2, design: .default).weight(.bold))
                             .foregroundStyle(Color.accentMint)
                         Text(subtitle(summary))
-                            .font(.system(.caption, design: .rounded))
+                            .font(.system(.caption, design: .default))
                             .foregroundStyle(Color.obsidianTextSecondary)
                     }
                 }

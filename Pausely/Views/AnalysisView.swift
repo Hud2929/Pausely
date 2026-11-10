@@ -71,20 +71,20 @@ struct AnalysisView: View {
     private var header: some View {
         VStack(alignment: .leading, spacing: 4) {
             Text("Analysis")
-                .font(.system(.largeTitle, design: .rounded).weight(.bold))
+                .font(.system(.largeTitle, design: .default).weight(.bold))
                 .foregroundStyle(.white)
 
             if let date = insightsEngine.lastAnalysisDate {
                 Text("Updated \(date.formatted(.relative(presentation: .named)))")
-                    .font(.system(.footnote, design: .rounded))
+                    .font(.system(.footnote, design: .default))
                     .foregroundStyle(Color.obsidianTextSecondary)
             } else if insightsEngine.isAnalyzing {
                 Text("Analyzing…")
-                    .font(.system(.footnote, design: .rounded))
+                    .font(.system(.footnote, design: .default))
                     .foregroundStyle(Color.obsidianTextSecondary)
             } else {
                 Text("Subscription health and optimization")
-                    .font(.system(.footnote, design: .rounded))
+                    .font(.system(.footnote, design: .default))
                     .foregroundStyle(Color.obsidianTextSecondary)
             }
         }
@@ -145,13 +145,13 @@ struct AnalysisView: View {
     private func analysisHero(monthly: Decimal) -> some View {
         VStack(spacing: 6) {
             Text(CurrencyManager.shared.format(monthly))
-                .font(.system(.largeTitle, design: .rounded).weight(.black))
+                .font(.system(.largeTitle, design: .default).weight(.black))
                 .foregroundStyle(Color.accentMint)
                 .minimumScaleFactor(0.7)
                 .lineLimit(1)
             HStack(spacing: 6) {
                 Text("across \(store.subscriptions.filter { $0.status == .active }.count) subscription\(store.subscriptions.filter { $0.status == .active }.count == 1 ? "" : "s") · per month")
-                    .font(.system(.caption, design: .rounded))
+                    .font(.system(.caption, design: .default))
                     .foregroundStyle(Color.obsidianTextTertiary)
             }
         }
@@ -177,9 +177,8 @@ struct AnalysisView: View {
                 .frame(height: 1)
 
             Text("SAVINGS IDEAS")
-                .font(.system(size: 10, weight: .semibold, design: .rounded))
+                .font(.system(size: 10, weight: .semibold, design: .default))
                 .foregroundStyle(Color.obsidianTextTertiary)
-                .tracking(1.5)
                 .fixedSize()
 
             Rectangle()
@@ -222,7 +221,7 @@ struct AnalysisView: View {
                                 .font(.system(size: 16, weight: .semibold))
                         }
                         Text(aiButtonLabel)
-                            .font(.system(.headline, design: .rounded).weight(.semibold))
+                            .font(.system(.headline, design: .default).weight(.semibold))
                     }
                     .foregroundStyle(Color.black)
                     .frame(maxWidth: .infinity)
@@ -281,11 +280,11 @@ struct AnalysisView: View {
 
             VStack(spacing: 6) {
                 Text("Ready to Analyze")
-                    .font(.system(.headline, design: .rounded).weight(.semibold))
+                    .font(.system(.headline, design: .default).weight(.semibold))
                     .foregroundStyle(.white)
 
                 Text("Discover savings opportunities and optimization tips for your subscriptions.")
-                    .font(.system(.subheadline, design: .rounded))
+                    .font(.system(.subheadline, design: .default))
                     .foregroundStyle(Color.obsidianTextSecondary)
                     .multilineTextAlignment(.center)
             }
@@ -333,12 +332,12 @@ struct AnalysisView: View {
                 .font(.title3)
                 .foregroundStyle(color)
             Text(value)
-                .font(.system(.headline, design: .rounded).weight(.bold))
+                .font(.system(.headline, design: .default).weight(.bold))
                 .foregroundStyle(.white)
                 .lineLimit(1)
                 .minimumScaleFactor(0.7)
             Text(label)
-                .font(.system(.caption2, design: .rounded))
+                .font(.system(.caption2, design: .default))
                 .foregroundStyle(Color.obsidianTextSecondary)
         }
         .frame(maxWidth: .infinity)
@@ -360,10 +359,10 @@ struct AnalysisView: View {
             }
             VStack(spacing: 6) {
                 Text("Nothing to Optimize")
-                    .font(.system(.headline, design: .rounded).weight(.semibold))
+                    .font(.system(.headline, design: .default).weight(.semibold))
                     .foregroundStyle(.white)
                 Text("No obvious savings found with your current subscriptions. Enable Screen Time tracking for usage-based recommendations.")
-                    .font(.system(.subheadline, design: .rounded))
+                    .font(.system(.subheadline, design: .default))
                     .foregroundStyle(Color.obsidianTextSecondary)
                     .multilineTextAlignment(.center)
             }
@@ -387,10 +386,10 @@ struct AnalysisView: View {
             }
             VStack(spacing: 6) {
                 Text("Analysis Failed")
-                    .font(.system(.headline, design: .rounded).weight(.semibold))
+                    .font(.system(.headline, design: .default).weight(.semibold))
                     .foregroundStyle(.white)
                 Text(message)
-                    .font(.system(.subheadline, design: .rounded))
+                    .font(.system(.subheadline, design: .default))
                     .foregroundStyle(Color.obsidianTextSecondary)
                     .multilineTextAlignment(.center)
             }
@@ -409,15 +408,15 @@ struct AnalysisView: View {
                     .fill(Color.accentMint.opacity(0.10))
                     .frame(width: 72, height: 72)
                 Image(systemName: "chart.xyaxis.line")
-                    .font(.system(size: 28, weight: .semibold, design: .rounded))
+                    .font(.system(size: 28, weight: .semibold, design: .default))
                     .foregroundStyle(Color.accentMint)
             }
             VStack(spacing: 8) {
                 Text("Nothing to Analyze Yet")
-                    .font(.system(.title3, design: .rounded).weight(.bold))
+                    .font(.system(.title3, design: .default).weight(.bold))
                     .foregroundStyle(.white)
                 Text("Add your subscriptions and come back to see a full health report and savings opportunities.")
-                    .font(.system(.subheadline, design: .rounded))
+                    .font(.system(.subheadline, design: .default))
                     .foregroundStyle(Color.obsidianTextSecondary)
                     .multilineTextAlignment(.center)
             }
@@ -497,13 +496,13 @@ private struct AnnualSpendRealityCard: View {
             HStack {
                 VStack(alignment: .leading, spacing: 2) {
                     Text("This year you'll spend")
-                        .font(.system(.caption, design: .rounded).weight(.medium))
+                        .font(.system(.caption, design: .default).weight(.medium))
                         .foregroundStyle(Color.obsidianTextSecondary)
                     Text(CurrencyManager.shared.format(annualSpend))
-                        .font(.system(.title, design: .rounded).weight(.black))
+                        .font(.system(.title, design: .default).weight(.black))
                         .foregroundStyle(Color.accentMint)
                     Text("on subscriptions")
-                        .font(.system(.caption, design: .rounded).weight(.medium))
+                        .font(.system(.caption, design: .default).weight(.medium))
                         .foregroundStyle(Color.obsidianTextSecondary)
                 }
                 Spacer()
@@ -523,10 +522,10 @@ private struct AnnualSpendRealityCard: View {
                             .font(.system(size: 16))
                             .foregroundStyle(Color.obsidianTextSecondary)
                         Text(c.count)
-                            .font(.system(.headline, design: .rounded).weight(.bold))
+                            .font(.system(.headline, design: .default).weight(.bold))
                             .foregroundStyle(.white)
                         Text(c.label)
-                            .font(.system(size: 10, design: .rounded))
+                            .font(.system(size: 10, design: .default))
                             .foregroundStyle(Color.obsidianTextTertiary)
                     }
                     .frame(maxWidth: .infinity)

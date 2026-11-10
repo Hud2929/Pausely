@@ -55,7 +55,7 @@ struct ErrorToastModifier: ViewModifier {
                             .foregroundStyle(.red)
                             .font(.system(size: 16, weight: .semibold))
                         Text(msg)
-                            .font(.system(.subheadline, design: .rounded).weight(.medium))
+                            .font(.system(.subheadline, design: .default).weight(.medium))
                             .foregroundStyle(.white)
                             .fixedSize(horizontal: false, vertical: true)
                         Spacer()

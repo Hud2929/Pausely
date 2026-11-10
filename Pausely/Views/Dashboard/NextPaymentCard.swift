@@ -60,13 +60,13 @@ struct NextPaymentCard: View {
         VStack(alignment: .leading, spacing: 6) {
             HStack(spacing: 6) {
                 Text("Next Payment")
-                    .font(.system(.caption, design: .rounded).weight(.semibold))
+                    .font(.system(.caption, design: .default).weight(.semibold))
                     .foregroundStyle(.secondary)
                     .textCase(.uppercase)
 
                 if daysUntil <= 3 {
                     Text("SOON")
-                        .font(.system(.caption2, design: .rounded).weight(.bold))
+                        .font(.system(.caption2, design: .default).weight(.bold))
                         .foregroundStyle(.white)
                         .padding(.horizontal, 8)
                         .padding(.vertical, 2)
@@ -76,7 +76,7 @@ struct NextPaymentCard: View {
             }
 
             Text(sub.name)
-                .font(.system(.headline, design: .rounded).weight(.bold))
+                .font(.system(.headline, design: .default).weight(.bold))
                 .foregroundStyle(.primary)
                 .lineLimit(1)
 
@@ -87,14 +87,14 @@ struct NextPaymentCard: View {
     private func cardAmountAndDate(for sub: Subscription) -> some View {
         VStack(alignment: .leading, spacing: 4) {
             Text(sub.chargeText)  // the charge itself, in what it's billed in
-                .font(.system(.subheadline, design: .rounded).weight(.semibold))
+                .font(.system(.subheadline, design: .default).weight(.semibold))
                 .foregroundStyle(urgencyColor)
                 .lineLimit(1)
 
             if sub.calculatedNextBillingDate != nil {
                 HStack(spacing: 8) {
                     Text(renewalDateText)
-                        .font(.system(.subheadline, design: .rounded).weight(.medium))
+                        .font(.system(.subheadline, design: .default).weight(.medium))
                         .foregroundStyle(.secondary)
                         .lineLimit(1)
 
@@ -102,17 +102,17 @@ struct NextPaymentCard: View {
                         .foregroundStyle(.tertiary)
 
                     Text(daysUntilText)
-                        .font(.system(.subheadline, design: .rounded).weight(.medium))
+                        .font(.system(.subheadline, design: .default).weight(.medium))
                         .foregroundStyle(daysUntil <= 3 ? urgencyColor : .secondary)
                         .lineLimit(1)
                 }
             } else {
                 HStack(spacing: 4) {
                     Image(systemName: "calendar.badge.plus")
-                        .font(.system(.subheadline, design: .rounded))
+                        .font(.system(.subheadline, design: .default))
                         .foregroundStyle(Color.accentMint)
                     Text("Tap to set billing date")
-                        .font(.system(.subheadline, design: .rounded).weight(.medium))
+                        .font(.system(.subheadline, design: .default).weight(.medium))
                         .foregroundStyle(Color.accentMint)
                 }
             }

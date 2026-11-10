@@ -76,7 +76,7 @@ struct OnboardingCarouselView: View {
                 onGetStarted()
             }) {
                 Text("Get Started")
-                    .font(.system(.headline, design: .rounded).weight(.semibold))
+                    .font(.system(.headline, design: .default).weight(.semibold))
                     .foregroundColor(.white)
                     .frame(maxWidth: .infinity)
                     .frame(height: 56)
@@ -112,7 +112,7 @@ struct OnboardingCarouselView: View {
                 onSignIn()
             }) {
                 Text("Already have an account? **Sign In**")
-                    .font(.system(.subheadline, design: .rounded).weight(.medium))
+                    .font(.system(.subheadline, design: .default).weight(.medium))
                     .foregroundColor(Color.obsidianTextSecondary)
             }
             .accessibilityLabel("Already have an account? Sign In")
@@ -143,11 +143,11 @@ struct DashboardPreviewPage: View {
                     HStack {
                         VStack(alignment: .leading, spacing: 4) {
                             Text("Dashboard")
-                                .font(.system(.title2, design: .rounded).weight(.bold))
+                                .font(.system(.title2, design: .default).weight(.bold))
                                 .foregroundColor(.white)
 
                             Text("Good morning")
-                                .font(.system(.footnote, design: .rounded).weight(.medium))
+                                .font(.system(.footnote, design: .default).weight(.medium))
                                 .foregroundColor(Color.obsidianTextSecondary)
                         }
 
@@ -158,7 +158,7 @@ struct DashboardPreviewPage: View {
                             .frame(width: 36, height: 36)
                             .overlay(
                                 Image(systemName: "bell")
-                                    .font(.system(.subheadline, design: .rounded))
+                                    .font(.system(.subheadline, design: .default))
                                     .foregroundColor(Color.accentMint)
                             )
                     }
@@ -168,11 +168,11 @@ struct DashboardPreviewPage: View {
                     // Hero spend card with glass effect
                     VStack(spacing: 8) {
                         Text(verbatim: OnboardingSample.money(247, wholeUnits: true))
-                            .font(.system(.largeTitle, design: .rounded).weight(.bold))
+                            .font(.system(.largeTitle, design: .default).weight(.bold))
                             .foregroundColor(.white)
 
                         Text("/month")
-                            .font(.system(.subheadline, design: .rounded).weight(.medium))
+                            .font(.system(.subheadline, design: .default).weight(.medium))
                             .foregroundColor(Color.obsidianTextSecondary)
                     }
                     .frame(maxWidth: .infinity)
@@ -261,12 +261,12 @@ struct OnboardingHeadline: View {
     var body: some View {
         VStack(spacing: 10) {
             Text(title)
-                .font(.system(.title2, design: .rounded).weight(.bold))
+                .font(.system(.title2, design: .default).weight(.bold))
                 .foregroundColor(.white)
                 .multilineTextAlignment(.center)
                 .accessibilityAddTraits(.isHeader)
             Text(subtitle)
-                .font(.system(.body, design: .rounded))
+                .font(.system(.body, design: .default))
                 .foregroundColor(Color.obsidianTextSecondary)
                 .multilineTextAlignment(.center)
                 .fixedSize(horizontal: false, vertical: true)
@@ -292,10 +292,10 @@ struct DecisionPreviewPage: View {
                         .overlay(Image(systemName: "pause.fill").foregroundColor(.black).font(.system(size: 16, weight: .bold)))
                     VStack(alignment: .leading, spacing: 2) {
                         Text("Netflix renews in 2 days")
-                            .font(.system(.subheadline, design: .rounded).weight(.semibold))
+                            .font(.system(.subheadline, design: .default).weight(.semibold))
                             .foregroundColor(.white)
                         Text("\(OnboardingSample.money(17.99)) on Thursday. Keep it or cancel it?")
-                            .font(.system(.caption, design: .rounded))
+                            .font(.system(.caption, design: .default))
                             .foregroundColor(Color.obsidianTextSecondary)
                     }
                     Spacer(minLength: 0)
@@ -309,7 +309,7 @@ struct DecisionPreviewPage: View {
                 // The decision
                 VStack(spacing: 12) {
                     Text("Keep Netflix?")
-                        .font(.system(.title3, design: .rounded).weight(.bold))
+                        .font(.system(.title3, design: .default).weight(.bold))
                         .foregroundColor(.white)
                     VStack(alignment: .leading, spacing: 8) {
                         previewFact("calendar", "That's \(OnboardingSample.money(215.88)) a year")
@@ -318,13 +318,13 @@ struct DecisionPreviewPage: View {
                     }
                     HStack(spacing: 10) {
                         Text("Keep it")
-                            .font(.system(.subheadline, design: .rounded).weight(.semibold))
+                            .font(.system(.subheadline, design: .default).weight(.semibold))
                             .foregroundColor(.black)
                             .frame(maxWidth: .infinity)
                             .frame(height: 40)
                             .background(RoundedRectangle(cornerRadius: 12, style: .continuous).fill(Color.accentMint))
                         Text("Cancel it")
-                            .font(.system(.subheadline, design: .rounded).weight(.semibold))
+                            .font(.system(.subheadline, design: .default).weight(.semibold))
                             .foregroundColor(.red)
                             .frame(maxWidth: .infinity)
                             .frame(height: 40)
@@ -365,7 +365,7 @@ struct DecisionPreviewPage: View {
                 .foregroundColor(Color.accentMint)
                 .frame(width: 18)
             Text(text)
-                .font(.system(.footnote, design: .rounded))
+                .font(.system(.footnote, design: .default))
                 .foregroundColor(.white)
             Spacer(minLength: 0)
         }
@@ -399,14 +399,13 @@ struct ReceiptPreviewPage: View {
             VStack(spacing: 14) {
                 VStack(spacing: 4) {
                     Text("SAVED WITH PAUSELY")
-                        .font(.system(.caption2, design: .rounded).weight(.semibold))
-                        .tracking(2)
+                        .font(.system(.caption2, design: .default).weight(.semibold))
                         .foregroundColor(Color.obsidianTextTertiary)
                     Text(verbatim: OnboardingSample.money(269.83))
-                        .font(.system(size: 40, weight: .black, design: .rounded))
+                        .font(.system(size: 40, weight: .black, design: .default))
                         .foregroundColor(Color.accentMint)
                     Text("Pausely paid for itself 9×")
-                        .font(.system(.footnote, design: .rounded).weight(.semibold))
+                        .font(.system(.footnote, design: .default).weight(.semibold))
                         .foregroundColor(.white)
                         .padding(.horizontal, 10)
                         .padding(.vertical, 4)
@@ -418,15 +417,15 @@ struct ReceiptPreviewPage: View {
                         HStack {
                             VStack(alignment: .leading, spacing: 2) {
                                 Text(line.name)
-                                    .font(.system(.subheadline, design: .rounded).weight(.semibold))
+                                    .font(.system(.subheadline, design: .default).weight(.semibold))
                                     .foregroundColor(.white)
                                 Text(line.detail)
-                                    .font(.system(.caption, design: .rounded))
+                                    .font(.system(.caption, design: .default))
                                     .foregroundColor(Color.obsidianTextSecondary)
                             }
                             Spacer()
                             Text(verbatim: OnboardingSample.money(line.amount))
-                                .font(.system(.subheadline, design: .rounded).weight(.bold))
+                                .font(.system(.subheadline, design: .default).weight(.bold))
                                 .foregroundColor(Color.accentMint)
                         }
                         .padding(.vertical, 10)

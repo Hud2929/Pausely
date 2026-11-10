@@ -52,7 +52,7 @@ struct PauselyLiveActivityView: View {
                 VStack(alignment: .trailing, spacing: 4) {
                     if context.state.daysUntilRenewal > 0 {
                         Text("\(context.state.daysUntilRenewal)")
-                            .font(.system(.title, design: .rounded).weight(.bold))
+                            .font(.system(.title, design: .default).weight(.bold))
                             .foregroundStyle(context.state.isUrgent ? .red : .primary)
 
                         Text(context.state.daysUntilRenewal == 1 ? "day" : "days")
@@ -60,7 +60,7 @@ struct PauselyLiveActivityView: View {
                             .foregroundStyle(.secondary)
                     } else {
                         Text("\(context.state.hoursUntilRenewal)h")
-                            .font(.system(.title, design: .rounded).weight(.bold))
+                            .font(.system(.title, design: .default).weight(.bold))
                             .foregroundStyle(.red)
                     }
 

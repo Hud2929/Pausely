@@ -89,23 +89,23 @@ struct RenewalVerdictView: View {
             ServiceLogoView(name: sub.name, category: sub.category, size: 64)
                 .accessibilityHidden(true)
             Text("Keep \(sub.name)?")
-                .font(.system(.title, design: .rounded).weight(.bold))
+                .font(.system(.title, design: .default).weight(.bold))
                 .foregroundStyle(.white)
                 .multilineTextAlignment(.center)
                 .accessibilityAddTraits(.isHeader)
             if let charge {
                 Text(whenText(charge))
-                    .font(.system(.subheadline, design: .rounded).weight(.medium))
+                    .font(.system(.subheadline, design: .default).weight(.medium))
                     .foregroundStyle(daysUntil(charge.date) <= 1 ? Color.orange : Color.obsidianTextSecondary)
             }
             HStack(alignment: .firstTextBaseline, spacing: 4) {
                 Text(MoneyFormat.string(sub.amount, sub.currency))
-                    .font(.system(size: 40, weight: .black, design: .rounded))
+                    .font(.system(size: 40, weight: .black, design: .default))
                     .foregroundStyle(Color.accentMint)
                     .minimumScaleFactor(0.6)
                     .lineLimit(1)
                 Text(sub.billingFrequency.shortDisplay)
-                    .font(.system(.title3, design: .rounded))
+                    .font(.system(.title3, design: .default))
                     .foregroundStyle(Color.obsidianTextSecondary)
             }
             .accessibilityElement(children: .combine)
@@ -217,7 +217,7 @@ struct RenewalVerdictView: View {
                 .frame(width: 22)
                 .accessibilityHidden(true)
             Text(text)
-                .font(.system(.callout, design: .rounded))
+                .font(.system(.callout, design: .default))
                 .foregroundStyle(.white)
                 .frame(maxWidth: .infinity, alignment: .leading)
                 .fixedSize(horizontal: false, vertical: true)
@@ -240,7 +240,7 @@ struct RenewalVerdictView: View {
                     Task { await keep(sub) }
                 } label: {
                     Label(isKeeping ? L10n.string("Keeping…") : L10n.string("Keep it"), systemImage: "checkmark")
-                        .font(.system(.body, design: .rounded).weight(.semibold))
+                        .font(.system(.body, design: .default).weight(.semibold))
                         .foregroundStyle(Color.black)
                         .frame(maxWidth: .infinity)
                         .frame(height: 54)
@@ -259,7 +259,7 @@ struct RenewalVerdictView: View {
                     }
                 } label: {
                     Label("Cancel it", systemImage: "xmark")
-                        .font(.system(.body, design: .rounded).weight(.semibold))
+                        .font(.system(.body, design: .default).weight(.semibold))
                         .foregroundStyle(Color.red)
                         .frame(maxWidth: .infinity)
                         .frame(height: 54)
@@ -273,7 +273,7 @@ struct RenewalVerdictView: View {
                 dismiss()
             } label: {
                 Text("Decide later")
-                    .font(.system(.subheadline, design: .rounded))
+                    .font(.system(.subheadline, design: .default))
                     .foregroundStyle(Color.obsidianTextTertiary)
                     .frame(maxWidth: .infinity)
                     .frame(height: 40)
@@ -306,26 +306,26 @@ struct RenewalVerdictView: View {
             switch outcome {
             case .kept(let askAgain):
                 Text("Kept")
-                    .font(.system(.title, design: .rounded).weight(.bold))
+                    .font(.system(.title, design: .default).weight(.bold))
                     .foregroundStyle(.white)
                 Text(askAgain.map { L10n.string("No more reminders about this charge. We'll ask again before \($0.formatted(.dateTime.month(.abbreviated).day())).") }
                      ?? L10n.string("No more reminders about this charge."))
-                    .font(.system(.body, design: .rounded))
+                    .font(.system(.body, design: .default))
                     .foregroundStyle(Color.obsidianTextSecondary)
                     .multilineTextAlignment(.center)
             case .cancelled:
                 let line = SavingsSummary.current().lines.last { $0.subscriptionId == sub.id }
                 Text("\(sub.name) cancelled")
-                    .font(.system(.title, design: .rounded).weight(.bold))
+                    .font(.system(.title, design: .default).weight(.bold))
                     .foregroundStyle(.white)
                     .multilineTextAlignment(.center)
                 Text(line.map { L10n.string("That's \(MoneyFormat.string($0.onTrack, $0.currency)) you won't pay over the next 12 months. It's on your Savings Receipt.") }
                      ?? L10n.string("It's on your Savings Receipt."))
-                    .font(.system(.body, design: .rounded))
+                    .font(.system(.body, design: .default))
                     .foregroundStyle(Color.obsidianTextSecondary)
                     .multilineTextAlignment(.center)
                 Button("See your Savings Receipt") { showReceipt = true }
-                    .font(.system(.body, design: .rounded).weight(.semibold))
+                    .font(.system(.body, design: .default).weight(.semibold))
                     .foregroundStyle(Color.accentMint)
                     .padding(.top, 4)
             }
@@ -335,7 +335,7 @@ struct RenewalVerdictView: View {
                 dismiss()
             } label: {
                 Text("Done")
-                    .font(.system(.body, design: .rounded).weight(.semibold))
+                    .font(.system(.body, design: .default).weight(.semibold))
                     .foregroundStyle(.black)
                     .frame(maxWidth: .infinity)
                     .frame(height: 54)
@@ -360,11 +360,11 @@ struct PauselyPromiseCard: View {
         let summary = SavingsSummary.current()
         VStack(alignment: .leading, spacing: 10) {
             Label("The Pausely Promise", systemImage: "seal")
-                .font(.system(.caption, design: .rounded).weight(.bold))
+                .font(.system(.caption, design: .default).weight(.bold))
                 .textCase(.uppercase)
                 .foregroundStyle(Color.accentMint)
             Text(message(summary))
-                .font(.system(.body, design: .rounded))
+                .font(.system(.body, design: .default))
                 .foregroundStyle(.white)
                 .fixedSize(horizontal: false, vertical: true)
         }

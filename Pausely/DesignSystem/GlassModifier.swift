@@ -260,23 +260,10 @@ extension View {
     }
 }
 
-// MARK: - Clean Dark Background (replaces animated gradient blobs)
+// MARK: - Background (plain ink; the old name is kept until each screen is rebuilt)
 struct AnimatedGradientBackground: View {
     var body: some View {
-        ZStack {
-            Color.obsidianBlack.ignoresSafeArea()
-
-            // Subtle mint vignette at top-right — depth without noise
-            GeometryReader { geo in
-                RadialGradient(
-                    colors: [Color.accentMint.opacity(0.04), .clear],
-                    center: .topTrailing,
-                    startRadius: 0,
-                    endRadius: geo.size.width * 0.8
-                )
-                .ignoresSafeArea()
-            }
-        }
+        Color.ink.ignoresSafeArea()
     }
 }
 

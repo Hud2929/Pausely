@@ -49,18 +49,17 @@ struct SavingsReceiptView: View {
     private func totals(_ summary: SavingsSummary) -> some View {
         VStack(spacing: 6) {
             Text("SAVED WITH PAUSELY")
-                .font(.system(.caption, design: .rounded).weight(.semibold))
-                .tracking(2)
+                .font(.system(.caption, design: .default).weight(.semibold))
                 .foregroundStyle(Color.obsidianTextTertiary)
             Text(summary.formatted(summary.savedSoFar))
-                .font(.system(size: 44, weight: .black, design: .rounded))
+                .font(.system(size: 44, weight: .black, design: .default))
                 .foregroundStyle(Color.accentMint)
                 .minimumScaleFactor(0.6)
                 .lineLimit(1)
             Text(summary.isEmpty
                  ? L10n.string("Nothing yet")
                  : L10n.string("\(summary.formatted(summary.onTrack)) over the 12 months after each cancellation"))
-                .font(.system(.subheadline, design: .rounded))
+                .font(.system(.subheadline, design: .default))
                 .foregroundStyle(Color.obsidianTextSecondary)
                 .multilineTextAlignment(.center)
         }
@@ -73,24 +72,24 @@ struct SavingsReceiptView: View {
         VStack(alignment: .leading, spacing: 6) {
             HStack(alignment: .firstTextBaseline) {
                 Text(line.name)
-                    .font(.system(.body, design: .rounded).weight(.semibold))
+                    .font(.system(.body, design: .default).weight(.semibold))
                     .foregroundStyle(.white)
                 Spacer(minLength: 8)
                 Text(summary.formatted(line.savedSoFar, from: line.currency))
-                    .font(.system(.body, design: .rounded).weight(.bold))
+                    .font(.system(.body, design: .default).weight(.bold))
                     .foregroundStyle(Color.accentMint)
             }
             Text(L10n.string("Cancelled \(line.cancelledOn.formatted(.dateTime.month(.abbreviated).day().year())) · \(line.avoidedSoFar.count) of \(line.avoidedCharges.count) charges avoided so far"))
-                .font(.system(.caption, design: .rounded))
+                .font(.system(.caption, design: .default))
                 .foregroundStyle(Color.obsidianTextSecondary)
             if let next = line.avoidedCharges.first(where: { !line.avoidedSoFar.contains($0) }) {
                 Text(L10n.string("Next avoided charge: \(MoneyFormat.string(line.amountPerCharge, line.currency)) on \(next.formatted(.dateTime.month(.abbreviated).day()))"))
-                    .font(.system(.caption, design: .rounded))
+                    .font(.system(.caption, design: .default))
                     .foregroundStyle(Color.obsidianTextTertiary)
             }
             if let ended = line.endedOn {
                 Text(L10n.string("Started again \(ended.formatted(.dateTime.month(.abbreviated).day())). Savings stop there."))
-                    .font(.system(.caption, design: .rounded))
+                    .font(.system(.caption, design: .default))
                     .foregroundStyle(.orange)
             }
         }
@@ -105,11 +104,11 @@ struct SavingsReceiptView: View {
                 .foregroundStyle(Color.accentMint)
                 .accessibilityHidden(true)
             Text("Your receipt starts with your first decision")
-                .font(.system(.headline, design: .rounded))
+                .font(.system(.headline, design: .default))
                 .foregroundStyle(.white)
                 .multilineTextAlignment(.center)
             Text("Before each renewal Pausely asks: keep it or cancel it? Every subscription you cancel shows up here with the charges it avoided.")
-                .font(.system(.subheadline, design: .rounded))
+                .font(.system(.subheadline, design: .default))
                 .foregroundStyle(Color.obsidianTextSecondary)
                 .multilineTextAlignment(.center)
         }
@@ -120,7 +119,7 @@ struct SavingsReceiptView: View {
 
     private var howWeCount: some View {
         Text("How we count: only charges that would really have happened, worked out from the payment date you entered, for 12 months after you cancel. If a subscription starts again, its savings stop that day. Pausely's own subscription never counts.")
-            .font(.system(.footnote, design: .rounded))
+            .font(.system(.footnote, design: .default))
             .foregroundStyle(Color.obsidianTextTertiary)
             .multilineTextAlignment(.leading)
             .frame(maxWidth: .infinity, alignment: .leading)

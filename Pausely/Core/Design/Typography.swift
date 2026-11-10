@@ -9,7 +9,7 @@ import SwiftUI
 
 // MARK: - Typography Scale
 enum STFont {
-    static let displayMedium = Font.system(.title, design: .rounded).weight(.bold)
+    static let displayMedium = Font.system(.title, design: .default).weight(.bold)
 
     // Headlines — section headers
     static let headlineLarge = Font.title3.weight(.semibold)

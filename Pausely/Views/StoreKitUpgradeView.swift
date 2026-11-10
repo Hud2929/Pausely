@@ -217,9 +217,9 @@ struct StoreKitUpgradeView: View {
             if isTrialEnabled {
                 HStack(spacing: 6) {
                     Image(systemName: "gift.fill")
-                        .font(.system(.caption, design: .rounded).weight(.semibold))
+                        .font(.system(.caption, design: .default).weight(.semibold))
                     Text(LocalizedStringKey("7-DAY FREE TRIAL"))
-                        .font(.system(.caption, design: .rounded).weight(.bold))
+                        .font(.system(.caption, design: .default).weight(.bold))
                 }
                 .foregroundColor(.black)
                 .padding(.horizontal, 14)
@@ -282,11 +282,11 @@ struct StoreKitUpgradeView: View {
                     }) {
                         HStack(spacing: 6) {
                             Text(plan.title)
-                                .font(.system(.subheadline, design: .rounded).weight(.semibold))
+                                .font(.system(.subheadline, design: .default).weight(.semibold))
 
                             if let badge = plan.badge {
                                 Text(badge)
-                                    .font(.system(.caption2, design: .rounded).weight(.bold))
+                                    .font(.system(.caption2, design: .default).weight(.bold))
                                     .foregroundColor(.black)
                                     .padding(.horizontal, 6)
                                     .padding(.vertical, 2)
@@ -430,10 +430,10 @@ struct StoreKitUpgradeView: View {
                             .scaleEffect(1.2)
                     } else {
                         Image(systemName: "sparkles")
-                            .font(.system(.title3, design: .rounded).weight(.semibold))
+                            .font(.system(.title3, design: .default).weight(.semibold))
 
                         Text(isTrialEnabled ? L10n.string("Start Free Trial") : L10n.string("Subscribe"))
-                            .font(.system(.body, design: .rounded).weight(.bold))
+                            .font(.system(.body, design: .default).weight(.bold))
                     }
                 }
                 .foregroundStyle(Color.black)
@@ -481,12 +481,12 @@ struct StoreKitUpgradeView: View {
         VStack(spacing: 8) {
             if isTrialEnabled {
                 Text("After your free trial, you'll be charged \(selectedPlan == .monthly ? priceText(.pro) + "/month" : priceText(.proAnnual) + "/year") unless you cancel at least 24 hours before the trial ends.")
-                    .font(.system(.caption2, design: .rounded))
+                    .font(.system(.caption2, design: .default))
                     .foregroundStyle(Color.obsidianTextTertiary)
                     .multilineTextAlignment(.center)
             }
             Text("Subscription auto-renews. Cancel anytime in Settings → Apple ID → Subscriptions.")
-                .font(.system(.caption2, design: .rounded))
+                .font(.system(.caption2, design: .default))
                 .foregroundStyle(Color.obsidianTextTertiary)
                 .multilineTextAlignment(.center)
             HStack(spacing: 12) {
@@ -502,7 +502,7 @@ struct StoreKitUpgradeView: View {
                     if let url = URL(string: AppConfig.refundPolicyURL) { UIApplication.shared.open(url) }
                 }
             }
-            .font(.system(.caption2, design: .rounded))
+            .font(.system(.caption2, design: .default))
             .foregroundStyle(Color.accentMint.opacity(0.7))
         }
         .padding(.horizontal, 24)
@@ -571,11 +571,11 @@ struct TrialFeatureRow: View {
     var body: some View {
         HStack(spacing: 12) {
             Image(systemName: "checkmark.circle.fill")
-                .font(.system(.title3, design: .rounded).weight(.semibold))
+                .font(.system(.title3, design: .default).weight(.semibold))
                 .foregroundColor(Color.accentMint)
 
             Text(text)
-                .font(.system(.subheadline, design: .rounded).weight(.medium))
+                .font(.system(.subheadline, design: .default).weight(.medium))
                 .foregroundStyle(.white)
 
             Spacer()

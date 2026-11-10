@@ -51,13 +51,13 @@ struct IMAPConnectView: View {
                     if let preset = effectivePreset { steps(preset) }
                     if let error {
                         Text(error)
-                            .font(.system(.footnote, design: .rounded))
+                            .font(.system(.footnote, design: .default))
                             .foregroundStyle(Color.semanticDestructive)
                             .accessibilityIdentifier("imapError")
                     }
                     connectButton
                     Text("Pausely only reads. It opens your mail read-only, never marks anything as read, and can't send or delete email. The app password stays on this iPhone; remove it at your provider whenever you like.")
-                        .font(.system(.caption, design: .rounded))
+                        .font(.system(.caption, design: .default))
                         .foregroundStyle(Color.obsidianTextTertiary)
                 }
                 .padding(20)
@@ -78,7 +78,7 @@ struct IMAPConnectView: View {
         (effectivePreset == nil
              ? Text("Enter your email address, an app password and your provider's IMAP server.")
              : Text("Enter your email address and an app password. It's a separate password just for Pausely, so your main password stays private."))
-            .font(.system(.subheadline, design: .rounded))
+            .font(.system(.subheadline, design: .default))
             .foregroundStyle(Color.obsidianTextSecondary)
     }
 
@@ -124,7 +124,7 @@ struct IMAPConnectView: View {
                         .accessibilityIdentifier("imapPort")
                 }
                 Text("Pausely only connects over an encrypted connection (IMAP with SSL/TLS, usually port 993).")
-                    .font(.system(.caption, design: .rounded))
+                    .font(.system(.caption, design: .default))
                     .foregroundStyle(Color.obsidianTextTertiary)
             }
         }
@@ -134,16 +134,16 @@ struct IMAPConnectView: View {
     private func steps(_ preset: IMAPPreset) -> some View {
         VStack(alignment: .leading, spacing: 10) {
             Text("Create an app password")
-                .font(.system(.subheadline, design: .rounded).weight(.semibold))
+                .font(.system(.subheadline, design: .default).weight(.semibold))
                 .foregroundStyle(.white)
             ForEach(Array(preset.steps.enumerated()), id: \.offset) { index, step in
                 HStack(alignment: .top, spacing: 10) {
                     Text(index + 1, format: .number)
-                        .font(.system(.caption, design: .rounded).weight(.bold))
+                        .font(.system(.caption, design: .default).weight(.bold))
                         .foregroundStyle(Color.accentMint)
                         .frame(width: 18, alignment: .leading)
                     Text(step)
-                        .font(.system(.footnote, design: .rounded))
+                        .font(.system(.footnote, design: .default))
                         .foregroundStyle(Color.obsidianTextSecondary)
                 }
             }
@@ -152,7 +152,7 @@ struct IMAPConnectView: View {
                     openURL(page)
                 } label: {
                     Label("Open \(Self.pageName(page) ?? preset.name)", systemImage: "arrow.up.right.square")
-                        .font(.system(.footnote, design: .rounded).weight(.semibold))
+                        .font(.system(.footnote, design: .default).weight(.semibold))
                         .foregroundStyle(Color.accentMint)
                 }
                 .accessibilityIdentifier("imapOpenPasswordPage")
@@ -168,7 +168,7 @@ struct IMAPConnectView: View {
             HStack {
                 if connecting { ProgressView().tint(.black) }
                 (connecting ? Text("Checking…") : Text("Connect"))
-                    .font(.system(.body, design: .rounded).weight(.semibold))
+                    .font(.system(.body, design: .default).weight(.semibold))
             }
             .foregroundStyle(Color.black)
             .frame(maxWidth: .infinity)

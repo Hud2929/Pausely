@@ -100,11 +100,11 @@ struct InboxImportView: View {
 
             VStack(spacing: 8) {
                 Text("Find subscriptions in your email")
-                    .font(.system(.title3, design: .rounded).weight(.bold))
+                    .font(.system(.title3, design: .default).weight(.bold))
                     .foregroundStyle(.white)
                     .multilineTextAlignment(.center)
                 Text("Pausely reads the receipts in your inbox and finds what you pay for, including trials and price changes.")
-                    .font(.system(.subheadline, design: .rounded))
+                    .font(.system(.subheadline, design: .default))
                     .foregroundStyle(Color.obsidianTextSecondary)
                     .multilineTextAlignment(.center)
                     .lineSpacing(3)
@@ -115,7 +115,7 @@ struct InboxImportView: View {
 
             if let error = scanner.error {
                 Text(error)
-                    .font(.system(.caption, design: .rounded))
+                    .font(.system(.caption, design: .default))
                     .foregroundStyle(Color.semanticDestructive)
                     .multilineTextAlignment(.center)
             }
@@ -128,14 +128,14 @@ struct InboxImportView: View {
         VStack(alignment: .leading, spacing: 8) {
             HStack(spacing: 10) {
                 Image(systemName: "lock.shield.fill")
-                    .font(.system(.caption, design: .rounded))
+                    .font(.system(.caption, design: .default))
                     .foregroundStyle(Color.accentMint)
                 Text("Your email never leaves your iPhone.")
-                    .font(.system(.caption, design: .rounded).weight(.semibold))
+                    .font(.system(.caption, design: .default).weight(.semibold))
                     .foregroundStyle(Color.accentMint)
             }
             Text("Pausely connects straight to your email provider with read-only access, reads receipts on this iPhone and keeps only the name, amount and date of each charge. It can't send, change or delete email.")
-                .font(.system(.caption, design: .rounded))
+                .font(.system(.caption, design: .default))
                 .foregroundStyle(Color.obsidianTextSecondary)
                 .lineSpacing(2)
         }
@@ -194,10 +194,10 @@ struct InboxImportView: View {
                     .frame(width: 28)
                 VStack(alignment: .leading, spacing: 2) {
                     title
-                        .font(.system(.body, design: .rounded).weight(.semibold))
+                        .font(.system(.body, design: .default).weight(.semibold))
                         .foregroundStyle(.white)
                     detail
-                        .font(.system(.caption, design: .rounded))
+                        .font(.system(.caption, design: .default))
                         .foregroundStyle(Color.obsidianTextSecondary)
                 }
                 Spacer()
@@ -227,7 +227,7 @@ struct InboxImportView: View {
             }
 
             (scanner.statusLine.isEmpty ? Text("Scanning your email…") : Text(verbatim: scanner.statusLine))
-                .font(.system(.headline, design: .rounded))
+                .font(.system(.headline, design: .default))
                 .foregroundStyle(.white)
                 .multilineTextAlignment(.center)
 
@@ -236,11 +236,11 @@ struct InboxImportView: View {
                 .padding(.horizontal, 40)
 
             Text(scanner.progress, format: .percent.precision(.fractionLength(0)))
-                .font(.system(.caption, design: .rounded).monospacedDigit())
+                .font(.system(.caption, design: .default).monospacedDigit())
                 .foregroundStyle(Color.obsidianTextSecondary)
 
             Button("Stop") { scanner.cancelScan() }
-                .font(.system(.subheadline, design: .rounded).weight(.semibold))
+                .font(.system(.subheadline, design: .default).weight(.semibold))
                 .foregroundStyle(Color.obsidianTextSecondary)
         }
         .padding(32)
@@ -263,7 +263,7 @@ struct InboxImportView: View {
                     Image(systemName: "magnifyingglass")
                         .font(.system(size: 16, weight: .semibold))
                     (scanner.accounts.count == 1 ? Text("Find subscriptions") : Text("Search \(scanner.accounts.count) inboxes"))
-                        .font(.system(.body, design: .rounded).weight(.semibold))
+                        .font(.system(.body, design: .default).weight(.semibold))
                 }
                 .foregroundStyle(Color.black)
                 .frame(maxWidth: .infinity)
@@ -275,7 +275,7 @@ struct InboxImportView: View {
 
             if let error = scanner.error {
                 Text(error)
-                    .font(.system(.caption, design: .rounded))
+                    .font(.system(.caption, design: .default))
                     .foregroundStyle(Color.obsidianTextSecondary)
                     .multilineTextAlignment(.center)
             }
@@ -290,11 +290,11 @@ struct InboxImportView: View {
                 .foregroundStyle(scanner.accountErrors[account.id] == nil ? Color.green : Color.semanticWarning)
             VStack(alignment: .leading, spacing: 2) {
                 Text(account.address)
-                    .font(.system(.subheadline, design: .rounded).weight(.semibold))
+                    .font(.system(.subheadline, design: .default).weight(.semibold))
                     .foregroundStyle(.white)
                     .lineLimit(1)
                 Text(accountDetail(account))
-                    .font(.system(.caption, design: .rounded))
+                    .font(.system(.caption, design: .default))
                     .foregroundStyle(Color.obsidianTextSecondary)
                     .lineLimit(2)
             }
@@ -379,32 +379,32 @@ struct InboxImportView: View {
 
         return VStack(alignment: .leading, spacing: 10) {
             Text("We found \(count) subscriptions")
-                .font(.system(.headline, design: .rounded))
+                .font(.system(.headline, design: .default))
                 .foregroundStyle(.white)
             HStack(alignment: .firstTextBaseline, spacing: 8) {
                 Text(InboxImportView.money(monthly, currency))
-                    .font(.system(.largeTitle, design: .rounded).weight(.black))
+                    .font(.system(.largeTitle, design: .default).weight(.black))
                     .foregroundStyle(Color.accentMint)
                 Text("per month")
-                    .font(.system(.subheadline, design: .rounded))
+                    .font(.system(.subheadline, design: .default))
                     .foregroundStyle(Color.obsidianTextSecondary)
             }
             Text("\(InboxImportView.money(annual, currency)) a year")
-                .font(.system(.footnote, design: .rounded))
+                .font(.system(.footnote, design: .default))
                 .foregroundStyle(Color.obsidianTextSecondary)
             if ignored > 0 {
                 Label("Ignored \(ignored) one-time purchases so your list stays clean", systemImage: "line.3.horizontal.decrease.circle")
-                    .font(.system(.caption, design: .rounded))
+                    .font(.system(.caption, design: .default))
                     .foregroundStyle(Color.obsidianTextTertiary)
             }
             if scanner.stats.emailsChecked > 0 {
                 let stats = scanner.stats
                 Label("Emails checked: \(stats.emailsChecked) · read in full: \(stats.bodiesRead) · all on your phone", systemImage: "lock.shield")
-                    .font(.system(.caption, design: .rounded))
+                    .font(.system(.caption, design: .default))
                     .foregroundStyle(Color.obsidianTextTertiary)
                 if stats.aiAssisted > 0 {
                     Label("On-device AI helped with \(stats.aiAssisted) tricky receipts", systemImage: "sparkles")
-                        .font(.system(.caption, design: .rounded))
+                        .font(.system(.caption, design: .default))
                         .foregroundStyle(Color.obsidianTextTertiary)
                 }
             }
@@ -421,7 +421,7 @@ struct InboxImportView: View {
         if !insights.isEmpty {
             VStack(alignment: .leading, spacing: 12) {
                 Text("Worth knowing")
-                    .font(.system(.subheadline, design: .rounded).weight(.semibold))
+                    .font(.system(.subheadline, design: .default).weight(.semibold))
                     .foregroundStyle(.white)
                 ForEach(insights) { insight in
                     HStack(alignment: .top, spacing: 12) {
@@ -432,10 +432,10 @@ struct InboxImportView: View {
                             .accessibilityHidden(true)
                         VStack(alignment: .leading, spacing: 2) {
                             Text(insight.title)
-                                .font(.system(.footnote, design: .rounded).weight(.semibold))
+                                .font(.system(.footnote, design: .default).weight(.semibold))
                                 .foregroundStyle(.white)
                             Text(insight.detail)
-                                .font(.system(.caption, design: .rounded))
+                                .font(.system(.caption, design: .default))
                                 .foregroundStyle(Color.obsidianTextSecondary)
                                 .fixedSize(horizontal: false, vertical: true)
                         }
@@ -473,10 +473,10 @@ struct InboxImportView: View {
             HStack(alignment: .firstTextBaseline) {
                 VStack(alignment: .leading, spacing: 2) {
                     Text(title)
-                        .font(.system(.headline, design: .rounded))
+                        .font(.system(.headline, design: .default))
                         .foregroundStyle(.white)
                     Text(subtitle)
-                        .font(.system(.caption, design: .rounded))
+                        .font(.system(.caption, design: .default))
                         .foregroundStyle(Color.obsidianTextSecondary)
                 }
                 Spacer()
@@ -490,7 +490,7 @@ struct InboxImportView: View {
                 } label: {
                     allSelected ? Text("Deselect all") : Text("Select all")
                 }
-                .font(.system(.caption, design: .rounded).weight(.semibold))
+                .font(.system(.caption, design: .default).weight(.semibold))
                 .foregroundStyle(Color.accentMint)
             }
 
@@ -539,7 +539,7 @@ struct InboxImportView: View {
                             .font(.system(size: 15, weight: .semibold))
                     }
                     Text("Import \(selectedSubscriptions.count) subscriptions")
-                        .font(.system(.body, design: .rounded).weight(.semibold))
+                        .font(.system(.body, design: .default).weight(.semibold))
                 }
                 .foregroundStyle(Color.black)
                 .frame(maxWidth: .infinity)
@@ -570,18 +570,18 @@ struct InboxImportView: View {
             }
 
             Text("Import complete")
-                .font(.system(.title3, design: .rounded).weight(.bold))
+                .font(.system(.title3, design: .default).weight(.bold))
                 .foregroundStyle(.white)
 
             VStack(spacing: 6) {
                 if result.added > 0 {
                     Text("\(result.added) subscriptions added")
-                        .font(.system(.subheadline, design: .rounded))
+                        .font(.system(.subheadline, design: .default))
                         .foregroundStyle(Color.accentMint)
                 }
                 if result.duplicates > 0 {
                     Text("\(result.duplicates) already tracked (skipped)")
-                        .font(.system(.caption, design: .rounded))
+                        .font(.system(.caption, design: .default))
                         .foregroundStyle(Color.obsidianTextSecondary)
                 }
             }
@@ -590,7 +590,7 @@ struct InboxImportView: View {
                 dismiss()
             } label: {
                 Text("Done")
-                    .font(.system(.body, design: .rounded).weight(.semibold))
+                    .font(.system(.body, design: .default).weight(.semibold))
                     .foregroundStyle(Color.black)
                     .frame(maxWidth: .infinity)
                     .frame(height: 48)
@@ -674,17 +674,17 @@ private struct GmailSubscriptionRow: View {
 
                         VStack(alignment: .leading, spacing: 3) {
                             Text(subscription.name)
-                                .font(.system(.subheadline, design: .rounded).weight(.semibold))
+                                .font(.system(.subheadline, design: .default).weight(.semibold))
                                 .foregroundStyle(.white)
                                 .lineLimit(1)
                             Text(evidenceLine)
-                                .font(.system(.caption2, design: .rounded))
+                                .font(.system(.caption2, design: .default))
                                 .foregroundStyle(Color.obsidianTextTertiary)
                                 .lineLimit(2)
                                 .fixedSize(horizontal: false, vertical: true)
                             if let badge = statusBadge {
                                 Text(badge.text)
-                                    .font(.system(.caption2, design: .rounded).weight(.semibold))
+                                    .font(.system(.caption2, design: .default).weight(.semibold))
                                     .foregroundStyle(badge.color)
                             }
                         }
@@ -693,10 +693,10 @@ private struct GmailSubscriptionRow: View {
 
                         VStack(alignment: .trailing, spacing: 1) {
                             Text(InboxImportView.money(subscription.amount, subscription.currency))
-                                .font(.system(.subheadline, design: .rounded).weight(.bold))
+                                .font(.system(.subheadline, design: .default).weight(.bold))
                                 .foregroundStyle(Color.accentMint)
                             Text(frequencySuffix)
-                                .font(.system(.caption2, design: .rounded))
+                                .font(.system(.caption2, design: .default))
                                 .foregroundStyle(Color.obsidianTextTertiary)
                         }
                     }
@@ -748,7 +748,7 @@ private struct GmailSubscriptionRow: View {
     private func evidenceDetail(_ proven: ProvenSubscription) -> some View {
         VStack(alignment: .leading, spacing: 10) {
             Text("Why we think so")
-                .font(.system(.caption, design: .rounded).weight(.semibold))
+                .font(.system(.caption, design: .default).weight(.semibold))
                 .foregroundStyle(.white)
             ForEach(Array(proven.reasons.enumerated()), id: \.offset) { _, reason in
                 HStack(alignment: .top, spacing: 8) {
@@ -758,7 +758,7 @@ private struct GmailSubscriptionRow: View {
                         .padding(.top, 2)
                         .accessibilityHidden(true)
                     Text(reason)
-                        .font(.system(.caption, design: .rounded))
+                        .font(.system(.caption, design: .default))
                         .foregroundStyle(Color.obsidianTextSecondary)
                         .fixedSize(horizontal: false, vertical: true)
                 }
@@ -768,18 +768,18 @@ private struct GmailSubscriptionRow: View {
                 ForEach(proven.evidence.suffix(5).reversed()) { charge in
                     HStack {
                         Text(charge.date, format: .dateTime.month(.abbreviated).day().year())
-                            .font(.system(.caption2, design: .rounded))
+                            .font(.system(.caption2, design: .default))
                             .foregroundStyle(Color.obsidianTextTertiary)
                         Spacer()
                         Text(InboxImportView.money(charge.amount, charge.currency))
-                            .font(.system(.caption2, design: .rounded).weight(.semibold))
+                            .font(.system(.caption2, design: .default).weight(.semibold))
                             .foregroundStyle(Color.obsidianTextSecondary)
                     }
                 }
             }
             Button(action: onReject) {
                 Label("This isn't a subscription", systemImage: "hand.thumbsdown")
-                    .font(.system(.caption, design: .rounded).weight(.semibold))
+                    .font(.system(.caption, design: .default).weight(.semibold))
                     .foregroundStyle(Color.obsidianTextSecondary)
                     .padding(.vertical, 8)
                     .padding(.horizontal, 12)

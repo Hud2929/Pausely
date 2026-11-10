@@ -94,19 +94,18 @@ struct TrialSmallView: View {
                         .foregroundStyle(urgencyColor(for: trial.daysRemaining))
                     Spacer()
                     Text("TRIAL")
-                        .font(.system(size: 9, weight: .bold, design: .rounded))
+                        .font(.system(size: 9, weight: .bold, design: .default))
                         .foregroundStyle(.secondary)
-                        .tracking(1)
                 }
 
                 Spacer()
 
                 VStack(alignment: .leading, spacing: 2) {
                     Text("\(trial.daysRemaining)")
-                        .font(.system(.largeTitle, design: .rounded).weight(.black))
+                        .font(.system(.largeTitle, design: .default).weight(.black))
                         .foregroundStyle(urgencyColor(for: trial.daysRemaining))
                     Text(trial.daysRemaining == 1 ? "day left" : "days left")
-                        .font(.system(.caption2, design: .rounded).weight(.medium))
+                        .font(.system(.caption2, design: .default).weight(.medium))
                         .foregroundStyle(.secondary)
                 }
 
@@ -114,11 +113,11 @@ struct TrialSmallView: View {
 
                 VStack(alignment: .leading, spacing: 2) {
                     Text(trial.name)
-                        .font(.system(.subheadline, design: .rounded).weight(.semibold))
+                        .font(.system(.subheadline, design: .default).weight(.semibold))
                         .foregroundStyle(.primary)
                         .lineLimit(1)
                     Text("\(trial.amountText ?? "")/\(shortFrequency(trial.billingFrequency)) after")
-                        .font(.system(.caption2, design: .rounded))
+                        .font(.system(.caption2, design: .default))
                         .foregroundStyle(.secondary)
                         .lineLimit(1)
                 }
@@ -146,7 +145,7 @@ struct TrialMediumView: View {
                         .font(.callout.weight(.semibold))
                         .foregroundStyle(.orange)
                     Text("Trial Countdowns")
-                        .font(.system(.callout, design: .rounded).weight(.semibold))
+                        .font(.system(.callout, design: .default).weight(.semibold))
                     Spacer()
                 }
 
@@ -156,7 +155,7 @@ struct TrialMediumView: View {
 
                 if entry.trials.count > 3 {
                     Text("+\(entry.trials.count - 3) more")
-                        .font(.system(.caption2, design: .rounded))
+                        .font(.system(.caption2, design: .default))
                         .foregroundStyle(.secondary)
                 }
             }
@@ -177,19 +176,19 @@ struct TrialRowView: View {
                 .frame(width: 8, height: 8)
 
             Text(trial.name)
-                .font(.system(.caption, design: .rounded).weight(.semibold))
+                .font(.system(.caption, design: .default).weight(.semibold))
                 .foregroundStyle(.primary)
                 .lineLimit(1)
 
             Spacer()
 
             Text("\(trial.daysRemaining)d")
-                .font(.system(.caption, design: .rounded).weight(.bold))
+                .font(.system(.caption, design: .default).weight(.bold))
                 .foregroundStyle(urgencyColor(for: trial.daysRemaining))
                 .frame(minWidth: 24, alignment: .trailing)
 
             Text(trial.amountText ?? "")
-                .font(.system(.caption2, design: .rounded))
+                .font(.system(.caption2, design: .default))
                 .foregroundStyle(.secondary)
                 .frame(minWidth: 44, alignment: .trailing)
         }
@@ -206,7 +205,7 @@ private struct TrialNoDataView: View {
                 .font(.title2)
                 .foregroundStyle(.green)
             Text("No active trials")
-                .font(.system(.caption, design: .rounded).weight(.medium))
+                .font(.system(.caption, design: .default).weight(.medium))
                 .foregroundStyle(.secondary)
                 .multilineTextAlignment(.center)
         }

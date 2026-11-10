@@ -106,7 +106,7 @@ struct SubscriptionEditView: View {
                 .accessibilityHidden(true)
 
             TextField("Name", text: $draft.name)
-                .font(.system(.title2, design: .rounded).weight(.bold))
+                .font(.system(.title2, design: .default).weight(.bold))
                 .foregroundStyle(.white)
                 .multilineTextAlignment(.center)
                 .textInputAutocapitalization(.words)
@@ -118,7 +118,7 @@ struct SubscriptionEditView: View {
 
             if showValidation, let error = draft.nameError {
                 Text(error)
-                    .font(.system(.caption, design: .rounded))
+                    .font(.system(.caption, design: .default))
                     .foregroundStyle(.red)
             }
         }
@@ -145,7 +145,7 @@ struct SubscriptionEditView: View {
                 } label: {
                     HStack(spacing: 3) {
                         Text(amountPrefix)
-                            .font(.system(size: 30, weight: .bold, design: .rounded))
+                            .font(.system(size: 30, weight: .bold, design: .default))
                         Image(systemName: "chevron.up.chevron.down")
                             .font(.system(size: 10, weight: .bold))
                     }
@@ -154,7 +154,7 @@ struct SubscriptionEditView: View {
                 .accessibilityLabel("Currency, \(draft.currency)")
 
                 TextField("0.00", text: $draft.amountText)
-                    .font(.system(size: 52, weight: .black, design: .rounded))
+                    .font(.system(size: 52, weight: .black, design: .default))
                     .foregroundStyle(Color.accentMint)
                     .keyboardType(.decimalPad)
                     .fixedSize(horizontal: true, vertical: false)
@@ -167,11 +167,11 @@ struct SubscriptionEditView: View {
 
             if showValidation, let error = draft.amountError {
                 Text(error)
-                    .font(.system(.caption, design: .rounded))
+                    .font(.system(.caption, design: .default))
                     .foregroundStyle(.red)
             } else {
                 Text(draft.frequency.billingPeriodLabel)
-                    .font(.system(.subheadline, design: .rounded))
+                    .font(.system(.subheadline, design: .default))
                     .foregroundStyle(Color.obsidianTextSecondary)
             }
         }
@@ -218,7 +218,7 @@ struct SubscriptionEditView: View {
                         draft.nextBillingDate = Date()
                     } label: {
                         Text("Set date")
-                            .font(.system(.body, design: .rounded).weight(.semibold))
+                            .font(.system(.body, design: .default).weight(.semibold))
                             .foregroundStyle(Color.accentMint)
                     }
                 }
@@ -274,12 +274,12 @@ struct SubscriptionEditView: View {
         VStack(spacing: 6) {
             if let yearly = draft.yearlyCost {
                 Text("That's \(MoneyFormat.string(yearly, draft.currency)) a year")
-                    .font(.system(.footnote, design: .rounded))
+                    .font(.system(.footnote, design: .default))
                     .foregroundStyle(Color.obsidianTextTertiary)
             }
             if draft.reminderDays > 0 && draft.nextBillingDate == nil {
                 Text("Set a payment date to get reminders.")
-                    .font(.system(.footnote, design: .rounded))
+                    .font(.system(.footnote, design: .default))
                     .foregroundStyle(.orange)
             }
         }
@@ -290,7 +290,7 @@ struct SubscriptionEditView: View {
     private func row<Content: View>(_ title: String, @ViewBuilder content: () -> Content) -> some View {
         HStack(spacing: 12) {
             Text(title)
-                .font(.system(.body, design: .rounded))
+                .font(.system(.body, design: .default))
                 .foregroundStyle(.white)
             Spacer(minLength: 12)
             content()
@@ -302,7 +302,7 @@ struct SubscriptionEditView: View {
     private func valueLabel(_ text: String) -> some View {
         HStack(spacing: 6) {
             Text(text)
-                .font(.system(.body, design: .rounded))
+                .font(.system(.body, design: .default))
                 .foregroundStyle(Color.obsidianTextSecondary)
             Image(systemName: "chevron.up.chevron.down")
                 .font(.system(size: 11, weight: .semibold))

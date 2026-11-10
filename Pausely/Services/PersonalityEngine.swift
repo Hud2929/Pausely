@@ -233,19 +233,18 @@ struct PersonalityProfileCard: View {
                 VStack(alignment: .leading, spacing: 4) {
                     HStack(spacing: 6) {
                         Text("YOUR PERSONALITY")
-                            .font(.system(size: 9, weight: .bold, design: .rounded))
+                            .font(.system(size: 9, weight: .bold, design: .default))
                             .foregroundStyle(Color.obsidianTextTertiary)
-                            .tracking(1.2)
                         Spacer()
                         Image(systemName: "chevron.right")
                             .font(.system(size: 11, weight: .semibold))
                             .foregroundStyle(Color.obsidianTextTertiary)
                     }
                     Text(personality.name)
-                        .font(.system(.subheadline, design: .rounded).weight(.bold))
+                        .font(.system(.subheadline, design: .default).weight(.bold))
                         .foregroundStyle(.white)
                     Text(personality.headline)
-                        .font(.system(.caption, design: .rounded))
+                        .font(.system(.caption, design: .default))
                         .foregroundStyle(Color.obsidianTextSecondary)
                         .lineLimit(2)
                 }

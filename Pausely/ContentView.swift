@@ -177,6 +177,10 @@ struct RootView: View {
                     #if DEBUG
                     SubscriptionEditView(subscription: DemoSubscriptions.netflix)
                     #endif
+                } else if isDemoScreen("--demo-design") {
+                    #if DEBUG
+                    DesignGalleryView()
+                    #endif
                 } else if isDemoScreen("--demo-paywall") {
                     #if DEBUG
                     StoreKitUpgradeView(currentSubscriptionCount: 3)
@@ -365,18 +369,18 @@ struct PremiumSplashScreen: View {
                         .shadow(color: .brandPrimary.opacity(0.5), radius: 30, x: 0, y: 15)
                     
                     Image(systemName: "pause.circle.fill")
-                        .font(.system(.largeTitle, design: .rounded).weight(.medium))
+                        .font(.system(.largeTitle, design: .default).weight(.medium))
                         .foregroundColor(.white)
                 }
                 
                 // Text
                 VStack(spacing: 12) {
                     Text("Pausely")
-                        .font(.system(.largeTitle, design: .rounded).weight(.bold))
+                        .font(.system(.largeTitle, design: .default).weight(.bold))
                         .foregroundColor(.white)
 
                     Text("Smart Subscription Manager")
-                        .font(.system(.body, design: .rounded).weight(.medium))
+                        .font(.system(.body, design: .default).weight(.medium))
                         .foregroundColor(Color.obsidianTextSecondary)
                 }
                 .opacity(opacity)
@@ -463,18 +467,18 @@ struct PremiumWelcomeFlow: View {
                         .shadow(color: BrandColors.primary.opacity(0.4), radius: 30, x: 0, y: 15)
 
                     Image(systemName: "pause.circle.fill")
-                        .font(.system(.largeTitle, design: .rounded))
+                        .font(.system(.largeTitle, design: .default))
                         .foregroundColor(.white)
                 }
 
                 VStack(spacing: 8) {
                     Text("Welcome to Pausely")
-                        .font(.system(.title, design: .rounded).weight(.bold))
+                        .font(.system(.title, design: .default).weight(.bold))
                         .foregroundColor(.white)
                         .multilineTextAlignment(.center)
 
                     Text("Take control of your subscriptions")
-                        .font(.system(.body, design: .rounded).weight(.medium))
+                        .font(.system(.body, design: .default).weight(.medium))
                         .foregroundColor(Color.obsidianTextSecondary)
                 }
             }
@@ -540,17 +544,17 @@ struct PremiumFeatureRow: View {
                     .frame(width: 52, height: 52)
                 
                 Image(systemName: icon)
-                    .font(.system(.title2, design: .rounded).weight(.semibold))
+                    .font(.system(.title2, design: .default).weight(.semibold))
                     .foregroundColor(BrandColors.primary)
             }
 
             VStack(alignment: .leading, spacing: 4) {
                 Text(title)
-                    .font(.system(.body, design: .rounded).weight(.semibold))
+                    .font(.system(.body, design: .default).weight(.semibold))
                     .foregroundColor(.white)
 
                 Text(description)
-                    .font(.system(.subheadline, design: .rounded))
+                    .font(.system(.subheadline, design: .default))
                     .foregroundColor(.textSecondary)
             }
             
@@ -603,11 +607,11 @@ struct PremiumSignUpView: View {
                         // Header
                         VStack(spacing: 8) {
                             Text("Create Account")
-                                .font(.system(.title, design: .rounded).weight(.bold))
+                                .font(.system(.title, design: .default).weight(.bold))
                                 .foregroundColor(.white)
 
                             Text("Start your subscription journey")
-                                .font(.system(.body, design: .rounded))
+                                .font(.system(.body, design: .default))
                                 .foregroundColor(Color.obsidianTextSecondary)
                         }
                         .padding(.top, 20)
@@ -618,14 +622,14 @@ struct PremiumSignUpView: View {
                             HStack(spacing: 12) {
                                 VStack(alignment: .leading, spacing: 8) {
                                     Text("First Name")
-                                        .font(.system(.subheadline, design: .rounded).weight(.medium))
+                                        .font(.system(.subheadline, design: .default).weight(.medium))
                                         .foregroundColor(Color.obsidianTextSecondary)
                                     PremiumTextField(placeholder: "Jane", text: $firstName)
                                         .accessibilityIdentifier("firstNameTextField")
                                 }
                                 VStack(alignment: .leading, spacing: 8) {
                                     Text("Last Name")
-                                        .font(.system(.subheadline, design: .rounded).weight(.medium))
+                                        .font(.system(.subheadline, design: .default).weight(.medium))
                                         .foregroundColor(Color.obsidianTextSecondary)
                                     PremiumTextField(placeholder: "Smith", text: $lastName)
                                         .accessibilityIdentifier("lastNameTextField")
@@ -635,7 +639,7 @@ struct PremiumSignUpView: View {
                             // Email
                             VStack(alignment: .leading, spacing: 8) {
                                 Text("Email")
-                                    .font(.system(.subheadline, design: .rounded).weight(.medium))
+                                    .font(.system(.subheadline, design: .default).weight(.medium))
                                     .foregroundColor(Color.obsidianTextSecondary)
 
                                 PremiumTextField(
@@ -650,7 +654,7 @@ struct PremiumSignUpView: View {
                             // Password
                             VStack(alignment: .leading, spacing: 8) {
                                 Text("Password")
-                                    .font(.system(.subheadline, design: .rounded).weight(.medium))
+                                    .font(.system(.subheadline, design: .default).weight(.medium))
                                     .foregroundColor(Color.obsidianTextSecondary)
 
                                 PremiumTextField(
@@ -673,7 +677,7 @@ struct PremiumSignUpView: View {
                                 Image(systemName: "exclamationmark.triangle.fill")
                                     .foregroundColor(.error)
                                 Text(errorMessage)
-                                    .font(.system(.subheadline, design: .rounded))
+                                    .font(.system(.subheadline, design: .default))
                                     .foregroundColor(.error)
                             }
                             .padding(.horizontal, 24)
@@ -688,7 +692,7 @@ struct PremiumSignUpView: View {
                                         .tint(.white)
                                 } else {
                                     Text("Create Account")
-                                        .font(.system(.body, design: .rounded).weight(.semibold))
+                                        .font(.system(.body, design: .default).weight(.semibold))
                                 }
                             }
                         }
@@ -701,7 +705,7 @@ struct PremiumSignUpView: View {
                         // Divider
                         HStack {
                             Rectangle().fill(Color.white.opacity(0.1)).frame(height: 1)
-                            Text("or").font(.system(.footnote, design: .rounded)).foregroundColor(.textTertiary).padding(.horizontal, 8)
+                            Text("or").font(.system(.footnote, design: .default)).foregroundColor(.textTertiary).padding(.horizontal, 8)
                             Rectangle().fill(Color.white.opacity(0.1)).frame(height: 1)
                         }
                         .padding(.horizontal, 24)
@@ -723,7 +727,7 @@ struct PremiumSignUpView: View {
 
                         // Terms
                         Text("By creating an account, you agree to our Terms of Service and Privacy Policy")
-                            .font(.system(.footnote, design: .rounded))
+                            .font(.system(.footnote, design: .default))
                             .foregroundColor(.textTertiary)
                             .multilineTextAlignment(.center)
                             .padding(.horizontal, 40)
@@ -856,11 +860,11 @@ struct PremiumSignInView: View {
                         // Header
                         VStack(spacing: 8) {
                             Text("Welcome Back")
-                                .font(.system(.title, design: .rounded).weight(.bold))
+                                .font(.system(.title, design: .default).weight(.bold))
                                 .foregroundColor(.white)
 
                             Text("Sign in to continue")
-                                .font(.system(.body, design: .rounded))
+                                .font(.system(.body, design: .default))
                                 .foregroundColor(Color.obsidianTextSecondary)
                         }
                         .padding(.top, 20)
@@ -869,7 +873,7 @@ struct PremiumSignInView: View {
                         VStack(spacing: 20) {
                             VStack(alignment: .leading, spacing: 8) {
                                 Text("Email")
-                                    .font(.system(.subheadline, design: .rounded).weight(.medium))
+                                    .font(.system(.subheadline, design: .default).weight(.medium))
                                     .foregroundColor(Color.obsidianTextSecondary)
 
                                 PremiumTextField(
@@ -883,7 +887,7 @@ struct PremiumSignInView: View {
 
                             VStack(alignment: .leading, spacing: 8) {
                                 Text("Password")
-                                    .font(.system(.subheadline, design: .rounded).weight(.medium))
+                                    .font(.system(.subheadline, design: .default).weight(.medium))
                                     .foregroundColor(Color.obsidianTextSecondary)
 
                                 PremiumTextField(
@@ -901,7 +905,7 @@ struct PremiumSignInView: View {
                                 Image(systemName: "exclamationmark.triangle.fill")
                                     .foregroundColor(.error)
                                 Text(errorMessage)
-                                    .font(.system(.subheadline, design: .rounded))
+                                    .font(.system(.subheadline, design: .default))
                                     .foregroundColor(.error)
                             }
                             .padding(.horizontal, 24)
@@ -916,7 +920,7 @@ struct PremiumSignInView: View {
                                         .tint(.white)
                                 } else {
                                     Text("Sign In")
-                                        .font(.system(.body, design: .rounded).weight(.semibold))
+                                        .font(.system(.body, design: .default).weight(.semibold))
                                 }
                             }
                         }
@@ -929,14 +933,14 @@ struct PremiumSignInView: View {
                         Button("Forgot Password?") {
                             showPasswordReset = true
                         }
-                        .font(.system(.subheadline, design: .rounded))
+                        .font(.system(.subheadline, design: .default))
                         .foregroundColor(Color.obsidianTextSecondary)
                         .accessibilityIdentifier("forgotPasswordButton")
 
                         // Divider
                         HStack {
                             Rectangle().fill(Color.white.opacity(0.1)).frame(height: 1)
-                            Text("or").font(.system(.footnote, design: .rounded)).foregroundColor(.textTertiary).padding(.horizontal, 8)
+                            Text("or").font(.system(.footnote, design: .default)).foregroundColor(.textTertiary).padding(.horizontal, 8)
                             Rectangle().fill(Color.white.opacity(0.1)).frame(height: 1)
                         }
                         .padding(.horizontal, 24)

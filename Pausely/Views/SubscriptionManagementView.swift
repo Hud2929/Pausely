@@ -98,18 +98,18 @@ struct SubscriptionManagementView: View {
                 .accessibilityHidden(true)
 
             Text(current.name)
-                .font(.system(.title2, design: .rounded).weight(.bold))
+                .font(.system(.title2, design: .default).weight(.bold))
                 .foregroundStyle(.white)
                 .multilineTextAlignment(.center)
 
             HStack(alignment: .firstTextBaseline, spacing: 4) {
                 Text(MoneyFormat.string(current.amount, current.currency))
-                    .font(.system(size: 44, weight: .black, design: .rounded))
+                    .font(.system(size: 44, weight: .black, design: .default))
                     .foregroundStyle(Color.accentMint)
                     .minimumScaleFactor(0.6)
                     .lineLimit(1)
                 Text(current.billingFrequency.shortDisplay)
-                    .font(.system(.title3, design: .rounded))
+                    .font(.system(.title3, design: .default))
                     .foregroundStyle(Color.obsidianTextSecondary)
             }
             .accessibilityElement(children: .ignore)
@@ -118,7 +118,7 @@ struct SubscriptionManagementView: View {
             if current.currency != currencyManager.selectedCurrency {
                 let converted = currencyManager.convertToSelected(current.amount, from: current.currency)
                 Text("About \(MoneyFormat.string(converted, currencyManager.selectedCurrency)) in your currency")
-                    .font(.system(.footnote, design: .rounded))
+                    .font(.system(.footnote, design: .default))
                     .foregroundStyle(Color.obsidianTextTertiary)
             }
 
@@ -126,7 +126,7 @@ struct SubscriptionManagementView: View {
                 statusChip
                 if let line = renewalLine {
                     Text(line.text)
-                        .font(.system(.footnote, design: .rounded))
+                        .font(.system(.footnote, design: .default))
                         .foregroundStyle(line.tint)
                 }
             }
@@ -138,7 +138,7 @@ struct SubscriptionManagementView: View {
                     route = .edit
                 } label: {
                     Text("Add a payment date")
-                        .font(.system(.footnote, design: .rounded).weight(.semibold))
+                        .font(.system(.footnote, design: .default).weight(.semibold))
                         .foregroundStyle(Color.accentMint)
                 }
             }
@@ -157,7 +157,7 @@ struct SubscriptionManagementView: View {
             }
         }()
         return Text(text)
-            .font(.system(.caption, design: .rounded).weight(.semibold))
+            .font(.system(.caption, design: .default).weight(.semibold))
             .foregroundStyle(tint)
             .padding(.horizontal, 10)
             .padding(.vertical, 4)
@@ -196,11 +196,11 @@ struct SubscriptionManagementView: View {
     private func fact(_ title: String, _ value: String) -> some View {
         HStack {
             Text(title)
-                .font(.system(.body, design: .rounded))
+                .font(.system(.body, design: .default))
                 .foregroundStyle(Color.obsidianTextSecondary)
             Spacer(minLength: 12)
             Text(value)
-                .font(.system(.body, design: .rounded))
+                .font(.system(.body, design: .default))
                 .foregroundStyle(.white)
                 .multilineTextAlignment(.trailing)
         }
@@ -293,18 +293,18 @@ struct SubscriptionManagementView: View {
                     .accessibilityHidden(true)
                 VStack(alignment: .leading, spacing: 2) {
                     Text(title)
-                        .font(.system(.body, design: .rounded))
+                        .font(.system(.body, design: .default))
                         .foregroundStyle(.white)
                     if let subtitle {
                         Text(subtitle)
-                            .font(.system(.caption, design: .rounded))
+                            .font(.system(.caption, design: .default))
                             .foregroundStyle(Color.obsidianTextTertiary)
                     }
                 }
                 Spacer(minLength: 8)
                 if isPro {
                     Text("Pro")
-                        .font(.system(.caption2, design: .rounded).weight(.bold))
+                        .font(.system(.caption2, design: .default).weight(.bold))
                         .foregroundStyle(Color.accentMint)
                         .padding(.horizontal, 7)
                         .padding(.vertical, 3)
@@ -377,7 +377,7 @@ struct SubscriptionManagementView: View {
                             .font(.system(size: 15, weight: .semibold))
                         Text("Cancel subscription")
                     }
-                    .font(.system(.body, design: .rounded).weight(.semibold))
+                    .font(.system(.body, design: .default).weight(.semibold))
                     .foregroundStyle(Color.red)
                     .frame(maxWidth: .infinity)
                     .frame(height: 52)
@@ -395,7 +395,7 @@ struct SubscriptionManagementView: View {
                 showRemoveConfirm = true
             } label: {
                 Text(isRemoving ? "Removing…" : "Remove from Pausely")
-                    .font(.system(.subheadline, design: .rounded))
+                    .font(.system(.subheadline, design: .default))
                     .foregroundStyle(Color.obsidianTextTertiary)
                     .frame(maxWidth: .infinity)
                     .frame(height: 44)
@@ -524,7 +524,7 @@ private struct UsageSheet: View {
                     } label: {
                         HStack {
                             Text("Usage history")
-                                .font(.system(.body, design: .rounded))
+                                .font(.system(.body, design: .default))
                                 .foregroundStyle(.white)
                             Spacer()
                             Image(systemName: "chevron.right")

@@ -41,7 +41,7 @@ struct ExportDataView: View {
 
                     VStack(alignment: .leading, spacing: 4) {
                         Text(formatDescription)
-                            .font(.system(.caption, design: .rounded))
+                            .font(.system(.caption, design: .default))
                             .foregroundStyle(.secondary)
                     }
                     .padding(.top, 4)
@@ -57,13 +57,13 @@ struct ExportDataView: View {
                         Text("Subscriptions to Export")
                         Spacer()
                         Text("\(filteredCount)")
-                            .font(.system(.subheadline, design: .rounded).weight(.semibold))
+                            .font(.system(.subheadline, design: .default).weight(.semibold))
                             .foregroundStyle(.secondary)
                     }
 
                     if filteredCount == 0 {
                         Text("No subscriptions match your filters")
-                            .font(.system(.caption, design: .rounded))
+                            .font(.system(.caption, design: .default))
                             .foregroundStyle(.secondary)
                     }
                 }
@@ -83,7 +83,7 @@ struct ExportDataView: View {
                             }
                             Spacer()
                         }
-                        .font(.system(.subheadline, design: .rounded).weight(.semibold))
+                        .font(.system(.subheadline, design: .default).weight(.semibold))
                         .foregroundStyle(.white)
                         .padding(.vertical, 14)
                         .background(filteredCount > 0 ? Color.accentMint : Color.gray)
@@ -100,7 +100,7 @@ struct ExportDataView: View {
                             Image(systemName: "exclamationmark.triangle.fill")
                                 .foregroundStyle(Color.semanticDestructive)
                             Text(error)
-                                .font(.system(.caption, design: .rounded))
+                                .font(.system(.caption, design: .default))
                                 .foregroundStyle(Color.semanticDestructive)
                         }
                     }

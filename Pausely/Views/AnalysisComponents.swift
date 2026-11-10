@@ -46,23 +46,23 @@ struct HealthScoreCard: View {
                     .rotationEffect(.degrees(-90))
                 VStack(spacing: 0) {
                     Text("\(score)")
-                        .font(.system(.title3, design: .rounded).weight(.black))
+                        .font(.system(.title3, design: .default).weight(.black))
                         .foregroundStyle(scoreColor)
                     Text("/100")
-                        .font(.system(.caption2, design: .rounded))
+                        .font(.system(.caption2, design: .default))
                         .foregroundStyle(Color.obsidianTextTertiary)
                 }
             }
 
             VStack(alignment: .leading, spacing: 4) {
                 Text("Subscription Health")
-                    .font(.system(.subheadline, design: .rounded).weight(.semibold))
+                    .font(.system(.subheadline, design: .default).weight(.semibold))
                     .foregroundStyle(.white)
                 Text(scoreLabel)
-                    .font(.system(.caption, design: .rounded))
+                    .font(.system(.caption, design: .default))
                     .foregroundStyle(scoreColor)
                 Text("Based on organization, costs, and value")
-                    .font(.system(.caption2, design: .rounded))
+                    .font(.system(.caption2, design: .default))
                     .foregroundStyle(Color.obsidianTextSecondary)
                     .lineLimit(2)
             }
@@ -85,12 +85,12 @@ struct CategoryBreakdownCard: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 16) {
             Text("Spending by Category")
-                .font(.system(.subheadline, design: .rounded).weight(.semibold))
+                .font(.system(.subheadline, design: .default).weight(.semibold))
                 .foregroundStyle(.white)
 
             if categories.isEmpty {
                 Text("No category data yet")
-                    .font(.system(.caption, design: .rounded))
+                    .font(.system(.caption, design: .default))
                     .foregroundStyle(Color.obsidianTextTertiary)
                     .frame(maxWidth: .infinity, alignment: .center)
                     .padding(.vertical, 24)
@@ -111,12 +111,12 @@ struct CategoryBreakdownCard: View {
                     // Center label
                     VStack(spacing: 2) {
                         Text(CurrencyManager.shared.format(totalMonthly))
-                            .font(.system(.callout, design: .rounded).weight(.black).monospacedDigit())
+                            .font(.system(.callout, design: .default).weight(.black).monospacedDigit())
                             .foregroundStyle(Color.accentMint)
                             .minimumScaleFactor(0.7)
                             .lineLimit(1)
                         Text("/ mo")
-                            .font(.system(.caption2, design: .rounded))
+                            .font(.system(.caption2, design: .default))
                             .foregroundStyle(Color.obsidianTextTertiary)
                     }
                     .padding(.horizontal, 8)
@@ -131,12 +131,12 @@ struct CategoryBreakdownCard: View {
                                 .fill(cat.color)
                                 .frame(width: 7, height: 7)
                             Text(cat.category)
-                                .font(.system(.caption, design: .rounded))
+                                .font(.system(.caption, design: .default))
                                 .foregroundStyle(Color.obsidianTextSecondary)
                                 .lineLimit(1)
                             Spacer(minLength: 0)
                             Text("\(Int(cat.percentage * 100))%")
-                                .font(.system(.caption, design: .rounded).weight(.semibold))
+                                .font(.system(.caption, design: .default).weight(.semibold))
                                 .foregroundStyle(.white)
                         }
                     }
@@ -165,7 +165,7 @@ struct SpendingForecastCard: View {
         } else {
             VStack(alignment: .leading, spacing: 14) {
                 Text("Spending Forecast")
-                    .font(.system(.subheadline, design: .rounded).weight(.semibold))
+                    .font(.system(.subheadline, design: .default).weight(.semibold))
                     .foregroundStyle(.white)
 
                 let maxAmount = max(forecast.currentMonthly, forecast.optimizedMonthly, forecast.aggressiveMonthly)
@@ -229,7 +229,7 @@ private struct ForecastBar: View {
     var body: some View {
         VStack(spacing: 6) {
             Text(CurrencyManager.shared.format(monthly))
-                .font(.system(.caption2, design: .rounded).weight(.bold))
+                .font(.system(.caption2, design: .default).weight(.bold))
                 .foregroundStyle(color)
                 .lineLimit(1)
                 .minimumScaleFactor(0.7)
@@ -240,10 +240,10 @@ private struct ForecastBar: View {
                 .animation(.spring(response: 0.5, dampingFraction: 0.7), value: appeared)
 
             Text(label)
-                .font(.system(.caption2, design: .rounded))
+                .font(.system(.caption2, design: .default))
                 .foregroundStyle(Color.obsidianTextTertiary)
             Text("/mo")
-                .font(.system(.caption2, design: .rounded))
+                .font(.system(.caption2, design: .default))
                 .foregroundStyle(Color.obsidianTextTertiary.opacity(0.6))
         }
         .frame(maxWidth: .infinity)
@@ -262,11 +262,11 @@ struct WasteAlertsSection: View {
                     .foregroundStyle(.orange)
                     .font(.caption.weight(.semibold))
                 Text("Waste Alerts")
-                    .font(.system(.subheadline, design: .rounded).weight(.semibold))
+                    .font(.system(.subheadline, design: .default).weight(.semibold))
                     .foregroundStyle(.white)
                 Spacer()
                 Text("\(alerts.count)")
-                    .font(.system(.caption2, design: .rounded).weight(.bold))
+                    .font(.system(.caption2, design: .default).weight(.bold))
                     .foregroundStyle(.orange)
                     .padding(.horizontal, 8)
                     .padding(.vertical, 3)
@@ -306,10 +306,10 @@ private struct WasteAlertRow: View {
 
             VStack(alignment: .leading, spacing: 2) {
                 Text(alert.subscription.name)
-                    .font(.system(.caption, design: .rounded).weight(.semibold))
+                    .font(.system(.caption, design: .default).weight(.semibold))
                     .foregroundStyle(.white)
                 Text(alert.reason)
-                    .font(.system(.caption2, design: .rounded))
+                    .font(.system(.caption2, design: .default))
                     .foregroundStyle(Color.obsidianTextSecondary)
                     .lineLimit(2)
             }
@@ -318,7 +318,7 @@ private struct WasteAlertRow: View {
 
             if alert.potentialSavings > 0 {
                 Text(CurrencyManager.shared.format(alert.potentialSavings))
-                    .font(.system(.caption, design: .rounded).weight(.bold))
+                    .font(.system(.caption, design: .default).weight(.bold))
                     .foregroundStyle(Color.accentMint)
             }
         }
@@ -367,14 +367,14 @@ struct GeniusInsightCard: View {
             VStack(alignment: .leading, spacing: 3) {
                 HStack(spacing: 6) {
                     Text(insight.title)
-                        .font(.system(.callout, design: .rounded).weight(.semibold))
+                        .font(.system(.callout, design: .default).weight(.semibold))
                         .foregroundStyle(.white)
                         .lineLimit(1)
 
                     // Urgency text badge
                     if insight.urgency == .high || insight.urgency == .critical {
                         Text(insight.urgency == .critical ? "URGENT" : "HIGH")
-                            .font(.system(.caption2, design: .rounded).weight(.bold))
+                            .font(.system(.caption2, design: .default).weight(.bold))
                             .foregroundStyle(accentColor)
                             .padding(.horizontal, 6)
                             .padding(.vertical, 2)
@@ -383,7 +383,7 @@ struct GeniusInsightCard: View {
                     }
                 }
                 Text(insight.description)
-                    .font(.system(.caption, design: .rounded))
+                    .font(.system(.caption, design: .default))
                     .foregroundStyle(Color.obsidianTextSecondary)
                     .lineLimit(2)
             }
@@ -395,12 +395,12 @@ struct GeniusInsightCard: View {
             VStack(alignment: .trailing, spacing: 2) {
                 if insight.potentialSavings > 0 {
                     Text(CurrencyManager.shared.format(insight.potentialSavings))
-                        .font(.system(.callout, design: .rounded).weight(.bold))
+                        .font(.system(.callout, design: .default).weight(.bold))
                         .foregroundStyle(accentColor)
                         .lineLimit(1)
                         .minimumScaleFactor(0.8)
                     Text("/mo")
-                        .font(.system(.caption2, design: .rounded))
+                        .font(.system(.caption2, design: .default))
                         .foregroundStyle(Color.obsidianTextTertiary)
                 }
             }
@@ -465,12 +465,11 @@ struct SavingsOpportunityBadge: View {
             VStack(alignment: .leading, spacing: 4) {
                 HStack(spacing: 6) {
                     Text("SAVINGS OPPORTUNITY")
-                        .font(.system(.caption2, design: .rounded).weight(.bold))
+                        .font(.system(.caption2, design: .default).weight(.bold))
                         .foregroundStyle(Color.accentMint.opacity(0.7))
-                        .tracking(1.2)
 
                     Text("\(alertCount) \(alertCount == 1 ? "issue" : "issues")")
-                        .font(.system(.caption2, design: .rounded).weight(.bold))
+                        .font(.system(.caption2, design: .default).weight(.bold))
                         .foregroundStyle(Color.accentMint)
                         .padding(.horizontal, 6)
                         .padding(.vertical, 2)
@@ -479,11 +478,11 @@ struct SavingsOpportunityBadge: View {
                 }
 
                 Text("Save up to \(CurrencyManager.shared.format(monthlyAmount))/mo")
-                    .font(.system(.title3, design: .rounded).weight(.black))
+                    .font(.system(.title3, design: .default).weight(.black))
                     .foregroundStyle(.white)
 
                 Text("That's \(CurrencyManager.shared.format(annualAmount)) back in your pocket this year")
-                    .font(.system(.caption, design: .rounded))
+                    .font(.system(.caption, design: .default))
                     .foregroundStyle(Color.obsidianTextSecondary)
             }
 

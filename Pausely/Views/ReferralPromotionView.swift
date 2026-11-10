@@ -34,18 +34,18 @@ struct ApplyReferralView: View {
                                 .frame(width: 100, height: 100)
                             
                             Image(systemName: "percent")
-                                .font(.system(.largeTitle, design: .rounded).weight(.bold))
+                                .font(.system(.largeTitle, design: .default).weight(.bold))
                                 .foregroundColor(Color.accentMint)
                         }
                         
                         VStack(spacing: 8) {
                             Text("30% Off Your First Month!")
-                                .font(.system(.title2, design: .rounded).weight(.bold))
+                                .font(.system(.title2, design: .default).weight(.bold))
                                 .foregroundColor(.white)
                                 .multilineTextAlignment(.center)
 
                             Text("Enter a referral code to get 30% off Pausely Pro")
-                                .font(.system(.callout, design: .rounded).weight(.medium))
+                                .font(.system(.callout, design: .default).weight(.medium))
                                 .foregroundColor(.white.opacity(0.7))
                                 .multilineTextAlignment(.center)
                         }
@@ -67,7 +67,7 @@ struct ApplyReferralView: View {
                         
                         if let error = errorMessage {
                             Text(error)
-                                .font(.system(.footnote, design: .rounded).weight(.medium))
+                                .font(.system(.footnote, design: .default).weight(.medium))
                                 .foregroundColor(.red.opacity(0.8))
                                 .multilineTextAlignment(.center)
                         }
@@ -81,7 +81,7 @@ struct ApplyReferralView: View {
                                 }
                                 
                                 Text("Apply Code")
-                                    .font(.system(.body, design: .rounded).weight(.semibold))
+                                    .font(.system(.body, design: .default).weight(.semibold))
                             }
                             .foregroundColor(.white)
                             .frame(maxWidth: .infinity)

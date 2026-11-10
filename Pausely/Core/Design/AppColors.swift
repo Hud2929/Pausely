@@ -3,24 +3,24 @@ import SwiftUI
 // MARK: - Obsidian Color System
 extension Color {
     // === BACKGROUNDS ===
-    static let obsidianBlack       = Color(hex: "#09090B")      // Primary BG (zinc-950)
-    static let obsidianSurface     = Color(hex: "#18181B")      // Cards, sheets (zinc-900)
-    static let obsidianElevated    = Color(hex: "#27272A")      // Elevated cards (zinc-800)
+    static let obsidianBlack       = Color.ink                  // Primary background
+    static let obsidianSurface     = Color.inkRaised            // Cards, sheets
+    static let obsidianElevated    = Color.inkLifted            // Controls on a card
     static let obsidianBorder      = Color(hex: "#3F3F46")      // Dividers, borders (zinc-700)
 
     // === TEXT ===
-    static let obsidianText        = Color(hex: "#FAFAFA")      // Primary text (zinc-50)
-    static let obsidianTextSecondary = Color(hex: "#A1A1AA")    // Secondary text (zinc-400)
-    static let obsidianTextTertiary = Color(hex: "#8A8A96")     // Tertiary/disabled — lifted from zinc-500 to pass WCAG AA on surface cards
+    static let obsidianText        = Color.inkText              // Primary text
+    static let obsidianTextSecondary = Color.inkTextMuted       // Secondary text
+    static let obsidianTextTertiary = Color.inkTextFaint       // Tertiary; passes WCAG AA on cards
 
     // === ACCENT — "Electric Mint" ===
-    static let accentMint          = Color(hex: "#34D399")      // Primary accent (emerald-400)
+    static let accentMint          = Color.kept                 // Money kept (being removed from everything else)
 
     // === SEMANTIC ===
-    static let semanticDestructive = Color(hex: "#EF4444")      // Red-500
-    static let semanticWarning     = Color(hex: "#F59E0B")      // Amber-500
+    static let semanticDestructive = Color.due
+    static let semanticWarning     = Color.decide
     static let semanticSuccess     = Color(hex: "#22C55E")      // Green-500
-    static let semanticInfo        = Color(hex: "#3B82F6")      // Blue-500
+    static let semanticInfo        = Color.paused
 
 
 }
@@ -55,24 +55,22 @@ struct PrimaryButtonStyle: ButtonStyle {
     var isLoading: Bool = false
     var isDisabled: Bool = false
 
+    /// Paper on ink: the one thing to do on a screen. Mint is kept for money kept.
     func makeBody(configuration: Configuration) -> some View {
         configuration.label
-            .font(.headline.weight(.semibold))
-            .foregroundColor(.black)
-            .frame(maxWidth: .infinity)
-            .frame(height: 56)
+            .font(.headline)
+            .multilineTextAlignment(.center)
+            .foregroundStyle(isDisabled ? Color.inkTextFaint : Color.paperInk)
+            .padding(.horizontal, 20)
+            .padding(.vertical, 14)
+            .frame(maxWidth: .infinity, minHeight: 54)
             .background(
-                RoundedRectangle(cornerRadius: Radius.md)
-                    .fill(isDisabled ? Color.obsidianElevated : Color.accentMint)
-                    .overlay(
-                        RoundedRectangle(cornerRadius: Radius.md)
-                            .stroke(Color.white.opacity(0.08), lineWidth: 1)
-                    )
+                RoundedRectangle(cornerRadius: Layout.cardRadius, style: .continuous)
+                    .fill(isDisabled ? Color.inkLifted : Color.paper)
             )
-            .shadow(color: isDisabled ? .clear : Color.accentMint.opacity(0.25), radius: 12, x: 0, y: 6)
-            .scaleEffect(configuration.isPressed && !isDisabled ? 0.98 : 1)
-            .opacity(isDisabled ? 0.5 : 1)
-            .animation(PremiumAnimations.fast, value: configuration.isPressed)
+            .scaleEffect(configuration.isPressed && !isDisabled ? 0.985 : 1)
+            .opacity(configuration.isPressed ? 0.8 : 1)
+            .animation(Motion.unlessReduced(Motion.touch), value: configuration.isPressed)
     }
 }
 

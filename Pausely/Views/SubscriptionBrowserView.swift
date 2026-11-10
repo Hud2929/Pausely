@@ -452,7 +452,7 @@ struct PopularServiceChip: View {
                 }
 
                 Text(entry.name)
-                    .font(.system(size: 10, weight: .medium, design: .rounded))
+                    .font(.system(size: 10, weight: .medium, design: .default))
                     .foregroundStyle(isAdded ? Color.white.opacity(0.35) : Color.white.opacity(0.8))
                     .lineLimit(1)
                     .frame(width: 66)
@@ -525,7 +525,7 @@ struct SearchResultRow: View {
                                 .foregroundColor(.white.opacity(0.5))
                             if needsConversion {
                                 Text("*")
-                                    .font(.system(.caption2, design: .rounded))
+                                    .font(.system(.caption2, design: .default))
                                     .foregroundColor(Color.obsidianTextTertiary)
                             }
                         }
@@ -660,7 +660,7 @@ struct CatalogEntryCard: View {
                                 .foregroundColor(.white.opacity(0.4))
                             if needsConversion {
                                 Text("*")
-                                    .font(.system(.caption2, design: .rounded))
+                                    .font(.system(.caption2, design: .default))
                                     .foregroundColor(Color.obsidianTextTertiary)
                             }
                         }

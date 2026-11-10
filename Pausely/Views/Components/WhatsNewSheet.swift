@@ -27,17 +27,17 @@ struct WhatsNewSheet: View {
                             .frame(width: 80, height: 80)
 
                         Image(systemName: "sparkles")
-                            .font(.system(.title, design: .rounded).weight(.semibold))
+                            .font(.system(.title, design: .default).weight(.semibold))
                             .foregroundStyle(Color.accentMint)
                     }
 
                     Text(displayVersion.isEmpty ? "What's New" : "What's New in \(displayVersion)")
-                        .font(.system(.title2, design: .rounded).weight(.bold))
+                        .font(.system(.title2, design: .default).weight(.bold))
                         .foregroundColor(.white)
                         .multilineTextAlignment(.center)
 
                     Text("Check out the latest improvements")
-                        .font(.system(.body, design: .rounded))
+                        .font(.system(.body, design: .default))
                         .foregroundColor(Color.obsidianTextSecondary)
                         .multilineTextAlignment(.center)
                 }
@@ -78,7 +78,7 @@ struct WhatsNewSheet: View {
                     dismiss()
                 }) {
                     Text("Continue")
-                        .font(.system(.body, design: .rounded).weight(.semibold))
+                        .font(.system(.body, design: .default).weight(.semibold))
                         .foregroundColor(.white)
                         .frame(maxWidth: .infinity)
                         .frame(height: 56)
@@ -116,17 +116,17 @@ struct WhatsNewFeatureRow: View {
                     .frame(width: 52, height: 52)
 
                 Image(systemName: icon)
-                    .font(.system(.title2, design: .rounded))
+                    .font(.system(.title2, design: .default))
                     .foregroundStyle(iconColor)
             }
 
             VStack(alignment: .leading, spacing: 4) {
                 Text(title)
-                    .font(.system(.headline, design: .rounded).weight(.semibold))
+                    .font(.system(.headline, design: .default).weight(.semibold))
                     .foregroundColor(.white)
 
                 Text(description)
-                    .font(.system(.subheadline, design: .rounded))
+                    .font(.system(.subheadline, design: .default))
                     .foregroundColor(Color.obsidianTextSecondary)
                     .fixedSize(horizontal: false, vertical: true)
             }

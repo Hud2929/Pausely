@@ -11,13 +11,13 @@ struct PausedSubscriptionsSection: View {
         VStack(alignment: .leading, spacing: 12) {
             HStack {
                 Text("Paused")
-                    .font(.system(.title3, design: .rounded).weight(.bold))
+                    .font(.system(.title3, design: .default).weight(.bold))
                     .foregroundStyle(.primary)
 
                 Spacer()
 
                 Text("\(subscriptions.count) saving you money")
-                    .font(.system(.footnote, design: .rounded).weight(.medium))
+                    .font(.system(.footnote, design: .default).weight(.medium))
                     .foregroundStyle(.orange)
             }
             .padding(.horizontal, 20)
@@ -50,7 +50,7 @@ struct PausedCard: View {
         VStack(alignment: .leading, spacing: 12) {
             HStack {
                 Text("\(daysUntilResume)d")
-                    .font(.system(.footnote, design: .rounded).weight(.bold))
+                    .font(.system(.footnote, design: .default).weight(.bold))
                     .foregroundStyle(.white)
                     .padding(.horizontal, 10)
                     .padding(.vertical, 4)
@@ -61,12 +61,12 @@ struct PausedCard: View {
             Spacer()
 
             Text(subscription.name)
-                .font(.system(.subheadline, design: .rounded).weight(.semibold))
+                .font(.system(.subheadline, design: .default).weight(.semibold))
                 .foregroundStyle(.primary)
                 .lineLimit(1)
 
             Text("Saving \(monthlySaving)/mo")
-                .font(.system(.footnote, design: .rounded).weight(.medium))
+                .font(.system(.footnote, design: .default).weight(.medium))
                 .foregroundStyle(.orange)
         }
         .padding(14)

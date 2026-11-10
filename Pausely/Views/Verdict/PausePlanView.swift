@@ -92,10 +92,10 @@ struct PausePlanView: View {
         if eligible.count < 2 {
             VStack(spacing: 8) {
                 Text("Add two or more streaming services")
-                    .font(.system(.headline, design: .rounded))
+                    .font(.system(.headline, design: .default))
                     .foregroundStyle(.white)
                 Text("Netflix, Max, Disney+, Hulu, Prime Video and the like. Pause Plan rotates monthly video services; music and storage stay on.")
-                    .font(.system(.subheadline, design: .rounded))
+                    .font(.system(.subheadline, design: .default))
                     .foregroundStyle(Color.obsidianTextSecondary)
                     .multilineTextAlignment(.center)
             }
@@ -105,8 +105,7 @@ struct PausePlanView: View {
         } else {
             VStack(alignment: .leading, spacing: 10) {
                 Text("ROTATE THESE")
-                    .font(.system(.caption, design: .rounded).weight(.semibold))
-                    .tracking(1.5)
+                    .font(.system(.caption, design: .default).weight(.semibold))
                     .foregroundStyle(Color.obsidianTextTertiary)
                 VStack(spacing: 0) {
                     ForEach(Array(eligible.enumerated()), id: \.element.id) { index, sub in
@@ -140,7 +139,7 @@ struct PausePlanView: View {
             } label: {
                 Label(paymentManager.isUnlocked(.pausePlan) ? L10n.string("Start Pause Plan") : L10n.string("Start Pause Plan with Pro"),
                       systemImage: paymentManager.isUnlocked(.pausePlan) ? "arrow.triangle.2.circlepath" : "lock.fill")
-                    .font(.system(.body, design: .rounded).weight(.semibold))
+                    .font(.system(.body, design: .default).weight(.semibold))
                     .foregroundStyle(.black)
                     .frame(maxWidth: .infinity)
                     .frame(height: 54)
@@ -152,7 +151,7 @@ struct PausePlanView: View {
             .accessibilityIdentifier("startPausePlanButton")
 
             Text("Pausely can't cancel for you. It tells you when to cancel and when to start again, and your Savings Receipt counts what rotating saves.")
-                .font(.system(.footnote, design: .rounded))
+                .font(.system(.footnote, design: .default))
                 .foregroundStyle(Color.obsidianTextTertiary)
                 .frame(maxWidth: .infinity, alignment: .leading)
         }
@@ -167,10 +166,10 @@ struct PausePlanView: View {
                 .background(Circle().fill(Color.accentMint.opacity(0.15)))
                 .accessibilityHidden(true)
             Text("Watch one at a time")
-                .font(.system(.title2, design: .rounded).weight(.bold))
+                .font(.system(.title2, design: .default).weight(.bold))
                 .foregroundStyle(.white)
             Text("Most people pay for several streaming services and watch one. Pause Plan keeps one on, pauses the rest, and rotates every month, so you still see everything.")
-                .font(.system(.subheadline, design: .rounded))
+                .font(.system(.subheadline, design: .default))
                 .foregroundStyle(Color.obsidianTextSecondary)
                 .multilineTextAlignment(.center)
         }
@@ -199,16 +198,16 @@ struct PausePlanView: View {
                     .accessibilityHidden(true)
                 VStack(alignment: .leading, spacing: 2) {
                     Text(sub.name)
-                        .font(.system(.subheadline, design: .rounded).weight(.semibold))
+                        .font(.system(.subheadline, design: .default).weight(.semibold))
                         .foregroundStyle(.white)
                     Text(sub.status == .cancelled ? L10n.string("Paused now") : L10n.string("\(money(sub.amount, from: sub.currency)) a month"))
-                        .font(.system(.caption, design: .rounded))
+                        .font(.system(.caption, design: .default))
                         .foregroundStyle(Color.obsidianTextSecondary)
                 }
                 Spacer(minLength: 8)
                 if isFirst {
                     Text("On first")
-                        .font(.system(.caption2, design: .rounded).weight(.bold))
+                        .font(.system(.caption2, design: .default).weight(.bold))
                         .foregroundStyle(.black)
                         .padding(.horizontal, 8)
                         .padding(.vertical, 4)
@@ -218,7 +217,7 @@ struct PausePlanView: View {
                         HapticStyle.light.trigger()
                         firstId = sub.id
                     }
-                    .font(.system(.caption, design: .rounded).weight(.semibold))
+                    .font(.system(.caption, design: .default).weight(.semibold))
                     .foregroundStyle(Color.accentMint)
                     .buttonStyle(.borderless)
                 }
@@ -248,11 +247,11 @@ struct PausePlanView: View {
             Divider().overlay(Color.white.opacity(0.08))
             HStack {
                 Text("Back in your pocket")
-                    .font(.system(.subheadline, design: .rounded))
+                    .font(.system(.subheadline, design: .default))
                     .foregroundStyle(Color.obsidianTextSecondary)
                 Spacer()
                 Text("\(currencyManager.format(yearly)) a year")
-                    .font(.system(.headline, design: .rounded).weight(.bold))
+                    .font(.system(.headline, design: .default).weight(.bold))
                     .foregroundStyle(Color.accentMint)
             }
         }
@@ -265,15 +264,15 @@ struct PausePlanView: View {
     private func estimateColumn(_ title: String, _ amount: String, _ caption: String) -> some View {
         VStack(spacing: 2) {
             Text(title)
-                .font(.system(.caption, design: .rounded))
+                .font(.system(.caption, design: .default))
                 .foregroundStyle(Color.obsidianTextTertiary)
             Text(amount)
-                .font(.system(.title3, design: .rounded).weight(.bold))
+                .font(.system(.title3, design: .default).weight(.bold))
                 .foregroundStyle(.white)
                 .minimumScaleFactor(0.7)
                 .lineLimit(1)
             Text(caption)
-                .font(.system(.caption2, design: .rounded))
+                .font(.system(.caption2, design: .default))
                 .foregroundStyle(Color.obsidianTextTertiary)
         }
         .frame(maxWidth: .infinity)
@@ -300,7 +299,7 @@ struct PausePlanView: View {
                 confirmEnd = true
             } label: {
                 Text("End Pause Plan")
-                    .font(.system(.subheadline, design: .rounded))
+                    .font(.system(.subheadline, design: .default))
                     .foregroundStyle(Color.obsidianTextTertiary)
                     .frame(maxWidth: .infinity)
                     .frame(height: 44)
@@ -312,16 +311,15 @@ struct PausePlanView: View {
     private func nowCard(_ sub: Subscription, until end: Date, next: Subscription?) -> some View {
         VStack(spacing: 10) {
             Text("ON NOW")
-                .font(.system(.caption, design: .rounded).weight(.semibold))
-                .tracking(2)
+                .font(.system(.caption, design: .default).weight(.semibold))
                 .foregroundStyle(Color.obsidianTextTertiary)
             ServiceLogoView(name: sub.name, category: sub.category, size: 60)
                 .accessibilityHidden(true)
             Text(sub.name)
-                .font(.system(.title2, design: .rounded).weight(.bold))
+                .font(.system(.title2, design: .default).weight(.bold))
                 .foregroundStyle(.white)
             Text(next.map { L10n.string("Until \(short(end)). Then \($0.name).") } ?? L10n.string("Until \(short(end))."))
-                .font(.system(.subheadline, design: .rounded))
+                .font(.system(.subheadline, design: .default))
                 .foregroundStyle(Color.obsidianTextSecondary)
         }
         .frame(maxWidth: .infinity)
@@ -371,13 +369,13 @@ struct PausePlanView: View {
         let items = todos(plan, current: current, currentSub: currentSub, next: next, today: today)
         return VStack(alignment: .leading, spacing: 12) {
             Text("To do")
-                .font(.system(.headline, design: .rounded))
+                .font(.system(.headline, design: .default))
                 .foregroundStyle(.white)
             if items.isEmpty {
                 Label {
                     Text(next.flatMap { byId[$0.subscriptionId] }.map { L10n.string("You're all set. We'll remind you before \($0.name) starts.") }
                          ?? L10n.string("You're all set."))
-                        .font(.system(.subheadline, design: .rounded))
+                        .font(.system(.subheadline, design: .default))
                         .foregroundStyle(Color.obsidianTextSecondary)
                 } icon: {
                     Image(systemName: "checkmark.circle.fill").foregroundStyle(Color.accentMint)
@@ -388,7 +386,7 @@ struct PausePlanView: View {
                         ServiceLogoView(name: item.sub.name, category: item.sub.category, size: 32)
                             .accessibilityHidden(true)
                         Text(item.text)
-                            .font(.system(.subheadline, design: .rounded))
+                            .font(.system(.subheadline, design: .default))
                             .foregroundStyle(.white)
                             .fixedSize(horizontal: false, vertical: true)
                         Spacer(minLength: 8)
@@ -400,7 +398,7 @@ struct PausePlanView: View {
                             }
                         } label: {
                             Text(item.action == .cancel ? L10n.string("How") : L10n.string("I started it"))
-                                .font(.system(.caption, design: .rounded).weight(.bold))
+                                .font(.system(.caption, design: .default).weight(.bold))
                                 .foregroundStyle(.black)
                                 .padding(.horizontal, 10)
                                 .frame(height: 30)
@@ -419,7 +417,7 @@ struct PausePlanView: View {
     private func scheduleCard(_ upcoming: [PausePlanSchedule.Turn]) -> some View {
         VStack(alignment: .leading, spacing: 10) {
             Text("Coming up")
-                .font(.system(.headline, design: .rounded))
+                .font(.system(.headline, design: .default))
                 .foregroundStyle(.white)
             ForEach(upcoming, id: \.index) { turn in
                 if let sub = byId[turn.subscriptionId], let start = turn.start {
@@ -427,11 +425,11 @@ struct PausePlanView: View {
                         ServiceLogoView(name: sub.name, category: sub.category, size: 28)
                             .accessibilityHidden(true)
                         Text(sub.name)
-                            .font(.system(.subheadline, design: .rounded).weight(.semibold))
+                            .font(.system(.subheadline, design: .default).weight(.semibold))
                             .foregroundStyle(.white)
                         Spacer()
                         Text("\(short(start)) – \(short(turn.end))")
-                            .font(.system(.caption, design: .rounded))
+                            .font(.system(.caption, design: .default))
                             .foregroundStyle(Color.obsidianTextSecondary)
                     }
                     .accessibilityElement(children: .combine)
@@ -449,11 +447,11 @@ struct PausePlanView: View {
         let saved = lines.reduce(Decimal(0)) { $0 + currencyManager.convertToSelected($1.savedSoFar, from: $1.currency) }
         return HStack {
             Text("Saved by rotating so far")
-                .font(.system(.subheadline, design: .rounded))
+                .font(.system(.subheadline, design: .default))
                 .foregroundStyle(Color.obsidianTextSecondary)
             Spacer()
             Text(currencyManager.format(saved))
-                .font(.system(.headline, design: .rounded).weight(.bold))
+                .font(.system(.headline, design: .default).weight(.bold))
                 .foregroundStyle(Color.accentMint)
         }
         .padding(16)
@@ -493,11 +491,11 @@ struct PausePlanCard: View {
                 VStack(alignment: .leading, spacing: 3) {
                     HStack(spacing: 6) {
                         Text("Pause Plan")
-                            .font(.system(.subheadline, design: .rounded).weight(.semibold))
+                            .font(.system(.subheadline, design: .default).weight(.semibold))
                             .foregroundStyle(.white)
                         if !paymentManager.isUnlocked(.pausePlan) && planStore.activePlan == nil {
                             Text("Pro")
-                                .font(.system(.caption2, design: .rounded).weight(.bold))
+                                .font(.system(.caption2, design: .default).weight(.bold))
                                 .foregroundStyle(Color.accentMint)
                                 .padding(.horizontal, 6)
                                 .padding(.vertical, 2)
@@ -505,7 +503,7 @@ struct PausePlanCard: View {
                         }
                     }
                     Text(subtitle)
-                        .font(.system(.caption, design: .rounded))
+                        .font(.system(.caption, design: .default))
                         .foregroundStyle(Color.obsidianTextSecondary)
                         .fixedSize(horizontal: false, vertical: true)
                 }

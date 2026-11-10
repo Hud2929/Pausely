@@ -117,7 +117,6 @@ struct HelpSupportView: View {
                         Text("FREQUENTLY ASKED QUESTIONS")
                             .font(.caption.weight(.bold))
                             .foregroundColor(Color.obsidianTextTertiary)
-                            .tracking(1.5)
                             .padding(.leading, 4)
                             .padding(.horizontal, 20)
 
@@ -141,7 +140,6 @@ struct HelpSupportView: View {
                         Text("CONTACT US")
                             .font(.caption.weight(.bold))
                             .foregroundColor(Color.obsidianTextTertiary)
-                            .tracking(1.5)
                             .padding(.leading, 4)
 
                         VStack(spacing: 0) {

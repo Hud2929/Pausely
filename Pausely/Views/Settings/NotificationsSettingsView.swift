@@ -159,7 +159,6 @@ struct NotificationsSettingsView: View {
             Text(title)
                 .font(.caption.weight(.bold))
                 .foregroundColor(Color.obsidianTextTertiary)
-                .tracking(1.5)
                 .padding(.leading, 4)
 
             VStack(spacing: 0) {

@@ -197,17 +197,16 @@ struct PremiumSubscriptionsView: View {
         HStack(alignment: .bottom, spacing: 12) {
             VStack(alignment: .leading, spacing: 4) {
                 Text("SUBSCRIPTIONS")
-                    .font(.system(size: 11, weight: .semibold, design: .rounded))
+                    .font(.system(size: 11, weight: .semibold, design: .default))
                     .foregroundStyle(Color.obsidianTextTertiary)
-                    .tracking(2)
 
                 Text(currencyManager.format(store.totalMonthlySpend))
-                    .font(.system(.title2, design: .rounded).weight(.bold))
+                    .font(.system(.title2, design: .default).weight(.bold))
                     .foregroundStyle(Color.accentMint)
 
                 let count = store.subscriptions.filter(Self.isLive).count
                 Text("\(count) active")
-                    .font(.system(.caption, design: .rounded))
+                    .font(.system(.caption, design: .default))
                     .foregroundStyle(Color.obsidianTextSecondary)
             }
 

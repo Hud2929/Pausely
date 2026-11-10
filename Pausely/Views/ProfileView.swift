@@ -200,7 +200,7 @@ struct ProfileHeaderCard: View {
                     .frame(width: 72, height: 72)
 
                 Text(user?.initials ?? "U")
-                    .font(.system(.title2, design: .rounded).weight(.bold))
+                    .font(.system(.title2, design: .default).weight(.bold))
                     .foregroundStyle(Color.accentMint)
 
                 if isPremium {
@@ -220,19 +220,19 @@ struct ProfileHeaderCard: View {
             // User info
             VStack(alignment: .leading, spacing: 4) {
                 Text(user?.displayName ?? "User")
-                    .font(.system(.headline, design: .rounded).weight(.bold))
+                    .font(.system(.headline, design: .default).weight(.bold))
                     .foregroundStyle(Color.obsidianText)
 
                 if let email = user?.email, !email.isEmpty {
                     Text(email)
-                        .font(.system(.caption, design: .rounded))
+                        .font(.system(.caption, design: .default))
                         .foregroundStyle(Color.obsidianTextSecondary)
                         .lineLimit(1)
                 }
 
                 if isPremium {
                     Text("Pro Member")
-                        .font(.system(.caption2, design: .rounded).weight(.semibold))
+                        .font(.system(.caption2, design: .default).weight(.semibold))
                         .foregroundStyle(Color.accentMint)
                         .padding(.horizontal, 8)
                         .padding(.vertical, 3)
@@ -265,7 +265,7 @@ struct PremiumStatusCard: View {
         VStack(spacing: 16) {
             HStack {
                 Image(systemName: "crown.fill")
-                    .font(.system(.title2, design: .rounded))
+                    .font(.system(.title2, design: .default))
                     .foregroundColor(Color.accentMint)
                 
                 VStack(alignment: .leading, spacing: 4) {
@@ -331,24 +331,24 @@ struct UpgradePromptCard: View {
                         .frame(width: 44, height: 44)
 
                     Image(systemName: "sparkles")
-                        .font(.system(.body, design: .rounded).weight(.semibold))
+                        .font(.system(.body, design: .default).weight(.semibold))
                         .foregroundStyle(Color.accentMint)
                 }
 
                 VStack(alignment: .leading, spacing: 3) {
                     Text("Upgrade to Pro")
-                        .font(.system(.subheadline, design: .rounded).weight(.semibold))
+                        .font(.system(.subheadline, design: .default).weight(.semibold))
                         .foregroundStyle(Color.obsidianText)
 
                     Text("Unlimited subscriptions & all features")
-                        .font(.system(.caption, design: .rounded))
+                        .font(.system(.caption, design: .default))
                         .foregroundStyle(Color.obsidianTextSecondary)
                 }
 
                 Spacer()
 
                 Image(systemName: "chevron.right")
-                    .font(.system(.caption, design: .rounded).weight(.semibold))
+                    .font(.system(.caption, design: .default).weight(.semibold))
                     .foregroundStyle(Color.obsidianTextTertiary)
             }
             .padding(16)
@@ -410,7 +410,7 @@ struct ProfileStatHero: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
             Text(value)
-                .font(.system(.title, design: .rounded).weight(.bold))
+                .font(.system(.title, design: .default).weight(.bold))
                 .foregroundStyle(Color.accentMint)
 
             Rectangle()
@@ -421,7 +421,7 @@ struct ProfileStatHero: View {
                 .padding(.bottom, 8)
 
             Text(label)
-                .font(.system(.caption, design: .rounded))
+                .font(.system(.caption, design: .default))
                 .foregroundStyle(Color.obsidianTextSecondary)
         }
         .padding(.horizontal, 18)
@@ -449,11 +449,11 @@ struct ProfileStatBox: View {
         VStack(alignment: .leading, spacing: 0) {
             HStack {
                 Text(value)
-                    .font(.system(.title2, design: .rounded).weight(.bold))
+                    .font(.system(.title2, design: .default).weight(.bold))
                     .foregroundStyle(Color.accentMint)
                 Spacer()
                 Image(systemName: icon)
-                    .font(.system(.caption, design: .rounded))
+                    .font(.system(.caption, design: .default))
                     .foregroundColor(color.opacity(0.6))
             }
 
@@ -465,7 +465,7 @@ struct ProfileStatBox: View {
                 .padding(.bottom, 8)
 
             Text(label)
-                .font(.system(.caption, design: .rounded))
+                .font(.system(.caption, design: .default))
                 .foregroundStyle(Color.obsidianTextSecondary)
         }
         .padding(.horizontal, 14)
@@ -748,10 +748,10 @@ struct WrappedEntryCard: View {
 
                 VStack(alignment: .leading, spacing: 2) {
                     Text("Subscription Wrapped")
-                        .font(.system(.body, design: .rounded).weight(.semibold))
+                        .font(.system(.body, design: .default).weight(.semibold))
                         .foregroundStyle(.white)
                     Text("Your year in subscriptions — shareable")
-                        .font(.system(.caption, design: .rounded))
+                        .font(.system(.caption, design: .default))
                         .foregroundStyle(Color.obsidianTextSecondary)
                 }
 
@@ -832,7 +832,7 @@ struct SubscriptionWrappedView: View {
                             Image(systemName: "square.and.arrow.up")
                                 .font(.system(size: 15, weight: .semibold))
                             Text("Share")
-                                .font(.system(.headline, design: .rounded).weight(.semibold))
+                                .font(.system(.headline, design: .default).weight(.semibold))
                         }
                         .foregroundStyle(.black)
                         .frame(maxWidth: .infinity)
@@ -846,7 +846,7 @@ struct SubscriptionWrappedView: View {
                         dismiss()
                     } label: {
                         Text("Done")
-                            .font(.system(.headline, design: .rounded).weight(.semibold))
+                            .font(.system(.headline, design: .default).weight(.semibold))
                             .foregroundStyle(.white)
                             .frame(width: 80, height: 50)
                             .background(Color.white.opacity(0.15))
@@ -898,8 +898,7 @@ private struct StoryPausleyBadge: View {
             Image(systemName: "sparkles")
                 .font(.system(size: 12, weight: .bold))
             Text("pausely")
-                .font(.system(size: 13, weight: .black, design: .rounded))
-                .tracking(0.5)
+                .font(.system(size: 13, weight: .black, design: .default))
         }
         .foregroundStyle(Color.accentMint)
         .padding(.horizontal, 14)
@@ -928,23 +927,22 @@ private struct WrappedStory1_TotalSpent: View {
 
                 VStack(alignment: .leading, spacing: 16) {
                     Text("\(String(stats.year)) WRAPPED")
-                        .font(.system(size: 13, weight: .bold, design: .rounded))
+                        .font(.system(size: 13, weight: .bold, design: .default))
                         .foregroundStyle(Color.white.opacity(0.5))
-                        .tracking(2)
 
                     Text("Your subscriptions\ncost")
-                        .font(.system(size: 38, weight: .black, design: .rounded))
+                        .font(.system(size: 38, weight: .black, design: .default))
                         .foregroundStyle(.white)
                         .lineSpacing(4)
 
                     Text(CurrencyManager.shared.format(stats.yearlyCost))
-                        .font(.system(size: 72, weight: .black, design: .rounded))
+                        .font(.system(size: 72, weight: .black, design: .default))
                         .foregroundStyle(Color.accentMint)
                         .minimumScaleFactor(0.4)
                         .lineLimit(1)
 
                     Text(stats.totalCount == 1 ? L10n.string("a year, for 1 subscription") : L10n.string("a year, across \(stats.totalCount) subscriptions"))
-                        .font(.system(size: 22, weight: .semibold, design: .rounded))
+                        .font(.system(size: 22, weight: .semibold, design: .default))
                         .foregroundStyle(Color.white.opacity(0.7))
                 }
                 .padding(.horizontal, 32)
@@ -974,18 +972,17 @@ private struct WrappedStory2_TopService: View {
 
                 VStack(alignment: .leading, spacing: 16) {
                     Text("YOUR TOP SERVICE")
-                        .font(.system(size: 11, weight: .bold, design: .rounded))
+                        .font(.system(size: 11, weight: .bold, design: .default))
                         .foregroundStyle(Color.white.opacity(0.5))
-                        .tracking(2)
 
                     Text(stats.topService)
-                        .font(.system(size: 58, weight: .black, design: .rounded))
+                        .font(.system(size: 58, weight: .black, design: .default))
                         .foregroundStyle(.white)
                         .minimumScaleFactor(0.4)
                         .lineLimit(2)
 
                     Text("most expensive\nsubscription")
-                        .font(.system(size: 22, weight: .medium, design: .rounded))
+                        .font(.system(size: 22, weight: .medium, design: .default))
                         .foregroundStyle(Color.white.opacity(0.6))
                         .lineSpacing(4)
 
@@ -993,7 +990,7 @@ private struct WrappedStory2_TopService: View {
                         HStack(spacing: 8) {
                             Image(systemName: "checkmark.circle.fill").foregroundStyle(.green)
                             Text("You cancelled \(stats.cancelledCount) subscription\(stats.cancelledCount == 1 ? "" : "s") this year")
-                                .font(.system(.subheadline, design: .rounded).weight(.medium))
+                                .font(.system(.subheadline, design: .default).weight(.medium))
                                 .foregroundStyle(Color.white.opacity(0.8))
                         }
                         .padding(12)
@@ -1047,32 +1044,31 @@ private struct WrappedStory3_VsAverage: View {
 
                 VStack(alignment: .leading, spacing: 20) {
                     Text("VS. THE AVERAGE")
-                        .font(.system(size: 11, weight: .bold, design: .rounded))
+                        .font(.system(size: 11, weight: .bold, design: .default))
                         .foregroundStyle(Color.white.opacity(0.5))
-                        .tracking(2)
 
                     Text(isBelow ? "You spend\n\(pct)% less\nthan average" : "You spend\n\(pct)% more\nthan average")
-                        .font(.system(size: 52, weight: .black, design: .rounded))
+                        .font(.system(size: 52, weight: .black, design: .default))
                         .foregroundStyle(isBelow ? Color.green : Color.orange)
                         .lineSpacing(4)
 
                     VStack(alignment: .leading, spacing: 8) {
                         HStack {
                             Text("You")
-                                .font(.system(.caption, design: .rounded).weight(.semibold))
+                                .font(.system(.caption, design: .default).weight(.semibold))
                                 .foregroundStyle(.white.opacity(0.7))
                             Spacer()
                             Text(CurrencyManager.shared.format(monthlySpend) + "/mo")
-                                .font(.system(.subheadline, design: .rounded).weight(.bold))
+                                .font(.system(.subheadline, design: .default).weight(.bold))
                                 .foregroundStyle(.white)
                         }
                         HStack {
                             Text("Avg. Pausely User")
-                                .font(.system(.caption, design: .rounded).weight(.semibold))
+                                .font(.system(.caption, design: .default).weight(.semibold))
                                 .foregroundStyle(.white.opacity(0.5))
                             Spacer()
                             Text(CurrencyManager.shared.format(localAverage) + "/mo")
-                                .font(.system(.subheadline, design: .rounded).weight(.bold))
+                                .font(.system(.subheadline, design: .default).weight(.bold))
                                 .foregroundStyle(.white.opacity(0.6))
                         }
                     }
@@ -1126,12 +1122,11 @@ private struct WrappedStory4_CouldBuy: View {
 
                 VStack(alignment: .leading, spacing: 24) {
                     Text("WHAT ELSE THAT BUYS")
-                        .font(.system(size: 10, weight: .bold, design: .rounded))
+                        .font(.system(size: 10, weight: .bold, design: .default))
                         .foregroundStyle(Color.white.opacity(0.5))
-                        .tracking(1.5)
 
                     Text("\(CurrencyManager.shared.format(stats.yearlyCost)) a year\nalso buys…")
-                        .font(.system(size: 32, weight: .black, design: .rounded))
+                        .font(.system(size: 32, weight: .black, design: .default))
                         .foregroundStyle(.white)
                         .lineSpacing(4)
 
@@ -1143,10 +1138,10 @@ private struct WrappedStory4_CouldBuy: View {
                                     .font(.system(size: 36))
                                 VStack(alignment: .leading, spacing: 2) {
                                     Text("\(c.count)")
-                                        .font(.system(size: 36, weight: .black, design: .rounded))
+                                        .font(.system(size: 36, weight: .black, design: .default))
                                         .foregroundStyle(.white)
                                     Text(c.item)
-                                        .font(.system(.caption, design: .rounded).weight(.medium))
+                                        .font(.system(.caption, design: .default).weight(.medium))
                                         .foregroundStyle(Color.white.opacity(0.5))
                                 }
                             }
@@ -1181,26 +1176,25 @@ private struct WrappedStory5_Personality: View {
 
                 VStack(alignment: .leading, spacing: 20) {
                     Text("YOUR SUBSCRIPTION PERSONALITY")
-                        .font(.system(size: 10, weight: .bold, design: .rounded))
+                        .font(.system(size: 10, weight: .bold, design: .default))
                         .foregroundStyle(Color.white.opacity(0.5))
-                        .tracking(1.5)
 
                     Text(personality.emoji)
                         .font(.system(size: 72))
 
                     Text(personality.name)
-                        .font(.system(size: 42, weight: .black, design: .rounded))
+                        .font(.system(size: 42, weight: .black, design: .default))
                         .foregroundStyle(Color.accentMint)
                         .lineLimit(2)
                         .minimumScaleFactor(0.6)
 
                     Text(personality.headline)
-                        .font(.system(size: 20, weight: .medium, design: .rounded))
+                        .font(.system(size: 20, weight: .medium, design: .default))
                         .foregroundStyle(Color.white.opacity(0.8))
                         .lineSpacing(4)
 
                     Text(personality.description)
-                        .font(.system(.subheadline, design: .rounded))
+                        .font(.system(.subheadline, design: .default))
                         .foregroundStyle(Color.white.opacity(0.5))
                         .lineSpacing(3)
                         .lineLimit(4)
@@ -1210,7 +1204,7 @@ private struct WrappedStory5_Personality: View {
                 Spacer()
 
                 Text("Track & optimize at pausely.pro")
-                    .font(.system(size: 12, design: .rounded))
+                    .font(.system(size: 12, design: .default))
                     .foregroundStyle(Color.white.opacity(0.25))
                     .padding(.horizontal, 32)
                     .padding(.bottom, 100)

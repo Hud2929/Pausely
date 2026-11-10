@@ -70,11 +70,10 @@ struct CancelCelebrationView: View {
                     Text("YOU'LL SAVE")
                         .font(.caption.weight(.bold))
                         .foregroundStyle(Color.obsidianTextSecondary)
-                        .tracking(2)
                         .opacity(opacity)
 
                     Text(annualSavings)
-                        .font(.system(size: 64, weight: .black, design: .rounded))
+                        .font(.system(size: 64, weight: .black, design: .default))
                         .foregroundStyle(
                             LinearGradient(
                                 colors: [Color.semanticSuccess, Color.accentMint],

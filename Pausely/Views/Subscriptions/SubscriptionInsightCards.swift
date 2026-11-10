@@ -44,11 +44,11 @@ struct CancelTimingCard: View {
             // Section header
             HStack {
                 Label("Cancel Timing", systemImage: "clock.badge.checkmark.fill")
-                    .font(.system(.headline, design: .rounded).weight(.bold))
+                    .font(.system(.headline, design: .default).weight(.bold))
                     .foregroundStyle(.white)
                 Spacer()
                 Text(daysRemaining == 1 ? L10n.string("1 day left") : L10n.string("\(daysRemaining) days left"))
-                    .font(.system(.caption, design: .rounded).weight(.semibold))
+                    .font(.system(.caption, design: .default).weight(.semibold))
                     .foregroundStyle(Color.obsidianTextSecondary)
             }
 
@@ -67,12 +67,12 @@ struct CancelTimingCard: View {
 
             if let nextChargeText {
                 Text(nextChargeText)
-                    .font(.system(.subheadline, design: .rounded).weight(.semibold))
+                    .font(.system(.subheadline, design: .default).weight(.semibold))
                     .foregroundStyle(.white)
             }
 
             Text(adviceText)
-                .font(.system(.caption, design: .rounded))
+                .font(.system(.caption, design: .default))
                 .foregroundStyle(Color.obsidianTextSecondary)
                 .fixedSize(horizontal: false, vertical: true)
             .padding(.horizontal, 12)
@@ -110,7 +110,7 @@ struct LifetimeCostCard: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
             Label("Lifetime Cost", systemImage: "infinity.circle.fill")
-                .font(.system(.subheadline, design: .rounded).weight(.semibold))
+                .font(.system(.subheadline, design: .default).weight(.semibold))
                 .foregroundStyle(.white)
 
             HStack(spacing: 0) {
@@ -119,10 +119,10 @@ struct LifetimeCostCard: View {
                     let cost = LifetimeCostCalculator.projectedCost(monthly: monthly, years: p.years)
                     VStack(spacing: 4) {
                         Text(p.label)
-                            .font(.system(size: 10, design: .rounded))
+                            .font(.system(size: 10, design: .default))
                             .foregroundStyle(Color.obsidianTextTertiary)
                         Text(cm.format(cost))
-                            .font(.system(.caption, design: .rounded).weight(.bold))
+                            .font(.system(.caption, design: .default).weight(.bold))
                             .foregroundStyle(.white)
                             .minimumScaleFactor(0.7)
                             .lineLimit(1)
