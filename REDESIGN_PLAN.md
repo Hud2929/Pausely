@@ -418,6 +418,47 @@ types the price. The founder should check the 27 prices before release.
 
 ---
 
+## 12. Consumer pass (2026-11-11)
+
+`ConsumerJourneyTests` now walks a fresh install end to end (guess, tally, reveal, the list after
+sign-up, adding, the free limit, editing, cancelling, the tabs) and passes. `ScreenTourTests`
+captures every screen and takes `PAUSELY_TOUR_VARIANT=ar` or `big`; it was run in Arabic, at the
+largest text size, and on iPad.
+
+What the pass found and fixed:
+- Subscriptions from the tally had no renewal dates, so Home was empty and no reminder could fire.
+  Home now asks first, and one sheet ("When do they charge you?") takes every date.
+- A subscription added today for next month fell outside Home's 30-day window. The window is a
+  full month and the section is "Coming up".
+- The paywall didn't say why it appeared at the free limit.
+- Largest text: titles hyphenated, label/value rows broke mid-word, the empty list's button was cut.
+- Arabic: the detail screen's labels and every category name were English.
+- iPad: correct on every screen checked (phone-width column, tab bar at the top).
+
+Removed because the app could not back them up:
+- Deep analysis rules built on hard-coded price tables (an annual Netflix plan, cheaper tiers,
+  family plans converted by exchange rate).
+- The usage "value score" and "Poor Value" verdict, and the claim that Pausely tracks phone
+  screen time (the Screen Time extensions are not in the project; usage is typed in).
+- The price history's "next year" projection.
+- The catalog's plan and yearly-price choices on the plan sheet (Netflix was listed with annual,
+  family and student plans it does not sell). The sheet asks what the person pays.
+
+Prices: the tally and the plan sheet use list prices read on 2026-11-10 from each service's own
+page for Netflix, Spotify, Apple Music, iCloud+ and Apple TV in USD, CAD, GBP, EUR and AUD, and
+Claude Pro in USD. Other services have a US price from press round-ups only; outside the US the
+person is asked.
+
+Still below 9.0, and why: the settings screens, sign-in forms, price history and alternatives had
+a token-level restyle and small fixes, not a new layout (about 8.2 to 8.5). Widgets and the Live
+Activity were changed in code and never seen on a Home or Lock Screen.
+
+Recommended and not done, because they change what Pro promises on the App Store listing:
+"Cheaper Alternatives" rests on a hand-written list of 74 alternatives with prices nobody has
+checked. Either verify it or drop it from `ProFeature`, the paywall and `metadata/` together.
+
+---
+
 ## Sources
 
 1. MacStories, Bobby review: https://www.macstories.net/reviews/bobby-subscription-tracking-made-easy/

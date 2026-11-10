@@ -180,11 +180,11 @@ struct SubscriptionManagementView: View {
     private var renewalLine: (text: String, tint: Color)? {
         guard current.status == .active || current.status == .trial,
               let date = current.calculatedNextBillingDate, let days = current.daysUntilRenewal else { return nil }
-        let dateText = date.formatted(.dateTime.month(.abbreviated).day())
-        if days < 0 { return ("Payment was due \(-days) day\(-days == 1 ? "" : "s") ago", Color.due) }
-        if days == 0 { return ("Renews today", Color.due) }
-        if days == 1 { return ("Renews tomorrow", Color.due) }
-        return ("Renews \(dateText) · in \(days) days", Color.inkTextMuted)
+        let dateText = date.formatted(.dateTime.month(.abbreviated).day().locale(L10n.locale))
+        if days < 0 { return (L10n.string("Payment was due \(-days) days ago"), Color.due) }
+        if days == 0 { return (L10n.string("Renews \(L10n.string("today"))"), Color.due) }
+        if days == 1 { return (L10n.string("Renews \(L10n.string("tomorrow"))"), Color.due) }
+        return (L10n.string("Renews \(dateText) · \(L10n.string("in \(days) days"))"), Color.inkTextMuted)
     }
 
     // MARK: - Facts
