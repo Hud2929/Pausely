@@ -22,34 +22,28 @@ struct ServiceLogoView: View {
 
     private var domain: String? { ServiceDomains.domain(for: name) }
 
+    /// The service's own icon in an app-icon shape. Without one, the first letter on a quiet tile:
+    /// no category colours, no gradients, so a list of logos doesn't turn into confetti.
     var body: some View {
+        let shape = RoundedRectangle(cornerRadius: size * 0.24, style: .continuous)
         ZStack {
-            // Background — gradient for depth, always present
-            Circle()
-                .fill(
-                    LinearGradient(
-                        colors: [categoryColor.opacity(0.38), categoryColor.opacity(0.18)],
-                        startPoint: .topLeading,
-                        endPoint: .bottomTrailing
-                    )
-                )
-                .overlay(Circle().stroke(categoryColor.opacity(0.45), lineWidth: 1))
-                .frame(width: size, height: size)
+            shape.fill(Color.inkLifted)
 
             if let image {
                 Image(uiImage: image)
                     .resizable()
                     .interpolation(.high)
                     .scaledToFill()
-                    .frame(width: size * 0.66, height: size * 0.66)
-                    .clipShape(RoundedRectangle(cornerRadius: size * 0.17, style: .continuous))
+                    .frame(width: size, height: size)
                     .transition(.opacity)
             } else {
                 initialView
             }
         }
         .frame(width: size, height: size)
-        .clipShape(Circle())
+        .clipShape(shape)
+        .overlay(shape.stroke(Color.line, lineWidth: 1))
+        .accessibilityHidden(true)
         .task(id: domain) {
             guard let domain else { image = nil; return }
             if let cached = LogoStore.shared.cachedImage(for: domain) {
@@ -57,22 +51,14 @@ struct ServiceLogoView: View {
                 return
             }
             let loaded = await LogoStore.shared.image(for: domain)
-            withAnimation(.easeOut(duration: 0.2)) { image = loaded }
+            withAnimation(Motion.unlessReduced(.easeOut(duration: 0.2))) { image = loaded }
         }
     }
 
     private var initialView: some View {
         Text(String(name.prefix(1)).uppercased())
-            .font(.system(size: size * 0.40, weight: .bold, design: .default))
-            .foregroundStyle(.white)
-    }
-
-    private var categoryColor: Color {
-        guard let cat = category,
-              let sc = ServiceCategory.allCases.first(where: {
-                  $0.rawValue.lowercased() == cat.lowercased()
-              }) else { return .purple }
-        return sc.color
+            .font(.system(size: size * 0.44, weight: .semibold, design: .serif))
+            .foregroundStyle(Color.inkText)
     }
 }
 

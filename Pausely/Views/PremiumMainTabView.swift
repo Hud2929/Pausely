@@ -85,6 +85,8 @@ struct PremiumMainTabView: View {
             await LocalUserData.claim(for: RevolutionaryAuthManager.shared.currentUser?.id)
             await NotificationManager.shared.refreshStatus()
             await subscriptionStore.fetchSubscriptions()
+            // The slip made before the account existed joins the list once it has loaded.
+            await TallyImporter.importPending(into: subscriptionStore)
         }
         // A reminder tap (or "Review") opens the keep-or-cancel decision for that subscription.
         .sheet(item: $verdictCenter.presented) { request in

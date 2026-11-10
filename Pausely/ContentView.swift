@@ -177,6 +177,13 @@ struct RootView: View {
                     #if DEBUG
                     SubscriptionEditView(subscription: DemoSubscriptions.netflix)
                     #endif
+                } else if isDemoScreen("--demo-first-run") || isDemoScreen("--demo-first-run=tally") || isDemoScreen("--demo-first-run=reveal") {
+                    #if DEBUG
+                    FirstRunView(startAt: isDemoScreen("--demo-first-run=reveal") ? .reveal
+                                    : isDemoScreen("--demo-first-run=tally") ? .tally : .guess,
+                                 tally: isDemoScreen("--demo-first-run") ? nil : DemoTally.make(),
+                                 onKeepList: {}, onSignIn: {})
+                    #endif
                 } else if isDemoScreen("--demo-design") {
                     #if DEBUG
                     DesignGalleryView()
@@ -227,24 +234,24 @@ struct RootView: View {
                     }
                     .transition(.opacity.combined(with: .scale(0.98)))
                 } else if !showAuth && !hasCompletedOnboarding {
-                    // New user: show value-first onboarding BEFORE auth wall
-                    OnboardingCarouselView(
-                        onGetStarted: {
+                    // New person: the guess, the tally and the reveal come before the account.
+                    FirstRunView(
+                        onKeepList: {
                             authStart = .signUp
-                            withAnimation(.easeInOut(duration: 0.4)) {
+                            withAnimation(Motion.unlessReduced(Motion.arrive)) {
                                 showAuth = true
                                 hasCompletedOnboarding = true
                             }
                         },
                         onSignIn: {
                             authStart = .signIn
-                            withAnimation(.easeInOut(duration: 0.4)) {
+                            withAnimation(Motion.unlessReduced(Motion.arrive)) {
                                 showAuth = true
                                 hasCompletedOnboarding = true
                             }
                         }
                     )
-                    .transition(.opacity.combined(with: .move(edge: .bottom)))
+                    .transition(.opacity)
                 } else {
                     // Onboarding completed but not authenticated: show auth
                     PremiumWelcomeFlow(start: authStart)
@@ -262,12 +269,12 @@ struct RootView: View {
         .animation(.easeInOut(duration: 0.5), value: showAuth)
         .onAppear {
             let workItem = DispatchWorkItem {
-                withAnimation(.easeOut(duration: 0.4)) {
+                withAnimation(.easeOut(duration: 0.25)) {
                     showSplash = false
                 }
             }
             splashWorkItem = workItem
-            DispatchQueue.main.asyncAfter(deadline: .now() + 2.5, execute: workItem)
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.6, execute: workItem)
         }
         .onDisappear {
             splashWorkItem?.cancel()
@@ -314,98 +321,19 @@ struct RootView: View {
 }
 
 // MARK: - Premium Splash Screen
+/// The launch screen: the pause mark on ink, for a little over half a second. No tagline, no spinner.
 struct PremiumSplashScreen: View {
     @Binding var animation: Bool
-    @State private var rotation = 0.0
-    @State private var opacity = 0.0
-    
+
     var body: some View {
         ZStack {
-            PremiumBackground()
-            
-            VStack(spacing: 32) {
-                Spacer()
-                
-                // Animated Logo
-                ZStack {
-                    // Outer rotating ring
-                    Circle()
-                        .stroke(
-                            AngularGradient(
-                                colors: [BrandColors.primary, BrandColors.secondary, BrandColors.accent, BrandColors.primary],
-                                center: .center
-                            ),
-                            lineWidth: 3
-                        )
-                        .frame(width: 140, height: 140)
-                        .rotationEffect(.degrees(rotation))
-                    
-                    // Middle glow
-                    Circle()
-                        .fill(
-                            RadialGradient(
-                                colors: [
-                                    BrandColors.primary.opacity(0.3),
-                                    .clear
-                                ],
-                                center: .center,
-                                startRadius: 20,
-                                endRadius: 60
-                            )
-                        )
-                        .frame(width: 120, height: 120)
-                        .scaleEffect(animation ? 1.1 : 0.9)
-                    
-                    // Icon container
-                    Circle()
-                        .fill(
-                            LinearGradient(
-                                colors: [BrandColors.primary, BrandColors.secondary],
-                                startPoint: .topLeading,
-                                endPoint: .bottomTrailing
-                            )
-                        )
-                        .frame(width: 90, height: 90)
-                        .shadow(color: .brandPrimary.opacity(0.5), radius: 30, x: 0, y: 15)
-                    
-                    Image(systemName: "pause.circle.fill")
-                        .font(.system(.largeTitle, design: .default).weight(.medium))
-                        .foregroundColor(.white)
-                }
-                
-                // Text
-                VStack(spacing: 12) {
-                    Text("Pausely")
-                        .font(.system(.largeTitle, design: .default).weight(.bold))
-                        .foregroundColor(.white)
-
-                    Text("Smart Subscription Manager")
-                        .font(.system(.body, design: .default).weight(.medium))
-                        .foregroundColor(Color.obsidianTextSecondary)
-                }
-                .opacity(opacity)
-                
-                Spacer()
-                
-                // Loading indicator
-                PremiumLoadingIndicator()
-                    .opacity(opacity)
-                
-                Spacer()
+            Color.ink.ignoresSafeArea()
+            HStack(spacing: 10) {
+                Capsule().frame(width: 12, height: 44)
+                Capsule().frame(width: 12, height: 44)
             }
-        }
-        .onAppear {
-            if !UIAccessibility.isReduceMotionEnabled {
-                withAnimation(.linear(duration: 3).repeatForever(autoreverses: false)) {
-                    rotation = 360
-                }
-                withAnimation(.easeInOut(duration: 1.5).repeatForever(autoreverses: true)) {
-                    animation = true
-                }
-            }
-            withAnimation(.easeOut(duration: 0.6).delay(0.3)) {
-                opacity = 1
-            }
+            .foregroundStyle(Color.paper)
+            .accessibilityLabel(Text(verbatim: "Pausely"))
         }
     }
 }

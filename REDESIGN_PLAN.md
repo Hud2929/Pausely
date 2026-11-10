@@ -265,8 +265,8 @@ Release builds and the serial test run.
 | Step | Work | Days | Status |
 |---|---|---|---|
 | 0 | Truth fixes | 1.5 | **Done** (tour extension still open) |
-| 1 | **Design system**: Ink and Paper tokens, type, motion, haptics, paper slip, buttons; old tokens mapped onto the new ones so every screen shifts at once; letter-spacing removed | 2 | **Now** |
-| 2 | **First run**: Tally and reveal, reminder ask that names a real charge, account after value, splash under 0.6 s | 3 | |
+| 1 | **Design system**: Ink and Paper tokens, type, motion, haptics, paper slip, buttons; old tokens mapped onto the new ones so every screen shifts at once; letter-spacing removed | 2 | **Done** |
+| 2 | **First run**: Tally and reveal, account after value, splash 0.6 s, logos redrawn | 3 | **Done** except the reminder ask (moves to Home, step 4) |
 | 3 | **Paywall** from the user's own numbers, trial timeline, Pausely on its own slip, free-limit choice, Promise meter | 3 | |
 | 4 | Home: the number, next decision, 30-day horizon, kept | 2 | |
 | 5 | Verdict slip, tear to cancel, receipt roll, share image | 3 | |
@@ -358,6 +358,31 @@ Written as the toughest reviewer I can imagine, with what changed in response.
 - **Benchmarks** marked "vendor" or "secondary" above are direction, not proof. The Blinkist figure
   has no primary source.
 - **Real devices:** haptics and the tear moment can only be judged on an iPhone.
+
+---
+
+## 11. Coverage: no old UI may remain
+
+`scripts/old_ui_check.sh` lists every Swift file that still uses a pre-redesign colour, font,
+gradient, glow, glass card, button style or haptic. The redesign is finished when it prints
+"0 files" and every screen is rated 9.0 or more (the `pausely-design` skill has the method).
+
+| Date | Files with old UI | Note |
+|---|---|---|
+| 2026-11-10 | 71 | After steps 1 and 2. New and clean: first run, splash, service logos, design gallery. The onboarding carousel is deleted. |
+
+Rated on screen so far (English; Arabic and largest text checked for the reveal):
+
+| Screen | Score | Weakest point |
+|---|---|---|
+| Guess | 8.7 | System slider is plain; nothing on screen moves until touched |
+| Tally | 8.8 | A few logos fall back to a letter; grid is competent, not distinctive |
+| Reveal | 9.1 | At the largest text size the bottom bar takes a third of the screen |
+
+Typical prices on the tally come from news round-ups dated April to September 2026, not from each
+service's own price page, and local prices outside the US are a single factor per currency
+(CAD 1.05, AUD 1.1, GBP 0.75, EUR 0.8). Currencies without a factor get no guess: the person
+types the price. The founder should check the 27 prices before release.
 
 ---
 

@@ -1,6 +1,6 @@
 import XCTest
 
-/// A first launch: the onboarding pages, then Get Started leads to the age check and sign-up.
+/// A first launch: guess, tally and reveal, then Keep my list leads to the age check and sign-up.
 @MainActor
 final class OnboardingFlowTests: XCTestCase {
 
@@ -19,25 +19,42 @@ final class OnboardingFlowTests: XCTestCase {
         return XCTWaiter.wait(for: [hittable], timeout: timeout) == .completed
     }
 
-    func testOnboardingCanBeDismissed() {
-        let getStarted = app.buttons["getStartedButton"]
-        XCTAssertTrue(waitUntilHittable(getStarted), "onboarding shows Get Started")
-        getStarted.tap()
+    func testGuessTallyRevealThenAccount() {
+        let guess = app.buttons["getStartedButton"]
+        XCTAssertTrue(waitUntilHittable(guess), "the first screen asks for a guess")
+        XCTAssertTrue(app.staticTexts["What do you think you pay for subscriptions each month?"].exists)
+        guess.tap()
 
-        // "Get Started" goes straight to creating an account, which starts with the age check (16+).
+        let netflix = app.buttons["Netflix"]
+        XCTAssertTrue(netflix.waitForExistence(timeout: 5), "the tally offers common services")
+        XCTAssertFalse(app.buttons["showTotalButton"].exists, "no total to show while the slip is empty")
+        netflix.tap()
+        app.buttons["Spotify"].tap()
+
+        let showTotal = app.buttons["showTotalButton"]
+        XCTAssertTrue(waitUntilHittable(showTotal, timeout: 5))
+        showTotal.tap()
+
+        let keep = app.buttons["keepListButton"]
+        XCTAssertTrue(waitUntilHittable(keep, timeout: 8), "the reveal offers to keep the list")
+        for name in ["Netflix", "Spotify"] {
+            let line = app.buttons.matching(NSPredicate(format: "label BEGINSWITH %@", name)).firstMatch
+            XCTAssertTrue(line.waitForExistence(timeout: 5), "\(name) is printed on the slip")
+        }
+        keep.tap()
+
+        // Keeping the list leads to creating an account, which starts with the age check (16+).
         let ageCheck = app.staticTexts["Confirm your age"]
         let signIn = app.buttons["signInButton"]
         XCTAssertTrue(ageCheck.waitForExistence(timeout: 10) || signIn.waitForExistence(timeout: 2),
-                      "Get Started should lead to the age check and sign-up, not another carousel")
+                      "Keep my list should lead to the age check and sign-up")
     }
 
-    func testSwipingShowsEachPageAndKeepsGetStarted() {
-        let first = app.staticTexts["Know every renewal before it hits"]
-        XCTAssertTrue(waitUntilHittable(first), "the first page shows")
-        for title in ["Keep it or cancel it, in one tap", "See exactly what you saved"] {
-            app.swipeLeft()
-            XCTAssertTrue(waitUntilHittable(app.staticTexts[title], timeout: 5), "\(title) should show after a swipe")
-        }
-        XCTAssertTrue(app.buttons["getStartedButton"].isHittable, "Get Started stays on every page")
+    func testSignInSkipsTheTally() {
+        let signIn = app.buttons["firstRunSignIn"]
+        XCTAssertTrue(waitUntilHittable(signIn))
+        signIn.tap()
+        XCTAssertTrue(app.buttons["signInButton"].waitForExistence(timeout: 10), "Sign in opens the sign-in screen")
+        XCTAssertFalse(app.sliders["guessSlider"].exists, "the guess screen is gone")
     }
 }
