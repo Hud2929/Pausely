@@ -90,7 +90,7 @@ struct LuxuryAddSubscriptionView: View {
                         row(L10n.string("Category")) {
                             Picker("Category", selection: $category) {
                                 ForEach(SubscriptionCategory.allCases, id: \.self) { cat in
-                                    Text(cat.displayName).tag(cat)
+                                    Text(verbatim: cat.localizedName).tag(cat)
                                 }
                             }
                             .pickerStyle(.menu)

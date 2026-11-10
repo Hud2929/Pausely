@@ -163,7 +163,7 @@ struct SubscriptionBrowserView: View {
                             .font(.body.weight(.medium))
                             .foregroundStyle(Color.inkText)
                             .multilineTextAlignment(.leading)
-                        Text(entry.category.displayName)
+                        Text(verbatim: entry.category.localizedName)
                             .font(.subheadline)
                             .foregroundStyle(Color.inkTextMuted)
                     }
@@ -218,7 +218,7 @@ struct SubscriptionBrowserView: View {
             HStack(spacing: 8) {
                 pill(L10n.string("All"), isOn: selectedCategory == nil) { selectedCategory = nil }
                 ForEach(SubscriptionCategory.allCases, id: \.self) { category in
-                    pill(category.displayName, isOn: selectedCategory == category) { selectedCategory = category }
+                    pill(category.localizedName, isOn: selectedCategory == category) { selectedCategory = category }
                 }
             }
             .padding(.horizontal, Layout.margin)

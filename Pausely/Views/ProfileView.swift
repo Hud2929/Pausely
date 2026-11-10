@@ -274,7 +274,7 @@ private struct YearSlip: View {
                 ProofLine(label: L10n.string("Each year"), value: money(stats.yearlyCost), emphasised: true)
                 Perforation()
                 ProofLine(label: L10n.string("Biggest"), value: stats.topService)
-                ProofLine(label: L10n.string("Most goes to"), value: SubscriptionCategory.label(for: stats.topCategory))
+                ProofLine(label: L10n.string("Most goes to"), value: SubscriptionCategory.localizedLabel(for: stats.topCategory))
                 if stats.cancelledCount > 0 || !kept.isEmpty {
                     Perforation()
                     ProofLine(label: L10n.string("Cancelled this year"), value: "\(stats.cancelledCount)")

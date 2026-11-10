@@ -129,6 +129,51 @@ enum SubscriptionCategory: String, Codable, CaseIterable, Identifiable {
         }
     }
 
+    /// The name in the reader's language. `displayName` stays English: it is what gets stored.
+    var localizedName: String {
+        switch self {
+        case .entertainment: return L10n.string("Entertainment")
+        case .music: return L10n.string("Music")
+        case .productivity: return L10n.string("Productivity")
+        case .healthFitness: return L10n.string("Health & Fitness")
+        case .cloudStorage: return L10n.string("Cloud Storage")
+        case .education: return L10n.string("Education")
+        case .news: return L10n.string("News")
+        case .utilities: return L10n.string("Utilities & Internet")
+        case .social: return L10n.string("Social")
+        case .shopping: return L10n.string("Shopping")
+        case .food: return L10n.string("Food")
+        case .sports: return L10n.string("Sports")
+        case .finance: return L10n.string("Finance")
+        case .phone: return L10n.string("Phone & Mobile")
+        case .insurance: return L10n.string("Insurance")
+        case .gym: return L10n.string("Gym & Fitness")
+        case .automotive: return L10n.string("Automotive")
+        case .home: return L10n.string("Home & Security")
+        case .pet: return L10n.string("Pet")
+        case .personalCare: return L10n.string("Personal Care")
+        case .aiTools: return L10n.string("AI & Creativity")
+        case .gaming: return L10n.string("Gaming")
+        case .developerTools: return L10n.string("Developer Tools")
+        case .creator: return L10n.string("Creator Economy")
+        case .travel: return L10n.string("Travel")
+        case .dating: return L10n.string("Dating")
+        case .kids: return L10n.string("Kids & Family")
+        case .security: return L10n.string("Security")
+        case .other: return L10n.string("Other")
+        }
+    }
+
+    /// The name to show for a stored category, in the reader's language. A category the person
+    /// typed themselves is shown as typed.
+    static func localizedLabel(for stored: String?) -> String {
+        guard let stored, !stored.isEmpty else { return SubscriptionCategory.other.localizedName }
+        let match = allCases.first {
+            $0.rawValue.caseInsensitiveCompare(stored) == .orderedSame || $0.displayName.caseInsensitiveCompare(stored) == .orderedSame
+        }
+        return match?.localizedName ?? stored
+    }
+
     var icon: String {
         switch self {
         case .entertainment: return "tv"

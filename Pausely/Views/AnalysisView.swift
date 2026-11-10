@@ -74,7 +74,7 @@ struct AnalysisView: View {
                             let top = insightsEngine.categoryBreakdown.map(\.amount).max() ?? 1
                             ForEach(Array(insightsEngine.categoryBreakdown.prefix(5).enumerated()), id: \.element.id) { index, category in
                                 if index > 0 { Hairline() }
-                                BarRow(title: SubscriptionCategory.label(for: category.category),
+                                BarRow(title: SubscriptionCategory.localizedLabel(for: category.category),
                                        value: MoneyFormat.string(category.amount, currencyManager.selectedCurrency, locale: L10n.locale),  // money-guard: category totals are already in the display currency
                                        share: fraction(category.amount, of: top))
                             }

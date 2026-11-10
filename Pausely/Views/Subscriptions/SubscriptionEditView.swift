@@ -229,14 +229,14 @@ struct SubscriptionEditView: View {
                             draft.category = option
                         } label: {
                             if option == SubscriptionCategory.label(for: draft.category) {
-                                Label(option, systemImage: "checkmark")
+                                Label(SubscriptionCategory.localizedLabel(for: option), systemImage: "checkmark")
                             } else {
-                                Text(option)
+                                Text(verbatim: SubscriptionCategory.localizedLabel(for: option))
                             }
                         }
                     }
                 } label: {
-                    valueLabel(SubscriptionCategory.label(for: draft.category))
+                    valueLabel(SubscriptionCategory.localizedLabel(for: draft.category))
                 }
                 .accessibilityLabel("Category, \(SubscriptionCategory.label(for: draft.category))")
             }

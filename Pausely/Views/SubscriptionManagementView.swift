@@ -192,15 +192,15 @@ struct SubscriptionManagementView: View {
     private var factsCard: some View {
         let startedOn = current.startDate ?? current.createdAt
         return VStack(spacing: 0) {
-            fact("Billing cycle", current.billingFrequency.displayName)
+            fact(L10n.string("Billing cycle"), current.billingFrequency.displayName)
             divider
-            fact("Next payment", current.calculatedNextBillingDate.map { $0.formatted(.dateTime.month(.abbreviated).day().year()) } ?? "Not set")
+            fact(L10n.string("Next payment"), current.calculatedNextBillingDate.map { $0.formatted(.dateTime.month(.abbreviated).day().year().locale(L10n.locale)) } ?? L10n.string("Not set"))
             divider
-            fact("Category", SubscriptionCategory.label(for: current.category))
+            fact(L10n.string("Category"), SubscriptionCategory.localizedLabel(for: current.category))
             divider
-            fact("Per year", MoneyFormat.string(current.amount * ProvenSubscription.periodsPerYear(current.billingFrequency), current.currency))
+            fact(L10n.string("Per year"), MoneyFormat.string(current.amount * ProvenSubscription.periodsPerYear(current.billingFrequency), current.currency))
             divider
-            fact("Tracking since", startedOn.formatted(.dateTime.month(.abbreviated).year()))
+            fact(L10n.string("Tracking since"), startedOn.formatted(.dateTime.month(.abbreviated).year().locale(L10n.locale)))
         }
         .accessibilityElement(children: .contain)
     }
@@ -252,12 +252,12 @@ struct SubscriptionManagementView: View {
     @ViewBuilder
     private var toolsGroup: some View {
         VStack(spacing: 0) {
-            toolRow(icon: "chart.line.uptrend.xyaxis", title: "Price history", subtitle: nil) { route = .priceHistory }
+            toolRow(icon: "chart.line.uptrend.xyaxis", title: L10n.string("Price history"), subtitle: nil) { route = .priceHistory }
 
             if !alternatives.isEmpty {
                 divider
-                toolRow(icon: "arrow.left.arrow.right", title: "Cheaper alternatives",
-                        subtitle: "\(alternatives.count) option\(alternatives.count == 1 ? "" : "s")",
+                toolRow(icon: "arrow.left.arrow.right", title: L10n.string("Cheaper alternatives"),
+                        subtitle: L10n.string("\(alternatives.count) options"),
                         isPro: !paymentManager.isUnlocked(.cheaperAlternatives)) {
                     route = paymentManager.isUnlocked(.cheaperAlternatives) ? .alternatives : .paywall
                 }
@@ -274,7 +274,7 @@ struct SubscriptionManagementView: View {
             }
 
             divider
-            toolRow(icon: "gauge.with.dots.needle.33percent", title: "Usage and value", subtitle: nil) { route = .usage }
+            toolRow(icon: "gauge.with.dots.needle.33percent", title: L10n.string("Usage and value"), subtitle: nil) { route = .usage }
         }
     }
 
@@ -335,11 +335,11 @@ struct SubscriptionManagementView: View {
         if phone != nil || chat != nil {
             VStack(spacing: 0) {
                 if let phone, let url = Self.url(for: phone) {
-                    toolRow(icon: "phone", title: "Call support", subtitle: phone.value) { openURL(url) }
+                    toolRow(icon: "phone", title: L10n.string("Call support"), subtitle: phone.value) { openURL(url) }
                 }
                 if phone != nil, chat != nil { divider }
                 if let chat, let url = Self.url(for: chat) {
-                    toolRow(icon: chat.type == .email ? "envelope" : "bubble.left", title: "Contact support", subtitle: chat.label) { openURL(url) }
+                    toolRow(icon: chat.type == .email ? "envelope" : "bubble.left", title: L10n.string("Contact support"), subtitle: chat.label) { openURL(url) }
                 }
             }
         }
