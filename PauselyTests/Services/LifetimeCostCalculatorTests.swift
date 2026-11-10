@@ -40,28 +40,6 @@ final class LifetimeCostCalculatorTests: XCTestCase {
         XCTAssertEqual(two, one * 2)
     }
 
-    // MARK: - retirementCost
-
-    func testRetirementYears_is30() {
-        XCTAssertEqual(LifetimeCostCalculator.retirementYears, 30)
-    }
-
-    func testRetirementCost_equals30YearProjection() {
-        let monthly = Decimal(10)
-        let retirement = LifetimeCostCalculator.retirementCost(monthly: monthly)
-        let thirtyYears = LifetimeCostCalculator.projectedCost(monthly: monthly, years: 30)
-        XCTAssertEqual(retirement, thirtyYears)
-    }
-
-    func testRetirementCost_specificValue() {
-        // $15/mo × 12 × 30 = $5,400
-        XCTAssertEqual(LifetimeCostCalculator.retirementCost(monthly: Decimal(15)), 5400)
-    }
-
-    func testRetirementCost_zero() {
-        XCTAssertEqual(LifetimeCostCalculator.retirementCost(monthly: Decimal(0)), 0)
-    }
-
     // MARK: - dailyCost
 
 

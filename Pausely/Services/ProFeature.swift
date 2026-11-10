@@ -19,10 +19,10 @@ enum ProFeature: String, CaseIterable, Identifiable {
 
     var title: String {
         switch self {
-        case .unlimitedSubscriptions: return NSLocalizedString("Unlimited subscriptions", comment: "Pro feature")
-        case .pausePlan: return NSLocalizedString("Pause Plan: rotate your streaming", comment: "Pro feature")
-        case .deepAnalysis: return NSLocalizedString("Deep savings analysis", comment: "Pro feature")
-        case .cheaperAlternatives: return NSLocalizedString("Cheaper Alternatives", comment: "Pro feature")
+        case .unlimitedSubscriptions: return L10n.string("Unlimited subscriptions")
+        case .pausePlan: return L10n.string("Pause Plan: rotate your streaming")
+        case .deepAnalysis: return L10n.string("Deep savings analysis")
+        case .cheaperAlternatives: return L10n.string("Cheaper Alternatives")
         }
     }
 

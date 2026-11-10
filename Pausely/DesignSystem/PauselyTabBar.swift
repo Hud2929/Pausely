@@ -5,7 +5,7 @@ import SwiftUI
 struct PauselyTabItem {
     let tag: Int
     let icon: String
-    let label: String
+    let label: LocalizedStringResource
 }
 
 private let tabItems: [PauselyTabItem] = [
@@ -58,10 +58,10 @@ private struct TabBarButton: View {
 
     private var accessLabel: String {
         switch item.tag {
-        case 0: return "Dashboard"
-        case 1: return "Subscriptions"
-        case 2: return "Analysis"
-        case 3: return "Profile"
+        case 0: return L10n.string("Dashboard")
+        case 1: return L10n.string("Subscriptions")
+        case 2: return L10n.string("Analysis")
+        case 3: return L10n.string("Profile")
         default: return "Tab \(item.tag + 1)"
         }
     }
@@ -94,7 +94,9 @@ private struct TabBarButton: View {
                     }
                 }
 
-                Text(item.label)
+                Text(L10n.string(item.label))
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.7)
                     .font(.system(size: 10, weight: isSelected ? .semibold : .medium, design: .rounded))
                     .foregroundStyle(isSelected ? Color.accentMint : Color.obsidianTextTertiary)
                     .accessibilityHidden(true)

@@ -142,7 +142,7 @@ struct BillsThisWeekCard: View {
                                                 .font(.system(.caption2, design: .rounded).weight(.bold))
                                                 .foregroundStyle(color)
                                         } else {
-                                            Text("in \(day.daysAway)d")
+                                            Text(L10n.string("in \(day.daysAway) days"))
                                                 .font(.system(.caption2, design: .rounded).weight(.semibold))
                                                 .foregroundStyle(color.opacity(0.8))
                                         }

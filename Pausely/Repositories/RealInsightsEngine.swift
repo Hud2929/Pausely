@@ -271,33 +271,38 @@ final class RealInsightsEngine: ObservableObject {
         let monthsUntilRenewal: [UUID: Int]
     }
 
+    /// The two lower forecast figures. `minutesLogged` is nil when the user never logged usage for
+    /// that subscription; those always stay in both totals. Without any usage logged, the only cut
+    /// shown is the savings Pausely can point to (`pointedSavings`).
+    nonisolated static func forecastTotals(_ items: [(monthly: Decimal, minutesLogged: Int?)],
+                                           pointedSavings: Decimal) -> (optimized: Decimal, aggressive: Decimal) {
+        let current = items.reduce(Decimal(0)) { $0 + $1.monthly }
+        guard items.contains(where: { $0.minutesLogged != nil }) else {
+            let optimized = max(0, current - pointedSavings)
+            return (optimized, optimized)
+        }
+        var optimized = Decimal(0), aggressive = Decimal(0)
+        for item in items {
+            guard let minutes = item.minutesLogged else {
+                optimized += item.monthly
+                aggressive += item.monthly
+                continue
+            }
+            if minutes > 0 { optimized += item.monthly }
+            if minutes >= 30 { aggressive += item.monthly }
+        }
+        return (optimized, aggressive)
+    }
+
     func calculateSpendingForecast(subscriptions: [Subscription], totalMonthlySavings: Decimal = 0) -> SpendingForecast {
         let active = subscriptions.filter { $0.status == .active }
 
         let currentMonthly = active.reduce(Decimal(0)) { $0 + monthly($1) }
 
-        // Check if any subscriptions have manual usage data
-        let hasUsageData = active.contains { screenTimeManager.getUsage(for: $0.name) != nil }
-
-        var optimizedMonthly: Decimal
-        var aggressiveMonthly: Decimal
-        if hasUsageData {
-            // Usage-based: remove ghost subs (0 usage) and low-use subs (<30 min)
-            var usageOptimized = Decimal(0)
-            var usageAggressive = Decimal(0)
-            for sub in active {
-                let usage = screenTimeManager.getUsage(for: sub.name)
-                let minutes = usage?.minutesUsed ?? 0
-                if minutes > 0 { usageOptimized += monthly(sub) }
-                if minutes >= 30 { usageAggressive += monthly(sub) }
-            }
-            optimizedMonthly = usageOptimized
-            aggressiveMonthly = usageAggressive
-        } else {
-            // No usage data: only the savings Pausely can actually point to. No invented "minimal" plan.
-            optimizedMonthly = max(0, currentMonthly - totalMonthlySavings)
-            aggressiveMonthly = optimizedMonthly
-        }
+        // A subscription with no usage logged is unknown, not unused: only one the user logged at
+        // zero (or under 30 minutes) counts as a possible cut.
+        let costsAndUsage = active.map { (monthly: monthly($0), minutesLogged: screenTimeManager.getUsage(for: $0.name)?.minutesUsed) }
+        let (optimizedMonthly, aggressiveMonthly) = Self.forecastTotals(costsAndUsage, pointedSavings: totalMonthlySavings)
 
         // subscription.annualCost (price × charges per year), converted to display currency
         let trueAnnual = active.reduce(Decimal(0)) { $0 + annual($1) }

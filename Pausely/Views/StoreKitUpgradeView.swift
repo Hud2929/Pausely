@@ -51,15 +51,15 @@ struct StoreKitUpgradeView: View {
 
         var title: String {
             switch self {
-            case .monthly: return "Monthly"
-            case .annual: return "Annual"
+            case .monthly: return L10n.string("Monthly")
+            case .annual: return L10n.string("Annual")
             }
         }
 
         var period: String {
             switch self {
-            case .monthly: return "/month"
-            case .annual: return "/year"
+            case .monthly: return L10n.string("/month")
+            case .annual: return L10n.string("/year")
             }
         }
 
@@ -69,7 +69,7 @@ struct StoreKitUpgradeView: View {
             case .monthly: return nil
             case .annual:
                 guard let percent = StoreKitManager.shared.annualSavingsPercent else { return nil }
-                return "Save \(percent)%"
+                return L10n.string("Save \(percent)%")
             }
         }
 
@@ -311,7 +311,6 @@ struct StoreKitUpgradeView: View {
                         )
                     }
                     .buttonStyle(PlainButtonStyle())
-                    .accessibilityValue(selectedPlan == plan ? "Selected" : "Not selected")
                     .accessibilityAddTraits(selectedPlan == plan ? .isSelected : [])
                 }
             }
@@ -322,43 +321,34 @@ struct StoreKitUpgradeView: View {
             )
             .accessibilityElement(children: .contain)
 
-            // Selected plan details (uses our pricing, not StoreKit sandbox prices)
-            HStack {
+            // Selected plan. Apple: the amount that will be billed is the most prominent price on
+            // the screen; the trial and the per-month equivalent sit below it, smaller.
+            HStack(alignment: .top) {
                 VStack(alignment: .leading, spacing: 4) {
-                    if isTrialEnabled {
-                        Text("Free")
-                            .font(.title2.bold())
-                            .foregroundStyle(.white)
-
-                        Text("for 7 days")
-                            .font(AppTypography.bodySmall)
-                            .foregroundStyle(Color.accentMint)
-                    } else {
+                    HStack(alignment: .firstTextBaseline, spacing: 2) {
                         Text(selectedPlan == .monthly ? priceText(.pro) : priceText(.proAnnual))
-                            .font(.title2.bold())
+                            .font(.title.bold())
                             .foregroundStyle(.white)
-
                         Text(selectedPlan.period)
                             .font(AppTypography.bodySmall)
                             .foregroundStyle(Color.obsidianTextSecondary)
+                    }
+                    .accessibilityElement(children: .combine)
+
+                    if isTrialEnabled {
+                        Text("after 7 days free")
+                            .font(AppTypography.bodySmall)
+                            .foregroundStyle(Color.accentMint)
                     }
                 }
 
                 Spacer()
 
-                VStack(alignment: .trailing, spacing: 4) {
-                    // The discount is already on the Annual toggle; here, what happens after the trial.
-                    if isTrialEnabled {
-                        Text("then \(selectedPlan == .monthly ? priceText(.pro) : priceText(.proAnnual))\(selectedPlan.period)")
-                            .font(.subheadline.bold())
-                            .foregroundColor(.white)
-                    }
-
-                    if selectedPlan == .annual, let perMonth = storeManager.annualPricePerMonth {
-                        Text("\(perMonth)/mo equivalent")
-                            .font(AppTypography.labelMedium)
-                            .foregroundStyle(Color.obsidianTextTertiary)
-                    }
+                if selectedPlan == .annual, let perMonth = storeManager.annualPricePerMonth {
+                    Text("\(perMonth)/mo equivalent")
+                        .font(AppTypography.labelMedium)
+                        .foregroundStyle(Color.obsidianTextTertiary)
+                        .padding(.top, 8)
                 }
             }
             .padding(16)
@@ -442,7 +432,7 @@ struct StoreKitUpgradeView: View {
                         Image(systemName: "sparkles")
                             .font(.system(.title3, design: .rounded).weight(.semibold))
 
-                        Text(isTrialEnabled ? "Start Free Trial" : "Subscribe")
+                        Text(isTrialEnabled ? L10n.string("Start Free Trial") : L10n.string("Subscribe"))
                             .font(.system(.body, design: .rounded).weight(.bold))
                     }
                 }
@@ -475,8 +465,8 @@ struct StoreKitUpgradeView: View {
 
             // Terms
             Text(isTrialEnabled
-                ? "Free for 7 days, then auto-renews. Cancel anytime in App Store Settings."
-                : "Auto-renews. Cancel anytime in App Store Settings.")
+                ? L10n.string("Free for 7 days, then auto-renews. Cancel anytime in App Store Settings.")
+                : L10n.string("Auto-renews. Cancel anytime in App Store Settings."))
                 .font(AppTypography.labelMedium)
                 .foregroundStyle(.white.opacity(0.4))
                 .multilineTextAlignment(.center)

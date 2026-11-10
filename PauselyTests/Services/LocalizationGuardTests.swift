@@ -97,7 +97,9 @@ final class LocalizationGuardTests: XCTestCase {
     /// Catalog key for a source literal: each interpolation becomes a format specifier.
     private static func matchingKey(_ literal: String, in keys: [String]) -> String? {
         if !literal.contains("\\(…)") { return keys.contains(literal) ? literal : nil }
-        let pattern = "^" + literal.components(separatedBy: "\\(…)").map(NSRegularExpression.escapedPattern(for:))
+        // A literal "%" in source is "%%" in the catalog key.
+        let pattern = "^" + literal.components(separatedBy: "\\(…)")
+            .map { NSRegularExpression.escapedPattern(for: $0.replacingOccurrences(of: "%", with: "%%")) }
             .joined(separator: "%(?:lld|ld|d|@|lf|f|\\.\\d+f)") + "$"
         guard let regex = try? NSRegularExpression(pattern: pattern) else { return nil }
         return keys.first { regex.firstMatch(in: $0, range: NSRange($0.startIndex..., in: $0)) != nil }

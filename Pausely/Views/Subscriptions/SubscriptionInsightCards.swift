@@ -15,10 +15,6 @@ struct CancelTimingCard: View {
         return Calendar.current.date(byAdding: .day, value: -cycleDays, to: next)
     }
 
-    private var daysUsed: Int {
-        CancelTimingCalculator.daysUsed(from: lastBillingDate ?? Date())
-    }
-
     private var daysRemaining: Int {
         guard let next = subscription.calculatedNextBillingDate else { return 0 }
         return max(0, Calendar.current.calendarDays(from: Date(), to: next))
@@ -28,34 +24,19 @@ struct CancelTimingCard: View {
         CancelTimingCalculator.progress(lastBillingDate: lastBillingDate, cycleDays: cycleDays)
     }
 
-    private var valueUsed: Decimal {
-        currencyManager.convertToSelected(
-            CancelTimingCalculator.valueUsed(monthlyCost: subscription.monthlyCost, progress: progress),
-            from: subscription.currency
-        )
+    /// Shown in the subscription's own currency, like every single price.
+    private var nextChargeText: String? {
+        guard let next = subscription.calculatedNextBillingDate else { return nil }
+        let day = next.formatted(.dateTime.month(.abbreviated).day())
+        return L10n.string("Next charge: \(MoneyFormat.string(subscription.amount, subscription.currency)) on \(day)")
     }
 
-    private var valueRemaining: Decimal {
-        currencyManager.convertToSelected(
-            CancelTimingCalculator.valueRemaining(monthlyCost: subscription.monthlyCost, progress: progress),
-            from: subscription.currency
-        )
-    }
-
-    private var timingAdvice: (text: String, color: Color) {
-        let advice = CancelTimingCalculator.cancelAdvice(
-            daysUsed: daysUsed,
-            daysRemaining: daysRemaining,
-            cycleDays: cycleDays
-        )
-        let color: Color = {
-            switch advice.level {
-            case .good: return .green
-            case .fair: return .yellow
-            case .poor: return .orange
-            }
-        }()
-        return (advice.text, color)
+    private var adviceText: String {
+        guard let next = subscription.calculatedNextBillingDate else {
+            return L10n.string("Add a payment date to see when to cancel.")
+        }
+        let day = next.formatted(.dateTime.month(.abbreviated).day())
+        return L10n.string("Cancel any day before \(day) to avoid it. Most services let you keep using it until then.")
     }
 
     var body: some View {
@@ -66,7 +47,7 @@ struct CancelTimingCard: View {
                     .font(.system(.headline, design: .rounded).weight(.bold))
                     .foregroundStyle(.white)
                 Spacer()
-                Text("\(Int(progress * 100))% used")
+                Text(daysRemaining == 1 ? L10n.string("1 day left") : L10n.string("\(daysRemaining) days left"))
                     .font(.system(.caption, design: .rounded).weight(.semibold))
                     .foregroundStyle(Color.obsidianTextSecondary)
             }
@@ -78,43 +59,22 @@ struct CancelTimingCard: View {
                         .fill(Color.white.opacity(0.08))
                         .frame(height: 8)
                     RoundedRectangle(cornerRadius: 5)
-                        .fill(timingAdvice.color)
+                        .fill(daysRemaining <= 3 ? Color.orange : Color.accentMint)
                         .frame(width: max(0, geo.size.width * progress), height: 8)
                 }
             }
             .frame(height: 8)
 
-            // Value row
-            HStack {
-                VStack(alignment: .leading, spacing: 3) {
-                    Text(currencyManager.format(valueUsed))
-                        .font(.system(.subheadline, design: .rounded).weight(.bold))
-                        .foregroundStyle(.white)
-                    Text("consumed")
-                        .font(.system(.caption2, design: .rounded))
-                        .foregroundStyle(Color.obsidianTextTertiary)
-                }
-                Spacer()
-                VStack(alignment: .trailing, spacing: 3) {
-                    Text(currencyManager.format(valueRemaining))
-                        .font(.system(.subheadline, design: .rounded).weight(.bold))
-                        .foregroundStyle(timingAdvice.color)
-                    Text("remaining")
-                        .font(.system(.caption2, design: .rounded))
-                        .foregroundStyle(Color.obsidianTextTertiary)
-                }
+            if let nextChargeText {
+                Text(nextChargeText)
+                    .font(.system(.subheadline, design: .rounded).weight(.semibold))
+                    .foregroundStyle(.white)
             }
 
-            // Advice pill
-            HStack(spacing: 7) {
-                Circle()
-                    .fill(timingAdvice.color)
-                    .frame(width: 7, height: 7)
-                Text(timingAdvice.text)
-                    .font(.system(.caption, design: .rounded))
-                    .foregroundStyle(Color.obsidianTextSecondary)
-                    .fixedSize(horizontal: false, vertical: true)
-            }
+            Text(adviceText)
+                .font(.system(.caption, design: .rounded))
+                .foregroundStyle(Color.obsidianTextSecondary)
+                .fixedSize(horizontal: false, vertical: true)
             .padding(.horizontal, 12)
             .padding(.vertical, 8)
             .frame(maxWidth: .infinity, alignment: .leading)
@@ -163,7 +123,7 @@ struct LifetimeCostCard: View {
                             .foregroundStyle(Color.obsidianTextTertiary)
                         Text(cm.format(cost))
                             .font(.system(.caption, design: .rounded).weight(.bold))
-                            .foregroundStyle(i == 0 ? .white : i == 1 ? .orange : .red)
+                            .foregroundStyle(.white)
                             .minimumScaleFactor(0.7)
                             .lineLimit(1)
                     }
@@ -173,23 +133,6 @@ struct LifetimeCostCard: View {
                     }
                 }
             }
-
-            // Retirement bomb
-            let retirementCost = LifetimeCostCalculator.retirementCost(monthly: monthly)
-            HStack(spacing: 8) {
-                Image(systemName: "clock.arrow.2.circlepath")
-                    .font(.caption)
-                    .foregroundStyle(.red)
-                Text("Keep until retirement: ")
-                    .font(.system(.caption2, design: .rounded))
-                    .foregroundStyle(Color.obsidianTextSecondary) +
-                Text(cm.format(retirementCost))
-                    .font(.system(.caption2, design: .rounded).weight(.black))
-                    .foregroundStyle(.red)
-            }
-            .padding(8)
-            .background(Color.red.opacity(0.08))
-            .clipShape(RoundedRectangle(cornerRadius: 8, style: .continuous))
         }
         .padding(18)
         .surfaceCard(cornerRadius: 20, elevated: true)

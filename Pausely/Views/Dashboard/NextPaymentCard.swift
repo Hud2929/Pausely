@@ -150,11 +150,11 @@ struct NextPaymentCard: View {
     }
 
     private var daysUntilText: String {
-        guard subscription?.calculatedNextBillingDate != nil else { return "Tap to set billing date" }
-        if daysUntil == 0 { return "Today" }
-        if daysUntil == 1 { return "Tomorrow" }
-        if daysUntil < 0 { return "Overdue" }
-        return "In \(daysUntil) days"
+        guard subscription?.calculatedNextBillingDate != nil else { return L10n.string("Tap to set billing date") }
+        if daysUntil == 0 { return L10n.string("Today") }
+        if daysUntil == 1 { return L10n.string("Tomorrow") }
+        if daysUntil < 0 { return L10n.string("Overdue") }
+        return L10n.string("in \(daysUntil) days")
     }
 
     private var accessibilityLabelText: String {

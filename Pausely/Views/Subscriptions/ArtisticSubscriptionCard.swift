@@ -76,10 +76,10 @@ struct ArtisticSubscriptionCard: View {
 
                     if let days = subscription.daysUntilRenewal {
                         let countdownText: String = {
-                            if days < 0 { return "Overdue" }
-                            if days == 0 { return "Today" }
-                            if days == 1 { return "Tomorrow" }
-                            return "in \(days)d"
+                            if days < 0 { return L10n.string("Overdue") }
+                            if days == 0 { return L10n.string("Today") }
+                            if days == 1 { return L10n.string("Tomorrow") }
+                            return L10n.string("in \(days) days")
                         }()
                         Text(countdownText)
                             .font(.system(.caption2, design: .rounded))

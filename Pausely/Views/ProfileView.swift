@@ -932,18 +932,18 @@ private struct WrappedStory1_TotalSpent: View {
                         .foregroundStyle(Color.white.opacity(0.5))
                         .tracking(2)
 
-                    Text("This year,\nyou spent")
+                    Text("Your subscriptions\ncost")
                         .font(.system(size: 38, weight: .black, design: .rounded))
                         .foregroundStyle(.white)
                         .lineSpacing(4)
 
-                    Text(CurrencyManager.shared.format(stats.totalSpent))
+                    Text(CurrencyManager.shared.format(stats.yearlyCost))
                         .font(.system(size: 72, weight: .black, design: .rounded))
                         .foregroundStyle(Color.accentMint)
                         .minimumScaleFactor(0.4)
                         .lineLimit(1)
 
-                    Text("on \(stats.totalCount) subscription\(stats.totalCount == 1 ? "" : "s")")
+                    Text(stats.totalCount == 1 ? L10n.string("a year, for 1 subscription") : L10n.string("a year, across \(stats.totalCount) subscriptions"))
                         .font(.system(size: 22, weight: .semibold, design: .rounded))
                         .foregroundStyle(Color.white.opacity(0.7))
                 }
@@ -1019,7 +1019,7 @@ private struct WrappedStory3_VsAverage: View {
         CurrencyManager.shared.convertToSelected(Decimal(219), from: "USD")
     }
     private var monthlySpend: Decimal {
-        stats.totalCount > 0 ? stats.totalSpent / Decimal(max(1, Calendar.current.component(.month, from: Date()))) : 0
+        stats.monthlyCost
     }
     private var isBelow: Bool {
         monthlySpend < localAverage
@@ -1095,7 +1095,7 @@ private struct WrappedStory4_CouldBuy: View {
     let stats: WrappedStats
 
     private var localAnnual: Double {
-        NSDecimalNumber(decimal: CurrencyManager.shared.convertToSelected(stats.totalSpent, from: CurrencyManager.shared.currentCurrency.code)).doubleValue
+        NSDecimalNumber(decimal: CurrencyManager.shared.convertToSelected(stats.yearlyCost, from: CurrencyManager.shared.currentCurrency.code)).doubleValue
     }
     private func convertedPrice(_ usdPrice: Double) -> Double {
         NSDecimalNumber(decimal: CurrencyManager.shared.convertToSelected(Decimal(usdPrice), from: "USD")).doubleValue
@@ -1125,12 +1125,12 @@ private struct WrappedStory4_CouldBuy: View {
                 Spacer()
 
                 VStack(alignment: .leading, spacing: 24) {
-                    Text("WHAT ELSE YOU COULD'VE DONE")
+                    Text("WHAT ELSE THAT BUYS")
                         .font(.system(size: 10, weight: .bold, design: .rounded))
                         .foregroundStyle(Color.white.opacity(0.5))
                         .tracking(1.5)
 
-                    Text("With \(CurrencyManager.shared.format(stats.totalSpent))\nyou could've had…")
+                    Text("\(CurrencyManager.shared.format(stats.yearlyCost)) a year\nalso buys…")
                         .font(.system(size: 32, weight: .black, design: .rounded))
                         .foregroundStyle(.white)
                         .lineSpacing(4)
@@ -1226,7 +1226,8 @@ private struct WrappedStory5_Personality: View {
 
 struct WrappedStats {
     let year: Int
-    let totalSpent: Decimal
+    let yearlyCost: Decimal
+    let monthlyCost: Decimal
     let totalCount: Int
     let cancelledCount: Int
     let topService: String
@@ -1242,10 +1243,10 @@ struct WrappedStats {
         }
         totalCount = active.count
         cancelledCount = cancelled.count
-        let monthsThisYear = max(1, Calendar.current.component(.month, from: Date()))
-        // In the display currency, so subscriptions in different currencies add up and compare fairly.
-        let monthly = active.monthlyTotal()
-        totalSpent = monthly * Decimal(monthsThisYear)
+        // What the current list costs, in the display currency. Pausely doesn't know what was
+        // charged before a subscription was added, so Wrapped never claims an amount "spent".
+        yearlyCost = active.annualTotal()
+        monthlyCost = active.monthlyTotal()
         topService = active.max(by: { [$0].monthlyTotal() < [$1].monthlyTotal() })?.name ?? "–"
         let grouped = Dictionary(grouping: active) { $0.category ?? "Other" }
         topCategory = grouped.max(by: { $0.value.monthlyTotal() < $1.value.monthlyTotal() })?.key ?? "–"
