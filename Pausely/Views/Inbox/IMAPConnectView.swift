@@ -173,7 +173,7 @@ struct IMAPConnectView: View {
             .foregroundStyle(Color.ink)
             .frame(maxWidth: .infinity)
             .frame(height: 52)
-            .background(RoundedRectangle(cornerRadius: 16).fill(canConnect ? Color.inkText : Color.inkTextMuted))
+            .background(RoundedRectangle(cornerRadius: 16).fill(canConnect ? Color.paper : Color.inkLifted))
         }
         .buttonStyle(PlainButtonStyle())
         .disabled(!canConnect)

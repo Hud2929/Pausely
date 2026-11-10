@@ -130,7 +130,7 @@ struct NotificationsSettingsView: View {
                         .foregroundColor(.black)
                         .padding(.horizontal, 14)
                         .frame(height: 34)
-                        .background(Capsule().fill(status == .denied ? Color.decide : Color.inkText))
+                        .background(Capsule().fill(status == .denied ? Color.decide : Color.paper))
                 }
                 .buttonStyle(PlainButtonStyle())
                 .disabled(isAsking)

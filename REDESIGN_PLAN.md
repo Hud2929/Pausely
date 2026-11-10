@@ -374,6 +374,7 @@ gradient, glow, glass card, button style or haptic. The redesign is finished whe
 | 2026-11-11 | 59 | After Home and the system tab bar. Deleted: Next Payment, Bills This Week, Biggest Expenses, Lifetime Spend, the waste and opportunity cards, the price alert banner, the custom tab bar. |
 | 2026-11-11 | 55 | After the verdict, cancel flow, cancel rating and Savings Receipt. The confetti celebration screen is deleted. |
 | 2026-11-11 | 28 | After the Subscriptions list, detail, edit, catalog, plan sheet, custom add and the tool screens. Deleted: nine unused add-flow views and the "Switch to yearly" screen, which always showed $0.00 saved. |
+| 2026-11-11 | 0 | Every old token is gone and the legacy design files are deleted. This counts tokens, not quality: the screens below 9.0 in the table still need a layout pass. |
 
 Rated on screen so far (English; Arabic and largest text checked for the reveal):
 
@@ -395,6 +396,20 @@ Rated on screen so far (English; Arabic and largest text checked for the reveal)
 | Plan sheet | 8.9 | The catalog still lists plans that may not exist (a Netflix "Student" plan in the US data) |
 | Custom add | 8.8 | Seen with the keyboard up only |
 | Price history, usage and value, alternatives | about 7.5 | Restyled mechanically: clean, but still card layouts with centred icons; need a real pass |
+| Insights | 9.0 | Deep analysis seen only in its locked state |
+| Profile | 9.0 | Plain by design; signed-in name and email not seen (demo account) |
+| Your year (Wrapped) | 9.1 | Share image not opened in a share sheet |
+| Welcome | 9.0 | Shown only to someone signed out after onboarding |
+| Sign in, sign up, age check | about 8.5 | Forms are standard; the date wheel dominates the age check |
+| Pause Plan | about 8.5 | Mechanical pass: still cards, centred intro |
+| Inbox import, results, connect | about 8.3 | Mechanical pass: still cards; results screen is dense |
+| Notifications, Privacy, Help, Currency, Language, Export | about 8.2 | Mechanical pass: clean and consistent, still grouped cards; toggles are system green |
+| What's New | 8.8 | Rewritten to describe this build; not seen after the rewrite |
+| Widgets and Live Activity | not rated | Colours and fonts changed in code; not seen on a Home Screen or Lock Screen |
+
+Not yet checked on any screen: iPad, the empty and loading states of Home and Insights, most screens
+in Arabic and at the largest text size (only the first run, paywall, Home, verdict were), and the
+full consumer walk-through (`ConsumerJourneyTests`, `ScreenTourTests`).
 
 Typical prices on the tally come from news round-ups dated April to September 2026, not from each
 service's own price page, and local prices outside the US are a single factor per currency

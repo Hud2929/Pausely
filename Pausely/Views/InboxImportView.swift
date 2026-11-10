@@ -266,7 +266,7 @@ struct InboxImportView: View {
                 .foregroundStyle(Color.ink)
                 .frame(maxWidth: .infinity)
                 .frame(height: 52)
-                .background(RoundedRectangle(cornerRadius: 16, style: .continuous).fill(Color.inkText))
+                .background(RoundedRectangle(cornerRadius: 16, style: .continuous).fill(Color.paper))
             }
             .buttonStyle(PlainButtonStyle())
             .accessibilityIdentifier("scanInboxesButton")
@@ -540,7 +540,7 @@ struct InboxImportView: View {
                 .foregroundStyle(Color.ink)
                 .frame(maxWidth: .infinity)
                 .frame(height: 52)
-                .background(RoundedRectangle(cornerRadius: 16, style: .continuous).fill(Color.inkText))
+                .background(RoundedRectangle(cornerRadius: 16, style: .continuous).fill(Color.paper))
             }
             .buttonStyle(PlainButtonStyle())
             .disabled(importing)
@@ -592,7 +592,7 @@ struct InboxImportView: View {
                     .frame(height: 48)
                     .background(
                         RoundedRectangle(cornerRadius: 14, style: .continuous)
-                            .fill(Color.inkText)
+                            .fill(Color.paper)
                     )
             }
             .buttonStyle(PlainButtonStyle())

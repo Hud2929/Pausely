@@ -76,18 +76,18 @@ struct ExportDataView: View {
                             Spacer()
                             if isExporting {
                                 ProgressView()
-                                    .tint(.white)
+                                    .tint(Color.paperInk)
                             } else {
                                 Image(systemName: "square.and.arrow.up")
                                 Text("Export \(filteredCount) Subscriptions")
                             }
                             Spacer()
                         }
-                        .font(.subheadline.weight(.semibold))
-                        .foregroundStyle(Color.inkText)
-                        .padding(.vertical, 14)
-                        .background(filteredCount > 0 ? Color.inkText : Color.inkTextFaint)
-                        .clipShape(RoundedRectangle(cornerRadius: 14))
+                        .font(.headline)
+                        .foregroundStyle(filteredCount > 0 ? Color.paperInk : Color.inkTextFaint)
+                        .frame(minHeight: 54)
+                        .background(filteredCount > 0 ? Color.paper : Color.inkLifted)
+                        .clipShape(RoundedRectangle(cornerRadius: Layout.cardRadius, style: .continuous))
                     }
                     .disabled(filteredCount == 0 || isExporting)
                     .listRowBackground(Color.clear)

@@ -59032,6 +59032,210 @@
           }
         }
       }
+    },
+    "A new look": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "مظهر جديد"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ein neuer Look"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Un nuevo aspecto"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Une nouvelle apparence"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "新しいデザイン"
+          }
+        }
+      }
+    },
+    "Pausely is ink and paper now: your decisions and your savings are printed on slips.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "أصبح Pausely حبرًا وورقًا: قراراتك ومدخراتك تُطبع على قسائم."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pausely ist jetzt Tinte und Papier: Deine Entscheidungen und Ersparnisse stehen auf Belegen."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pausely ahora es tinta y papel: tus decisiones y tus ahorros se imprimen en tickets."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pausely, c'est désormais de l'encre et du papier : vos décisions et vos économies sont imprimées sur des tickets."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pauselyはインクと紙のデザインに。判断と節約がレシートに印字されます。"
+          }
+        }
+      }
+    },
+    "The next 30 days on one line": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "الثلاثون يومًا القادمة في سطر واحد"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Die nächsten 30 Tage auf einer Linie"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Los próximos 30 días en una línea"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Les 30 prochains jours sur une ligne"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "今後30日間を1本の線で"
+          }
+        }
+      }
+    },
+    "Home shows every charge that's coming and what leaves by any day.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "تعرض الصفحة الرئيسية كل خصم قادم وما سيُدفع حتى أي يوم."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Die Startseite zeigt jede kommende Abbuchung und was bis zu einem Tag abgeht."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Inicio muestra cada cobro que viene y lo que sale hasta cualquier día."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "L'accueil montre chaque prélèvement à venir et ce qui part d'ici un jour donné."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ホームに今後の請求と、その日までの合計が表示されます。"
+          }
+        }
+      }
+    },
+    "Keep or cancel, on a slip": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "أبقِ أو ألغِ، على قسيمة"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Behalten oder kündigen, auf einem Beleg"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Conservar o cancelar, en un ticket"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Garder ou annuler, sur un ticket"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "続けるか解約か、レシートの上で"
+          }
+        }
+      }
+    },
+    "Keeping stamps it. Cancelling tears it and adds it to your Savings Receipt.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "الإبقاء يختمها. الإلغاء يمزقها ويضيفها إلى إيصال التوفير."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Behalten stempelt ihn. Kündigen reißt ihn ab und setzt ihn auf deinen Sparbeleg."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Conservar lo sella. Cancelar lo rasga y lo añade a tu recibo de ahorros."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Garder le tamponne. Annuler le déchire et l'ajoute à votre reçu d'économies."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "続けるとスタンプ、解約すると切り取られて節約レシートに加わります。"
+          }
+        }
+      }
     }
   },
   "version": "1.1"

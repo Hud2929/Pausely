@@ -209,7 +209,7 @@ struct PausePlanView: View {
                         .foregroundStyle(.black)
                         .padding(.horizontal, 8)
                         .padding(.vertical, 4)
-                        .background(Capsule().fill(Color.inkText))
+                        .background(Capsule().fill(Color.paper))
                 } else if isSelected {
                     Button("Put first") {
                         firstId = sub.id
@@ -398,7 +398,7 @@ struct PausePlanView: View {
                                 .foregroundStyle(.black)
                                 .padding(.horizontal, 10)
                                 .frame(height: 30)
-                                .background(Capsule().fill(item.action == .cancel ? Color.decide : Color.inkText))
+                                .background(Capsule().fill(item.action == .cancel ? Color.decide : Color.paper))
                         }
                         .buttonStyle(PlainButtonStyle())
                     }
