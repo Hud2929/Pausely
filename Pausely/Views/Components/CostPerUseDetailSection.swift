@@ -69,11 +69,11 @@ struct CostPerUseDetailSection: View {
             // Section title
             HStack(spacing: 8) {
                 Image(systemName: "chart.bar.fill")
-                    .font(AppTypography.headlineMedium)
+                    .font(Font.headline)
                     .foregroundStyle(Color.accentMint)
 
                 Text(LocalizedStringKey("Cost Per Use"))
-                    .font(AppTypography.headlineLarge)
+                    .font(Font.title3.weight(.semibold))
                     .foregroundStyle(.primary)
 
                 Spacer()
@@ -117,13 +117,13 @@ struct CostPerUseDetailSection: View {
         VStack(alignment: .leading, spacing: 12) {
             HStack {
                 Text(LocalizedStringKey("Usage Trend"))
-                    .font(AppTypography.headlineSmall)
+                    .font(Font.subheadline.weight(.semibold))
                     .foregroundStyle(.primary)
 
                 Spacer()
 
                 Text(LocalizedStringKey("Last 3 Months"))
-                    .font(AppTypography.labelMedium)
+                    .font(Font.caption.weight(.medium))
                     .foregroundStyle(.secondary)
             }
 
@@ -135,7 +135,7 @@ struct CostPerUseDetailSection: View {
                     VStack(spacing: 6) {
                         // Value label
                         Text(CostPerUseCalculator.formatHours(trendData[index]))
-                            .font(.system(.caption2, design: .default).weight(.semibold))
+                            .font(.caption2.weight(.semibold))
                             .foregroundStyle(.primary)
 
                         // Bar
@@ -154,7 +154,7 @@ struct CostPerUseDetailSection: View {
 
                         // Month label
                         Text(trendLabels[index])
-                            .font(.system(.caption2, design: .default).weight(.medium))
+                            .font(.caption2.weight(.medium))
                             .foregroundStyle(.secondary)
                     }
                     .frame(maxWidth: .infinity)
@@ -180,11 +180,11 @@ struct CostPerUseDetailSection: View {
 
             VStack(alignment: .leading, spacing: 3) {
                 Text(LocalizedStringKey("Since You Started Tracking"))
-                    .font(AppTypography.labelLarge)
+                    .font(Font.footnote.weight(.medium))
                     .foregroundStyle(.secondary)
 
                 Text("\(CostPerUseCalculator.formatHours(totalTrackedHours)) of use")
-                    .font(AppTypography.headlineMedium)
+                    .font(Font.headline)
                     .foregroundStyle(.primary)
             }
 
@@ -207,7 +207,7 @@ struct CostPerUseDetailSection: View {
         return AnyView(
             VStack(alignment: .leading, spacing: 12) {
                 Text(LocalizedStringKey("Category Comparison"))
-                    .font(AppTypography.headlineSmall)
+                    .font(Font.subheadline.weight(.semibold))
                     .foregroundStyle(.primary)
 
                 VStack(spacing: 8) {
@@ -220,20 +220,20 @@ struct CostPerUseDetailSection: View {
 
                             HStack(spacing: 10) {
                                 Image(systemName: "arrow.left.arrow.right")
-                                    .font(AppTypography.labelMedium)
+                                    .font(Font.caption.weight(.medium))
                                     .foregroundStyle(Color.accentMint)
 
                                 Text("You use \(subscription.name)")
-                                    .font(AppTypography.bodySmall)
+                                    .font(Font.subheadline)
                                     .foregroundStyle(.secondary)
 
                                 + Text(" \(String(format: "%.1f", ratio))x ")
-                                    .font(AppTypography.bodySmall)
+                                    .font(Font.subheadline)
                                     .foregroundStyle(Color.accentMint)
                                     .fontWeight(.semibold)
 
                                 + Text("more than \(other.name)")
-                                    .font(AppTypography.bodySmall)
+                                    .font(Font.subheadline)
                                     .foregroundStyle(.secondary)
 
                                 Spacer()
@@ -260,7 +260,7 @@ struct CostPerUseDetailSection: View {
 // MARK: - Preview
 #Preview {
     ZStack {
-        AnimatedGradientBackground()
+        Color.ink.ignoresSafeArea()
         ScrollView {
             CostPerUseDetailSection(
                 subscription: Subscription(

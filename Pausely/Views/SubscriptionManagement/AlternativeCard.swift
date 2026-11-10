@@ -40,7 +40,7 @@ struct AlternativeCard: View {
                         .cornerRadius(8)
                 }
 
-                Image(systemName: "chevron.right")
+                Image(systemName: "chevron.forward")
                     .foregroundStyle(.secondary)
             }
         }

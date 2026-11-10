@@ -19,151 +19,104 @@ struct LuxuryAddSubscriptionView: View {
     }
 
     var body: some View {
-        ZStack {
-            AnimatedGradientBackground()
-
+        VStack(spacing: 0) {
             ScrollView {
-                VStack(spacing: 32) {
-                    // Header
-                    VStack(spacing: 8) {
-                        Text("Add Subscription")
-                            .font(AppTypography.displayMedium)
-                            .foregroundStyle(.white)
-
-                        Text("Track a new recurring expense")
-                            .font(AppTypography.bodyLarge)
-                            .foregroundStyle(.white.opacity(0.6))
+                VStack(alignment: .leading, spacing: 24) {
+                    HStack {
+                        Button { dismiss() } label: {
+                            Text("Cancel")
+                                .font(.subheadline.weight(.semibold))
+                                .foregroundStyle(Color.inkTextMuted)
+                                .frame(minHeight: Layout.tapTarget)
+                                .contentShape(Rectangle())
+                        }
+                        .accessibilityIdentifier("cancelButton")
+                        Spacer()
                     }
-                    .padding(.top, 40)
+                    .padding(.bottom, -12)
 
-                    // Form
-                    VStack(spacing: 24) {
-                        // Name
-                        VStack(alignment: .leading, spacing: 8) {
-                            Text("Service Name")
-                                .font(AppTypography.labelLarge)
-                                .foregroundStyle(.white.opacity(0.6))
-                                .textCase(.uppercase)
+                    TextField("Netflix, Spotify...", text: $name)
+                        .font(.question(.title))
+                        .foregroundStyle(Color.inkText)
+                        .textInputAutocapitalization(.words)
+                        .focused($focusedField, equals: .name)
+                        .submitLabel(.next)
+                        .onSubmit { focusedField = .amount }
+                        .accessibilityLabel(Text("Service Name"))
+                        .accessibilityIdentifier("serviceNameTextField")
 
-                            TextField("Netflix, Spotify...", text: $name)
-                                .font(AppTypography.bodyLarge)
-                                .foregroundStyle(.white)
-                                .focused($focusedField, equals: .name)
-                                .submitLabel(.next)
-                                .padding()
-                                .glass(intensity: 0.2, tint: .white)
-                                .accessibilityIdentifier("serviceNameTextField")
+                    VStack(alignment: .leading, spacing: 6) {
+                        Text(frequency == .yearly ? L10n.string("What do you pay each year?") : L10n.string("What do you pay each month?"))
+                            .font(.subheadline)
+                            .foregroundStyle(Color.inkTextMuted)
+                            .opacity(frequency == .monthly || frequency == .yearly ? 1 : 0)
+                            .accessibilityHidden(!(frequency == .monthly || frequency == .yearly))
+                        HStack(alignment: .firstTextBaseline, spacing: 8) {
+                            TextField("0.00", text: $amount)
+                                .font(.system(size: 44, weight: .bold, design: .serif))
+                                .foregroundStyle(Color.inkText)
+                                .keyboardType(.decimalPad)
+                                .focused($focusedField, equals: .amount)
+                                .accessibilityLabel(Text("Amount"))
+                                .accessibilityIdentifier("amountTextField")
+                            Text(verbatim: currencyManager.selectedCurrency)
+                                .font(.proof(.subheadline))
+                                .foregroundStyle(Color.inkTextMuted)
                         }
+                    }
 
-                        // Amount
-                        VStack(alignment: .leading, spacing: 8) {
-                            Text("Amount")
-                                .font(AppTypography.labelLarge)
-                                .foregroundStyle(.white.opacity(0.6))
-                                .textCase(.uppercase)
-
-                            HStack {
-                                Text(currencyManager.currencySymbol(for: currencyManager.selectedCurrency))
-                                    .font(AppTypography.headlineLarge)
-                                    .foregroundStyle(Color.accentMint)
-
-                                TextField("0.00", text: $amount)
-                                    .font(AppTypography.displaySmall)
-                                    .foregroundStyle(.white)
-                                    .keyboardType(.decimalPad)
-                                    .submitLabel(.done)
-                                    .focused($focusedField, equals: .amount)
-                                    .accessibilityIdentifier("amountTextField")
-                            }
-                            .padding()
-                            .glass(intensity: 0.2, tint: .white)
-                        }
-
-                        // Frequency
-                        VStack(alignment: .leading, spacing: 8) {
-                            Text("Billing Frequency")
-                                .font(AppTypography.labelLarge)
-                                .foregroundStyle(.white.opacity(0.6))
-                                .textCase(.uppercase)
-
+                    VStack(spacing: 0) {
+                        row(L10n.string("Billing cycle")) {
                             Picker("Frequency", selection: $frequency) {
                                 ForEach(BillingFrequency.allCases, id: \.self) { freq in
-                                    Text(freq.displayName)
-                                        .tag(freq)
-                                        .foregroundStyle(.white)
+                                    Text(freq.displayName).tag(freq)
                                 }
                             }
-                            .pickerStyle(.segmented)
-                            .padding()
-                            .glass(intensity: 0.2, tint: .white)
+                            .pickerStyle(.menu)
+                            .tint(Color.inkText)
                             .onChange(of: frequency) { _, newValue in
                                 if !nextPaymentEdited { nextPayment = Self.onePeriod(after: Date(), newValue) }
                             }
                         }
-
-                        // Next payment: without a date there is nothing to remind about.
-                        VStack(alignment: .leading, spacing: 8) {
-                            Text("Next payment")
-                                .font(AppTypography.labelLarge)
-                                .foregroundStyle(.white.opacity(0.6))
-                                .textCase(.uppercase)
-
+                        Hairline()
+                        row(L10n.string("Next payment")) {
                             DatePicker("Next payment", selection: Binding(get: { nextPayment }, set: { nextPayment = $0; nextPaymentEdited = true }),
                                        in: Calendar.current.startOfDay(for: Date())..., displayedComponents: .date)
                                 .labelsHidden()
-                                .frame(maxWidth: .infinity, alignment: .leading)
-                                .padding()
-                                .glass(intensity: 0.2, tint: .white)
-                                .tint(.accentMint)
+                                .tint(Color.inkText)
                                 .accessibilityIdentifier("nextPaymentPicker")
                         }
-
-                        // Category
-                        VStack(alignment: .leading, spacing: 8) {
-                            Text("Category")
-                                .font(AppTypography.labelLarge)
-                                .foregroundStyle(.white.opacity(0.6))
-                                .textCase(.uppercase)
-
+                        Hairline()
+                        row(L10n.string("Category")) {
                             Picker("Category", selection: $category) {
                                 ForEach(SubscriptionCategory.allCases, id: \.self) { cat in
-                                    Text(cat.displayName)
-                                        .tag(cat)
-                                        .foregroundStyle(.white)
+                                    Text(cat.displayName).tag(cat)
                                 }
                             }
                             .pickerStyle(.menu)
-                            .padding()
-                            .glass(intensity: 0.2, tint: .white)
-                            .tint(.white)
+                            .tint(Color.inkText)
                         }
                     }
-                    .padding(.horizontal, 24)
-
-                    Spacer()
-
-                    // Buttons
-                    VStack(spacing: 16) {
-                        Button(action: saveSubscription) {
-                            Text("Add Subscription")
-                                .premiumButton(gradient: [Color.accentMint, Color.accentMint])
-                        }
-                        .disabled(name.isEmpty || amount.isEmpty)
-                        .accessibilityIdentifier("addSubscriptionButton")
-                        .accessibilityHint(name.isEmpty || amount.isEmpty ? "Please enter a service name and amount" : "")
-
-                        Button(action: { dismiss() }) {
-                            Text("Cancel")
-                                .font(AppTypography.bodyLarge)
-                                .foregroundStyle(.white.opacity(0.6))
-                        }
-                        .accessibilityIdentifier("cancelButton")
-                    }
-                    .padding(.horizontal, 24)
-                    .padding(.bottom, 40)
                 }
+                .padding(.horizontal, Layout.margin)
+                .padding(.top, 8)
+                .padding(.bottom, 24)
             }
+            .scrollDismissesKeyboard(.interactively)
+
+            Button(action: saveSubscription) { Text("Add Subscription") }
+                .buttonStyle(.ink)
+                .disabled(name.isEmpty || amount.isEmpty)
+                .accessibilityIdentifier("addSubscriptionButton")
+                .accessibilityHint(name.isEmpty || amount.isEmpty ? "Please enter a service name and amount" : "")
+                .padding(.horizontal, Layout.margin)
+                .padding(.top, 12)
+                .padding(.bottom, 8)
+                .background(Color.ink)
         }
+        .background(Color.ink.ignoresSafeArea())
+        .preferredColorScheme(.dark)
+        .onAppear { focusedField = .name }
         .alert("Error", isPresented: $showError) {
             Button("OK", role: .cancel) {}
         } message: {
@@ -171,7 +124,17 @@ struct LuxuryAddSubscriptionView: View {
         }
     }
 
-    /// The same date one billing period later (the default next payment for a new subscription).
+    private func row<Content: View>(_ title: String, @ViewBuilder content: () -> Content) -> some View {
+        HStack(spacing: 12) {
+            Text(verbatim: title)
+                .font(.body)
+                .foregroundStyle(Color.inkText)
+            Spacer(minLength: 12)
+            content()
+        }
+        .frame(minHeight: 54)
+    }
+
     static func onePeriod(after date: Date, _ frequency: BillingFrequency, calendar: Calendar = .current) -> Date {
         let step: DateComponents
         switch frequency {
@@ -189,12 +152,11 @@ struct LuxuryAddSubscriptionView: View {
         let trimmedName = name.trimmingCharacters(in: .whitespacesAndNewlines)
         // "9,99" and "9.99" both work, and the amount stays an exact decimal.
         guard !trimmedName.isEmpty, let price = SubscriptionEditDraft.parseAmount(amount), price > 0 else {
-            HapticStyle.warning.trigger()
             errorMessage = L10n.string("Enter a name and an amount.")
             showError = true
             return
         }
-        HapticStyle.success.trigger()
+        Feel.landed()
         let newSub = Subscription(
             name: trimmedName,
             category: category.rawValue,

@@ -9262,7 +9262,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "%lldサービス"
+            "value": "%lld件のサービス"
           }
         },
         "ar": {
@@ -11094,7 +11094,7 @@
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Agregar %@"
+            "value": "Añadir %@"
           }
         },
         "fr": {
@@ -15359,7 +15359,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "カテゴリー"
+            "value": "カテゴリ"
           }
         }
       }
@@ -15912,7 +15912,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "クリア"
+            "value": "消去"
           }
         },
         "ar": {
@@ -18134,13 +18134,13 @@
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Benutzerdefiniert"
+            "value": "Eigenes"
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Personalizado"
+            "value": "Personalizada"
           }
         },
         "fr": {
@@ -31629,13 +31629,13 @@
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Popular"
+            "value": "Populares"
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Populaire"
+            "value": "Populaires"
           }
         },
         "ja": {
@@ -31647,7 +31647,7 @@
         "ar": {
           "stringUnit": {
             "state": "translated",
-            "value": "شائع"
+            "value": "الأكثر شيوعًا"
           }
         }
       }
@@ -41886,13 +41886,13 @@
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "L'essai se termine"
+            "value": "Fin de l'essai"
           }
         },
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "トライアル終了"
+            "value": "トライアル終了日"
           }
         },
         "ar": {
@@ -53836,7 +53836,7 @@
         "ar": {
           "stringUnit": {
             "state": "translated",
-            "value": "الدفعة التالية"
+            "value": "الدفعة القادمة"
           }
         },
         "de": {
@@ -58281,6 +58281,312 @@
           "stringUnit": {
             "state": "translated",
             "value": "更新日を追加"
+          }
+        }
+      }
+    },
+    "Added": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "أُضيف"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hinzugefügt"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Añadido"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ajouté"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "追加済み"
+          }
+        }
+      }
+    },
+    "Search %lld services": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ابحث في %lld خدمة"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld Dienste durchsuchen"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Buscar entre %lld servicios"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Rechercher parmi %lld services"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld件のサービスを検索"
+          }
+        }
+      }
+    },
+    "Billing cycle": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "دورة الفوترة"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Abrechnungszeitraum"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ciclo de facturación"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cycle de facturation"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "請求サイクル"
+          }
+        }
+      }
+    },
+    "I'm on a free trial": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "أنا في فترة تجربة مجانية"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ich bin in einer kostenlosen Testphase"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Estoy en una prueba gratuita"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Je suis en essai gratuit"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "無料トライアル中"
+          }
+        }
+      }
+    },
+    "What do you pay each year?": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "كم تدفع كل سنة؟"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Was zahlst du pro Jahr?"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "¿Cuánto pagas al año?"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Combien payez-vous par an ?"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "毎年いくら払っていますか？"
+          }
+        }
+      }
+    },
+    "What do you pay each month?": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "كم تدفع كل شهر؟"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Was zahlst du pro Monat?"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "¿Cuánto pagas al mes?"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Combien payez-vous par mois ?"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "毎月いくら払っていますか？"
+          }
+        }
+      }
+    },
+    "Saved as what you pay.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "سيُحفظ كما تدفع."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Wird so gespeichert, wie du zahlst."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Se guarda lo que pagas."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Enregistré comme ce que vous payez."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "実際の支払額として保存します。"
+          }
+        }
+      }
+    },
+    "This is a typical price. Type over it if you pay something else.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "هذا سعر معتاد. اكتب فوقه إن كنت تدفع غير ذلك."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Das ist ein üblicher Preis. Überschreibe ihn, wenn du etwas anderes zahlst."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Es un precio habitual. Escribe encima si pagas otra cosa."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "C'est un prix habituel. Remplacez-le si vous payez autre chose."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "一般的な料金です。違う場合は上書きしてください。"
+          }
+        }
+      }
+    },
+    "Plan": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "الخطة"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tarif"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Plan"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Formule"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "プラン"
           }
         }
       }

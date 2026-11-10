@@ -43,7 +43,7 @@ struct AlternativeDetailView: View {
                                 Text(current.displayAmountInUserCurrency + "/mo")
                                     .font(.title3)
                                     .strikethrough()
-                                    .foregroundStyle(.red)
+                                    .foregroundStyle(Color.due)
                             }
 
                             Spacer()
@@ -112,12 +112,12 @@ struct AlternativeDetailView: View {
                     VStack(alignment: .leading, spacing: 12) {
                         Text("Cons")
                             .font(.title3.bold())
-                            .foregroundStyle(.orange)
+                            .foregroundStyle(Color.decide)
 
                         ForEach(alternative.cons, id: \.self) { con in
                             HStack {
                                 Image(systemName: "minus.circle.fill")
-                                    .foregroundStyle(.orange)
+                                    .foregroundStyle(Color.decide)
                                 Text(con)
                                     .foregroundColor(.primary)
                             }

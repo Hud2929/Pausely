@@ -57,13 +57,13 @@ struct CostPerUseCard: View {
                     .frame(width: 52, height: 52)
 
                 Text(String(result.subscription.name.prefix(1)))
-                    .font(.system(.title3, design: .default).weight(.bold))
-                    .foregroundStyle(.white)
+                    .font(.title3.weight(.bold))
+                    .foregroundStyle(Color.inkText)
             }
 
             VStack(alignment: .leading, spacing: 4) {
                 Text(result.subscription.name)
-                    .font(AppTypography.headlineMedium)
+                    .font(Font.headline)
                     .foregroundStyle(.primary)
                     .lineLimit(1)
 
@@ -73,8 +73,8 @@ struct CostPerUseCard: View {
 
                     if result.isWasted {
                         Text("Wasted")
-                            .font(AppTypography.labelSmall)
-                            .foregroundStyle(.red)
+                            .font(Font.caption2.weight(.medium))
+                            .foregroundStyle(Color.due)
                             .padding(.horizontal, 8)
                             .padding(.vertical, 3)
                             .background(Color.red.opacity(0.15))
@@ -91,30 +91,30 @@ struct CostPerUseCard: View {
     private var mainMetricSection: some View {
         VStack(alignment: .leading, spacing: 4) {
             Text("Cost Per Hour")
-                .font(AppTypography.labelLarge)
+                .font(Font.footnote.weight(.medium))
                 .foregroundStyle(.secondary)
 
             HStack(alignment: .lastTextBaseline, spacing: 8) {
                 if let cph = result.costPerHour {
                     Text(CostPerUseCalculator.formatCostPerHour(cph, currencyCode: result.subscription.currency))
-                        .font(.system(.largeTitle, design: .default).weight(.bold))
+                        .font(.largeTitle.weight(.bold))
                         .foregroundStyle(result.valueTier.swiftUIColor)
                 } else {
                     Text("—")
-                        .font(.system(.largeTitle, design: .default).weight(.bold))
+                        .font(.largeTitle.weight(.bold))
                         .foregroundStyle(.secondary)
                 }
 
                 if let score = result.valueScore {
                     Text("/ \(CostPerUseCalculator.formatValueScore(score))")
-                        .font(AppTypography.headlineSmall)
+                        .font(Font.subheadline.weight(.semibold))
                         .foregroundStyle(.secondary)
                 }
             }
 
             // Contextual subtitle
             Text(subtitleText)
-                .font(AppTypography.bodySmall)
+                .font(Font.subheadline)
                 .foregroundStyle(.secondary)
                 .fixedSize(horizontal: false, vertical: true)
         }
@@ -149,20 +149,20 @@ struct CostPerUseCard: View {
     private func comparisonRow(ratio: Double, name: String) -> some View {
         HStack(spacing: 8) {
             Image(systemName: "arrow.left.arrow.right")
-                .font(AppTypography.labelMedium)
+                .font(Font.caption.weight(.medium))
                 .foregroundStyle(Color.accentMint)
 
             Text("You use \(result.subscription.name)")
-                .font(AppTypography.bodySmall)
+                .font(Font.subheadline)
                 .foregroundStyle(.secondary)
 
             + Text(" \(String(format: "%.1f", ratio))x ")
-                .font(AppTypography.bodySmall)
+                .font(Font.subheadline)
                 .foregroundStyle(Color.accentMint)
                 .fontWeight(.semibold)
 
             + Text("more than \(name)")
-                .font(AppTypography.bodySmall)
+                .font(Font.subheadline)
                 .foregroundStyle(.secondary)
         }
         .padding(10)
@@ -174,11 +174,11 @@ struct CostPerUseCard: View {
     private var insightRow: some View {
         HStack(spacing: 8) {
             Image(systemName: insightIcon)
-                .font(AppTypography.labelMedium)
+                .font(Font.caption.weight(.medium))
                 .foregroundStyle(insightColor)
 
             Text(insightText)
-                .font(AppTypography.bodySmall)
+                .font(Font.subheadline)
                 .foregroundStyle(insightColor)
                 .fixedSize(horizontal: false, vertical: true)
 
@@ -237,9 +237,9 @@ struct CostPerUseCard: View {
     private var cardAccentColor: Color {
         if result.isWasted { return .red }
         switch result.valueTier {
-        case .great:   return .semanticSuccess
-        case .fair:    return .semanticWarning
-        case .poor:    return .semanticDestructive
+        case .great:   return .kept
+        case .fair:    return .decide
+        case .poor:    return .due
         case .unknown: return .accentMint
         }
     }
@@ -281,7 +281,7 @@ struct DetailPill: View {
             .foregroundStyle(.secondary)
 
             Text(value)
-                .font(.system(.subheadline, design: .default).weight(.semibold))
+                .font(.subheadline.weight(.semibold))
                 .foregroundStyle(.primary)
         }
         .frame(maxWidth: .infinity)

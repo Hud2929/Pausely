@@ -188,7 +188,7 @@ struct UsageTrackingSection: View {
                 Text("Enable Automatic Screen Time Tracking")
                     .font(.subheadline.weight(.semibold))
             }
-            .foregroundColor(.white)
+            .foregroundStyle(Color.inkText)
             .frame(maxWidth: .infinity)
             .frame(height: 48)
             .background(

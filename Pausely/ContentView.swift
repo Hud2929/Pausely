@@ -206,6 +206,14 @@ struct RootView: View {
                         .padding(Layout.margin)
                     }
                     #endif
+                } else if isDemoScreen("--demo-custom-add") {
+                    #if DEBUG
+                    LuxuryAddSubscriptionView()
+                    #endif
+                } else if isDemoScreen("--demo-tier") {
+                    #if DEBUG
+                    DemoTierSheet()
+                    #endif
                 } else if isDemoScreen("--demo-design") {
                     #if DEBUG
                     DesignGalleryView()
@@ -996,3 +1004,22 @@ struct PremiumSignInView: View {
 #Preview {
     RootView()
 }
+
+
+#if DEBUG
+/// `--demo-tier`: the plan sheet for Netflix, once the catalog has loaded.
+private struct DemoTierSheet: View {
+    @ObservedObject private var catalog = SubscriptionCatalogService.shared
+
+    var body: some View {
+        Group {
+            if let entry = catalog.entry(named: "Netflix") {
+                TierSelectionSheet(entry: entry) { _, _, _, _, _, _ in }
+            } else {
+                Color.ink.ignoresSafeArea()
+            }
+        }
+        .task { await catalog.loadCatalog() }
+    }
+}
+#endif

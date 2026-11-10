@@ -41,10 +41,10 @@ struct AnnualSavingsCalculatorView: View {
                         }
 
                         Text("Switch to Annual")
-                            .font(.system(.title2, design: .default).weight(.bold))
+                            .font(.title2.weight(.bold))
 
                         Text("See how much you could save by paying yearly instead of monthly.")
-                            .font(.system(.subheadline, design: .default))
+                            .font(.subheadline)
                             .foregroundStyle(.secondary)
                             .multilineTextAlignment(.center)
                             .padding(.horizontal)
@@ -78,18 +78,18 @@ struct AnnualSavingsCalculatorView: View {
         VStack(spacing: 16) {
             VStack(spacing: 4) {
                 Text("You Could Save")
-                    .font(.system(.caption, design: .default).weight(.semibold))
+                    .font(.caption.weight(.semibold))
                     .foregroundStyle(.secondary)
                     .textCase(.uppercase)
 
                 let converted = currencyManager.convertToSelected(potentialSavings, from: subscription.currency)
                 Text(currencyManager.format(converted))
-                    .font(.system(.largeTitle, design: .default).weight(.black))
+                    .font(.largeTitle.weight(.bold))
                     .foregroundStyle(Color.accentMint)
 
                 if savingsPercentage > 0 {
                     Text("\(String(format: "%.0f", savingsPercentage))% off equivalent monthly cost")
-                        .font(.system(.subheadline, design: .default))
+                        .font(.subheadline)
                         .foregroundStyle(.secondary)
                 }
             }
@@ -99,11 +99,11 @@ struct AnnualSavingsCalculatorView: View {
             HStack {
                 VStack(alignment: .leading, spacing: 2) {
                     Text("Monthly Total")
-                        .font(.system(.caption, design: .default))
+                        .font(.caption)
                         .foregroundStyle(.secondary)
                     let monthlyAnnual = currencyManager.convertToSelected(monthlyCost * 12, from: subscription.currency)
                     Text(currencyManager.format(monthlyAnnual))
-                        .font(.system(.subheadline, design: .default).weight(.semibold))
+                        .font(.subheadline.weight(.semibold))
                         .foregroundStyle(.secondary)
                         .strikethrough()
                 }
@@ -112,11 +112,11 @@ struct AnnualSavingsCalculatorView: View {
 
                 VStack(alignment: .trailing, spacing: 2) {
                     Text("Annual Price")
-                        .font(.system(.caption, design: .default))
+                        .font(.caption)
                         .foregroundStyle(.secondary)
                     let annualConverted = currencyManager.convertToSelected(annualCost, from: subscription.currency)
                     Text(currencyManager.format(annualConverted))
-                        .font(.system(.subheadline, design: .default).weight(.bold))
+                        .font(.subheadline.weight(.bold))
                         .foregroundStyle(.primary)
                 }
             }
@@ -124,7 +124,7 @@ struct AnnualSavingsCalculatorView: View {
         .padding(24)
         .background(
             RoundedRectangle(cornerRadius: 28, style: .continuous)
-                .fill(Color.obsidianSurface)
+                .fill(Color.inkRaised)
                 .overlay(
                     RoundedRectangle(cornerRadius: 28, style: .continuous)
                         .stroke(Color.accentMint.opacity(0.25), lineWidth: 1.5)
@@ -136,7 +136,7 @@ struct AnnualSavingsCalculatorView: View {
     private var comparisonSection: some View {
         VStack(alignment: .leading, spacing: 12) {
             Text("Cost Comparison")
-                .font(.system(.headline, design: .default).weight(.bold))
+                .font(.headline.weight(.bold))
 
             VStack(spacing: 0) {
                 ComparisonRow(
@@ -155,7 +155,7 @@ struct AnnualSavingsCalculatorView: View {
                     isRecommended: true
                 )
             }
-            .background(Color.obsidianElevated)
+            .background(Color.inkLifted)
             .clipShape(RoundedRectangle(cornerRadius: 16))
         }
     }
@@ -163,7 +163,7 @@ struct AnnualSavingsCalculatorView: View {
     private var projectionSection: some View {
         VStack(alignment: .leading, spacing: 12) {
             Text("Long-Term Savings")
-                .font(.system(.headline, design: .default).weight(.bold))
+                .font(.headline.weight(.bold))
 
             HStack(spacing: 12) {
                 ProjectionPill(
@@ -193,9 +193,9 @@ struct AnnualSavingsCalculatorView: View {
 
             VStack(alignment: .leading, spacing: 4) {
                 Text("Pro Tip")
-                    .font(.system(.subheadline, design: .default).weight(.semibold))
+                    .font(.subheadline.weight(.semibold))
                 Text("Many services offer a free month or bonus credits when switching to annual. Contact support to ask.")
-                    .font(.system(.caption, design: .default))
+                    .font(.caption)
                     .foregroundStyle(.secondary)
                     .fixedSize(horizontal: false, vertical: true)
             }
@@ -230,14 +230,14 @@ struct ComparisonRow: View {
                         .foregroundStyle(Color.accentMint)
                 }
                 Text(label)
-                    .font(.system(.subheadline, design: .default).weight(.semibold))
+                    .font(.subheadline.weight(.semibold))
             }
 
             Spacer()
 
             let converted = currencyManager.convertToSelected(amount, from: currency)
             Text(currencyManager.format(converted))
-                .font(.system(.subheadline, design: .default).weight(.bold))
+                .font(.subheadline.weight(.bold))
                 .foregroundStyle(isRecommended ? Color.accentMint : .primary)
         }
         .padding(.horizontal, 16)
@@ -256,19 +256,19 @@ struct ProjectionPill: View {
     var body: some View {
         VStack(spacing: 6) {
             Text(period)
-                .font(.system(.caption, design: .default).weight(.medium))
+                .font(.caption.weight(.medium))
                 .foregroundStyle(.secondary)
 
             let converted = currencyManager.convertToSelected(savings, from: currency)
             Text(currencyManager.format(converted))
-                .font(.system(.title3, design: .default).weight(.bold))
+                .font(.title3.weight(.bold))
                 .foregroundStyle(Color.accentMint)
                 .lineLimit(1)
                 .minimumScaleFactor(0.8)
         }
         .padding(.vertical, 16)
         .frame(maxWidth: .infinity)
-        .background(Color.obsidianElevated)
+        .background(Color.inkLifted)
         .clipShape(RoundedRectangle(cornerRadius: 16))
     }
 }

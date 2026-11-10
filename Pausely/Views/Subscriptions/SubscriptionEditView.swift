@@ -38,10 +38,10 @@ struct SubscriptionEditView: View {
     var body: some View {
         NavigationStack {
             ZStack {
-                Color.obsidianBlack.ignoresSafeArea()
+                Color.ink.ignoresSafeArea()
 
                 ScrollView {
-                    VStack(spacing: 28) {
+                    VStack(alignment: .leading, spacing: 28) {
                         header
                         amountField
                         detailsCard
@@ -60,7 +60,7 @@ struct SubscriptionEditView: View {
                     Button("Cancel") {
                         if isDirty { showDiscardConfirm = true } else { dismiss() }
                     }
-                    .foregroundStyle(Color.obsidianTextSecondary)
+                    .foregroundStyle(Color.inkTextMuted)
                     .accessibilityIdentifier("editCancelButton")
                 }
                 ToolbarItem(placement: .topBarTrailing) {
@@ -68,19 +68,19 @@ struct SubscriptionEditView: View {
                         Task { await save() }
                     } label: {
                         if isSaving {
-                            ProgressView().tint(Color.accentMint)
+                            ProgressView().tint(Color.inkText)
                         } else {
                             Text("Save").fontWeight(.semibold)
                         }
                     }
-                    .foregroundStyle(isDirty ? Color.accentMint : Color.obsidianTextTertiary)
+                    .foregroundStyle(isDirty ? Color.inkText : Color.inkTextFaint)
                     .disabled(!isDirty || isSaving)
                     .accessibilityIdentifier("editSaveButton")
                 }
                 ToolbarItemGroup(placement: .keyboard) {
                     Spacer()
                     Button("Done") { focus = nil }
-                        .foregroundStyle(Color.accentMint)
+                        .foregroundStyle(Color.inkText)
                 }
             }
         }
@@ -100,36 +100,33 @@ struct SubscriptionEditView: View {
     // MARK: - Header
 
     private var header: some View {
-        VStack(spacing: 12) {
-            ServiceLogoView(name: draft.trimmedName.isEmpty ? original.name : draft.trimmedName,
-                            category: draft.category, size: 64)
-                .accessibilityHidden(true)
-
-            TextField("Name", text: $draft.name)
-                .font(.system(.title2, design: .default).weight(.bold))
-                .foregroundStyle(.white)
-                .multilineTextAlignment(.center)
-                .textInputAutocapitalization(.words)
-                .submitLabel(.next)
-                .focused($focus, equals: .name)
-                .onSubmit { focus = .amount }
-                .accessibilityLabel("Name")
-                .accessibilityIdentifier("editNameField")
-
+        VStack(alignment: .leading, spacing: 8) {
+            HStack(spacing: 12) {
+                ServiceLogoView(name: draft.trimmedName.isEmpty ? original.name : draft.trimmedName,
+                                category: draft.category, size: 48)
+                TextField("Name", text: $draft.name)
+                    .font(.question(.title))
+                    .foregroundStyle(Color.inkText)
+                    .textInputAutocapitalization(.words)
+                    .submitLabel(.next)
+                    .focused($focus, equals: .name)
+                    .onSubmit { focus = .amount }
+                    .accessibilityLabel("Name")
+                    .accessibilityIdentifier("editNameField")
+            }
             if showValidation, let error = draft.nameError {
                 Text(error)
-                    .font(.system(.caption, design: .default))
-                    .foregroundStyle(.red)
+                    .font(.footnote)
+                    .foregroundStyle(Color.due)
             }
         }
+        .frame(maxWidth: .infinity, alignment: .leading)
     }
 
-    // MARK: - Amount
 
     private var amountField: some View {
-        VStack(spacing: 10) {
+        VStack(alignment: .leading, spacing: 6) {
             HStack(alignment: .firstTextBaseline, spacing: 6) {
-                Spacer(minLength: 0)
                 Menu {
                     ForEach(currencyManager.currencies, id: \.code) { currency in
                         Button {
@@ -145,17 +142,17 @@ struct SubscriptionEditView: View {
                 } label: {
                     HStack(spacing: 3) {
                         Text(amountPrefix)
-                            .font(.system(size: 30, weight: .bold, design: .default))
+                            .font(.system(size: 30, weight: .semibold, design: .serif))
                         Image(systemName: "chevron.up.chevron.down")
                             .font(.system(size: 10, weight: .bold))
                     }
-                    .foregroundStyle(Color.accentMint.opacity(0.7))
+                    .foregroundStyle(Color.inkTextMuted)
                 }
                 .accessibilityLabel("Currency, \(draft.currency)")
 
                 TextField("0.00", text: $draft.amountText)
-                    .font(.system(size: 52, weight: .black, design: .default))
-                    .foregroundStyle(Color.accentMint)
+                    .font(.system(size: 52, weight: .bold, design: .serif))
+                    .foregroundStyle(Color.inkText)
                     .keyboardType(.decimalPad)
                     .fixedSize(horizontal: true, vertical: false)
                     .frame(minWidth: 90)
@@ -167,12 +164,12 @@ struct SubscriptionEditView: View {
 
             if showValidation, let error = draft.amountError {
                 Text(error)
-                    .font(.system(.caption, design: .default))
-                    .foregroundStyle(.red)
+                    .font(.caption)
+                    .foregroundStyle(Color.due)
             } else {
                 Text(draft.frequency.billingPeriodLabel)
-                    .font(.system(.subheadline, design: .default))
-                    .foregroundStyle(Color.obsidianTextSecondary)
+                    .font(.subheadline)
+                    .foregroundStyle(Color.inkTextMuted)
             }
         }
         .contentShape(Rectangle())
@@ -211,15 +208,14 @@ struct SubscriptionEditView: View {
                         set: { draft.nextBillingDate = $0 }
                     ), displayedComponents: .date)
                     .labelsHidden()
-                    .tint(Color.accentMint)
+                    .tint(Color.inkText)
                 } else {
                     Button {
-                        HapticStyle.light.trigger()
                         draft.nextBillingDate = Date()
                     } label: {
                         Text("Set date")
-                            .font(.system(.body, design: .default).weight(.semibold))
-                            .foregroundStyle(Color.accentMint)
+                            .font(.body.weight(.semibold))
+                            .foregroundStyle(Color.inkText)
                     }
                 }
             }
@@ -266,21 +262,20 @@ struct SubscriptionEditView: View {
                 .accessibilityLabel("Remind me, \(SubscriptionEditDraft.reminderLabel(draft.reminderDays))")
             }
         }
-        .background(RoundedRectangle(cornerRadius: 16, style: .continuous).fill(Color.obsidianSurface))
     }
 
     @ViewBuilder
     private var footnote: some View {
-        VStack(spacing: 6) {
+        VStack(alignment: .leading, spacing: 6) {
             if let yearly = draft.yearlyCost {
                 Text("That's \(MoneyFormat.string(yearly, draft.currency)) a year")
-                    .font(.system(.footnote, design: .default))
-                    .foregroundStyle(Color.obsidianTextTertiary)
+                    .font(.footnote)
+                    .foregroundStyle(Color.inkTextFaint)
             }
             if draft.reminderDays > 0 && draft.nextBillingDate == nil {
                 Text("Set a payment date to get reminders.")
-                    .font(.system(.footnote, design: .default))
-                    .foregroundStyle(.orange)
+                    .font(.footnote)
+                    .foregroundStyle(Color.decide)
             }
         }
     }
@@ -290,36 +285,30 @@ struct SubscriptionEditView: View {
     private func row<Content: View>(_ title: String, @ViewBuilder content: () -> Content) -> some View {
         HStack(spacing: 12) {
             Text(title)
-                .font(.system(.body, design: .default))
-                .foregroundStyle(.white)
+                .font(.body)
+                .foregroundStyle(Color.inkText)
             Spacer(minLength: 12)
             content()
         }
-        .padding(.horizontal, 16)
         .frame(minHeight: 54)
     }
 
     private func valueLabel(_ text: String) -> some View {
         HStack(spacing: 6) {
             Text(text)
-                .font(.system(.body, design: .default))
-                .foregroundStyle(Color.obsidianTextSecondary)
+                .font(.body)
+                .foregroundStyle(Color.inkTextMuted)
             Image(systemName: "chevron.up.chevron.down")
                 .font(.system(size: 11, weight: .semibold))
-                .foregroundStyle(Color.obsidianTextTertiary)
+                .foregroundStyle(Color.inkTextFaint)
         }
     }
 
-    private var divider: some View {
-        Divider()
-            .overlay(Color.white.opacity(0.06))
-            .padding(.leading, 16)
-    }
+    private var divider: some View { Hairline() }
 
-    // MARK: - Save
 
     private func finishSaving(_ updated: Subscription) {
-        HapticStyle.success.trigger()
+        Feel.landed()
         onSaved?(updated)
         dismiss()
     }
@@ -328,7 +317,6 @@ struct SubscriptionEditView: View {
         focus = nil
         guard let updated = draft.applied(to: original) else {
             showValidation = true
-            HapticStyle.error.trigger()
             focus = draft.nameError != nil ? .name : .amount
             return
         }
@@ -343,7 +331,6 @@ struct SubscriptionEditView: View {
             if SubscriptionStore.shared.subscriptions.contains(where: { $0.id == updated.id && $0.updatedAt == updated.updatedAt }) {
                 finishSaving(updated)
             } else {
-                HapticStyle.error.trigger()
                 saveError = "Your changes weren't saved. \(error.localizedDescription)"
             }
         }

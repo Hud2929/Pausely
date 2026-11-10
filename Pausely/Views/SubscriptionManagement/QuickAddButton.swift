@@ -16,7 +16,6 @@ struct QuickAddButton: View {
     var body: some View {
         Button(action: {
             manager.updateUsage(minutes: minutes, for: subscriptionName)
-            HapticStyle.light.trigger()
         }) {
             Label(label, systemImage: "plus.circle")
                 .font(.caption.weight(.medium))

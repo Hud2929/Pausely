@@ -67,7 +67,7 @@ struct UsageInputSheet: View {
                         minutes = "0"
                         save()
                     }
-                    .foregroundColor(.red)
+                    .foregroundStyle(Color.due)
 
                     Button("Light usage (30 minutes)") {
                         hours = "0"
