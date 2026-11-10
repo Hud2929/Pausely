@@ -56,21 +56,24 @@ final class SubscriptionManagementTests: XCTestCase {
         let spotify = card("Spotify")
         XCTAssertTrue(spotify.waitForExistence(timeout: 10))
 
-        // Keep: nothing changes.
+        // Keep: nothing changes. On iOS 26 the question is a popover with no Keep button; tapping
+        // outside it keeps the subscription. Earlier versions show an action sheet with Keep.
+        let question = app.staticTexts["Remove \"Spotify\"?"]
         spotify.swipeLeft()
         let swipeRemove = app.buttons["Remove"].firstMatch
         XCTAssertTrue(swipeRemove.waitForExistence(timeout: 3), "swiping left offers Remove")
         swipeRemove.tap()
+        XCTAssertTrue(question.waitForExistence(timeout: 3), "removing asks first")
         let keep = app.buttons["Keep"]
-        XCTAssertTrue(keep.waitForExistence(timeout: 3), "removing asks first")
-        keep.tap()
-        XCTAssertTrue(spotify.waitForExistence(timeout: 3), "Keep leaves it on the list")
+        if keep.exists { keep.tap() } else { app.otherElements["PopoverDismissRegion"].firstMatch.tap() }
+        XCTAssertTrue(waitUntilGone(question, timeout: 3))
+        XCTAssertTrue(spotify.waitForExistence(timeout: 3), "declining leaves it on the list")
 
         // Remove: it leaves the list.
         spotify.swipeLeft()
         XCTAssertTrue(app.buttons["Remove"].firstMatch.waitForExistence(timeout: 3))
         app.buttons["Remove"].firstMatch.tap()
-        XCTAssertTrue(keep.waitForExistence(timeout: 3))
+        XCTAssertTrue(question.waitForExistence(timeout: 3))
         let confirm = app.buttons.matching(NSPredicate(format: "label == 'Remove'")).allElementsBoundByIndex.last
         XCTAssertNotNil(confirm)
         confirm?.tap()

@@ -1,14 +1,13 @@
 import SwiftUI
 
-// MARK: - Revolutionary Subscriptions View
-// A unique timeline-based layout showing subscriptions as cards flowing through time
-
+/// The list of everything the person pays for, grouped by when each one next charges.
 struct PremiumSubscriptionsView: View {
     @ObservedObject private var store = SubscriptionStore.shared
     @ObservedObject private var currencyManager = CurrencyManager.shared
-    @State private var selectedFilter: FilterType = .all
+    @ObservedObject private var eventLog = LifecycleEventLog.shared
     @State private var searchText = ""
     @State private var activeSheet: ActiveSheet?
+    @State private var pendingRemoval: Subscription?
     @Binding var deepLinkedSubscription: Subscription?
 
     init(deepLinkedSubscription: Binding<Subscription?> = .constant(nil)) {
@@ -16,164 +15,147 @@ struct PremiumSubscriptionsView: View {
     }
 
     enum ActiveSheet: Identifiable {
-        case add
         case browser
         case detail(Subscription)
 
         var id: String {
             switch self {
-            case .add: return "add"
             case .browser: return "browser"
             case .detail(let sub): return "detail-\(sub.id)"
             }
         }
     }
 
-    enum FilterType: String, CaseIterable {
-        case all, active, upcoming
-
-        var title: String {
-            switch self {
-            case .all: return L10n.string("All")
-            case .active: return L10n.string("Active")
-            case .upcoming: return L10n.string("Upcoming")
-            }
-        }
-    }
-
-    enum SortOrder: String, CaseIterable {
-        case renewalDate, highestCost, alphabetical
-
-        var title: String {
-            switch self {
-            case .renewalDate: return L10n.string("Renewal Date")
-            case .highestCost: return L10n.string("Highest Cost")
-            case .alphabetical: return L10n.string("A–Z")
-            }
-        }
-    }
-
-    @State private var sortOrder: SortOrder = .renewalDate
-    @State private var pendingRemoval: Subscription?
-
-    /// Still charging: active or in a trial, and not paused. Cancelled and expired ones aren't "active".
-    static func isLive(_ subscription: Subscription) -> Bool {
-        (subscription.status == .active || subscription.status == .trial) && !subscription.isPaused
-    }
-
-    /// Renews within the next week (never a date already past).
-    static func isUpcoming(_ subscription: Subscription) -> Bool {
-        guard isLive(subscription), let days = subscription.daysUntilRenewal else { return false }
-        return (0...7).contains(days)
-    }
-
-    var filteredSubscriptions: [Subscription] {
-        var result = store.subscriptions
-
-        if !searchText.isEmpty {
-            result = result.filter { $0.name.localizedCaseInsensitiveContains(searchText) }
-        }
-
-        switch selectedFilter {
-        case .all: break
-        case .active: result = result.filter(Self.isLive)
-        case .upcoming: result = result.filter(Self.isUpcoming)
-        }
-
-        switch sortOrder {
-        case .renewalDate:
-            // Next renewal first; subscriptions that no longer renew go last.
-            let key: (Subscription) -> Int = { sub in
-                guard Self.isLive(sub), let days = sub.daysUntilRenewal, days >= 0 else { return Int.max }
-                return days
-            }
-            result.sort { key($0) < key($1) }
-        case .highestCost:
-            result.sort { $0.monthlyCost > $1.monthlyCost }
-        case .alphabetical:
-            result.sort { $0.name.localizedCaseInsensitiveCompare($1.name) == .orderedAscending }
-        }
-
-        return result
+    private var sections: [SubscriptionGroups.Section] {
+        let shown = searchText.isEmpty
+            ? store.subscriptions
+            : store.subscriptions.filter { $0.name.localizedCaseInsensitiveContains(searchText) }
+        let pending = Set(VerdictCenter.shared.pendingDecisions().map(\.subscriptionId))
+        return SubscriptionGroups.sections(shown, pending: pending, now: Date())
     }
 
     var body: some View {
-        ZStack {
-            PremiumBackground()
+        VStack(spacing: 0) {
+            header
+                .padding(.horizontal, Layout.margin)
+                .padding(.top, 16)
 
-            VStack(spacing: 0) {
-                // Header
-                subscriptionsHeader
-                    .padding(.horizontal, 20)
-                    .padding(.top, 16)
-
-                // Search & Filter
-                searchAndFilterSection
-                    .padding(.horizontal, 20)
-                    .padding(.top, 20)
-
-                // Subscription Cards
-                if filteredSubscriptions.isEmpty {
-                    EmptySubscriptionsArtisticView {
-                        activeSheet = .browser
-                    }
+            if store.subscriptions.isEmpty {
+                empty
+                    .padding(.horizontal, Layout.margin)
                     .padding(.top, 40)
-                } else {
-                    // A List, not a ScrollView: swipe actions only work on List rows.
-                    List {
-                        ForEach(Array(filteredSubscriptions.enumerated()), id: \.element.id) { index, subscription in
-                            ArtisticSubscriptionCard(
-                                subscription: subscription,
-                                index: index,
-                                onTap: { activeSheet = .detail(subscription) }
-                            )
-                            .listRowInsets(EdgeInsets(top: 4, leading: 20, bottom: 4, trailing: 20))
-                            .listRowBackground(Color.clear)
-                            .listRowSeparator(.hidden)
-                            .swipeActions(edge: .trailing, allowsFullSwipe: false) {
-                                // Not role: .destructive, which would animate the row away before the
-                                // person confirms.
-                                Button {
-                                    HapticStyle.heavy.trigger()
-                                    pendingRemoval = subscription
-                                } label: {
-                                    Label("Remove", systemImage: "trash")
-                                }
-                                .tint(Color.semanticDestructive)
-                            }
-                            .swipeActions(edge: .leading, allowsFullSwipe: true) {
-                                Button {
-                                    HapticStyle.medium.trigger()
-                                    activeSheet = .detail(subscription)
-                                } label: {
-                                    Label("Details", systemImage: "info.circle")
-                                }
-                                .tint(Color.accentMint)
-                            }
-                        }
-                        // Room above the floating tab bar.
-                        Color.clear
-                            .frame(height: 100)
-                            .listRowBackground(Color.clear)
-                            .listRowSeparator(.hidden)
-                    }
-                    .listStyle(.plain)
-                    .scrollContentBackground(.hidden)
-                    .scrollIndicators(.hidden)
-                    .contentMargins(.top, 16, for: .scrollContent)
-                }
+                Spacer()
+            } else {
+                list
             }
         }
+        .background(Color.ink.ignoresSafeArea())
         .sheet(item: $activeSheet) { sheet in
             switch sheet {
-            case .add:
-                ArtisticAddSubscriptionView()
             case .browser:
                 SubscriptionBrowserView()
             case .detail(let subscription):
                 SubscriptionManagementView(subscription: subscription)
             }
         }
+        .onChange(of: deepLinkedSubscription) { oldValue, newValue in
+            if oldValue == nil, let subscription = newValue {
+                activeSheet = .detail(subscription)
+                deepLinkedSubscription = nil
+            }
+        }
+    }
+
+    // MARK: - Header
+
+    private var header: some View {
+        HStack(alignment: .top, spacing: 12) {
+            VStack(alignment: .leading, spacing: 4) {
+                Text("Subscriptions")
+                    .font(.question(.largeTitle, weight: .bold))
+                    .foregroundStyle(Color.inkText)
+                    .accessibilityAddTraits(.isHeader)
+                if !store.subscriptions.isEmpty {
+                    Text(L10n.string("\(store.activeSubscriptions.count) subscriptions") + " · "
+                         + L10n.string("\(currencyManager.format(store.totalMonthlySpend)) a month"))
+                        .font(.subheadline)
+                        .foregroundStyle(Color.inkTextMuted)
+                }
+            }
+            Spacer(minLength: 8)
+            Button { activeSheet = .browser } label: {
+                Image(systemName: "plus")
+                    .font(.title3.weight(.semibold))
+                    .foregroundStyle(Color.inkText)
+                    .frame(width: Layout.tapTarget, height: Layout.tapTarget)
+                    .overlay(Circle().stroke(Color.white.opacity(0.18), lineWidth: 1))
+                    .contentShape(Circle())
+            }
+            .accessibilityLabel(Text("Add Subscription"))
+            .accessibilityIdentifier("addSubscriptionButton")
+        }
+    }
+
+    // MARK: - List
+
+    private var list: some View {
+        List {
+            // Search earns its place only once the list is long enough to lose something in.
+            if store.subscriptions.count > 8 {
+                HStack(spacing: 10) {
+                    Image(systemName: "magnifyingglass").foregroundStyle(Color.inkTextFaint)
+                        .accessibilityHidden(true)
+                    TextField("Search subscriptions...", text: $searchText)
+                        .foregroundStyle(Color.inkText)
+                        .submitLabel(.search)
+                }
+                .font(.body)
+                .padding(.horizontal, 14)
+                .frame(minHeight: Layout.tapTarget)
+                .background(Color.inkRaised, in: RoundedRectangle(cornerRadius: Layout.tileRadius, style: .continuous))
+                .listRowInsets(EdgeInsets(top: 12, leading: Layout.margin, bottom: 4, trailing: Layout.margin))
+                .listRowBackground(Color.clear)
+                .listRowSeparator(.hidden)
+            }
+
+            if sections.isEmpty {
+                Text(L10n.string("Nothing matches \"\(searchText)\"."))
+                    .font(.body)
+                    .foregroundStyle(Color.inkTextMuted)
+                    .listRowBackground(Color.clear)
+                    .listRowSeparator(.hidden)
+            }
+
+            ForEach(sections) { section in
+                Section {
+                    ForEach(section.subscriptions) { subscription in
+                        SubscriptionRow(subscription: subscription, group: section.group) {
+                            activeSheet = .detail(subscription)
+                        }
+                        .listRowInsets(EdgeInsets(top: 0, leading: Layout.margin, bottom: 0, trailing: Layout.margin))
+                        .listRowBackground(Color.clear)
+                        .listRowSeparatorTint(Color.line)
+                        .swipeActions(edge: .trailing, allowsFullSwipe: false) {
+                            Button { pendingRemoval = subscription } label: {
+                                Label("Remove", systemImage: "trash")
+                            }
+                            .tint(Color.due)
+                        }
+                        .swipeActions(edge: .leading, allowsFullSwipe: true) {
+                            Button { activeSheet = .detail(subscription) } label: {
+                                Label("Details", systemImage: "info.circle")
+                            }
+                            .tint(Color.inkLifted)
+                        }
+                    }
+                } header: {
+                    sectionHeader(section)
+                }
+            }
+        }
+        .listStyle(.plain)
+        .scrollContentBackground(.hidden)
+        .contentMargins(.bottom, 24, for: .scrollContent)
         .confirmationDialog(Text("Remove \"\(pendingRemoval?.name ?? "")\"?"),
                             isPresented: Binding(get: { pendingRemoval != nil }, set: { if !$0 { pendingRemoval = nil } }),
                             titleVisibility: .visible,
@@ -185,125 +167,139 @@ struct PremiumSubscriptionsView: View {
         } message: { _ in
             Text("This only removes it from Pausely. It won't cancel the subscription itself.")
         }
-        .onChange(of: deepLinkedSubscription) { oldValue, newValue in
-            if oldValue == nil, let subscription = newValue {
-                activeSheet = .detail(subscription)
-                deepLinkedSubscription = nil
-            }
-        }
     }
 
-    private var subscriptionsHeader: some View {
-        HStack(alignment: .bottom, spacing: 12) {
-            VStack(alignment: .leading, spacing: 4) {
-                Text("SUBSCRIPTIONS")
-                    .font(.system(size: 11, weight: .semibold, design: .default))
-                    .foregroundStyle(Color.obsidianTextTertiary)
-
-                Text(currencyManager.format(store.totalMonthlySpend))
-                    .font(.system(.title2, design: .default).weight(.bold))
-                    .foregroundStyle(Color.accentMint)
-
-                let count = store.subscriptions.filter(Self.isLive).count
-                Text("\(count) active")
-                    .font(.system(.caption, design: .default))
-                    .foregroundStyle(Color.obsidianTextSecondary)
-            }
-
+    private func sectionHeader(_ section: SubscriptionGroups.Section) -> some View {
+        HStack(spacing: 8) {
+            if let state = Self.state(for: section.group) { StateMark(state: state) }
+            Text(verbatim: Self.title(for: section.group))
+                .font(.subheadline.weight(.semibold))
+                .foregroundStyle(Self.state(for: section.group)?.color ?? Color.inkTextMuted)
             Spacer()
+            Text(verbatim: "\(section.subscriptions.count)")
+                .font(.subheadline.monospacedDigit())
+                .foregroundStyle(Color.inkTextFaint)
+        }
+        .padding(.top, 12)
+        .padding(.bottom, 4)
+        .padding(.horizontal, Layout.margin)
+        .frame(maxWidth: .infinity)
+        .background(Color.ink)
+        .listRowInsets(EdgeInsets())
+        .textCase(nil)
+        .accessibilityElement(children: .combine)
+        .accessibilityAddTraits(.isHeader)
+    }
 
-            // Sort Button
-            Menu {
-                ForEach(SortOrder.allCases, id: \.self) { order in
-                    Button(action: { withAnimation { sortOrder = order } }) {
-                        if sortOrder == order {
-                            Label(order.title, systemImage: "checkmark")
-                        } else {
-                            Text(order.title)
-                        }
-                    }
-                }
-            } label: {
-                ZStack {
-                    Circle()
-                        .fill(Color.obsidianElevated)
-                        .frame(width: 40, height: 40)
-                    Image(systemName: "arrow.up.arrow.down")
-                        .font(.callout.weight(.semibold))
-                        .foregroundColor(Color.obsidianTextSecondary)
-                }
-            }
-            .accessibilityLabel("Sort subscriptions")
-
-            // Add Button - opens premium catalog browser
-            Button(action: { activeSheet = .browser }) {
-                ZStack {
-                    Circle()
-                        .fill(Color.accentMint)
-                        .frame(width: 40, height: 40)
-
-                    Image(systemName: "plus")
-                        .font(.callout.weight(.semibold))
-                        .foregroundColor(.white)
-                }
-            }
-            .accessibilityLabel("Add subscription")
-            .accessibilityIdentifier("addSubscriptionButton")
+    static func title(for group: SubscriptionGroups.Group) -> String {
+        switch group {
+        case .decide: return L10n.string("Needs a decision")
+        case .thisWeek: return L10n.string("This week")
+        case .thisMonth: return L10n.string("This month")
+        case .later: return L10n.string("Later")
+        case .undated: return L10n.string("No renewal date")
+        case .paused: return L10n.string("Paused")
+        case .cancelled: return L10n.string("Cancelled")
         }
     }
 
-    private var searchAndFilterSection: some View {
-        VStack(spacing: 16) {
-            // Search Bar
-            HStack(spacing: 12) {
-                Image(systemName: "magnifyingglass")
-                    .font(.body)
-                    .foregroundColor(Color.obsidianTextTertiary)
-
-                TextField("Search subscriptions...", text: $searchText)
-                    .font(.body)
-                    .foregroundColor(.white)
-                    .keyboardType(.default)
-                    .submitLabel(.search)
-            }
-            .padding(14)
-            .background(
-                RoundedRectangle(cornerRadius: 14)
-                    .fill(Color.obsidianElevated)
-                    .overlay(
-                        RoundedRectangle(cornerRadius: 14)
-                            .stroke(Color.white.opacity(0.08), lineWidth: 1)
-                    )
-            )
-
-            // Filter Pills
-            ScrollView(.horizontal, showsIndicators: false) {
-                HStack(spacing: 10) {
-                    ForEach(FilterType.allCases, id: \.self) { filter in
-                        SubscriptionFilterPill(
-                            title: filter.title,
-                            count: countForFilter(filter),
-                            isSelected: selectedFilter == filter
-                        ) {
-                            withAnimation(.spring(response: 0.3)) {
-                                selectedFilter = filter
-                            }
-                        }
-                    }
-                }
-                .padding(.horizontal, 4)
-            }
+    static func state(for group: SubscriptionGroups.Group) -> MoneyState? {
+        switch group {
+        case .decide: return .decide
+        case .paused: return .paused
+        case .cancelled: return .kept
+        case .thisWeek, .thisMonth, .later, .undated: return nil
         }
     }
 
-    private func countForFilter(_ filter: FilterType) -> Int {
-        switch filter {
-        case .all:
-            return store.subscriptions.count
-        case .active:
-            return store.subscriptions.filter(Self.isLive).count
-        case .upcoming:
-            return store.subscriptions.filter(Self.isUpcoming).count
+    // MARK: - Empty
+
+    private var empty: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            Text("Nothing on your list yet.")
+                .font(.question(.title2))
+                .foregroundStyle(Color.inkText)
+            Text("Add what you pay for. Pausely asks before each renewal whether it's still worth it.")
+                .font(.body)
+                .foregroundStyle(Color.inkTextMuted)
+                .fixedSize(horizontal: false, vertical: true)
+            Button { activeSheet = .browser } label: { Text("Add Subscription") }
+                .buttonStyle(.ink)
+                .padding(.top, 12)
+        }
+    }
+}
+
+/// One subscription: its logo, its name, when it next charges, and the price in its own currency.
+private struct SubscriptionRow: View {
+    let subscription: Subscription
+    let group: SubscriptionGroups.Group
+    let onTap: () -> Void
+    @Environment(\.dynamicTypeSize) private var typeSize
+
+    var body: some View {
+        // One element, not a button wrapped around text: a single thing to tap, swipe and read.
+        HStack(spacing: 12) {
+                if !typeSize.isAccessibilitySize {
+                    ServiceLogoView(name: subscription.name, category: subscription.category, size: 40)
+                }
+                VStack(alignment: .leading, spacing: 2) {
+                    Text(verbatim: subscription.name)
+                        .font(.body.weight(.medium))
+                        .foregroundStyle(Color.inkText)
+                        .strikethrough(group == .cancelled, color: Color.inkTextFaint)
+                    Text(verbatim: detail)
+                        .font(.subheadline)
+                        .foregroundStyle(detailColor)
+                    if typeSize.isAccessibilitySize { price }
+                }
+                Spacer(minLength: 8)
+                if !typeSize.isAccessibilitySize { price }
+            }
+        .padding(.vertical, 12)
+        .contentShape(Rectangle())
+        .onTapGesture(perform: onTap)
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel(Text(verbatim: "\(subscription.name), \(subscription.chargeText) \(subscription.billingFrequency.billingPeriodLabel), \(detail)"))
+        .accessibilityAddTraits(.isButton)
+        .accessibilityAction(.default, onTap)
+    }
+
+    private var price: some View {
+        HStack(alignment: .firstTextBaseline, spacing: 2) {
+            Text(verbatim: subscription.chargeText)
+                .font(.body.monospacedDigit())
+                .foregroundStyle(group == .cancelled ? Color.inkTextFaint : Color.inkText)
+            Text(verbatim: subscription.billingFrequency.shortDisplay)
+                .font(.footnote)
+                .foregroundStyle(Color.inkTextFaint)
+        }
+    }
+
+    private var detailColor: Color {
+        guard group == .decide || group == .thisWeek,
+              let charge = RenewalDecisions.upcomingCharge(for: subscription, now: Date()),
+              Calendar.current.calendarDays(from: Date(), to: charge.date) <= 1 else { return Color.inkTextMuted }
+        return Color.due
+    }
+
+    private var detail: String {
+        switch group {
+        case .cancelled:
+            return L10n.string("Cancelled")
+        case .paused:
+            if let until = subscription.pausedUntil {
+                return L10n.string("Paused until \(until.formatted(.dateTime.month(.abbreviated).day().locale(L10n.locale)))")
+            }
+            return L10n.string("Paused")
+        case .undated:
+            return L10n.string("Add its renewal date")
+        case .decide, .thisWeek, .thisMonth, .later:
+            guard let charge = RenewalDecisions.upcomingCharge(for: subscription, now: Date()) else { return "" }
+            let days = Calendar.current.calendarDays(from: Date(), to: charge.date)
+            let day = charge.date.formatted(.dateTime.month(.abbreviated).day().locale(L10n.locale))
+            let relative = days == 0 ? L10n.string("Today") : days == 1 ? L10n.string("Tomorrow") : L10n.string("in \(days) days")
+            return charge.isTrialEnd ? L10n.string("Trial ends \(day) · \(relative)") : "\(day) · \(relative)"
         }
     }
 }
