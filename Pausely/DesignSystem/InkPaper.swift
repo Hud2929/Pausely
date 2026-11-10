@@ -98,8 +98,15 @@ extension Font {
 
     /// Proof: receipt lines, amounts in a column, dates on a slip.
     static func proof(_ style: Font.TextStyle = .subheadline, weight: Font.Weight = .regular) -> Font {
-        .system(style, design: .monospaced, weight: weight)
+        // A monospaced face pulls the letters of a joined script apart, so Arabic (and other
+        // joined scripts) keep the system face with fixed-width digits.
+        if joinedScripts.contains(L10n.locale.language.languageCode?.identifier ?? "") {
+            return .system(style, design: .default, weight: weight).monospacedDigit()
+        }
+        return .system(style, design: .monospaced, weight: weight)
     }
+
+    private static let joinedScripts: Set<String> = ["ar", "fa", "ur", "ps", "ckb"]
 }
 
 // MARK: - Layout

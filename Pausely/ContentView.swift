@@ -186,6 +186,26 @@ struct RootView: View {
                                  tally: isDemoScreen("--demo-first-run") ? nil : DemoTally.make(),
                                  onKeepList: {}, onSignIn: {})
                     #endif
+                } else if isDemoScreen("--demo-cancel") {
+                    #if DEBUG
+                    CancelSubscriptionFlow(subscription: DemoSubscriptions.netflix)
+                    #endif
+                } else if isDemoScreen("--demo-cancelled") || isDemoScreen("--demo-kept") {
+                    #if DEBUG
+                    ZStack {
+                        Color.ink.ignoresSafeArea()
+                        Group {
+                            if isDemoScreen("--demo-kept") {
+                                OutcomeSlip(name: "Netflix", category: "entertainment", stamp: L10n.string("Kept"), torn: false) {
+                                    Text(L10n.string("No more reminders about this charge.")).font(.proof(.footnote))
+                                }
+                            } else {
+                                CancelledSlip(subscription: DemoSubscriptions.netflix)
+                            }
+                        }
+                        .padding(Layout.margin)
+                    }
+                    #endif
                 } else if isDemoScreen("--demo-design") {
                     #if DEBUG
                     DesignGalleryView()

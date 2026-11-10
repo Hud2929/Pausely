@@ -16,133 +16,99 @@ struct CancelDifficultyRatingView: View {
     @State private var isSubmitting = false
     @State private var submitted = false
 
-    private let ratings: [(value: Int, label: String, icon: String)] = [
-        (1, "Super Easy",   "hand.thumbsup.fill"),
-        (2, "A Bit Annoying", "hand.thumbsdown"),
-        (3, "Had to Search", "magnifyingglass"),
-        (4, "Very Hard",    "exclamationmark.triangle"),
-        (5, "Dark Pattern", "flame.fill"),
+    private let ratings: [(value: Int, label: LocalizedStringResource)] = [
+        (1, "Super Easy"),
+        (2, "A Bit Annoying"),
+        (3, "Had to Search"),
+        (4, "Very Hard"),
+        (5, "Dark Pattern"),
     ]
 
     var body: some View {
-        VStack(spacing: 0) {
-            // Handle
-            Capsule()
-                .fill(Color.obsidianTextTertiary.opacity(0.4))
-                .frame(width: 36, height: 4)
-                .padding(.top, 12)
-                .padding(.bottom, 20)
-
-            if submitted {
-                submittedView
-            } else {
-                ratingContent
-            }
+        Group {
+            if submitted { submittedView } else { ratingContent }
         }
-        .padding(.horizontal, 24)
-        .padding(.bottom, 40)
-        .background(Color.obsidianSurface)
+        .padding(.horizontal, Layout.margin)
+        .padding(.top, 28)
+        .padding(.bottom, 12)
+        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
+        .background(Color.inkRaised.ignoresSafeArea())
         .presentationDetents([.large])
-        .presentationDragIndicator(.hidden)
+        .presentationDragIndicator(.visible)
     }
 
     private var ratingContent: some View {
-        VStack(spacing: 24) {
-            // Header
-            VStack(spacing: 8) {
-                Image(systemName: "checkmark.circle.fill")
-                    .font(.largeTitle)
-                    .foregroundStyle(Color.semanticSuccess)
+        VStack(alignment: .leading, spacing: 0) {
+            Text("How hard was it to cancel?")
+                .font(.question(.title2))
+                .foregroundStyle(Color.inkText)
+                .fixedSize(horizontal: false, vertical: true)
+                .accessibilityAddTraits(.isHeader)
+            Text("Your feedback helps other users know what to expect.")
+                .font(.subheadline)
+                .foregroundStyle(Color.inkTextMuted)
+                .fixedSize(horizontal: false, vertical: true)
+                .padding(.top, 8)
+                .padding(.bottom, 16)
 
-                Text("You cancelled \(serviceName)!")
-                    .font(.headline.weight(.bold))
-                    .foregroundStyle(Color.obsidianText)
+            ForEach(ratings, id: \.value) { option in
+                let isOn = selectedRating == option.value
+                Button {
+                    Feel.selection()
+                    selectedRating = option.value
+                } label: {
+                    HStack(spacing: 14) {
+                        Image(systemName: isOn ? "largecircle.fill.circle" : "circle")
+                            .font(.title3)
+                            .foregroundStyle(isOn ? Color.paper : Color.inkTextFaint)
+                            .accessibilityHidden(true)
+                        Text(option.label)
+                            .font(.body)
+                            .foregroundStyle(Color.inkText)
+                        Spacer(minLength: 8)
+                    }
+                    .padding(.vertical, 14)
+                    .contentShape(Rectangle())
+                }
+                .buttonStyle(.plain)
+                .accessibilityAddTraits(isOn ? [.isSelected] : [])
+                Hairline()
+            }
 
-                Text("How hard was it to cancel?")
+            Spacer(minLength: 16)
+
+            Button(action: submitRating) {
+                if isSubmitting { ProgressView().tint(Color.paperInk) } else { Text("Submit Rating") }
+            }
+            .buttonStyle(.ink)
+            .disabled(selectedRating == nil || isSubmitting)
+
+            Button(action: onDone) {
+                Text("Skip")
                     .font(.subheadline)
-                    .foregroundStyle(Color.obsidianTextSecondary)
+                    .foregroundStyle(Color.inkTextMuted)
+                    .frame(maxWidth: .infinity, minHeight: Layout.tapTarget)
+                    .contentShape(Rectangle())
             }
-
-            // Rating buttons
-            VStack(spacing: 10) {
-                ForEach(ratings, id: \.value) { option in
-                    Button(action: { selectedRating = option.value }) {
-                        HStack(spacing: 14) {
-                            Image(systemName: option.icon)
-                                .font(.body)
-                                .foregroundStyle(selectedRating == option.value ? Color.obsidianBlack : ratingColor(option.value))
-                                .frame(width: 24)
-
-                            Text(option.label)
-                                .font(.callout.weight(.semibold))
-                                .foregroundStyle(selectedRating == option.value ? Color.obsidianBlack : Color.obsidianText)
-
-                            Spacer()
-
-                            if selectedRating == option.value {
-                                Image(systemName: "checkmark")
-                                    .font(.caption.weight(.bold))
-                                    .foregroundStyle(Color.obsidianBlack)
-                            }
-                        }
-                        .padding(.horizontal, 16)
-                        .padding(.vertical, 14)
-                        .background(
-                            RoundedRectangle(cornerRadius: 14)
-                                .fill(selectedRating == option.value ? ratingColor(option.value) : Color.obsidianElevated)
-                        )
-                    }
-                    .buttonStyle(.plain)
-                }
-            }
-
-            // Submit / Skip
-            VStack(spacing: 10) {
-                Button(action: submitRating) {
-                    HStack {
-                        if isSubmitting {
-                            ProgressView().tint(.black)
-                        } else {
-                            Text("Submit Rating")
-                                .font(.callout.weight(.semibold))
-                                .foregroundStyle(Color.obsidianBlack)
-                        }
-                    }
-                    .frame(maxWidth: .infinity)
-                    .frame(height: 52)
-                    .background(selectedRating != nil ? Color.accentMint : Color.obsidianElevated)
-                    .clipShape(RoundedRectangle(cornerRadius: 14))
-                }
-                .disabled(selectedRating == nil || isSubmitting)
-
-                Button(action: onDone) {
-                    Text("Skip")
-                        .font(.callout)
-                        .foregroundStyle(Color.obsidianTextSecondary)
-                }
-            }
+            .buttonStyle(.plain)
         }
     }
 
     private var submittedView: some View {
-        VStack(spacing: 20) {
-            Spacer()
-            Image(systemName: "star.fill")
-                .font(.largeTitle)
-                .foregroundStyle(Color.accentMint)
-
+        VStack(alignment: .leading, spacing: 10) {
             Text("Thanks for rating!")
-                .font(.headline.weight(.bold))
-                .foregroundStyle(Color.obsidianText)
-
+                .font(.question(.title2))
+                .foregroundStyle(Color.inkText)
             Text("Your feedback helps other users know what to expect.")
-                .font(.subheadline)
-                .foregroundStyle(Color.obsidianTextSecondary)
-                .multilineTextAlignment(.center)
+                .font(.body)
+                .foregroundStyle(Color.inkTextMuted)
+                .fixedSize(horizontal: false, vertical: true)
             Spacer()
         }
-        .onAppear {
-            DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) { onDone() }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .task {
+            try? await Task.sleep(for: .seconds(1.2))
+            onDone()
         }
     }
 
@@ -153,19 +119,8 @@ struct CancelDifficultyRatingView: View {
             await CancelDifficultyService.shared.submitRating(serviceName: serviceName, rating: rating)
             await MainActor.run {
                 isSubmitting = false
-                withAnimation { submitted = true }
+                withAnimation(Motion.unlessReduced(Motion.arrive)) { submitted = true }
             }
-        }
-    }
-
-    private func ratingColor(_ value: Int) -> Color {
-        switch value {
-        case 1: return Color.accentMint
-        case 2: return Color(hex: "6EE7B7")
-        case 3: return Color.yellow
-        case 4: return Color.orange
-        case 5: return Color.red
-        default: return Color.accentMint
         }
     }
 }

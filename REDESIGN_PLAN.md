@@ -372,6 +372,7 @@ gradient, glow, glass card, button style or haptic. The redesign is finished whe
 | 2026-11-10 | 71 | After steps 1 and 2. New and clean: first run, splash, service logos, design gallery. The onboarding carousel is deleted. |
 | 2026-11-10 | 70 | After step 3. The paywall is clean; confetti and the "Purchase Successful!" alert are gone from it. |
 | 2026-11-11 | 59 | After Home and the system tab bar. Deleted: Next Payment, Bills This Week, Biggest Expenses, Lifetime Spend, the waste and opportunity cards, the price alert banner, the custom tab bar. |
+| 2026-11-11 | 55 | After the verdict, cancel flow, cancel rating and Savings Receipt. The confetti celebration screen is deleted. |
 
 Rated on screen so far (English; Arabic and largest text checked for the reveal):
 
@@ -382,6 +383,10 @@ Rated on screen so far (English; Arabic and largest text checked for the reveal)
 | Reveal | 9.1 | At the largest text size the bottom bar takes a third of the screen |
 | Paywall | 9.0 | Not seen with a real App Store price outside the test storefront; Arabic shows the charge date in the device calendar |
 | Home | 9.0 | The 30-day total equals the monthly total when everything is monthly, which reads as a repeat; empty and loading states built but not seen on screen |
+| Renewal Verdict | 9.2 | At the largest text size the three buttons take half the screen |
+| Kept and Cancelled slips | 9.1 | The tear and the stamp are animated; only their end state was checked on screen |
+| Cancel steps | 9.0 | Steps come from the catalog and are not verified per service |
+| Savings Receipt | 9.3 | Share image built but not opened in a share sheet |
 
 Typical prices on the tally come from news round-ups dated April to September 2026, not from each
 service's own price page, and local prices outside the US are a single factor per currency

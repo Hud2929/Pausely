@@ -27,32 +27,32 @@ struct RenewalVerdictView: View {
     private var subscription: Subscription? { store.subscriptions.first { $0.id == subscriptionId } }
 
     var body: some View {
-        NavigationStack {
-            ZStack {
-                Color.obsidianBlack.ignoresSafeArea()
-                if let sub = subscription {
-                    if let outcome {
-                        outcomeView(outcome, sub)
-                            .transition(.opacity.combined(with: .scale(scale: 0.97)))
-                    } else {
-                        verdict(sub)
-                    }
+        ZStack {
+            Color.ink.ignoresSafeArea()
+            if let sub = subscription {
+                if let outcome {
+                    outcomeView(outcome, sub)
+                        .transition(.opacity)
                 } else {
-                    ContentUnavailableView("This subscription is gone", systemImage: "questionmark.circle",
-                                           description: Text("It may have been removed from Pausely."))
+                    verdict(sub)
                 }
-            }
-            .toolbar {
-                ToolbarItem(placement: .topBarLeading) {
-                    Button("Close") { dismiss() }
-                        .foregroundStyle(Color.obsidianTextSecondary)
-                        .accessibilityIdentifier("verdictCloseButton")
+            } else {
+                VStack(alignment: .leading, spacing: 12) {
+                    closeRow
+                    Text("This subscription is gone")
+                        .font(.question(.title2))
+                        .foregroundStyle(Color.inkText)
+                    Text("It may have been removed from Pausely.")
+                        .font(.body)
+                        .foregroundStyle(Color.inkTextMuted)
+                    Spacer()
                 }
+                .padding(.horizontal, Layout.margin)
             }
         }
         .preferredColorScheme(.dark)
         .sheet(isPresented: $showCancelFlow) {
-            if let sub = subscription { CancelSubscriptionFlow(subscription: sub) }
+            if let sub = subscription { CancelSubscriptionFlow(subscription: sub, showsOutcome: false) }
         }
         .sheet(isPresented: $showPaywall) {
             StoreKitUpgradeView(currentSubscriptionCount: store.subscriptions.count)
@@ -62,56 +62,83 @@ struct RenewalVerdictView: View {
         }
         .onChange(of: subscription?.status) { _, status in
             if status == .cancelled, outcome == nil {
-                withAnimation(.spring(response: 0.4, dampingFraction: 0.85)) { outcome = .cancelled }
+                withAnimation(Motion.unlessReduced(Motion.arrive)) { outcome = .cancelled }
             }
         }
     }
 
-    // MARK: - Verdict
+    private var closeRow: some View {
+        HStack {
+            Button { dismiss() } label: {
+                Text("Close")
+                    .font(.subheadline.weight(.semibold))
+                    .foregroundStyle(Color.inkTextMuted)
+                    .frame(minHeight: Layout.tapTarget)
+                    .contentShape(Rectangle())
+            }
+            .accessibilityIdentifier("verdictCloseButton")
+            Spacer()
+        }
+    }
+
+    // MARK: - The slip
 
     private func verdict(_ sub: Subscription) -> some View {
         let charge = RenewalDecisions.upcomingCharge(for: sub, now: Date())
-        return ScrollView {
-            VStack(spacing: 24) {
-                header(sub, charge: charge)
-                if sub.isPausely { PauselyPromiseCard() }
-                factsCard(sub, charge: charge)
-                decisionButtons(sub, hasCharge: charge != nil)
+        return VStack(spacing: 0) {
+            ScrollView {
+                VStack(alignment: .leading, spacing: 0) {
+                    closeRow
+                    PaperSlip(tornTop: true, tornBottom: true) {
+                        VStack(alignment: .leading, spacing: 14) {
+                            header(sub, charge: charge)
+                            Perforation()
+                            facts(sub, charge: charge)
+                        }
+                    }
+                    .padding(.top, 4)
+
+                    if !sub.isPausely, let cheaper = cheaperOption(sub) {
+                        cheaperLine(cheaper).padding(.top, 16)
+                    }
+                }
+                .padding(.horizontal, Layout.margin)
+                .padding(.bottom, 16)
             }
-            .padding(.horizontal, 20)
-            .padding(.top, 8)
-            .padding(.bottom, 32)
+            decisionButtons(sub, hasCharge: charge != nil)
+                .padding(.horizontal, Layout.margin)
+                .padding(.top, 12)
+                .padding(.bottom, 8)
+                .background(Color.ink)
         }
     }
 
     private func header(_ sub: Subscription, charge: (date: Date, isTrialEnd: Bool)?) -> some View {
-        VStack(spacing: 10) {
-            ServiceLogoView(name: sub.name, category: sub.category, size: 64)
-                .accessibilityHidden(true)
-            Text("Keep \(sub.name)?")
-                .font(.system(.title, design: .default).weight(.bold))
-                .foregroundStyle(.white)
-                .multilineTextAlignment(.center)
-                .accessibilityAddTraits(.isHeader)
-            if let charge {
-                Text(whenText(charge))
-                    .font(.system(.subheadline, design: .default).weight(.medium))
-                    .foregroundStyle(daysUntil(charge.date) <= 1 ? Color.orange : Color.obsidianTextSecondary)
+        VStack(alignment: .leading, spacing: 10) {
+            HStack(spacing: 10) {
+                ServiceLogoView(name: sub.name, category: sub.category, size: 36)
+                if let charge {
+                    Text(whenText(charge))
+                        .font(.subheadline.weight(.medium))
+                        .foregroundStyle(daysUntil(charge.date) <= 1 ? Color.paperDue : Color.paperMuted)
+                        .fixedSize(horizontal: false, vertical: true)
+                }
             }
+            Text("Keep \(sub.name)?")
+                .font(.question(.largeTitle, weight: .bold))
+                .fixedSize(horizontal: false, vertical: true)
+                .accessibilityAddTraits(.isHeader)
             HStack(alignment: .firstTextBaseline, spacing: 4) {
                 Text(MoneyFormat.string(sub.amount, sub.currency))
-                    .font(.system(size: 40, weight: .black, design: .default))
-                    .foregroundStyle(Color.accentMint)
+                    .font(.question(.title, weight: .semibold))
                     .minimumScaleFactor(0.6)
                     .lineLimit(1)
                 Text(sub.billingFrequency.shortDisplay)
-                    .font(.system(.title3, design: .default))
-                    .foregroundStyle(Color.obsidianTextSecondary)
+                    .font(.subheadline)
+                    .foregroundStyle(Color.paperMuted)
             }
             .accessibilityElement(children: .combine)
         }
-        .frame(maxWidth: .infinity)
-        .padding(.top, 4)
     }
 
     private func whenText(_ charge: (date: Date, isTrialEnd: Bool)) -> String {
@@ -129,57 +156,66 @@ struct RenewalVerdictView: View {
 
     // MARK: - Facts
 
-    private func factsCard(_ sub: Subscription, charge: (date: Date, isTrialEnd: Bool)?) -> some View {
-        VStack(spacing: 0) {
-            factRow("calendar", yearlyText(sub))
+    /// What is true about this subscription, printed like lines on a receipt. No icons, no colour
+    /// except where money went up or was kept.
+    private func facts(_ sub: Subscription, charge: (date: Date, isTrialEnd: Bool)?) -> some View {
+        VStack(alignment: .leading, spacing: 10) {
+            factLine(yearlyText(sub))
 
             if let change = VerdictFacts.priceChange(for: sub.id, currentAmount: sub.amount, events: eventLog.events) {
                 let up = sub.amount > change.from
-                divider
-                factRow(up ? "arrow.up.right" : "arrow.down.right",
-                        up ? L10n.string("Up from \(MoneyFormat.string(change.from, sub.currency)) since \(change.since.formatted(.dateTime.month(.abbreviated).day()))")
-                           : L10n.string("Down from \(MoneyFormat.string(change.from, sub.currency)) since \(change.since.formatted(.dateTime.month(.abbreviated).day()))"),
-                        tint: up ? .orange : Color.accentMint)
+                factLine(up ? L10n.string("Up from \(MoneyFormat.string(change.from, sub.currency)) since \(change.since.formatted(.dateTime.month(.abbreviated).day()))")
+                            : L10n.string("Down from \(MoneyFormat.string(change.from, sub.currency)) since \(change.since.formatted(.dateTime.month(.abbreviated).day()))"),
+                         color: up ? .paperDue : .paperKept)
             }
 
-            if let usage = usageText(sub) {
-                divider
-                factRow("hourglass", usage)
-            }
+            if let usage = usageText(sub) { factLine(usage) }
 
             if let charge {
-                divider
-                factRow("clock",
-                        charge.isTrialEnd
-                            ? L10n.string("Cancel before \(charge.date.formatted(.dateTime.month(.abbreviated).day())) and you won't be charged.")
-                            : L10n.string("Cancel now and you usually keep it until \(charge.date.formatted(.dateTime.month(.abbreviated).day()))."))
+                factLine(charge.isTrialEnd
+                    ? L10n.string("Cancel before \(charge.date.formatted(.dateTime.month(.abbreviated).day())) and you won't be charged.")
+                    : L10n.string("Cancel now and you usually keep it until \(charge.date.formatted(.dateTime.month(.abbreviated).day()))."))
             }
 
             if let kept = VerdictFacts.lastKept(for: sub.id, events: eventLog.events) {
-                divider
-                factRow("checkmark.circle", L10n.string("You kept it on \(kept.formatted(.dateTime.month(.abbreviated).day()))."))
+                factLine(L10n.string("You kept it on \(kept.formatted(.dateTime.month(.abbreviated).day()))."))
             }
 
-            if !sub.isPausely, let cheaper = cheaperOption(sub) {
-                divider
-                if paymentManager.isUnlocked(.cheaperAlternatives) {
-                    factRow("arrow.left.arrow.right",
-                            cheaper.monthly == 0
-                                ? L10n.string("Free alternative: \(cheaper.name)")
-                                : L10n.string("Cheaper: \(cheaper.name) at \(currencyManager.format(cheaper.monthly)) a month"),
-                            tint: Color.accentMint)
-                } else {
-                    Button {
-                        HapticStyle.light.trigger()
-                        showPaywall = true
-                    } label: {
-                        factRow("lock.fill", L10n.string("Pro shows a cheaper option for this"), tint: Color.obsidianTextSecondary)
-                    }
-                    .buttonStyle(PlainButtonStyle())
-                }
+            if sub.isPausely {
+                Perforation().padding(.vertical, 2)
+                PauselyPromiseCard()
             }
         }
-        .background(RoundedRectangle(cornerRadius: 16, style: .continuous).fill(Color.obsidianSurface))
+    }
+
+    private func factLine(_ text: String, color: Color = .paperInk) -> some View {
+        Text(text)
+            .font(.proof(.footnote))
+            .foregroundStyle(color)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .fixedSize(horizontal: false, vertical: true)
+    }
+
+    /// A cheaper option sits quietly below the slip: it is a suggestion, not one of the facts.
+    private func cheaperLine(_ cheaper: (name: String, monthly: Decimal)) -> some View {
+        Group {
+            if paymentManager.isUnlocked(.cheaperAlternatives) {
+                Text(cheaper.monthly == 0
+                     ? L10n.string("Free alternative: \(cheaper.name)")
+                     : L10n.string("Cheaper: \(cheaper.name) at \(currencyManager.format(cheaper.monthly)) a month"))
+                    .foregroundStyle(Color.inkTextMuted)
+            } else {
+                Button { showPaywall = true } label: {
+                    Text(L10n.string("Pro shows a cheaper option for this")).underline()
+                        .foregroundStyle(Color.inkTextMuted)
+                        .frame(minHeight: Layout.tapTarget, alignment: .leading)
+                        .contentShape(Rectangle())
+                }
+                .buttonStyle(.plain)
+            }
+        }
+        .font(.subheadline)
+        .frame(maxWidth: .infinity, alignment: .leading)
     }
 
     private func yearlyText(_ sub: Subscription) -> String {
@@ -209,76 +245,39 @@ struct RenewalVerdictView: View {
             .min { $0.monthly < $1.monthly }
     }
 
-    private func factRow(_ icon: String, _ text: String, tint: Color = Color.accentMint) -> some View {
-        HStack(alignment: .firstTextBaseline, spacing: 12) {
-            Image(systemName: icon)
-                .font(.system(size: 15, weight: .semibold))
-                .foregroundStyle(tint)
-                .frame(width: 22)
-                .accessibilityHidden(true)
-            Text(text)
-                .font(.system(.callout, design: .default))
-                .foregroundStyle(.white)
-                .frame(maxWidth: .infinity, alignment: .leading)
-                .fixedSize(horizontal: false, vertical: true)
-        }
-        .padding(.horizontal, 16)
-        .padding(.vertical, 14)
-        .contentShape(Rectangle())
-    }
-
-    private var divider: some View {
-        Divider().overlay(Color.white.opacity(0.06)).padding(.leading, 50)
-    }
-
-    // MARK: - Decision
+    // MARK: - The two answers
 
     private func decisionButtons(_ sub: Subscription, hasCharge: Bool) -> some View {
-        VStack(spacing: 12) {
-            HStack(spacing: 12) {
-                Button {
-                    Task { await keep(sub) }
-                } label: {
-                    Label(isKeeping ? L10n.string("Keeping…") : L10n.string("Keep it"), systemImage: "checkmark")
-                        .font(.system(.body, design: .default).weight(.semibold))
-                        .foregroundStyle(Color.black)
-                        .frame(maxWidth: .infinity)
-                        .frame(height: 54)
-                        .background(RoundedRectangle(cornerRadius: 16, style: .continuous).fill(Color.accentMint))
-                }
-                .buttonStyle(PlainButtonStyle())
-                .disabled(isKeeping || !hasCharge)
-                .accessibilityIdentifier("verdictKeepButton")
-
-                Button {
-                    HapticStyle.medium.trigger()
-                    if sub.isPausely, let url = URL(string: "https://apps.apple.com/account/subscriptions") {
-                        openURL(url)
-                    } else {
-                        showCancelFlow = true
-                    }
-                } label: {
-                    Label("Cancel it", systemImage: "xmark")
-                        .font(.system(.body, design: .default).weight(.semibold))
-                        .foregroundStyle(Color.red)
-                        .frame(maxWidth: .infinity)
-                        .frame(height: 54)
-                        .background(RoundedRectangle(cornerRadius: 16, style: .continuous).fill(Color.red.opacity(0.12)))
-                }
-                .buttonStyle(PlainButtonStyle())
-                .accessibilityIdentifier("verdictCancelButton")
+        VStack(spacing: 10) {
+            Button {
+                Task { await keep(sub) }
+            } label: {
+                Text(isKeeping ? L10n.string("Keeping…") : L10n.string("Keep it"))
             }
+            .buttonStyle(.ink(.keep))
+            .disabled(isKeeping || !hasCharge)
+            .accessibilityIdentifier("verdictKeepButton")
 
             Button {
-                dismiss()
+                if sub.isPausely, let url = URL(string: "https://apps.apple.com/account/subscriptions") {
+                    openURL(url)
+                } else {
+                    showCancelFlow = true
+                }
             } label: {
-                Text("Decide later")
-                    .font(.system(.subheadline, design: .default))
-                    .foregroundStyle(Color.obsidianTextTertiary)
-                    .frame(maxWidth: .infinity)
-                    .frame(height: 40)
+                Text("Cancel it")
             }
-            .buttonStyle(PlainButtonStyle())
+            .buttonStyle(.ink(.quiet))
+            .accessibilityIdentifier("verdictCancelButton")
+
+            Button { dismiss() } label: {
+                Text("Decide later")
+                    .font(.subheadline)
+                    .foregroundStyle(Color.inkTextMuted)
+                    .frame(maxWidth: .infinity, minHeight: Layout.tapTarget)
+                    .contentShape(Rectangle())
+            }
+            .buttonStyle(.plain)
         }
     }
 
@@ -287,91 +286,155 @@ struct RenewalVerdictView: View {
         defer { isKeeping = false }
         let charge = RenewalDecisions.upcomingCharge(for: sub, now: Date())
         await VerdictCenter.shared.keep(subscriptionId: sub.id)
-        HapticStyle.success.trigger()
-        withAnimation(.spring(response: 0.4, dampingFraction: 0.85)) {
+        Feel.keep()
+        withAnimation(Motion.unlessReduced(Motion.arrive)) {
             outcome = .kept(askAgain: charge.flatMap { VerdictFacts.renewal(after: $0.date, for: sub) })
         }
     }
 
     // MARK: - Outcome
 
-    private func outcomeView(_ outcome: Outcome, _ sub: Subscription) -> some View {
-        VStack(spacing: 18) {
-            Spacer()
-            Image(systemName: outcome == .cancelled ? "checkmark.seal.fill" : "checkmark.circle.fill")
-                .font(.system(size: 56, weight: .semibold))
-                .foregroundStyle(Color.accentMint)
-                .accessibilityHidden(true)
+    // MARK: - After the answer
 
+    private func outcomeView(_ outcome: Outcome, _ sub: Subscription) -> some View {
+        VStack(alignment: .leading, spacing: 0) {
+            Spacer(minLength: 24)
             switch outcome {
             case .kept(let askAgain):
-                Text("Kept")
-                    .font(.system(.title, design: .default).weight(.bold))
-                    .foregroundStyle(.white)
-                Text(askAgain.map { L10n.string("No more reminders about this charge. We'll ask again before \($0.formatted(.dateTime.month(.abbreviated).day())).") }
-                     ?? L10n.string("No more reminders about this charge."))
-                    .font(.system(.body, design: .default))
-                    .foregroundStyle(Color.obsidianTextSecondary)
-                    .multilineTextAlignment(.center)
+                OutcomeSlip(name: sub.name, category: sub.category, stamp: L10n.string("Kept"), torn: false) {
+                    Text(askAgain.map { L10n.string("No more reminders about this charge. We'll ask again before \($0.formatted(.dateTime.month(.abbreviated).day())).") }
+                         ?? L10n.string("No more reminders about this charge."))
+                        .font(.proof(.footnote))
+                        .fixedSize(horizontal: false, vertical: true)
+                }
             case .cancelled:
-                let line = SavingsSummary.current().lines.last { $0.subscriptionId == sub.id }
-                Text("\(sub.name) cancelled")
-                    .font(.system(.title, design: .default).weight(.bold))
-                    .foregroundStyle(.white)
-                    .multilineTextAlignment(.center)
-                Text(line.map { L10n.string("That's \(MoneyFormat.string($0.onTrack, $0.currency)) you won't pay over the next 12 months. It's on your Savings Receipt.") }
-                     ?? L10n.string("It's on your Savings Receipt."))
-                    .font(.system(.body, design: .default))
-                    .foregroundStyle(Color.obsidianTextSecondary)
-                    .multilineTextAlignment(.center)
-                Button("See your Savings Receipt") { showReceipt = true }
-                    .font(.system(.body, design: .default).weight(.semibold))
-                    .foregroundStyle(Color.accentMint)
-                    .padding(.top, 4)
+                CancelledSlip(subscription: sub)
             }
+            Spacer(minLength: 24)
 
-            Spacer()
-            Button {
-                dismiss()
-            } label: {
-                Text("Done")
-                    .font(.system(.body, design: .default).weight(.semibold))
-                    .foregroundStyle(.black)
-                    .frame(maxWidth: .infinity)
-                    .frame(height: 54)
-                    .background(RoundedRectangle(cornerRadius: 16, style: .continuous).fill(Color.accentMint))
+            VStack(spacing: 10) {
+                if outcome == .cancelled {
+                    Button { showReceipt = true } label: { Text("See your Savings Receipt") }
+                        .buttonStyle(.ink)
+                    Button { dismiss() } label: { Text("Done") }
+                        .buttonStyle(.ink(.quiet))
+                } else {
+                    Button { dismiss() } label: { Text("Done") }
+                        .buttonStyle(.ink)
+                }
             }
-            .buttonStyle(PlainButtonStyle())
         }
-        .padding(.horizontal, 24)
-        .padding(.bottom, 24)
+        .padding(.horizontal, Layout.margin)
+        .padding(.bottom, 12)
     }
 }
 
-// MARK: - The Pausely Promise
+/// The slip after a decision: stamped when kept, torn along the perforation when cancelled.
+struct OutcomeSlip<Detail: View>: View {
+    let name: String
+    let category: String?
+    let stamp: String
+    /// Cancelled: the lower half of the slip tears off and falls away.
+    let torn: Bool
+    @ViewBuilder var detail: Detail
 
-/// Shown when the renewal is Pausely's own: what Pausely saved, compared with what it costs,
-/// and an honest recommendation either way.
+    @State private var landed = false
+
+    var body: some View {
+        ZStack(alignment: .top) {
+            if torn {
+                // The half that tears off. It starts where the slip continues and drops away.
+                PaperSlip(tornTop: true, tornBottom: true) {
+                    VStack(alignment: .leading, spacing: 12) {
+                        ForEach(0..<3, id: \.self) { _ in
+                            RoundedRectangle(cornerRadius: 2).fill(Color.paperShade).frame(height: 10)
+                        }
+                    }
+                }
+                .padding(.top, 150)
+                .offset(y: landed ? 420 : 0)
+                .rotationEffect(.degrees(landed ? 9 : 0), anchor: .topLeading)
+                .opacity(landed ? 0 : 1)
+                .accessibilityHidden(true)
+            }
+
+            PaperSlip(tornTop: true, tornBottom: true) {
+                VStack(alignment: .leading, spacing: 14) {
+                    HStack(spacing: 10) {
+                        ServiceLogoView(name: name, category: category, size: 36)
+                        Text(verbatim: name).font(.question(.title2))
+                            .fixedSize(horizontal: false, vertical: true)
+                    }
+                    Text(verbatim: stamp)
+                        .font(.proof(.title3, weight: .bold))
+                        .textCase(.uppercase)
+                        .foregroundStyle(torn ? Color.paperInk : Color.paperKept)
+                        .padding(.horizontal, 12)
+                        .padding(.vertical, 6)
+                        .overlay(RoundedRectangle(cornerRadius: 6).stroke(torn ? Color.paperInk : Color.paperKept, lineWidth: 2))
+                        .rotationEffect(.degrees(-4))
+                        .scaleEffect(landed ? 1 : 1.5)
+                        .opacity(landed ? 1 : 0)
+                    Perforation()
+                    detail
+                }
+            }
+        }
+        .accessibilityElement(children: .combine)
+        .task {
+            guard !landed else { return }
+            if UIAccessibility.isReduceMotionEnabled {
+                landed = true
+                return
+            }
+            if torn { Feel.tearStart() }
+            try? await Task.sleep(for: .milliseconds(180))
+            withAnimation(torn ? Motion.leave : Motion.arrive) { landed = true }
+            if torn { Feel.tearEnd() }
+        }
+    }
+}
+
+
+/// The torn slip for a cancelled subscription, with what the cancellation keeps over 12 months.
+struct CancelledSlip: View {
+    let subscription: Subscription
+
+    var body: some View {
+        let line = SavingsSummary.current().lines.last { $0.subscriptionId == subscription.id }
+        OutcomeSlip(name: subscription.name, category: subscription.category, stamp: L10n.string("Cancelled"), torn: true) {
+            VStack(alignment: .leading, spacing: 10) {
+                if let line {
+                    ProofLine(label: L10n.string("On track over 12 months"),
+                              value: MoneyFormat.string(line.onTrack, line.currency), emphasised: true)
+                        .foregroundStyle(Color.paperKept)
+                }
+                Text(line.map { L10n.string("That's \(MoneyFormat.string($0.onTrack, $0.currency)) you won't pay over the next 12 months. It's on your Savings Receipt.") }
+                     ?? L10n.string("It's on your Savings Receipt."))
+                    .font(.proof(.footnote))
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+        }
+    }
+}
+
+
 struct PauselyPromiseCard: View {
     @ObservedObject private var store = SubscriptionStore.shared
     @ObservedObject private var eventLog = LifecycleEventLog.shared
 
+    /// Printed on Pausely's own slip: what it has kept against what it costs.
     var body: some View {
         let summary = SavingsSummary.current()
-        VStack(alignment: .leading, spacing: 10) {
-            Label("The Pausely Promise", systemImage: "seal")
-                .font(.system(.caption, design: .default).weight(.bold))
-                .textCase(.uppercase)
-                .foregroundStyle(Color.accentMint)
+        VStack(alignment: .leading, spacing: 6) {
+            Text("The Pausely Promise")
+                .font(.footnote.weight(.semibold))
             Text(message(summary))
-                .font(.system(.body, design: .default))
-                .foregroundStyle(.white)
+                .font(.footnote)
                 .fixedSize(horizontal: false, vertical: true)
         }
-        .padding(16)
         .frame(maxWidth: .infinity, alignment: .leading)
-        .background(RoundedRectangle(cornerRadius: 16, style: .continuous).fill(Color.accentMint.opacity(0.10)))
-        .overlay(RoundedRectangle(cornerRadius: 16, style: .continuous).stroke(Color.accentMint.opacity(0.25), lineWidth: 1))
+        .accessibilityElement(children: .combine)
     }
 
     private func message(_ summary: SavingsSummary) -> String {
