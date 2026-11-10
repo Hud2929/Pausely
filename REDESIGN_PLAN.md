@@ -267,7 +267,7 @@ Release builds and the serial test run.
 | 0 | Truth fixes | 1.5 | **Done** (tour extension still open) |
 | 1 | **Design system**: Ink and Paper tokens, type, motion, haptics, paper slip, buttons; old tokens mapped onto the new ones so every screen shifts at once; letter-spacing removed | 2 | **Done** |
 | 2 | **First run**: Tally and reveal, account after value, splash 0.6 s, logos redrawn | 3 | **Done** except the reminder ask (moves to Home, step 4) |
-| 3 | **Paywall** from the user's own numbers, trial timeline, Pausely on its own slip, free-limit choice, Promise meter | 3 | |
+| 3 | **Paywall** from the user's own numbers, trial timeline on a paper slip, lines over the free limit join the list when Pro starts | 3 | **Done**. Still open: Pausely adding itself to the list during its trial (founder decision), Promise meter (with Home, step 4) |
 | 4 | Home: the number, next decision, 30-day horizon, kept | 2 | |
 | 5 | Verdict slip, tear to cancel, receipt roll, share image | 3 | |
 | 6 | Subscriptions list, detail, add and edit, catalog browser | 3 | |
@@ -370,6 +370,7 @@ gradient, glow, glass card, button style or haptic. The redesign is finished whe
 | Date | Files with old UI | Note |
 |---|---|---|
 | 2026-11-10 | 71 | After steps 1 and 2. New and clean: first run, splash, service logos, design gallery. The onboarding carousel is deleted. |
+| 2026-11-10 | 70 | After step 3. The paywall is clean; confetti and the "Purchase Successful!" alert are gone from it. |
 
 Rated on screen so far (English; Arabic and largest text checked for the reveal):
 
@@ -378,6 +379,7 @@ Rated on screen so far (English; Arabic and largest text checked for the reveal)
 | Guess | 8.7 | System slider is plain; nothing on screen moves until touched |
 | Tally | 8.8 | A few logos fall back to a letter; grid is competent, not distinctive |
 | Reveal | 9.1 | At the largest text size the bottom bar takes a third of the screen |
+| Paywall | 9.0 | Not seen with a real App Store price outside the test storefront; Arabic shows the charge date in the device calendar |
 
 Typical prices on the tally come from news round-ups dated April to September 2026, not from each
 service's own price page, and local prices outside the US are a single factor per currency

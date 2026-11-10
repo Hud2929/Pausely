@@ -56584,6 +56584,380 @@
           }
         }
       }
+    },
+    "You pay for %lld subscriptions. Free watches %lld.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "أنت تدفع مقابل %1$lld اشتراكًا. النسخة المجانية تراقب %2$lld."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Du zahlst für %1$lld Abos. Kostenlos überwacht %2$lld."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pagas por %1$lld suscripciones. La versión gratuita vigila %2$lld."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Vous payez %1$lld abonnements. La version gratuite en surveille %2$lld."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$lld件のサブスクに支払っています。無料版が見守るのは%2$lld件です。"
+          }
+        }
+      }
+    },
+    "Pro watches every subscription you have.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pro يراقب كل اشتراكاتك."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pro überwacht jedes deiner Abos."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pro vigila todas tus suscripciones."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pro surveille tous vos abonnements."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Proはすべてのサブスクを見守ります。"
+          }
+        }
+      }
+    },
+    "Your subscriptions cost about %@ a year.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "اشتراكاتك تكلّف نحو %@ في السنة."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Deine Abos kosten etwa %@ im Jahr."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tus suscripciones cuestan unos %@ al año."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Vos abonnements coûtent environ %@ par an."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "サブスクに年間およそ%@かかっています。"
+          }
+        }
+      }
+    },
+    "Pausely Pro is %@ a year.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pausely Pro بسعر %@ في السنة."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pausely Pro kostet %@ im Jahr."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pausely Pro cuesta %@ al año."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pausely Pro coûte %@ par an."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pausely Proは年額%@です。"
+          }
+        }
+      }
+    },
+    "Pausely Pro is %@ a month.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pausely Pro بسعر %@ في الشهر."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pausely Pro kostet %@ im Monat."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pausely Pro cuesta %@ al mes."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pausely Pro coûte %@ par mois."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pausely Proは月額%@です。"
+          }
+        }
+      }
+    },
+    "A year of it costs less than one month of %@.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "سنة كاملة منه تكلّف أقل من شهر واحد من %@."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ein Jahr davon kostet weniger als ein Monat %@."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Un año cuesta menos que un mes de %@."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Une année coûte moins qu'un mois de %@."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "1年分でも%@の1か月分より安くなります。"
+          }
+        }
+      }
+    },
+    "A year of it costs less than %lld months of %@.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "سنة كاملة منه تكلّف أقل من %1$lld أشهر من %2$@."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ein Jahr davon kostet weniger als %1$lld Monate %2$@."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Un año cuesta menos que %1$lld meses de %2$@."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Une année coûte moins que %1$lld mois de %2$@."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "1年分でも%2$@の%1$lldか月分より安くなります。"
+          }
+        }
+      }
+    },
+    "Cancel before %@ in Settings and you pay nothing.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ألغِ قبل %@ من الإعدادات ولن تدفع شيئًا."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kündige vor dem %@ in den Einstellungen und du zahlst nichts."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cancela antes del %@ en Ajustes y no pagas nada."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Annulez avant le %@ dans Réglages et vous ne payez rien."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@より前に「設定」で解約すれば、料金はかかりません。"
+          }
+        }
+      }
+    },
+    "You have Pausely Pro": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "لديك Pausely Pro"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Du hast Pausely Pro"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tienes Pausely Pro"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Vous avez Pausely Pro"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pausely Proをご利用中です"
+          }
+        }
+      }
+    },
+    "Every subscription you add is watched from now on.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "كل اشتراك تضيفه سيُراقب من الآن."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ab jetzt wird jedes Abo überwacht, das du hinzufügst."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A partir de ahora se vigila cada suscripción que añadas."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Chaque abonnement que vous ajoutez est désormais surveillé."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "これからは追加するすべてのサブスクを見守ります。"
+          }
+        }
+      }
+    },
+    "Couldn't reach the App Store. Tap to try again.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "تعذّر الوصول إلى App Store. اضغط للمحاولة مجددًا."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "App Store nicht erreichbar. Tippe, um es erneut zu versuchen."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No se pudo conectar con el App Store. Toca para reintentar."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Impossible de joindre l'App Store. Touchez pour réessayer."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "App Storeに接続できません。タップして再試行。"
+          }
+        }
+      }
     }
   },
   "version": "1.1"

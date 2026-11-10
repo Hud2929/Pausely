@@ -112,6 +112,9 @@ struct Tally: Codable, Equatable {
                                amount: price, currency: currency, isConfirmed: confirmed))
     }
 
+    /// Puts saved lines back on the slip.
+    mutating func restore(_ saved: [TallyLine]) { lines = saved }
+
     /// The person corrected a price. Negative amounts are ignored.
     mutating func setAmount(_ amount: Decimal, for name: String) {
         guard amount >= 0, let index = lines.firstIndex(where: { $0.name == name }) else { return }
@@ -234,6 +237,19 @@ enum TallyImporter {
         } else if let data = try? JSONEncoder().encode(waiting) {
             defaults.set(data, forKey: waitingKey)
         }
+    }
+}
+
+extension TallyImporter {
+    /// After Pro starts: the lines that were waiting join the list.
+    static func importWaiting(into store: SubscriptionStore, defaults: UserDefaults = .standard) async {
+        let lines = waitingLines(defaults: defaults)
+        guard !lines.isEmpty else { return }
+        clearWaiting(defaults: defaults)
+        var tally = Tally(currency: lines[0].currency)
+        tally.restore(lines)
+        PendingTally.save(tally, defaults: defaults)
+        await importPending(into: store, defaults: defaults)
     }
 }
 
