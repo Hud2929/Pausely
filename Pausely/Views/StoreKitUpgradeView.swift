@@ -117,10 +117,16 @@ struct StoreKitUpgradeView: View {
         return (selectedPlan == .annual ? product.price : product.price * 12, currency)
     }
 
+    /// True when the person got here by trying to add one more than the free plan watches.
+    private var atFreeLimit: Bool {
+        !paymentManager.isUnlocked(.unlimitedSubscriptions) && currentSubscriptionCount >= FreeTier.subscriptionLimit
+    }
+
     private var headline: String {
         if waitingCount > 0 {
             return L10n.string("You pay for \(activeSubscriptions.count + waitingCount) subscriptions. Free watches \(FreeTier.subscriptionLimit).")
         }
+        if atFreeLimit { return L10n.string("Free watches \(FreeTier.subscriptionLimit). Pro watches all of them.") }
         guard !activeSubscriptions.isEmpty else { return L10n.string("Pro watches every subscription you have.") }
         let yearly = MoneyFormat.string(activeSubscriptions.annualTotal(), currencyManager.selectedCurrency,
                                         locale: L10n.locale, wholeUnits: true)
@@ -163,6 +169,7 @@ struct StoreKitUpgradeView: View {
                         .padding(.top, 4)
                         .accessibilityAddTraits(.isHeader)
                         .accessibilityFocused($focusedElement, equals: .title)
+                        .accessibilityIdentifier(atFreeLimit ? "freeLimitNotice" : "paywallHeadline")
 
                     Text(verbatim: valueLine)
                         .font(.body)

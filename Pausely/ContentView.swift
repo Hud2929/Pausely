@@ -19,6 +19,8 @@ struct PauselyApp: App {
         // UI tests pass --reset-state to start from a first launch, whatever an earlier run left behind.
         if ProcessInfo.processInfo.arguments.contains("--reset-state") {
             UserDefaults.standard.removeObject(forKey: "hasCompletedOnboarding")
+            PendingTally.clear()
+            TallyImporter.clearWaiting()
         }
         #endif
     }
@@ -54,6 +56,9 @@ class AppDelegate: NSObject, UIApplicationDelegate {
         UINavigationBar.appearance().standardAppearance = scrolledAppearance
         UINavigationBar.appearance().compactAppearance = scrolledAppearance
         UINavigationBar.appearance().scrollEdgeAppearance = appearance
+
+        // Switches: green would read as "money kept", so an "on" switch is a quiet grey.
+        UISwitch.appearance().onTintColor = UIColor(Color.inkTextMuted)
 
         // iOS 26 draws the tab bar as Liquid Glass by itself. Earlier versions get a solid ink bar.
         if #unavailable(iOS 26) {

@@ -21,16 +21,25 @@ final class HorizonTests: XCTestCase {
                      nextBillingDate: anchor, trialEndsAt: trialEnds, status: status)
     }
 
-    func testChargesAreOrderedByDayAndStopAtThirtyDays() {
+    func testChargesAreOrderedByDayAndCoverAFullMonth() {
         let now = day(2026, 11, 10, hour: 15)
         let charges = Horizon.charges(for: [
-            subscription("Late", "5.00", anchor: day(2026, 12, 10)),      // day 30: outside
-            subscription("Edge", "6.00", anchor: day(2026, 12, 9)),       // day 29: inside
+            subscription("Late", "5.00", anchor: day(2026, 12, 12)),      // day 32: outside
+            subscription("Edge", "6.00", anchor: day(2026, 12, 11)),      // day 31: inside
             subscription("Today", "7.00", anchor: day(2026, 11, 10)),
             subscription("Soon", "8.00", anchor: day(2026, 11, 15)),
         ], now: now, calendar: calendar)
-        XCTAssertEqual(charges.map(\.name), ["Today", "Soon", "Edge"])
-        XCTAssertEqual(charges.map(\.dayOffset), [0, 5, 29])
+        // A monthly charge that falls today falls again 30 days later, inside the window.
+        XCTAssertEqual(charges.map(\.name), ["Today", "Soon", "Today", "Edge"])
+        XCTAssertEqual(charges.map(\.dayOffset), [0, 5, 30, 31])
+    }
+
+    func testASubscriptionAddedTodayForNextMonthIsOnTheLine() {
+        // The add flow's default date is one month out: 30 days in November, 31 in December.
+        for (now, next) in [(day(2026, 11, 10), day(2026, 12, 10)), (day(2026, 12, 10), day(2027, 1, 10))] {
+            let charges = Horizon.charges(for: [subscription("New", "9.99", anchor: next)], now: now, calendar: calendar)
+            XCTAssertEqual(charges.count, 1, "a charge one month from \(now) is shown")
+        }
     }
 
     func testAPastAnchorRollsForwardAndWeeklyChargesRepeat() {
@@ -41,7 +50,7 @@ final class HorizonTests: XCTestCase {
 
         let weekly = Horizon.charges(for: [subscription("Paper", "2.00", anchor: day(2026, 11, 12), frequency: .weekly)],
                                      now: now, calendar: calendar)
-        XCTAssertEqual(weekly.map(\.dayOffset), [2, 9, 16, 23])
+        XCTAssertEqual(weekly.map(\.dayOffset), [2, 9, 16, 23, 30])
     }
 
     func testTrialIsChargedWhenItEndsAndInactiveOnesAreLeftOut() {
@@ -67,6 +76,8 @@ final class HorizonTests: XCTestCase {
         ], now: now, calendar: calendar)
         XCTAssertEqual(Horizon.total(of: charges, through: 5, in: "USD", rates: rates), 10)
         XCTAssertEqual(Horizon.total(of: charges, through: 29, in: "USD", rates: rates), 20)
+        // A is charged again on day 31 (Dec 11).
+        XCTAssertEqual(Horizon.total(of: charges, through: 31, in: "USD", rates: rates), 30)
         XCTAssertEqual(Horizon.total(of: charges, through: 0, in: "USD", rates: rates), 0)
     }
 

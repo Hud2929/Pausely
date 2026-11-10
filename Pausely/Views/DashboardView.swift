@@ -14,6 +14,7 @@ struct DashboardView: View {
     @State private var showingAdd = false
     @State private var showingPaywall = false
     @State private var showingReceipt = false
+    @State private var showingDates = false
     @State private var showsYear = false
     @State private var dismissedAlerts: Set<UUID> = []
     @ScaledMetric(relativeTo: .largeTitle) private var numberSize: CGFloat = 52
@@ -51,6 +52,7 @@ struct DashboardView: View {
         .sheet(isPresented: $showingAdd) { SubscriptionBrowserView() }
         .sheet(isPresented: $showingPaywall) { StoreKitUpgradeView(currentSubscriptionCount: store.subscriptions.count) }
         .sheet(isPresented: $showingReceipt) { SavingsReceiptView() }
+        .sheet(isPresented: $showingDates) { RenewalDatesSheet(subscriptions: Horizon.undated(store.subscriptions)) }
         .onAppear {
             Task { await ScreenTimeManager.shared.syncUsageData() }
             ReviewPromptManager.shared.askAfterMoneyKept()
@@ -118,6 +120,19 @@ struct DashboardView: View {
         let showReminderAsk = !NotificationManager.shared.isAuthorized && !DemoSavings.isScreenshotRun
 
         VStack(spacing: 0) {
+            if let first = undated.first {
+                AttentionRow(state: nil, symbol: "calendar.badge.plus",
+                             title: undated.count == 1
+                                ? L10n.string("When does \(first.name) renew?")
+                                : L10n.string("\(undated.count) subscriptions have no renewal date"),
+                             detail: L10n.string("Add the date and Pausely will ask you before it charges."),
+                             action: undated.count == 1 ? L10n.string("Add date") : L10n.string("Add dates")) {
+                    showingDates = true
+                }
+                .accessibilityIdentifier("undatedRow")
+                Hairline()
+            }
+
             ForEach(pending) { item in
                 if let sub = store.subscriptions.first(where: { $0.id == item.subscriptionId }) {
                     AttentionRow(state: .decide,
@@ -138,23 +153,12 @@ struct DashboardView: View {
 
             if !waiting.isEmpty, !paymentManager.isUnlocked(.unlimitedSubscriptions) {
                 AttentionRow(state: nil, symbol: "eye.slash",
-                             title: L10n.string("\(waiting.count) of your subscriptions aren't watched"),
+                             title: waiting.count == 1
+                                ? L10n.string("\(waiting[0].name) isn't watched")
+                                : L10n.string("\(waiting.count) of your subscriptions aren't watched"),
                              detail: L10n.string("Free watches \(FreeTier.subscriptionLimit). Pro watches all of them."),
                              action: L10n.string("See Pro")) { showingPaywall = true }
                     .accessibilityIdentifier("waitingRow")
-                Hairline()
-            }
-
-            if let first = undated.first {
-                AttentionRow(state: nil, symbol: "calendar.badge.plus",
-                             title: undated.count == 1
-                                ? L10n.string("When does \(first.name) renew?")
-                                : L10n.string("\(undated.count) subscriptions have no renewal date"),
-                             detail: L10n.string("Add the date and Pausely will ask you before it charges."),
-                             action: L10n.string("Add date")) {
-                    VerdictCenter.shared.showSubscription(first.id)
-                }
-                .accessibilityIdentifier("undatedRow")
                 Hairline()
             }
 
@@ -377,7 +381,7 @@ private struct ReminderAskRow: View {
 
 // MARK: - The 30-day horizon
 
-/// The next 30 days as one line: a dot per charge, placed by day and sized by amount. Dragging along
+/// The coming month as one line: a dot per charge, placed by day and sized by amount. Dragging along
 /// it shows what leaves by that day. The rows below say the same thing in words.
 private struct HorizonSection: View {
     let charges: [Horizon.Charge]
@@ -394,7 +398,7 @@ private struct HorizonSection: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
             HStack(alignment: .firstTextBaseline) {
-                Text(selectedDay == nil ? L10n.string("Next 30 days") : L10n.string("By \(dayText(throughDay))"))
+                Text(selectedDay == nil ? L10n.string("Coming up") : L10n.string("By \(dayText(throughDay))"))
                     .font(.headline)
                     .foregroundStyle(Color.inkText)
                 Spacer(minLength: 8)
@@ -406,7 +410,7 @@ private struct HorizonSection: View {
             .accessibilityElement(children: .combine)
 
             if charges.isEmpty {
-                Text("Nothing is due in the next 30 days.")
+                Text("Nothing is due in the next month.")
                     .font(.subheadline)
                     .foregroundStyle(Color.inkTextMuted)
                     .padding(.top, 10)

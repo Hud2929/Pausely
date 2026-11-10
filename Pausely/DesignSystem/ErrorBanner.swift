@@ -51,9 +51,11 @@ struct ErrorToastModifier: ViewModifier {
             .overlay(alignment: .top) {
                 if isVisible, let msg = message {
                     HStack(spacing: 10) {
-                        Image(systemName: "exclamationmark.circle.fill")
-                            .foregroundStyle(Color.due)
-                            .font(.system(size: 16, weight: .semibold))
+                        // A notice, not an alarm: most of these say a change was kept on the device.
+                        Image(systemName: "info.circle")
+                            .foregroundStyle(Color.inkTextMuted)
+                            .font(.body)
+                            .accessibilityHidden(true)
                         Text(msg)
                             .font(.subheadline.weight(.medium))
                             .foregroundStyle(Color.inkText)
@@ -67,7 +69,7 @@ struct ErrorToastModifier: ViewModifier {
                             .fill(Color.inkRaised)
                             .overlay(
                                 RoundedRectangle(cornerRadius: 14, style: .continuous)
-                                    .stroke(Color.due.opacity(0.3), lineWidth: 1)
+                                    .stroke(Color.line, lineWidth: 1)
                             )
                     )
                     .padding(.horizontal, 16)

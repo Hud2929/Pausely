@@ -1,9 +1,12 @@
 import Foundation
 
-/// The next 30 days of charges, for Home: one dot per charge on a line, and "what leaves by then".
+/// The coming month of charges, for Home: one dot per charge on a line, and "what leaves by then".
 /// Pure: takes `now` and a calendar. Renewal days come from `RenewalSchedule`, never recomputed here.
 enum Horizon {
-    static let days = 30
+    /// Today plus the 31 days after it. A charge one month from today is 28 to 31 days away, and
+    /// it must be on the line: someone who adds a subscription today with "next month" as its date
+    /// has to see it on Home.
+    static let days = 32
 
     struct Charge: Identifiable, Equatable {
         let subscriptionId: UUID
@@ -11,7 +14,7 @@ enum Horizon {
         let category: String?
         /// The charge day, at local noon.
         let date: Date
-        /// 0 = today … 29.
+        /// 0 = today … 31.
         let dayOffset: Int
         /// The amount in the subscription's own currency.
         let amount: Decimal

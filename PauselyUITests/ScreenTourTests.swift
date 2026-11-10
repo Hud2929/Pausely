@@ -21,23 +21,36 @@ final class ScreenTourTests: XCTestCase {
 
     // MARK: - Tours
 
+    /// Extra launch arguments for a variant of the tour: `PAUSELY_TOUR_VARIANT=ar` (Arabic, right
+    /// to left) or `big` (the largest text size).
+    private var variantArguments: [String] {
+        switch ProcessInfo.processInfo.environment["PAUSELY_TOUR_VARIANT"] ?? "" {
+        case "ar": return ["-AppleLanguages", "(ar)", "-AppleLocale", "ar_SA"]
+        case "big": return ["-UIPreferredContentSizeCategoryName", "UICTContentSizeCategoryAccessibilityXXXL"]
+        default: return []
+        }
+    }
+
     func testFirstLaunch() throws {
         let app = XCUIApplication()
-        app.launchArguments = ["--uitesting"]
+        app.launchArguments = ["--uitesting", "--reset-state"] + variantArguments
         app.launch()
-        capture(app, "launch")
         sleep(3)
-        capture(app, "onboarding-1")
-        for page in 2...5 {
-            app.swipeLeft()
+        capture(app, "firstrun-guess")
+        if tapFirst(app, ["getStartedButton"]) {
             sleep(1)
-            capture(app, "onboarding-\(page)")
-        }
-        if tapFirst(app, ["getStartedButton", "Get Started", "Continue", "Get started"]) {
-            sleep(2)
-            capture(app, "auth")
-            app.swipeUp()
-            capture(app, "auth-scrolled")
+            for name in ["Netflix", "Spotify", "YouTube Premium", "iCloud+"] where app.buttons[name].exists {
+                app.buttons[name].tap()
+            }
+            capture(app, "firstrun-tally")
+            if tapFirst(app, ["showTotalButton"]) {
+                sleep(3)
+                capture(app, "firstrun-reveal")
+                if tapFirst(app, ["keepListButton"]) {
+                    sleep(2)
+                    capture(app, "firstrun-account")
+                }
+            }
         }
     }
 
@@ -79,16 +92,29 @@ final class ScreenTourTests: XCTestCase {
     }
 
     func testSingleScreens() throws {
-        for (flag, name) in [("--demo-verdict", "verdict"), ("--demo-receipt", "receipt"), ("--demo-pause-plan", "pauseplan"),
-                             ("--demo-paywall", "paywall"), ("--demo-browser", "browser"),
-                             ("--demo-subscription", "manage"), ("--demo-subscription-edit", "edit"),
-                             ("--demo-gmail-results", "gmail-results"), ("--demo-wrapped", "wrapped")] {
+        let screens: [(flags: [String], name: String)] = [
+            (["--demo-verdict"], "verdict"), (["--demo-kept"], "kept"), (["--demo-cancelled"], "cancelled"),
+            (["--demo-cancel"], "cancel"), (["--demo-receipt"], "receipt"),
+            (["--demo-pause-plan"], "pauseplan"), (["--demo-pause-plan", "--demo-plan-active"], "pauseplan-active"),
+            (["--demo-paywall"], "paywall"), (["--demo-browser"], "browser"), (["--demo-tier"], "plan"),
+            (["--demo-custom-add"], "custom"), (["--demo-subscription"], "manage"), (["--demo-subscription-edit"], "edit"),
+            (["--demo-price-history"], "pricehistory"), (["--demo-usage"], "usage"),
+            (["--demo-inbox"], "inbox"), (["--demo-gmail-results"], "inbox-results"), (["--demo-imap-connect"], "inbox-connect"),
+            (["--demo-wrapped"], "year"), (["--demo-auth"], "welcome"), (["--demo-auth=signup"], "signup"),
+            (["--demo-auth=signin"], "signin"), (["--demo-age-gate"], "age"),
+            (["--demo-settings=notifications"], "notifications"), (["--demo-settings=privacy"], "privacy"),
+            (["--demo-settings=help"], "help"), (["--demo-settings=currency"], "currency"),
+            (["--demo-settings=export"], "export"), (["--demo-whats-new"], "whatsnew"),
+            (["--empty-demo-data", "--demo-tab=0"], "home-empty"), (["--empty-demo-data", "--demo-tab=1"], "list-empty"),
+            (["--empty-demo-data", "--demo-tab=2"], "insights-empty"),
+        ]
+        for screen in screens {
             let app = XCUIApplication()
-            app.launchArguments = ["--uitesting", flag]
+            app.launchArguments = ["--uitesting", "--demo-mode"] + screen.flags + variantArguments
             app.launch()
             sleep(3)
-            capture(app, name)
-            scrollCapture(app, name, times: 3)
+            capture(app, screen.name)
+            scrollCapture(app, screen.name, times: 1)
         }
     }
 
@@ -96,7 +122,7 @@ final class ScreenTourTests: XCTestCase {
 
     private func launchDemo(tab: Int? = nil) -> XCUIApplication {
         let app = XCUIApplication()
-        app.launchArguments = ["--uitesting", "--demo-mode"] + (tab.map { ["--demo-tab=\($0)"] } ?? [])
+        app.launchArguments = ["--uitesting", "--demo-mode"] + (tab.map { ["--demo-tab=\($0)"] } ?? []) + variantArguments
         app.launch()
         sleep(4)
         return app
