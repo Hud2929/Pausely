@@ -125,11 +125,11 @@ struct LuxuryAddSubscriptionView: View {
     }
 
     private func row<Content: View>(_ title: String, @ViewBuilder content: () -> Content) -> some View {
-        HStack(spacing: 12) {
+        AdaptiveRow {
             Text(verbatim: title)
                 .font(.body)
                 .foregroundStyle(Color.inkText)
-            Spacer(minLength: 12)
+        } value: {
             content()
         }
         .frame(minHeight: 54)

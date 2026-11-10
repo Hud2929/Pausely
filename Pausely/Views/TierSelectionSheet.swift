@@ -15,7 +15,6 @@ struct TierSelectionSheet: View {
     @Environment(\.dismiss) private var dismiss
     @ObservedObject private var currencyManager = CurrencyManager.shared
 
-    @State private var selectedTier: PricingTier = .individual
     @State private var frequency: BillingFrequency = .monthly
     /// What the person typed. Empty means "the typical price is right".
     @State private var amountText = ""
@@ -24,36 +23,20 @@ struct TierSelectionSheet: View {
     @State private var trialEndsAt: Date = Calendar.current.date(byAdding: .day, value: 14, to: Date()) ?? Date()
     @FocusState private var amountFocused: Bool
 
-    // MARK: - Prices
+    // MARK: - Price
 
-    /// The same price the add flow saves (see `CatalogEntry.pricing(for:payingIn:)`).
-    private var pricings: [TierPricing] {
-        let all = entry.availableTiers.compactMap { entry.pricing(for: $0, payingIn: currencyManager.selectedCurrency) }
-        // Plans priced in another country's currency are that country's plans, not ones this
-        // person can buy, so only plans in the same currency as the standard one are offered.
-        guard let home = (all.first { $0.tier == .individual } ?? all.first)?.currencyCode else { return all }
-        return all.filter { $0.currencyCode == home }
-    }
-
-    private var pricing: TierPricing? { pricings.first { $0.tier == selectedTier } }
-
-    private var offersYearly: Bool { (pricing?.annualPriceUSD ?? 0) > 0 }
-
-    /// The catalog's price for the chosen plan and cycle, in the catalog's currency for it.
-    private var typical: (amount: Decimal, currency: String)? {
-        guard let pricing else { return nil }
-        let price = frequency == .yearly ? (pricing.annualPriceUSD ?? pricing.monthlyPriceUSD * 12) : pricing.monthlyPriceUSD
-        return (MoneyFormat.decimal(price), pricing.currencyCode)
+    /// A price Pausely read from the service's own page for this currency, if it has one. The
+    /// catalog's own plans and prices are not shown: they are not reliable enough to present as fact.
+    private var typical: Decimal? {
+        frequency == .monthly
+            ? TallyCatalog.price(forServiceNamed: entry.name, payingIn: currencyManager.selectedCurrency)
+            : nil
     }
 
     private var typed: Decimal? { SubscriptionEditDraft.parseAmount(amountText) }
-    private var isOverridden: Bool { !amountText.isEmpty }
-    private var canAdd: Bool { isOverridden ? (typed ?? 0) > 0 : typical != nil }
-    private var currency: String { isOverridden ? currencyManager.selectedCurrency : (typical?.currency ?? currencyManager.selectedCurrency) }
-
-    private func tierPrice(_ pricing: TierPricing) -> String {
-        MoneyFormat.string(pricing.monthlyPriceUSD, pricing.currencyCode, locale: L10n.locale) + L10n.string("/month")
-    }
+    private var amount: Decimal? { amountText.isEmpty ? typical : typed }
+    private var canAdd: Bool { (amount ?? 0) > 0 }
+    private var currency: String { currencyManager.selectedCurrency }
 
     // MARK: - Body
 
@@ -84,20 +67,17 @@ struct TierSelectionSheet: View {
 
                     amountSection
 
-                    if pricings.count > 1 { planSection }
-
                     VStack(spacing: 0) {
-                        if offersYearly {
-                            row(L10n.string("Billing cycle")) {
-                                Picker(L10n.string("Billing cycle"), selection: $frequency) {
-                                    Text(BillingFrequency.monthly.displayName).tag(BillingFrequency.monthly)
-                                    Text(BillingFrequency.yearly.displayName).tag(BillingFrequency.yearly)
+                        row(L10n.string("Billing cycle")) {
+                            Picker(L10n.string("Billing cycle"), selection: $frequency) {
+                                ForEach(BillingFrequency.allCases, id: \.self) { option in
+                                    Text(option.displayName).tag(option)
                                 }
-                                .pickerStyle(.menu)
-                                .tint(Color.inkText)
                             }
-                            Hairline()
+                            .pickerStyle(.menu)
+                            .tint(Color.inkText)
                         }
+                        Hairline()
                         row(L10n.string("Next payment")) {
                             DatePicker(L10n.string("Next payment"), selection: $nextBillingDate, in: Date()..., displayedComponents: .date)
                                 .labelsHidden()
@@ -129,8 +109,8 @@ struct TierSelectionSheet: View {
 
             Button {
                 Feel.tick()
-                onSelect(selectedTier, frequency, isOverridden, isOverridden ? typed : nil,
-                         nextBillingDate, hasFreeTrial ? trialEndsAt : nil)
+                // Always saved as what the person confirmed, in their own currency.
+                onSelect(.individual, frequency, true, amount, nextBillingDate, hasFreeTrial ? trialEndsAt : nil)
                 dismiss()
             } label: {
                 Text(L10n.string("Add \(entry.name)"))
@@ -145,26 +125,21 @@ struct TierSelectionSheet: View {
         }
         .background(Color.ink.ignoresSafeArea())
         .preferredColorScheme(.dark)
-        .onAppear {
-            if !pricings.contains(where: { $0.tier == selectedTier }), let first = pricings.first { selectedTier = first.tier }
-        }
-        .onChange(of: selectedTier) { _, _ in
-            if !offersYearly { frequency = .monthly }
-        }
     }
 
     /// The price, as a question the person can answer by typing. The catalog's figure is only the
     /// starting suggestion.
     private var amountSection: some View {
         VStack(alignment: .leading, spacing: 6) {
-            Text(frequency == .yearly ? L10n.string("What do you pay each year?") : L10n.string("What do you pay each month?"))
+            Text(frequency == .yearly ? L10n.string("What do you pay each year?")
+                 : frequency == .monthly ? L10n.string("What do you pay each month?") : L10n.string("What do you pay each time?"))
                 .font(.subheadline)
                 .foregroundStyle(Color.inkTextMuted)
             HStack(alignment: .firstTextBaseline, spacing: 8) {
                 // The typical price is shown as a real figure, not a greyed-out hint: it is what
                 // will be saved unless the person types over it.
                 TextField("", text: $amountText,
-                          prompt: Text(verbatim: typical.map { MoneyFormat.string($0.amount, $0.currency, locale: L10n.locale) } ?? "0.00")
+                          prompt: Text(verbatim: typical.map { MoneyFormat.string($0, currency, locale: L10n.locale) } ?? "0.00")
                             .foregroundStyle(typical == nil ? Color.inkTextFaint : Color.inkText))
                     .font(.system(size: 44, weight: .bold, design: .serif))
                     .foregroundStyle(Color.inkText)
@@ -176,58 +151,21 @@ struct TierSelectionSheet: View {
                     .font(.proof(.subheadline))
                     .foregroundStyle(Color.inkTextMuted)
             }
-            Text(isOverridden
-                 ? L10n.string("Saved as what you pay.")
-                 : L10n.string("This is a typical price. Type over it if you pay something else."))
-                .font(.footnote)
-                .foregroundStyle(Color.inkTextFaint)
-                .fixedSize(horizontal: false, vertical: true)
-        }
-    }
-
-    private var planSection: some View {
-        VStack(alignment: .leading, spacing: 0) {
-            Text("Plan")
-                .font(.subheadline.weight(.semibold))
-                .foregroundStyle(Color.inkTextMuted)
-                .padding(.bottom, 4)
-            ForEach(Array(pricings.enumerated()), id: \.element.id) { index, option in
-                if index > 0 { Hairline() }
-                let isOn = option.tier == selectedTier
-                Button {
-                    Feel.selection()
-                    selectedTier = option.tier
-                    amountText = ""
-                } label: {
-                    HStack(spacing: 14) {
-                        Image(systemName: isOn ? "largecircle.fill.circle" : "circle")
-                            .font(.title3)
-                            .foregroundStyle(isOn ? Color.paper : Color.inkTextFaint)
-                            .accessibilityHidden(true)
-                        Text(option.tier.displayName)
-                            .font(.body)
-                            .foregroundStyle(Color.inkText)
-                        Spacer(minLength: 8)
-                        Text(verbatim: tierPrice(option))
-                            .font(.body.monospacedDigit())
-                            .foregroundStyle(Color.inkTextMuted)
-                    }
-                    .padding(.vertical, 14)
-                    .contentShape(Rectangle())
-                }
-                .buttonStyle(.plain)
-                .accessibilityElement(children: .combine)
-                .accessibilityAddTraits(isOn ? [.isSelected] : [])
+            if amountText.isEmpty, typical != nil {
+                Text("This is a typical price. Type over it if you pay something else.")
+                    .font(.footnote)
+                    .foregroundStyle(Color.inkTextFaint)
+                    .fixedSize(horizontal: false, vertical: true)
             }
         }
     }
 
     private func row<Content: View>(_ title: String, @ViewBuilder content: () -> Content) -> some View {
-        HStack(spacing: 12) {
+        AdaptiveRow {
             Text(verbatim: title)
                 .font(.body)
                 .foregroundStyle(Color.inkText)
-            Spacer(minLength: 12)
+        } value: {
             content()
         }
         .frame(minHeight: 54)

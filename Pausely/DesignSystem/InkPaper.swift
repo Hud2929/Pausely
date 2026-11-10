@@ -267,6 +267,41 @@ struct ProofLine: View {
     }
 }
 
+/// A label on the leading side and a value or control on the trailing side. At accessibility text
+/// sizes the two stack, so neither is squeezed into breaking mid-word.
+struct AdaptiveRow<Label: View, Value: View>: View {
+    @ViewBuilder var label: Label
+    @ViewBuilder var value: Value
+    @Environment(\.dynamicTypeSize) private var typeSize
+
+    var body: some View {
+        if typeSize.isAccessibilitySize {
+            VStack(alignment: .leading, spacing: 6) { label; value }
+                .frame(maxWidth: .infinity, alignment: .leading)
+        } else {
+            HStack(alignment: .firstTextBaseline, spacing: 12) {
+                label
+                Spacer(minLength: 12)
+                value
+            }
+        }
+    }
+}
+
+/// A screen's title: serif, on one line. It shrinks before it wraps, and never hyphenates.
+struct ScreenTitle: View {
+    let text: String
+
+    var body: some View {
+        Text(verbatim: text)
+            .font(.question(.largeTitle, weight: .bold))
+            .foregroundStyle(Color.inkText)
+            .lineLimit(1)
+            .minimumScaleFactor(0.5)
+            .accessibilityAddTraits(.isHeader)
+    }
+}
+
 /// A hairline between rows, in place of a card per row.
 struct Hairline: View {
     var body: some View {

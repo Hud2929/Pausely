@@ -59,6 +59,15 @@ final class ConsumerJourneyTests: XCTestCase {
         let add = app.buttons["tierAddButton"]
         guard add.waitForExistence(timeout: 5) else { capture(app, shot + "-no-plan-sheet"); return false }
         capture(app, shot + "-plan")
+        // Without a price Pausely can stand behind, the sheet asks for it before it will add.
+        if !add.isEnabled {
+            let amount = app.textFields["tierAmountField"]
+            guard amount.waitForExistence(timeout: 3) else { return false }
+            amount.tap()
+            amount.typeText("9.99")
+            capture(app, shot + "-price-typed")
+        }
+        guard add.isEnabled else { return false }
         add.tap()
         return true
     }
@@ -76,7 +85,7 @@ final class ConsumerJourneyTests: XCTestCase {
         guess.tap()
         XCTAssertTrue(app.buttons["Netflix"].waitForExistence(timeout: 5), "the tally offers common services")
         capture(app, "tally-empty")
-        for name in ["Netflix", "Spotify", "YouTube Premium", "Amazon Prime", "iCloud+", "Disney+"] {
+        for name in ["Netflix", "Spotify", "Apple Music", "iCloud+", "Apple TV"] {
             let tile = app.buttons[name]
             if tile.exists { tile.tap() }
         }

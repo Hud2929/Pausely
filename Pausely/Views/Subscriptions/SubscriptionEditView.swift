@@ -283,11 +283,11 @@ struct SubscriptionEditView: View {
     // MARK: - Pieces
 
     private func row<Content: View>(_ title: String, @ViewBuilder content: () -> Content) -> some View {
-        HStack(spacing: 12) {
+        AdaptiveRow {
             Text(title)
                 .font(.body)
                 .foregroundStyle(Color.inkText)
-            Spacer(minLength: 12)
+        } value: {
             content()
         }
         .frame(minHeight: 54)

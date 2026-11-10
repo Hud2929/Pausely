@@ -41,10 +41,12 @@ struct PremiumSubscriptionsView: View {
                 .padding(.top, 16)
 
             if store.subscriptions.isEmpty {
-                empty
-                    .padding(.horizontal, Layout.margin)
-                    .padding(.top, 40)
-                Spacer()
+                ScrollView {
+                    empty
+                        .padding(.horizontal, Layout.margin)
+                        .padding(.top, 40)
+                        .padding(.bottom, 24)
+                }
             } else {
                 list
             }
@@ -71,10 +73,7 @@ struct PremiumSubscriptionsView: View {
     private var header: some View {
         HStack(alignment: .top, spacing: 12) {
             VStack(alignment: .leading, spacing: 4) {
-                Text("Subscriptions")
-                    .font(.question(.largeTitle, weight: .bold))
-                    .foregroundStyle(Color.inkText)
-                    .accessibilityAddTraits(.isHeader)
+                ScreenTitle(text: L10n.string("Subscriptions"))
                 if !store.subscriptions.isEmpty {
                     Text(L10n.string("\(store.activeSubscriptions.count) subscriptions") + " · "
                          + L10n.string("\(currencyManager.format(store.totalMonthlySpend)) a month"))
@@ -219,6 +218,7 @@ struct PremiumSubscriptionsView: View {
             Text("Nothing on your list yet.")
                 .font(.question(.title2))
                 .foregroundStyle(Color.inkText)
+                .fixedSize(horizontal: false, vertical: true)
             Text("Add what you pay for. Pausely asks before each renewal whether it's still worth it.")
                 .font(.body)
                 .foregroundStyle(Color.inkTextMuted)

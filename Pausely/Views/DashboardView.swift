@@ -563,6 +563,7 @@ private struct HomeEmpty: View {
             Text("Nothing on your list yet.")
                 .font(.question(.title2))
                 .foregroundStyle(Color.inkText)
+                .fixedSize(horizontal: false, vertical: true)
             Text("Add what you pay for. Pausely asks before each renewal whether it's still worth it.")
                 .font(.body)
                 .foregroundStyle(Color.inkTextMuted)

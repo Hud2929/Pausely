@@ -48,10 +48,7 @@ struct AnalysisView: View {
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 0) {
-                Text("Insights")
-                    .font(.question(.largeTitle, weight: .bold))
-                    .foregroundStyle(Color.inkText)
-                    .accessibilityAddTraits(.isHeader)
+                ScreenTitle(text: L10n.string("Insights"))
 
                 if live.isEmpty {
                     empty.padding(.top, 24)

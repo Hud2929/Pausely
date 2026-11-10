@@ -39,7 +39,7 @@ final class ScreenTourTests: XCTestCase {
         capture(app, "firstrun-guess")
         if tapFirst(app, ["getStartedButton"]) {
             sleep(1)
-            for name in ["Netflix", "Spotify", "YouTube Premium", "iCloud+"] where app.buttons[name].exists {
+            for name in ["Netflix", "Spotify", "Apple Music", "iCloud+"] where app.buttons[name].exists && app.buttons[name].isHittable {
                 app.buttons[name].tap()
             }
             capture(app, "firstrun-tally")

@@ -86,6 +86,7 @@ struct SubscriptionBrowserView: View {
                 Text("Add Subscriptions")
                     .font(.question(.title))
                     .foregroundStyle(Color.inkText)
+                    .fixedSize(horizontal: false, vertical: true)
                     .accessibilityAddTraits(.isHeader)
 
                 searchBar

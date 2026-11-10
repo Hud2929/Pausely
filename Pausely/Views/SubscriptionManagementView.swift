@@ -129,13 +129,9 @@ struct SubscriptionManagementView: View {
                     .foregroundStyle(Color.inkTextFaint)
             }
 
-            HStack(spacing: 8) {
-                statusChip
-                if let line = renewalLine {
-                    Text(line.text)
-                        .font(.subheadline)
-                        .foregroundStyle(line.tint)
-                }
+            ViewThatFits(in: .horizontal) {
+                HStack(spacing: 8) { statusChip; renewalText }
+                VStack(alignment: .leading, spacing: 4) { statusChip; renewalText }
             }
 
             if current.nextBillingDate == nil, current.status == .active || current.status == .trial {
@@ -150,6 +146,15 @@ struct SubscriptionManagementView: View {
             }
         }
         .frame(maxWidth: .infinity, alignment: .leading)
+    }
+
+    @ViewBuilder private var renewalText: some View {
+        if let line = renewalLine {
+            Text(line.text)
+                .font(.subheadline)
+                .foregroundStyle(line.tint)
+                .fixedSize(horizontal: false, vertical: true)
+        }
     }
 
     /// The state in words, with its mark: colour is never the only signal.
@@ -201,15 +206,14 @@ struct SubscriptionManagementView: View {
     }
 
     private func fact(_ title: String, _ value: String) -> some View {
-        HStack(alignment: .firstTextBaseline) {
+        AdaptiveRow {
             Text(title)
                 .font(.body)
                 .foregroundStyle(Color.inkTextMuted)
-            Spacer(minLength: 12)
+        } value: {
             Text(value)
                 .font(.body)
                 .foregroundStyle(Color.inkText)
-                .multilineTextAlignment(.trailing)
         }
         .padding(.vertical, 12)
         .accessibilityElement(children: .combine)

@@ -14,21 +14,29 @@ final class TallyTests: XCTestCase {
         tally.toggle(service("Netflix"))
         tally.toggle(service("Spotify"))
         XCTAssertEqual(tally.lines.map(\.name), ["Netflix", "Spotify"])
-        XCTAssertEqual(tally.lines[0].amount, Decimal(string: "17.99"))
-        XCTAssertEqual(tally.monthlyTotal(rates: rates), Decimal(string: "30.98"))
-        XCTAssertEqual(tally.yearlyTotal(rates: rates), Decimal(string: "371.76"))
+        XCTAssertEqual(tally.lines[0].amount, Decimal(string: "19.99"))
+        XCTAssertEqual(tally.monthlyTotal(rates: rates), Decimal(string: "32.98"))
+        XCTAssertEqual(tally.yearlyTotal(rates: rates), Decimal(string: "395.76"))
 
         tally.toggle(service("Netflix"))
         XCTAssertEqual(tally.lines.map(\.name), ["Spotify"])
     }
 
-    func testCanadianPriceIsALocalPriceNotAnExchangeRate() {
-        // $17.99 at the exchange rate would be about 25 Canadian dollars; Netflix charges about 19.
-        XCTAssertEqual(Tally.typicalAmount(service("Netflix"), payingIn: "CAD"), Decimal(string: "18.89"))
+    func testCanadianPriceIsTheCanadianListPriceNotAnExchangeRate() {
+        // $19.99 at the exchange rate would be about 28 Canadian dollars; Netflix charges 18.99 there.
+        XCTAssertEqual(Tally.typicalAmount(service("Netflix"), payingIn: "CAD"), Decimal(string: "18.99"))
         var tally = Tally(currency: "cad")
         tally.toggle(service("Netflix"))
         XCTAssertEqual(tally.lines[0].currency, "CAD")
-        XCTAssertEqual(tally.monthlyTotal(rates: rates), Decimal(string: "18.89"))
+        XCTAssertEqual(tally.monthlyTotal(rates: rates), Decimal(string: "18.99"))
+    }
+
+    func testAServiceWithoutAPriceInThisCurrencyIsAskedNotGuessed() {
+        // YouTube Premium's price is only known in US dollars.
+        XCTAssertNil(Tally.typicalAmount(service("YouTube Premium"), payingIn: "CAD"))
+        XCTAssertEqual(Tally.typicalAmount(service("YouTube Premium"), payingIn: "USD"), Decimal(string: "13.99"))
+        XCTAssertNil(TallyCatalog.price(forServiceNamed: "netflix", payingIn: "JPY"))
+        XCTAssertEqual(TallyCatalog.price(forServiceNamed: " netflix ", payingIn: "eur"), Decimal(string: "15.99"))
     }
 
     func testACurrencyWithoutLocalPricesGetsNoGuess() {
@@ -56,18 +64,18 @@ final class TallyTests: XCTestCase {
 
     func testVerdictComparesTheGuessWithTheTotal() {
         var tally = Tally(currency: "USD")
-        tally.toggle(service("Netflix"))       // 17.99
-        tally.toggle(service("ChatGPT Plus"))  // 20.00 → 37.99
+        tally.toggle(service("Netflix"))       // 19.99
+        tally.toggle(service("ChatGPT Plus"))  // 20.00 → 39.99
 
         tally.guess = 20
         XCTAssertEqual(tally.verdict(rates: rates),
-                       .more(monthly: Decimal(string: "17.99")!, yearly: Decimal(string: "215.88")!))
+                       .more(monthly: Decimal(string: "19.99")!, yearly: Decimal(string: "239.88")!))
         tally.guess = 36
         XCTAssertEqual(tally.verdict(rates: rates), .close)
-        tally.guess = 41
+        tally.guess = 43
         XCTAssertEqual(tally.verdict(rates: rates), .close)
         tally.guess = 60
-        XCTAssertEqual(tally.verdict(rates: rates), .less(monthly: Decimal(string: "22.01")!))
+        XCTAssertEqual(tally.verdict(rates: rates), .less(monthly: Decimal(string: "20.01")!))
     }
 
     func testUSOnlyServicesAreHiddenElsewhere() {
@@ -80,6 +88,9 @@ final class TallyTests: XCTestCase {
         XCTAssertEqual(Set(TallyCatalog.services.map(\.name)).count, TallyCatalog.services.count)
         for service in TallyCatalog.services {
             XCTAssertGreaterThan(service.typicalUSD, 0, service.name)
+            for (currency, price) in service.prices {
+                XCTAssertGreaterThan(price, 0, "\(service.name) \(currency)")
+            }
         }
     }
 

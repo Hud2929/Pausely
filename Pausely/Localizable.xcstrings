@@ -59780,6 +59780,40 @@
           }
         }
       }
+    },
+    "What do you pay each time?": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "كم تدفع في كل مرة؟"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Was zahlst du jedes Mal?"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "¿Cuánto pagas cada vez?"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Combien payez-vous à chaque fois ?"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "1回あたりいくら払っていますか？"
+          }
+        }
+      }
     }
   },
   "version": "1.1"
