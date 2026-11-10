@@ -1,6 +1,6 @@
 import SwiftUI
 
-// MARK: - Premium Main Tab View (Custom Floating Tab Bar)
+// MARK: - The four tabs
 struct PremiumMainTabView: View {
     @State private var selectedTab = PremiumMainTabView.launchTab
 
@@ -15,54 +15,43 @@ struct PremiumMainTabView: View {
     }
     @State private var deepLinkedSubscription: Subscription?
     @ObservedObject private var subscriptionStore = SubscriptionStore.shared
-    @ObservedObject private var insightsEngine = RealInsightsEngine.shared
     @ObservedObject private var verdictCenter = VerdictCenter.shared
 
     var body: some View {
-        ZStack(alignment: .bottom) {
-            // Tab content — opacity-based so scroll/nav state persists across tab switches
-            ZStack {
-                NavigationStack {
-                    DashboardView().navigationBarHidden(true)
-                        .accessibilityHidden(selectedTab != 0)   // VoiceOver must not wander into a hidden tab
-                }
-                .opacity(selectedTab == 0 ? 1 : 0)
-                .allowsHitTesting(selectedTab == 0)
+        // The system tab bar: it translates, scales with text size, and is Liquid Glass on iOS 26.
+        TabView(selection: $selectedTab) {
+            Tab(value: 0) {
+                NavigationStack { DashboardView().navigationBarHidden(true) }
+            } label: {
+                Label(L10n.string("Home"), systemImage: "house")
+            }
+            .accessibilityIdentifier("tabHome")
 
+            Tab(value: 1) {
                 NavigationStack {
                     PremiumSubscriptionsView(deepLinkedSubscription: $deepLinkedSubscription)
                         .navigationBarHidden(true)
-                        .accessibilityHidden(selectedTab != 1)
                 }
-                .opacity(selectedTab == 1 ? 1 : 0)
-                .allowsHitTesting(selectedTab == 1)
-
-                NavigationStack {
-                    AnalysisView().navigationBarHidden(true)
-                        .accessibilityHidden(selectedTab != 2)
-                }
-                .opacity(selectedTab == 2 ? 1 : 0)
-                .allowsHitTesting(selectedTab == 2)
-
-                NavigationStack {
-                    PremiumProfileView().navigationBarHidden(true)
-                        .accessibilityHidden(selectedTab != 3)
-                }
-                .opacity(selectedTab == 3 ? 1 : 0)
-                .allowsHitTesting(selectedTab == 3)
+            } label: {
+                Label(L10n.string("Subscriptions"), systemImage: "list.bullet")
             }
-            .frame(maxWidth: .infinity, maxHeight: .infinity)
-            .ignoresSafeArea()
-            .statusBarBackdrop()
+            .accessibilityIdentifier("tabSubscriptions")
 
-            // Custom floating tab bar
-            PauselyTabBar(
-                selectedTab: $selectedTab,
-                badgeCounts: selectedTab == 2 ? [:] : [2: insightsEngine.wasteAlerts.count]
-            )
-                .padding(.bottom, 8)
+            Tab(value: 2) {
+                NavigationStack { AnalysisView().navigationBarHidden(true) }
+            } label: {
+                Label(L10n.string("Insights"), systemImage: "chart.bar")
+            }
+            .accessibilityIdentifier("tabAnalysis")
+
+            Tab(value: 3) {
+                NavigationStack { PremiumProfileView().navigationBarHidden(true) }
+            } label: {
+                Label(L10n.string("Profile"), systemImage: "person")
+            }
+            .accessibilityIdentifier("tabProfile")
         }
-        .ignoresSafeArea(edges: .bottom)
+        .tint(Color.inkText)
         .errorToast(message: $subscriptionStore.lastErrorMessage)
         .onReceive(NotificationCenter.default.publisher(for: .switchToProfileTab)) { _ in
             withAnimation { selectedTab = 3 }

@@ -55,13 +55,15 @@ class AppDelegate: NSObject, UIApplicationDelegate {
         UINavigationBar.appearance().compactAppearance = scrolledAppearance
         UINavigationBar.appearance().scrollEdgeAppearance = appearance
 
-        // Configure tab bar appearance
-        let tabBarAppearance = UITabBarAppearance()
-        tabBarAppearance.configureWithTransparentBackground()
-        tabBarAppearance.backgroundColor = UIColor(Color.backgroundPrimary).withAlphaComponent(0.95)
-
-        UITabBar.appearance().standardAppearance = tabBarAppearance
-        UITabBar.appearance().scrollEdgeAppearance = tabBarAppearance
+        // iOS 26 draws the tab bar as Liquid Glass by itself. Earlier versions get a solid ink bar.
+        if #unavailable(iOS 26) {
+            let tabBarAppearance = UITabBarAppearance()
+            tabBarAppearance.configureWithOpaqueBackground()
+            tabBarAppearance.backgroundColor = UIColor(Color.ink)
+            tabBarAppearance.shadowColor = UIColor.white.withAlphaComponent(0.08)
+            UITabBar.appearance().standardAppearance = tabBarAppearance
+            UITabBar.appearance().scrollEdgeAppearance = tabBarAppearance
+        }
 
         // Configure TipKit for contextual tips
         TipKitConfiguration.configure()

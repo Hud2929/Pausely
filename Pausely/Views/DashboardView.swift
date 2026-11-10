@@ -1,456 +1,583 @@
 import SwiftUI
+import UserNotifications
 
-
-// MARK: - Dashboard View
-
+/// Home. Four things, in the order someone needs them: what it all costs, what needs a decision,
+/// what leaves in the next 30 days, and what Pausely has kept.
 @MainActor
 struct DashboardView: View {
     @ObservedObject private var store = SubscriptionStore.shared
-    @ObservedObject private var paymentManager = PaymentManager.shared
     @ObservedObject private var currencyManager = CurrencyManager.shared
-    @ObservedObject private var screenTimeManager = ScreenTimeManager.shared
-    @ObservedObject private var referralManager = ReferralManager.shared
     @ObservedObject private var eventLog = LifecycleEventLog.shared
     @ObservedObject private var pausePlanStore = PausePlanStore.shared
-    @State private var appear = false
-    @State private var showingPaywall = false
-    @State private var showingAddSubscription = false
-    @State private var showingApplyReferral = false
-    @State private var selectedTimeframe: DashboardTimeframe = .monthly
-    @State private var heroScale: CGFloat = 1.0
-
-    var displayAmount: Decimal {
-        switch selectedTimeframe {
-        case .weekly:
-            return store.totalMonthlySpend / 4.33
-        case .monthly:
-            return store.totalMonthlySpend
-        case .yearly:
-            return store.totalAnnualSpend
-        }
-    }
-
-    var body: some View {
-        ScrollView(showsIndicators: false) {
-            VStack(spacing: 0) {
-                // Hero Header — big number dominates
-                heroHeader
-
-                // Price Increase Alerts
-                if !PriceIncreaseMonitor.shared.alerts.isEmpty {
-                    VStack(spacing: 8) {
-                        ForEach(PriceIncreaseMonitor.shared.alerts) { alert in
-                            PriceAlertBanner(alert: alert) {
-                                PriceIncreaseMonitor.shared.dismissAlert(id: alert.id)
-                            }
-                        }
-                    }
-                    .padding(.horizontal, 20)
-                    .padding(.top, 12)
-                }
-
-                if store.isLoading && store.subscriptions.isEmpty {
-                    dashboardSkeletonSection
-                        .transition(.opacity)
-                } else if store.subscriptions.isEmpty {
-                    DashboardEmptyState(
-                        onAdd: { showingAddSubscription = true }
-                    )
-                    .padding(.horizontal, 20)
-                    .padding(.top, 40)
-                } else {
-                    // 0. Reminders are the core promise: ask for permission here, in context.
-                    if !NotificationManager.shared.isAuthorized && !DemoSavings.isScreenshotRun {
-                        RemindersPermissionCard(nextCharge: store.upcomingRenewals.first ?? store.activeSubscriptions.first)
-                            .padding(.horizontal, 20)
-                            .padding(.top, 20)
-                    }
-
-                    // 0b. Renewals waiting for a keep-or-cancel decision
-                    if !VerdictCenter.shared.pendingDecisions().isEmpty {
-                        PendingDecisionsCard()
-                            .padding(.horizontal, 20)
-                            .padding(.top, 16)
-                    }
-
-                    // 1. Next upcoming payment — most urgent item
-                    NextPaymentCard(subscription: store.upcomingRenewals.first ?? store.activeSubscriptions.first)
-                        .padding(.horizontal, 20)
-                        .padding(.top, 20)
-
-                    // 2. Upcoming bills this week
-                    BillsThisWeekCard(subscriptions: store.activeSubscriptions)
-                        .padding(.horizontal, 20)
-                        .padding(.top, 16)
-
-                    // 2a. What Pausely has saved (the Savings Receipt)
-                    SavingsReceiptCard()
-                        .padding(.horizontal, 20)
-                        .padding(.top, 16)
-
-                    // 2b'. A running Pause Plan: who's on and until when
-                    if PausePlanStore.shared.activePlan != nil {
-                        PausePlanCard()
-                            .padding(.horizontal, 20)
-                            .padding(.top, 16)
-                    }
-
-                    // 2b. Top Opportunity Card — waste / savings / healthy
-                    TopOpportunityCard()
-                        .padding(.horizontal, 20)
-                        .padding(.top, 16)
-
-                    // 2c. Waste Score Callout
-                    WasteScoreCalloutCard()
-                        .padding(.horizontal, 20)
-                        .padding(.top, 16)
-
-                    // 3. Trials ending soon (conditional)
-                    let expiringTrials = store.activeSubscriptions.filter { sub in
-                        guard let trial = sub.trialEndsAt else { return false }
-                        return trial > Date() && trial < Date().addingTimeInterval(7 * 86400)
-                    }
-                    if !expiringTrials.isEmpty {
-                        TrialExpirationSection(subscriptions: expiringTrials)
-                            .padding(.horizontal, 20)
-                            .padding(.top, 16)
-                    }
-
-                    // 4. Biggest expenses
-                    BiggestExpensesSection()
-
-                    // 5. Paused subscriptions (conditional)
-                    if !store.pausedSubscriptions.isEmpty {
-                        PausedSubscriptionsSection(subscriptions: store.pausedSubscriptions)
-                            .padding(.top, 16)
-                    }
-
-                    // 6. Lifetime spend (only once there's a month of history; $0.00 just looks broken)
-                    if store.totalLifetimeSpend >= 1 {
-                        LifetimeSpendCard(
-                            lifetimeSpend: store.totalLifetimeSpend,
-                            currencyManager: currencyManager
-                        )
-                        .padding(.horizontal, 20)
-                        .padding(.top, 16)
-                    }
-
-                    Spacer(minLength: 100)
-                }
-            }
-        }
-        .refreshable {
-            HapticStyle.medium.trigger()
-            await store.fetchSubscriptions(force: true)
-            HapticStyle.success.trigger()
-        }
-        .sheet(isPresented: $showingAddSubscription) {
-            SubscriptionBrowserView()
-        }
-        .sheet(isPresented: $showingPaywall) {
-            StoreKitUpgradeView(currentSubscriptionCount: store.subscriptions.count)
-        }
-        .sheet(isPresented: $showingApplyReferral) {
-            ApplyReferralView()
-        }
-        .onAppear {
-            withAnimation(.spring(response: 0.5, dampingFraction: 0.8)) {
-                appear = true
-            }
-            Task {
-                await screenTimeManager.syncUsageData()
-            }
-            checkPendingReferralCode()
-            ReviewPromptManager.shared.askAfterMoneyKept()
-        }
-        .onReceive(NotificationCenter.default.publisher(for: .referralCodeReceived)) { _ in
-            checkPendingReferralCode()
-        }
-        .onReceive(NotificationCenter.default.publisher(for: Notification.Name("subscriptionAdded"))) { _ in
-            withAnimation(.spring(response: 0.15, dampingFraction: 0.5)) {
-                heroScale = 1.04
-            }
-            DispatchQueue.main.asyncAfter(deadline: .now() + 0.15) {
-                withAnimation(.spring(response: 0.25, dampingFraction: 0.6)) {
-                    heroScale = 1.0
-                }
-            }
-        }
-    }
-
-    private func checkPendingReferralCode() {
-        if referralManager.pendingReferralCode != nil,
-           referralManager.referrerCodeUsed == nil,
-           !paymentManager.isPremium {
-            showingApplyReferral = true
-        }
-    }
-
-    // MARK: - Skeleton Loading Section
-    private var dashboardSkeletonSection: some View {
-        VStack(spacing: 20) {
-            // Hero card skeleton
-            SkeletonCard(height: 180, cornerRadius: 28)
-                .padding(.horizontal, 20)
-                .padding(.top, 20)
-
-            // Quick actions skeleton
-            HStack(spacing: 12) {
-                ForEach(0..<3) { _ in
-                    SkeletonCard(height: 100)
-                }
-            }
-            .padding(.horizontal, 20)
-
-            // Insights card skeleton
-            SkeletonCard(height: 120, cornerRadius: 24)
-                .padding(.horizontal, 20)
-
-            // Carousel skeleton
-            HStack(spacing: 12) {
-                ForEach(0..<2) { _ in
-                    SkeletonCard(height: 100)
-                        .frame(width: 160)
-                }
-            }
-            .padding(.horizontal, 20)
-
-            Spacer(minLength: 100)
-        }
-    }
-
-    // MARK: - Hero Header
-    private var heroHeader: some View {
-        VStack(alignment: .leading, spacing: 12) {
-            HStack(alignment: .top) {
-                // Timeframe label
-                Text(selectedTimeframe == .weekly ? "WEEKLY SPEND" : selectedTimeframe == .yearly ? "YEARLY SPEND" : "MONTHLY SPEND")
-                    .font(.system(size: 11, weight: .semibold, design: .default))
-                    .foregroundStyle(Color.obsidianTextTertiary)
-                    .animation(.none, value: selectedTimeframe)
-
-                Spacer()
-
-                HStack(spacing: 8) {
-                    CurrencySelectorButton()
-                        .accessibilityIdentifier("currencySelectorButton")
-                    NotificationButton()
-                        .accessibilityIdentifier("notificationButton")
-                }
-            }
-
-            Text(currencyManager.format(displayAmount))
-                .font(.system(.largeTitle, design: .default).weight(.black))
-                .foregroundStyle(Color.accentMint)
-                .contentTransition(.numericText())
-                .scaleEffect(heroScale)
-
-            HStack(spacing: 12) {
-                let count = store.activeSubscriptions.count
-                Text("\(count) active")
-                    .font(.system(.caption, design: .default).weight(.medium))
-                    .foregroundStyle(Color.obsidianTextSecondary)
-
-                // Timeframe picker — compact inline
-                HStack(spacing: 0) {
-                    ForEach(DashboardTimeframe.allCases, id: \.self) { tf in
-                        Button {
-                            withAnimation(.spring(response: 0.28, dampingFraction: 0.72)) { selectedTimeframe = tf }
-                            HapticStyle.light.trigger()
-                        } label: {
-                            Text(tf.shortLabel)
-                                .font(.system(size: 11, weight: selectedTimeframe == tf ? .bold : .medium, design: .default))
-                                .foregroundStyle(selectedTimeframe == tf ? Color.obsidianSurface : Color.obsidianTextTertiary)
-                                .padding(.horizontal, 8)
-                                .padding(.vertical, 4)
-                                .background(selectedTimeframe == tf ? Color.accentMint : Color.clear)
-                                .clipShape(Capsule())
-                        }
-                        .buttonStyle(PlainButtonStyle())
-                    }
-                }
-                .background(Color.obsidianElevated)
-                .clipShape(Capsule())
-            }
-        }
-        .padding(.horizontal, 20)
-        .padding(.top, 24)
-        .padding(.bottom, 8)
-        .opacity(appear ? 1 : 0)
-        .offset(y: appear ? 0 : -8)
-    }
-}
-
-// MARK: - Compelling Dashboard Empty State
-struct DashboardEmptyState: View {
-    let onAdd: () -> Void
     @ObservedObject private var paymentManager = PaymentManager.shared
 
-    private var isFree: Bool { !paymentManager.isPremium }
+    @State private var showingAdd = false
+    @State private var showingPaywall = false
+    @State private var showingReceipt = false
+    @State private var showsYear = false
+    @State private var dismissedAlerts: Set<UUID> = []
+
+    private var charges: [Horizon.Charge] { Horizon.charges(for: store.subscriptions, now: Date()) }
 
     var body: some View {
-        VStack(spacing: 0) {
-            VStack(spacing: 0) {
-                // Icon
-                ZStack {
-                    Circle()
-                        .fill(Color.accentMint.opacity(0.12))
-                        .frame(width: 88, height: 88)
+        ScrollView {
+            VStack(alignment: .leading, spacing: 0) {
+                header
 
-                    Circle()
-                        .stroke(Color.accentMint.opacity(0.2), lineWidth: 1.5)
-                        .frame(width: 88, height: 88)
-
-                    Image(systemName: "plus")
-                        .font(.system(size: 34, weight: .semibold, design: .default))
-                        .foregroundStyle(Color.accentMint)
+                if store.isLoading && store.subscriptions.isEmpty {
+                    HomeLoading().padding(.top, 32)
+                } else if store.subscriptions.isEmpty {
+                    HomeEmpty(onAdd: { showingAdd = true }).padding(.top, 40)
+                } else {
+                    attention.padding(.top, 28)
+                    HorizonSection(charges: charges, currency: currencyManager.selectedCurrency,
+                                   rates: currencyManager.rates,
+                                   pendingIds: Set(VerdictCenter.shared.pendingDecisions().map(\.subscriptionId)))
+                        .padding(.top, 32)
+                    keptSection.padding(.top, 32)
+                    quietRows.padding(.top, 20)
                 }
+            }
+            .padding(.horizontal, Layout.margin)
+            .padding(.top, 16)
+            .padding(.bottom, 32)
+        }
+        .background(Color.ink.ignoresSafeArea())
+        .refreshable { await store.fetchSubscriptions(force: true) }
+        .sheet(isPresented: $showingAdd) { SubscriptionBrowserView() }
+        .sheet(isPresented: $showingPaywall) { StoreKitUpgradeView(currentSubscriptionCount: store.subscriptions.count) }
+        .sheet(isPresented: $showingReceipt) { SavingsReceiptView() }
+        .onAppear {
+            Task { await ScreenTimeManager.shared.syncUsageData() }
+            ReviewPromptManager.shared.askAfterMoneyKept()
+        }
+    }
 
-                // Text content
-                Text("Track Your Subscriptions")
-                    .font(.system(.title3, design: .default).weight(.bold))
-                    .foregroundStyle(.white)
-                    .multilineTextAlignment(.center)
-                    .padding(.top, 20)
+    // MARK: - The number
 
-                Text("Add services to see your monthly spend, renewal dates, and savings opportunities.")
-                    .font(.system(.subheadline, design: .default))
-                    .foregroundStyle(Color.obsidianTextSecondary)
-                    .multilineTextAlignment(.center)
-                    .lineSpacing(3)
-                    .padding(.top, 8)
-
-                // Post-signup guidance
-                VStack(alignment: .leading, spacing: 8) {
-                    GuidanceBullet(icon: "magnifyingglass", text: "Search 400+ services or add custom ones")
-                    GuidanceBullet(icon: "bell.badge", text: "Get alerts before renewals hit")
-                    GuidanceBullet(icon: "chart.bar", text: "Spot waste and save money automatically")
-                }
-                .padding(.top, 16)
-
-                // Full-width mint CTA
-                Button(action: {
-                    HapticStyle.medium.trigger()
-                    onAdd()
-                }) {
-                    HStack(spacing: 8) {
-                        Image(systemName: "plus")
-                            .font(.system(size: 15, weight: .semibold))
-                        Text("Add Subscription")
-                            .font(.system(.body, design: .default).weight(.semibold))
+    private var header: some View {
+        HStack(alignment: .top, spacing: 12) {
+            VStack(alignment: .leading, spacing: 6) {
+                Button {
+                    Feel.selection()
+                    withAnimation(Motion.unlessReduced(Motion.touch)) { showsYear.toggle() }
+                } label: {
+                    HStack(spacing: 6) {
+                        Text(showsYear ? L10n.string("Each year") : L10n.string("Each month"))
+                        Image(systemName: "arrow.up.arrow.down").font(.caption2.weight(.semibold))
+                            .accessibilityHidden(true)
                     }
-                    .foregroundStyle(Color.black)
-                    .frame(maxWidth: .infinity)
-                    .frame(height: 52)
-                    .background(
-                        RoundedRectangle(cornerRadius: 16, style: .continuous)
-                            .fill(Color.accentMint)
-                    )
+                    .font(.subheadline)
+                    .foregroundStyle(Color.inkTextMuted)
+                    .frame(minHeight: 32)
+                    .contentShape(Rectangle())
                 }
-                .buttonStyle(PlainButtonStyle())
-                .padding(.top, 24)
-                .accessibilityIdentifier("addSubscriptionButton")
+                .buttonStyle(.plain)
+                .accessibilityHint(Text("Switches between a month and a year"))
+                .accessibilityIdentifier("spendPeriodToggle")
 
-                // Free tier limit
-                if isFree {
-                    Text("Free plan: track up to \(FreeTier.subscriptionLimit) subscriptions. Upgrade for unlimited.")
-                        .font(.system(.caption2, design: .default))
-                        .foregroundStyle(Color.obsidianTextTertiary)
-                        .multilineTextAlignment(.center)
-                        .padding(.top, 12)
+                Text(verbatim: currencyManager.format(showsYear ? store.totalAnnualSpend : store.totalMonthlySpend))
+                    .font(.question(.largeTitle, weight: .bold))
+                    .foregroundStyle(Color.inkText)
+                    .contentTransition(.numericText())
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.5)
+                    .accessibilityIdentifier("spendTotal")
+
+                if !store.subscriptions.isEmpty {
+                    Text(L10n.string("\(store.activeSubscriptions.count) subscriptions"))
+                        .font(.subheadline)
+                        .foregroundStyle(Color.inkTextMuted)
                 }
             }
-            .padding(.horizontal, 32)
-            .padding(.vertical, 28)
-            .surfaceCard(cornerRadius: 24)
+            Spacer(minLength: 8)
+            Button { showingAdd = true } label: {
+                Image(systemName: "plus")
+                    .font(.title3.weight(.semibold))
+                    .foregroundStyle(Color.inkText)
+                    .frame(width: Layout.tapTarget, height: Layout.tapTarget)
+                    .overlay(Circle().stroke(Color.white.opacity(0.18), lineWidth: 1))
+                    .contentShape(Circle())
+            }
+            .accessibilityLabel(Text("Add Subscription"))
+            .accessibilityIdentifier("homeAddButton")
         }
-        .padding(.vertical, 16)
+    }
+
+    // MARK: - What needs attention
+
+    @ViewBuilder private var attention: some View {
+        let pending = VerdictCenter.shared.pendingDecisions()
+        let waiting = TallyImporter.waitingLines()
+        let undated = Horizon.undated(store.subscriptions)
+        let alerts = PriceIncreaseMonitor.shared.alerts.filter { !dismissedAlerts.contains($0.id) }
+        let showReminderAsk = !NotificationManager.shared.isAuthorized && !DemoSavings.isScreenshotRun
+
+        VStack(spacing: 0) {
+            ForEach(pending) { item in
+                if let sub = store.subscriptions.first(where: { $0.id == item.subscriptionId }) {
+                    AttentionRow(state: .decide,
+                                 title: L10n.string("Keep \(sub.name)?"),
+                                 detail: whenText(item) + " · " + sub.chargeText,
+                                 action: L10n.string("Decide")) {
+                        VerdictCenter.shared.open(subscriptionId: sub.id)
+                    }
+                    .accessibilityIdentifier("decideRow")
+                    Hairline()
+                }
+            }
+
+            if showReminderAsk {
+                ReminderAskRow(nextCharge: charges.first)
+                Hairline()
+            }
+
+            if !waiting.isEmpty, !paymentManager.isUnlocked(.unlimitedSubscriptions) {
+                AttentionRow(state: nil, symbol: "eye.slash",
+                             title: L10n.string("\(waiting.count) of your subscriptions aren't watched"),
+                             detail: L10n.string("Free watches \(FreeTier.subscriptionLimit). Pro watches all of them."),
+                             action: L10n.string("See Pro")) { showingPaywall = true }
+                    .accessibilityIdentifier("waitingRow")
+                Hairline()
+            }
+
+            if let first = undated.first {
+                AttentionRow(state: nil, symbol: "calendar.badge.plus",
+                             title: undated.count == 1
+                                ? L10n.string("When does \(first.name) renew?")
+                                : L10n.string("\(undated.count) subscriptions have no renewal date"),
+                             detail: L10n.string("Add the date and Pausely will ask you before it charges."),
+                             action: L10n.string("Add date")) {
+                    VerdictCenter.shared.showSubscription(first.id)
+                }
+                .accessibilityIdentifier("undatedRow")
+                Hairline()
+            }
+
+            ForEach(alerts) { alert in
+                AttentionRow(state: .due, symbol: "arrow.up.right",
+                             title: L10n.string("\(alert.subscriptionName) went up"),
+                             detail: L10n.string("\(alert.formattedIncrease) more each time it charges."),
+                             action: L10n.string("OK")) {
+                    dismissedAlerts.insert(alert.id)
+                    PriceIncreaseMonitor.shared.dismissAlert(id: alert.id)
+                }
+                Hairline()
+            }
+        }
+    }
+
+    private func whenText(_ item: RenewalDecisions.Pending) -> String {
+        let days = Calendar.current.calendarDays(from: Date(), to: item.date)
+        let relative = days == 0 ? L10n.string("today") : days == 1 ? L10n.string("tomorrow") : L10n.string("in \(days) days")
+        return item.isTrialEnd ? L10n.string("Trial ends \(relative)") : L10n.string("Renews \(relative)")
+    }
+
+    // MARK: - Kept
+
+    /// The receipt's stub: paper, because this is money proven kept.
+    @ViewBuilder private var keptSection: some View {
+        let summary = SavingsSummary.current()
+        Button {
+            Feel.selection()
+            showingReceipt = true
+        } label: {
+            if summary.isEmpty {
+                HStack(spacing: 12) {
+                    VStack(alignment: .leading, spacing: 4) {
+                        Text("Savings Receipt")
+                            .font(.headline)
+                            .foregroundStyle(Color.inkText)
+                        Text("Your Savings Receipt starts with your first cancel")
+                            .font(.subheadline)
+                            .foregroundStyle(Color.inkTextMuted)
+                            .multilineTextAlignment(.leading)
+                    }
+                    Spacer(minLength: 8)
+                    Chevron()
+                }
+                .padding(.vertical, 14)
+                .contentShape(Rectangle())
+            } else {
+                PaperSlip(tornTop: true, tornBottom: false) {
+                    VStack(alignment: .leading, spacing: 8) {
+                        ProofLine(label: L10n.string("Kept with Pausely"), value: summary.formatted(summary.savedSoFar),
+                                  emphasised: true)
+                            .foregroundStyle(Color.paperKept)
+                        ProofLine(label: L10n.string("On track over 12 months"), value: summary.formatted(summary.onTrack))
+                        if let multiple = summary.returnMultiple, summary.paysForItself {
+                            Text(L10n.string("Pausely has paid for itself \(multiple.formatted(.number.precision(.fractionLength(1)).locale(L10n.locale)))× over."))
+                                .font(.footnote)
+                                .foregroundStyle(Color.paperMuted)
+                        }
+                    }
+                }
+            }
+        }
+        .buttonStyle(.plain)
+        .accessibilityHint(Text("Opens your Savings Receipt"))
+        .accessibilityIdentifier("savingsReceiptCard")
+    }
+
+    // MARK: - Pause Plan and paused
+
+    @ViewBuilder private var quietRows: some View {
+        VStack(spacing: 0) {
+            if pausePlanStore.activePlan != nil {
+                Hairline()
+                Button { VerdictCenter.shared.openPausePlan() } label: {
+                    HStack(spacing: 12) {
+                        StateMark(state: .paused)
+                        Text("Pause Plan").font(.body).foregroundStyle(Color.inkText)
+                        Spacer(minLength: 8)
+                        Chevron()
+                    }
+                    .padding(.vertical, 14)
+                    .contentShape(Rectangle())
+                }
+                .buttonStyle(.plain)
+            }
+            if !store.pausedSubscriptions.isEmpty {
+                Hairline()
+                HStack(spacing: 12) {
+                    StateMark(state: .paused)
+                    Text(L10n.string("\(store.pausedSubscriptions.count) paused"))
+                        .font(.body).foregroundStyle(Color.inkText)
+                    Spacer(minLength: 8)
+                    Text(verbatim: currencyManager.format(store.pausedSubscriptions.monthlyTotal()))
+                        .font(.body.monospacedDigit()).foregroundStyle(Color.inkTextMuted)
+                }
+                .padding(.vertical, 14)
+                .accessibilityElement(children: .combine)
+            }
+        }
     }
 }
 
-private struct GuidanceBullet: View {
-    let icon: String
-    let text: String
+// MARK: - Parts
 
+private struct Chevron: View {
     var body: some View {
-        HStack(spacing: 10) {
-            Image(systemName: icon)
-                .font(.system(size: 13, weight: .semibold))
-                .foregroundStyle(Color.accentMint)
-                .frame(width: 20)
-            Text(text)
-                .font(.system(.caption, design: .default))
-                .foregroundStyle(Color.obsidianTextSecondary)
-        }
+        Image(systemName: "chevron.forward")
+            .font(.footnote.weight(.semibold))
+            .foregroundStyle(Color.inkTextFaint)
+            .accessibilityHidden(true)
     }
 }
 
-// MARK: - Currency Selector Button
-
-struct CurrencySelectorButton: View {
-    @ObservedObject private var currencyManager = CurrencyManager.shared
-    @State private var showingCurrencyPicker = false
+/// One thing that wants a decision or an answer: a mark, a sentence, and the action.
+private struct AttentionRow: View {
+    var state: MoneyState?
+    var symbol: String?
+    let title: String
+    let detail: String
+    let action: String
+    let perform: () -> Void
+    @Environment(\.dynamicTypeSize) private var typeSize
 
     var body: some View {
-        Button(action: {
-            showingCurrencyPicker = true
-            HapticStyle.light.trigger()
-        }) {
-            HStack(spacing: 6) {
-                Text(currencyManager.currencyFlag(for: currencyManager.selectedCurrency))
-                    .font(AppTypography.bodyMedium)
-                Text(currencyManager.selectedCurrency)
-                    .font(AppTypography.labelLarge)
-                    .foregroundStyle(.primary)
+        Button {
+            Feel.selection()
+            perform()
+        } label: {
+            Group {
+                if typeSize.isAccessibilitySize {
+                    VStack(alignment: .leading, spacing: 8) { mark; text; actionLabel }
+                } else {
+                    HStack(alignment: .center, spacing: 12) { mark; text; Spacer(minLength: 8); actionLabel }
+                }
             }
-            .padding(.horizontal, 12)
-            .padding(.vertical, 8)
-            .background(
-                Capsule()
-                    .fill(.ultraThinMaterial)
-                    .overlay(
-                        Capsule()
-                            .stroke(.white.opacity(0.2), lineWidth: 0.5)
-                    )
+            .padding(.vertical, 14)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+        .accessibilityElement(children: .combine)
+    }
+
+    @ViewBuilder private var mark: some View {
+        if let state, symbol == nil {
+            StateMark(state: state)
+        } else {
+            Image(systemName: symbol ?? "circle")
+                .font(.footnote.weight(.semibold))
+                .foregroundStyle(state?.color ?? Color.inkTextMuted)
+                .frame(width: 18, height: 18)
+                .accessibilityHidden(true)
+        }
+    }
+
+    private var text: some View {
+        VStack(alignment: .leading, spacing: 3) {
+            Text(verbatim: title)
+                .font(.body.weight(.semibold))
+                .foregroundStyle(Color.inkText)
+                .multilineTextAlignment(.leading)
+            Text(verbatim: detail)
+                .font(.subheadline)
+                .foregroundStyle(Color.inkTextMuted)
+                .multilineTextAlignment(.leading)
+        }
+        .fixedSize(horizontal: false, vertical: true)
+    }
+
+    private var actionLabel: some View {
+        Text(verbatim: action)
+            .font(.subheadline.weight(.semibold))
+            .foregroundStyle(Color.inkText)
+            .padding(.horizontal, 14)
+            .frame(minHeight: 34)
+            .overlay(Capsule().stroke(Color.white.opacity(0.22), lineWidth: 1))
+    }
+}
+
+/// Asks for notifications in context, naming the charge the first reminder would be about.
+private struct ReminderAskRow: View {
+    let nextCharge: Horizon.Charge?
+    private var notifications = NotificationManager.shared
+    @State private var isAsking = false
+
+    init(nextCharge: Horizon.Charge?) { self.nextCharge = nextCharge }
+
+    var body: some View {
+        let denied = notifications.status == .denied
+        AttentionRow(state: nil, symbol: denied ? "bell.slash" : "bell",
+                     title: denied ? L10n.string("Reminders are off") : title,
+                     detail: denied
+                        ? L10n.string("Turn on notifications for Pausely in Settings so renewals don't surprise you.")
+                        : L10n.string("Pausely reminds you before each renewal so you can keep it or cancel it."),
+                     action: denied ? L10n.string("Settings") : L10n.string("Turn on")) {
+            if denied {
+                notifications.openSystemSettings()
+            } else if !isAsking {
+                isAsking = true
+                Task {
+                    await notifications.requestPermission()
+                    isAsking = false
+                }
+            }
+        }
+        .accessibilityIdentifier("turnOnRemindersButton")
+    }
+
+    private var title: String {
+        guard let charge = nextCharge else { return L10n.string("Get a heads-up before you're charged") }
+        let price = MoneyFormat.string(charge.amount, charge.currency, locale: L10n.locale)
+        let day = charge.date.formatted(.dateTime.month(.abbreviated).day().locale(L10n.locale))
+        return L10n.string("Remind me before \(charge.name) charges \(price) on \(day)")
+    }
+}
+
+// MARK: - The 30-day horizon
+
+/// The next 30 days as one line: a dot per charge, placed by day and sized by amount. Dragging along
+/// it shows what leaves by that day. The rows below say the same thing in words.
+private struct HorizonSection: View {
+    let charges: [Horizon.Charge]
+    let currency: String
+    let rates: CurrencyRates
+    let pendingIds: Set<UUID>
+
+    @State private var selectedDay: Int?
+    @Environment(\.layoutDirection) private var direction
+
+    private var throughDay: Int { selectedDay ?? Horizon.days - 1 }
+    private var total: Decimal { Horizon.total(of: charges, through: throughDay, in: currency, rates: rates) }
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 0) {
+            HStack(alignment: .firstTextBaseline) {
+                Text(selectedDay == nil ? L10n.string("Next 30 days") : L10n.string("By \(dayText(throughDay))"))
+                    .font(.headline)
+                    .foregroundStyle(Color.inkText)
+                Spacer(minLength: 8)
+                Text(verbatim: MoneyFormat.string(total, currency, locale: L10n.locale))
+                    .font(.headline.monospacedDigit())
+                    .foregroundStyle(Color.inkText)
+                    .contentTransition(.numericText())
+            }
+            .accessibilityElement(children: .combine)
+
+            if charges.isEmpty {
+                Text("Nothing is due in the next 30 days.")
+                    .font(.subheadline)
+                    .foregroundStyle(Color.inkTextMuted)
+                    .padding(.top, 10)
+            } else {
+                line.padding(.top, 18)
+                HStack {
+                    Text("Today")
+                    Spacer()
+                    Text(verbatim: dayText(Horizon.days - 1))
+                }
+                .font(.caption)
+                .foregroundStyle(Color.inkTextFaint)
+                .padding(.top, 6)
+                .padding(.bottom, 10)
+                .accessibilityHidden(true)
+
+                ForEach(Array(charges.prefix(6).enumerated()), id: \.element.id) { index, charge in
+                    if index > 0 { Hairline() }
+                    ChargeRow(charge: charge, state: state(for: charge),
+                              dimmed: charge.dayOffset > throughDay)
+                }
+                if charges.count > 6 {
+                    Hairline()
+                    Text(L10n.string("And \(charges.count - 6) more in Subscriptions."))
+                        .font(.subheadline)
+                        .foregroundStyle(Color.inkTextMuted)
+                        .padding(.vertical, 12)
+                }
+            }
+        }
+    }
+
+    private func state(for charge: Horizon.Charge) -> MoneyState? {
+        if pendingIds.contains(charge.subscriptionId) && charge.dayOffset <= 7 { return .decide }
+        return charge.dayOffset <= 1 ? .due : nil
+    }
+
+    private func dayText(_ offset: Int) -> String {
+        let date = Calendar.current.date(byAdding: .day, value: offset, to: Date()) ?? Date()
+        return date.formatted(.dateTime.month(.abbreviated).day().locale(L10n.locale))
+    }
+
+    private var line: some View {
+        GeometryReader { geo in
+            let width = geo.size.width
+            let largest = charges.compactMap { rates.convert($0.amount, from: $0.currency, to: currency) }.max() ?? 1
+            ZStack(alignment: .leading) {
+                Rectangle().fill(Color.white.opacity(0.14)).frame(height: 1)
+                if let selectedDay {
+                    Rectangle().fill(Color.inkText).frame(width: x(selectedDay, width), height: 1)
+                }
+                ForEach(charges) { charge in
+                    let amount = rates.convert(charge.amount, from: charge.currency, to: currency) ?? 0
+                    let share = largest > 0 ? NSDecimalNumber(decimal: amount / largest).doubleValue : 0
+                    let size = 7 + 15 * share.squareRoot()
+                    Circle()
+                        .fill(state(for: charge)?.color ?? Color.inkText)
+                        .opacity(charge.dayOffset > throughDay ? 0.3 : 1)
+                        .frame(width: size, height: size)
+                        .overlay(Circle().stroke(Color.ink, lineWidth: 1.5))
+                        .position(x: x(charge.dayOffset, width), y: geo.size.height / 2)
+                }
+            }
+            .frame(height: geo.size.height)
+            .contentShape(Rectangle())
+            .gesture(
+                DragGesture(minimumDistance: 0)
+                    .onChanged { value in
+                        let fraction = min(max(value.location.x / max(width, 1), 0), 1)
+                        let day = Int(((direction == .rightToLeft ? 1 - fraction : fraction) * Double(Horizon.days - 1)).rounded())
+                        if day != selectedDay {
+                            Feel.selection()
+                            withAnimation(Motion.unlessReduced(Motion.touch)) { selectedDay = day }
+                        }
+                    }
+                    .onEnded { _ in withAnimation(Motion.unlessReduced(Motion.touch)) { selectedDay = nil } }
             )
         }
-        .accessibilityLabel("Select currency, currently \(currencyManager.selectedCurrency)")
-        .sheet(isPresented: $showingCurrencyPicker) {
-            CurrencySettingsView()
-        }
+        .frame(height: 28)
+        .accessibilityHidden(true)
+    }
+
+    private func x(_ day: Int, _ width: CGFloat) -> CGFloat {
+        let inset: CGFloat = 11
+        let fraction = CGFloat(day) / CGFloat(Horizon.days - 1)
+        let position = inset + fraction * (width - inset * 2)
+        return direction == .rightToLeft ? width - position : position
     }
 }
 
-// MARK: - Notification Button
-
-struct NotificationButton: View {
-    @State private var showingSettings = false
+private struct ChargeRow: View {
+    let charge: Horizon.Charge
+    let state: MoneyState?
+    let dimmed: Bool
+    @Environment(\.dynamicTypeSize) private var typeSize
 
     var body: some View {
-        Button(action: {
-            HapticStyle.light.trigger()
-            showingSettings = true
-        }) {
-            Image(systemName: "bell.fill")
-                .font(AppTypography.headlineMedium)
-                .foregroundStyle(Color.accentMint)
-                .padding(10)
-                .background(
-                    Circle()
-                        .fill(.ultraThinMaterial)
-                        .overlay(
-                            Circle()
-                                .stroke(.white.opacity(0.2), lineWidth: 0.5)
-                        )
-                )
+        Button {
+            Feel.selection()
+            VerdictCenter.shared.showSubscription(charge.subscriptionId)
+        } label: {
+            HStack(spacing: 12) {
+                if !typeSize.isAccessibilitySize {
+                    ServiceLogoView(name: charge.name, category: charge.category, size: 36)
+                }
+                VStack(alignment: .leading, spacing: 2) {
+                    Text(verbatim: charge.name)
+                        .font(.body)
+                        .foregroundStyle(Color.inkText)
+                    HStack(spacing: 6) {
+                        if let state { StateMark(state: state) }
+                        Text(verbatim: when)
+                            .font(.subheadline)
+                            .foregroundStyle(state?.color ?? Color.inkTextMuted)
+                    }
+                    if typeSize.isAccessibilitySize { price }
+                }
+                Spacer(minLength: 8)
+                if !typeSize.isAccessibilitySize { price }
+            }
+            .padding(.vertical, 12)
+            .opacity(dimmed ? 0.35 : 1)
+            .contentShape(Rectangle())
         }
-        .frame(minWidth: 44, minHeight: 44)
-        .accessibilityLabel("Notification Settings")
-        .sheet(isPresented: $showingSettings) {
-            NotificationsSettingsView()
+        .buttonStyle(.plain)
+        .accessibilityElement(children: .combine)
+    }
+
+    private var price: some View {
+        Text(verbatim: MoneyFormat.string(charge.amount, charge.currency, locale: L10n.locale))
+            .font(.body.monospacedDigit())
+            .foregroundStyle(Color.inkText)
+    }
+
+    private var when: String {
+        let day = charge.date.formatted(.dateTime.month(.abbreviated).day().locale(L10n.locale))
+        let relative = charge.dayOffset == 0 ? L10n.string("Today")
+            : charge.dayOffset == 1 ? L10n.string("Tomorrow") : L10n.string("in \(charge.dayOffset) days")
+        return charge.isTrialEnd ? L10n.string("Trial ends \(day) · \(relative)") : "\(day) · \(relative)"
+    }
+}
+
+// MARK: - Empty and loading
+
+private struct HomeEmpty: View {
+    let onAdd: () -> Void
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            Text("Nothing on your list yet.")
+                .font(.question(.title2))
+                .foregroundStyle(Color.inkText)
+            Text("Add what you pay for. Pausely asks before each renewal whether it's still worth it.")
+                .font(.body)
+                .foregroundStyle(Color.inkTextMuted)
+                .fixedSize(horizontal: false, vertical: true)
+            Button(action: onAdd) { Text("Add Subscription") }
+                .buttonStyle(.ink)
+                .padding(.top, 12)
+                .accessibilityIdentifier("addSubscriptionButton")
         }
     }
 }
 
-// MARK: - Preview
-
+private struct HomeLoading: View {
+    var body: some View {
+        VStack(spacing: 0) {
+            ForEach(0..<4, id: \.self) { index in
+                if index > 0 { Hairline() }
+                HStack(spacing: 12) {
+                    RoundedRectangle(cornerRadius: 9, style: .continuous).fill(Color.inkRaised).frame(width: 36, height: 36)
+                    RoundedRectangle(cornerRadius: 4).fill(Color.inkRaised).frame(width: 140, height: 14)
+                    Spacer()
+                    RoundedRectangle(cornerRadius: 4).fill(Color.inkRaised).frame(width: 56, height: 14)
+                }
+                .padding(.vertical, 12)
+            }
+        }
+        .accessibilityLabel(Text("Loading"))
+    }
+}
