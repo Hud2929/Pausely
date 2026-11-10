@@ -45357,19 +45357,19 @@
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Où il va"
+            "value": "Où ça part"
           }
         },
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "行き先"
+            "value": "お金の行き先"
           }
         },
         "ar": {
           "stringUnit": {
             "state": "translated",
-            "value": "أين يذهب"
+            "value": "أين يذهب المال"
           }
         }
       }
@@ -58587,6 +58587,448 @@
           "stringUnit": {
             "state": "translated",
             "value": "プラン"
+          }
+        }
+      }
+    },
+    "What costs most": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "الأعلى تكلفة"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Was am meisten kostet"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lo que más cuesta"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ce qui coûte le plus"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "いちばん高いもの"
+          }
+        }
+      }
+    },
+    "What went up": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ما ارتفع سعره"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Was teurer wurde"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lo que ha subido"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ce qui a augmenté"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "値上がりしたもの"
+          }
+        }
+      }
+    },
+    "%@ is the biggest, at %@ a month.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ هو الأكبر، بسعر %2$@ في الشهر."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ ist am teuersten, mit %2$@ im Monat."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ es la mayor, con %2$@ al mes."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ est le plus cher, à %2$@ par mois."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "最も高いのは%1$@で、月%2$@です。"
+          }
+        }
+      }
+    },
+    "Nothing to show yet.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "لا شيء لعرضه بعد."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Noch nichts zu zeigen."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aún no hay nada que mostrar."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Rien à afficher pour l'instant."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "まだ表示するものがありません。"
+          }
+        }
+      }
+    },
+    "Add what you pay for and this page shows what costs most and what went up.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "أضف ما تدفع مقابله وستعرض هذه الصفحة الأعلى تكلفة وما ارتفع سعره."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Trag ein, wofür du zahlst, und diese Seite zeigt, was am meisten kostet und was teurer wurde."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Añade lo que pagas y esta página mostrará lo que más cuesta y lo que ha subido."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ajoutez ce que vous payez et cette page montrera ce qui coûte le plus et ce qui a augmenté."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "払っているものを追加すると、高いものや値上がりしたものが表示されます。"
+          }
+        }
+      }
+    },
+    "Pro looks for duplicates, unused subscriptions and trials about to charge.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pro يبحث عن الاشتراكات المكررة وغير المستخدمة والتجارب التي ستُخصم قريبًا."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pro sucht nach doppelten und ungenutzten Abos und nach Testphasen, die bald kosten."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pro busca duplicados, suscripciones sin usar y pruebas a punto de cobrarse."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pro repère les doublons, les abonnements inutilisés et les essais sur le point d'être facturés."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Proは重複、使っていないサブスク、まもなく課金されるトライアルを見つけます。"
+          }
+        }
+      }
+    },
+    "Nothing to cut right now. Pausely will keep asking before each renewal.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "لا شيء للإلغاء الآن. سيواصل Pausely سؤالك قبل كل تجديد."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Im Moment gibt es nichts zu streichen. Pausely fragt weiter vor jeder Verlängerung."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nada que recortar por ahora. Pausely seguirá preguntando antes de cada renovación."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Rien à supprimer pour l'instant. Pausely continuera de demander avant chaque renouvellement."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "今は削るものがありません。Pauselyは更新のたびに確認を続けます。"
+          }
+        }
+      }
+    },
+    "Your year in subscriptions": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "سنتك في الاشتراكات"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dein Jahr in Abos"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tu año en suscripciones"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Votre année en abonnements"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "あなたの1年のサブスク"
+          }
+        }
+      }
+    },
+    "Pausely Pro": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pausely Pro"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pausely Pro"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pausely Pro"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pausely Pro"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pausely Pro"
+          }
+        }
+      }
+    },
+    "Free plan: Pausely watches up to %lld subscriptions.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "الخطة المجانية: يراقب Pausely حتى %lld اشتراكات."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kostenlos: Pausely überwacht bis zu %lld Abos."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Plan gratuito: Pausely vigila hasta %lld suscripciones."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Formule gratuite : Pausely surveille jusqu'à %lld abonnements."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "無料プラン：Pauselyは%lld件まで見守ります。"
+          }
+        }
+      }
+    },
+    "Biggest": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "الأكبر"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Teuerstes"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "La mayor"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Le plus cher"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "最も高い"
+          }
+        }
+      }
+    },
+    "Most goes to": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "أغلبه يذهب إلى"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Das meiste geht an"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "La mayor parte va a"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "La plus grande part va à"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "いちばん多い分野"
+          }
+        }
+      }
+    },
+    "Cancelled this year": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "أُلغي هذا العام"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dieses Jahr gekündigt"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Canceladas este año"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Annulés cette année"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "今年解約した数"
           }
         }
       }

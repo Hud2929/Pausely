@@ -23,13 +23,13 @@ struct AgeGateView: View {
 
     var body: some View {
         ZStack {
-            Color.obsidianBlack.ignoresSafeArea()
+            Color.ink.ignoresSafeArea()
 
             ScrollView {
                 VStack(spacing: 24) {
                     Image(systemName: isBlocked ? "hand.raised.fill" : "calendar.badge.checkmark")
                         .font(.system(size: 44))
-                        .foregroundStyle(Color.accentMint)
+                        .foregroundStyle(Color.inkText)
                         .padding(.top, 48)
                         .accessibilityHidden(true)
 
@@ -54,10 +54,10 @@ struct AgeGateView: View {
             VStack(spacing: 8) {
                 Text("Confirm your age")
                     .font(.title.weight(.bold))
-                    .foregroundStyle(.white)
+                    .foregroundStyle(Color.inkText)
                 Text("Pausely is for people \(AgeConsentManager.minimumAge) and older. Enter your date of birth to continue.")
                     .font(.subheadline)
-                    .foregroundStyle(Color.textSecondary)
+                    .foregroundStyle(Color.inkTextMuted)
                     .multilineTextAlignment(.center)
             }
 
@@ -74,26 +74,26 @@ struct AgeGateView: View {
             if outcome == .invalidDate {
                 Text("That date is in the future. Please check your date of birth.")
                     .font(.footnote)
-                    .foregroundStyle(.red)
+                    .foregroundStyle(Color.due)
                     .multilineTextAlignment(.center)
             }
 
             Button(action: submit) {
                 Text("Continue")
             }
-            .buttonStyle(PrimaryButtonStyle())
+            .buttonStyle(InkButtonStyle())
             .accessibilityIdentifier("ageGateContinueButton")
             .accessibilityHint("Confirms your age and continues")
 
             Text("We only use this to check eligibility. Your date of birth is not saved. We keep a record that you confirmed you are \(AgeConsentManager.minimumAge)+.")
                 .font(.caption)
-                .foregroundStyle(Color.textTertiary)
+                .foregroundStyle(Color.inkTextFaint)
                 .multilineTextAlignment(.center)
 
             if let onCancel {
                 Button(cancelTitle, action: onCancel)
                     .font(.subheadline)
-                    .foregroundStyle(Color.textSecondary)
+                    .foregroundStyle(Color.inkTextMuted)
                     .accessibilityIdentifier("ageGateCancelButton")
             }
         }
@@ -105,20 +105,20 @@ struct AgeGateView: View {
         VStack(spacing: 16) {
             Text("You can't use Pausely yet")
                 .font(.title2.weight(.bold))
-                .foregroundStyle(.white)
+                .foregroundStyle(Color.inkText)
                 .multilineTextAlignment(.center)
             Text("Pausely is only available to people \(AgeConsentManager.minimumAge) and older, so we can't create an account for you right now.")
                 .font(.subheadline)
-                .foregroundStyle(Color.textSecondary)
+                .foregroundStyle(Color.inkTextMuted)
                 .multilineTextAlignment(.center)
             if let lockoutText {
                 Text(lockoutText)
                     .font(.footnote)
-                    .foregroundStyle(Color.textTertiary)
+                    .foregroundStyle(Color.inkTextFaint)
             }
             if let onCancel {
                 Button(cancelTitle, action: onCancel)
-                    .buttonStyle(PrimaryButtonStyle())
+                    .buttonStyle(InkButtonStyle())
                     .accessibilityIdentifier("ageGateBlockedCloseButton")
             }
         }
@@ -128,17 +128,15 @@ struct AgeGateView: View {
     // MARK: - Actions
 
     private func submit() {
-        HapticStyle.medium.trigger()
         let result = consent.evaluate(birthDate: birthDate)
         outcome = result
         switch result {
         case .allowed:
             onPassed()
         case .underAge, .lockedOut:
-            HapticStyle.error.trigger()
             refreshLockout()
         case .invalidDate:
-            HapticStyle.error.trigger()
+            break
         }
     }
 

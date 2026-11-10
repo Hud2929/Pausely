@@ -40,12 +40,12 @@ struct PausePlanView: View {
                 .padding(.top, 8)
                 .padding(.bottom, 40)
             }
-            .background(Color.obsidianBlack.ignoresSafeArea())
+            .background(Color.ink.ignoresSafeArea())
             .navigationTitle("Pause Plan")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .topBarLeading) {
-                    Button("Done") { dismiss() }.foregroundStyle(Color.accentMint)
+                    Button("Done") { dismiss() }.foregroundStyle(Color.inkText)
                 }
             }
         }
@@ -92,28 +92,28 @@ struct PausePlanView: View {
         if eligible.count < 2 {
             VStack(spacing: 8) {
                 Text("Add two or more streaming services")
-                    .font(.system(.headline, design: .default))
-                    .foregroundStyle(.white)
+                    .font(.headline)
+                    .foregroundStyle(Color.inkText)
                 Text("Netflix, Max, Disney+, Hulu, Prime Video and the like. Pause Plan rotates monthly video services; music and storage stay on.")
-                    .font(.system(.subheadline, design: .default))
-                    .foregroundStyle(Color.obsidianTextSecondary)
+                    .font(.subheadline)
+                    .foregroundStyle(Color.inkTextMuted)
                     .multilineTextAlignment(.center)
             }
             .padding(20)
             .frame(maxWidth: .infinity)
-            .background(RoundedRectangle(cornerRadius: 16, style: .continuous).fill(Color.obsidianSurface))
+            .background(RoundedRectangle(cornerRadius: 16, style: .continuous).fill(Color.inkRaised))
         } else {
             VStack(alignment: .leading, spacing: 10) {
                 Text("ROTATE THESE")
-                    .font(.system(.caption, design: .default).weight(.semibold))
-                    .foregroundStyle(Color.obsidianTextTertiary)
+                    .font(.caption.weight(.semibold))
+                    .foregroundStyle(Color.inkTextFaint)
                 VStack(spacing: 0) {
                     ForEach(Array(eligible.enumerated()), id: \.element.id) { index, sub in
                         if index > 0 { Divider().overlay(Color.white.opacity(0.06)).padding(.leading, 64) }
                         selectableRow(sub)
                     }
                 }
-                .background(RoundedRectangle(cornerRadius: 16, style: .continuous).fill(Color.obsidianSurface))
+                .background(RoundedRectangle(cornerRadius: 16, style: .continuous).fill(Color.inkRaised))
             }
 
             estimateCard
@@ -129,30 +129,29 @@ struct PausePlanView: View {
                             order.insert(firstId, at: 0)
                         }
                         await planStore.start(order: order)
-                        HapticStyle.success.trigger()
+                        Feel.landed()
                         isWorking = false
                     }
                 } else {
-                    HapticStyle.medium.trigger()
                     showPaywall = true
                 }
             } label: {
                 Label(paymentManager.isUnlocked(.pausePlan) ? L10n.string("Start Pause Plan") : L10n.string("Start Pause Plan with Pro"),
                       systemImage: paymentManager.isUnlocked(.pausePlan) ? "arrow.triangle.2.circlepath" : "lock.fill")
-                    .font(.system(.body, design: .default).weight(.semibold))
+                    .font(.body.weight(.semibold))
                     .foregroundStyle(.black)
                     .frame(maxWidth: .infinity)
                     .frame(height: 54)
                     .background(RoundedRectangle(cornerRadius: 16, style: .continuous)
-                        .fill(chosen.count >= 2 ? Color.accentMint : Color.accentMint.opacity(0.35)))
+                        .fill(chosen.count >= 2 ? Color.inkText : Color.inkTextMuted))
             }
             .buttonStyle(PlainButtonStyle())
             .disabled(chosen.count < 2 || isWorking)
             .accessibilityIdentifier("startPausePlanButton")
 
             Text("Pausely can't cancel for you. It tells you when to cancel and when to start again, and your Savings Receipt counts what rotating saves.")
-                .font(.system(.footnote, design: .default))
-                .foregroundStyle(Color.obsidianTextTertiary)
+                .font(.footnote)
+                .foregroundStyle(Color.inkTextFaint)
                 .frame(maxWidth: .infinity, alignment: .leading)
         }
     }
@@ -161,16 +160,16 @@ struct PausePlanView: View {
         VStack(spacing: 10) {
             Image(systemName: "arrow.triangle.2.circlepath")
                 .font(.system(size: 30, weight: .semibold))
-                .foregroundStyle(Color.accentMint)
+                .foregroundStyle(Color.inkText)
                 .frame(width: 64, height: 64)
-                .background(Circle().fill(Color.accentMint.opacity(0.15)))
+                .background(Circle().fill(Color.white.opacity(0.06)))
                 .accessibilityHidden(true)
             Text("Watch one at a time")
-                .font(.system(.title2, design: .default).weight(.bold))
-                .foregroundStyle(.white)
+                .font(.title2.weight(.bold))
+                .foregroundStyle(Color.inkText)
             Text("Most people pay for several streaming services and watch one. Pause Plan keeps one on, pauses the rest, and rotates every month, so you still see everything.")
-                .font(.system(.subheadline, design: .default))
-                .foregroundStyle(Color.obsidianTextSecondary)
+                .font(.subheadline)
+                .foregroundStyle(Color.inkTextMuted)
                 .multilineTextAlignment(.center)
         }
         .frame(maxWidth: .infinity)
@@ -180,7 +179,6 @@ struct PausePlanView: View {
         let isSelected = selected.contains(sub.id)
         let isFirst = isSelected && firstId == sub.id
         return Button {
-            HapticStyle.light.trigger()
             if isSelected {
                 selected.remove(sub.id)
                 if firstId == sub.id { firstId = PausePlanSchedule.suggestedOrder(chosen, now: Date()).first }
@@ -192,33 +190,32 @@ struct PausePlanView: View {
             HStack(spacing: 12) {
                 Image(systemName: isSelected ? "checkmark.circle.fill" : "circle")
                     .font(.system(size: 20))
-                    .foregroundStyle(isSelected ? Color.accentMint : Color.obsidianTextTertiary)
+                    .foregroundStyle(isSelected ? Color.inkText : Color.inkTextFaint)
                     .accessibilityHidden(true)
                 ServiceLogoView(name: sub.name, category: sub.category, size: 34)
                     .accessibilityHidden(true)
                 VStack(alignment: .leading, spacing: 2) {
                     Text(sub.name)
-                        .font(.system(.subheadline, design: .default).weight(.semibold))
-                        .foregroundStyle(.white)
+                        .font(.subheadline.weight(.semibold))
+                        .foregroundStyle(Color.inkText)
                     Text(sub.status == .cancelled ? L10n.string("Paused now") : L10n.string("\(money(sub.amount, from: sub.currency)) a month"))
-                        .font(.system(.caption, design: .default))
-                        .foregroundStyle(Color.obsidianTextSecondary)
+                        .font(.caption)
+                        .foregroundStyle(Color.inkTextMuted)
                 }
                 Spacer(minLength: 8)
                 if isFirst {
                     Text("On first")
-                        .font(.system(.caption2, design: .default).weight(.bold))
+                        .font(.caption2.weight(.bold))
                         .foregroundStyle(.black)
                         .padding(.horizontal, 8)
                         .padding(.vertical, 4)
-                        .background(Capsule().fill(Color.accentMint))
+                        .background(Capsule().fill(Color.inkText))
                 } else if isSelected {
                     Button("Put first") {
-                        HapticStyle.light.trigger()
                         firstId = sub.id
                     }
-                    .font(.system(.caption, design: .default).weight(.semibold))
-                    .foregroundStyle(Color.accentMint)
+                    .font(.caption.weight(.semibold))
+                    .foregroundStyle(Color.inkText)
                     .buttonStyle(.borderless)
                 }
             }
@@ -240,40 +237,40 @@ struct PausePlanView: View {
             HStack {
                 estimateColumn(L10n.string("All at once"), currencyManager.format(now), L10n.string("a month"))
                 Image(systemName: "arrow.right")
-                    .foregroundStyle(Color.obsidianTextTertiary)
+                    .foregroundStyle(Color.inkTextFaint)
                     .accessibilityHidden(true)
                 estimateColumn(L10n.string("One at a time"), currencyManager.format(rotating), L10n.string("a month on average"))
             }
             Divider().overlay(Color.white.opacity(0.08))
             HStack {
                 Text("Back in your pocket")
-                    .font(.system(.subheadline, design: .default))
-                    .foregroundStyle(Color.obsidianTextSecondary)
+                    .font(.subheadline)
+                    .foregroundStyle(Color.inkTextMuted)
                 Spacer()
                 Text("\(currencyManager.format(yearly)) a year")
-                    .font(.system(.headline, design: .default).weight(.bold))
-                    .foregroundStyle(Color.accentMint)
+                    .font(.headline.weight(.bold))
+                    .foregroundStyle(Color.inkText)
             }
         }
         .padding(16)
-        .background(RoundedRectangle(cornerRadius: 16, style: .continuous).fill(Color.obsidianSurface))
-        .overlay(RoundedRectangle(cornerRadius: 16, style: .continuous).stroke(Color.accentMint.opacity(0.25), lineWidth: 1))
+        .background(RoundedRectangle(cornerRadius: 16, style: .continuous).fill(Color.inkRaised))
+        .overlay(RoundedRectangle(cornerRadius: 16, style: .continuous).stroke(Color.white.opacity(0.06), lineWidth: 1))
         .accessibilityElement(children: .combine)
     }
 
     private func estimateColumn(_ title: String, _ amount: String, _ caption: String) -> some View {
         VStack(spacing: 2) {
             Text(title)
-                .font(.system(.caption, design: .default))
-                .foregroundStyle(Color.obsidianTextTertiary)
+                .font(.caption)
+                .foregroundStyle(Color.inkTextFaint)
             Text(amount)
-                .font(.system(.title3, design: .default).weight(.bold))
-                .foregroundStyle(.white)
+                .font(.title3.weight(.bold))
+                .foregroundStyle(Color.inkText)
                 .minimumScaleFactor(0.7)
                 .lineLimit(1)
             Text(caption)
-                .font(.system(.caption2, design: .default))
-                .foregroundStyle(Color.obsidianTextTertiary)
+                .font(.caption2)
+                .foregroundStyle(Color.inkTextFaint)
         }
         .frame(maxWidth: .infinity)
     }
@@ -299,8 +296,8 @@ struct PausePlanView: View {
                 confirmEnd = true
             } label: {
                 Text("End Pause Plan")
-                    .font(.system(.subheadline, design: .default))
-                    .foregroundStyle(Color.obsidianTextTertiary)
+                    .font(.subheadline)
+                    .foregroundStyle(Color.inkTextFaint)
                     .frame(maxWidth: .infinity)
                     .frame(height: 44)
             }
@@ -311,20 +308,20 @@ struct PausePlanView: View {
     private func nowCard(_ sub: Subscription, until end: Date, next: Subscription?) -> some View {
         VStack(spacing: 10) {
             Text("ON NOW")
-                .font(.system(.caption, design: .default).weight(.semibold))
-                .foregroundStyle(Color.obsidianTextTertiary)
+                .font(.caption.weight(.semibold))
+                .foregroundStyle(Color.inkTextFaint)
             ServiceLogoView(name: sub.name, category: sub.category, size: 60)
                 .accessibilityHidden(true)
             Text(sub.name)
-                .font(.system(.title2, design: .default).weight(.bold))
-                .foregroundStyle(.white)
+                .font(.title2.weight(.bold))
+                .foregroundStyle(Color.inkText)
             Text(next.map { L10n.string("Until \(short(end)). Then \($0.name).") } ?? L10n.string("Until \(short(end))."))
-                .font(.system(.subheadline, design: .default))
-                .foregroundStyle(Color.obsidianTextSecondary)
+                .font(.subheadline)
+                .foregroundStyle(Color.inkTextMuted)
         }
         .frame(maxWidth: .infinity)
         .padding(.vertical, 18)
-        .background(RoundedRectangle(cornerRadius: 20, style: .continuous).fill(Color.obsidianSurface))
+        .background(RoundedRectangle(cornerRadius: 20, style: .continuous).fill(Color.inkRaised))
         .accessibilityElement(children: .combine)
     }
 
@@ -369,16 +366,16 @@ struct PausePlanView: View {
         let items = todos(plan, current: current, currentSub: currentSub, next: next, today: today)
         return VStack(alignment: .leading, spacing: 12) {
             Text("To do")
-                .font(.system(.headline, design: .default))
-                .foregroundStyle(.white)
+                .font(.headline)
+                .foregroundStyle(Color.inkText)
             if items.isEmpty {
                 Label {
                     Text(next.flatMap { byId[$0.subscriptionId] }.map { L10n.string("You're all set. We'll remind you before \($0.name) starts.") }
                          ?? L10n.string("You're all set."))
-                        .font(.system(.subheadline, design: .default))
-                        .foregroundStyle(Color.obsidianTextSecondary)
+                        .font(.subheadline)
+                        .foregroundStyle(Color.inkTextMuted)
                 } icon: {
-                    Image(systemName: "checkmark.circle.fill").foregroundStyle(Color.accentMint)
+                    Image(systemName: "checkmark.circle.fill").foregroundStyle(Color.inkText)
                 }
             } else {
                 ForEach(items) { item in
@@ -386,23 +383,22 @@ struct PausePlanView: View {
                         ServiceLogoView(name: item.sub.name, category: item.sub.category, size: 32)
                             .accessibilityHidden(true)
                         Text(item.text)
-                            .font(.system(.subheadline, design: .default))
-                            .foregroundStyle(.white)
+                            .font(.subheadline)
+                            .foregroundStyle(Color.inkText)
                             .fixedSize(horizontal: false, vertical: true)
                         Spacer(minLength: 8)
                         Button {
-                            HapticStyle.light.trigger()
                             switch item.action {
                             case .cancel: cancelTarget = item.sub
                             case .start: Task { await planStore.markStarted(item.sub) }
                             }
                         } label: {
                             Text(item.action == .cancel ? L10n.string("How") : L10n.string("I started it"))
-                                .font(.system(.caption, design: .default).weight(.bold))
+                                .font(.caption.weight(.bold))
                                 .foregroundStyle(.black)
                                 .padding(.horizontal, 10)
                                 .frame(height: 30)
-                                .background(Capsule().fill(item.action == .cancel ? Color.orange : Color.accentMint))
+                                .background(Capsule().fill(item.action == .cancel ? Color.orange : Color.inkText))
                         }
                         .buttonStyle(PlainButtonStyle())
                     }
@@ -411,26 +407,26 @@ struct PausePlanView: View {
         }
         .padding(16)
         .frame(maxWidth: .infinity, alignment: .leading)
-        .background(RoundedRectangle(cornerRadius: 16, style: .continuous).fill(Color.obsidianSurface))
+        .background(RoundedRectangle(cornerRadius: 16, style: .continuous).fill(Color.inkRaised))
     }
 
     private func scheduleCard(_ upcoming: [PausePlanSchedule.Turn]) -> some View {
         VStack(alignment: .leading, spacing: 10) {
             Text("Coming up")
-                .font(.system(.headline, design: .default))
-                .foregroundStyle(.white)
+                .font(.headline)
+                .foregroundStyle(Color.inkText)
             ForEach(upcoming, id: \.index) { turn in
                 if let sub = byId[turn.subscriptionId], let start = turn.start {
                     HStack(spacing: 12) {
                         ServiceLogoView(name: sub.name, category: sub.category, size: 28)
                             .accessibilityHidden(true)
                         Text(sub.name)
-                            .font(.system(.subheadline, design: .default).weight(.semibold))
-                            .foregroundStyle(.white)
+                            .font(.subheadline.weight(.semibold))
+                            .foregroundStyle(Color.inkText)
                         Spacer()
                         Text("\(short(start)) – \(short(turn.end))")
-                            .font(.system(.caption, design: .default))
-                            .foregroundStyle(Color.obsidianTextSecondary)
+                            .font(.caption)
+                            .foregroundStyle(Color.inkTextMuted)
                     }
                     .accessibilityElement(children: .combine)
                 }
@@ -438,7 +434,7 @@ struct PausePlanView: View {
         }
         .padding(16)
         .frame(maxWidth: .infinity, alignment: .leading)
-        .background(RoundedRectangle(cornerRadius: 16, style: .continuous).fill(Color.obsidianSurface))
+        .background(RoundedRectangle(cornerRadius: 16, style: .continuous).fill(Color.inkRaised))
     }
 
     private func savedCard(_ plan: PausePlan) -> some View {
@@ -447,15 +443,15 @@ struct PausePlanView: View {
         let saved = lines.reduce(Decimal(0)) { $0 + currencyManager.convertToSelected($1.savedSoFar, from: $1.currency) }
         return HStack {
             Text("Saved by rotating so far")
-                .font(.system(.subheadline, design: .default))
-                .foregroundStyle(Color.obsidianTextSecondary)
+                .font(.subheadline)
+                .foregroundStyle(Color.inkTextMuted)
             Spacer()
             Text(currencyManager.format(saved))
-                .font(.system(.headline, design: .default).weight(.bold))
-                .foregroundStyle(Color.accentMint)
+                .font(.headline.weight(.bold))
+                .foregroundStyle(Color.inkText)
         }
         .padding(16)
-        .background(RoundedRectangle(cornerRadius: 16, style: .continuous).fill(Color.obsidianSurface))
+        .background(RoundedRectangle(cornerRadius: 16, style: .continuous).fill(Color.inkRaised))
         .accessibilityElement(children: .combine)
     }
 }
@@ -478,43 +474,42 @@ struct PausePlanCard: View {
 
     var body: some View {
         Button {
-            HapticStyle.light.trigger()
             showPlan = true
         } label: {
             HStack(spacing: 14) {
                 Image(systemName: "arrow.triangle.2.circlepath")
                     .font(.system(size: 18, weight: .semibold))
-                    .foregroundStyle(Color.accentMint)
+                    .foregroundStyle(Color.inkText)
                     .frame(width: 44, height: 44)
-                    .background(Circle().fill(Color.accentMint.opacity(0.15)))
+                    .background(Circle().fill(Color.white.opacity(0.06)))
                     .accessibilityHidden(true)
                 VStack(alignment: .leading, spacing: 3) {
                     HStack(spacing: 6) {
                         Text("Pause Plan")
-                            .font(.system(.subheadline, design: .default).weight(.semibold))
-                            .foregroundStyle(.white)
+                            .font(.subheadline.weight(.semibold))
+                            .foregroundStyle(Color.inkText)
                         if !paymentManager.isUnlocked(.pausePlan) && planStore.activePlan == nil {
                             Text("Pro")
-                                .font(.system(.caption2, design: .default).weight(.bold))
-                                .foregroundStyle(Color.accentMint)
+                                .font(.caption2.weight(.bold))
+                                .foregroundStyle(Color.inkText)
                                 .padding(.horizontal, 6)
                                 .padding(.vertical, 2)
-                                .background(Capsule().fill(Color.accentMint.opacity(0.15)))
+                                .background(Capsule().fill(Color.white.opacity(0.06)))
                         }
                     }
                     Text(subtitle)
-                        .font(.system(.caption, design: .default))
-                        .foregroundStyle(Color.obsidianTextSecondary)
+                        .font(.caption)
+                        .foregroundStyle(Color.inkTextMuted)
                         .fixedSize(horizontal: false, vertical: true)
                 }
                 Spacer(minLength: 8)
-                Image(systemName: "chevron.right")
+                Image(systemName: "chevron.forward")
                     .font(.system(size: 12, weight: .semibold))
-                    .foregroundStyle(Color.obsidianTextTertiary)
+                    .foregroundStyle(Color.inkTextFaint)
                     .accessibilityHidden(true)
             }
             .padding(16)
-            .background(RoundedRectangle(cornerRadius: 20, style: .continuous).fill(Color.obsidianSurface))
+            .background(RoundedRectangle(cornerRadius: 20, style: .continuous).fill(Color.inkRaised))
         }
         .buttonStyle(PlainButtonStyle())
         .accessibilityIdentifier("pausePlanCard")

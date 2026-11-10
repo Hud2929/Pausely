@@ -41,7 +41,7 @@ struct ExportDataView: View {
 
                     VStack(alignment: .leading, spacing: 4) {
                         Text(formatDescription)
-                            .font(.system(.caption, design: .default))
+                            .font(.caption)
                             .foregroundStyle(.secondary)
                     }
                     .padding(.top, 4)
@@ -57,13 +57,13 @@ struct ExportDataView: View {
                         Text("Subscriptions to Export")
                         Spacer()
                         Text("\(filteredCount)")
-                            .font(.system(.subheadline, design: .default).weight(.semibold))
+                            .font(.subheadline.weight(.semibold))
                             .foregroundStyle(.secondary)
                     }
 
                     if filteredCount == 0 {
                         Text("No subscriptions match your filters")
-                            .font(.system(.caption, design: .default))
+                            .font(.caption)
                             .foregroundStyle(.secondary)
                     }
                 }
@@ -83,10 +83,10 @@ struct ExportDataView: View {
                             }
                             Spacer()
                         }
-                        .font(.system(.subheadline, design: .default).weight(.semibold))
-                        .foregroundStyle(.white)
+                        .font(.subheadline.weight(.semibold))
+                        .foregroundStyle(Color.inkText)
                         .padding(.vertical, 14)
-                        .background(filteredCount > 0 ? Color.accentMint : Color.gray)
+                        .background(filteredCount > 0 ? Color.inkText : Color.gray)
                         .clipShape(RoundedRectangle(cornerRadius: 14))
                     }
                     .disabled(filteredCount == 0 || isExporting)
@@ -98,10 +98,10 @@ struct ExportDataView: View {
                     Section {
                         HStack(spacing: 8) {
                             Image(systemName: "exclamationmark.triangle.fill")
-                                .foregroundStyle(Color.semanticDestructive)
+                                .foregroundStyle(Color.due)
                             Text(error)
-                                .font(.system(.caption, design: .default))
-                                .foregroundStyle(Color.semanticDestructive)
+                                .font(.caption)
+                                .foregroundStyle(Color.due)
                         }
                     }
                 }

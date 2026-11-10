@@ -174,10 +174,10 @@ enum ValueTier: String, CaseIterable {
 
     var swiftUIColor: SwiftUI.Color {
         switch self {
-        case .great:   return .semanticSuccess
-        case .fair:    return .semanticWarning
-        case .poor:    return .semanticDestructive
-        case .unknown: return .obsidianTextTertiary
+        case .great:   return .kept
+        case .fair:    return .decide
+        case .poor:    return .due
+        case .unknown: return .inkTextFaint
         }
     }
 

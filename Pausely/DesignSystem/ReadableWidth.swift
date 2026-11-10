@@ -13,7 +13,7 @@ struct ReadableWidth: ViewModifier {
         content
             .frame(maxWidth: isWide ? Self.maxWidth : .infinity)
             .frame(maxWidth: .infinity)
-            .background(Color.obsidianBlack.ignoresSafeArea())
+            .background(Color.ink.ignoresSafeArea())
     }
 }
 

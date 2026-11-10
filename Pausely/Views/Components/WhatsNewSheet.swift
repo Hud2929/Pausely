@@ -10,7 +10,7 @@ struct WhatsNewSheet: View {
 
     var body: some View {
         ZStack {
-            PremiumBackground()
+            Color.ink.ignoresSafeArea()
 
             VStack(spacing: 0) {
                 // Header
@@ -18,27 +18,23 @@ struct WhatsNewSheet: View {
                     ZStack {
                         Circle()
                             .fill(
-                                LinearGradient(
-                                    colors: [Color.accentMint.opacity(0.3), Color.accentMint.opacity(0.2)],
-                                    startPoint: .topLeading,
-                                    endPoint: .bottomTrailing
-                                )
+                                Color.inkText
                             )
                             .frame(width: 80, height: 80)
 
                         Image(systemName: "sparkles")
-                            .font(.system(.title, design: .default).weight(.semibold))
-                            .foregroundStyle(Color.accentMint)
+                            .font(.title.weight(.semibold))
+                            .foregroundStyle(Color.inkText)
                     }
 
                     Text(displayVersion.isEmpty ? "What's New" : "What's New in \(displayVersion)")
-                        .font(.system(.title2, design: .default).weight(.bold))
-                        .foregroundColor(.white)
+                        .font(.title2.weight(.bold))
+                        .foregroundStyle(Color.inkText)
                         .multilineTextAlignment(.center)
 
                     Text("Check out the latest improvements")
-                        .font(.system(.body, design: .default))
-                        .foregroundColor(Color.obsidianTextSecondary)
+                        .font(.body)
+                        .foregroundColor(Color.inkTextMuted)
                         .multilineTextAlignment(.center)
                 }
                 .padding(.top, 32)
@@ -48,21 +44,21 @@ struct WhatsNewSheet: View {
                 VStack(spacing: 16) {
                     WhatsNewFeatureRow(
                         icon: "arrow.down.circle.fill",
-                        iconColor: Color.accentMint,
+                        iconColor: Color.inkText,
                         title: "Pull to Refresh",
                         description: "Swipe down on your Dashboard to instantly refresh your subscription data."
                     )
 
                     WhatsNewFeatureRow(
                         icon: "gift.fill",
-                        iconColor: Color.accentMint,
+                        iconColor: Color.inkText,
                         title: "First-Subscription Celebration",
                         description: "Enjoy a fun confetti animation when you add your very first subscription."
                     )
 
                     WhatsNewFeatureRow(
                         icon: "star.fill",
-                        iconColor: Color.accentMint,
+                        iconColor: Color.inkText,
                         title: "What's New Updates",
                         description: "Stay in the loop with a quick summary of new features after every update."
                     )
@@ -74,25 +70,19 @@ struct WhatsNewSheet: View {
 
                 // Continue button
                 Button(action: {
-                    HapticStyle.medium.trigger()
                     dismiss()
                 }) {
                     Text("Continue")
-                        .font(.system(.body, design: .default).weight(.semibold))
-                        .foregroundColor(.white)
+                        .font(.body.weight(.semibold))
+                        .foregroundStyle(Color.inkText)
                         .frame(maxWidth: .infinity)
                         .frame(height: 56)
                         .background(
                             RoundedRectangle(cornerRadius: 16, style: .continuous)
                                 .fill(
-                                    LinearGradient(
-                                        colors: [Color.accentMint, Color.accentMint],
-                                        startPoint: .topLeading,
-                                        endPoint: .bottomTrailing
-                                    )
+                                    Color.inkText
                                 )
                         )
-                        .shadow(color: Color.accentMint.opacity(0.4), radius: 15, x: 0, y: 8)
                 }
                 .padding(.horizontal, 24)
                 .padding(.bottom, 40)
@@ -116,18 +106,18 @@ struct WhatsNewFeatureRow: View {
                     .frame(width: 52, height: 52)
 
                 Image(systemName: icon)
-                    .font(.system(.title2, design: .default))
+                    .font(.title2)
                     .foregroundStyle(iconColor)
             }
 
             VStack(alignment: .leading, spacing: 4) {
                 Text(title)
-                    .font(.system(.headline, design: .default).weight(.semibold))
-                    .foregroundColor(.white)
+                    .font(.headline.weight(.semibold))
+                    .foregroundStyle(Color.inkText)
 
                 Text(description)
-                    .font(.system(.subheadline, design: .default))
-                    .foregroundColor(Color.obsidianTextSecondary)
+                    .font(.subheadline)
+                    .foregroundColor(Color.inkTextMuted)
                     .fixedSize(horizontal: false, vertical: true)
             }
 
@@ -136,7 +126,7 @@ struct WhatsNewFeatureRow: View {
         .padding(16)
         .background(
             RoundedRectangle(cornerRadius: 20, style: .continuous)
-                .fill(Color.obsidianSurface)
+                .fill(Color.inkRaised)
                 .overlay(
                     RoundedRectangle(cornerRadius: 20, style: .continuous)
                         .stroke(Color.white.opacity(0.06), lineWidth: 1)

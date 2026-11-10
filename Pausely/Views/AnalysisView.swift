@@ -1,548 +1,293 @@
+//
+//  AnalysisView.swift
+//  Pausely
+//
+//  Insights: one sentence about the whole list, then what costs most, where it goes, what went up,
+//  and (Pro) the deep analysis.
+//
+
 import SwiftUI
 
-// MARK: - Analysis View (merged Genius + Insights)
-//
-// Static analytics (health score, categories, forecast) auto-run on open.
-// AI recommendations (waste alerts, actionable insights) require "Run Analysis" tap.
-// Free users see the static section; AI section prompts paywall.
-
-@MainActor
 struct AnalysisView: View {
     @ObservedObject private var insightsEngine = RealInsightsEngine.shared
     @ObservedObject private var geniusEngine = RealGeniusEngine.shared
     @ObservedObject private var store = SubscriptionStore.shared
     @ObservedObject private var paymentManager = PaymentManager.shared
     @ObservedObject private var currencyManager = CurrencyManager.shared
+    @ObservedObject private var eventLog = LifecycleEventLog.shared
 
-    @State private var aiState: AIRunState = .idle
+    @State private var deep: DeepState = .idle
     @State private var showingPaywall = false
-    @State private var appeared = false
 
-    private enum AIRunState {
-        case idle
-        case analyzing
-        case results(GeniusReport)
-        case noOpportunities
-        case error(String)
+    private enum DeepState {
+        case idle, analyzing, results(GeniusReport), nothing, failed(String)
+    }
+
+    private var canAnalyze: Bool { paymentManager.isUnlocked(.deepAnalysis) }
+
+    private var live: [Subscription] { store.activeSubscriptions }
+
+    /// Each live subscription with its monthly cost in the display currency, most expensive first.
+    /// One that can't be converted is left out rather than ranked at the wrong value.
+    private var ranked: [(subscription: Subscription, monthly: Decimal)] {
+        live.compactMap { sub in
+            currencyManager.rates.convert(sub.monthlyCost, from: sub.currency, to: currencyManager.selectedCurrency)
+                .map { (sub, $0) }
+        }
+        .sorted { $0.monthly > $1.monthly }
+    }
+
+    private var increases: [(subscription: Subscription, from: Decimal, since: Date)] {
+        live.compactMap { sub in
+            guard let change = VerdictFacts.priceChange(for: sub.id, currentAmount: sub.amount, events: eventLog.events),
+                  sub.amount > change.from else { return nil }
+            return (sub, change.from, change.since)
+        }
     }
 
     var body: some View {
-        ScrollView(showsIndicators: false) {
-            VStack(spacing: 20) {
-                header
-                    .padding(.top, 20)
+        ScrollView {
+            VStack(alignment: .leading, spacing: 0) {
+                Text("Insights")
+                    .font(.question(.largeTitle, weight: .bold))
+                    .foregroundStyle(Color.inkText)
+                    .accessibilityAddTraits(.isHeader)
 
-                if store.subscriptions.isEmpty {
-                    emptyState
+                if live.isEmpty {
+                    empty.padding(.top, 24)
                 } else {
-                    // --- Static analytics (always auto-computed) ---
-                    staticSection
-                        .opacity(appeared ? 1 : 0)
+                    Text(verbatim: sentence)
+                        .font(.question(.title3, weight: .regular))
+                        .foregroundStyle(Color.inkText)
+                        .fixedSize(horizontal: false, vertical: true)
+                        .padding(.top, 16)
 
-                    // --- AI recommendation section ---
-                    aiDivider
+                    section(L10n.string("What costs most")) {
+                        let top = ranked.first?.monthly ?? 1
+                        ForEach(Array(ranked.prefix(6).enumerated()), id: \.element.subscription.id) { index, item in
+                            if index > 0 { Hairline() }
+                            BarRow(title: item.subscription.name,
+                                   value: currencyManager.format(item.monthly),
+                                   share: fraction(item.monthly, of: top))
+                        }
+                    }
 
-                    aiSection
-                        .opacity(appeared ? 1 : 0)
+                    if insightsEngine.categoryBreakdown.count > 1 {
+                        section(L10n.string("Where it goes")) {
+                            let top = insightsEngine.categoryBreakdown.map(\.amount).max() ?? 1
+                            ForEach(Array(insightsEngine.categoryBreakdown.prefix(5).enumerated()), id: \.element.id) { index, category in
+                                if index > 0 { Hairline() }
+                                BarRow(title: SubscriptionCategory.label(for: category.category),
+                                       value: MoneyFormat.string(category.amount, currencyManager.selectedCurrency, locale: L10n.locale),  // money-guard: category totals are already in the display currency
+                                       share: fraction(category.amount, of: top))
+                            }
+                        }
+                    }
+
+                    if !increases.isEmpty {
+                        section(L10n.string("What went up")) {
+                            ForEach(Array(increases.enumerated()), id: \.element.subscription.id) { index, item in
+                                if index > 0 { Hairline() }
+                                HStack(alignment: .firstTextBaseline, spacing: 12) {
+                                    StateMark(state: .due)
+                                    VStack(alignment: .leading, spacing: 2) {
+                                        Text(verbatim: item.subscription.name)
+                                            .font(.body)
+                                            .foregroundStyle(Color.inkText)
+                                        Text(L10n.string("Up from \(MoneyFormat.string(item.from, item.subscription.currency)) since \(item.since.formatted(.dateTime.month(.abbreviated).day()))"))
+                                            .font(.subheadline)
+                                            .foregroundStyle(Color.inkTextMuted)
+                                    }
+                                    Spacer(minLength: 8)
+                                    Text(verbatim: item.subscription.chargeText)
+                                        .font(.body.monospacedDigit())
+                                        .foregroundStyle(Color.inkText)
+                                }
+                                .padding(.vertical, 12)
+                                .accessibilityElement(children: .combine)
+                            }
+                        }
+                    }
+
+                    if PausePlanCard.isRelevant() {
+                        Hairline().padding(.top, 28)
+                        PausePlanCard()
+                        Hairline()
+                    }
+
+                    deepSection
                 }
-
-                Spacer(minLength: 100)
             }
-            .padding(.horizontal, 20)
+            .padding(.horizontal, Layout.margin)
+            .padding(.top, 16)
+            .padding(.bottom, 32)
         }
-        .background(Color.obsidianBlack.ignoresSafeArea())
+        .background(Color.ink.ignoresSafeArea())
         .task(id: store.subscriptions.count) {
             await insightsEngine.analyze(subscriptions: store.subscriptions)
-            // Auto-run genius for Pro users once when subscriptions are available
-            if canAnalyze, !store.subscriptions.isEmpty, case .idle = aiState {
-                await runAIAnalysis()
-            }
-        }
-        .onAppear {
-            withAnimation(.spring(response: 0.5, dampingFraction: 0.82).delay(0.05)) { appeared = true }
+            if canAnalyze, !store.subscriptions.isEmpty, case .idle = deep { await runDeepAnalysis() }
         }
         .sheet(isPresented: $showingPaywall) {
             StoreKitUpgradeView(currentSubscriptionCount: store.subscriptions.count)
         }
     }
 
-    // MARK: - Header
+    private var sentence: String {
+        let yearly = MoneyFormat.string(live.annualTotal(), currencyManager.selectedCurrency, locale: L10n.locale, wholeUnits: true)
+        guard let top = ranked.first else {
+            return L10n.string("Your subscriptions cost about \(yearly) a year.")
+        }
+        return L10n.string("Your subscriptions cost about \(yearly) a year.") + " "
+            + L10n.string("\(top.subscription.name) is the biggest, at \(currencyManager.format(top.monthly)) a month.")
+    }
 
-    private var header: some View {
-        VStack(alignment: .leading, spacing: 4) {
-            Text("Analysis")
-                .font(.system(.largeTitle, design: .default).weight(.bold))
-                .foregroundStyle(.white)
+    private func fraction(_ amount: Decimal, of top: Decimal) -> Double {
+        guard top > 0 else { return 0 }
+        return min(max(NSDecimalNumber(decimal: amount / top).doubleValue, 0), 1)
+    }
 
-            if let date = insightsEngine.lastAnalysisDate {
-                Text("Updated \(date.formatted(.relative(presentation: .named)))")
-                    .font(.system(.footnote, design: .default))
-                    .foregroundStyle(Color.obsidianTextSecondary)
-            } else if insightsEngine.isAnalyzing {
-                Text("Analyzing…")
-                    .font(.system(.footnote, design: .default))
-                    .foregroundStyle(Color.obsidianTextSecondary)
+    private func section<Content: View>(_ title: String, @ViewBuilder content: () -> Content) -> some View {
+        VStack(alignment: .leading, spacing: 0) {
+            Text(verbatim: title)
+                .font(.headline)
+                .foregroundStyle(Color.inkText)
+                .padding(.top, 32)
+                .padding(.bottom, 4)
+                .accessibilityAddTraits(.isHeader)
+            content()
+        }
+    }
+
+    private var empty: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            Text("Nothing to show yet.")
+                .font(.question(.title2))
+                .foregroundStyle(Color.inkText)
+            Text("Add what you pay for and this page shows what costs most and what went up.")
+                .font(.body)
+                .foregroundStyle(Color.inkTextMuted)
+                .fixedSize(horizontal: false, vertical: true)
+        }
+    }
+
+    // MARK: - Deep analysis (Pro)
+
+    @ViewBuilder private var deepSection: some View {
+        section(L10n.string("Deep savings analysis")) {
+            if !canAnalyze {
+                Text("Pro looks for duplicates, unused subscriptions and trials about to charge.")
+                    .font(.subheadline)
+                    .foregroundStyle(Color.inkTextMuted)
+                    .fixedSize(horizontal: false, vertical: true)
+                    .padding(.bottom, 12)
+                Button { showingPaywall = true } label: { Text("See Pro") }
+                    .buttonStyle(.ink(.quiet))
+                    .accessibilityIdentifier("insightsSeePro")
             } else {
-                Text("Subscription health and optimization")
-                    .font(.system(.footnote, design: .default))
-                    .foregroundStyle(Color.obsidianTextSecondary)
-            }
-        }
-        .frame(maxWidth: .infinity, alignment: .leading)
-    }
-
-    // MARK: - Static Section
-
-    private var staticSection: some View {
-        VStack(spacing: 16) {
-            // Hero row — always shown when data is available
-            if let forecast = insightsEngine.spendingForecast, forecast.currentMonthly > 0 {
-                analysisHero(monthly: forecast.currentMonthly)
-            }
-
-            if insightsEngine.isAnalyzing {
-                SkeletonCard(height: 120, cornerRadius: 20)
-                SkeletonCard(height: 100, cornerRadius: 20)
-                SkeletonCard(height: 80, cornerRadius: 20)
-            } else {
-                // B4: Savings opportunity badge — shown when waste is detected
-                let totalSavings = insightsEngine.wasteAlerts.reduce(Decimal(0)) { $0 + $1.potentialSavings }
-                if totalSavings > 0 {
-                    SavingsOpportunityBadge(
-                        monthlyAmount: totalSavings,
-                        alertCount: insightsEngine.wasteAlerts.count
-                    )
-                }
-
-                if let forecast = insightsEngine.spendingForecast, forecast.annualCurrent > 0 {
-                    AnnualSpendRealityCard(annualSpend: forecast.annualCurrent)
-                }
-
-                // Rotating streaming services is the biggest saving most people have.
-                if PausePlanCard.isRelevant() {
-                    PausePlanCard()
-                }
-
-                HealthScoreCard(score: insightsEngine.healthScore)
-
-                if !insightsEngine.categoryBreakdown.isEmpty {
-                    CategoryBreakdownCard(categories: insightsEngine.categoryBreakdown)
-                }
-
-                if let forecast = insightsEngine.spendingForecast {
-                    SpendingForecastCard(forecast: forecast)
-                }
-
-                // Waste alerts — most actionable auto-computed output
-                if !insightsEngine.wasteAlerts.isEmpty {
-                    WasteAlertsSection(alerts: insightsEngine.wasteAlerts)
-                }
-            }
-        }
-    }
-
-    @ViewBuilder
-    private func analysisHero(monthly: Decimal) -> some View {
-        VStack(spacing: 6) {
-            Text(CurrencyManager.shared.format(monthly))
-                .font(.system(.largeTitle, design: .default).weight(.black))
-                .foregroundStyle(Color.accentMint)
-                .minimumScaleFactor(0.7)
-                .lineLimit(1)
-            HStack(spacing: 6) {
-                Text("across \(store.subscriptions.filter { $0.status == .active }.count) subscription\(store.subscriptions.filter { $0.status == .active }.count == 1 ? "" : "s") · per month")
-                    .font(.system(.caption, design: .default))
-                    .foregroundStyle(Color.obsidianTextTertiary)
-            }
-        }
-        .frame(maxWidth: .infinity)
-        .padding(.vertical, 12)
-        .padding(.horizontal, 16)
-        .background(
-            RoundedRectangle(cornerRadius: 16, style: .continuous)
-                .fill(Color.accentMint.opacity(0.06))
-                .overlay(
-                    RoundedRectangle(cornerRadius: 16, style: .continuous)
-                        .stroke(Color.accentMint.opacity(0.12), lineWidth: 1)
-                )
-        )
-    }
-
-    // MARK: - Section Divider
-
-    private var aiDivider: some View {
-        HStack(spacing: 12) {
-            Rectangle()
-                .fill(Color.white.opacity(0.08))
-                .frame(height: 1)
-
-            Text("SAVINGS IDEAS")
-                .font(.system(size: 10, weight: .semibold, design: .default))
-                .foregroundStyle(Color.obsidianTextTertiary)
-                .fixedSize()
-
-            Rectangle()
-                .fill(Color.white.opacity(0.08))
-                .frame(height: 1)
-        }
-        .padding(.vertical, 4)
-    }
-
-    // MARK: - AI Section
-
-    private var canAnalyze: Bool { paymentManager.isUnlocked(.deepAnalysis) }
-
-    private var showRunButton: Bool {
-        // Hide the button for small sets (≤5 subs) — auto-runs on load for Pro users
-        // Always show for free users (paywall) or when user wants to re-run >5 subs
-        if !canAnalyze { return true }
-        return store.subscriptions.count > 5
-    }
-
-    private var aiSection: some View {
-        VStack(spacing: 16) {
-            // Run button — only shown for large sets or non-pro users
-            if showRunButton {
-                Button {
-                    if canAnalyze {
-                        Task { await runAIAnalysis() }
-                    } else {
-                        HapticStyle.medium.trigger()
-                        showingPaywall = true
-                    }
-                } label: {
+                switch deep {
+                case .idle, .analyzing:
                     HStack(spacing: 10) {
-                        if case .analyzing = aiState {
-                            ProgressView()
-                                .progressViewStyle(CircularProgressViewStyle(tint: .black))
-                                .scaleEffect(0.85)
-                        } else {
-                            Image(systemName: canAnalyze ? "wand.and.stars" : "crown.fill")
-                                .font(.system(size: 16, weight: .semibold))
-                        }
-                        Text(aiButtonLabel)
-                            .font(.system(.headline, design: .default).weight(.semibold))
+                        ProgressView().tint(Color.inkTextMuted)
+                        Text("Analyzing…").font(.subheadline).foregroundStyle(Color.inkTextMuted)
                     }
-                    .foregroundStyle(Color.black)
-                    .frame(maxWidth: .infinity)
-                    .frame(height: 52)
-                    .background(
-                        RoundedRectangle(cornerRadius: 16, style: .continuous)
-                            .fill(canAnalyze ? Color.accentMint : Color.orange)
-                            .shadow(color: (canAnalyze ? Color.accentMint : Color.orange).opacity(0.3), radius: 12, x: 0, y: 6)
-                    )
-                }
-                .buttonStyle(PlainButtonStyle())
-                .disabled({ if case .analyzing = aiState { return true } else { return false } }())
-            }
-
-            // AI results
-            switch aiState {
-            case .idle:
-                aiIdleState
-
-            case .analyzing:
-                VStack(spacing: 16) {
-                    SkeletonCard(height: 90, cornerRadius: 16)
-                    SkeletonCard(height: 90, cornerRadius: 16)
-                    SkeletonCard(height: 90, cornerRadius: 16)
-                }
-
-            case .results(let report):
-                aiResultsSection(report: report)
-
-            case .noOpportunities:
-                noOpportunitiesState
-
-            case .error(let msg):
-                aiErrorState(message: msg)
-            }
-        }
-    }
-
-    private var aiButtonLabel: String {
-        if case .analyzing = aiState { return "Analyzing…" }
-        return canAnalyze ? "Run Deep Analysis" : "Unlock Pro to Analyze"
-    }
-
-    // MARK: - AI Idle State
-
-    private var aiIdleState: some View {
-        VStack(spacing: 12) {
-            ZStack {
-                Circle()
-                    .fill(Color.accentMint.opacity(0.10))
-                    .frame(width: 56, height: 56)
-                Image(systemName: "sparkles")
-                    .font(.title2.weight(.semibold))
-                    .foregroundStyle(Color.accentMint)
-            }
-
-            VStack(spacing: 6) {
-                Text("Ready to Analyze")
-                    .font(.system(.headline, design: .default).weight(.semibold))
-                    .foregroundStyle(.white)
-
-                Text("Discover savings opportunities and optimization tips for your subscriptions.")
-                    .font(.system(.subheadline, design: .default))
-                    .foregroundStyle(Color.obsidianTextSecondary)
-                    .multilineTextAlignment(.center)
-            }
-        }
-        .padding(24)
-        .frame(maxWidth: .infinity)
-        .surfaceCard(cornerRadius: 20)
-    }
-
-    // MARK: - AI Results
-
-    private func aiResultsSection(report: GeniusReport) -> some View {
-        VStack(spacing: 12) {
-            // Summary pills
-            HStack(spacing: 12) {
-                analysisPill(
-                    icon: "lightbulb.fill",
-                    value: "\(report.actionableCount)",
-                    label: "Opportunities",
-                    color: .yellow
-                )
-                analysisPill(
-                    icon: "dollarsign.circle.fill",
-                    value: CurrencyManager.shared.format(report.totalPotentialSavings),
-                    label: "Potential/mo",
-                    color: Color.accentMint
-                )
-            }
-
-            // Insights
-            if !report.insights.isEmpty {
-                ForEach(Array(report.insights.prefix(8).enumerated()), id: \.element.id) { index, insight in
-                    GeniusInsightCard(insight: insight)
-                        .opacity(appeared ? 1 : 0)
-                        .offset(y: appeared ? 0 : 16)
-                        .animation(.spring(response: 0.4, dampingFraction: 0.8).delay(Double(index) * 0.05), value: appeared)
+                    .padding(.vertical, 12)
+                case .nothing:
+                    Text("Nothing to cut right now. Pausely will keep asking before each renewal.")
+                        .font(.subheadline)
+                        .foregroundStyle(Color.inkTextMuted)
+                        .fixedSize(horizontal: false, vertical: true)
+                        .padding(.vertical, 8)
+                case .failed(let message):
+                    Text(verbatim: message)
+                        .font(.subheadline)
+                        .foregroundStyle(Color.inkTextMuted)
+                        .fixedSize(horizontal: false, vertical: true)
+                        .padding(.vertical, 8)
+                    Button { Task { await runDeepAnalysis() } } label: { Text("Try Again") }
+                        .buttonStyle(.ink(.quiet))
+                case .results(let report):
+                    ForEach(Array(report.insights.prefix(8).enumerated()), id: \.element.id) { index, insight in
+                        if index > 0 { Hairline() }
+                        insightRow(insight)
+                    }
                 }
             }
         }
     }
 
-    private func analysisPill(icon: String, value: String, label: String, color: Color) -> some View {
-        VStack(spacing: 6) {
-            Image(systemName: icon)
-                .font(.title3)
-                .foregroundStyle(color)
-            Text(value)
-                .font(.system(.headline, design: .default).weight(.bold))
-                .foregroundStyle(.white)
-                .lineLimit(1)
-                .minimumScaleFactor(0.7)
-            Text(label)
-                .font(.system(.caption2, design: .default))
-                .foregroundStyle(Color.obsidianTextSecondary)
+    private func insightRow(_ insight: GeniusInsight) -> some View {
+        Button {
+            if let id = insight.subscriptionId { VerdictCenter.shared.showSubscription(id) }
+        } label: {
+            HStack(alignment: .firstTextBaseline, spacing: 12) {
+                VStack(alignment: .leading, spacing: 3) {
+                    Text(verbatim: insight.title)
+                        .font(.body.weight(.semibold))
+                        .foregroundStyle(Color.inkText)
+                        .multilineTextAlignment(.leading)
+                    Text(verbatim: insight.description)
+                        .font(.subheadline)
+                        .foregroundStyle(Color.inkTextMuted)
+                        .multilineTextAlignment(.leading)
+                }
+                .fixedSize(horizontal: false, vertical: true)
+                Spacer(minLength: 8)
+                if insight.potentialSavings > 0 {
+                    Text(verbatim: currencyManager.format(insight.potentialSavings) + L10n.string("/month"))
+                        .font(.subheadline.monospacedDigit())
+                        .foregroundStyle(Color.inkText)
+                }
+            }
+            .padding(.vertical, 12)
+            .contentShape(Rectangle())
         }
-        .frame(maxWidth: .infinity)
-        .padding(.vertical, 16)
-        .surfaceCard(cornerRadius: 16)
+        .buttonStyle(.plain)
+        .disabled(insight.subscriptionId == nil)
+        .accessibilityElement(children: .combine)
     }
 
-    // MARK: - No Opportunities
-
-    private var noOpportunitiesState: some View {
-        VStack(spacing: 12) {
-            ZStack {
-                Circle()
-                    .fill(Color.accentMint.opacity(0.12))
-                    .frame(width: 56, height: 56)
-                Image(systemName: "checkmark.seal.fill")
-                    .font(.title2.weight(.semibold))
-                    .foregroundStyle(Color.accentMint)
-            }
-            VStack(spacing: 6) {
-                Text("Nothing to Optimize")
-                    .font(.system(.headline, design: .default).weight(.semibold))
-                    .foregroundStyle(.white)
-                Text("No obvious savings found with your current subscriptions. Enable Screen Time tracking for usage-based recommendations.")
-                    .font(.system(.subheadline, design: .default))
-                    .foregroundStyle(Color.obsidianTextSecondary)
-                    .multilineTextAlignment(.center)
-            }
-        }
-        .padding(24)
-        .frame(maxWidth: .infinity)
-        .surfaceCard(cornerRadius: 20)
-    }
-
-    // MARK: - Error State
-
-    private func aiErrorState(message: String) -> some View {
-        VStack(spacing: 12) {
-            ZStack {
-                Circle()
-                    .fill(Color.red.opacity(0.12))
-                    .frame(width: 56, height: 56)
-                Image(systemName: "exclamationmark.triangle.fill")
-                    .font(.title2.weight(.semibold))
-                    .foregroundStyle(.red)
-            }
-            VStack(spacing: 6) {
-                Text("Analysis Failed")
-                    .font(.system(.headline, design: .default).weight(.semibold))
-                    .foregroundStyle(.white)
-                Text(message)
-                    .font(.system(.subheadline, design: .default))
-                    .foregroundStyle(Color.obsidianTextSecondary)
-                    .multilineTextAlignment(.center)
-            }
-        }
-        .padding(24)
-        .frame(maxWidth: .infinity)
-        .surfaceCard(cornerRadius: 20)
-    }
-
-    // MARK: - Empty State
-
-    private var emptyState: some View {
-        VStack(spacing: 20) {
-            ZStack {
-                Circle()
-                    .fill(Color.accentMint.opacity(0.10))
-                    .frame(width: 72, height: 72)
-                Image(systemName: "chart.xyaxis.line")
-                    .font(.system(size: 28, weight: .semibold, design: .default))
-                    .foregroundStyle(Color.accentMint)
-            }
-            VStack(spacing: 8) {
-                Text("Nothing to Analyze Yet")
-                    .font(.system(.title3, design: .default).weight(.bold))
-                    .foregroundStyle(.white)
-                Text("Add your subscriptions and come back to see a full health report and savings opportunities.")
-                    .font(.system(.subheadline, design: .default))
-                    .foregroundStyle(Color.obsidianTextSecondary)
-                    .multilineTextAlignment(.center)
-            }
-        }
-        .padding(28)
-        .frame(maxWidth: .infinity)
-        .surfaceCard(cornerRadius: 24)
-        .padding(.top, 24)
-    }
-
-    // MARK: - Run AI Analysis
-
-    private func runAIAnalysis() async {
-        aiState = .analyzing
-        HapticStyle.medium.trigger()
-
-        let subs = store.subscriptions
-        guard !subs.isEmpty else {
-            aiState = .noOpportunities
-            return
-        }
-
+    private func runDeepAnalysis() async {
+        deep = .analyzing
+        guard !store.subscriptions.isEmpty else { deep = .nothing; return }
         do {
-            let report = try await geniusEngine.analyze(subscriptions: subs)
-            try await Task.sleep(for: .milliseconds(400))
-            if report.insights.isEmpty {
-                aiState = .noOpportunities
-            } else {
-                HapticStyle.success.trigger()
-                aiState = .results(report)
-            }
+            let report = try await geniusEngine.analyze(subscriptions: store.subscriptions)
+            deep = report.insights.isEmpty ? .nothing : .results(report)
         } catch is CancellationError {
-            // Task cancelled by .task(id:) restart — reset so next run can auto-trigger
-            if case .analyzing = aiState { aiState = .idle }
+            // Restarted by .task(id:): go back to idle so the next run starts.
+            if case .analyzing = deep { deep = .idle }
         } catch {
-            aiState = .error(error.localizedDescription)
+            deep = .failed(error.localizedDescription)
         }
     }
 }
 
-// MARK: - Annual Spend Reality Card
-
-private struct AnnualSpendRealityCard: View {
-    let annualSpend: Decimal
-
-    private var annualDouble: Double {
-        NSDecimalNumber(decimal: annualSpend).doubleValue
-    }
-
-    private struct Comparison {
-        let icon: String
-        let count: String
-        let label: String
-    }
-
-    private var comparisons: [Comparison] {
-        // Convert USD reference prices to user's currency for accurate comparisons
-        let cm = CurrencyManager.shared
-        let coffeeUSD = Decimal(4)
-        let movieUSD = Decimal(15)
-        let dinnerUSD = Decimal(22)
-        let coffeeLocal = NSDecimalNumber(decimal: cm.convertToSelected(coffeeUSD, from: "USD")).doubleValue
-        let movieLocal = NSDecimalNumber(decimal: cm.convertToSelected(movieUSD, from: "USD")).doubleValue
-        let dinnerLocal = NSDecimalNumber(decimal: cm.convertToSelected(dinnerUSD, from: "USD")).doubleValue
-        let coffees = coffeeLocal > 0 ? Int(annualDouble / coffeeLocal) : 0
-        let movies = movieLocal > 0 ? Int(annualDouble / movieLocal) : 0
-        let dinners = dinnerLocal > 0 ? Int(annualDouble / dinnerLocal) : 0
-        return [
-            Comparison(icon: "cup.and.saucer.fill", count: "\(coffees)", label: "coffees"),
-            Comparison(icon: "ticket.fill",          count: "\(movies)",  label: "movie tickets"),
-            Comparison(icon: "fork.knife",           count: "\(dinners)", label: "dinners out"),
-        ]
-    }
+/// A ranked row: a name, an amount, and a bar showing its size against the largest.
+private struct BarRow: View {
+    let title: String
+    let value: String
+    let share: Double
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 14) {
-            HStack {
-                VStack(alignment: .leading, spacing: 2) {
-                    Text("This year you'll spend")
-                        .font(.system(.caption, design: .default).weight(.medium))
-                        .foregroundStyle(Color.obsidianTextSecondary)
-                    Text(CurrencyManager.shared.format(annualSpend))
-                        .font(.system(.title, design: .default).weight(.black))
-                        .foregroundStyle(Color.accentMint)
-                    Text("on subscriptions")
-                        .font(.system(.caption, design: .default).weight(.medium))
-                        .foregroundStyle(Color.obsidianTextSecondary)
-                }
-                Spacer()
-                Image(systemName: "dollarsign.circle.fill")
-                    .font(.system(size: 32))
-                    .foregroundStyle(Color.accentMint.opacity(0.3))
+        VStack(alignment: .leading, spacing: 8) {
+            HStack(alignment: .firstTextBaseline) {
+                Text(verbatim: title)
+                    .font(.body)
+                    .foregroundStyle(Color.inkText)
+                Spacer(minLength: 12)
+                Text(verbatim: value)
+                    .font(.body.monospacedDigit())
+                    .foregroundStyle(Color.inkText)
             }
-
-            Divider()
-                .background(Color.white.opacity(0.06))
-
-            HStack(spacing: 0) {
-                ForEach(comparisons.indices, id: \.self) { i in
-                    let c = comparisons[i]
-                    VStack(spacing: 4) {
-                        Image(systemName: c.icon)
-                            .font(.system(size: 16))
-                            .foregroundStyle(Color.obsidianTextSecondary)
-                        Text(c.count)
-                            .font(.system(.headline, design: .default).weight(.bold))
-                            .foregroundStyle(.white)
-                        Text(c.label)
-                            .font(.system(size: 10, design: .default))
-                            .foregroundStyle(Color.obsidianTextTertiary)
-                    }
-                    .frame(maxWidth: .infinity)
-
-                    if i < comparisons.count - 1 {
-                        Divider()
-                            .background(Color.white.opacity(0.06))
-                            .frame(height: 40)
-                    }
+            GeometryReader { geo in
+                ZStack(alignment: .leading) {
+                    Capsule().fill(Color.white.opacity(0.08)).frame(height: 3)
+                    Capsule().fill(Color.inkText).frame(width: max(3, geo.size.width * share), height: 3)
                 }
             }
+            .frame(height: 3)
+            .accessibilityHidden(true)
         }
-        .padding(16)
-        .surfaceCard(cornerRadius: 20)
+        .padding(.vertical, 12)
+        .accessibilityElement(children: .combine)
     }
-}
-
-#Preview {
-    AnalysisView()
 }

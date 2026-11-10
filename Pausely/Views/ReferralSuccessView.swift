@@ -4,7 +4,7 @@ import SwiftUI
 // MARK: - Confetti View
 struct ConfettiView: View {
     @State private var confettiParticles: [ConfettiParticle] = []
-    let colors: [Color] = [.accentMint, .accentMint, .accentMint, .accentMint, .white, .green]
+    let colors: [Color] = [Color.inkText, Color.inkText, Color.inkText, Color.inkText, .white, .green]
 
     var body: some View {
         GeometryReader { geometry in

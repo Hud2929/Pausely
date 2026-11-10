@@ -13,7 +13,7 @@ struct NotificationsSettingsView: View {
 
     var body: some View {
         ZStack {
-            PremiumBackground()
+            Color.ink.ignoresSafeArea()
 
             ScrollView(showsIndicators: false) {
                 VStack(spacing: 28) {
@@ -25,7 +25,7 @@ struct NotificationsSettingsView: View {
                                 Text("Back")
                             }
                             .font(.body.weight(.medium))
-                            .foregroundColor(Color.obsidianTextSecondary)
+                            .foregroundColor(Color.inkTextMuted)
                         }
                         .accessibilityLabel("Back")
 
@@ -33,7 +33,7 @@ struct NotificationsSettingsView: View {
 
                         Text("Notifications")
                             .font(.headline.weight(.bold))
-                            .foregroundColor(.white)
+                            .foregroundStyle(Color.inkText)
 
                         Spacer()
 
@@ -64,7 +64,7 @@ struct NotificationsSettingsView: View {
 
                     Text("Renewal reminders come at 9am the number of days you choose for each subscription (\"Remind me\" when you edit it), again the day before, and the morning of. \"Keep it\" on a reminder stops the rest for that charge.")
                         .font(.footnote)
-                        .foregroundColor(Color.obsidianTextTertiary)
+                        .foregroundColor(Color.inkTextFaint)
                         .padding(.horizontal, 24)
                         .frame(maxWidth: .infinity, alignment: .leading)
 
@@ -89,25 +89,25 @@ struct NotificationsSettingsView: View {
         HStack(spacing: 14) {
             ZStack {
                 Circle()
-                    .fill((notifications.isAuthorized ? Color.accentMint : Color.orange).opacity(0.15))
+                    .fill((notifications.isAuthorized ? Color.inkText : Color.orange).opacity(0.15))
                     .frame(width: 48, height: 48)
                 Image(systemName: notifications.isAuthorized ? "bell.badge.fill" : "bell.slash.fill")
                     .font(.title3)
-                    .foregroundColor(notifications.isAuthorized ? Color.accentMint : Color.orange)
+                    .foregroundColor(notifications.isAuthorized ? Color.inkText : Color.orange)
             }
             .accessibilityHidden(true)
 
             VStack(alignment: .leading, spacing: 2) {
                 Text(notifications.isAuthorized ? "Reminders are on" : "Reminders are off")
                     .font(.callout.weight(.semibold))
-                    .foregroundColor(.white)
+                    .foregroundStyle(Color.inkText)
                 Text(notifications.isAuthorized
                      ? "Pausely can warn you before you're charged."
                      : status == .denied
                         ? "Notifications for Pausely are off in iOS Settings."
                         : "Turn them on so renewals never surprise you.")
                     .font(.footnote)
-                    .foregroundColor(Color.obsidianTextSecondary)
+                    .foregroundColor(Color.inkTextMuted)
                     .fixedSize(horizontal: false, vertical: true)
             }
 
@@ -130,7 +130,7 @@ struct NotificationsSettingsView: View {
                         .foregroundColor(.black)
                         .padding(.horizontal, 14)
                         .frame(height: 34)
-                        .background(Capsule().fill(status == .denied ? Color.orange : Color.accentMint))
+                        .background(Capsule().fill(status == .denied ? Color.orange : Color.inkText))
                 }
                 .buttonStyle(PlainButtonStyle())
                 .disabled(isAsking)
@@ -139,7 +139,7 @@ struct NotificationsSettingsView: View {
         .padding(16)
         .background(
             RoundedRectangle(cornerRadius: 16)
-                .fill(Color.obsidianSurface)
+                .fill(Color.inkRaised)
                 .overlay(RoundedRectangle(cornerRadius: 16).stroke(Color.white.opacity(0.06), lineWidth: 1))
         )
     }
@@ -158,7 +158,7 @@ struct NotificationsSettingsView: View {
         VStack(alignment: .leading, spacing: 8) {
             Text(title)
                 .font(.caption.weight(.bold))
-                .foregroundColor(Color.obsidianTextTertiary)
+                .foregroundColor(Color.inkTextFaint)
                 .padding(.leading, 4)
 
             VStack(spacing: 0) {
@@ -166,28 +166,28 @@ struct NotificationsSettingsView: View {
                     HStack(spacing: 14) {
                         ZStack {
                             RoundedRectangle(cornerRadius: 10)
-                                .fill(Color.accentMint.opacity(0.12))
+                                .fill(Color.white.opacity(0.06))
                                 .frame(width: 38, height: 38)
 
                             Image(systemName: row.icon)
                                 .font(.callout)
-                                .foregroundColor(Color.accentMint)
+                                .foregroundColor(Color.inkText)
                         }
 
                         VStack(alignment: .leading, spacing: 2) {
                             Text(row.title)
                                 .font(.callout.weight(.semibold))
-                                .foregroundColor(.white)
+                                .foregroundStyle(Color.inkText)
 
                             Text(row.subtitle)
                                 .font(.footnote)
-                                .foregroundColor(Color.obsidianTextSecondary)
+                                .foregroundColor(Color.inkTextMuted)
                         }
 
                         Spacer()
 
                         Toggle("", isOn: row.binding)
-                            .tint(Color.accentMint)
+                            .tint(Color.inkText)
                             .labelsHidden()
                     }
                     .padding(.horizontal, 16)
@@ -202,7 +202,7 @@ struct NotificationsSettingsView: View {
             }
             .background(
                 RoundedRectangle(cornerRadius: 16)
-                    .fill(Color.obsidianSurface)
+                    .fill(Color.inkRaised)
                     .overlay(
                         RoundedRectangle(cornerRadius: 16)
                             .stroke(Color.white.opacity(0.06), lineWidth: 1)

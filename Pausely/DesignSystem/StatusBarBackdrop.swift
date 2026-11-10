@@ -3,19 +3,11 @@ import SwiftUI
 /// A fade behind the status bar so scrolled content never runs under the clock.
 /// For full-screen layouts that ignore the top safe area (the tabs, the paywall).
 struct StatusBarBackdrop: ViewModifier {
-    var color: Color = .obsidianBlack
+    var color: Color = .ink
 
     func body(content: Content) -> some View {
         content.overlay(alignment: .top) {
-            LinearGradient(
-                stops: [
-                    .init(color: color, location: 0),
-                    .init(color: color.opacity(0.94), location: 0.7),
-                    .init(color: color.opacity(0), location: 1)
-                ],
-                startPoint: .top,
-                endPoint: .bottom
-            )
+            Color.inkText
             .frame(height: Self.statusBarHeight + 14)
             .frame(maxWidth: .infinity, alignment: .top)
             .ignoresSafeArea()
@@ -36,7 +28,7 @@ struct StatusBarBackdrop: ViewModifier {
 }
 
 extension View {
-    func statusBarBackdrop(_ color: Color = .obsidianBlack) -> some View {
+    func statusBarBackdrop(_ color: Color = .ink) -> some View {
         modifier(StatusBarBackdrop(color: color))
     }
 }

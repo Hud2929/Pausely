@@ -41,15 +41,15 @@ struct LanguageSettingsView: View {
                 VStack(spacing: 8) {
                     Image(systemName: "globe")
                         .font(.largeTitle)
-                        .foregroundStyle(Color.accentMint)
+                        .foregroundStyle(Color.inkText)
 
                     Text("Language")
-                        .font(.system(.title, design: .default).weight(.bold))
-                        .foregroundStyle(.white)
+                        .font(.title.weight(.bold))
+                        .foregroundStyle(Color.inkText)
 
                     Text("Choose your preferred language")
-                        .font(.system(.subheadline, design: .default).weight(.medium))
-                        .foregroundStyle(.white.opacity(0.6))
+                        .font(.subheadline.weight(.medium))
+                        .foregroundStyle(Color.inkTextMuted)
                 }
                 .padding(.top, 20)
 
@@ -57,18 +57,18 @@ struct LanguageSettingsView: View {
                 if languages.count > 5 {
                     HStack {
                         Image(systemName: "magnifyingglass")
-                            .foregroundStyle(.white.opacity(0.5))
+                            .foregroundStyle(Color.inkTextFaint)
 
                         TextField("Search languages...", text: $searchText)
-                            .font(.system(.callout, design: .default).weight(.medium))
-                            .foregroundStyle(.white)
+                            .font(.callout.weight(.medium))
+                            .foregroundStyle(Color.inkText)
                             .keyboardType(.default)
                             .submitLabel(.search)
 
                         if !searchText.isEmpty {
                             Button(action: { searchText = "" }) {
                                 Image(systemName: "xmark.circle.fill")
-                                    .foregroundStyle(.white.opacity(0.5))
+                                    .foregroundStyle(Color.inkTextFaint)
                             }
                             .accessibilityLabel("Clear search")
                         }
@@ -89,7 +89,6 @@ struct LanguageSettingsView: View {
                             isSelected: selectedLanguage == language.code,
                             action: {
                                 selectedLanguage = language.code
-                                HapticStyle.medium.trigger()
                             }
                         )
                     }
@@ -100,15 +99,15 @@ struct LanguageSettingsView: View {
                 HStack(spacing: 12) {
                     Image(systemName: "info.circle.fill")
                         .font(.title3)
-                        .foregroundStyle(Color.accentMint)
+                        .foregroundStyle(Color.inkText)
 
                     Text("Language changes apply instantly. Some features may not be fully translated yet.")
-                        .font(.system(.footnote, design: .default).weight(.medium))
-                        .foregroundStyle(.white.opacity(0.6))
+                        .font(.footnote.weight(.medium))
+                        .foregroundStyle(Color.inkTextMuted)
                         .multilineTextAlignment(.leading)
                 }
                 .padding()
-                .glass(intensity: 0.05, tint: .white)
+                .background(Color.inkRaised, in: RoundedRectangle(cornerRadius: Layout.cardRadius, style: .continuous))
                 .padding(.horizontal, 20)
 
                 Spacer(minLength: 40)
@@ -140,12 +139,12 @@ struct LanguageRow: View {
 
                 VStack(alignment: .leading, spacing: 2) {
                     Text(language.name)
-                        .font(.system(.callout, design: .default).weight(.semibold))
-                        .foregroundStyle(.white)
+                        .font(.callout.weight(.semibold))
+                        .foregroundStyle(Color.inkText)
 
                     Text(language.code == "system" ? "Uses device language" : language.code.uppercased())
-                        .font(.system(.footnote, design: .default).weight(.medium))
-                        .foregroundStyle(.white.opacity(0.5))
+                        .font(.footnote.weight(.medium))
+                        .foregroundStyle(Color.inkTextFaint)
                 }
 
                 Spacer()
@@ -153,14 +152,14 @@ struct LanguageRow: View {
                 if isSelected {
                     Image(systemName: "checkmark.circle.fill")
                         .font(.title3)
-                        .foregroundStyle(Color.accentMint)
+                        .foregroundStyle(Color.inkText)
                 }
             }
             .padding()
-            .glass(intensity: isSelected ? 0.15 : 0.08, tint: isSelected ? Color.accentMint : .white)
+            .background(Color.inkRaised, in: RoundedRectangle(cornerRadius: Layout.cardRadius, style: .continuous))
             .overlay(
                 RoundedRectangle(cornerRadius: 14)
-                    .stroke(isSelected ? Color.accentMint.opacity(0.5) : Color.clear, lineWidth: 1)
+                    .stroke(isSelected ? Color.inkTextMuted : Color.clear, lineWidth: 1)
             )
         }
         .buttonStyle(PlainButtonStyle())

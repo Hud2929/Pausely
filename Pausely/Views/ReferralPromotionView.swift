@@ -23,30 +23,30 @@ struct ApplyReferralView: View {
     var body: some View {
         NavigationStack {
             ZStack {
-                AnimatedGradientBackground()
+                Color.ink.ignoresSafeArea()
                 
                 VStack(spacing: 32) {
                     // Header
                     VStack(spacing: 16) {
                         ZStack {
                             Circle()
-                                .fill(Color.accentMint.opacity(0.2))
+                                .fill(Color.white.opacity(0.06))
                                 .frame(width: 100, height: 100)
                             
                             Image(systemName: "percent")
-                                .font(.system(.largeTitle, design: .default).weight(.bold))
-                                .foregroundColor(Color.accentMint)
+                                .font(.largeTitle.weight(.bold))
+                                .foregroundColor(Color.inkText)
                         }
                         
                         VStack(spacing: 8) {
                             Text("30% Off Your First Month!")
-                                .font(.system(.title2, design: .default).weight(.bold))
-                                .foregroundColor(.white)
+                                .font(.title2.weight(.bold))
+                                .foregroundStyle(Color.inkText)
                                 .multilineTextAlignment(.center)
 
                             Text("Enter a referral code to get 30% off Pausely Pro")
-                                .font(.system(.callout, design: .default).weight(.medium))
-                                .foregroundColor(.white.opacity(0.7))
+                                .font(.callout.weight(.medium))
+                                .foregroundStyle(Color.inkTextMuted)
                                 .multilineTextAlignment(.center)
                         }
                     }
@@ -59,15 +59,15 @@ struct ApplyReferralView: View {
                             .textInputAutocapitalization(.characters)
                             .autocorrectionDisabled()
                             .multilineTextAlignment(.center)
-                            .foregroundColor(.white)
+                            .foregroundStyle(Color.inkText)
                             .keyboardType(.default)
                             .submitLabel(.go)
                             .padding()
-                            .glass(intensity: 0.2, tint: .white)
+                            .background(Color.inkRaised, in: RoundedRectangle(cornerRadius: Layout.cardRadius, style: .continuous))
                         
                         if let error = errorMessage {
                             Text(error)
-                                .font(.system(.footnote, design: .default).weight(.medium))
+                                .font(.footnote.weight(.medium))
                                 .foregroundColor(.red.opacity(0.8))
                                 .multilineTextAlignment(.center)
                         }
@@ -81,20 +81,15 @@ struct ApplyReferralView: View {
                                 }
                                 
                                 Text("Apply Code")
-                                    .font(.system(.body, design: .default).weight(.semibold))
+                                    .font(.body.weight(.semibold))
                             }
-                            .foregroundColor(.white)
+                            .foregroundStyle(Color.inkText)
                             .frame(maxWidth: .infinity)
                             .frame(height: 54)
                             .background(
-                                LinearGradient(
-                                    colors: [Color.accentMint, Color.accentMint],
-                                    startPoint: .leading,
-                                    endPoint: .trailing
-                                )
+                                Color.inkText
                             )
                             .cornerRadius(16)
-                            .shadow(color: Color.accentMint.opacity(0.4), radius: 15)
                         }
                         .disabled(code.count < 6 || isApplying)
                         .accessibilityHint(code.count < 6 ? "Please enter a valid 6-character referral code" : isApplying ? "Please wait, applying code" : "")
@@ -112,7 +107,7 @@ struct ApplyReferralView: View {
                     Button("Cancel") {
                         dismiss()
                     }
-                    .foregroundColor(.white)
+                    .foregroundStyle(Color.inkText)
                 }
             }
             .alert("Success!", isPresented: $showSuccess) {
@@ -142,7 +137,7 @@ struct ApplyReferralView: View {
                 await MainActor.run {
                     isApplying = false
                     showSuccess = true
-                    HapticStyle.success.trigger()
+                    Feel.landed()
                 }
             } catch let error as ReferralError {
                 await MainActor.run {

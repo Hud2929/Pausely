@@ -50,7 +50,7 @@ struct HelpSupportView: View {
 
     var body: some View {
         ZStack {
-            PremiumBackground()
+            Color.ink.ignoresSafeArea()
 
             ScrollView(showsIndicators: false) {
                 VStack(spacing: 28) {
@@ -62,14 +62,14 @@ struct HelpSupportView: View {
                                 Text("Back")
                             }
                             .font(.body.weight(.medium))
-                            .foregroundColor(Color.obsidianTextSecondary)
+                            .foregroundColor(Color.inkTextMuted)
                         }
 
                         Spacer()
 
                         Text("Help & Support")
                             .font(.headline.weight(.bold))
-                            .foregroundColor(.white)
+                            .foregroundStyle(Color.inkText)
 
                         Spacer()
 
@@ -81,30 +81,30 @@ struct HelpSupportView: View {
                     // Icon
                     ZStack {
                         Circle()
-                            .fill(Color.accentMint.opacity(0.12))
+                            .fill(Color.white.opacity(0.06))
                             .frame(width: 80, height: 80)
 
                         Image(systemName: "questionmark.bubble.fill")
                             .font(.title)
-                            .foregroundColor(Color.accentMint)
+                            .foregroundColor(Color.inkText)
                     }
 
                     // Search
                     HStack(spacing: 12) {
                         Image(systemName: "magnifyingglass")
                             .font(.body)
-                            .foregroundColor(Color.obsidianTextTertiary)
+                            .foregroundColor(Color.inkTextFaint)
 
                         TextField("Search help articles...", text: $searchText)
                             .font(.body)
-                            .foregroundColor(.white)
+                            .foregroundStyle(Color.inkText)
                             .keyboardType(.default)
                             .submitLabel(.search)
                     }
                     .padding(14)
                     .background(
                         RoundedRectangle(cornerRadius: 14)
-                            .fill(Color.obsidianElevated)
+                            .fill(Color.inkLifted)
                             .overlay(
                                 RoundedRectangle(cornerRadius: 14)
                                     .stroke(Color.white.opacity(0.08), lineWidth: 1)
@@ -116,7 +116,7 @@ struct HelpSupportView: View {
                     VStack(alignment: .leading, spacing: 8) {
                         Text("FREQUENTLY ASKED QUESTIONS")
                             .font(.caption.weight(.bold))
-                            .foregroundColor(Color.obsidianTextTertiary)
+                            .foregroundColor(Color.inkTextFaint)
                             .padding(.leading, 4)
                             .padding(.horizontal, 20)
 
@@ -124,7 +124,7 @@ struct HelpSupportView: View {
                             if filteredFAQs.isEmpty {
                                 Text("No results for \"\(searchText)\"")
                                     .font(.subheadline)
-                                    .foregroundColor(Color.obsidianTextSecondary)
+                                    .foregroundColor(Color.inkTextMuted)
                                     .padding(.horizontal, 20)
                             } else {
                                 ForEach(filteredFAQs, id: \.0) { question, answer in
@@ -139,7 +139,7 @@ struct HelpSupportView: View {
                     VStack(alignment: .leading, spacing: 8) {
                         Text("CONTACT US")
                             .font(.caption.weight(.bold))
-                            .foregroundColor(Color.obsidianTextTertiary)
+                            .foregroundColor(Color.inkTextFaint)
                             .padding(.leading, 4)
 
                         VStack(spacing: 0) {
@@ -157,7 +157,7 @@ struct HelpSupportView: View {
                         }
                         .background(
                             RoundedRectangle(cornerRadius: 16)
-                                .fill(Color.obsidianSurface)
+                                .fill(Color.inkRaised)
                                 .overlay(
                                     RoundedRectangle(cornerRadius: 16)
                                         .stroke(Color.white.opacity(0.06), lineWidth: 1)
@@ -181,30 +181,29 @@ private struct ContactRow: View {
 
     var body: some View {
         Button(action: {
-            HapticStyle.light.trigger()
             action()
         }) {
             HStack(spacing: 14) {
                 ZStack {
                     RoundedRectangle(cornerRadius: 10)
-                        .fill(Color.accentMint.opacity(0.12))
+                        .fill(Color.white.opacity(0.06))
                         .frame(width: 38, height: 38)
                     Image(systemName: icon)
                         .font(.callout)
-                        .foregroundColor(Color.accentMint)
+                        .foregroundColor(Color.inkText)
                 }
                 VStack(alignment: .leading, spacing: 2) {
                     Text(title)
                         .font(.callout.weight(.semibold))
-                        .foregroundColor(.white)
+                        .foregroundStyle(Color.inkText)
                     Text(subtitle)
                         .font(.footnote)
-                        .foregroundColor(Color.obsidianTextSecondary)
+                        .foregroundColor(Color.inkTextMuted)
                 }
                 Spacer()
-                Image(systemName: "chevron.right")
+                Image(systemName: "chevron.forward")
                     .font(.caption.weight(.semibold))
-                    .foregroundColor(Color.obsidianTextTertiary)
+                    .foregroundColor(Color.inkTextFaint)
             }
             .padding(.horizontal, 16)
             .padding(.vertical, 12)
@@ -225,7 +224,7 @@ struct HelpFAQItem: View {
             content: {
                 Text(answer)
                     .font(.subheadline)
-                    .foregroundColor(Color.obsidianTextSecondary)
+                    .foregroundColor(Color.inkTextMuted)
                     .padding(.top, 10)
                     .padding(.bottom, 4)
                     .frame(maxWidth: .infinity, alignment: .leading)
@@ -233,21 +232,21 @@ struct HelpFAQItem: View {
             label: {
                 Text(question)
                     .font(.callout.weight(.semibold))
-                    .foregroundColor(.white)
+                    .foregroundStyle(Color.inkText)
             }
         )
         .padding(16)
         .background(
             RoundedRectangle(cornerRadius: 14)
-                .fill(Color.obsidianSurface)
+                .fill(Color.inkRaised)
                 .overlay(
                     RoundedRectangle(cornerRadius: 14)
                         .stroke(Color.white.opacity(0.06), lineWidth: 1)
                 )
         )
-        .tint(Color.accentMint)
+        .tint(Color.inkText)
         .onChange(of: isExpanded) { _, expanded in
-            if expanded { HapticStyle.light.trigger() }
+            if expanded { Feel.selection() }
         }
     }
 }

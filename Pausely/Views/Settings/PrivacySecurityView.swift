@@ -10,7 +10,7 @@ struct PrivacySecurityView: View {
 
     var body: some View {
         ZStack {
-            PremiumBackground()
+            Color.ink.ignoresSafeArea()
 
             ScrollView(showsIndicators: false) {
                 VStack(spacing: 28) {
@@ -22,14 +22,14 @@ struct PrivacySecurityView: View {
                                 Text("Back")
                             }
                             .font(.body.weight(.medium))
-                            .foregroundColor(Color.obsidianTextSecondary)
+                            .foregroundColor(Color.inkTextMuted)
                         }
 
                         Spacer()
 
                         Text("Privacy & Security")
                             .font(.headline.weight(.bold))
-                            .foregroundColor(.white)
+                            .foregroundStyle(Color.inkText)
 
                         Spacer()
 
@@ -41,12 +41,12 @@ struct PrivacySecurityView: View {
                     // Icon
                     ZStack {
                         Circle()
-                            .fill(Color.accentMint.opacity(0.12))
+                            .fill(Color.white.opacity(0.06))
                             .frame(width: 80, height: 80)
 
                         Image(systemName: "lock.shield.fill")
                             .font(.title)
-                            .foregroundColor(Color.accentMint)
+                            .foregroundColor(Color.inkText)
                     }
 
                     // How data is kept: facts, not switches.
@@ -79,22 +79,22 @@ struct PrivacySecurityView: View {
                             HStack(spacing: 14) {
                                 ZStack {
                                     RoundedRectangle(cornerRadius: 10)
-                                        .fill(Color.semanticDestructive.opacity(0.12))
+                                        .fill(Color.due.opacity(0.12))
                                         .frame(width: 38, height: 38)
                                     Image(systemName: "trash.fill")
                                         .font(.callout)
-                                        .foregroundColor(Color.semanticDestructive)
+                                        .foregroundColor(Color.due)
                                 }
                                 VStack(alignment: .leading, spacing: 2) {
                                     Text(isDeleting ? "Deleting…" : "Delete Account")
                                         .font(.callout.weight(.semibold))
-                                        .foregroundColor(Color.semanticDestructive)
+                                        .foregroundColor(Color.due)
                                     Text("Permanently remove your account and all its data")
                                         .font(.footnote)
-                                        .foregroundColor(Color.obsidianTextSecondary)
+                                        .foregroundColor(Color.inkTextMuted)
                                 }
                                 Spacer()
-                                if isDeleting { ProgressView().tint(Color.semanticDestructive) }
+                                if isDeleting { ProgressView().tint(Color.due) }
                             }
                             .padding(.horizontal, 16)
                             .padding(.vertical, 12)
@@ -133,10 +133,9 @@ struct PrivacySecurityView: View {
         defer { isDeleting = false }
         do {
             try await RevolutionaryAuthManager.shared.deleteAccount()
-            HapticStyle.success.trigger()
+            Feel.landed()
             dismiss()
         } catch {
-            HapticStyle.error.trigger()
             deleteError = "Check your connection and try again. If it keeps failing, email \(AppConfig.supportEmail) and we'll delete it within 30 days. (\(error.localizedDescription))"
         }
     }
@@ -146,7 +145,7 @@ struct PrivacySecurityView: View {
         VStack(alignment: .leading, spacing: 8) {
             Text(title)
                 .font(.caption.weight(.bold))
-                .foregroundColor(Color.obsidianTextTertiary)
+                .foregroundColor(Color.inkTextFaint)
                 .padding(.leading, 4)
 
             VStack(spacing: 0) {
@@ -154,7 +153,7 @@ struct PrivacySecurityView: View {
             }
             .background(
                 RoundedRectangle(cornerRadius: 16)
-                    .fill(Color.obsidianSurface)
+                    .fill(Color.inkRaised)
                     .overlay(
                         RoundedRectangle(cornerRadius: 16)
                             .stroke(Color.white.opacity(0.06), lineWidth: 1)
@@ -180,20 +179,20 @@ struct SettingsInfoRow: View {
         HStack(alignment: .top, spacing: 14) {
             ZStack {
                 RoundedRectangle(cornerRadius: 10)
-                    .fill(Color.accentMint.opacity(0.12))
+                    .fill(Color.white.opacity(0.06))
                     .frame(width: 38, height: 38)
                 Image(systemName: icon)
                     .font(.callout)
-                    .foregroundColor(Color.accentMint)
+                    .foregroundColor(Color.inkText)
             }
             .accessibilityHidden(true)
             VStack(alignment: .leading, spacing: 2) {
                 Text(title)
                     .font(.callout.weight(.semibold))
-                    .foregroundColor(.white)
+                    .foregroundStyle(Color.inkText)
                 Text(detail)
                     .font(.footnote)
-                    .foregroundColor(Color.obsidianTextSecondary)
+                    .foregroundColor(Color.inkTextMuted)
                     .fixedSize(horizontal: false, vertical: true)
             }
             Spacer(minLength: 0)
@@ -214,19 +213,19 @@ struct SettingsNavRow: View {
             HStack(spacing: 14) {
                 ZStack {
                     RoundedRectangle(cornerRadius: 10)
-                        .fill(Color.accentMint.opacity(0.12))
+                        .fill(Color.white.opacity(0.06))
                         .frame(width: 38, height: 38)
                     Image(systemName: icon)
                         .font(.callout)
-                        .foregroundColor(Color.accentMint)
+                        .foregroundColor(Color.inkText)
                 }
                 Text(title)
                     .font(.callout.weight(.semibold))
-                    .foregroundColor(.white)
+                    .foregroundStyle(Color.inkText)
                 Spacer()
-                Image(systemName: "chevron.right")
+                Image(systemName: "chevron.forward")
                     .font(.caption.weight(.semibold))
-                    .foregroundColor(Color.obsidianTextTertiary)
+                    .foregroundColor(Color.inkTextFaint)
             }
             .padding(.horizontal, 16)
             .padding(.vertical, 12)

@@ -47,7 +47,7 @@ class AppDelegate: NSObject, UIApplicationDelegate {
         // under the buttons; at the top it stays transparent.
         let scrolledAppearance = UINavigationBarAppearance()
         scrolledAppearance.configureWithDefaultBackground()
-        scrolledAppearance.backgroundColor = UIColor(Color.obsidianBlack).withAlphaComponent(0.92)
+        scrolledAppearance.backgroundColor = UIColor(Color.ink).withAlphaComponent(0.92)
         scrolledAppearance.shadowColor = .clear
         scrolledAppearance.titleTextAttributes = appearance.titleTextAttributes
 
@@ -392,7 +392,7 @@ struct PremiumWelcomeFlow: View {
     var body: some View {
         NavigationStack {
             ZStack {
-                PremiumBackground()
+                Color.ink.ignoresSafeArea()
                 authWallContent
             }
             .navigationBarHidden(true)
@@ -424,29 +424,24 @@ struct PremiumWelcomeFlow: View {
                 ZStack {
                     Circle()
                         .fill(
-                            LinearGradient(
-                                colors: [BrandColors.primary, BrandColors.secondary],
-                                startPoint: .topLeading,
-                                endPoint: .bottomTrailing
-                            )
+                            Color.inkText
                         )
                         .frame(width: 100, height: 100)
-                        .shadow(color: BrandColors.primary.opacity(0.4), radius: 30, x: 0, y: 15)
 
                     Image(systemName: "pause.circle.fill")
-                        .font(.system(.largeTitle, design: .default))
-                        .foregroundColor(.white)
+                        .font(.largeTitle)
+                        .foregroundStyle(Color.inkText)
                 }
 
                 VStack(spacing: 8) {
                     Text("Welcome to Pausely")
-                        .font(.system(.title, design: .default).weight(.bold))
-                        .foregroundColor(.white)
+                        .font(.title.weight(.bold))
+                        .foregroundStyle(Color.inkText)
                         .multilineTextAlignment(.center)
 
                     Text("Take control of your subscriptions")
-                        .font(.system(.body, design: .default).weight(.medium))
-                        .foregroundColor(Color.obsidianTextSecondary)
+                        .font(.body.weight(.medium))
+                        .foregroundColor(Color.inkTextMuted)
                 }
             }
             .padding(.bottom, 48)
@@ -481,14 +476,14 @@ struct PremiumWelcomeFlow: View {
                 Button(action: { showSignUp = true }) {
                     Text("Get Started")
                 }
-                .buttonStyle(PrimaryButtonStyle())
+                .buttonStyle(InkButtonStyle())
                 .padding(.horizontal, 24)
                 .accessibilityIdentifier("getStartedButton")
 
                 Button(action: { showSignIn = true }) {
                     Text("I already have an account")
                 }
-                .buttonStyle(GhostButtonStyle())
+                .buttonStyle(InkButtonStyle(kind: .quiet))
                 .accessibilityIdentifier("signInButton")
             }
             .padding(.bottom, 48)
@@ -507,22 +502,22 @@ struct PremiumFeatureRow: View {
             // Icon
             ZStack {
                 RoundedRectangle(cornerRadius: 12)
-                    .fill(BrandColors.primary.opacity(0.15))
+                    .fill(Color.inkText.opacity(0.15))
                     .frame(width: 52, height: 52)
                 
                 Image(systemName: icon)
-                    .font(.system(.title2, design: .default).weight(.semibold))
-                    .foregroundColor(BrandColors.primary)
+                    .font(.title2.weight(.semibold))
+                    .foregroundColor(Color.inkText)
             }
 
             VStack(alignment: .leading, spacing: 4) {
                 Text(title)
-                    .font(.system(.body, design: .default).weight(.semibold))
-                    .foregroundColor(.white)
+                    .font(.body.weight(.semibold))
+                    .foregroundStyle(Color.inkText)
 
                 Text(description)
-                    .font(.system(.subheadline, design: .default))
-                    .foregroundColor(.textSecondary)
+                    .font(.subheadline)
+                    .foregroundColor(.inkTextMuted)
             }
             
             Spacer()
@@ -530,7 +525,7 @@ struct PremiumFeatureRow: View {
         .padding(16)
         .background(
             RoundedRectangle(cornerRadius: 16)
-                .fill(BackgroundColors.secondary)
+                .fill(Color.inkRaised)
                 .overlay(
                     RoundedRectangle(cornerRadius: 16)
                         .stroke(.white.opacity(0.06), lineWidth: 1)
@@ -567,19 +562,19 @@ struct PremiumSignUpView: View {
     var body: some View {
         NavigationStack {
             ZStack {
-                PremiumBackground()
+                Color.ink.ignoresSafeArea()
 
                 ScrollView(showsIndicators: false) {
                     VStack(spacing: 20) {
                         // Header
                         VStack(spacing: 8) {
                             Text("Create Account")
-                                .font(.system(.title, design: .default).weight(.bold))
-                                .foregroundColor(.white)
+                                .font(.title.weight(.bold))
+                                .foregroundStyle(Color.inkText)
 
                             Text("Start your subscription journey")
-                                .font(.system(.body, design: .default))
-                                .foregroundColor(Color.obsidianTextSecondary)
+                                .font(.body)
+                                .foregroundColor(Color.inkTextMuted)
                         }
                         .padding(.top, 20)
 
@@ -589,16 +584,16 @@ struct PremiumSignUpView: View {
                             HStack(spacing: 12) {
                                 VStack(alignment: .leading, spacing: 8) {
                                     Text("First Name")
-                                        .font(.system(.subheadline, design: .default).weight(.medium))
-                                        .foregroundColor(Color.obsidianTextSecondary)
-                                    PremiumTextField(placeholder: "Jane", text: $firstName)
+                                        .font(.subheadline.weight(.medium))
+                                        .foregroundColor(Color.inkTextMuted)
+                                    InkTextField(placeholder: "Jane", text: $firstName)
                                         .accessibilityIdentifier("firstNameTextField")
                                 }
                                 VStack(alignment: .leading, spacing: 8) {
                                     Text("Last Name")
-                                        .font(.system(.subheadline, design: .default).weight(.medium))
-                                        .foregroundColor(Color.obsidianTextSecondary)
-                                    PremiumTextField(placeholder: "Smith", text: $lastName)
+                                        .font(.subheadline.weight(.medium))
+                                        .foregroundColor(Color.inkTextMuted)
+                                    InkTextField(placeholder: "Smith", text: $lastName)
                                         .accessibilityIdentifier("lastNameTextField")
                                 }
                             }
@@ -606,10 +601,10 @@ struct PremiumSignUpView: View {
                             // Email
                             VStack(alignment: .leading, spacing: 8) {
                                 Text("Email")
-                                    .font(.system(.subheadline, design: .default).weight(.medium))
-                                    .foregroundColor(Color.obsidianTextSecondary)
+                                    .font(.subheadline.weight(.medium))
+                                    .foregroundColor(Color.inkTextMuted)
 
-                                PremiumTextField(
+                                InkTextField(
                                     placeholder: "your@email.com",
                                     text: $email,
                                     keyboardType: .emailAddress,
@@ -621,10 +616,10 @@ struct PremiumSignUpView: View {
                             // Password
                             VStack(alignment: .leading, spacing: 8) {
                                 Text("Password")
-                                    .font(.system(.subheadline, design: .default).weight(.medium))
-                                    .foregroundColor(Color.obsidianTextSecondary)
+                                    .font(.subheadline.weight(.medium))
+                                    .foregroundColor(Color.inkTextMuted)
 
-                                PremiumTextField(
+                                InkTextField(
                                     placeholder: "Min. 8 characters",
                                     text: $password,
                                     isSecure: true
@@ -642,10 +637,10 @@ struct PremiumSignUpView: View {
                         if showError {
                             HStack(spacing: 8) {
                                 Image(systemName: "exclamationmark.triangle.fill")
-                                    .foregroundColor(.error)
+                                    .foregroundStyle(Color.due)
                                 Text(errorMessage)
-                                    .font(.system(.subheadline, design: .default))
-                                    .foregroundColor(.error)
+                                    .font(.subheadline)
+                                    .foregroundStyle(Color.due)
                             }
                             .padding(.horizontal, 24)
                         }
@@ -659,11 +654,11 @@ struct PremiumSignUpView: View {
                                         .tint(.white)
                                 } else {
                                     Text("Create Account")
-                                        .font(.system(.body, design: .default).weight(.semibold))
+                                        .font(.body.weight(.semibold))
                                 }
                             }
                         }
-                        .buttonStyle(PrimaryButtonStyle(isLoading: isLoading, isDisabled: !isValid))
+                        .buttonStyle(.ink)
                         .padding(.horizontal, 24)
                         .disabled(!isValid || isLoading)
                         .accessibilityIdentifier("createAccountButton")
@@ -672,7 +667,7 @@ struct PremiumSignUpView: View {
                         // Divider
                         HStack {
                             Rectangle().fill(Color.white.opacity(0.1)).frame(height: 1)
-                            Text("or").font(.system(.footnote, design: .default)).foregroundColor(.textTertiary).padding(.horizontal, 8)
+                            Text("or").font(.footnote).foregroundColor(.inkTextFaint).padding(.horizontal, 8)
                             Rectangle().fill(Color.white.opacity(0.1)).frame(height: 1)
                         }
                         .padding(.horizontal, 24)
@@ -694,8 +689,8 @@ struct PremiumSignUpView: View {
 
                         // Terms
                         Text("By creating an account, you agree to our Terms of Service and Privacy Policy")
-                            .font(.system(.footnote, design: .default))
-                            .foregroundColor(.textTertiary)
+                            .font(.footnote)
+                            .foregroundColor(.inkTextFaint)
                             .multilineTextAlignment(.center)
                             .padding(.horizontal, 40)
                             .padding(.bottom, 24)
@@ -706,7 +701,7 @@ struct PremiumSignUpView: View {
             .toolbar {
                 ToolbarItem(placement: .navigationBarLeading) {
                     Button("Cancel") { dismiss() }
-                        .foregroundColor(Color.obsidianTextSecondary)
+                        .foregroundColor(Color.inkTextMuted)
                         .accessibilityIdentifier("cancelButton")
                 }
             }
@@ -820,19 +815,19 @@ struct PremiumSignInView: View {
     var body: some View {
         NavigationStack {
             ZStack {
-                PremiumBackground()
+                Color.ink.ignoresSafeArea()
 
                 ScrollView(showsIndicators: false) {
                     VStack(spacing: 20) {
                         // Header
                         VStack(spacing: 8) {
                             Text("Welcome Back")
-                                .font(.system(.title, design: .default).weight(.bold))
-                                .foregroundColor(.white)
+                                .font(.title.weight(.bold))
+                                .foregroundStyle(Color.inkText)
 
                             Text("Sign in to continue")
-                                .font(.system(.body, design: .default))
-                                .foregroundColor(Color.obsidianTextSecondary)
+                                .font(.body)
+                                .foregroundColor(Color.inkTextMuted)
                         }
                         .padding(.top, 20)
 
@@ -840,10 +835,10 @@ struct PremiumSignInView: View {
                         VStack(spacing: 20) {
                             VStack(alignment: .leading, spacing: 8) {
                                 Text("Email")
-                                    .font(.system(.subheadline, design: .default).weight(.medium))
-                                    .foregroundColor(Color.obsidianTextSecondary)
+                                    .font(.subheadline.weight(.medium))
+                                    .foregroundColor(Color.inkTextMuted)
 
-                                PremiumTextField(
+                                InkTextField(
                                     placeholder: "your@email.com",
                                     text: $email,
                                     keyboardType: .emailAddress,
@@ -854,10 +849,10 @@ struct PremiumSignInView: View {
 
                             VStack(alignment: .leading, spacing: 8) {
                                 Text("Password")
-                                    .font(.system(.subheadline, design: .default).weight(.medium))
-                                    .foregroundColor(Color.obsidianTextSecondary)
+                                    .font(.subheadline.weight(.medium))
+                                    .foregroundColor(Color.inkTextMuted)
 
-                                PremiumTextField(
+                                InkTextField(
                                     placeholder: "••••••••",
                                     text: $password,
                                     isSecure: true
@@ -870,10 +865,10 @@ struct PremiumSignInView: View {
                         if showError {
                             HStack(spacing: 8) {
                                 Image(systemName: "exclamationmark.triangle.fill")
-                                    .foregroundColor(.error)
+                                    .foregroundStyle(Color.due)
                                 Text(errorMessage)
-                                    .font(.system(.subheadline, design: .default))
-                                    .foregroundColor(.error)
+                                    .font(.subheadline)
+                                    .foregroundStyle(Color.due)
                             }
                             .padding(.horizontal, 24)
                         }
@@ -887,11 +882,11 @@ struct PremiumSignInView: View {
                                         .tint(.white)
                                 } else {
                                     Text("Sign In")
-                                        .font(.system(.body, design: .default).weight(.semibold))
+                                        .font(.body.weight(.semibold))
                                 }
                             }
                         }
-                        .buttonStyle(PrimaryButtonStyle(isLoading: isLoading, isDisabled: !isValid))
+                        .buttonStyle(.ink)
                         .padding(.horizontal, 24)
                         .disabled(!isValid || isLoading)
                         .accessibilityIdentifier("signInButton")
@@ -900,14 +895,14 @@ struct PremiumSignInView: View {
                         Button("Forgot Password?") {
                             showPasswordReset = true
                         }
-                        .font(.system(.subheadline, design: .default))
-                        .foregroundColor(Color.obsidianTextSecondary)
+                        .font(.subheadline)
+                        .foregroundColor(Color.inkTextMuted)
                         .accessibilityIdentifier("forgotPasswordButton")
 
                         // Divider
                         HStack {
                             Rectangle().fill(Color.white.opacity(0.1)).frame(height: 1)
-                            Text("or").font(.system(.footnote, design: .default)).foregroundColor(.textTertiary).padding(.horizontal, 8)
+                            Text("or").font(.footnote).foregroundColor(.inkTextFaint).padding(.horizontal, 8)
                             Rectangle().fill(Color.white.opacity(0.1)).frame(height: 1)
                         }
                         .padding(.horizontal, 24)
@@ -934,7 +929,7 @@ struct PremiumSignInView: View {
             .toolbar {
                 ToolbarItem(placement: .navigationBarLeading) {
                     Button("Cancel") { dismiss() }
-                        .foregroundColor(Color.obsidianTextSecondary)
+                        .foregroundColor(Color.inkTextMuted)
                         .accessibilityIdentifier("signInCancelButton")
                 }
             }

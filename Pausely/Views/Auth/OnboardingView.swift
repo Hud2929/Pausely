@@ -26,7 +26,7 @@ struct EmailConfirmationView: View {
 
     var body: some View {
         ZStack {
-            AnimatedGradientBackground()
+            Color.ink.ignoresSafeArea()
 
             VStack(spacing: 32) {
                 Spacer()
@@ -35,55 +35,42 @@ struct EmailConfirmationView: View {
                 ZStack {
                     Circle()
                         .fill(
-                            RadialGradient(
-                                colors: [Color.accentMint.opacity(0.3), .clear],
-                                center: .center,
-                                startRadius: 0,
-                                endRadius: 100
-                            )
+                            Color.inkText
                         )
                         .frame(width: 200, height: 200)
                         .blur(radius: 20)
 
                     Circle()
-                        .fill(.ultraThinMaterial)
+                        .fill(Color.inkRaised)
                         .frame(width: 140, height: 140)
                         .overlay(
                             Circle()
                                 .stroke(
-                                    LinearGradient(
-                                        colors: [.white.opacity(0.5), .white.opacity(0.1)],
-                                        startPoint: .topLeading,
-                                        endPoint: .bottomTrailing
-                                    ),
+                                    Color.inkText,
                                     lineWidth: 1.5
                                 )
                         )
 
                     Image(systemName: "envelope.badge.shield.fill")
-                        .font(.system(.largeTitle, design: .default).weight(.light))
+                        .font(.largeTitle.weight(.light))
                         .foregroundStyle(
-                            LinearGradient(
-                                colors: [Color.accentMint, .white],
-                                startPoint: .topLeading,
-                                endPoint: .bottomTrailing
-                            )
+                            Color.inkText
                         )
                 }
 
                 // Text
                 VStack(spacing: 16) {
                     Text("Verify Your Email")
-                        .font(.system(.title, design: .default).weight(.bold))
-                        .foregroundStyle(.white)
+                        .font(.title.weight(.bold))
+                        .foregroundStyle(Color.inkText)
 
                     Text("Enter the 6-digit code we sent to")
-                        .font(.system(.body, design: .default))
-                        .foregroundStyle(.white.opacity(0.7))
+                        .font(.body)
+                        .foregroundStyle(Color.inkTextMuted)
 
                     Text(email)
-                        .font(.system(.body, design: .default).weight(.semibold))
-                        .foregroundStyle(Color.accentMint)
+                        .font(.body.weight(.semibold))
+                        .foregroundStyle(Color.inkText)
                 }
 
                 // OTP Input
@@ -106,10 +93,10 @@ struct EmailConfirmationView: View {
                 if let error = verificationError {
                     HStack(spacing: 6) {
                         Image(systemName: "exclamationmark.circle.fill")
-                            .foregroundStyle(Color.semanticDestructive)
+                            .foregroundStyle(Color.due)
                         Text(error)
-                            .font(.system(.subheadline, design: .default))
-                            .foregroundStyle(Color.semanticDestructive)
+                            .font(.subheadline)
+                            .foregroundStyle(Color.due)
                     }
                     .padding(.horizontal, 32)
                 }
@@ -134,18 +121,12 @@ struct EmailConfirmationView: View {
                             }
                             Text("Verify")
                         }
-                        .font(.system(.body, design: .default).weight(.semibold))
-                        .foregroundStyle(.white)
+                        .font(.body.weight(.semibold))
+                        .foregroundStyle(Color.inkText)
                         .frame(maxWidth: .infinity)
                         .padding()
                         .background(
-                            LinearGradient(
-                                colors: isCodeComplete
-                                    ? [Color.accentMint, Color.accentMint]
-                                    : [Color.gray.opacity(0.5), Color.gray.opacity(0.3)],
-                                startPoint: .leading,
-                                endPoint: .trailing
-                            )
+                            Color.inkText
                         )
                         .cornerRadius(16)
                     }
@@ -155,23 +136,23 @@ struct EmailConfirmationView: View {
                         HStack {
                             if resendTimer < 60 {
                                 Text("Resend code in \(resendTimer)s")
-                                    .foregroundStyle(.white.opacity(0.5))
+                                    .foregroundStyle(Color.inkTextFaint)
                             } else {
                                 Text("Resend Code")
-                                    .foregroundStyle(.white)
+                                    .foregroundStyle(Color.inkText)
                             }
                         }
-                        .font(.system(.body, design: .default).weight(.semibold))
+                        .font(.body.weight(.semibold))
                         .frame(maxWidth: .infinity)
                         .padding()
-                        .glass(intensity: 0.2, tint: .white)
+                        .background(Color.inkRaised, in: RoundedRectangle(cornerRadius: Layout.cardRadius, style: .continuous))
                     }
                     .disabled(resendTimer < 60)
 
                     Button(action: goBackToSignIn) {
                         Text("Use Different Email")
-                            .font(.system(.body, design: .default).weight(.medium))
-                            .foregroundStyle(.white.opacity(0.6))
+                            .font(.body.weight(.medium))
+                            .foregroundStyle(Color.inkTextMuted)
                     }
                 }
                 .padding(.horizontal, 32)
@@ -227,20 +208,18 @@ struct EmailConfirmationView: View {
         let code = otpCode.joined()
         isVerifying = true
         verificationError = nil
-        HapticStyle.medium.trigger()
 
         Task {
             do {
                 try await authManager.verifyEmailOTP(email: email, code: code)
                 await MainActor.run {
                     isVerifying = false
-                    HapticStyle.success.trigger()
+                    Feel.landed()
                     dismiss()
                 }
             } catch {
                 await MainActor.run {
                     isVerifying = false
-                    HapticStyle.error.trigger()
                     verificationError = "Invalid code. Please try again."
                     // Clear code for retry
                     otpCode = Array(repeating: "", count: 6)
@@ -307,14 +286,14 @@ struct OTPDigitBox: View {
                 .overlay(
                     RoundedRectangle(cornerRadius: 12)
                         .stroke(
-                            isFocused ? Color.accentMint : Color.white.opacity(0.15),
+                            isFocused ? Color.inkText : Color.white.opacity(0.15),
                             lineWidth: isFocused ? 2 : 1
                         )
                 )
 
             Text(text)
-                .font(.system(.title2, design: .default).weight(.bold))
-                .foregroundStyle(.white)
+                .font(.title2.weight(.bold))
+                .foregroundStyle(Color.inkText)
 
             // Hidden text field for actual input
             TextField("", text: $text)
@@ -348,33 +327,33 @@ struct EnhancedTextField: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
             Text(title)
-                .font(.system(.caption, design: .default).weight(.semibold))
-                .foregroundStyle(.white.opacity(0.6))
+                .font(.caption.weight(.semibold))
+                .foregroundStyle(Color.inkTextMuted)
                 .textCase(.uppercase)
             
             HStack {
                 Image(systemName: icon)
-                    .foregroundStyle(.white.opacity(0.5))
+                    .foregroundStyle(Color.inkTextFaint)
                     .frame(width: 24)
                 
                 if isSecure && !showPassword {
                     SecureField("", text: $text)
-                        .foregroundStyle(.white)
+                        .foregroundStyle(Color.inkText)
                 } else {
                     TextField("", text: $text)
-                        .foregroundStyle(.white)
+                        .foregroundStyle(Color.inkText)
                 }
                 
                 if isSecure {
                     Button(action: { showPassword.toggle() }) {
                         Image(systemName: showPassword ? "eye.slash" : "eye")
-                            .foregroundStyle(.white.opacity(0.5))
+                            .foregroundStyle(Color.inkTextFaint)
                     }
                     .accessibilityLabel(showPassword ? "Hide password" : "Show password")
                 }
             }
             .padding()
-            .glass(intensity: 0.15, tint: .white)
+            .background(Color.inkRaised, in: RoundedRectangle(cornerRadius: Layout.cardRadius, style: .continuous))
         }
     }
 }
@@ -385,10 +364,10 @@ struct ErrorMessageView: View {
     var body: some View {
         HStack(spacing: 8) {
             Image(systemName: "exclamationmark.triangle.fill")
-                .foregroundStyle(.orange)
+                .foregroundStyle(Color.decide)
             Text(message)
-                .font(.system(.subheadline, design: .default).weight(.medium))
-                .foregroundStyle(.white)
+                .font(.subheadline.weight(.medium))
+                .foregroundStyle(Color.inkText)
             Spacer()
         }
         .padding()
@@ -415,7 +394,7 @@ struct PasswordResetView: View {
     
     var body: some View {
         ZStack {
-            AnimatedGradientBackground()
+            Color.ink.ignoresSafeArea()
             
             VStack(spacing: 32) {
                 if isSent {
@@ -433,17 +412,17 @@ struct PasswordResetView: View {
             Spacer()
             
             Image(systemName: "lock.rotation")
-                .font(.system(.largeTitle, design: .default))
-                .foregroundStyle(Color.accentMint)
+                .font(.largeTitle)
+                .foregroundStyle(Color.inkText)
 
             VStack(spacing: 12) {
                 Text("Reset Password")
-                    .font(.system(.title, design: .default).weight(.bold))
-                    .foregroundStyle(.white)
+                    .font(.title.weight(.bold))
+                    .foregroundStyle(Color.inkText)
 
                 Text("Enter your email address and we'll send you a link to reset your password.")
-                    .font(.system(.subheadline, design: .default))
-                    .foregroundStyle(.white.opacity(0.6))
+                    .font(.subheadline)
+                    .foregroundStyle(Color.inkTextMuted)
                     .multilineTextAlignment(.center)
             }
             
@@ -465,17 +444,13 @@ struct PasswordResetView: View {
                         ProgressView().tint(.white)
                     }
                     Text("Send Reset Link")
-                        .font(.system(.body, design: .default).weight(.semibold))
+                        .font(.body.weight(.semibold))
                 }
-                .foregroundStyle(.white)
+                .foregroundStyle(Color.inkText)
                 .frame(maxWidth: .infinity)
                 .padding()
                 .background(
-                    LinearGradient(
-                        colors: [Color.accentMint, Color.accentMint],
-                        startPoint: .leading,
-                        endPoint: .trailing
-                    )
+                    Color.inkText
                 )
                 .cornerRadius(16)
             }
@@ -487,8 +462,8 @@ struct PasswordResetView: View {
                 dismiss()
             }
             .accessibilityIdentifier("cancelButton")
-            .font(.system(.body, design: .default).weight(.medium))
-            .foregroundStyle(.white.opacity(0.6))
+            .font(.body.weight(.medium))
+            .foregroundStyle(Color.inkTextMuted)
             
             Spacer()
         }
@@ -499,31 +474,31 @@ struct PasswordResetView: View {
             Spacer()
             
             Image(systemName: "checkmark.circle.fill")
-                .font(.system(.largeTitle, design: .default))
-                .foregroundStyle(Color.accentMint)
+                .font(.largeTitle)
+                .foregroundStyle(Color.inkText)
 
             VStack(spacing: 12) {
                 Text("Check Your Email")
-                    .font(.system(.title, design: .default).weight(.bold))
-                    .foregroundStyle(.white)
+                    .font(.title.weight(.bold))
+                    .foregroundStyle(Color.inkText)
 
                 Text("We've sent a password reset link to")
-                    .font(.system(.subheadline, design: .default))
-                    .foregroundStyle(.white.opacity(0.6))
+                    .font(.subheadline)
+                    .foregroundStyle(Color.inkTextMuted)
 
                 Text(resetEmail)
-                    .font(.system(.body, design: .default).weight(.semibold))
-                    .foregroundStyle(Color.accentMint)
+                    .font(.body.weight(.semibold))
+                    .foregroundStyle(Color.inkText)
             }
             
             Button("Done") {
                 dismiss()
             }
-            .font(.system(.body, design: .default).weight(.semibold))
-            .foregroundStyle(.white)
+            .font(.body.weight(.semibold))
+            .foregroundStyle(Color.inkText)
             .frame(maxWidth: .infinity)
             .padding()
-            .background(Color.accentMint.opacity(0.3))
+            .background(Color.inkTextMuted)
             .cornerRadius(16)
             
             Spacer()
@@ -545,7 +520,6 @@ struct PasswordResetView: View {
                 await MainActor.run {
                     isLoading = false
                     errorMessage = error.localizedDescription
-                    HapticStyle.warning.trigger()
                 }
             }
         }
@@ -560,13 +534,13 @@ struct TipRow: View {
     var body: some View {
         HStack(spacing: 12) {
             Image(systemName: icon)
-                .font(.system(.subheadline, design: .default))
+                .font(.subheadline)
                 .foregroundColor(Color(hex: "00F0FF"))
                 .frame(width: 24)
 
             Text(text)
-                .font(.system(.subheadline, design: .default))
-                .foregroundColor(.white)
+                .font(.subheadline)
+                .foregroundStyle(Color.inkText)
             
             Spacer()
         }

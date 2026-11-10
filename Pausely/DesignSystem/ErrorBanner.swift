@@ -10,10 +10,10 @@ struct ErrorBanner: ViewModifier {
             if let error = error {
                 HStack {
                     Image(systemName: "exclamationmark.circle.fill")
-                        .foregroundColor(.red)
+                        .foregroundStyle(Color.due)
                     Text(error)
                         .font(.caption)
-                        .foregroundColor(.red)
+                        .foregroundStyle(Color.due)
                     Spacer()
                     Button {
                         self.error = nil
@@ -37,7 +37,7 @@ extension View {
     }
 }
 
-// MARK: - Error Toast (auto-dismissing, obsidian surface)
+// MARK: - Error Toast (auto-dismissing)
 
 /// Slides in from the top of the screen and auto-dismisses after 4 seconds.
 /// Apply once at the root view to cover all tabs.
@@ -52,11 +52,11 @@ struct ErrorToastModifier: ViewModifier {
                 if isVisible, let msg = message {
                     HStack(spacing: 10) {
                         Image(systemName: "exclamationmark.circle.fill")
-                            .foregroundStyle(.red)
+                            .foregroundStyle(Color.due)
                             .font(.system(size: 16, weight: .semibold))
                         Text(msg)
-                            .font(.system(.subheadline, design: .default).weight(.medium))
-                            .foregroundStyle(.white)
+                            .font(.subheadline.weight(.medium))
+                            .foregroundStyle(Color.inkText)
                             .fixedSize(horizontal: false, vertical: true)
                         Spacer()
                     }
@@ -64,13 +64,12 @@ struct ErrorToastModifier: ViewModifier {
                     .padding(.vertical, 12)
                     .background(
                         RoundedRectangle(cornerRadius: 14, style: .continuous)
-                            .fill(Color.obsidianSurface)
+                            .fill(Color.inkRaised)
                             .overlay(
                                 RoundedRectangle(cornerRadius: 14, style: .continuous)
                                     .stroke(Color.red.opacity(0.3), lineWidth: 1)
                             )
                     )
-                    .shadow(color: .black.opacity(0.3), radius: 12, y: 4)
                     .padding(.horizontal, 16)
                     .padding(.top, 8)
                     .transition(.move(edge: .top).combined(with: .opacity))
@@ -81,7 +80,6 @@ struct ErrorToastModifier: ViewModifier {
             .onChange(of: message) { _, newMessage in
                 if newMessage != nil {
                     isVisible = true
-                    HapticStyle.warning.trigger()
                     dismissItem?.cancel()
                     let item = DispatchWorkItem {
                         withAnimation { isVisible = false }

@@ -1,1222 +1,300 @@
 import SwiftUI
 
-// MARK: - Artistic Profile View
+/// Profile: who is signed in, which plan they are on, and every setting. One list, no cards.
 struct PremiumProfileView: View {
     @ObservedObject private var authManager = RevolutionaryAuthManager.shared
     @ObservedObject private var paymentManager = PaymentManager.shared
     @ObservedObject private var store = SubscriptionStore.shared
-    @State private var showingPaywall = false
-    @State private var showingNotifications = false
-    @State private var showingReceipt = false
-    @State private var showingCurrency = false
-    @State private var showingPrivacy = false
-    @State private var showingHelp = false
-    @State private var showingExport = false
-    @State private var showingWhatsNew = false
-    @State private var showingWrapped = false
-    @State private var showingGmailImport = false
-    @State private var showingLanguage = false
-
-    var body: some View {
-        ZStack {
-            PremiumBackground()
-
-            ScrollView(showsIndicators: false) {
-                VStack(spacing: 0) {
-                    // Profile Header with artistic design
-                    ProfileHeaderCard(
-                        user: authManager.currentUser,
-                        isPremium: paymentManager.isPremium,
-                        subscriptionCount: store.subscriptions.count
-                    )
-                    .padding(.horizontal, 20)
-                    .padding(.top, 16)
-
-                    // Membership Status
-                    if !paymentManager.isPremium {
-                        UpgradePromptCard {
-                            showingPaywall = true
-                        }
-                        .padding(.horizontal, 20)
-                        .padding(.top, 20)
-                        .accessibilityIdentifier("upgradePromptCard")
-                    } else {
-                        PremiumStatusCard(
-                            memberSince: authManager.currentUser?.createdAt ?? Date()
-                        )
-                        .padding(.horizontal, 20)
-                        .padding(.top, 20)
-                    }
-
-                    // Stats Grid
-                    ProfileStatsGrid(store: store)
-                        .padding(.horizontal, 20)
-                        .padding(.top, 20)
-
-                    // Personality Card (always visible, drives Wrapped engagement)
-                    PersonalityProfileCard(subscriptions: store.activeSubscriptions) {
-                        if paymentManager.isPremium {
-                            showingWrapped = true
-                        }
-                    }
-                    .padding(.horizontal, 20)
-                    .padding(.top, 20)
-
-                    // Subscription Wrapped
-                    if paymentManager.isPremium {
-                        WrappedEntryCard {
-                            showingWrapped = true
-                        }
-                        .padding(.horizontal, 20)
-                        .padding(.top, 12)
-                    }
-
-                    // Settings Section
-                    SettingsSection(
-                        onNotifications: { showingNotifications = true },
-                        onCurrency: { showingCurrency = true },
-                        onPrivacy: { showingPrivacy = true },
-                        onHelp: { showingHelp = true },
-                        onExport: { showingExport = true },
-                        onGmailImport: { showingGmailImport = true },
-                        onLanguage: { showingLanguage = true },
-                        onReceipt: { showingReceipt = true }
-                    )
-                    .padding(.horizontal, 20)
-                    .padding(.top, 24)
-
-                    // What's New Button
-                    Button(action: {
-                        HapticStyle.medium.trigger()
-                        showingWhatsNew = true
-                    }) {
-                        HStack(spacing: 16) {
-                            ZStack {
-                                RoundedRectangle(cornerRadius: 10)
-                                    .fill(Color.accentMint.opacity(0.15))
-                                    .frame(width: 36, height: 36)
-
-                                Image(systemName: "sparkles")
-                                    .font(.body)
-                                    .foregroundColor(Color.accentMint)
-                            }
-
-                            Text("What's New")
-                                .font(.body)
-                                .foregroundColor(.white)
-
-                            Spacer()
-
-                            Text(Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "–")
-                                .font(.body)
-                                .foregroundColor(Color.obsidianTextSecondary)
-
-                            Image(systemName: "chevron.right")
-                                .font(.subheadline.weight(.semibold))
-                                .foregroundColor(Color.obsidianTextTertiary)
-                        }
-                        .padding(14)
-                        .background(Color.obsidianSurface)
-                    }
-                    .buttonStyle(PlainButtonStyle())
-                    .padding(.horizontal, 20)
-                    .padding(.top, 24)
-                    .accessibilityIdentifier("whatsNewButton")
-
-                    // About Section
-                    AboutSection()
-                        .padding(.horizontal, 20)
-                        .padding(.top, 24)
-
-                    // Sign Out
-                    SignOutButton {
-                        Task {
-                            await authManager.signOut()
-                        }
-                    }
-                    .padding(.horizontal, 20)
-                    .padding(.top, 32)
-                    .padding(.bottom, 40)
-                    .accessibilityIdentifier("signOutButton")
-                }
-            }
-        }
-        .sheet(isPresented: $showingPaywall) {
-            StoreKitUpgradeView(currentSubscriptionCount: store.subscriptions.count)
-        }
-        .sheet(isPresented: $showingNotifications) {
-            NotificationsSettingsView()
-        }
-        .sheet(isPresented: $showingReceipt) {
-            SavingsReceiptView()
-        }
-        .sheet(isPresented: $showingCurrency) {
-            CurrencySettingsView()
-        }
-        .sheet(isPresented: $showingPrivacy) {
-            PrivacySecurityView()
-        }
-        .sheet(isPresented: $showingHelp) {
-            HelpSupportView()
-        }
-        .sheet(isPresented: $showingExport) {
-            ExportDataView()
-        }
-        .sheet(isPresented: $showingWhatsNew) {
-            WhatsNewSheet()
-        }
-        .sheet(isPresented: $showingWrapped) {
-            SubscriptionWrappedView(subscriptions: store.subscriptions)
-        }
-        .sheet(isPresented: $showingGmailImport) {
-            InboxImportView()
-        }
-        .sheet(isPresented: $showingLanguage) {
-            NavigationStack {
-                LanguageSettingsView()
-                    .toolbar {
-                        ToolbarItem(placement: .topBarLeading) {
-                            Button("Close") { showingLanguage = false }
-                                .foregroundStyle(Color.accentMint)
-                        }
-                    }
-            }
-        }
-    }
-}
-
-// MARK: - Profile Header Card
-struct ProfileHeaderCard: View {
-    let user: User?
-    let isPremium: Bool
-    let subscriptionCount: Int
-
-    var body: some View {
-        HStack(spacing: 16) {
-            // Avatar
-            ZStack {
-                Circle()
-                    .fill(Color.accentMint.opacity(0.15))
-                    .frame(width: 72, height: 72)
-
-                Text(user?.initials ?? "U")
-                    .font(.system(.title2, design: .default).weight(.bold))
-                    .foregroundStyle(Color.accentMint)
-
-                if isPremium {
-                    Circle()
-                        .fill(Color.accentMint)
-                        .frame(width: 22, height: 22)
-                        .overlay(
-                            Image(systemName: "checkmark")
-                                .font(.system(size: 10, weight: .bold))
-                                .foregroundStyle(Color.black)
-                        )
-                        .offset(x: 24, y: -24)
-                }
-            }
-            .accessibilityHidden(true)
-
-            // User info
-            VStack(alignment: .leading, spacing: 4) {
-                Text(user?.displayName ?? "User")
-                    .font(.system(.headline, design: .default).weight(.bold))
-                    .foregroundStyle(Color.obsidianText)
-
-                if let email = user?.email, !email.isEmpty {
-                    Text(email)
-                        .font(.system(.caption, design: .default))
-                        .foregroundStyle(Color.obsidianTextSecondary)
-                        .lineLimit(1)
-                }
-
-                if isPremium {
-                    Text("Pro Member")
-                        .font(.system(.caption2, design: .default).weight(.semibold))
-                        .foregroundStyle(Color.accentMint)
-                        .padding(.horizontal, 8)
-                        .padding(.vertical, 3)
-                        .background(Color.accentMint.opacity(0.12))
-                        .clipShape(Capsule())
-                        .padding(.top, 2)
-                }
-            }
-
-            Spacer()
-        }
-        .padding(20)
-        .surfaceCard(cornerRadius: 20)
-        .accessibilityElement(children: .combine)
-        .accessibilityLabel("Profile, \(user?.displayName ?? "User"), \(isPremium ? "Pro member" : "Free tier")")
-    }
-}
-
-// MARK: - Premium Status Card
-struct PremiumStatusCard: View {
-    let memberSince: Date
-    
-    var memberSinceText: String {
-        let formatter = DateFormatter()
-        formatter.dateStyle = .medium
-        return formatter.string(from: memberSince)
-    }
-    
-    var body: some View {
-        VStack(spacing: 16) {
-            HStack {
-                Image(systemName: "crown.fill")
-                    .font(.system(.title2, design: .default))
-                    .foregroundColor(Color.accentMint)
-                
-                VStack(alignment: .leading, spacing: 4) {
-                    Text("Pro Member")
-                        .font(.headline.bold())
-                        .foregroundColor(.white)
-
-                    Text("Member since \(memberSinceText)")
-                        .font(.subheadline)
-                        .foregroundColor(Color.obsidianTextSecondary)
-                }
-                
-                Spacer()
-                
-                PremiumBadge(text: "ACTIVE", badgeColor: Color.semanticSuccess)
-            }
-            
-            PremiumDivider()
-            
-            HStack(spacing: 24) {
-                ProFeatureItem(icon: "infinity", text: "Unlimited")
-                ProFeatureItem(icon: "arrow.triangle.swap", text: "Alternatives")
-                ProFeatureItem(icon: "chart.bar", text: "Insights")
-            }
-        }
-        .padding(20)
-        .surfaceCard(cornerRadius: 20)
-    }
-}
-
-// MARK: - Pro Feature Item
-struct ProFeatureItem: View {
-    let icon: String
-    let text: String
-    
-    var body: some View {
-        VStack(spacing: 6) {
-            Image(systemName: icon)
-                .font(.headline)
-                .foregroundColor(Color.accentMint)
-
-            Text(text)
-                .font(.caption)
-                .foregroundColor(Color.obsidianTextSecondary)
-        }
-    }
-}
-
-// MARK: - Upgrade Prompt Card
-struct UpgradePromptCard: View {
-    let onUpgrade: () -> Void
-    @State private var isPressed = false
-
-    var body: some View {
-        Button(action: {
-            HapticStyle.medium.trigger()
-            onUpgrade()
-        }) {
-            HStack(spacing: 14) {
-                ZStack {
-                    RoundedRectangle(cornerRadius: 12)
-                        .fill(Color.accentMint.opacity(0.12))
-                        .frame(width: 44, height: 44)
-
-                    Image(systemName: "sparkles")
-                        .font(.system(.body, design: .default).weight(.semibold))
-                        .foregroundStyle(Color.accentMint)
-                }
-
-                VStack(alignment: .leading, spacing: 3) {
-                    Text("Upgrade to Pro")
-                        .font(.system(.subheadline, design: .default).weight(.semibold))
-                        .foregroundStyle(Color.obsidianText)
-
-                    Text("Unlimited subscriptions & all features")
-                        .font(.system(.caption, design: .default))
-                        .foregroundStyle(Color.obsidianTextSecondary)
-                }
-
-                Spacer()
-
-                Image(systemName: "chevron.right")
-                    .font(.system(.caption, design: .default).weight(.semibold))
-                    .foregroundStyle(Color.obsidianTextTertiary)
-            }
-            .padding(16)
-            .surfaceCard(cornerRadius: 16)
-        }
-        .buttonStyle(PlainButtonStyle())
-        .scaleEffect(isPressed ? 0.98 : 1)
-        .simultaneousGesture(
-            DragGesture(minimumDistance: 0)
-                .onChanged { _ in withAnimation(.easeInOut(duration: 0.1)) { isPressed = true } }
-                .onEnded { _ in withAnimation(.easeInOut(duration: 0.1)) { isPressed = false } }
-        )
-    }
-}
-
-
-// MARK: - Profile Stats Grid
-struct ProfileStatsGrid: View {
-    @ObservedObject var store: SubscriptionStore
-
-    var body: some View {
-        VStack(spacing: 12) {
-            // Hero row: monthly spend spans full width — the most important number
-            ProfileStatHero(
-                value: formatCurrency(store.totalMonthlySpend),
-                label: "Monthly Spend"
-            )
-
-            // Secondary row: two equal smaller stats
-            HStack(spacing: 12) {
-                let subCount = store.subscriptions.count
-                ProfileStatBox(
-                    value: "\(subCount)",
-                    label: subCount == 1 ? "subscription" : "subscriptions",
-                    icon: "list.bullet.rectangle",
-                    color: Color.accentMint
-                )
-
-                ProfileStatBox(
-                    value: "\(store.upcomingRenewals.count)",
-                    label: "renew in 30 days",
-                    icon: "checkmark.shield",
-                    color: Color.semanticSuccess
-                )
-            }
-        }
-    }
-
-    private func formatCurrency(_ amount: Decimal) -> String {
-        return CurrencyManager.shared.format(amount)
-    }
-}
-
-// MARK: - Profile Stat Hero (full-width featured stat)
-struct ProfileStatHero: View {
-    let value: String
-    let label: String
-
-    var body: some View {
-        VStack(alignment: .leading, spacing: 0) {
-            Text(value)
-                .font(.system(.title, design: .default).weight(.bold))
-                .foregroundStyle(Color.accentMint)
-
-            Rectangle()
-                .fill(Color.white.opacity(0.08))
-                .frame(maxWidth: .infinity)
-                .frame(height: 1)
-                .padding(.top, 10)
-                .padding(.bottom, 8)
-
-            Text(label)
-                .font(.system(.caption, design: .default))
-                .foregroundStyle(Color.obsidianTextSecondary)
-        }
-        .padding(.horizontal, 18)
-        .padding(.vertical, 16)
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .background(
-            RoundedRectangle(cornerRadius: 16)
-                .fill(Color.obsidianSurface)
-                .overlay(
-                    RoundedRectangle(cornerRadius: 16)
-                        .stroke(Color.white.opacity(0.06), lineWidth: 1)
-                )
-        )
-    }
-}
-
-// MARK: - Profile Stat Box
-struct ProfileStatBox: View {
-    let value: String
-    let label: String
-    let icon: String
-    let color: Color
-
-    var body: some View {
-        VStack(alignment: .leading, spacing: 0) {
-            HStack {
-                Text(value)
-                    .font(.system(.title2, design: .default).weight(.bold))
-                    .foregroundStyle(Color.accentMint)
-                Spacer()
-                Image(systemName: icon)
-                    .font(.system(.caption, design: .default))
-                    .foregroundColor(color.opacity(0.6))
-            }
-
-            Rectangle()
-                .fill(Color.white.opacity(0.08))
-                .frame(maxWidth: .infinity)
-                .frame(height: 1)
-                .padding(.top, 10)
-                .padding(.bottom, 8)
-
-            Text(label)
-                .font(.system(.caption, design: .default))
-                .foregroundStyle(Color.obsidianTextSecondary)
-        }
-        .padding(.horizontal, 14)
-        .padding(.vertical, 14)
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .background(
-            RoundedRectangle(cornerRadius: 16)
-                .fill(Color.obsidianSurface)
-                .overlay(
-                    RoundedRectangle(cornerRadius: 16)
-                        .stroke(Color.white.opacity(0.06), lineWidth: 1)
-                )
-        )
-    }
-}
-
-// MARK: - Settings Section
-struct SettingsSection: View {
     @ObservedObject private var currencyManager = CurrencyManager.shared
     @Environment(\.openURL) private var openURL
-    let onNotifications: () -> Void
-    let onCurrency: () -> Void
-    let onPrivacy: () -> Void
-    let onHelp: () -> Void
-    let onExport: () -> Void
-    var onGmailImport: (() -> Void)? = nil
-    var onLanguage: (() -> Void)? = nil
-    var onReceipt: (() -> Void)? = nil
     @AppStorage("app_language") private var appLanguage = "system"
 
-    var body: some View {
-        VStack(alignment: .leading, spacing: 16) {
-            Text("Settings")
-                .font(.title2.bold())
-                .foregroundColor(.white)
-                .padding(.horizontal, 4)
+    @State private var sheet: Sheet?
+    @State private var confirmSignOut = false
 
-            VStack(spacing: 1) {
-                SettingsRow(icon: "doc.text.fill", title: "Savings Receipt", color: Color.accentMint, action: { onReceipt?() })
-                    .accessibilityIdentifier("savingsReceiptButton")
-                SettingsRow(icon: "arrow.up.forward.app.fill", title: "Apple Subscriptions", color: Color.accentMint, action: {
-                    if let url = URL(string: "https://apps.apple.com/account/subscriptions") {
-                        openURL(url)
+    private enum Sheet: String, Identifiable {
+        case paywall, notifications, receipt, currency, privacy, help, export, whatsNew, wrapped, inbox, language
+        var id: String { rawValue }
+    }
+
+    private var version: String { Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "" }
+
+    var body: some View {
+        ScrollView {
+            VStack(alignment: .leading, spacing: 0) {
+                header
+
+                group(nil) {
+                    row("doc.text", L10n.string("Savings Receipt"), id: "savingsReceiptButton") { sheet = .receipt }
+                    row("calendar", L10n.string("Your year in subscriptions"), id: "wrappedButton") { sheet = .wrapped }
+                    if FeatureFlags.inboxImportEnabled {
+                        let inboxes = InboxScanner.shared.accounts
+                        row("envelope",
+                            inboxes.isEmpty ? L10n.string("Find subscriptions in email") : L10n.string("Email inboxes"),
+                            value: inboxes.isEmpty ? nil : (inboxes.count == 1 ? inboxes[0].address : L10n.string("\(inboxes.count) connected")),
+                            id: "inboxImportButton") { sheet = .inbox }
                     }
-                })
-                .accessibilityIdentifier("importFromAppStoreButton")
-                if FeatureFlags.inboxImportEnabled {
-                    let inboxes = InboxScanner.shared.accounts
-                    SettingsRow(
-                        icon: "envelope.fill",
-                        title: inboxes.isEmpty ? "Find subscriptions in email" : "Email inboxes",
-                        value: inboxes.isEmpty ? nil : (inboxes.count == 1 ? inboxes[0].address : L10n.string("\(inboxes.count) connected")),
-                        color: Color.accentMint,
-                        action: { onGmailImport?() }
-                    )
-                    .accessibilityIdentifier("inboxImportButton")
-                }
-                SettingsRow(icon: "bell.fill", title: "Notifications", color: Color.semanticWarning, action: onNotifications)
-                    .accessibilityIdentifier("notificationsSettingsButton")
-                SettingsRow(icon: "dollarsign.circle.fill", title: "Currency", value: currencyManager.selectedCurrency, color: Color.semanticSuccess, action: onCurrency)
-                    .accessibilityIdentifier("currencySettingsButton")
-                SettingsRow(icon: "globe", title: "Language", value: LanguageSettingsView.displayName(for: appLanguage), color: Color.accentMint, action: { onLanguage?() })
-                    .accessibilityIdentifier("languageSettingsButton")
-                SettingsRow(icon: "square.and.arrow.up", title: "Export Data", color: Color.semanticInfo, action: onExport)
-                    .accessibilityIdentifier("exportDataButton")
-                SettingsRow(icon: "lock.fill", title: "Privacy & Security", color: Color.semanticInfo, action: onPrivacy)
-                    .accessibilityIdentifier("privacySecurityButton")
-                SettingsRow(icon: "questionmark.circle.fill", title: "Help & Support", color: Color.obsidianTextSecondary, action: onHelp)
-                    .accessibilityIdentifier("helpSupportButton")
-            }
-            .background(
-                RoundedRectangle(cornerRadius: 16)
-                    .fill(Color.obsidianSurface)
-            )
-        }
-    }
-}
-
-// MARK: - Settings Row
-struct SettingsRow: View {
-    let icon: String
-    let title: String
-    var value: String? = nil
-    let color: Color
-    let action: () -> Void
-    @State private var isPressed = false
-
-    var body: some View {
-        Button(action: {
-            HapticStyle.light.trigger()
-            action()
-        }) {
-            HStack(spacing: 16) {
-                ZStack {
-                    RoundedRectangle(cornerRadius: 10)
-                        .fill(color.opacity(0.15))
-                        .frame(width: 36, height: 36)
-
-                    Image(systemName: icon)
-                        .font(.body)
-                        .foregroundColor(color)
-                }
-
-                Text(LocalizedStringKey(title))  // titles are catalog keys; Text(String) skips translation
-                    .font(.body)
-                    .foregroundColor(.white)
-
-                Spacer()
-
-                if let value = value {
-                    Text(value)
-                        .font(.body)
-                        .foregroundColor(Color.obsidianTextSecondary)
-                }
-
-                Image(systemName: "chevron.right")
-                    .font(.subheadline.weight(.semibold))
-                    .foregroundColor(Color.obsidianTextTertiary)
-            }
-            .padding(14)
-            .background(Color.obsidianSurface)
-            .scaleEffect(isPressed ? 0.98 : 1)
-        }
-        .buttonStyle(PlainButtonStyle())
-        .simultaneousGesture(
-            DragGesture(minimumDistance: 0)
-                .onChanged { _ in withAnimation(.easeInOut(duration: 0.1)) { isPressed = true } }
-                .onEnded { _ in withAnimation(.easeInOut(duration: 0.1)) { isPressed = false } }
-        )
-    }
-}
-
-// MARK: - About Section
-struct AboutSection: View {
-    var body: some View {
-        VStack(alignment: .leading, spacing: 16) {
-            Text("About")
-                .font(.title2.bold())
-                .foregroundColor(.white)
-                .padding(.horizontal, 4)
-
-            VStack(spacing: 1) {
-                AboutRow(title: "Version", value: Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "")
-                AboutRow(title: "Build", value: Bundle.main.infoDictionary?["CFBundleVersion"] as? String ?? "")
-                AboutRow(title: "Terms of Service", action: {
-                    if let url = URL(string: AppConfig.termsOfServiceURL) {
-                        UIApplication.shared.open(url)
+                    row("arrow.up.forward.app", L10n.string("Apple Subscriptions"), id: "importFromAppStoreButton", last: true) {
+                        if let url = URL(string: "https://apps.apple.com/account/subscriptions") { openURL(url) }
                     }
-                })
-                AboutRow(title: "Privacy Policy", action: {
-                    if let url = URL(string: AppConfig.privacyPolicyURL) {
-                        UIApplication.shared.open(url)
-                    }
-                })
-            }
-            .background(
-                RoundedRectangle(cornerRadius: 16)
-                    .fill(Color.obsidianSurface)
-            )
-        }
-    }
-}
-
-// MARK: - About Row
-struct AboutRow: View {
-    let title: String
-    var value: String? = nil
-    var action: (() -> Void)? = nil
-    @State private var isPressed = false
-
-    var body: some View {
-        Button(action: {
-            HapticStyle.light.trigger()
-            action?()
-        }) {
-            HStack {
-                Text(LocalizedStringKey(title))  // titles are catalog keys; Text(String) skips translation
-                    .font(.body)
-                    .foregroundColor(.white)
-
-                Spacer()
-
-                if let value = value {
-                    Text(value)
-                        .font(.body)
-                        .foregroundColor(Color.obsidianTextSecondary)
-                } else {
-                    Image(systemName: "arrow.up.right")
-                        .font(.subheadline)
-                        .foregroundColor(Color.obsidianTextTertiary)
                 }
+
+                group(L10n.string("Settings")) {
+                    row("bell", L10n.string("Notifications"), id: "notificationsSettingsButton") { sheet = .notifications }
+                    row("dollarsign.circle", L10n.string("Currency"), value: currencyManager.selectedCurrency,
+                        id: "currencySettingsButton") { sheet = .currency }
+                    row("globe", L10n.string("Language"), value: LanguageSettingsView.displayName(for: appLanguage),
+                        id: "languageSettingsButton") { sheet = .language }
+                    row("square.and.arrow.up", L10n.string("Export Data"), id: "exportDataButton") { sheet = .export }
+                    row("lock", L10n.string("Privacy & Security"), id: "privacySecurityButton") { sheet = .privacy }
+                    row("questionmark.circle", L10n.string("Help & Support"), id: "helpSupportButton", last: true) { sheet = .help }
+                }
+
+                group(L10n.string("About")) {
+                    row("sparkles", L10n.string("What's New"), value: version, id: "whatsNewButton") { sheet = .whatsNew }
+                    row("doc.plaintext", L10n.string("Terms of Service"), id: "termsButton") { open(AppConfig.termsOfServiceURL) }
+                    row("hand.raised", L10n.string("Privacy Policy"), id: "privacyPolicyButton", last: true) { open(AppConfig.privacyPolicyURL) }
+                }
+
+                Button { confirmSignOut = true } label: {
+                    Text("Sign Out")
+                        .font(.body.weight(.semibold))
+                        .foregroundStyle(Color.due)
+                        .frame(maxWidth: .infinity, minHeight: Layout.tapTarget, alignment: .leading)
+                        .contentShape(Rectangle())
+                }
+                .buttonStyle(.plain)
+                .padding(.top, 28)
+                .accessibilityIdentifier("signOutButton")
             }
-            .padding(14)
-            .background(Color.obsidianSurface)
-            .scaleEffect(isPressed ? 0.98 : 1)
+            .padding(.horizontal, Layout.margin)
+            .padding(.top, 16)
+            .padding(.bottom, 32)
         }
-        .buttonStyle(PlainButtonStyle())
-        .disabled(action == nil)
-        .accessibilityHint(action == nil ? "No action available for this row" : "")
-        .simultaneousGesture(
-            DragGesture(minimumDistance: 0)
-                .onChanged { _ in withAnimation(.easeInOut(duration: 0.1)) { isPressed = true } }
-                .onEnded { _ in withAnimation(.easeInOut(duration: 0.1)) { isPressed = false } }
-        )
-    }
-}
-
-// MARK: - Sign Out Button
-struct SignOutButton: View {
-    let action: () -> Void
-    @State private var isPressed = false
-    @State private var showConfirm = false
-
-    var body: some View {
-        Button(action: {
-            HapticStyle.medium.trigger()
-            showConfirm = true
-        }) {
-            HStack {
-                Image(systemName: "arrow.left.circle.fill")
-                    .font(.title3)
-
-                Text("Sign Out")
-                    .font(.body.weight(.semibold))
-            }
-            .foregroundColor(Color.semanticDestructive)
-            .frame(maxWidth: .infinity)
-            .frame(height: 56)
-            .background(
-                RoundedRectangle(cornerRadius: 16)
-                    .fill(Color.semanticDestructive.opacity(0.1))
-                    .overlay(
-                        RoundedRectangle(cornerRadius: 16)
-                            .stroke(Color.semanticDestructive.opacity(0.2), lineWidth: 1)
-                    )
-            )
-            .scaleEffect(isPressed ? 0.97 : 1)
-        }
-        .buttonStyle(PlainButtonStyle())
-        .simultaneousGesture(
-            DragGesture(minimumDistance: 0)
-                .onChanged { _ in withAnimation(.easeInOut(duration: 0.1)) { isPressed = true } }
-                .onEnded { _ in withAnimation(.easeInOut(duration: 0.1)) { isPressed = false } }
-        )
-        .confirmationDialog("Sign out of Pausely?", isPresented: $showConfirm, titleVisibility: .visible) {
-            Button("Sign Out", role: .destructive) {
-                HapticStyle.heavy.trigger()
-                action()
-            }
+        .background(Color.ink.ignoresSafeArea())
+        .confirmationDialog("Sign out of Pausely?", isPresented: $confirmSignOut, titleVisibility: .visible) {
+            Button("Sign Out", role: .destructive) { Task { await authManager.signOut() } }
             Button("Cancel", role: .cancel) {}
         } message: {
             Text("Your data is saved and will be here when you return.")
         }
-    }
-}
-
-// MARK: - Wrapped Entry Card
-
-struct WrappedEntryCard: View {
-    let action: () -> Void
-
-    var body: some View {
-        Button(action: {
-            HapticStyle.medium.trigger()
-            action()
-        }) {
-            HStack(spacing: 14) {
-                ZStack {
-                    RoundedRectangle(cornerRadius: 12)
-                        .fill(LinearGradient(
-                            colors: [Color.accentMint.opacity(0.3), Color.accentMint.opacity(0.1)],
-                            startPoint: .topLeading,
-                            endPoint: .bottomTrailing
-                        ))
-                        .frame(width: 44, height: 44)
-                    Image(systemName: "chart.bar.xaxis.ascending.badge.clock")
-                        .font(.system(size: 18, weight: .semibold))
-                        .foregroundStyle(Color.accentMint)
+        .sheet(item: $sheet) { sheet in
+            switch sheet {
+            case .paywall: StoreKitUpgradeView(currentSubscriptionCount: store.subscriptions.count)
+            case .notifications: NotificationsSettingsView()
+            case .receipt: SavingsReceiptView()
+            case .currency: CurrencySettingsView()
+            case .privacy: PrivacySecurityView()
+            case .help: HelpSupportView()
+            case .export: ExportDataView()
+            case .whatsNew: WhatsNewSheet()
+            case .wrapped: SubscriptionWrappedView(subscriptions: store.subscriptions)
+            case .inbox: InboxImportView()
+            case .language:
+                NavigationStack {
+                    LanguageSettingsView()
+                        .toolbar {
+                            ToolbarItem(placement: .topBarLeading) {
+                                Button("Close") { self.sheet = nil }.foregroundStyle(Color.inkText)
+                            }
+                        }
                 }
-
-                VStack(alignment: .leading, spacing: 2) {
-                    Text("Subscription Wrapped")
-                        .font(.system(.body, design: .default).weight(.semibold))
-                        .foregroundStyle(.white)
-                    Text("Your year in subscriptions — shareable")
-                        .font(.system(.caption, design: .default))
-                        .foregroundStyle(Color.obsidianTextSecondary)
-                }
-
-                Spacer()
-
-                Image(systemName: "chevron.right")
-                    .font(.caption.weight(.semibold))
-                    .foregroundStyle(Color.obsidianTextTertiary)
             }
-            .padding(14)
-            .background(
-                RoundedRectangle(cornerRadius: 16, style: .continuous)
-                    .fill(Color.obsidianSurface)
-                    .overlay(
-                        RoundedRectangle(cornerRadius: 16, style: .continuous)
-                            .stroke(Color.accentMint.opacity(0.2), lineWidth: 1)
-                    )
-            )
         }
-        .buttonStyle(PlainButtonStyle())
+    }
+
+    // MARK: - Who and which plan
+
+    private var header: some View {
+        let user = authManager.currentUser
+        let isPro = paymentManager.isPremium
+        return VStack(alignment: .leading, spacing: 6) {
+            Text(verbatim: user?.displayName ?? L10n.string("Profile"))
+                .font(.question(.largeTitle, weight: .bold))
+                .foregroundStyle(Color.inkText)
+                .fixedSize(horizontal: false, vertical: true)
+                .accessibilityAddTraits(.isHeader)
+            if let email = user?.email, !email.isEmpty {
+                Text(verbatim: email)
+                    .font(.subheadline)
+                    .foregroundStyle(Color.inkTextMuted)
+            }
+            Text(isPro ? L10n.string("Pausely Pro")
+                       : L10n.string("Free plan: Pausely watches up to \(FreeTier.subscriptionLimit) subscriptions."))
+                .font(.subheadline)
+                .foregroundStyle(Color.inkTextMuted)
+                .fixedSize(horizontal: false, vertical: true)
+                .padding(.top, 2)
+            if !isPro {
+                Button { sheet = .paywall } label: { Text("See Pro") }
+                    .buttonStyle(.ink(.quiet))
+                    .padding(.top, 12)
+                    .accessibilityIdentifier("upgradePromptCard")
+            }
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+    }
+
+    // MARK: - Rows
+
+    private func group<Content: View>(_ title: String?, @ViewBuilder content: () -> Content) -> some View {
+        VStack(alignment: .leading, spacing: 0) {
+            if let title {
+                Text(verbatim: title)
+                    .font(.headline)
+                    .foregroundStyle(Color.inkText)
+                    .padding(.bottom, 4)
+                    .accessibilityAddTraits(.isHeader)
+            }
+            content()
+        }
+        .padding(.top, 28)
+    }
+
+    private func row(_ icon: String, _ title: String, value: String? = nil, id: String, last: Bool = false,
+                     action: @escaping () -> Void) -> some View {
+        VStack(spacing: 0) {
+            Button {
+                Feel.selection()
+                action()
+            } label: {
+                HStack(spacing: 14) {
+                    Image(systemName: icon)
+                        .font(.body)
+                        .foregroundStyle(Color.inkTextMuted)
+                        .frame(width: 24)
+                        .accessibilityHidden(true)
+                    Text(verbatim: title)
+                        .font(.body)
+                        .foregroundStyle(Color.inkText)
+                        .multilineTextAlignment(.leading)
+                    Spacer(minLength: 8)
+                    if let value {
+                        Text(verbatim: value)
+                            .font(.body)
+                            .foregroundStyle(Color.inkTextMuted)
+                            .lineLimit(1)
+                    }
+                    Image(systemName: "chevron.forward")
+                        .font(.footnote.weight(.semibold))
+                        .foregroundStyle(Color.inkTextFaint)
+                        .accessibilityHidden(true)
+                }
+                .padding(.vertical, 14)
+                .contentShape(Rectangle())
+            }
+            .buttonStyle(.plain)
+            .accessibilityElement(children: .combine)
+            .accessibilityIdentifier(id)
+            if !last { Hairline() }
+        }
+    }
+
+    private func open(_ address: String) {
+        if let url = URL(string: address) { openURL(url) }
     }
 }
 
-// MARK: - Subscription Wrapped View (Story Format)
+// MARK: - Your year in subscriptions
 
+/// The year on one slip: what the list costs, the biggest line, what was cancelled and what that kept.
+/// It states what the current list costs, never what was "spent": Pausely doesn't know what was
+/// charged before a subscription was added.
 struct SubscriptionWrappedView: View {
     let subscriptions: [Subscription]
     @Environment(\.dismiss) private var dismiss
-    @State private var currentPage = 0
+    @ObservedObject private var currencyManager = CurrencyManager.shared
 
-    @MainActor
     private var stats: WrappedStats { WrappedStats(subscriptions: subscriptions) }
 
-    @MainActor
-    private var personality: SubscriptionPersonality {
-        PersonalityEngine.compute(subscriptions: subscriptions)
-    }
-
     var body: some View {
-        ZStack(alignment: .bottom) {
-            Color.black.ignoresSafeArea()
-
-            // Story cards — full screen TabView
-            TabView(selection: $currentPage) {
-                WrappedStory1_TotalSpent(stats: stats).tag(0)
-                WrappedStory2_TopService(stats: stats).tag(1)
-                WrappedStory3_VsAverage(stats: stats).tag(2)
-                WrappedStory4_CouldBuy(stats: stats).tag(3)
-                WrappedStory5_Personality(personality: personality).tag(4)
-            }
-            .tabViewStyle(.page(indexDisplayMode: .never))
-            .ignoresSafeArea()
-
-            // Progress dots + controls
-            VStack(spacing: 0) {
-                // Progress bar strip
-                HStack(spacing: 4) {
-                    ForEach(0..<5) { i in
-                        Capsule()
-                            .fill(i <= currentPage ? Color.white : Color.white.opacity(0.3))
-                            .frame(maxWidth: .infinity)
-                            .frame(height: 3)
-                            .animation(.easeInOut(duration: 0.25), value: currentPage)
-                    }
-                }
-                .padding(.horizontal, 20)
-                .padding(.top, 56)
-
-                Spacer()
-
-                // Share + Done
-                HStack(spacing: 12) {
-                    Button {
-                        HapticStyle.medium.trigger()
-                        shareCurrentCard()
-                    } label: {
-                        HStack(spacing: 8) {
-                            Image(systemName: "square.and.arrow.up")
-                                .font(.system(size: 15, weight: .semibold))
-                            Text("Share")
-                                .font(.system(.headline, design: .default).weight(.semibold))
-                        }
-                        .foregroundStyle(.black)
-                        .frame(maxWidth: .infinity)
-                        .frame(height: 50)
-                        .background(Color.accentMint)
-                        .clipShape(Capsule())
-                    }
-                    .buttonStyle(PlainButtonStyle())
-
-                    Button {
-                        dismiss()
-                    } label: {
+        ScrollView {
+            VStack(alignment: .leading, spacing: 0) {
+                HStack {
+                    Button { dismiss() } label: {
                         Text("Done")
-                            .font(.system(.headline, design: .default).weight(.semibold))
-                            .foregroundStyle(.white)
-                            .frame(width: 80, height: 50)
-                            .background(Color.white.opacity(0.15))
-                            .clipShape(Capsule())
+                            .font(.subheadline.weight(.semibold))
+                            .foregroundStyle(Color.inkTextMuted)
+                            .frame(minHeight: Layout.tapTarget)
+                            .contentShape(Rectangle())
                     }
-                    .buttonStyle(PlainButtonStyle())
+                    Spacer()
+                    if let image = YearSlip.image(stats: stats, currency: currencyManager.selectedCurrency) {
+                        ShareLink(item: image, preview: SharePreview(L10n.string("Your year in subscriptions"), image: image)) {
+                            Image(systemName: "square.and.arrow.up")
+                                .font(.body.weight(.semibold))
+                                .foregroundStyle(Color.inkText)
+                                .frame(width: Layout.tapTarget, height: Layout.tapTarget, alignment: .trailing)
+                        }
+                        .accessibilityLabel(Text("Share"))
+                    }
                 }
-                .padding(.horizontal, 24)
-                .padding(.bottom, 48)
+
+                Text(L10n.string("Your subscriptions cost about \(MoneyFormat.string(stats.yearlyCost, currencyManager.selectedCurrency, locale: L10n.locale, wholeUnits: true)) a year."))
+                    .font(.question(.title))
+                    .foregroundStyle(Color.inkText)
+                    .fixedSize(horizontal: false, vertical: true)
+                    .padding(.top, 4)
+                    .accessibilityAddTraits(.isHeader)
+
+                YearSlip(stats: stats, currency: currencyManager.selectedCurrency)
+                    .padding(.top, 24)
+            }
+            .padding(.horizontal, Layout.margin)
+            .padding(.top, 8)
+            .padding(.bottom, 32)
+        }
+        .background(Color.ink.ignoresSafeArea())
+        .preferredColorScheme(.dark)
+    }
+}
+
+/// The printed year. Also what is shared.
+private struct YearSlip: View {
+    let stats: WrappedStats
+    let currency: String
+
+    private func money(_ amount: Decimal) -> String { MoneyFormat.string(amount, currency, locale: L10n.locale) }
+
+    var body: some View {
+        let kept = SavingsSummary.current()
+        PaperSlip(tornTop: true, tornBottom: true) {
+            VStack(alignment: .leading, spacing: 12) {
+                HStack(spacing: 8) {
+                    HStack(spacing: 3) {
+                        Capsule().frame(width: 4, height: 14)
+                        Capsule().frame(width: 4, height: 14)
+                    }
+                    .accessibilityHidden(true)
+                    Text(verbatim: "Pausely \(stats.year)").font(.headline)
+                }
+                Perforation()
+                ProofLine(label: L10n.string("Subscriptions"), value: "\(stats.totalCount)")
+                ProofLine(label: L10n.string("Each month"), value: money(stats.monthlyCost))
+                ProofLine(label: L10n.string("Each year"), value: money(stats.yearlyCost), emphasised: true)
+                Perforation()
+                ProofLine(label: L10n.string("Biggest"), value: stats.topService)
+                ProofLine(label: L10n.string("Most goes to"), value: SubscriptionCategory.label(for: stats.topCategory))
+                if stats.cancelledCount > 0 || !kept.isEmpty {
+                    Perforation()
+                    ProofLine(label: L10n.string("Cancelled this year"), value: "\(stats.cancelledCount)")
+                    if !kept.isEmpty {
+                        ProofLine(label: L10n.string("Kept with Pausely"), value: kept.formatted(kept.savedSoFar), emphasised: true)
+                            .foregroundStyle(Color.paperKept)
+                    }
+                }
             }
         }
-        .statusBar(hidden: true)
     }
 
     @MainActor
-    private func shareCurrentCard() {
-        let view: AnyView
-        switch currentPage {
-        case 0: view = AnyView(WrappedStory1_TotalSpent(stats: stats).frame(width: 390, height: 844))
-        case 1: view = AnyView(WrappedStory2_TopService(stats: stats).frame(width: 390, height: 844))
-        case 2: view = AnyView(WrappedStory3_VsAverage(stats: stats).frame(width: 390, height: 844))
-        case 3: view = AnyView(WrappedStory4_CouldBuy(stats: stats).frame(width: 390, height: 844))
-        default: view = AnyView(WrappedStory5_Personality(personality: personality).frame(width: 390, height: 844))
-        }
-        let renderer = ImageRenderer(content: view)
+    static func image(stats: WrappedStats, currency: String) -> Image? {
+        let renderer = ImageRenderer(content: YearSlip(stats: stats, currency: currency)
+            .frame(width: 360).padding(24).background(Color.ink))
         renderer.scale = 3
-        guard let image = renderer.uiImage else { return }
-        let vc = UIActivityViewController(activityItems: [image], applicationActivities: nil)
-        if let scene = UIApplication.shared.connectedScenes.first as? UIWindowScene,
-           let root = scene.windows.first?.rootViewController {
-            root.present(vc, animated: true)
-        }
+        return renderer.uiImage.map(Image.init(uiImage:))
     }
 }
-
-// MARK: - Story Card Base
-
-private struct StoryBackground: View {
-    let gradient: [Color]
-    var body: some View {
-        LinearGradient(colors: gradient, startPoint: .topLeading, endPoint: .bottomTrailing)
-            .ignoresSafeArea()
-    }
-}
-
-private struct StoryPausleyBadge: View {
-    var body: some View {
-        HStack(spacing: 6) {
-            Image(systemName: "sparkles")
-                .font(.system(size: 12, weight: .bold))
-            Text("pausely")
-                .font(.system(size: 13, weight: .black, design: .default))
-        }
-        .foregroundStyle(Color.accentMint)
-        .padding(.horizontal, 14)
-        .padding(.vertical, 7)
-        .background(Color.black.opacity(0.4))
-        .clipShape(Capsule())
-    }
-}
-
-// MARK: - Story 1: Total Spent
-
-private struct WrappedStory1_TotalSpent: View {
-    let stats: WrappedStats
-    var body: some View {
-        ZStack {
-            StoryBackground(gradient: [Color(hex: "#050810"), Color(hex: "#0A1A12")])
-            // Glow
-            Circle().fill(Color.accentMint.opacity(0.12))
-                .frame(width: 400).offset(x: 100, y: -200).blur(radius: 80)
-
-            VStack(alignment: .leading, spacing: 0) {
-                HStack { StoryPausleyBadge(); Spacer() }
-                    .padding(.horizontal, 32).padding(.top, 64)
-
-                Spacer()
-
-                VStack(alignment: .leading, spacing: 16) {
-                    Text("\(String(stats.year)) WRAPPED")
-                        .font(.system(size: 13, weight: .bold, design: .default))
-                        .foregroundStyle(Color.white.opacity(0.5))
-
-                    Text("Your subscriptions\ncost")
-                        .font(.system(size: 38, weight: .black, design: .default))
-                        .foregroundStyle(.white)
-                        .lineSpacing(4)
-
-                    Text(CurrencyManager.shared.format(stats.yearlyCost))
-                        .font(.system(size: 72, weight: .black, design: .default))
-                        .foregroundStyle(Color.accentMint)
-                        .minimumScaleFactor(0.4)
-                        .lineLimit(1)
-
-                    Text(stats.totalCount == 1 ? L10n.string("a year, for 1 subscription") : L10n.string("a year, across \(stats.totalCount) subscriptions"))
-                        .font(.system(size: 22, weight: .semibold, design: .default))
-                        .foregroundStyle(Color.white.opacity(0.7))
-                }
-                .padding(.horizontal, 32)
-
-                Spacer()
-                Spacer()
-            }
-        }
-    }
-}
-
-// MARK: - Story 2: Top Service
-
-private struct WrappedStory2_TopService: View {
-    let stats: WrappedStats
-    var body: some View {
-        ZStack {
-            StoryBackground(gradient: [Color(hex: "#100510"), Color(hex: "#1A0A1A")])
-            Circle().fill(Color.purple.opacity(0.15))
-                .frame(width: 350).offset(x: -80, y: 150).blur(radius: 70)
-
-            VStack(alignment: .leading, spacing: 0) {
-                HStack { StoryPausleyBadge(); Spacer() }
-                    .padding(.horizontal, 32).padding(.top, 64)
-
-                Spacer()
-
-                VStack(alignment: .leading, spacing: 16) {
-                    Text("YOUR TOP SERVICE")
-                        .font(.system(size: 11, weight: .bold, design: .default))
-                        .foregroundStyle(Color.white.opacity(0.5))
-
-                    Text(stats.topService)
-                        .font(.system(size: 58, weight: .black, design: .default))
-                        .foregroundStyle(.white)
-                        .minimumScaleFactor(0.4)
-                        .lineLimit(2)
-
-                    Text("most expensive\nsubscription")
-                        .font(.system(size: 22, weight: .medium, design: .default))
-                        .foregroundStyle(Color.white.opacity(0.6))
-                        .lineSpacing(4)
-
-                    if stats.cancelledCount > 0 {
-                        HStack(spacing: 8) {
-                            Image(systemName: "checkmark.circle.fill").foregroundStyle(.green)
-                            Text("You cancelled \(stats.cancelledCount) subscription\(stats.cancelledCount == 1 ? "" : "s") this year")
-                                .font(.system(.subheadline, design: .default).weight(.medium))
-                                .foregroundStyle(Color.white.opacity(0.8))
-                        }
-                        .padding(12)
-                        .background(Color.green.opacity(0.15))
-                        .clipShape(RoundedRectangle(cornerRadius: 12))
-                    }
-                }
-                .padding(.horizontal, 32)
-
-                Spacer()
-                Spacer()
-            }
-        }
-    }
-}
-
-// MARK: - Story 3: vs Average
-
-private struct WrappedStory3_VsAverage: View {
-    let stats: WrappedStats
-
-    private var localAverage: Decimal {
-        CurrencyManager.shared.convertToSelected(Decimal(219), from: "USD")
-    }
-    private var monthlySpend: Decimal {
-        stats.monthlyCost
-    }
-    private var isBelow: Bool {
-        monthlySpend < localAverage
-    }
-    private var pct: Int {
-        guard NSDecimalNumber(decimal: localAverage).doubleValue > 0 else { return 0 }
-        let diff = abs(NSDecimalNumber(decimal: monthlySpend - localAverage).doubleValue)
-        return Int((diff / NSDecimalNumber(decimal: localAverage).doubleValue) * 100)
-    }
-
-    var body: some View {
-        ZStack {
-            StoryBackground(gradient: isBelow
-                ? [Color(hex: "#051005"), Color(hex: "#0A1A0A")]
-                : [Color(hex: "#100800"), Color(hex: "#1A1000")]
-            )
-            Circle().fill((isBelow ? Color.green : Color.orange).opacity(0.12))
-                .frame(width: 400).offset(y: 100).blur(radius: 80)
-
-            VStack(alignment: .leading, spacing: 0) {
-                HStack { StoryPausleyBadge(); Spacer() }
-                    .padding(.horizontal, 32).padding(.top, 64)
-
-                Spacer()
-
-                VStack(alignment: .leading, spacing: 20) {
-                    Text("VS. THE AVERAGE")
-                        .font(.system(size: 11, weight: .bold, design: .default))
-                        .foregroundStyle(Color.white.opacity(0.5))
-
-                    Text(isBelow ? "You spend\n\(pct)% less\nthan average" : "You spend\n\(pct)% more\nthan average")
-                        .font(.system(size: 52, weight: .black, design: .default))
-                        .foregroundStyle(isBelow ? Color.green : Color.orange)
-                        .lineSpacing(4)
-
-                    VStack(alignment: .leading, spacing: 8) {
-                        HStack {
-                            Text("You")
-                                .font(.system(.caption, design: .default).weight(.semibold))
-                                .foregroundStyle(.white.opacity(0.7))
-                            Spacer()
-                            Text(CurrencyManager.shared.format(monthlySpend) + "/mo")
-                                .font(.system(.subheadline, design: .default).weight(.bold))
-                                .foregroundStyle(.white)
-                        }
-                        HStack {
-                            Text("Avg. Pausely User")
-                                .font(.system(.caption, design: .default).weight(.semibold))
-                                .foregroundStyle(.white.opacity(0.5))
-                            Spacer()
-                            Text(CurrencyManager.shared.format(localAverage) + "/mo")
-                                .font(.system(.subheadline, design: .default).weight(.bold))
-                                .foregroundStyle(.white.opacity(0.6))
-                        }
-                    }
-                    .padding(16)
-                    .background(Color.white.opacity(0.06))
-                    .clipShape(RoundedRectangle(cornerRadius: 14))
-                }
-                .padding(.horizontal, 32)
-
-                Spacer()
-                Spacer()
-            }
-        }
-    }
-}
-
-// MARK: - Story 4: What You Could've Bought
-
-private struct WrappedStory4_CouldBuy: View {
-    let stats: WrappedStats
-
-    private var localAnnual: Double {
-        NSDecimalNumber(decimal: CurrencyManager.shared.convertToSelected(stats.yearlyCost, from: CurrencyManager.shared.currentCurrency.code)).doubleValue
-    }
-    private func convertedPrice(_ usdPrice: Double) -> Double {
-        NSDecimalNumber(decimal: CurrencyManager.shared.convertToSelected(Decimal(usdPrice), from: "USD")).doubleValue
-    }
-
-    private var comparisons: [(emoji: String, count: Int, item: String)] {
-        let coffee = convertedPrice(3)
-        let dinner = convertedPrice(45)
-        let drinks = convertedPrice(11)
-        return [
-            ("☕️", coffee > 0 ? Int(localAnnual / coffee) : 0, "coffees"),
-            ("🍽️", dinner > 0 ? Int(localAnnual / dinner) : 0, "dinners out"),
-            ("🍹", drinks > 0 ? Int(localAnnual / drinks) : 0, "cocktails"),
-        ]
-    }
-
-    var body: some View {
-        ZStack {
-            StoryBackground(gradient: [Color(hex: "#080510"), Color(hex: "#10080A")])
-            Circle().fill(Color.blue.opacity(0.12))
-                .frame(width: 350).offset(x: 120, y: -100).blur(radius: 70)
-
-            VStack(alignment: .leading, spacing: 0) {
-                HStack { StoryPausleyBadge(); Spacer() }
-                    .padding(.horizontal, 32).padding(.top, 64)
-
-                Spacer()
-
-                VStack(alignment: .leading, spacing: 24) {
-                    Text("WHAT ELSE THAT BUYS")
-                        .font(.system(size: 10, weight: .bold, design: .default))
-                        .foregroundStyle(Color.white.opacity(0.5))
-
-                    Text("\(CurrencyManager.shared.format(stats.yearlyCost)) a year\nalso buys…")
-                        .font(.system(size: 32, weight: .black, design: .default))
-                        .foregroundStyle(.white)
-                        .lineSpacing(4)
-
-                    VStack(spacing: 12) {
-                        ForEach(comparisons.indices, id: \.self) { i in
-                            let c = comparisons[i]
-                            HStack(spacing: 16) {
-                                Text(c.emoji)
-                                    .font(.system(size: 36))
-                                VStack(alignment: .leading, spacing: 2) {
-                                    Text("\(c.count)")
-                                        .font(.system(size: 36, weight: .black, design: .default))
-                                        .foregroundStyle(.white)
-                                    Text(c.item)
-                                        .font(.system(.caption, design: .default).weight(.medium))
-                                        .foregroundStyle(Color.white.opacity(0.5))
-                                }
-                            }
-                        }
-                    }
-                }
-                .padding(.horizontal, 32)
-
-                Spacer()
-                Spacer()
-            }
-        }
-    }
-}
-
-// MARK: - Story 5: Personality
-
-private struct WrappedStory5_Personality: View {
-    let personality: SubscriptionPersonality
-
-    var body: some View {
-        ZStack {
-            StoryBackground(gradient: [Color(hex: "#050A10"), Color(hex: "#0A1015")])
-            Circle().fill(Color.accentMint.opacity(0.10))
-                .frame(width: 450).offset(y: 200).blur(radius: 100)
-
-            VStack(alignment: .leading, spacing: 0) {
-                HStack { StoryPausleyBadge(); Spacer() }
-                    .padding(.horizontal, 32).padding(.top, 64)
-
-                Spacer()
-
-                VStack(alignment: .leading, spacing: 20) {
-                    Text("YOUR SUBSCRIPTION PERSONALITY")
-                        .font(.system(size: 10, weight: .bold, design: .default))
-                        .foregroundStyle(Color.white.opacity(0.5))
-
-                    Text(personality.emoji)
-                        .font(.system(size: 72))
-
-                    Text(personality.name)
-                        .font(.system(size: 42, weight: .black, design: .default))
-                        .foregroundStyle(Color.accentMint)
-                        .lineLimit(2)
-                        .minimumScaleFactor(0.6)
-
-                    Text(personality.headline)
-                        .font(.system(size: 20, weight: .medium, design: .default))
-                        .foregroundStyle(Color.white.opacity(0.8))
-                        .lineSpacing(4)
-
-                    Text(personality.description)
-                        .font(.system(.subheadline, design: .default))
-                        .foregroundStyle(Color.white.opacity(0.5))
-                        .lineSpacing(3)
-                        .lineLimit(4)
-                }
-                .padding(.horizontal, 32)
-
-                Spacer()
-
-                Text("Track & optimize at pausely.pro")
-                    .font(.system(size: 12, design: .default))
-                    .foregroundStyle(Color.white.opacity(0.25))
-                    .padding(.horizontal, 32)
-                    .padding(.bottom, 100)
-            }
-        }
-    }
-}
-
-// MARK: - Wrapped Card (shareable content)
-
-
-// MARK: - Wrapped Stats
 
 struct WrappedStats {
     let year: Int

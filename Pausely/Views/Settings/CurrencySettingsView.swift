@@ -39,7 +39,7 @@ struct CurrencySettingsView: View {
                     Button(action: { dismiss() }) {
                         Image(systemName: "xmark")
                             .font(.callout.weight(.semibold))
-                            .foregroundColor(.white)
+                            .foregroundStyle(Color.inkText)
                             .frame(width: 36, height: 36)
                             .background(Color.white.opacity(0.1))
                             .clipShape(Circle())
@@ -50,7 +50,7 @@ struct CurrencySettingsView: View {
 
                     Text("Currency")
                         .font(.callout.weight(.semibold))
-                        .foregroundColor(.white)
+                        .foregroundStyle(Color.inkText)
 
                     Spacer()
 
@@ -64,17 +64,17 @@ struct CurrencySettingsView: View {
                 VStack(spacing: 12) {
                     ZStack {
                         Circle()
-                            .fill(Color.accentMint.opacity(0.2))
+                            .fill(Color.white.opacity(0.06))
                             .frame(width: 80, height: 80)
 
                         Text(currentSymbol)
                             .font(.largeTitle.weight(.bold))
-                            .foregroundColor(.accentMint)
+                            .foregroundColor(Color.inkText)
                     }
 
                     Text(currentName)
                         .font(.title3.weight(.bold))
-                        .foregroundColor(.white)
+                        .foregroundStyle(Color.inkText)
 
                     Text(currentCode)
                         .font(.footnote.weight(.medium))
@@ -89,7 +89,7 @@ struct CurrencySettingsView: View {
                         .font(.callout)
 
                     TextField("Search currencies...", text: $searchText)
-                        .foregroundColor(.white)
+                        .foregroundStyle(Color.inkText)
                         .font(.callout)
                         .keyboardType(.default)
                         .submitLabel(.search)
@@ -169,25 +169,24 @@ struct CurrencyRow: View {
 
     var body: some View {
         Button(action: {
-            HapticStyle.light.trigger()
             action()
         }) {
             HStack(spacing: 16) {
                 // Symbol circle
                 ZStack {
                     Circle()
-                        .fill(isSelected ? Color.accentMint.opacity(0.3) : Color.white.opacity(0.08))
+                        .fill(isSelected ? Color.inkTextMuted : Color.white.opacity(0.08))
                         .frame(width: 48, height: 48)
 
                     Text(symbol)
                         .font(.callout.weight(.bold))
-                        .foregroundColor(isSelected ? .accentMint : .white)
+                        .foregroundColor(isSelected ? Color.inkText : .white)
                 }
 
                 VStack(alignment: .leading, spacing: 4) {
                     Text(name)
                         .font(.callout.weight(.medium))
-                        .foregroundColor(.white)
+                        .foregroundStyle(Color.inkText)
 
                     Text(code)
                         .font(.footnote.weight(.medium))
@@ -199,17 +198,16 @@ struct CurrencyRow: View {
                 if isSelected {
                     Image(systemName: "checkmark.circle.fill")
                         .font(.title3)
-                        .foregroundColor(.accentMint)
-                        .shadow(color: .accentMint.opacity(0.5), radius: 8)
+                        .foregroundColor(Color.inkText)
                 }
             }
             .padding(14)
             .background(
                 RoundedRectangle(cornerRadius: 14)
-                    .fill(isSelected ? Color.accentMint.opacity(0.12) : Color.white.opacity(0.05))
+                    .fill(isSelected ? Color.white.opacity(0.06) : Color.white.opacity(0.05))
                     .overlay(
                         RoundedRectangle(cornerRadius: 14)
-                            .stroke(isSelected ? Color.accentMint : Color.clear, lineWidth: 1.5)
+                            .stroke(isSelected ? Color.inkText : Color.clear, lineWidth: 1.5)
                     )
             )
             .scaleEffect(isPressed ? 0.98 : 1)

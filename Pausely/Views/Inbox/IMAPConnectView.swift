@@ -51,23 +51,23 @@ struct IMAPConnectView: View {
                     if let preset = effectivePreset { steps(preset) }
                     if let error {
                         Text(error)
-                            .font(.system(.footnote, design: .default))
-                            .foregroundStyle(Color.semanticDestructive)
+                            .font(.footnote)
+                            .foregroundStyle(Color.due)
                             .accessibilityIdentifier("imapError")
                     }
                     connectButton
                     Text("Pausely only reads. It opens your mail read-only, never marks anything as read, and can't send or delete email. The app password stays on this iPhone; remove it at your provider whenever you like.")
-                        .font(.system(.caption, design: .default))
-                        .foregroundStyle(Color.obsidianTextTertiary)
+                        .font(.caption)
+                        .foregroundStyle(Color.inkTextFaint)
                 }
                 .padding(20)
             }
-            .background(PremiumBackground())
+            .background(Color.ink.ignoresSafeArea())
             .navigationTitle(effectivePreset.map { Text(verbatim: $0.name) } ?? Text("Other email"))
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .topBarLeading) {
-                    Button("Cancel") { dismiss() }.foregroundStyle(Color.accentMint)
+                    Button("Cancel") { dismiss() }.foregroundStyle(Color.inkText)
                 }
             }
             .onAppear { focused = .address }
@@ -78,8 +78,8 @@ struct IMAPConnectView: View {
         (effectivePreset == nil
              ? Text("Enter your email address, an app password and your provider's IMAP server.")
              : Text("Enter your email address and an app password. It's a separate password just for Pausely, so your main password stays private."))
-            .font(.system(.subheadline, design: .default))
-            .foregroundStyle(Color.obsidianTextSecondary)
+            .font(.subheadline)
+            .foregroundStyle(Color.inkTextMuted)
     }
 
     private var fields: some View {
@@ -93,7 +93,7 @@ struct IMAPConnectView: View {
                 .submitLabel(.next)
                 .onSubmit { focused = .password }
                 .padding(14)
-                .background(RoundedRectangle(cornerRadius: 12).fill(Color.obsidianSurface))
+                .background(RoundedRectangle(cornerRadius: 12).fill(Color.inkRaised))
                 .accessibilityIdentifier("imapAddress")
             SecureField("App password", text: $password)
                 .textContentType(.password)
@@ -103,7 +103,7 @@ struct IMAPConnectView: View {
                 .submitLabel(.go)
                 .onSubmit { if canConnect { connect() } }
                 .padding(14)
-                .background(RoundedRectangle(cornerRadius: 12).fill(Color.obsidianSurface))
+                .background(RoundedRectangle(cornerRadius: 12).fill(Color.inkRaised))
                 .accessibilityIdentifier("imapPassword")
             if needsServer {
                 HStack(spacing: 10) {
@@ -113,38 +113,38 @@ struct IMAPConnectView: View {
                         .autocorrectionDisabled()
                         .focused($focused, equals: .host)
                         .padding(14)
-                        .background(RoundedRectangle(cornerRadius: 12).fill(Color.obsidianSurface))
+                        .background(RoundedRectangle(cornerRadius: 12).fill(Color.inkRaised))
                         .accessibilityIdentifier("imapHost")
                     TextField("Port", text: $customPort, prompt: Text(verbatim: "993"))
                         .keyboardType(.numberPad)
                         .focused($focused, equals: .port)
                         .frame(width: 70)
                         .padding(14)
-                        .background(RoundedRectangle(cornerRadius: 12).fill(Color.obsidianSurface))
+                        .background(RoundedRectangle(cornerRadius: 12).fill(Color.inkRaised))
                         .accessibilityIdentifier("imapPort")
                 }
                 Text("Pausely only connects over an encrypted connection (IMAP with SSL/TLS, usually port 993).")
-                    .font(.system(.caption, design: .default))
-                    .foregroundStyle(Color.obsidianTextTertiary)
+                    .font(.caption)
+                    .foregroundStyle(Color.inkTextFaint)
             }
         }
-        .foregroundStyle(.white)
+        .foregroundStyle(Color.inkText)
     }
 
     private func steps(_ preset: IMAPPreset) -> some View {
         VStack(alignment: .leading, spacing: 10) {
             Text("Create an app password")
-                .font(.system(.subheadline, design: .default).weight(.semibold))
-                .foregroundStyle(.white)
+                .font(.subheadline.weight(.semibold))
+                .foregroundStyle(Color.inkText)
             ForEach(Array(preset.steps.enumerated()), id: \.offset) { index, step in
                 HStack(alignment: .top, spacing: 10) {
                     Text(index + 1, format: .number)
-                        .font(.system(.caption, design: .default).weight(.bold))
-                        .foregroundStyle(Color.accentMint)
+                        .font(.caption.weight(.bold))
+                        .foregroundStyle(Color.inkText)
                         .frame(width: 18, alignment: .leading)
                     Text(step)
-                        .font(.system(.footnote, design: .default))
-                        .foregroundStyle(Color.obsidianTextSecondary)
+                        .font(.footnote)
+                        .foregroundStyle(Color.inkTextMuted)
                 }
             }
             if let page = preset.passwordPage {
@@ -152,15 +152,15 @@ struct IMAPConnectView: View {
                     openURL(page)
                 } label: {
                     Label("Open \(Self.pageName(page) ?? preset.name)", systemImage: "arrow.up.right.square")
-                        .font(.system(.footnote, design: .default).weight(.semibold))
-                        .foregroundStyle(Color.accentMint)
+                        .font(.footnote.weight(.semibold))
+                        .foregroundStyle(Color.inkText)
                 }
                 .accessibilityIdentifier("imapOpenPasswordPage")
             }
         }
         .frame(maxWidth: .infinity, alignment: .leading)
         .padding(14)
-        .background(RoundedRectangle(cornerRadius: 14).fill(Color.obsidianSurface))
+        .background(RoundedRectangle(cornerRadius: 14).fill(Color.inkRaised))
     }
 
     private var connectButton: some View {
@@ -168,12 +168,12 @@ struct IMAPConnectView: View {
             HStack {
                 if connecting { ProgressView().tint(.black) }
                 (connecting ? Text("Checking…") : Text("Connect"))
-                    .font(.system(.body, design: .default).weight(.semibold))
+                    .font(.body.weight(.semibold))
             }
             .foregroundStyle(Color.black)
             .frame(maxWidth: .infinity)
             .frame(height: 52)
-            .background(RoundedRectangle(cornerRadius: 16).fill(canConnect ? Color.accentMint : Color.accentMint.opacity(0.4)))
+            .background(RoundedRectangle(cornerRadius: 16).fill(canConnect ? Color.inkText : Color.inkTextMuted))
         }
         .buttonStyle(PlainButtonStyle())
         .disabled(!canConnect)
