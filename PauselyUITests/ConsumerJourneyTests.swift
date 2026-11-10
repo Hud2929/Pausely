@@ -84,10 +84,10 @@ final class ConsumerJourneyTests: XCTestCase {
         app.launchArguments = ["--uitesting", "--demo-mode", "--empty-demo-data", "-AppleLanguages", "(en)",
                                "-debug_free_pro", "NO", "-debug_premium_override", "NO"]
         app.launch()
-        XCTAssertTrue(waitHittable(app.buttons["tabHome"].firstMatch, 15), "the app opens past the splash")
+        XCTAssertTrue(waitHittable(app.tab("tabHome"), 15), "the app opens past the splash")
         sleep(1)
         capture(app, "home-empty")
-        app.buttons["tabSubscriptions"].firstMatch.tap()
+        app.tab("tabSubscriptions").tap()
         sleep(1)   // let the tab switch finish
         capture(app, "subs-empty")
 
@@ -124,7 +124,7 @@ final class ConsumerJourneyTests: XCTestCase {
         XCTAssertEqual(notice.label, "Free covers 5 subscriptions. Pro tracks all of them.")
         // Back out to the list, whatever is showing.
         for _ in 0..<4 {
-            if app.buttons["tabSubscriptions"].firstMatch.isHittable { break }
+            if app.tab("tabSubscriptions").isHittable { break }
             if !tapIfThere(app, ["OK", "Not now", "Maybe later", "Close", "Done"], timeout: 1) { app.swipeDown(velocity: .fast) }
         }
 
@@ -170,19 +170,19 @@ final class ConsumerJourneyTests: XCTestCase {
             capture(app, "after-cancel")
         }
         for _ in 0..<4 {
-            if app.buttons["tabHome"].firstMatch.isHittable { break }
+            if app.tab("tabHome").isHittable { break }
             if !tapIfThere(app, ["subscriptionDoneButton", "Done", "Close"], timeout: 1) { app.swipeDown(velocity: .fast) }
         }
 
         // 9. The other tabs.
-        XCTAssertTrue(waitHittable(app.buttons["tabHome"].firstMatch, 6), "back on the tabs")
-        app.buttons["tabHome"].firstMatch.tap()
+        XCTAssertTrue(waitHittable(app.tab("tabHome"), 6), "back on the tabs")
+        app.tab("tabHome").tap()
         sleep(1)
         capture(app, "home")
         app.swipeUp(); capture(app, "home-scrolled")
-        app.buttons["tabAnalysis"].firstMatch.tap()
+        app.tab("tabAnalysis").tap()
         capture(app, "analysis")
-        app.buttons["tabProfile"].firstMatch.tap()
+        app.tab("tabProfile").tap()
         capture(app, "profile")
         let receipt = app.buttons.matching(NSPredicate(format: "label CONTAINS[c] 'Savings Receipt'")).firstMatch
         if receipt.waitForExistence(timeout: 3) {

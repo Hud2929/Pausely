@@ -371,6 +371,7 @@ gradient, glow, glass card, button style or haptic. The redesign is finished whe
 |---|---|---|
 | 2026-11-10 | 71 | After steps 1 and 2. New and clean: first run, splash, service logos, design gallery. The onboarding carousel is deleted. |
 | 2026-11-10 | 70 | After step 3. The paywall is clean; confetti and the "Purchase Successful!" alert are gone from it. |
+| 2026-11-11 | 59 | After Home and the system tab bar. Deleted: Next Payment, Bills This Week, Biggest Expenses, Lifetime Spend, the waste and opportunity cards, the price alert banner, the custom tab bar. |
 
 Rated on screen so far (English; Arabic and largest text checked for the reveal):
 
@@ -380,6 +381,7 @@ Rated on screen so far (English; Arabic and largest text checked for the reveal)
 | Tally | 8.8 | A few logos fall back to a letter; grid is competent, not distinctive |
 | Reveal | 9.1 | At the largest text size the bottom bar takes a third of the screen |
 | Paywall | 9.0 | Not seen with a real App Store price outside the test storefront; Arabic shows the charge date in the device calendar |
+| Home | 9.0 | The 30-day total equals the monthly total when everything is monthly, which reads as a repeat; empty and loading states built but not seen on screen |
 
 Typical prices on the tally come from news round-ups dated April to September 2026, not from each
 service's own price page, and local prices outside the US are a single factor per currency

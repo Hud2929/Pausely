@@ -12,7 +12,7 @@ final class SubscriptionManagementTests: XCTestCase {
         app = XCUIApplication()
         app.launchArguments = ["--uitesting", "--demo-mode", "--fresh-demo-data", "-AppleLanguages", "(en)"]
         app.launch()
-        let tab = app.buttons["tabSubscriptions"].firstMatch
+        let tab = app.tab("tabSubscriptions")
         XCTAssertTrue(tab.waitForExistence(timeout: 10))
         tab.tap()
     }

@@ -16,7 +16,9 @@ struct DashboardView: View {
     @State private var showingReceipt = false
     @State private var showsYear = false
     @State private var dismissedAlerts: Set<UUID> = []
+    @ScaledMetric(relativeTo: .largeTitle) private var numberSize: CGFloat = 52
 
+    private var hasKept: Bool { !SavingsSummary.current().isEmpty }
     private var charges: [Horizon.Charge] { Horizon.charges(for: store.subscriptions, now: Date()) }
 
     var body: some View {
@@ -30,11 +32,13 @@ struct DashboardView: View {
                     HomeEmpty(onAdd: { showingAdd = true }).padding(.top, 40)
                 } else {
                     attention.padding(.top, 28)
+                    // Proof of money kept comes before the list of what is about to leave.
+                    if hasKept { keptSection.padding(.top, 24) }
                     HorizonSection(charges: charges, currency: currencyManager.selectedCurrency,
                                    rates: currencyManager.rates,
                                    pendingIds: Set(VerdictCenter.shared.pendingDecisions().map(\.subscriptionId)))
                         .padding(.top, 32)
-                    keptSection.padding(.top, 32)
+                    if !hasKept { keptSection.padding(.top, 28) }
                     quietRows.padding(.top, 20)
                 }
             }
@@ -77,7 +81,7 @@ struct DashboardView: View {
                 .accessibilityIdentifier("spendPeriodToggle")
 
                 Text(verbatim: currencyManager.format(showsYear ? store.totalAnnualSpend : store.totalMonthlySpend))
-                    .font(.question(.largeTitle, weight: .bold))
+                    .font(.system(size: numberSize, weight: .bold, design: .serif))
                     .foregroundStyle(Color.inkText)
                     .contentTransition(.numericText())
                     .lineLimit(1)
@@ -342,10 +346,10 @@ private struct ReminderAskRow: View {
     var body: some View {
         let denied = notifications.status == .denied
         AttentionRow(state: nil, symbol: denied ? "bell.slash" : "bell",
-                     title: denied ? L10n.string("Reminders are off") : title,
+                     title: denied ? L10n.string("Reminders are off") : L10n.string("Get a heads-up before you're charged"),
                      detail: denied
                         ? L10n.string("Turn on notifications for Pausely in Settings so renewals don't surprise you.")
-                        : L10n.string("Pausely reminds you before each renewal so you can keep it or cancel it."),
+                        : detail,
                      action: denied ? L10n.string("Settings") : L10n.string("Turn on")) {
             if denied {
                 notifications.openSystemSettings()
@@ -360,11 +364,14 @@ private struct ReminderAskRow: View {
         .accessibilityIdentifier("turnOnRemindersButton")
     }
 
-    private var title: String {
-        guard let charge = nextCharge else { return L10n.string("Get a heads-up before you're charged") }
+    /// Names the charge the first reminder would be about, so the request is concrete.
+    private var detail: String {
+        guard let charge = nextCharge else {
+            return L10n.string("Pausely reminds you before each renewal so you can keep it or cancel it.")
+        }
         let price = MoneyFormat.string(charge.amount, charge.currency, locale: L10n.locale)
         let day = charge.date.formatted(.dateTime.month(.abbreviated).day().locale(L10n.locale))
-        return L10n.string("Remind me before \(charge.name) charges \(price) on \(day)")
+        return L10n.string("First up: \(charge.name), \(price) on \(day).")
     }
 }
 
