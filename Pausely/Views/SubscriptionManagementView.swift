@@ -33,46 +33,25 @@ struct SubscriptionManagementView: View {
     private var contacts: [SupportContact] { actionManager.getSupportContacts(for: current) }
 
     var body: some View {
-        NavigationStack {
-            ZStack {
-                Color.obsidianBlack.ignoresSafeArea()
-
-                ScrollView {
-                    VStack(spacing: 24) {
-                        hero
-                        decisionGroup
-                        factsCard
-                        if current.calculatedNextBillingDate != nil, current.renewsAutomatically {
-                            CancelTimingCard(subscription: current)
-                        }
-                        toolsGroup
-                        LifetimeCostCard(subscription: current)
-                        supportGroup
-                        actions
-                    }
-                    .padding(.horizontal, 20)
-                    .padding(.top, 8)
-                    .padding(.bottom, 40)
+        ScrollView {
+            VStack(alignment: .leading, spacing: 28) {
+                topBar
+                hero
+                decisionGroup
+                factsCard
+                if current.calculatedNextBillingDate != nil, current.renewsAutomatically {
+                    CancelTimingCard(subscription: current)
                 }
+                toolsGroup
+                LifetimeCostCard(subscription: current)
+                supportGroup
+                actions
             }
-            .navigationBarTitleDisplayMode(.inline)
-            .toolbar {
-                ToolbarItem(placement: .topBarLeading) {
-                    Button("Done") { dismiss() }
-                        .foregroundStyle(Color.obsidianTextSecondary)
-                        .accessibilityIdentifier("subscriptionDoneButton")
-                }
-                ToolbarItem(placement: .topBarTrailing) {
-                    Button("Edit") {
-                        HapticStyle.light.trigger()
-                        route = .edit
-                    }
-                    .fontWeight(.semibold)
-                    .foregroundStyle(Color.accentMint)
-                    .accessibilityIdentifier("editSubscriptionButton")
-                }
-            }
+            .padding(.horizontal, Layout.margin)
+            .padding(.top, 8)
+            .padding(.bottom, 40)
         }
+        .background(Color.ink.ignoresSafeArea())
         .preferredColorScheme(.dark)
         .sheet(item: $route) { route in
             sheetContent(for: route)
@@ -90,88 +69,117 @@ struct SubscriptionManagementView: View {
         }
     }
 
-    // MARK: - Hero
+    private var topBar: some View {
+        HStack {
+            Button { dismiss() } label: {
+                Text("Done")
+                    .font(.subheadline.weight(.semibold))
+                    .foregroundStyle(Color.inkTextMuted)
+                    .frame(minHeight: Layout.tapTarget)
+                    .contentShape(Rectangle())
+            }
+            .accessibilityIdentifier("subscriptionDoneButton")
+            Spacer()
+            Button { route = .edit } label: {
+                Text("Edit")
+                    .font(.subheadline.weight(.semibold))
+                    .foregroundStyle(Color.inkText)
+                    .padding(.horizontal, 14)
+                    .frame(minHeight: 34)
+                    .overlay(Capsule().stroke(Color.white.opacity(0.22), lineWidth: 1))
+                    .frame(minHeight: Layout.tapTarget)
+                    .contentShape(Rectangle())
+            }
+            .accessibilityIdentifier("editSubscriptionButton")
+        }
+        .padding(.bottom, -16)
+    }
+
+    // MARK: - What it is and what it costs
 
     private var hero: some View {
-        VStack(spacing: 10) {
-            ServiceLogoView(name: current.name, category: current.category, size: 68)
-                .accessibilityHidden(true)
-
-            Text(current.name)
-                .font(.system(.title2, design: .default).weight(.bold))
-                .foregroundStyle(.white)
-                .multilineTextAlignment(.center)
+        VStack(alignment: .leading, spacing: 8) {
+            HStack(spacing: 12) {
+                ServiceLogoView(name: current.name, category: current.category, size: 48)
+                Text(current.name)
+                    .font(.question(.title))
+                    .foregroundStyle(Color.inkText)
+                    .fixedSize(horizontal: false, vertical: true)
+                    .accessibilityAddTraits(.isHeader)
+            }
 
             HStack(alignment: .firstTextBaseline, spacing: 4) {
                 Text(MoneyFormat.string(current.amount, current.currency))
-                    .font(.system(size: 44, weight: .black, design: .default))
-                    .foregroundStyle(Color.accentMint)
+                    .font(.question(.largeTitle, weight: .bold))
+                    .foregroundStyle(Color.inkText)
                     .minimumScaleFactor(0.6)
                     .lineLimit(1)
                 Text(current.billingFrequency.shortDisplay)
-                    .font(.system(.title3, design: .default))
-                    .foregroundStyle(Color.obsidianTextSecondary)
+                    .font(.title3)
+                    .foregroundStyle(Color.inkTextMuted)
             }
+            .padding(.top, 8)
             .accessibilityElement(children: .ignore)
             .accessibilityLabel("\(MoneyFormat.string(current.amount, current.currency)) \(current.billingFrequency.billingPeriodLabel)")
 
             if current.currency != currencyManager.selectedCurrency {
                 let converted = currencyManager.convertToSelected(current.amount, from: current.currency)
                 Text("About \(MoneyFormat.string(converted, currencyManager.selectedCurrency)) in your currency")
-                    .font(.system(.footnote, design: .default))
-                    .foregroundStyle(Color.obsidianTextTertiary)
+                    .font(.footnote)
+                    .foregroundStyle(Color.inkTextFaint)
             }
 
             HStack(spacing: 8) {
                 statusChip
                 if let line = renewalLine {
                     Text(line.text)
-                        .font(.system(.footnote, design: .default))
+                        .font(.subheadline)
                         .foregroundStyle(line.tint)
                 }
             }
-            .padding(.top, 2)
 
             if current.nextBillingDate == nil, current.status == .active || current.status == .trial {
-                Button {
-                    HapticStyle.light.trigger()
-                    route = .edit
-                } label: {
-                    Text("Add a payment date")
-                        .font(.system(.footnote, design: .default).weight(.semibold))
-                        .foregroundStyle(Color.accentMint)
+                Button { route = .edit } label: {
+                    Text("Add a payment date").underline()
+                        .font(.subheadline.weight(.semibold))
+                        .foregroundStyle(Color.inkText)
+                        .frame(minHeight: Layout.tapTarget, alignment: .leading)
+                        .contentShape(Rectangle())
                 }
+                .buttonStyle(.plain)
             }
         }
-        .frame(maxWidth: .infinity)
+        .frame(maxWidth: .infinity, alignment: .leading)
     }
 
+    /// The state in words, with its mark: colour is never the only signal.
     private var statusChip: some View {
-        let (text, tint): (String, Color) = {
+        let (text, state): (LocalizedStringKey, MoneyState?) = {
             switch current.status {
-            case .active: return ("Active", Color.accentMint)
-            case .trial: return ("Free trial", Color.accentMint)
-            case .paused: return ("Paused", .orange)
-            case .cancelled: return ("Cancelled", .red)
-            case .expired: return ("Expired", Color.obsidianTextSecondary)
+            case .active: return ("Active", nil)
+            case .trial: return ("Free trial", .decide)
+            case .paused: return ("Paused", .paused)
+            case .cancelled: return ("Cancelled", .kept)
+            case .expired: return ("Expired", nil)
             }
         }()
-        return Text(text)
-            .font(.system(.caption, design: .default).weight(.semibold))
-            .foregroundStyle(tint)
-            .padding(.horizontal, 10)
-            .padding(.vertical, 4)
-            .background(Capsule().fill(tint.opacity(0.15)))
+        return HStack(spacing: 6) {
+            if let state { StateMark(state: state) }
+            Text(text)
+                .font(.subheadline.weight(.semibold))
+                .foregroundStyle(state?.color ?? Color.inkText)
+        }
+        .accessibilityElement(children: .combine)
     }
 
     private var renewalLine: (text: String, tint: Color)? {
         guard current.status == .active || current.status == .trial,
               let date = current.calculatedNextBillingDate, let days = current.daysUntilRenewal else { return nil }
         let dateText = date.formatted(.dateTime.month(.abbreviated).day())
-        if days < 0 { return ("Payment was due \(-days) day\(-days == 1 ? "" : "s") ago", .orange) }
-        if days == 0 { return ("Renews today", .orange) }
-        if days == 1 { return ("Renews tomorrow", Color.obsidianTextSecondary) }
-        return ("Renews \(dateText) · in \(days) days", Color.obsidianTextSecondary)
+        if days < 0 { return ("Payment was due \(-days) day\(-days == 1 ? "" : "s") ago", Color.due) }
+        if days == 0 { return ("Renews today", Color.due) }
+        if days == 1 { return ("Renews tomorrow", Color.due) }
+        return ("Renews \(dateText) · in \(days) days", Color.inkTextMuted)
     }
 
     // MARK: - Facts
@@ -189,57 +197,49 @@ struct SubscriptionManagementView: View {
             divider
             fact("Tracking since", startedOn.formatted(.dateTime.month(.abbreviated).year()))
         }
-        .background(RoundedRectangle(cornerRadius: 16, style: .continuous).fill(Color.obsidianSurface))
         .accessibilityElement(children: .contain)
     }
 
     private func fact(_ title: String, _ value: String) -> some View {
-        HStack {
+        HStack(alignment: .firstTextBaseline) {
             Text(title)
-                .font(.system(.body, design: .default))
-                .foregroundStyle(Color.obsidianTextSecondary)
+                .font(.body)
+                .foregroundStyle(Color.inkTextMuted)
             Spacer(minLength: 12)
             Text(value)
-                .font(.system(.body, design: .default))
-                .foregroundStyle(.white)
+                .font(.body)
+                .foregroundStyle(Color.inkText)
                 .multilineTextAlignment(.trailing)
         }
-        .padding(.horizontal, 16)
-        .frame(minHeight: 50)
+        .padding(.vertical, 12)
         .accessibilityElement(children: .combine)
     }
 
-    private var divider: some View {
-        Divider().overlay(Color.white.opacity(0.06)).padding(.leading, 16)
-    }
+    private var divider: some View { Hairline() }
 
-    // MARK: - Decision
 
-    /// Keep it or cancel it, when a charge is coming; the receipt line once it's cancelled.
     @ViewBuilder
     private var decisionGroup: some View {
         if let pending = RenewalDecisions.pending(for: current, kept: RenewalDecisions.keptKeys(in: eventLog.events), now: Date()) {
             let days = Calendar.current.calendarDays(from: Date(), to: pending.date)
             let when = days == 0 ? L10n.string("today") : days == 1 ? L10n.string("tomorrow") : L10n.string("in \(days) days")
             VStack(spacing: 0) {
-                toolRow(icon: "questionmark.circle",
+                toolRow(icon: "questionmark.circle", state: .decide,
                         title: L10n.string("Keep it or cancel it?"),
                         subtitle: pending.isTrialEnd ? L10n.string("Free trial ends \(when)") : L10n.string("Renews \(when)")) {
                     route = .verdict
                 }
             }
-            .background(RoundedRectangle(cornerRadius: 16, style: .continuous).fill(Color.obsidianSurface))
-            .overlay(RoundedRectangle(cornerRadius: 16, style: .continuous).stroke(Color.orange.opacity(0.35), lineWidth: 1))
+
         } else if current.status == .cancelled,
                   let line = SavingsSummary.current().lines.last(where: { $0.subscriptionId == current.id }) {
             VStack(spacing: 0) {
-                toolRow(icon: "doc.text",
+                toolRow(icon: "doc.text", state: .kept,
                         title: L10n.string("On your Savings Receipt"),
                         subtitle: L10n.string("\(MoneyFormat.string(line.onTrack, line.currency)) avoided over 12 months")) {
                     route = .receipt
                 }
             }
-            .background(RoundedRectangle(cornerRadius: 16, style: .continuous).fill(Color.obsidianSurface))
         }
     }
 
@@ -277,53 +277,57 @@ struct SubscriptionManagementView: View {
             divider
             toolRow(icon: "gauge.with.dots.needle.33percent", title: "Usage and value", subtitle: nil) { route = .usage }
         }
-        .background(RoundedRectangle(cornerRadius: 16, style: .continuous).fill(Color.obsidianSurface))
     }
 
-    private func toolRow(icon: String, title: String, subtitle: String?, isPro: Bool = false, action: @escaping () -> Void) -> some View {
+    private func toolRow(icon: String, state: MoneyState? = nil, title: String, subtitle: String?, isPro: Bool = false,
+                         action: @escaping () -> Void) -> some View {
         Button {
-            HapticStyle.light.trigger()
+            Feel.selection()
             action()
         } label: {
             HStack(spacing: 14) {
-                Image(systemName: icon)
-                    .font(.system(size: 16, weight: .semibold))
-                    .foregroundStyle(Color.accentMint)
-                    .frame(width: 24)
-                    .accessibilityHidden(true)
+                if let state {
+                    StateMark(state: state).frame(width: 24)
+                } else {
+                    Image(systemName: icon)
+                        .font(.body)
+                        .foregroundStyle(Color.inkTextMuted)
+                        .frame(width: 24)
+                        .accessibilityHidden(true)
+                }
                 VStack(alignment: .leading, spacing: 2) {
                     Text(title)
-                        .font(.system(.body, design: .default))
-                        .foregroundStyle(.white)
+                        .font(.body)
+                        .foregroundStyle(Color.inkText)
+                        .multilineTextAlignment(.leading)
                     if let subtitle {
                         Text(subtitle)
-                            .font(.system(.caption, design: .default))
-                            .foregroundStyle(Color.obsidianTextTertiary)
+                            .font(.subheadline)
+                            .foregroundStyle(state?.color ?? Color.inkTextMuted)
+                            .multilineTextAlignment(.leading)
                     }
                 }
                 Spacer(minLength: 8)
                 if isPro {
                     Text("Pro")
-                        .font(.system(.caption2, design: .default).weight(.bold))
-                        .foregroundStyle(Color.accentMint)
-                        .padding(.horizontal, 7)
+                        .font(.caption.weight(.semibold))
+                        .foregroundStyle(Color.inkText)
+                        .padding(.horizontal, 8)
                         .padding(.vertical, 3)
-                        .background(Capsule().fill(Color.accentMint.opacity(0.15)))
+                        .overlay(Capsule().stroke(Color.white.opacity(0.25), lineWidth: 1))
                 }
-                Image(systemName: "chevron.right")
-                    .font(.system(size: 12, weight: .semibold))
-                    .foregroundStyle(Color.obsidianTextTertiary)
+                Image(systemName: "chevron.forward")
+                    .font(.footnote.weight(.semibold))
+                    .foregroundStyle(Color.inkTextFaint)
                     .accessibilityHidden(true)
             }
-            .padding(.horizontal, 16)
-            .frame(minHeight: 54)
+            .padding(.vertical, 14)
             .contentShape(Rectangle())
         }
-        .buttonStyle(PlainButtonStyle())
+        .buttonStyle(.plain)
         .accessibilityElement(children: .combine)
     }
 
-    // MARK: - Support
 
     @ViewBuilder
     private var supportGroup: some View {
@@ -339,7 +343,6 @@ struct SubscriptionManagementView: View {
                     toolRow(icon: chat.type == .email ? "envelope" : "bubble.left", title: "Contact support", subtitle: chat.label) { openURL(url) }
                 }
             }
-            .background(RoundedRectangle(cornerRadius: 16, style: .continuous).fill(Color.obsidianSurface))
         }
     }
 
@@ -361,46 +364,25 @@ struct SubscriptionManagementView: View {
     // MARK: - Actions
 
     private var actions: some View {
-        VStack(spacing: 12) {
+        VStack(spacing: 10) {
             if current.isPaused {
                 RevolutionaryResumeButton(subscription: current)
             }
 
             if current.status != .cancelled {
-                // Cancelling is never behind the paywall.
-                Button {
-                    HapticStyle.medium.trigger()
-                    route = .cancel
-                } label: {
-                    HStack(spacing: 8) {
-                        Image(systemName: "xmark.circle")
-                            .font(.system(size: 15, weight: .semibold))
-                        Text("Cancel subscription")
-                    }
-                    .font(.system(.body, design: .default).weight(.semibold))
-                    .foregroundStyle(Color.red)
-                    .frame(maxWidth: .infinity)
-                    .frame(height: 52)
-                    .background(
-                        RoundedRectangle(cornerRadius: 16, style: .continuous)
-                            .fill(Color.red.opacity(0.12))
-                    )
-                }
-                .buttonStyle(PlainButtonStyle())
-                .accessibilityIdentifier("cancelSubscriptionButton")
+                Button { route = .cancel } label: { Text("Cancel subscription") }
+                    .buttonStyle(.ink(.quiet))
+                    .accessibilityIdentifier("cancelSubscriptionButton")
             }
 
-            Button {
-                HapticStyle.light.trigger()
-                showRemoveConfirm = true
-            } label: {
+            Button { showRemoveConfirm = true } label: {
                 Text(isRemoving ? "Removing…" : "Remove from Pausely")
-                    .font(.system(.subheadline, design: .default))
-                    .foregroundStyle(Color.obsidianTextTertiary)
-                    .frame(maxWidth: .infinity)
-                    .frame(height: 44)
+                    .font(.subheadline)
+                    .foregroundStyle(Color.inkTextMuted)
+                    .frame(maxWidth: .infinity, minHeight: Layout.tapTarget)
+                    .contentShape(Rectangle())
             }
-            .buttonStyle(PlainButtonStyle())
+            .buttonStyle(.plain)
             .disabled(isRemoving)
             .accessibilityIdentifier("removeSubscriptionButton")
         }
@@ -411,10 +393,8 @@ struct SubscriptionManagementView: View {
         defer { isRemoving = false }
         do {
             try await store.deleteSubscription(id: current.id)
-            HapticStyle.success.trigger()
             dismiss()
         } catch {
-            HapticStyle.error.trigger()
             errorMessage = "\"\(current.name)\" couldn't be removed. \(error.localizedDescription)"
         }
     }
@@ -473,12 +453,12 @@ private struct AlternativesSheet: View {
                 )
                 .padding(20)
             }
-            .background(Color.obsidianBlack.ignoresSafeArea())
+            .background(Color.ink.ignoresSafeArea())
             .navigationTitle("Alternatives")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .topBarLeading) {
-                    Button("Done") { dismiss() }.foregroundStyle(Color.accentMint)
+                    Button("Done") { dismiss() }.foregroundStyle(Color.inkText)
                 }
             }
             .sheet(item: $selected) { alternative in
@@ -524,27 +504,26 @@ private struct UsageSheet: View {
                     } label: {
                         HStack {
                             Text("Usage history")
-                                .font(.system(.body, design: .default))
-                                .foregroundStyle(.white)
+                                .font(.body)
+                                .foregroundStyle(Color.inkText)
                             Spacer()
-                            Image(systemName: "chevron.right")
-                                .font(.system(size: 12, weight: .semibold))
-                                .foregroundStyle(Color.obsidianTextTertiary)
+                            Image(systemName: "chevron.forward")
+                                .font(.footnote.weight(.semibold))
+                                .foregroundStyle(Color.inkTextFaint)
                         }
                         .padding(.horizontal, 16)
                         .frame(height: 54)
-                        .background(RoundedRectangle(cornerRadius: 16, style: .continuous).fill(Color.obsidianSurface))
-                    }
+                                }
                     .buttonStyle(PlainButtonStyle())
                 }
                 .padding(20)
             }
-            .background(Color.obsidianBlack.ignoresSafeArea())
+            .background(Color.ink.ignoresSafeArea())
             .navigationTitle("Usage and value")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .topBarLeading) {
-                    Button("Done") { dismiss() }.foregroundStyle(Color.accentMint)
+                    Button("Done") { dismiss() }.foregroundStyle(Color.inkText)
                 }
             }
             .sheet(isPresented: $showInput) {
