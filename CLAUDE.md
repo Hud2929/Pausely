@@ -50,7 +50,7 @@ for App Store captures. `--reset-state` (UI tests) starts signed out with onboar
 
 ### Entry and navigation
 `Pausely/ContentView.swift` holds `PauselyApp`, the `AppDelegate` (sets the notification delegate and
-categories at launch) and `RootView`: splash → `OnboardingCarouselView` (3 pages) →
+categories at launch) and `RootView`: splash → `FirstRunView` (guess, tally, reveal) →
 `PremiumWelcomeFlow` (sign up / sign in) → `AgeGateView` when needed → `PremiumMainTabView`
 (Dashboard, Subscriptions, Analysis, Profile). Deep links go through `DeepLinkManager`
 (`URL.routeSegments` treats `pausely://auth/confirm` and `https://pausely.pro/r/CODE` alike).
@@ -107,9 +107,12 @@ One engine, one adapter per kind of inbox, all read-only and on-device:
 ### Design
 iPhone and iPad (`TARGETED_DEVICE_FAMILY = "1,2"`; 1.0.1 shipped on iPad, so Apple rejects any
 update that drops it). On iPad, `.readableWidth()` keeps the app at phone width, centred; apply it
-to any new `fullScreenCover`. Dark only. Colours `Color.obsidianBlack`, `obsidianSurface`, `accentMint`; rounded system fonts.
-`ServiceLogoView` loads logos (touch icon, then favicon, cached). `.statusBarBackdrop()` for full-screen
-scroll views.
+to any new `fullScreenCover`. Dark only. The design system is "Ink and Paper"
+(`DesignSystem/InkPaper.swift`, rules in the `pausely-design` skill): `Color.ink` background, `PaperSlip`
+only where money is decided or proven, `Color.kept` (mint) only for money kept, `Font.question` (serif)
+for questions and totals, `Font.proof` (mono) for receipt lines, `.buttonStyle(.ink…)`, `Motion`, `Feel`.
+`scripts/old_ui_check.sh` must print "0 files". `ServiceLogoView` loads logos (touch icon, then favicon,
+cached). `--demo-design` shows every part; screen ratings are in `REDESIGN_PLAN.md` section 11.
 
 ### Localization
 `Pausely/Localizable.xcstrings`: English plus Arabic, German, Spanish, French and Japanese. New
