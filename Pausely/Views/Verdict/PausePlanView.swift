@@ -101,7 +101,6 @@ struct PausePlanView: View {
             }
             .padding(20)
             .frame(maxWidth: .infinity)
-            .background(RoundedRectangle(cornerRadius: 16, style: .continuous).fill(Color.inkRaised))
         } else {
             VStack(alignment: .leading, spacing: 10) {
                 Text("ROTATE THESE")
@@ -113,7 +112,6 @@ struct PausePlanView: View {
                         selectableRow(sub)
                     }
                 }
-                .background(RoundedRectangle(cornerRadius: 16, style: .continuous).fill(Color.inkRaised))
             }
 
             estimateCard
@@ -157,22 +155,18 @@ struct PausePlanView: View {
     }
 
     private var intro: some View {
-        VStack(spacing: 10) {
-            Image(systemName: "arrow.triangle.2.circlepath")
-                .font(.system(size: 30, weight: .semibold))
-                .foregroundStyle(Color.inkText)
-                .frame(width: 64, height: 64)
-                .background(Circle().fill(Color.white.opacity(0.06)))
-                .accessibilityHidden(true)
+        VStack(alignment: .leading, spacing: 10) {
             Text("Watch one at a time")
-                .font(.title2.weight(.bold))
+                .font(.question(.title))
                 .foregroundStyle(Color.inkText)
+                .fixedSize(horizontal: false, vertical: true)
+                .accessibilityAddTraits(.isHeader)
             Text("Most people pay for several streaming services and watch one. Pause Plan keeps one on, pauses the rest, and rotates every month, so you still see everything.")
-                .font(.subheadline)
+                .font(.body)
                 .foregroundStyle(Color.inkTextMuted)
-                .multilineTextAlignment(.center)
+                .fixedSize(horizontal: false, vertical: true)
         }
-        .frame(maxWidth: .infinity)
+        .frame(maxWidth: .infinity, alignment: .leading)
     }
 
     private func selectableRow(_ sub: Subscription) -> some View {
@@ -228,51 +222,22 @@ struct PausePlanView: View {
         .accessibilityAddTraits(isSelected ? .isSelected : [])
     }
 
+    /// The sum, printed: what all of them cost together, what one at a time costs, and the difference.
     private var estimateCard: some View {
         let costs = chosen.map { currencyManager.convertToSelected($0.monthlyCost, from: $0.currency) }
         let now = costs.reduce(0, +)
         let rotating = PausePlanSchedule.monthlyCostWhileRotating(monthlyCosts: costs)
         let yearly = PausePlanSchedule.yearlySavings(monthlyCosts: costs)
-        return VStack(spacing: 12) {
-            HStack {
-                estimateColumn(L10n.string("All at once"), currencyManager.format(now), L10n.string("a month"))
-                Image(systemName: "arrow.right")
-                    .foregroundStyle(Color.inkTextFaint)
-                    .accessibilityHidden(true)
-                estimateColumn(L10n.string("One at a time"), currencyManager.format(rotating), L10n.string("a month on average"))
-            }
-            Divider().overlay(Color.white.opacity(0.08))
-            HStack {
-                Text("Back in your pocket")
-                    .font(.subheadline)
-                    .foregroundStyle(Color.inkTextMuted)
-                Spacer()
-                Text("\(currencyManager.format(yearly)) a year")
-                    .font(.headline.weight(.bold))
-                    .foregroundStyle(Color.inkText)
+        return PaperSlip(tornTop: true, tornBottom: true) {
+            VStack(alignment: .leading, spacing: 10) {
+                ProofLine(label: L10n.string("All at once"), value: currencyManager.format(now) + " " + L10n.string("a month"))
+                ProofLine(label: L10n.string("One at a time"), value: currencyManager.format(rotating) + " " + L10n.string("a month on average"))
+                Perforation()
+                ProofLine(label: L10n.string("Back in your pocket"), value: L10n.string("\(currencyManager.format(yearly)) a year"),
+                          emphasised: true)
             }
         }
-        .padding(16)
-        .background(RoundedRectangle(cornerRadius: 16, style: .continuous).fill(Color.inkRaised))
-        .overlay(RoundedRectangle(cornerRadius: 16, style: .continuous).stroke(Color.white.opacity(0.06), lineWidth: 1))
         .accessibilityElement(children: .combine)
-    }
-
-    private func estimateColumn(_ title: String, _ amount: String, _ caption: String) -> some View {
-        VStack(spacing: 2) {
-            Text(title)
-                .font(.caption)
-                .foregroundStyle(Color.inkTextFaint)
-            Text(amount)
-                .font(.title3.weight(.bold))
-                .foregroundStyle(Color.inkText)
-                .minimumScaleFactor(0.7)
-                .lineLimit(1)
-            Text(caption)
-                .font(.caption2)
-                .foregroundStyle(Color.inkTextFaint)
-        }
-        .frame(maxWidth: .infinity)
     }
 
     // MARK: - Active plan
@@ -306,22 +271,22 @@ struct PausePlanView: View {
     }
 
     private func nowCard(_ sub: Subscription, until end: Date, next: Subscription?) -> some View {
-        VStack(spacing: 10) {
+        VStack(alignment: .leading, spacing: 10) {
             Text("ON NOW")
-                .font(.caption.weight(.semibold))
-                .foregroundStyle(Color.inkTextFaint)
-            ServiceLogoView(name: sub.name, category: sub.category, size: 60)
-                .accessibilityHidden(true)
-            Text(sub.name)
-                .font(.title2.weight(.bold))
-                .foregroundStyle(Color.inkText)
+                .font(.subheadline.weight(.semibold))
+                .foregroundStyle(Color.inkTextMuted)
+            HStack(spacing: 12) {
+                ServiceLogoView(name: sub.name, category: sub.category, size: 48)
+                Text(sub.name)
+                    .font(.question(.title))
+                    .foregroundStyle(Color.inkText)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
             Text(next.map { L10n.string("Until \(short(end)). Then \($0.name).") } ?? L10n.string("Until \(short(end))."))
-                .font(.subheadline)
+                .font(.body)
                 .foregroundStyle(Color.inkTextMuted)
         }
-        .frame(maxWidth: .infinity)
-        .padding(.vertical, 18)
-        .background(RoundedRectangle(cornerRadius: 20, style: .continuous).fill(Color.inkRaised))
+        .frame(maxWidth: .infinity, alignment: .leading)
         .accessibilityElement(children: .combine)
     }
 
@@ -407,7 +372,6 @@ struct PausePlanView: View {
         }
         .padding(16)
         .frame(maxWidth: .infinity, alignment: .leading)
-        .background(RoundedRectangle(cornerRadius: 16, style: .continuous).fill(Color.inkRaised))
     }
 
     private func scheduleCard(_ upcoming: [PausePlanSchedule.Turn]) -> some View {
@@ -434,7 +398,6 @@ struct PausePlanView: View {
         }
         .padding(16)
         .frame(maxWidth: .infinity, alignment: .leading)
-        .background(RoundedRectangle(cornerRadius: 16, style: .continuous).fill(Color.inkRaised))
     }
 
     private func savedCard(_ plan: PausePlan) -> some View {
@@ -450,8 +413,7 @@ struct PausePlanView: View {
                 .font(.headline.weight(.bold))
                 .foregroundStyle(Color.inkText)
         }
-        .padding(16)
-        .background(RoundedRectangle(cornerRadius: 16, style: .continuous).fill(Color.inkRaised))
+        .padding(.vertical, 12)
         .accessibilityElement(children: .combine)
     }
 }
@@ -509,7 +471,6 @@ struct PausePlanCard: View {
                     .accessibilityHidden(true)
             }
             .padding(16)
-            .background(RoundedRectangle(cornerRadius: 20, style: .continuous).fill(Color.inkRaised))
         }
         .buttonStyle(PlainButtonStyle())
         .accessibilityIdentifier("pausePlanCard")

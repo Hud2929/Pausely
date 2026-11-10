@@ -39,9 +39,9 @@ struct InboxImportView: View {
                             connectedSection
                         }
                     }
-                    .padding(.horizontal, 20)
-                    .padding(.top, 20)
-                    .padding(.bottom, 100)
+                    .padding(.horizontal, Layout.margin)
+                    .padding(.top, 12)
+                    .padding(.bottom, 40)
                 }
             }
             .navigationTitle("Find in Email")
@@ -86,77 +86,61 @@ struct InboxImportView: View {
 
     // MARK: - Connect Section
 
+    /// Before any inbox is connected: what this does, what it never does, and which inbox.
     private var connectSection: some View {
-        VStack(spacing: 24) {
-            ZStack {
-                Circle()
-                    .fill(Color.white.opacity(0.06))
-                    .frame(width: 100, height: 100)
-                Image(systemName: "envelope.open.fill")
-                    .font(.system(size: 40, weight: .semibold))
-                    .foregroundStyle(Color.inkText)
-            }
-            .padding(.top, 24)
+        VStack(alignment: .leading, spacing: 0) {
+            Text("Find subscriptions in your email")
+                .font(.question(.title))
+                .foregroundStyle(Color.inkText)
+                .fixedSize(horizontal: false, vertical: true)
+                .accessibilityAddTraits(.isHeader)
+            Text("Pausely reads the receipts in your inbox and finds what you pay for, including trials and price changes.")
+                .font(.body)
+                .foregroundStyle(Color.inkTextMuted)
+                .fixedSize(horizontal: false, vertical: true)
+                .padding(.top, 10)
 
-            VStack(spacing: 8) {
-                Text("Find subscriptions in your email")
-                    .font(.title3.weight(.bold))
-                    .foregroundStyle(Color.inkText)
-                    .multilineTextAlignment(.center)
-                Text("Pausely reads the receipts in your inbox and finds what you pay for, including trials and price changes.")
-                    .font(.subheadline)
-                    .foregroundStyle(Color.inkTextMuted)
-                    .multilineTextAlignment(.center)
-                    .lineSpacing(3)
-            }
+            privacyNotice.padding(.top, 24)
 
-            privacyNotice
-            providerButtons
+            providerButtons.padding(.top, 16)
 
             if let error = scanner.error {
                 Text(error)
-                    .font(.caption)
+                    .font(.footnote)
                     .foregroundStyle(Color.due)
-                    .multilineTextAlignment(.center)
+                    .fixedSize(horizontal: false, vertical: true)
+                    .padding(.top, 12)
             }
         }
-        .padding(24)
-        .background(Color.inkRaised, in: RoundedRectangle(cornerRadius: Layout.cardRadius, style: .continuous))
+        .frame(maxWidth: .infinity, alignment: .leading)
     }
 
+    /// The promise, printed: it is the reason someone would let an app near their inbox.
     private var privacyNotice: some View {
-        VStack(alignment: .leading, spacing: 8) {
-            HStack(spacing: 10) {
-                Image(systemName: "lock.shield.fill")
-                    .font(.caption)
-                    .foregroundStyle(Color.inkText)
+        PaperSlip(tornTop: true, tornBottom: true) {
+            VStack(alignment: .leading, spacing: 8) {
                 Text("Your email never leaves your iPhone.")
-                    .font(.caption.weight(.semibold))
-                    .foregroundStyle(Color.inkText)
+                    .font(.question(.title3))
+                    .fixedSize(horizontal: false, vertical: true)
+                Text("Pausely connects straight to your email provider with read-only access, reads receipts on this iPhone and keeps only the name, amount and date of each charge. It can't send, change or delete email.")
+                    .font(.footnote)
+                    .foregroundStyle(Color.paperMuted)
+                    .fixedSize(horizontal: false, vertical: true)
             }
-            Text("Pausely connects straight to your email provider with read-only access, reads receipts on this iPhone and keeps only the name, amount and date of each charge. It can't send, change or delete email.")
-                .font(.caption)
-                .foregroundStyle(Color.inkTextMuted)
-                .lineSpacing(2)
         }
-        .padding(12)
-        .background(
-            RoundedRectangle(cornerRadius: 12, style: .continuous)
-                .fill(Color.white.opacity(0.06))
-                .overlay(RoundedRectangle(cornerRadius: 12, style: .continuous).stroke(Color.white.opacity(0.06), lineWidth: 1))
-        )
+        .accessibilityElement(children: .combine)
     }
 
     private var providerButtons: some View {
-        VStack(spacing: 10) {
+        VStack(spacing: 0) {
             if FeatureFlags.gmailImportEnabled && GmailMailboxProvider.isConfigured {
-                providerButton(Text(verbatim: "Gmail"), detail: Text("Sign in with Google"), icon: "envelope.fill", id: "connectGmail") {
+                providerButton(Text(verbatim: "Gmail"), detail: Text("Sign in with Google"), icon: "Gmail", id: "connectGmail") {
                     showingProviders = false
                     Task { await scanner.connectGmail() }
                 }
             }
             if FeatureFlags.microsoftImportEnabled && MicrosoftGraphProvider.isConfigured {
-                providerButton(Text(verbatim: "Outlook, Hotmail, Live, MSN"), detail: Text("Sign in with Microsoft"), icon: "envelope.badge.fill", id: "connectMicrosoft") {
+                providerButton(Text(verbatim: "Outlook, Hotmail, Live, MSN"), detail: Text("Sign in with Microsoft"), icon: "Outlook", id: "connectMicrosoft") {
                     showingProviders = false
                     Task { await scanner.connectMicrosoft() }
                 }
@@ -164,12 +148,12 @@ struct InboxImportView: View {
             if FeatureFlags.imapImportEnabled {
                 ForEach(["icloud", "yahoo", "aol", "gmail-imap"], id: \.self) { id in
                     if let preset = IMAPPreset.find(id) {
-                        providerButton(Text(verbatim: preset.name), detail: Text("With an app password"), icon: "envelope", id: "connect-\(id)") {
+                        providerButton(Text(verbatim: preset.name), detail: Text("With an app password"), icon: preset.name, id: "connect-\(id)") {
                             openIMAP(preset)
                         }
                     }
                 }
-                providerButton(Text("Other email"), detail: Text("GMX, WEB.DE, Zoho, Fastmail and more"), icon: "tray.full", id: "connect-other") {
+                providerButton(Text("Other email"), detail: Text("GMX, WEB.DE, Zoho, Fastmail and more"), icon: "", id: "connect-other") {
                     openIMAP(nil)
                 }
             }
@@ -183,70 +167,71 @@ struct InboxImportView: View {
     }
 
     private func providerButton(_ title: Text, detail: Text, icon: String, id: String, action: @escaping () -> Void) -> some View {
-        Button {
-            action()
-        } label: {
-            HStack(spacing: 12) {
-                Image(systemName: icon)
-                    .font(.system(size: 16, weight: .semibold))
-                    .foregroundStyle(Color.inkText)
-                    .frame(width: 28)
-                VStack(alignment: .leading, spacing: 2) {
-                    title
-                        .font(.body.weight(.semibold))
-                        .foregroundStyle(Color.inkText)
-                    detail
-                        .font(.caption)
-                        .foregroundStyle(Color.inkTextMuted)
+        VStack(spacing: 0) {
+            Button(action: action) {
+                HStack(spacing: 12) {
+                    if icon.isEmpty {
+                        Image(systemName: "envelope")
+                            .font(.body)
+                            .foregroundStyle(Color.inkTextMuted)
+                            .frame(width: 36, height: 36)
+                            .accessibilityHidden(true)
+                    } else {
+                        ServiceLogoView(name: icon, category: nil, size: 36)
+                    }
+                    VStack(alignment: .leading, spacing: 2) {
+                        title
+                            .font(.body.weight(.medium))
+                            .foregroundStyle(Color.inkText)
+                            .multilineTextAlignment(.leading)
+                        detail
+                            .font(.subheadline)
+                            .foregroundStyle(Color.inkTextMuted)
+                            .multilineTextAlignment(.leading)
+                    }
+                    Spacer(minLength: 8)
+                    Image(systemName: "chevron.forward")
+                        .font(.footnote.weight(.semibold))
+                        .foregroundStyle(Color.inkTextFaint)
+                        .accessibilityHidden(true)
                 }
-                Spacer()
-                Image(systemName: "chevron.forward")
-                    .font(.system(.caption).weight(.semibold))
-                    .foregroundStyle(Color.inkTextFaint)
+                .padding(.vertical, 12)
+                .contentShape(Rectangle())
             }
-            .padding(14)
-            .background(RoundedRectangle(cornerRadius: 14, style: .continuous).fill(Color.inkRaised))
+            .buttonStyle(.plain)
+            .accessibilityElement(children: .combine)
+            .accessibilityIdentifier(id)
+            Hairline()
         }
-        .buttonStyle(PlainButtonStyle())
-        .accessibilityIdentifier(id)
     }
 
-    // MARK: - Scanning Section
 
     private var scanningSection: some View {
-        VStack(spacing: 20) {
-            ZStack {
-                Circle()
-                    .fill(Color.white.opacity(0.06))
-                    .frame(width: 80, height: 80)
-                Image(systemName: "magnifyingglass")
-                    .font(.system(size: 30, weight: .semibold))
-                    .foregroundStyle(Color.inkText)
-                    .symbolEffect(.pulse)
-            }
-
+        VStack(alignment: .leading, spacing: 16) {
             (scanner.statusLine.isEmpty ? Text("Scanning your email…") : Text(verbatim: scanner.statusLine))
-                .font(.headline)
+                .font(.question(.title2))
                 .foregroundStyle(Color.inkText)
-                .multilineTextAlignment(.center)
+                .fixedSize(horizontal: false, vertical: true)
+                .accessibilityAddTraits(.isHeader)
 
             ProgressView(value: scanner.progress)
                 .tint(Color.inkText)
-                .padding(.horizontal, 40)
 
-            Text(scanner.progress, format: .percent.precision(.fractionLength(0)))
-                .font(.caption.monospacedDigit())
-                .foregroundStyle(Color.inkTextMuted)
-
-            Button("Stop") { scanner.cancelScan() }
-                .font(.subheadline.weight(.semibold))
-                .foregroundStyle(Color.inkTextMuted)
+            HStack {
+                Text(scanner.progress, format: .percent.precision(.fractionLength(0)))
+                    .font(.proof(.subheadline))
+                    .foregroundStyle(Color.inkTextMuted)
+                Spacer()
+                Button("Stop") { scanner.cancelScan() }
+                    .font(.subheadline.weight(.semibold))
+                    .foregroundStyle(Color.inkText)
+                    .frame(minHeight: Layout.tapTarget)
+            }
         }
-        .padding(32)
-        .background(Color.inkRaised, in: RoundedRectangle(cornerRadius: Layout.cardRadius, style: .continuous))
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .padding(.top, 8)
     }
 
-    // MARK: - Connected Section (ready to scan)
 
     private var connectedSection: some View {
         VStack(spacing: 16) {
@@ -314,8 +299,7 @@ struct InboxImportView: View {
             .accessibilityLabel("Options for \(account.address)")
             .accessibilityIdentifier("inboxOptions")
         }
-        .padding(16)
-        .background(Color.inkRaised, in: RoundedRectangle(cornerRadius: Layout.cardRadius, style: .continuous))
+        .padding(.vertical, 10)
     }
 
     private func accountDetail(_ account: MailboxAccount) -> String {
@@ -342,7 +326,7 @@ struct InboxImportView: View {
         let worthALook = subs.filter { $0.proven?.tier != .confirmed && isLive($0) }
         let ended = subs.filter { !isLive($0) }
 
-        return VStack(spacing: 20) {
+        return VStack(spacing: 28) {
             summaryCard(count: confirmed.count + worthALook.count)
             insightsCard
             if !confirmed.isEmpty {
@@ -367,49 +351,49 @@ struct InboxImportView: View {
             .map(\.id))
     }
 
+    /// What the scan found, as a slip: the total first, then how it was worked out.
     private func summaryCard(count: Int) -> some View {
         let report = scanner.report
-        // In the display currency: a mailbox can have receipts in several currencies.
         let currency = CurrencyManager.shared.selectedCurrency
         let monthly = report?.monthlyTotal(in: currency) ?? 0
         let annual = monthly * 12
         let ignored = scanner.stats.purchasesIgnored
 
-        return VStack(alignment: .leading, spacing: 10) {
+        return VStack(alignment: .leading, spacing: 16) {
             Text("We found \(count) subscriptions")
-                .font(.headline)
+                .font(.question(.title))
                 .foregroundStyle(Color.inkText)
-            HStack(alignment: .firstTextBaseline, spacing: 8) {
-                Text(InboxImportView.money(monthly, currency))
-                    .font(.largeTitle.weight(.bold))
-                    .foregroundStyle(Color.inkText)
-                Text("per month")
-                    .font(.subheadline)
-                    .foregroundStyle(Color.inkTextMuted)
-            }
-            Text("\(InboxImportView.money(annual, currency)) a year")
-                .font(.footnote)
-                .foregroundStyle(Color.inkTextMuted)
-            if ignored > 0 {
-                Label("Ignored \(ignored) one-time purchases so your list stays clean", systemImage: "line.3.horizontal.decrease.circle")
-                    .font(.caption)
-                    .foregroundStyle(Color.inkTextFaint)
-            }
-            if scanner.stats.emailsChecked > 0 {
-                let stats = scanner.stats
-                Label("Emails checked: \(stats.emailsChecked) · read in full: \(stats.bodiesRead) · all on your phone", systemImage: "lock.shield")
-                    .font(.caption)
-                    .foregroundStyle(Color.inkTextFaint)
-                if stats.aiAssisted > 0 {
-                    Label("On-device AI helped with \(stats.aiAssisted) tricky receipts", systemImage: "sparkles")
-                        .font(.caption)
-                        .foregroundStyle(Color.inkTextFaint)
+                .fixedSize(horizontal: false, vertical: true)
+                .accessibilityAddTraits(.isHeader)
+
+            PaperSlip(tornTop: true, tornBottom: true) {
+                VStack(alignment: .leading, spacing: 10) {
+                    ProofLine(label: L10n.string("Each month"), value: InboxImportView.money(monthly, currency), emphasised: true)
+                    ProofLine(label: L10n.string("Each year"), value: InboxImportView.money(annual, currency))
+                    if ignored > 0 || scanner.stats.emailsChecked > 0 { Perforation() }
+                    if ignored > 0 {
+                        Text("Ignored \(ignored) one-time purchases so your list stays clean")
+                            .font(.proof(.caption))
+                            .foregroundStyle(Color.paperMuted)
+                            .fixedSize(horizontal: false, vertical: true)
+                    }
+                    if scanner.stats.emailsChecked > 0 {
+                        let stats = scanner.stats
+                        Text("Emails checked: \(stats.emailsChecked) · read in full: \(stats.bodiesRead) · all on your phone")
+                            .font(.proof(.caption))
+                            .foregroundStyle(Color.paperMuted)
+                            .fixedSize(horizontal: false, vertical: true)
+                        if stats.aiAssisted > 0 {
+                            Text("On-device AI helped with \(stats.aiAssisted) tricky receipts")
+                                .font(.proof(.caption))
+                                .foregroundStyle(Color.paperMuted)
+                                .fixedSize(horizontal: false, vertical: true)
+                        }
+                    }
                 }
             }
         }
         .frame(maxWidth: .infinity, alignment: .leading)
-        .padding(18)
-        .background(RoundedRectangle(cornerRadius: 16, style: .continuous).fill(Color.inkRaised))
         .accessibilityElement(children: .combine)
     }
 
@@ -417,33 +401,35 @@ struct InboxImportView: View {
     private var insightsCard: some View {
         let insights = Array((scanner.report?.insights ?? []).prefix(4))
         if !insights.isEmpty {
-            VStack(alignment: .leading, spacing: 12) {
+            VStack(alignment: .leading, spacing: 0) {
                 Text("Worth knowing")
-                    .font(.subheadline.weight(.semibold))
+                    .font(.headline)
                     .foregroundStyle(Color.inkText)
-                ForEach(insights) { insight in
-                    HStack(alignment: .top, spacing: 12) {
+                    .padding(.bottom, 4)
+                    .accessibilityAddTraits(.isHeader)
+                ForEach(Array(insights.enumerated()), id: \.element.id) { index, insight in
+                    if index > 0 { Hairline() }
+                    HStack(alignment: .firstTextBaseline, spacing: 12) {
                         Image(systemName: icon(for: insight.kind))
-                            .font(.system(size: 15, weight: .semibold))
+                            .font(.footnote.weight(.semibold))
                             .foregroundStyle(color(for: insight.kind))
-                            .frame(width: 22)
+                            .frame(width: 20)
                             .accessibilityHidden(true)
                         VStack(alignment: .leading, spacing: 2) {
                             Text(insight.title)
-                                .font(.footnote.weight(.semibold))
+                                .font(.body.weight(.semibold))
                                 .foregroundStyle(Color.inkText)
                             Text(insight.detail)
-                                .font(.caption)
+                                .font(.subheadline)
                                 .foregroundStyle(Color.inkTextMuted)
                                 .fixedSize(horizontal: false, vertical: true)
                         }
                     }
+                    .padding(.vertical, 12)
                     .accessibilityElement(children: .combine)
                 }
             }
             .frame(maxWidth: .infinity, alignment: .leading)
-            .padding(18)
-            .background(RoundedRectangle(cornerRadius: 16, style: .continuous).fill(Color.inkRaised))
         }
     }
 
@@ -460,8 +446,8 @@ struct InboxImportView: View {
 
     private func color(for kind: IntelligenceInsight.Kind) -> Color {
         switch kind {
-        case .chargedAfterCancel, .paymentFailed: return .red
-        case .priceIncrease, .priceChangeNotice, .trialEnding, .renewalSoon: return .orange
+        case .chargedAfterCancel, .paymentFailed: return .due
+        case .priceIncrease, .priceChangeNotice, .trialEnding, .renewalSoon: return .decide
         case .likelyEnded: return Color.inkTextMuted
         }
     }
@@ -474,7 +460,7 @@ struct InboxImportView: View {
                         .font(.headline)
                         .foregroundStyle(Color.inkText)
                     Text(subtitle)
-                        .font(.caption)
+                        .font(.subheadline)
                         .foregroundStyle(Color.inkTextMuted)
                 }
                 Spacer()
@@ -492,8 +478,9 @@ struct InboxImportView: View {
                 .foregroundStyle(Color.inkText)
             }
 
-            VStack(spacing: 1) {
-                ForEach(items) { sub in
+            VStack(spacing: 0) {
+                ForEach(Array(items.enumerated()), id: \.element.id) { index, sub in
+                    if index > 0 { Hairline() }
                     GmailSubscriptionRow(
                         subscription: sub,
                         isSelected: selectedSubscriptions.contains(sub.id),
@@ -517,7 +504,6 @@ struct InboxImportView: View {
                     )
                 }
             }
-            .background(RoundedRectangle(cornerRadius: 16, style: .continuous).fill(Color.inkRaised))
         }
     }
 
@@ -527,22 +513,13 @@ struct InboxImportView: View {
             Button {
                 Task { await importSelected() }
             } label: {
-                HStack(spacing: 8) {
-                    if importing {
-                        ProgressView().tint(.black)
-                    } else {
-                        Image(systemName: "square.and.arrow.down")
-                            .font(.system(size: 15, weight: .semibold))
-                    }
+                if importing {
+                    ProgressView().tint(Color.paperInk)
+                } else {
                     Text("Import \(selectedSubscriptions.count) subscriptions")
-                        .font(.body.weight(.semibold))
                 }
-                .foregroundStyle(Color.ink)
-                .frame(maxWidth: .infinity)
-                .frame(height: 52)
-                .background(RoundedRectangle(cornerRadius: 16, style: .continuous).fill(Color.paper))
             }
-            .buttonStyle(PlainButtonStyle())
+            .buttonStyle(.ink)
             .disabled(importing)
             .accessibilityIdentifier("importSelectedButton")
         }
@@ -633,7 +610,7 @@ private struct GmailSubscriptionRow: View {
 
     private var statusBadge: (text: String, color: Color)? {
         switch proven?.status {
-        case .priceIncreased: return (L10n.string("Price went up"), .orange)
+        case .priceIncreased: return (L10n.string("Price went up"), Color.decide)
         case .trial: return (L10n.string("Free trial"), Color.inkText)
         case .likelyEnded: return (L10n.string("May have ended"), Color.inkTextMuted)
         case .cancelled: return (L10n.string("Cancelled"), Color.inkTextMuted)
@@ -674,8 +651,8 @@ private struct GmailSubscriptionRow: View {
                                 .foregroundStyle(Color.inkText)
                                 .lineLimit(1)
                             Text(evidenceLine)
-                                .font(.caption2)
-                                .foregroundStyle(Color.inkTextFaint)
+                                .font(.caption)
+                                .foregroundStyle(Color.inkTextMuted)
                                 .lineLimit(2)
                                 .fixedSize(horizontal: false, vertical: true)
                             if let badge = statusBadge {
@@ -714,8 +691,6 @@ private struct GmailSubscriptionRow: View {
                     .accessibilityLabel(isExpanded ? Text("Hide why") : Text("Show why we think this is a subscription"))
                 }
             }
-            .padding(.leading, 14)
-            .padding(.trailing, 6)
             .padding(.vertical, 12)
 
             if isExpanded, let proven {
@@ -727,7 +702,7 @@ private struct GmailSubscriptionRow: View {
     private var checkbox: some View {
         ZStack {
             RoundedRectangle(cornerRadius: 6, style: .continuous)
-                .fill(isSelected ? Color.inkText : Color.clear)
+                .fill(isSelected ? Color.paper : Color.clear)
                 .overlay(
                     RoundedRectangle(cornerRadius: 6, style: .continuous)
                         .stroke(isSelected ? Color.clear : Color.inkTextFaint, lineWidth: 1.5)
@@ -736,7 +711,7 @@ private struct GmailSubscriptionRow: View {
             if isSelected {
                 Image(systemName: "checkmark")
                     .font(.system(size: 11, weight: .bold))
-                    .foregroundStyle(.black)
+                    .foregroundStyle(Color.paperInk)
             }
         }
     }

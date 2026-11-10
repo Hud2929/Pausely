@@ -158,6 +158,8 @@ enum ServiceDomains {
     private static let domains: [String: String] = [
         // ── Streaming: Video ──────────────────────────────────────────────
         "netflix": "netflix.com",
+        "gmail": "gmail.com", "gmail (app password)": "gmail.com", "icloud mail": "icloud.com",
+        "yahoo mail": "yahoo.com", "aol mail": "aol.com", "outlook": "outlook.com",
         "hulu": "hulu.com",
         "disney+": "disneyplus.com",
         "disney plus": "disneyplus.com",
