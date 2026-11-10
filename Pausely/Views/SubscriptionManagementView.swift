@@ -477,57 +477,81 @@ private struct UsageSheet: View {
         screenTimeManager.calculateCostPerHour(monthlyCost: subscription.monthlyCost, subscriptionName: subscription.name)
     }
 
+    /// What the person says they used it, and what that makes an hour cost. No score, no verdict:
+    /// the figure is theirs, and so is the judgment.
     var body: some View {
-        NavigationStack {
-            ScrollView {
-                VStack(spacing: 20) {
-                    CostPerUseDetailSection(subscription: subscription)
+        ScrollView {
+            VStack(alignment: .leading, spacing: 0) {
+                HStack {
+                    Button { dismiss() } label: {
+                        Text("Done")
+                            .font(.subheadline.weight(.semibold))
+                            .foregroundStyle(Color.inkTextMuted)
+                            .frame(minHeight: Layout.tapTarget)
+                            .contentShape(Rectangle())
+                    }
+                    Spacer()
+                }
 
-                    UsageTrackingSection(
-                        subscription: subscription,
-                        screenTimeManager: screenTimeManager,
-                        currentUsageMinutes: minutes,
-                        costPerHour: costPerHour,
-                        usageStats: screenTimeManager.getUsageStats(for: subscription.name),
-                        onEditUsage: { showInput = true }
-                    )
+                Text(L10n.string("How much do you use \(subscription.name)?"))
+                    .font(.question(.title))
+                    .foregroundStyle(Color.inkText)
+                    .fixedSize(horizontal: false, vertical: true)
+                    .padding(.top, 4)
+                    .accessibilityAddTraits(.isHeader)
 
-                    Button {
-                        showHistory = true
-                    } label: {
-                        HStack {
-                            Text("Usage history")
-                                .font(.body)
-                                .foregroundStyle(Color.inkText)
-                            Spacer()
-                            Image(systemName: "chevron.forward")
-                                .font(.footnote.weight(.semibold))
-                                .foregroundStyle(Color.inkTextFaint)
+                Text("You enter this yourself. Pausely doesn't read your Screen Time.")
+                    .font(.subheadline)
+                    .foregroundStyle(Color.inkTextMuted)
+                    .fixedSize(horizontal: false, vertical: true)
+                    .padding(.top, 10)
+
+                PaperSlip(tornTop: true, tornBottom: true) {
+                    VStack(alignment: .leading, spacing: 10) {
+                        ProofLine(label: L10n.string("This month"),
+                                  value: minutes > 0
+                                    ? Duration.seconds(minutes * 60).formatted(.units(allowed: [.hours, .minutes], width: .abbreviated))
+                                    : L10n.string("Not entered"),
+                                  emphasised: true)
+                        ProofLine(label: L10n.string("It costs"), value: subscription.chargeText + subscription.billingFrequency.shortDisplay)
+                        if let costPerHour {
+                            Perforation()
+                            ProofLine(label: L10n.string("Each hour of use"),
+                                      value: MoneyFormat.string(costPerHour, subscription.currency, locale: L10n.locale), emphasised: true)
                         }
-                        .padding(.horizontal, 16)
-                        .frame(height: 54)
-                                }
-                    .buttonStyle(PlainButtonStyle())
+                    }
                 }
-                .padding(20)
-            }
-            .background(Color.ink.ignoresSafeArea())
-            .navigationTitle("Usage and value")
-            .navigationBarTitleDisplayMode(.inline)
-            .toolbar {
-                ToolbarItem(placement: .topBarLeading) {
-                    Button("Done") { dismiss() }.foregroundStyle(Color.inkText)
+                .padding(.top, 24)
+
+                Button { showInput = true } label: {
+                    Text(minutes > 0 ? L10n.string("Change this month's hours") : L10n.string("Enter this month's hours"))
                 }
-            }
-            .sheet(isPresented: $showInput) {
-                UsageInputSheet(subscriptionName: subscription.name, currentMinutes: minutes) { newMinutes in
-                    screenTimeManager.setMonthlyUsage(minutes: newMinutes, for: subscription.name)
+                .buttonStyle(.ink)
+                .padding(.top, 20)
+                .accessibilityIdentifier("enterUsageButton")
+
+                Button { showHistory = true } label: {
+                    Text("Usage history")
+                        .font(.subheadline)
+                        .foregroundStyle(Color.inkTextMuted)
+                        .frame(maxWidth: .infinity, minHeight: Layout.tapTarget)
+                        .contentShape(Rectangle())
                 }
+                .buttonStyle(.plain)
             }
-            .sheet(isPresented: $showHistory) {
-                UsageHistorySheet(subscriptionName: subscription.name)
+            .padding(.horizontal, Layout.margin)
+            .padding(.top, 8)
+            .padding(.bottom, 32)
+        }
+        .background(Color.ink.ignoresSafeArea())
+        .preferredColorScheme(.dark)
+        .sheet(isPresented: $showInput) {
+            UsageInputSheet(subscriptionName: subscription.name, currentMinutes: minutes) { newMinutes in
+                screenTimeManager.setMonthlyUsage(minutes: newMinutes, for: subscription.name)
             }
         }
-        .preferredColorScheme(.dark)
+        .sheet(isPresented: $showHistory) {
+            UsageHistorySheet(subscriptionName: subscription.name)
+        }
     }
 }

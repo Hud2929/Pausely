@@ -223,43 +223,6 @@ struct RootView: View {
                     #if DEBUG
                     PriceHistoryView(subscription: DemoSubscriptions.netflix)
                     #endif
-                } else if isDemoScreen("--demo-usage") {
-                    #if DEBUG
-                    ScrollView { CostPerUseDetailSection(subscription: DemoSubscriptions.netflix).padding(Layout.margin) }
-                        .background(Color.ink.ignoresSafeArea())
-                    #endif
-                } else if isDemoScreen("--demo-auth=signup") || isDemoScreen("--demo-auth=signin") || isDemoScreen("--demo-auth") {
-                    #if DEBUG
-                    PremiumWelcomeFlow(start: isDemoScreen("--demo-auth=signup") ? .signUp : isDemoScreen("--demo-auth=signin") ? .signIn : .welcome)
-                    #endif
-                } else if isDemoScreen("--demo-age-gate") {
-                    #if DEBUG
-                    AgeGateView(onPassed: {}, onCancel: {}, cancelTitle: "Sign Out")
-                    #endif
-                } else if isDemoScreen("--demo-settings=notifications") {
-                    #if DEBUG
-                    NotificationsSettingsView()
-                    #endif
-                } else if isDemoScreen("--demo-settings=privacy") {
-                    #if DEBUG
-                    PrivacySecurityView()
-                    #endif
-                } else if isDemoScreen("--demo-settings=help") {
-                    #if DEBUG
-                    HelpSupportView()
-                    #endif
-                } else if isDemoScreen("--demo-settings=currency") {
-                    #if DEBUG
-                    CurrencySettingsView()
-                    #endif
-                } else if isDemoScreen("--demo-settings=export") {
-                    #if DEBUG
-                    ExportDataView()
-                    #endif
-                } else if isDemoScreen("--demo-whats-new") {
-                    #if DEBUG
-                    WhatsNewSheet()
-                    #endif
                 } else if isDemoScreen("--demo-design") {
                     #if DEBUG
                     DesignGalleryView()

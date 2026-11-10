@@ -98,7 +98,7 @@ final class ScreenTourTests: XCTestCase {
             (["--demo-pause-plan"], "pauseplan"), (["--demo-pause-plan", "--demo-plan-active"], "pauseplan-active"),
             (["--demo-paywall"], "paywall"), (["--demo-browser"], "browser"), (["--demo-tier"], "plan"),
             (["--demo-custom-add"], "custom"), (["--demo-subscription"], "manage"), (["--demo-subscription-edit"], "edit"),
-            (["--demo-price-history"], "pricehistory"), (["--demo-usage"], "usage"),
+            (["--demo-price-history"], "pricehistory"),
             (["--demo-inbox"], "inbox"), (["--demo-gmail-results"], "inbox-results"), (["--demo-imap-connect"], "inbox-connect"),
             (["--demo-wrapped"], "year"), (["--demo-auth"], "welcome"), (["--demo-auth=signup"], "signup"),
             (["--demo-auth=signin"], "signin"), (["--demo-age-gate"], "age"),

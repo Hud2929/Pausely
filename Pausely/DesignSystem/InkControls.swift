@@ -50,13 +50,3 @@ struct EstimateBadge: View {
         .accessibilityElement(children: .combine)
     }
 }
-
-/// What Screen Time can and can't see.
-struct ScreenTimeDisclaimer: View {
-    var body: some View {
-        Text("iOS app only — Screen Time tracks time spent in the iPhone app, not web or desktop usage. This subscription must have an iOS app installed on your device.")
-            .font(.footnote)
-            .foregroundStyle(Color.inkTextFaint)
-            .fixedSize(horizontal: false, vertical: true)
-    }
-}

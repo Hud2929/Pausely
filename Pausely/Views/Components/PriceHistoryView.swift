@@ -32,7 +32,6 @@ struct PriceHistoryView: View {
                     if history.count >= 2 {
                         trendCard
                         historyList
-                        projectionCard
                     } else {
                         emptyState
                     }
@@ -147,51 +146,6 @@ struct PriceHistoryView: View {
                 }
             }
         }
-    }
-
-    private var projectionCard: some View {
-        let projected = tracker.projectedAnnualCost(for: subscription)
-        let currentAnnual = subscription.annualCost
-        let diff = projected - currentAnnual
-
-        return VStack(alignment: .leading, spacing: 12) {
-            HStack(spacing: 12) {
-                ZStack {
-                    Circle()
-                        .fill(Color.white.opacity(0.06))
-                        .frame(width: 44, height: 44)
-                    Image(systemName: "chart.line.uptrend.xyaxis")
-                        .font(.title3)
-                        .foregroundStyle(Color.inkText)
-                }
-
-                VStack(alignment: .leading, spacing: 2) {
-                    Text("Next Year Projection")
-                        .font(.subheadline.weight(.semibold))
-                    Text("Based on historical price changes")
-                        .font(.caption)
-                        .foregroundStyle(Color.inkTextMuted)
-                }
-
-                Spacer()
-            }
-
-            Text(MoneyFormat.string(projected, subscription.currency))
-                .font(.title2.weight(.bold))
-
-            if diff > 0 {
-                Text("+\(MoneyFormat.string(diff, subscription.currency)) more than current annual cost")
-                    .font(.caption.weight(.medium))
-                    .foregroundStyle(Color.due)
-            }
-        }
-        .padding(16)
-        .background(Color.white.opacity(0.06))
-        .overlay(
-            RoundedRectangle(cornerRadius: 20, style: .continuous)
-                .stroke(Color.white.opacity(0.06), lineWidth: 1)
-        )
-        .clipShape(RoundedRectangle(cornerRadius: 20, style: .continuous))
     }
 
     private var emptyState: some View {

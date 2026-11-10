@@ -82,21 +82,9 @@ final class RealGeniusEngine: ObservableObject {
         let wasteInsights = detectWaste(subscriptions: subscriptions)
         allInsights.append(contentsOf: wasteInsights)
 
-        // 4. Annual Savings - Suggest annual plans with real pricing data
-        let annualInsights = suggestAnnualPlans(subscriptions: subscriptions)
-        allInsights.append(contentsOf: annualInsights)
-
-        // 4b. Cheaper Tiers - Known cheaper plan alternatives
-        let cheaperTierInsights = findCheaperTiers(subscriptions: subscriptions)
-        allInsights.append(contentsOf: cheaperTierInsights)
-
         // 5. Duplicate Detection - Same category services
         let duplicateInsights = detectDuplicates(subscriptions: subscriptions)
         allInsights.append(contentsOf: duplicateInsights)
-
-        // 6. Family Sharing Opportunities
-        let familyInsights = analyzeFamilySharing(subscriptions: subscriptions)
-        allInsights.append(contentsOf: familyInsights)
 
         insights = allInsights.sorted { $0.potentialSavings > $1.potentialSavings }
 
@@ -211,7 +199,8 @@ final class RealGeniusEngine: ObservableObject {
 
     // MARK: - Waste Detection
 
-    /// Detects actual waste based on screen time data
+    /// Flags subscriptions the person logged little or no use of. Usage is what they typed in;
+    /// Pausely does not read Screen Time.
     func detectWaste(subscriptions: [Subscription]) -> [GeniusInsight] {
         var insights: [GeniusInsight] = []
 
@@ -229,7 +218,7 @@ final class RealGeniusEngine: ObservableObject {
                 insights.append(GeniusInsight(
                     type: .waste,
                     title: "Ghost: \(sub.name)",
-                    description: "No iOS app usage detected this month. Consider cancelling to save \(formatCurrency(monthlyInDisplay(sub)))/month.",
+                    description: "You logged no use this month. Consider cancelling to save \(formatCurrency(monthlyInDisplay(sub)))/month.",
                     icon: "exclamationmark.triangle.fill",
                     iconColor: .red,
                     potentialSavings: monthlyInDisplay(sub),
@@ -263,111 +252,6 @@ final class RealGeniusEngine: ObservableObject {
     }
 
     // MARK: - Annual Savings
-
-    private let annualPlanData: [String: (monthlyEquivalent: Decimal, annualTotal: Decimal)] = [
-        "Netflix": (13.58, 163.00),
-        "Spotify": (9.99, 99.99),
-        "Apple Music": (9.99, 99.99),
-        "Hulu": (7.99, 79.99),
-        "Disney+": (7.99, 79.99),
-        "YouTube Premium": (11.99, 139.99),
-        "iCloud": (0.99, 10.99),
-        "Dropbox": (9.99, 119.99),
-        "Headspace": (5.83, 69.99),
-        "Calm": (6.67, 79.99),
-    ]
-
-    /// Suggests switching to annual plans using real pricing data
-    func suggestAnnualPlans(subscriptions: [Subscription]) -> [GeniusInsight] {
-        var insights: [GeniusInsight] = []
-
-        for sub in subscriptions {
-            guard sub.billingFrequency == .monthly else { continue }
-
-            // Look up by case-insensitive name match
-            guard let (key, data) = annualPlanData.first(where: { sub.name.localizedCaseInsensitiveContains($0.key) }) else { continue }
-
-            // Compare in the user's display currency so cross-currency subs work
-            let subMonthlyDisplay = monthlyInDisplay(sub)
-            let annualMonthlyDisplay = usdToDisplay(data.monthlyEquivalent)
-            let monthlySavings = subMonthlyDisplay - annualMonthlyDisplay
-            guard monthlySavings > 0 else { continue }
-
-            let annualSavings = monthlySavings * 12
-
-            insights.append(GeniusInsight(
-                type: .annualSavings,
-                title: "Annual plan for \(key)",
-                description: "Switch \(sub.name) to annual: pay \(formatCurrency(annualMonthlyDisplay))/mo equivalent instead of \(formatCurrency(subMonthlyDisplay))/mo — save \(formatCurrency(annualSavings))/year.",
-                icon: "calendar.badge.clock",
-                iconColor: .blue,
-                potentialSavings: monthlySavings,
-                confidence: 0.92,
-                subscriptionId: sub.id,
-                action: .switchToAnnual,
-                urgency: .low
-            ))
-        }
-
-        return insights
-    }
-
-    // MARK: - Cheaper Tiers
-
-    private let cheaperTiers: [String: [(name: String, monthlyPrice: Decimal, description: String)]] = [
-        "Netflix": [
-            ("Netflix Standard with Ads", 7.99, "Same content, saves you $X/mo with ads"),
-        ],
-        "Hulu": [
-            ("Hulu (Ads)", 7.99, "Same content with ads saves $X/mo"),
-        ],
-        "YouTube Premium": [
-            ("YouTube Premium Lite", 7.99, "Ad-free YouTube without Music, saves $X/mo"),
-        ],
-        "Spotify": [
-            ("Spotify Student", 5.99, "If eligible: student plan saves $X/mo"),
-        ],
-    ]
-
-    /// Finds known cheaper tier alternatives for existing subscriptions
-    func findCheaperTiers(subscriptions: [Subscription]) -> [GeniusInsight] {
-        var insights: [GeniusInsight] = []
-
-        for sub in subscriptions {
-            for (serviceName, tiers) in cheaperTiers {
-                guard sub.name.localizedCaseInsensitiveContains(serviceName) else { continue }
-
-                let subMonthlyDisplay = monthlyInDisplay(sub)
-                for tier in tiers {
-                    let tierPriceDisplay = usdToDisplay(tier.monthlyPrice)
-                    guard subMonthlyDisplay > tierPriceDisplay else { continue }
-
-                    let savings = subMonthlyDisplay - tierPriceDisplay
-                    let description = tier.description.replacingOccurrences(
-                        of: "$X",
-                        with: formatCurrency(savings)
-                    )
-
-                    insights.append(GeniusInsight(
-                        type: .annualSavings,
-                        title: "Cheaper option: \(tier.name)",
-                        description: description,
-                        icon: "arrow.down.circle.fill",
-                        iconColor: .green,
-                        potentialSavings: savings,
-                        confidence: 0.92,
-                        subscriptionId: sub.id,
-                        action: .switchToAnnual,
-                        urgency: .high
-                    ))
-                }
-            }
-        }
-
-        return insights
-    }
-
-    // MARK: - Duplicate Detection
 
     /// Detects duplicate services in the same category
     func detectDuplicates(subscriptions: [Subscription]) -> [GeniusInsight] {
@@ -413,62 +297,12 @@ final class RealGeniusEngine: ObservableObject {
 
     // MARK: - Family Sharing
 
-    /// Analyzes family sharing opportunities
-    func analyzeFamilySharing(subscriptions: [Subscription]) -> [GeniusInsight] {
-        var insights: [GeniusInsight] = []
-
-        let familyPlanPricing: [String: (individual: Decimal, family: Decimal, maxUsers: Int)] = [
-            "Netflix": (15.99, 22.99, 4),
-            "Apple Music": (10.99, 16.99, 6),
-            "Spotify": (10.99, 16.99, 6),
-            "iCloud": (2.99, 9.99, 6),
-            "Microsoft 365": (9.99, 22.99, 6),
-            "YouTube Premium": (13.99, 22.99, 5)
-        ]
-
-        for sub in subscriptions {
-            for (serviceName, pricing) in familyPlanPricing {
-                if sub.name.localizedCaseInsensitiveContains(serviceName) && sub.billingFrequency == .monthly {
-                    // Convert USD reference prices to display currency
-                    let individualDisplay = usdToDisplay(pricing.individual)
-                    let familyDisplay = usdToDisplay(pricing.family)
-                    // Calculate savings if splitting with 1 other person
-                    let savingsPerPerson = (individualDisplay - familyDisplay / 2)
-
-                    if savingsPerPerson > 0 {
-                        insights.append(GeniusInsight(
-                            type: .familySharing,
-                            title: "Family plan: \(serviceName)",
-                            description: "Family plan is \(formatCurrency(familyDisplay))/mo for \(pricing.maxUsers). Splitting with 1 person saves \(formatCurrency(savingsPerPerson))/mo.",
-                            icon: "person.3.fill",
-                            iconColor: .purple,
-                            potentialSavings: savingsPerPerson,
-                            confidence: 0.78,
-                            subscriptionId: sub.id,
-                            action: .exploreFamilyPlan,
-                            urgency: .low
-                        ))
-                    }
-                }
-            }
-        }
-
-        return insights
-    }
-
-    // MARK: - Helpers
-
     private func formatCurrency(_ amount: Decimal) -> String {
         CurrencyManager.shared.format(amount)
     }
 
     /// Converts a USD reference price to the user's selected display currency.
     /// Used for comparing hardcoded USD pricing data against user subscriptions.
-    private func usdToDisplay(_ usdAmount: Decimal) -> Decimal {
-        CurrencyManager.shared.convertToSelected(usdAmount, from: "USD")
-    }
-
-    /// Converts a subscription's monthly cost to the user's selected display currency.
     private func monthlyInDisplay(_ sub: Subscription) -> Decimal {
         CurrencyManager.shared.convertToSelected(sub.monthlyCost, from: sub.currency)
     }
