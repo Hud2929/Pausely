@@ -20,7 +20,7 @@ struct SubscriptionManagementView: View {
     @State private var errorMessage: String?
 
     private enum Route: String, Identifiable {
-        case edit, paywall, cancel, priceHistory, annualSavings, alternatives, usage, verdict, receipt, pausePlan
+        case edit, paywall, cancel, priceHistory, alternatives, usage, verdict, receipt, pausePlan
         var id: String { rawValue }
     }
 
@@ -250,11 +250,6 @@ struct SubscriptionManagementView: View {
         VStack(spacing: 0) {
             toolRow(icon: "chart.line.uptrend.xyaxis", title: "Price history", subtitle: nil) { route = .priceHistory }
 
-            if current.billingFrequency == .monthly {
-                divider
-                toolRow(icon: "calendar.badge.checkmark", title: "Switch to yearly", subtitle: "See what you'd save") { route = .annualSavings }
-            }
-
             if !alternatives.isEmpty {
                 divider
                 toolRow(icon: "arrow.left.arrow.right", title: "Cheaper alternatives",
@@ -412,8 +407,6 @@ struct SubscriptionManagementView: View {
             CancelSubscriptionFlow(subscription: current)
         case .priceHistory:
             PriceHistoryView(subscription: current)
-        case .annualSavings:
-            AnnualSavingsCalculatorView(subscription: current)
         case .alternatives:
             AlternativesSheet(subscription: current, alternatives: alternatives) { self.route = .paywall }
         case .usage:

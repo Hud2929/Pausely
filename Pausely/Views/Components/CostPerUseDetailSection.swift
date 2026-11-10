@@ -70,11 +70,11 @@ struct CostPerUseDetailSection: View {
             HStack(spacing: 8) {
                 Image(systemName: "chart.bar.fill")
                     .font(Font.headline)
-                    .foregroundStyle(Color.accentMint)
+                    .foregroundStyle(Color.inkText)
 
                 Text(LocalizedStringKey("Cost Per Use"))
                     .font(Font.title3.weight(.semibold))
-                    .foregroundStyle(.primary)
+                    .foregroundStyle(Color.inkText)
 
                 Spacer()
             }
@@ -118,13 +118,13 @@ struct CostPerUseDetailSection: View {
             HStack {
                 Text(LocalizedStringKey("Usage Trend"))
                     .font(Font.subheadline.weight(.semibold))
-                    .foregroundStyle(.primary)
+                    .foregroundStyle(Color.inkText)
 
                 Spacer()
 
                 Text(LocalizedStringKey("Last 3 Months"))
                     .font(Font.caption.weight(.medium))
-                    .foregroundStyle(.secondary)
+                    .foregroundStyle(Color.inkTextMuted)
             }
 
             // Simple bar chart
@@ -136,32 +136,25 @@ struct CostPerUseDetailSection: View {
                         // Value label
                         Text(CostPerUseCalculator.formatHours(trendData[index]))
                             .font(.caption2.weight(.semibold))
-                            .foregroundStyle(.primary)
+                            .foregroundStyle(Color.inkText)
 
                         // Bar
                         RoundedRectangle(cornerRadius: 6, style: .continuous)
                             .fill(
-                                LinearGradient(
-                                    colors: [
-                                        barColor(for: trendData[index]).opacity(0.8),
-                                        barColor(for: trendData[index]).opacity(0.4)
-                                    ],
-                                    startPoint: .top,
-                                    endPoint: .bottom
-                                )
+                                Color.inkText
                             )
                             .frame(width: 40, height: max(20, CGFloat(trendData[index] / maxValue) * 100))
 
                         // Month label
                         Text(trendLabels[index])
                             .font(.caption2.weight(.medium))
-                            .foregroundStyle(.secondary)
+                            .foregroundStyle(Color.inkTextMuted)
                     }
                     .frame(maxWidth: .infinity)
                 }
             }
             .padding(16)
-            .glassBackground(cornerRadius: 16, strokeColor: .white.opacity(0.1), strokeWidth: 0.5)
+            .background(Color.inkRaised, in: RoundedRectangle(cornerRadius: 16, style: .continuous))
         }
     }
 
@@ -170,28 +163,28 @@ struct CostPerUseDetailSection: View {
         HStack(spacing: 14) {
             ZStack {
                 Circle()
-                    .fill(Color.accentMint.opacity(0.15))
+                    .fill(Color.white.opacity(0.06))
                     .frame(width: 48, height: 48)
 
                 Image(systemName: "clock.arrow.circlepath")
                     .font(.callout.weight(.semibold))
-                    .foregroundStyle(Color.accentMint)
+                    .foregroundStyle(Color.inkText)
             }
 
             VStack(alignment: .leading, spacing: 3) {
                 Text(LocalizedStringKey("Since You Started Tracking"))
                     .font(Font.footnote.weight(.medium))
-                    .foregroundStyle(.secondary)
+                    .foregroundStyle(Color.inkTextMuted)
 
                 Text("\(CostPerUseCalculator.formatHours(totalTrackedHours)) of use")
                     .font(Font.headline)
-                    .foregroundStyle(.primary)
+                    .foregroundStyle(Color.inkText)
             }
 
             Spacer()
         }
         .padding(14)
-        .glassBackground(cornerRadius: 16, strokeColor: Color.accentMint.opacity(0.2), strokeWidth: 1)
+        .background(Color.inkRaised, in: RoundedRectangle(cornerRadius: 16, style: .continuous))
     }
 
     // MARK: - Similar Subscriptions Comparison
@@ -208,7 +201,7 @@ struct CostPerUseDetailSection: View {
             VStack(alignment: .leading, spacing: 12) {
                 Text(LocalizedStringKey("Category Comparison"))
                     .font(Font.subheadline.weight(.semibold))
-                    .foregroundStyle(.primary)
+                    .foregroundStyle(Color.inkText)
 
                 VStack(spacing: 8) {
                     ForEach(similar.prefix(2)) { other in
@@ -221,25 +214,25 @@ struct CostPerUseDetailSection: View {
                             HStack(spacing: 10) {
                                 Image(systemName: "arrow.left.arrow.right")
                                     .font(Font.caption.weight(.medium))
-                                    .foregroundStyle(Color.accentMint)
+                                    .foregroundStyle(Color.inkText)
 
                                 Text("You use \(subscription.name)")
                                     .font(Font.subheadline)
-                                    .foregroundStyle(.secondary)
+                                    .foregroundStyle(Color.inkTextMuted)
 
                                 + Text(" \(String(format: "%.1f", ratio))x ")
                                     .font(Font.subheadline)
-                                    .foregroundStyle(Color.accentMint)
+                                    .foregroundStyle(Color.inkText)
                                     .fontWeight(.semibold)
 
                                 + Text("more than \(other.name)")
                                     .font(Font.subheadline)
-                                    .foregroundStyle(.secondary)
+                                    .foregroundStyle(Color.inkTextMuted)
 
                                 Spacer()
                             }
                             .padding(12)
-                            .glassBackground(cornerRadius: 12, strokeColor: Color.accentMint.opacity(0.15), strokeWidth: 0.5)
+                            .background(Color.inkRaised, in: RoundedRectangle(cornerRadius: 12, style: .continuous))
                         }
                     }
                 }

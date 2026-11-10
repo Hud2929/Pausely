@@ -39,6 +39,7 @@ struct PriceHistoryView: View {
                 }
                 .padding()
             }
+            .background(Color.ink.ignoresSafeArea())
             .navigationTitle("Price History")
             .navigationBarTitleDisplayMode(.large)
             .toolbar {
@@ -55,13 +56,13 @@ struct PriceHistoryView: View {
                 VStack(alignment: .leading, spacing: 4) {
                     Text("Price Trend")
                         .font(.caption.weight(.semibold))
-                        .foregroundStyle(.secondary)
+                        .foregroundStyle(Color.inkTextMuted)
                         .textCase(.uppercase)
 
                     HStack(spacing: 6) {
                         Text(subscription.chargeText)
                             .font(.largeTitle.weight(.bold))
-                            .foregroundStyle(.primary)
+                            .foregroundStyle(Color.inkText)
 
                         if percentageChange != 0 {
                             HStack(spacing: 4) {
@@ -99,10 +100,10 @@ struct PriceHistoryView: View {
                     VStack(alignment: .leading, spacing: 2) {
                         Text("Originally")
                             .font(.caption)
-                            .foregroundStyle(.secondary)
+                            .foregroundStyle(Color.inkTextMuted)
                         Text(MoneyFormat.string(first.amount, first.currency))
                             .font(.subheadline.weight(.semibold))
-                            .foregroundStyle(.secondary)
+                            .foregroundStyle(Color.inkTextMuted)
                             .strikethrough(trend == .increasing)
                     }
 
@@ -111,7 +112,7 @@ struct PriceHistoryView: View {
                     VStack(alignment: .trailing, spacing: 2) {
                         Text("Since Tracked")
                             .font(.caption)
-                            .foregroundStyle(.secondary)
+                            .foregroundStyle(Color.inkTextMuted)
                         let totalIncrease = tracker.totalPriceIncrease(for: subscription.id)
                         Text(MoneyFormat.string(totalIncrease, subscription.currency))
                             .font(.subheadline.weight(.bold))
@@ -157,11 +158,11 @@ struct PriceHistoryView: View {
             HStack(spacing: 12) {
                 ZStack {
                     Circle()
-                        .fill(Color.accentMint.opacity(0.15))
+                        .fill(Color.white.opacity(0.06))
                         .frame(width: 44, height: 44)
                     Image(systemName: "chart.line.uptrend.xyaxis")
                         .font(.title3)
-                        .foregroundStyle(Color.accentMint)
+                        .foregroundStyle(Color.inkText)
                 }
 
                 VStack(alignment: .leading, spacing: 2) {
@@ -169,7 +170,7 @@ struct PriceHistoryView: View {
                         .font(.subheadline.weight(.semibold))
                     Text("Based on historical price changes")
                         .font(.caption)
-                        .foregroundStyle(.secondary)
+                        .foregroundStyle(Color.inkTextMuted)
                 }
 
                 Spacer()
@@ -185,10 +186,10 @@ struct PriceHistoryView: View {
             }
         }
         .padding(16)
-        .background(Color.accentMint.opacity(0.06))
+        .background(Color.white.opacity(0.06))
         .overlay(
             RoundedRectangle(cornerRadius: 20, style: .continuous)
-                .stroke(Color.accentMint.opacity(0.2), lineWidth: 1)
+                .stroke(Color.white.opacity(0.06), lineWidth: 1)
         )
         .clipShape(RoundedRectangle(cornerRadius: 20, style: .continuous))
     }
@@ -199,11 +200,11 @@ struct PriceHistoryView: View {
 
             ZStack {
                 Circle()
-                    .fill(Color.accentMint.opacity(0.15))
+                    .fill(Color.white.opacity(0.06))
                     .frame(width: 80, height: 80)
                 Image(systemName: "chart.line.uptrend.xyaxis")
                     .font(.largeTitle)
-                    .foregroundStyle(Color.accentMint)
+                    .foregroundStyle(Color.inkText)
             }
 
             VStack(spacing: 8) {
@@ -211,7 +212,7 @@ struct PriceHistoryView: View {
                     .font(.title3.weight(.bold))
                 Text("Price changes will be tracked automatically when you edit a subscription's cost.")
                     .font(.subheadline)
-                    .foregroundStyle(.secondary)
+                    .foregroundStyle(Color.inkTextMuted)
                     .multilineTextAlignment(.center)
                     .padding(.horizontal)
             }
@@ -260,7 +261,7 @@ struct HistoryEntryRow: View {
 
                 Text(entry.date, style: .date)
                     .font(.caption)
-                    .foregroundStyle(.secondary)
+                    .foregroundStyle(Color.inkTextMuted)
             }
 
             Spacer()
@@ -282,7 +283,7 @@ struct HistoryEntryRow: View {
             } else {
                 Text("First Record")
                     .font(.caption.weight(.medium))
-                    .foregroundStyle(.secondary)
+                    .foregroundStyle(Color.inkTextMuted)
                     .padding(.horizontal, 8)
                     .padding(.vertical, 4)
                     .background(Color.inkLifted)

@@ -31,7 +31,8 @@ struct CostPerUseCard: View {
             insightRow
         }
         .padding(20)
-        .glassCard(color: cardAccentColor)
+        .padding(20)
+        .background(Color.inkRaised, in: RoundedRectangle(cornerRadius: Layout.cardRadius, style: .continuous))
         .opacity(appear ? 1 : 0)
         .offset(y: appear ? 0 : 20)
         .onAppear {
@@ -44,27 +45,12 @@ struct CostPerUseCard: View {
     // MARK: - Header Row
     private var headerRow: some View {
         HStack(spacing: 14) {
-            // Subscription icon
-            ZStack {
-                Circle()
-                    .fill(
-                        LinearGradient(
-                            colors: [cardAccentColor.opacity(0.4), cardAccentColor.opacity(0.1)],
-                            startPoint: .topLeading,
-                            endPoint: .bottomTrailing
-                        )
-                    )
-                    .frame(width: 52, height: 52)
-
-                Text(String(result.subscription.name.prefix(1)))
-                    .font(.title3.weight(.bold))
-                    .foregroundStyle(Color.inkText)
-            }
+            ServiceLogoView(name: result.subscription.name, category: result.subscription.category, size: 48)
 
             VStack(alignment: .leading, spacing: 4) {
                 Text(result.subscription.name)
                     .font(Font.headline)
-                    .foregroundStyle(.primary)
+                    .foregroundStyle(Color.inkText)
                     .lineLimit(1)
 
                 HStack(spacing: 6) {
@@ -92,7 +78,7 @@ struct CostPerUseCard: View {
         VStack(alignment: .leading, spacing: 4) {
             Text("Cost Per Hour")
                 .font(Font.footnote.weight(.medium))
-                .foregroundStyle(.secondary)
+                .foregroundStyle(Color.inkTextMuted)
 
             HStack(alignment: .lastTextBaseline, spacing: 8) {
                 if let cph = result.costPerHour {
@@ -102,20 +88,20 @@ struct CostPerUseCard: View {
                 } else {
                     Text("—")
                         .font(.largeTitle.weight(.bold))
-                        .foregroundStyle(.secondary)
+                        .foregroundStyle(Color.inkTextMuted)
                 }
 
                 if let score = result.valueScore {
                     Text("/ \(CostPerUseCalculator.formatValueScore(score))")
                         .font(Font.subheadline.weight(.semibold))
-                        .foregroundStyle(.secondary)
+                        .foregroundStyle(Color.inkTextMuted)
                 }
             }
 
             // Contextual subtitle
             Text(subtitleText)
                 .font(Font.subheadline)
-                .foregroundStyle(.secondary)
+                .foregroundStyle(Color.inkTextMuted)
                 .fixedSize(horizontal: false, vertical: true)
         }
     }
@@ -150,23 +136,23 @@ struct CostPerUseCard: View {
         HStack(spacing: 8) {
             Image(systemName: "arrow.left.arrow.right")
                 .font(Font.caption.weight(.medium))
-                .foregroundStyle(Color.accentMint)
+                .foregroundStyle(Color.inkText)
 
             Text("You use \(result.subscription.name)")
                 .font(Font.subheadline)
-                .foregroundStyle(.secondary)
+                .foregroundStyle(Color.inkTextMuted)
 
             + Text(" \(String(format: "%.1f", ratio))x ")
                 .font(Font.subheadline)
-                .foregroundStyle(Color.accentMint)
+                .foregroundStyle(Color.inkText)
                 .fontWeight(.semibold)
 
             + Text("more than \(name)")
                 .font(Font.subheadline)
-                .foregroundStyle(.secondary)
+                .foregroundStyle(Color.inkTextMuted)
         }
         .padding(10)
-        .background(Color.accentMint.opacity(0.08))
+        .background(Color.white.opacity(0.06))
         .clipShape(RoundedRectangle(cornerRadius: 10, style: .continuous))
     }
 
@@ -240,7 +226,7 @@ struct CostPerUseCard: View {
         case .great:   return .kept
         case .fair:    return .decide
         case .poor:    return .due
-        case .unknown: return .accentMint
+        case .unknown: return Color.inkText
         }
     }
 }
@@ -278,15 +264,15 @@ struct DetailPill: View {
                 Text(label)
                     .font(.caption2.weight(.medium))
             }
-            .foregroundStyle(.secondary)
+            .foregroundStyle(Color.inkTextMuted)
 
             Text(value)
                 .font(.subheadline.weight(.semibold))
-                .foregroundStyle(.primary)
+                .foregroundStyle(Color.inkText)
         }
         .frame(maxWidth: .infinity)
         .padding(.vertical, 10)
-        .background(.ultraThinMaterial)
+        .background(Color.inkRaised)
         .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
     }
 }

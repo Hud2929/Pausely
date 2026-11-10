@@ -21,6 +21,6 @@ struct QuickAddButton: View {
                 .font(.caption.weight(.medium))
         }
         .buttonStyle(.bordered)
-        .tint(.accentMint)
+        .tint(Color.inkText)
     }
 }

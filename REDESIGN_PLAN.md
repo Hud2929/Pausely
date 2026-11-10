@@ -373,6 +373,7 @@ gradient, glow, glass card, button style or haptic. The redesign is finished whe
 | 2026-11-10 | 70 | After step 3. The paywall is clean; confetti and the "Purchase Successful!" alert are gone from it. |
 | 2026-11-11 | 59 | After Home and the system tab bar. Deleted: Next Payment, Bills This Week, Biggest Expenses, Lifetime Spend, the waste and opportunity cards, the price alert banner, the custom tab bar. |
 | 2026-11-11 | 55 | After the verdict, cancel flow, cancel rating and Savings Receipt. The confetti celebration screen is deleted. |
+| 2026-11-11 | 28 | After the Subscriptions list, detail, edit, catalog, plan sheet, custom add and the tool screens. Deleted: nine unused add-flow views and the "Switch to yearly" screen, which always showed $0.00 saved. |
 
 Rated on screen so far (English; Arabic and largest text checked for the reveal):
 
@@ -387,6 +388,13 @@ Rated on screen so far (English; Arabic and largest text checked for the reveal)
 | Kept and Cancelled slips | 9.1 | The tear and the stamp are animated; only their end state was checked on screen |
 | Cancel steps | 9.0 | Steps come from the catalog and are not verified per service |
 | Savings Receipt | 9.3 | Share image built but not opened in a share sheet |
+| Subscriptions list | 9.1 | Not seen at the largest text size |
+| Subscription detail | 9.0 | Long; the tools list is plain |
+| Edit | 8.8 | Toolbar buttons are system capsules; seen in English only |
+| Catalog | 8.9 | Category names are not translated (already so before) |
+| Plan sheet | 8.9 | The catalog still lists plans that may not exist (a Netflix "Student" plan in the US data) |
+| Custom add | 8.8 | Seen with the keyboard up only |
+| Price history, usage and value, alternatives | about 7.5 | Restyled mechanically: clean, but still card layouts with centred icons; need a real pass |
 
 Typical prices on the tally come from news round-ups dated April to September 2026, not from each
 service's own price page, and local prices outside the US are a single factor per currency

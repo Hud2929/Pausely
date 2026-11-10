@@ -214,6 +214,15 @@ struct RootView: View {
                     #if DEBUG
                     DemoTierSheet()
                     #endif
+                } else if isDemoScreen("--demo-price-history") {
+                    #if DEBUG
+                    PriceHistoryView(subscription: DemoSubscriptions.netflix)
+                    #endif
+                } else if isDemoScreen("--demo-usage") {
+                    #if DEBUG
+                    ScrollView { CostPerUseDetailSection(subscription: DemoSubscriptions.netflix).padding(Layout.margin) }
+                        .background(Color.ink.ignoresSafeArea())
+                    #endif
                 } else if isDemoScreen("--demo-design") {
                     #if DEBUG
                     DesignGalleryView()

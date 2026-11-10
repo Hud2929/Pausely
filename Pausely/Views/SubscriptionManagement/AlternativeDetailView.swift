@@ -136,11 +136,7 @@ struct AlternativeDetailView: View {
                             .frame(maxWidth: .infinity)
                             .padding()
                             .background(
-                                LinearGradient(
-                                    colors: [.accentMint, .accentMint],
-                                    startPoint: .leading,
-                                    endPoint: .trailing
-                                )
+                                Color.inkText
                             )
                         }
                         .cornerRadius(16)

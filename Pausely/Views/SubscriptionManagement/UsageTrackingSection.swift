@@ -40,7 +40,7 @@ struct UsageTrackingSection: View {
                 Button(action: onEditUsage) {
                     Image(systemName: "pencil.circle")
                         .font(.title3)
-                        .foregroundColor(.accentMint)
+                        .foregroundColor(Color.inkText)
                 }
                 .accessibilityLabel("Edit usage")
             }
@@ -192,7 +192,7 @@ struct UsageTrackingSection: View {
             .frame(maxWidth: .infinity)
             .frame(height: 48)
             .background(
-                LinearGradient.premium
+                Color.inkText
             )
             .cornerRadius(12)
         }
