@@ -84,18 +84,6 @@ else
     WARNINGS=$((WARNINGS+1))
 fi
 
-# Check 6: Mission Control Setup
-echo ""
-echo "✓ Checking Mission Control..."
-if [ -d "MissionControl" ]; then
-    echo "${GREEN}✓ Mission Control dashboard created${NC}"
-    if [ -f "MissionControl/supabase-setup.sql" ]; then
-        echo "  ${GREEN}✓ Database schema ready${NC}"
-    fi
-else
-    echo "${YELLOW}⚠ Mission Control not found${NC}"
-fi
-
 # Summary
 echo ""
 echo "======================================"
