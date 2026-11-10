@@ -42,7 +42,7 @@ struct ExportDataView: View {
                     VStack(alignment: .leading, spacing: 4) {
                         Text(formatDescription)
                             .font(.caption)
-                            .foregroundStyle(.secondary)
+                            .foregroundStyle(Color.inkTextMuted)
                     }
                     .padding(.top, 4)
                 }
@@ -58,13 +58,13 @@ struct ExportDataView: View {
                         Spacer()
                         Text("\(filteredCount)")
                             .font(.subheadline.weight(.semibold))
-                            .foregroundStyle(.secondary)
+                            .foregroundStyle(Color.inkTextMuted)
                     }
 
                     if filteredCount == 0 {
                         Text("No subscriptions match your filters")
                             .font(.caption)
-                            .foregroundStyle(.secondary)
+                            .foregroundStyle(Color.inkTextMuted)
                     }
                 }
 
@@ -86,7 +86,7 @@ struct ExportDataView: View {
                         .font(.subheadline.weight(.semibold))
                         .foregroundStyle(Color.inkText)
                         .padding(.vertical, 14)
-                        .background(filteredCount > 0 ? Color.inkText : Color.gray)
+                        .background(filteredCount > 0 ? Color.inkText : Color.inkTextFaint)
                         .clipShape(RoundedRectangle(cornerRadius: 14))
                     }
                     .disabled(filteredCount == 0 || isExporting)

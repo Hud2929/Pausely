@@ -51,15 +51,17 @@ struct AgeGateView: View {
 
     private var formContent: some View {
         VStack(spacing: 20) {
-            VStack(spacing: 8) {
+            VStack(alignment: .leading, spacing: 8) {
                 Text("Confirm your age")
-                    .font(.title.weight(.bold))
+                    .font(.question(.title, weight: .bold))
                     .foregroundStyle(Color.inkText)
+                    .accessibilityAddTraits(.isHeader)
                 Text("Pausely is for people \(AgeConsentManager.minimumAge) and older. Enter your date of birth to continue.")
                     .font(.subheadline)
                     .foregroundStyle(Color.inkTextMuted)
-                    .multilineTextAlignment(.center)
+                    .fixedSize(horizontal: false, vertical: true)
             }
+            .frame(maxWidth: .infinity, alignment: .leading)
 
             DatePicker("Date of birth",
                        selection: $birthDate,

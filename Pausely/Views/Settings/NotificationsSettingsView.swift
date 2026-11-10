@@ -89,11 +89,11 @@ struct NotificationsSettingsView: View {
         HStack(spacing: 14) {
             ZStack {
                 Circle()
-                    .fill((notifications.isAuthorized ? Color.inkText : Color.orange).opacity(0.15))
+                    .fill((notifications.isAuthorized ? Color.inkText : Color.decide).opacity(0.15))
                     .frame(width: 48, height: 48)
                 Image(systemName: notifications.isAuthorized ? "bell.badge.fill" : "bell.slash.fill")
                     .font(.title3)
-                    .foregroundColor(notifications.isAuthorized ? Color.inkText : Color.orange)
+                    .foregroundColor(notifications.isAuthorized ? Color.inkText : Color.decide)
             }
             .accessibilityHidden(true)
 
@@ -130,7 +130,7 @@ struct NotificationsSettingsView: View {
                         .foregroundColor(.black)
                         .padding(.horizontal, 14)
                         .frame(height: 34)
-                        .background(Capsule().fill(status == .denied ? Color.orange : Color.inkText))
+                        .background(Capsule().fill(status == .denied ? Color.decide : Color.inkText))
                 }
                 .buttonStyle(PlainButtonStyle())
                 .disabled(isAsking)

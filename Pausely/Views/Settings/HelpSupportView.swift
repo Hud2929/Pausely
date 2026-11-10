@@ -78,16 +78,6 @@ struct HelpSupportView: View {
                     .padding(.horizontal, 20)
                     .padding(.top, 16)
 
-                    // Icon
-                    ZStack {
-                        Circle()
-                            .fill(Color.white.opacity(0.06))
-                            .frame(width: 80, height: 80)
-
-                        Image(systemName: "questionmark.bubble.fill")
-                            .font(.title)
-                            .foregroundColor(Color.inkText)
-                    }
 
                     // Search
                     HStack(spacing: 12) {

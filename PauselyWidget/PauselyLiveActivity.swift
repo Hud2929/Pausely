@@ -24,7 +24,7 @@ struct PauselyLiveActivityView: View {
                 VStack(spacing: 4) {
                     Image(systemName: "creditcard.fill")
                         .font(.title2)
-                        .foregroundStyle(context.state.isUrgent ? .red : .indigo)
+                        .foregroundStyle(context.state.isUrgent ? Color.widgetDue : Color.primary)
 
                     Text("Pausely")
                         .font(.caption2.weight(.semibold))
@@ -52,15 +52,15 @@ struct PauselyLiveActivityView: View {
                 VStack(alignment: .trailing, spacing: 4) {
                     if context.state.daysUntilRenewal > 0 {
                         Text("\(context.state.daysUntilRenewal)")
-                            .font(.system(.title, design: .default).weight(.bold))
-                            .foregroundStyle(context.state.isUrgent ? .red : .primary)
+                            .font(.title.weight(.bold))
+                            .foregroundStyle(context.state.isUrgent ? Color.widgetDue : Color.primary)
 
                         Text(context.state.daysUntilRenewal == 1 ? "day" : "days")
                             .font(.caption2)
                             .foregroundStyle(.secondary)
                     } else {
                         Text("\(context.state.hoursUntilRenewal)h")
-                            .font(.system(.title, design: .default).weight(.bold))
+                            .font(.title.weight(.bold))
                             .foregroundStyle(.red)
                     }
 
@@ -76,7 +76,7 @@ struct PauselyLiveActivityView: View {
     private var backgroundGradient: some View {
         ContainerRelativeShape()
             .fill(context.state.isUrgent
-                  ? Color.red.opacity(0.08)
+                  ? Color.widgetDue.opacity(0.08)
                   : (colorScheme == .dark ? Color.black : Color.white))
     }
 }

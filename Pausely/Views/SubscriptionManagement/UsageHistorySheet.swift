@@ -15,14 +15,14 @@ struct UsageHistorySheet: View {
                         VStack(spacing: 16) {
                             Image(systemName: "chart.bar")
                                 .font(.largeTitle)
-                                .foregroundColor(.secondary)
+                                .foregroundStyle(Color.inkTextMuted)
 
                             Text("No Usage History Yet")
                                 .font(.headline)
 
                             Text("Usage data will appear here as you track your time with \(subscriptionName)")
                                 .font(.subheadline)
-                                .foregroundColor(.secondary)
+                                .foregroundStyle(Color.inkTextMuted)
                                 .multilineTextAlignment(.center)
                         }
                         .padding(.vertical, 40)
@@ -43,7 +43,7 @@ struct UsageHistorySheet: View {
                                             .font(.caption)
                                         EstimateBadge(isEstimated: stats.source == .screenTime)
                                     }
-                                    .foregroundColor(.secondary)
+                                    .foregroundStyle(Color.inkTextMuted)
                                 }
 
                                 Spacer()

@@ -28,7 +28,7 @@ struct UsageInputSheet: View {
                             .accessibilityIdentifier("hoursTextField")
 
                         Text("hours")
-                            .foregroundColor(.secondary)
+                            .foregroundStyle(Color.inkTextMuted)
 
                         Spacer()
                     }
@@ -41,7 +41,7 @@ struct UsageInputSheet: View {
                             .accessibilityIdentifier("minutesTextField")
 
                         Text("minutes")
-                            .foregroundColor(.secondary)
+                            .foregroundStyle(Color.inkTextMuted)
 
                         Spacer()
                     }

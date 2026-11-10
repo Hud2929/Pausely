@@ -33,7 +33,7 @@ struct UsageTrackingSection: View {
                     .padding(.horizontal, 8)
                     .padding(.vertical, 4)
                     .background(Color.secondary.opacity(0.1))
-                    .foregroundColor(.secondary)
+                    .foregroundStyle(Color.inkTextMuted)
                     .cornerRadius(8)
                 }
 
@@ -53,7 +53,7 @@ struct UsageTrackingSection: View {
                         HStack(spacing: 8) {
                             Text("This Month's Usage")
                                 .font(.subheadline)
-                                .foregroundColor(.secondary)
+                                .foregroundStyle(Color.inkTextMuted)
 
                             EstimateBadge(isEstimated: screenTimeManager.isEstimated(for: subscription.name))
                         }
@@ -64,13 +64,13 @@ struct UsageTrackingSection: View {
                         } else {
                             Text("No data yet")
                                 .font(.title2.weight(.medium))
-                                .foregroundColor(.secondary)
+                                .foregroundStyle(Color.inkTextMuted)
                         }
 
                         if let stats = usageStats, let lastUpdated = stats.lastUpdated {
                             Text("Updated \(lastUpdated, style: .relative) ago")
                                 .font(.caption)
-                                .foregroundColor(.secondary)
+                                .foregroundStyle(Color.inkTextMuted)
                         }
                     }
 
@@ -91,10 +91,10 @@ struct UsageTrackingSection: View {
                         VStack(spacing: 0) {
                             Text("\(min(currentUsageMinutes * 100 / 600, 100))%")
                                 .font(.subheadline.weight(.bold))
-                                .foregroundColor(.primary)
+                                .foregroundStyle(Color.inkText)
                             Text("of 10h")
                                 .font(.caption2)
-                                .foregroundColor(.secondary)
+                                .foregroundStyle(Color.inkTextMuted)
                         }
                     }
                 }
@@ -106,7 +106,7 @@ struct UsageTrackingSection: View {
                         VStack(alignment: .leading, spacing: 4) {
                             Text("Cost Per Hour")
                                 .font(.subheadline)
-                                .foregroundColor(.secondary)
+                                .foregroundStyle(Color.inkTextMuted)
 
                             Text(formatCostPerHour(cph))
                                 .font(.title2.weight(.bold))
@@ -122,7 +122,7 @@ struct UsageTrackingSection: View {
 
                             Text(efficiencyDescription(cph))
                                 .font(.caption2)
-                                .foregroundColor(.secondary)
+                                .foregroundStyle(Color.inkTextMuted)
                                 .multilineTextAlignment(.trailing)
                         }
                     }
@@ -157,19 +157,19 @@ struct UsageTrackingSection: View {
         VStack(alignment: .leading, spacing: 8) {
             Text("Daily Usage")
                 .font(.caption)
-                .foregroundColor(.secondary)
+                .foregroundStyle(Color.inkTextMuted)
 
             HStack(spacing: 4) {
                 ForEach(0..<7) { day in
                     let minutes = usageStats?.dailyBreakdown?[day].minutes ?? 0
                     VStack(spacing: 4) {
                         RoundedRectangle(cornerRadius: 2)
-                            .fill(minutes > 0 ? usageColor : Color.gray.opacity(0.2))
+                            .fill(minutes > 0 ? usageColor : Color.inkTextFaint.opacity(0.2))
                             .frame(height: max(CGFloat(minutes) / 120 * 40, 4))
 
                         Text("\(day)")
                             .font(.caption2)
-                            .foregroundColor(.secondary)
+                            .foregroundStyle(Color.inkTextMuted)
                     }
                 }
             }
@@ -201,24 +201,24 @@ struct UsageTrackingSection: View {
     private var manualModeInfo: some View {
         HStack(spacing: 12) {
             Image(systemName: "hand.tap.fill")
-                .foregroundColor(.blue)
+                .foregroundStyle(Color.paused)
 
             VStack(alignment: .leading, spacing: 2) {
                 Text("Manual Tracking Mode")
                     .font(.subheadline.weight(.semibold))
                 Text("Tap + buttons to add usage time")
                     .font(.caption)
-                    .foregroundColor(.secondary)
+                    .foregroundStyle(Color.inkTextMuted)
             }
 
             Spacer()
 
             Image(systemName: "info.circle")
-                .foregroundColor(.blue)
+                .foregroundStyle(Color.paused)
                 .accessibilityHidden(true)
         }
         .padding()
-        .background(Color.blue.opacity(0.1))
+        .background(Color.paused.opacity(0.1))
         .cornerRadius(12)
     }
 

@@ -142,5 +142,5 @@ private struct RuleRow: View {
         PasswordStrengthMeter(password: "StrongPass1")
     }
     .padding()
-    .background(Color.black)
+    .background(Color.ink)
 }

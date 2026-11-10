@@ -17,19 +17,19 @@ struct AlternativeDetailView: View {
                     VStack(spacing: 12) {
                         Text(alternative.name)
                             .font(.title.bold())
-                            .foregroundColor(.primary)
+                            .foregroundStyle(Color.inkText)
 
                         Text(alternative.description)
                             .font(.subheadline)
-                            .foregroundStyle(.secondary)
+                            .foregroundStyle(Color.inkTextMuted)
                             .multilineTextAlignment(.center)
 
                         HStack(spacing: 8) {
                             Image(systemName: "star.fill")
-                                .foregroundStyle(.yellow)
+                                .foregroundStyle(Color.decide)
                             Text(String(format: "%.1f", alternative.rating))
                                 .fontWeight(.semibold)
-                                .foregroundColor(.primary)
+                                .foregroundStyle(Color.inkText)
                         }
                     }
 
@@ -39,7 +39,7 @@ struct AlternativeDetailView: View {
                             VStack(alignment: .leading) {
                                 Text("Current")
                                     .font(.caption)
-                                    .foregroundStyle(.secondary)
+                                    .foregroundStyle(Color.inkTextMuted)
                                 Text(current.displayAmountInUserCurrency + "/mo")
                                     .font(.title3)
                                     .strikethrough()
@@ -49,26 +49,26 @@ struct AlternativeDetailView: View {
                             Spacer()
 
                             Image(systemName: "arrow.right")
-                                .foregroundStyle(.green)
+                                .foregroundStyle(Color.kept)
 
                             Spacer()
 
                             VStack(alignment: .trailing) {
                                 Text(alternative.name)
                                     .font(.caption)
-                                    .foregroundStyle(.secondary)
+                                    .foregroundStyle(Color.inkTextMuted)
                                 Text("\(alternative.monthlyPriceText)/mo")
                                     .font(.title3)
-                                    .foregroundStyle(.green)
+                                    .foregroundStyle(Color.kept)
                             }
                         }
 
                         if savings > 0 {
                             Text("You save \(CurrencyManager.shared.format(Decimal(savings))) per year!")
                                 .font(.headline)
-                                .foregroundStyle(.green)
+                                .foregroundStyle(Color.kept)
                                 .padding()
-                                .background(Color.green.opacity(0.2))
+                                .background(Color.kept.opacity(0.2))
                                 .cornerRadius(12)
                         }
                     }
@@ -80,14 +80,14 @@ struct AlternativeDetailView: View {
                     VStack(alignment: .leading, spacing: 12) {
                         Text("Features")
                             .font(.title3.bold())
-                            .foregroundColor(.primary)
+                            .foregroundStyle(Color.inkText)
 
                         ForEach(alternative.features, id: \.self) { feature in
                             HStack {
                                 Image(systemName: "checkmark.circle.fill")
-                                    .foregroundStyle(.green)
+                                    .foregroundStyle(Color.kept)
                                 Text(feature)
-                                    .foregroundColor(.primary)
+                                    .foregroundStyle(Color.inkText)
                             }
                         }
                     }
@@ -96,14 +96,14 @@ struct AlternativeDetailView: View {
                     VStack(alignment: .leading, spacing: 12) {
                         Text("Pros")
                             .font(.title3.bold())
-                            .foregroundStyle(.green)
+                            .foregroundStyle(Color.kept)
 
                         ForEach(alternative.pros, id: \.self) { pro in
                             HStack {
                                 Image(systemName: "plus.circle.fill")
-                                    .foregroundStyle(.green)
+                                    .foregroundStyle(Color.kept)
                                 Text(pro)
-                                    .foregroundColor(.primary)
+                                    .foregroundStyle(Color.inkText)
                             }
                         }
                     }
@@ -119,7 +119,7 @@ struct AlternativeDetailView: View {
                                 Image(systemName: "minus.circle.fill")
                                     .foregroundStyle(Color.decide)
                                 Text(con)
-                                    .foregroundColor(.primary)
+                                    .foregroundStyle(Color.inkText)
                             }
                         }
                     }

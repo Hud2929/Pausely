@@ -19,11 +19,11 @@ struct ErrorBanner: ViewModifier {
                         self.error = nil
                     } label: {
                         Image(systemName: "xmark.circle.fill")
-                            .foregroundColor(.gray)
+                            .foregroundStyle(Color.inkTextFaint)
                     }
                 }
                 .padding()
-                .background(Color.red.opacity(0.1))
+                .background(Color.due.opacity(0.1))
                 .transition(.move(edge: .top).combined(with: .opacity))
             }
         }
@@ -67,7 +67,7 @@ struct ErrorToastModifier: ViewModifier {
                             .fill(Color.inkRaised)
                             .overlay(
                                 RoundedRectangle(cornerRadius: 14, style: .continuous)
-                                    .stroke(Color.red.opacity(0.3), lineWidth: 1)
+                                    .stroke(Color.due.opacity(0.3), lineWidth: 1)
                             )
                     )
                     .padding(.horizontal, 16)

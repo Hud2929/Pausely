@@ -11,15 +11,15 @@ struct DemoModeBanner: View {
     var body: some View {
         HStack {
             Image(systemName: "exclamationmark.triangle.fill")
-                .foregroundColor(.orange)
+                .foregroundStyle(Color.decide)
             Text("Demo Mode - Data is not being saved")
                 .font(.caption)
-                .foregroundColor(.orange)
+                .foregroundStyle(Color.decide)
             Spacer()
         }
         .padding(.horizontal)
         .padding(.vertical, 8)
-        .background(Color.orange.opacity(0.1))
+        .background(Color.decide.opacity(0.1))
     }
 }
 

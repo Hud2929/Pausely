@@ -31,7 +31,7 @@ struct CurrencySettingsView: View {
 
     var body: some View {
         ZStack {
-            Color.black.ignoresSafeArea()
+            Color.ink.ignoresSafeArea()
 
             VStack(spacing: 0) {
                 // Header
@@ -62,30 +62,20 @@ struct CurrencySettingsView: View {
 
                 // Current Selection Display
                 VStack(spacing: 12) {
-                    ZStack {
-                        Circle()
-                            .fill(Color.white.opacity(0.06))
-                            .frame(width: 80, height: 80)
-
-                        Text(currentSymbol)
-                            .font(.largeTitle.weight(.bold))
-                            .foregroundColor(Color.inkText)
-                    }
-
                     Text(currentName)
-                        .font(.title3.weight(.bold))
+                        .font(.question(.title2, weight: .bold))
                         .foregroundStyle(Color.inkText)
 
                     Text(currentCode)
                         .font(.footnote.weight(.medium))
-                        .foregroundColor(.gray)
+                        .foregroundStyle(Color.inkTextFaint)
                 }
                 .padding(.vertical, 20)
 
                 // Search Bar
                 HStack(spacing: 12) {
                     Image(systemName: "magnifyingglass")
-                        .foregroundColor(.gray)
+                        .foregroundStyle(Color.inkTextFaint)
                         .font(.callout)
 
                     TextField("Search currencies...", text: $searchText)
@@ -97,7 +87,7 @@ struct CurrencySettingsView: View {
                     if !searchText.isEmpty {
                         Button(action: { searchText = "" }) {
                             Image(systemName: "xmark.circle.fill")
-                                .foregroundColor(.gray)
+                                .foregroundStyle(Color.inkTextFaint)
                         }
                         .accessibilityLabel("Clear search")
                     }
@@ -113,7 +103,7 @@ struct CurrencySettingsView: View {
                 HStack {
                     Text("\(filteredCurrencies.count) currencies")
                         .font(.caption)
-                        .foregroundColor(.gray)
+                        .foregroundStyle(Color.inkTextFaint)
 
                     Spacer()
                 }
@@ -190,7 +180,7 @@ struct CurrencyRow: View {
 
                     Text(code)
                         .font(.footnote.weight(.medium))
-                        .foregroundColor(.gray)
+                        .foregroundStyle(Color.inkTextFaint)
                 }
 
                 Spacer()

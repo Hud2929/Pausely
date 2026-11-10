@@ -223,6 +223,38 @@ struct RootView: View {
                     ScrollView { CostPerUseDetailSection(subscription: DemoSubscriptions.netflix).padding(Layout.margin) }
                         .background(Color.ink.ignoresSafeArea())
                     #endif
+                } else if isDemoScreen("--demo-auth=signup") || isDemoScreen("--demo-auth=signin") || isDemoScreen("--demo-auth") {
+                    #if DEBUG
+                    PremiumWelcomeFlow(start: isDemoScreen("--demo-auth=signup") ? .signUp : isDemoScreen("--demo-auth=signin") ? .signIn : .welcome)
+                    #endif
+                } else if isDemoScreen("--demo-age-gate") {
+                    #if DEBUG
+                    AgeGateView(onPassed: {}, onCancel: {}, cancelTitle: "Sign Out")
+                    #endif
+                } else if isDemoScreen("--demo-settings=notifications") {
+                    #if DEBUG
+                    NotificationsSettingsView()
+                    #endif
+                } else if isDemoScreen("--demo-settings=privacy") {
+                    #if DEBUG
+                    PrivacySecurityView()
+                    #endif
+                } else if isDemoScreen("--demo-settings=help") {
+                    #if DEBUG
+                    HelpSupportView()
+                    #endif
+                } else if isDemoScreen("--demo-settings=currency") {
+                    #if DEBUG
+                    CurrencySettingsView()
+                    #endif
+                } else if isDemoScreen("--demo-settings=export") {
+                    #if DEBUG
+                    ExportDataView()
+                    #endif
+                } else if isDemoScreen("--demo-whats-new") {
+                    #if DEBUG
+                    WhatsNewSheet()
+                    #endif
                 } else if isDemoScreen("--demo-design") {
                     #if DEBUG
                     DesignGalleryView()
@@ -414,127 +446,65 @@ struct PremiumWelcomeFlow: View {
         }
     }
 
-    // MARK: - Auth Wall Content
+    // MARK: - The door: create an account or sign in
+
     private var authWallContent: some View {
-        VStack(spacing: 0) {
-            Spacer()
-
-            // Hero
-            VStack(spacing: 24) {
-                ZStack {
-                    Circle()
-                        .fill(
-                            Color.inkText
-                        )
-                        .frame(width: 100, height: 100)
-
-                    Image(systemName: "pause.circle.fill")
-                        .font(.largeTitle)
-                        .foregroundStyle(Color.inkText)
-                }
-
-                VStack(spacing: 8) {
-                    Text("Welcome to Pausely")
-                        .font(.title.weight(.bold))
-                        .foregroundStyle(Color.inkText)
-                        .multilineTextAlignment(.center)
-
-                    Text("Take control of your subscriptions")
-                        .font(.body.weight(.medium))
-                        .foregroundColor(Color.inkTextMuted)
-                }
+        VStack(alignment: .leading, spacing: 0) {
+            HStack(spacing: 10) {
+                Capsule().frame(width: 8, height: 30)
+                Capsule().frame(width: 8, height: 30)
             }
-            .padding(.bottom, 48)
+            .foregroundStyle(Color.paper)
+            .accessibilityHidden(true)
+            .padding(.top, 48)
 
-            // Features
-            VStack(spacing: 16) {
-                PremiumFeatureRow(
-                    icon: "calendar.badge.clock",
-                    title: "Every renewal, before it hits",
-                    description: "What each subscription costs and the day it charges you"
-                )
+            Text("Welcome to Pausely")
+                .font(.question(.largeTitle, weight: .bold))
+                .foregroundStyle(Color.inkText)
+                .fixedSize(horizontal: false, vertical: true)
+                .padding(.top, 28)
+                .accessibilityAddTraits(.isHeader)
 
-                PremiumFeatureRow(
-                    icon: "hand.tap.fill",
-                    title: "Keep it or cancel it",
-                    description: "A reminder before each charge, with the facts to decide"
-                )
-
-                PremiumFeatureRow(
-                    icon: "doc.text.fill",
-                    title: "Your Savings Receipt",
-                    description: "Exactly what your cancellations saved you"
-                )
+            VStack(alignment: .leading, spacing: 0) {
+                promise("Every renewal, before it hits", "What each subscription costs and the day it charges you")
+                Hairline()
+                promise("Keep it or cancel it", "A reminder before each charge, with the facts to decide")
+                Hairline()
+                promise("Your Savings Receipt", "Exactly what your cancellations saved you")
             }
-            .padding(.horizontal, 24)
-            .padding(.bottom, 48)
+            .padding(.top, 24)
 
-            Spacer()
+            Spacer(minLength: 24)
 
-            // Actions
-            VStack(spacing: 16) {
-                Button(action: { showSignUp = true }) {
-                    Text("Get Started")
-                }
-                .buttonStyle(InkButtonStyle())
-                .padding(.horizontal, 24)
-                .accessibilityIdentifier("getStartedButton")
-
-                Button(action: { showSignIn = true }) {
-                    Text("I already have an account")
-                }
-                .buttonStyle(InkButtonStyle(kind: .quiet))
-                .accessibilityIdentifier("signInButton")
+            VStack(spacing: 10) {
+                Button(action: { showSignUp = true }) { Text("Get Started") }
+                    .buttonStyle(.ink)
+                    .accessibilityIdentifier("getStartedButton")
+                Button(action: { showSignIn = true }) { Text("I already have an account") }
+                    .buttonStyle(.ink(.quiet))
+                    .accessibilityIdentifier("signInButton")
             }
-            .padding(.bottom, 48)
+            .padding(.bottom, 12)
         }
+        .padding(.horizontal, Layout.margin)
+        .frame(maxWidth: .infinity, alignment: .leading)
+    }
+
+    private func promise(_ title: LocalizedStringKey, _ detail: LocalizedStringKey) -> some View {
+        VStack(alignment: .leading, spacing: 3) {
+            Text(title)
+                .font(.body.weight(.semibold))
+                .foregroundStyle(Color.inkText)
+            Text(detail)
+                .font(.subheadline)
+                .foregroundStyle(Color.inkTextMuted)
+                .fixedSize(horizontal: false, vertical: true)
+        }
+        .padding(.vertical, 14)
+        .accessibilityElement(children: .combine)
     }
 }
 
-// MARK: - Premium Feature Row
-struct PremiumFeatureRow: View {
-    let icon: String
-    let title: String
-    let description: String
-    
-    var body: some View {
-        HStack(spacing: 16) {
-            // Icon
-            ZStack {
-                RoundedRectangle(cornerRadius: 12)
-                    .fill(Color.inkText.opacity(0.15))
-                    .frame(width: 52, height: 52)
-                
-                Image(systemName: icon)
-                    .font(.title2.weight(.semibold))
-                    .foregroundColor(Color.inkText)
-            }
-
-            VStack(alignment: .leading, spacing: 4) {
-                Text(title)
-                    .font(.body.weight(.semibold))
-                    .foregroundStyle(Color.inkText)
-
-                Text(description)
-                    .font(.subheadline)
-                    .foregroundColor(.inkTextMuted)
-            }
-            
-            Spacer()
-        }
-        .padding(16)
-        .background(
-            RoundedRectangle(cornerRadius: 16)
-                .fill(Color.inkRaised)
-                .overlay(
-                    RoundedRectangle(cornerRadius: 16)
-                        .stroke(.white.opacity(0.06), lineWidth: 1)
-                )
-        )
-    }
-}
-
-// MARK: - Premium Sign Up View
 struct PremiumSignUpView: View {
     @Environment(\.dismiss) private var dismiss
     @ObservedObject private var authManager = RevolutionaryAuthManager.shared
@@ -567,15 +537,17 @@ struct PremiumSignUpView: View {
                 ScrollView(showsIndicators: false) {
                     VStack(spacing: 20) {
                         // Header
-                        VStack(spacing: 8) {
+                        VStack(alignment: .leading, spacing: 8) {
                             Text("Create Account")
-                                .font(.title.weight(.bold))
+                                .font(.question(.title, weight: .bold))
                                 .foregroundStyle(Color.inkText)
+                                .accessibilityAddTraits(.isHeader)
 
                             Text("Start your subscription journey")
                                 .font(.body)
-                                .foregroundColor(Color.inkTextMuted)
+                                .foregroundStyle(Color.inkTextMuted)
                         }
+                        .frame(maxWidth: .infinity, alignment: .leading)
                         .padding(.top, 20)
 
                         // Form
@@ -820,15 +792,17 @@ struct PremiumSignInView: View {
                 ScrollView(showsIndicators: false) {
                     VStack(spacing: 20) {
                         // Header
-                        VStack(spacing: 8) {
+                        VStack(alignment: .leading, spacing: 8) {
                             Text("Welcome Back")
-                                .font(.title.weight(.bold))
+                                .font(.question(.title, weight: .bold))
                                 .foregroundStyle(Color.inkText)
+                                .accessibilityAddTraits(.isHeader)
 
                             Text("Sign in to continue")
                                 .font(.body)
-                                .foregroundColor(Color.inkTextMuted)
+                                .foregroundStyle(Color.inkTextMuted)
                         }
+                        .frame(maxWidth: .infinity, alignment: .leading)
                         .padding(.top, 20)
 
                         // Form

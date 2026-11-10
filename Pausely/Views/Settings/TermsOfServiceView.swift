@@ -9,11 +9,11 @@ struct TermsOfServiceView: View {
                 VStack(alignment: .leading, spacing: 24) {
                     Text("Terms of Service")
                         .font(.largeTitle.weight(.bold))
-                        .foregroundStyle(.primary)
+                        .foregroundStyle(Color.inkText)
 
                     Text("Last updated: April 9, 2026")
                         .font(.footnote)
-                        .foregroundStyle(.secondary)
+                        .foregroundStyle(Color.inkTextMuted)
 
                     VStack(alignment: .leading, spacing: 16) {
                         PolicySection(title: "1. Acceptance of Terms") {

@@ -94,7 +94,7 @@ struct TrialSmallView: View {
                         .foregroundStyle(urgencyColor(for: trial.daysRemaining))
                     Spacer()
                     Text("TRIAL")
-                        .font(.system(size: 9, weight: .bold, design: .default))
+                        .font(.system(size: 9, weight: .bold))
                         .foregroundStyle(.secondary)
                 }
 
@@ -102,10 +102,10 @@ struct TrialSmallView: View {
 
                 VStack(alignment: .leading, spacing: 2) {
                     Text("\(trial.daysRemaining)")
-                        .font(.system(.largeTitle, design: .default).weight(.black))
+                        .font(.largeTitle.weight(.bold))
                         .foregroundStyle(urgencyColor(for: trial.daysRemaining))
                     Text(trial.daysRemaining == 1 ? "day left" : "days left")
-                        .font(.system(.caption2, design: .default).weight(.medium))
+                        .font(.caption2.weight(.medium))
                         .foregroundStyle(.secondary)
                 }
 
@@ -113,11 +113,11 @@ struct TrialSmallView: View {
 
                 VStack(alignment: .leading, spacing: 2) {
                     Text(trial.name)
-                        .font(.system(.subheadline, design: .default).weight(.semibold))
+                        .font(.subheadline.weight(.semibold))
                         .foregroundStyle(.primary)
                         .lineLimit(1)
                     Text("\(trial.amountText ?? "")/\(shortFrequency(trial.billingFrequency)) after")
-                        .font(.system(.caption2, design: .default))
+                        .font(.caption2)
                         .foregroundStyle(.secondary)
                         .lineLimit(1)
                 }
@@ -143,9 +143,9 @@ struct TrialMediumView: View {
                 HStack {
                     Image(systemName: "clock.badge.exclamationmark.fill")
                         .font(.callout.weight(.semibold))
-                        .foregroundStyle(.orange)
+                        .foregroundStyle(Color.widgetDecide)
                     Text("Trial Countdowns")
-                        .font(.system(.callout, design: .default).weight(.semibold))
+                        .font(.callout.weight(.semibold))
                     Spacer()
                 }
 
@@ -155,7 +155,7 @@ struct TrialMediumView: View {
 
                 if entry.trials.count > 3 {
                     Text("+\(entry.trials.count - 3) more")
-                        .font(.system(.caption2, design: .default))
+                        .font(.caption2)
                         .foregroundStyle(.secondary)
                 }
             }
@@ -176,19 +176,19 @@ struct TrialRowView: View {
                 .frame(width: 8, height: 8)
 
             Text(trial.name)
-                .font(.system(.caption, design: .default).weight(.semibold))
+                .font(.caption.weight(.semibold))
                 .foregroundStyle(.primary)
                 .lineLimit(1)
 
             Spacer()
 
             Text("\(trial.daysRemaining)d")
-                .font(.system(.caption, design: .default).weight(.bold))
+                .font(.caption.weight(.bold))
                 .foregroundStyle(urgencyColor(for: trial.daysRemaining))
                 .frame(minWidth: 24, alignment: .trailing)
 
             Text(trial.amountText ?? "")
-                .font(.system(.caption2, design: .default))
+                .font(.caption2)
                 .foregroundStyle(.secondary)
                 .frame(minWidth: 44, alignment: .trailing)
         }
@@ -203,9 +203,9 @@ private struct TrialNoDataView: View {
         VStack(spacing: 8) {
             Image(systemName: "checkmark.seal.fill")
                 .font(.title2)
-                .foregroundStyle(.green)
+                .foregroundStyle(.primary)
             Text("No active trials")
-                .font(.system(.caption, design: .default).weight(.medium))
+                .font(.caption.weight(.medium))
                 .foregroundStyle(.secondary)
                 .multilineTextAlignment(.center)
         }
@@ -217,9 +217,9 @@ private struct TrialNoDataView: View {
 // MARK: - Helpers
 
 private func urgencyColor(for daysRemaining: Int) -> Color {
-    if daysRemaining <= 1 { return .red }
-    if daysRemaining <= 3 { return .orange }
-    return .yellow
+    if daysRemaining <= 1 { return .widgetDue }
+    if daysRemaining <= 3 { return .widgetDecide }
+    return .primary
 }
 
 private func shortFrequency(_ frequency: String) -> String {

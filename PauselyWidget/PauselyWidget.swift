@@ -107,10 +107,10 @@ struct SmallWidgetView: View {
 
     private var urgencyColor: Color {
         switch entry.nextChargeDays {
-        case 0...1: return .red
-        case 2...3: return .orange
-        case 4...7: return .yellow
-        default:    return .green
+        case 0...1: return .widgetDue
+        case 2...3: return .widgetDecide
+        case 4...7: return .primary
+        default:    return .primary
         }
     }
 
@@ -135,19 +135,19 @@ struct SmallWidgetView: View {
                             .fill(urgencyColor)
                             .frame(width: 6, height: 6)
                         Text("NEXT CHARGE")
-                            .font(.system(size: 9, weight: .bold, design: .default))
+                            .font(.system(size: 9, weight: .bold))
                             .foregroundStyle(.secondary)
                     }
 
                     Spacer()
 
                     Text(entry.nextChargeName)
-                        .font(.system(.headline, design: .default).weight(.semibold))
+                        .font(.headline.weight(.semibold))
                         .foregroundStyle(.primary)
                         .lineLimit(1)
 
                     Text(entry.nextChargeText)
-                        .font(.system(.title2, design: .default).weight(.black))
+                        .font(.title2.weight(.bold))
                         .foregroundStyle(.primary)
                         .minimumScaleFactor(0.6)
                         .lineLimit(1)
@@ -155,7 +155,7 @@ struct SmallWidgetView: View {
                     Spacer()
 
                     Text(daysLabel)
-                        .font(.system(.caption2, design: .default).weight(.semibold))
+                        .font(.caption2.weight(.semibold))
                         .foregroundStyle(urgencyColor)
                         .padding(.horizontal, 8)
                         .padding(.vertical, 3)
@@ -169,7 +169,7 @@ struct SmallWidgetView: View {
                         .font(.title2)
                         .foregroundStyle(.secondary)
                     Text("Add subscriptions to track")
-                        .font(.system(.caption2, design: .default))
+                        .font(.caption2)
                         .foregroundStyle(.secondary)
                         .multilineTextAlignment(.center)
                 }
@@ -200,7 +200,7 @@ struct MediumWidgetView: View {
                 
                 Text("\(entry.upcomingRenewals) renewing soon")
                     .font(.caption2)
-                    .foregroundStyle(entry.upcomingRenewals > 0 ? .orange : .secondary)
+                    .foregroundStyle(entry.upcomingRenewals > 0 ? Color.widgetDecide : Color.secondary)
             }
             
             Divider()
@@ -285,7 +285,7 @@ struct LargeWidgetView: View {
                 
                 InsightRow(
                     icon: "exclamationmark.triangle.fill",
-                    color: .orange,
+                    color: .widgetDecide,
                     text: entry.topInsight
                 )
                 
@@ -389,12 +389,12 @@ struct LargeStatCard: View {
             if let trend = trend {
                 Text(trend)
                     .font(.caption2)
-                    .foregroundStyle(.orange)
+                    .foregroundStyle(Color.widgetDecide)
             }
         }
         .frame(maxWidth: .infinity)
         .padding(.vertical, 8)
-        .background(.ultraThinMaterial)
+        .background(.fill.tertiary)
         .clipShape(RoundedRectangle(cornerRadius: 8))
     }
 }
@@ -424,12 +424,12 @@ struct PauselyLiveActivityWidget: Widget {
             DynamicIsland {
                 DynamicIslandExpandedRegion(.leading) {
                     Image(systemName: "creditcard.fill")
-                        .foregroundStyle(context.state.isUrgent ? .red : .indigo)
+                        .foregroundStyle(context.state.isUrgent ? Color.widgetDue : Color.primary)
                 }
                 DynamicIslandExpandedRegion(.trailing) {
                     Text("\(context.state.daysUntilRenewal) days")
                         .font(.headline)
-                        .foregroundStyle(context.state.isUrgent ? .red : .primary)
+                        .foregroundStyle(context.state.isUrgent ? Color.widgetDue : Color.primary)
                 }
                 DynamicIslandExpandedRegion(.bottom) {
                     Text(context.attributes.subscriptionName)
@@ -438,13 +438,13 @@ struct PauselyLiveActivityWidget: Widget {
                 }
             } compactLeading: {
                 Image(systemName: "creditcard.fill")
-                    .foregroundStyle(context.state.isUrgent ? .red : .indigo)
+                    .foregroundStyle(context.state.isUrgent ? Color.widgetDue : Color.primary)
             } compactTrailing: {
                 Text("\(context.state.daysUntilRenewal)")
-                    .foregroundStyle(context.state.isUrgent ? .red : .primary)
+                    .foregroundStyle(context.state.isUrgent ? Color.widgetDue : Color.primary)
             } minimal: {
                 Text("\(context.state.daysUntilRenewal)")
-                    .foregroundStyle(context.state.isUrgent ? .red : .primary)
+                    .foregroundStyle(context.state.isUrgent ? Color.widgetDue : Color.primary)
             }
         }
     }

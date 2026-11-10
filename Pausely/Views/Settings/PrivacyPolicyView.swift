@@ -9,11 +9,11 @@ struct PrivacyPolicyView: View {
                 VStack(alignment: .leading, spacing: 24) {
                     Text("Privacy Policy")
                         .font(.largeTitle.weight(.bold))
-                        .foregroundStyle(.primary)
+                        .foregroundStyle(Color.inkText)
 
                     Text("Last updated: September 22, 2026")
                         .font(.footnote)
-                        .foregroundStyle(.secondary)
+                        .foregroundStyle(Color.inkTextMuted)
 
                     VStack(alignment: .leading, spacing: 16) {
                         PolicySection(title: "1. Information We Collect") {
@@ -80,11 +80,11 @@ struct PolicySection<Content: View>: View {
         VStack(alignment: .leading, spacing: 8) {
             Text(title)
                 .font(.body.weight(.semibold))
-                .foregroundStyle(.primary)
+                .foregroundStyle(Color.inkText)
 
             content()
                 .font(.subheadline)
-                .foregroundStyle(.secondary)
+                .foregroundStyle(Color.inkTextMuted)
         }
         .padding()
         .frame(maxWidth: .infinity, alignment: .leading)

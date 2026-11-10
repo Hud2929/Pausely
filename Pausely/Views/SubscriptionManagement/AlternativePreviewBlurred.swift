@@ -9,7 +9,7 @@ struct AlternativePreviewBlurred: View {
                 HStack {
                     Text(alt.name)
                         .font(.headline)
-                        .foregroundColor(.primary)
+                        .foregroundStyle(Color.inkText)
                     Spacer()
                 }
                 .padding()

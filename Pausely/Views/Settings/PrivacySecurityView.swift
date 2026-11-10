@@ -38,16 +38,6 @@ struct PrivacySecurityView: View {
                     .padding(.horizontal, 20)
                     .padding(.top, 16)
 
-                    // Icon
-                    ZStack {
-                        Circle()
-                            .fill(Color.white.opacity(0.06))
-                            .frame(width: 80, height: 80)
-
-                        Image(systemName: "lock.shield.fill")
-                            .font(.title)
-                            .foregroundColor(Color.inkText)
-                    }
 
                     // How data is kept: facts, not switches.
                     settingsGroup(title: "YOUR DATA") {

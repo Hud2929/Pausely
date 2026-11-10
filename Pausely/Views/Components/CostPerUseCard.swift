@@ -63,7 +63,7 @@ struct CostPerUseCard: View {
                             .foregroundStyle(Color.due)
                             .padding(.horizontal, 8)
                             .padding(.vertical, 3)
-                            .background(Color.red.opacity(0.15))
+                            .background(Color.due.opacity(0.15))
                             .clipShape(Capsule())
                     }
                 }

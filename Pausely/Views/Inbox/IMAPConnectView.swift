@@ -170,7 +170,7 @@ struct IMAPConnectView: View {
                 (connecting ? Text("Checking…") : Text("Connect"))
                     .font(.body.weight(.semibold))
             }
-            .foregroundStyle(Color.black)
+            .foregroundStyle(Color.ink)
             .frame(maxWidth: .infinity)
             .frame(height: 52)
             .background(RoundedRectangle(cornerRadius: 16).fill(canConnect ? Color.inkText : Color.inkTextMuted))

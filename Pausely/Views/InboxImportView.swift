@@ -263,7 +263,7 @@ struct InboxImportView: View {
                     (scanner.accounts.count == 1 ? Text("Find subscriptions") : Text("Search \(scanner.accounts.count) inboxes"))
                         .font(.body.weight(.semibold))
                 }
-                .foregroundStyle(Color.black)
+                .foregroundStyle(Color.ink)
                 .frame(maxWidth: .infinity)
                 .frame(height: 52)
                 .background(RoundedRectangle(cornerRadius: 16, style: .continuous).fill(Color.inkText))
@@ -285,7 +285,7 @@ struct InboxImportView: View {
         HStack(spacing: 12) {
             Image(systemName: scanner.accountErrors[account.id] == nil ? "checkmark.circle.fill" : "exclamationmark.triangle.fill")
                 .font(.system(.title3))
-                .foregroundStyle(scanner.accountErrors[account.id] == nil ? Color.green : Color.decide)
+                .foregroundStyle(scanner.accountErrors[account.id] == nil ? Color.kept : Color.decide)
             VStack(alignment: .leading, spacing: 2) {
                 Text(account.address)
                     .font(.subheadline.weight(.semibold))
@@ -537,7 +537,7 @@ struct InboxImportView: View {
                     Text("Import \(selectedSubscriptions.count) subscriptions")
                         .font(.body.weight(.semibold))
                 }
-                .foregroundStyle(Color.black)
+                .foregroundStyle(Color.ink)
                 .frame(maxWidth: .infinity)
                 .frame(height: 52)
                 .background(RoundedRectangle(cornerRadius: 16, style: .continuous).fill(Color.inkText))
@@ -558,11 +558,11 @@ struct InboxImportView: View {
         VStack(spacing: 20) {
             ZStack {
                 Circle()
-                    .fill(Color.green.opacity(0.12))
+                    .fill(Color.kept.opacity(0.12))
                     .frame(width: 80, height: 80)
                 Image(systemName: "checkmark.circle.fill")
                     .font(.system(size: 36))
-                    .foregroundStyle(.green)
+                    .foregroundStyle(Color.kept)
             }
 
             Text("Import complete")
@@ -587,7 +587,7 @@ struct InboxImportView: View {
             } label: {
                 Text("Done")
                     .font(.body.weight(.semibold))
-                    .foregroundStyle(Color.black)
+                    .foregroundStyle(Color.ink)
                     .frame(maxWidth: .infinity)
                     .frame(height: 48)
                     .background(

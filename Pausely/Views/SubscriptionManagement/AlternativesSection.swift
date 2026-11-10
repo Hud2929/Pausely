@@ -13,13 +13,13 @@ struct AlternativesSection: View {
             HStack {
                 Text("Cheaper Alternatives")
                     .font(.title2.bold())
-                    .foregroundColor(.primary)
+                    .foregroundStyle(Color.inkText)
 
                 Spacer()
 
                 if !paymentManager.isUnlocked(.cheaperAlternatives) {
                     Image(systemName: "lock.fill")
-                        .foregroundStyle(.yellow)
+                        .foregroundStyle(Color.decide)
                 }
             }
 
@@ -45,7 +45,7 @@ struct AlternativesSection: View {
                     VStack(spacing: 12) {
                         Image(systemName: "lock.fill")
                             .font(.largeTitle)
-                            .foregroundStyle(.yellow)
+                            .foregroundStyle(Color.decide)
 
                         Text("Upgrade to Premium to see alternatives")
                             .font(.headline)

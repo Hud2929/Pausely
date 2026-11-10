@@ -398,7 +398,7 @@ struct PausePlanView: View {
                                 .foregroundStyle(.black)
                                 .padding(.horizontal, 10)
                                 .frame(height: 30)
-                                .background(Capsule().fill(item.action == .cancel ? Color.orange : Color.inkText))
+                                .background(Capsule().fill(item.action == .cancel ? Color.decide : Color.inkText))
                         }
                         .buttonStyle(PlainButtonStyle())
                     }
