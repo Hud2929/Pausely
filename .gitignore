@@ -4,6 +4,8 @@ build/
 *.xcuserstate
 *.xcworkspace/xcuserdata/
 xcuserdata/
+*.pbxproj.backup
+*.pbxproj.widget_backup
 *.moved-aside
 *.hmap
 *.ipa

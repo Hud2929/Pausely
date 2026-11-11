@@ -134,15 +134,24 @@ strings need all five translations; take the exact keys from the build's `.strin
 ## Backend
 
 Supabase project `ddaotwyaowspwspyddzs`. Migrations live in `supabase/migrations/` and are applied by
-hand in the Supabase SQL editor. Pending as of 2026-11-06: paste `supabase/APPLY_2026-11-06.sql` (account deletion and
-cancel-difficulty ratings need it; it also closes the 2026-11-06 security holes: self-granted Pro,
-public affiliate and referral data, and adds the sync columns).
+hand in the Supabase SQL editor: paste the newest `supabase/APPLY_*.sql`. It is safe to run more than
+once and brings any state of the database up to date (account deletion, cancel-difficulty ratings and
+sync need it).
 Edge function: `supabase/functions/waitlist-signup`. Website and policies: `pausely.pro/` (GitHub Pages).
 
 Account emails are sent by Supabase from templates edited in its dashboard; the copy to paste is
 `SUPABASE_EMAIL_TEMPLATES.md`. The app asks for the 6-digit code in them (`Views/Auth/EmailCodeViews.swift`)
 and also accepts any link shape a template might carry (`Services/AuthLink.swift`, `handleDeepLink`), so a
 template change can't lock people out. Sign-up, sign-in and reset screens: `Views/Auth/AccountForms.swift`.
+A link is acted on only when this device asked for a code or reset within the hour, nobody is signed in,
+and the account that comes back has the address that was asked for (`AuthLinkGate`). Keep that gate: without
+it, a link carrying someone else's code signs the person holding the phone into the sender's account.
+
+Database rules are proven locally, never against the real project: `bash scripts/dbtest/run.sh` builds five
+starting states in a throwaway Postgres that stands in for Supabase, applies the newest APPLY file twice to
+each, and checks what a signed-out visitor, two signed-in people and the service role can each do.
+`bash scripts/dbtest/waitlist_function.sh` runs the waitlist function against a stand-in database. Both
+need Docker (Colima works). A new migration goes into the APPLY file too, and both scripts must pass.
 
 ## App Store
 

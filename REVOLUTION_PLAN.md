@@ -245,7 +245,7 @@ everything after them.
   rest block bots or need sign-in. They need a hand check before any become public web pages.
 
 **Owner checklist**
-1. Paste `supabase/APPLY_2026-11-06.sql` into the Supabase SQL editor (account deletion and the security fixes need it).
+1. Paste `supabase/APPLY_2026-11-11.sql` into the Supabase SQL editor (account deletion and sync need it). It ends with a checklist; every line should say "ok".
 2. Reset the review@pausely.app password and enter it in App Store Connect's App Review fields.
 3. Then say **"go"** to submit 1.0.3 (build 8 is attached and ready).
 4. Say yes to the 16-day Billing Grace Period; Claude turns it on with one command.
