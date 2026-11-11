@@ -422,7 +422,6 @@ private struct UsageSheet: View {
     @Environment(\.dismiss) private var dismiss
     @ObservedObject private var screenTimeManager = ScreenTimeManager.shared
     @State private var showInput = false
-    @State private var showHistory = false
 
     private var minutes: Int { screenTimeManager.getCurrentMonthUsage(for: subscription.name) }
     private var costPerHour: Decimal? {
@@ -482,14 +481,6 @@ private struct UsageSheet: View {
                 .padding(.top, 20)
                 .accessibilityIdentifier("enterUsageButton")
 
-                Button { showHistory = true } label: {
-                    Text("Usage history")
-                        .font(.subheadline)
-                        .foregroundStyle(Color.inkTextMuted)
-                        .frame(maxWidth: .infinity, minHeight: Layout.tapTarget)
-                        .contentShape(Rectangle())
-                }
-                .buttonStyle(.plain)
             }
             .padding(.horizontal, Layout.margin)
             .padding(.top, 8)
@@ -501,9 +492,6 @@ private struct UsageSheet: View {
             UsageInputSheet(subscriptionName: subscription.name, currentMinutes: minutes) { newMinutes in
                 screenTimeManager.setMonthlyUsage(minutes: newMinutes, for: subscription.name)
             }
-        }
-        .sheet(isPresented: $showHistory) {
-            UsageHistorySheet(subscriptionName: subscription.name)
         }
     }
 }

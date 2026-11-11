@@ -23611,7 +23611,7 @@
         "ar": {
           "stringUnit": {
             "state": "translated",
-            "value": "ساعات"
+            "value": "الساعات"
           }
         }
       }
@@ -26125,7 +26125,7 @@
         "ar": {
           "stringUnit": {
             "state": "translated",
-            "value": "دقائق"
+            "value": "الدقائق"
           }
         }
       }
@@ -60898,7 +60898,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "料金の履歴"
+            "value": "価格の履歴"
           }
         }
       }
@@ -65421,6 +65421,244 @@
           "stringUnit": {
             "state": "translated",
             "value": "表計算ファイル。Numbers、Excel、Googleスプレッドシートで開けます。"
+          }
+        }
+      }
+    },
+    "Each price": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "كل سعر"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Jeder Preis"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cada precio"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Chaque prix"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "これまでの価格"
+          }
+        }
+      }
+    },
+    "No price changes yet. When you change what %@ costs, the old price and the new one are kept here.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "لا تغييرات في السعر حتى الآن. عندما تغيّر تكلفة %@، يُحفظ السعر القديم والجديد هنا."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Noch keine Preisänderungen. Wenn du änderst, was %@ kostet, werden der alte und der neue Preis hier festgehalten."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aún no hay cambios de precio. Cuando cambies lo que cuesta %@, el precio anterior y el nuevo se guardan aquí."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aucun changement de prix pour l’instant. Quand vous modifiez le prix de %@, l’ancien et le nouveau sont conservés ici."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "まだ価格の変更はありません。%@ の金額を変更すると、変更前と変更後の価格がここに残ります。"
+          }
+        }
+      }
+    },
+    "%@ in %@, %@ now.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ في %2$@، والآن %3$@."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ im %2$@, jetzt %3$@."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ en %2$@, ahora %3$@."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ en %2$@, %3$@ aujourd’hui."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%2$@ は %1$@、現在は %3$@。"
+          }
+        }
+      }
+    },
+    "%@ more than before": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "أكثر من السابق بـ %@"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ mehr als zuvor"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ más que antes"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ de plus qu’avant"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "以前より %@ 高い"
+          }
+        }
+      }
+    },
+    "%@ less than before": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "أقل من السابق بـ %@"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ weniger als zuvor"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ menos que antes"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ de moins qu’avant"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "以前より %@ 安い"
+          }
+        }
+      }
+    },
+    "How long did you use %@ this month?": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "كم استخدمت %@ هذا الشهر؟"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Wie lange hast du %@ diesen Monat genutzt?"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "¿Cuánto has usado %@ este mes?"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Combien de temps avez-vous utilisé %@ ce mois-ci ?"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "今月 %@ をどのくらい使いましたか？"
+          }
+        }
+      }
+    },
+    "I haven't used it this month": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "لم أستخدمه هذا الشهر"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ich habe es diesen Monat nicht genutzt"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No lo he usado este mes"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Je ne l’ai pas utilisé ce mois-ci"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "今月は使っていません"
           }
         }
       }

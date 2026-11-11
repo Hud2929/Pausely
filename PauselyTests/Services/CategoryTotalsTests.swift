@@ -39,3 +39,21 @@ final class CategoryTotalsTests: XCTestCase {
         XCTAssertEqual(totals, [CategoryTotal(category: "Other", amount: 5, count: 1)])
     }
 }
+
+/// The hours someone types for a subscription: accepted only when they make sense.
+final class UsageInputTests: XCTestCase {
+    func testHoursAndMinutesBecomeMinutes() {
+        XCTAssertEqual(UsageInputSheet.totalMinutes(hours: "2", minutes: "30"), 150)
+        XCTAssertEqual(UsageInputSheet.totalMinutes(hours: "", minutes: "45"), 45)
+        XCTAssertEqual(UsageInputSheet.totalMinutes(hours: "3", minutes: ""), 180)
+        XCTAssertEqual(UsageInputSheet.totalMinutes(hours: "0", minutes: "0"), 0, "none at all is an answer")
+    }
+
+    func testNonsenseIsNotSaved() {
+        XCTAssertNil(UsageInputSheet.totalMinutes(hours: "", minutes: ""), "nothing typed is not zero")
+        XCTAssertNil(UsageInputSheet.totalMinutes(hours: "2", minutes: "75"), "minutes run to 59")
+        XCTAssertNil(UsageInputSheet.totalMinutes(hours: "900", minutes: "0"), "a month has 744 hours at most")
+        XCTAssertNil(UsageInputSheet.totalMinutes(hours: "two", minutes: ""))
+        XCTAssertNil(UsageInputSheet.totalMinutes(hours: "-1", minutes: "10"))
+    }
+}
