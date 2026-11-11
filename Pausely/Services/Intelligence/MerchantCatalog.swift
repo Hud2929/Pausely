@@ -129,18 +129,51 @@ struct MerchantCatalog {
                          kind: profile.kind, isKnown: true, cancelURL: profile.cancelURL, nameQuality: 100)
     }
 
+    /// Words that can follow a brand without making it a different business: plan names, legal forms, regions.
+    /// "Netflix International" is Netflix; "Linear Orbit" is not Linear.
+    private static let brandDescriptors: Set<String> = [
+        "premium", "plus", "pro", "basic", "standard", "family", "duo", "individual", "student", "personal", "business",
+        "teams", "annual", "yearly", "monthly", "plan", "subscription", "membership", "member", "with", "without", "ads",
+        "ad", "hd", "uhd", "4k", "gb", "tb", "storage", "international", "global", "usa", "us", "uk", "canada", "ca",
+        "europe", "eu", "ireland", "limited", "pty", "bv", "sarl", "ab", "ag", "sa", "se", "plc", "systems", "software",
+        "essential", "essentials", "starter", "unlimited", "and", "for", "of"
+    ]
+
     private func profile(forName raw: String) -> MerchantProfile? {
+        if let profile = exactOrDescribed(raw) { return profile }
+        // App and store listings add a tagline: "Duolingo - Language Lessons", "Calm: Sleep & Meditation".
+        for separator in [" - ", " – ", " — ", ": ", " | ", " ("] {
+            if let range = raw.range(of: separator), let profile = exactOrDescribed(String(raw[..<range.lowerBound])) {
+                return profile
+            }
+        }
+        return nil
+    }
+
+    /// The profile whose name is this name, or starts it with nothing but plan words, legal forms and sizes
+    /// after it. The longest such brand wins, so "Amazon Prime Membership" is Amazon Prime, not Amazon.
+    private func exactOrDescribed(_ raw: String) -> MerchantProfile? {
         let normalized = MerchantCatalog.normalize(raw)
         guard !normalized.isEmpty else { return nil }
         if let i = nameIndex[normalized] { return profiles[i] }
-        // Whole-word containment, longest profile name first so "amazon prime" beats "amazon".
-        let padded = " \(normalized) "
-        var best: (index: Int, length: Int)?
-        for (name, index) in nameIndex where name.count >= 4 {
-            if padded.contains(" \(name) "), name.count > (best?.length ?? 0) { best = (index, name.count) }
+        let tokens = normalized.split(separator: " ").map(String.init)
+        guard tokens.count >= 2 else { return nil }
+        // Short brand names (hbo, max, wsj) only on an exact match.
+        for length in stride(from: tokens.count - 1, through: 1, by: -1) {
+            let head = tokens[..<length].joined(separator: " ")
+            guard head.count >= 4, let index = nameIndex[head] else { continue }
+            let rest = tokens[length...]
+            if rest.allSatisfy({ MerchantCatalog.brandDescriptors.contains($0) || $0.first?.isNumber == true }) {
+                return profiles[index]
+            }
         }
-        if let best { return profiles[best.index] }
-        // Short brand names (hbo, max, wsj, nyt, ea) only on exact match
+        // A product named with its owner in front: "Amazon Prime Video" is Prime Video, "Google YouTube
+        // Premium" is YouTube Premium. Both parts have to be names the catalog knows.
+        for length in stride(from: tokens.count - 1, through: 1, by: -1) {
+            let tail = tokens[(tokens.count - length)...].joined(separator: " ")
+            let owner = tokens[..<(tokens.count - length)].joined(separator: " ")
+            if tail.count >= 4, let index = nameIndex[tail], nameIndex[owner] != nil { return profiles[index] }
+        }
         return nil
     }
 

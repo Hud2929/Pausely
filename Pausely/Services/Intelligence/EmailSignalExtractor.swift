@@ -311,7 +311,11 @@ enum EmailSignalExtractor {
 
         // A receipt wrongly filed under Promotions must not be discarded when the markup proves it is a receipt.
         let markupProvesReceipt = markup != nil && markup?.kind != .parcel
-        let promotional = (labelPromo && !markupProvesReceipt) || (flags.marketing && !markupProvesReceipt)
+        // Most inboxes have no "Promotions" label. Bulk mail with an unsubscribe link that neither calls itself a
+        // receipt nor says an amount was charged is an offer, whatever prices it quotes.
+        let bulkOffer = intel.bulk && intel.hasUnsubscribe && !analysis.chargeEvidence
+            && !ReceiptTextAnalyzer.subjectSaysReceipt(email.subject)
+        let promotional = (labelPromo || flags.marketing || bulkOffer) && !markupProvesReceipt
 
         var kind = ReceiptTextAnalyzer.classify(flags: flags, hasAmount: amount != nil)
         if markupProvesReceipt, amount != nil, !flags.cancelled, !flags.refund { kind = .charge }

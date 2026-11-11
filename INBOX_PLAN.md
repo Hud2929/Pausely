@@ -65,6 +65,41 @@ errors 10, performance 5):
 one real sign-in per provider on a device (`LiveMailboxTests.testRealConnectedInboxes`); the gates
 in section 5; and Google's decision for Gmail.
 
+## The standard (2026-11-11): what must be true before mail is called fantastic
+
+**Accuracy**, measured on every corpus (the synthetic scorecard, `RealWorldReceiptShapesTests`, the
+reference shapes, and a fresh real-mail sample kept outside the repository):
+- No wrong subscription in "Confirmed" or "Likely". A one-time order, ride, ticket, bill, transfer
+  or promotion never appears there.
+- At least 95% of the subscriptions that have a receipt in the corpus are found.
+- Everything found has the right amount, currency and billing period. A next date is either read
+  from the receipt or shown as expected, never stated as fact.
+- One receipt that lists several subscriptions yields each of them.
+- No message makes the parser crash or hang.
+
+**Flow**
+- The search starts by itself once an inbox is connected; findings appear while it runs; it can be
+  stopped at any moment and keeps what it found.
+- One tap imports. The free limit is handled in the open: the person sees what was found, what is
+  watched, and what waits.
+- Imports keep the category, the trial end and the cancel link.
+- Every failure names what happened and what to do: wrong password, two-factor needed, server not
+  found, offline, sign-in cancelled, access revoked, throttled, nothing found.
+- Reachable from where a person looks for it: Home when the list is empty, the add screen, Profile.
+
+**Trust**
+- A test proves the app contacts only the mail provider during a search, that the ledger holds no
+  email text, and that disconnecting wipes that inbox's facts and secrets.
+- Every sentence about privacy on screen is covered by one of those tests.
+
+**Coverage and repetition**
+- Each route (Gmail, Outlook, iCloud, Yahoo, AOL, Gmail app password, other IMAP) passes end to end
+  through the screens or its API stand-in, ten runs in a row.
+- English, Arabic, German, Spanish, French, Japanese; the largest text size; iPad; VoiceOver labels.
+
+**Not claimable without the owner**: one real sign-in per provider, the Microsoft client ID and
+Google's approval. Until then the release switches stay off and no release screen mentions mail.
+
 ---
 
 ## 1. The "10": what the ideal inbox scanner does

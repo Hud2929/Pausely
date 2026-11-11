@@ -285,31 +285,117 @@ struct SubscriptionIntelligenceEngine {
 
         // A. Whole-merchant sequence (handles price changes)
         var candidates: [Sequence] = []
-        if let whole = longestRegularRun(charges) { candidates.append(whole) }
+        if let whole = regularChain(charges) { candidates.append(whole) }
 
         // B. Per-amount clusters (handles mixed merchants with one real plan among many orders)
         for cluster in amountClusters(charges) where cluster.count >= 2 {
-            if let seq = longestRegularRun(cluster) { candidates.append(seq) }
+            if let seq = regularChain(cluster) { candidates.append(seq) }
         }
 
-        return candidates.max { lhs, rhs in
-            if lhs.charges.count != rhs.charges.count { return lhs.charges.count < rhs.charges.count }
-            return lhs.regularity < rhs.regularity
+        let ranked = candidates.sorted { lhs, rhs in
+            if lhs.charges.count != rhs.charges.count { return lhs.charges.count > rhs.charges.count }
+            return lhs.regularity > rhs.regularity
         }
+        guard let longest = ranked.first else { return nil }
+        // The longest run is normally the plan. When it stopped long before the newest charge and another
+        // run reaches that charge (monthly for a year, then one yearly price), the newer run is what's
+        // billed today.
+        if let newest = charges.max(by: { $0.date < $1.date }), let last = longest.charges.last, last.id != newest.id,
+           newest.date.timeIntervalSince(last.date) / 86_400 > longest.cadence.days * 1.5,
+           let current = ranked.first(where: { $0.charges.last?.id == newest.id }) {
+            return current
+        }
+        return longest
     }
 
-    /// The longest run of charges, ending at the latest one, that bills on a schedule. Older gaps (deleted mail,
-    /// a plan paused after a declined card, receipts sent to another inbox) must not hide a plan that is regular today.
-    private func longestRegularRun(_ charges: [ReceiptSignal]) -> Sequence? {
+    /// The charges that bill on a schedule: the longest chain in which each charge follows the one before by
+    /// one, two or three periods. A stray email between two receipts (a promotion read as a charge, a one-off
+    /// purchase from the same company) is left out of the chain instead of breaking it, and an old gap of
+    /// many months (deleted mail, a paused plan) starts the chain afresh.
+    private func regularChain(_ charges: [ReceiptSignal]) -> Sequence? {
         let sorted = charges.sorted { $0.date < $1.date }
-        guard sorted.count >= 2 else { return nil }
-        // Clearly regular first (a gappy long history must not outrank the clean recent run), then merely regular.
-        for threshold in [0.8, 0.7] {
-            for start in 0...(sorted.count - 2) {
-                if let seq = evaluateSequence(Array(sorted[start...])), seq.regularity >= threshold { return seq }
+        guard sorted.count >= 2, let newest = sorted.last else { return nil }
+
+        func better(_ a: Sequence?, _ b: Sequence?) -> Sequence? {
+            guard let a else { return b }
+            guard let b else { return a }
+            if a.charges.count != b.charges.count { return a.charges.count > b.charges.count ? a : b }
+            if abs(a.regularity - b.regularity) > 0.001 { return a.regularity > b.regularity ? a : b }
+            // Equal on both: the period the receipts themselves state, then the one that reaches further forward.
+            let aStated = statedShare(a), bStated = statedShare(b)
+            if aStated != bStated { return aStated > bStated ? a : b }
+            return (a.charges.last?.date ?? .distantPast) >= (b.charges.last?.date ?? .distantPast) ? a : b
+        }
+
+        var longest: Sequence?
+        var reachingNewest: Sequence?
+        for cadence in Self.cadences {
+            let (overall, atEnd) = chains(sorted, cadence)
+            longest = better(longest, overall)
+            reachingNewest = better(reachingNewest, atEnd)
+        }
+        guard let longest else { return reachingNewest }
+        // A plan that changed its schedule (monthly for a year, then yearly): the old chain is longer, but it
+        // stopped long before the newest charge. What's billed now is the chain that reaches the newest one.
+        if let current = reachingNewest, let last = longest.charges.last, last.id != newest.id,
+           newest.date.timeIntervalSince(last.date) / 86_400 > longest.cadence.days * 1.5 {
+            return current
+        }
+        return longest
+    }
+
+    /// How many of a chain's receipts state its billing period in words.
+    private func statedShare(_ sequence: Sequence) -> Int {
+        sequence.charges.filter { $0.cadenceHint == sequence.cadence.frequency }.count
+    }
+
+    /// For one billing period: the best chain anywhere in the history, and the best one ending at the newest
+    /// charge. Either is nil when it is too irregular to be a schedule.
+    private func chains(_ sorted: [ReceiptSignal], _ cadence: Cadence) -> (overall: Sequence?, atEnd: Sequence?) {
+        let count = sorted.count
+        var length = [Int](repeating: 1, count: count)
+        var weight = [Double](repeating: 0, count: count)
+        var previous = [Int?](repeating: nil, count: count)
+        for i in 1..<count {
+            for j in 0..<i {
+                let interval = sorted[i].date.timeIntervalSince(sorted[j].date) / 86_400
+                let periods = max(1.0, (interval / cadence.days).rounded())
+                // One or two missing receipts are common; a longer gap is a new start, not the same run.
+                guard periods <= 3, abs(interval - periods * cadence.days) <= cadence.tolerance * periods.squareRoot() else { continue }
+                // A price rise or a bigger tier keeps the run going; a charge many times the size is another
+                // plan (a year paid at once after months paid one by one), not the next charge of this one.
+                if let later = sorted[i].amount, let earlier = sorted[j].amount {
+                    let low = NSDecimalNumber(decimal: min(later, earlier)).doubleValue
+                    let high = NSDecimalNumber(decimal: max(later, earlier)).doubleValue
+                    if low > 0, high / low > 4 { continue }
+                }
+                let candidateLength = length[j] + 1
+                let candidateWeight = weight[j] + (periods == 1 ? 1.0 : 0.6)
+                if candidateLength > length[i] || (candidateLength == length[i] && candidateWeight > weight[i]) {
+                    length[i] = candidateLength
+                    weight[i] = candidateWeight
+                    previous[i] = j
+                }
             }
         }
-        return nil
+
+        func sequence(endingAt end: Int) -> Sequence? {
+            guard length[end] >= 2 else { return nil }
+            var indexes: [Int] = []
+            var cursor: Int? = end
+            while let index = cursor { indexes.append(index); cursor = previous[index] }
+            let regularity = weight[end] / Double(length[end] - 1)
+            guard regularity >= 0.7 else { return nil }
+            return Sequence(charges: indexes.reversed().map { sorted[$0] }, cadence: cadence, regularity: regularity)
+        }
+
+        var best: Int?
+        for i in 0..<count where length[i] >= 2 {
+            guard let current = best else { best = i; continue }
+            // Longer first; then more regular; then the later one.
+            if length[i] > length[current] || (length[i] == length[current] && weight[i] >= weight[current]) { best = i }
+        }
+        return (best.flatMap(sequence(endingAt:)), sequence(endingAt: count - 1))
     }
 
     private func amountClusters(_ charges: [ReceiptSignal]) -> [[ReceiptSignal]] {
@@ -326,28 +412,6 @@ struct SubscriptionIntelligenceEngine {
             }
         }
         return clusters
-    }
-
-    private func evaluateSequence(_ charges: [ReceiptSignal]) -> Sequence? {
-        let sorted = charges.sorted { $0.date < $1.date }
-        guard sorted.count >= 2 else { return nil }
-        let intervals = zip(sorted, sorted.dropFirst()).map { $1.date.timeIntervalSince($0.date) / 86_400 }
-
-        var best: (cadence: Cadence, regularity: Double)?
-        for cadence in Self.cadences {
-            var score = 0.0
-            for interval in intervals {
-                let k = max(1.0, (interval / cadence.days).rounded())
-                // A missing receipt or two is common; a gap of several periods counts for less.
-                guard k <= 6 else { continue }
-                let tolerance = cadence.tolerance * k.squareRoot()
-                if abs(interval - k * cadence.days) <= tolerance { score += (k == 1 ? 1.0 : k <= 3 ? 0.6 : 0.3) }
-            }
-            let regularity = score / Double(intervals.count)
-            if best == nil || regularity > best!.regularity + 0.001 { best = (cadence, regularity) }
-        }
-        guard let best else { return nil }
-        return Sequence(charges: sorted, cadence: best.cadence, regularity: best.regularity)
     }
 
     // MARK: Build detected subscription
@@ -380,8 +444,10 @@ struct SubscriptionIntelligenceEngine {
 
         let allSame = amounts.allSatisfy { closeAmounts($0, latestAmount, tolerance: 0.005) }
         let coefficient = variation(amounts)
+        // A plan whose price changed once or twice is still one plan; orders change every time.
+        let stepped = !allSame && isStepped(amounts)
         if allSame { score += 10; reasons.append(L10n.string("Same amount each time (\(format(latestAmount, currency)))")) }
-        else if coefficient <= 0.06 { score += 6 }
+        else if coefficient <= 0.06 || stepped { score += 6 }
         else if coefficient > 0.25 { score -= 30; reasons.append(L10n.string("Amount varies a lot, which looks more like orders than a plan")) }
 
         let renewalCount = allSignals.filter { $0.renewalLanguage && !$0.promotional }.count
@@ -409,11 +475,12 @@ struct SubscriptionIntelligenceEngine {
         // Gating: unknown or mixed-commerce brands must PROVE recurrence
         let needsStrongProof = !merchant.isKnown || merchant.kind == .mixedCommerce
         if needsStrongProof {
-            let membershipEvidence = renewalCount >= 1 && allSame && n >= 2
-            let strong = (n >= 3 && sequence.regularity >= 0.8 && coefficient <= 0.06) || membershipEvidence
+            let steady = coefficient <= 0.06 || stepped
+            let membershipEvidence = renewalCount >= 1 && (allSame || stepped) && n >= 2
+            let strong = (n >= 3 && sequence.regularity >= 0.8 && steady) || membershipEvidence
             if !strong {
                 // Steady, same-amount charges deserve a look. Varying amounts never surface: they are orders, not plans.
-                let plausible = sequence.regularity >= 0.8 && (allSame || coefficient <= 0.06) && (n >= 3 || renewalCount >= 1)
+                let plausible = sequence.regularity >= 0.8 && (allSame || steady) && (n >= 3 || renewalCount >= 1)
                 score = min(score, plausible ? 49 : 35)
                 reasons.append(L10n.string("Not enough proof of a recurring plan yet"))
             }
@@ -449,14 +516,11 @@ struct SubscriptionIntelligenceEngine {
 
         // Price change within the last 12 months
         var previousAmount: Decimal?
-        if charges.count >= 2, status != .cancelled {
-            let prior = charges.dropLast().compactMap(\.amount).last
-            if let prior, latestAmount > prior * Decimal(1.02),
-               now.timeIntervalSince(latest.date) < 400 * 86_400 {
-                previousAmount = prior
-                if status == .active { status = .priceIncreased }
-                reasons.append(L10n.string("Price rose from \(format(prior, currency)) to \(format(latestAmount, currency))"))
-            }
+        if status != .cancelled, let change = lastPriceChange(charges), latestAmount > change.previous * Decimal(1.02),
+           now.timeIntervalSince(change.date) < 400 * 86_400 {
+            previousAmount = change.previous
+            if status == .active { status = .priceIncreased }
+            reasons.append(L10n.string("Price rose from \(format(change.previous, currency)) to \(format(latestAmount, currency))"))
         }
 
         if let next = nextBillingDate { reasons.append(L10n.string("Next charge expected around \(shortDate(next))")) }
@@ -736,6 +800,39 @@ struct SubscriptionIntelligenceEngine {
         let y = NSDecimalNumber(decimal: b).doubleValue
         guard max(x, y) > 0 else { return true }
         return abs(x - y) / max(x, y) <= tolerance
+    }
+
+    /// The most recent change of price in a run of charges: what it was before, and the first charge at
+    /// today's price. Nil when every charge was the same.
+    private func lastPriceChange(_ charges: [ReceiptSignal]) -> (previous: Decimal, date: Date)? {
+        guard let latest = charges.last?.amount else { return nil }
+        for index in stride(from: charges.count - 1, through: 1, by: -1) {
+            guard let earlier = charges[index - 1].amount else { continue }
+            if !closeAmounts(earlier, latest, tolerance: 0.02) { return (earlier, charges[index].date) }
+        }
+        return nil
+    }
+
+    /// Amounts that hold steady and change at most twice (7.99, 7.99, 7.99, 9.99, 9.99): a plan whose price
+    /// moved, not a run of unrelated orders.
+    private func isStepped(_ amounts: [Decimal]) -> Bool {
+        guard amounts.count >= 3 else { return false }
+        var changes = 0
+        var longestLevel = 1
+        var level = 1
+        for (earlier, later) in zip(amounts, amounts.dropFirst()) {
+            if closeAmounts(earlier, later, tolerance: 0.005) {
+                level += 1
+                longestLevel = max(longestLevel, level)
+            } else {
+                let low = NSDecimalNumber(decimal: min(earlier, later)).doubleValue
+                let high = NSDecimalNumber(decimal: max(earlier, later)).doubleValue
+                guard low > 0, high / low <= 2.5 else { return false }
+                changes += 1
+                level = 1
+            }
+        }
+        return (1...2).contains(changes) && longestLevel >= 2
     }
 
     private func variation(_ amounts: [Decimal]) -> Double {

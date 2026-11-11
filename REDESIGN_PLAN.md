@@ -457,6 +457,34 @@ Recommended and not done, because they change what Pro promises on the App Store
 "Cheaper Alternatives" rests on a hand-written list of 74 alternatives with prices nobody has
 checked. Either verify it or drop it from `ProFeature`, the paywall and `metadata/` together.
 
+## 13. Finish: mail first, truth audit, remaining screens (started 2026-11-11)
+
+The founder's direction: mail finding is the main feature and must be the best part of the app;
+every screen is checked for untrue and unneeded information; nothing is called finished until it
+meets a written standard.
+
+**The standard ("fantastic" means all three hold)**
+1. *Truth and need*: the rules in the `pausely-design` skill ("Truth and need"). Applied to every
+   screen in the tour and every key in `Localizable.xcstrings`.
+2. *Mail*: the standard in `INBOX_PLAN.md` ("The standard").
+3. *Screens*: 9.0 or more, no dimension under 8.5, seen in English, Arabic, the largest text and iPad.
+
+**Order of work** (one commit per step; status is kept in this list)
+1. Measure: test mail server rebuilt, every mail test run, baseline recorded.
+2. References and a fresh real-mail sample (kept outside the repository).
+3. Accuracy fixes, each pinned by a test.
+4. Flow: search starts on connect, findings print while it runs, results and import rebuilt (free
+   limit, categories, trials), every failure state, entry points from Home and the add screen.
+5. Repeat runs of every route end to end, and the privacy test.
+6. Truth audit of every screen and string (Cheaper Alternatives and catalog prices included).
+7. Remaining screens to 9.0: settings, sign-in and sign-up, age check, price history, widgets.
+8. Full verification: all tests, Debug and Release, four tours, ratings, notes.
+
+Found while planning (all in step 3 or 4): import silently drops what exceeds the free limit;
+every import is filed under "Other" and loses the trial end and cancel link; connecting does not
+start the search; one Apple receipt with several subscriptions is read as one; mail is reachable
+only from Profile.
+
 ---
 
 ## Sources

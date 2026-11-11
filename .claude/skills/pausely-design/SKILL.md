@@ -55,6 +55,21 @@ charge date, "cancel anytime" with how. Never: countdowns, "only today", guilt c
 button, a hidden or delayed close button, a pre-selected plan that costs more than the one shown,
 claims the build can't prove.
 
+## Truth and need (every sentence and number; each is a fail)
+
+- **Source.** Every number and claim comes from one of: what the person entered; a receipt the app
+  read; StoreKit; a dated official source held in code with a test (`TallyCatalog`); or arithmetic on
+  those. Anything else is removed, not reworded.
+- **Estimates say so**, and say from what ("expected around Nov 3, from the last three charges").
+- **Nothing promises what the release build doesn't do.** A feature behind a `FeatureFlags` switch
+  that is off in release is not mentioned on any screen a release user can reach, or in `metadata/`.
+- **Need.** If removing an element would not change what the person does or decides on that screen,
+  remove it. Counts of work done ("emails checked") stay only where they are proof of a promise.
+- **One name per thing** across screens, notifications, the paywall and `metadata/`. No internal
+  words on screen: score, tier, confidence, signal, engine, AI.
+- **Check it the way a stranger would:** read every string on the screen aloud and ask "how does the
+  app know that?" and "would I miss it?".
+
 ## Old UI is not allowed to remain
 
 A screen is rebuilt only when this prints nothing for its files:

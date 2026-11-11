@@ -210,10 +210,14 @@ final class EmailSignalExtractorTests: XCTestCase {
         XCTAssertEqual(result?.signal.markup, .subscription)
     }
 
-    func testPlainPromotionWithPrice_isStillPromotional() {
-        let result = EmailSignalExtractor.extract(email(day(2026, 9, 1), from: "Acme <deals@acme.io>", subject: "Big sale",
-                                                        text: "Now only $9.99!", labels: ["CATEGORY_PROMOTIONS"]))
-        XCTAssertEqual(result?.signal.promotional, true)
+    func testPlainPromotionWithPrice_neverCountsAsACharge() {
+        // An offered price ("only $9.99") isn't an amount charged at all.
+        XCTAssertNil(EmailSignalExtractor.extract(email(day(2026, 9, 1), from: "Acme <deals@acme.io>", subject: "Big sale",
+                                                        text: "Now only $9.99!", labels: ["CATEGORY_PROMOTIONS"])))
+        // A price stated plainly in mail filed under Promotions is kept, marked as a promotion.
+        let stated = EmailSignalExtractor.extract(email(day(2026, 9, 1), from: "Acme <deals@acme.io>", subject: "Big sale",
+                                                        text: "Premium costs $9.99 per month.", labels: ["CATEGORY_PROMOTIONS"]))
+        XCTAssertEqual(stated?.signal.promotional, true)
     }
 
     func testBrandMentionedInPassing_doesNotRenameAnOrder() {
