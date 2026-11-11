@@ -37,6 +37,17 @@ SENTENCES = {
 }
 
 
+KEYCHAIN_ITEM = "Pausely Resend API key"
+
+
+def mail_key_from_keychain():
+    """The Resend key, kept in this Mac's login Keychain and nowhere in the repository."""
+    import subprocess
+    found = subprocess.run(["security", "find-generic-password", "-s", KEYCHAIN_ITEM, "-a", "pausely", "-w"],
+                           capture_output=True, text=True)
+    return found.stdout.strip()
+
+
 def call(method, body=None):
     request = urllib.request.Request(
         f"https://api.supabase.com/v1/projects/{db_apply.project_ref()}/config/auth",
@@ -142,9 +153,10 @@ def main():
         change({"external_apple_enabled": True, "external_apple_client_id": BUNDLE_ID})
         return show()
     if mode == "smtp":
-        key = os.environ.get("RESEND_API_KEY", "").strip()
+        key = os.environ.get("RESEND_API_KEY", "").strip() or mail_key_from_keychain()
         if not key.startswith("re_"):
-            db_apply.fail("Set RESEND_API_KEY to the Resend key for the pausely.pro domain, for this one command.")
+            db_apply.fail("No mail key. Set RESEND_API_KEY for this one command, or store it in the Keychain:\n"
+                          f'  security add-generic-password -U -a pausely -s "{KEYCHAIN_ITEM}" -w <key>')
         change({"smtp_host": "smtp.resend.com", "smtp_port": "465", "smtp_user": "resend", "smtp_pass": key,
                 "smtp_admin_email": "hello@pausely.pro", "smtp_sender_name": "Pausely",
                 "rate_limit_email_sent": 100}, secret_keys=("smtp_pass",))
