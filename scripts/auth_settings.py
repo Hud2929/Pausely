@@ -5,6 +5,8 @@
   python3 scripts/auth_settings.py apply    set the ones that hold no secret (codes, wording, addresses)
   python3 scripts/auth_settings.py apple    switch on Sign in with Apple for the app's bundle id
   RESEND_API_KEY=re_... python3 scripts/auth_settings.py smtp    send account email through Resend
+  python3 scripts/auth_settings.py hook     or: have Supabase Auth call the auth-email function
+                                            (deploy it first; the mail key stays in its secrets)
 
 Why this exists: until 2026-11-11 the live project still had Supabase's defaults. The emails carried a
 link to localhost instead of the 6-digit code the app asks for, codes were 8 digits long, and the
@@ -95,10 +97,11 @@ def show():
         wrong += 0 if code else 1
         print(f"  {'ok     ' if code else 'CHANGE '} the '{name}' email carries the 6-digit code: {'yes' if code else 'no'}")
 
-    custom_mail = bool(live.get("smtp_host"))
+    custom_mail = bool(live.get("smtp_host")) or bool(live.get("hook_send_email_enabled"))
     print("\nDelivery:")
-    print(f"  {'ok     ' if custom_mail else 'CHANGE '} account email goes through: "
-          f"{live.get('smtp_host') if custom_mail else 'the built-in mailer (project members only)'}")
+    route = ("the auth-email function" if live.get("hook_send_email_enabled")
+             else live.get("smtp_host") or "the built-in mailer (project members only)")
+    print(f"  {'ok     ' if custom_mail else 'CHANGE '} account email goes through: {route}")
     hourly = live.get("rate_limit_email_sent")
     print(f"  {'ok     ' if (hourly or 0) >= 30 else 'CHANGE '} emails allowed per hour: {hourly}")
     apple = bool(live.get("external_apple_enabled")) and BUNDLE_ID in str(live.get("external_apple_client_id") or "")
@@ -146,7 +149,33 @@ def main():
                 "smtp_admin_email": "hello@pausely.pro", "smtp_sender_name": "Pausely",
                 "rate_limit_email_sent": 100}, secret_keys=("smtp_pass",))
         return show()
+    if mode == "hook":
+        return point_auth_at_the_email_function()
     db_apply.fail(__doc__)
+
+
+def point_auth_at_the_email_function():
+    """After `supabase functions deploy auth-email`: give the function and Supabase Auth one new signing
+    secret, and have Supabase Auth call the function instead of the built-in mailer. The mail key stays
+    where it is, in the function's own secrets. To go back: set hook_send_email_enabled to false."""
+    import base64
+    import subprocess
+    import tempfile
+    secret = "v1,whsec_" + base64.b64encode(os.urandom(32)).decode()
+    with tempfile.NamedTemporaryFile("w", suffix=".env", delete=False) as handle:
+        os.chmod(handle.name, 0o600)
+        handle.write(f"SEND_EMAIL_HOOK_SECRET={secret}\n")
+    try:
+        done = subprocess.run(["supabase", "secrets", "set", "--env-file", handle.name,
+                               "--project-ref", db_apply.project_ref()], capture_output=True, text=True)
+    finally:
+        os.remove(handle.name)
+    if done.returncode != 0:
+        db_apply.fail("The function's signing secret could not be set. Nothing else was changed.\n" + done.stderr[-300:])
+    change({"hook_send_email_enabled": True,
+            "hook_send_email_uri": f"https://{db_apply.project_ref()}.supabase.co/functions/v1/auth-email",
+            "hook_send_email_secrets": secret}, secret_keys=("hook_send_email_secrets",))
+    return show()
 
 
 if __name__ == "__main__":
