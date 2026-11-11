@@ -63792,6 +63792,1638 @@
           }
         }
       }
+    },
+    "A file of your subscriptions that you can save or send anywhere.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ملف باشتراكاتك يمكنك حفظه أو إرساله إلى أي مكان."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Eine Datei mit deinen Abos, die du überall speichern oder versenden kannst."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Un archivo con tus suscripciones que puedes guardar o enviar a donde quieras."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Un fichier de vos abonnements, à enregistrer ou à envoyer où vous voulez."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "サブスクの一覧をファイルにして、好きな場所に保存・送信できます。"
+          }
+        }
+      }
+    },
+    "A page with a summary and a table, for printing or sharing.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "صفحة تتضمن ملخصًا وجدولًا، للطباعة أو المشاركة."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Eine Seite mit Übersicht und Tabelle, zum Drucken oder Teilen."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Una página con un resumen y una tabla, para imprimir o compartir."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Une page avec un résumé et un tableau, à imprimer ou à partager."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "概要と表をまとめたページ。印刷や共有に。"
+          }
+        }
+      }
+    },
+    "Before each renewal, so you can keep it or cancel it": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "قبل كل تجديد، لتقرّر الاحتفاظ به أو إلغاءه"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Vor jeder Verlängerung, damit du behalten oder kündigen kannst"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Antes de cada renovación, para que decidas si la mantienes o la cancelas"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Avant chaque renouvellement, pour décider de garder ou de résilier"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "更新のたびに事前にお知らせ。続けるか解約するかを決められます"
+          }
+        }
+      }
+    },
+    "Cancelled subscriptions": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "الاشتراكات الملغاة"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Gekündigte Abos"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Suscripciones canceladas"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Abonnements résiliés"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "解約済みのサブスク"
+          }
+        }
+      }
+    },
+    "Check your connection and try again. If it keeps failing, email %@ and we'll delete it within 30 days.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "تحقّق من اتصالك وحاول مرة أخرى. إذا استمرّ الفشل، راسل %@ وسنحذفه خلال 30 يومًا."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Prüfe deine Verbindung und versuche es erneut. Wenn es weiter fehlschlägt, schreibe an %@ und wir löschen es innerhalb von 30 Tagen."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Revisa tu conexión e inténtalo de nuevo. Si sigue fallando, escribe a %@ y la eliminaremos en un plazo de 30 días."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Vérifiez votre connexion et réessayez. Si l’échec persiste, écrivez à %@ et nous le supprimerons sous 30 jours."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "通信状況を確認して、もう一度お試しください。それでも失敗する場合は %@ までメールでご連絡ください。30日以内に削除します。"
+          }
+        }
+      }
+    },
+    "Common questions": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "أسئلة شائعة"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Häufige Fragen"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Preguntas frecuentes"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Questions fréquentes"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "よくある質問"
+          }
+        }
+      }
+    },
+    "Contact": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "تواصل معنا"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kontakt"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Contacto"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Contact"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "お問い合わせ"
+          }
+        }
+      }
+    },
+    "Double tap to hide the answer": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "اضغط مرتين لإخفاء الإجابة"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Doppeltippen, um die Antwort auszublenden"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Toca dos veces para ocultar la respuesta"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Touchez deux fois pour masquer la réponse"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ダブルタップで回答を隠す"
+          }
+        }
+      }
+    },
+    "Double tap to show the answer": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "اضغط مرتين لإظهار الإجابة"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Doppeltippen, um die Antwort anzuzeigen"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Toca dos veces para ver la respuesta"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Touchez deux fois pour afficher la réponse"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ダブルタップで回答を表示"
+          }
+        }
+      }
+    },
+    "Email us": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "راسلنا"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Schreib uns"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Escríbenos"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Écrivez-nous"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "メールで問い合わせる"
+          }
+        }
+      }
+    },
+    "Export %lld subscriptions": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "تصدير %lld اشتراكات"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld Abos exportieren"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Exportar %lld suscripciones"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Exporter %lld abonnements"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld件のサブスクを書き出す"
+          }
+        }
+      }
+    },
+    "Export your list": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "تصدير قائمتك"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Liste exportieren"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Exporta tu lista"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Exporter votre liste"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "リストを書き出す"
+          }
+        }
+      }
+    },
+    "Free trial reminders": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "تذكيرات التجربة المجانية"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Erinnerungen an Probezeiträume"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Recordatorios de pruebas gratuitas"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Rappels d’essai gratuit"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "無料体験のリマインダー"
+          }
+        }
+      }
+    },
+    "History, receipt and Pause Plan": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "السجل والإيصال وخطة الإيقاف"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Verlauf, Beleg und Pausenplan"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Historial, recibo y Plan de Pausa"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Historique, reçu et plan de pause"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "履歴・レシート・一時停止プラン"
+          }
+        }
+      }
+    },
+    "How do I add a subscription?": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "كيف أضيف اشتراكًا؟"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Wie füge ich ein Abo hinzu?"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "¿Cómo añado una suscripción?"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Comment ajouter un abonnement ?"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "サブスクを追加するには？"
+          }
+        }
+      }
+    },
+    "How do I cancel Pausely Pro?": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "كيف ألغي Pausely Pro؟"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Wie kündige ich Pausely Pro?"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "¿Cómo cancelo Pausely Pro?"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Comment résilier Pausely Pro ?"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pausely Proを解約するには？"
+          }
+        }
+      }
+    },
+    "How do I change currency?": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "كيف أغيّر العملة؟"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Wie ändere ich die Währung?"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "¿Cómo cambio la moneda?"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Comment changer de devise ?"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "通貨を変更するには？"
+          }
+        }
+      }
+    },
+    "How do I stop a subscription I no longer want?": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "كيف أوقف اشتراكًا لم أعد أريده؟"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Wie beende ich ein Abo, das ich nicht mehr möchte?"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "¿Cómo dejo una suscripción que ya no quiero?"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Comment arrêter un abonnement dont je ne veux plus ?"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "不要になったサブスクをやめるには？"
+          }
+        }
+      }
+    },
+    "How many subscriptions can I track for free?": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "كم اشتراكًا يمكنني متابعته مجانًا؟"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Wie viele Abos kann ich kostenlos verwalten?"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "¿Cuántas suscripciones puedo seguir gratis?"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Combien d’abonnements puis-je suivre gratuitement ?"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "無料で管理できるサブスクは何件まで？"
+          }
+        }
+      }
+    },
+    "Is my data secure?": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "هل بياناتي آمنة؟"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sind meine Daten sicher?"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "¿Están seguros mis datos?"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mes données sont-elles en sécurité ?"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "データは安全ですか？"
+          }
+        }
+      }
+    },
+    "No ads, no selling data": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "لا إعلانات ولا بيع للبيانات"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Keine Werbung, kein Datenverkauf"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sin anuncios ni venta de datos"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pas de publicité, pas de revente de données"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "広告なし、データの販売なし"
+          }
+        }
+      }
+    },
+    "No currency matches that.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "لا توجد عملة مطابقة."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Keine passende Währung gefunden."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ninguna moneda coincide."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aucune devise ne correspond."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "一致する通貨がありません。"
+          }
+        }
+      }
+    },
+    "Nothing on your list matches these choices.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "لا شيء في قائمتك يطابق هذه الخيارات."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nichts auf deiner Liste passt zu dieser Auswahl."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nada de tu lista coincide con estas opciones."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Rien dans votre liste ne correspond à ces choix."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "この条件に合うものがリストにありません。"
+          }
+        }
+      }
+    },
+    "Open Profile, then Currency. Totals change; each subscription keeps the currency it's charged in.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "افتح الملف الشخصي ثم العملة. تتغيّر الإجماليات، ويحتفظ كل اشتراك بالعملة التي يُخصم بها."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Öffne Profil und dann Währung. Die Summen ändern sich; jedes Abo behält die Währung, in der es abgebucht wird."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Abre Perfil y luego Moneda. Los totales cambian; cada suscripción conserva la moneda en la que se cobra."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ouvrez Profil, puis Devise. Les totaux changent ; chaque abonnement garde la devise dans laquelle il est prélevé."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "プロフィールを開き、「通貨」を選びます。合計の表示が変わり、各サブスクは請求される通貨のままです。"
+          }
+        }
+      }
+    },
+    "Open it and tap Cancel subscription. Pausely shows the steps and opens the service's own cancellation page; you always cancel with the service itself. Then tap \"I cancelled it\" so it moves to your Savings Receipt.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "افتحه واضغط «إلغاء الاشتراك». يعرض Pausely الخطوات ويفتح صفحة الإلغاء الخاصة بالخدمة؛ الإلغاء يتم دائمًا لدى الخدمة نفسها. ثم اضغط «لقد ألغيته» لينتقل إلى إيصال التوفير."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Öffne es und tippe auf „Abo kündigen“. Pausely zeigt die Schritte und öffnet die Kündigungsseite des Dienstes; gekündigt wird immer beim Dienst selbst. Tippe danach auf „Ich habe gekündigt“, damit es in deinen Sparbeleg wandert."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ábrela y toca «Cancelar suscripción». Pausely muestra los pasos y abre la página de cancelación del propio servicio; siempre cancelas con el servicio. Después toca «Ya la cancelé» para que pase a tu recibo de ahorro."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ouvrez-le et touchez « Résilier l’abonnement ». Pausely affiche les étapes et ouvre la page de résiliation du service ; la résiliation se fait toujours auprès du service lui-même. Touchez ensuite « Je l’ai résilié » pour qu’il passe dans votre reçu d’économies."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "サブスクを開いて「サブスクを解約」をタップします。Pauselyが手順を表示し、サービス自身の解約ページを開きます。解約は必ずサービス側で行います。その後「解約しました」をタップすると、節約レシートに移ります。"
+          }
+        }
+      }
+    },
+    "Paused subscriptions": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "الاشتراكات الموقوفة مؤقتًا"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pausierte Abos"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Suscripciones en pausa"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Abonnements en pause"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "一時停止中のサブスク"
+          }
+        }
+      }
+    },
+    "Pausely Pro is billed by Apple. Open Settings on your iPhone, tap your name, then Subscriptions, and choose Pausely Pro.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "يتم تحصيل رسوم Pausely Pro عبر Apple. افتح الإعدادات على الـ iPhone، واضغط على اسمك، ثم الاشتراكات، واختر Pausely Pro."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pausely Pro wird über Apple abgerechnet. Öffne die Einstellungen deines iPhones, tippe auf deinen Namen, dann auf Abonnements und wähle Pausely Pro."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pausely Pro lo cobra Apple. Abre Ajustes en tu iPhone, toca tu nombre, luego Suscripciones y elige Pausely Pro."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pausely Pro est facturé par Apple. Ouvrez Réglages sur votre iPhone, touchez votre nom, puis Abonnements, et choisissez Pausely Pro."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pausely ProはAppleを通じて請求されます。iPhoneの「設定」を開き、自分の名前、「サブスクリプション」の順にタップして、Pausely Proを選びます。"
+          }
+        }
+      }
+    },
+    "Pausely has no ad or tracking SDKs and never sells your data.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "لا يتضمن Pausely أي أدوات إعلانات أو تتبّع، ولا يبيع بياناتك أبدًا."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pausely enthält keine Werbe- oder Tracking-SDKs und verkauft deine Daten nie."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pausely no incluye SDK de publicidad ni de seguimiento y nunca vende tus datos."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pausely ne contient aucun SDK publicitaire ou de suivi et ne vend jamais vos données."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pauselyには広告やトラッキングのSDKは入っておらず、データを販売することもありません。"
+          }
+        }
+      }
+    },
+    "Plain data, for a backup or another tool.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "بيانات خام، للنسخ الاحتياطي أو لأداة أخرى."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reine Daten, für ein Backup oder ein anderes Tool."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Datos sin formato, para una copia de seguridad u otra herramienta."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Des données brutes, pour une sauvegarde ou un autre outil."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "バックアップやほかのツール用のデータ形式。"
+          }
+        }
+      }
+    },
+    "Rate Pausely": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "قيّم Pausely"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pausely bewerten"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Valorar Pausely"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Noter Pausely"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pauselyを評価"
+          }
+        }
+      }
+    },
+    "Receipts are read on this iPhone. Only the name, amount and date of each charge are kept.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "تُقرأ الإيصالات على هذا الـ iPhone. يُحتفظ فقط باسم كل عملية خصم ومبلغها وتاريخها."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Belege werden auf diesem iPhone gelesen. Gespeichert werden nur Name, Betrag und Datum jeder Abbuchung."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Los recibos se leen en este iPhone. Solo se guardan el nombre, el importe y la fecha de cada cargo."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Les reçus sont lus sur cet iPhone. Seuls le nom, le montant et la date de chaque prélèvement sont conservés."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "領収書はこのiPhone上で読み取られます。保存されるのは各請求の名前・金額・日付だけです。"
+          }
+        }
+      }
+    },
+    "Renewal reminders": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "تذكيرات التجديد"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Verlängerungs-Erinnerungen"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Recordatorios de renovación"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Rappels de renouvellement"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "更新のリマインダー"
+          }
+        }
+      }
+    },
+    "Same as iPhone": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "نفس لغة الـ iPhone"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Wie iPhone"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Igual que el iPhone"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Comme l’iPhone"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "iPhoneと同じ"
+          }
+        }
+      }
+    },
+    "Search currencies": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ابحث عن عملة"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Währungen suchen"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Buscar monedas"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Rechercher une devise"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "通貨を検索"
+          }
+        }
+      }
+    },
+    "Stay on this iPhone, protected by iOS data protection.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "تبقى على هذا الـ iPhone، محمية بحماية البيانات في iOS."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bleiben auf diesem iPhone, geschützt durch die iOS-Datensicherheit."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Se quedan en este iPhone, protegidos por la protección de datos de iOS."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Restent sur cet iPhone, protégés par la protection des données d’iOS."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "このiPhoneに保存され、iOSのデータ保護で守られます。"
+          }
+        }
+      }
+    },
+    "Support website": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "موقع الدعم"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Support-Website"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sitio de ayuda"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Site d’assistance"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "サポートサイト"
+          }
+        }
+      }
+    },
+    "Synced to Pausely's servers over an encrypted connection and encrypted at rest. Other accounts can't read it.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "تُزامن مع خوادم Pausely عبر اتصال مشفّر وتُخزَّن مشفّرة. لا تستطيع الحسابات الأخرى قراءتها."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Wird über eine verschlüsselte Verbindung mit den Servern von Pausely synchronisiert und verschlüsselt gespeichert. Andere Konten können sie nicht lesen."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Se sincroniza con los servidores de Pausely mediante una conexión cifrada y se guarda cifrada. Otras cuentas no pueden leerla."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Synchronisée avec les serveurs de Pausely via une connexion chiffrée et stockée chiffrée. Les autres comptes ne peuvent pas la lire."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "暗号化された通信でPauselyのサーバーと同期され、暗号化して保存されます。ほかのアカウントからは読めません。"
+          }
+        }
+      }
+    },
+    "Tap + on Home, find the service or choose Custom, then enter what you pay and when it renews.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "اضغط + في الصفحة الرئيسية، وابحث عن الخدمة أو اختر «مخصّص»، ثم أدخل ما تدفعه وموعد التجديد."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tippe auf der Startseite auf +, suche den Dienst oder wähle „Eigenes“, und gib dann ein, was du zahlst und wann es sich verlängert."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Toca + en Inicio, busca el servicio o elige Personalizada, e introduce lo que pagas y cuándo se renueva."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Touchez + dans l’Accueil, cherchez le service ou choisissez Personnalisé, puis indiquez ce que vous payez et la date de renouvellement."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ホームの＋をタップし、サービスを探すか「カスタム」を選んで、支払額と更新日を入力します。"
+          }
+        }
+      }
+    },
+    "The day before a free trial starts charging": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "قبل يوم من بدء الخصم بعد التجربة المجانية"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Am Tag, bevor ein Probezeitraum kostenpflichtig wird"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "El día antes de que una prueba gratuita empiece a cobrarse"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "La veille du jour où un essai gratuit devient payant"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "無料体験が有料に切り替わる前日"
+          }
+        }
+      }
+    },
+    "The documents": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "المستندات"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Die Dokumente"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Los documentos"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Les documents"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "規約とポリシー"
+          }
+        }
+      }
+    },
+    "The file couldn't be made. Try again.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "تعذّر إنشاء الملف. حاول مرة أخرى."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Die Datei konnte nicht erstellt werden. Versuche es erneut."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No se pudo crear el archivo. Inténtalo de nuevo."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Le fichier n’a pas pu être créé. Réessayez."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ファイルを作成できませんでした。もう一度お試しください。"
+          }
+        }
+      }
+    },
+    "Totals are shown in this currency. Each subscription keeps the currency it's charged in.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "تُعرض الإجماليات بهذه العملة. يحتفظ كل اشتراك بالعملة التي يُخصم بها."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Summen werden in dieser Währung angezeigt. Jedes Abo behält die Währung, in der es abgebucht wird."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Los totales se muestran en esta moneda. Cada suscripción conserva la moneda en la que se cobra."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Les totaux sont affichés dans cette devise. Chaque abonnement garde la devise dans laquelle il est prélevé."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "合計はこの通貨で表示されます。各サブスクは請求される通貨のままです。"
+          }
+        }
+      }
+    },
+    "Up to %lld. Pausely Pro removes the limit.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "حتى %lld. يزيل Pausely Pro هذا الحد."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bis zu %lld. Pausely Pro hebt die Grenze auf."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hasta %lld. Pausely Pro elimina el límite."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Jusqu’à %lld. Pausely Pro supprime la limite."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld件までです。Pausely Proなら上限がなくなります。"
+          }
+        }
+      }
+    },
+    "Your account": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "حسابك"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dein Konto"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tu cuenta"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Votre compte"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "アカウント"
+          }
+        }
+      }
+    },
+    "Your data": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "بياناتك"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Deine Daten"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tus datos"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Vos données"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "あなたのデータ"
+          }
+        }
+      }
+    },
+    "Your subscription list": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "قائمة اشتراكاتك"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Deine Abo-Liste"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tu lista de suscripciones"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Votre liste d’abonnements"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "サブスクの一覧"
+          }
+        }
+      }
+    },
+    "Your subscriptions are stored in your account and sent over encrypted connections. We never sell your data. See the Privacy Policy for details.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "تُحفظ اشتراكاتك في حسابك وتُرسل عبر اتصالات مشفّرة. لا نبيع بياناتك أبدًا. راجع سياسة الخصوصية للتفاصيل."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Deine Abos werden in deinem Konto gespeichert und über verschlüsselte Verbindungen übertragen. Wir verkaufen deine Daten nie. Details stehen in der Datenschutzerklärung."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tus suscripciones se guardan en tu cuenta y se envían mediante conexiones cifradas. Nunca vendemos tus datos. Consulta la Política de privacidad para más detalles."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Vos abonnements sont enregistrés dans votre compte et transmis via des connexions chiffrées. Nous ne vendons jamais vos données. Consultez la Politique de confidentialité pour en savoir plus."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "サブスクの情報はアカウントに保存され、暗号化された通信で送信されます。データを販売することはありません。詳しくはプライバシーポリシーをご覧ください。"
+          }
+        }
+      }
+    },
+    "A spreadsheet file. Opens in Numbers, Excel and Google Sheets.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ملف جدول بيانات. يُفتح في Numbers و Excel و Google Sheets."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Eine Tabellendatei. Lässt sich in Numbers, Excel und Google Sheets öffnen."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Un archivo de hoja de cálculo. Se abre en Numbers, Excel y Google Sheets."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Un fichier de tableur. S’ouvre dans Numbers, Excel et Google Sheets."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "表計算ファイル。Numbers、Excel、Googleスプレッドシートで開けます。"
+          }
+        }
+      }
     }
   },
   "version": "1.1"

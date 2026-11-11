@@ -204,15 +204,13 @@ struct RootView: View {
                     #endif
                 } else if let screen = demoValue("--demo-settings") {
                     #if DEBUG
-                    NavigationStack {
-                        switch screen {
-                        case "privacy": PrivacySecurityView()
-                        case "help": HelpSupportView()
-                        case "currency": CurrencySettingsView()
-                        case "export": ExportDataView()
-                        case "language": LanguageSettingsView()
-                        default: NotificationsSettingsView()
-                        }
+                    switch screen {
+                    case "privacy": PrivacySecurityView()
+                    case "help": HelpSupportView()
+                    case "currency": CurrencySettingsView()
+                    case "export": ExportDataView()
+                    case "language": LanguageSettingsView()
+                    default: NotificationsSettingsView()
                     }
                     #endif
                 } else if isDemoScreen("--demo-whats-new") {

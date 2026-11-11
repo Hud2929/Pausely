@@ -29,106 +29,61 @@ struct ExportDataView: View {
     }
 
     var body: some View {
-        NavigationStack {
-            Form {
-                Section("Format") {
-                    Picker("Format", selection: $selectedFormat) {
-                        ForEach(ExportFormat.allCases, id: \.self) { format in
-                            Text(format.rawValue).tag(format)
-                        }
+        SettingsPage(title: "Export your list", detail: "A file of your subscriptions that you can save or send anywhere.") {
+            SettingsSection(title: "Format") {
+                ForEach(ExportFormat.allCases, id: \.self) { format in
+                    ChoiceRow(title: format.rawValue, detail: description(of: format), isChosen: selectedFormat == format) {
+                        selectedFormat = format
                     }
-                    .pickerStyle(.segmented)
-
-                    VStack(alignment: .leading, spacing: 4) {
-                        Text(formatDescription)
-                            .font(.caption)
-                            .foregroundStyle(Color.inkTextMuted)
-                    }
-                    .padding(.top, 4)
+                    .accessibilityIdentifier("exportFormat-\(format.rawValue)")
                 }
+            }
 
-                Section("Include") {
-                    Toggle("Paused Subscriptions", isOn: $includePaused)
-                    Toggle("Cancelled Subscriptions", isOn: $includeCancelled)
+            SettingsSection(title: "Include") {
+                SettingsRow(title: L10n.string("Paused subscriptions")) {
+                    Toggle("", isOn: $includePaused).labelsHidden().tint(Color.inkTextMuted)
+                        .accessibilityLabel(Text("Paused subscriptions"))
                 }
-
-                Section {
-                    HStack {
-                        Text("Subscriptions to Export")
-                        Spacer()
-                        Text("\(filteredCount)")
-                            .font(.subheadline.weight(.semibold))
-                            .foregroundStyle(Color.inkTextMuted)
-                    }
-
-                    if filteredCount == 0 {
-                        Text("No subscriptions match your filters")
-                            .font(.caption)
-                            .foregroundStyle(Color.inkTextMuted)
-                    }
+                SettingsRow(title: L10n.string("Cancelled subscriptions")) {
+                    Toggle("", isOn: $includeCancelled).labelsHidden().tint(Color.inkTextMuted)
+                        .accessibilityLabel(Text("Cancelled subscriptions"))
                 }
+            }
 
-                Section {
-                    Button {
-                        performExport()
-                    } label: {
-                        HStack {
-                            Spacer()
-                            if isExporting {
-                                ProgressView()
-                                    .tint(Color.paperInk)
-                            } else {
-                                Image(systemName: "square.and.arrow.up")
-                                Text("Export \(filteredCount) Subscriptions")
-                            }
-                            Spacer()
-                        }
-                        .font(.headline)
-                        .foregroundStyle(filteredCount > 0 ? Color.paperInk : Color.inkTextFaint)
-                        .frame(minHeight: 54)
-                        .background(filteredCount > 0 ? Color.paper : Color.inkLifted)
-                        .clipShape(RoundedRectangle(cornerRadius: Layout.cardRadius, style: .continuous))
-                    }
-                    .disabled(filteredCount == 0 || isExporting)
-                    .listRowBackground(Color.clear)
-                    .listRowInsets(EdgeInsets())
-                }
-
+            VStack(alignment: .leading, spacing: 12) {
                 if let error = exportError {
-                    Section {
-                        HStack(spacing: 8) {
-                            Image(systemName: "exclamationmark.triangle.fill")
-                                .foregroundStyle(Color.due)
-                            Text(error)
-                                .font(.caption)
-                                .foregroundStyle(Color.due)
-                        }
+                    Label {
+                        Text(verbatim: error).fixedSize(horizontal: false, vertical: true)
+                    } icon: {
+                        Image(systemName: "exclamationmark.circle")
                     }
+                    .font(.subheadline)
+                    .foregroundStyle(Color.due)
                 }
-            }
-            .navigationTitle("Export Data")
-            .navigationBarTitleDisplayMode(.large)
-            .toolbar {
-                ToolbarItem(placement: .topBarLeading) {
-                    Button("Done") { dismiss() }
+                if filteredCount == 0 {
+                    Text("Nothing on your list matches these choices.")
+                        .font(.subheadline)
+                        .foregroundStyle(Color.inkTextMuted)
                 }
-            }
-            .sheet(isPresented: $showingShareSheet) {
-                if let url = exportURL {
-                    ShareSheet(items: [url])
+                Button(action: performExport) {
+                    if isExporting { ProgressView().tint(Color.paperInk) } else { Text("Export \(filteredCount) subscriptions") }
                 }
+                .buttonStyle(.ink)
+                .disabled(filteredCount == 0 || isExporting)
+                .accessibilityIdentifier("exportButton")
             }
+        }
+        .sheet(isPresented: $showingShareSheet) {
+            if let url = exportURL { ShareSheet(items: [url]) }
         }
     }
 
-    private var formatDescription: String {
-        switch selectedFormat {
-        case .csv:
-            return "Spreadsheet format compatible with Excel, Numbers, and Google Sheets. Great for tax preparation."
-        case .pdf:
-            return "Formatted report with summary and table. Best for sharing or printing."
-        case .json:
-            return "Machine-readable format for backups or importing into other tools."
+    /// What each file is, said plainly.
+    private func description(of format: ExportFormat) -> String {
+        switch format {
+        case .csv: return L10n.string("A spreadsheet file. Opens in Numbers, Excel and Google Sheets.")
+        case .pdf: return L10n.string("A page with a summary and a table, for printing or sharing.")
+        case .json: return L10n.string("Plain data, for a backup or another tool.")
         }
     }
 
@@ -152,7 +107,7 @@ struct ExportDataView: View {
                     exportURL = url
                     showingShareSheet = true
                 } else {
-                    exportError = "Failed to generate export file. Please try again."
+                    exportError = L10n.string("The file couldn't be made. Try again.")
                 }
             }
         }

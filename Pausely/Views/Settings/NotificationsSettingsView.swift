@@ -1,10 +1,8 @@
 import SwiftUI
-import UserNotifications
 
-/// Reminder settings. Every switch here changes which reminders are scheduled; nothing is decorative.
+/// Which reminders Pausely sends. The switches only matter once iOS allows notifications, so the page
+/// says first whether it does, and offers the one step that turns them on.
 struct NotificationsSettingsView: View {
-    @Environment(\.dismiss) private var dismiss
-
     @AppStorage(ReminderScheduler.renewalRemindersKey) private var renewalAlerts = true
     @AppStorage(ReminderScheduler.trialRemindersKey) private var trialEndingAlerts = true
 
@@ -12,65 +10,25 @@ struct NotificationsSettingsView: View {
     @State private var isAsking = false
 
     var body: some View {
-        ZStack {
-            Color.ink.ignoresSafeArea()
+        SettingsPage(title: "Notifications") {
+            permission
 
-            ScrollView(showsIndicators: false) {
-                VStack(spacing: 28) {
-                    // Header
-                    HStack {
-                        Button(action: { dismiss() }) {
-                            HStack(spacing: 6) {
-                                Image(systemName: "chevron.left")
-                                Text("Back")
-                            }
-                            .font(.body.weight(.medium))
-                            .foregroundColor(Color.inkTextMuted)
-                        }
-                        .accessibilityLabel("Back")
-
-                        Spacer()
-
-                        Text("Notifications")
-                            .font(.headline.weight(.bold))
-                            .foregroundStyle(Color.inkText)
-
-                        Spacer()
-
-                        Color.clear.frame(width: 60)
-                    }
-                    .padding(.horizontal, 20)
-                    .padding(.top, 16)
-
-                    permissionCard
-                        .padding(.horizontal, 20)
-
-                    notificationSection(
-                        title: "REMINDERS",
-                        rows: [
-                            NotifRow(icon: "calendar.badge.exclamationmark",
-                                     title: "Renewal reminders",
-                                     subtitle: "Before each renewal, so you can keep it or cancel it",
-                                     binding: $renewalAlerts),
-                            NotifRow(icon: "clock.fill",
-                                     title: "Free trial reminders",
-                                     subtitle: "The day before a free trial starts charging",
-                                     binding: $trialEndingAlerts),
-                        ]
-                    )
-                    .padding(.horizontal, 20)
-                    .disabled(!notifications.isAuthorized)
-                    .opacity(notifications.isAuthorized ? 1 : 0.5)
-
-                    Text("Renewal reminders come at 9am the number of days you choose for each subscription (\"Remind me\" when you edit it), again the day before, and the morning of. \"Keep it\" on a reminder stops the rest for that charge.")
-                        .font(.footnote)
-                        .foregroundColor(Color.inkTextFaint)
-                        .padding(.horizontal, 24)
-                        .frame(maxWidth: .infinity, alignment: .leading)
-
-                    Spacer(minLength: 60)
+            SettingsSection(footer: "Renewal reminders come at 9am the number of days you choose for each subscription (\"Remind me\" when you edit it), again the day before, and the morning of. \"Keep it\" on a reminder stops the rest for that charge.") {
+                SettingsRow(title: L10n.string("Renewal reminders"),
+                            detail: L10n.string("Before each renewal, so you can keep it or cancel it")) {
+                    Toggle("", isOn: $renewalAlerts).labelsHidden().tint(Color.inkTextMuted)
+                        .accessibilityLabel(Text("Renewal reminders"))
+                        .accessibilityIdentifier("renewalRemindersToggle")
+                }
+                SettingsRow(title: L10n.string("Free trial reminders"),
+                            detail: L10n.string("The day before a free trial starts charging")) {
+                    Toggle("", isOn: $trialEndingAlerts).labelsHidden().tint(Color.inkTextMuted)
+                        .accessibilityLabel(Text("Free trial reminders"))
+                        .accessibilityIdentifier("trialRemindersToggle")
                 }
             }
+            .disabled(!notifications.isAuthorized)
+            .opacity(notifications.isAuthorized ? 1 : 0.5)
         }
         .task { await notifications.refreshStatus() }
         .onChange(of: renewalAlerts) { _, _ in reschedule() }
@@ -81,37 +39,28 @@ struct NotificationsSettingsView: View {
         Task { await ReminderScheduler.shared.reschedule(SubscriptionStore.shared.subscriptions) }
     }
 
-    // MARK: - Permission
-
+    /// Whether iOS lets Pausely notify, and the way to change it.
     @ViewBuilder
-    private var permissionCard: some View {
+    private var permission: some View {
         let status = notifications.status
-        HStack(spacing: 14) {
-            ZStack {
-                Circle()
-                    .fill((notifications.isAuthorized ? Color.inkText : Color.decide).opacity(0.15))
-                    .frame(width: 48, height: 48)
-                Image(systemName: notifications.isAuthorized ? "bell.badge.fill" : "bell.slash.fill")
-                    .font(.title3)
-                    .foregroundColor(notifications.isAuthorized ? Color.inkText : Color.decide)
+        VStack(alignment: .leading, spacing: 12) {
+            HStack(alignment: .firstTextBaseline, spacing: 10) {
+                if !notifications.isAuthorized { StateMark(state: .decide).accessibilityHidden(true) }
+                VStack(alignment: .leading, spacing: 3) {
+                    Text(notifications.isAuthorized ? "Reminders are on" : "Reminders are off")
+                        .font(.headline)
+                        .foregroundStyle(Color.inkText)
+                    Text(notifications.isAuthorized
+                         ? "Pausely can warn you before you're charged."
+                         : status == .denied
+                            ? "Notifications for Pausely are off in iOS Settings."
+                            : "Turn them on so renewals never surprise you.")
+                        .font(.subheadline)
+                        .foregroundStyle(Color.inkTextMuted)
+                        .fixedSize(horizontal: false, vertical: true)
+                }
             }
-            .accessibilityHidden(true)
-
-            VStack(alignment: .leading, spacing: 2) {
-                Text(notifications.isAuthorized ? "Reminders are on" : "Reminders are off")
-                    .font(.callout.weight(.semibold))
-                    .foregroundStyle(Color.inkText)
-                Text(notifications.isAuthorized
-                     ? "Pausely can warn you before you're charged."
-                     : status == .denied
-                        ? "Notifications for Pausely are off in iOS Settings."
-                        : "Turn them on so renewals never surprise you.")
-                    .font(.footnote)
-                    .foregroundColor(Color.inkTextMuted)
-                    .fixedSize(horizontal: false, vertical: true)
-            }
-
-            Spacer(minLength: 8)
+            .accessibilityElement(children: .combine)
 
             if !notifications.isAuthorized {
                 Button {
@@ -125,93 +74,13 @@ struct NotificationsSettingsView: View {
                         }
                     }
                 } label: {
-                    Text(status == .denied ? "Settings" : "Turn on")
-                        .font(.subheadline.weight(.semibold))
-                        .foregroundColor(.black)
-                        .padding(.horizontal, 14)
-                        .frame(height: 34)
-                        .background(Capsule().fill(status == .denied ? Color.decide : Color.paper))
+                    status == .denied ? Text("Settings") : Text("Turn on")
                 }
-                .buttonStyle(PlainButtonStyle())
+                .buttonStyle(.ink)
                 .disabled(isAsking)
+                .accessibilityIdentifier("turnOnNotificationsButton")
             }
         }
-        .padding(16)
-        .background(
-            RoundedRectangle(cornerRadius: 16)
-                .fill(Color.inkRaised)
-                .overlay(RoundedRectangle(cornerRadius: 16).stroke(Color.white.opacity(0.06), lineWidth: 1))
-        )
+        .frame(maxWidth: .infinity, alignment: .leading)
     }
-
-    // MARK: - Rows
-
-    private struct NotifRow {
-        let icon: String
-        let title: String
-        let subtitle: String
-        let binding: Binding<Bool>
-    }
-
-    @ViewBuilder
-    private func notificationSection(title: String, rows: [NotifRow]) -> some View {
-        VStack(alignment: .leading, spacing: 8) {
-            Text(title)
-                .font(.caption.weight(.bold))
-                .foregroundColor(Color.inkTextFaint)
-                .padding(.leading, 4)
-
-            VStack(spacing: 0) {
-                ForEach(Array(rows.enumerated()), id: \.offset) { index, row in
-                    HStack(spacing: 14) {
-                        ZStack {
-                            RoundedRectangle(cornerRadius: 10)
-                                .fill(Color.white.opacity(0.06))
-                                .frame(width: 38, height: 38)
-
-                            Image(systemName: row.icon)
-                                .font(.callout)
-                                .foregroundColor(Color.inkText)
-                        }
-
-                        VStack(alignment: .leading, spacing: 2) {
-                            Text(row.title)
-                                .font(.callout.weight(.semibold))
-                                .foregroundStyle(Color.inkText)
-
-                            Text(row.subtitle)
-                                .font(.footnote)
-                                .foregroundColor(Color.inkTextMuted)
-                        }
-
-                        Spacer()
-
-                        Toggle("", isOn: row.binding)
-                            .tint(Color.inkText)
-                            .labelsHidden()
-                    }
-                    .padding(.horizontal, 16)
-                    .padding(.vertical, 12)
-
-                    if index < rows.count - 1 {
-                        Divider()
-                            .background(Color.white.opacity(0.06))
-                            .padding(.leading, 68)
-                    }
-                }
-            }
-            .background(
-                RoundedRectangle(cornerRadius: 16)
-                    .fill(Color.inkRaised)
-                    .overlay(
-                        RoundedRectangle(cornerRadius: 16)
-                            .stroke(Color.white.opacity(0.06), lineWidth: 1)
-                    )
-            )
-        }
-    }
-}
-
-#Preview {
-    NotificationsSettingsView()
 }

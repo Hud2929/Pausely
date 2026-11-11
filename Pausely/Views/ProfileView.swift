@@ -90,15 +90,7 @@ struct PremiumProfileView: View {
             case .whatsNew: WhatsNewSheet()
             case .wrapped: SubscriptionWrappedView(subscriptions: store.subscriptions)
             case .inbox: InboxImportView()
-            case .language:
-                NavigationStack {
-                    LanguageSettingsView()
-                        .toolbar {
-                            ToolbarItem(placement: .topBarLeading) {
-                                Button("Close") { self.sheet = nil }.foregroundStyle(Color.inkText)
-                            }
-                        }
-                }
+            case .language: LanguageSettingsView()
             }
         }
     }
