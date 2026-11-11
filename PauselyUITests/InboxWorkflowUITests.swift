@@ -12,7 +12,9 @@ final class InboxWorkflowUITests: XCTestCase {
 
     private func launch(reset: Bool) -> XCUIApplication {
         let app = XCUIApplication()
-        app.launchArguments = ["--uitesting", "--demo-inbox", "-AppleLanguages", "(en)"] + (reset ? ["--reset-inbox"] : [])
+        // An empty list and no Pro, so the free limit is part of what's tested.
+        app.launchArguments = ["--uitesting", "--demo-inbox", "--empty-demo-data", "-AppleLanguages", "(en)",
+                               "-debug_premium_override", "NO", "-debug_free_pro", "NO"] + (reset ? ["--reset-inbox"] : [])
         app.launch()
         return app
     }
@@ -24,6 +26,13 @@ final class InboxWorkflowUITests: XCTestCase {
             if (field.value(forKey: "hasKeyboardFocus") as? Bool) == true { return }
             Thread.sleep(forTimeInterval: 0.5)
         }
+    }
+
+    /// Saves what's on screen when TEST_RUNNER_PAUSELY_TOUR_DIR is set, so each stage can be looked at.
+    private func snap(_ name: String) {
+        guard let directory = ProcessInfo.processInfo.environment["PAUSELY_TOUR_DIR"] else { return }
+        let url = URL(fileURLWithPath: directory).appendingPathComponent("inbox-\(name).png")
+        try? XCUIScreen.main.screenshot().pngRepresentation.write(to: url)
     }
 
     private func row(_ app: XCUIApplication, startingWith name: String) -> XCUIElement {
@@ -43,6 +52,7 @@ final class InboxWorkflowUITests: XCTestCase {
         // 1. Choose "Other email" and fill in the server.
         let other = app.buttons["connect-other"]
         XCTAssertTrue(other.waitForExistence(timeout: 15))
+        snap("1-start")
         other.tap()
         let address = app.textFields["imapAddress"]
         XCTAssertTrue(address.waitForExistence(timeout: 5))
@@ -72,20 +82,21 @@ final class InboxWorkflowUITests: XCTestCase {
         app.buttons["imapConnect"].tap()
         let error = app.staticTexts.matching(NSPredicate(format: "identifier == 'imapError' AND label CONTAINS %@", "wasn't accepted")).firstMatch
         XCTAssertTrue(error.waitForExistence(timeout: 30), "a wrong password must say so: \(app.staticTexts["imapError"].label)")
+        snap("2-wrong-password")
 
-        // 3. The right password connects and returns to the inbox screen.
+        // 3. The right password connects, and the search starts by itself: no second tap.
         focus(secret)
         secret.typeText(password)
         app.buttons["imapConnect"].tap()
-        let scan = app.buttons["scanInboxesButton"]
-        XCTAssertTrue(scan.waitForExistence(timeout: 30), "connected inboxes show the search button")
-        XCTAssertTrue(app.staticTexts[user].exists)
+        XCTAssertTrue(app.staticTexts["scanStatus"].waitForExistence(timeout: 30), "connecting starts the search")
+        Thread.sleep(forTimeInterval: 3)
+        snap("3-searching")
 
-        // 4. Scan: results list the expected subscriptions. Confirmed ones come preselected; "likely" ones
+        // 4. Results list the expected subscriptions. Confirmed ones come preselected; "likely" ones
         // wait for the person to pick them, so pick any expected one that isn't selected yet.
-        scan.tap()
         let firstExpected = row(app, startingWith: expected.first ?? "")
-        XCTAssertTrue(firstExpected.waitForExistence(timeout: 120), "the scan should list \(expected)")
+        XCTAssertTrue(firstExpected.waitForExistence(timeout: 180), "the search should list \(expected)")
+        snap("4-results")
         for name in expected {
             let item = row(app, startingWith: name)
             XCTAssertTrue(item.exists, "\(name) should be listed")
@@ -94,18 +105,32 @@ final class InboxWorkflowUITests: XCTestCase {
             XCTAssertEqual(XCTWaiter.wait(for: [selected], timeout: 5), .completed, "\(name) should be selected: \(item.label)")
         }
         let importButton = app.buttons["importSelectedButton"]
-        XCTAssertTrue(importButton.waitForExistence(timeout: 5), "selected subscriptions can be imported")
-        XCTAssertTrue(importButton.label.hasPrefix("Import "), importButton.label)
+        XCTAssertTrue(importButton.waitForExistence(timeout: 5), "selected subscriptions can be added")
+        XCTAssertTrue(importButton.label.hasPrefix("Add "), importButton.label)
+        // More were chosen than the free list holds: that is said before the tap.
+        let limitNote = app.staticTexts["freeLimitNote"]
+        let overLimit = limitNote.exists
+        app.swipeUp()
+        snap("5-results-list")
+        if overLimit { XCTAssertTrue(limitNote.label.contains("Free watches"), limitNote.label) }
 
-        // 5. Import.
+        // 5. Add. The screen says what was added and what waits; nothing is dropped unsaid.
         importButton.tap()
-        XCTAssertTrue(app.buttons["importDoneButton"].waitForExistence(timeout: 15), "the import should finish")
-        XCTAssertTrue(app.staticTexts["Import complete"].exists)
+        XCTAssertTrue(app.buttons["importDoneButton"].waitForExistence(timeout: 20), "adding should finish")
+        let title = app.staticTexts["importOutcomeTitle"]
+        XCTAssertTrue(title.exists)
+        snap("6-added")
+        XCTAssertTrue(title.label.contains("added to your list") || title.label.contains("is on your list"), title.label)
+        if overLimit {
+            XCTAssertTrue(app.buttons["importSeeProButton"].exists, "what waits is said, with the way to watch it")
+        }
 
         // 6. Relaunch: the inbox is remembered. Disconnect removes it.
         app.terminate()
         app = launch(reset: false)
         XCTAssertTrue(app.buttons["scanInboxesButton"].waitForExistence(timeout: 15), "the inbox survives a relaunch")
+        XCTAssertTrue(app.staticTexts[user].exists, "the connected inbox is listed by its address")
+        snap("7-connected")
         let options = app.buttons["Options for \(user)"]
         let disconnect = app.buttons["disconnectInbox"]
         for _ in 0..<3 where !disconnect.exists {

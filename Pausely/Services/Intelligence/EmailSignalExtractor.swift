@@ -178,6 +178,8 @@ enum PlatformHints {
     static func merchantFromSubject(_ subject: String) -> String? {
         let patterns = [
             #"(?:receipt|invoice|statement)\s+from\s+([A-Za-z0-9][A-Za-z0-9\s\-\.&']*?)(?:\s+#|\s+\(|\.\s|\.$|,|$)"#,
+            // Stripe's own wording: "Your Acme receipt [#1217-3050]".
+            #"^your\s+([A-Za-z0-9][A-Za-z0-9\s\-\.&']{1,40}?)\s+(?:receipt|invoice)\b"#,
             #"(?:payment|automatic payment|payment sent)\s+to\s+([A-Za-z0-9][A-Za-z0-9\s\-\.&']*?)(?:\s+#|\s+\(|\.\s|\.$|,|$)"#,
             #"^([A-Za-z0-9][A-Za-z0-9\s]{1,30}?)[\s\-–:]+(?:subscription|invoice|receipt|billing|renewal)"#,
         ]
@@ -281,6 +283,33 @@ enum HTMLText {
 /// which is what makes the whole detection pipeline testable without touching a real mailbox.
 enum EmailSignalExtractor {
 
+    /// Every fact an email holds. Almost always one; an App Store receipt lists each subscription with
+    /// its own price and renewal line, and yields one per subscription (and none for one-off purchases).
+    static func extractAll(_ email: RawEmail, catalog: MerchantCatalog = .builtin) -> [ExtractionResult] {
+        let sender = parseSender(email.from)
+        let text = email.bodyText.isEmpty ? HTMLText.plain(email.bodyHTML ?? "") : email.bodyText
+        // A family member's copy says what was bought with their account; the organiser's copy is the bill.
+        if AppleReceipt.isApple(sender.domain), AppleReceipt.isFamilyNotice(text) { return [] }
+        guard AppleReceipt.isAppleBilling(fromDomain: sender.domain, subject: email.subject) else {
+            return [extract(email, catalog: catalog)].compactMap { $0 }
+        }
+        guard let items = AppleReceipt.items(in: text) else {
+            // Not a layout this reader knows: fall back to reading it as one receipt.
+            return [extract(email, catalog: catalog)].compactMap { $0 }
+        }
+        let intel = HeaderIntel.analyze(headers: email.headers)
+        let spoofed = intel.isSpoofed(fromDomain: sender.domain)
+        return items.filter(\.renews).enumerated().map { index, item in
+            let signal = ReceiptSignal(
+                id: index == 0 ? email.id : "\(email.id)#\(index)", date: email.date, senderDomain: sender.domain,
+                senderName: sender.name, merchantHint: item.title, platform: "apple", kind: .charge, amount: item.amount,
+                currency: item.currency, cadenceHint: item.frequency, trialDays: nil, renewalLanguage: true,
+                oneTimeLanguage: false, promotional: false, markup: nil, hasUnsubscribe: intel.hasUnsubscribe,
+                bulkMail: intel.bulk, spoofSuspected: spoofed ? true : nil)
+            return ExtractionResult(signal: signal, ambiguousExcerpt: nil, merchantGuess: item.title, subject: email.subject)
+        }
+    }
+
     static func extract(_ email: RawEmail, catalog: MerchantCatalog = .builtin) -> ExtractionResult? {
         let sender = parseSender(email.from)
         let intel = HeaderIntel.analyze(headers: email.headers)
@@ -311,9 +340,10 @@ enum EmailSignalExtractor {
 
         // A receipt wrongly filed under Promotions must not be discarded when the markup proves it is a receipt.
         let markupProvesReceipt = markup != nil && markup?.kind != .parcel
-        // Most inboxes have no "Promotions" label. Bulk mail with an unsubscribe link that neither calls itself a
-        // receipt nor says an amount was charged is an offer, whatever prices it quotes.
-        let bulkOffer = intel.bulk && intel.hasUnsubscribe && !analysis.chargeEvidence
+        // Most inboxes have no "Promotions" label. Mail with an unsubscribe header that neither calls itself a
+        // receipt nor says an amount was charged is an offer, whatever prices it quotes. (In a measured real
+        // mailbox, most mail carried that header and no billing mail did.)
+        let bulkOffer = intel.hasUnsubscribe && !analysis.chargeEvidence
             && !ReceiptTextAnalyzer.subjectSaysReceipt(email.subject)
         let promotional = (labelPromo || flags.marketing || bulkOffer) && !markupProvesReceipt
 
@@ -334,7 +364,7 @@ enum EmailSignalExtractor {
             cadenceHint: cadence, trialDays: analysis.trialDays, renewalLanguage: flags.renewal,
             oneTimeLanguage: flags.oneTime, promotional: promotional,
             markup: markup?.kind, hasUnsubscribe: intel.hasUnsubscribe, bulkMail: intel.bulk,
-            spoofSuspected: spoofed ? true : nil, nextAmount: analysis.nextAmount)
+            spoofSuspected: spoofed ? true : nil, nextAmount: analysis.nextAmount, introAmount: analysis.introAmount)
 
         // Ambiguous: a charge from a merchant we do not know, with no recurring or one-time language at all.
         var excerpt: String?

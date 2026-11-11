@@ -160,16 +160,16 @@ final class MailTruthTests: XCTestCase {
         var lines: [String] = []
         var signals: [ReceiptSignal] = []
         for email in emails {
-            if let result = EmailSignalExtractor.extract(email, catalog: catalog) {
+            let results = EmailSignalExtractor.extractAll(email, catalog: catalog)
+            for result in results {
                 let s = result.signal
                 signals.append(s)
                 lines.append("SIGNAL \(s.senderDomain) | \(email.subject.prefix(46)) | hint=\(s.merchantHint ?? "-") kind=\(s.kind) "
                              + "amount=\(s.amount.map { "\($0)" } ?? "-") \(s.currency ?? "-") cadence=\(s.cadenceHint?.rawValue ?? "-") "
                              + "platform=\(s.platform) renewal=\(s.renewalLanguage) oneTime=\(s.oneTimeLanguage) promo=\(s.promotional) "
                              + "spoof=\(s.spoofSuspected ?? false)")
-            } else {
-                lines.append("DROPPED \(email.from.prefix(36)) | \(email.subject.prefix(46))")
             }
+            if results.isEmpty { lines.append("DROPPED \(email.from.prefix(36)) | \(email.subject.prefix(46))") }
         }
         let report = SubscriptionIntelligenceEngine(catalog: catalog)
             .analyze(signals: signals, now: truth.date ?? Date(), defaultCurrency: environment("PAUSELY_MAIL_CURRENCY") ?? "USD")

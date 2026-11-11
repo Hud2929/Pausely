@@ -1,6 +1,43 @@
 import Foundation
 import os.log
 
+/// A subscription a search of the person's email found, as the results screen lists it.
+struct FoundSubscription: Identifiable, Equatable {
+    let proven: ProvenSubscription
+
+    /// Stable across a re-analysis (merchant, period, currency), so what was ticked stays ticked.
+    var id: String { proven.id }
+    var name: String { proven.name }
+    var amount: Decimal { proven.amount }
+    var currency: String { proven.currency }
+    var billingFrequency: BillingFrequency { proven.frequency }
+
+    /// A cancellation email came after the last charge: shown, never offered for import.
+    var isCancelled: Bool { proven.status == .cancelled }
+    /// Still charging as far as the receipts show.
+    var isLive: Bool { proven.status != .likelyEnded && proven.status != .cancelled }
+    /// A trial whose email didn't say what it costs afterwards.
+    var priceUnknown: Bool { proven.status == .trial && proven.amount == 0 }
+
+    /// The line this becomes on the person's list. The anchor is the day of the last charge the receipts
+    /// show (a real date the renewal schedule rolls forward), never a date worked out from it.
+    var line: TallyLine {
+        TallyLine(name: name, category: SubscriptionCategory.matching(proven.category).displayName,
+                  amount: amount, currency: currency, isConfirmed: true, frequency: billingFrequency,
+                  anchor: proven.status == .trial ? nil : (proven.lastChargeDate ?? proven.nextBillingDate),
+                  trialEndsAt: proven.status == .trial ? proven.trialEndsOn : nil)
+    }
+}
+
+/// One receipt read during a search, shown while the search runs: who charged, how much, when.
+struct ReceiptSeen: Identifiable, Equatable {
+    var name: String
+    var amount: Decimal
+    var currency: String
+    var date: Date
+    var id: String { name.lowercased() }
+}
+
 /// Finds subscriptions in every connected inbox, on the iPhone. For each inbox: search (or only new mail),
 /// read headers, open only the messages that look financial, parse them with the same MIME parser, and
 /// keep a few facts per receipt. Email text never outlives a single message's processing, and nothing
@@ -13,7 +50,9 @@ final class InboxScanner: ObservableObject {
     @Published private(set) var isScanning = false
     @Published private(set) var progress: Double = 0
     @Published private(set) var statusLine = ""
-    @Published var foundSubscriptions: [SmartImportManager.ImportSubscription] = []
+    @Published var foundSubscriptions: [FoundSubscription] = []
+    /// The latest receipt read for each sender during the running search, newest first.
+    @Published private(set) var receiptsSeen: [ReceiptSeen] = []
     @Published var report: IntelligenceReport?
     @Published var error: String?
     @Published private(set) var accountErrors: [String: String] = [:]
@@ -167,6 +206,7 @@ final class InboxScanner: ObservableObject {
         error = nil
         accountErrors = [:]
         stats = ScanStats()
+        receiptsSeen = []
         defer { isScanning = false; statusLine = "" }
 
         let catalog = Self.buildCatalog()
@@ -209,7 +249,9 @@ final class InboxScanner: ObservableObject {
         analyze(ledger, catalog: catalog)
         stats.receipts = newSignals.count
         if foundSubscriptions.isEmpty && accountErrors.count < accounts.count {
-            error = L10n.string("No recurring subscriptions found in your email yet.")
+            error = L10n.string("No subscriptions found")
+        } else if foundSubscriptions.isEmpty, !accounts.isEmpty {
+            error = L10n.string("The search couldn't be finished.")
         }
     }
 
@@ -234,29 +276,36 @@ final class InboxScanner: ObservableObject {
             report(0.35, L10n.string("Reading \(L10n.string("\(wanted.count) receipts")) from \(account.providerName)…"))
 
             var signals: [ReceiptSignal] = []
+            var stopped = false
             for (offset, summary) in wanted.enumerated() {
-                try Task.checkCancellation()
+                // Stopping keeps what has been read so far: the person asked to see it, not to throw it away.
+                if Task.isCancelled { stopped = true; break }
                 guard let raw = try? await provider.rawMessage(summary.ref) else { continue }
                 accountStats.read += 1
                 let id = summary.messageID ?? "\(account.id):\(summary.ref.folder ?? ""):\(summary.ref.id)"
-                guard let email = MIMEParser.parse(raw, id: id, receivedDate: summary.receivedDate, labelIds: summary.labelIds),
-                      let result = EmailSignalExtractor.extract(email, catalog: catalog) else { continue }
-                var signal = result.signal
-                if let excerpt = result.ambiguousExcerpt, let classifier, aiBudget > 0 {
-                    aiBudget -= 1
-                    let verdict = await classifier.classify(merchantGuess: result.merchantGuess, subject: result.subject, excerpt: excerpt)
-                    if verdict != .unsure { stats.aiAssisted += 1 }
-                    signal = signal.applying(verdict)
+                guard let email = MIMEParser.parse(raw, id: id, receivedDate: summary.receivedDate, labelIds: summary.labelIds) else { continue }
+                // One email is one fact, except a store receipt that lists several subscriptions.
+                for result in EmailSignalExtractor.extractAll(email, catalog: catalog) {
+                    var signal = result.signal
+                    if let excerpt = result.ambiguousExcerpt, let classifier, aiBudget > 0 {
+                        aiBudget -= 1
+                        let verdict = await classifier.classify(merchantGuess: result.merchantGuess, subject: result.subject, excerpt: excerpt)
+                        if verdict != .unsure { stats.aiAssisted += 1 }
+                        signal = signal.applying(verdict)
+                    }
+                    signal.sources = [account.id]
+                    signals.append(signal)
+                    noteReceipt(signal, catalog: catalog)
                 }
-                signal.sources = [account.id]
-                signals.append(signal)
                 if offset % 10 == 0 {
                     report(0.35 + 0.6 * Double(offset + 1) / Double(max(wanted.count, 1)),
                            L10n.string("Read \(offset + 1) of \(wanted.count) in \(account.providerName)"))
                 }
             }
             accountStats.receipts = signals.count
-            if MailboxAccountStore.all().contains(where: { $0.id == account.id }) {
+            // A search that was stopped hasn't read everything, so the next one starts over instead of
+            // looking only at newer mail.
+            if !stopped, MailboxAccountStore.all().contains(where: { $0.id == account.id }) {
                 MailboxAccountStore.setCursor(nextCursor, for: account.id)
             }
             await provider.close()
@@ -265,6 +314,22 @@ final class InboxScanner: ObservableObject {
             await provider.close()
             throw error
         }
+    }
+
+    /// Shows a charge as soon as its receipt is read. One line per sender, its latest receipt; promotions
+    /// and anything without an amount or a usable name are left out. These are receipts, not yet
+    /// subscriptions: the list of subscriptions comes when the search has weighed them all.
+    private func noteReceipt(_ signal: ReceiptSignal, catalog: MerchantCatalog) {
+        guard signal.kind == .charge, !signal.promotional, signal.spoofSuspected != true, let amount = signal.amount,
+              let merchant = catalog.resolve(hint: signal.merchantHint, senderName: signal.senderName, senderDomain: signal.senderDomain)
+        else { return }
+        let seen = ReceiptSeen(name: merchant.displayName, amount: amount,
+                               currency: signal.currency ?? CurrencyManager.shared.selectedCurrency, date: signal.date)
+        if let index = receiptsSeen.firstIndex(where: { $0.id == seen.id }) {
+            guard receiptsSeen[index].date < seen.date else { return }
+            receiptsSeen.remove(at: index)
+        }
+        receiptsSeen.insert(seen, at: 0)
     }
 
     /// Which messages are worth reading in full, most promising first: known billers and platforms, then
@@ -324,29 +389,20 @@ final class InboxScanner: ObservableObject {
         analyze(ReceiptLedger.load(), catalog: Self.buildCatalog())
     }
 
-    func markNotSubscription(_ subscription: SmartImportManager.ImportSubscription) {
-        guard let key = subscription.proven?.merchantKey else { return }
-        UserCorrections.set(key, .notSubscription)
+    func markNotSubscription(_ subscription: FoundSubscription) {
+        UserCorrections.set(subscription.proven.merchantKey, .notSubscription)
         reanalyze()
     }
 
-    func importSubscriptions(_ selected: [SmartImportManager.ImportSubscription]) async -> (added: Int, duplicates: Int) {
-        for sub in selected { if let key = sub.proven?.merchantKey { UserCorrections.set(key, .trusted) } }
-        let result = SmartImportManager.ImportResult(subscriptions: selected, errors: [])
-        await SmartImportManager.shared.processImports(from: [result])
-        return (SmartImportManager.shared.importedCount, SmartImportManager.shared.duplicatesFound)
+    /// Adds what the person chose to their list. Under the free limit, the ones that cost most are added
+    /// and the rest wait (see `TallyImporter`); the outcome says which, so the screen can too.
+    func importSubscriptions(_ selected: [FoundSubscription]) async -> TallyImporter.Outcome {
+        for found in selected where !found.isCancelled { UserCorrections.set(found.proven.merchantKey, .trusted) }
+        return await TallyImporter.add(selected.filter { !$0.isCancelled }.map(\.line), into: SubscriptionStore.shared)
     }
 
-    static func makeImport(from sub: ProvenSubscription) -> SmartImportManager.ImportSubscription {
-        let confidence: SmartImportManager.ImportSubscription.Confidence
-        switch sub.tier {
-        case .confirmed: confidence = .high
-        case .likely: confidence = .medium
-        default: confidence = .low
-        }
-        return SmartImportManager.ImportSubscription(
-            name: sub.name, amount: sub.amount, currency: sub.currency, billingFrequency: sub.frequency,
-            nextBillingDate: sub.nextBillingDate, confidence: confidence, source: "Email", proven: sub)
+    static func makeImport(from sub: ProvenSubscription) -> FoundSubscription {
+        FoundSubscription(proven: sub)
     }
 
     #if DEBUG

@@ -82,6 +82,146 @@ final class ReceiptAccuracyTests: XCTestCase {
         XCTAssertEqual(money("ご利用料金のお知らせ", "ご請求額: ￥９９０"), .init(amount: 990, currency: "JPY"))
     }
 
+    // MARK: Which figure on a receipt is the charge (shapes from real receipts, details made up)
+
+    func testTaxIsNotThePrice_whenLabelsComeBeforeFigures() {
+        let body = """
+        You've successfully subscribed to Brightdesk Plus.
+        Your subscription will automatically renew monthly.
+        Order number: sub_0000 Order date: Sep 03, 2025 Plan
+           Amount
+              Brightdesk Plus Subscription $20.00 Tax: $2.60
+        Total: $22.60 Payment method Visa-0000 By subscribing, you authorize us to charge you the subscription cost.
+        """
+        XCTAssertEqual(money("Brightdesk - Your new plan", body), .init(amount: Decimal(string: "22.60")!, currency: nil))
+    }
+
+    func testTotalChargedIsRead_whenFiguresComeBeforeLabels() {
+        let body = "| CA$59.99 Studywell Plus annual plan CA$7.80 GST/HST CA$67.79 Total charged |\n| Your annual subscription renews automatically each year. |"
+        XCTAssertEqual(money("Your Studywell Plus receipt", body), .init(amount: Decimal(string: "67.79")!, currency: "CAD"))
+    }
+
+    func testStoreReceiptTotalIncludesTax() {
+        let body = """
+        You've made a subscription purchase on the store. You will be automatically charged $134.99 for 1 year, then $269.99/year starting Dec 26, 2026, unless canceled.
+        Item Price
+        Cloud Plan 2 TB (by Example LLC) $134.99
+        Auto-renewing subscription
+        Tax: $17.55
+        Total: $152.54
+        """
+        XCTAssertEqual(money("Your Order Receipt from Dec 26, 2025", body), .init(amount: Decimal(string: "152.54")!, currency: nil))
+        let prices = ReceiptTextAnalyzer.introductoryPrices(in: body)
+        XCTAssertEqual(prices?.intro, Decimal(string: "134.99"))
+        XCTAssertEqual(prices?.next, Decimal(string: "269.99"))
+    }
+
+    func testAQuantityNextToAPriceIsNotAFigure() {
+        XCTAssertEqual(money("Receipt", "Pro plan\nQty 1 $12.00\nAmount paid $12.00"), .init(amount: 12, currency: nil))
+    }
+
+    func testMembershipFeeIsACharge_serviceFeeIsNot() {
+        XCTAssertEqual(money("Your DashPass receipt", "Your membership fee of C$9.99 was charged."),
+                       .init(amount: Decimal(string: "9.99")!, currency: "CAD"))
+        XCTAssertEqual(money("Your order", "Service fee $2.99\nTotal $31.40"), .init(amount: Decimal(string: "31.40")!, currency: nil))
+    }
+
+    // MARK: Offers are not trials (a real "90 days free" offer was reported as a trial that had started)
+
+    func testAnInvitationToStartATrialIsNotATrial() {
+        let offer = email(day(2026, 8, 27), from: "Tunewave <no-reply@tunewave.example>", subject: "Activate 90 days FREE of Tunewave Unlimited",
+                          text: "You're eligible for a complimentary 90 day free trial of Tunewave Unlimited. To activate your trial, tap below.\nSubscribe Now - 90 Days Free\nAuto-renews at $12.99/month after until cancelled. New subscribers only. Limited time offer. Terms apply.")
+        let signal = EmailSignalExtractor.extract(offer)?.signal
+        XCTAssertNotEqual(signal?.kind, .trialStarted)
+        XCTAssertNotEqual(signal?.kind, .trialEnding)
+        XCTAssertTrue(signal == nil || signal?.promotional == true, "an offer is a promotion, whatever price it quotes")
+        XCTAssertTrue(analyze([signal].compactMap { $0 }, now: day(2026, 9, 1)).isEmpty)
+    }
+
+    func testATrialThatHasBegunIsATrial() {
+        let welcome = email(day(2026, 5, 12), from: "Amazon.ca <prime@amazon.ca>", subject: "Welcome to Prime!",
+                            text: "* Plan name: - Prime\n* Plan type: - 30-day Free Trial\n* Renewal date: - June 10, 2026\nAfter your trial, your membership renews at $9.99 plus tax per month. You won't be charged if you cancel your membership before the renewal date.")
+        let signal = EmailSignalExtractor.extract(welcome)?.signal
+        XCTAssertEqual(signal?.kind, .trialStarted)
+        XCTAssertEqual(signal?.promotional, false)
+    }
+
+    // MARK: Stores (shapes from real mail and from the reference notes)
+
+    func testAChannelBoughtInAVideoStore_withNoReceiptsSince_isWorthALook() {
+        let started = email(day(2026, 5, 21), from: "Prime Video <no-reply@primevideo.com>", subject: "You subscribed to Crunchyroll Fan on Prime Video",
+                            text: "You recently started a promotional offer for Crunchyroll Fan on Prime Video.\nCrunchyroll Fan\n3-month promotional period\nStarted on 21 May 2026\nPromotional price\nCA$2.99/month\nFor 3 months\nStandard subscription price\nCA$10.99/month\nAfter that\nYour subscription automatically renews.")
+        let found = analyze(EmailSignalExtractor.extractAll(started).map(\.signal), now: day(2026, 11, 10))
+        let channel = found.first
+        XCTAssertEqual(channel?.name, "Crunchyroll", "in a store, what follows the brand is its plan")
+        XCTAssertEqual(channel?.amount, Decimal(string: "10.99"))
+        XCTAssertEqual(channel?.status, .active, "the store sends no renewal receipts, so silence is not an ending")
+        XCTAssertEqual(channel?.tier, .review, "one sign-up notice is worth a look, not a claim")
+
+        // With the store's cancellation notice, it is not offered as running.
+        let ended = email(day(2026, 6, 2), from: "Prime Video <no-reply@primevideo.com>", subject: "Your Crunchyroll Fan Subscription Has Ended",
+                          text: "Your subscription to Crunchyroll Fan on Prime Video has ended. You won't be charged again.")
+        let after = analyze((EmailSignalExtractor.extractAll(started) + EmailSignalExtractor.extractAll(ended)).map(\.signal), now: day(2026, 11, 10))
+        XCTAssertFalse(after.contains { $0.status == .active })
+    }
+
+    func testAnAppStoreReceiptYieldsEachSubscriptionAndNoOneOffPurchase() {
+        let text = """
+        Receipt
+        APPLE ACCOUNT tester@example.com
+        DATE Sep 18, 2026
+        ORDER ID MNJ0000000
+        DOCUMENT NO. 780000000000
+        Duolingo - Language Lessons
+        Super Duolingo (Monthly)
+        Renews Oct 18, 2026  $12.99
+        Castle Siege
+        Sack of Gems
+        In-App Purchase  $4.99
+        iCloud+
+        iCloud+ with 200 GB of Storage (Monthly)
+        Renews Oct 18, 2026  $2.99
+        Subtotal  $20.97
+        Tax  $1.73
+        TOTAL  $22.70
+        """
+        let receipt = email(day(2026, 9, 18), from: "Apple <no_reply@email.apple.com>", subject: "Your receipt from Apple.", text: text)
+        let signals = EmailSignalExtractor.extractAll(receipt).map(\.signal)
+        XCTAssertEqual(signals.map(\.amount), [Decimal(string: "12.99"), Decimal(string: "2.99")], "each item's own price, never the total")
+        XCTAssertEqual(signals.map(\.merchantHint), ["Duolingo - Language Lessons", "iCloud+"])
+        XCTAssertEqual(signals.map(\.cadenceHint), [.monthly, .monthly])
+        XCTAssertEqual(Set(signals.map(\.id)).count, 2, "two facts from one email keep separate identities")
+        let names = analyze(signals, now: day(2026, 9, 20)).map(\.name)
+        XCTAssertEqual(Set(names), ["Duolingo", "iCloud+"])
+    }
+
+    func testAnAppStoreReceiptOfOneOffPurchasesIsNotASubscription() {
+        let text = "Receipt\nAPPLE ACCOUNT tester@example.com\nDuolingo - Language Lessons\n1,200 Gems\nIn-App Purchase  $9.99\nSubtotal  $9.99\nTax  $0.00\nTOTAL  $9.99"
+        let receipt = email(day(2026, 9, 18), from: "Apple <no_reply@email.apple.com>", subject: "Your receipt from Apple.", text: text)
+        XCTAssertTrue(EmailSignalExtractor.extractAll(receipt).isEmpty, "a one-off purchase inside a subscription app is not that app's subscription")
+    }
+
+    func testAFamilyMembersCopyIsNotABill() {
+        let text = "Your Apple ID was used to purchase Super Duolingo (Monthly).\nDuolingo - Language Lessons\nSuper Duolingo (Monthly)\nRenews Oct 18, 2026  $12.99\nTOTAL  $12.99\nThis is not a receipt. The original receipt for this purchase has been sent to the Family Organizer."
+        let notice = email(day(2026, 9, 18), from: "Apple <no_reply@email.apple.com>", subject: "Your recent purchase with your Apple Account.", text: text)
+        XCTAssertTrue(EmailSignalExtractor.extractAll(notice).isEmpty)
+    }
+
+    func testAnAppStoreSubscriptionNobodyHasHeardOfIsStillFound() {
+        let text = "Receipt\nAPPLE ACCOUNT tester@example.com\nMoonlit Journal: Daily Diary\nPremium (Annual)\nRenews Sep 18, 2027  $39.99\nSubtotal  $39.99\nTax  $0.00\nTOTAL  $39.99"
+        let receipt = email(day(2026, 9, 18), from: "Apple <no_reply@email.apple.com>", subject: "Your receipt from Apple.", text: text)
+        let found = analyze(EmailSignalExtractor.extractAll(receipt).map(\.signal), now: day(2026, 10, 1)).first
+        XCTAssertEqual(found?.name, "Moonlit Journal")
+        XCTAssertEqual(found?.frequency, .yearly)
+        XCTAssertEqual(found?.amount, Decimal(string: "39.99"))
+        XCTAssertGreaterThanOrEqual(found?.tier ?? .hidden, .likely)
+    }
+
+    func testStripeSubjectNamesTheMerchant() {
+        XCTAssertEqual(PlatformHints.merchantFromSubject("Your Acme Tools receipt [#1217-3050]"), "Acme Tools")
+        XCTAssertEqual(PlatformHints.merchantFromSubject("Your receipt from Notion #2041-0001"), "Notion")
+    }
+
     // MARK: Promotions without a "Promotions" label (every inbox except Gmail's own)
 
     func testBulkOfferFromARealBillerIsNotACharge() {

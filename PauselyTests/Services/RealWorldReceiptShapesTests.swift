@@ -153,7 +153,8 @@ final class RealWorldReceiptShapesTests: XCTestCase {
                             Total: $112.99
                             """)
         let signal = try XCTUnwrap(EmailSignalExtractor.extract(receipt)?.signal)
-        XCTAssertEqual(signal.amount, Decimal(string: "99.99"))
+        XCTAssertEqual(signal.amount, Decimal(string: "112.99"), "what was charged is the total, tax included")
+        XCTAssertEqual(signal.introAmount, Decimal(string: "99.99"))
         XCTAssertEqual(signal.nextAmount, Decimal(string: "199.99"))
         XCTAssertEqual(signal.merchantHint, "Google One")
         XCTAssertFalse(signal.oneTimeLanguage, "\"Order number\" on an auto-renewing purchase is not an order")
@@ -161,7 +162,7 @@ final class RealWorldReceiptShapesTests: XCTestCase {
         let report = analyze([receipt], now: day(2026, 10, 28))
         XCTAssertEqual(report.subscriptions.first?.frequency, .yearly)
         let insight = try XCTUnwrap(report.insights.first { $0.id.hasPrefix("intro|") })
-        XCTAssertEqual(insight.annualImpact, Decimal(100))
+        XCTAssertEqual(insight.annualImpact, Decimal(100), "the rise is between the two prices the email states, both before tax")
     }
 
     func testFailedPayment_isNotACharge_andIsFlaggedUntilAPaymentGoesThrough() throws {

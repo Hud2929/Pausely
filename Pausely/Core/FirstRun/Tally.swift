@@ -92,10 +92,28 @@ struct TallyLine: Codable, Equatable, Identifiable {
     let category: String
     var amount: Decimal
     var currency: String
-    /// True once the person typed the price themselves.
+    /// True once the person typed the price themselves, or it was read from their own receipts.
     var isConfirmed = false
+    /// How often it bills, when known (lines found in email). First-run lines are monthly.
+    var frequency: BillingFrequency? = nil
+    /// The day of the last charge the receipts show. A real date: the renewal schedule rolls it forward.
+    var anchor: Date? = nil
+    /// When a free trial ends, for a line found while it is still in its trial.
+    var trialEndsAt: Date? = nil
 
     var id: String { name }
+
+    /// What a year of it costs, in its own currency: how lines are ranked when only some fit.
+    var yearlyCost: Decimal { amount * ProvenSubscription.periodsPerYear(frequency ?? .monthly) }
+
+    /// The subscription this line becomes.
+    func subscription(now: Date = Date()) -> Subscription {
+        let inTrial = trialEndsAt.map { $0 > now } ?? false
+        return Subscription(name: name, category: category, amount: amount, currency: currency,
+                            billingFrequency: frequency ?? .monthly, nextBillingDate: anchor ?? (inTrial ? trialEndsAt : nil),
+                            trialEndsAt: inTrial ? trialEndsAt : nil, status: inTrial ? .trial : .active,
+                            isDetected: anchor != nil || trialEndsAt != nil)
+    }
 }
 
 struct Tally: Codable, Equatable {
@@ -207,20 +225,35 @@ enum PendingTally {
     /// Which lines to add now and which must wait. Lines already in the list (same name, any case)
     /// are dropped. Without Pro, only `freeSlots` fit; the most expensive go first, because those
     /// are the ones worth a reminder.
-    static func plan(lines: [TallyLine], existingNames: [String], freeSlots: Int?) -> (add: [TallyLine], wait: [TallyLine]) {
+    static func plan(lines: [TallyLine], existingNames: [String], freeSlots: Int?,
+                     cost: (TallyLine) -> Decimal = { $0.yearlyCost }) -> (add: [TallyLine], wait: [TallyLine]) {
         let existing = Set(existingNames.map { $0.lowercased() })
-        let fresh = lines.filter { !existing.contains($0.name.lowercased()) }
+        var seen = Set<String>()
+        let fresh = lines.filter { !existing.contains($0.name.lowercased()) && seen.insert($0.name.lowercased()).inserted }
         guard let freeSlots else { return (fresh, []) }
-        let ranked = fresh.sorted { $0.amount > $1.amount }
+        let ranked = fresh.sorted { cost($0) > cost($1) }
         let slots = max(freeSlots, 0)
         return (Array(ranked.prefix(slots)), Array(ranked.dropFirst(slots)))
     }
 }
 
-/// Adds the first-run slip to the signed-in person's list.
+/// Adds lines to the person's list: the first-run slip after sign-up, and what a search of their email
+/// found. One path, so the free limit is handled the same way everywhere, and in the open.
 @MainActor
 enum TallyImporter {
     private static let waitingKey = "first_run_tally_waiting"
+
+    /// What happened to each line, by name, so the screen can say it.
+    struct Outcome: Equatable {
+        /// Now on the list and watched.
+        var added: [String] = []
+        /// Didn't fit under the free limit. Kept, and added the moment Pro starts.
+        var waiting: [String] = []
+        /// Already on the list (same name, any case).
+        var alreadyListed: [String] = []
+        /// Already on the list without a renewal date, which the receipts supplied.
+        var datesFilled: [String] = []
+    }
 
     /// Lines that didn't fit under the free limit. The paywall offers the choice: pick which ones
     /// Pausely watches, or let Pro watch them all.
@@ -231,28 +264,67 @@ enum TallyImporter {
 
     static func clearWaiting(defaults: UserDefaults = .standard) { defaults.removeObject(forKey: waitingKey) }
 
+    private static func saveWaiting(_ lines: [TallyLine], defaults: UserDefaults) {
+        if lines.isEmpty {
+            clearWaiting(defaults: defaults)
+        } else if let data = try? JSONEncoder().encode(lines) {
+            defaults.set(data, forKey: waitingKey)
+        }
+    }
+
     static func importPending(into store: SubscriptionStore, payments: PaymentManager = .shared,
                               defaults: UserDefaults = .standard) async {
         guard let tally = PendingTally.load(defaults: defaults) else { return }
         // Clear first: a second run (another tab appearing, a relaunch mid-import) must not add twice.
         PendingTally.clear(defaults: defaults)
+        await add(tally.lines, into: store, payments: payments, defaults: defaults)
+    }
+
+    /// Adds what fits, keeps the rest waiting, and fills in a missing renewal date on a subscription that
+    /// is already listed when the line has one from a receipt. Nothing is dropped without being reported.
+    @discardableResult
+    static func add(_ lines: [TallyLine], into store: SubscriptionStore, payments: PaymentManager = .shared,
+                    rates: CurrencyRates = CurrencyManager.shared.rates, defaults: UserDefaults = .standard) async -> Outcome {
+        var outcome = Outcome()
+
+        // Already listed: never added twice. A date read from receipts fills an empty one, when the
+        // billing period agrees; an amount or a date the person entered is never changed.
+        for line in lines {
+            guard let existing = store.subscriptions.first(where: { $0.name.caseInsensitiveCompare(line.name) == .orderedSame }) else { continue }
+            outcome.alreadyListed.append(existing.name)
+            if existing.nextBillingDate == nil, let anchor = line.anchor, existing.billingFrequency == (line.frequency ?? .monthly) {
+                var updated = existing
+                updated.nextBillingDate = anchor
+                if (try? await store.updateSubscription(updated)) != nil { outcome.datesFilled.append(existing.name) }
+            }
+        }
 
         let unlimited = payments.isUnlocked(.unlimitedSubscriptions)
         let slots = unlimited ? nil : FreeTier.subscriptionLimit - store.subscriptions.count
-        let plan = PendingTally.plan(lines: tally.lines, existingNames: store.subscriptions.map(\.name), freeSlots: slots)
+        let display = CurrencyManager.shared.selectedCurrency
+        let plan = PendingTally.plan(lines: lines, existingNames: store.subscriptions.map(\.name), freeSlots: slots) { line in
+            // Ranked in one currency; a currency with no rate ranks last instead of by its raw number.
+            rates.convert(line.yearlyCost, from: line.currency, to: display) ?? 0
+        }
 
         var waiting = plan.wait
         // Added cheapest first, so the most expensive ends up at the top of the list.
         for line in plan.add.reversed() {
-            let subscription = Subscription(name: line.name, category: line.category, amount: line.amount,
-                                            currency: line.currency, billingFrequency: .monthly, nextBillingDate: nil)
-            do { _ = try await store.addSubscription(subscription) } catch { waiting.append(line) }
+            do {
+                _ = try await store.addSubscription(line.subscription())
+                outcome.added.insert(line.name, at: 0)
+            } catch {
+                waiting.append(line)
+            }
         }
-        if waiting.isEmpty {
-            clearWaiting(defaults: defaults)
-        } else if let data = try? JSONEncoder().encode(waiting) {
-            defaults.set(data, forKey: waitingKey)
-        }
+        outcome.waiting = waiting.map(\.name)
+
+        // What was already waiting stays; a line found again replaces its older copy.
+        let names = Set(waiting.map { $0.name.lowercased() })
+        let listed = Set(store.subscriptions.map { $0.name.lowercased() })
+        let earlier = waitingLines(defaults: defaults).filter { !names.contains($0.name.lowercased()) && !listed.contains($0.name.lowercased()) }
+        saveWaiting(earlier + waiting, defaults: defaults)
+        return outcome
     }
 }
 
@@ -262,10 +334,7 @@ extension TallyImporter {
         let lines = waitingLines(defaults: defaults)
         guard !lines.isEmpty else { return }
         clearWaiting(defaults: defaults)
-        var tally = Tally(currency: lines[0].currency)
-        tally.restore(lines)
-        PendingTally.save(tally, defaults: defaults)
-        await importPending(into: store, defaults: defaults)
+        await add(lines, into: store, defaults: defaults)
     }
 }
 

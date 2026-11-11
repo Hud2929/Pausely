@@ -29,6 +29,8 @@ struct ReceiptSignal: Codable, Equatable, Identifiable {
     var spoofSuspected: Bool? = nil
     /// What the plan costs once an introductory price ends ("$134.99 for 1 year, then $269.99/year").
     var nextAmount: Decimal? = nil
+    /// The introductory price as stated, before tax, so the rise is measured like with like.
+    var introAmount: Decimal? = nil
 }
 
 // MARK: - Output Models
@@ -234,7 +236,7 @@ struct SubscriptionIntelligenceEngine {
         }
 
         let cancellation = signals.last { $0.kind == .cancellation }
-        let trialSignals = signals.filter { $0.kind == .trialStarted || $0.kind == .trialEnding }
+        let trialSignals = signals.filter { ($0.kind == .trialStarted || $0.kind == .trialEnding) && !$0.promotional }
 
         var results: [ProvenSubscription] = []
 
@@ -549,18 +551,23 @@ struct SubscriptionIntelligenceEngine {
                                        calendar: Calendar,
                                        currency: String) -> ProvenSubscription? {
         guard let signal = eligible.last, let amount = signal.amount else { return nil }
-        let explicit = signal.renewalLanguage || signal.platform == "apple" || signal.platform == "googleplay"
-        guard explicit else { return nil }
+        let appStore = signal.platform == "apple" || signal.platform == "googleplay"
+        // An app-store receipt is proof only when it says the item renews: the same stores sell one-off
+        // purchases inside the same apps.
+        guard signal.renewalLanguage else { return nil }
         let structured = signal.markup == .subscription
         let knownPure = merchant.isKnown && merchant.kind == .pureSubscription
-        guard knownPure || (structured && merchant.nameQuality >= 55) else { return nil }
+        let storeSubscription = appStore && merchant.nameQuality >= 55
+        guard knownPure || (structured && merchant.nameQuality >= 55) || storeSubscription else { return nil }
 
         let frequency = signal.cadenceHint ?? .monthly
         var score = 30 + 12 + (knownPure ? 20 : 0) + (structured ? 25 : 0)
-        var reasons = [knownPure ? L10n.string("\(merchant.displayName) is a known subscription service") : L10n.string("The receipt includes structured subscription data"),
+        var reasons = [knownPure ? L10n.string("\(merchant.displayName) is a known subscription service")
+                       : structured ? L10n.string("The receipt includes structured subscription data")
+                       : L10n.string("Billed through an app-store subscription"),
                        L10n.string("The receipt says it renews on a schedule")]
         if signal.cadenceHint == nil { reasons.append(L10n.string("Billing period assumed monthly until a second charge confirms it")) ; score -= 6 }
-        if signal.platform == "apple" || signal.platform == "googleplay" { score += 10 }
+        if appStore { score += knownPure ? 10 : 25 }
         if amount < 1 { score -= 18 }
 
         var status: ProvenSubscription.Status = .active
@@ -568,8 +575,18 @@ struct SubscriptionIntelligenceEngine {
         var nextDate: Date? = next
         if missed >= 1, let expected = nextExpected(after: signal.date, frequency: frequency, calendar: calendar),
            now.timeIntervalSince(expected) / 86_400 > graceDays(frequency) {
-            status = .likelyEnded; nextDate = nil
-            reasons.append(L10n.string("No later charge found since \(shortDate(signal.date))"))
+            let silent = MerchantCatalog.silentRenewalDomains.contains(MerchantCatalog.registrableDomain(signal.senderDomain))
+            if silent, cancellation == nil {
+                // The store told them it started and has not told them it stopped; it never sends renewal
+                // receipts. Probably still running, and worth a look rather than a claim.
+                score = min(score, 52)
+                reasons = [L10n.string("Subscribed on \(shortDate(signal.date))"),
+                           L10n.string("No cancellation email found. This store doesn't email a receipt for each renewal, so it is probably still running.")]
+                if let next { reasons.append(L10n.string("Next charge expected around \(shortDate(next))")) }
+            } else {
+                status = .likelyEnded; nextDate = nil
+                reasons.append(L10n.string("No later charge found since \(shortDate(signal.date))"))
+            }
         }
         if let cancellation, cancellation.date >= signal.date { status = .cancelled; nextDate = nil; reasons.append(L10n.string("Cancelled on \(shortDate(cancellation.date))")) }
 
@@ -724,15 +741,18 @@ struct SubscriptionIntelligenceEngine {
                       ($0.kind == .charge || $0.kind == .renewalNotice) && $0.nextAmount != nil
                           && abs($0.date.timeIntervalSince(lastCharge)) < 3 * 86_400
                   }),
-                  let next = signal.nextAmount, next > sub.amount else { continue }
-            let impact = (next - sub.amount) * ProvenSubscription.periodsPerYear(sub.frequency)
+                  let next = signal.nextAmount else { continue }
+            // The email's own two prices when it states both; the amount charged (tax included) otherwise.
+            let intro = signal.introAmount ?? sub.amount
+            guard next > intro else { continue }
+            let impact = (next - intro) * ProvenSubscription.periodsPerYear(sub.frequency)
             let newPrice = format(next, sub.currency)
             let title = sub.nextBillingDate.map { L10n.string("\(sub.name) goes up to \(newPrice) on \(shortDate($0))") }
                 ?? L10n.string("\(sub.name) goes up to \(newPrice) at the next renewal")
             out.append(IntelligenceInsight(
                 id: "intro|\(sub.id)", kind: .priceChangeNotice,
                 title: title,
-                detail: L10n.string("You're on an introductory price of \(format(sub.amount, sub.currency)). It renews at \(newPrice) unless you cancel or switch plans first."),
+                detail: L10n.string("You're on an introductory price of \(format(intro, sub.currency)). It renews at \(newPrice) unless you cancel or switch plans first."),
                 subscriptionId: sub.id, annualImpact: impact))
         }
         return out

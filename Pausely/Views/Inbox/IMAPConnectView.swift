@@ -45,29 +45,43 @@ struct IMAPConnectView: View {
     var body: some View {
         NavigationStack {
             ScrollView {
-                VStack(alignment: .leading, spacing: 18) {
+                VStack(alignment: .leading, spacing: 24) {
                     header
-                    fields
                     if let preset = effectivePreset { steps(preset) }
-                    if let error {
-                        Text(error)
-                            .font(.footnote)
+                    fields
+                    VStack(alignment: .leading, spacing: 12) {
+                        if let error {
+                            Label {
+                                Text(verbatim: error).fixedSize(horizontal: false, vertical: true)
+                            } icon: {
+                                Image(systemName: "exclamationmark.circle")
+                            }
+                            .font(.subheadline)
                             .foregroundStyle(Color.due)
                             .accessibilityIdentifier("imapError")
+                        }
+                        Button(action: connect) {
+                            if connecting { ProgressView().tint(Color.paperInk) } else { Text("Connect and search") }
+                        }
+                        .buttonStyle(.ink)
+                        .disabled(!canConnect)
+                        .accessibilityIdentifier("imapConnect")
+                        Text("Pausely only reads. It opens your mailbox read-only and never marks anything as read. The app password stays in this iPhone's Keychain; you can remove it at your provider whenever you like.")
+                            .font(.footnote)
+                            .foregroundStyle(Color.inkTextFaint)
+                            .fixedSize(horizontal: false, vertical: true)
                     }
-                    connectButton
-                    Text("Pausely only reads. It opens your mail read-only, never marks anything as read, and can't send or delete email. The app password stays on this iPhone; remove it at your provider whenever you like.")
-                        .font(.caption)
-                        .foregroundStyle(Color.inkTextFaint)
                 }
-                .padding(20)
+                .padding(.horizontal, Layout.margin)
+                .padding(.top, 16)
+                .padding(.bottom, 24)
             }
+            .scrollDismissesKeyboard(.interactively)
             .background(Color.ink.ignoresSafeArea())
-            .navigationTitle(effectivePreset.map { Text(verbatim: $0.name) } ?? Text("Other email"))
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .topBarLeading) {
-                    Button("Cancel") { dismiss() }.foregroundStyle(Color.inkText)
+                    Button("Cancel") { dismiss() }.foregroundStyle(Color.inkTextMuted)
                 }
             }
             .onAppear { focused = .address }
@@ -75,109 +89,96 @@ struct IMAPConnectView: View {
     }
 
     private var header: some View {
-        (effectivePreset == nil
-             ? Text("Enter your email address, an app password and your provider's IMAP server.")
-             : Text("Enter your email address and an app password. It's a separate password just for Pausely, so your main password stays private."))
-            .font(.subheadline)
-            .foregroundStyle(Color.inkTextMuted)
-    }
-
-    private var fields: some View {
-        VStack(spacing: 10) {
-            TextField("Email address", text: $address, prompt: Text(verbatim: "you@example.com"))
-                .textContentType(.emailAddress)
-                .keyboardType(.emailAddress)
-                .textInputAutocapitalization(.never)
-                .autocorrectionDisabled()
-                .focused($focused, equals: .address)
-                .submitLabel(.next)
-                .onSubmit { focused = .password }
-                .padding(14)
-                .background(RoundedRectangle(cornerRadius: 12).fill(Color.inkRaised))
-                .accessibilityIdentifier("imapAddress")
-            SecureField("App password", text: $password)
-                .textContentType(.password)
-                .textInputAutocapitalization(.never)
-                .autocorrectionDisabled()
-                .focused($focused, equals: .password)
-                .submitLabel(.go)
-                .onSubmit { if canConnect { connect() } }
-                .padding(14)
-                .background(RoundedRectangle(cornerRadius: 12).fill(Color.inkRaised))
-                .accessibilityIdentifier("imapPassword")
-            if needsServer {
-                HStack(spacing: 10) {
-                    TextField("IMAP server", text: $customHost, prompt: Text(verbatim: suggestedHost ?? "imap.example.com"))
-                        .keyboardType(.URL)
-                        .textInputAutocapitalization(.never)
-                        .autocorrectionDisabled()
-                        .focused($focused, equals: .host)
-                        .padding(14)
-                        .background(RoundedRectangle(cornerRadius: 12).fill(Color.inkRaised))
-                        .accessibilityIdentifier("imapHost")
-                    TextField("Port", text: $customPort, prompt: Text(verbatim: "993"))
-                        .keyboardType(.numberPad)
-                        .focused($focused, equals: .port)
-                        .frame(width: 70)
-                        .padding(14)
-                        .background(RoundedRectangle(cornerRadius: 12).fill(Color.inkRaised))
-                        .accessibilityIdentifier("imapPort")
-                }
-                Text("Pausely only connects over an encrypted connection (IMAP with SSL/TLS, usually port 993).")
-                    .font(.caption)
-                    .foregroundStyle(Color.inkTextFaint)
-            }
-        }
-        .foregroundStyle(Color.inkText)
-    }
-
-    private func steps(_ preset: IMAPPreset) -> some View {
         VStack(alignment: .leading, spacing: 10) {
-            Text("Create an app password")
-                .font(.subheadline.weight(.semibold))
+            (effectivePreset.map { Text("Connect \($0.name)") } ?? Text("Connect your email"))
+                .font(.question(.title, weight: .bold))
                 .foregroundStyle(Color.inkText)
+                .fixedSize(horizontal: false, vertical: true)
+                .accessibilityAddTraits(.isHeader)
+            (effectivePreset == nil
+                 ? Text("Enter your email address, an app password and your provider's IMAP server.")
+                 : Text("You'll need an app password: a separate password just for Pausely, so your main password stays private."))
+                .font(.body)
+                .foregroundStyle(Color.inkTextMuted)
+                .fixedSize(horizontal: false, vertical: true)
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+    }
+
+    /// How to get the app password, before the field that asks for it.
+    private func steps(_ preset: IMAPPreset) -> some View {
+        VStack(alignment: .leading, spacing: 12) {
             ForEach(Array(preset.steps.enumerated()), id: \.offset) { index, step in
-                HStack(alignment: .top, spacing: 10) {
+                HStack(alignment: .firstTextBaseline, spacing: 12) {
                     Text(index + 1, format: .number)
-                        .font(.caption.weight(.bold))
+                        .font(.proof(.subheadline, weight: .semibold))
                         .foregroundStyle(Color.inkText)
-                        .frame(width: 18, alignment: .leading)
-                    Text(step)
-                        .font(.footnote)
+                        .frame(minWidth: 16, alignment: .leading)
+                    Text(verbatim: step)
+                        .font(.subheadline)
                         .foregroundStyle(Color.inkTextMuted)
+                        .fixedSize(horizontal: false, vertical: true)
                 }
+                .accessibilityElement(children: .combine)
             }
             if let page = preset.passwordPage {
-                Button {
-                    openURL(page)
-                } label: {
-                    Label("Open \(Self.pageName(page) ?? preset.name)", systemImage: "arrow.up.right.square")
-                        .font(.footnote.weight(.semibold))
-                        .foregroundStyle(Color.inkText)
+                Button(action: { openURL(page) }) {
+                    Label("Open \(Self.pageName(page) ?? preset.name)", systemImage: "arrow.up.forward")
                 }
+                .buttonStyle(.ink(.quiet))
                 .accessibilityIdentifier("imapOpenPasswordPage")
             }
         }
         .frame(maxWidth: .infinity, alignment: .leading)
-        .padding(14)
-        .background(RoundedRectangle(cornerRadius: 14).fill(Color.inkRaised))
     }
 
-    private var connectButton: some View {
-        Button(action: connect) {
-            HStack {
-                if connecting { ProgressView().tint(.black) }
-                (connecting ? Text("Checking…") : Text("Connect"))
-                    .font(.body.weight(.semibold))
+    private var fields: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            InkTextField(placeholder: "you@example.com", text: $address, keyboardType: .emailAddress, autocapitalization: .never)
+                .textContentType(.emailAddress)
+                .autocorrectionDisabled()
+                .focused($focused, equals: .address)
+                .submitLabel(.next)
+                .onSubmit { focused = .password }
+                .accessibilityLabel(Text("Email address"))
+                .accessibilityIdentifier("imapAddress")
+            HStack(spacing: 10) {
+                InkTextField(placeholder: L10n.string("App password"), text: $password, isSecure: true, autocapitalization: .never)
+                    .autocorrectionDisabled()
+                    .focused($focused, equals: .password)
+                    .submitLabel(.go)
+                    .onSubmit { if canConnect { connect() } }
+                    .accessibilityLabel(Text("App password"))
+                    .accessibilityIdentifier("imapPassword")
+                // The system's own paste control: one tap after copying the password, and no permission prompt.
+                PasteButton(payloadType: String.self) { strings in
+                    if let pasted = strings.first { password = pasted.trimmingCharacters(in: .whitespacesAndNewlines) }
+                }
+                .labelStyle(.iconOnly)
+                .buttonBorderShape(.roundedRectangle(radius: Layout.tileRadius))
+                .tint(Color.inkLifted)
+                .accessibilityLabel(Text("Paste app password"))
+                .accessibilityIdentifier("imapPastePassword")
             }
-            .foregroundStyle(Color.ink)
-            .frame(maxWidth: .infinity)
-            .frame(height: 52)
-            .background(RoundedRectangle(cornerRadius: 16).fill(canConnect ? Color.paper : Color.inkLifted))
+            if needsServer {
+                HStack(spacing: 10) {
+                    InkTextField(placeholder: suggestedHost ?? "imap.example.com", text: $customHost, keyboardType: .URL, autocapitalization: .never)
+                        .autocorrectionDisabled()
+                        .focused($focused, equals: .host)
+                        .accessibilityLabel(Text("IMAP server"))
+                        .accessibilityIdentifier("imapHost")
+                    InkTextField(placeholder: "993", text: $customPort, keyboardType: .numberPad)
+                        .focused($focused, equals: .port)
+                        .frame(width: 88)
+                        .accessibilityLabel(Text("Port"))
+                        .accessibilityIdentifier("imapPort")
+                }
+                Text("Pausely only connects over an encrypted connection (IMAP with SSL/TLS, usually port 993).")
+                    .font(.footnote)
+                    .foregroundStyle(Color.inkTextFaint)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
         }
-        .buttonStyle(PlainButtonStyle())
-        .disabled(!canConnect)
-        .accessibilityIdentifier("imapConnect")
     }
 
     private func connect() {

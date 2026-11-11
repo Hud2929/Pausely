@@ -119,6 +119,7 @@ final class LiveMailboxTests: XCTestCase {
 
     /// PAUSELY_REAL_MAIL_DIR=<folder of .eml files>. Prints what each message became and the final list,
     /// and writes it to PAUSELY_REPORT_PATH when set. Real mail stays outside the repository.
+    @MainActor
     func testRealMailDirectory() throws {
         guard let directory = environment("PAUSELY_REAL_MAIL_DIR").map({ URL(fileURLWithPath: $0) }) else {
             throw XCTSkip("set PAUSELY_REAL_MAIL_DIR")
@@ -128,7 +129,7 @@ final class LiveMailboxTests: XCTestCase {
             .sorted { $0.lastPathComponent < $1.lastPathComponent }
         try XCTSkipIf(files.isEmpty, "no .eml files")
 
-        let catalog = MerchantCatalog.builtin
+        let catalog = InboxScanner.buildCatalog()   // the app's own: built-in names plus the catalog's
         var lines: [String] = []
         var signals: [ReceiptSignal] = []
         for file in files {
@@ -138,14 +139,16 @@ final class LiveMailboxTests: XCTestCase {
                 lines.append("UNPARSED \(name)")
                 continue
             }
-            if let result = EmailSignalExtractor.extract(email, catalog: catalog) {
+            let results = EmailSignalExtractor.extractAll(email, catalog: catalog)
+            for result in results {
                 let s = result.signal
                 signals.append(s)
                 lines.append("SIGNAL \(name) \(s.senderDomain) | \(email.subject.prefix(50)) | hint=\(s.merchantHint ?? "-") kind=\(s.kind) "
                              + "amount=\(s.amount.map { "\($0)" } ?? "-") \(s.currency ?? "-") cadence=\(s.cadenceHint.map { "\($0)" } ?? "-") "
                              + "platform=\(s.platform) renewal=\(s.renewalLanguage) oneTime=\(s.oneTimeLanguage) promo=\(s.promotional) "
                              + "spoof=\(s.spoofSuspected ?? false)")
-            } else {
+            }
+            if results.isEmpty {
                 lines.append("DROPPED \(name) \(email.from.prefix(40)) | \(email.subject.prefix(50)) | text=\(email.bodyText.count) html=\(email.bodyHTML?.count ?? 0)")
             }
         }

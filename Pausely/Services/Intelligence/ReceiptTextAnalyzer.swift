@@ -36,6 +36,8 @@ enum ReceiptTextAnalyzer {
         var nextAmount: Decimal? = nil
         /// The words around the amount say it was charged ("amount paid", "total"), not just what a plan costs.
         var chargeEvidence = false
+        /// The introductory price as the email states it, before tax, when it also states what follows.
+        var introAmount: Decimal? = nil
     }
 
     // MARK: Entry point
@@ -52,11 +54,12 @@ enum ReceiptTextAnalyzer {
         // A brand mentioned only in passing (e.g. "DashPass savings" on an order) must not rename that order.
         if product != nil, productHint(subject: subject, body: "") == nil, flags.oneTime || !flags.renewal { product = nil }
         let kind = classify(flags: flags, hasAmount: money != nil)
-        var next = introductoryPriceEnd(in: subject + "\n" + cappedBody)
-        if let current = money?.amount, let later = next, later <= current { next = nil }
+        let stated = introductoryPrices(in: subject + "\n" + cappedBody)
+        var next = stated?.next
+        if let current = stated?.intro ?? money?.amount, let later = next, later <= current { next = nil }
         return Analysis(money: money, flags: flags, frequency: frequency,
                         trialDays: trialDays, productHint: product, kind: kind, nextAmount: next,
-                        chargeEvidence: candidate?.evidence ?? false)
+                        chargeEvidence: candidate?.evidence ?? false, introAmount: next == nil ? nil : stated?.intro)
     }
 
     // MARK: Classification
@@ -156,13 +159,32 @@ enum ReceiptTextAnalyzer {
             "無料体験は", "無料期間が終了", "無料体験の終了", "トライアル終了", "تنتهي الفترة التجريبية", "무료 체험이 종료"
         ])
 
-        flags.trialStart = flags.trialEnding || containsAny(text, [
+        let mentionsTrial = containsAny(text, [
             "free trial", "trial has started", "your trial", "trial begins", "start your trial", "trial period",
             "welcome to your trial", "trial started", "days free",
             "essai gratuit", "prueba gratuita", "kostenlose testphase", "kostenloser test",
             "prova gratuita", "teste grátis", "avaliação gratuita", "無料体験", "無料トライアル", "お試し期間",
             "الفترة التجريبية", "تجربة مجانية", "무료 체험"
         ])
+        // An invitation to start a trial is not a trial. "You're eligible for 90 days free. Subscribe now"
+        // is an offer; "Welcome to Prime. Plan type: 30-day free trial. Renewal date: June 10" has begun.
+        let invites = containsAny(text, [
+            "you're eligible", "you are eligible", "to activate", "activate your", "activate now", "claim your", "redeem",
+            "subscribe now", "sign up now", "join now", "start your free trial", "start your trial", "start free trial",
+            "try it free", "try free", "try now", "new subscribers only", "new members only", "limited time", "limited-time",
+            "offer ends", "offer expires", "terms apply", "get started today", "don't miss",
+            "profitez", "inscrivez-vous", "offre limitée", "aprovecha", "suscríbete ahora", "oferta limitada",
+            "jetzt testen", "jetzt abonnieren", "nur für kurze zeit", "今すぐ登録", "今すぐ始め", "期間限定", "اشترك الآن", "عرض لفترة محدودة"
+        ])
+        let begun = containsAny(text, [
+            "you subscribed", "you've subscribed", "you have subscribed", "successfully subscribed", "has started", "have started",
+            "trial started", "started on", "welcome to", "thanks for starting", "thank you for starting", "renewal date",
+            "after your trial", "trial ends on", "trial will end", "order number", "order date",
+            "a commencé", "bienvenue", "ha comenzado", "te damos la bienvenida", "hat begonnen", "willkommen",
+            "開始されました", "ようこそ", "بدأت", "مرحبًا بك في"
+        ])
+        let isInvitation = invites && !begun
+        flags.trialStart = (flags.trialEnding || mentionsTrial) && !isInvitation
 
         flags.priceChange = containsAny(text, [
             "price change", "price increase", "price is changing", "price will change", "new price", "increase in price",
@@ -211,7 +233,7 @@ enum ReceiptTextAnalyzer {
             "pagamento recusado", "o pagamento falhou", "お支払いに失敗", "決済に失敗", "فشل الدفع", "결제 실패", "결제에 실패"
         ])
 
-        flags.marketing = promotional || containsAny(subjectLower, [
+        flags.marketing = promotional || (isInvitation && mentionsTrial) || containsAny(subjectLower, [
             "% off", "sale", "limited time", "special offer", "exclusive offer", "newsletter", "deal of", "save up to",
             "shop now", "last chance", "don't miss", "flash sale", "black friday", "cyber monday", "new arrivals"
         ])
@@ -349,78 +371,201 @@ enum ReceiptTextAnalyzer {
         chargeCandidate(subject: subject, body: body)?.money
     }
 
+    /// Every money figure in a text, in reading order: the building block for receipts that list several
+    /// charges, where each figure belongs to the lines just above it.
+    static func moneyFigures(in text: String) -> [(money: Money, range: NSRange)] {
+        let ns = text as NSString
+        let full = NSRange(location: 0, length: ns.length)
+        var found: [(money: Money, range: NSRange)] = []
+        func add(_ amount: String, _ token: String, _ range: NSRange) {
+            let currency = currencyCode(forToken: token)
+            // Zero figures are kept ("Tax $0.00"): they still separate one label from the next.
+            guard let parsed = parseAmount(amount, currency: currency) else { return }
+            found.append((Money(amount: parsed.value, currency: currency), range))
+        }
+        prefixRegex?.enumerateMatches(in: text, range: full) { match, _, _ in
+            guard let match else { return }
+            add(ns.substring(with: match.range(at: 2)), ns.substring(with: match.range(at: 1)), match.range)
+        }
+        suffixRegex?.enumerateMatches(in: text, range: full) { match, _, _ in
+            guard let match, !found.contains(where: { NSIntersectionRange($0.range, match.range).length > 0 }) else { return }
+            add(ns.substring(with: match.range(at: 1)), ns.substring(with: match.range(at: 2)), match.range)
+        }
+        return found.sorted { $0.range.location < $1.range.location }
+    }
+
+    /// True when the words nearest a figure call it a subtotal, a tax, shipping or a discount.
+    static func isPartOfASum(label: String) -> Bool {
+        let nearest = String(label.suffix(22))
+        return partLabel?.firstMatch(in: nearest, range: NSRange(location: 0, length: (nearest as NSString).length)) != nil
+    }
+
+    /// True when the words nearest a figure call it the total.
+    static func isTotal(label: String) -> Bool {
+        let range = NSRange(location: 0, length: (label as NSString).length)
+        let cleaned = (subtotalWord?.stringByReplacingMatches(in: label, range: range, withTemplate: " ") ?? label).lowercased()
+        let nearest = String(cleaned.suffix(26))
+        return totalLabels.contains(where: nearest.contains)
+    }
+
+    /// Labels that say "this figure is what was charged" when they stand right before it.
+    private static let totalLabels = [
+        "total", "amount paid", "amount charged", "amount due", "you paid", "total paid", "total charged", "grand total",
+        "montant total", "montant payé", "montant facturé", "importe total", "importe cobrado", "total pagado",
+        "gesamtbetrag", "gesamt", "gesamtsumme", "betrag", "totale", "importo", "valor total",
+        "合計", "請求額", "ご請求額", "支払金額", "お支払い金額", "합계", "결제 금액", "결제금액",
+        "المبلغ المدفوع", "الإجمالي", "المجموع"
+    ]
+
+    /// Labels that say "this figure is part of the sum, not the sum": a subtotal, a tax, shipping, a discount.
+    /// Whole words only: "vat" is inside "activate" and "iva" inside "private".
+    private static let partLabel: NSRegularExpression? = try? NSRegularExpression(
+        pattern: "\\b(?:sub[- ]?total|sous-total|zwischensumme|tax|taxes|vat|gst|hst|pst|qst|tva|mwst|ust|iva|shipping|"
+            + "delivery|livraison|versand|envío|discount|rabatt|remise|descuento)\\b|小計|소계|المجموع الفرعي|税|세금|ضريبة|送料",
+        options: [.caseInsensitive])
+
+    /// "Subtotal" must not read as "total".
+    private static let subtotalWord: NSRegularExpression? = try? NSRegularExpression(
+        pattern: "sub[- ]?total|sous-total|zwischensumme|小計|소계|المجموع الفرعي", options: [.caseInsensitive])
+
     /// The charged amount, and whether the words around it say a charge happened ("amount paid", "total",
     /// "we charged") rather than only naming a plan's price.
+    ///
+    /// A receipt is a column of labelled figures ("Plan $20.00 · Tax: $2.60 · Total: $22.60"). Each figure is
+    /// judged first by its own label, the words between the figure before it and itself; words elsewhere
+    /// count for less and can't veto it. "Tax:" disqualifies the 2.60 it labels, not the 20.00 before it.
     static func chargeCandidate(subject: String, body: String) -> (money: Money, evidence: Bool)? {
         let text = normalizingDigits(subject + "\n" + body)
         let ns = text as NSString
-        var candidates: [(money: Money, score: Int, position: Int, evidence: Bool)] = []
+        let full = NSRange(location: 0, length: ns.length)
 
-        func consider(amountString: String, currency: String?, range: NSRange, numberRange: NSRange) {
+        struct Figure {
+            var amount: String
+            var currency: String?
+            var range: NSRange
+            var numberRange: NSRange
+        }
+        var figures: [Figure] = []
+        prefixRegex?.enumerateMatches(in: text, range: full) { match, _, _ in
+            guard let match else { return }
+            figures.append(Figure(amount: ns.substring(with: match.range(at: 2)),
+                                  currency: currencyCode(forToken: ns.substring(with: match.range(at: 1))),
+                                  range: match.range, numberRange: match.range(at: 2)))
+        }
+        suffixRegex?.enumerateMatches(in: text, range: full) { match, _, _ in
+            guard let match else { return }
+            // "$49.00 USD" was already read with its symbol; the code after it only names the currency.
+            // (And "Qty 1 $12.00" is not one dollar: a figure never shares characters with another.)
+            if figures.contains(where: { NSIntersectionRange($0.range, match.range).length > 0 }) { return }
+            figures.append(Figure(amount: ns.substring(with: match.range(at: 1)),
+                                  currency: currencyCode(forToken: ns.substring(with: match.range(at: 2))),
+                                  range: match.range, numberRange: match.range(at: 1)))
+        }
+        figures.sort { $0.range.location < $1.range.location }
+
+        var candidates: [(money: Money, score: Int, position: Int, evidence: Bool)] = []
+        for (index, figure) in figures.enumerated() {
+            let range = figure.range
             // "1 299,00 €" could be a quantity and a price, or a price over a thousand: too unsure to use.
-            if numberRange.location >= 2 {
-                let lead = ns.substring(with: NSRange(location: numberRange.location - 2, length: 2))
-                if lead.range(of: "^\\d[ \\x{00A0}\\x{202F}]$", options: .regularExpression) != nil { return }
+            if figure.numberRange.location >= 2 {
+                let lead = ns.substring(with: NSRange(location: figure.numberRange.location - 2, length: 2))
+                if lead.range(of: "^\\d[ \\x{00A0}\\x{202F}]$", options: .regularExpression) != nil { continue }
             }
             // A longer run of digits (an order number, a date) is not an amount.
-            if numberRange.location >= 1, range.location == numberRange.location {
-                let previous = ns.substring(with: NSRange(location: numberRange.location - 1, length: 1))
-                if previous.range(of: "[\\d.,]", options: .regularExpression) != nil { return }
+            if figure.numberRange.location >= 1, range.location == figure.numberRange.location {
+                let previous = ns.substring(with: NSRange(location: figure.numberRange.location - 1, length: 1))
+                if previous.range(of: "[\\d.,]", options: .regularExpression) != nil { continue }
             }
-            guard let parsed = parseAmount(amountString, currency: currency) else { return }
-            let wholeUnits = currency.map(wholeUnitCurrencies.contains) ?? false
-            let ceiling: Decimal = wholeUnits ? 2_000_000 : 10_000
-            guard parsed.value > 0, parsed.value < ceiling else { return }
+            guard let parsed = parseAmount(figure.amount, currency: figure.currency) else { continue }
+            let wholeUnits = figure.currency.map(wholeUnitCurrencies.contains) ?? false
+            guard parsed.value > 0, parsed.value < (wholeUnits ? 2_000_000 : 10_000) else { continue }
 
-            let beforeStart = max(0, range.location - 70)
-            let before = ns.substring(with: NSRange(location: beforeStart, length: range.location - beforeStart)).lowercased()
-            let afterEnd = min(ns.length, range.location + range.length + 40)
-            let after = ns.substring(with: NSRange(location: range.location + range.length, length: afterEnd - (range.location + range.length))).lowercased()
-            let context = before + "|" + after
+            let end = range.location + range.length
+            let previousEnd = index > 0 ? figures[index - 1].range.location + figures[index - 1].range.length : 0
+            let nextStart = index + 1 < figures.count ? figures[index + 1].range.location : ns.length
+
+            // Which way does this line read? Most receipts put the label first ("Total: $22.60"). Some put the
+            // figure first ("CA$67.79 Total charged"): a line whose first figure has nothing before it and
+            // whose last figure has words after it.
+            let lineRange = ns.lineRange(for: NSRange(location: range.location, length: 0))
+            let onLine = figures.filter { NSLocationInRange($0.range.location, lineRange) }
+            var labelFollows = false
+            if let first = onLine.first, let last = onLine.last {
+                let lead = ns.substring(with: NSRange(location: lineRange.location, length: first.range.location - lineRange.location))
+                let lastEnd = last.range.location + last.range.length
+                let tail = ns.substring(with: NSRange(location: lastEnd, length: max(0, lineRange.location + lineRange.length - lastEnd)))
+                labelFollows = !lead.contains(where: \.isLetter) && tail.contains(where: \.isLetter)
+            }
+
+            let own: String      // the words that label this figure
+            let nearest: String  // the part of that label touching the figure
+            let wider: String    // the lead-in before the label
+            let after: String    // what follows the figure, up to the next one
+            if labelFollows {
+                let labelEnd = max(end, min(nextStart, end + 60, lineRange.location + lineRange.length))
+                own = ns.substring(with: NSRange(location: end, length: labelEnd - end)).lowercased()
+                nearest = String(own.prefix(26))
+                wider = ""
+                after = ""
+            } else {
+                // Back to the figure before it, at most 60 characters.
+                let ownStart = min(range.location, max(previousEnd, range.location - 60, 0))
+                own = ns.substring(with: NSRange(location: ownStart, length: range.location - ownStart)).lowercased()
+                nearest = String(own.suffix(26))
+                let widerStart = max(0, range.location - 70)
+                wider = widerStart < ownStart
+                    ? ns.substring(with: NSRange(location: widerStart, length: ownStart - widerStart)).lowercased() : ""
+                let afterEnd = max(end, min(nextStart, end + 40, ns.length))
+                after = ns.substring(with: NSRange(location: end, length: afterEnd - end)).lowercased()
+            }
+            // Words after a figure label the next figure when one follows closely ("$20.00  Tax: $2.60").
+            let labelsNext = nextStart >= end && nextStart - end <= 28
 
             var score = 0
             var evidence = false
-            for (word, weight) in positiveContext where context.contains(word) {
-                score += weight
-                if weight >= 3 || word == "total" || word == "gesamt" || word == "totale" || word == "合計" || word == "합계"
-                    || word == "الإجمالي" || word == "المجموع" { evidence = true }
+            func withoutSubtotal(_ text: String) -> String {
+                subtotalWord?.stringByReplacingMatches(in: text, range: NSRange(location: 0, length: (text as NSString).length),
+                                                       withTemplate: " ") ?? text
             }
-            for (word, weight) in negativeContext where context.contains(word) { score -= weight }
-            // "total" inside "subtotal" must not count as positive
-            if context.contains("subtotal") { score -= 2 }
-            if offerLead?.firstMatch(in: before, range: NSRange(location: 0, length: (before as NSString).length)) != nil {
+            let ownWithoutParts = withoutSubtotal(own)
+            for (word, weight) in positiveContext where ownWithoutParts.contains(word) {
+                score += weight * 2
+                if weight >= 3 || totalLabels.contains(word) { evidence = true }
+            }
+            // Only the label nearest the figure can make it a part of the sum ("Tax: $2.60").
+            let partRange = NSRange(location: 0, length: (nearest as NSString).length)
+            if partLabel?.firstMatch(in: nearest, range: partRange) != nil {
+                score -= 8
+                evidence = false
+            }
+            for (word, weight) in negativeContext where own.contains(word) { score -= weight * 2 }
+            // The label right against the figure decides most receipts: "Total: $22.60", "Amount paid $12.00".
+            let direct = withoutSubtotal(nearest)
+            if totalLabels.contains(where: direct.contains) { score += 6; evidence = true }
+
+            for (word, weight) in positiveContext where wider.contains(word) { score += weight }
+            let close = String(after.prefix(14))
+            for (word, weight) in positiveContext where close.contains(word) { score += weight }
+            if !labelsNext {
+                for (word, weight) in negativeContext where after.contains(word) { score -= weight }
+            } else {
+                // "$5 off", "$10.00 discount": said of this figure even when another follows.
+                for word in [" off", "discount", "rabatt", "remise", "descuento"] where close.contains(word) { score -= 6 }
+            }
+            if !labelFollows, offerLead?.firstMatch(in: own, range: NSRange(location: 0, length: (own as NSString).length)) != nil {
                 score -= 8
                 evidence = false
             }
             // A price without cents ("$8") is how offers and thresholds are written too ("$5 off", "over $50"):
             // it counts only when the words around it say it was charged.
-            if !parsed.hasDecimals && !wholeUnits && score < 3 { return }
+            if !parsed.hasDecimals && !wholeUnits && score < 3 { continue }
 
-            var resolvedCurrency = currency
-            if resolvedCurrency == nil {
+            var currency = figure.currency
+            if currency == nil {
                 let trailing = after.trimmingCharacters(in: .whitespaces).prefix(4).uppercased()
-                for code in ["USD", "CAD", "AUD", "GBP", "EUR", "NZD", "CHF"] where trailing.hasPrefix(code) { resolvedCurrency = code }
+                for code in ["USD", "CAD", "AUD", "GBP", "EUR", "NZD", "CHF"] where trailing.hasPrefix(code) { currency = code }
             }
-            candidates.append((Money(amount: parsed.value, currency: resolvedCurrency), score, range.location, evidence))
-        }
-
-        let full = NSRange(location: 0, length: ns.length)
-        var taken: [NSRange] = []
-
-        prefixRegex?.enumerateMatches(in: text, range: full) { match, _, _ in
-            guard let match else { return }
-            let token = ns.substring(with: match.range(at: 1))
-            taken.append(match.range)
-            consider(amountString: ns.substring(with: match.range(at: 2)), currency: currencyCode(forToken: token),
-                     range: match.range, numberRange: match.range(at: 2))
-        }
-        suffixRegex?.enumerateMatches(in: text, range: full) { match, _, _ in
-            guard let match else { return }
-            // "$49.00 USD" was already read with its symbol; the code after it only names the currency.
-            if taken.contains(where: { NSIntersectionRange($0, match.range(at: 1)).length > 0 }) { return }
-            let token = ns.substring(with: match.range(at: 2))
-            consider(amountString: ns.substring(with: match.range(at: 1)), currency: currencyCode(forToken: token),
-                     range: match.range, numberRange: match.range(at: 1))
+            candidates.append((Money(amount: parsed.value, currency: currency), score, range.location, evidence))
         }
 
         guard !candidates.isEmpty else { return nil }
@@ -551,11 +696,29 @@ enum ReceiptTextAnalyzer {
 
     /// "…, then $269.99/year" → 269.99: what an introductory price turns into.
     static func introductoryPriceEnd(in text: String) -> Decimal? {
-        let pattern = #"(?i)\bthen\s+(?:C\$|CA\$|US\$|A\$|AU\$|\$|€|£)\s?(\d{1,3}(?:,\d{3})*\.\d{2}|\d+\.\d{2})"#
-        guard let regex = try? NSRegularExpression(pattern: pattern) else { return nil }
+        introductoryPrices(in: text)?.next
+    }
+
+    /// "charged $134.99 for 1 year, then $269.99/year": the introductory price and what follows it, as the
+    /// email states them. Both are the plan's own prices, so their difference is the real rise even when
+    /// the amount charged has tax on top.
+    static func introductoryPrices(in text: String) -> (intro: Decimal?, next: Decimal)? {
+        let amount = #"(?:C\$|CA\$|US\$|A\$|AU\$|\$|€|£)\s?(\d{1,3}(?:,\d{3})*\.\d{2}|\d+\.\d{2})"#
         let ns = text as NSString
-        guard let match = regex.firstMatch(in: text, range: NSRange(location: 0, length: min(ns.length, 12_000))) else { return nil }
-        return Decimal(string: ns.substring(with: match.range(at: 1)).replacingOccurrences(of: ",", with: ""))
+        let range = NSRange(location: 0, length: min(ns.length, 12_000))
+        func value(_ match: NSTextCheckingResult, _ group: Int) -> Decimal? {
+            guard match.range(at: group).location != NSNotFound else { return nil }
+            return Decimal(string: ns.substring(with: match.range(at: group)).replacingOccurrences(of: ",", with: ""))
+        }
+        if let both = try? NSRegularExpression(pattern: "(?i)\(amount)[^.\\n]{0,40}?\\bthen\\s+\(amount)"),
+           let match = both.firstMatch(in: text, range: range), let next = value(match, 2) {
+            return (value(match, 1), next)
+        }
+        if let only = try? NSRegularExpression(pattern: "(?i)\\bthen\\s+\(amount)"),
+           let match = only.firstMatch(in: text, range: range), let next = value(match, 1) {
+            return (nil, next)
+        }
+        return nil
     }
 
     // MARK: Trial

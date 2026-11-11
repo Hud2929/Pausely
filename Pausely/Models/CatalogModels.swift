@@ -63,6 +63,23 @@ enum SubscriptionCategory: String, Codable, CaseIterable, Identifiable {
         }
         return match?.displayName ?? stored
     }
+    /// The category for a name from somewhere else (the receipt engine's merchant list, the catalog):
+    /// a raw value, a display name, or one of a few names that differ. "Other" when nothing fits.
+    static func matching(_ text: String?) -> SubscriptionCategory {
+        guard let text = text?.trimmingCharacters(in: .whitespaces), !text.isEmpty else { return .other }
+        if let match = allCases.first(where: {
+            $0.rawValue.caseInsensitiveCompare(text) == .orderedSame || $0.displayName.caseInsensitiveCompare(text) == .orderedSame
+        }) { return match }
+        switch text.lowercased() {
+        case "ai tools": return .aiTools
+        case "utilities": return .utilities
+        case "food & delivery": return .food
+        case "transportation": return .travel
+        case "design": return .productivity
+        default: return .other
+        }
+    }
+
     case entertainment
     case music
     case productivity
