@@ -18,6 +18,7 @@ Packages/
 # Build products
 *.plist
 !Info.plist
+!Configuration/PauselyWidgetInfo.plist
 
 # Environment / Secrets
 .env
@@ -89,3 +90,6 @@ logs/
 .codex/
 .sourcekit-lsp/
 .mcp.json
+
+# The founder's own marketing and business notes: on this Mac only, never in the public repository
+private/

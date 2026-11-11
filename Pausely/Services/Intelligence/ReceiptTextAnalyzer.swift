@@ -694,11 +694,6 @@ enum ReceiptTextAnalyzer {
         return names.firstIndex(of: prefix).map { $0 + 1 }
     }
 
-    /// "…, then $269.99/year" → 269.99: what an introductory price turns into.
-    static func introductoryPriceEnd(in text: String) -> Decimal? {
-        introductoryPrices(in: text)?.next
-    }
-
     /// "charged $134.99 for 1 year, then $269.99/year": the introductory price and what follows it, as the
     /// email states them. Both are the plan's own prices, so their difference is the real rise even when
     /// the amount charged has tax on top.

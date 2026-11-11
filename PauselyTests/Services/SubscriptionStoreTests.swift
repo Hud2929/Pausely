@@ -114,21 +114,4 @@ final class SubscriptionStoreTests: XCTestCase {
         XCTAssertEqual(store.totalMonthlySpend, 10)
         XCTAssertEqual(store.totalAnnualSpend, 120)
     }
-
-    func testUpcomingRenewalsAreTheNext30DaysOfActiveOnesInDateOrder() {
-        store.subscriptions = [
-            TestFactories.makeSubscription(name: "In 10 days", nextBillingDate: days(10)),
-            TestFactories.makeSubscription(name: "In 60 days", billingFrequency: .yearly, nextBillingDate: days(60)),
-            TestFactories.makeSubscription(name: "In 3 days", nextBillingDate: days(3)),
-            TestFactories.makeSubscription(name: "Cancelled", status: .cancelled, nextBillingDate: days(5)),
-            TestFactories.makeSubscription(name: "Paused", nextBillingDate: days(2), pausedUntil: days(20))
-        ]
-        XCTAssertEqual(store.upcomingRenewals.map(\.name), ["In 3 days", "In 10 days"])
-    }
-
-    func testFilteredSubscriptionsKeepsOrderAndStopsAtTheLimit() {
-        store.subscriptions = ["Netflix", "Spotify", "Hulu", "Max"].map { TestFactories.makeSubscription(name: $0) }
-        XCTAssertEqual(store.filteredSubscriptions(matching: { _ in true }, limit: 2).map(\.name), ["Netflix", "Spotify"])
-        XCTAssertEqual(store.filteredSubscriptions(matching: { $0.name.contains("u") }).map(\.name), ["Hulu"])
-    }
 }

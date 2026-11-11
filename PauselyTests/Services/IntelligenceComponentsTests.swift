@@ -168,8 +168,6 @@ final class UserCorrectionsTests: XCTestCase {
         XCTAssertEqual(UserCorrections.load(defaults: defaults), ["netflix": .trusted, "uber": .notSubscription])
         UserCorrections.set("uber", nil, defaults: defaults)
         XCTAssertEqual(UserCorrections.load(defaults: defaults), ["netflix": .trusted])
-        UserCorrections.clear(defaults: defaults)
-        XCTAssertTrue(UserCorrections.load(defaults: defaults).isEmpty)
     }
 
     private func gymEmails() -> [RawEmail] {

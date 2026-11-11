@@ -439,10 +439,6 @@ class CurrencyManager: ObservableObject {
     private let ratesCacheKey = "cached_exchange_rates"
     private let ratesDateKey = "exchange_rates_date"
     
-    var currentCurrency: Currency {
-        currencies.first { $0.code == selectedCurrency } ?? Currency(code: "USD", name: "US Dollar", flag: "🇺🇸", locale: "en_US")
-    }
-    
     private init() {
         let deviceCurrency = Locale.current.currency?.identifier ?? "USD"
         let offered = Set(currencies.map(\.code))
@@ -524,13 +520,6 @@ class CurrencyManager: ObservableObject {
         UserDefaults.standard.set(lastUpdated, forKey: ratesDateKey)
     }
 
-    func convert(_ amount: Decimal, from sourceCurrency: String, to targetCurrency: String) throws -> Decimal {
-        guard let converted = rates.convert(amount, from: sourceCurrency, to: targetCurrency) else {
-            throw CurrencyError.rateNotAvailable
-        }
-        return converted
-    }
-
     /// `amount` in the user's display currency. A currency Pausely can't convert (not an ISO code it
     /// knows) comes back unchanged and is logged; every currency in the picker always converts.
     func convertToSelected(_ amount: Decimal, from sourceCurrency: String) -> Decimal {
@@ -542,37 +531,9 @@ class CurrencyManager: ObservableObject {
     // MARK: - Catalog Price Helpers
 
 
-    /// A catalog price in the user's display currency, converted when it is in another currency.
-    func formatCatalogPrice(_ price: Double, sourceCurrency: String = "USD") -> String {
-        let converted = convertCrossCurrency(price, from: sourceCurrency, to: selectedCurrency)
-        return MoneyFormat.string(converted, selectedCurrency)
-    }
-
-    /// Converts between two currencies; an amount Pausely can't convert comes back unchanged.
-    func convertCrossCurrency(_ amount: Double, from sourceCurrency: String, to targetCurrency: String) -> Double {
-        guard let converted = rates.convert(MoneyFormat.decimal(amount), from: sourceCurrency, to: targetCurrency) else {
-            return amount
-        }
-        return NSDecimalNumber(decimal: converted).doubleValue
-    }
-
-    /// "≈" in front of catalog prices shown in a currency other than the catalog's US dollars.
-    var priceIndicator: String {
-        selectedCurrency == "USD" ? "" : "≈"
-    }
-
     /// `amount` in `currencyCode` (the display currency when nil). Goes through `MoneyFormat`.
     func format(_ amount: Decimal, currencyCode: String? = nil) -> String {
         MoneyFormat.string(amount, currencyCode ?? selectedCurrency)
-    }
-    
-    /// The symbol the user's locale shows for `code` ("$", "US$", "€"). Unknown codes show as the code.
-    func currencySymbol(for code: String) -> String {
-        MoneyFormat.symbol(for: code)
-    }
-    
-    func currencyFlag(for code: String) -> String {
-        currencies.first { $0.code == code }?.flag ?? "🏳️"
     }
     
     func setCurrency(_ code: String) {
@@ -582,22 +543,10 @@ class CurrencyManager: ObservableObject {
     }
     
     
-    /// Get currency by code
-    func currency(for code: String) -> Currency? {
-        currencies.first { $0.code == code }
-    }
-    
     /// All available currencies
     var allCurrencies: [Currency] {
         currencies
     }
-    
-    /// Convert Double amount (overload for convenience)
-    func convert(_ amount: Double, from sourceCurrency: String, to targetCurrency: String) throws -> Double {
-        let converted = try convert(MoneyFormat.decimal(amount), from: sourceCurrency, to: targetCurrency)
-        return NSDecimalNumber(decimal: converted).doubleValue
-    }
-
 }
 
 // MARK: - Supporting Types
@@ -609,14 +558,6 @@ struct Currency: Identifiable, Codable, Hashable {
     let name: String
     let flag: String
     let locale: String
-    
-    var displayName: String {
-        "\(flag) \(code) - \(name)"
-    }
-    
-    func format(_ amount: Double) -> String {
-        MoneyFormat.string(amount, code)
-    }
 }
 
 struct ExchangeRateResponse: Codable {

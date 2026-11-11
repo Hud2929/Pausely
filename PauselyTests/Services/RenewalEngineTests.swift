@@ -2,7 +2,7 @@ import XCTest
 @testable import Pausely
 
 /// Renewal math, reminder planning and the lifecycle run. Edge cases follow the list Lago tests for its
-/// billing periods (see LAGO_TAKEAWAYS.md): month-end anchors, leap days, the first period, time zones.
+/// billing periods (see docs/LAGO_TAKEAWAYS.md): month-end anchors, leap days, the first period, time zones.
 @MainActor
 final class RenewalEngineTests: XCTestCase {
 

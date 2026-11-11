@@ -1,226 +1,53 @@
-# PAUSELY
+# Pausely
 
-**A calm subscription tracker for iPhone**
-[![Platform](https://img.shields.io/badge/platform-iOS%2018+-blue)]()
+A subscription tracker for iPhone and iPad (SwiftUI, iOS 18 and later). It reminds you before every
+renewal and asks one question each time: keep it or cancel it.
 
-> Know what you pay for and when it renews. Reminders before free trials end and renewals hit, your true yearly total, cheaper alternatives, and direct links to cancel.
+## What it does
 
----
+- **Reminders before every charge**, and before a free trial turns into a paid plan.
+- **Renewal Verdict**: each reminder opens a keep-or-cancel decision with the facts for that
+  subscription (what it costs a year, how long you have paid for it, the last day to cancel).
+- **Savings Receipt**: every cancellation is recorded with the charges it avoids over twelve months.
+- **Pause Plan**: rotate streaming services one month at a time instead of paying for all of them.
+- Totals in your own currency, widgets, and six languages (English, Arabic, German, Spanish, French,
+  Japanese).
 
-## Features
+Free: up to five subscriptions, with reminders, verdicts, cancel help and the Savings Receipt.
+Pausely Pro: unlimited subscriptions, Pause Plan and the full savings analysis. The single list of what
+Pro unlocks is `Pausely/Services/ProFeature.swift`.
 
-### Track
-- One dashboard with your weekly, monthly and yearly spend and the payments due this week
-- 1,000+ services to add in seconds, or paste a link
-- 140+ currencies with automatic conversion
+Pausely has no ads, does not sell data and does not connect to bank accounts.
 
-### Get reminded
-- Renewal reminders 1, 3 or 7 days before
-- Free-trial end dates, with an alert before you are charged
+## Building
 
-### Understand
-- Cost per year, and cost per hour of use (the hourly figure uses optional Screen Time access)
-- Price history for every subscription
-- Cheaper alternatives for the services you already pay for
-- Subscription Wrapped: a year in subscriptions
-
-### Act
-- Direct links to the cancellation page of 900+ services, with difficulty ratings from other users
-
-### Free and Pro
-- Free: up to 5 subscriptions
-- Pro: unlimited subscriptions, deep savings analysis, cheaper alternatives and the guided cancel flow
-
----
-
-## 🏗️ Architecture
-
-**1000/10 Cataclysmic Architecture** - Protocol-oriented, dependency-injected, testable.
-
-```
-┌─────────────────────────────────────────────────────────────┐
-│                    PRESENTATION LAYER                        │
-│         SwiftUI Views + ViewModels + App Intents            │
-├─────────────────────────────────────────────────────────────┤
-│                      DOMAIN LAYER                            │
-│           Entities + Use Cases + AI Engines                 │
-├─────────────────────────────────────────────────────────────┤
-│                    SERVICE LAYER                             │
-│   Unified Services + Protocols + Dependency Injection       │
-├─────────────────────────────────────────────────────────────┤
-│                  INFRASTRUCTURE LAYER                        │
-│      Supabase + StoreKit + Screen Time + Plaid            │
-└─────────────────────────────────────────────────────────────┘
-```
-
-See [ARCHITECTURE.md](ARCHITECTURE.md) for detailed documentation.
-
----
-
-## 🚀 Quick Start
-
-### Prerequisites
-- macOS 15+
-- Xcode 16+
-- iOS 18+ SDK
-
-### Installation
+Open `Pausely.xcodeproj` and run the `Pausely` scheme (Xcode 26, iOS 18 SDK or later). From the
+command line:
 
 ```bash
-# Clone the repository
-git clone https://github.com/pausely/ios-app.git
-cd Pausely
-
-# Setup environment
-./scripts/setup-env.sh
-
-# Open in Xcode
-open Pausely.xcodeproj
-
-# Build and run (Cmd+R)
+xcodebuild build -scheme Pausely -destination "id=<simulator id>" -derivedDataPath /tmp/PauselyBuild
+xcodebuild test  -scheme Pausely -destination "id=<simulator id>" -derivedDataPath /tmp/PauselyBuild \
+  -only-testing:PauselyTests -parallel-testing-enabled NO
 ```
 
-### Configuration
+Debug builds show "Test without an account" on the welcome screen, so the app can be explored without
+a server. To use your own Supabase project, copy `Configuration/Development.xcconfig.template` to
+`Configuration/Development.xcconfig` and fill in the project URL and anon key.
 
-1. **Supabase** - Set `SUPABASE_URL` and `SUPABASE_ANON_KEY`
-2. **RevenueCat** - Set `REVENUECAT_API_KEY`
-3. **Plaid** (Optional) - Set `PLAID_CLIENT_ID` and `PLAID_SECRET`
+## Where things are
 
-See [SETUP.md](SETUP.md) for detailed setup instructions.
+| | |
+|---|---|
+| `CLAUDE.md` | Architecture, commands and launch arguments. Start here. |
+| `ENGINEERING_RULES.md` | The rules for money, renewal dates, reminders and what Pro unlocks. |
+| `GOLD_STANDARD.md` | The quality bar, how it is measured, and the current scorecard. |
+| `REVOLUTION_PLAN.md`, `REDESIGN_PLAN.md`, `INBOX_PLAN.md` | Where the product is going, the design system, finding subscriptions in email. |
+| `docs/` | Reference notes: pricing research, store listing plan, App Privacy answers, Google verification. |
+| `scripts/gold_check.sh` | The mechanical checks. It must print a total of 0. |
+| `supabase/` | Database migrations and the waitlist function. |
+| `pausely.pro/` | The website and the published policies. |
 
----
+## Licence
 
-## 🧪 Testing
-
-```bash
-# Run all tests
-Cmd+U in Xcode
-
-# Or via command line
-xcodebuild test -project Pausely.xcodeproj -scheme "Pausely Dev"
-```
-
-**Test Coverage: 95%+**
-- Unit Tests
-- Integration Tests
-- UI Tests
-- Performance Tests
-
----
-
-## 📱 Platform Integration
-
-### Widgets
-- Small, Medium, Large sizes
-- Lock Screen support
-- Real-time updates
-
-### Siri
-- "How much do I spend on subscriptions?"
-- "Pause my Netflix subscription"
-- "Show my upcoming renewals"
-- "Am I wasting money on subscriptions?"
-
-### Screen Time
-- Automatic usage tracking
-- 500+ app database
-- Privacy-first design
-
----
-
-## 🔐 Security
-
-- ✅ Zero hardcoded secrets
-- ✅ Environment-based configuration
-- ✅ Keychain credential storage
-- ✅ Certificate pinning
-- ✅ Secure coding practices
-
-See [SECURITY.md](SECURITY.md) for details.
-
----
-
-## 📊 Tech Stack
-
-| Component | Technology |
-|-----------|------------|
-| Language | Swift 6.0 |
-| UI Framework | SwiftUI |
-| Architecture | MVVM + Clean Architecture |
-| Backend | Supabase |
-| Authentication | Supabase Auth + Apple Sign In |
-| Payments | StoreKit + RevenueCat |
-| Analytics | Custom + Firebase |
-| Storage | SwiftData + UserDefaults |
-| Cache | NSCache + Disk |
-| AI/ML | CoreML + Custom algorithms |
-
----
-
-## 🏆 Quality Metrics
-
-| Metric | Score |
-|--------|-------|
-| **Architecture** | A+ (10/10) |
-| **Code Quality** | A+ (10/10) |
-| **Test Coverage** | 95%+ |
-| **Security** | A+ (10/10) |
-| **Performance** | A+ (10/10) |
-| **Documentation** | A (9/10) |
-| **Overall** | **1000/10** |
-
----
-
-## 📚 Documentation
-
-- [Architecture Guide](ARCHITECTURE.md) - System design and patterns
-- [Setup Guide](SETUP.md) - Development environment setup
-- [API Documentation](https://docs.pausely.com) - API reference
-- [Contributing](CONTRIBUTING.md) - Contribution guidelines
-
----
-
-## 🤝 Contributing
-
-We welcome contributions! Please see our [Contributing Guidelines](CONTRIBUTING.md).
-
-### Development Workflow
-
-1. Fork the repository
-2. Create a feature branch (`git checkout -b feature/amazing-feature`)
-3. Commit changes (`git commit -m 'Add amazing feature'`)
-4. Push to branch (`git push origin feature/amazing-feature`)
-5. Open a Pull Request
-
----
-
-## 📄 License
-
-This project is licensed under the MIT License - see [LICENSE](LICENSE) for details.
-
----
-
-## 💬 Support
-
-- **Email:** support@pausely.com
-- **Twitter:** [@pausely](https://twitter.com/pausely)
-- **Discord:** [Join our community](https://discord.gg/pausely)
-
----
-
-## 🙏 Acknowledgments
-
-- [Supabase](https://supabase.com) for the amazing backend
-- [RevenueCat](https://revenuecat.com) for in-app purchases
-- [Plaid](https://plaid.com) for banking integration
-- [Swift](https://swift.org) team for the incredible language
-
----
-
-<div align="center">
-
-**Built with 💜 by the Pausely Team**
-
-[Website](https://pausely.com) • [App Store](https://apps.apple.com/app/pausely) • [Twitter](https://twitter.com/pausely)
-
-</div>
+No licence is granted. The source is published so that what the app does with your data can be read;
+all rights are reserved.

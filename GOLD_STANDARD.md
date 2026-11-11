@@ -102,14 +102,112 @@ scorecard; what is left for the owner.
 
 ## 6. The ledger
 
-Findings from the scan, with status. Filled in when the audits report (Phase 0), closed as work lands.
+Every finding from the scan, grouped, with its status. The full reports (file and line for each
+finding) are kept on the founder's Mac in `private/audits/2026-11-11/`, outside the public repository,
+because some describe security bugs: `engineering.md` (B1 to B18 and rule breaks), `truth.md`
+(numbered findings), `ui.md` (136 screens and states, findings per file), `dead_code.md`,
+`best_apps.md`, `overlooked.md`, and `accessibility_audit_en.txt` (what Apple's audit reported on 94
+captures). Numbers below refer to those reports.
 
-_(pending: audits running)_
+### 6.1 Closed
+
+| Date | What | Evidence |
+|---|---|---|
+| 11-11 | Repository root: 143 stale files and 6 leftover folders removed; the founder's marketing notes moved to `private/` (on disk, not tracked). README rewritten: it claimed bank linking, Firebase analytics, 95% test coverage and an MIT licence. | `gold_check` clutter 90 → 0 |
+| 11-11 | Live Activity removed. It could never start (its Info.plist key was in the widget, its switch defaulted to off with no screen), and a 14-day countdown is not what a Live Activity is for. | build, widget tests |
+| 11-11 | Entitlements and Info.plist: Screen Time entitlement and usage string, background fetch, an unused background-task id and a misspelt orientation key removed; three duplicate entitlement files deleted; iPhone is portrait only. | Debug and Release build |
+| 11-11 | The widget's Info.plist was ignored by git, so a fresh clone could not build. Now tracked. | `git ls-files` |
+| 11-11 | Widget "next charge" showed the first subscription in list order with the saved anchor date (a date in the past read "today" every day). Now the soonest real charge; cleared when nothing is active. (truth 90) | `WidgetDataStoreTests` ×4 |
+| 11-11 | Referral system removed: a link stored a code that nothing ever used, with live network calls behind it. | `DeepLinkTests` |
+| 11-11 | Account links (which carry sign-in tokens and an email) were written to the device log in release builds. (B6) | `DeepLinkManager` |
+| 11-11 | Dead code: 100 declarations, 9 files, 34 of 38 saved settings. | `gold_check` dead 96 → 33 |
+| 11-11 | Gates written: `scripts/gold_check.sh`, a translation guard over every screen, Apple's accessibility audit inside the screen tour. | 280 → 115 |
+
+### 6.2 Open: can lose, expose or corrupt a customer's data (first)
+
+| Id | What | Status |
+|---|---|---|
+| B1 | History file unreadable on a locked phone → "Keep it" from a notification can overwrite the whole Savings Receipt history | open |
+| B2 | Sync queue drops changes queued while it is sending | open |
+| B3 | Edits, cancels and deletes made before a failed add has synced are silently undone | open |
+| B4 | The queue only drains on launch or pull-to-refresh, while the app says "It will sync when you're back online"; failures retry forever, silently | open |
+| B5 | Currency rates are written off the main thread while every screen reads them (data race) | open |
+| B7 | Any `pausely://auth/...` link is accepted without the app having asked for one (sign-in into someone else's account, then the local history is wiped) | open |
+| B8 | A password typed on an abandoned sign-up is applied to whichever account next signs in by email | open |
+| B10 | Fields are dropped the moment an add reaches the server; an edit made meanwhile is overwritten | open |
+| B15 | Signing out offline leaves the cached session: the next launch shows the signed-out person's list | open |
+| B16 | Name and email are left on the device after sign-out and account deletion | open |
+| T62 | Cancel help matches by "name contains": Loom shows Bloomberg's steps, link and phone number (34 wrong companies measured) | open |
+
+### 6.3 Open: wrong money, dates or claims
+
+| Id | What | Status |
+|---|---|---|
+| B9 | Pause Plan overwrites the billing anchor with "a month after today" | open |
+| B11, B12, B13 | Paywall never retries prices after one failure; a refund or expiry is not noticed while the app runs; Pausely's own line can be created at USD launch prices for any country | open |
+| B14 | `startDate` is never saved, so "lifetime" always starts the day the row was added | open |
+| B17, T41 | Four definitions of "active": Home, Insights, paywall and the year slip show different yearly totals for one list | open |
+| B18, T95 | Stale rates are never reported; converted totals are not marked "about" | open |
+| Rules | Unconverted fallback in `convertToSelected`; groups ranked in mixed currencies; dates not normalised on update; pause reminder outside the planner; demo flags readable in release; rate host hard-coded; a writable no-op `isPremium` and a dormant client-side Pro grant | open |
+| T71, T75, T-RenewalDates | Renewal dates the person never entered are saved as theirs (Shortcut add, add sheet pre-fill, "Add date" = today + 14) | open |
+| T5, T45–47 | "Went up" on a currency change or typo fix; year slip counts by `updatedAt` and raw category strings | open |
+| T15–19, T23, T43 | Estimates and forecasts stated as fact ("this year", "Back in your pocket", "avoided") | open |
+| T59, T66, T72–74 | "Open Cancellation Page" opens a web search for 794 of 994 names; a "pause" that pauses nothing and stops reminders; Shortcuts report wrong status | open |
+| T96 | Pause Plan counts Audible, PlayStation Plus and Kindle as streaming | open |
+
+### 6.4 Open: truth and need on screen, translation, the listing
+
+| Id | What | Status |
+|---|---|---|
+| T60, T61, T63 | 717 unsourced English cancel steps; 68 US phone numbers shown worldwide; a rating sheet whose ratings nobody can see | open |
+| T42, T76 | 21 of 27 first-run prices come from press round-ups, not the service's page, and are saved as if confirmed | open |
+| Scope C | Catalog: 1,379 invented plan prices, invented descriptions (Pausely's own says "bank sync"), invented websites used for logos, plan variants listed as services | open |
+| T25–33 | "Deep savings analysis": English only, invented thresholds, a figure that always equals the price, overlap matched by substring on cancelled items too | open |
+| T50–56 | In-app Privacy Policy and Terms: untrue lines (analytics, push, price alerts, a licence to use data), English only, a second copy beside the website's | open |
+| T34–38 | Paywall: cancelling Apple's sheet raises "Purchase Error"; restore outcomes all read "Purchase failed"; "Apple ID" path is out of date; two different last days to cancel | open |
+| T97–99, T80–86, T70, T67, T89 | Untranslated: the welcome screen's six lines, edit-screen rows, age gate buttons, every Shortcut result, a notification, every widget string; 15 counts with no plural forms ("1 subscriptions") | open |
+| T101 | About 940 unused string keys, some carrying old false claims in six languages | open |
+| T102–108 | Seven names for Find in Email; "Renewal Verdict" exists only in the listing; five names for Insights; "watch" and "track" | open |
+| T109–111, generator | Listing: "with their plans and prices", "900+ cancel links", "weekly spend"; `scripts/store_copy.py` would put "cheaper alternatives" back if run | open |
+
+### 6.5 Open: screens
+
+| What | Status |
+|---|---|
+| 136 screens and states; 95 cannot be opened by a launch argument, so have not been seen in Arabic, at the largest text or on iPad | open |
+| Apple's audit, English tour: 307 issues (105 Dynamic Type, 98 contrast, 51 clipped text, 36 elements not detected, 13 hit regions, 4 descriptions) | open |
+| Not rebuilt: both widgets, Pause Plan, age check, policy pages, error banner and toast, demo banner | open |
+| System-wide: accent colour is iOS blue; `Motion.unlessReduced` still moves; `StateMark` does not grow; iPad column is 680 pt wide; five ways to leave a sheet; Title Case and sentence case mixed; "iPhone" said on iPad; prices and dates not formatted in the app's language in 43 places; the serif is missing in Arabic and Japanese | open |
+| Per-file findings (colour, type, layout, Dynamic Type, right to left, VoiceOver, motion, haptics, states) in `ui.md` | open |
+
+### 6.6 Open: engineering hygiene
+
+Test bundles share the app's bundle id; the shared scheme runs tests in parallel; strict concurrency is
+off; project backups and per-user Xcode data are tracked; an empty build-file entry; development
+signing identity on Release; the xcconfig files are decoration (real values sit in the project file);
+two classes own StoreKit state; 7 Swift files over 700 lines; 17 hype names.
+
+### 6.7 For the owner (cannot or should not be done from here)
+
+- The repository is public. Its history still holds business notes (growth, monetisation, data
+  monetisation research) and a committed `backend/.dev.vars`. The values looked like scaffold
+  defaults, but if any was ever real, rotate it. Decide whether the app repository should be private
+  (the website can live in its own public one).
+- The README now says no licence is granted. It used to say MIT with no licence file. Confirm.
+- Everything already on the list in memory: Supabase email templates and redirect URLs, the pending
+  SQL, the edited listing text and review notes, Microsoft client id, the "go" for 1.0.3.
 
 ## 7. Scorecard
 
-| Area | Score | Evidence | What holds it down |
+Measured, not felt. A score is written only when its evidence exists.
+
+| Area | Now | Evidence | What holds it down |
 |---|---|---|---|
-| Screens | not yet scored against this standard | | |
-| Customer rounds | not yet run | | |
-| Codebase | not yet scored | | |
+| Screens | not scored | 41 of 136 states captured in English only | 95 states unseen; 307 audit issues |
+| Customer rounds | not run | | waits for the screens |
+| Codebase: truth | open findings: about 70 | `truth.md` | 6.3, 6.4 |
+| Codebase: dead code and repository | `gold_check` 115 (was 280) | script output | 33 declarations, 940 string keys, data files |
+| Codebase: correctness | 16 known bugs open | `engineering.md` | 6.2, 6.3 |
+| Codebase: tests | 504 pass, 1 fails by design (36 untranslated lines), 7 need a mail server | test run 11-11 | the failing guard; parallel scheme |
+| Codebase: translation | 36 literals + about 60 strings outside the catalog + all widget text | guard test, `truth.md` | 6.4 |
+| Codebase: accessibility | 307 audit issues | tour audit | 6.5 |

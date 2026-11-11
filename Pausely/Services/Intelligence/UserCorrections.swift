@@ -23,8 +23,4 @@ enum UserCorrections {
         if let verdict { all[merchantKey] = verdict } else { all.removeValue(forKey: merchantKey) }
         if let data = try? JSONEncoder().encode(all) { defaults.set(data, forKey: storageKey) }
     }
-
-    static func clear(defaults: UserDefaults = .standard) {
-        defaults.removeObject(forKey: storageKey)
-    }
 }

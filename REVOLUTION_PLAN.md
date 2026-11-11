@@ -1,7 +1,7 @@
 # Pausely: the plan to $10M a year
 
 Written 2026-10-23 from four research reports (market and revenue model, product vision, design,
-growth). Builds on `PRODUCT_PLAN.md` (shipped) and `CONSUMER_REVIEW.md` (8/10 today).
+growth). Builds on the October product plan (shipped) and the consumer review of 2026-10-22 (8/10 then); both are in git history.
 
 **The "10":** Pausely earns $10M a year from about 200–240k paying subscribers who would recommend
 it unprompted, because it saves each of them many times what it costs and proves it.

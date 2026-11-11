@@ -3,16 +3,24 @@ import XCTest
 
 /// Keeps translations complete. Fails with file:line when:
 /// 1. a string built in code (`L10n.string("…")`, anywhere in the app) has no entry in all five languages;
-/// 2. a literal in the inbox screens (`Text`, `Label`, `Button`, titles, field labels, accessibility) is
-///    missing a language;
+/// 2. a literal on any screen (`Text`, `Label`, `Button`, titles, field labels, accessibility, the app's
+///    own labelled parts) is missing a language, or an English sentence is shown with `Text(verbatim:)`;
 /// 3. any translation in the catalog has different format specifiers from its key (a missing `%@` shows
 ///    the wrong text; an extra one can crash).
 final class LocalizationGuardTests: XCTestCase {
 
     private static let languages = ["ar", "de", "es", "fr", "ja"]
-    private static let screenFiles = ["Pausely/Views/InboxImportView.swift", "Pausely/Views/Inbox/"]
-    private static let screenCalls = ["Text(\"", "Label(\"", "Button(\"", ".navigationTitle(\"", ".accessibilityLabel(\"",
-                                      ".accessibilityHint(\"", "TextField(\"", "SecureField(\""]
+    /// Everything that draws a screen. The DEBUG-only gallery of design parts is not a screen people see.
+    private static let screenFiles = ["Pausely/Views", "Pausely/DesignSystem", "Pausely/ContentView.swift"]
+    private static let notScreens = ["DesignGalleryView.swift"]
+    /// Every way a literal reaches the screen: SwiftUI's own calls, and the labelled arguments of the app's
+    /// own parts (`SettingsPage(title:)`, `SettingsSection(footer:)`, `FormHeader(detail:)` and the like).
+    private static let screenCalls = [
+        "Text(\"", "Label(\"", "Button(\"", "Toggle(\"", "Picker(\"", "Section(\"", "Link(\"", "Menu(\"",
+        ".navigationTitle(\"", ".accessibilityLabel(\"", ".accessibilityHint(\"", ".accessibilityValue(\"",
+        "TextField(\"", "SecureField(\"", ".alert(\"", ".confirmationDialog(\"",
+        "title: \"", "detail: \"", "footer: \"", "subtitle: \"", "label: \"", "header: \"", "message: \"", "prompt: \""
+    ]
 
     private var root: URL {
         URL(fileURLWithPath: #filePath).deletingLastPathComponent().deletingLastPathComponent().deletingLastPathComponent()
@@ -136,11 +144,14 @@ final class LocalizationGuardTests: XCTestCase {
         XCTAssertTrue(found.isEmpty, found.map { "\($0.file):\($0.line) wrap in L10n.string: \"\($0.literal)\"" }.joined(separator: "\n"))
     }
 
-    func testInboxScreensAreTranslated() throws {
+    /// Every literal on every screen exists in all five languages. Until 2026-11-11 this looked only at the
+    /// mail screens, and the settings screens shipped in English in every language.
+    func testEveryScreenIsTranslated() throws {
         let strings = try catalog()
         let keys = Array(strings.keys)
         let found = try scan(Self.screenFiles, calls: Self.screenCalls)
-        XCTAssertGreaterThan(found.count, 30)
+            .filter { item in !Self.notScreens.contains { item.file.hasSuffix($0) } }
+        XCTAssertGreaterThan(found.count, 300, "the scan should see the app's screens")
         var failures: [String] = []
         for item in found {
             guard let key = Self.matchingKey(item.literal, in: keys) else {
@@ -149,8 +160,24 @@ final class LocalizationGuardTests: XCTestCase {
             let missing = Self.missingLanguages(strings[key])
             if !missing.isEmpty { failures.append("\(item.file):\(item.line) \"\(key)\" missing \(missing)") }
         }
-        XCTAssertTrue(failures.isEmpty, failures.joined(separator: "\n"))
+        XCTAssertTrue(failures.isEmpty, "\(failures.count) untranslated:\n" + failures.joined(separator: "\n"))
     }
+
+    /// `Text(verbatim:)` is for names, numbers and addresses. An English sentence in it stays English.
+    func testNoEnglishSentenceIsShownVerbatim() throws {
+        let found = try scan(Self.screenFiles, calls: ["Text(verbatim: \""])
+            .filter { item in !Self.notScreens.contains { item.file.hasSuffix($0) } }
+            .filter { item in
+                // Two or more plain words in a row read as a sentence; brand names and addresses don't.
+                let words = item.literal.split(separator: " ").filter { word in word.allSatisfy(\.isLetter) && word.count > 1 }
+                return words.count >= 2 && !item.literal.contains("\\(…)") && !Self.properNames.contains(item.literal)
+            }
+        XCTAssertTrue(found.isEmpty, found.map { "\($0.file):\($0.line) translate: \"\($0.literal)\"" }.joined(separator: "\n"))
+    }
+
+    /// Names that are the same in every language, and the one line only a debug build shows.
+    private static let properNames: Set<String> = ["Outlook, Hotmail, Live, MSN", "Pausely Pro",
+                                                   "Test without an account (debug build)"]
 
     func testTranslationsKeepTheirFormatSpecifiers() throws {
         let strings = try catalog()

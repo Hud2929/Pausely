@@ -22,10 +22,6 @@ struct CurrencyRates: Equatable {
         self.init(perUSD: apiRates.compactMapValues { Decimal(string: String($0)) })
     }
 
-    func rate(_ code: String) -> Decimal? {
-        perUSD[MoneyFormat.normalizedCode(code)]
-    }
-
     /// `amount` in `from`, expressed in `to`, or `nil` when either rate is unknown.
     func convert(_ amount: Decimal, from: String, to: String) -> Decimal? {
         let source = MoneyFormat.normalizedCode(from)

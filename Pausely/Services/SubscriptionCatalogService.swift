@@ -10,20 +10,6 @@ import os.log
 
 // MARK: - Catalog Subscription (for tracking)
 
-struct CatalogSubscription: Identifiable {
-    let id: UUID
-    let bundleId: String
-    let name: String
-    let category: SubscriptionCategory
-
-    init(from entry: CatalogEntry) {
-        self.id = entry.id
-        self.bundleId = entry.bundleId
-        self.name = entry.name
-        self.category = entry.category
-    }
-}
-
 @MainActor
 final class SubscriptionCatalogService: ObservableObject {
     static let shared = SubscriptionCatalogService()
@@ -63,22 +49,6 @@ final class SubscriptionCatalogService: ObservableObject {
     }
 
     // MARK: - Subscriptions (for tracking compatibility)
-
-    /// Returns all known subscriptions as simple structs for tracking
-    var subscriptions: [CatalogSubscription] {
-        catalog.map { CatalogSubscription(from: $0) }
-    }
-
-
-    /// Returns all bundle IDs in the catalog
-    var allBundleIds: [String] {
-        catalog.map { $0.bundleId }
-    }
-
-    /// Returns the app name for a bundle ID
-    func appName(for bundleId: String) -> String? {
-        entry(for: bundleId)?.name
-    }
 
     // MARK: - Load Catalog
 
@@ -245,11 +215,6 @@ final class SubscriptionCatalogService: ObservableObject {
     }
 
     // MARK: - Search
-
-
-    func entry(for bundleId: String) -> CatalogEntry? {
-        entryByBundleId[bundleId]
-    }
 
     /// The catalog entry with this exact name (case-insensitive).
     func entry(named name: String) -> CatalogEntry? {

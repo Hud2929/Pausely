@@ -2,14 +2,13 @@
 //  DeepLinkManager.swift
 //  Pausely
 //
-//  Handles all app deep links: referral codes, auth callbacks, subscription management
+//  Where a link into the app goes: account links from email, and a subscription's own screen.
 //
 
 import Foundation
 import os.log
 
 enum DeepLinkRoute {
-    case referral(code: String)
     case authConfirm
     case authResetPassword
     case subscriptionManage(id: UUID)
@@ -31,14 +30,10 @@ final class DeepLinkManager {
         let isUniversalLink = scheme == "https" && ["pausely.pro", "www.pausely.pro"].contains(url.host?.lowercased() ?? "")
         guard scheme == "pausely" || isUniversalLink else { return .unknown }
 
+        // The link itself is never logged: account links carry sign-in tokens and an email address.
         let parts = url.routeSegments
-        os_log("Handling deep link: %{public}@ parts=%{public}@", log: .default, type: .info, url.absoluteString, parts.description)
 
         switch parts.first?.lowercased() {
-        case "r", "referral":
-            // pausely://r/CODE, pausely://referral?code=CODE, https://pausely.pro/r/CODE
-            let code = parts.dropFirst().first ?? url.queryParameters?["code"] ?? ""
-            return code.isEmpty ? .unknown : .referral(code: code)
         case "auth" where scheme == "pausely":
             // pausely://auth/reset-password; confirm and callback links go to the same handler
             return parts.dropFirst().first?.lowercased() == "reset-password" ? .authResetPassword : .authConfirm
@@ -57,9 +52,6 @@ final class DeepLinkManager {
         let route = handle(url)
 
         switch route {
-        case .referral:
-            _ = ReferralManager.shared.handleReferralDeepLink(url)
-
         case .authConfirm:
             authDeepLinkTask?.cancel()
             authDeepLinkTask = Task {
@@ -80,7 +72,7 @@ final class DeepLinkManager {
             )
 
         case .unknown:
-            os_log("Unknown deep link: %{public}@", log: .default, type: .info, url.absoluteString)
+            os_log("A link the app has no screen for was opened (scheme %{public}@)", log: .default, type: .info, url.scheme ?? "none")
         }
     }
 }
@@ -95,7 +87,7 @@ extension Notification.Name {
 
 extension URL {
     /// The meaningful parts of a link: ["auth", "confirm"] for `pausely://auth/confirm` (where "auth"
-    /// is the host) and ["r", "CODE"] for `https://pausely.pro/r/CODE` (where it's the path).
+    /// is the host) and ["subscription", "manage"] for `https://pausely.pro/subscription/manage` (where it's the path).
     var routeSegments: [String] {
         let path = pathComponents.filter { $0 != "/" && !$0.isEmpty }
         if scheme?.lowercased() == "pausely", let host, !host.isEmpty {

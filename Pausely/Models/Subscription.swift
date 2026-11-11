@@ -116,42 +116,10 @@ struct Subscription: Identifiable, Codable, Equatable {
     
     // MARK: - Display Properties
     
-    var displayCostPerHour: String {
-        guard let cost = costPerHour else { return "N/A" }
-        return formatCurrency(cost)
-    }
-    
     var displayAmount: String {
         return formatCurrency(amount)
     }
 
-    /// Amount formatted in the user's currently selected currency
-    var displayAmountInUserCurrency: String {
-        let manager = CurrencyManager.shared
-        guard currency != manager.selectedCurrency,
-              let converted = manager.rates.convert(amount, from: currency, to: manager.selectedCurrency) else {
-            // Same currency, or one Pausely can't convert: show what is really charged.
-            return displayAmount
-        }
-        return manager.format(converted)
-    }
-
-    /// Monthly cost formatted in the user's currently selected currency
-    var displayMonthlyCostInUserCurrency: String {
-        let manager = CurrencyManager.shared
-        guard currency != manager.selectedCurrency else {
-            return formatCurrency(monthlyCost)
-        }
-        guard let converted = manager.rates.convert(monthlyCost, from: currency, to: manager.selectedCurrency) else {
-            return formatCurrency(monthlyCost)
-        }
-        return manager.format(converted)
-    }
-
-    var displayAnnualCost: String {
-        return formatCurrency(annualCost)
-    }
-    
     /// What it costs over a year: the price times the number of charges in a year (a monthly plan
     /// charges 12 times). One definition, so every screen shows the same yearly number.
     var annualCost: Decimal {
@@ -226,29 +194,6 @@ struct Subscription: Identifiable, Codable, Equatable {
 
     // MARK: - StoreKit Integration
 
-    /// Known StoreKit product IDs for this app's premium subscriptions
-    private static let storeKitProductIds: Set<String> = [
-        "com.pausely.premium.monthly",
-        "com.pausely.premium.annual",
-        "com.pausely.premium.lifetime"
-    ]
-
-    /// Whether this subscription is managed by StoreKit (in-app purchase)
-    /// Falls back to checking if we have a product ID match
-    var isStoreKitManaged: Bool {
-        // Check if this subscription's name matches our StoreKit products
-        // In a full implementation, you'd store the product ID on the subscription
-        if let description = description {
-            return Self.storeKitProductIds.contains(description)
-        }
-        return false
-    }
-
-    /// Checks if this subscription can be managed through StoreKit APIs
-    var canManageViaStoreKit: Bool {
-        return isStoreKitManaged
-    }
-
     // MARK: - Equatable
     
     static func == (lhs: Subscription, rhs: Subscription) -> Bool {
@@ -319,26 +264,6 @@ enum SubscriptionStatus: String, Codable, CaseIterable {
         case .cancelled: return "Cancelled"
         case .trial: return "Trial"
         case .expired: return "Expired"
-        }
-    }
-    
-    var icon: String {
-        switch self {
-        case .active: return "checkmark.circle.fill"
-        case .paused: return "pause.circle.fill"
-        case .cancelled: return "xmark.circle.fill"
-        case .trial: return "clock.fill"
-        case .expired: return "exclamationmark.circle.fill"
-        }
-    }
-    
-    var color: String {
-        switch self {
-        case .active: return "green"
-        case .paused: return "orange"
-        case .cancelled: return "red"
-        case .trial: return "blue"
-        case .expired: return "gray"
         }
     }
 }

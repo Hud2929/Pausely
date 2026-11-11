@@ -146,9 +146,6 @@ struct Tally: Codable, Equatable {
                                amount: price, currency: currency, isConfirmed: confirmed))
     }
 
-    /// Puts saved lines back on the slip.
-    mutating func restore(_ saved: [TallyLine]) { lines = saved }
-
     /// The person corrected a price. Negative amounts are ignored.
     mutating func setAmount(_ amount: Decimal, for name: String) {
         guard amount >= 0, let index = lines.firstIndex(where: { $0.name == name }) else { return }
@@ -193,13 +190,6 @@ struct Tally: Codable, Equatable {
         if gap > tolerance { return .more(monthly: gap, yearly: gap * 12) }
         if gap < -tolerance { return .less(monthly: -gap) }
         return .close
-    }
-
-    /// Rounds a converted price to the currency's smallest everyday unit.
-    static func tidy(_ amount: Decimal, _ currency: String) -> Decimal {
-        var value = amount, result = Decimal()
-        NSDecimalRound(&result, &value, MoneyFormat.fractionDigits(for: currency), .plain)
-        return result
     }
 }
 

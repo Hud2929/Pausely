@@ -7,7 +7,6 @@
 //
 
 import Foundation
-import ActivityKit
 
 // MARK: - Widget Summary
 
@@ -47,21 +46,4 @@ struct WidgetTrialInfo: Codable, Identifiable {
     var daysRemaining: Int {
         max(0, Calendar.current.dateComponents([.day], from: Date(), to: trialEndsAt).day ?? 0)
     }
-}
-
-// MARK: - Live Activity Attributes
-// IMPORTANT: Field names and types must match PauselyLiveActivityAttributes in the main app exactly.
-
-struct PauselyLiveActivityAttributes: ActivityAttributes {
-    struct ContentState: Codable, Hashable {
-        var daysUntilRenewal: Int
-        var hoursUntilRenewal: Int
-        var isUrgent: Bool
-    }
-
-    var subscriptionName: String
-    var renewalDate: Date
-    /// The next charge in the subscription's own currency, formatted by the app ("$129.99").
-    var amountText: String
-    var frequency: String
 }

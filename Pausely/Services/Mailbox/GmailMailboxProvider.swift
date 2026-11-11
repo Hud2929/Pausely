@@ -4,7 +4,6 @@ import Foundation
 /// provider goes through the same parser (and every character set is decoded correctly).
 final class GmailMailboxProvider: MailboxProvider {
     let account: MailboxAccount
-    private var cachedSummaries: [String: MessageSummary] = [:]
 
     static let api = "https://gmail.googleapis.com/gmail/v1/users/me"
 

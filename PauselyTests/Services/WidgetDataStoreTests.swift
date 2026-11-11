@@ -138,28 +138,59 @@ final class WidgetDataStoreTests: XCTestCase {
         XCTAssertEqual(summary.yearlySpendWholeText, MoneyFormat.string(Decimal(240), "USD", wholeUnits: true))
     }
 
-    // MARK: - Live Activity Data
+    // MARK: - Next charge (PauselyWidget/WidgetReader reads these values exactly as written)
 
-    // MARK: - Live Activity (PauselyWidget/WidgetReader reads these values exactly as written)
-
-    func testLiveActivityShowsTheNextRenewalInItsOwnCurrency() {
+    func testNextChargeIsTheSoonestOneInItsOwnCurrency() {
         let soon = Calendar.current.date(byAdding: .day, value: 3, to: Date())!
-        let later = Calendar.current.date(byAdding: .day, value: 20, to: Date())!
+        let later = Calendar.current.date(byAdding: .day, value: 5, to: Date())!
         let netflix = TestFactories.makeSubscription(name: "Netflix", amount: 15.49, status: .active, nextBillingDate: later)
         let crave = TestFactories.makeSubscription(name: "Crave", amount: 99.99, currency: "CAD",
                                                    billingFrequency: .yearly, status: .active, nextBillingDate: soon)
+        // Both renew this week and Netflix is first in the list: the sooner charge still wins.
         sut.publish(subscriptions: [netflix, crave])
 
         XCTAssertEqual(testDefaults.string(forKey: "liveActivity_subscriptionName"), "Crave")
         XCTAssertEqual(testDefaults.string(forKey: "liveActivity_amountText"), MoneyFormat.string(Decimal(string: "99.99")!, "CAD"))
-        XCTAssertEqual(testDefaults.double(forKey: "liveActivity_renewalDate"), soon.timeIntervalSince1970, accuracy: 1)
+        let shown = Date(timeIntervalSince1970: testDefaults.double(forKey: "liveActivity_renewalDate"))
+        XCTAssertTrue(Calendar.current.isDate(shown, inSameDayAs: soon), "the widget shows the day of the charge")
     }
 
-    func testLiveActivityFallsBackToTheFirstActiveSubscription() {
-        let later = Calendar.current.date(byAdding: .day, value: 20, to: Date())!
-        let disney = TestFactories.makeSubscription(name: "Disney+", amount: 7.99, status: .active, nextBillingDate: later)
-        sut.publish(subscriptions: [disney])
-        XCTAssertEqual(testDefaults.string(forKey: "liveActivity_subscriptionName"), "Disney+")
-        XCTAssertEqual(testDefaults.string(forKey: "liveActivity_amountText"), disney.chargeText)
+    func testNextChargeLooksPastThisWeek() {
+        let far = Calendar.current.date(byAdding: .day, value: 40, to: Date())!
+        let nearer = Calendar.current.date(byAdding: .day, value: 20, to: Date())!
+        let first = TestFactories.makeSubscription(name: "Disney+", amount: 7.99, status: .active, nextBillingDate: far)
+        let second = TestFactories.makeSubscription(name: "Spotify", amount: 11.99, status: .active, nextBillingDate: nearer)
+        sut.publish(subscriptions: [first, second])
+        XCTAssertEqual(testDefaults.string(forKey: "liveActivity_subscriptionName"), "Spotify")
+        XCTAssertEqual(testDefaults.string(forKey: "liveActivity_amountText"), second.chargeText)
+    }
+
+    /// The saved date is only the anchor. A monthly plan anchored 45 days ago next charges 15 days or so
+    /// from now, and that is the day the widget must show: never a day already gone.
+    func testNextChargeRollsAnOldAnchorForward() throws {
+        let now = Date()
+        let anchor = Calendar.current.date(byAdding: .day, value: -45, to: now)!
+        let hulu = TestFactories.makeSubscription(name: "Hulu", amount: 9.99, billingFrequency: .monthly, status: .active, nextBillingDate: anchor)
+        sut.publish(subscriptions: [hulu])
+
+        let shown = Date(timeIntervalSince1970: testDefaults.double(forKey: "liveActivity_renewalDate"))
+        XCTAssertGreaterThanOrEqual(shown, Calendar.current.startOfDay(for: now))
+        XCTAssertEqual(shown.timeIntervalSince1970, try XCTUnwrap(hulu.nextRenewal(onOrAfter: now)).timeIntervalSince1970, accuracy: 1)
+        XCTAssertLessThan(shown, Calendar.current.date(byAdding: .day, value: 32, to: now)!)
+    }
+
+    /// When the last subscription is cancelled the widget must stop naming it.
+    func testNextChargeIsClearedWhenNothingIsActive() {
+        let soon = Calendar.current.date(byAdding: .day, value: 3, to: Date())!
+        let netflix = TestFactories.makeSubscription(name: "Netflix", amount: 15.49, status: .active, nextBillingDate: soon)
+        sut.publish(subscriptions: [netflix])
+        XCTAssertEqual(testDefaults.string(forKey: "liveActivity_subscriptionName"), "Netflix")
+
+        var cancelled = netflix
+        cancelled.status = .cancelled
+        sut.publish(subscriptions: [cancelled])
+        XCTAssertNil(testDefaults.string(forKey: "liveActivity_subscriptionName"))
+        XCTAssertNil(testDefaults.string(forKey: "liveActivity_amountText"))
+        XCTAssertEqual(testDefaults.double(forKey: "liveActivity_renewalDate"), 0)
     }
 }

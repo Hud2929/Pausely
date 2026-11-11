@@ -1,7 +1,7 @@
 import Foundation
 import os.log
 
-/// Shares subscription summary data to App Group UserDefaults for widget and Live Activity consumption.
+/// Publishes what the widgets show (totals, the next charge, trials) to the shared App Group defaults.
 @MainActor
 final class WidgetDataStore {
     static let shared = WidgetDataStore()
@@ -49,22 +49,19 @@ final class WidgetDataStore {
         defaults.set(MoneyFormat.string(monthlyTotal, displayCurrency, wholeUnits: true), forKey: "widget_monthlySpendWholeText")
         defaults.set(MoneyFormat.string(monthlyTotal * 12, displayCurrency, wholeUnits: true), forKey: "widget_yearlySpendWholeText")
 
-        let insight = generateInsight(for: active, monthlyTotal: monthlyTotal, currency: displayCurrency)
-        defaults.set(insight, forKey: "widget_topInsight")
+        let next = Self.nextCharge(in: active)
+        defaults.set(nextChargeLine(next, hasSubscriptions: !active.isEmpty), forKey: "widget_topInsight")
 
-        // Publish upcoming renewal details for Live Activities
-        if let firstUpcoming = upcoming.first {
-            defaults.set(firstUpcoming.name, forKey: "liveActivity_subscriptionName")
-            defaults.set(firstUpcoming.nextBillingDate?.timeIntervalSince1970 ?? 0, forKey: "liveActivity_renewalDate")
-            defaults.set(NSDecimalNumber(decimal: firstUpcoming.amount).doubleValue, forKey: "liveActivity_amount")
-            defaults.set(firstUpcoming.chargeText, forKey: "liveActivity_amountText")
-            defaults.set(firstUpcoming.billingFrequency.displayName, forKey: "liveActivity_frequency")
-        } else if let firstActive = active.first {
-            defaults.set(firstActive.name, forKey: "liveActivity_subscriptionName")
-            defaults.set(firstActive.nextBillingDate?.timeIntervalSince1970 ?? 0, forKey: "liveActivity_renewalDate")
-            defaults.set(NSDecimalNumber(decimal: firstActive.amount).doubleValue, forKey: "liveActivity_amount")
-            defaults.set(firstActive.chargeText, forKey: "liveActivity_amountText")
-            defaults.set(firstActive.billingFrequency.displayName, forKey: "liveActivity_frequency")
+        // The next charge. (Key names date from an earlier design; they stay, so a widget that refreshes
+        // after an update still finds what the previous version wrote.)
+        if let next {
+            defaults.set(next.subscription.name, forKey: "liveActivity_subscriptionName")
+            defaults.set(next.date.timeIntervalSince1970, forKey: "liveActivity_renewalDate")
+            defaults.set(next.subscription.chargeText, forKey: "liveActivity_amountText")
+        } else {
+            for key in ["liveActivity_subscriptionName", "liveActivity_renewalDate", "liveActivity_amountText"] {
+                defaults.removeObject(forKey: key)
+            }
         }
 
         // Publish trial subscriptions sorted by urgency
@@ -108,22 +105,29 @@ final class WidgetDataStore {
     }
 
 
-    // MARK: - Insights
+    // MARK: - Next charge
+
+    /// The subscription that charges soonest, with the day of that charge: its next renewal on or after
+    /// `now`, not the stored anchor, which may be months old. Nil when nothing has a date.
+    static func nextCharge(in subscriptions: [Subscription], now: Date = Date(), calendar: Calendar = .current) -> (subscription: Subscription, date: Date)? {
+        subscriptions
+            .compactMap { sub in sub.nextRenewal(onOrAfter: now, calendar: calendar).map { (subscription: sub, date: $0) } }
+            .min { $0.date < $1.date }
+    }
 
     /// The one line the widget leads with: what charges next, how much, and when. A fact from the
     /// person's own list, in their language; never commentary on their spending.
-    private func generateInsight(for subscriptions: [Subscription], monthlyTotal: Decimal, currency: String) -> String {
-        guard !subscriptions.isEmpty else { return L10n.string("Add what you pay for in Pausely") }
-        let dated = subscriptions.compactMap { sub in sub.calculatedNextBillingDate.map { (sub, $0) } }
-        guard let (next, date) = dated.min(by: { $0.1 < $1.1 }) else { return L10n.string("Add renewal dates to see what's next") }
-        let days = max(0, Calendar.current.calendarDays(from: Date(), to: date))
+    private func nextChargeLine(_ next: (subscription: Subscription, date: Date)?, hasSubscriptions: Bool) -> String {
+        guard hasSubscriptions else { return L10n.string("Add what you pay for in Pausely") }
+        guard let next else { return L10n.string("Add renewal dates to see what's next") }
+        let days = max(0, Calendar.current.calendarDays(from: Date(), to: next.date))
         let when: String
         switch days {
         case 0: when = L10n.string("today")
         case 1: when = L10n.string("tomorrow")
         default: when = L10n.string("in \(days) days")
         }
-        return "\(next.name) · \(MoneyFormat.string(next.amount, next.currency)) · \(when)"
+        return "\(next.subscription.name) · \(MoneyFormat.string(next.subscription.amount, next.subscription.currency)) · \(when)"
     }
 }
 
@@ -163,9 +167,5 @@ struct WidgetTrialInfo: Codable, Identifiable {
     let billingFrequency: String
     /// What the first charge will be, in the subscription's own currency ("$15.49").
     let amountText: String?
-
-    var daysRemaining: Int {
-        max(0, Calendar.current.dateComponents([.day], from: Date(), to: trialEndsAt).day ?? 0)
-    }
 }
 

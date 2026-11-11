@@ -2,7 +2,6 @@ import Foundation
 import Auth
 import PostgREST
 import os.log
-import ActivityKit
 import Combine
 
 @MainActor
@@ -125,7 +124,6 @@ class SubscriptionStore: ObservableObject {
                 self.saveToCache()
                 WidgetDataStore.shared.publish(subscriptions: self.subscriptions)
                 SpotlightManager.shared.index(subscriptions: self.subscriptions)
-                self.startLiveActivityIfNeeded()
                 PriceIncreaseMonitor.shared.checkForPriceChanges(subscriptions: self.subscriptions)
             }
 
@@ -622,26 +620,6 @@ class SubscriptionStore: ObservableObject {
     // MARK: - Batch Operations for Scale
     
     
-    /// Memory-efficient filtering for large subscription lists
-    func filteredSubscriptions(
-        matching predicate: (Subscription) -> Bool,
-        limit: Int? = nil
-    ) -> [Subscription] {
-        var result: [Subscription] = []
-        result.reserveCapacity(limit ?? subscriptions.count / 2)
-        
-        for sub in subscriptions {
-            if predicate(sub) {
-                result.append(sub)
-                if let limit = limit, result.count >= limit {
-                    break
-                }
-            }
-        }
-        
-        return result
-    }
-    
     // MARK: - Totals
 
     /// Monthly, yearly and lifetime totals of active subscriptions in the display currency. Every
@@ -667,38 +645,6 @@ class SubscriptionStore: ObservableObject {
         subscriptions.filter { $0.isPaused }
     }
 
-    
-    var upcomingRenewals: [Subscription] {
-        let calendar = Calendar.current
-        let now = Date()
-        let thirtyDaysFromNow = calendar.date(byAdding: .day, value: 30, to: now) ?? now
-
-        return activeSubscriptions
-            .filter { sub in
-                guard sub.calculatedNextBillingDate != nil, let days = sub.daysUntilRenewal else { return false }
-                return days >= 0 && days <= calendar.calendarDays(from: now, to: thirtyDaysFromNow)
-            }
-            .sorted { ($0.calculatedNextBillingDate ?? now) < ($1.calculatedNextBillingDate ?? now) }
-    }
-    
-    
-
-    // MARK: - Live Activity
-
-    private func startLiveActivityIfNeeded() {
-        guard AppSettings.shared.liveActivitiesEnabled else { return }
-
-        // Find the most urgent upcoming renewal
-        let upcoming = activeSubscriptions
-            .filter { ($0.daysUntilRenewal ?? 999) <= 14 }
-            .sorted { ($0.daysUntilRenewal ?? 999) < ($1.daysUntilRenewal ?? 999) }
-
-        if let first = upcoming.first {
-            LiveActivityManager.shared.startLiveActivity(for: first)
-        } else {
-            LiveActivityManager.shared.endCurrentActivity()
-        }
-    }
 }
 
 // MARK: - Notification Names

@@ -190,40 +190,6 @@ enum SubscriptionCategory: String, Codable, CaseIterable, Identifiable {
         }
         return match?.localizedName ?? stored
     }
-
-    var icon: String {
-        switch self {
-        case .entertainment: return "tv"
-        case .music: return "music.note"
-        case .productivity: return "briefcase"
-        case .healthFitness: return "heart.circle"
-        case .cloudStorage: return "cloud"
-        case .education: return "book"
-        case .news: return "newspaper"
-        case .utilities: return "wifi"
-        case .social: return "person.2"
-        case .shopping: return "cart"
-        case .food: return "fork.knife"
-        case .sports: return "sportscourt"
-        case .finance: return "dollarsign.circle"
-        case .phone: return "iphone"
-        case .insurance: return "shield.checkered"
-        case .gym: return "dumbbell"
-        case .automotive: return "car"
-        case .home: return "house"
-        case .pet: return "pawprint"
-        case .personalCare: return "sparkles"
-        case .aiTools: return "sparkles.square.fill.on.square"
-        case .gaming: return "gamecontroller"
-        case .developerTools: return "chevron.left.forwardslash.chevron.right"
-        case .creator: return "pencil.circle"
-        case .travel: return "airplane"
-        case .dating: return "heart"
-        case .kids: return "figure.and.child.holdinghands"
-        case .security: return "lock.shield"
-        case .other: return "square.grid.2x2"
-        }
-    }
 }
 
 // MARK: - Pricing Tier
@@ -237,37 +203,6 @@ enum PricingTier: String, Codable, CaseIterable, Identifiable {
     case enterprise
 
     var id: String { rawValue }
-
-    var displayName: String {
-        switch self {
-        case .individual: return "Individual"
-        case .family: return "Family"
-        case .student: return "Student"
-        case .duo: return "Duo"
-        case .team: return "Team"
-        case .enterprise: return "Enterprise"
-        }
-    }
-
-    var maxUsers: Int? {
-        switch self {
-        case .family: return 6
-        case .duo: return 2
-        case .team: return nil
-        default: return 1
-        }
-    }
-
-    var icon: String {
-        switch self {
-        case .individual: return "person"
-        case .family: return "person.3"
-        case .student: return "graduationcap"
-        case .duo: return "person.2"
-        case .team: return "person.3.fill"
-        case .enterprise: return "building.2"
-        }
-    }
 }
 
 // MARK: - Tier Pricing
@@ -303,13 +238,6 @@ struct TierPricing: Codable, Equatable, Identifiable {
         self.isBestValue = isBestValue
         self.currencyCode = currencyCode ?? region.currencyCode
     }
-
-    var monthlyPricePerUser: Double? {
-        guard tier == .family, let max = tier.maxUsers, max > 0 else { return nil }
-        return monthlyPriceUSD / Double(max)
-    }
-
-
 }
 
 // MARK: - Catalog Entry
@@ -381,17 +309,6 @@ struct CatalogEntry: Identifiable, Codable, Equatable {
 
     var defaultIndividualPricing: TierPricing? { pricing(for: .individual) }
     var bestValueTier: TierPricing? { supportedTiers.first { $0.isBestValue } }
-
-    /// Default price as a Double for compatibility with existing code
-    var defaultPrice: Double { defaultIndividualPricing?.monthlyPriceUSD ?? 0 }
-
-    var availableTiers: [PricingTier] {
-        Array(Set(supportedTiers.map { $0.tier })).sorted { $0.rawValue < $1.rawValue }
-    }
-
-    var familyPlanAvailable: Bool {
-        supportedTiers.contains { $0.tier == .family }
-    }
 }
 
 // MARK: - Subscription Info

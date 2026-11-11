@@ -38,20 +38,23 @@ enum WidgetReader {
         return trials.filter { $0.trialEndsAt > Date() }.sorted { $0.trialEndsAt < $1.trialEndsAt }
     }
 
-    // MARK: - Live Activity
+    // MARK: - Next charge
+    // The key names date from an earlier design. They stay as they are, so a widget that refreshes after an
+    // update, before the app is next opened, still finds what the previous version wrote.
 
-    static func readLiveActivityName() -> String {
-        UserDefaults(suiteName: suiteName)?.string(forKey: "liveActivity_subscriptionName") ?? "Subscription"
+    /// The subscription that charges next, or "" when there is none.
+    static func readNextChargeName() -> String {
+        UserDefaults(suiteName: suiteName)?.string(forKey: "liveActivity_subscriptionName") ?? ""
     }
 
-    static func readLiveActivityDate() -> Date {
-        let ts = UserDefaults(suiteName: suiteName)?.double(forKey: "liveActivity_renewalDate") ?? 0
-        return Date(timeIntervalSince1970: ts)
+    /// The day of that charge, or nil when there is none.
+    static func readNextChargeDate() -> Date? {
+        let seconds = UserDefaults(suiteName: suiteName)?.double(forKey: "liveActivity_renewalDate") ?? 0
+        return seconds > 0 ? Date(timeIntervalSince1970: seconds) : nil
     }
 
-    /// The next charge as the app formatted it, or "" when there is none.
-    static func readLiveActivityAmountText() -> String {
+    /// The amount of that charge as the app formatted it, or "" when there is none.
+    static func readNextChargeText() -> String {
         UserDefaults(suiteName: suiteName)?.string(forKey: "liveActivity_amountText") ?? ""
     }
-
 }

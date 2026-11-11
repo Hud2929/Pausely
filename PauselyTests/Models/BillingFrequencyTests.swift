@@ -64,22 +64,6 @@ final class SubscriptionStatusTests: XCTestCase {
         XCTAssertEqual(SubscriptionStatus.expired.displayName, "Expired")
     }
 
-    func testIcons() {
-        XCTAssertEqual(SubscriptionStatus.active.icon, "checkmark.circle.fill")
-        XCTAssertEqual(SubscriptionStatus.paused.icon, "pause.circle.fill")
-        XCTAssertEqual(SubscriptionStatus.cancelled.icon, "xmark.circle.fill")
-        XCTAssertEqual(SubscriptionStatus.trial.icon, "clock.fill")
-        XCTAssertEqual(SubscriptionStatus.expired.icon, "exclamationmark.circle.fill")
-    }
-
-    func testColors() {
-        XCTAssertEqual(SubscriptionStatus.active.color, "green")
-        XCTAssertEqual(SubscriptionStatus.paused.color, "orange")
-        XCTAssertEqual(SubscriptionStatus.cancelled.color, "red")
-        XCTAssertEqual(SubscriptionStatus.trial.color, "blue")
-        XCTAssertEqual(SubscriptionStatus.expired.color, "gray")
-    }
-
     func testCodableRoundTrip() throws {
         for status in SubscriptionStatus.allCases {
             let encoded = try JSONEncoder().encode(status)

@@ -97,28 +97,29 @@ final class CurrencyRatesTests: XCTestCase {
 
     func testLiveRatesWinAndTheBuiltInTableFillsGaps() {
         let filled = rates.fillingGaps()
-        XCTAssertEqual(filled.rate("CAD"), Decimal(string: "1.4"))
-        XCTAssertEqual(filled.rate("JPY"), CurrencyRates.fallback.rate("JPY"))
+        XCTAssertEqual(filled.perUSD["CAD"], Decimal(string: "1.4"))
+        XCTAssertEqual(filled.perUSD["JPY"], CurrencyRates.fallback.perUSD["JPY"])
     }
 
     func testRatesFromTheAPIKeepTheirDigits() {
         let api = CurrencyRates(apiRates: ["CAD": 1.38])
-        XCTAssertEqual(api.rate("CAD"), Decimal(string: "1.38"))
+        XCTAssertEqual(api.perUSD["CAD"], Decimal(string: "1.38"))
     }
 
     /// Every currency someone can pick converts, online or not.
     func testBuiltInRatesCoverEveryCurrencyInThePicker() {
-        let missing = CurrencyManager.shared.allCurrencies.map(\.code).filter { CurrencyRates.fallback.rate($0) == nil }
+        let missing = CurrencyManager.shared.allCurrencies.map(\.code).filter { CurrencyRates.fallback.perUSD[$0] == nil }
         XCTAssertEqual(missing, [], "Add rates for \(missing) to CurrencyRates.fallback")
     }
 
     func testEveryCurrencyInThePickerIsARealISOCode() {
-        let unknown = CurrencyManager.shared.allCurrencies.map(\.code).filter { !MoneyFormat.isKnown($0) }
+        let iso = Set(Locale.Currency.isoCurrencies.map(\.identifier))
+        let unknown = CurrencyManager.shared.allCurrencies.map(\.code).filter { !iso.contains($0) }
         XCTAssertEqual(unknown, [])
     }
 
     func testBuiltInRatesArePlausible() {
-        XCTAssertEqual(CurrencyRates.fallback.rate("USD"), 1)
+        XCTAssertEqual(CurrencyRates.fallback.perUSD["USD"], 1)
         XCTAssertTrue(CurrencyRates.fallback.perUSD.values.allSatisfy { $0 > 0 })
         XCTAssertFalse(CurrencyRates.fallbackDate.isEmpty)
     }

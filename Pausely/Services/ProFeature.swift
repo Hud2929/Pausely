@@ -22,14 +22,6 @@ enum ProFeature: String, CaseIterable, Identifiable {
         case .deepAnalysis: return L10n.string("Deep savings analysis")
         }
     }
-
-    var icon: String {
-        switch self {
-        case .unlimitedSubscriptions: return "infinity"
-        case .pausePlan: return "arrow.triangle.2.circlepath"
-        case .deepAnalysis: return "chart.line.uptrend.xyaxis"
-        }
-    }
 }
 
 extension ProFeature {

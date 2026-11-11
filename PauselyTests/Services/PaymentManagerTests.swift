@@ -22,11 +22,11 @@ final class PaymentManagerTests: XCTestCase {
 
     // MARK: - Entitlements
 
-    func testProFeatures_haveTitlesAndDistinctIcons() {
+    func testProFeatures_eachHaveTheirOwnTitle() {
         let features = ProFeature.allCases
-        XCTAssertFalse(features.isEmpty)
+        XCTAssertEqual(features.count, 3)
         XCTAssertTrue(features.allSatisfy { !$0.title.isEmpty })
-        XCTAssertEqual(Set(features.map(\.icon)).count, features.count)
+        XCTAssertEqual(Set(features.map(\.title)).count, features.count)
     }
 
     func testFreeTier_locksProFeaturesAndStopsAtTheLimit() {

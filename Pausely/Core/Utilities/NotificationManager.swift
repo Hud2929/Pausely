@@ -107,16 +107,6 @@ final class NotificationManager {
             "pause-reminder-\(subscriptionId.uuidString)"
         ])
     }
-
-    func cancelReminder(for subscriptionId: UUID) {
-        let id = subscriptionId.uuidString
-        center.getPendingNotificationRequests { [center] requests in
-            let matching = requests.map(\.identifier).filter {
-                $0.contains(id) && (ReminderScheduler.isPauselyReminder($0) || $0.hasPrefix("pause-"))
-            }
-            center.removePendingNotificationRequests(withIdentifiers: matching)
-        }
-    }
 }
 
 // MARK: - Delegate

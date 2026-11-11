@@ -10,5 +10,5 @@ Use these instead (all generated from `scripts/store_copy.py` + `scripts/store_l
 | Per-language, per-country metadata that `asc metadata push` reads | `metadata/app-info/<locale>.json`, `metadata/version/<version>/<locale>.json` |
 | Plain-text copies for proofreading and translators | `AppStoreMetadata/<locale>/*.txt` |
 | Seasonal promotional text | `AppStoreScreenshots/PromotionalText.md` |
-| Full plan: store UI, screenshots, ASO matrix, Apple account | `APP_STORE_LISTING_PLAN.md` |
-| Keyword research and competitor evidence | `ASO_KEYWORD_PLAN.md`, `scripts/aso_scan_*.json` |
+| Full plan: store UI, screenshots, ASO matrix, Apple account | `docs/APP_STORE_LISTING_PLAN.md` |
+| Keyword research and competitor evidence | `docs/ASO_KEYWORD_PLAN.md`, `scripts/aso_scan_*.json` |

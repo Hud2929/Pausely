@@ -2,157 +2,77 @@ import Foundation
 import XCTest
 @testable import Pausely
 
+/// `CurrencyManager` holds the display currency and the live rates. Screens convert through
+/// `convertToSelected` and `ratesTable`, and format through `format`; those are what is tested here.
 final class CurrencyManagerTests: XCTestCase {
 
-    var manager: CurrencyManager!
+    private var manager: CurrencyManager!
+    private var savedCurrency = "USD"
+    private var savedRates: [String: Double] = [:]
 
     override func setUp() {
         super.setUp()
         manager = CurrencyManager.shared
+        savedCurrency = manager.selectedCurrency
+        savedRates = manager.exchangeRates
     }
 
     override func tearDown() {
-        // Reset to safe defaults
-        manager.exchangeRates = [:]
-        manager.selectedCurrency = "USD"
+        manager.exchangeRates = savedRates
+        manager.selectedCurrency = savedCurrency
         super.tearDown()
     }
 
-    // MARK: - Currency Lookup
+    private func d(_ text: String) -> Decimal { Decimal(string: text)! }
 
-    func testCurrencyForCode() {
-        let usd = manager.currency(for: "USD")
-        XCTAssertNotNil(usd)
-        XCTAssertEqual(usd?.code, "USD")
-    }
-
-    func testCurrencyForUnknownCode() {
-        let unknown = manager.currency(for: "XXX")
-        XCTAssertNil(unknown)
-    }
-
-    func testAllCurrenciesNotEmpty() {
-        XCTAssertFalse(manager.allCurrencies.isEmpty)
-        XCTAssertTrue(manager.allCurrencies.contains { $0.code == "USD" })
-        XCTAssertTrue(manager.allCurrencies.contains { $0.code == "EUR" })
-    }
-
-    // MARK: - Symbol & Flag
-
-    /// Symbols follow the reader's locale: "$" in the US, "US$" in Canada (see MoneyFormatTests).
-    func testCurrencySymbol() {
-        XCTAssertTrue(manager.currencySymbol(for: "USD").hasSuffix("$"))
-        XCTAssertTrue(manager.currencySymbol(for: "GBP").hasSuffix("£"))
-        XCTAssertEqual(manager.currencySymbol(for: "EUR"), "€")
-    }
-
-    /// A currency Pausely doesn't know shows as its code, never as a borrowed "$".
-    func testCurrencySymbolUnknown() {
-        XCTAssertEqual(manager.currencySymbol(for: "ZZZ"), "ZZZ")
-    }
-
-    func testCurrencyFlag() {
-        XCTAssertEqual(manager.currencyFlag(for: "USD"), "🇺🇸")
-    }
-
-    func testCurrencyFlagUnknown() {
-        XCTAssertEqual(manager.currencyFlag(for: "ZZZ"), "🏳️")
+    func testThePickerOffersTheMajorCurrencies() {
+        let codes = Set(manager.allCurrencies.map(\.code))
+        XCTAssertTrue(codes.isSuperset(of: ["USD", "EUR", "GBP", "CAD", "JPY", "SAR"]))
+        XCTAssertEqual(codes.count, manager.allCurrencies.count, "no currency is listed twice")
     }
 
     // MARK: - Conversion
 
-    func testConvertSameCurrency() throws {
-        let result = try manager.convert(Decimal(100), from: "USD", to: "USD")
-        XCTAssertEqual(result, 100)
-    }
-
-    func testConvertWithRates() throws {
-        manager.exchangeRates = ["USD": 1.0, "EUR": 0.85]
-        let result = try manager.convert(Decimal(100), from: "USD", to: "EUR")
-        XCTAssertEqual(result, Decimal(85))
-    }
-
-    func testConvertUnknownSourceThrows() {
-        manager.exchangeRates = ["EUR": 0.85]
-        XCTAssertThrowsError(try manager.convert(Decimal(100), from: "ZZZ", to: "EUR")) { error in
-            guard case CurrencyError.rateNotAvailable = error else {
-                XCTFail("Expected rateNotAvailable")
-                return
-            }
-        }
-    }
-
-    func testConvertUnknownTargetThrows() {
-        manager.exchangeRates = ["USD": 1.0]
-        XCTAssertThrowsError(try manager.convert(Decimal(100), from: "USD", to: "ZZZ")) { error in
-            guard case CurrencyError.rateNotAvailable = error else {
-                XCTFail("Expected rateNotAvailable")
-                return
-            }
-        }
-    }
-
     func testConvertToSelected() {
         manager.selectedCurrency = "EUR"
         manager.exchangeRates = ["USD": 1.0, "EUR": 0.85]
-        let result = manager.convertToSelected(Decimal(100), from: "USD")
-        XCTAssertEqual(result, Decimal(85))
+        XCTAssertEqual(manager.convertToSelected(Decimal(100), from: "USD"), Decimal(85))
     }
 
     /// Without live rates, conversions use the built-in table instead of returning dollars as euros.
-    func testConvertToSelectedUsesBuiltInRatesWhenOffline() {
+    func testConvertToSelectedUsesBuiltInRatesWhenOffline() throws {
         manager.selectedCurrency = "EUR"
         manager.exchangeRates = [:]
-        let result = manager.convertToSelected(Decimal(100), from: "USD")
-        XCTAssertEqual(result, 100 * CurrencyRates.fallback.rate("EUR")!)
-        XCTAssertNotEqual(result, 100)
+        let builtIn = try XCTUnwrap(CurrencyRates.fallback.perUSD["EUR"])
+        XCTAssertEqual(manager.convertToSelected(Decimal(100), from: "USD"), 100 * builtIn)
+        XCTAssertNotEqual(manager.convertToSelected(Decimal(100), from: "USD"), 100)
     }
 
-    /// Live rates win over the built-in table.
+    /// Live rates win over the built-in table; currencies the live rates lack still come from it.
     func testLiveRatesOverrideBuiltInRates() throws {
         manager.exchangeRates = ["CAD": 1.25]
-        XCTAssertEqual(try manager.convert(Decimal(100), from: "USD", to: "CAD"), 125)
+        XCTAssertEqual(manager.ratesTable.convert(Decimal(100), from: "USD", to: "CAD"), 125)
+        let yen = try XCTUnwrap(CurrencyRates.fallback.perUSD["JPY"])
+        XCTAssertEqual(manager.ratesTable.convert(Decimal(1), from: "USD", to: "JPY"), yen)
+    }
+
+    /// A currency with no rate does not convert. It never comes back as the same number in another currency.
+    func testAnUnknownCurrencyDoesNotConvert() {
+        manager.exchangeRates = ["EUR": 0.85]
+        XCTAssertNil(manager.ratesTable.convert(Decimal(100), from: "ZZZ", to: "EUR"))
+        XCTAssertNil(manager.ratesTable.convert(Decimal(100), from: "USD", to: "ZZZ"))
+        XCTAssertEqual(manager.ratesTable.convert(Decimal(100), from: "ZZZ", to: "ZZZ"), 100, "the same currency needs no rate")
     }
 
     // MARK: - Formatting
 
-    func testFormatUSD() {
-        let formatted = manager.format(Decimal(99.99), currencyCode: "USD")
-        XCTAssertTrue(formatted.contains("$") || formatted.contains("USD"))
+    func testFormatUsesTheCurrencyGiven() {
+        XCTAssertEqual(manager.format(d("99.99"), currencyCode: "USD"), MoneyFormat.string(d("99.99"), "USD"))
+        XCTAssertEqual(manager.format(d("49.5"), currencyCode: "EUR"), MoneyFormat.string(d("49.5"), "EUR"))
     }
 
-    func testFormatEUR() {
-        let formatted = manager.format(Decimal(49.50), currencyCode: "EUR")
-        XCTAssertTrue(formatted.contains("€") || formatted.contains("EUR"))
+    func testFormatFallsBackToTheDisplayCurrency() {
+        manager.selectedCurrency = "GBP"
+        XCTAssertEqual(manager.format(d("12")), MoneyFormat.string(d("12"), "GBP"))
     }
-
-    // MARK: - Catalog Price Helpers
-
-
-    func testPriceIndicatorUSD() {
-        manager.selectedCurrency = "USD"
-        XCTAssertEqual(manager.priceIndicator, "")
-    }
-
-    func testPriceIndicatorNonUSD() {
-        manager.selectedCurrency = "EUR"
-        XCTAssertEqual(manager.priceIndicator, "≈")
-    }
-
-    // MARK: - Rate Calculation
-
-
-    // MARK: - Historical Rate
-
-    func testHistoricalRateChange() {
-        let previous = HistoricalRate(date: Date(), fromCurrency: "USD", toCurrency: "EUR", rate: 0.80)
-        let current = HistoricalRate(date: Date(), fromCurrency: "USD", toCurrency: "EUR", rate: 0.85)
-        let change = current.change(from: previous)
-        XCTAssertNotNil(change)
-        XCTAssertEqual(change ?? 0, 6.25, accuracy: 0.01)
-    }
-
-
-    // MARK: - Double Rounding
-
 }

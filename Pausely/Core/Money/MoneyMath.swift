@@ -33,11 +33,6 @@ extension Subscription {
         rates.convert(monthlyCost, from: self.currency, to: currency)
     }
 
-    /// What this costs a year, in `currency`. Nil when its currency can't be converted.
-    func annualCost(in currency: String, rates: CurrencyRates = CurrencyManager.shared.rates) -> Decimal? {
-        rates.convert(annualCost, from: self.currency, to: currency)
-    }
-
     /// The price of one charge in this subscription's own currency: "$15.49", "US$20.00".
     var chargeText: String { MoneyFormat.string(amount, currency) }
 }

@@ -55,7 +55,7 @@ user; nothing reaches the server). `--reset-state` (UI tests) starts signed out 
 categories at launch) and `RootView`: splash → `FirstRunView` (guess, tally, reveal) →
 `PremiumWelcomeFlow` (sign up / sign in) → `AgeGateView` when needed → `PremiumMainTabView`
 (Dashboard, Subscriptions, Analysis, Profile). Deep links go through `DeepLinkManager`
-(`URL.routeSegments` treats `pausely://auth/confirm` and `https://pausely.pro/r/CODE` alike).
+(`URL.routeSegments` reads `pausely://auth/confirm` and an `https://pausely.pro/...` link the same way).
 
 ### Renewals and decisions (`Pausely/Core/Renewals/`)
 All pure and unit-tested; they take `now` and a `Calendar`.
@@ -78,7 +78,7 @@ All pure and unit-tested; they take `now` and a `Calendar`.
   `MoneyMath` (totals across currencies). `CurrencyManager` (in SupabaseManager.swift) holds the
   display currency and live rates.
 - `SupabaseManager`, `UsageLog` (hours the person types in, counted for the month they were entered),
-  `ReferralManager`, `KeychainManager`, `AppConfig`.
+  `KeychainManager`, `AppConfig`.
 
 ### Finding subscriptions in email (`Pausely/Services/Mailbox/`, plan in `INBOX_PLAN.md`)
 One engine, one adapter per kind of inbox, all read-only and on-device:

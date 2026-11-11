@@ -13,7 +13,7 @@ struct PauselyWidgetProvider: TimelineProvider {
         PauselyWidgetEntry(
             date: Date(),
             summary: WidgetSummaryData(),
-            nextChargeName: "–",
+            nextChargeName: "",
             nextChargeDate: nil,
             nextChargeText: ""
         )
@@ -24,9 +24,9 @@ struct PauselyWidgetProvider: TimelineProvider {
         let entry = PauselyWidgetEntry(
             date: Date(),
             summary: summary,
-            nextChargeName: WidgetReader.readLiveActivityName(),
-            nextChargeDate: WidgetReader.readLiveActivityDate(),
-            nextChargeText: WidgetReader.readLiveActivityAmountText()
+            nextChargeName: WidgetReader.readNextChargeName(),
+            nextChargeDate: WidgetReader.readNextChargeDate(),
+            nextChargeText: WidgetReader.readNextChargeText()
         )
         completion(entry)
     }
@@ -49,9 +49,9 @@ struct PauselyWidgetProvider: TimelineProvider {
         return PauselyWidgetEntry(
             date: Date(),
             summary: summary,
-            nextChargeName: WidgetReader.readLiveActivityName(),
-            nextChargeDate: WidgetReader.readLiveActivityDate(),
-            nextChargeText: WidgetReader.readLiveActivityAmountText()
+            nextChargeName: WidgetReader.readNextChargeName(),
+            nextChargeDate: WidgetReader.readNextChargeDate(),
+            nextChargeText: WidgetReader.readNextChargeText()
         )
     }
 }
@@ -123,7 +123,7 @@ struct SmallWidgetView: View {
     }
 
     private var hasData: Bool {
-        !entry.nextChargeText.isEmpty && entry.nextChargeName != "–" && entry.nextChargeName != "Subscription"
+        !entry.nextChargeText.isEmpty && !entry.nextChargeName.isEmpty
     }
 
     var body: some View {
@@ -415,48 +415,12 @@ struct InsightRow: View {
     }
 }
 
-// MARK: - Live Activity Widget
-struct PauselyLiveActivityWidget: Widget {
-    var body: some WidgetConfiguration {
-        ActivityConfiguration(for: PauselyLiveActivityAttributes.self) { context in
-            PauselyLiveActivityView(context: context)
-        } dynamicIsland: { context in
-            DynamicIsland {
-                DynamicIslandExpandedRegion(.leading) {
-                    Image(systemName: "creditcard.fill")
-                        .foregroundStyle(context.state.isUrgent ? Color.widgetDue : Color.primary)
-                }
-                DynamicIslandExpandedRegion(.trailing) {
-                    Text("\(context.state.daysUntilRenewal) days")
-                        .font(.headline)
-                        .foregroundStyle(context.state.isUrgent ? Color.widgetDue : Color.primary)
-                }
-                DynamicIslandExpandedRegion(.bottom) {
-                    Text(context.attributes.subscriptionName)
-                        .font(.subheadline)
-                        .lineLimit(1)
-                }
-            } compactLeading: {
-                Image(systemName: "creditcard.fill")
-                    .foregroundStyle(context.state.isUrgent ? Color.widgetDue : Color.primary)
-            } compactTrailing: {
-                Text("\(context.state.daysUntilRenewal)")
-                    .foregroundStyle(context.state.isUrgent ? Color.widgetDue : Color.primary)
-            } minimal: {
-                Text("\(context.state.daysUntilRenewal)")
-                    .foregroundStyle(context.state.isUrgent ? Color.widgetDue : Color.primary)
-            }
-        }
-    }
-}
-
 // MARK: - Widget Bundle
 @main
 struct PauselyWidgetBundle: WidgetBundle {
     var body: some Widget {
         PauselyWidget()
         TrialCountdownWidget()
-        PauselyLiveActivityWidget()
     }
 }
 

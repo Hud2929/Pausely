@@ -720,23 +720,5 @@ extension ServiceDatabase {
 }
 
 // MARK: - Parsed Subscription Result
-struct ParsedSubscription: Identifiable {
-    let id = UUID()
-    let name: String
-    let url: URL
-    var price: Double?
-    var currency: String = "USD"
-    var billingFrequency: BillingFrequency = .monthly
-    var logoURL: URL?
-    var description: String?
-    var confidence: Double
-    var category: ServiceCategory
-    var directCancelURL: URL?
-    var directPauseURL: URL?
-    var supportURL: URL?
-    var metadata: [String: String]
-    
-    
-}
 
 // MARK: - Service Detection Pattern

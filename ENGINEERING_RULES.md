@@ -1,7 +1,7 @@
 # Engineering rules
 
 Short rules that keep Pausely's numbers, dates and promises correct. Most of them come from
-how Lago (an open-source billing engine) avoids billing bugs; see `LAGO_TAKEAWAYS.md`.
+how Lago (an open-source billing engine) avoids billing bugs; see `docs/LAGO_TAKEAWAYS.md`.
 
 ## Money
 

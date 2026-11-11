@@ -10,6 +10,10 @@ final class ScreenTourTests: XCTestCase {
 
     private var outputDir: URL!
     private var step = 0
+    /// With `PAUSELY_TOUR_AUDIT=1`, every captured screen also goes through the system's accessibility
+    /// audit (contrast, text clipping, hit regions, missing descriptions, Dynamic Type), and what it finds
+    /// is appended to `audit.txt` in the tour folder. The gold standard asks for that file to be empty.
+    private var auditing: Bool { ProcessInfo.processInfo.environment["PAUSELY_TOUR_AUDIT"] == "1" }
 
     override func setUpWithError() throws {
         let path = ProcessInfo.processInfo.environment["PAUSELY_TOUR_DIR"] ?? ""
@@ -104,7 +108,9 @@ final class ScreenTourTests: XCTestCase {
             (["--demo-auth=signin"], "signin"), (["--demo-age-gate"], "age"),
             (["--demo-settings=notifications"], "notifications"), (["--demo-settings=privacy"], "privacy"),
             (["--demo-settings=help"], "help"), (["--demo-settings=currency"], "currency"),
-            (["--demo-settings=export"], "export"), (["--demo-whats-new"], "whatsnew"),
+            (["--demo-settings=export"], "export"), (["--demo-settings=language"], "language"),
+            (["--demo-whats-new"], "whatsnew"), (["--demo-auth=verify"], "emailcode"),
+            (["--demo-auth=reset"], "resetpassword"), (["--demo-auth=newpassword"], "newpassword"),
             (["--empty-demo-data", "--demo-tab=0"], "home-empty"), (["--empty-demo-data", "--demo-tab=1"], "list-empty"),
             (["--empty-demo-data", "--demo-tab=2"], "insights-empty"),
         ]
@@ -154,5 +160,41 @@ final class ScreenTourTests: XCTestCase {
         let png = XCUIScreen.main.screenshot().pngRepresentation
         try? png.write(to: outputDir.appendingPathComponent(base + ".png"))
         try? app.debugDescription.write(to: outputDir.appendingPathComponent(base + ".txt"), atomically: true, encoding: .utf8)
+        if auditing { audit(app, base) }
+    }
+
+    /// Runs the system accessibility audit on what is showing and records each issue instead of failing,
+    /// so one run lists everything there is to fix.
+    private func audit(_ app: XCUIApplication, _ screen: String) {
+        var lines: [String] = []
+        do {
+            try app.performAccessibilityAudit { issue in
+                let element = issue.element.map { $0.identifier.isEmpty ? $0.label : $0.identifier } ?? ""
+                lines.append("\(screen) | \(issue.auditType.name) | \(issue.compactDescription) | \(element.prefix(80))")
+                return true
+            }
+        } catch {
+            lines.append("\(screen) | audit could not run | \(error.localizedDescription)")
+        }
+        guard !lines.isEmpty else { return }
+        let url = outputDir.appendingPathComponent("audit.txt")
+        let existing = (try? String(contentsOf: url, encoding: .utf8)) ?? ""
+        try? (existing + lines.joined(separator: "\n") + "\n").write(to: url, atomically: true, encoding: .utf8)
+    }
+}
+
+private extension XCUIAccessibilityAuditType {
+    /// The kind of issue, in a word, for the audit file.
+    var name: String {
+        switch self {
+        case .contrast: return "contrast"
+        case .elementDetection: return "element not detected"
+        case .hitRegion: return "hit region"
+        case .sufficientElementDescription: return "description"
+        case .dynamicType: return "dynamic type"
+        case .textClipped: return "text clipped"
+        case .trait: return "trait"
+        default: return "other(\(rawValue))"
+        }
     }
 }

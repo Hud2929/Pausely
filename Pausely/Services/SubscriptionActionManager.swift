@@ -12,33 +12,6 @@ enum CancellationDifficulty: String, Codable, CaseIterable {
     case veryHard = "Very Hard"
     
     var displayName: String { rawValue }
-    
-    var color: String {
-        switch self {
-        case .easy: return "green"
-        case .medium: return "yellow"
-        case .hard: return "orange"
-        case .veryHard: return "red"
-        }
-    }
-    
-    var description: String {
-        switch self {
-        case .easy: return "Can be cancelled online instantly"
-        case .medium: return "May require a few clicks or confirmation"
-        case .hard: return "Requires contacting support or multiple steps"
-        case .veryHard: return "Phone call required or very difficult process"
-        }
-    }
-    
-    var estimatedMinutes: Int {
-        switch self {
-        case .easy: return 2
-        case .medium: return 5
-        case .hard: return 15
-        case .veryHard: return 30
-        }
-    }
 }
 
 /// Pause duration options for services that support pausing
@@ -51,17 +24,6 @@ enum PauseDuration: Int, CaseIterable, Identifiable, Codable {
     case sixMonths = 180
     
     var id: Int { rawValue }
-    
-    var displayName: String {
-        switch self {
-        case .oneWeek: return "1 Week"
-        case .twoWeeks: return "2 Weeks"
-        case .oneMonth: return "1 Month"
-        case .twoMonths: return "2 Months"
-        case .threeMonths: return "3 Months"
-        case .sixMonths: return "6 Months"
-        }
-    }
 }
 
 
@@ -71,24 +33,6 @@ enum SupportType: String, Codable {
     case chat = "chat"
     case email = "email"
     case webForm = "webForm"
-    
-    var icon: String {
-        switch self {
-        case .phone: return "phone.fill"
-        case .chat: return "message.fill"
-        case .email: return "envelope.fill"
-        case .webForm: return "doc.text.fill"
-        }
-    }
-    
-    var displayName: String {
-        switch self {
-        case .phone: return "Call"
-        case .chat: return "Chat"
-        case .email: return "Email"
-        case .webForm: return "Contact Form"
-        }
-    }
 }
 
 /// Service category types
@@ -111,52 +55,6 @@ enum ServiceCategory: String, Codable, CaseIterable {
     case cloudComputing = "Cloud Computing"
     case aiTools = "AI & Productivity Tools"
     case other = "Other"
-    
-    var icon: String {
-        switch self {
-        case .streaming: return "play.tv.fill"
-        case .music: return "music.note"
-        case .productivity: return "checkmark.square.fill"
-        case .storage: return "cloud.fill"
-        case .security: return "shield.fill"
-        case .gaming: return "gamecontroller.fill"
-        case .fitness: return "figure.run"
-        case .food: return "fork.knife"
-        case .news: return "newspaper.fill"
-        case .dating: return "heart.fill"
-        case .shopping: return "bag.fill"
-        case .finance: return "dollarsign.circle.fill"
-        case .education: return "book.fill"
-        case .design: return "paintbrush.fill"
-        case .communication: return "bubble.left.fill"
-        case .cloudComputing: return "server.rack"
-        case .aiTools: return "cpu.fill"
-        case .other: return "app.fill"
-        }
-    }
-    
-    var color: Color {
-        switch self {
-        case .streaming: return .red
-        case .music: return .pink
-        case .productivity: return .blue
-        case .storage: return .cyan
-        case .security: return .green
-        case .gaming: return .purple
-        case .fitness: return .orange
-        case .food: return .red.opacity(0.8)
-        case .news: return .gray
-        case .dating: return .pink.opacity(0.8)
-        case .shopping: return .yellow
-        case .finance: return .green.opacity(0.8)
-        case .education: return .indigo
-        case .design: return .purple.opacity(0.8)
-        case .communication: return .blue.opacity(0.8)
-        case .cloudComputing: return .cyan.opacity(0.8)
-        case .aiTools: return .indigo.opacity(0.9)
-        case .other: return .secondary
-        }
-    }
 }
 
 /// Support contact information
@@ -268,12 +166,6 @@ struct PauseRecord: Identifiable, Codable {
         case active = "active"
         case ended = "ended"
         case cancelled = "cancelled"
-    }
-    
-    var daysRemaining: Int {
-        let calendar = Calendar.current
-        let components = calendar.dateComponents([.day], from: Date(), to: endsAt)
-        return max(0, components.day ?? 0)
     }
     
     var isExpired: Bool {

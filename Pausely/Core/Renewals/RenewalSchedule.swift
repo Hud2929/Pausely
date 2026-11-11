@@ -1,6 +1,6 @@
 import Foundation
 
-/// Computes renewal dates the way billing systems do (see LAGO_TAKEAWAYS.md).
+/// Computes renewal dates the way billing systems do (see docs/LAGO_TAKEAWAYS.md).
 ///
 /// The date the user entered is an ANCHOR that is never overwritten; every renewal is computed from it.
 /// Month-based cycles add N whole months to the anchor itself, never to the previous renewal, so a

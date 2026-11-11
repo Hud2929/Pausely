@@ -34,19 +34,3 @@ struct InkTextField: View {
         .animation(Motion.unlessReduced(Motion.touch), value: isFocused)
     }
 }
-
-/// Says whether a usage figure was measured or typed in by the person.
-struct EstimateBadge: View {
-    let isEstimated: Bool
-
-    var body: some View {
-        Label {
-            Text(isEstimated ? "Estimated" : "Tracked")
-        } icon: {
-            Image(systemName: isEstimated ? "questionmark.circle" : "checkmark.circle")
-        }
-        .font(.caption.weight(.medium))
-        .foregroundStyle(Color.inkTextMuted)
-        .accessibilityElement(children: .combine)
-    }
-}

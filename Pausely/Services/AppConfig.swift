@@ -18,8 +18,6 @@ enum AppConfig {
     static let supportURL = "https://pausely.pro/support.html"
     static let privacyPolicyURL = "https://pausely.pro/privacy.html"
     static let termsOfServiceURL = "https://pausely.pro/terms.html"
-    static let refundPolicyURL = "https://pausely.pro/refunds.html"
-    
     // MARK: - Deep Link Configuration
     
     // MARK: - Email Template Configuration

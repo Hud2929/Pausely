@@ -53,33 +53,7 @@ enum SubscriptionTier: String, CaseIterable, Comparable, Codable {
         }
     }
     
-    var shortName: String {
-        switch self {
-        case .free:        return "Free"
-        case .pro:         return "Pro"
-        case .proAnnual:   return "Pro"
-        }
-    }
-    
-    var monthlyPrice: Decimal {
-        switch self {
-        case .free:        return 0
-        case .pro:         return ProPricing.monthlyUSD
-        case .proAnnual:   return ProPricing.annualUSD / 12
-        }
-    }
-
     // MARK: - Limits
-    
-    /// FREE: up to `FreeTier.subscriptionLimit` subscriptions, enough for most people's real list.
-    /// PRO: Unlimited
-    var subscriptionLimit: Int {
-        switch self {
-        case .free:        return FreeTier.subscriptionLimit
-        case .pro, .proAnnual: return Int.max
-        }
-    }
-    
 }
 
 // MARK: - Payment Manager

@@ -13,7 +13,6 @@ final class CancelDifficultyService: ObservableObject {
 
     // Local cache: serviceName -> (avgScore, ratingCount, fetchedAt)
     private var cache: [String: (score: Double, count: Int, date: Date)] = [:]
-    private let cacheTTL: TimeInterval = 86400 // 24 hours
 
     private init() {}
 
@@ -49,37 +48,4 @@ final class CancelDifficultyService: ObservableObject {
     }
 
     // MARK: - Fetch Score
-
-    struct DifficultyScore: Decodable {
-        let avg_difficulty: Double
-        let rating_count: Int
-    }
-
-    /// Returns (averageScore, ratingCount) or nil if no ratings exist.
-    func fetchScore(for serviceName: String) async -> (score: Double, count: Int)? {
-        // Serve from cache if fresh
-        if let cached = cache[serviceName],
-           Date().timeIntervalSince(cached.date) < cacheTTL {
-            return (cached.score, cached.count)
-        }
-
-        guard !SupabaseManager.shared.isUsingDemoMode else { return nil }
-
-        do {
-            let results: [DifficultyScore] = try await SupabaseManager.shared.client
-                .from("service_difficulty_scores")
-                .select("avg_difficulty, rating_count")
-                .eq("service_name", value: serviceName)
-                .execute()
-                .value
-
-            if let first = results.first {
-                cache[serviceName] = (first.avg_difficulty, first.rating_count, Date())
-                return (first.avg_difficulty, first.rating_count)
-            }
-        } catch {
-            // Not found or network error — return nil
-        }
-        return nil
-    }
 }

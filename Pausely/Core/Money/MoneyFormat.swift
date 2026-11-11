@@ -63,11 +63,6 @@ enum MoneyFormat {
         code.trimmingCharacters(in: .whitespacesAndNewlines).uppercased()
     }
 
-    /// True for ISO 4217 codes Foundation knows.
-    static func isKnown(_ code: String) -> Bool {
-        knownCodes.contains(normalizedCode(code))
-    }
-
     /// A `Double` amount as a `Decimal` without binary noise (12.99, not 12.9900000000000002).
     static func decimal(_ amount: Double) -> Decimal {
         guard amount.isFinite else { return 0 }
@@ -75,8 +70,6 @@ enum MoneyFormat {
     }
 
     // MARK: - Private
-
-    private static let knownCodes = Set(Locale.Currency.isoCurrencies.map(\.identifier))
 
     private static func isWellFormed(_ code: String) -> Bool {
         code.count == 3 && code.allSatisfy { $0.isASCII && $0.isLetter }

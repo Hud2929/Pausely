@@ -114,7 +114,6 @@ extension Font {
 enum Layout {
     /// Side margin of every screen.
     static let margin: CGFloat = 20
-    static let sheetRadius: CGFloat = 28
     static let cardRadius: CGFloat = 18
     static let tileRadius: CGFloat = 10
     /// Smallest tap target.
@@ -130,8 +129,6 @@ enum Motion {
     static let arrive = Animation.spring(duration: 0.5, bounce: 0.18)
     /// A slip leaving or tearing.
     static let leave = Animation.spring(duration: 0.42, bounce: 0)
-    /// Gap between printed lines on paper.
-    static let printGap: Double = 0.04
 
     /// The animation to use, or nil when Reduce Motion is on and the change should be instant
     /// or cross-faded by the caller.

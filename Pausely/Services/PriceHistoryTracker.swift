@@ -112,55 +112,7 @@ final class PriceHistoryTracker: ObservableObject {
             .sorted { $0.date < $1.date }
     }
 
-    func priceTrend(for subscriptionId: UUID) -> PriceTrend {
-        let history = history(for: subscriptionId)
-        guard history.count >= 2 else { return .stable }
-
-        guard let first = history.first?.amount, let last = history.last?.amount else { return .stable }
-
-        if last > first { return .increasing }
-        if last < first { return .decreasing }
-        return .stable
-    }
-
-    func totalPriceIncrease(for subscriptionId: UUID) -> Decimal {
-        let history = history(for: subscriptionId)
-        guard let first = history.first, let last = history.last else { return 0 }
-        return last.amount - first.amount
-    }
-
-    func percentageIncrease(for subscriptionId: UUID) -> Double {
-        let history = history(for: subscriptionId)
-        guard let first = history.first else { return 0 }
-        let firstAmount = Double(truncating: first.amount as NSDecimalNumber)
-        let total = Double(truncating: totalPriceIncrease(for: subscriptionId) as NSDecimalNumber)
-        guard firstAmount > 0 else { return 0 }
-        return (total / firstAmount) * 100
-    }
-
-    func averageAnnualIncrease(for subscriptionId: UUID) -> Double {
-        let history = history(for: subscriptionId)
-        guard history.count >= 2 else { return 0 }
-        guard let firstDate = history.first?.date, let lastDate = history.last?.date else { return 0 }
-
-        let years = Calendar.current.dateComponents([.year], from: firstDate, to: lastDate).year ?? 0
-        guard years > 0 else { return percentageIncrease(for: subscriptionId) }
-
-        return percentageIncrease(for: subscriptionId) / Double(years)
-    }
-
-
     // MARK: - Projections
-
-    func projectedAnnualCost(for subscription: Subscription) -> Decimal {
-        let history = history(for: subscription.id)
-        guard history.count >= 2 else { return subscription.annualCost }
-
-        let avgIncrease = averageAnnualIncrease(for: subscription.id)
-        let currentAnnual = subscription.annualCost
-        let multiplier = 1 + (Decimal(avgIncrease) / 100)
-        return currentAnnual * multiplier
-    }
 
     // MARK: - Private
 
@@ -188,12 +140,4 @@ final class PriceHistoryTracker: ObservableObject {
             os_log("Failed to load price history: %{public}@", log: .default, type: .error, error.localizedDescription)
         }
     }
-}
-
-enum PriceTrend: String {
-    case increasing = "increasing"
-    case decreasing = "decreasing"
-    case stable = "stable"
-
-
 }
