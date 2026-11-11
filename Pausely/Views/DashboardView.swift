@@ -15,6 +15,7 @@ struct DashboardView: View {
     @State private var showingPaywall = false
     @State private var showingReceipt = false
     @State private var showingDates = false
+    @State private var showingInbox = false
     @State private var showsYear = false
     @State private var dismissedAlerts: Set<UUID> = []
     @ScaledMetric(relativeTo: .largeTitle) private var numberSize: CGFloat = 52
@@ -30,7 +31,9 @@ struct DashboardView: View {
                 if store.isLoading && store.subscriptions.isEmpty {
                     HomeLoading().padding(.top, 32)
                 } else if store.subscriptions.isEmpty {
-                    HomeEmpty(onAdd: { showingAdd = true }).padding(.top, 40)
+                    HomeEmpty(onAdd: { showingAdd = true },
+                              onFindInEmail: FeatureFlags.inboxImportEnabled ? { showingInbox = true } : nil)
+                        .padding(.top, 40)
                 } else {
                     attention.padding(.top, 28)
                     // Proof of money kept comes before the list of what is about to leave.
@@ -53,6 +56,7 @@ struct DashboardView: View {
         .sheet(isPresented: $showingPaywall) { StoreKitUpgradeView(currentSubscriptionCount: store.subscriptions.count) }
         .sheet(isPresented: $showingReceipt) { SavingsReceiptView() }
         .sheet(isPresented: $showingDates) { RenewalDatesSheet(subscriptions: Horizon.undated(store.subscriptions)) }
+        .sheet(isPresented: $showingInbox) { InboxImportView() }
         .onAppear {
             Task { await ScreenTimeManager.shared.syncUsageData() }
             ReviewPromptManager.shared.askAfterMoneyKept()
@@ -557,6 +561,8 @@ private struct ChargeRow: View {
 
 private struct HomeEmpty: View {
     let onAdd: () -> Void
+    /// Nil while finding subscriptions in email is switched off (`FeatureFlags`).
+    var onFindInEmail: (() -> Void)?
 
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
@@ -568,10 +574,17 @@ private struct HomeEmpty: View {
                 .font(.body)
                 .foregroundStyle(Color.inkTextMuted)
                 .fixedSize(horizontal: false, vertical: true)
-            Button(action: onAdd) { Text("Add Subscription") }
-                .buttonStyle(.ink)
-                .padding(.top, 12)
-                .accessibilityIdentifier("addSubscriptionButton")
+            VStack(spacing: 10) {
+                Button(action: onAdd) { Text("Add Subscription") }
+                    .buttonStyle(.ink)
+                    .accessibilityIdentifier("addSubscriptionButton")
+                if let onFindInEmail {
+                    Button(action: onFindInEmail) { Text("Find them in my email") }
+                        .buttonStyle(.ink(.quiet))
+                        .accessibilityIdentifier("homeFindInEmailButton")
+                }
+            }
+            .padding(.top, 12)
         }
     }
 }

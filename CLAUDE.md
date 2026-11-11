@@ -86,11 +86,16 @@ One engine, one adapter per kind of inbox, all read-only and on-device:
   Live, MSN, Microsoft 365; needs `MS_CLIENT_ID` in Info.plist) and `IMAP/IMAPMailboxProvider`
   (iCloud, Yahoo, AOL, GMX, WEB.DE, Zoho, Fastmail, Xfinity, any server; app passwords; EXAMINE and
   BODY.PEEK only, TLS 1.2+). Presets live in `MailboxAccount.swift`.
-- `MIMEParser` turns raw RFC 822 into a `RawEmail`; `Intelligence/EmailSignalExtractor` +
-  `ReceiptTextAnalyzer` reduce it to a `ReceiptSignal`; `ReceiptLedger` keeps the facts (never the
-  mail) tagged by inbox; `SubscriptionIntelligenceEngine` proves subscriptions from charge patterns.
-- `InboxScanner` runs it all for every connected inbox; `Views/InboxImportView` and `Views/Inbox/`
-  are the screens. Each provider is gated in `FeatureFlags` (on in DEBUG, off in release).
+- `MIMEParser` turns raw RFC 822 into a `RawEmail`; `Intelligence/EmailSignalExtractor.extractAll` +
+  `ReceiptTextAnalyzer` (each figure judged by its own label) + `AppleReceipt` (several subscriptions on
+  one receipt) reduce it to `ReceiptSignal`s; `ReceiptLedger` keeps the facts (never the mail) tagged
+  by inbox; `SubscriptionIntelligenceEngine` proves subscriptions from charge patterns.
+- `InboxScanner` runs it all for every connected inbox and publishes `FoundSubscription`s;
+  `Views/InboxImportView` and `Views/Inbox/` are the screens. Findings join the list through
+  `TallyImporter.add` (Core/FirstRun), the one importer: free limit in the open, the last real charge
+  date as the anchor. Each provider is gated in `FeatureFlags` (on in DEBUG, off in release).
+- The privacy sentences on the screen are held by `InboxPrivacyTests`; change the wording and the
+  tests together.
 - Tests: `PauselyTests/Services/Mailbox/` and `RealWorldReceiptShapesTests` (shapes from real inboxes,
   rewritten with made-up details). `LiveMailboxTests` only run with `TEST_RUNNER_` variables:
   `PAUSELY_LOCAL_IMAP` / `PAUSELY_LOCAL_IMAP_APP` (a local IMAP server), `PAUSELY_REAL_MAIL_DIR` (a

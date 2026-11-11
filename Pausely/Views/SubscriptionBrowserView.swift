@@ -21,6 +21,7 @@ struct SubscriptionBrowserView: View {
     @State private var showingTierSheet = false
     @State private var showingCustomAdd = false
     @State private var showingPaywall = false
+    @State private var showingInbox = false
 
     // Popular service names shown in the featured row (shown before any filter)
     private let popularNames: [String] = [
@@ -56,6 +57,43 @@ struct SubscriptionBrowserView: View {
     // Show featured row only when browsing all (no search, no category filter)
     private var showFeatured: Bool {
         searchText.isEmpty && selectedCategory == nil
+    }
+
+    /// The quicker way to fill the list, offered before the catalog.
+    private var findInEmailRow: some View {
+        VStack(spacing: 0) {
+            Button(action: { showingInbox = true }) {
+                HStack(spacing: 12) {
+                    Image(systemName: "envelope")
+                        .font(.body)
+                        .foregroundStyle(Color.inkText)
+                        .frame(width: 36, height: 36)
+                        .background(Color.inkRaised, in: RoundedRectangle(cornerRadius: 9, style: .continuous))
+                        .accessibilityHidden(true)
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text("Find them in your email")
+                            .font(.body.weight(.medium))
+                            .foregroundStyle(Color.inkText)
+                            .multilineTextAlignment(.leading)
+                        Text("Pausely reads your receipts on this iPhone")
+                            .font(.subheadline)
+                            .foregroundStyle(Color.inkTextMuted)
+                            .multilineTextAlignment(.leading)
+                    }
+                    Spacer(minLength: 8)
+                    Image(systemName: "chevron.forward")
+                        .font(.footnote.weight(.semibold))
+                        .foregroundStyle(Color.inkTextFaint)
+                        .accessibilityHidden(true)
+                }
+                .padding(.vertical, 12)
+                .contentShape(Rectangle())
+            }
+            .buttonStyle(.plain)
+            .accessibilityElement(children: .combine)
+            .accessibilityIdentifier("browserFindInEmail")
+            Hairline()
+        }
     }
 
     var body: some View {
@@ -107,6 +145,7 @@ struct SubscriptionBrowserView: View {
                         noResultsView
                     } else {
                         if showFeatured {
+                            if FeatureFlags.inboxImportEnabled { findInEmailRow }
                             sectionTitle(L10n.string("Popular"))
                             ForEach(popularEntries) { entry in row(entry) }
                             sectionTitle(L10n.string("\(catalogService.catalog.count) services"))
@@ -133,6 +172,7 @@ struct SubscriptionBrowserView: View {
         .sheet(isPresented: $showingCustomAdd) {
             LuxuryAddSubscriptionView()
         }
+        .sheet(isPresented: $showingInbox) { InboxImportView() }
         .sheet(isPresented: $showingPaywall) {
             StoreKitUpgradeView(currentSubscriptionCount: store.subscriptions.count)
         }

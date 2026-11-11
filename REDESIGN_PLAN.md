@@ -485,6 +485,15 @@ every import is filed under "Other" and loses the trial end and cancel link; con
 start the search; one Apple receipt with several subscriptions is read as one; mail is reachable
 only from Profile.
 
+**Status, 2026-11-10 (night).** Steps 1 to 5 are done for mail and recorded in `INBOX_PLAN.md`
+("Build status (2026-11-10)"): every item above is fixed and pinned by a test. On the way, email
+sign-up turned out to be impossible to finish (the app asked for a code, the live email sent a link):
+the app now accepts both, the verification, reset-password, sign-up and sign-in screens are rebuilt,
+and the owner has one dashboard step (`SUPABASE_EMAIL_TEMPLATES.md`). Steps 6 to 8 remain: the truth
+audit of every screen and string, the remaining screens (settings, age check, price history, What's
+New, widgets: their earlier ratings were never from seeing them, because the demo arguments the
+screen tour named did not exist in the app until now), and the full verification.
+
 ---
 
 ## Sources

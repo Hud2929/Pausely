@@ -167,4 +167,15 @@ final class MailboxProvidersTests: XCTestCase {
         let wanted = InboxScanner.triage(summaries, catalog: .builtin)
         XCTAssertEqual(wanted.map(\.ref.id), ["2", "1"])
     }
+
+    // MARK: Signing in
+
+    func testICloudSignsInWithTheNamePartFirst_asAppleDocuments() {
+        func account(_ address: String, preset: String?) -> MailboxAccount {
+            MailboxAccount(id: "t", kind: .imap, address: address, presetID: preset, host: "imap.example.com", port: 993, addedAt: Date())
+        }
+        XCTAssertEqual(IMAPMailboxProvider.loginNames(for: account("jordan@icloud.com", preset: "icloud")), ["jordan", "jordan@icloud.com"])
+        XCTAssertEqual(IMAPMailboxProvider.loginNames(for: account("jordan@yahoo.com", preset: "yahoo")), ["jordan@yahoo.com"])
+        XCTAssertEqual(IMAPMailboxProvider.loginNames(for: account("jordan@example.org", preset: nil)), ["jordan@example.org"])
+    }
 }

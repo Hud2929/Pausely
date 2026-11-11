@@ -16,6 +16,54 @@ strict multi-pass "find everything" protocol behind release gates, and keep watc
 v2 7.2 → v3 8.2 → v4 8.8 → **v5 9.3**. About 12 weeks of work and under $1,000 a year in fees.
 **Verdict: worth it.** It's the highest-return item on the roadmap.
 
+## Build status (2026-11-10): measured against the standard below
+
+**How it is measured now.** `scripts/mailtest/make_test_mailbox.py` writes a synthetic mailbox (138
+messages: 22 subscriptions in six languages and five currencies, real MIME encodings, and decoys such
+as orders, rides, bills, transfers, promotions, a forged receipt, Trash and Junk) with a `truth.json`.
+`MailTruthTests` scores a scan on name, amount, currency, billing period and state.
+`scripts/mailtest/imap_test_server.py` serves the same mailbox so the app's real IMAP stack and
+screens are driven end to end (`InboxWorkflowUITests`). A fresh sample of 81 real messages (kept
+outside the repository and deleted afterwards) was scored by hand against a written truth.
+
+| Corpus | Before | Now |
+|---|---|---|
+| Synthetic mailbox (22 subscriptions) | 18 found, 3 with a wrong detail, 1 wrong name | 22 found, none wrong, no false positive |
+| Real sample (3 live, 2 cancelled, about 20 look-alikes) | 1 amount wrong (tax read as the price), 1 false positive (an offer read as a trial), 1 live subscription missed | all live ones found with the right amount, cancelled ones shown as cancelled, no false positive |
+
+**What changed in the engine** (each pinned in `ReceiptAccuracyTests`):
+- Each figure is judged by its own label, whichever way the line reads ("Total: $22.60" and
+  "CA$67.79 Total charged"). A tax, subtotal, shipping or discount line is never the price; the amount
+  is the total charged, tax included.
+- Offered prices ("plans from", "then", "danach") are never the charge. Mail with an unsubscribe header
+  that neither calls itself a receipt nor says anything was charged is a promotion, with or without
+  Gmail's label. An invitation to start a trial is not a trial.
+- Whole-unit prices, riyals, dirhams, dinars, Arabic-Indic and full-width digits; billing periods in
+  every app language.
+- The schedule is the longest regular chain of charges: a stray email can't change it, a plan that
+  moved from monthly to yearly is yearly, a price rise is found wherever it happened.
+- App Store receipts yield each subscription with its own price (`AppleReceipt`), nothing for one-off
+  purchases or a family member's copy. An app-store subscription nobody has heard of is still found.
+- Stores that send no renewal receipts (Prime Video channels): a sign-up with no cancellation since is
+  listed as worth a look. Inside a store, what follows a brand is its plan; from a payment processor
+  it is another business.
+
+**What changed in the flow:**
+- Connecting starts the search. Receipts print on a slip while it runs. Stopping keeps what was read.
+- One importer (`TallyImporter.add`) for first-run lines and mail findings. The free limit is said
+  before the tap and after it; nothing is dropped unsaid. Imports keep the category, the period, a
+  trial's end and the last real charge date as the anchor.
+- The app-password screen puts the steps first and has the system paste button. iCloud signs in with
+  the name part first, as Apple documents.
+- Reachable from Home's empty state, the add screen and Profile (all behind `FeatureFlags`).
+- `InboxPrivacyTests` hold each sentence of the privacy promise: only mail providers are contacted,
+  the ledger has no field for email text, access is read-only, disconnecting forgets the inbox.
+
+**Still not claimable** (unchanged): one real sign-in per provider, the Microsoft client ID, Google's
+approval. Release switches stay off. Known limits: bodies larger than the fetch cap are cut; a store
+receipt in a layout the reader doesn't know falls back to one fact per email; Google Play's discounted
+receipts (the total shows the list price) have no sample yet.
+
 ## Build status (2026-11-03)
 
 **Built and tested, still off in release builds** (`FeatureFlags`):
