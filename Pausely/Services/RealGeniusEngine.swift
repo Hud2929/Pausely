@@ -22,7 +22,7 @@ final class RealGeniusEngine: ObservableObject {
     @Published private(set) var insights: [GeniusInsight] = []
 
     // MARK: - Screen Time Manager
-    private var screenTimeManager: ScreenTimeManager { ScreenTimeManager.shared }
+    private var screenTimeManager: UsageLog { UsageLog.shared }
     private var currencyCancellable: AnyCancellable?
 
     private init() {

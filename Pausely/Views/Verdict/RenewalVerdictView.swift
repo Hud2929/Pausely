@@ -11,7 +11,7 @@ struct RenewalVerdictView: View {
     @ObservedObject private var eventLog = LifecycleEventLog.shared
     @ObservedObject private var paymentManager = PaymentManager.shared
     @ObservedObject private var currencyManager = CurrencyManager.shared
-    @ObservedObject private var screenTime = ScreenTimeManager.shared
+    @ObservedObject private var screenTime = UsageLog.shared
 
     @State private var showCancelFlow = false
     @State private var showPaywall = false

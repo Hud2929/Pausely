@@ -77,7 +77,8 @@ All pure and unit-tested; they take `now` and a `Calendar`.
 - `Core/Money`: `MoneyFormat` (all money text), `CurrencyRates` (conversion, built-in rates),
   `MoneyMath` (totals across currencies). `CurrencyManager` (in SupabaseManager.swift) holds the
   display currency and live rates.
-- `SupabaseManager`, `ScreenTimeManager` (manual usage), `ReferralManager`, `KeychainManager`, `AppConfig`.
+- `SupabaseManager`, `UsageLog` (hours the person types in, counted for the month they were entered),
+  `ReferralManager`, `KeychainManager`, `AppConfig`.
 
 ### Finding subscriptions in email (`Pausely/Services/Mailbox/`, plan in `INBOX_PLAN.md`)
 One engine, one adapter per kind of inbox, all read-only and on-device:
@@ -113,7 +114,8 @@ One engine, one adapter per kind of inbox, all read-only and on-device:
 - `Views/Verdict/`: `RenewalVerdictView`, `SavingsReceiptView`, `PausePlanView`, dashboard cards.
 - `SubscriptionManagementView`: the subscription screen (tools, cancel timing, lifetime cost).
 - `SubscriptionEditView`, `SubscriptionBrowserView` (catalog), `StoreKitUpgradeView` (paywall),
-  `Settings/` (notifications, privacy and account deletion, help).
+  `Settings/` (notifications, privacy and account deletion, help, currency), all built from
+  `DesignSystem/SettingsParts.swift` (`SettingsPage`, `SettingsSection`, `SettingsRow`, `ChoiceRow`).
 
 ### Design
 iPhone and iPad (`TARGETED_DEVICE_FAMILY = "1,2"`; 1.0.1 shipped on iPad, so Apple rejects any

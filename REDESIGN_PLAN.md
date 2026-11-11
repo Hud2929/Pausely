@@ -518,9 +518,10 @@ Ratings from what was actually seen on screen this time (harsh method; "not seen
 | Hours-used sheet (rebuilt) | not seen | | | not rated |
 | Widgets, Live Activity | never seen on a Home or Lock Screen | | | not rated |
 
-Still open: `ScreenTimeManager` (782 lines that import FamilyControls and carry Screen Time
-authorisation text; only its typed-hours functions are used) should become a small typed-hours
-store; widget strings are English only; the screens marked "not seen" above; a full four-variant
+Done after the table was written: `ScreenTimeManager` (782 lines importing FamilyControls) is replaced
+by `UsageLog`, sixty lines that keep typed hours for the month they were entered in.
+
+Still open: widget strings are English only; the screens marked "not seen" above; a full four-variant
 tour; 848 keys in `Localizable.xcstrings` that no code references.
 
 ---

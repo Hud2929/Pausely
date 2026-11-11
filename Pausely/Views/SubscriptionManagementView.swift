@@ -11,7 +11,7 @@ struct SubscriptionManagementView: View {
     @ObservedObject private var actionManager = SubscriptionActionManager.shared
     @ObservedObject private var paymentManager = PaymentManager.shared
     @ObservedObject private var eventLog = LifecycleEventLog.shared
-    @ObservedObject private var screenTimeManager = ScreenTimeManager.shared
+    @ObservedObject private var screenTimeManager = UsageLog.shared
     @ObservedObject private var currencyManager = CurrencyManager.shared
 
     @State private var route: Route?
@@ -420,7 +420,7 @@ private struct UsageSheet: View {
     let subscription: Subscription
 
     @Environment(\.dismiss) private var dismiss
-    @ObservedObject private var screenTimeManager = ScreenTimeManager.shared
+    @ObservedObject private var screenTimeManager = UsageLog.shared
     @State private var showInput = false
 
     private var minutes: Int { screenTimeManager.getCurrentMonthUsage(for: subscription.name) }

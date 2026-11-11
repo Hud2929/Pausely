@@ -58,7 +58,6 @@ struct DashboardView: View {
         .sheet(isPresented: $showingDates) { RenewalDatesSheet(subscriptions: Horizon.undated(store.subscriptions)) }
         .sheet(isPresented: $showingInbox) { InboxImportView() }
         .onAppear {
-            Task { await ScreenTimeManager.shared.syncUsageData() }
             ReviewPromptManager.shared.askAfterMoneyKept()
         }
     }
