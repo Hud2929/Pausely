@@ -383,6 +383,9 @@ struct RootView: View {
             // Time-driven changes (renewals passing, trials ending) and a fresh set of reminders
             // every time the app comes back to the foreground.
             if phase == .active {
+                // The phone is unlocked now: anything a locked-screen action couldn't read can be.
+                LifecycleEventLog.shared.loadIfNeeded()
+                PausePlanStore.shared.loadIfNeeded()
                 Task {
                     await NotificationManager.shared.refreshStatus()
                     await SubscriptionLifecycle.shared.run()

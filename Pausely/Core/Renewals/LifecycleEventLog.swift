@@ -55,56 +55,80 @@ final class LifecycleEventLog: ObservableObject {
     @Published private(set) var events: [LifecycleEvent] = []
     private let fileURL: URL
 
+    /// False while the saved history exists but can't be read (a background launch on a locked phone).
+    /// Nothing is written until it has been read: saving now would replace the whole history with the
+    /// one or two things that happened since launch.
+    private(set) var historyIsLoaded = true
+    /// What was recorded while the history couldn't be read. Joined to it as soon as it can be.
+    private var recordedBeforeLoad: [LifecycleEvent] = []
+
     init(fileURL: URL? = nil) {
         self.fileURL = fileURL ?? Self.defaultURL()
-        events = Self.load(from: self.fileURL)
+        switch DeviceFile.load([LifecycleEvent].self, from: self.fileURL) {
+        case .value(let saved):
+            events = saved
+            DeviceFile.relaxProtection(of: self.fileURL)
+        case .missing:
+            events = []
+        case .unreadable:
+            historyIsLoaded = false
+        }
     }
 
     func record(_ kind: LifecycleEvent.Kind, for subscription: Subscription, date: Date = Date(),
                 previousAmount: Decimal? = nil, renewalDate: Date? = nil) {
-        events.append(LifecycleEvent(kind: kind, subscription: subscription, date: date,
-                                     previousAmount: previousAmount, renewalDate: renewalDate))
-        if events.count > Self.maxEvents {
-            events.removeFirst(events.count - Self.maxEvents)
-        }
+        let event = LifecycleEvent(kind: kind, subscription: subscription, date: date,
+                                   previousAmount: previousAmount, renewalDate: renewalDate)
+        events.append(event)
+        if !historyIsLoaded { recordedBeforeLoad.append(event) }
         save()
     }
 
-    func events(for subscriptionId: UUID) -> [LifecycleEvent] {
-        events.filter { $0.subscriptionId == subscriptionId }
+    /// Reads the history if an earlier attempt couldn't, and saves anything recorded in between.
+    /// Called whenever the app comes to the foreground, when the phone is certainly unlocked.
+    func loadIfNeeded() {
+        guard !historyIsLoaded else { return }
+        save()
     }
 
     /// Wipes the log (used when the user deletes their account or data).
     func removeAll() {
-        events = []
-        save()
+        restore([])
     }
 
-    /// Puts back a saved history (tests restore what they changed).
+    /// Replaces the history (tests put back what they changed).
     func restore(_ saved: [LifecycleEvent]) {
         events = saved
+        recordedBeforeLoad = []
+        historyIsLoaded = true
         save()
     }
 
     // MARK: - Persistence
 
     private func save() {
+        if !historyIsLoaded {
+            switch DeviceFile.load([LifecycleEvent].self, from: fileURL) {
+            case .value(let saved):
+                let known = Set(saved.map(\.id))
+                events = saved + recordedBeforeLoad.filter { !known.contains($0.id) }
+                DeviceFile.relaxProtection(of: fileURL)
+            case .missing:
+                events = recordedBeforeLoad
+            case .unreadable:
+                return
+            }
+            recordedBeforeLoad = []
+            historyIsLoaded = true
+        }
+        if events.count > Self.maxEvents {
+            events.removeFirst(events.count - Self.maxEvents)
+        }
         do {
-            let encoder = JSONEncoder()
-            encoder.dateEncodingStrategy = .iso8601
-            let data = try encoder.encode(events)
-            try FileManager.default.createDirectory(at: fileURL.deletingLastPathComponent(), withIntermediateDirectories: true)
-            try data.write(to: fileURL, options: [.atomic, .completeFileProtection])
+            try DeviceFile.save(events, to: fileURL)
         } catch {
             PauselyLogger.error("Lifecycle log save failed: \(error.localizedDescription)", category: "lifecycle")
         }
-    }
-
-    private static func load(from url: URL) -> [LifecycleEvent] {
-        guard let data = try? Data(contentsOf: url) else { return [] }
-        let decoder = JSONDecoder()
-        decoder.dateDecodingStrategy = .iso8601
-        return (try? decoder.decode([LifecycleEvent].self, from: data)) ?? []
     }
 
     private static func defaultURL() -> URL {

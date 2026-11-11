@@ -7,10 +7,32 @@ final class PausePlanStore: ObservableObject {
 
     @Published private(set) var plan: PausePlan?
     private let fileURL: URL
+    /// False while a saved plan exists but can't be read (a background launch on a locked phone);
+    /// nothing is written over it until it has been.
+    private var planIsLoaded = true
 
     init(fileURL: URL? = nil) {
         self.fileURL = fileURL ?? Self.defaultURL()
-        plan = Self.load(from: self.fileURL)
+        load()
+    }
+
+    /// Reads the plan if an earlier attempt couldn't. Called when the app comes to the foreground.
+    func loadIfNeeded() {
+        if !planIsLoaded { load() }
+    }
+
+    private func load() {
+        switch DeviceFile.load(PausePlan.self, from: fileURL) {
+        case .value(let saved):
+            plan = saved
+            planIsLoaded = true
+            DeviceFile.relaxProtection(of: fileURL)
+        case .missing:
+            plan = nil
+            planIsLoaded = true
+        case .unreadable:
+            planIsLoaded = false
+        }
     }
 
     /// The plan with removed subscriptions dropped; nil once fewer than two are left.
@@ -59,26 +81,17 @@ final class PausePlanStore: ObservableObject {
     // MARK: - Persistence
 
     private func save() {
+        // A plan the person starts or ends by hand replaces whatever was saved, readable or not.
+        planIsLoaded = true
         do {
             if let plan {
-                let encoder = JSONEncoder()
-                encoder.dateEncodingStrategy = .iso8601
-                let data = try encoder.encode(plan)
-                try FileManager.default.createDirectory(at: fileURL.deletingLastPathComponent(), withIntermediateDirectories: true)
-                try data.write(to: fileURL, options: [.atomic, .completeFileProtection])
+                try DeviceFile.save(plan, to: fileURL)
             } else if FileManager.default.fileExists(atPath: fileURL.path) {
                 try FileManager.default.removeItem(at: fileURL)
             }
         } catch {
             PauselyLogger.error("Pause Plan save failed: \(error.localizedDescription)", category: "lifecycle")
         }
-    }
-
-    private static func load(from url: URL) -> PausePlan? {
-        guard let data = try? Data(contentsOf: url) else { return nil }
-        let decoder = JSONDecoder()
-        decoder.dateDecodingStrategy = .iso8601
-        return try? decoder.decode(PausePlan.self, from: data)
     }
 
     private static func defaultURL() -> URL {

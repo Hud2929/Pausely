@@ -152,7 +152,7 @@ matters to a stranger: the customer round below scores "getting in" at 1.
 
 | Id | What | Status |
 |---|---|---|
-| B1 | History file unreadable on a locked phone → "Keep it" from a notification can overwrite the whole Savings Receipt history | open |
+| B1 | History file unreadable on a locked phone → "Keep it" from a notification can overwrite the whole Savings Receipt history | closed 11-11: `DeviceFile` tells "missing" from "unreadable"; nothing is saved until the history has been read; six tests |
 | B2 | Sync queue drops changes queued while it is sending | open |
 | B3 | Edits, cancels and deletes made before a failed add has synced are silently undone | open |
 | B4 | The queue only drains on launch or pull-to-refresh, while the app says "It will sync when you're back online"; failures retry forever, silently | open |

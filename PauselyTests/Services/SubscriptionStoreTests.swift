@@ -46,7 +46,7 @@ final class SubscriptionStoreTests: XCTestCase {
         XCTAssertEqual(store.subscriptions.map(\.id), [sub.id], "the subscription stays on the device")
         XCTAssertEqual(SyncQueue.shared.pendingOperations.last?.subscriptionId, sub.id)
         XCTAssertEqual(queued.last, .create)
-        XCTAssertEqual(LifecycleEventLog.shared.events(for: sub.id).map(\.kind), [.added])
+        XCTAssertEqual(LifecycleEventLog.shared.events.filter { $0.subscriptionId == sub.id }.map(\.kind), [.added])
     }
 
     // MARK: Changing
@@ -58,7 +58,7 @@ final class SubscriptionStoreTests: XCTestCase {
         edited.amount = 12
         try await store.updateSubscription(edited)
         XCTAssertEqual(store.totalMonthlySpend, 12)
-        let change = try XCTUnwrap(LifecycleEventLog.shared.events(for: sub.id).last)
+        let change = try XCTUnwrap(LifecycleEventLog.shared.events.filter { $0.subscriptionId == sub.id }.last)
         XCTAssertEqual(change.kind, .priceChanged)
         XCTAssertEqual(change.previousAmount, 10)
         XCTAssertEqual(change.amount, 12)
@@ -72,7 +72,7 @@ final class SubscriptionStoreTests: XCTestCase {
         XCTAssertEqual(store.totalMonthlySpend, 0)
         try await store.updateSubscriptionStatus(id: sub.id, status: .active)
         XCTAssertEqual(store.totalMonthlySpend, 10)
-        XCTAssertEqual(LifecycleEventLog.shared.events(for: sub.id).map(\.kind), [.added, .cancelled, .reactivated])
+        XCTAssertEqual(LifecycleEventLog.shared.events.filter { $0.subscriptionId == sub.id }.map(\.kind), [.added, .cancelled, .reactivated])
         XCTAssertEqual(queued.suffix(2), [.updateStatus, .updateStatus])
     }
 
@@ -100,7 +100,7 @@ final class SubscriptionStoreTests: XCTestCase {
         try await store.deleteSubscription(id: gone.id)
         XCTAssertEqual(store.subscriptions.map(\.id), [keep.id])
         XCTAssertEqual(store.totalMonthlySpend, 5)
-        XCTAssertEqual(LifecycleEventLog.shared.events(for: gone.id).last?.kind, .deleted)
+        XCTAssertEqual(LifecycleEventLog.shared.events.filter { $0.subscriptionId == gone.id }.last?.kind, .deleted)
         XCTAssertEqual(queued.suffix(1), [.delete])
     }
 
