@@ -751,6 +751,9 @@ private struct FoundRow: View {
                 .font(.subheadline)
                 .foregroundStyle(Color.inkTextMuted)
                 .multilineTextAlignment(.leading)
+                // One line beside a price at ordinary sizes; free to wrap when the text is large.
+                .lineLimit(typeSize.isAccessibilitySize ? nil : 1)
+                .minimumScaleFactor(0.8)
             if let badge {
                 HStack(spacing: 6) {
                     if let state = badge.state { StateMark(state: state) }

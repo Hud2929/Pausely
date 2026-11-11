@@ -12,8 +12,6 @@ enum ProFeature: String, CaseIterable, Identifiable {
     case pausePlan
     /// The full savings analysis on the Analysis tab.
     case deepAnalysis
-    /// Cheaper alternatives to a subscription.
-    case cheaperAlternatives
 
     var id: String { rawValue }
 
@@ -22,7 +20,6 @@ enum ProFeature: String, CaseIterable, Identifiable {
         case .unlimitedSubscriptions: return L10n.string("Unlimited subscriptions")
         case .pausePlan: return L10n.string("Pause Plan: rotate your streaming")
         case .deepAnalysis: return L10n.string("Deep savings analysis")
-        case .cheaperAlternatives: return L10n.string("Cheaper Alternatives")
         }
     }
 
@@ -31,7 +28,6 @@ enum ProFeature: String, CaseIterable, Identifiable {
         case .unlimitedSubscriptions: return "infinity"
         case .pausePlan: return "arrow.triangle.2.circlepath"
         case .deepAnalysis: return "chart.line.uptrend.xyaxis"
-        case .cheaperAlternatives: return "arrow.triangle.swap"
         }
     }
 }
@@ -41,7 +37,7 @@ extension ProFeature {
     /// moving a single feature between free and Pro a one-line change.
     func isUnlocked(isPro: Bool) -> Bool {
         switch self {
-        case .unlimitedSubscriptions, .pausePlan, .deepAnalysis, .cheaperAlternatives:
+        case .unlimitedSubscriptions, .pausePlan, .deepAnalysis:
             return isPro
         }
     }

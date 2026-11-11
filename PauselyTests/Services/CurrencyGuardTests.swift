@@ -72,7 +72,7 @@ final class CurrencyGuardTests: XCTestCase {
              fix: "Format the amount with MoneyFormat and interpolate it; sample amounts use OnboardingSample.money.",
              matches: { line in CurrencyGuardTests.literalTexts(line).contains { CurrencyGuardTests.has(CurrencyGuardTests.symbolNextToAmount, $0) } },
              allowedPaths: [
-                "Pausely/Services/AlternativeDatabase.swift", // US offers quoted as published ("$300 credit")
+                "Pausely/Services/ServiceDatabaseMore.swift", // US offers quoted as published ("$300 credit")
                 "Pausely/Services/CatalogData.swift",         // US plan names and descriptions ("ChatGPT Pro ($200)")
                 "Pausely/Services/Intelligence/ReceiptTextAnalyzer.swift",   // reads symbols out of receipts
                 "Pausely/Services/Intelligence/EmailSignalExtractor.swift"   // decodes &euro; and friends in emails
@@ -94,7 +94,7 @@ final class CurrencyGuardTests: XCTestCase {
              matches: { CurrencyGuardTests.has(CurrencyGuardTests.usdDefault, $0) },
              allowedPaths: [
                 "Pausely/Services/SupabaseManager.swift",       // formatCatalogPrice: the catalog's prices are in USD
-                "Pausely/Services/AlternativeDatabase.swift",   // parsed catalog patterns carry US list prices
+                "Pausely/Services/ServiceDatabaseMore.swift",   // parsed catalog patterns carry US list prices
                 "Pausely/Services/WidgetDataStore.swift",       // empty widget summary before the first publish
                 "Pausely/Services/Intelligence/SubscriptionIntelligenceEngine.swift", // mailbox fallback, tested in USD
                 "PauselyWidget/"                                 // sample data for widget previews

@@ -74,24 +74,6 @@ final class PauselyAppIntentsTests: XCTestCase {
         XCTAssertTrue((result.value ?? "").contains("in 2 days") || (result.value ?? "").contains("in 3 days"))
     }
 
-    // MARK: - GetBestValueSubscriptionIntent
-
-    func testGetBestValueSubscriptionIntent_noActive() async throws {
-        let intent = GetBestValueSubscriptionIntent()
-        let result = try await intent.perform()
-        XCTAssertEqual(result.value, "You don't have any active subscriptions.")
-    }
-
-    func testGetBestValueSubscriptionIntent_findsCheapest() async throws {
-        SubscriptionStore.shared.subscriptions = [
-            TestFactories.makeSubscription(name: "Expensive", amount: 50, status: .active),
-            TestFactories.makeSubscription(name: "Cheap", amount: 5, status: .active)
-        ]
-        let intent = GetBestValueSubscriptionIntent()
-        let result = try await intent.perform()
-        XCTAssertTrue((result.value ?? "").contains("Cheap"))
-    }
-
     // MARK: - GetSubscriptionDetailIntent
 
     func testGetSubscriptionDetailIntent_found() async throws {

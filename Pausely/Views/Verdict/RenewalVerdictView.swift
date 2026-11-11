@@ -98,9 +98,6 @@ struct RenewalVerdictView: View {
                     }
                     .padding(.top, 4)
 
-                    if !sub.isPausely, let cheaper = cheaperOption(sub) {
-                        cheaperLine(cheaper).padding(.top, 16)
-                    }
                 }
                 .padding(.horizontal, Layout.margin)
                 .padding(.bottom, 16)
@@ -196,28 +193,6 @@ struct RenewalVerdictView: View {
             .fixedSize(horizontal: false, vertical: true)
     }
 
-    /// A cheaper option sits quietly below the slip: it is a suggestion, not one of the facts.
-    private func cheaperLine(_ cheaper: (name: String, monthly: Decimal)) -> some View {
-        Group {
-            if paymentManager.isUnlocked(.cheaperAlternatives) {
-                Text(cheaper.monthly == 0
-                     ? L10n.string("Free alternative: \(cheaper.name)")
-                     : L10n.string("Cheaper: \(cheaper.name) at \(currencyManager.format(cheaper.monthly)) a month"))
-                    .foregroundStyle(Color.inkTextMuted)
-            } else {
-                Button { showPaywall = true } label: {
-                    Text(L10n.string("Pro shows a cheaper option for this")).underline()
-                        .foregroundStyle(Color.inkTextMuted)
-                        .frame(minHeight: Layout.tapTarget, alignment: .leading)
-                        .contentShape(Rectangle())
-                }
-                .buttonStyle(.plain)
-            }
-        }
-        .font(.subheadline)
-        .frame(maxWidth: .infinity, alignment: .leading)
-    }
-
     private func yearlyText(_ sub: Subscription) -> String {
         let yearly = MoneyFormat.string(sub.annualCost, sub.currency)
         guard sub.currency != currencyManager.selectedCurrency else {
@@ -235,14 +210,6 @@ struct RenewalVerdictView: View {
             return L10n.string("Used \(duration) this month · \(MoneyFormat.string(perHour, sub.currency)) an hour")
         }
         return L10n.string("Used \(duration) this month")
-    }
-
-    private func cheaperOption(_ sub: Subscription) -> (name: String, monthly: Decimal)? {
-        let current = currencyManager.convertToSelected(sub.monthlyCost, from: sub.currency)
-        return SubscriptionActionManager.shared.findAlternatives(for: sub)
-            .map { (name: $0.name, monthly: currencyManager.convertToSelected(Decimal($0.monthlyPrice), from: "USD")) }
-            .filter { $0.monthly < current && $0.name.caseInsensitiveCompare(sub.name) != .orderedSame }
-            .min { $0.monthly < $1.monthly }
     }
 
     // MARK: - The two answers

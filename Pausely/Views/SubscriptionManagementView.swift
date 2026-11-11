@@ -20,7 +20,7 @@ struct SubscriptionManagementView: View {
     @State private var errorMessage: String?
 
     private enum Route: String, Identifiable {
-        case edit, paywall, cancel, priceHistory, alternatives, usage, verdict, receipt, pausePlan
+        case edit, paywall, cancel, priceHistory, usage, verdict, receipt, pausePlan
         var id: String { rawValue }
     }
 
@@ -29,7 +29,6 @@ struct SubscriptionManagementView: View {
         store.subscriptions.first { $0.id == subscription.id } ?? subscription
     }
 
-    private var alternatives: [AlternativeService] { actionManager.findAlternatives(for: current) }
     private var contacts: [SupportContact] { actionManager.getSupportContacts(for: current) }
 
     var body: some View {
@@ -254,14 +253,6 @@ struct SubscriptionManagementView: View {
         VStack(spacing: 0) {
             toolRow(icon: "chart.line.uptrend.xyaxis", title: L10n.string("Price history"), subtitle: nil) { route = .priceHistory }
 
-            if !alternatives.isEmpty {
-                divider
-                toolRow(icon: "arrow.left.arrow.right", title: L10n.string("Cheaper alternatives"),
-                        subtitle: L10n.string("\(alternatives.count) options"),
-                        isPro: !paymentManager.isUnlocked(.cheaperAlternatives)) {
-                    route = paymentManager.isUnlocked(.cheaperAlternatives) ? .alternatives : .paywall
-                }
-            }
 
             if PausePlanSchedule.isEligible(current) {
                 divider
@@ -411,8 +402,6 @@ struct SubscriptionManagementView: View {
             CancelSubscriptionFlow(subscription: current)
         case .priceHistory:
             PriceHistoryView(subscription: current)
-        case .alternatives:
-            AlternativesSheet(subscription: current, alternatives: alternatives) { self.route = .paywall }
         case .usage:
             UsageSheet(subscription: current)
         case .verdict:
@@ -422,47 +411,6 @@ struct SubscriptionManagementView: View {
         case .pausePlan:
             PausePlanView()
         }
-    }
-}
-
-// MARK: - Alternatives
-
-private struct AlternativesSheet: View {
-    let subscription: Subscription
-    let alternatives: [AlternativeService]
-    let onPaywall: () -> Void
-
-    @Environment(\.dismiss) private var dismiss
-    @ObservedObject private var actionManager = SubscriptionActionManager.shared
-    @ObservedObject private var paymentManager = PaymentManager.shared
-    @State private var selected: AlternativeService?
-
-    var body: some View {
-        NavigationStack {
-            ScrollView {
-                AlternativesSection(
-                    subscription: subscription,
-                    alternatives: alternatives,
-                    paymentManager: paymentManager,
-                    actionManager: actionManager,
-                    onSelectAlternative: { selected = $0 },
-                    onPaywall: onPaywall
-                )
-                .padding(20)
-            }
-            .background(Color.ink.ignoresSafeArea())
-            .navigationTitle("Alternatives")
-            .navigationBarTitleDisplayMode(.inline)
-            .toolbar {
-                ToolbarItem(placement: .topBarLeading) {
-                    Button("Done") { dismiss() }.foregroundStyle(Color.inkText)
-                }
-            }
-            .sheet(item: $selected) { alternative in
-                AlternativeDetailView(alternative: alternative, current: subscription)
-            }
-        }
-        .preferredColorScheme(.dark)
     }
 }
 

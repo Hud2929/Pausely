@@ -56,7 +56,7 @@ struct UsageHistorySheet: View {
                         }
                     }
 
-                    Section(footer: Text("Note: Screen Time data is estimated from session counts. Manual entries are exact values you provided.")) {
+                    Section(footer: Text("These are the hours you entered yourself.")) {
                         HStack {
                             Text("Total Tracked Time")
                             Spacer()

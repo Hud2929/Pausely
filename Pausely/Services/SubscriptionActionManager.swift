@@ -253,38 +253,6 @@ struct CancellationStep: Codable, Identifiable {
     }
 }
 
-/// Alternative service option
-struct AlternativeService: Identifiable, Codable {
-    var id = UUID()
-    let name: String
-    let description: String
-    let monthlyPrice: Double
-    let annualPrice: Double?
-    let features: [String]
-    let pros: [String]
-    let cons: [String]
-    let websiteURL: String
-    let rating: Double
-    let category: ServiceCategory
-    let savingsPercentage: Double?
-    
-    var annualCost: Double {
-        annualPrice ?? monthlyPrice * 12
-    }
-
-    /// Alternative prices are US list prices; shown in the user's currency, marked "≈" when converted.
-    var monthlyPriceText: String {
-        let manager = CurrencyManager.shared
-        let converted = manager.convertCrossCurrency(monthlyPrice, from: "USD", to: manager.selectedCurrency)
-        return manager.priceIndicator + MoneyFormat.string(converted, manager.selectedCurrency)
-    }
-
-    func calculateSavings(comparedTo currentMonthly: Double) -> Double {
-        let currentAnnual = currentMonthly * 12
-        return currentAnnual - annualCost
-    }
-}
-
 /// Pause record for tracking paused subscriptions
 struct PauseRecord: Identifiable, Codable {
     let id: UUID

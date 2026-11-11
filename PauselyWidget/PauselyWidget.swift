@@ -280,7 +280,7 @@ struct LargeWidgetView: View {
             
             // Insights
             VStack(alignment: .leading, spacing: 8) {
-                Text("AI Insights")
+                Text("Next charge")
                     .font(.caption.bold())
                 
                 InsightRow(

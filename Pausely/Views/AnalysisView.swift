@@ -9,7 +9,6 @@
 import SwiftUI
 
 struct AnalysisView: View {
-    @ObservedObject private var insightsEngine = RealInsightsEngine.shared
     @ObservedObject private var geniusEngine = RealGeniusEngine.shared
     @ObservedObject private var store = SubscriptionStore.shared
     @ObservedObject private var paymentManager = PaymentManager.shared
@@ -69,10 +68,11 @@ struct AnalysisView: View {
                         }
                     }
 
-                    if insightsEngine.categoryBreakdown.count > 1 {
+                    let categories = store.subscriptions.categoryTotals(in: currencyManager.selectedCurrency)
+                    if categories.count > 1 {
                         section(L10n.string("Where it goes")) {
-                            let top = insightsEngine.categoryBreakdown.map(\.amount).max() ?? 1
-                            ForEach(Array(insightsEngine.categoryBreakdown.prefix(5).enumerated()), id: \.element.id) { index, category in
+                            let top = categories.map(\.amount).max() ?? 1
+                            ForEach(Array(categories.prefix(5).enumerated()), id: \.element.id) { index, category in
                                 if index > 0 { Hairline() }
                                 BarRow(title: SubscriptionCategory.localizedLabel(for: category.category),
                                        value: MoneyFormat.string(category.amount, currencyManager.selectedCurrency, locale: L10n.locale),  // money-guard: category totals are already in the display currency
@@ -121,7 +121,6 @@ struct AnalysisView: View {
         }
         .background(Color.ink.ignoresSafeArea())
         .task(id: store.subscriptions.count) {
-            await insightsEngine.analyze(subscriptions: store.subscriptions)
             if canAnalyze, !store.subscriptions.isEmpty, case .idle = deep { await runDeepAnalysis() }
         }
         .sheet(isPresented: $showingPaywall) {

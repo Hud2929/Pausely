@@ -110,18 +110,20 @@ final class WidgetDataStore {
 
     // MARK: - Insights
 
+    /// The one line the widget leads with: what charges next, how much, and when. A fact from the
+    /// person's own list, in their language; never commentary on their spending.
     private func generateInsight(for subscriptions: [Subscription], monthlyTotal: Decimal, currency: String) -> String {
-        if subscriptions.isEmpty {
-            return "Add your first subscription to start tracking"
+        guard !subscriptions.isEmpty else { return L10n.string("Add what you pay for in Pausely") }
+        let dated = subscriptions.compactMap { sub in sub.calculatedNextBillingDate.map { (sub, $0) } }
+        guard let (next, date) = dated.min(by: { $0.1 < $1.1 }) else { return L10n.string("Add renewal dates to see what's next") }
+        let days = max(0, Calendar.current.calendarDays(from: Date(), to: date))
+        let when: String
+        switch days {
+        case 0: when = L10n.string("today")
+        case 1: when = L10n.string("tomorrow")
+        default: when = L10n.string("in \(days) days")
         }
-        if subscriptions.monthlyTotal(in: "USD") > 200 {
-            return "You're spending \(MoneyFormat.string(monthlyTotal, currency, wholeUnits: true))/month — review for savings"
-        }
-        let paused = subscriptions.filter { $0.isPaused }.count
-        if paused > 0 {
-            return "\(paused) subscription\(paused == 1 ? "" : "s") paused — great job saving"
-        }
-        return "Tracking \(subscriptions.count) active subscription\(subscriptions.count == 1 ? "" : "s")"
+        return "\(next.name) · \(MoneyFormat.string(next.amount, next.currency)) · \(when)"
     }
 }
 

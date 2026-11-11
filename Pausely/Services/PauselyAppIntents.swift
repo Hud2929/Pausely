@@ -68,34 +68,6 @@ struct GetSubscriptionCountIntent: AppIntent {
     }
 }
 
-// MARK: - Get Best Value Subscription Intent
-struct GetBestValueSubscriptionIntent: AppIntent {
-    static var title: LocalizedStringResource = "Get Best Value Subscription"
-    static var description = IntentDescription("Find which subscription gives you the best value per hour of use.")
-
-    @MainActor
-    func perform() async throws -> some IntentResult & ReturnsValue<String> {
-        let store = SubscriptionStore.shared
-        let activeSubs = store.subscriptions.filter { $0.status == .active }
-
-        guard !activeSubs.isEmpty else {
-            return .result(value: "You don't have any active subscriptions.")
-        }
-
-        let bestValue = activeSubs.min { a, b in
-            [a].monthlyTotal() < [b].monthlyTotal()  // compared in one currency
-        }
-
-        guard let best = bestValue else {
-            return .result(value: "Could not determine best value subscription.")
-        }
-
-        let amount = MoneyFormat.string(best.monthlyCost, best.currency)
-
-        return .result(value: "Your best value subscription is \(best.name) at \(amount) per month.")
-    }
-}
-
 // MARK: - Add Subscription Intent
 struct AddSubscriptionIntent: AppIntent {
     static var title: LocalizedStringResource = "Add Subscription"

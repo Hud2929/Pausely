@@ -63690,6 +63690,108 @@
           }
         }
       }
+    },
+    "Add what you pay for in Pausely": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "أضف ما تدفع مقابله في Pausely"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Füge in Pausely hinzu, wofür du zahlst"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Añade en Pausely lo que pagas"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ajoutez dans Pausely ce que vous payez"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "支払っているものをPauselyに追加"
+          }
+        }
+      }
+    },
+    "Add renewal dates to see what's next": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "أضف تواريخ التجديد لمعرفة الخصم التالي"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Füge Verlängerungsdaten hinzu, um die nächste Abbuchung zu sehen"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Añade las fechas de renovación para ver el próximo cargo"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ajoutez les dates de renouvellement pour voir le prochain prélèvement"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "更新日を追加すると次の請求がわかります"
+          }
+        }
+      }
+    },
+    "These are the hours you entered yourself.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "هذه هي الساعات التي أدخلتها بنفسك."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Das sind die Stunden, die du selbst eingetragen hast."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Estas son las horas que introdujiste tú."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ce sont les heures que vous avez saisies vous-même."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ご自身で入力した時間です。"
+          }
+        }
+      }
     }
   },
   "version": "1.1"

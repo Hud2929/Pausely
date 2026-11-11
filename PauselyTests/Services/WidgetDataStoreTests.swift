@@ -38,7 +38,7 @@ final class WidgetDataStoreTests: XCTestCase {
         XCTAssertEqual(summary.monthlySpend, 0)
         XCTAssertEqual(summary.activeCount, 0)
         XCTAssertEqual(summary.upcomingCount, 0)
-        XCTAssertEqual(summary.topInsight, "Add your first subscription to start tracking")
+        XCTAssertEqual(summary.topInsight, "Add what you pay for in Pausely")
     }
 
     func testPublish_singleActiveSubscription() {
@@ -87,22 +87,39 @@ final class WidgetDataStoreTests: XCTestCase {
         XCTAssertEqual(summary.activeCount, 3)
     }
 
-    func testPublish_highSpendInsight() {
-        let sub = TestFactories.makeSubscription(amount: 250, status: .active)
-        sut.publish(subscriptions: [sub])
-        let summary = sut.readSummary()
+    // The widget's top line is the next charge: who, how much, when. It never comments on the
+    // person's spending ("review for savings", "great job saving").
 
-        XCTAssertTrue(summary.topInsight.contains("250"))
-        XCTAssertTrue(summary.topInsight.contains("review"))
+    func testTopLineIsTheNextCharge() {
+        let calendar = Calendar.current
+        let soon = TestFactories.makeSubscription(name: "Spotify", amount: Decimal(string: "10.99")!, status: .active,
+                                                  nextBillingDate: calendar.date(byAdding: .day, value: 3, to: Date()))
+        let later = TestFactories.makeSubscription(name: "Netflix", amount: 250, status: .active,
+                                                   nextBillingDate: calendar.date(byAdding: .day, value: 20, to: Date()))
+        sut.publish(subscriptions: [later, soon])
+        let line = sut.readSummary().topInsight
+
+        XCTAssertTrue(line.hasPrefix("Spotify"), line)
+        XCTAssertTrue(line.contains("10.99"), line)
+        XCTAssertTrue(line.contains("in 3 days"), line)
+        XCTAssertFalse(line.contains("review") || line.contains("great job"), line)
     }
 
-    func testPublish_pausedInsight() {
-        let active = TestFactories.makeSubscription(amount: 10, status: .active)
-        let paused = TestFactories.makeSubscription(amount: 10, status: .active, pausedUntil: Calendar.current.date(byAdding: .day, value: 7, to: Date()))
-        sut.publish(subscriptions: [active, paused])
-        let summary = sut.readSummary()
+    func testTopLineSaysTomorrowAndToday() {
+        let calendar = Calendar.current
+        let tomorrow = TestFactories.makeSubscription(name: "Hulu", amount: 8, status: .active,
+                                                      nextBillingDate: calendar.date(byAdding: .day, value: 1, to: Date()))
+        sut.publish(subscriptions: [tomorrow])
+        XCTAssertTrue(sut.readSummary().topInsight.hasSuffix("tomorrow"), sut.readSummary().topInsight)
 
-        XCTAssertTrue(summary.topInsight.contains("paused"))
+        let today = TestFactories.makeSubscription(name: "Hulu", amount: 8, status: .active, nextBillingDate: Date())
+        sut.publish(subscriptions: [today])
+        XCTAssertTrue(sut.readSummary().topInsight.hasSuffix("today"), sut.readSummary().topInsight)
+    }
+
+    func testTopLineAsksForDatesWhenNoneAreKnown() {
+        sut.publish(subscriptions: [TestFactories.makeSubscription(amount: 10, status: .active, nextBillingDate: nil)])
+        XCTAssertEqual(sut.readSummary().topInsight, "Add renewal dates to see what's next")
     }
 
     /// The widget's total converts every subscription, and arrives formatted by the app.
