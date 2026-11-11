@@ -72,12 +72,91 @@ walk, write down every hesitation and doubt, fix them, walk again. At least thre
 Each phase ends in commits, a green test run, and an updated scorecard (section 7). Every finding
 from the scan goes into the ledger (section 6) and is closed there, so nothing is fixed from memory.
 
-**Order from 2026-11-11 (after the first customer walk).** The phases below stand, with one thing put in
-front of all of them: section 6.1a. A stranger must be able to create an account before any other
-score means anything to them. After that, in this order: 6.2 (data that can be lost or exposed), 6.3
-(wrong money, dates or claims), Phase 5 (every screen seen in four variants), then the customer rounds
-again from a clean install against the live project, all six people, three rounds. Each round is scored
-in section 7 from captures that were opened and read, and the walk is repeated after the fixes.
+### 5.1 The run to 9.5 (set on the evening of 2026-11-11)
+
+The founder's instruction: "dont come back unless everything is above a 9.5 no exeptions ... i dont
+care how long it takes". This is the order of work until section 7 shows 9.5 or more on every line.
+The phases further down are the same work seen by kind; this is the order it is done in.
+
+**How every slice is done.** One ledger item, or one tight group, at a time. A slice is finished only
+when all five are true: (1) a test that fails without the fix, (2) the affected test classes green,
+serially, (3) the ledger row closed with its evidence, (4) a commit that holds only that slice,
+(5) section 5.2 updated. No parallel agents. Nothing is scored from memory: a score is written from a
+capture that was opened and read, or from what a script printed. A step the session's safety check
+refuses is written into 6.7 with the one line that would allow it, and the run goes on to the next
+slice; a refusal is never routed around. The live project is changed only where the founder asked.
+
+**Stage A. Getting in (6.1a).** G3 with B15 and B16 as one piece of work: after sign-out, account
+deletion or a reinstall, nothing of the last person is left and the app starts signed out. G4: leaving
+"Create your account" returns to the reveal with the list intact. Exit: a clean install walked on the
+simulator from the first screen to the home screen, and a reinstall that opens on the first screen.
+
+**Stage B. Data that can be lost or exposed (6.2).** The sync queue as one design, not four patches
+(B2, B3, B4, B10): changes are kept in order per subscription and joined (an edit after an unsent add
+becomes one add; a delete after an unsent add becomes nothing), the queue drains after every change,
+on foreground and when the network returns, a failure backs off and is shown, and nothing typed is
+dropped when the server answers. Proven against a stand-in transport that can fail, stall and answer
+out of order. Then B5 (rates read and written on one actor) and T62 (cancel help by exact service,
+never "name contains"). Exit: the 6.2 table is empty.
+
+**Stage C. Money, dates and claims (6.3).** One definition of "active" used by Home, Insights, the
+paywall and the year slip (B17, T41). The billing anchor is never overwritten by Pause Plan (B9).
+`startDate` saved (B14). Paywall retries, notices refunds and expiry while running, and prices
+Pausely's own line from the store (B11 to B13). Stale rates are said to be stale and converted totals
+say "about" (B18, T95). A renewal date the person never entered is never saved as theirs (T71, T75).
+"Went up" only for a real price rise (T5, T45 to T47). Forecasts worded as forecasts (T15 to T19, T23,
+T43). "Open cancellation page" opens the service's page or says there is none (T59, T66, T72 to T74).
+Pause Plan lists streaming only (T96). The rule breaks listed in 6.3. Exit: the 6.3 table is empty and
+`CurrencyGuardTests` is green.
+
+**Stage D. Truth and words (6.4).** The in-app Privacy Policy and Terms are removed in favour of the
+website's (T50 to T56), which also ends the translation guard's 36 failures. Cancel steps, phone
+numbers and the rating sheet cut to what is sourced and visible (T60, T61, T63). First-run prices
+either sourced from the service's page or shown as typical and never saved as confirmed (T42, T76).
+The catalog cut to what is true and used (Scope C). "Deep savings analysis" rebuilt on real figures or
+removed (T25 to T33). Paywall wording (T34 to T38). Every string a person can see in all five
+languages, with plural forms (T97 to T99, T80 to T86, T70, T67, T89). Unused keys deleted (T101). One
+name for each thing (T102 to T108). Exit: the truth ledger is at zero and the translation guard is green.
+
+**Stage E. Every screen (6.5).** A launch argument for each of the 136 states. The tour run in four
+variants (English, Arabic, the largest text size, iPad), Apple's audit inside it brought to zero
+issues, the system-wide items fixed (accent colour, Reduce Motion, the iPad column, one way to leave a
+sheet, sentence case, formats in the app's language, the serif in Arabic and Japanese). Each screen is
+then scored on the eight dimensions from contact sheets that were opened, and repaired or rebuilt
+until it reaches 9.5. Exit: section 7 lists every screen at 9.5 or more, each with its evidence.
+
+**Stage F. What makes it worth paying for.** The first customer round scored "would I pay" at 6
+because the verdict shows the price times twelve and nothing more. Before the customer rounds are run
+again, the verdict gets the facts a person cannot work out alone and that the app truly has: hours
+typed in against the price (cost per hour), the price history ("$2 more than a year ago"), how many
+times it has been kept, and what cancelling has saved so far. Nothing invented, nothing estimated
+without saying so. Exit: the buyer and the returner (section 3) score "would I pay" at 9.5.
+
+**Stage G. Engineering hygiene (6.6).** Test bundles get their own bundle ids, the scheme runs
+serially, strict concurrency on, one owner of StoreKit state, the large files split where there is a
+reason to, the hype names renamed. Exit: `gold_check` prints zero.
+
+**Stage H. Customer rounds (section 3).** All six people, each from a clean install, against the live
+project where the flow touches it, three rounds at least, fixes between rounds. Exit: every journey at
+9.5 on all seven counts.
+
+**Stage I. The store page and the proof.** Listing text and screenshots brought into line with the app
+as built (local files). Then three serial green test runs in a row, Debug and Release builds, the
+rigs in `scripts/dbtest/` green, and the final scorecard.
+
+**What cannot reach 9.5 from here, however long the run.** These are scored at their true value in
+section 7 and listed in 6.7, never rated up: a sign-up by someone outside the project team seen to
+work (the automated test was refused; it needs one person with an outside address), VoiceOver and
+Sign in with Apple on a real device, and anything that waits on App Review.
+
+### 5.2 Where the run is
+
+Updated at every commit, so the work can be picked up from this file alone.
+
+- Done before the run began: the live database fix, the waitlist function, sign-in settings, mail
+  delivery, Apple sign-in (all in 6.1 and 6.1a); B1, B7, B8; G5, G6.
+- Now: Stage A, first slice: G3 with B15 and B16.
+- Next: G4, then Stage B.
 
 **Phase 0. Scan (read-only).** Four independent audits (dead code, truth, design rules on every
 view, engineering) plus mechanical scans. Output: the ledger.
