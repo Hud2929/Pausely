@@ -62,6 +62,46 @@ enum AuthLink: Equatable {
     }
 }
 
+/// Whether a link from an account email may be acted on.
+///
+/// A link is honoured only when this device asked for a code or a reset in the last hour (the life of a
+/// code), nobody is signed in, and the account it opens has the address that was asked for. Without
+/// this, anyone could put a sign-in code for their own account in a `pausely://auth/...` link, and a tap
+/// would sign whoever holds the phone into the sender's account.
+struct AuthLinkGate: Equatable {
+    /// How long an emailed code or link lasts.
+    static let window: TimeInterval = 3_600
+
+    /// The address this device last asked a code or a reset for, and when.
+    var requestedEmail: String?
+    var requestedAt: Date?
+    var isSignedIn: Bool
+
+    /// May the app act on this link at all? Checked before anything is sent to the account service.
+    func allows(_ link: AuthLink, now: Date) -> Bool {
+        guard !isSignedIn, let requestedEmail, let requestedAt,
+              now.timeIntervalSince(requestedAt) <= Self.window else { return false }
+        // A link that names its address has to name the one that was asked for.
+        if case .emailToken(_, let email, _) = link { return Self.sameAddress(email, requestedEmail) }
+        return true
+    }
+
+    /// Once the account service has answered: is this the account that was asked for?
+    func accepts(accountEmail: String?) -> Bool {
+        guard let requestedEmail, let accountEmail else { return false }
+        return Self.sameAddress(accountEmail, requestedEmail)
+    }
+
+    static func sameAddress(_ first: String, _ second: String) -> Bool {
+        let a = normalized(first)
+        return !a.isEmpty && a == normalized(second)
+    }
+
+    private static func normalized(_ email: String) -> String {
+        email.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
+    }
+}
+
 /// How long until another code can be requested. The account service refuses a second email inside a
 /// minute, so the button waits that long instead of failing.
 struct ResendCountdown: Equatable {

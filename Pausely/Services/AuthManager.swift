@@ -31,9 +31,14 @@ class RevolutionaryAuthManager: ObservableObject {
     private let lastEmailKey = "last_auth_email"
     private var refreshTask: Task<Void, Never>?
     private var pendingPassword: String?
+    /// The address `pendingPassword` was typed for. The password is saved only on that account.
+    private var pendingPasswordEmail: String?
     /// The account a reset was accepted for, held until the new password is saved.
     private var recoveryUser: Auth.User?
     private static let resetRequestedKey = "auth_reset_requested_at"
+    /// The address this device last asked a code or a reset for, and when (see `AuthLinkGate`).
+    private static let linkRequestedEmailKey = "auth_link_requested_email"
+    private static let linkRequestedAtKey = "auth_link_requested_at"
 
     /// Where the links in sign-up and sign-in emails come back to. It has to be on the account service's
     /// list of allowed redirect addresses; if it isn't, the service uses its own default address instead.
@@ -315,6 +320,8 @@ class RevolutionaryAuthManager: ObservableObject {
         do {
             // Store password and profile temporarily for after OTP verification
             pendingPassword = password
+            pendingPasswordEmail = email
+            noteCodeRequested(for: email)
             if let fn = firstName, !fn.isEmpty { KeychainManager.shared.save(fn, forKey: Self.pendingFirstNameKey) }
             if let ln = lastName, !ln.isEmpty { KeychainManager.shared.save(ln, forKey: Self.pendingLastNameKey) }
             UserDefaults.standard.set(email, forKey: lastEmailKey)
@@ -330,6 +337,7 @@ class RevolutionaryAuthManager: ObservableObject {
 
         } catch {
             pendingPassword = nil
+            pendingPasswordEmail = nil
             KeychainManager.shared.delete(key: Self.pendingFirstNameKey)
             KeychainManager.shared.delete(key: Self.pendingLastNameKey)
             let authError = PauselyAuthError.unknown(error)
@@ -362,16 +370,21 @@ class RevolutionaryAuthManager: ObservableObject {
         if let firstName { saveProfile(userId: supabaseUser.id.uuidString, firstName: firstName, lastName: lastName) }
 
         if let password = pendingPassword {
+            let typedFor = pendingPasswordEmail
             pendingPassword = nil
+            pendingPasswordEmail = nil
             // The email is proven and the account exists. If saving the password fails (it's the one the
             // account already has, or the network dropped), the person is still in, and "Forgot password"
-            // sets one later.
-            do {
-                _ = try await client.auth.update(user: UserAttributes(password: password))
-            } catch {
-                os_log("Saving the sign-up password failed: %{public}@", log: .default, type: .error, String(describing: type(of: error)))
+            // sets one later. A password typed for one address is never saved on a different account.
+            if let typedFor, AuthLinkGate.sameAddress(typedFor, supabaseUser.email ?? "") {
+                do {
+                    _ = try await client.auth.update(user: UserAttributes(password: password))
+                } catch {
+                    os_log("Saving the sign-up password failed: %{public}@", log: .default, type: .error, String(describing: type(of: error)))
+                }
             }
         }
+        forgetCodeRequest()
         KeychainManager.shared.delete(key: Self.pendingFirstNameKey)
         KeychainManager.shared.delete(key: Self.pendingLastNameKey)
 
@@ -384,6 +397,7 @@ class RevolutionaryAuthManager: ObservableObject {
 
     /// Resend the OTP code to the user's email
     func resendOTP(email: String) async throws {
+        noteCodeRequested(for: email)
         do {
             try await client.auth.signInWithOTP(
                 email: email,
@@ -515,7 +529,8 @@ class RevolutionaryAuthManager: ObservableObject {
     
     func sendPasswordReset(email: String) async throws {
         state = .loading
-        
+        noteCodeRequested(for: email)
+
         do {
             try await client.auth.resetPasswordForEmail(email, redirectTo: Self.resetRedirect)
             // A reset link that comes back without saying what it is (the service's default address) is
@@ -564,6 +579,9 @@ class RevolutionaryAuthManager: ObservableObject {
         #endif
         needsNewPassword = false
         recoveryUser = nil
+        pendingPassword = nil
+        pendingPasswordEmail = nil
+        forgetCodeRequest()
         isAuthenticated = false
         currentUser = nil
         state = .unauthenticated
@@ -589,11 +607,25 @@ class RevolutionaryAuthManager: ObservableObject {
 
     /// A link from a sign-up, sign-in or reset email was opened. Whatever shape the account service gave
     /// it (see `AuthLink`), the person ends up signed in, or choosing a new password after a reset.
+    ///
+    /// Only a link this device asked for is acted on (see `AuthLinkGate`): a code or reset was requested
+    /// here within the hour, nobody is signed in, and the account that comes back has that address.
+    /// Anything else is ignored, so a link someone else made can't switch the account on this phone.
     /// - Returns: true when the link signed someone in or started a reset.
     @discardableResult
     func handleDeepLink(_ url: URL) async -> Bool {
         guard url.scheme?.lowercased() == "pausely", url.host?.lowercased() == "auth" else { return false }
         let link = AuthLink.parse(url)
+        if link == .none { return false }
+        let expired = L10n.string("That link has expired or was already used. Ask for a new one.")
+
+        let gate = linkGate
+        guard gate.allows(link, now: Date()) else {
+            os_log("An account link this device did not ask for was ignored", log: .default, type: .info)
+            // Someone already signed in has nothing to fix; someone signing in is told to ask again.
+            if !isAuthenticated { linkProblem = expired }
+            return false
+        }
         let recovery = AuthLink.isRecovery(url) || resetWasRequestedRecently
 
         do {
@@ -602,7 +634,7 @@ class RevolutionaryAuthManager: ObservableObject {
             case .none:
                 return false
             case .failed:
-                linkProblem = L10n.string("That link has expired or was already used. Ask for a new one.")
+                linkProblem = expired
                 return false
             case .code(let code):
                 user = try await client.auth.exchangeCodeForSession(authCode: code).user
@@ -614,6 +646,15 @@ class RevolutionaryAuthManager: ObservableObject {
                 user = try await client.auth.verifyOTP(email: email, token: token,
                                                        type: Self.emailOTPType(type, recovery: recovery)).user
             }
+            guard gate.accepts(accountEmail: user.email) else {
+                // The link opened some other account. Drop that session; nobody is signed in.
+                os_log("An account link for a different address was refused", log: .default, type: .error)
+                pendingPassword = nil
+                pendingPasswordEmail = nil
+                try? await client.auth.signOut(scope: .local)
+                linkProblem = expired
+                return false
+            }
             if recovery {
                 beginNewPassword(for: user)
             } else {
@@ -622,9 +663,30 @@ class RevolutionaryAuthManager: ObservableObject {
             return true
         } catch {
             os_log("An account link failed: %{public}@", log: .default, type: .error, String(describing: type(of: error)))
-            linkProblem = L10n.string("That link has expired or was already used. Ask for a new one.")
+            linkProblem = expired
             return false
         }
+    }
+
+    // MARK: - Which account links are acted on
+
+    /// This device asked the account service for a code or a reset for `email`. Links for that address
+    /// are honoured for the next hour.
+    private func noteCodeRequested(for email: String) {
+        UserDefaults.standard.set(email, forKey: Self.linkRequestedEmailKey)
+        UserDefaults.standard.set(Date().timeIntervalSince1970, forKey: Self.linkRequestedAtKey)
+    }
+
+    private func forgetCodeRequest() {
+        UserDefaults.standard.removeObject(forKey: Self.linkRequestedEmailKey)
+        UserDefaults.standard.removeObject(forKey: Self.linkRequestedAtKey)
+    }
+
+    private var linkGate: AuthLinkGate {
+        let requestedAt = UserDefaults.standard.double(forKey: Self.linkRequestedAtKey)
+        return AuthLinkGate(requestedEmail: UserDefaults.standard.string(forKey: Self.linkRequestedEmailKey),
+                            requestedAt: requestedAt > 0 ? Date(timeIntervalSince1970: requestedAt) : nil,
+                            isSignedIn: isAuthenticated)
     }
 
     private static func emailOTPType(_ type: String, recovery: Bool) -> EmailOTPType {
@@ -657,6 +719,7 @@ class RevolutionaryAuthManager: ObservableObject {
 
     private func beginNewPassword(for user: Auth.User) {
         UserDefaults.standard.removeObject(forKey: Self.resetRequestedKey)
+        forgetCodeRequest()
         recoveryUser = user
         needsNewPassword = true
     }

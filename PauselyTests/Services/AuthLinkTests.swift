@@ -61,6 +61,72 @@ final class AuthLinkTests: XCTestCase {
         XCTAssertFalse(AuthLink.isRecovery(URL(string: "pausely://auth/callback#access_token=A&refresh_token=B&type=signup")!))
     }
 
+    // MARK: Which links are acted on
+
+    private let asked = Date(timeIntervalSince1970: 1_800_000_000)
+
+    /// Jane asked for a code on this phone and nobody is signed in.
+    private func janeIsSigningUp(signedIn: Bool = false) -> AuthLinkGate {
+        AuthLinkGate(requestedEmail: "jane@example.com", requestedAt: asked, isSignedIn: signedIn)
+    }
+
+    private var tenMinutesLater: Date { asked.addingTimeInterval(600) }
+
+    func testALinkForTheAddressThatAskedIsActedOn() {
+        let gate = janeIsSigningUp()
+        XCTAssertTrue(gate.allows(link("pausely://auth/confirm?token=482913&type=email&email=jane%40example.com"), now: tenMinutesLater))
+        XCTAssertTrue(gate.allows(link("pausely://auth/confirm?token=482913&type=email&email=%20Jane%40Example.COM"), now: tenMinutesLater),
+                      "the same address in another case, with a stray space")
+        XCTAssertTrue(gate.allows(link("pausely://auth/confirm?code=abc123"), now: tenMinutesLater))
+        XCTAssertTrue(gate.allows(link("pausely://auth/confirm?token_hash=pkce_9f8e7d&type=email"), now: tenMinutesLater))
+    }
+
+    /// The attack this gate exists for: someone asks for a code for their own account, wraps it in a link
+    /// and sends it. Tapping it must not sign the person holding the phone into the sender's account.
+    func testSomeoneElsesCodeInALinkIsIgnored() {
+        let attack = link("pausely://auth/confirm?token=111222&type=email&email=attacker%40example.net")
+        XCTAssertEqual(attack, .emailToken("111222", email: "attacker@example.net", type: "email"))
+        XCTAssertFalse(janeIsSigningUp().allows(attack, now: tenMinutesLater))
+    }
+
+    func testNoLinkIsActedOnWhenNothingWasAskedFor() {
+        let nothingAsked = AuthLinkGate(requestedEmail: nil, requestedAt: nil, isSignedIn: false)
+        for url in ["pausely://auth/confirm?code=abc123",
+                    "pausely://auth/callback#access_token=AAA.BBB.CCC&refresh_token=rrr111",
+                    "pausely://auth/confirm?token_hash=pkce_9f8e7d&type=magiclink",
+                    "pausely://auth/confirm?token=482913&type=email&email=jane%40example.com"] {
+            XCTAssertFalse(nothingAsked.allows(link(url), now: tenMinutesLater), url)
+        }
+    }
+
+    func testALinkIsIgnoredOnceSomeoneIsSignedIn() {
+        XCTAssertFalse(janeIsSigningUp(signedIn: true).allows(link("pausely://auth/callback#access_token=AAA.BBB.CCC&refresh_token=rrr111"),
+                                                             now: tenMinutesLater))
+    }
+
+    func testARequestLastsOneHour() {
+        let gate = janeIsSigningUp()
+        let code = link("pausely://auth/confirm?code=abc123")
+        XCTAssertTrue(gate.allows(code, now: asked.addingTimeInterval(3_600)))
+        XCTAssertFalse(gate.allows(code, now: asked.addingTimeInterval(3_601)))
+    }
+
+    /// A session or token hash doesn't name its address, so the account that comes back is checked.
+    func testTheAccountThatComesBackMustBeTheOneAskedFor() {
+        let gate = janeIsSigningUp()
+        XCTAssertTrue(gate.accepts(accountEmail: "jane@example.com"))
+        XCTAssertTrue(gate.accepts(accountEmail: "JANE@example.com"))
+        XCTAssertFalse(gate.accepts(accountEmail: "attacker@example.net"))
+        XCTAssertFalse(gate.accepts(accountEmail: nil), "an account with no address can't be matched")
+        XCTAssertFalse(AuthLinkGate(requestedEmail: nil, requestedAt: nil, isSignedIn: false).accepts(accountEmail: "jane@example.com"))
+    }
+
+    func testAddressesAreComparedWithoutCaseOrOuterSpaces() {
+        XCTAssertTrue(AuthLinkGate.sameAddress(" Jane@Example.com", "jane@example.com\n"))
+        XCTAssertFalse(AuthLinkGate.sameAddress("jane@example.com", "jane@example.org"))
+        XCTAssertFalse(AuthLinkGate.sameAddress("", ""), "two missing addresses are not a match")
+    }
+
     // MARK: Resend
 
     func testResendWaitsOutTheMinuteThenOpens() {
