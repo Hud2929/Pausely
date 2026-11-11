@@ -118,9 +118,9 @@ strings need all five translations; take the exact keys from the build's `.strin
 ## Backend
 
 Supabase project `ddaotwyaowspwspyddzs`. Migrations live in `supabase/migrations/` and are applied by
-hand in the Supabase SQL editor. Pending as of 2026-11-06: paste `supabase/APPLY_2026-11-06.sql` (account deletion and
-cancel-difficulty ratings need it; it also closes the 2026-11-06 security holes: self-granted Pro,
-public affiliate and referral data, and adds the sync columns).
+hand in the Supabase SQL editor: paste the newest `supabase/APPLY_*.sql`. It is safe to run more than
+once and brings any state of the database up to date (account deletion, cancel-difficulty ratings and
+sync need it).
 Edge function: `supabase/functions/waitlist-signup`. Website and policies: `pausely.pro/` (GitHub Pages).
 
 ## App Store
