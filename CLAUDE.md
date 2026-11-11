@@ -41,8 +41,10 @@ DEBUG launch arguments open single screens with demo data (see `RootView` in `Co
 `--demo-mode`, `--demo-tab=N`, `--demo-verdict`, `--demo-receipt`, `--demo-savings`,
 `--demo-pause-plan` (`--demo-plan-active`), `--demo-subscription`, `--demo-subscription-edit`,
 `--demo-paywall`, `--demo-browser`, `--demo-gmail-results`, `--demo-inbox`, `--demo-imap-connect` (`=yahoo`, `=aol`, `=other`…),
-`--demo-wrapped`, and `--screenshots`
-for App Store captures. `--reset-state` (UI tests) starts signed out with onboarding not yet seen;
+`--demo-wrapped`, `--demo-auth` (`=signup`, `=signin`, `=verify`, `=reset`, `=newpassword`), `--demo-age-gate`,
+`--demo-settings=notifications|privacy|help|currency|export|language`, `--demo-whats-new`, and `--screenshots`
+for App Store captures. Debug builds show "Test without an account" on the welcome screen (a local test
+user; nothing reaches the server). `--reset-state` (UI tests) starts signed out with onboarding not yet seen;
 `--fresh-demo-data` starts the subscription list from the demo set on every launch, with cloud writes off. `PauselyUITests/ScreenTourTests` captures every screen when
 `TEST_RUNNER_PAUSELY_TOUR_DIR` is set.
 
@@ -97,6 +99,10 @@ One engine, one adapter per kind of inbox, all read-only and on-device:
   adapters against stand-ins for their APIs (made-up mail, or `PAUSELY_REAL_MAIL_DIR`).
   `PauselyUITests/InboxWorkflowUITests` drives the IMAP flow through the screens with
   `PAUSELY_LOCAL_IMAP_UI=host:port:user:password`. Never commit real email.
+- End-to-end rig: `scripts/mailtest/make_test_mailbox.py <dir>` writes a synthetic mailbox (real MIME, six
+  languages, decoys) and its `truth.json`; `scripts/mailtest/imap_test_server.py` serves it on localhost;
+  `MailTruthTests` (`PAUSELY_MAIL_TRUTH_DIR=<dir>`) scores a scan against the truth on name, amount,
+  currency, period and state. `ReceiptAccuracyTests` pins each mistake that rig has exposed.
 
 ### Views
 - `Views/Verdict/`: `RenewalVerdictView`, `SavingsReceiptView`, `PausePlanView`, dashboard cards.
@@ -125,6 +131,11 @@ hand in the Supabase SQL editor. Pending as of 2026-11-06: paste `supabase/APPLY
 cancel-difficulty ratings need it; it also closes the 2026-11-06 security holes: self-granted Pro,
 public affiliate and referral data, and adds the sync columns).
 Edge function: `supabase/functions/waitlist-signup`. Website and policies: `pausely.pro/` (GitHub Pages).
+
+Account emails are sent by Supabase from templates edited in its dashboard; the copy to paste is
+`SUPABASE_EMAIL_TEMPLATES.md`. The app asks for the 6-digit code in them (`Views/Auth/EmailCodeViews.swift`)
+and also accepts any link shape a template might carry (`Services/AuthLink.swift`, `handleDeepLink`), so a
+template change can't lock people out. Sign-up, sign-in and reset screens: `Views/Auth/AccountForms.swift`.
 
 ## App Store
 

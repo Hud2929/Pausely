@@ -18,7 +18,11 @@ class RevolutionaryAuthManager: ObservableObject {
     @Published var isAuthenticated = false
     @Published var currentUser: User?
     @Published var isBiometricEnabled = false
-    
+    /// A password-reset code or link was accepted: the next thing the person sees is "choose a new password".
+    @Published var needsNewPassword = false
+    /// Why a link from an account email didn't work, in words the person can act on.
+    @Published var linkProblem: String?
+
     private var verifyTask: Task<Void, Never>?
 
     // MARK: - Private Properties
@@ -27,6 +31,14 @@ class RevolutionaryAuthManager: ObservableObject {
     private let lastEmailKey = "last_auth_email"
     private var refreshTask: Task<Void, Never>?
     private var pendingPassword: String?
+    /// The account a reset was accepted for, held until the new password is saved.
+    private var recoveryUser: Auth.User?
+    private static let resetRequestedKey = "auth_reset_requested_at"
+
+    /// Where the links in sign-up and sign-in emails come back to. It has to be on the account service's
+    /// list of allowed redirect addresses; if it isn't, the service uses its own default address instead.
+    static let confirmRedirect = URL(string: "pausely://auth/confirm")
+    static let resetRedirect = URL(string: "pausely://auth/reset-password")
 
     // MARK: - Scale Optimizations
     private var pendingRequests: [String: Task<Any, Error>] = [:]
@@ -310,6 +322,7 @@ class RevolutionaryAuthManager: ObservableObject {
             // Send OTP — creates user if they don't exist
             try await client.auth.signInWithOTP(
                 email: email,
+                redirectTo: Self.confirmRedirect,
                 shouldCreateUser: true
             )
 
@@ -325,52 +338,48 @@ class RevolutionaryAuthManager: ObservableObject {
         }
     }
 
-    /// Verifies the 6-digit OTP code sent to email.
-    /// After successful verification, sets the pending password and profile if they exist.
+    /// Verifies the 6-digit code sent by email, then finishes the sign-up.
     func verifyEmailOTP(email: String, code: String) async throws {
         state = .loading
-
         do {
-            let session = try await client.auth.verifyOTP(
-                email: email,
-                token: code,
-                type: .email
-            )
-
-            let supabaseUser = session.user
-            let firstName = KeychainManager.shared.get(Self.pendingFirstNameKey)
-            let lastName = KeychainManager.shared.get(Self.pendingLastNameKey)
-
-            let user = makeUser(from: supabaseUser, firstName: firstName, lastName: lastName)
-            cacheSession(userId: supabaseUser.id.uuidString,
-                         email: supabaseUser.email,
-                         createdAt: supabaseUser.createdAt)
-
-            // Save profile
-            if let fn = firstName { saveProfile(userId: supabaseUser.id.uuidString, firstName: fn, lastName: lastName) }
-
-            // Set password if we have one pending
-            if let password = pendingPassword {
-                _ = try await client.auth.update(user: UserAttributes(password: password))
-                pendingPassword = nil
-            }
-
-            // Clean up pending profile data
-            KeychainManager.shared.delete(key: Self.pendingFirstNameKey)
-            KeychainManager.shared.delete(key: Self.pendingLastNameKey)
-
-            currentUser = user
-            isAuthenticated = true
-            state = .authenticated(user)
-
-            startSessionRefresh()
-            postAuthSetup(user: user)
-
+            let response = try await client.auth.verifyOTP(email: email, token: code, type: .email)
+            await finishEmailSignIn(response.user)
         } catch {
             let authError = PauselyAuthError.unknown(error)
-            state = .error(authError)
+            state = .emailConfirmationRequired(email)
             throw authError
         }
+    }
+
+    /// The end of every email sign-up or sign-in, by code or by link: remember the session, apply the name
+    /// and password typed on the sign-up form if this finishes one, and show the app.
+    private func finishEmailSignIn(_ supabaseUser: Auth.User) async {
+        let firstName = KeychainManager.shared.get(Self.pendingFirstNameKey)
+        let lastName = KeychainManager.shared.get(Self.pendingLastNameKey)
+
+        let user = makeUser(from: supabaseUser, firstName: firstName, lastName: lastName)
+        cacheSession(userId: supabaseUser.id.uuidString, email: supabaseUser.email, createdAt: supabaseUser.createdAt)
+        if let firstName { saveProfile(userId: supabaseUser.id.uuidString, firstName: firstName, lastName: lastName) }
+
+        if let password = pendingPassword {
+            pendingPassword = nil
+            // The email is proven and the account exists. If saving the password fails (it's the one the
+            // account already has, or the network dropped), the person is still in, and "Forgot password"
+            // sets one later.
+            do {
+                _ = try await client.auth.update(user: UserAttributes(password: password))
+            } catch {
+                os_log("Saving the sign-up password failed: %{public}@", log: .default, type: .error, String(describing: type(of: error)))
+            }
+        }
+        KeychainManager.shared.delete(key: Self.pendingFirstNameKey)
+        KeychainManager.shared.delete(key: Self.pendingLastNameKey)
+
+        currentUser = user
+        isAuthenticated = true
+        state = .authenticated(user)
+        startSessionRefresh()
+        postAuthSetup(user: user)
     }
 
     /// Resend the OTP code to the user's email
@@ -378,6 +387,7 @@ class RevolutionaryAuthManager: ObservableObject {
         do {
             try await client.auth.signInWithOTP(
                 email: email,
+                redirectTo: Self.confirmRedirect,
                 shouldCreateUser: true
             )
         } catch {
@@ -501,55 +511,16 @@ class RevolutionaryAuthManager: ObservableObject {
     
     
     
-    // MARK: - Deep Link Email Confirmation
-    
-    /// Handles email confirmation deep link
-    /// URL format: pausely://auth/confirm?token=xxx&type=signup&email=xxx
-    func confirmEmail(token: String, email: String, type: String = "signup") async throws {
-        state = .loading
-        
-        do {
-            guard type == "signup" || type == "email_change" || type == "recovery" else {
-                throw NSError(domain: "AuthManager", code: 1, userInfo: [NSLocalizedDescriptionKey: "Invalid verification type: \(type)"])
-            }
-            let session = try await client.auth.verifyOTP(
-                email: email,
-                token: token,
-                type: (type == "signup" || type == "email_change") ? .signup : .recovery
-            )
-
-            let supabaseUser = session.user
-
-            let user = makeUser(from: supabaseUser)
-            cacheSession(userId: supabaseUser.id.uuidString,
-                         email: supabaseUser.email,
-                         createdAt: supabaseUser.createdAt)
-
-            currentUser = user
-            isAuthenticated = true
-            state = .authenticated(user)
-
-            startSessionRefresh()
-            postAuthSetup(user: user)
-
-        } catch {
-            let authError = PauselyAuthError.unknown(error)
-            state = .error(authError)
-            throw authError
-        }
-    }
-
-
     // MARK: - Password Reset
     
     func sendPasswordReset(email: String) async throws {
         state = .loading
         
         do {
-            try await client.auth.resetPasswordForEmail(
-                email,
-                redirectTo: URL(string: "pausely://auth/reset-password")
-            )
+            try await client.auth.resetPasswordForEmail(email, redirectTo: Self.resetRedirect)
+            // A reset link that comes back without saying what it is (the service's default address) is
+            // still a reset if one was asked for here within the hour the link lasts.
+            UserDefaults.standard.set(Date().timeIntervalSince1970, forKey: Self.resetRequestedKey)
             
             state = .unauthenticated
 
@@ -588,72 +559,126 @@ class RevolutionaryAuthManager: ObservableObject {
             os_log("Sign out failed: %{public}@", log: .default, type: .error, error.localizedDescription)
         }
 
+        #if DEBUG
+        UserDefaults.standard.removeObject(forKey: "debug_auth_bypass")
+        #endif
+        needsNewPassword = false
+        recoveryUser = nil
         isAuthenticated = false
         currentUser = nil
         state = .unauthenticated
     }
-    
+
+    #if DEBUG
+    /// Debug builds only: use the app without an account, as the built-in test user. Nothing is sent to
+    /// the server; everything stays on this device. Signing out leaves it.
+    func enterAsDebugUser() {
+        UserDefaults.standard.set(true, forKey: "debug_auth_bypass")
+        let user = User(id: "debug-user", email: "debug@pausely.app", createdAt: Date(), firstName: "Debug", lastName: "User")
+        currentUser = user
+        isAuthenticated = true
+        state = .authenticated(user)
+    }
+    #endif
+
     // MARK: - Biometric Authentication
     
     
     
-    // MARK: - Deep Link Handler
-    
-    /// Main entry point for handling auth-related deep links
-    /// - Parameter url: The deep link URL (e.g., pausely://auth/confirm?token=xxx&email=xxx)
-    /// - Returns: true if the deep link was handled successfully
+    // MARK: - Links from account emails
+
+    /// A link from a sign-up, sign-in or reset email was opened. Whatever shape the account service gave
+    /// it (see `AuthLink`), the person ends up signed in, or choosing a new password after a reset.
+    /// - Returns: true when the link signed someone in or started a reset.
     @discardableResult
     func handleDeepLink(_ url: URL) async -> Bool {
-        guard url.scheme == "pausely",
-              url.host == "auth" else {
-            return false
-        }
-        
-        let path = url.path.trimmingCharacters(in: CharacterSet(charactersIn: "/"))
-        let components = URLComponents(url: url, resolvingAgainstBaseURL: false)
-        let queryItems = components?.queryItems ?? []
-        
-        switch path {
-        case "confirm", "confirm-callback":
-            if let token = queryItems.first(where: { $0.name == "token" })?.value,
-               let email = queryItems.first(where: { $0.name == "email" })?.value,
-               let type = queryItems.first(where: { $0.name == "type" })?.value ?? queryItems.first(where: { $0.name == "verification_type" })?.value {
-                do {
-                    try await confirmEmail(token: token, email: email, type: type)
-                    return true
-                } catch {
-                    os_log("Email confirmation failed: %{public}@", log: .default, type: .error, error.localizedDescription)
-                    NotificationCenter.default.post(
-                        name: .emailConfirmationFailed,
-                        object: error.localizedDescription
-                    )
-                    return false
-                }
+        guard url.scheme?.lowercased() == "pausely", url.host?.lowercased() == "auth" else { return false }
+        let link = AuthLink.parse(url)
+        let recovery = AuthLink.isRecovery(url) || resetWasRequestedRecently
+
+        do {
+            let user: Auth.User
+            switch link {
+            case .none:
+                return false
+            case .failed:
+                linkProblem = L10n.string("That link has expired or was already used. Ask for a new one.")
+                return false
+            case .code(let code):
+                user = try await client.auth.exchangeCodeForSession(authCode: code).user
+            case .tokens(let access, let refresh):
+                user = try await client.auth.setSession(accessToken: access, refreshToken: refresh).user
+            case .tokenHash(let hash, let type):
+                user = try await client.auth.verifyOTP(tokenHash: hash, type: Self.emailOTPType(type, recovery: recovery)).user
+            case .emailToken(let token, let email, let type):
+                user = try await client.auth.verifyOTP(email: email, token: token,
+                                                       type: Self.emailOTPType(type, recovery: recovery)).user
             }
-            return false
-            
-        case "reset-password":
-            // Store token and email for password reset view to handle
-            if let token = queryItems.first(where: { $0.name == "token" })?.value,
-               let email = queryItems.first(where: { $0.name == "email" })?.value {
-                NotificationCenter.default.post(
-                    name: .passwordResetTokenReceived,
-                    object: ["token": token, "email": email]
-                )
-                return true
+            if recovery {
+                beginNewPassword(for: user)
+            } else {
+                await finishEmailSignIn(user)
             }
-            return false
-            
-        default:
+            return true
+        } catch {
+            os_log("An account link failed: %{public}@", log: .default, type: .error, String(describing: type(of: error)))
+            linkProblem = L10n.string("That link has expired or was already used. Ask for a new one.")
             return false
         }
     }
-}
 
-// MARK: - Notifications
-extension Notification.Name {
-    static let passwordResetTokenReceived = Notification.Name("passwordResetTokenReceived")
-    static let emailConfirmationFailed = Notification.Name("emailConfirmationFailed")
+    private static func emailOTPType(_ type: String, recovery: Bool) -> EmailOTPType {
+        switch type.lowercased() {
+        case "recovery": return .recovery
+        case "signup": return .signup
+        case "magiclink": return .magiclink
+        case "invite": return .invite
+        case "email_change": return .emailChange
+        default: return recovery ? .recovery : .email
+        }
+    }
+
+    private var resetWasRequestedRecently: Bool {
+        let requested = UserDefaults.standard.double(forKey: Self.resetRequestedKey)
+        return requested > 0 && Date().timeIntervalSince1970 - requested < 3_600
+    }
+
+    // MARK: - Choosing a new password after a reset
+
+    /// Checks the 6-digit code from a reset email. On success the person is asked for a new password.
+    func verifyRecoveryCode(email: String, code: String) async throws {
+        do {
+            let response = try await client.auth.verifyOTP(email: email, token: code, type: .recovery)
+            beginNewPassword(for: response.user)
+        } catch {
+            throw PauselyAuthError.unknown(error)
+        }
+    }
+
+    private func beginNewPassword(for user: Auth.User) {
+        UserDefaults.standard.removeObject(forKey: Self.resetRequestedKey)
+        recoveryUser = user
+        needsNewPassword = true
+    }
+
+    /// Saves the new password and signs the person in.
+    func setNewPassword(_ password: String) async throws {
+        do {
+            let updated = try await client.auth.update(user: UserAttributes(password: password))
+            needsNewPassword = false
+            recoveryUser = nil
+            await finishEmailSignIn(updated)
+        } catch {
+            throw PauselyAuthError.unknown(error)
+        }
+    }
+
+    /// The person backed out of choosing a password: the reset is dropped and nobody is signed in.
+    func cancelNewPassword() async {
+        needsNewPassword = false
+        recoveryUser = nil
+        try? await client.auth.signOut(scope: .local)
+    }
 }
 
 // MARK: - Helpers

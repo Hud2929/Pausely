@@ -131,6 +131,17 @@ struct RootView: View {
         #endif
     }
 
+    /// DEBUG only: the value of `--demo-name=value`, or "" for a bare `--demo-name`. Nil when it isn't there.
+    private func demoValue(_ name: String) -> String? {
+        #if DEBUG
+        for argument in ProcessInfo.processInfo.arguments {
+            if argument == name { return "" }
+            if argument.hasPrefix(name + "=") { return String(argument.dropFirst(name.count + 1)) }
+        }
+        #endif
+        return nil
+    }
+
     /// DEBUG only: `--demo-imap-connect` (iCloud) or `--demo-imap-connect=<preset id>`; `=other` for any server.
     private var demoIMAPPreset: String? {
         #if DEBUG
@@ -175,6 +186,38 @@ struct RootView: View {
                 } else if let presetID = demoIMAPPreset {
                     #if DEBUG
                     IMAPConnectView(preset: IMAPPreset.find(presetID))
+                    #endif
+                } else if let screen = demoValue("--demo-auth") {
+                    #if DEBUG
+                    switch screen {
+                    case "verify": EmailConfirmationView(email: "jane@example.com")
+                    case "reset": PasswordResetView(email: "")
+                    case "newpassword": NewPasswordView()
+                    case "signup": PremiumWelcomeFlow(start: .signUp)
+                    case "signin": PremiumWelcomeFlow(start: .signIn)
+                    default: PremiumWelcomeFlow(start: .welcome)
+                    }
+                    #endif
+                } else if isDemoScreen("--demo-age-gate") {
+                    #if DEBUG
+                    AgeGateView(onPassed: {}, onCancel: {}, cancelTitle: "Sign Out")
+                    #endif
+                } else if let screen = demoValue("--demo-settings") {
+                    #if DEBUG
+                    NavigationStack {
+                        switch screen {
+                        case "privacy": PrivacySecurityView()
+                        case "help": HelpSupportView()
+                        case "currency": CurrencySettingsView()
+                        case "export": ExportDataView()
+                        case "language": LanguageSettingsView()
+                        default: NotificationsSettingsView()
+                        }
+                    }
+                    #endif
+                } else if isDemoScreen("--demo-whats-new") {
+                    #if DEBUG
+                    WhatsNewSheet()
                     #endif
                 } else if isDemoScreen("--demo-subscription") {
                     #if DEBUG
@@ -348,6 +391,13 @@ struct RootView: View {
                 }
             }
         }
+        // A reset code or link was accepted: nothing else until the new password is chosen.
+        .fullScreenCover(isPresented: $authManager.needsNewPassword) {
+            NewPasswordView()
+                .readableWidth()
+                .preferredColorScheme(.dark)
+        }
+        .errorBanner($authManager.linkProblem)
         .onOpenURL { url in
             // Handle deep links (referral codes, auth callbacks, subscription management, etc.)
             #if DEBUG
@@ -417,6 +467,14 @@ struct PremiumWelcomeFlow: View {
     // MARK: - The door: create an account or sign in
 
     private var authWallContent: some View {
+        ScrollView {
+            authWallText
+        }
+        .scrollBounceBehavior(.basedOnSize)
+        .safeAreaInset(edge: .bottom) { authWallButtons }
+    }
+
+    private var authWallText: some View {
         VStack(alignment: .leading, spacing: 0) {
             HStack(spacing: 10) {
                 Capsule().frame(width: 8, height: 30)
@@ -441,9 +499,14 @@ struct PremiumWelcomeFlow: View {
                 promise("Your Savings Receipt", "Exactly what your cancellations saved you")
             }
             .padding(.top, 24)
+        }
+        .padding(.horizontal, Layout.margin)
+        .padding(.bottom, 16)
+        .frame(maxWidth: .infinity, alignment: .leading)
+    }
 
-            Spacer(minLength: 24)
-
+    private var authWallButtons: some View {
+        VStack(spacing: 0) {
             VStack(spacing: 10) {
                 Button(action: { showSignUp = true }) { Text("Get Started") }
                     .buttonStyle(.ink)
@@ -451,11 +514,24 @@ struct PremiumWelcomeFlow: View {
                 Button(action: { showSignIn = true }) { Text("I already have an account") }
                     .buttonStyle(.ink(.quiet))
                     .accessibilityIdentifier("signInButton")
+                #if DEBUG
+                // Debug builds only (never in the App Store build): the app without an account.
+                if !ProcessInfo.processInfo.arguments.contains("--uitesting") {
+                    Button(action: { RevolutionaryAuthManager.shared.enterAsDebugUser() }) {
+                        Text(verbatim: "Test without an account (debug build)")
+                            .font(.footnote.weight(.medium))
+                            .foregroundStyle(Color.inkTextMuted)
+                            .frame(maxWidth: .infinity, minHeight: Layout.tapTarget)
+                    }
+                    .accessibilityIdentifier("debugTestUserButton")
+                }
+                #endif
             }
             .padding(.bottom, 12)
         }
         .padding(.horizontal, Layout.margin)
-        .frame(maxWidth: .infinity, alignment: .leading)
+        .padding(.top, 8)
+        .background(Color.ink)
     }
 
     private func promise(_ title: LocalizedStringKey, _ detail: LocalizedStringKey) -> some View {
@@ -472,485 +548,6 @@ struct PremiumWelcomeFlow: View {
         .accessibilityElement(children: .combine)
     }
 }
-
-struct PremiumSignUpView: View {
-    @Environment(\.dismiss) private var dismiss
-    @ObservedObject private var authManager = RevolutionaryAuthManager.shared
-    @ObservedObject private var ageConsent = AgeConsentManager.shared
-    @State private var showAgeGate = false
-    @State private var firstName = ""
-    @State private var lastName = ""
-    @State private var email = ""
-    @State private var password = ""
-    @State private var isLoading = false
-    @State private var showError = false
-    @State private var errorMessage = ""
-    @State private var appleNonce: String?
-    @State private var showEmailConfirmation = false
-    @State private var pendingEmail = ""
-
-    var isPasswordValid: Bool {
-        PasswordStrength.rulesMet(password) == 4
-    }
-
-    var isValid: Bool {
-        !firstName.isEmpty && !email.isEmpty && email.contains("@") && isPasswordValid
-    }
-
-    var body: some View {
-        NavigationStack {
-            ZStack {
-                Color.ink.ignoresSafeArea()
-
-                ScrollView(showsIndicators: false) {
-                    VStack(spacing: 20) {
-                        // Header
-                        VStack(alignment: .leading, spacing: 8) {
-                            Text("Create Account")
-                                .font(.question(.title, weight: .bold))
-                                .foregroundStyle(Color.inkText)
-                                .accessibilityAddTraits(.isHeader)
-
-                            Text("Start your subscription journey")
-                                .font(.body)
-                                .foregroundStyle(Color.inkTextMuted)
-                        }
-                        .frame(maxWidth: .infinity, alignment: .leading)
-                        .padding(.top, 20)
-
-                        // Form
-                        VStack(spacing: 20) {
-                            // Name row
-                            HStack(spacing: 12) {
-                                VStack(alignment: .leading, spacing: 8) {
-                                    Text("First Name")
-                                        .font(.subheadline.weight(.medium))
-                                        .foregroundColor(Color.inkTextMuted)
-                                    InkTextField(placeholder: "Jane", text: $firstName)
-                                        .accessibilityIdentifier("firstNameTextField")
-                                }
-                                VStack(alignment: .leading, spacing: 8) {
-                                    Text("Last Name")
-                                        .font(.subheadline.weight(.medium))
-                                        .foregroundColor(Color.inkTextMuted)
-                                    InkTextField(placeholder: "Smith", text: $lastName)
-                                        .accessibilityIdentifier("lastNameTextField")
-                                }
-                            }
-
-                            // Email
-                            VStack(alignment: .leading, spacing: 8) {
-                                Text("Email")
-                                    .font(.subheadline.weight(.medium))
-                                    .foregroundColor(Color.inkTextMuted)
-
-                                InkTextField(
-                                    placeholder: "your@email.com",
-                                    text: $email,
-                                    keyboardType: .emailAddress,
-                                    autocapitalization: .never
-                                )
-                                .accessibilityIdentifier("emailTextField")
-                            }
-
-                            // Password
-                            VStack(alignment: .leading, spacing: 8) {
-                                Text("Password")
-                                    .font(.subheadline.weight(.medium))
-                                    .foregroundColor(Color.inkTextMuted)
-
-                                InkTextField(
-                                    placeholder: "Min. 8 characters",
-                                    text: $password,
-                                    isSecure: true
-                                )
-                                .accessibilityIdentifier("passwordTextField")
-
-                                if !password.isEmpty {
-                                    PasswordStrengthMeter(password: password)
-                                }
-                            }
-                        }
-                        .padding(.horizontal, 24)
-
-                        // Error
-                        if showError {
-                            HStack(spacing: 8) {
-                                Image(systemName: "exclamationmark.triangle.fill")
-                                    .foregroundStyle(Color.due)
-                                Text(errorMessage)
-                                    .font(.subheadline)
-                                    .foregroundStyle(Color.due)
-                            }
-                            .padding(.horizontal, 24)
-                        }
-
-                        // Spacer removed — meter pushes button, keep it reachable on small screens
-                        // Button
-                        Button(action: performSignUp) {
-                            HStack {
-                                if isLoading {
-                                    ProgressView()
-                                        .tint(.white)
-                                } else {
-                                    Text("Create Account")
-                                        .font(.body.weight(.semibold))
-                                }
-                            }
-                        }
-                        .buttonStyle(.ink)
-                        .padding(.horizontal, 24)
-                        .disabled(!isValid || isLoading)
-                        .accessibilityIdentifier("createAccountButton")
-                        .accessibilityHint(!isValid ? "Please fill in all required fields correctly" : isLoading ? "Please wait, creating account" : "")
-
-                        // Divider
-                        HStack {
-                            Rectangle().fill(Color.white.opacity(0.1)).frame(height: 1)
-                            Text("or").font(.footnote).foregroundColor(.inkTextFaint).padding(.horizontal, 8)
-                            Rectangle().fill(Color.white.opacity(0.1)).frame(height: 1)
-                        }
-                        .padding(.horizontal, 24)
-
-                        // Sign in with Apple
-                        SignInWithAppleButton(.signUp, onRequest: { request in
-                            let nonce = AppleSignInCoordinator.generateNonce()
-                            appleNonce = nonce
-                            request.requestedScopes = [.fullName, .email]
-                            request.nonce = AppleSignInCoordinator.sha256(nonce)
-                        }, onCompletion: { result in
-                            handleAppleResult(result)
-                        })
-                        .signInWithAppleButtonStyle(.white)
-                        .frame(height: 50)
-                        .cornerRadius(14)
-                        .padding(.horizontal, 24)
-                        .accessibilityIdentifier("appleSignUpButton")
-
-                        // Terms
-                        Text("By creating an account, you agree to our Terms of Service and Privacy Policy")
-                            .font(.footnote)
-                            .foregroundColor(.inkTextFaint)
-                            .multilineTextAlignment(.center)
-                            .padding(.horizontal, 40)
-                            .padding(.bottom, 24)
-                    }
-                }
-            }
-            .navigationBarTitleDisplayMode(.inline)
-            .toolbar {
-                ToolbarItem(placement: .navigationBarLeading) {
-                    Button("Cancel") { dismiss() }
-                        .foregroundColor(Color.inkTextMuted)
-                        .accessibilityIdentifier("cancelButton")
-                }
-            }
-            .sheet(isPresented: $showEmailConfirmation) {
-                EmailConfirmationView(email: pendingEmail)
-            }
-            .fullScreenCover(isPresented: $showAgeGate) {
-                AgeGateView(
-                    onPassed: { showAgeGate = false },
-                    onCancel: {
-                        showAgeGate = false
-                        dismiss()
-                    }
-                )
-                .readableWidth()
-            }
-            .onAppear {
-                // Age is confirmed BEFORE any account can be created.
-                if !ageConsent.hasPassedDeviceGate { showAgeGate = true }
-            }
-        }
-    }
-
-    private func handleAppleResult(_ result: Result<ASAuthorization, Error>) {
-        switch result {
-        case .success(let auth):
-            guard
-                let credential = auth.credential as? ASAuthorizationAppleIDCredential,
-                let tokenData = credential.identityToken,
-                let idToken = String(data: tokenData, encoding: .utf8),
-                let nonce = appleNonce
-            else { return }
-            isLoading = true
-            Task {
-                do {
-                    try await authManager.signInWithApple(
-                        idToken: idToken,
-                        rawNonce: nonce,
-                        fullName: credential.fullName
-                    )
-                    await MainActor.run {
-                        isLoading = false
-                        if authManager.isAuthenticated { dismiss() }
-                    }
-                } catch {
-                    await MainActor.run {
-                        isLoading = false
-                        showError = true
-                        errorMessage = error.localizedDescription
-                    }
-                }
-            }
-        case .failure(let error):
-            let nsError = error as NSError
-            if nsError.code != ASAuthorizationError.canceled.rawValue {
-                showError = true
-                errorMessage = error.localizedDescription
-            }
-        }
-    }
-
-    private func performSignUp() {
-        guard isValid else { return }
-        isLoading = true
-        showError = false
-        Task {
-            do {
-                try await authManager.signUpWithOTP(
-                    email: email,
-                    password: password,
-                    firstName: firstName.isEmpty ? nil : firstName,
-                    lastName: lastName.isEmpty ? nil : lastName
-                )
-                await MainActor.run {
-                    isLoading = false
-                    if authManager.isAuthenticated {
-                        dismiss()
-                    } else {
-                        // OTP sent — show code entry view
-                        pendingEmail = email
-                        showEmailConfirmation = true
-                    }
-                }
-            } catch {
-                await MainActor.run {
-                    isLoading = false
-                    showError = true
-                    errorMessage = error.localizedDescription
-                }
-            }
-        }
-    }
-}
-
-// MARK: - Premium Sign In View
-struct PremiumSignInView: View {
-    @Environment(\.dismiss) private var dismiss
-    @ObservedObject private var authManager = RevolutionaryAuthManager.shared
-    @State private var email = ""
-    @State private var password = ""
-    @State private var isLoading = false
-    @State private var showError = false
-    @State private var errorMessage = ""
-    @State private var appleNonce: String?
-    @State private var showPasswordReset = false
-
-    var isValid: Bool {
-        !email.isEmpty && !password.isEmpty
-    }
-
-    var body: some View {
-        NavigationStack {
-            ZStack {
-                Color.ink.ignoresSafeArea()
-
-                ScrollView(showsIndicators: false) {
-                    VStack(spacing: 20) {
-                        // Header
-                        VStack(alignment: .leading, spacing: 8) {
-                            Text("Welcome Back")
-                                .font(.question(.title, weight: .bold))
-                                .foregroundStyle(Color.inkText)
-                                .accessibilityAddTraits(.isHeader)
-
-                            Text("Sign in to continue")
-                                .font(.body)
-                                .foregroundStyle(Color.inkTextMuted)
-                        }
-                        .frame(maxWidth: .infinity, alignment: .leading)
-                        .padding(.top, 20)
-
-                        // Form
-                        VStack(spacing: 20) {
-                            VStack(alignment: .leading, spacing: 8) {
-                                Text("Email")
-                                    .font(.subheadline.weight(.medium))
-                                    .foregroundColor(Color.inkTextMuted)
-
-                                InkTextField(
-                                    placeholder: "your@email.com",
-                                    text: $email,
-                                    keyboardType: .emailAddress,
-                                    autocapitalization: .never
-                                )
-                                .accessibilityIdentifier("signInEmailTextField")
-                            }
-
-                            VStack(alignment: .leading, spacing: 8) {
-                                Text("Password")
-                                    .font(.subheadline.weight(.medium))
-                                    .foregroundColor(Color.inkTextMuted)
-
-                                InkTextField(
-                                    placeholder: "••••••••",
-                                    text: $password,
-                                    isSecure: true
-                                )
-                                .accessibilityIdentifier("signInPasswordTextField")
-                            }
-                        }
-                        .padding(.horizontal, 24)
-
-                        if showError {
-                            HStack(spacing: 8) {
-                                Image(systemName: "exclamationmark.triangle.fill")
-                                    .foregroundStyle(Color.due)
-                                Text(errorMessage)
-                                    .font(.subheadline)
-                                    .foregroundStyle(Color.due)
-                            }
-                            .padding(.horizontal, 24)
-                        }
-
-                        Spacer(minLength: 40)
-
-                        Button(action: performSignIn) {
-                            HStack {
-                                if isLoading {
-                                    ProgressView()
-                                        .tint(.white)
-                                } else {
-                                    Text("Sign In")
-                                        .font(.body.weight(.semibold))
-                                }
-                            }
-                        }
-                        .buttonStyle(.ink)
-                        .padding(.horizontal, 24)
-                        .disabled(!isValid || isLoading)
-                        .accessibilityIdentifier("signInButton")
-                        .accessibilityHint(!isValid ? "Please enter your email and password" : isLoading ? "Please wait, signing in" : "")
-
-                        Button("Forgot Password?") {
-                            showPasswordReset = true
-                        }
-                        .font(.subheadline)
-                        .foregroundColor(Color.inkTextMuted)
-                        .accessibilityIdentifier("forgotPasswordButton")
-
-                        // Divider
-                        HStack {
-                            Rectangle().fill(Color.white.opacity(0.1)).frame(height: 1)
-                            Text("or").font(.footnote).foregroundColor(.inkTextFaint).padding(.horizontal, 8)
-                            Rectangle().fill(Color.white.opacity(0.1)).frame(height: 1)
-                        }
-                        .padding(.horizontal, 24)
-
-                        // Sign in with Apple
-                        SignInWithAppleButton(.signIn, onRequest: { request in
-                            let nonce = AppleSignInCoordinator.generateNonce()
-                            appleNonce = nonce
-                            request.requestedScopes = [.fullName, .email]
-                            request.nonce = AppleSignInCoordinator.sha256(nonce)
-                        }, onCompletion: { result in
-                            handleAppleResult(result)
-                        })
-                        .signInWithAppleButtonStyle(.white)
-                        .frame(height: 50)
-                        .cornerRadius(14)
-                        .padding(.horizontal, 24)
-                        .padding(.bottom, 24)
-                        .accessibilityIdentifier("appleSignInButton")
-                    }
-                }
-            }
-            .navigationBarTitleDisplayMode(.inline)
-            .toolbar {
-                ToolbarItem(placement: .navigationBarLeading) {
-                    Button("Cancel") { dismiss() }
-                        .foregroundColor(Color.inkTextMuted)
-                        .accessibilityIdentifier("signInCancelButton")
-                }
-            }
-            .sheet(isPresented: $showPasswordReset) {
-                PasswordResetView(email: email)
-            }
-        }
-    }
-
-    private func handleAppleResult(_ result: Result<ASAuthorization, Error>) {
-        switch result {
-        case .success(let auth):
-            guard
-                let credential = auth.credential as? ASAuthorizationAppleIDCredential,
-                let tokenData = credential.identityToken,
-                let idToken = String(data: tokenData, encoding: .utf8),
-                let nonce = appleNonce
-            else { return }
-            isLoading = true
-            Task {
-                do {
-                    try await authManager.signInWithApple(
-                        idToken: idToken,
-                        rawNonce: nonce,
-                        fullName: credential.fullName
-                    )
-                    await MainActor.run {
-                        isLoading = false
-                        if authManager.isAuthenticated { dismiss() }
-                    }
-                } catch {
-                    await MainActor.run {
-                        isLoading = false
-                        showError = true
-                        errorMessage = error.localizedDescription
-                    }
-                }
-            }
-        case .failure(let error):
-            let nsError = error as NSError
-            if nsError.code != ASAuthorizationError.canceled.rawValue {
-                showError = true
-                errorMessage = error.localizedDescription
-            }
-        }
-    }
-
-    private func performSignIn() {
-        guard isValid else { return }
-
-        isLoading = true
-        showError = false
-
-        Task {
-            do {
-                try await authManager.signIn(email: email, password: password)
-
-                await MainActor.run {
-                    isLoading = false
-                    if authManager.isAuthenticated {
-                        dismiss()
-                    }
-                }
-            } catch {
-                await MainActor.run {
-                    isLoading = false
-                    showError = true
-                    // Show the actual error message from the auth system
-                    errorMessage = error.localizedDescription
-                }
-            }
-        }
-    }
-}
-
-#Preview {
-    RootView()
-}
-
 
 #if DEBUG
 /// `--demo-tier`: the plan sheet for Netflix, once the catalog has loaded.
