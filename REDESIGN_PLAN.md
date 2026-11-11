@@ -494,6 +494,35 @@ audit of every screen and string, the remaining screens (settings, age check, pr
 New, widgets: their earlier ratings were never from seeing them, because the demo arguments the
 screen tour named did not exist in the app until now), and the full verification.
 
+**Status, end of 2026-11-10.** Step 6 (truth audit), first pass: Cheaper Alternatives removed from
+Pro, the paywall, the verdict and detail screens and the local listing text; the old insights engine,
+the "best value" shortcut, widget commentary and the usage-history list removed. Step 7: the six
+settings screens, price history and the hours-used sheet are rebuilt on one pattern
+(`DesignSystem/SettingsParts.swift`) and translated (they had been English in every language).
+
+Ratings from what was actually seen on screen this time (harsh method; "not seen" means not rated):
+
+| Screen | English | Arabic | Largest text | Score |
+|---|---|---|---|---|
+| Mail: start | seen | seen | seen | 9.2 |
+| Mail: app-password sheet | seen | not seen | not seen | 9.0 |
+| Mail: searching (receipts printing) | seen | not seen | not seen | 9.3 |
+| Mail: results, added, connected | seen | not seen | not seen | 9.0 |
+| Welcome, sign-up, sign-in | seen | sign-up seen | all seen | 9.0 |
+| Email code, reset, new password | seen | code and new password seen | code seen | 9.0 |
+| Notifications, Privacy, Help | seen | Privacy and Help seen | Notifications seen | 9.0 |
+| Currency, Export, Language | seen | not seen | Export and Language seen | 9.0 |
+| Age check | seen | not seen | not seen | 8.6 (unchanged) |
+| What's New | seen | not seen | not seen | 8.8 (unchanged) |
+| Price history (rebuilt) | empty state seen before the rebuild only | | | not rated |
+| Hours-used sheet (rebuilt) | not seen | | | not rated |
+| Widgets, Live Activity | never seen on a Home or Lock Screen | | | not rated |
+
+Still open: `ScreenTimeManager` (782 lines that import FamilyControls and carry Screen Time
+authorisation text; only its typed-hours functions are used) should become a small typed-hours
+store; widget strings are English only; the screens marked "not seen" above; a full four-variant
+tour; 848 keys in `Localizable.xcstrings` that no code references.
+
 ---
 
 ## Sources

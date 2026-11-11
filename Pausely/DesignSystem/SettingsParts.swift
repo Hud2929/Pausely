@@ -84,30 +84,47 @@ struct SettingsRow<Trailing: View>: View {
     var titleColor: Color = .inkText
     @ViewBuilder var trailing: Trailing
 
+    @Environment(\.dynamicTypeSize) private var typeSize
+
     var body: some View {
         VStack(spacing: 0) {
-            HStack(alignment: .center, spacing: 12) {
-                VStack(alignment: .leading, spacing: 3) {
-                    Text(verbatim: title)
-                        .font(.body)
-                        .foregroundStyle(titleColor)
-                        .multilineTextAlignment(.leading)
-                        .fixedSize(horizontal: false, vertical: true)
-                    if let detail {
-                        Text(verbatim: detail)
-                            .font(.subheadline)
-                            .foregroundStyle(Color.inkTextMuted)
-                            .multilineTextAlignment(.leading)
-                            .fixedSize(horizontal: false, vertical: true)
+            Group {
+                if typeSize.isAccessibilitySize {
+                    // Large text gets the full width; what was at the end goes underneath.
+                    VStack(alignment: .leading, spacing: 8) {
+                        words
+                        trailing
+                    }
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                } else {
+                    HStack(alignment: .center, spacing: 12) {
+                        words
+                        Spacer(minLength: 8)
+                        trailing
                     }
                 }
-                Spacer(minLength: 8)
-                trailing
             }
             .frame(minHeight: Layout.tapTarget)
             .padding(.vertical, 8)
             .contentShape(Rectangle())
             Hairline()
+        }
+    }
+
+    private var words: some View {
+        VStack(alignment: .leading, spacing: 3) {
+            Text(verbatim: title)
+                .font(.body)
+                .foregroundStyle(titleColor)
+                .multilineTextAlignment(.leading)
+                .fixedSize(horizontal: false, vertical: true)
+            if let detail {
+                Text(verbatim: detail)
+                    .font(.subheadline)
+                    .foregroundStyle(Color.inkTextMuted)
+                    .multilineTextAlignment(.leading)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
         }
     }
 }
@@ -125,17 +142,23 @@ struct ChoiceRow: View {
     let isChosen: Bool
     let action: () -> Void
 
+    @Environment(\.dynamicTypeSize) private var typeSize
+
     var body: some View {
         Button {
             Feel.selection()
             action()
         } label: {
             SettingsRow(title: title, detail: detail) {
-                Image(systemName: "checkmark")
-                    .font(.body.weight(.semibold))
-                    .foregroundStyle(Color.inkText)
-                    .opacity(isChosen ? 1 : 0)
-                    .accessibilityHidden(true)
+                // Beside the title the tick keeps its place so rows don't shift; stacked under it at
+                // large text sizes, only the chosen row shows one.
+                if isChosen || !typeSize.isAccessibilitySize {
+                    Image(systemName: "checkmark")
+                        .font(.body.weight(.semibold))
+                        .foregroundStyle(Color.inkText)
+                        .opacity(isChosen ? 1 : 0)
+                        .accessibilityHidden(true)
+                }
             }
         }
         .buttonStyle(.plain)
