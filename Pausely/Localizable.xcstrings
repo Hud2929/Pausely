@@ -61311,36 +61311,70 @@
         }
       }
     },
-    "The email couldn't be sent. Check the address and try again.": {
+    "That email address doesn't look right. Check it and try again.": {
       "localizations": {
         "ar": {
           "stringUnit": {
             "state": "translated",
-            "value": "تعذّر إرسال الرسالة. تحقّق من العنوان وحاول مرة أخرى."
+            "value": "عنوان البريد الإلكتروني لا يبدو صحيحًا. تحقّق منه وحاول مرة أخرى."
           }
         },
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Die E-Mail konnte nicht gesendet werden. Prüfe die Adresse und versuche es erneut."
+            "value": "Diese E-Mail-Adresse sieht nicht richtig aus. Prüfe sie und versuche es erneut."
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "No se pudo enviar el correo. Revisa la dirección e inténtalo de nuevo."
+            "value": "Esa dirección de correo no parece correcta. Revísala e inténtalo de nuevo."
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "L’e-mail n’a pas pu être envoyé. Vérifiez l’adresse et réessayez."
+            "value": "Cette adresse e-mail ne semble pas correcte. Vérifiez-la et réessayez."
           }
         },
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "メールを送信できませんでした。アドレスを確認して、もう一度お試しください。"
+            "value": "メールアドレスが正しくないようです。確認して、もう一度お試しください。"
+          }
+        }
+      }
+    },
+    "We couldn't send the email. The problem is on our side. Try again in a few minutes.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "تعذّر علينا إرسال الرسالة. المشكلة من جهتنا. حاول مرة أخرى بعد بضع دقائق."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Wir konnten die E-Mail nicht senden. Das Problem liegt bei uns. Versuche es in ein paar Minuten erneut."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No pudimos enviar el correo. El problema es nuestro. Inténtalo de nuevo en unos minutos."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nous n’avons pas pu envoyer l’e-mail. Le problème vient de notre côté. Réessayez dans quelques minutes."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "メールを送信できませんでした。原因はこちら側にあります。数分後にもう一度お試しください。"
           }
         }
       }

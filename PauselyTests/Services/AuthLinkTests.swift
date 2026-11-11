@@ -127,6 +127,33 @@ final class AuthLinkTests: XCTestCase {
         XCTAssertFalse(AuthLinkGate.sameAddress("", ""), "two missing addresses are not a match")
     }
 
+    // MARK: Why an email request failed
+
+    private struct ServiceError: Error, CustomStringConvertible {
+        let description: String
+    }
+
+    /// Seen on the live project on 2026-11-11: the mailer refused a correct address, and the form told
+    /// the person to "check the address". Only a malformed address is the person's to fix.
+    func testAFailureToSendIsNotBlamedOnTheAddress() {
+        for refusal in ["Email address \"new@example.com\" cannot be used as it is not authorized",
+                        "Error sending confirmation email",
+                        "unexpected_failure"] {
+            XCTAssertEqual(CodeProblem.sending(ServiceError(description: refusal)),
+                           L10n.string("We couldn't send the email. The problem is on our side. Try again in a few minutes."), refusal)
+        }
+    }
+
+    func testAMalformedAddressIsReportedAsTheAddress() {
+        XCTAssertEqual(CodeProblem.sending(ServiceError(description: "validation_failed: Unable to validate email address: invalid format")),
+                       L10n.string("That email address doesn't look right. Check it and try again."))
+    }
+
+    func testAskingAgainTooSoonSaysToWait() {
+        XCTAssertEqual(CodeProblem.sending(ServiceError(description: "over_email_send_rate_limit (429)")),
+                       L10n.string("That was too soon after the last email. Wait a minute and try again."))
+    }
+
     // MARK: Resend
 
     func testResendWaitsOutTheMinuteThenOpens() {

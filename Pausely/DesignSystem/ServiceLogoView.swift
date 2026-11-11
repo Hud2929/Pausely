@@ -205,7 +205,11 @@ enum ServiceDomains {
         // ── Cloud Storage ─────────────────────────────────────────────────
         "icloud": "icloud.com",
         "icloud+": "icloud.com",
-        "google one": "one.google.com",
+        // one.google.com serves no touch icon and only a 32-pixel favicon; google.com serves the full mark.
+        "google one": "google.com",
+        // chatgpt.com serves no touch icon and a 48-pixel favicon; openai.com serves the same mark at full size.
+        "chatgpt": "openai.com",
+        "chatgpt plus": "openai.com",
         "dropbox": "dropbox.com",
         "onedrive": "microsoft.com",
         "pcloud": "pcloud.com",

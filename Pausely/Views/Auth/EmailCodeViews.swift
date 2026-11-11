@@ -154,7 +154,12 @@ enum CodeProblem {
         if text.contains("rate") || text.contains("security purposes") || text.contains("429") {
             return L10n.string("That was too soon after the last email. Wait a minute and try again.")
         }
-        return L10n.string("The email couldn't be sent. Check the address and try again.")
+        // The address is blamed only when the account service says the address is what's wrong. Any other
+        // failure to send is ours, and telling someone to check a correct address sends them in circles.
+        if text.contains("email_address_invalid") || text.contains("invalid format") || text.contains("validation_failed") {
+            return L10n.string("That email address doesn't look right. Check it and try again.")
+        }
+        return L10n.string("We couldn't send the email. The problem is on our side. Try again in a few minutes.")
     }
 
     private static func isOffline(_ error: Error) -> Bool {

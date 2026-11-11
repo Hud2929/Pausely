@@ -72,6 +72,13 @@ walk, write down every hesitation and doubt, fix them, walk again. At least thre
 Each phase ends in commits, a green test run, and an updated scorecard (section 7). Every finding
 from the scan goes into the ledger (section 6) and is closed there, so nothing is fixed from memory.
 
+**Order from 2026-11-11 (after the first customer walk).** The phases below stand, with one thing put in
+front of all of them: section 6.1a. A stranger must be able to create an account before any other
+score means anything to them. After that, in this order: 6.2 (data that can be lost or exposed), 6.3
+(wrong money, dates or claims), Phase 5 (every screen seen in four variants), then the customer rounds
+again from a clean install against the live project, all six people, three rounds. Each round is scored
+in section 7 from captures that were opened and read, and the walk is repeated after the fixes.
+
 **Phase 0. Scan (read-only).** Four independent audits (dead code, truth, design rules on every
 view, engineering) plus mechanical scans. Output: the ledger.
 
@@ -122,6 +129,24 @@ captures). Numbers below refer to those reports.
 | 11-11 | Account links (which carry sign-in tokens and an email) were written to the device log in release builds. (B6) | `DeepLinkManager` |
 | 11-11 | Dead code: 100 declarations, 9 files, 34 of 38 saved settings. | `gold_check` dead 96 → 33 |
 | 11-11 | Gates written: `scripts/gold_check.sh`, a translation guard over every screen, Apple's accessibility audit inside the screen tour. | 280 → 115 |
+| 11-11 | The live database: anyone could mark themselves Pro, read the affiliate record, and read through three old payment views that join account emails. Account deletion was not installed. Fixed by `supabase/APPLY_2026-11-11.sql`, rehearsed on the live project and then applied. | `db_apply.py verify`: 29 of 34 checks failed before, 0 after; the rig passes 565 checks over six starting states |
+| 11-11 | The waitlist function could be used to email strangers in bulk. Hourly ceiling, optional CAPTCHA, one reply for every address; deployed (version 24). | `scripts/dbtest/waitlist_function.sh`, 23 checks |
+| 11-11 | Security audit (`private/audits/2026-11-11/security.md`): three crash paths on bad server input, formula cells in the CSV export, `swift-crypto` advisory, six private notes on public `main`, an old migration that failed on a fresh database. | tests named in the report; 522 of 523 unit tests pass |
+
+### 6.1a Open: a new customer cannot get in (before everything else)
+
+Found on 2026-11-11 by installing the app clean and signing up against the live project, and by reading
+the live settings (`python3 scripts/auth_settings.py show`). Until G1 is closed, no screen's score
+matters to a stranger: the customer round below scores "getting in" at 1.
+
+| Id | What | Status |
+|---|---|---|
+| G1 | The live project still has Supabase's default sign-in settings. Account emails carry a link to `localhost` and no code, codes are 8 digits (the app takes 6), and the built-in mailer delivers only to members of the project, two emails an hour. A stranger pressing "Create account" sees "The email couldn't be sent". Five accounts exist in total. | Prepared, not applied: `scripts/auth_settings.py apply` sets the codes, wording and return addresses (refused by the session's safety check until the founder asks). Delivery to strangers also needs the mail key: `RESEND_API_KEY=... python3 scripts/auth_settings.py smtp`. |
+| G2 | "Sign up with Apple" is on both account forms; the Apple provider is switched off on the live project. | Prepared: `scripts/auth_settings.py apple`. Needs the founder's word. |
+| G3 | Deleting the app and installing it again opens it on the age check, still signed in: the Keychain outlives the app's files. | open (belongs with B15 and B16) |
+| G4 | Cancelling "Create your account" after the first-run reveal lands on a generic "Welcome to Pausely / Get Started" screen, as if the guess and the list had never happened. | open |
+| G5 | The sign-up error told people to "check the address" when the address was correct and the mailer had refused it. | closed 11-11: only a malformed address is blamed; three tests |
+| G6 | Two of the twelve first-run services showed a letter instead of a logo (ChatGPT Plus had no entry; Google One pointed at a host with a 32-pixel icon). | closed 11-11 in the logo table; to be re-seen on the next capture |
 
 ### 6.2 Open: can lose, expose or corrupt a customer's data (first)
 
@@ -132,8 +157,8 @@ captures). Numbers below refer to those reports.
 | B3 | Edits, cancels and deletes made before a failed add has synced are silently undone | open |
 | B4 | The queue only drains on launch or pull-to-refresh, while the app says "It will sync when you're back online"; failures retry forever, silently | open |
 | B5 | Currency rates are written off the main thread while every screen reads them (data race) | open |
-| B7 | Any `pausely://auth/...` link is accepted without the app having asked for one (sign-in into someone else's account, then the local history is wiped) | open |
-| B8 | A password typed on an abandoned sign-up is applied to whichever account next signs in by email | open |
+| B7 | Any `pausely://auth/...` link is accepted without the app having asked for one (sign-in into someone else's account, then the local history is wiped) | closed 11-11: `AuthLinkGate`, seven tests |
+| B8 | A password typed on an abandoned sign-up is applied to whichever account next signs in by email | closed 11-11: saved only on the address it was typed for |
 | B10 | Fields are dropped the moment an add reaches the server; an edit made meanwhile is overwritten | open |
 | B15 | Signing out offline leaves the cached session: the next launch shows the signed-out person's list | open |
 | B16 | Name and email are left on the device after sign-out and account deletion | open |
@@ -204,7 +229,7 @@ Measured, not felt. A score is written only when its evidence exists.
 | Area | Now | Evidence | What holds it down |
 |---|---|---|---|
 | Screens | not scored | 41 of 136 states captured in English only | 95 states unseen; 307 audit issues |
-| Customer rounds | not run | | waits for the screens |
+| Customer round 1: the searcher (English, iPhone 17 Pro, clean install, live backend) | **1.5** today; 6.5 once people can get in | Walked 11-11: first run, sign-up against the live project, home, the verdict, cancelling, the confirmation. Captures read one by one. Scores: first 90 seconds 8.5, getting in 1, trust 7, effort 8, clarity 8.5, would pay 6, would come back 7, would tell someone 6. | G1 and G2 (nobody can create an account). After that: the verdict offers the price times twelve and nothing a person couldn't work out alone; "isn't watched" is jargon; the age wheel sits between the reveal and the account. The other five personas and rounds 2 and 3 are not run. |
 | Codebase: truth | open findings: about 70 | `truth.md` | 6.3, 6.4 |
 | Codebase: dead code and repository | `gold_check` 115 (was 280) | script output | 33 declarations, 940 string keys, data files |
 | Codebase: correctness | 16 known bugs open | `engineering.md` | 6.2, 6.3 |
