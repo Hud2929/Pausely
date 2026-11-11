@@ -1,33 +1,86 @@
-// Waitlist Signup + Welcome Email Edge Function
-// Supports high-volume email via AWS SES ($0.10 per 1,000) or Resend (easier setup)
+// Waitlist sign-up and welcome email (Supabase Edge Function).
+// The website posts { email, source } with no key, so everything here assumes a hostile caller.
+// Mail goes out through AWS SES ($0.10 per 1,000) or Resend.
+//
+// What limits abuse, most important first:
+//   1. One welcome email per address, ever (the waitlist's unique email).
+//   2. A ceiling on new sign-ups per hour, counted in the database, so it holds across cold starts
+//      and across every running copy: WAITLIST_MAX_PER_HOUR (default 200).
+//   3. An optional CAPTCHA: set TURNSTILE_SECRET_KEY and have the page send the widget's token as
+//      captcha_token. Without the secret this step is skipped.
+//   4. A per-caller limit kept in memory. It resets on a cold start and a caller can dodge it, so it
+//      only slows a naive loop.
+// The reply is the same whether or not the address was already on the list, and no address is logged.
+// Tested by scripts/dbtest/waitlist_function.sh.
 
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts'
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.117.3'
 import { AwsClient } from 'https://esm.sh/aws4fetch@1.0.17'
 
-// Email provider selection
 const USE_AWS_SES = !!Deno.env.get('AWS_ACCESS_KEY_ID')
 const AWS_REGION = Deno.env.get('AWS_REGION') || 'us-east-1'
 const RESEND_API_KEY = Deno.env.get('RESEND_API_KEY')
+const USE_RESEND = !USE_AWS_SES && !!RESEND_API_KEY && !RESEND_API_KEY.includes('YOUR_RESEND')
 
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL')
 const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')
 
+const TURNSTILE_SECRET_KEY = Deno.env.get('TURNSTILE_SECRET_KEY')
+const MAX_SIGNUPS_PER_HOUR = positiveInt(Deno.env.get('WAITLIST_MAX_PER_HOUR'), 200)
+const MAX_EMAIL_LENGTH = 254
+const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Methods': 'POST, OPTIONS',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 }
 
-// Simple in-memory rate limiter: 5 requests per minute per IP
+const VALID_SOURCES = new Set([
+  'waitlist', 'organic', 'tiktok', 'instagram', 'twitter', 'youtube',
+  'friend', 'search', 'other'
+])
+
+function positiveInt(value: string | undefined, fallback: number): number {
+  const parsed = Number.parseInt(value ?? '', 10)
+  return Number.isFinite(parsed) && parsed > 0 ? parsed : fallback
+}
+
+function reply(status: number, body: Record<string, unknown>): Response {
+  return new Response(JSON.stringify(body), {
+    status,
+    headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+  })
+}
+
+/// The one reply for "this address is on the list", new or not.
+function joined(): Response {
+  return reply(200, {
+    success: true,
+    message: 'Welcome to the waitlist! Check your email.',
+    email_sent: USE_AWS_SES || USE_RESEND
+  })
+}
+
+// MARK: Per-caller limit (in memory): 5 requests a minute
+
 const rateLimitMap = new Map<string, { count: number; resetTime: number }>()
 const RATE_LIMIT_MAX = 5
 const RATE_LIMIT_WINDOW_MS = 60_000
+const RATE_LIMIT_MAX_KEYS = 5_000
 
-function checkRateLimit(ip: string): boolean {
+function checkRateLimit(key: string): boolean {
   const now = Date.now()
-  const entry = rateLimitMap.get(ip)
+  if (rateLimitMap.size > RATE_LIMIT_MAX_KEYS) {
+    // A flood of made-up callers must not grow this map without end.
+    for (const [existingKey, entry] of rateLimitMap) {
+      if (now > entry.resetTime) rateLimitMap.delete(existingKey)
+    }
+    if (rateLimitMap.size > RATE_LIMIT_MAX_KEYS) rateLimitMap.clear()
+  }
+  const entry = rateLimitMap.get(key)
   if (!entry || now > entry.resetTime) {
-    rateLimitMap.set(ip, { count: 1, resetTime: now + RATE_LIMIT_WINDOW_MS })
+    rateLimitMap.set(key, { count: 1, resetTime: now + RATE_LIMIT_WINDOW_MS })
     return true
   }
   if (entry.count >= RATE_LIMIT_MAX) {
@@ -37,64 +90,166 @@ function checkRateLimit(ip: string): boolean {
   return true
 }
 
-// Valid source values
-const VALID_SOURCES = new Set([
-  'waitlist', 'organic', 'tiktok', 'instagram', 'twitter', 'youtube',
-  'friend', 'search', 'other'
-])
+/// Cloudflare's header can't be set by the caller when the request came through Cloudflare; the
+/// forwarded-for list can, which is why this limit is only a courtesy.
+function callerKey(req: Request): string {
+  return req.headers.get('cf-connecting-ip')
+    || (req.headers.get('x-forwarded-for') || '').split(',')[0].trim()
+    || 'unknown'
+}
+
+// MARK: CAPTCHA (Cloudflare Turnstile), only when TURNSTILE_SECRET_KEY is set
+
+async function passesCaptcha(token: unknown, req: Request): Promise<boolean> {
+  if (typeof token !== 'string' || token.length === 0 || token.length > 2048) return false
+  try {
+    const form = new URLSearchParams({ secret: TURNSTILE_SECRET_KEY!, response: token })
+    const callerIP = req.headers.get('cf-connecting-ip')
+    if (callerIP) form.set('remoteip', callerIP)
+    const response = await fetch('https://challenges.cloudflare.com/turnstile/v0/siteverify', {
+      method: 'POST',
+      body: form
+    })
+    const result = await response.json()
+    return result?.success === true
+  } catch {
+    return false
+  }
+}
+
+// MARK: Welcome email
+
+async function sendWelcomeEmail(address: string): Promise<void> {
+  const htmlBody = getWelcomeEmailHTML(address)
+
+  if (USE_AWS_SES) {
+    try {
+      const aws = new AwsClient({
+        accessKeyId: Deno.env.get('AWS_ACCESS_KEY_ID')!,
+        secretAccessKey: Deno.env.get('AWS_SECRET_ACCESS_KEY')!,
+        region: AWS_REGION
+      })
+
+      const response = await aws.fetch(`https://email.${AWS_REGION}.amazonaws.com/v2/email/outbound-emails`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          Content: {
+            Simple: {
+              Subject: { Data: "You're on the Pausely waitlist!", Charset: 'UTF-8' },
+              Body: { Html: { Data: htmlBody, Charset: 'UTF-8' } }
+            }
+          },
+          Destination: { ToAddresses: [address] },
+          FromEmailAddress: Deno.env.get('SES_FROM_EMAIL') || 'hello@pausely.app',
+          ReplyToAddresses: [Deno.env.get('SES_REPLY_TO') || 'support@pausely.app']
+        })
+      })
+
+      if (response.status === 200) {
+        console.log('[AWS SES] Welcome email sent')
+      } else {
+        console.error('[AWS SES] Error: HTTP', response.status)
+      }
+    } catch (sesErr) {
+      console.error('[AWS SES] Failed:', sesErr instanceof Error ? sesErr.message : 'unknown error')
+    }
+  } else if (USE_RESEND) {
+    try {
+      const response = await fetch('https://api.resend.com/emails', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${RESEND_API_KEY}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          from: 'Pausely <hello@pausely.pro>',
+          to: address,
+          subject: "You're on the Pausely waitlist!",
+          html: htmlBody
+        })
+      })
+
+      if (response.ok) {
+        console.log('[Resend] Welcome email sent')
+      } else {
+        console.error('[Resend] Error: HTTP', response.status)
+      }
+    } catch (resendErr) {
+      console.error('[Resend] Failed:', resendErr instanceof Error ? resendErr.message : 'unknown error')
+    }
+  } else {
+    console.log('[DEBUG MODE] No mail provider is set, so no welcome email was sent')
+  }
+}
+
+// MARK: The endpoint
 
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response('ok', { headers: corsHeaders })
   }
-
-  // Rate limiting
-  const clientIP = req.headers.get('x-forwarded-for') || req.headers.get('cf-connecting-ip') || 'unknown'
-  if (!checkRateLimit(clientIP)) {
-    return new Response(
-      JSON.stringify({ error: 'Rate limit exceeded. Please try again later.' }),
-      { status: 429, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-    )
+  if (req.method !== 'POST') {
+    return reply(405, { error: 'Method not allowed' })
+  }
+  if (!checkRateLimit(callerKey(req))) {
+    return reply(429, { error: 'Rate limit exceeded. Please try again later.' })
   }
 
   try {
-    const { email, source } = await req.json()
+    let body: unknown
+    try {
+      body = await req.json()
+    } catch {
+      return reply(400, { error: 'Invalid request' })
+    }
+    const fields = (body !== null && typeof body === 'object' ? body : {}) as Record<string, unknown>
 
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
-    if (!email || !emailRegex.test(email)) {
-      return new Response(
-        JSON.stringify({ error: 'Invalid email address' }),
-        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      )
+    const normalizedEmail = typeof fields.email === 'string' ? fields.email.trim().toLowerCase() : ''
+    if (!normalizedEmail || normalizedEmail.length > MAX_EMAIL_LENGTH || !EMAIL_PATTERN.test(normalizedEmail)) {
+      return reply(400, { error: 'Invalid email address' })
     }
 
-    const normalizedEmail = email.toLowerCase().trim()
-
-    // Validate source
-    const normalizedSource = (source || 'waitlist').toString().toLowerCase().trim()
+    const normalizedSource = typeof fields.source === 'string' ? fields.source.toLowerCase().trim() : 'waitlist'
     const validSource = VALID_SOURCES.has(normalizedSource) ? normalizedSource : 'other'
-    if (validSource.length > 50) {
-      return new Response(
-        JSON.stringify({ error: 'Invalid source' }),
-        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      )
+
+    if (TURNSTILE_SECRET_KEY && !(await passesCaptcha(fields.captcha_token, req))) {
+      return reply(403, { error: 'Please complete the check and try again.' })
     }
 
     const supabase = createClient(SUPABASE_URL!, SUPABASE_SERVICE_ROLE_KEY!, {
       auth: { autoRefreshToken: false, persistSession: false }
     })
 
-    const { data: existing } = await supabase
+    // The hourly ceiling comes first and applies to every address, so a reply at the ceiling says
+    // nothing about whether the address was already on the list.
+    const oneHourAgo = new Date(Date.now() - 60 * 60 * 1000).toISOString()
+    const { count: recentSignups, error: countError } = await supabase
+      .from('waitlist')
+      .select('id', { count: 'exact', head: true })
+      .gt('created_at', oneHourAgo)
+
+    if (countError) {
+      console.error('Waitlist count error:', countError.message)
+      return reply(500, { error: 'Failed to join waitlist' })
+    }
+    if ((recentSignups ?? 0) >= MAX_SIGNUPS_PER_HOUR) {
+      console.warn('Waitlist hourly ceiling reached:', MAX_SIGNUPS_PER_HOUR)
+      return reply(429, { error: 'The waitlist is busy right now. Please try again in an hour.' })
+    }
+
+    const { data: existing, error: lookupError } = await supabase
       .from('waitlist')
       .select('id')
       .eq('email', normalizedEmail)
-      .single()
+      .maybeSingle()
 
+    if (lookupError) {
+      console.error('Waitlist lookup error:', lookupError.message)
+      return reply(500, { error: 'Failed to join waitlist' })
+    }
     if (existing) {
-      return new Response(
-        JSON.stringify({ success: true, message: 'Already on the list!', already_exists: true }),
-        { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      )
+      return joined()
     }
 
     const { error: insertError } = await supabase
@@ -105,100 +260,20 @@ serve(async (req) => {
       })
 
     if (insertError) {
-      console.error('Waitlist insert error:', insertError)
-      return new Response(
-        JSON.stringify({ error: 'Failed to join waitlist' }),
-        { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      )
+      // Two requests for one new address can cross; the second meets the unique email.
+      if (insertError.code === '23505') {
+        return joined()
+      }
+      console.error('Waitlist insert error:', insertError.message)
+      return reply(500, { error: 'Failed to join waitlist' })
     }
 
-    let emailSent = false
-    let provider = 'none'
-    const htmlBody = getWelcomeEmailHTML(normalizedEmail)
-
-    if (USE_AWS_SES) {
-      try {
-        const aws = new AwsClient({
-          accessKeyId: Deno.env.get('AWS_ACCESS_KEY_ID')!,
-          secretAccessKey: Deno.env.get('AWS_SECRET_ACCESS_KEY')!,
-          region: AWS_REGION
-        })
-
-        const response = await aws.fetch(`https://email.${AWS_REGION}.amazonaws.com/v2/email/outbound-emails`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            Content: {
-              Simple: {
-                Subject: { Data: "You're on the Pausely waitlist!", Charset: 'UTF-8' },
-                Body: { Html: { Data: htmlBody, Charset: 'UTF-8' } }
-              }
-            },
-            Destination: { ToAddresses: [normalizedEmail] },
-            FromEmailAddress: Deno.env.get('SES_FROM_EMAIL') || 'hello@pausely.app',
-            ReplyToAddresses: [Deno.env.get('SES_REPLY_TO') || 'support@pausely.app']
-          })
-        })
-
-        if (response.status === 200) {
-          emailSent = true
-          provider = 'aws_ses'
-          console.log(`[AWS SES] Welcome email sent to ${normalizedEmail}`)
-        } else {
-          const errorText = await response.text()
-          console.error('[AWS SES] Error:', errorText)
-        }
-      } catch (sesErr) {
-        console.error('[AWS SES] Failed:', sesErr)
-      }
-    } else if (RESEND_API_KEY && !RESEND_API_KEY.includes('YOUR_RESEND')) {
-      try {
-        const response = await fetch('https://api.resend.com/emails', {
-          method: 'POST',
-          headers: {
-            'Authorization': `Bearer ${RESEND_API_KEY}`,
-            'Content-Type': 'application/json'
-          },
-          body: JSON.stringify({
-            from: 'Pausely <hello@pausely.pro>',
-            to: normalizedEmail,
-            subject: "You're on the Pausely waitlist!",
-            html: htmlBody
-          })
-        })
-
-        if (response.ok) {
-          emailSent = true
-          provider = 'resend'
-          console.log(`[Resend] Welcome email sent to ${normalizedEmail}`)
-        } else {
-          const errorText = await response.text()
-          console.error('[Resend] Error:', errorText)
-        }
-      } catch (resendErr) {
-        console.error('[Resend] Failed:', resendErr)
-      }
-    } else {
-      console.log(`[DEBUG MODE] Would send welcome email to: ${normalizedEmail}`)
-      console.log('[DEBUG MODE] Set AWS SES credentials OR RESEND_API_KEY to send real emails')
-    }
-
-    return new Response(
-      JSON.stringify({
-        success: true,
-        message: "Welcome to the waitlist! Check your email.",
-        email_sent: emailSent,
-        provider: provider
-      }),
-      { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-    )
+    await sendWelcomeEmail(normalizedEmail)
+    return joined()
 
   } catch (error) {
-    console.error('Edge function error:', error)
-    return new Response(
-      JSON.stringify({ error: 'Internal server error' }),
-      { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-    )
+    console.error('Edge function error:', error instanceof Error ? error.message : 'unknown error')
+    return reply(500, { error: 'Internal server error' })
   }
 })
 
