@@ -155,8 +155,14 @@ Updated at every commit, so the work can be picked up from this file alone.
 
 - Done before the run began: the live database fix, the waitlist function, sign-in settings, mail
   delivery, Apple sign-in (all in 6.1 and 6.1a); B1, B7, B8; G5, G6.
-- Now: Stage A, first slice: G3 with B15 and B16.
-- Next: G4, then Stage B.
+- Stage A is done (G3, G4, B15, B16), walked on the simulator from a clean install.
+- Now: Stage B, the sync queue as one design (B2, B3, B4, B10). The design: every change to a
+  subscription goes through the queue; the queue holds one pending intent per subscription (the
+  latest whole record to upsert, or a delete), so an edit after an unsent add is one upsert; it drains
+  after every change, on foreground and when the network returns; a finished intent is removed only if
+  it has not been replaced while it was being sent; failures back off and are shown; a successful
+  write never replaces the copy on the phone. Proven against a stand-in transport that can fail.
+- Next: B5, T62, then Stage C.
 
 **Phase 0. Scan (read-only).** Four independent audits (dead code, truth, design rules on every
 view, engineering) plus mechanical scans. Output: the ledger.
@@ -222,8 +228,8 @@ matters to a stranger: the customer round below scores "getting in" at 1.
 |---|---|---|
 | G1 | The live project still has Supabase's default sign-in settings. Account emails carry a link to `localhost` and no code, codes are 8 digits (the app takes 6), and the built-in mailer delivers only to members of the project, two emails an hour. A stranger pressing "Create account" sees "The email couldn't be sent". Five accounts exist in total. | Closed on the server on 11-11, not yet proven from outside. Account email now goes through Resend with the founder's key (kept in this Mac's Keychain, never in the repository), 100 an hour; `scripts/auth_settings.py show` reads "ok" on every line. An automated sign-up from an outside mailbox was refused by the session's safety check, so the proof still owed is one sign-up with an address that is not a member of the Supabase project. Earlier that day: the codes, wording and return addresses were applied at the founder's word (`scripts/auth_settings.py apply`; all twelve settings read "ok", the previous values are saved in `private/audits/`). Still open: delivery. The built-in mailer reaches project members only, two emails an hour, so a stranger still cannot sign up. Two ways to close it. (a) `supabase/functions/auth-email` sends the email through the mail key the project already holds; it is written and passes 20 local checks (`scripts/dbtest/auth_email_function.sh`) but is not deployed, because the session's safety check refuses a deploy the founder has not named: "deploy auth-email", then `python3 scripts/auth_settings.py hook`, then a sign-up from an outside mailbox. (b) Put the mail key in the project's SMTP settings: `RESEND_API_KEY=... python3 scripts/auth_settings.py smtp`. |
 | G2 | "Sign up with Apple" is on both account forms; the Apple provider is switched off on the live project. | Switched on 11-11 at the founder's word (`scripts/auth_settings.py apple`): the provider is on for the app's bundle id. Not yet exercised from a device signed in to an Apple account. |
-| G3 | Deleting the app and installing it again opens it on the age check, still signed in: the Keychain outlives the app's files. | open (belongs with B15 and B16) |
-| G4 | Cancelling "Create your account" after the first-run reveal lands on a generic "Welcome to Pausely / Get Started" screen, as if the guess and the list had never happened. | open |
+| G3 | The Keychain outlives the app, so a copy installed after a delete would restore the last person's sign-in and keep their mail passwords. (The sighting on the simulator on 11-11 was a debug flag an earlier session had left there, since removed; the cause on a real phone is the Keychain.) | closed 11-11: on the first launch after an install the Keychain is cleared, the sign-in library's own stored session first; seen on the simulator after delete and reinstall; `InstallStateTests` |
+| G4 | Cancelling "Create your account" after the first-run reveal lands on a generic "Welcome to Pausely / Get Started" screen, as if the guess and the list had never happened. | closed 11-11: leaving account creation, or closing the app there, comes back to the person's own reveal with the list; walked on the simulator |
 | G5 | The sign-up error told people to "check the address" when the address was correct and the mailer had refused it. | closed 11-11: only a malformed address is blamed; three tests |
 | G6 | Two of the twelve first-run services showed a letter instead of a logo (ChatGPT Plus had no entry; Google One pointed at a host with a 32-pixel icon). | closed 11-11 in the logo table; to be re-seen on the next capture |
 
@@ -239,8 +245,8 @@ matters to a stranger: the customer round below scores "getting in" at 1.
 | B7 | Any `pausely://auth/...` link is accepted without the app having asked for one (sign-in into someone else's account, then the local history is wiped) | closed 11-11: `AuthLinkGate`, seven tests |
 | B8 | A password typed on an abandoned sign-up is applied to whichever account next signs in by email | closed 11-11: saved only on the address it was typed for |
 | B10 | Fields are dropped the moment an add reaches the server; an edit made meanwhile is overwritten | open |
-| B15 | Signing out offline leaves the cached session: the next launch shows the signed-out person's list | open |
-| B16 | Name and email are left on the device after sign-out and account deletion | open |
+| B15 | Signing out offline leaves the cached session: the next launch shows the signed-out person's list | closed 11-11: the cache is cleared before the server is asked, whatever it answers. No test: it is the order of two calls that need the account service |
+| B16 | Name and email are left on the device after sign-out and account deletion | closed 11-11: the unused saved email is no longer written and is removed; the kept name is removed on account deletion and when another account takes over the phone (sign-out keeps it, because Apple gives a name only once); `InstallStateTests` |
 | T62 | Cancel help matches by "name contains": Loom shows Bloomberg's steps, link and phone number (34 wrong companies measured) | open |
 
 ### 6.3 Open: wrong money, dates or claims

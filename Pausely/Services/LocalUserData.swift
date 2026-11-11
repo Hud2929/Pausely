@@ -20,6 +20,11 @@ enum LocalUserData {
     }
 
     static func wipe() async {
+        // The name kept for this account, and an email address older versions saved and never read.
+        if let owner = UserDefaults.standard.string(forKey: ownerKey) {
+            RevolutionaryAuthManager.forgetProfile(userId: owner)
+        }
+        UserDefaults.standard.removeObject(forKey: "last_auth_email")
         SubscriptionStore.shared.removeAllLocalData()
         LifecycleEventLog.shared.removeAll()
         PausePlanStore.shared.removeAll()

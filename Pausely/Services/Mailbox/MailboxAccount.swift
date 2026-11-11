@@ -165,6 +165,16 @@ enum MailboxAccountStore {
         UserDefaults.standard.removeObject(forKey: accountsKey)
     }
 
+    /// Removes every mail password and token, including ones whose inbox is no longer listed. After a
+    /// reinstall the list of inboxes is gone but the Keychain still holds their secrets.
+    static func deleteAllSecrets() {
+        let query: [String: Any] = [
+            kSecClass as String: kSecClassGenericPassword,
+            kSecAttrService as String: service
+        ]
+        SecItemDelete(query as CFDictionary)
+    }
+
     // MARK: Sync position (Gmail history id, Graph delta link, IMAP uidvalidity:uid)
 
     static func cursor(for id: String) -> String? { UserDefaults.standard.string(forKey: cursorPrefix + id) }

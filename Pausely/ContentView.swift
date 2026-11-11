@@ -15,6 +15,8 @@ struct PauselyApp: App {
     }
 
     init() {
+        // Has to be read before anything is saved in this launch (see `InstallState`).
+        _ = InstallState.firstLaunch
         #if DEBUG
         // UI tests pass --reset-state to start from a first launch, whatever an earlier run left behind.
         if ProcessInfo.processInfo.arguments.contains("--reset-state") {
@@ -313,9 +315,13 @@ struct RootView: View {
                         PremiumMainTabView()
                     }
                     .transition(.opacity.combined(with: .scale(0.98)))
-                } else if !showAuth && !hasCompletedOnboarding {
+                } else if !showAuth && (!hasCompletedOnboarding || PendingTally.load() != nil) {
                     // New person: the guess, the tally and the reveal come before the account.
+                    // Someone who made a list and then backed out of creating an account (or closed the
+                    // app there) comes back to their own reveal, not to a welcome screen that starts over.
                     FirstRunView(
+                        startAt: PendingTally.load() == nil ? .guess : .reveal,
+                        tally: PendingTally.load(),
                         onKeepList: {
                             authStart = .signUp
                             withAnimation(Motion.unlessReduced(Motion.arrive)) {
@@ -334,7 +340,10 @@ struct RootView: View {
                     .transition(.opacity)
                 } else {
                     // Onboarding completed but not authenticated: show auth
-                    PremiumWelcomeFlow(start: authStart)
+                    PremiumWelcomeFlow(start: authStart, onSignUpDismissed: {
+                        guard !authManager.isAuthenticated, PendingTally.load() != nil else { return }
+                        withAnimation(Motion.unlessReduced(Motion.arrive)) { showAuth = false }
+                    })
                         .transition(.opacity.combined(with: .move(edge: .bottom)))
                 }
             }
@@ -435,6 +444,8 @@ struct PremiumSplashScreen: View {
 struct PremiumWelcomeFlow: View {
     enum Start { case welcome, signUp, signIn }
     var start: Start = .welcome
+    /// The "Create your account" sheet was closed. After the first run this leads back to the reveal.
+    var onSignUpDismissed: (() -> Void)?
 
     @State private var showSignUp = false
     @State private var showSignIn = false
@@ -447,7 +458,7 @@ struct PremiumWelcomeFlow: View {
                 authWallContent
             }
             .navigationBarHidden(true)
-            .sheet(isPresented: $showSignUp) {
+            .sheet(isPresented: $showSignUp, onDismiss: { onSignUpDismissed?() }) {
                 PremiumSignUpView()
             }
             .sheet(isPresented: $showSignIn) {

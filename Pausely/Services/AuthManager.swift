@@ -28,7 +28,6 @@ class RevolutionaryAuthManager: ObservableObject {
     // MARK: - Private Properties
     private var client: SupabaseClient { SupabaseManager.shared.client }
     private let biometricKey = "biometric_auth_enabled"
-    private let lastEmailKey = "last_auth_email"
     private var refreshTask: Task<Void, Never>?
     private var pendingPassword: String?
     /// The address `pendingPassword` was typed for. The password is saved only on that account.
@@ -104,6 +103,14 @@ class RevolutionaryAuthManager: ObservableObject {
         }
         #endif
 
+        // The Keychain outlives the app. On the first launch after an install whatever it holds was
+        // left by a copy that has been deleted: clear it and start signed out (see `InstallState`).
+        let leftByADeletedCopy = InstallState.firstLaunch
+        if leftByADeletedCopy {
+            KeychainManager.shared.deleteAll()
+            MailboxAccountStore.deleteAllSecrets()
+        }
+
         // Restore session synchronously so the UI is correct on the very first frame,
         // with no flash of the login screen for returning users.
         if let uid = KeychainManager.shared.get(Self.cachedUserIdKey) {
@@ -122,6 +129,9 @@ class RevolutionaryAuthManager: ObservableObject {
         // Async: verify the Supabase token is still valid and refresh user data.
         verifyTask = Task { [weak self] in
             guard let self = self else { return }
+            // The sign-in library keeps its own copy of the session in the Keychain. It has to be gone
+            // before the session is looked at, or the deleted copy's sign-in is restored after all.
+            if leftByADeletedCopy { try? await self.client.auth.signOut(scope: .local) }
             await verifySession()
         }
     }
@@ -162,6 +172,14 @@ class RevolutionaryAuthManager: ObservableObject {
 
     private func loadProfile(userId: String) -> (firstName: String?, lastName: String?) {
         Self.loadProfileStatic(userId: userId)
+    }
+
+    /// Removes the name kept for an account. Sign-out keeps it, because Apple gives a name only on the
+    /// first sign-in and a returning person would otherwise come back nameless; deleting the account, or
+    /// another account taking over this phone, removes it.
+    static func forgetProfile(userId: String) {
+        KeychainManager.shared.delete(key: "profile_\(userId)_firstName")
+        KeychainManager.shared.delete(key: "profile_\(userId)_lastName")
     }
 
     private static func loadProfileStatic(userId: String) -> (firstName: String?, lastName: String?) {
@@ -324,7 +342,6 @@ class RevolutionaryAuthManager: ObservableObject {
             noteCodeRequested(for: email)
             if let fn = firstName, !fn.isEmpty { KeychainManager.shared.save(fn, forKey: Self.pendingFirstNameKey) }
             if let ln = lastName, !ln.isEmpty { KeychainManager.shared.save(ln, forKey: Self.pendingLastNameKey) }
-            UserDefaults.standard.set(email, forKey: lastEmailKey)
 
             // Send OTP — creates user if they don't exist
             try await client.auth.signInWithOTP(
@@ -423,8 +440,6 @@ class RevolutionaryAuthManager: ObservableObject {
                 password: password
             )
             
-            // Save email for biometric auth
-            UserDefaults.standard.set(email, forKey: lastEmailKey)
 
             let supabaseUser = session.user
 
@@ -567,9 +582,12 @@ class RevolutionaryAuthManager: ObservableObject {
         pendingRequests.values.forEach { $0.cancel() }
         pendingRequests.removeAll()
         
+        // The cache goes first, whatever the server says. Offline, the library drops its own session and
+        // then throws; a cache left behind would open the next launch as the person who just signed out.
+        clearSessionCache()
+        UserDefaults.standard.removeObject(forKey: "last_auth_email")
         do {
             try await client.auth.signOut()
-            clearSessionCache()
         } catch {
             os_log("Sign out failed: %{public}@", log: .default, type: .error, error.localizedDescription)
         }
