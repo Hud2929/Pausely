@@ -83,8 +83,10 @@ same commit.
 
 ## Rating (never round up)
 
-Rate each screen 0–10 on seven dimensions: clarity, hierarchy, identity, craft, accessibility,
-honesty, delight. The score is the mean, capped at one point above the weakest dimension. Compare
-against the best shipped apps in any category (principles only; never copy a look, layout, icon or
-signature interaction). A screen is done at 9.0 with no dimension under 8.5, checked on screen in
-English, one right-to-left language and the largest text size.
+The bar is 9.5, set by the founder on 2026-11-11, with no exceptions. The full standard is
+`GOLD_STANDARD.md`: eight dimensions per screen (purpose, truth and need, hierarchy, identity, craft,
+accessibility, reach, feel), the score capped at the weakest dimension plus 0.5, so every dimension
+must reach 9.0. A screen is scored only from captures that were opened and read, in English, Arabic,
+the largest text size and iPad, in every state it has, and only after the system accessibility audit
+passes on it. "Not seen" is not a score. Compare against the best shipped apps in any category
+(principles only; never copy a look, layout, icon or signature interaction).
