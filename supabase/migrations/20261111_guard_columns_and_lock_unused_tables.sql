@@ -148,18 +148,29 @@ END $$;
 -- ============================================================================
 -- 4. Tables no build of the app uses are closed to the app
 -- (user_profiles, usage_snapshots, user_devices, ai_insights_log, affiliates, affiliate_conversions,
--- waitlist). The waitlist is written by the waitlist-signup function, which uses the service role.
+-- waitlist, and the earlier payment system's tables and views). The waitlist is written by the waitlist-signup function, which uses the service role.
 -- To open one again: GRANT ... ON public.<table> TO authenticated, and its policies apply as before.
 -- ============================================================================
 DO $$
 DECLARE
     unused text;
+    kind "char";
 BEGIN
     FOREACH unused IN ARRAY ARRAY['user_profiles', 'usage_snapshots', 'user_devices', 'ai_insights_log',
-                                  'affiliates', 'affiliate_conversions', 'waitlist']
+                                  'affiliates', 'affiliate_conversions', 'waitlist',
+                                  -- An earlier payment system, set up by hand on the live project: two tables
+                                  -- and three views that join them to account emails. A view answers with its
+                                  -- owner's rights, so the views would show every payer to anyone holding the
+                                  -- public key as soon as the tables held a row.
+                                  'orders', 'user_subscriptions',
+                                  'active_subscriptions', 'expiring_subscriptions', 'payment_failures']
     LOOP
-        IF to_regclass('public.' || unused) IS NOT NULL THEN
-            EXECUTE format('REVOKE ALL ON TABLE public.%I FROM anon, authenticated', unused);
+        SELECT c.relkind INTO kind FROM pg_class c WHERE c.oid = to_regclass('public.' || unused);
+        IF kind IS NULL THEN
+            CONTINUE;
+        END IF;
+        EXECUTE format('REVOKE ALL ON TABLE public.%I FROM anon, authenticated', unused);
+        IF kind IN ('r', 'p') THEN
             EXECUTE format('ALTER TABLE public.%I ENABLE ROW LEVEL SECURITY', unused);
             IF EXISTS (SELECT 1 FROM pg_publication_tables
                        WHERE pubname = 'supabase_realtime' AND schemaname = 'public' AND tablename = unused) THEN

@@ -362,12 +362,23 @@ END $$;
 DO $$
 DECLARE
     unused text;
+    kind "char";
 BEGIN
     FOREACH unused IN ARRAY ARRAY['user_profiles', 'usage_snapshots', 'user_devices', 'ai_insights_log',
-                                  'affiliates', 'affiliate_conversions', 'waitlist']
+                                  'affiliates', 'affiliate_conversions', 'waitlist',
+                                  -- An earlier payment system, set up by hand on the live project: two tables
+                                  -- and three views that join them to account emails. A view answers with its
+                                  -- owner's rights, so the views would show every payer to anyone holding the
+                                  -- public key as soon as the tables held a row.
+                                  'orders', 'user_subscriptions',
+                                  'active_subscriptions', 'expiring_subscriptions', 'payment_failures']
     LOOP
-        IF to_regclass('public.' || unused) IS NOT NULL THEN
-            EXECUTE format('REVOKE ALL ON TABLE public.%I FROM anon, authenticated', unused);
+        SELECT c.relkind INTO kind FROM pg_class c WHERE c.oid = to_regclass('public.' || unused);
+        IF kind IS NULL THEN
+            CONTINUE;
+        END IF;
+        EXECUTE format('REVOKE ALL ON TABLE public.%I FROM anon, authenticated', unused);
+        IF kind IN ('r', 'p') THEN
             EXECUTE format('ALTER TABLE public.%I ENABLE ROW LEVEL SECURITY', unused);
             IF EXISTS (SELECT 1 FROM pg_publication_tables
                        WHERE pubname = 'supabase_realtime' AND schemaname = 'public' AND tablename = unused) THEN
@@ -414,7 +425,14 @@ FROM (VALUES
                 WHERE tgrelid = 'public.subscriptions'::regclass AND tgname = 'enforce_row_cap' AND NOT tgisinternal)),
     (8, 'One difficulty rating per person per service',
         EXISTS (SELECT 1 FROM pg_indexes
-                WHERE schemaname = 'public' AND indexname = 'cancel_difficulty_one_per_user'))
+                WHERE schemaname = 'public' AND indexname = 'cancel_difficulty_one_per_user')),
+    (9, 'The earlier payment tables and views are closed to the app',
+        NOT EXISTS (SELECT 1 FROM pg_class c JOIN pg_namespace n ON n.oid = c.relnamespace
+                    WHERE n.nspname = 'public'
+                      AND c.relname IN ('orders', 'user_subscriptions', 'active_subscriptions',
+                                        'expiring_subscriptions', 'payment_failures')
+                      AND (has_table_privilege('anon', c.oid, 'SELECT')
+                           OR has_table_privilege('authenticated', c.oid, 'SELECT'))))
 ) AS checks(position, item, passed)
 UNION ALL
 SELECT 'Accounts marked Pro in the database: ' || count(*) FILTER (WHERE is_pro),

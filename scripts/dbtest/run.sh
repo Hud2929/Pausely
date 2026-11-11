@@ -12,6 +12,8 @@
 #   old      migrations up to 2026-05-20 (a database that never got the October and November files)
 #   oct22    migrations up to 20261022b (ratings exist, but one person could still rate a service twice)
 #   nov6     every migration up to 20261106
+#   live     the shape of the real project on 2026-11-11: only the migrations that were ever run
+#            there, plus an earlier payment system that is in no migration (live_extras.sql)
 #   fresh    every migration in filename order, without the APPLY file
 # Needs Docker (Colima is fine). Exits 1 if any check fails.
 set -uo pipefail
@@ -46,6 +48,23 @@ admin() {  # admin <db>   (SQL on stdin, run as the database owner)
 apply_file() {  # apply_file <db> <file> [single-transaction flag]
   docker exec -i "$CONTAINER" psql -U postgres -X -v ON_ERROR_STOP=1 -q ${3:-} -d "$1" < "$2" 2>&1
 }
+
+sql_stream() {  # sql_stream <db>   (SQL on stdin, output as a person would see it)
+  docker exec -i "$CONTAINER" psql -U postgres -X -v ON_ERROR_STOP=1 -q -d "$1" 2>&1
+}
+
+# Everything a rehearsal could leave behind if it were not fully undone.
+FINGERPRINT="select md5(coalesce(string_agg(item, ',' order by item), '')) from (
+  select 'trigger ' || c.relname || '.' || t.tgname as item from pg_trigger t join pg_class c on c.oid = t.tgrelid where not t.tgisinternal
+  union all select 'policy ' || tablename || '.' || policyname from pg_policies
+  union all select 'function ' || p.proname || ' ' || md5(p.prosrc) from pg_proc p join pg_namespace n on n.oid = p.pronamespace where n.nspname = 'public'
+  union all select 'column ' || table_name || '.' || column_name from information_schema.columns where table_schema = 'public'
+  union all select 'index ' || indexname from pg_indexes where schemaname = 'public'
+  union all select 'grant ' || table_name || ' ' || grantee || ' ' || privilege_type from information_schema.role_table_grants where table_schema = 'public'
+  union all select 'realtime ' || tablename from pg_publication_tables where pubname = 'supabase_realtime'
+  union all select 'rows ' || c.relname || ' ' || (xpath('/row/n/text()', query_to_xml(format('select count(*) as n from public.%I', c.relname), false, true, '')))[1]::text
+            from pg_class c join pg_namespace n on n.oid = c.relnamespace where n.nspname = 'public' and c.relkind = 'r'
+) everything"
 
 # as <db> <role> <user id or -> <sql>: runs the SQL the way the API would for that caller.
 # END=rollback leaves no trace.
@@ -88,6 +107,22 @@ build() {  # build <db> <newest migration to include, by filename prefix>
   done
 }
 
+build_live() {  # what python3 scripts/db_apply.py state showed on the real project
+  local db=$1 name out
+  printf 'drop database if exists %s;\ncreate database %s;\n' "$db" "$db" | docker exec -i "$CONTAINER" psql -U postgres -X -q -d postgres >/dev/null 2>&1
+  apply_file "$db" "$STUB" >/dev/null
+  for name in 20260304173000_fix_and_create_all_tables.sql 20260305000000_add_usage_ai_tables.sql \
+              20260507000000_add_waitlist_and_affiliates.sql 20261005_age_consent.sql \
+              20261007_restore_subscriptions_amount_column.sql 20261008_add_missing_subscription_columns.sql; do
+    if ! out=$(apply_file "$db" "$MIGRATIONS/$name" -1); then
+      fail "$db: migration $name applies" "$(printf '%s' "$out" | grep -m1 ERROR)"
+    fi
+  done
+  if ! out=$(apply_file "$db" "$ROOT/scripts/dbtest/live_extras.sql" -1); then
+    fail "$db: the earlier payment system's objects are created" "$(printf '%s' "$out" | grep -m1 ERROR)"
+  fi
+}
+
 seed() {  # rows that exist before the fix is applied, wherever the table exists
   admin "$1" >/dev/null <<SQL
 insert into auth.users (id, email) values
@@ -111,6 +146,11 @@ begin
   end if;
   if to_regclass('public.user_profiles') is not null then
     insert into public.user_profiles (id) values ('$A');
+  end if;
+  if to_regclass('public.user_subscriptions') is not null then
+    -- One paying account in the earlier payment system, with a failed payment.
+    insert into public.user_subscriptions (user_id, tier, status, payment_failed, payment_failed_at)
+      values ('$B', 'pro', 'active', true, now() - interval '2 days');
   end if;
   if to_regclass('public.cancel_difficulty_ratings') is not null then
     -- The same person rated one service twice before the one-per-person rule existed.
@@ -143,6 +183,15 @@ holes() {
   END=rollback works  "a signed-out visitor can read anyone's monthly spend" "$db" anon - "select public.calculate_monthly_spend('$B')"
   END=rollback works  "a signed-out visitor can write to the waitlist" "$db" anon - "insert into public.waitlist (email) values ('x@example.test')"
   END=rollback gives  "a person can give their referral code free-Pro status" t "$db" authenticated "$A" "insert into public.referral_codes (code, referrer_user_id, is_eligible_for_free_pro) values ('ACODE', '$A', true) returning is_eligible_for_free_pro"
+}
+
+holes_live() {
+  local db=$1
+  printf '  %s before the fix: the earlier payment views, which no migration knows about\n' "$db"
+  END=rollback gives  "a signed-out visitor can read a payer's email through an old view" "b@example.test" "$db" anon - "select user_email from public.payment_failures"
+  END=rollback gives  "and can list every active payer" 1 "$db" anon - "select count(*) from public.active_subscriptions"
+  END=rollback works  "a person can mark themselves Pro"            "$db" authenticated "$A" "update public.profiles set is_pro = true where id = '$A' returning 1"
+  END=rollback gives  "a signed-out visitor can read affiliate payment details" "account 000-111" "$db" anon - "select payment_details from public.affiliates"
 }
 
 # ---- what a fixed database allows -------------------------------------------------------------
@@ -246,6 +295,20 @@ checks() {
     refused "a person cannot fill ai_insights_log"              "$db" authenticated "$A" "insert into public.ai_insights_log (user_id, insight_type, insight_text) values ('$A', 'unused', 'x')"
   fi
 
+  # The earlier payment system (on the live project only)
+  if has "$db" user_subscriptions; then
+    local object
+    for object in orders user_subscriptions active_subscriptions expiring_subscriptions payment_failures; do
+      refused "a signed-out visitor cannot read $object"        "$db" anon - "select count(*) from public.$object"
+      refused "a signed-in person cannot read $object"          "$db" authenticated "$A" "select count(*) from public.$object"
+    done
+    gives   "the service role still reads the old payment views" 1 "$db" service_role - "select count(*) from public.payment_failures"
+    works   "a payment recorded by the service role still marks the account Pro" "$db" service_role - "insert into public.user_subscriptions (user_id, tier, status) values ('$A', 'pro', 'active')"
+    owner_sees "and the account is Pro" "t|pro" "$db" "select is_pro, pro_tier from public.profiles where id = '$A'"
+    works   "an ended payment takes Pro away again"             "$db" service_role - "update public.user_subscriptions set status = 'ended' where user_id = '$A'"
+    owner_sees "and the account is no longer Pro" "f|" "$db" "select is_pro, pro_tier from public.profiles where id = '$A'"
+  fi
+
   # The function that summed anyone's spending
   if [ "$(printf "select count(*) from pg_proc where proname = 'calculate_monthly_spend';\n" | admin "$db")" != "0" ]; then
     refused "a signed-out visitor cannot read anyone's monthly spend" "$db" anon - "select public.calculate_monthly_spend('$B')"
@@ -278,23 +341,44 @@ for _ in $(seq 1 30); do docker exec "$CONTAINER" pg_isready -U postgres >/dev/n
 
 printf 'Applying %s\n\n' "$(basename "$APPLY")"
 
-for state in "minimal 20260304173000" "old 20260520000001" "oct22 20261022b" "nov6 20261106" "fresh 99999999"; do
+for state in "minimal 20260304173000" "old 20260520000001" "oct22 20261022b" "nov6 20261106" "live -" "fresh 99999999"; do
   set -- $state
   db=$1
-  build "$db" "$2"
+  if [ "$db" = "live" ]; then build_live "$db"; else build "$db" "$2"; fi
   seed "$db"
   [ "$db" = "old" ] && holes "$db"
+  [ "$db" = "live" ] && holes_live "$db"
   if [ "$db" = "oct22" ]; then
     owner_sees "oct22 starts with one person's double rating" 2 "$db" "select count(*) from public.cancel_difficulty_ratings where user_id = '$B' and service_name = 'Netflix'"
   fi
   if [ "$db" != "fresh" ]; then
-    for run in first second; do
-      if ! out=$(apply_file "$db" "$APPLY"); then
-        fail "$db: the APPLY file runs ($run time)" "$(printf '%s' "$out" | grep -m1 ERROR)"
-      elif printf '%s' "$out" | grep -q 'NOT OK'; then
-        fail "$db: the APPLY file's checklist is all ok ($run time)" "$(printf '%s' "$out" | grep 'NOT OK' | head -1)"
+    # The rehearsal scripts/db_apply.py sends to the live project: the whole file, then all of it undone.
+    before=$(printf '%s;\n' "$FINGERPRINT" | admin "$db")
+    out=$(python3 "$ROOT/scripts/db_apply.py" wrap rehearse | sql_stream "$db")
+    if printf '%s' "$out" | grep -q 'REHEARSAL_ROLLED_BACK' && ! printf '%s' "$out" | grep -q 'NOT OK'; then
+      pass "$db: a rehearsal runs to its end and reports an all-ok checklist"
+    else
+      fail "$db: a rehearsal runs to its end and reports an all-ok checklist" "$(printf '%s' "$out" | grep -m1 -E 'ERROR|NOT OK')"
+    fi
+    if [ "$before" = "$(printf '%s;\n' "$FINGERPRINT" | admin "$db")" ]; then
+      pass "$db: the rehearsal left nothing behind"
+    else
+      fail "$db: the rehearsal left nothing behind" "the schema or the rows it touches differ from before"
+    fi
+
+    # First the way db_apply.py applies it (one statement), then the way a person pastes it.
+    for run in "as one statement" "pasted, on top"; do
+      if [ "$run" = "as one statement" ]; then
+        out=$(python3 "$ROOT/scripts/db_apply.py" wrap | sql_stream "$db"); status=$?
       else
-        pass "$db: the APPLY file runs and its checklist is all ok ($run time)"
+        out=$(apply_file "$db" "$APPLY"); status=$?
+      fi
+      if [ "$status" -ne 0 ]; then
+        fail "$db: the APPLY file runs ($run)" "$(printf '%s' "$out" | grep -m1 ERROR)"
+      elif printf '%s' "$out" | grep -q 'NOT OK'; then
+        fail "$db: the APPLY file's checklist is all ok ($run)" "$(printf '%s' "$out" | grep 'NOT OK' | head -1)"
+      else
+        pass "$db: the APPLY file runs and its checklist is all ok ($run)"
       fi
     done
   fi
