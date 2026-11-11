@@ -105,6 +105,23 @@ final class IMAPProtocolTests: XCTestCase {
         XCTAssertThrowsError(try parse("* LIST () \"/\" \"unterminated\r\n"))
     }
 
+    /// A server that announces a negative length must get an error back, not take the app down.
+    func testNegativeLiteralLengthIsMalformed() {
+        XCTAssertThrowsError(try parse("* 1 FETCH (BODY[] {-5}\r\n)\r\n")) { error in
+            guard case IMAPProtocolError.malformed(let reason) = error else { return XCTFail("\(error)") }
+            XCTAssertEqual(reason, "bad literal")
+        }
+    }
+
+    /// A message size beyond what an Int holds is dropped; the rest of the item is still read.
+    func testImpossibleMessageSizeIsDropped() throws {
+        let item = try XCTUnwrap(IMAPParser.fetchItem(try parse("* 7 FETCH (UID 42 RFC822.SIZE 18446744073709551615)\r\n")))
+        XCTAssertEqual(item.uid, 42)
+        XCTAssertNil(item.size)
+        let ordinary = try XCTUnwrap(IMAPParser.fetchItem(try parse("* 8 FETCH (UID 43 RFC822.SIZE 2048)\r\n")))
+        XCTAssertEqual(ordinary.size, 2048)
+    }
+
     func testInternalDate() {
         // The exact moment, time zone included (RFC 3501 date-time; a single-digit day starts with a space).
         XCTAssertEqual(IMAPParser.parseInternalDate("17-Jul-1996 02:44:25 -0700")?.timeIntervalSince1970, 837596665)

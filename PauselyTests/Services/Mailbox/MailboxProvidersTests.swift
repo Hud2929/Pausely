@@ -92,6 +92,21 @@ final class MailboxProvidersTests: XCTestCase {
         XCTAssertFalse(OAuthSession.Tokens(accessToken: "a", refreshToken: nil, expiresAt: Date().addingTimeInterval(30)).isFresh)
     }
 
+    /// The wait before retrying a throttled request goes straight into a sleep that crashes on a
+    /// negative number, so whatever the server sends has to come out between 0 and 30 seconds.
+    func testRetryDelayStaysBetweenZeroAndThirtySeconds() {
+        XCTAssertEqual(MailboxHTTP.retryDelay(retryAfter: "12", attempt: 1), 12)
+        XCTAssertEqual(MailboxHTTP.retryDelay(retryAfter: " 2.5 ", attempt: 1), 2.5)
+        XCTAssertEqual(MailboxHTTP.retryDelay(retryAfter: "-1", attempt: 1), 0)
+        XCTAssertEqual(MailboxHTTP.retryDelay(retryAfter: "86400", attempt: 1), 30)
+        XCTAssertEqual(MailboxHTTP.retryDelay(retryAfter: "inf", attempt: 2), 8, "not a usable number: the usual back-off")
+        XCTAssertEqual(MailboxHTTP.retryDelay(retryAfter: "nan", attempt: 2), 8)
+        XCTAssertEqual(MailboxHTTP.retryDelay(retryAfter: "Wed, 21 Oct 2026 07:28:00 GMT", attempt: 3), 16, "a date is not seconds")
+        XCTAssertEqual(MailboxHTTP.retryDelay(retryAfter: nil, attempt: 1), 4)
+        XCTAssertEqual(MailboxHTTP.retryDelay(retryAfter: nil, attempt: 2), 8)
+        XCTAssertEqual(MailboxHTTP.retryDelay(retryAfter: nil, attempt: 3), 16)
+    }
+
     // MARK: Forged senders
 
     private func email(from: String, authentication: String?) -> RawEmail {

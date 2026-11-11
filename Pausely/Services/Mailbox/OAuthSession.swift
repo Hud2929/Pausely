@@ -200,6 +200,17 @@ enum OAuthSession {
 // MARK: - HTTP with retries
 
 enum MailboxHTTP {
+    /// How long to wait before retrying a throttled request: what the server asked for, kept between
+    /// zero and 30 seconds. With no usable `Retry-After`, 4 then 8 then 16 seconds.
+    /// A negative or non-numeric header must never reach the sleep, where it would crash.
+    static func retryDelay(retryAfter header: String?, attempt: Int) -> TimeInterval {
+        let fallback = min(30, TimeInterval(2 << max(0, min(attempt, 4))))
+        guard let header, let asked = TimeInterval(header.trimmingCharacters(in: .whitespaces)), asked.isFinite else {
+            return fallback
+        }
+        return min(30, max(0, asked))
+    }
+
     /// Sends a request with a bearer token. Retries once after refreshing on 401, and waits out 429/503
     /// (Retry-After, at most 30 seconds, up to three times).
     static func data(_ request: URLRequest, token: () async throws -> String, refresh: () async throws -> String) async throws -> Data {
@@ -224,7 +235,7 @@ enum MailboxHTTP {
                 throw MailboxError.notFound
             case 429 where throttles < 3, 503 where throttles < 3:  // `where` binds per pattern in Swift
                 throttles += 1
-                let wait = min(30, Double(http?.value(forHTTPHeaderField: "Retry-After") ?? "") ?? Double(2 << throttles))
+                let wait = retryDelay(retryAfter: http?.value(forHTTPHeaderField: "Retry-After"), attempt: throttles)
                 try await Task.sleep(nanoseconds: UInt64(wait * 1_000_000_000))
             case 429, 503:
                 throw MailboxError.throttled(retryAfter: 60)

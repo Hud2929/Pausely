@@ -57,15 +57,24 @@ final class SubscriptionExporter {
         for sub in subscriptions {
             let nextDate = sub.nextBillingDate.map { formatter.string(from: $0) } ?? "N/A"
             let createdDate = formatter.string(from: sub.createdAt)
-            csv += "\(escapeCSV(sub.name)),\(escapeCSV(sub.category ?? "")),\(MoneyFormat.plainNumber(sub.amount, sub.currency)),\(sub.currency),\(sub.billingFrequency.displayName),\(sub.status.displayName),\(MoneyFormat.plainNumber(sub.monthlyCost, sub.currency)),\(MoneyFormat.plainNumber(sub.annualCost, sub.currency)),\(nextDate),\(createdDate)\n"
+            csv += "\(Self.csvCell(sub.name)),\(Self.csvCell(sub.category ?? "")),\(MoneyFormat.plainNumber(sub.amount, sub.currency)),\(sub.currency),\(sub.billingFrequency.displayName),\(sub.status.displayName),\(MoneyFormat.plainNumber(sub.monthlyCost, sub.currency)),\(MoneyFormat.plainNumber(sub.annualCost, sub.currency)),\(nextDate),\(createdDate)\n"
         }
 
         return writeToFile(content: csv, extension: "csv")
     }
 
-    private func escapeCSV(_ value: String) -> String {
-        let escaped = value.replacingOccurrences(of: "\"", with: "\"\"")
-        if escaped.contains(",") || escaped.contains("\n") || escaped.contains("\"") {
+    /// One text cell of the spreadsheet file.
+    ///
+    /// A name can come from a scanned email, so it is treated as untrusted: a cell that starts like a
+    /// formula (`=`, `+`, `-`, `@`, a tab or a return) would run when the file is opened in a
+    /// spreadsheet. A leading apostrophe makes the spreadsheet show it as plain text.
+    nonisolated static func csvCell(_ value: String) -> String {
+        var cell = value
+        if let first = cell.first, "=+-@\t\r".contains(first) {
+            cell = "'" + cell
+        }
+        let escaped = cell.replacingOccurrences(of: "\"", with: "\"\"")
+        if escaped.contains(",") || escaped.contains("\n") || escaped.contains("\r") || escaped.contains("\"") {
             return "\"\(escaped)\""
         }
         return escaped

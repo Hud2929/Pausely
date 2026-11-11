@@ -198,7 +198,8 @@ enum IMAPParser {
             let value = items[index + 1]
             if key == "UID" { result.uid = value.number.flatMap { UInt32(exactly: $0) } }
             else if key == "INTERNALDATE" { result.internalDate = value.text.flatMap(parseInternalDate) }
-            else if key == "RFC822.SIZE" { result.size = value.number.map { Int($0) } }
+            // A size no message could have (a broken or hostile server) is dropped, not trusted to fit.
+            else if key == "RFC822.SIZE" { result.size = value.number.flatMap { Int(exactly: $0) } }
             else if key.hasPrefix("BODY[") || key.hasPrefix("BINARY[") || key == "RFC822" || key == "RFC822.HEADER" {
                 if case .nilValue = value { result.section = nil } else { result.section = value.data }
             }
@@ -293,7 +294,8 @@ enum IMAPParser {
             case UInt8(ascii: "{"):
                 advance()
                 let digits = readUntil(UInt8(ascii: "}")).replacingOccurrences(of: "+", with: "")
-                guard let count = Int(digits), peek() == UInt8(ascii: "}") else { throw IMAPProtocolError.malformed("bad literal") }
+                // A negative length would make an impossible range below: refuse it like any other bad literal.
+                guard let count = Int(digits), count >= 0, peek() == UInt8(ascii: "}") else { throw IMAPProtocolError.malformed("bad literal") }
                 advance()
                 if peek() == 13 { advance() }
                 guard peek() == 10 else { throw IMAPProtocolError.malformed("literal without line end") }
