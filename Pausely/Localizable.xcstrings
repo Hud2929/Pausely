@@ -133,7 +133,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "%@は既知のサブスクリプションサービスです"
+            "value": "%@は既知のサブスクサービスです"
           }
         }
       }
@@ -303,7 +303,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "%1$@の無料体験の終了：%2$@"
+            "value": "%1$@の無料トライアルの終了：%2$@"
           }
         }
       }
@@ -331,7 +331,7 @@
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "%1$@ · recherche %2$@"
+            "value": "%1$@ · dernière recherche %2$@"
           }
         },
         "ja": {
@@ -693,7 +693,7 @@
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Tous"
+            "value": "Toutes"
           }
         },
         "ja": {
@@ -869,7 +869,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "アプリストアのサブスクリプション経由で請求"
+            "value": "アプリストアのサブスク経由で請求"
           }
         }
       }
@@ -1965,7 +1965,7 @@
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Abonnements konnten nicht geladen werden. Zum Aktualisieren nach unten ziehen."
+            "value": "Abos konnten nicht geladen werden. Zum Aktualisieren nach unten ziehen."
           }
         },
         "es": {
@@ -1983,7 +1983,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "サブスクリプションを読み込めませんでした。下に引っ張って更新してください。"
+            "value": "サブスクを読み込めませんでした。下に引っ張って更新してください。"
           }
         }
       }
@@ -2595,7 +2595,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "サブスクリプションを探す"
+            "value": "サブスクを探す"
           }
         }
       }
@@ -2629,7 +2629,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "メールからサブスクリプションを探す"
+            "value": "メールからサブスクを探す"
           }
         }
       }
@@ -4975,7 +4975,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "領収書に構造化されたサブスクリプション情報があります"
+            "value": "領収書に構造化されたサブスク情報があります"
           }
         }
       }
@@ -5043,7 +5043,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "領収書に構造化されたサブスクリプション情報があります"
+            "value": "領収書に構造化されたサブスク情報があります"
           }
         }
       }
@@ -5723,7 +5723,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "これはサブスクリプションだとPauselyに伝えました"
+            "value": "これはサブスクだとPauselyに伝えました"
           }
         }
       }
@@ -6015,19 +6015,19 @@
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "%@/Mo. äquivalent"
+            "value": "entspricht %@/Monat"
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "%@/mes equivalente"
+            "value": "equivale a %@/mes"
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "%@/mois équivalent"
+            "value": "soit %@/mois"
           }
         },
         "ja": {
@@ -6039,7 +6039,7 @@
         "ar": {
           "stringUnit": {
             "state": "translated",
-            "value": "%@/شهر بشكل مكافئ"
+            "value": "ما يعادل %@/شهر"
           }
         }
       }
@@ -6185,7 +6185,7 @@
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Über"
+            "value": "Über Pausely"
           }
         },
         "es": {
@@ -6203,7 +6203,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "について"
+            "value": "Pauselyについて"
           }
         }
       }
@@ -6226,7 +6226,7 @@
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Activo"
+            "value": "Activa"
           }
         },
         "fr": {
@@ -6238,7 +6238,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "アクティブ"
+            "value": "利用中"
           }
         },
         "ar": {
@@ -6292,19 +6292,19 @@
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Benutzerdefiniert hinzufügen"
+            "value": "Eigenes Abo hinzufügen"
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Agregar personalizado"
+            "value": "Añadir personalizada"
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Ajouter personnalisé"
+            "value": "Ajouter le vôtre"
           }
         },
         "ja": {
@@ -6332,7 +6332,7 @@
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Abonnement hinzufügen"
+            "value": "Abo hinzufügen"
           }
         },
         "es": {
@@ -6350,7 +6350,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "サブスクリプションを追加"
+            "value": "サブスクを追加"
           }
         }
       }
@@ -6366,7 +6366,7 @@
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Abonnements hinzufügen"
+            "value": "Abos hinzufügen"
           }
         },
         "es": {
@@ -6384,7 +6384,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "サブスクリプションを追加"
+            "value": "サブスクを追加"
           }
         }
       }
@@ -6408,13 +6408,13 @@
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Après votre essai gratuit, vous serez facturé %@ sauf si vous annulez au moins 24 heures avant la fin de l'essai."
+            "value": "Après votre essai gratuit, vous serez facturé %@ sauf si vous résiliez au moins 24 heures avant la fin de l'essai."
           }
         },
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "無料トライアル終了後、トライアル終了24時間前までにキャンセルしない限り%@が請求されます。"
+            "value": "無料トライアルの終了後は、終了の24時間前までに解約しない限り%@が請求されます。"
           }
         },
         "ar": {
@@ -6523,7 +6523,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "Appleのサブスクリプション"
+            "value": "Appleのサブスク"
           }
         },
         "ar": {
@@ -6619,13 +6619,13 @@
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Annuler %@"
+            "value": "Résilier %@"
           }
         },
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "%@をキャンセル"
+            "value": "%@を解約"
           }
         },
         "ar": {
@@ -6655,13 +6655,13 @@
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Timing d'annulation"
+            "value": "Quand résilier"
           }
         },
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "キャンセルのタイミング"
+            "value": "解約のタイミング"
           }
         },
         "ar": {
@@ -6683,25 +6683,25 @@
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Storniert"
+            "value": "Gekündigt"
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Cancelado"
+            "value": "Cancelada"
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Annulé"
+            "value": "Résilié"
           }
         },
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "キャンセル済み"
+            "value": "解約済み"
           }
         }
       }
@@ -6923,7 +6923,7 @@
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Días por adelante"
+            "value": "Días de antelación"
           }
         },
         "fr": {
@@ -7452,7 +7452,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "特定のサブスクリプションの詳細を取得。"
+            "value": "特定のサブスクの詳細を取得。"
           }
         },
         "ar": {
@@ -7554,7 +7554,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "サブスクリプションの詳細を取得"
+            "value": "サブスクの詳細を取得"
           }
         },
         "ar": {
@@ -7645,19 +7645,19 @@
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Zuhause"
+            "value": "Start"
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Hogar"
+            "value": "Inicio"
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Maison"
+            "value": "Accueil"
           }
         },
         "ja": {
@@ -8130,7 +8130,7 @@
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Keine Abonnements gefunden"
+            "value": "Keine Abos gefunden"
           }
         },
         "es": {
@@ -8148,7 +8148,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "サブスクリプションが見つかりません"
+            "value": "サブスクが見つかりません"
           }
         }
       }
@@ -8712,7 +8712,7 @@
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Agrega rápidamente una nueva suscripción para rastrear."
+            "value": "Añade rápidamente una nueva suscripción para seguirla."
           }
         },
         "fr": {
@@ -8724,7 +8724,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "追跡する新しいサブスクリプションをすばやく追加。"
+            "value": "追跡する新しいサブスクをすばやく追加。"
           }
         },
         "ar": {
@@ -8895,7 +8895,7 @@
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Abonnements suchen..."
+            "value": "Abos suchen …"
           }
         },
         "es": {
@@ -8913,7 +8913,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "サブスクリプションを検索..."
+            "value": "サブスクを検索..."
           }
         }
       }
@@ -8941,7 +8941,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "もうすぐ更新されるサブスクリプションを確認。"
+            "value": "もうすぐ更新されるサブスクを確認。"
           }
         },
         "ar": {
@@ -9221,7 +9221,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "サブスクリプション名"
+            "value": "サブスク名"
           }
         },
         "ar": {
@@ -9243,7 +9243,7 @@
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Abonnements"
+            "value": "Abos"
           }
         },
         "es": {
@@ -9261,7 +9261,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "サブスクリプション"
+            "value": "サブスク"
           }
         }
       }
@@ -9343,13 +9343,13 @@
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Versuchen Sie einen anderen Namen oder fügen Sie es als benutzerdefiniertes Abonnement hinzu."
+            "value": "Versuchen Sie einen anderen Namen oder fügen Sie es als eigenes Abo hinzu."
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Pruebe con un nombre diferente o agréguelo como suscripción personalizada."
+            "value": "Prueba con otro nombre o añádela como suscripción personalizada."
           }
         },
         "fr": {
@@ -9361,7 +9361,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "別の名前を試すか、カスタムサブスクリプションとして追加してください。"
+            "value": "別の名前を試すか、カスタムサブスクとして追加してください。"
           }
         },
         "ar": {
@@ -9417,7 +9417,7 @@
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Unbegrenzte Abonnements"
+            "value": "Unbegrenzt viele Abos"
           }
         },
         "es": {
@@ -9435,7 +9435,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "無制限のサブスクリプション"
+            "value": "無制限のサブスク"
           }
         },
         "ar": {
@@ -9594,7 +9594,7 @@
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Wie lautet der Name des Abonnements?"
+            "value": "Wie heißt das Abo?"
           }
         },
         "es": {
@@ -9612,7 +9612,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "サブスクリプションの名前は？"
+            "value": "サブスクの名前は？"
           }
         },
         "ar": {
@@ -9662,7 +9662,7 @@
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Welches Abonnement?"
+            "value": "Welches Abo?"
           }
         },
         "es": {
@@ -9680,7 +9680,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "どのサブスクリプション？"
+            "value": "どのサブスク？"
           }
         },
         "ar": {
@@ -10517,7 +10517,7 @@
               "other": {
                 "stringUnit": {
                   "state": "translated",
-                  "value": "サブスクリプションが%lld件見つかりました"
+                  "value": "サブスクが%lld件見つかりました"
                 }
               }
             }
@@ -10708,7 +10708,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "サブスクリプションと判断した理由を表示"
+            "value": "サブスクと判断した理由を表示"
           }
         }
       }
@@ -10776,7 +10776,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "これはサブスクリプションではありません"
+            "value": "これはサブスクではありません"
           }
         }
       }
@@ -10878,7 +10878,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "更新リマインダーは、サブスクリプションごとに選んだ日数前（編集画面の「リマインド」）の午前9時、前日、当日の朝に届きます。リマインダーで「継続する」を選ぶと、その請求に関する残りの通知は止まります。"
+            "value": "更新リマインダーは、サブスクごとに選んだ日数前（編集画面の「リマインド」）の午前9時、前日、当日の朝に届きます。リマインダーで「継続する」を選ぶと、その請求に関する残りの通知は止まります。"
           }
         }
       }
@@ -11252,7 +11252,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "サブスクリプションはそのままです。Pauselyは通常の更新リマインダーに戻ります。"
+            "value": "サブスクはそのままです。Pauselyは通常の更新リマインダーに戻ります。"
           }
         }
       }
@@ -12612,7 +12612,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "%@のトライアルは明日終了します"
+            "value": "%@の無料トライアルは明日終了します"
           }
         }
       }
@@ -12850,7 +12850,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "このサブスクリプションは見つかりません"
+            "value": "このサブスクは見つかりません"
           }
         }
       }
@@ -13802,7 +13802,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "更新のたびにPauselyが「継続か解約か」をお尋ねします。解約したサブスクリプションは、回避した請求とともにここに表示されます。"
+            "value": "更新のたびにPauselyが「継続か解約か」をお尋ねします。解約したサブスクは、回避した請求とともにここに表示されます。"
           }
         }
       }
@@ -14278,7 +14278,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "Pauselyから削除するだけで、サブスクリプション自体は解約されません。"
+            "value": "Pauselyから削除するだけで、サブスク自体は解約されません。"
           }
         }
       }
@@ -14550,7 +14550,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "サブスクリプションを解約"
+            "value": "サブスクを解約"
           }
         }
       }
@@ -17966,7 +17966,7 @@
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Annulés cette année"
+            "value": "Résiliés cette année"
           }
         },
         "ja": {
@@ -21632,7 +21632,7 @@
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Un e-mail d’annulation a suivi le dernier prélèvement"
+            "value": "Un e-mail de résiliation a suivi le dernier prélèvement"
           }
         },
         "ja": {
@@ -22244,7 +22244,7 @@
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Aucun e-mail d’annulation trouvé. Cette boutique n’envoie pas de reçu à chaque renouvellement : l’abonnement est donc probablement toujours en cours."
+            "value": "Aucun e-mail de résiliation trouvé. Cette boutique n’envoie pas de reçu à chaque renouvellement : l’abonnement est donc probablement toujours en cours."
           }
         },
         "ja": {
@@ -24312,7 +24312,7 @@
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Annulez au plus tard le %@ dans Réglages et vous ne payez rien."
+            "value": "Résiliez au plus tard le %@ dans Réglages et vous ne payez rien."
           }
         },
         "ja": {
@@ -24386,7 +24386,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "アカウント、サブスクリプション一覧、履歴をPauselyのサーバーとこのiPhoneから完全に削除します。Pausely Proを含むサブスクリプションは解約されません。解約するには「設定」を開き、自分の名前、「サブスクリプション」の順にタップします。"
+            "value": "アカウント、サブスク一覧、履歴をPauselyのサーバーとこのiPhoneから完全に削除します。Pausely Proを含むサブスクは解約されません。解約するには「設定」を開き、自分の名前、「サブスクリプション」の順にタップします。"
           }
         }
       }
@@ -24658,7 +24658,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "このApple AccountにはPausely Proのサブスクリプションがありません。"
+            "value": "このApple AccountにはPausely Proのサブスクがありません。"
           }
         }
       }
@@ -25066,7 +25066,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "計算方法：入力された更新日と金額から、解約後12か月間に発生していたはずの請求だけを数えます。再開した場合はその日で節約の計上を止めます。Pausely自体のサブスクリプションは含めません。"
+            "value": "計算方法：入力された更新日と金額から、解約後12か月間に発生していたはずの請求だけを数えます。再開した場合はその日で節約の計上を止めます。Pausely自体のサブスクは含めません。"
           }
         }
       }
@@ -25326,7 +25326,7 @@
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Toca Cancelar suscripción. Puede que tengas que desplazarte hacia abajo para encontrarlo."
+            "value": "Toca Cancelar Suscripción. Puede que tengas que desplazarte hacia abajo para encontrarlo."
           }
         },
         "fr": {
@@ -25338,7 +25338,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "「サブスクリプションをキャンセルする」をタップします。下にスクロールしないと表示されない場合があります。"
+            "value": "「サブスクリプションをキャンセル」をタップします。下にスクロールしないと表示されない場合があります。"
           }
         }
       }
@@ -25406,7 +25406,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "サブスクリプションを開く"
+            "value": "サブスクを開く"
           }
         }
       }
@@ -26290,7 +26290,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "サブスクリプションを管理"
+            "value": "サブスクを管理"
           }
         }
       }
@@ -26522,13 +26522,13 @@
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Annulez n'importe quel jour avant le %@ pour l'éviter."
+            "value": "Résiliez n'importe quel jour avant le %@ pour l'éviter."
           }
         },
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "%@より前にキャンセルすれば請求されません。"
+            "value": "%@より前に解約すれば請求されません。"
           }
         }
       }

@@ -143,6 +143,35 @@ final class OneLocaleTests: XCTestCase {
         XCTAssertNil("Suche läuft".range(of: Self.informalGermanCommand, options: .regularExpression), "a noun, not a command")
     }
 
+    /// A subscription has one word in each language. German says "Abo" and Japanese "サブスク"; the long
+    /// forms appear only where a sentence names Apple's own Settings menu. And the first tab is the
+    /// start of the app, not a house ("Zuhause", "Hogar" and "Maison" all shipped).
+    func testASubscriptionAndTheFirstTabHaveOneWordInEachLanguage() throws {
+        let root = URL(fileURLWithPath: #filePath)
+            .deletingLastPathComponent().deletingLastPathComponent().deletingLastPathComponent()
+        let url = root.appendingPathComponent("Pausely/Localizable.xcstrings")
+        try XCTSkipUnless(FileManager.default.fileExists(atPath: url.path), "Sources aren't readable from this test run")
+        let catalog = try XCTUnwrap(JSONSerialization.jsonObject(with: Data(contentsOf: url)) as? [String: Any])
+        let strings = try XCTUnwrap(catalog["strings"] as? [String: [String: Any]])
+        func value(_ key: String, _ language: String) -> String? {
+            let unit = ((strings[key]?["localizations"] as? [String: Any])?[language] as? [String: Any])?["stringUnit"] as? [String: Any]
+            return unit?["value"] as? String
+        }
+        var strays: [String] = []
+        for key in strings.keys {
+            if let german = value(key, "de"), german.contains("Abonnement"),
+               !german.contains("Einstellungen"), !german.contains("„Abonnements“") { strays.append(german) }
+            if let japanese = value(key, "ja") {
+                let outsideQuotes = japanese.replacingOccurrences(of: "「[^」]*」", with: "", options: .regularExpression)
+                if outsideQuotes.contains("サブスクリプション") { strays.append(japanese) }
+            }
+        }
+        XCTAssertEqual(strays.sorted(), [])
+        XCTAssertEqual(value("Home", "de"), "Start")
+        XCTAssertEqual(value("Home", "es"), "Inicio")
+        XCTAssertEqual(value("Home", "fr"), "Accueil")
+    }
+
     /// A sentence that opens with the "du" form of a command, not followed by "Sie". Words that are also
     /// nouns ("Suche", "Teile", "Stelle") are left out: a heading may open with them.
     private static let informalGermanCommand = "^(Tippe|Füge|Wähle|Gib|Öffne|Prüfe|Kündige|Behalte|Schau|Schaue|Sieh|Lies|Melde|Erstelle"

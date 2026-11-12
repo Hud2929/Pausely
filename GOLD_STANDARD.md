@@ -245,6 +245,16 @@ Updated at every commit, so the work can be picked up from this file alone.
   in Japanese, and Apple's own button named differently from Apple's page in Japanese and Spanish
   (checked against support.apple.com/118428 in each language). So each language is read in full
   before O14 and O13.
+- D5, fourth slice (part): the word-by-word read of all five languages, strings 1 to 203 of 784
+  read so far. Fixed: the first tab ("Start", "Inicio", "Accueil"), one word for a subscription in
+  German ("Abo") and Japanese ("サブスク"; the long forms only where Apple's Settings menu is named),
+  cancelling a subscription is "résilier" in French and "解約" in Japanese, never the word for
+  dismissing a dialog, the status "Cancelled" ("Storniert" was a reversed payment), Apple's button
+  as Apple's own page names it in Japanese and Spanish, one formal Spanish sentence.
+  `OneLocaleTests.testASubscriptionAndTheFirstTabHaveOneWordInEachLanguage`. 710 tests, 0 failures.
+  Left in this slice: strings 204 to 784 (the dump is rebuilt by the snippet in this session;
+  corrections go through a per-language setter), then in English: "payment date" and "renewal
+  date" are one thing with two names, "Add Custom", and Title Case on a few buttons and cards.
 - Told by the other session at 22:04 (it has stood down and changed nothing): sections 2, 3, 4, 6, 7
   and 10 of the engineering audit were never done and there is no finished overlooked-details
   report. Those areas have been scanned by nobody; they are owed before Stage G can be called done.
