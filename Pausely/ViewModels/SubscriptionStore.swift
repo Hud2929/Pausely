@@ -51,7 +51,12 @@ class SubscriptionStore: ObservableObject {
         sync.currentCopy = copyForSync
         #if DEBUG
         // UI tests: start from the demo list on every launch and never write to the cloud.
-        if LaunchFlag.isSet("--fresh-demo-data") {
+        if LaunchFlag.isSet("--varied-demo-data") {
+            // One of everything a list can hold, with its history (see `DemoSubscriptions.varied`).
+            let varied = DemoSubscriptions.varied()
+            useDemoList(varied)
+            DemoSubscriptions.seedVariedHistory(for: varied)
+        } else if LaunchFlag.isSet("--fresh-demo-data") {
             useDemoList()
         } else if LaunchFlag.isSet("--empty-demo-data") {
             // A new person's empty list (an empty array, so the demo data isn't loaded in its place)
@@ -418,10 +423,10 @@ class SubscriptionStore: ObservableObject {
     }
 
     /// The demo set becomes the list: marked as such, and never sent anywhere.
-    private func useDemoList() {
+    private func useDemoList(_ list: [Subscription] = SubscriptionStore.makeDemoSubscriptions()) {
         Self.cloudSyncEnabled = false
         UserDefaults.standard.set(true, forKey: Self.savedListIsDemoKey)
-        subscriptions = Self.makeDemoSubscriptions()
+        subscriptions = list
         calculateTotals()
         saveToCache()
     }

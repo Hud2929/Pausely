@@ -271,6 +271,7 @@ struct PausePlanView: View {
                     .frame(height: 44)
             }
             .buttonStyle(PlainButtonStyle())
+            .accessibilityIdentifier("endPausePlanButton")
         }
     }
 

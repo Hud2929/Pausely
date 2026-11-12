@@ -461,6 +461,33 @@ Updated at every commit, so the work can be picked up from this file alone.
   `testNoEnglishSentenceIsAssignedReturnedOrChosenAsPlainText` reads every source line for a
   sentence that is assigned, returned or picked by a condition without reaching the catalog; it
   finds these two as they were and nothing else in the app. `testTheLockoutLineIsInTheReadersLanguage`.
+- E, the states (11-12, first part). Most states could not be opened by a launch argument, so
+  nobody had looked at them. Now: `--varied-demo-data` starts from a list with one of everything a
+  list can hold (a charge tomorrow, one waiting for a decision, a free trial about to charge, one
+  with no renewal date, one in another currency and yearly, a quarterly one, a cancelled one, four
+  video services, more than eight entries, more than six charges in a month), with its history (a
+  price rise, a cancellation, hours of use); `testTheVariedDemoListHoldsOneOfEverything` keeps it
+  whole. `--demo-subscription=Name`, `--demo-verdict=Name`, `--demo-subscription-edit=Name`,
+  `--demo-price-history=Name` and `--demo-cancel=Name` open that subscription; `--demo-receipt=plain`
+  and `--demo-wrapped=list` show the list in use. The tour's `testStates` opens 45 states: the tabs
+  with the varied list, the subscription screen for a trial, a cancelled one, an undated one and
+  one in another currency, three verdicts, the empty receipt and year, both refusals of the age
+  check, and 26 states behind a tap (dialogs, searches with no match, sheets behind a row, the kept
+  and cancelled slips). A demo launch counts as signed in, so Home's rows and Keep can be followed.
+  English run read in full (`/tmp/pausely_states_en_1`, 78 captures). Fixed so far from it: a free
+  trial was said to "renew" on the subscription screen (it says when the trial ends, in the header
+  and in the facts); a cancelled subscription showed a "next renewal" in the past, a yearly cost
+  and what it would cost over ten years (it shows the day it was cancelled instead, and no usage
+  row); the verdict said a yearly price twice ("€59.99 /yr … That's €59.99 a year": it now says
+  only what it comes to in the person's currency; `testTheSlipDoesNotSayAYearlyPriceTwice`).
+  Still to fix from the same reading: Insights' "Where it goes" drops categories after the fifth
+  without saying; a price rise is marked amber in one place and coral in two; Pause Plan calls a
+  cancelled service "paused" and says a trial "renews", and its blocks have two left edges; the
+  year's page with an empty list ("about $0 a year", with a share button); the age check's
+  refusals are centred in a bold sans title; the catalog still says "a custom subscription"; the
+  plan sheet asks for a renewal date and a trial end; the dates sheet says "they" of one
+  subscription; two tap areas (End Pause Plan, the catalog's clear button); "$54.99/mo" spoken as
+  written. Then the same pass in Arabic, at the largest size and on iPad. 753 tests, 0 failures.
 - Told by the other session at 22:04 (it has stood down and changed nothing): sections 2, 3, 4, 6, 7
   and 10 of the engineering audit were never done and there is no finished overlooked-details
   report. Those areas have been scanned by nobody; they are owed before Stage G can be called done.
@@ -746,7 +773,7 @@ and limits) is O37 and nothing else was found.
 
 | What | Status |
 |---|---|
-| 136 screens and states; 95 cannot be opened by a launch argument, so have not been seen in Arabic, at the largest text or on iPad | open |
+| 136 screens and states; 95 cannot be opened by a launch argument, so have not been seen in Arabic, at the largest text or on iPad | in progress 11-12: the tour's `testStates` opens 45 more through a varied demo list, named demo screens and taps; read in English, the other three variants to come. Not opened from here and listed for the end: states that need the network or a purchase to fail (sign-in errors, a wrong code, StoreKit not answering), the system's own sheets, widgets on a Home Screen |
 | Apple's audit, English tour: 307 issues (105 Dynamic Type, 98 contrast, 51 clipped text, 36 elements not detected, 13 hit regions, 4 descriptions) | open |
 | Not rebuilt: Pause Plan, age check, policy pages, error banner and toast, demo banner (both widgets were rebuilt on 11-12: S15) | open |
 | System-wide: accent colour is iOS blue; `Motion.unlessReduced` still moves; `StateMark` does not grow; iPad column is 680 pt wide; five ways to leave a sheet; ~~Title Case and sentence case mixed~~ (done 11-12, held by a test); ~~"iPhone" said on iPad~~ (done 11-12, held by a test); prices and dates not formatted in the app's language in 43 places; the serif is missing in Arabic and Japanese | open |

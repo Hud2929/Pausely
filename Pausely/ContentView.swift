@@ -43,7 +43,7 @@ struct PauselyApp: App {
         }
         // A launch that starts from a set list (the demo one, or none) takes in nothing an earlier
         // run left waiting: an "empty" capture once opened on a Netflix from a first-run test.
-        if LaunchFlag.isSet("--fresh-demo-data") || LaunchFlag.isSet("--empty-demo-data") {
+        if LaunchFlag.isSet("--fresh-demo-data") || LaunchFlag.isSet("--empty-demo-data") || LaunchFlag.isSet("--varied-demo-data") {
             PendingTally.clear()
             TallyImporter.clearWaiting()
         }
@@ -159,6 +159,16 @@ struct RootView: View {
     /// DEBUG only: the value of `--demo-name=value`, or "" for a bare `--demo-name`. Nil when it isn't there.
     private func demoValue(_ name: String) -> String? { LaunchFlag.value(of: name) }
 
+    #if DEBUG
+    /// The subscription a `--demo-…=Name` argument names, from the list in use ("--demo-subscription=Hulu"
+    /// with `--varied-demo-data` opens the cancelled one). Netflix when it names none.
+    private func demoSubscription(_ name: String) -> Subscription {
+        let list = SubscriptionStore.shared.subscriptions
+        if !name.isEmpty, let named = list.first(where: { $0.name.caseInsensitiveCompare(name) == .orderedSame }) { return named }
+        return list.first { $0.name == "Netflix" } ?? DemoSubscriptions.netflix
+    }
+    #endif
+
     /// DEBUG only: `--demo-imap-connect` (iCloud) or `--demo-imap-connect=<preset id>`; `=other` for any server.
     private var demoIMAPPreset: String? {
         LaunchFlag.value(of: "--demo-imap-connect").map { $0.isEmpty ? "icloud" : $0 }
@@ -203,7 +213,7 @@ struct RootView: View {
                     default: WelcomeFlow(start: .welcome)
                     }
                     #endif
-                } else if isDemoScreen("--demo-age-gate") {
+                } else if demoValue("--demo-age-gate") != nil {
                     #if DEBUG
                     AgeGateView(onPassed: {}, onCancel: {}, cancelTitle: "Sign out")
                     #endif
@@ -222,13 +232,13 @@ struct RootView: View {
                     #if DEBUG
                     WhatsNewSheet()
                     #endif
-                } else if isDemoScreen("--demo-subscription") {
+                } else if let name = demoValue("--demo-subscription") {
                     #if DEBUG
-                    SubscriptionManagementView(subscription: SubscriptionStore.shared.subscriptions.first { $0.name == "Netflix" } ?? DemoSubscriptions.netflix)
+                    SubscriptionManagementView(subscription: demoSubscription(name))
                     #endif
-                } else if isDemoScreen("--demo-subscription-edit") {
+                } else if let name = demoValue("--demo-subscription-edit") {
                     #if DEBUG
-                    SubscriptionEditView(subscription: DemoSubscriptions.netflix)
+                    SubscriptionEditView(subscription: name.isEmpty ? DemoSubscriptions.netflix : demoSubscription(name))
                     #endif
                 } else if isDemoScreen("--demo-first-run") || isDemoScreen("--demo-first-run=tally") || isDemoScreen("--demo-first-run=reveal") {
                     #if DEBUG
@@ -237,9 +247,9 @@ struct RootView: View {
                                  tally: isDemoScreen("--demo-first-run") ? nil : DemoTally.make(),
                                  onKeepList: {}, onSignIn: {})
                     #endif
-                } else if isDemoScreen("--demo-cancel") {
+                } else if let name = demoValue("--demo-cancel") {
                     #if DEBUG
-                    CancelSubscriptionFlow(subscription: DemoSubscriptions.netflix)
+                    CancelSubscriptionFlow(subscription: name.isEmpty ? DemoSubscriptions.netflix : demoSubscription(name))
                     #endif
                 } else if isDemoScreen("--demo-cancelled") || isDemoScreen("--demo-kept") {
                     #if DEBUG
@@ -265,9 +275,9 @@ struct RootView: View {
                     #if DEBUG
                     DemoTierSheet()
                     #endif
-                } else if isDemoScreen("--demo-price-history") {
+                } else if let name = demoValue("--demo-price-history") {
                     #if DEBUG
-                    PriceHistoryView(subscription: DemoSubscriptions.netflix)
+                    PriceHistoryView(subscription: name.isEmpty ? DemoSubscriptions.netflix : demoSubscription(name))
                     #endif
                 } else if isDemoScreen("--demo-design") {
                     #if DEBUG
@@ -277,13 +287,16 @@ struct RootView: View {
                     #if DEBUG
                     StoreKitUpgradeView()
                     #endif
-                } else if isDemoScreen("--demo-wrapped") {
+                } else if let list = demoValue("--demo-wrapped") {
                     #if DEBUG
-                    SubscriptionWrappedView(subscriptions: SubscriptionStore.makeDemoSubscriptions())
+                    // `--demo-wrapped=list` shows the year of the list in use (empty, or the varied one).
+                    SubscriptionWrappedView(subscriptions: list == "list" ? SubscriptionStore.shared.subscriptions
+                                                                          : SubscriptionStore.makeDemoSubscriptions())
                     #endif
-                } else if isDemoScreen("--demo-verdict") {
+                } else if let name = demoValue("--demo-verdict") {
                     #if DEBUG
-                    RenewalVerdictView(subscriptionId: SubscriptionStore.shared.subscriptions.first?.id ?? UUID())
+                    RenewalVerdictView(subscriptionId: name.isEmpty ? SubscriptionStore.shared.subscriptions.first?.id ?? UUID()
+                                                                    : demoSubscription(name).id)
                     #endif
                 } else if isDemoScreen("--demo-pause-plan") {
                     #if DEBUG
@@ -294,7 +307,7 @@ struct RootView: View {
                             await PausePlanStore.shared.start(order: PausePlanSchedule.suggestedOrder(eligible, now: Date()))
                         }
                     #endif
-                } else if isDemoScreen("--demo-receipt") {
+                } else if demoValue("--demo-receipt") != nil {
                     #if DEBUG
                     SavingsReceiptView()
                     #endif

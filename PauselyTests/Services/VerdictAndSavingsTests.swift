@@ -145,6 +145,24 @@ final class VerdictAndSavingsTests: XCTestCase {
         XCTAssertEqual(lines[1].avoidedSoFar.map(ymd), ["2027-01-31", "2027-02-28"])
     }
 
+    /// Under the price, the slip says what a year of it comes to. For a yearly price that is the price
+    /// again ("€59.99 /yr … That's €59.99 a year"), so it says only what the person doesn't know yet.
+    func testTheSlipDoesNotSayAYearlyPriceTwice() {
+        let rates = CurrencyRates(perUSD: ["EUR": Decimal(string: "0.5")!])
+        func plan(_ amount: Decimal, _ currency: String, _ frequency: BillingFrequency) -> Subscription {
+            Subscription(name: "Plan", amount: amount, currency: currency, billingFrequency: frequency)
+        }
+        XCTAssertEqual(VerdictFacts.yearLine(for: plan(10, "USD", .monthly), displayCurrency: "USD", rates: rates), .yearly(120))
+        XCTAssertEqual(VerdictFacts.yearLine(for: plan(10, "EUR", .monthly), displayCurrency: "USD", rates: rates),
+                       .yearlyAndConverted(120, inDisplay: 240))
+        XCTAssertNil(VerdictFacts.yearLine(for: plan(60, "USD", .yearly), displayCurrency: "USD", rates: rates))
+        XCTAssertEqual(VerdictFacts.yearLine(for: plan(60, "EUR", .yearly), displayCurrency: "USD", rates: rates),
+                       .convertedOnly(inDisplay: 120))
+        XCTAssertNil(VerdictFacts.yearLine(for: plan(60, "XXX", .yearly), displayCurrency: "USD", rates: rates),
+                     "no rate, no guess")
+        XCTAssertEqual(VerdictFacts.yearLine(for: plan(10, "XXX", .monthly), displayCurrency: "USD", rates: rates), .yearly(120))
+    }
+
     func testYearlyPlanCountsOneCharge() {
         let adobe = sub("Adobe", amount: 240, anchor: day(2026, 11, 11), frequency: .yearly)
         let lines = SavingsLedger.lines(from: [event(.cancelled, adobe, on: day(2026, 11, 1))], now: day(2026, 11, 12), calendar: cal)

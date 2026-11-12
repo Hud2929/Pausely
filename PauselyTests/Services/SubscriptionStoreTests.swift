@@ -49,6 +49,27 @@ final class SubscriptionStoreTests: XCTestCase {
         XCTAssertTrue(AppSettings.shared.cachedSubscriptions.isEmpty, "and nothing made up is saved")
     }
 
+    /// `--varied-demo-data` is how the screen tour opens every row and state that depends on what is
+    /// in a list. If the list loses one of these, the tour stops seeing that state and nobody notices.
+    func testTheVariedDemoListHoldsOneOfEverything() {
+        let now = Date()
+        let list = DemoSubscriptions.varied(now: now, currency: "USD")
+        XCTAssertEqual(Set(list.map(\.name)).count, list.count, "each name once")
+
+        XCTAssertEqual(list.filter { $0.status == .trial && $0.trialEndsAt != nil }.map(\.name), ["Disney+"])
+        XCTAssertEqual(list.filter { $0.status == .cancelled }.map(\.name), ["Hulu"])
+        XCTAssertEqual(Horizon.undated(list).map(\.name), ["Adobe Creative Cloud"])
+        XCTAssertEqual(list.filter { $0.currency != "USD" }.map(\.name), ["Duolingo"], "one in another currency")
+        XCTAssertTrue(list.charging.isConverted(to: "USD"), "so the totals are marked as converted")
+        XCTAssertEqual(Set(list.map(\.billingFrequency)), [.monthly, .quarterly, .yearly])
+
+        XCTAssertGreaterThan(list.charging.count, 8, "the Subscriptions tab shows its search field")
+        XCTAssertGreaterThan(Horizon.charges(for: list, now: now).count, 6, "Home says how many more are in Subscriptions")
+        XCTAssertGreaterThanOrEqual(list.filter(PausePlanSchedule.isEligible).count, 2, "Pause Plan has something to rotate")
+        XCTAssertFalse(RenewalDecisions.pending(in: list, events: [], now: now).isEmpty, "something waits for a decision")
+        XCTAssertEqual(DemoSubscriptions.varied(now: now, currency: "EUR").first { $0.name == "Duolingo" }?.currency, "GBP")
+    }
+
     func testTheDemoSetIsOnlyForDemoLaunchesAndNeverOutlivesThem() {
         XCTAssertTrue(SubscriptionStore.fillsWithDemoList(listIsEmpty: true, isDemoLaunch: true))
         XCTAssertFalse(SubscriptionStore.fillsWithDemoList(listIsEmpty: true, isDemoLaunch: false))

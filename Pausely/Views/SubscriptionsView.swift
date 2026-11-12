@@ -121,6 +121,7 @@ struct SubscriptionsView: View {
                     TextField("Search subscriptions...", text: $searchText)
                         .foregroundStyle(Color.inkText)
                         .submitLabel(.search)
+                        .accessibilityIdentifier("subscriptionSearchField")
                 }
                 .font(.body)
                 .padding(.horizontal, 14)
@@ -153,6 +154,7 @@ struct SubscriptionsView: View {
                                 Label("Remove", systemImage: "trash")
                             }
                             .tint(Color.due)
+                            .accessibilityIdentifier("swipeRemove")
                         }
                         .swipeActions(edge: .leading, allowsFullSwipe: true) {
                             Button { activeSheet = .detail(subscription) } label: {

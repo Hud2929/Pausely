@@ -38,7 +38,8 @@ struct SubscriptionManagementView: View {
                     CancelTimingCard(subscription: current)
                 }
                 toolsGroup
-                LifetimeCostCard(subscription: current)
+                // What it will cost over the years is a question about something still being paid for.
+                if current.status != .cancelled { LifetimeCostCard(subscription: current) }
                 actions
             }
             .padding(.horizontal, Layout.margin)
@@ -162,7 +163,20 @@ struct SubscriptionManagementView: View {
         .accessibilityElement(children: .combine)
     }
 
+    /// The day a free trial stops being free: its first charge. A trial doesn't "renew".
+    private var trialEnd: Date? {
+        guard current.status == .trial, let end = current.trialEndsAt,
+              Calendar.billing.startOfDay(for: end) >= Calendar.billing.startOfDay(for: Date()) else { return nil }
+        return end
+    }
+
     private var renewalLine: (text: String, tint: Color)? {
+        if let end = trialEnd {
+            let days = Calendar.billing.calendarDays(from: Date(), to: end)
+            let dateText = end.formatted(.dateTime.month(.abbreviated).day().locale(L10n.locale))
+            if days <= 1 { return (L10n.string("Trial ends \(L10n.relativeDay(days))"), Color.due) }
+            return (L10n.string("Trial ends \(dateText)") + " · " + L10n.relativeDay(days), Color.inkTextMuted)
+        }
         guard current.status == .active || current.status == .trial,
               let date = current.calculatedNextBillingDate, let days = current.daysUntilRenewal else { return nil }
         let dateText = date.formatted(.dateTime.month(.abbreviated).day().locale(L10n.locale))
@@ -171,21 +185,45 @@ struct SubscriptionManagementView: View {
         return (L10n.string("Renews \(dateText) · \(L10n.relativeDay(days))"), Color.inkTextMuted)
     }
 
+    /// The day it was cancelled, from the history on this device.
+    private var cancelledOn: Date? {
+        guard current.status == .cancelled else { return nil }
+        return eventLog.events.last { $0.kind == .cancelled && $0.subscriptionId == current.id }?.date
+    }
+
     // MARK: - Facts
 
     private var factsCard: some View {
         VStack(spacing: 0) {
             fact(L10n.string("Billing cycle"), current.billingFrequency.displayName)
             divider
-            fact(L10n.string("Next renewal"), current.calculatedNextBillingDate.map { $0.formatted(.dateTime.month(.abbreviated).day().year().locale(L10n.locale)) } ?? L10n.string("Not set"))
-            divider
+            // One date, named for what happens on it. A cancelled subscription has no next renewal
+            // (it showed the last one, in the past) and no yearly cost; it has the day it stopped.
+            if current.status == .cancelled {
+                if let cancelledOn {
+                    fact(L10n.string("Cancelled"), day(cancelledOn))
+                    divider
+                }
+            } else if let trialEnd {
+                fact(L10n.string("Trial ends"), day(trialEnd))
+                divider
+            } else {
+                fact(L10n.string("Next renewal"), current.calculatedNextBillingDate.map(day) ?? L10n.string("Not set"))
+                divider
+            }
             fact(L10n.string("Category"), SubscriptionCategory.localizedLabel(for: current.category))
             divider
-            fact(L10n.string("Per year"), MoneyFormat.string(current.amount * ProvenSubscription.periodsPerYear(current.billingFrequency), current.currency))
-            divider
+            if current.status != .cancelled {
+                fact(L10n.string("Per year"), MoneyFormat.string(current.amount * ProvenSubscription.periodsPerYear(current.billingFrequency), current.currency))
+                divider
+            }
             fact(L10n.string("Tracking since"), current.createdAt.formatted(.dateTime.month(.abbreviated).year().locale(L10n.locale)))
         }
         .accessibilityElement(children: .contain)
+    }
+
+    private func day(_ date: Date) -> String {
+        date.formatted(.dateTime.month(.abbreviated).day().year().locale(L10n.locale))
     }
 
     private func fact(_ title: String, _ value: String) -> some View {
@@ -248,8 +286,12 @@ struct SubscriptionManagementView: View {
                 }
             }
 
-            divider
-            toolRow(icon: "gauge.with.dots.needle.33percent", title: L10n.string("Usage and value"), subtitle: nil) { route = .usage }
+            // How much it is used matters while it is being paid for.
+            if current.status != .cancelled {
+                divider
+                toolRow(icon: "gauge.with.dots.needle.33percent", title: L10n.string("Usage and value"), subtitle: nil) { route = .usage }
+                    .accessibilityIdentifier("usageRow")
+            }
         }
     }
 

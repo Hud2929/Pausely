@@ -180,7 +180,7 @@ struct RenewalVerdictView: View {
     /// except where money went up or was kept.
     private func facts(_ sub: Subscription, charge: (date: Date, isTrialEnd: Bool)?) -> some View {
         VStack(alignment: .leading, spacing: 10) {
-            factLine(yearlyText(sub))
+            if let yearly = yearlyText(sub) { factLine(yearly) }
 
             if let change = PriceHistory.latestChange(for: sub, events: eventLog.events) {
                 let up = change.isIncrease
@@ -221,13 +221,17 @@ struct RenewalVerdictView: View {
             .fixedSize(horizontal: false, vertical: true)
     }
 
-    private func yearlyText(_ sub: Subscription) -> String {
-        let yearly = MoneyFormat.string(sub.annualCost, sub.currency)
-        guard sub.currency != currencyManager.selectedCurrency,
-              let inDisplay = currencyManager.convertToSelected(sub.annualCost, from: sub.currency) else {
-            return L10n.string("That's \(yearly) a year")
+    private func yearlyText(_ sub: Subscription) -> String? {
+        switch VerdictFacts.yearLine(for: sub, displayCurrency: currencyManager.selectedCurrency, rates: currencyManager.rates) {
+        case nil:
+            return nil
+        case .yearly(let yearly):
+            return L10n.string("That's \(MoneyFormat.string(yearly, sub.currency)) a year")
+        case .yearlyAndConverted(let yearly, let inDisplay):
+            return L10n.string("That's \(MoneyFormat.string(yearly, sub.currency)) a year (about \(currencyManager.format(inDisplay)))")
+        case .convertedOnly(let inDisplay):
+            return L10n.string("About \(currencyManager.format(inDisplay)) in your currency")
         }
-        return L10n.string("That's \(yearly) a year (about \(currencyManager.format(inDisplay)))")
     }
 
     private func usageText(_ sub: Subscription) -> String? {

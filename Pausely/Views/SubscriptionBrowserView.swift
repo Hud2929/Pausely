@@ -293,6 +293,7 @@ struct SubscriptionBrowserView: View {
         }
         .buttonStyle(.plain)
         .accessibilityAddTraits(isOn ? [.isSelected] : [])
+        .accessibilityIdentifier("categoryPill")
     }
 
     private var noResultsView: some View {

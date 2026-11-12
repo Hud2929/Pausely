@@ -94,6 +94,7 @@ struct CatalogAddSheet: View {
                         }
                         .tint(Color.inkTextMuted)
                         .frame(minHeight: 54)
+                        .accessibilityIdentifier("tierTrialToggle")
                         if hasFreeTrial {
                             Hairline()
                             row(L10n.string("Trial ends")) {
