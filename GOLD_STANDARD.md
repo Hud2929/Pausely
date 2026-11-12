@@ -453,6 +453,14 @@ Updated at every commit, so the work can be picked up from this file alone.
   (a richer demo list, then the dialogs, error lines and data-dependent rows through the tour),
   the parts not yet rebuilt (Pause Plan, the notice toast), then the four whole tours for the
   counts and the scores.
+- Two more sentences that were English in every language (11-12), found reading the age check's
+  code for the state pass: its lockout line ("You can try again in about 3 hours.", built by hand
+  with an "s" added for the plural) and the mail server's fallbacks ("The server refused the
+  request.", "Sign-in failed.", chosen when the server says nothing; the mail-error test could not
+  see them behind their `?`). Both translated, the first with plural forms.
+  `testNoEnglishSentenceIsAssignedReturnedOrChosenAsPlainText` reads every source line for a
+  sentence that is assigned, returned or picked by a condition without reaching the catalog; it
+  finds these two as they were and nothing else in the app. `testTheLockoutLineIsInTheReadersLanguage`.
 - Told by the other session at 22:04 (it has stood down and changed nothing): sections 2, 3, 4, 6, 7
   and 10 of the engineering audit were never done and there is no finished overlooked-details
   report. Those areas have been scanned by nobody; they are owed before Stage G can be called done.

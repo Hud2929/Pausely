@@ -211,6 +211,55 @@ final class LocalizationGuardTests: XCTestCase {
         XCTAssertEqual(stayEnglish.map { "\($0.file):\($0.line) \"\($0.literal)\" is in the catalog but stays English here" }, [])
     }
 
+    /// A sentence that is assigned, returned or picked by a condition as plain text never meets the
+    /// catalog. Two were found on 2026-11-12, both English in every language: the age check's
+    /// "You can try again in about 3 hours." (built by hand, with an "s" added for the plural) and
+    /// the mail server's fallbacks ("The server refused the request." chosen when the server says
+    /// nothing), which the test for mail errors could not see behind their `?`.
+    func testNoEnglishSentenceIsAssignedReturnedOrChosenAsPlainText() throws {
+        let appFolder = root.appendingPathComponent("Pausely")
+        try XCTSkipUnless(FileManager.default.fileExists(atPath: appFolder.path), "source tree not available")
+        var found: [String] = []
+        let files = try XCTUnwrap(FileManager.default.enumerator(at: appFolder, includingPropertiesForKeys: nil))
+        for case let file as URL in files where file.pathExtension == "swift" && !Self.demoFiles.contains(file.lastPathComponent) {
+            let lines = try String(contentsOf: file, encoding: .utf8).components(separatedBy: "\n")
+            for (index, line) in lines.enumerated() where Self.holdsABareSentence(line) {
+                found.append("\(file.lastPathComponent):\(index + 1) \(line.trimmingCharacters(in: .whitespaces).prefix(100))")
+            }
+        }
+        XCTAssertEqual(found, [])
+        // The rule sees the two it was written for, and lets their repairs through.
+        XCTAssertTrue(Self.holdsABareSentence(#"lockoutText = "You can try again in about \(hours) hour\(hours == 1 ? "" : "s").""#))
+        XCTAssertTrue(Self.holdsABareSentence(#"throw MailboxError.server(text.isEmpty ? "The server refused the request." : text)"#))
+        XCTAssertFalse(Self.holdsABareSentence(#"throw MailboxError.server(text.isEmpty ? L10n.string("The server refused the request.") : text)"#))
+        XCTAssertFalse(Self.holdsABareSentence(#"Text(isRemoving ? "Removing…" : "Remove from Pausely")"#), "a choice inside Text is a key")
+        XCTAssertFalse(Self.holdsABareSentence(#"let key = "saved_list_is_demo""#))
+    }
+
+    /// DEBUG-only sample data and the gallery of design parts: made-up sentences nobody ships.
+    private static let demoFiles: Set<String> = ["DesignGalleryView.swift", "DemoSubscriptions.swift", "DemoSavings.swift", "DemoTally.swift"]
+
+    /// True when the line assigns, returns or picks (`? "…"`, `"…" : "…"`) a literal of three or more
+    /// words and nothing on the line gives it to the catalog.
+    private static func holdsABareSentence(_ line: String) -> Bool {
+        let trimmed = line.trimmingCharacters(in: .whitespaces)
+        guard !trimmed.hasPrefix("//") else { return false }
+        let translated = ["L10n.string(", "Text(", "LocalizedStringKey", "LocalizedStringResource", ".accessibilityHint(",
+                          ".accessibilityLabel(", ".accessibilityValue(", "Button(", "Label(", "NSRegularExpression", "pattern",
+                          "os_log", "PauselyLogger", "print(", "#Preview"]
+        guard !translated.contains(where: line.contains) else { return false }
+        guard let literal = try? NSRegularExpression(pattern: #"(?:(?:=|return|\?)\s+|"\s+:\s+)"((?:[^"\\]|\\.)*)""#) else { return false }
+        for match in literal.matches(in: line, range: NSRange(line.startIndex..., in: line)) {
+            guard let range = Range(match.range(at: 1), in: line) else { continue }
+            let text = String(line[range])
+            if text.contains("\\\\") || text.contains("(?:") { continue }   // a pattern, not a sentence
+            let plain = text.replacingOccurrences(of: #"\\\((?:[^()]|\([^()]*\))*\)"#, with: "", options: .regularExpression)
+            let words = plain.split(whereSeparator: { !$0.isLetter && $0 != "'" }).filter { $0.count > 1 }
+            if words.count >= 3, plain.range(of: "[a-z] [a-z]", options: .regularExpression) != nil { return true }
+        }
+        return false
+    }
+
     /// `Text(verbatim:)` is for names, numbers and addresses. An English sentence in it stays English.
     func testNoEnglishSentenceIsShownVerbatim() throws {
         let found = try scan(Self.screenFiles, calls: ["Text(verbatim: \""])

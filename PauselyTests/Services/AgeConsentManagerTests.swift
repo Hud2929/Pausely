@@ -119,4 +119,19 @@ final class AgeConsentManagerTests: XCTestCase {
         let (manager, _) = makeManager()
         XCTAssertTrue(manager.needsConsent(userId: "user-1"))
     }
+
+    /// When the lockout ends, said in the reader's language: one hour is "hour", not "hour(s)".
+    func testTheLockoutLineIsInTheReadersLanguage() {
+        let saved = UserDefaults.standard.object(forKey: L10n.languageKey)
+        defer { UserDefaults.standard.set(saved, forKey: L10n.languageKey) }
+
+        UserDefaults.standard.set("en", forKey: L10n.languageKey)
+        XCTAssertEqual(AgeGateView.lockoutLine(remaining: 40 * 60), "You can try again in about 1 hour.")
+        XCTAssertEqual(AgeGateView.lockoutLine(remaining: 2.2 * 3600), "You can try again in about 3 hours.", "rounded up: never sooner than said")
+
+        UserDefaults.standard.set("de", forKey: L10n.languageKey)
+        XCTAssertEqual(AgeGateView.lockoutLine(remaining: 23 * 3600), "Sie können es in etwa 23 Stunden erneut versuchen.")
+        UserDefaults.standard.set("fr", forKey: L10n.languageKey)
+        XCTAssertEqual(AgeGateView.lockoutLine(remaining: 3600), "Vous pourrez réessayer dans environ 1 heure.")
+    }
 }

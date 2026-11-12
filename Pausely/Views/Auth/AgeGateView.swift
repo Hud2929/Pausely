@@ -145,11 +145,26 @@ struct AgeGateView: View {
         }
     }
 
+    /// "You can try again in about 3 hours.", in the reader's language. It was built by hand in
+    /// English ("hour" plus an "s"), so it stayed English everywhere.
+    static func lockoutLine(remaining: TimeInterval) -> String {
+        let hours = max(1, Int((remaining / 3600).rounded(.up)))
+        return L10n.string("You can try again in about \(hours) hours.")
+    }
+
     private func refreshLockout() {
+        #if DEBUG
+        // `--demo-age-gate=underage` and `=locked` show the two refusals without leaving a lockout
+        // behind on the simulator.
+        if let shown = LaunchFlag.value(of: "--demo-age-gate"), !shown.isEmpty {
+            outcome = shown == "locked" ? .lockedOut : .underAge
+            lockoutText = shown == "locked" ? Self.lockoutLine(remaining: 23 * 3600) : nil
+            return
+        }
+        #endif
         if let remaining = consent.lockoutRemaining() {
             outcome = .lockedOut
-            let hours = max(1, Int((remaining / 3600).rounded(.up)))
-            lockoutText = "You can try again in about \(hours) hour\(hours == 1 ? "" : "s")."
+            lockoutText = Self.lockoutLine(remaining: remaining)
         } else if outcome == .lockedOut {
             outcome = nil
             lockoutText = nil

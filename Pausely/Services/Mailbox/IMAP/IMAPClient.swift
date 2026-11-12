@@ -183,7 +183,7 @@ actor IMAPClient {
                         line.removeAll()
                         let next = try await readResponse()
                         guard next.kind == .continuation else {
-                            throw MailboxError.server(next.text.isEmpty ? "The server refused the request." : next.text)
+                            throw MailboxError.server(next.text.isEmpty ? L10n.string("The server refused the request.") : next.text)
                         }
                     }
                     line.append(contentsOf: bytes)
@@ -201,7 +201,7 @@ actor IMAPClient {
             switch response.kind {
             case .untagged:
                 if response.status == "BYE", !(arguments.first == .raw("LOGOUT")) {
-                    throw MailboxError.server(response.text.isEmpty ? "The server closed the connection." : response.text)
+                    throw MailboxError.server(response.text.isEmpty ? L10n.string("The server closed the connection.") : response.text)
                 }
                 untagged.append(response)
             case .continuation:
@@ -210,10 +210,10 @@ actor IMAPClient {
                 guard responseTag == tag else { continue }
                 if response.status == "OK" { return CommandResult(untagged: untagged, tagged: response) }
                 if response.code.first?.uppercased() == "AUTHENTICATIONFAILED" || response.code.first?.uppercased() == "AUTHORIZATIONFAILED" {
-                    throw MailboxError.server(response.text.isEmpty ? "Sign-in failed." : response.text)
+                    throw MailboxError.server(response.text.isEmpty ? L10n.string("Sign-in failed.") : response.text)
                 }
-                if sensitive { throw MailboxError.server(response.text.isEmpty ? "Sign-in failed." : response.text) }
-                throw MailboxError.server(response.text.isEmpty ? "The server refused the request." : response.text)
+                if sensitive { throw MailboxError.server(response.text.isEmpty ? L10n.string("Sign-in failed.") : response.text) }
+                throw MailboxError.server(response.text.isEmpty ? L10n.string("The server refused the request.") : response.text)
             }
         }
     }
