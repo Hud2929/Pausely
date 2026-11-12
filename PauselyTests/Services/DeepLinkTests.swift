@@ -13,7 +13,6 @@ final class DeepLinkTests: XCTestCase {
     func testRouteSegmentsTreatHostAndPathTheSame() {
         XCTAssertEqual(URL(string: "pausely://auth/confirm?token=x")!.routeSegments, ["auth", "confirm"])
         XCTAssertEqual(URL(string: "pausely://subscription/manage?id=1")!.routeSegments, ["subscription", "manage"])
-        XCTAssertEqual(URL(string: "https://pausely.pro/subscription/manage?id=1")!.routeSegments, ["subscription", "manage"])
     }
 
     func testAuthLinks() {
@@ -26,7 +25,31 @@ final class DeepLinkTests: XCTestCase {
     func testOldReferralLinksGoNowhere() {
         guard case .unknown = route("pausely://r/ABCD1234") else { return XCTFail("short form") }
         guard case .unknown = route("pausely://referral?code=WXYZ9876") else { return XCTFail("query form") }
-        guard case .unknown = route("https://pausely.pro/r/QWER5678") else { return XCTFail("universal link") }
+        guard case .unknown = route("https://pausely.pro/r/QWER5678") else { return XCTFail("web form") }
+    }
+
+    /// The app claims no web links (no associated domain), so none is acted on: an `https` link that
+    /// reaches it by some other road opens nothing, whatever its path says.
+    func testWebLinksAreNotTheApps() {
+        let id = UUID()
+        guard case .unknown = route("https://pausely.pro/subscription/manage?id=\(id.uuidString)") else { return XCTFail("subscription") }
+        guard case .unknown = route("https://pausely.pro/auth/confirm?code=x") else { return XCTFail("account link") }
+    }
+
+    /// What the app is entitled to is what it uses: Sign in with Apple and the group it shares with its
+    /// widgets. A capability nobody uses (universal links, Screen Time, push) fails here.
+    func testTheAppClaimsOnlyWhatItUses() throws {
+        let root = URL(fileURLWithPath: #filePath)
+            .deletingLastPathComponent().deletingLastPathComponent().deletingLastPathComponent()
+        func keys(_ path: String) throws -> [String] {
+            let url = root.appendingPathComponent(path)
+            try XCTSkipUnless(FileManager.default.fileExists(atPath: url.path), "Sources aren't readable from this test run")
+            let plist = try PropertyListSerialization.propertyList(from: Data(contentsOf: url), format: nil)
+            return try XCTUnwrap(plist as? [String: Any]).keys.sorted()
+        }
+        XCTAssertEqual(try keys("Pausely/Pausely.entitlements"),
+                       ["com.apple.developer.applesignin", "com.apple.security.application-groups"])
+        XCTAssertEqual(try keys("PauselyWidget/PauselyWidget.entitlements"), ["com.apple.security.application-groups"])
     }
 
     func testSubscriptionLink() {

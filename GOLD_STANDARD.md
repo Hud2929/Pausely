@@ -202,8 +202,11 @@ Updated at every commit, so the work can be picked up from this file alone.
 - 11-11, 23:30: the run resumed. Before any change, the overlooked report was checked against the
   code (rows O1 to O41 in 6.3a) and the rest of the run was planned as one piece: section 5.3. The
   order there replaces the list that stood here.
-- D0, first slice: O1, O23, O38, O40 closed (see their rows). Next in D0: O36 (universal links), O39
-  (Sign in with Apple revocation). Then D1, the scan.
+- D0, first slice: O1, O23, O38, O40 closed (see their rows).
+- O36 closed (see its row). Found on the way, for D5: the website exists in three places (the live
+  `gh-pages` branch, `site-next`, and the `pausely.pro/` folder on this branch, which lacks files the
+  live site has). The privacy correction of 11-11 was made in the folder, so it is in none of the two
+  branches a push would publish. Next in D0: O39 (Sign in with Apple revocation). Then D1, the scan.
 - Told by the other session at 22:04 (it has stood down and changed nothing): sections 2, 3, 4, 6, 7
   and 10 of the engineering audit were never done and there is no finished overlooked-details
   report. Those areas have been scanned by nobody; they are owed before Stage G can be called done.
@@ -428,7 +431,7 @@ matters to a stranger: the customer round below scores "getting in" at 1.
 | O33 | low | A widget tap or a Spotlight result opens the app, not the subscription | open |
 | O34 | low | Lock Screen widgets show amounts while the iPhone is locked | open |
 | O35 | unclear | Widgets in tinted, clear and StandBy rendering | simulator in Stage E; device for the owner |
-| O36 | high | The app claims universal links for pausely.pro and the site publishes no association file | open |
+| O36 | medium | Not what the report said: the live site (the `gh-pages` branch) does publish an association file. What was real: the file names only referral links, which the app no longer has; nothing in the app makes or needs a web link; and the entitlement listed www.pausely.pro, which redirects and so could never be verified | closed 11-11: the app claims no web links (the associated-domains entitlement and the `https` route are gone), so the file on the site is inert. `DeepLinkTests`: web links open nothing, and the two entitlement files hold exactly Sign in with Apple and the widgets' shared group |
 | O37 | medium | The free plan's limit counts cancelled rows: cancelling, which is what the app is for, frees no room | open |
 | O38 | medium | Wiping misses typed hours, merchant corrections, the Pro flag and the waiting tally: the next account inherits them. Found with it: a name typed on a sign-up nobody finished was given to whichever account next signed in by code (the same fault B8 fixed for the password) | closed 11-11: one list of the person's saved values (`LocalUserData.personalKeys`, plus everything under `usage_`), removed together with the saved logos; the name is kept with the address it was typed for and given to no other. `LocalDataGuardTests` reads the sources and fails on a value saved under a name that is neither on that list nor named there as a setting of the iPhone with its reason (6 tests) |
 | O39 | medium | Deleting an account does not revoke the Sign in with Apple token (Apple asks for it) | open |

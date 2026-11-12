@@ -55,8 +55,8 @@ user; nothing reaches the server). `--reset-state` (UI tests) starts signed out 
 `Pausely/ContentView.swift` holds `PauselyApp`, the `AppDelegate` (sets the notification delegate and
 categories at launch) and `RootView`: splash → `FirstRunView` (guess, tally, reveal) →
 `PremiumWelcomeFlow` (sign up / sign in) → `AgeGateView` when needed → `PremiumMainTabView`
-(Dashboard, Subscriptions, Analysis, Profile). Deep links go through `DeepLinkManager`
-(`URL.routeSegments` reads `pausely://auth/confirm` and an `https://pausely.pro/...` link the same way).
+(Dashboard, Subscriptions, Analysis, Profile). Deep links go through `DeepLinkManager`: only
+`pausely://` links are the app's (`URL.routeSegments`); it claims no web links.
 
 ### Renewals and decisions (`Pausely/Core/Renewals/`)
 All pure and unit-tested; they take `now` and a `Calendar`.

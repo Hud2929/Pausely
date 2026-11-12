@@ -23,18 +23,17 @@ final class DeepLinkManager {
 
     private init() {}
 
-    /// Where a link goes. In `pausely://auth/confirm` the first part ("auth") is the URL's host, not
-    /// its path, so routing uses `routeSegments`, which treats both link styles the same way.
+    /// Where a link goes. Only `pausely://` links are the app's: account links from its emails and
+    /// links to a subscription from its own widgets. In `pausely://auth/confirm` the first part ("auth")
+    /// is the URL's host, not its path, so routing uses `routeSegments`.
     func handle(_ url: URL) -> DeepLinkRoute {
-        let scheme = url.scheme?.lowercased()
-        let isUniversalLink = scheme == "https" && ["pausely.pro", "www.pausely.pro"].contains(url.host?.lowercased() ?? "")
-        guard scheme == "pausely" || isUniversalLink else { return .unknown }
+        guard url.scheme?.lowercased() == "pausely" else { return .unknown }
 
         // The link itself is never logged: account links carry sign-in tokens and an email address.
         let parts = url.routeSegments
 
         switch parts.first?.lowercased() {
-        case "auth" where scheme == "pausely":
+        case "auth":
             // pausely://auth/reset-password; confirm and callback links go to the same handler
             return parts.dropFirst().first?.lowercased() == "reset-password" ? .authResetPassword : .authConfirm
         case "subscription" where parts.dropFirst().first?.lowercased() == "manage":
@@ -86,14 +85,12 @@ extension Notification.Name {
 // MARK: - URL Query Parameters Helper
 
 extension URL {
-    /// The meaningful parts of a link: ["auth", "confirm"] for `pausely://auth/confirm` (where "auth"
-    /// is the host) and ["subscription", "manage"] for `https://pausely.pro/subscription/manage` (where it's the path).
+    /// The meaningful parts of one of the app's links: ["auth", "confirm"] for `pausely://auth/confirm`,
+    /// where "auth" is the URL's host and "confirm" its path.
     var routeSegments: [String] {
         let path = pathComponents.filter { $0 != "/" && !$0.isEmpty }
-        if scheme?.lowercased() == "pausely", let host, !host.isEmpty {
-            return [host] + path
-        }
-        return path
+        guard let host, !host.isEmpty else { return path }
+        return [host] + path
     }
 
     var queryParameters: [String: String]? {
