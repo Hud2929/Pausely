@@ -1,5 +1,4 @@
 import Foundation
-import LocalAuthentication
 import SwiftUI
 import Supabase
 import os.log
@@ -571,10 +570,27 @@ class RevolutionaryAuthManager: ObservableObject {
     
     // MARK: - Delete Account
 
+    /// Whether this account signs in with Apple (it may also have a password).
+    var signsInWithApple: Bool {
+        client.auth.currentSession?.user.identities?.contains { $0.provider == "apple" } ?? false
+    }
+
     /// Deletes the account and everything stored with it: on the server (supabase function
     /// `delete_my_account`, which cascades to every table) and on this iPhone. Subscriptions billed by
     /// Apple, including Pausely Pro, are not cancelled; Apple manages those.
+    ///
+    /// An account that signs in with Apple confirms with Apple first, and the tokens Apple gave Pausely
+    /// are revoked (`AppleRevocation`). Closing Apple's sheet stops the deletion (`CancellationError`).
     func deleteAccount() async throws {
+        if signsInWithApple {
+            let coordinator = AppleSignInCoordinator()
+            let revocation = AppleRevocation(
+                authorizationCode: { try await coordinator.authorizationCode() },
+                revoke: { [client] code in
+                    try await client.functions.invoke("apple-revoke", options: FunctionInvokeOptions(body: ["code": code]))
+                })
+            if await revocation.run() == .backedOut { throw CancellationError() }
+        }
         try await client.rpc("delete_my_account").execute()
         await LocalUserData.wipe()
         await signOut()

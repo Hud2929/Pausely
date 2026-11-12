@@ -142,7 +142,10 @@ Supabase project `ddaotwyaowspwspyddzs`. Migrations live in `supabase/migrations
 hand in the Supabase SQL editor: paste the newest `supabase/APPLY_*.sql`. It is safe to run more than
 once and brings any state of the database up to date (account deletion, cancel-difficulty ratings and
 sync need it).
-Edge function: `supabase/functions/waitlist-signup`. Website and policies: `pausely.pro/` (GitHub Pages).
+Edge functions (`supabase/functions/`): `waitlist-signup`, `auth-email` (sends the sign-in codes) and
+`apple-revoke` (revokes Apple's tokens when an account made with Sign in with Apple is deleted; needs
+Apple's key as secrets, see its header). Website and policies: `pausely.pro/` (GitHub Pages; the live
+site is the `gh-pages` branch).
 
 Account emails are sent by Supabase from templates edited in its dashboard; the copy to paste is
 `SUPABASE_EMAIL_TEMPLATES.md`. The app asks for the 6-digit code in them (`Views/Auth/EmailCodeViews.swift`)
@@ -155,8 +158,8 @@ it, a link carrying someone else's code signs the person holding the phone into 
 Database rules are proven locally, never against the real project: `bash scripts/dbtest/run.sh` builds five
 starting states in a throwaway Postgres that stands in for Supabase, applies the newest APPLY file twice to
 each, and checks what a signed-out visitor, two signed-in people and the service role can each do.
-`bash scripts/dbtest/waitlist_function.sh` runs the waitlist function against a stand-in database. Both
-need Docker (Colima works). A new migration goes into the APPLY file too, and both scripts must pass.
+`bash scripts/dbtest/waitlist_function.sh`, `auth_email_function.sh` and `apple_revoke_function.sh` run each
+function against stand-ins. All need Docker (Colima works). A new migration goes into the APPLY file too, and both scripts must pass.
 
 ## App Store
 

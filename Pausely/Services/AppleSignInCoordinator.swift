@@ -2,16 +2,32 @@ import AuthenticationServices
 import CryptoKit
 import Foundation
 
-/// Drives the native Sign in with Apple sheet and returns the identity token + nonce.
+/// Sign in with Apple outside Apple's own button: the nonce the button needs, and the confirmation
+/// Apple's sheet gives when an account is being deleted.
 @MainActor
-final class AppleSignInCoordinator: NSObject, ObservableObject {
+final class AppleSignInCoordinator: NSObject {
 
     private var continuation: CheckedContinuation<ASAuthorization, Error>?
 
-    // MARK: - Public API
+    /// Has the person confirm with Apple and returns the one-time code Apple issues for it: what the
+    /// server needs to revoke the tokens Apple gave Pausely for this person (`AppleRevocation`).
+    func authorizationCode() async throws -> String {
+        let controller = ASAuthorizationController(authorizationRequests: [ASAuthorizationAppleIDProvider().createRequest()])
+        controller.delegate = self
+        controller.presentationContextProvider = self
+        let authorization = try await withCheckedThrowingContinuation { continuation in
+            self.continuation = continuation
+            controller.performRequests()
+        }
+        guard let credential = authorization.credential as? ASAuthorizationAppleIDCredential,
+              let data = credential.authorizationCode,
+              let code = String(data: data, encoding: .utf8), !code.isEmpty else {
+            throw ASAuthorizationError(.invalidResponse)
+        }
+        return code
+    }
 
-
-    // MARK: - Helpers (also exposed as static for use with SignInWithAppleButton)
+    // MARK: - The nonce for Apple's button
 
     static func generateNonce(length: Int = 32) -> String {
         let charset = Array("0123456789ABCDEFGHIJKLMNOPQRSTUVXYZabcdefghijklmnopqrstuvwxyz-._")
@@ -83,6 +99,3 @@ extension AppleSignInCoordinator: ASAuthorizationControllerPresentationContextPr
         return window
     }
 }
-
-// MARK: - Error
-

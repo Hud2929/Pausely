@@ -52,7 +52,7 @@ struct PrivacySecurityView: View {
                     Button("Cancel", role: .cancel) {}
                     Button("Delete", role: .destructive) { Task { await deleteAccount() } }
                 } message: {
-                    Text("This permanently deletes your account, your subscription list and your history from Pausely's servers and this iPhone. It doesn't cancel any subscriptions, including Pausely Pro. To cancel those, open Settings, tap your name, then Subscriptions.")
+                    Text(deleteWarning)
                 }
                 .alert("Couldn't delete your account", isPresented: Binding(get: { deleteError != nil }, set: { if !$0 { deleteError = nil } })) {
                     Button("OK", role: .cancel) {}
@@ -66,6 +66,14 @@ struct PrivacySecurityView: View {
         .sheet(isPresented: $showingTermsOfService) { LegalPage.terms.view }
     }
 
+    /// What deleting does and does not do. An account that signs in with Apple is told Apple's sheet
+    /// comes next, so it isn't a surprise.
+    private var deleteWarning: String {
+        let warning = L10n.string("This permanently deletes your account, your subscription list and your history from Pausely's servers and this iPhone. It doesn't cancel any subscriptions, including Pausely Pro. To cancel those, open Settings, tap your name, then Subscriptions.")
+        guard RevolutionaryAuthManager.shared.signsInWithApple else { return warning }
+        return warning + "\n\n" + L10n.string("Apple will ask you to confirm first.")
+    }
+
     private func deleteAccount() async {
         isDeleting = true
         defer { isDeleting = false }
@@ -73,6 +81,8 @@ struct PrivacySecurityView: View {
             try await RevolutionaryAuthManager.shared.deleteAccount()
             Feel.landed()
             dismiss()
+        } catch is CancellationError {
+            // The person closed Apple's sheet: nothing was deleted and there is nothing to report.
         } catch {
             deleteError = L10n.string("Check your connection and try again. If it keeps failing, email \(AppConfig.supportEmail) and we'll delete it within 30 days.")
         }

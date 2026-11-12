@@ -66031,6 +66031,40 @@
           }
         }
       }
+    },
+    "Apple will ask you to confirm first.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ستطلب منك Apple التأكيد أولاً."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Apple bittet Sie zuerst um Bestätigung."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Apple te pedirá que confirmes primero."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Apple vous demandera d'abord de confirmer."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "先に Apple での確認が求められます。"
+          }
+        }
+      }
     }
   },
   "version": "1.1"
