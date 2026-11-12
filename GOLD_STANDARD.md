@@ -534,6 +534,25 @@ Updated at every commit, so the work can be picked up from this file alone.
   is SF Arabic because New York has no Arabic and iOS pairs them itself (Japanese to be looked at).
   758 tests, 0 failures; Release builds; gold_check 0; old_ui_check 0. Next: the state pass at the
   largest size and on iPad, the inventory brought up to date, then the four whole tours.
+- Where the run stopped (11-12, usage limit). Working tree clean at `f6818ef`. Running when it
+  stopped: the state pass at the largest text size, writing to `/tmp/pausely_states_big_1` (not yet
+  read; read it, or run it again, before anything else). Next, in order: (1) read that pass and fix
+  what it shows; (2) the state pass on iPad
+  (`-destination id=058E020B-C1BB-4821-AA6E-0360638BDF59 -only-testing:PauselyUITests/ScreenTourTests/testStates`);
+  (3) states still without a way in, each cheap to add: `--demo-plan-active` on any screen (Home's
+  Pause Plan row, the Insights card and the subscription row while a plan runs), `--demo-pro`
+  (Profile and Pause Plan for a Pro customer; `PaymentManager` already has a debug override key),
+  the verdict for Netflix with hours of use, for a subscription with no date (Keep disabled), for
+  Pausely's own slip and for a subscription that is gone, the cancel steps for an Apple-billed one,
+  the reveal's "good guess" and "less than you guessed", the dates sheet with several rows, a
+  "Started again" line on the receipt, the waiting row on Home; (4) the 136-row inventory rewritten
+  in 6.5 from the reconciliation done on 11-12 (gone: deep analysis, paused, the rating sheet,
+  in-app policies, Live Activity, Home's price-rise row; not openable from here: anything that needs
+  the network, a purchase or a permission to fail, the system's sheets, widgets on a Home Screen);
+  (5) Japanese looked at for the serif; (6) task E5, the four whole tours on the final build with
+  `tour_untranslated.py` and `tour_black_bands.swift`, then the scores; (7) H, the personas;
+  (8) I, the proof and section 7. Section 7 is still the stale scorecard: nothing in it has been
+  rewritten yet, and no screen has a recorded score from this run.
 - Told by the other session at 22:04 (it has stood down and changed nothing): sections 2, 3, 4, 6, 7
   and 10 of the engineering audit were never done and there is no finished overlooked-details
   report. Those areas have been scanned by nobody; they are owed before Stage G can be called done.
