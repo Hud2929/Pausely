@@ -23,6 +23,19 @@ enum LaunchFlag: String {
         #endif
     }
 
+    /// A launch that shows screens from demo data without an account (captures, UI tests, demos).
+    /// Always false in a release build.
+    static var isDemoLaunch: Bool {
+        #if DEBUG
+        return ProcessInfo.processInfo.arguments.contains { argument in
+            argument.hasPrefix("--demo") || argument == LaunchFlag.screenshots.rawValue
+                || argument == "--fresh-demo-data" || argument == "--empty-demo-data"
+        }
+        #else
+        return false
+        #endif
+    }
+
     /// The value of `--name=value`, or "" for a bare `--name`. Nil when it isn't there, and always
     /// nil in a release build.
     static func value(of name: String) -> String? {

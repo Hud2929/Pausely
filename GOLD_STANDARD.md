@@ -209,9 +209,10 @@ Updated at every commit, so the work can be picked up from this file alone.
   branches a push would publish.
 - O39 built (see its row; live only after the owner's key and a deploy). D0 is done. Next: D1, the
   scan of the areas nobody has read (engineering 2, 3, 4, 6, 7, 10; overlooked 5 to 9).
-- D1 under way. Error handling (engineering 4) and persistence (6) read: rows S1 to S7 in 6.3b. S1 and
-  S2 were fixed at once because they lose data (a launch before the phone's first unlock). Next:
-  concurrency (3), correctness (2), backend files (7), widget and App Intents (10), overlooked 5 to 9.
+- D1 done: every area is read (scan status under 6.3b). Rows S1 to S16. Fixed at once because they
+  lose or expose data: S1, S2, S9, S10, S11. The rest are placed in D3 to D5 and G.
+- Whole suite after D0 and D1: 634 tests, 0 failures (7 need a mail server and are skipped).
+- Next: D2, the billing day and typed amounts (O2 to O10).
 - Told by the other session at 22:04 (it has stood down and changed nothing): sections 2, 3, 4, 6, 7
   and 10 of the engineering audit were never done and there is no finished overlooked-details
   report. Those areas have been scanned by nobody; they are owed before Stage G can be called done.
@@ -416,7 +417,7 @@ matters to a stranger: the customer round below scores "getting in" at 1.
 | O13 | low | Currency names are English and searched in English only | open |
 | O14 | low | A price and its period are joined in code ("$4.99" + "/month") | open |
 | O15 | unclear | Whether a nine-digit total fits on Home, Analysis and the receipt | check in Stage E with rupiah data |
-| O16 | unclear | If the live `next_billing_date` column were DATE, no fetched renewal would parse | read-only check |
+| O16 | unclear | If the live `next_billing_date` column were DATE, no fetched renewal would parse | not a finding: read from the live project on 11-12 (`db_apply.py state`, which now prints column types and reads nothing else): it is `timestamp with time zone`, as are the trial end and the created and updated times. The table also still has `start_date` and `paused_until`, which the app no longer uses (to drop by the two-step rule) |
 | O17 | low | The paywall shows "Subscribe" and today's price for a moment before the trial is known | open |
 | O18 | low | A failed card (billing retry, grace period) is never mentioned | open |
 | O19 | low | Manage, refund and offer codes go through a web link, not Apple's sheets | open |
@@ -455,11 +456,23 @@ matters to a stranger: the customer round below scores "getting in" at 1.
 | S6 | low | A widget drawn before the first unlock reads nothing and shows the empty state until its next refresh (up to six hours for the trial widget) | open, with the widget work in D4 |
 | S7 | low | A reminder that fails to be scheduled is dropped without a trace | open |
 | S8 | low | A catalog seed file for a backend the project does not use (39 KB of invented plans and descriptions) | closed 11-12: deleted |
+| S9 | medium | The privacy manifest declared two protected APIs the app does not use (boot time, and disk space under a reason code that does not exist), did not declare the settings it shares with its widgets (reason 1C8F.1), and listed a name and usage data as collected though both stay on the iPhone. The widgets had no manifest at all, though they read shared settings (Apple asks one of every bundle that uses these APIs) | closed 11-12: both manifests rewritten from what the code does; `PrivacyManifestTests` ×3 fails when a declared API is unused or a used one undeclared, and pins what is collected (address, account id, the list and its prices, when age was confirmed) |
+| S10 | low | iPad multi-window was switched on, though the app is one phone-width column and nothing was built or tried for two windows | closed 11-12: off |
+| S11 | medium | A change of mine on 11-11 (hide the list at sign-out) had two gaps: a Shortcut could add to the hidden list, saving a list of one over the saved copy; and a relaunch while signed out loaded the saved list back, so reminders returned | closed 11-12: signed out, every Shortcut says to sign in and an add is refused; a launch that finds nobody signed in hides the list again. `PauselyAppIntentsTests`, `LocalDataGuardTests` |
+| S12 | medium | Threading: built once with complete checking, 58 warnings in 14 files (list in `private/audits/2026-11-12/strict_concurrency.txt`). One is a live fault: the export screen reads the list, the history and the Pause Plan on a background thread | open (the export fault in D4; the rest in G) |
+| S13 | medium | "Paused" is a status nothing can set any more (the pause that paused nothing was removed on 11-11), yet it has a section in the list, a switch on the export screen, a colour and a mark; a row an older version left paused is stuck there | open (D3) |
+| S14 | medium | The export: the PDF is English throughout, statuses and frequencies are English words, dates in the spreadsheet file follow the phone's short style (11/12/26 reads two ways) | open (D5, with the export screen) |
+| S15 | medium | Widgets, read line by line: "days until" counts whole 24-hour periods, so from noon the day before a charge the small widget says "today"; once the published charge has passed, the widget keeps showing it as "today" until the app is next opened; one timeline entry reloaded every 15 minutes (the system throttles that); an English fallback line | open (D4, with O28 to O35 and S6: one rebuild) |
+| S16 | low | Shortcuts, read line by line: results are English with hand-made plurals (T86), Delete asks for no confirmation, Add takes zero, negative and empty values (O31 confirmed) | open (D4) |
 
-Scan status (16 areas). Scanned: engineering 1, 5, 8, 9; overlooked 1 to 4 (calendars and locales,
-StoreKit, notifications, widgets and intents). Not scanned by anyone: engineering 2 (correctness), 3
-(concurrency), 4 (error handling), 6 (persistence), 7 (backend files), 10 (widget and App Intents);
-overlooked 5 to 9 in full (only the eight findings above were saved).
+Scan status (16 areas). Done before the run resumed: engineering 1, 5, 8, 9; overlooked 1 to 4. Done
+on 11-12 by reading, with what was found in the table above: engineering 3 (concurrency, measured by a
+build with complete checking), 4 (error handling: every `try?` and every `catch`), 6 (persistence:
+every saved key, file and Keychain item), 7 (backend files), 10 (widget and App Intents, every line);
+overlooked 5 (links), 7 (account lifecycle), 8 (privacy manifest, Info.plist, entitlements), 9 (launch
+states, windows). Engineering 2 (correctness) was read where no test reaches: the notification
+delegate, the export, the root view's start-up; logic with tests was not re-read. Overlooked 6 (plans
+and limits) is O37 and nothing else was found.
 
 ### 6.4 Open: truth and need on screen, translation, the listing
 

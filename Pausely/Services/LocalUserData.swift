@@ -38,8 +38,9 @@ enum LocalUserData {
         "subscription_price_history",
     ]
 
-    /// Saved once per subscription, under its name: the hours a person typed in.
-    static let personalKeyPrefixes = ["usage_"]
+    /// Saved once per subscription, under its name (the hours a person typed in), and once per account,
+    /// under its id (when that person confirmed their age).
+    static let personalKeyPrefixes = ["usage_", "age_consent_"]
 
     static func removeSavedValues(from defaults: UserDefaults = .standard) {
         for key in personalKeys { defaults.removeObject(forKey: key) }

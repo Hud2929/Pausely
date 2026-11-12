@@ -143,9 +143,13 @@ final class StoreSandbox {
     private let events: [LifecycleEvent]
     private let currency: String
     private let defaults: [String: Any]
+    private let wasHidden: Bool
 
     init() {
         let store = SubscriptionStore.shared
+        // The test app starts with nobody signed in, so its list is hidden. A test's list is its own.
+        wasHidden = store.isHidden
+        store.isHidden = false
         subscriptions = store.subscriptions
         totals = (store.totalMonthlySpend, store.totalAnnualSpend)
         cache = AppSettings.shared.cachedSubscriptions
@@ -164,6 +168,7 @@ final class StoreSandbox {
 
     func restore() async {
         let store = SubscriptionStore.shared
+        store.isHidden = wasHidden
         store.subscriptions = subscriptions
         (store.totalMonthlySpend, store.totalAnnualSpend) = totals
         AppSettings.shared.cachedSubscriptions = cache

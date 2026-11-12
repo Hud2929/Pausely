@@ -272,6 +272,11 @@ class RevolutionaryAuthManager: ObservableObject {
             LocalUserData.hideWhileSignedOut()
         } else {
             state = .unauthenticated
+            // Nobody is signed in. What the last person left on this iPhone (their list loads from its
+            // saved copy at every launch) stays out of sight until they sign back in. Decided here and
+            // not at launch, because here it is known: the sign-in library's session can be read
+            // whenever the app's own data can.
+            if !LaunchFlag.isDemoLaunch { LocalUserData.hideWhileSignedOut() }
         }
     }
     

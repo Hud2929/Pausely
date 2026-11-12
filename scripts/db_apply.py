@@ -171,7 +171,7 @@ select json_build_object(
                where pubname = 'supabase_realtime' and schemaname = 'public'),
   'realtime_owner', (select pg_get_userbyid(pubowner) from pg_publication where pubname = 'supabase_realtime'),
   'columns', (select json_object_agg(table_name, cols) from (
-      select table_name, json_agg(column_name order by ordinal_position) as cols
+      select table_name, json_agg(column_name || ' ' || data_type order by ordinal_position) as cols
       from information_schema.columns
       where table_schema = 'public' and table_name in ('profiles', 'subscriptions', 'referral_codes', 'waitlist', 'user_settings')
       group by table_name) x),

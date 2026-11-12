@@ -280,8 +280,9 @@ class SubscriptionStore: ObservableObject {
         lastFetchDate = nil
     }
 
-    /// True between signing out and signing in again.
-    private(set) var isHidden = false
+    /// True while nobody is signed in: from signing out, or from a launch signed out, until someone
+    /// signs in. (Tests set it back through `StoreSandbox`.)
+    var isHidden = false
 
     /// Signed out: the list leaves memory, the widgets and Spotlight. The copy kept on the iPhone and
     /// the changes still waiting to be sent stay, for when the same person signs back in.

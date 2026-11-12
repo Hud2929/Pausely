@@ -25,6 +25,8 @@ final class LocalDataGuardTests: XCTestCase {
         "review_receipt_milestone_last": "how often this iPhone was asked for a review",
         "current_subscription_tier": "the plan the App Store confirmed for the Apple Account on this iPhone",
         "pending_first_run_tally": "made before any account exists; joins the list of whoever signs in next, then cleared",
+        "age_gate_device_passed": "someone confirmed their age on this iPhone before an account existed",
+        "age_gate_blocked_at": "an under-age answer blocks this iPhone, whoever signs in",
         "debug_auth_bypass": "debug builds only",
         "debug_premium_override": "debug builds only",
         "debug_free_pro": "debug builds only",
@@ -58,7 +60,8 @@ final class LocalDataGuardTests: XCTestCase {
             #"@AppStorage\("([^"]+)"\)"#,
             #"@AppSetting\("([^"]+)""#,
             #"let \w*[Kk]ey\w* *= *"([^"\\]+)"#,                 // let somethingKey = "name"
-            #"Key\([^)]*\) -> String \{ "([^"\\]+)"#,            // func minutesKey(_:) -> String { "usage_\(name)" }
+            #"\) -> String \{ "([^"\\]+)\\\("#,                  // func minutesKey(_:) -> String { "usage_\(name)" }
+            #"static let \w+ = "([a-z]+(?:_[a-z0-9]+)+)""#,       // a name in an `enum Key`: static let blockedAt = "age_gate_blocked_at"
         ].map { try! NSRegularExpression(pattern: $0) }
 
         var found: [String: String] = [:]   // name → first file it was seen in
@@ -94,6 +97,8 @@ final class LocalDataGuardTests: XCTestCase {
         for key in LocalUserData.personalKeys { defaults.set("someone's", forKey: key) }
         defaults.set(90, forKey: "usage_Netflix")
         defaults.set("2026-11", forKey: "usage_month_Netflix")
+        defaults.set(Date(), forKey: "age_consent_user_5f0c3a0e")
+        defaults.set(true, forKey: "age_consent_pending_sync_5f0c3a0e")
         for key in Self.deviceSettings.keys { defaults.set("this iPhone's", forKey: key) }
 
         LocalUserData.removeSavedValues(from: defaults)
