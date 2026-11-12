@@ -14,6 +14,12 @@ struct PauselyApp: App {
     }
 
     init() {
+        // Started in the background before the phone's first unlock, nothing saved can be read, and
+        // anything saved now could replace it (see `SavedData`). The launch ends here; a person can't
+        // be looking at the app, because opening it takes an unlocked phone.
+        if SavedData.lockedAtLaunch, UIApplication.shared.applicationState == .background {
+            exit(0)
+        }
         // Has to be read before anything is saved in this launch (see `InstallState`).
         _ = InstallState.firstLaunch
         // Two earlier price trackers wrote different things under this one key and overwrote each

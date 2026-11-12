@@ -208,7 +208,10 @@ Updated at every commit, so the work can be picked up from this file alone.
   live site has). The privacy correction of 11-11 was made in the folder, so it is in none of the two
   branches a push would publish.
 - O39 built (see its row; live only after the owner's key and a deploy). D0 is done. Next: D1, the
-  scan of the sixteen areas nobody has read (engineering 2, 3, 4, 6, 7, 10; overlooked 5 to 9).
+  scan of the areas nobody has read (engineering 2, 3, 4, 6, 7, 10; overlooked 5 to 9).
+- D1 under way. Error handling (engineering 4) and persistence (6) read: rows S1 to S7 in 6.3b. S1 and
+  S2 were fixed at once because they lose data (a launch before the phone's first unlock). Next:
+  concurrency (3), correctness (2), backend files (7), widget and App Intents (10), overlooked 5 to 9.
 - Told by the other session at 22:04 (it has stood down and changed nothing): sections 2, 3, 4, 6, 7
   and 10 of the engineering audit were never done and there is no finished overlooked-details
   report. Those areas have been scanned by nobody; they are owed before Stage G can be called done.
@@ -440,6 +443,18 @@ matters to a stranger: the customer round below scores "getting in" at 1.
 | O40 | low | Biometric lock is dead code, with a Face ID usage string in Info.plist for a feature that does not exist | closed 11-11: the code, the error case and the usage string are deleted |
 | O41 | low | The app switcher shows amounts | open |
 
+### 6.3b From the scan finished in D1 (found by reading, each checked in the code)
+
+| Id | Weight | What | Status |
+|---|---|---|---|
+| S1 | high | Started in the background before the phone's first unlock after a restart (a reminder's "Keep it" on the Lock Screen, or iOS warming the app up), saved settings read as empty with no error. The app took itself for a new install: it tried to clear the Keychain and the mail passwords and to sign out, and whatever it then saved could replace the real settings: the list kept on the iPhone, the changes still waiting to be sent, typed hours (sources: christianselig.com/2024/10/beware-userdefaults; developer.apple.com/forums/thread/667959). An interaction with G3's fix of 11-11 | closed 11-12: the app looks before it trusts an empty answer. If the settings file is on disk and can't be read, storage is locked: a background launch ends there, before anything is read or saved, and "first launch after an install" now also needs the file to be absent. `InstallStateTests` ×3. Not provable on the simulator, which has no data protection: one check on a device (6.7) |
+| S2 | medium | What the app keeps in the Keychain (who is signed in) was readable only while the phone was unlocked. A reminder's "Keep it", pressed on a locked phone, started the app unable to tell who was signed in | closed 11-12: readable after the first unlock, like the session the sign-in library keeps; an item saved by an earlier version moves over the next time it is saved. `InstallStateTests` |
+| S3 | low | Dead error text: four cases of `PauselyAuthError` nothing throws, its English descriptions that no screen shows, and `SubscriptionLimitError`'s ("free tier limit") likewise | open |
+| S4 | medium | Debug builds only: an empty saved list is filled with demo subscriptions, and the next sync uploads them to whichever real account is signed in | open |
+| S5 | low | The receipt-facts file is written "only while unlocked" and a failed read counts as empty, so a save after it writes over the facts (a rescan rebuilds them) | open |
+| S6 | low | A widget drawn before the first unlock reads nothing and shows the empty state until its next refresh (up to six hours for the trial widget) | open, with the widget work in D4 |
+| S7 | low | A reminder that fails to be scheduled is dropped without a trace | open |
+
 Scan status (16 areas). Scanned: engineering 1, 5, 8, 9; overlooked 1 to 4 (calendars and locales,
 StoreKit, notifications, widgets and intents). Not scanned by anyone: engineering 2 (correctness), 3
 (concurrency), 4 (error handling), 6 (persistence), 7 (backend files), 10 (widget and App Intents);
@@ -496,6 +511,9 @@ two classes own StoreKit state; 7 Swift files over 700 lines; 17 hype names.
   `APPLE_PRIVATE_KEY`, `APPLE_CLIENT_ID`), and the word to deploy `apple-revoke` to the live project.
   Then one deletion of an Apple-made test account on a device, to see Apple's sheet and the entry
   leave Settings → Apple Account → Sign in with Apple.
+- One check on a real iPhone for S1 (the simulator has no data protection): with a renewal reminder
+  due, restart the phone and leave it locked; when the reminder arrives, press and hold it and tap
+  "Keep it"; then unlock and open Pausely. It must open signed in, with the list as it was.
 - One real purchase on a device with a sandbox Apple Account: start the free trial, see Pausely Pro
   join the list at the App Store's price, then refund it in the sandbox and see Pro go without a
   restart. The code paths are tested against stand-in answers; the App Store itself can't be reached

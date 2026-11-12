@@ -9,6 +9,11 @@ final class KeychainManager {
 
     private let service: String
 
+    /// Readable once the phone has been unlocked after a restart, like the session the sign-in library
+    /// keeps. A reminder's "Keep it" runs while the phone is locked: with "only while unlocked" the app
+    /// could not tell who was signed in, and the button did nothing.
+    private static let readable = kSecAttrAccessibleAfterFirstUnlockThisDeviceOnly
+
     /// The app uses `shared`. Tests make their own with a service of their own, so they never touch
     /// what the app keeps.
     init(service: String = "com.pausely.app") {
@@ -52,7 +57,7 @@ final class KeychainManager {
 
         let attributes: [String: Any] = [
             kSecValueData as String: data,
-            kSecAttrAccessible as String: kSecAttrAccessibleWhenUnlockedThisDeviceOnly
+            kSecAttrAccessible as String: Self.readable
         ]
 
         let status = SecItemUpdate(query as CFDictionary, attributes as CFDictionary)
@@ -63,7 +68,7 @@ final class KeychainManager {
                 kSecAttrService as String: service,
                 kSecAttrAccount as String: key,
                 kSecValueData as String: data,
-                kSecAttrAccessible as String: kSecAttrAccessibleWhenUnlockedThisDeviceOnly
+                kSecAttrAccessible as String: Self.readable
             ]
             let addStatus = SecItemAdd(newItem as CFDictionary, nil)
             if addStatus != errSecSuccess {
