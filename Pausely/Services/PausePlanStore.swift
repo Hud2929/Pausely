@@ -60,15 +60,24 @@ final class PausePlanStore: ObservableObject {
         await ReminderScheduler.shared.reschedule(SubscriptionStore.shared.subscriptions)
     }
 
-    /// "I started it": the subscription is active again and its next charge is a month after `date`.
-    /// The status change records a reactivation, which closes its Savings Receipt line.
+    /// "I started it": the subscription is on again from `date`, and renews on that day of the month
+    /// from now on (see `PausePlanSchedule.restartAnchor`). The status change records a reactivation,
+    /// which closes its Savings Receipt line. One that is already on keeps the date it has.
     func markStarted(_ subscription: Subscription, on date: Date = Date(), calendar: Calendar = .current) async {
         let store = SubscriptionStore.shared
-        var updated = subscription
-        updated.nextBillingDate = calendar.date(byAdding: .month, value: 1, to: calendar.startOfDay(for: date)).map { calendar.noon(of: $0) }
+        guard var updated = store.subscriptions.first(where: { $0.id == subscription.id }),
+              !updated.renewsAutomatically else { return }
+        let restart = PausePlanSchedule.restartAnchor(startedOn: date, frequency: updated.billingFrequency, calendar: calendar)
+        updated.nextBillingDate = restart.anchor
+        updated.pausedUntil = nil
         updated.updatedAt = date
         await store.updateSubscription(updated)
         await store.updateSubscriptionStatus(id: subscription.id, status: .active)
+        if restart.isStartDay {
+            // Today's charge is the one just paid: nothing to decide and nothing to be reminded of.
+            LifecycleEventLog.shared.record(.kept, for: updated, date: date, renewalDate: restart.anchor)
+            await ReminderScheduler.shared.reschedule(store.subscriptions)
+        }
     }
 
     /// Wipes the plan (account deletion).

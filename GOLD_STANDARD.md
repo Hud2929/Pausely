@@ -174,7 +174,8 @@ Updated at every commit, so the work can be picked up from this file alone.
   gone, and the catalog is built in and ready at first use, so the cancel screen and logos no longer
   depend on the browse screen having been opened. Whole suite: 574 tests, one failure, the known
   translation guard (D).
-- Stage B is done. Now: Stage C (6.3), top to bottom, starting with B9.
+- Stage B is done. Stage C (6.3), top to bottom: B9 done. Now: B11, B12, B13 (paywall prices, refunds
+  noticed while running, Pausely's own line in the right currency).
 
 **Phase 0. Scan (read-only).** Four independent audits (dead code, truth, design rules on every
 view, engineering) plus mechanical scans. Output: the ledger.
@@ -265,7 +266,7 @@ matters to a stranger: the customer round below scores "getting in" at 1.
 
 | Id | What | Status |
 |---|---|---|
-| B9 | Pause Plan overwrites the billing anchor with "a month after today" | open |
+| B9 | Pause Plan overwrites the billing anchor with "a month after today" | closed 11-11: `PausePlanSchedule.restartAnchor`. A service started again renews on the day of the month it was started (31 Jan → 28 Feb, 31 Mar, 30 Apr; it used to become the 28th forever). A month later is stored only where that is the same schedule; otherwise the start day is stored and recorded as kept, so the day just paid is not asked about. One that is already on keeps its date. Six tests (`PausePlanTests`, `PausePlanStartTests`); the 31st ones fail on the old rule |
 | B11, B12, B13 | Paywall never retries prices after one failure; a refund or expiry is not noticed while the app runs; Pausely's own line can be created at USD launch prices for any country | open |
 | B14 | `startDate` is never saved, so "lifetime" always starts the day the row was added | open |
 | B17, T41 | Four definitions of "active": Home, Insights, paywall and the year slip show different yearly totals for one list | open |

@@ -72,6 +72,27 @@ enum PausePlanSchedule {
         return [first.id] + sorted.dropFirst().sorted { (next($0), $0.name) < (next($1), $1.name) }.map(\.id)
     }
 
+    // MARK: - Starting a service again
+
+    /// The renewal date to store for a service started again on `day`.
+    ///
+    /// Every renewal has to fall on the day of the month it was started: a restart on the 31st renews
+    /// on the last day of shorter months and on the 31st again after them. One period later says
+    /// exactly the same for most start days, and is what's stored when it does, so the start day
+    /// itself (already paid) never shows as a charge to come. When it would not (the 29th to 31st, a
+    /// 29 February), the start day is stored, `isStartDay` is true, and the caller records that day
+    /// as decided.
+    static func restartAnchor(startedOn day: Date, frequency: BillingFrequency,
+                              calendar: Calendar = .current) -> (anchor: Date, isStartDay: Bool) {
+        let start = calendar.startOfDay(for: day)
+        let first = RenewalSchedule.occurrence(1, anchorDay: start, frequency: frequency, calendar: calendar)
+        let sameSchedule = (1...48).allSatisfy { cycle in
+            RenewalSchedule.occurrence(cycle + 1, anchorDay: start, frequency: frequency, calendar: calendar)
+                == RenewalSchedule.occurrence(cycle, anchorDay: first, frequency: frequency, calendar: calendar)
+        }
+        return sameSchedule ? (calendar.noon(of: first), false) : (calendar.noon(of: start), true)
+    }
+
     // MARK: - Turns
 
     /// When the first service hands over: its next renewal on or after the plan's start.
