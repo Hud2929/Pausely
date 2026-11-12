@@ -378,24 +378,20 @@ class SubscriptionStore: ObservableObject {
             Subscription(
                 id: UUID(),
                 name: "Netflix",
-                bundleIdentifier: "com.netflix.Netflix",
                 category: "Entertainment",
                 amount: 15.99,
                 billingFrequency: .monthly,
                 nextBillingDate: calendar.date(byAdding: .day, value: 5, to: now),
-                status: .active,
-                canPause: true
+                status: .active
             ),
             Subscription(
                 id: UUID(),
                 name: "Spotify",
-                bundleIdentifier: "com.spotify.client",
                 category: "Music",
                 amount: 10.99,
                 billingFrequency: .monthly,
                 nextBillingDate: calendar.date(byAdding: .day, value: 12, to: now),
-                status: .active,
-                canPause: true
+                status: .active
             ),
             Subscription(
                 id: UUID(),
@@ -404,8 +400,7 @@ class SubscriptionStore: ObservableObject {
                 amount: 20.00,
                 billingFrequency: .monthly,
                 nextBillingDate: calendar.date(byAdding: .day, value: 18, to: now),
-                status: .active,
-                canPause: false
+                status: .active
             ),
             Subscription(
                 id: UUID(),
@@ -414,8 +409,7 @@ class SubscriptionStore: ObservableObject {
                 amount: 32.95,
                 billingFrequency: .monthly,
                 nextBillingDate: calendar.date(byAdding: .day, value: 2, to: now),
-                status: .active,
-                canPause: true
+                status: .active
             ),
             Subscription(
                 id: UUID(),
@@ -424,8 +418,7 @@ class SubscriptionStore: ObservableObject {
                 amount: 13.99,
                 billingFrequency: .monthly,
                 nextBillingDate: calendar.date(byAdding: .day, value: 24, to: now),
-                status: .active,
-                canPause: true
+                status: .active
             ),
             Subscription(
                 id: UUID(),
@@ -434,8 +427,7 @@ class SubscriptionStore: ObservableObject {
                 amount: 10.00,
                 billingFrequency: .monthly,
                 nextBillingDate: calendar.date(byAdding: .day, value: 8, to: now),
-                status: .active,
-                canPause: true
+                status: .active
             ),
             Subscription(
                 id: UUID(),
@@ -444,8 +436,7 @@ class SubscriptionStore: ObservableObject {
                 amount: 44.00,
                 billingFrequency: .monthly,
                 nextBillingDate: calendar.date(byAdding: .day, value: 15, to: now),
-                status: .active,
-                canPause: true
+                status: .active
             )
         ]
     }

@@ -38,10 +38,9 @@ final class SubscriptionLifecycle {
 
     /// A trial that has ended is charging now. The day it ended was its first charge, so when no
     /// renewal date was ever set, that day (which the person entered) becomes it.
-    static func afterTrial(_ trial: Subscription, endedOn end: Date, now: Date) -> Subscription {
+    static func afterTrial(_ trial: Subscription, endedOn end: Date) -> Subscription {
         var active = trial
         active.status = .active
-        active.updatedAt = now
         if active.nextBillingDate == nil { active.nextBillingDate = end }
         return active
     }
@@ -57,7 +56,7 @@ final class SubscriptionLifecycle {
 
         for (id, endDate) in changes.endedTrials {
             guard let trial = store.subscriptions.first(where: { $0.id == id }) else { continue }
-            let sub = Self.afterTrial(trial, endedOn: endDate, now: now)
+            let sub = Self.afterTrial(trial, endedOn: endDate)
             await store.updateSubscription(sub)
             LifecycleEventLog.shared.record(.trialEnded, for: sub, date: endDate)
         }

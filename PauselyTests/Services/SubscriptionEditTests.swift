@@ -175,9 +175,8 @@ final class SubscriptionEditDraftTests: XCTestCase {
 
     func testAppliedKeepsEverythingElse() {
         var original = sub()
-        original.status = .paused
-        original.isDetected = true
-        original.monthlyUsageMinutes = 420
+        original.status = .trial
+        original.trialEndsAt = Calendar.billing.date(from: DateComponents(year: 2027, month: 1, day: 15, hour: 12))
         let created = original.createdAt
         var draft = SubscriptionEditDraft(from: original)
         draft.name = "  Netflix Premium "
@@ -186,18 +185,15 @@ final class SubscriptionEditDraftTests: XCTestCase {
         draft.category = "Music"
         draft.reminderDays = 7
 
-        let now = Date(timeIntervalSince1970: 1_800_000_000)
-        let updated = draft.applied(to: original, now: now)
+        let updated = draft.applied(to: original)
         XCTAssertEqual(updated?.name, "Netflix Premium")
         XCTAssertEqual(updated?.amount, Decimal(string: "22.99"))
         XCTAssertEqual(updated?.billingFrequency, .yearly)
         XCTAssertEqual(updated?.category, "Music")
         XCTAssertEqual(updated?.notifyBeforeDays, 7)
-        XCTAssertEqual(updated?.updatedAt, now)
         XCTAssertEqual(updated?.id, original.id)
-        XCTAssertEqual(updated?.status, .paused)
-        XCTAssertEqual(updated?.isDetected, true)
-        XCTAssertEqual(updated?.monthlyUsageMinutes, 420)
+        XCTAssertEqual(updated?.status, .trial)
+        XCTAssertEqual(updated?.trialEndsAt, original.trialEndsAt)
         XCTAssertEqual(updated?.createdAt, created)
     }
 

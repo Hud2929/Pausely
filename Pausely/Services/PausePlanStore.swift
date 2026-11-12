@@ -69,7 +69,6 @@ final class PausePlanStore: ObservableObject {
               !updated.renewsAutomatically else { return }
         let restart = PausePlanSchedule.restartAnchor(startedOn: date, frequency: updated.billingFrequency, calendar: calendar)
         updated.nextBillingDate = restart.anchor
-        updated.updatedAt = date
         await store.updateSubscription(updated)
         await store.updateSubscriptionStatus(id: subscription.id, status: .active)
         if restart.isStartDay {

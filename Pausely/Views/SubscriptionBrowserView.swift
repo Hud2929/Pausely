@@ -313,8 +313,7 @@ struct SubscriptionBrowserView: View {
             billingFrequency: billingFrequency,
             nextBillingDate: nextBillingDate,
             trialEndsAt: trialEndDate,
-            status: trialEndDate != nil ? .trial : .active,
-            isDetected: true
+            status: trialEndDate != nil ? .trial : .active
         )
 
         Task {

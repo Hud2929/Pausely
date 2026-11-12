@@ -15,7 +15,7 @@ enum DemoSavings {
         // Pausely tracks itself, so the Pausely Promise has something to compare against.
         if !store.subscriptions.contains(where: \.isPausely) {
             store.subscriptions.append(Subscription(
-                name: "Pausely Pro", bundleIdentifier: "com.pausely.app.Pausely", category: "Productivity",
+                name: PaymentManager.ownName, category: "Productivity",
                 amount: ProPricing.annualUSD, currency: "USD", billingFrequency: .yearly,
                 nextBillingDate: Calendar.billing.date(byAdding: .month, value: 9, to: now)))
         }

@@ -50,7 +50,6 @@ struct SubscriptionSyncMerge {
                 continue
             }
             var merged = remote
-            merged.bundleIdentifier = mine.bundleIdentifier
             if remote.nextBillingDate == nil, let date = mine.nextBillingDate {
                 merged.nextBillingDate = date
                 result.backfill.append(merged)

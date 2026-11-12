@@ -79,7 +79,7 @@ struct SubscriptionEditDraft: Equatable {
     }
 
     /// The subscription with these edits applied. Everything not editable here is preserved.
-    func applied(to original: Subscription, now: Date = Date()) -> Subscription? {
+    func applied(to original: Subscription) -> Subscription? {
         guard isValid, let amount = parsedAmount else { return nil }
         var updated = original
         updated.name = trimmedName
@@ -93,7 +93,6 @@ struct SubscriptionEditDraft: Equatable {
         }
         updated.category = category
         updated.notifyBeforeDays = reminderDays
-        updated.updatedAt = now
         return updated
     }
 

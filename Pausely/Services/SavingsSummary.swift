@@ -1,9 +1,10 @@
 import Foundation
 
 extension Subscription {
-    /// Pausely's own subscription, which Pausely tracks like any other (see the Pausely Promise).
+    /// Pausely's own subscription, which Pausely tracks like any other (see the Pausely Promise). It is
+    /// known by its name, which is the same on every device the list reaches.
     var isPausely: Bool {
-        bundleIdentifier == "com.pausely.app.Pausely" || name.caseInsensitiveCompare("Pausely Pro") == .orderedSame
+        name.caseInsensitiveCompare(PaymentManager.ownName) == .orderedSame
     }
 }
 

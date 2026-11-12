@@ -89,16 +89,13 @@ struct AddSubscriptionIntent: AppIntent {
 
         let sub = Subscription(
             name: name,
-            bundleIdentifier: nil,
-            description: nil,
             category: SubscriptionCategory.other.rawValue,
             amount: MoneyFormat.decimal(monthlyCost),
             currency: CurrencyManager.shared.selectedCurrency,
             billingFrequency: .monthly,
             // No renewal date was given, so none is made up: Home asks "When does it renew?".
             nextBillingDate: nil,
-            status: .active,
-            isDetected: false
+            status: .active
         )
 
         try await store.addSubscription(sub)

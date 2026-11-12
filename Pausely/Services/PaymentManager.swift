@@ -156,23 +156,22 @@ final class PaymentManager: ObservableObject {
     // MARK: - Pausely's own line in the list
 
     private let pauselyProAutoAddedKey = "pausely_pro_auto_added"
-    static let ownBundleIdentifier = "com.pausely.app.Pausely"
+    /// The name of Pausely's own line in the list.
+    nonisolated static let ownName = "Pausely Pro"
 
     /// Pausely Pro as a line in the person's own list, so the app watches its own cost like any other.
     /// Everything on it is the App Store's: the price and currency for this storefront, whether the
     /// free trial is running, and the day it next charges.
     static func pauselyLine(_ own: StoreKitManager.OwnSubscription) -> Subscription {
         Subscription(
-            name: "Pausely Pro",
-            bundleIdentifier: ownBundleIdentifier,
+            name: ownName,
             category: SubscriptionCategory.productivity.rawValue,
             amount: own.price,
             currency: own.currency,
             billingFrequency: own.tier == .proAnnual ? .yearly : .monthly,
             nextBillingDate: own.renews,
             trialEndsAt: own.isTrial ? own.renews : nil,
-            status: own.isTrial ? .trial : .active,
-            isDetected: true
+            status: own.isTrial ? .trial : .active
         )
     }
 
@@ -196,7 +195,7 @@ final class PaymentManager: ObservableObject {
         let store = SubscriptionStore.shared
         guard let own = await StoreKitManager.shared.ownSubscription(for: currentTier) else { return }
 
-        if let existing = store.subscriptions.first(where: { $0.bundleIdentifier == Self.ownBundleIdentifier }) {
+        if let existing = store.subscriptions.first(where: \.isPausely) {
             if let fixed = Self.corrected(existing, to: own) { await store.updateSubscription(fixed) }
             UserDefaults.standard.set(true, forKey: pauselyProAutoAddedKey)
             return

@@ -47,7 +47,6 @@ final class SubscriptionSyncTests: XCTestCase {
         XCTAssertEqual(sub.nextBillingDate, Calendar.billing.date(from: DateComponents(year: 2026, month: 11, day: 20, hour: 12)))
         XCTAssertEqual(sub.createdAt.timeIntervalSince1970, day("2026-03-04T17:30:00Z").timeIntervalSince1970 + 0.123, accuracy: 0.001,
                        "the creation date must not reset to now on every fetch")
-        XCTAssertEqual(sub.updatedAt.timeIntervalSince1970, day("2026-10-01T09:15:42Z").timeIntervalSince1970 + 0.5, accuracy: 0.001)
     }
 
     func testARoundTripKeepsEverythingTheServerStores() throws {
@@ -122,15 +121,28 @@ final class SubscriptionSyncTests: XCTestCase {
         XCTAssertEqual(merge.backfill.map(\.id), [mine.id])
     }
 
-    func testWhatOnlyThisIPhoneStoresSurvivesAFetch() {
-        var mine = TestFactories.makeSubscription(name: "Pausely Pro")
-        mine.bundleIdentifier = "com.pausely.app.Pausely"
+    /// Pausely's own line used to be known by a mark only the phone that added it held, so on a second
+    /// device it was an ordinary row and its price was never brought in step with the App Store. It is
+    /// known by its name now, which every device has.
+    func testPauselysOwnLineIsStillKnownAfterAFetch() throws {
+        let mine = TestFactories.makeSubscription(name: "Pausely Pro")
         var theirs = mine
-        theirs.bundleIdentifier = nil
         theirs.amount = 12.99   // changed on another device
         let merged = SubscriptionSyncMerge.merge(server: [theirs], local: [mine], pending: [:], firstSyncForUser: false).subscriptions
         XCTAssertEqual(merged.first?.amount, 12.99, "the server's change comes through")
-        XCTAssertEqual(merged.first?.bundleIdentifier, "com.pausely.app.Pausely")
+        XCTAssertEqual(merged.first?.isPausely, true)
+
+        // As it arrives on a device that never added it: straight from a row of the table.
+        let arrived = try JSONDecoder().decode(SubscriptionRecord.self, from: JSONEncoder().encode(SubscriptionRecord(from: mine))).toSubscription()
+        XCTAssertTrue(arrived.isPausely)
+        XCTAssertFalse(TestFactories.makeSubscription(name: "Pausely Pro Max").isPausely)
+    }
+
+    /// The app has eleven fields and sends those. Columns earlier versions filled are left as they are.
+    func testOnlyTheFieldsTheAppHasAreSent() throws {
+        let sent = try json(SubscriptionRecord(from: TestFactories.makeSubscription(name: "Netflix")))
+        XCTAssertEqual(sent.keys.sorted(), ["amount", "billing_frequency", "category", "currency", "id", "name",
+                                            "next_billing_date", "notify_before_days", "status", "trial_ends_at"])
     }
 
     // MARK: Pro

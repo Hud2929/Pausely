@@ -1,92 +1,54 @@
 import Foundation
-import SwiftUI
 
 struct Subscription: Identifiable, Codable, Equatable {
     var id: UUID
-    var userId: UUID?
     var name: String
-    var bundleIdentifier: String?  // Bundle ID for Screen Time tracking
-    var description: String?
-    var logoUrl: String?
     var category: String?
     var amount: Decimal
     var currency: String
     var billingFrequency: BillingFrequency
     /// The renewal anchor: a day, not a moment (`BillingDay`).
     @SavedDay var nextBillingDate: Date?
-    var monthlyUsageMinutes: Int
-    var costPerHour: Decimal?
-    var roiScore: Decimal?
-    var wasteScore: Decimal?  // NEW: 0.0 = total waste, 1.0 = great value
-    var notifyBeforeDays: Int  // NEW: Days before renewal to notify
+    /// Days before a renewal to remind. 0 means no reminder.
+    var notifyBeforeDays: Int
     /// The last day of a free trial: a day, not a moment.
     @SavedDay var trialEndsAt: Date?
     var status: SubscriptionStatus
-    var isDetected: Bool
-    var canPause: Bool
-    var pauseUrl: String?
     var createdAt: Date
-    var updatedAt: Date
 
-
-    // MARK: - Coding Keys
+    // Every field here is read by a screen, the renewal engine or the export
+    // (`SubscriptionFieldTests`). A copy saved by an earlier version holds more; the rest is ignored.
     enum CodingKeys: String, CodingKey {
-        case id, userId, name, bundleIdentifier, description, logoUrl, category, amount, currency
-        case billingFrequency, nextBillingDate, monthlyUsageMinutes, costPerHour
-        case roiScore, wasteScore, notifyBeforeDays, trialEndsAt, status, isDetected, canPause, pauseUrl
-        case createdAt, updatedAt
+        case id, name, category, amount, currency, billingFrequency, nextBillingDate
+        case notifyBeforeDays, trialEndsAt, status, createdAt
     }
-    
+
     // MARK: - Initializers
 
     init(
         id: UUID = UUID(),
-        userId: UUID? = nil,
         name: String,
-        bundleIdentifier: String? = nil,
-        description: String? = nil,
-        logoUrl: String? = nil,
         category: String? = nil,
         amount: Decimal,
         currency: String = CurrencyManager.shared.selectedCurrency,  // what the user pays in, unless told otherwise
         billingFrequency: BillingFrequency = .monthly,
         nextBillingDate: Date? = nil,
-        monthlyUsageMinutes: Int = 0,
-        costPerHour: Decimal? = nil,
-        roiScore: Decimal? = nil,
-        wasteScore: Decimal? = nil,
         notifyBeforeDays: Int = 3,
         trialEndsAt: Date? = nil,
         status: SubscriptionStatus = .active,
-        isDetected: Bool = false,
-        canPause: Bool = true,
-        pauseUrl: String? = nil,
-        createdAt: Date = Date(),
-        updatedAt: Date = Date()
+        createdAt: Date = Date()
     ) {
         self.id = id
-        self.userId = userId
         self.name = name
-        self.bundleIdentifier = bundleIdentifier
-        self.description = description
-        self.logoUrl = logoUrl
         self.category = category
         self.amount = amount
         self.currency = currency
         self.billingFrequency = billingFrequency
         self.nextBillingDate = nextBillingDate
-        self.monthlyUsageMinutes = monthlyUsageMinutes
-        self.costPerHour = costPerHour
-        self.roiScore = roiScore
-        self.wasteScore = wasteScore
         self.notifyBeforeDays = notifyBeforeDays
         self.trialEndsAt = trialEndsAt
         self.status = status
-        self.isDetected = isDetected
-        self.canPause = canPause
-        self.pauseUrl = pauseUrl
         self.createdAt = createdAt
-        self.updatedAt = updatedAt
     }
 
     init(name: String, price: Double, category: String, billingFrequency: BillingFrequency = .monthly) {

@@ -69,51 +69,34 @@ class SupabaseManager: ObservableObject {
 
 // MARK: - Subscription Record
 
+/// A subscription as the `subscriptions` table holds it: the fields the app has, nothing more. The
+/// table still has columns from earlier versions; they are neither sent nor read.
 struct SubscriptionRecord: Codable {
     var id: UUID?
     var user_id: UUID?
     var name: String
-    var description: String?
-    var logo_url: String?
     var category: String?
     var amount: Decimal
     var currency: String
     var billing_frequency: String
     var next_billing_date: String?
-    var monthly_usage_minutes: Int
-    var cost_per_hour: Decimal?
-    var roi_score: Decimal?
-    var waste_score: Decimal?
     var notify_before_days: Int?
     var trial_ends_at: String?
     var status: String
-    var is_detected: Bool
-    var can_pause: Bool
-    var pause_url: String?
     var created_at: String?
-    var updated_at: String?
-    
+
     init(from subscription: Subscription) {
         self.id = subscription.id
         self.name = subscription.name
-        self.description = subscription.description
-        self.logo_url = subscription.logoUrl
         self.category = subscription.category
         self.amount = subscription.amount
         self.currency = subscription.currency
         self.billing_frequency = subscription.billingFrequency.rawValue
-        self.monthly_usage_minutes = subscription.monthlyUsageMinutes
-        self.cost_per_hour = subscription.costPerHour
-        self.roi_score = subscription.roiScore
-        self.waste_score = subscription.wasteScore
         self.notify_before_days = subscription.notifyBeforeDays
         // Days go up in their saved form: noon UTC on the day, the same day wherever it is read.
         self.trial_ends_at = subscription.trialEndsAt.map { BillingDay.stored($0).iso8601String }
         self.next_billing_date = subscription.nextBillingDate.map { BillingDay.stored($0).iso8601String }
         self.status = subscription.status.rawValue
-        self.is_detected = subscription.isDetected
-        self.can_pause = subscription.canPause
-        self.pause_url = subscription.pauseUrl
     }
 
     /// Dates that can be cleared are always sent, as null when empty, so clearing one on this iPhone
@@ -123,27 +106,17 @@ struct SubscriptionRecord: Codable {
         try c.encodeIfPresent(id, forKey: .id)
         try c.encodeIfPresent(user_id, forKey: .user_id)
         try c.encode(name, forKey: .name)
-        try c.encodeIfPresent(description, forKey: .description)
-        try c.encodeIfPresent(logo_url, forKey: .logo_url)
         try c.encodeIfPresent(category, forKey: .category)
         try c.encode(amount, forKey: .amount)
         try c.encode(currency, forKey: .currency)
         try c.encode(billing_frequency, forKey: .billing_frequency)
         try c.encode(next_billing_date, forKey: .next_billing_date)
-        try c.encode(monthly_usage_minutes, forKey: .monthly_usage_minutes)
-        try c.encodeIfPresent(cost_per_hour, forKey: .cost_per_hour)
-        try c.encodeIfPresent(roi_score, forKey: .roi_score)
-        try c.encodeIfPresent(waste_score, forKey: .waste_score)
         try c.encodeIfPresent(notify_before_days, forKey: .notify_before_days)
         try c.encode(trial_ends_at, forKey: .trial_ends_at)
         try c.encode(status, forKey: .status)
-        try c.encode(is_detected, forKey: .is_detected)
-        try c.encode(can_pause, forKey: .can_pause)
-        try c.encodeIfPresent(pause_url, forKey: .pause_url)
         try c.encodeIfPresent(created_at, forKey: .created_at)
-        try c.encodeIfPresent(updated_at, forKey: .updated_at)
     }
-    
+
     /// True when a day in this row was saved by an earlier version (as noon where it was typed). Read on
     /// the phone it was typed on it is right; sent back once in the saved form, it is right everywhere.
     var hasADayInTheOldForm: Bool {
@@ -154,31 +127,19 @@ struct SubscriptionRecord: Codable {
     }
 
     func toSubscription() -> Subscription {
-        var sub = Subscription(
+        Subscription(
+            id: id ?? UUID(),
             name: name,
-            price: Double(truncating: amount as NSNumber),
             category: category ?? "Other",
-            billingFrequency: BillingFrequency(rawValue: billing_frequency) ?? .monthly
+            amount: amount,
+            currency: currency,
+            billingFrequency: BillingFrequency(rawValue: billing_frequency) ?? .monthly,
+            nextBillingDate: next_billing_date?.iso8601Date.map { BillingDay.local(fromStored: $0) },
+            notifyBeforeDays: notify_before_days ?? 3,
+            trialEndsAt: trial_ends_at?.iso8601Date.map { BillingDay.local(fromStored: $0) },
+            status: SubscriptionStatus(rawValue: status) ?? .active,
+            createdAt: created_at?.iso8601Date ?? Date()
         )
-        sub.id = id ?? UUID()
-        sub.description = description
-        sub.logoUrl = logo_url
-        sub.amount = amount
-        sub.currency = currency
-        sub.monthlyUsageMinutes = monthly_usage_minutes
-        sub.costPerHour = cost_per_hour
-        sub.roiScore = roi_score
-        sub.wasteScore = waste_score
-        sub.notifyBeforeDays = notify_before_days ?? 3
-        sub.trialEndsAt = trial_ends_at?.iso8601Date.map { BillingDay.local(fromStored: $0) }
-        sub.nextBillingDate = next_billing_date?.iso8601Date.map { BillingDay.local(fromStored: $0) }
-        sub.status = SubscriptionStatus(rawValue: status) ?? .active
-        sub.isDetected = is_detected
-        sub.canPause = can_pause
-        sub.pauseUrl = pause_url
-        sub.createdAt = created_at?.iso8601Date ?? Date()
-        sub.updatedAt = updated_at?.iso8601Date ?? Date()
-        return sub
     }
 }
 

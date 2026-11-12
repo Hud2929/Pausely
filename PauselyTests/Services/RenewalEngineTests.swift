@@ -180,14 +180,14 @@ final class RenewalEngineTests: XCTestCase {
     func testAnEndedTrialRenewsFromTheDayItEndedUnlessADateWasSet() {
         var trial = TestFactories.makeSubscription(name: "Crave", status: .trial, nextBillingDate: nil)
         trial.trialEndsAt = day(2026, 11, 5)
-        let active = SubscriptionLifecycle.afterTrial(trial, endedOn: day(2026, 11, 5), now: day(2026, 11, 6))
+        let active = SubscriptionLifecycle.afterTrial(trial, endedOn: day(2026, 11, 5))
         XCTAssertEqual(active.status, .active)
         XCTAssertEqual(active.nextBillingDate, day(2026, 11, 5))
         XCTAssertEqual(active.nextRenewal(onOrAfter: day(2026, 11, 6), calendar: cal).map { ReminderPlanner.dayStamp($0, cal) }, "2026-12-05")
 
         var dated = trial
         dated.nextBillingDate = day(2026, 11, 20)
-        XCTAssertEqual(SubscriptionLifecycle.afterTrial(dated, endedOn: day(2026, 11, 5), now: day(2026, 11, 6)).nextBillingDate, day(2026, 11, 20))
+        XCTAssertEqual(SubscriptionLifecycle.afterTrial(dated, endedOn: day(2026, 11, 5)).nextBillingDate, day(2026, 11, 20))
     }
 
     func testFirstRunDoesNotBackfill() {

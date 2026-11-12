@@ -123,8 +123,7 @@ final class SubscriptionStoreTests: XCTestCase {
     /// What came back from the server used to replace the subscription, and the server doesn't store
     /// everything: the app it belongs to was gone the moment it synced.
     func testAnAddThatReachesTheAccountKeepsWhatOnlyThisIPhoneKnows() async throws {
-        var sub = TestFactories.makeSubscription(name: "Pausely Pro")
-        sub.bundleIdentifier = "com.pausely.app.Pausely"
+        let sub = TestFactories.makeSubscription(name: "Pausely Pro")
         account.canSend = true
         store.lastErrorMessage = nil
         let reached = try await store.addSubscription(sub)

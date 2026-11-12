@@ -14,10 +14,8 @@ enum TestFactories {
         billingFrequency: BillingFrequency = .monthly,
         status: SubscriptionStatus = .active,
         nextBillingDate: Date? = nil,
-        monthlyUsageMinutes: Int = 120,
         category: String = "Entertainment",
-        createdAt: Date = Date(timeIntervalSince1970: 1_700_000_000),
-        canPause: Bool = true
+        createdAt: Date = Date(timeIntervalSince1970: 1_700_000_000)
     ) -> Subscription {
         Subscription(
             id: id,
@@ -27,11 +25,8 @@ enum TestFactories {
             currency: currency,
             billingFrequency: billingFrequency,
             nextBillingDate: nextBillingDate,
-            monthlyUsageMinutes: monthlyUsageMinutes,
             status: status,
-            canPause: canPause,
-            createdAt: createdAt,
-            updatedAt: createdAt
+            createdAt: createdAt
         )
     }
 

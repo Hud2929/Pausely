@@ -115,8 +115,7 @@ struct TallyLine: Codable, Equatable, Identifiable {
         let inTrial = trialEndsAt.map { $0 > now } ?? false
         return Subscription(name: name, category: category, amount: amount, currency: currency,
                             billingFrequency: frequency ?? .monthly, nextBillingDate: anchor ?? (inTrial ? trialEndsAt : nil),
-                            trialEndsAt: inTrial ? trialEndsAt : nil, status: inTrial ? .trial : .active,
-                            isDetected: anchor != nil || trialEndsAt != nil)
+                            trialEndsAt: inTrial ? trialEndsAt : nil, status: inTrial ? .trial : .active)
     }
 }
 

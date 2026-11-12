@@ -174,7 +174,6 @@ final class MailImportTests: XCTestCase {
         XCTAssertEqual(Calendar.current.dateComponents([.month, .day], from: march), DateComponents(month: 3, day: 31))
         let february = try XCTUnwrap(subscription.nextRenewal(onOrAfter: day(2026, 2, 10)))
         XCTAssertEqual(Calendar.current.dateComponents([.month, .day], from: february), DateComponents(month: 2, day: 28))
-        XCTAssertTrue(subscription.isDetected)
         XCTAssertEqual(subscription.status, .active)
     }
 
