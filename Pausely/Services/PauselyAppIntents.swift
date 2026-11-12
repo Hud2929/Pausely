@@ -9,6 +9,7 @@ struct GetMonthlySpendIntent: AppIntent {
 
     @MainActor
     func perform() async throws -> some IntentResult & ReturnsValue<String> {
+        try ShortcutProblem.requireSignedIn()
         let store = SubscriptionStore.shared
         let formatted = MoneyFormat.total(store.totalMonthlySpend, CurrencyManager.shared.selectedCurrency,
                                           converted: store.totalIsConverted)
@@ -27,6 +28,7 @@ struct GetUpcomingRenewalsIntent: AppIntent {
 
     @MainActor
     func perform() async throws -> some IntentResult & ReturnsValue<String> {
+        try ShortcutProblem.requireSignedIn()
         let store = SubscriptionStore.shared
         let calendar = Calendar.current
         let cutoff = calendar.date(byAdding: .day, value: daysAhead, to: Date()) ?? Date()
@@ -60,6 +62,7 @@ struct GetSubscriptionCountIntent: AppIntent {
 
     @MainActor
     func perform() async throws -> some IntentResult & ReturnsValue<String> {
+        try ShortcutProblem.requireSignedIn()
         let store = SubscriptionStore.shared
         let active = store.activeSubscriptions.count
         let total = store.subscriptions.count
@@ -81,6 +84,7 @@ struct AddSubscriptionIntent: AppIntent {
 
     @MainActor
     func perform() async throws -> some IntentResult & ReturnsValue<String> {
+        try ShortcutProblem.requireSignedIn()
         let store = SubscriptionStore.shared
 
         let sub = Subscription(
@@ -115,6 +119,7 @@ struct GetSubscriptionDetailIntent: AppIntent {
 
     @MainActor
     func perform() async throws -> some IntentResult & ReturnsValue<String> {
+        try ShortcutProblem.requireSignedIn()
         let store = SubscriptionStore.shared
 
         let sub: Subscription
@@ -147,6 +152,7 @@ struct DeleteSubscriptionIntent: AppIntent {
 
     @MainActor
     func perform() async throws -> some IntentResult & ReturnsValue<String> {
+        try ShortcutProblem.requireSignedIn()
         let store = SubscriptionStore.shared
 
         // Removing is not undone, so the name has to mean exactly one subscription.
@@ -157,6 +163,25 @@ struct DeleteSubscriptionIntent: AppIntent {
         case let other:
             return .result(value: other.problem(for: name))
         }
+    }
+}
+
+// MARK: - Who a Shortcut answers
+
+/// Shortcuts answer only for the person signed in on this iPhone. Signed out, the list is out of
+/// memory (`SubscriptionStore.hideList`), so an answer would be wrong and an add would be lost.
+enum ShortcutProblem: Error, CustomLocalizedStringResourceConvertible {
+    case signedOut
+
+    var localizedStringResource: LocalizedStringResource {
+        "Open Pausely and sign in first."
+    }
+
+    @MainActor static var isSignedIn: () -> Bool = { RevolutionaryAuthManager.shared.isAuthenticated }
+
+    @MainActor
+    static func requireSignedIn() throws {
+        guard isSignedIn() else { throw ShortcutProblem.signedOut }
     }
 }
 

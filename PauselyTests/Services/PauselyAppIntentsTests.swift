@@ -7,13 +7,46 @@ final class PauselyAppIntentsTests: XCTestCase {
 
     private var sandbox: StoreSandbox!
 
+    private var signedInCheck: (() -> Bool)!
+
     override func setUp() async throws {
         sandbox = StoreSandbox()   // an empty list, offline, put back afterwards
+        signedInCheck = ShortcutProblem.isSignedIn
+        ShortcutProblem.isSignedIn = { true }
     }
 
     override func tearDown() async throws {
+        ShortcutProblem.isSignedIn = signedInCheck
         await sandbox.restore()
         sandbox = nil
+    }
+
+    // MARK: - Signed out
+
+    /// Signed out, the list is out of memory: a Shortcut neither answers from an empty list nor adds
+    /// to it. It says to sign in.
+    func testSignedOutEveryShortcutSaysToSignIn() async throws {
+        ShortcutProblem.isSignedIn = { false }
+        func refused(_ run: () async throws -> Void) async -> Bool {
+            do { try await run() } catch ShortcutProblem.signedOut { return true } catch { return false }
+            return false
+        }
+        let add = AddSubscriptionIntent()
+        add.name = "Netflix"
+        add.monthlyCost = 15.49
+        let detail = GetSubscriptionDetailIntent()
+        detail.name = "Netflix"
+        let delete = DeleteSubscriptionIntent()
+        delete.name = "Netflix"
+
+        let spend = await refused { _ = try await GetMonthlySpendIntent().perform() }
+        let renewals = await refused { _ = try await GetUpcomingRenewalsIntent().perform() }
+        let count = await refused { _ = try await GetSubscriptionCountIntent().perform() }
+        let added = await refused { _ = try await add.perform() }
+        let detailed = await refused { _ = try await detail.perform() }
+        let deleted = await refused { _ = try await delete.perform() }
+        XCTAssertEqual([spend, renewals, count, added, detailed, deleted], [true, true, true, true, true, true])
+        XCTAssertEqual(SubscriptionStore.shared.subscriptions, [])
     }
 
     // MARK: - GetMonthlySpendIntent

@@ -133,8 +133,18 @@ final class LocalDataGuardTests: XCTestCase {
         XCTAssertEqual(AppSettings.shared.cachedSubscriptions, saved, "The copy on the iPhone waits for the same person to sign back in")
         XCTAssertEqual(WidgetDataStore.shared.readSummary().activeCount, 0)
 
+        // A Shortcut can still try to add. It is refused, and the copy on the iPhone stays whole.
+        do {
+            _ = try await store.addSubscription(Subscription(name: "Spotify", amount: 11.99, billingFrequency: .monthly))
+            XCTFail("An add while signed out went through")
+        } catch {}
+        XCTAssertEqual(store.subscriptions, [])
+        XCTAssertEqual(AppSettings.shared.cachedSubscriptions, saved)
+
         store.showList()
         XCTAssertEqual(store.subscriptions.map(\.name), ["Netflix"])
+        _ = try await store.addSubscription(Subscription(name: "Spotify", amount: 11.99, billingFrequency: .monthly))
+        XCTAssertEqual(store.subscriptions.map(\.name), ["Spotify", "Netflix"])
         await sandbox.restore()
     }
 

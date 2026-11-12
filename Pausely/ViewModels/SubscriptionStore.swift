@@ -191,6 +191,9 @@ class SubscriptionStore: ObservableObject {
     /// stop an add is a refusal, like the free tier's limit.
     @discardableResult
     func addSubscription(_ subscription: Subscription) async throws -> Bool {
+        // Signed out, the list is out of memory and its copy on the iPhone waits for its owner. An add
+        // now (a Shortcut can try) would save a list of one over that copy.
+        guard !isHidden else { throw SyncFailure.signedOut }
         if PaymentManager.shared.hasReachedSubscriptionLimit(currentCount: subscriptions.count) {
             throw SubscriptionLimitError.freeTierLimitReached
         }
@@ -277,9 +280,13 @@ class SubscriptionStore: ObservableObject {
         lastFetchDate = nil
     }
 
+    /// True between signing out and signing in again.
+    private(set) var isHidden = false
+
     /// Signed out: the list leaves memory, the widgets and Spotlight. The copy kept on the iPhone and
     /// the changes still waiting to be sent stay, for when the same person signs back in.
     func hideList() {
+        isHidden = true
         subscriptions = []
         calculateTotals()
         WidgetDataStore.shared.publish(subscriptions: [])
@@ -289,6 +296,7 @@ class SubscriptionStore: ObservableObject {
 
     /// Signed in again: the copy kept on the iPhone comes back before the server is asked.
     func showList() {
+        isHidden = false
         guard subscriptions.isEmpty else { return }
         loadFromCache()
         WidgetDataStore.shared.publish(subscriptions: subscriptions)
