@@ -24,14 +24,21 @@ differing() {
 
 if [ "${1:-}" = "--sync" ]; then
   for branch in gh-pages site-next; do
-    [ -z "$(differing "$branch")" ] && continue
     work=$(mktemp -d)
     git worktree add --quiet "$work" "$branch" || exit 1
+    if [ "$branch" = site-next ]; then
+      # site-next carries everything the publish branch has (so it can be published by a plain push)
+      # and keeps its own landing page.
+      git -C "$work" merge --quiet --no-commit --no-ff gh-pages >/dev/null 2>&1 || true
+      git -C "$work" checkout --quiet HEAD -- index.html
+    fi
     for page in $(pages_for "$branch"); do cp "pausely.pro/$page" "$work/$page"; done
     git -C "$work" add -A
-    git -C "$work" commit --quiet -m "Pages brought in line with pausely.pro/, where they are edited and held by WebsiteTruthTests"
+    if git -C "$work" rev-parse --verify --quiet MERGE_HEAD >/dev/null || ! git -C "$work" diff --cached --quiet; then
+      git -C "$work" commit --quiet -m "Pages brought in line with pausely.pro/, where they are edited and held by WebsiteTruthTests"
+      echo "$branch: committed locally, not pushed"
+    fi
     git worktree remove --force "$work"
-    echo "$branch: committed locally, not pushed"
   done
   exit 0
 fi

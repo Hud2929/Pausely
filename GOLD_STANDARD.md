@@ -269,7 +269,7 @@ Updated at every commit, so the work can be picked up from this file alone.
   its three copies (the folder, the live branch, the next-site branch), as local commits only.
 - D5, the website: the policy pages, the waitlist page and its welcome email corrected to what the
   app does, `WebsiteTruthTests`, and the three copies brought in line as local commits (`gh-pages`
-  1f138ee, `site-next` b7a3d40; nothing pushed, nothing deployed). 727 tests, 0 failures;
+  and `site-next`, which now descends from it; nothing pushed, nothing deployed). 727 tests, 0 failures;
   `gold_check` 78. **D5 is done, and with it Stage D.** Next: Stage G (hygiene: `gold_check` to 0,
   the scan the other session never did, strict concurrency), then E, H, I.
 - Told by the other session at 22:04 (it has stood down and changed nothing): sections 2, 3, 4, 6, 7
@@ -606,8 +606,9 @@ two classes own StoreKit state; 7 Swift files over 700 lines; 17 hype names.
 - Deploy the waitlist function so the welcome email stops promising early access and perks:
   `supabase functions deploy waitlist-signup --project-ref ddaotwyaowspwspyddzs` (the rig passes
   on the new text; no secret changes).
-- When 1.0.3 is on the App Store: `site-next` holds the new landing page, already corrected;
-  publishing it is `git push origin site-next:gh-pages` after reading it.
+- When 1.0.3 is on the App Store: `site-next` holds the new landing page, already corrected, and
+  now contains everything on `gh-pages` (so it publishes by a plain push, no force):
+  `git push origin site-next:gh-pages` after reading it.
 - One native reader for each of Arabic, German, Spanish, French and Japanese (15 minutes each, the
   app in that language, eight screens). Every string has been read against its English and the
   terms made consistent (11-12), but whether a sentence sounds like a person wrote it is a native
