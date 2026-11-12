@@ -10,7 +10,7 @@ struct WhatsNewSheet: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
-            Text(displayVersion.isEmpty ? "What's New" : "What's New in \(displayVersion)")
+            Text(displayVersion.isEmpty ? "What's new" : "What's new in \(displayVersion)")
                 .font(.question(.title))
                 .foregroundStyle(Color.inkText)
                 .fixedSize(horizontal: false, vertical: true)

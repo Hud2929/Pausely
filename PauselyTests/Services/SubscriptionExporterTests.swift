@@ -52,7 +52,7 @@ final class SubscriptionExporterTests: XCTestCase {
         let lines = csv.split(separator: "\n").map(String.init)
 
         XCTAssertEqual(lines.count, 3)
-        XCTAssertEqual(lines[0], "Name,Category,Amount,Currency,Billing cycle,Status,Each month,Each year,Next payment,Tracking since")
+        XCTAssertEqual(lines[0], "Name,Category,Amount,Currency,Billing cycle,Status,Each month,Each year,Next renewal,Tracking since")
         XCTAssertEqual(lines[1], "Netflix,Entertainment,15.49,USD,Monthly,Active,15.49,185.88,2026-11-30,2026-01-03")
         XCTAssertEqual(lines[2], "\"'=HYPERLINK(\"\"x\"\")\",Music,1500,JPY,Yearly,Cancelled,125,1500,,2025-06-01")
 

@@ -107,7 +107,7 @@ struct SubscriptionBrowserView: View {
                     }
                     Spacer()
                     Button { showingCustomAdd = true } label: {
-                        Text("Custom")
+                        Text("Add your own")
                             .font(.subheadline.weight(.semibold))
                             .foregroundStyle(Color.inkText)
                             .padding(.horizontal, 14)
@@ -119,7 +119,7 @@ struct SubscriptionBrowserView: View {
                     .accessibilityIdentifier("customAddButton")
                 }
 
-                Text("Add Subscriptions")
+                Text("Add subscriptions")
                     .font(.question(.title))
                     .foregroundStyle(Color.inkText)
                     .fixedSize(horizontal: false, vertical: true)
@@ -282,7 +282,7 @@ struct SubscriptionBrowserView: View {
                 .font(.subheadline)
                 .foregroundStyle(Color.inkTextMuted)
                 .fixedSize(horizontal: false, vertical: true)
-            Button { showingCustomAdd = true } label: { Text("Add Custom") }
+            Button { showingCustomAdd = true } label: { Text("Add your own") }
                 .buttonStyle(.ink)
                 .padding(.top, 8)
         }

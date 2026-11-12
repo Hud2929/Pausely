@@ -141,10 +141,10 @@ enum BillingFrequency: String, Codable, CaseIterable, Identifiable {
     var displayName: String {
         switch self {
         case .weekly: return L10n.string("Weekly")
-        case .biweekly: return L10n.string("Every 2 Weeks")
+        case .biweekly: return L10n.string("Every 2 weeks")
         case .monthly: return L10n.string("Monthly")
-        case .quarterly: return L10n.string("Every 3 Months")
-        case .semiannual: return L10n.string("Every 6 Months")
+        case .quarterly: return L10n.string("Every 3 months")
+        case .semiannual: return L10n.string("Every 6 months")
         case .yearly: return L10n.string("Yearly")
         }
     }

@@ -11,7 +11,7 @@ struct PrivacySecurityView: View {
     @State private var showingTermsOfService = false
 
     var body: some View {
-        SettingsPage(title: "Privacy & Security") {
+        SettingsPage(title: "Privacy & security") {
             SettingsSection(title: "Your data") {
                 SettingsRow(title: L10n.string("Your subscription list"),
                             detail: L10n.string("Synced to Pausely's servers over an encrypted connection and encrypted at rest. Other accounts can't read it."))
@@ -25,7 +25,7 @@ struct PrivacySecurityView: View {
                             detail: L10n.string("Pausely has no ad or tracking SDKs and never sells your data."))
             }
 
-            SettingsSection(title: "The documents") {
+            SettingsSection(title: "Terms and privacy") {
                 Button { showingPrivacyPolicy = true } label: {
                     SettingsRow(title: L10n.string("Privacy Policy")) { RowChevron() }
                 }
@@ -40,7 +40,7 @@ struct PrivacySecurityView: View {
 
             SettingsSection(title: "Your account") {
                 Button { showingDeleteAccountConfirmation = true } label: {
-                    SettingsRow(title: L10n.string("Delete Account"),
+                    SettingsRow(title: L10n.string("Delete account"),
                                 detail: L10n.string("Permanently remove your account and all its data"), titleColor: .due) {
                         if isDeleting { ProgressView().tint(Color.inkText) }
                     }
@@ -48,7 +48,7 @@ struct PrivacySecurityView: View {
                 .buttonStyle(.plain)
                 .disabled(isDeleting)
                 .accessibilityIdentifier("deleteAccountButton")
-                .alert("Delete Account?", isPresented: $showingDeleteAccountConfirmation) {
+                .alert("Delete account?", isPresented: $showingDeleteAccountConfirmation) {
                     Button("Cancel", role: .cancel) {}
                     Button("Delete", role: .destructive) { Task { await deleteAccount() } }
                 } message: {

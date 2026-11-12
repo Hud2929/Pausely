@@ -50,7 +50,7 @@ final class SubscriptionExporter {
     static func csv(for subscriptions: [Subscription], now: Date = Date(), calendar: Calendar = .billing) -> String {
         let headings = [L10n.string("Name"), L10n.string("Category"), L10n.string("Amount"), L10n.string("Currency"),
                         L10n.string("Billing cycle"), L10n.string("Status"), L10n.string("Each month"), L10n.string("Each year"),
-                        L10n.string("Next payment"), L10n.string("Tracking since")]
+                        L10n.string("Next renewal"), L10n.string("Tracking since")]
         var lines = [headings.map(csvCell).joined(separator: ",")]
         for sub in subscriptions {
             // The next renewal, not the day that was typed in, which may be months ago.

@@ -199,7 +199,7 @@ struct RootView: View {
                     #endif
                 } else if isDemoScreen("--demo-age-gate") {
                     #if DEBUG
-                    AgeGateView(onPassed: {}, onCancel: {}, cancelTitle: "Sign Out")
+                    AgeGateView(onPassed: {}, onCancel: {}, cancelTitle: "Sign out")
                     #endif
                 } else if let screen = demoValue("--demo-settings") {
                     #if DEBUG
@@ -300,7 +300,7 @@ struct RootView: View {
                     AgeGateView(
                         onPassed: { Task { await ageConsent.recordConsent(userId: uid) } },
                         onCancel: { Task { await authManager.signOut() } },
-                        cancelTitle: "Sign Out"
+                        cancelTitle: "Sign out"
                     )
                     .transition(.opacity)
                 } else if isDemoMode || authManager.isAuthenticated {
@@ -526,7 +526,7 @@ struct PremiumWelcomeFlow: View {
     private var authWallButtons: some View {
         VStack(spacing: 0) {
             VStack(spacing: 10) {
-                Button(action: { showSignUp = true }) { Text("Get Started") }
+                Button(action: { showSignUp = true }) { Text("Get started") }
                     .buttonStyle(.ink)
                     .accessibilityIdentifier("getStartedButton")
                 Button(action: { showSignIn = true }) { Text("I already have an account") }

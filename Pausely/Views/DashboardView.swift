@@ -108,7 +108,7 @@ struct DashboardView: View {
                     .overlay(Circle().stroke(Color.white.opacity(0.18), lineWidth: 1))
                     .contentShape(Circle())
             }
-            .accessibilityLabel(Text("Add Subscription"))
+            .accessibilityLabel(Text("Add subscription"))
             .accessibilityIdentifier("homeAddButton")
         }
     }
@@ -333,7 +333,7 @@ private struct ReminderAskRow: View {
                      detail: denied
                         ? L10n.string("Turn on notifications for Pausely in Settings so renewals don't surprise you.")
                         : detail,
-                     action: denied ? L10n.string("Settings") : L10n.string("Turn on")) {
+                     action: denied ? L10n.string("Open Settings") : L10n.string("Turn on")) {
             if denied {
                 notifications.openSystemSettings()
             } else if !isAsking {
@@ -550,7 +550,7 @@ private struct HomeEmpty: View {
                 .foregroundStyle(Color.inkTextMuted)
                 .fixedSize(horizontal: false, vertical: true)
             VStack(spacing: 10) {
-                Button(action: onAdd) { Text("Add Subscription") }
+                Button(action: onAdd) { Text("Add subscription") }
                     .buttonStyle(.ink)
                     .accessibilityIdentifier("addSubscriptionButton")
                 if let onFindInEmail {

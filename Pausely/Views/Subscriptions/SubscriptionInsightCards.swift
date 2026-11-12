@@ -31,7 +31,7 @@ struct CancelTimingCard: View {
 
     private var adviceText: String {
         guard let next = subscription.calculatedNextBillingDate else {
-            return L10n.string("Add a payment date to see when to cancel.")
+            return L10n.string("Add its renewal date to see when to cancel.")
         }
         let day = next.formatted(.dateTime.month(.abbreviated).day().locale(L10n.locale))
         return L10n.string("Cancel any day before \(day) to avoid it.")
@@ -40,7 +40,7 @@ struct CancelTimingCard: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 10) {
             HStack(alignment: .firstTextBaseline) {
-                Text("Cancel Timing")
+                Text("When to cancel")
                     .font(.headline)
                     .foregroundStyle(Color.inkText)
                 Spacer(minLength: 8)
@@ -95,7 +95,7 @@ struct LifetimeCostCard: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
-            Text("Lifetime Cost")
+            Text("Cost over time")
                 .font(.headline)
                 .foregroundStyle(Color.inkText)
                 .padding(.bottom, 4)

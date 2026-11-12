@@ -101,7 +101,7 @@ struct NotificationsSettingsView: View {
                         }
                     }
                 } label: {
-                    status == .denied || notifications.isAuthorized ? Text("Settings") : Text("Turn on")
+                    status == .denied || notifications.isAuthorized ? Text("Open Settings") : Text("Turn on")
                 }
                 .buttonStyle(.ink)
                 .disabled(isAsking)

@@ -172,6 +172,49 @@ final class OneLocaleTests: XCTestCase {
         XCTAssertEqual(value("Home", "fr"), "Accueil")
     }
 
+    /// English labels are written the way the rest of the app talks: sentence case ("Try again", never
+    /// "Try Again"), with capitals kept for names. And the day a subscription renews has one name,
+    /// the renewal date; it used to be the "payment date" on three screens.
+    func testEnglishLabelsAreInSentenceCaseAndTheRenewalDateHasOneName() throws {
+        let root = URL(fileURLWithPath: #filePath)
+            .deletingLastPathComponent().deletingLastPathComponent().deletingLastPathComponent()
+        let url = root.appendingPathComponent("Pausely/Localizable.xcstrings")
+        try XCTSkipUnless(FileManager.default.fileExists(atPath: url.path), "Sources aren't readable from this test run")
+        let catalog = try XCTUnwrap(JSONSerialization.jsonObject(with: Data(contentsOf: url)) as? [String: Any])
+        let keys = try XCTUnwrap(catalog["strings"] as? [String: Any]).keys
+
+        XCTAssertEqual(keys.filter { Self.isInTitleCase($0) }.sorted(), [])
+        XCTAssertEqual(keys.filter { $0.localizedCaseInsensitiveContains("payment date") }.sorted(), [])
+        XCTAssertEqual(keys.filter { $0 == "Custom" || $0 == "Add Custom" }.sorted(), [], "it is \"Add your own\"")
+
+        // The rule itself.
+        XCTAssertTrue(Self.isInTitleCase("Try Again"))
+        XCTAssertTrue(Self.isInTitleCase("Open Cancellation Page"))
+        XCTAssertFalse(Self.isInTitleCase("Try again"))
+        XCTAssertFalse(Self.isInTitleCase("See your Savings Receipt"))
+        XCTAssertFalse(Self.isInTitleCase("Start Pause Plan with Pro"))
+    }
+
+    /// A label (no sentence punctuation) with a capitalised word after its first that isn't a name.
+    private static func isInTitleCase(_ key: String) -> Bool {
+        // The Shortcuts app titles its actions and their fields in title case; these appear only there.
+        let shortcutTitles: Set = ["Add Subscription", "Get Monthly Spend", "Get Upcoming Renewals",
+                                   "Get Subscription Detail", "Days Ahead", "Monthly Cost", "Subscription Name"]
+        guard !shortcutTitles.contains(key), key.rangeOfCharacter(from: CharacterSet(charactersIn: ".,:")) == nil else { return false }
+        var label = key
+        for name in ["Pausely Pro", "Pause Plan", "Savings Receipt", "Pausely Promise", "Find in Email", "Privacy Policy",
+                     "Terms of Service", "App Store", "Apple Account", "Screen Time"] {
+            label = label.replacingOccurrences(of: name, with: " ")
+        }
+        let names: Set = ["Pausely", "Apple", "Google", "Microsoft", "Gmail", "Outlook", "IMAP", "Pro", "OK", "AI", "GMX",
+                          "WEB.DE", "Zoho", "Fastmail", "Netflix", "Spotify", "iPhone", "I", "Home", "Subscriptions", "Settings"]
+        let words = label.split(whereSeparator: { !($0.isLetter || $0.isNumber || $0 == "'" || $0 == ".") }).map(String.init)
+        return words.dropFirst().contains { word in
+            guard let first = word.first else { return false }
+            return first.isUppercase && !names.contains(word)
+        }
+    }
+
     /// A sentence that opens with the "du" form of a command, not followed by "Sie". Words that are also
     /// nouns ("Suche", "Teile", "Stelle") are left out: a heading may open with them.
     private static let informalGermanCommand = "^(Tippe|Füge|Wähle|Gib|Öffne|Prüfe|Kündige|Behalte|Schau|Schaue|Sieh|Lies|Melde|Erstelle"

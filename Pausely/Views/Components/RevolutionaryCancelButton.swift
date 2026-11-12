@@ -142,10 +142,10 @@ struct CancelSubscriptionFlow: View {
 
     private var openLabel: String {
         switch help.kind {
-        case .appleSubscription: return L10n.string("Open Your Subscriptions")
-        case .cancellationPage: return L10n.string("Open Cancellation Page")
-        case .website: return L10n.string("Open Website")
-        case .search: return L10n.string("Search How to Cancel")
+        case .appleSubscription: return L10n.string("Open your subscriptions")
+        case .cancellationPage: return L10n.string("Open cancellation page")
+        case .website: return L10n.string("Open website")
+        case .search: return L10n.string("Search how to cancel")
         }
     }
 

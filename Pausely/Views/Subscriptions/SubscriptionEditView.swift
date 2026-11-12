@@ -86,8 +86,8 @@ struct SubscriptionEditView: View {
         .preferredColorScheme(.dark)
         .interactiveDismissDisabled(isDirty)
         .confirmationDialog("Discard your changes?", isPresented: $showDiscardConfirm, titleVisibility: .visible) {
-            Button("Discard Changes", role: .destructive) { dismiss() }
-            Button("Keep Editing", role: .cancel) {}
+            Button("Discard changes", role: .destructive) { dismiss() }
+            Button("Keep editing", role: .cancel) {}
         }
     }
 
@@ -195,8 +195,8 @@ struct SubscriptionEditView: View {
 
             divider
 
-            row("Next payment") {
-                OptionalDatePicker(title: L10n.string("Next payment"), date: $draft.nextBillingDate)
+            row("Next renewal") {
+                OptionalDatePicker(title: L10n.string("Next renewal"), date: $draft.nextBillingDate)
             }
 
             divider
@@ -252,7 +252,7 @@ struct SubscriptionEditView: View {
                     .foregroundStyle(Color.inkTextFaint)
             }
             if draft.reminderDays > 0 && draft.nextBillingDate == nil {
-                Text("Set a payment date to get reminders.")
+                Text("Add its renewal date to get reminders.")
                     .font(.footnote)
                     .foregroundStyle(Color.decide)
             }

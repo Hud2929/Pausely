@@ -81,8 +81,8 @@ struct CatalogAddSheet: View {
                             .tint(Color.inkText)
                         }
                         Hairline()
-                        row(L10n.string("Next payment")) {
-                            OptionalDatePicker(title: L10n.string("Next payment"), date: $nextBillingDate,
+                        row(L10n.string("Next renewal")) {
+                            OptionalDatePicker(title: L10n.string("Next renewal"), date: $nextBillingDate,
                                                earliest: Calendar.billing.startOfDay(for: Date()))
                         }
                         Hairline()

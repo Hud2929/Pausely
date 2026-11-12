@@ -40,7 +40,7 @@ struct PremiumProfileView: View {
                             value: inboxes.isEmpty ? nil : (inboxes.count == 1 ? inboxes[0].address : "\(inboxes.count)"),
                             id: "inboxImportButton") { sheet = .inbox }
                     }
-                    row("arrow.up.forward.app", L10n.string("Apple Subscriptions"), id: "importFromAppStoreButton", last: true) {
+                    row("arrow.up.forward.app", L10n.string("Apple subscriptions"), id: "importFromAppStoreButton", last: true) {
                         if let url = URL(string: "https://apps.apple.com/account/subscriptions") { openURL(url) }
                     }
                 }
@@ -55,19 +55,19 @@ struct PremiumProfileView: View {
                         id: "currencySettingsButton") { sheet = .currency }
                     row("globe", L10n.string("Language"), value: LanguageSettingsView.displayName(for: appLanguage),
                         id: "languageSettingsButton") { sheet = .language }
-                    row("square.and.arrow.up", L10n.string("Export Data"), id: "exportDataButton") { sheet = .export }
-                    row("lock", L10n.string("Privacy & Security"), id: "privacySecurityButton") { sheet = .privacy }
-                    row("questionmark.circle", L10n.string("Help & Support"), id: "helpSupportButton", last: true) { sheet = .help }
+                    row("square.and.arrow.up", L10n.string("Export your list"), id: "exportDataButton") { sheet = .export }
+                    row("lock", L10n.string("Privacy & security"), id: "privacySecurityButton") { sheet = .privacy }
+                    row("questionmark.circle", L10n.string("Help & support"), id: "helpSupportButton", last: true) { sheet = .help }
                 }
 
                 group(L10n.string("About")) {
-                    row("sparkles", L10n.string("What's New"), value: version, id: "whatsNewButton") { sheet = .whatsNew }
+                    row("sparkles", L10n.string("What's new"), value: version, id: "whatsNewButton") { sheet = .whatsNew }
                     row("doc.plaintext", L10n.string("Terms of Service"), id: "termsButton") { open(AppConfig.termsOfServiceURL) }
                     row("hand.raised", L10n.string("Privacy Policy"), id: "privacyPolicyButton", last: true) { open(AppConfig.privacyPolicyURL) }
                 }
 
                 Button { confirmSignOut = true } label: {
-                    Text("Sign Out")
+                    Text("Sign out")
                         .font(.body.weight(.semibold))
                         .foregroundStyle(Color.due)
                         .frame(maxWidth: .infinity, minHeight: Layout.tapTarget, alignment: .leading)
@@ -89,7 +89,7 @@ struct PremiumProfileView: View {
         .manageSubscriptionsSheet(isPresented: $managingPlan)
         .refundRequestSheet(for: plan?.transactionId ?? 0, isPresented: $requestingRefund)
         .confirmationDialog("Sign out of Pausely?", isPresented: $confirmSignOut, titleVisibility: .visible) {
-            Button("Sign Out", role: .destructive) { Task { await authManager.signOut() } }
+            Button("Sign out", role: .destructive) { Task { await authManager.signOut() } }
             Button("Cancel", role: .cancel) {}
         } message: {
             Text("Your data is saved and will be here when you return.")

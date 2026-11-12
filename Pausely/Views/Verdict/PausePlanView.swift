@@ -108,7 +108,7 @@ struct PausePlanView: View {
             .frame(maxWidth: .infinity)
         } else {
             VStack(alignment: .leading, spacing: 10) {
-                Text("ROTATE THESE")
+                Text("Rotate these")
                     .font(.caption.weight(.semibold))
                     .foregroundStyle(Color.inkTextFaint)
                 VStack(spacing: 0) {
@@ -282,7 +282,7 @@ struct PausePlanView: View {
 
     private func nowCard(_ sub: Subscription, until end: Date, next: Subscription?) -> some View {
         VStack(alignment: .leading, spacing: 10) {
-            Text("ON NOW")
+            Text("On now")
                 .font(.subheadline.weight(.semibold))
                 .foregroundStyle(Color.inkTextMuted)
             HStack(spacing: 12) {

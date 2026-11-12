@@ -12,7 +12,7 @@ struct DemoModeBanner: View {
         HStack {
             Image(systemName: "exclamationmark.triangle.fill")
                 .foregroundStyle(Color.decide)
-            Text("Demo Mode - Data is not being saved")
+            Text("Demo mode: nothing is saved")
                 .font(.caption)
                 .foregroundStyle(Color.decide)
             Spacer()

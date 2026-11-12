@@ -17,13 +17,13 @@ struct PaywallNotice: Equatable, Identifiable {
         case .purchased, .cancelled:
             return nil
         case .pending:
-            return PaywallNotice(title: L10n.string("Waiting for Approval"),
+            return PaywallNotice(title: L10n.string("Waiting for approval"),
                                  message: L10n.string("This purchase needs someone's approval first. Pausely Pro turns on by itself once it's approved."))
         case .unverified:
-            return PaywallNotice(title: L10n.string("Purchase Not Confirmed"),
-                                 message: L10n.string("The App Store couldn't confirm this purchase. If you were charged, tap Restore Purchases."))
+            return PaywallNotice(title: L10n.string("Purchase not confirmed"),
+                                 message: L10n.string("The App Store couldn't confirm this purchase. If you were charged, tap Restore purchases."))
         case .failed:
-            return PaywallNotice(title: L10n.string("The Purchase Didn't Go Through"),
+            return PaywallNotice(title: L10n.string("The purchase didn't go through"),
                                  message: L10n.string("The App Store didn't complete it. Check your connection and try again."),
                                  offersRetry: true)
         }
@@ -34,10 +34,10 @@ struct PaywallNotice: Equatable, Identifiable {
         case .restored, .cancelled:
             return nil
         case .nothingToRestore:
-            return PaywallNotice(title: L10n.string("Nothing to Restore"),
+            return PaywallNotice(title: L10n.string("Nothing to restore"),
                                  message: L10n.string("There's no Pausely Pro subscription on this Apple Account."))
         case .failed:
-            return PaywallNotice(title: L10n.string("Couldn't Restore"),
+            return PaywallNotice(title: L10n.string("Couldn't restore"),
                                  message: L10n.string("The App Store couldn't be reached. Try again in a moment."),
                                  offersRetry: true)
         }

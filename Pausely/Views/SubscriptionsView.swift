@@ -91,7 +91,7 @@ struct PremiumSubscriptionsView: View {
                     .overlay(Circle().stroke(Color.white.opacity(0.18), lineWidth: 1))
                     .contentShape(Circle())
             }
-            .accessibilityLabel(Text("Add Subscription"))
+            .accessibilityLabel(Text("Add subscription"))
             .accessibilityIdentifier("addSubscriptionButton")
         }
     }
@@ -222,7 +222,7 @@ struct PremiumSubscriptionsView: View {
                 .font(.body)
                 .foregroundStyle(Color.inkTextMuted)
                 .fixedSize(horizontal: false, vertical: true)
-            Button { activeSheet = .browser } label: { Text("Add Subscription") }
+            Button { activeSheet = .browser } label: { Text("Add subscription") }
                 .buttonStyle(.ink)
                 .padding(.top, 12)
         }

@@ -23,7 +23,7 @@ struct StoreKitUpgradeView: View {
     /// The plan has loaded and whether it starts free is not known yet.
     private var isCheckingOffer: Bool { selectedProduct != nil && trialAvailable == nil }
     @State private var notice: PaywallNotice?
-    /// What "Try Again" on a notice repeats.
+    /// What "Try again" on a notice repeats.
     @State private var lastAttempt: Attempt = .purchase
     @State private var showSuccessAlert = false
     @AccessibilityFocusState private var focusedElement: FocusElement?
@@ -227,7 +227,7 @@ struct StoreKitUpgradeView: View {
                presenting: notice) { shown in
             Button("OK", role: .cancel) {}
             if shown.offersRetry {
-                Button("Try Again") {
+                Button("Try again") {
                     Task { lastAttempt == .purchase ? await attemptPurchase() : await restorePurchases() }
                 }
             }
@@ -392,7 +392,7 @@ struct StoreKitUpgradeView: View {
                 if (storeManager.isLoading && selectedProduct != nil) || isCheckingOffer {
                     ProgressView().tint(Color.paperInk)
                 } else {
-                    Text(isTrialEnabled ? L10n.string("Start Free Trial") : L10n.string("Subscribe"))
+                    Text(isTrialEnabled ? L10n.string("Start free trial") : L10n.string("Subscribe"))
                 }
             }
             .buttonStyle(.ink)
@@ -434,7 +434,7 @@ struct StoreKitUpgradeView: View {
     }
 
     @ViewBuilder private var footerLinks: some View {
-        Button("Restore Purchases") { Task { await restorePurchases() } }
+        Button("Restore purchases") { Task { await restorePurchases() } }
         Button("Terms of Service") { open(AppConfig.termsOfServiceURL) }
         Button("Privacy Policy") { open(AppConfig.privacyPolicyURL) }
     }

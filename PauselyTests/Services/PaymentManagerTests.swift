@@ -132,23 +132,23 @@ final class PaymentManagerTests: XCTestCase {
     /// Each of these used to read "Purchase failed. Please try again." under "Purchase Error".
     func testEveryOtherOutcomeHasItsOwnWords() {
         let pending = PaywallNotice.after(StoreKitManager.PurchaseOutcome.pending)
-        XCTAssertEqual(pending?.title, L10n.string("Waiting for Approval"))
+        XCTAssertEqual(pending?.title, L10n.string("Waiting for approval"))
         XCTAssertEqual(pending?.offersRetry, false, "buying again would not help")
 
         let failed = PaywallNotice.after(StoreKitManager.PurchaseOutcome.failed)
-        XCTAssertEqual(failed?.title, L10n.string("The Purchase Didn't Go Through"))
+        XCTAssertEqual(failed?.title, L10n.string("The purchase didn't go through"))
         XCTAssertEqual(failed?.offersRetry, true)
 
         let unverified = PaywallNotice.after(StoreKitManager.PurchaseOutcome.unverified)
-        XCTAssertEqual(unverified?.message, L10n.string("The App Store couldn't confirm this purchase. If you were charged, tap Restore Purchases."))
+        XCTAssertEqual(unverified?.message, L10n.string("The App Store couldn't confirm this purchase. If you were charged, tap Restore purchases."))
 
         let nothing = PaywallNotice.after(StoreKitManager.RestoreOutcome.nothingToRestore)
-        XCTAssertEqual(nothing?.title, L10n.string("Nothing to Restore"))
+        XCTAssertEqual(nothing?.title, L10n.string("Nothing to restore"))
         XCTAssertEqual(nothing?.message, L10n.string("There's no Pausely Pro subscription on this Apple Account."))
         XCTAssertEqual(nothing?.offersRetry, false)
 
         let unreachable = PaywallNotice.after(StoreKitManager.RestoreOutcome.failed)
-        XCTAssertEqual(unreachable?.title, L10n.string("Couldn't Restore"))
+        XCTAssertEqual(unreachable?.title, L10n.string("Couldn't restore"))
         XCTAssertEqual(unreachable?.offersRetry, true)
 
         let titles = [pending, failed, unverified, nothing, unreachable].compactMap { $0?.title }

@@ -77,7 +77,7 @@ struct RenewalDatesSheet: View {
             }
             Spacer(minLength: 8)
             if let date = dates[subscription.id] {
-                DatePicker(L10n.string("Next payment"),
+                DatePicker(L10n.string("Next renewal"),
                            selection: Binding(get: { date }, set: { dates[subscription.id] = $0 }),
                            in: Calendar.billing.startOfDay(for: Date())..., displayedComponents: .date)
                     .labelsHidden()

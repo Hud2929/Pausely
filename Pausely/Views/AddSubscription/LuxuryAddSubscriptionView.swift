@@ -43,7 +43,7 @@ struct LuxuryAddSubscriptionView: View {
                         .focused($focusedField, equals: .name)
                         .submitLabel(.next)
                         .onSubmit { focusedField = .amount }
-                        .accessibilityLabel(Text("Service Name"))
+                        .accessibilityLabel(Text("Service name"))
                         .accessibilityIdentifier("serviceNameTextField")
 
                     VStack(alignment: .leading, spacing: 6) {
@@ -77,8 +77,8 @@ struct LuxuryAddSubscriptionView: View {
                             .tint(Color.inkText)
                         }
                         Hairline()
-                        row(L10n.string("Next payment")) {
-                            OptionalDatePicker(title: L10n.string("Next payment"), date: $nextPayment,
+                        row(L10n.string("Next renewal")) {
+                            OptionalDatePicker(title: L10n.string("Next renewal"), date: $nextPayment,
                                                earliest: Calendar.billing.startOfDay(for: Date()))
                                 .accessibilityIdentifier("nextPaymentPicker")
                         }
@@ -100,11 +100,11 @@ struct LuxuryAddSubscriptionView: View {
             }
             .scrollDismissesKeyboard(.interactively)
 
-            Button(action: saveSubscription) { Text("Add Subscription") }
+            Button(action: saveSubscription) { Text("Add subscription") }
                 .buttonStyle(.ink)
                 .disabled(name.isEmpty || amount.isEmpty)
                 .accessibilityIdentifier("addSubscriptionButton")
-                .accessibilityHint(name.isEmpty || amount.isEmpty ? "Please enter a service name and amount" : "")
+                .accessibilityHint(name.isEmpty || amount.isEmpty ? "Enter a name and an amount." : "")
                 .padding(.horizontal, Layout.margin)
                 .padding(.top, 12)
                 .padding(.bottom, 8)

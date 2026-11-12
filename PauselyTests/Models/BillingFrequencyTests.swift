@@ -8,10 +8,10 @@ final class BillingFrequencyTests: XCTestCase {
 
     func testDisplayNames() {
         XCTAssertEqual(BillingFrequency.weekly.displayName, "Weekly")
-        XCTAssertEqual(BillingFrequency.biweekly.displayName, "Every 2 Weeks")
+        XCTAssertEqual(BillingFrequency.biweekly.displayName, "Every 2 weeks")
         XCTAssertEqual(BillingFrequency.monthly.displayName, "Monthly")
-        XCTAssertEqual(BillingFrequency.quarterly.displayName, "Every 3 Months")
-        XCTAssertEqual(BillingFrequency.semiannual.displayName, "Every 6 Months")
+        XCTAssertEqual(BillingFrequency.quarterly.displayName, "Every 3 months")
+        XCTAssertEqual(BillingFrequency.semiannual.displayName, "Every 6 months")
         XCTAssertEqual(BillingFrequency.yearly.displayName, "Yearly")
     }
 

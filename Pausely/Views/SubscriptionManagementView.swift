@@ -125,7 +125,7 @@ struct SubscriptionManagementView: View {
 
             if current.nextBillingDate == nil, current.status == .active || current.status == .trial {
                 Button { route = .edit } label: {
-                    Text("Add a payment date").underline()
+                    Text("Add its renewal date").underline()
                         .font(.subheadline.weight(.semibold))
                         .foregroundStyle(Color.inkText)
                         .frame(minHeight: Layout.tapTarget, alignment: .leading)
@@ -179,7 +179,7 @@ struct SubscriptionManagementView: View {
         VStack(spacing: 0) {
             fact(L10n.string("Billing cycle"), current.billingFrequency.displayName)
             divider
-            fact(L10n.string("Next payment"), current.calculatedNextBillingDate.map { $0.formatted(.dateTime.month(.abbreviated).day().year().locale(L10n.locale)) } ?? L10n.string("Not set"))
+            fact(L10n.string("Next renewal"), current.calculatedNextBillingDate.map { $0.formatted(.dateTime.month(.abbreviated).day().year().locale(L10n.locale)) } ?? L10n.string("Not set"))
             divider
             fact(L10n.string("Category"), SubscriptionCategory.localizedLabel(for: current.category))
             divider

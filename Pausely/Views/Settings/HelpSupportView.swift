@@ -9,7 +9,7 @@ struct HelpSupportView: View {
     private var questions: [(question: String, answer: String)] {
         [
             (L10n.string("How do I add a subscription?"),
-             L10n.string("Tap + on Home, find the service or choose Custom, then enter what you pay and when it renews.")),
+             L10n.string("Tap + on Home, find the service or tap Add your own, then enter what you pay and when it renews.")),
             (L10n.string("How many subscriptions can I track for free?"),
              L10n.string("Up to \(FreeTier.subscriptionLimit). Pausely Pro removes the limit.")),
             (L10n.string("How do I stop a subscription I no longer want?"),
@@ -24,7 +24,7 @@ struct HelpSupportView: View {
     }
 
     var body: some View {
-        SettingsPage(title: "Help & Support") {
+        SettingsPage(title: "Help & support") {
             SettingsSection(title: "Common questions") {
                 ForEach(Array(questions.enumerated()), id: \.offset) { index, item in
                     Button {
