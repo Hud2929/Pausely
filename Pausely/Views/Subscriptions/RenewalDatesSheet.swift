@@ -86,8 +86,9 @@ struct RenewalDatesSheet: View {
             } else {
                 Button {
                     Feel.selection()
-                    // Start a month out: the most likely place for a monthly charge, and never in the past.
-                    dates[subscription.id] = Calendar.current.date(byAdding: .day, value: 14, to: Date()) ?? Date()
+                    // The picker opens on today, as "Set date" does everywhere else. It used to open two
+                    // weeks out: a plausible-looking guess that could be saved without anyone choosing it.
+                    dates[subscription.id] = Date()
                 } label: {
                     Text("Add date")
                         .font(.subheadline.weight(.semibold))

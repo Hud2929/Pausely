@@ -196,22 +196,7 @@ struct SubscriptionEditView: View {
             divider
 
             row("Next payment") {
-                if draft.nextBillingDate != nil {
-                    DatePicker("Next payment", selection: Binding(
-                        get: { draft.nextBillingDate ?? Date() },
-                        set: { draft.nextBillingDate = $0 }
-                    ), displayedComponents: .date)
-                    .labelsHidden()
-                    .tint(Color.inkText)
-                } else {
-                    Button {
-                        draft.nextBillingDate = Date()
-                    } label: {
-                        Text("Set date")
-                            .font(.body.weight(.semibold))
-                            .foregroundStyle(Color.inkText)
-                    }
-                }
+                OptionalDatePicker(title: L10n.string("Next payment"), date: $draft.nextBillingDate)
             }
 
             divider

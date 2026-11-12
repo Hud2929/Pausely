@@ -6,8 +6,8 @@ struct LuxuryAddSubscriptionView: View {
     @State private var amount = ""
     @State private var frequency: BillingFrequency = .monthly
     @State private var category: SubscriptionCategory = .other
-    @State private var nextPayment = LuxuryAddSubscriptionView.onePeriod(after: Date(), .monthly)
-    @State private var nextPaymentEdited = false
+    /// Nil until the person picks a day. A date is never filled in for them.
+    @State private var nextPayment: Date?
     @ObservedObject private var store = SubscriptionStore.shared
     @ObservedObject private var currencyManager = CurrencyManager.shared
     @FocusState private var focusedField: Field?
@@ -75,16 +75,11 @@ struct LuxuryAddSubscriptionView: View {
                             }
                             .pickerStyle(.menu)
                             .tint(Color.inkText)
-                            .onChange(of: frequency) { _, newValue in
-                                if !nextPaymentEdited { nextPayment = Self.onePeriod(after: Date(), newValue) }
-                            }
                         }
                         Hairline()
                         row(L10n.string("Next payment")) {
-                            DatePicker("Next payment", selection: Binding(get: { nextPayment }, set: { nextPayment = $0; nextPaymentEdited = true }),
-                                       in: Calendar.current.startOfDay(for: Date())..., displayedComponents: .date)
-                                .labelsHidden()
-                                .tint(Color.inkText)
+                            OptionalDatePicker(title: L10n.string("Next payment"), date: $nextPayment,
+                                               earliest: Calendar.current.startOfDay(for: Date()))
                                 .accessibilityIdentifier("nextPaymentPicker")
                         }
                         Hairline()
@@ -137,19 +132,6 @@ struct LuxuryAddSubscriptionView: View {
             content()
         }
         .frame(minHeight: 54)
-    }
-
-    static func onePeriod(after date: Date, _ frequency: BillingFrequency, calendar: Calendar = .current) -> Date {
-        let step: DateComponents
-        switch frequency {
-        case .weekly:     step = DateComponents(day: 7)
-        case .biweekly:   step = DateComponents(day: 14)
-        case .monthly:    step = DateComponents(month: 1)
-        case .quarterly:  step = DateComponents(month: 3)
-        case .semiannual: step = DateComponents(month: 6)
-        case .yearly:     step = DateComponents(year: 1)
-        }
-        return calendar.date(byAdding: step, to: date) ?? date
     }
 
     func saveSubscription() {

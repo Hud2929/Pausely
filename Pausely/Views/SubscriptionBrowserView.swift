@@ -307,7 +307,7 @@ struct SubscriptionBrowserView: View {
     }
 
     private func addSubscription(entry: CatalogEntry, tier: PricingTier, billingFrequency: BillingFrequency,
-                                  isOverridden: Bool, userPrice: Decimal?, nextBillingDate: Date, trialEndDate: Date?) {
+                                  isOverridden: Bool, userPrice: Decimal?, nextBillingDate: Date?, trialEndDate: Date?) {
         // The same price the tier sheet showed, in the currency it showed it in.
         let tierPricing = entry.pricing(for: tier, payingIn: currencyManager.selectedCurrency)
             ?? entry.defaultIndividualPricing

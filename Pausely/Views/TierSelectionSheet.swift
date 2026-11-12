@@ -10,7 +10,7 @@ import SwiftUI
 struct TierSelectionSheet: View {
     let entry: CatalogEntry
     /// Parameters: tier, billingFreq, isPriceOverridden, overridePrice, nextBillingDate, trialEndsAt
-    let onSelect: (PricingTier, BillingFrequency, Bool, Decimal?, Date, Date?) -> Void
+    let onSelect: (PricingTier, BillingFrequency, Bool, Decimal?, Date?, Date?) -> Void
 
     @Environment(\.dismiss) private var dismiss
     @ObservedObject private var currencyManager = CurrencyManager.shared
@@ -18,9 +18,10 @@ struct TierSelectionSheet: View {
     @State private var frequency: BillingFrequency = .monthly
     /// What the person typed. Empty means "the typical price is right".
     @State private var amountText = ""
-    @State private var nextBillingDate: Date = Calendar.current.date(byAdding: .month, value: 1, to: Date()) ?? Date()
+    /// Both nil until the person picks a day: a date is never filled in for them.
+    @State private var nextBillingDate: Date?
     @State private var hasFreeTrial = false
-    @State private var trialEndsAt: Date = Calendar.current.date(byAdding: .day, value: 14, to: Date()) ?? Date()
+    @State private var trialEndsAt: Date?
     @FocusState private var amountFocused: Bool
 
     // MARK: - Price
@@ -35,7 +36,8 @@ struct TierSelectionSheet: View {
 
     private var typed: Decimal? { SubscriptionEditDraft.parseAmount(amountText) }
     private var amount: Decimal? { amountText.isEmpty ? typical : typed }
-    private var canAdd: Bool { (amount ?? 0) > 0 }
+    /// A trial is tracked for the day it ends, so saying "I'm on a free trial" needs that day.
+    private var canAdd: Bool { (amount ?? 0) > 0 && (!hasFreeTrial || trialEndsAt != nil) }
     private var currency: String { currencyManager.selectedCurrency }
 
     // MARK: - Body
@@ -79,9 +81,8 @@ struct TierSelectionSheet: View {
                         }
                         Hairline()
                         row(L10n.string("Next payment")) {
-                            DatePicker(L10n.string("Next payment"), selection: $nextBillingDate, in: Date()..., displayedComponents: .date)
-                                .labelsHidden()
-                                .tint(Color.inkText)
+                            OptionalDatePicker(title: L10n.string("Next payment"), date: $nextBillingDate,
+                                               earliest: Calendar.current.startOfDay(for: Date()))
                         }
                         Hairline()
                         Toggle(isOn: $hasFreeTrial.animation(Motion.unlessReduced(Motion.touch))) {
@@ -94,9 +95,8 @@ struct TierSelectionSheet: View {
                         if hasFreeTrial {
                             Hairline()
                             row(L10n.string("Trial ends")) {
-                                DatePicker(L10n.string("Trial ends"), selection: $trialEndsAt, in: Date()..., displayedComponents: .date)
-                                    .labelsHidden()
-                                    .tint(Color.inkText)
+                                OptionalDatePicker(title: L10n.string("Trial ends"), date: $trialEndsAt,
+                                                   earliest: Calendar.current.startOfDay(for: Date()))
                             }
                         }
                     }
