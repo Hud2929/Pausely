@@ -1,3 +1,4 @@
+import StoreKit
 import SwiftUI
 
 /// Profile: who is signed in, which plan they are on, and every setting. One list, no cards.
@@ -11,6 +12,11 @@ struct PremiumProfileView: View {
 
     @State private var sheet: Sheet?
     @State private var confirmSignOut = false
+    /// Pausely Pro as the App Store states it, for someone paying through it. Nil for the free plan and
+    /// for Pro given on the account, where there is nothing to manage or refund.
+    @State private var plan: StoreKitManager.OwnSubscription?
+    @State private var managingPlan = false
+    @State private var requestingRefund = false
 
     private enum Sheet: String, Identifiable {
         case paywall, notifications, receipt, currency, privacy, help, export, whatsNew, wrapped, inbox, language
@@ -37,6 +43,10 @@ struct PremiumProfileView: View {
                     row("arrow.up.forward.app", L10n.string("Apple Subscriptions"), id: "importFromAppStoreButton", last: true) {
                         if let url = URL(string: "https://apps.apple.com/account/subscriptions") { openURL(url) }
                     }
+                }
+
+                if paymentManager.isPremium, let plan {
+                    planGroup(plan)
                 }
 
                 group(L10n.string("Settings")) {
@@ -72,6 +82,12 @@ struct PremiumProfileView: View {
             .padding(.bottom, 32)
         }
         .background(Color.ink.ignoresSafeArea())
+        .task(id: paymentManager.currentTier) {
+            plan = paymentManager.isPremium ? await StoreKitManager.shared.ownSubscription(for: paymentManager.currentTier) : nil
+        }
+        // Apple's own sheets: changing or cancelling the plan, and asking for money back.
+        .manageSubscriptionsSheet(isPresented: $managingPlan)
+        .refundRequestSheet(for: plan?.transactionId ?? 0, isPresented: $requestingRefund)
         .confirmationDialog("Sign out of Pausely?", isPresented: $confirmSignOut, titleVisibility: .visible) {
             Button("Sign Out", role: .destructive) { Task { await authManager.signOut() } }
             Button("Cancel", role: .cancel) {}
@@ -125,6 +141,34 @@ struct PremiumProfileView: View {
             }
         }
         .frame(maxWidth: .infinity, alignment: .leading)
+    }
+
+    // MARK: - The plan, for someone paying through the App Store
+
+    /// When it renews or ends, a warning if Apple couldn't charge for it, and Apple's sheets for
+    /// managing it and for asking for a refund. Pausely tells people to cancel it if it isn't saving
+    /// them more than it costs, so the way to do that is two taps from here.
+    private func planGroup(_ plan: StoreKitManager.OwnSubscription) -> some View {
+        group(L10n.string("Pausely Pro")) {
+            if plan.hasBillingProblem {
+                HStack(alignment: .firstTextBaseline, spacing: 10) {
+                    StateMark(state: .due).accessibilityHidden(true)
+                    Text("Apple couldn't take the payment for Pausely Pro. Update your payment method to keep it.")
+                        .font(.subheadline)
+                        .foregroundStyle(Color.inkText)
+                        .fixedSize(horizontal: false, vertical: true)
+                }
+                .padding(.vertical, 10)
+                .accessibilityElement(children: .combine)
+                .accessibilityIdentifier("planBillingProblem")
+                Hairline()
+            }
+            row("creditcard", L10n.string("Manage subscription"), value: plan.statusLine(), id: "managePlanButton",
+                last: plan.transactionId == nil) { managingPlan = true }
+            if plan.transactionId != nil {
+                row("arrow.uturn.backward", L10n.string("Request a refund"), id: "refundPlanButton", last: true) { requestingRefund = true }
+            }
+        }
     }
 
     // MARK: - Rows

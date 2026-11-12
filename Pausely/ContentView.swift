@@ -84,6 +84,9 @@ class AppDelegate: NSObject, UIApplicationDelegate {
         // Configure TipKit for contextual tips
         TipKitConfiguration.configure()
 
+        // The app switcher shows the app's name, not what someone pays for.
+        PrivacyCover.install()
+
         // Reminder taps and their Keep / Review buttons. Set before launch finishes so a tap that
         // launched the app is delivered.
         UNUserNotificationCenter.current().delegate = NotificationDelegate.shared

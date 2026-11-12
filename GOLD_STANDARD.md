@@ -222,9 +222,9 @@ Updated at every commit, so the work can be picked up from this file alone.
 - D4, notifications: O21, O22, O25, O26, S7 closed; O24 waits on a capability (6.7); O27 accepted.
 - D4, widgets: rebuilt (S15's row closes O28 to O30, O33, O34, S6; O35 still to be seen). 695 tests,
   0 failures.
-- D4, Shortcuts: rewritten (S16's row closes O31, O32). 693 tests, 0 failures. Next in D4: the
-  paywall rows (O17 to O20), the app-switcher cover (O41), a way back for a cancelled subscription
-  (S19), the verdict's facts (Stage F).
+- D4, Shortcuts: rewritten (S16's row closes O31, O32).
+- D4, the paywall and the plan: O17 to O20 and O41 closed. 694 tests, 0 failures. Next in D4: a way
+  back for a cancelled subscription (S19) and the verdict's facts (Stage F). Then D5, the words.
 - Told by the other session at 22:04 (it has stood down and changed nothing): sections 2, 3, 4, 6, 7
   and 10 of the engineering audit were never done and there is no finished overlooked-details
   report. Those areas have been scanned by nobody; they are owed before Stage G can be called done.
@@ -430,10 +430,10 @@ matters to a stranger: the customer round below scores "getting in" at 1.
 | O14 | low | A price and its period are joined in code ("$4.99" + "/month") | open |
 | O15 | unclear | Whether a nine-digit total fits on Home, Analysis and the receipt | check in Stage E with rupiah data |
 | O16 | unclear | If the live `next_billing_date` column were DATE, no fetched renewal would parse | not a finding: read from the live project on 11-12 (`db_apply.py state`, which now prints column types and reads nothing else): it is `timestamp with time zone`, as are the trial end and the created and updated times. The table also still has `start_date` and `paused_until`, which the app no longer uses (to drop by the two-step rule) |
-| O17 | low | The paywall shows "Subscribe" and today's price for a moment before the trial is known | open |
-| O18 | low | A failed card (billing retry, grace period) is never mentioned | open |
-| O19 | low | Manage, refund and offer codes go through a web link, not Apple's sheets | open |
-| O20 | low | Two StoreKit test files ship inside the app | open |
+| O17 | low | The paywall shows "Subscribe" and today's price for a moment before the trial is known | closed 11-12: the slip and the button wait until the App Store has said whether this Apple Account gets the trial; when another plan is picked they wait again. Not seen with real App Store products (6.7) |
+| O18 | low | A failed card (billing retry, grace period) is never mentioned | closed 11-12 with O19: Profile has a Pausely Pro group for someone paying through the App Store. It says when the plan renews, when a trial ends, or when it ends once renewal is off; warns when Apple could not take the payment; and opens Apple's own sheets to manage the plan and to ask for a refund. Five languages. `testThePlanSaysWhenItRenewsOrEnds`. Not seen with a real purchase (6.7) |
+| O19 | low | Manage, refund and offer codes go through a web link, not Apple's sheets | closed 11-12 for manage and refund (O18's row). No row for offer codes: none have been made in App Store Connect, so the row would lead nowhere |
+| O20 | low | Two StoreKit test files ship inside the app | closed 11-12: the duplicate is deleted and the other moved out of the app's folder; the built app holds neither |
 | O21 | medium | "Keep it" on an old reminder keeps whichever charge is next, not the one the reminder was about | closed 11-12: a reminder carries the day of its charge and "Keep it" keeps that charge, if it is still ahead; answered after the charge, it keeps nothing. `ReminderReachTests` ×4 |
 | O22 | medium | Reminders are rebuilt only when the app opens: with twenty subscriptions the 60 slots last about three weeks | closed 11-12, in two parts. When there are more reminders than iOS holds, every subscription keeps the day-before reminder for its next charge before any keeps the others (the soonest sixty used to win, and whatever renewed late in the month got none). And the plan ends with one notification asking to open Pausely, the morning after its last reminder or before the first one left out, so reminders never stop without a word. `ReminderReachTests` ×6. Not done: waking in the background to plan more. iOS runs that least for an app that isn't opened, which is the case it would be for, and it can't be seen working from here |
 | O23 | medium | A reminder tapped while signed out leaves a verdict waiting for whoever signs in next. With it: after sign-out the widgets, Spotlight, the reminders already on the Lock Screen and the Shortcuts all still showed the list | closed 11-11: signing out (or a session that has ended) empties the list from memory, the widgets and Spotlight and removes pending and delivered reminders, while the copy on the iPhone waits for the same person (`LocalUserData.hideWhileSignedOut`); a reminder tapped while signed out opens and records nothing. `LocalDataGuardTests` ×2 |
@@ -454,7 +454,7 @@ matters to a stranger: the customer round below scores "getting in" at 1.
 | O38 | medium | Wiping misses typed hours, merchant corrections, the Pro flag and the waiting tally: the next account inherits them. Found with it: a name typed on a sign-up nobody finished was given to whichever account next signed in by code (the same fault B8 fixed for the password) | closed 11-11: one list of the person's saved values (`LocalUserData.personalKeys`, plus everything under `usage_`), removed together with the saved logos; the name is kept with the address it was typed for and given to no other. `LocalDataGuardTests` reads the sources and fails on a value saved under a name that is neither on that list nor named there as a setting of the iPhone with its reason (6 tests) |
 | O39 | medium | Deleting an account does not revoke the Sign in with Apple token (Apple asks for it) | built 11-12, not live. An account that signs in with Apple confirms with Apple before it is deleted, and the app hands Apple's one-time code to a new server function (`supabase/functions/apple-revoke`) that exchanges it and revokes at once; nothing is stored. Closing Apple's sheet stops the deletion; any other trouble does not. `AppleRevocationTests` ×3; `scripts/dbtest/apple_revoke_function.sh`, 22 checks against stand-ins for Apple that verify the signed client secret. Not live, and not seen on a device: it needs Apple's key and a deploy (6.7). Until then the function is absent, the app gets an error from it and deletes the account as before |
 | O40 | low | Biometric lock is dead code, with a Face ID usage string in Info.plist for a feature that does not exist | closed 11-11: the code, the error case and the usage string are deleted |
-| O41 | low | The app switcher shows amounts | open |
+| O41 | low | The app switcher shows amounts | closed 11-12: the app switcher shows the app's name on ink (`PrivacyCover`), and the screen is back as it was on return. Seen on the simulator, both ways |
 
 ### 6.3b From the scan finished in D1 (found by reading, each checked in the code)
 

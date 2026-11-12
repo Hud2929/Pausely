@@ -48,6 +48,21 @@ final class StoreKitManager: ObservableObject {
         /// When the current period (or free trial) ends and the next charge happens.
         let renews: Date?
         let isTrial: Bool
+        /// The purchase itself, for Apple's refund sheet.
+        var transactionId: UInt64?
+        /// False once the person has turned renewal off: the plan ends on `renews`. Nil when unknown.
+        var willRenew: Bool?
+        /// Apple tried to charge and couldn't (billing retry, or the grace period it gives meanwhile).
+        var hasBillingProblem = false
+
+        /// One line under the plan's name: "Free trial ends Nov 24, 2026", "Renews…", or "Ends…" once
+        /// renewal is off. Nil when the App Store gave no date.
+        func statusLine(locale: Locale = L10n.locale) -> String? {
+            guard let renews else { return nil }
+            let day = renews.formatted(.dateTime.month(.abbreviated).day().year().locale(locale))
+            if willRenew == false { return L10n.string("Ends \(day)") }
+            return isTrial ? L10n.string("Free trial ends \(day)") : L10n.string("Renews \(day)")
+        }
     }
 
     /// One thing the App Store says is paid for.
@@ -166,8 +181,21 @@ final class StoreKitManager: ObservableObject {
     func ownSubscription(for tier: SubscriptionTier) async -> OwnSubscription? {
         guard let product = product(for: tier), let latest = await Transaction.latest(for: product.id),
               case .verified(let transaction) = latest, transaction.revocationDate == nil else { return nil }
-        return OwnSubscription(tier: tier, price: product.price, currency: product.priceFormatStyle.currencyCode,
-                               renews: transaction.expirationDate, isTrial: transaction.offer?.type == .introductory)
+        var own = OwnSubscription(tier: tier, price: product.price, currency: product.priceFormatStyle.currencyCode,
+                                  renews: transaction.expirationDate, isTrial: transaction.offer?.type == .introductory)
+        own.transactionId = transaction.id
+        // Whether it will renew, and whether Apple is having trouble charging for it.
+        if let statuses = try? await product.subscription?.status {
+            let status = statuses.first { status in
+                if case .verified(let latest) = status.transaction { return latest.productID == product.id }
+                return false
+            } ?? statuses.first
+            if let status {
+                own.hasBillingProblem = status.state == .inBillingRetryPeriod || status.state == .inGracePeriod
+                if case .verified(let renewal) = status.renewalInfo { own.willRenew = renewal.willAutoRenew }
+            }
+        }
+        return own
     }
 
     /// Renewals, refunds, revocations and approved Ask to Buy purchases arrive here while the app

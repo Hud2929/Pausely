@@ -15,8 +15,13 @@ struct StoreKitUpgradeView: View {
     /// True only when StoreKit offers THIS customer a 7-day free trial on the selected plan. It is never
     /// assumed: the offer must exist in App Store Connect and the Apple Account must still be eligible
     /// (Apple allows one trial per subscription group).
-    @State private var trialAvailable = false
-    private var isTrialEnabled: Bool { trialAvailable }
+    /// Whether the selected plan starts with a free trial for this Apple Account. Nil until the App
+    /// Store has said: the slip and the button wait for it, so nobody eligible for a trial is shown
+    /// "Subscribe" and today's price for a moment first.
+    @State private var trialAvailable: Bool?
+    private var isTrialEnabled: Bool { trialAvailable == true }
+    /// The plan has loaded and whether it starts free is not known yet.
+    private var isCheckingOffer: Bool { selectedProduct != nil && trialAvailable == nil }
     @State private var notice: PaywallNotice?
     /// What "Try Again" on a notice repeats.
     @State private var lastAttempt: Attempt = .purchase
@@ -83,7 +88,10 @@ struct StoreKitUpgradeView: View {
     /// Decides whether to advertise the free trial: the selected plan must carry a 7-day free-trial
     /// introductory offer in App Store Connect and this Apple Account must still be eligible for it.
     private func refreshTrialEligibility() async {
-        guard let subscription = storeManager.products.first(where: { $0.id == selectedPlan.productID })?.subscription,
+        // Another plan was picked, or the plans have just loaded: what was known is for the other one.
+        trialAvailable = nil
+        guard let product = storeManager.products.first(where: { $0.id == selectedPlan.productID }) else { return }
+        guard let subscription = product.subscription,
               let offer = subscription.introductoryOffer,
               offer.paymentMode == .freeTrial else {
             trialAvailable = false
@@ -253,7 +261,9 @@ struct StoreKitUpgradeView: View {
                 Text(verbatim: "Pausely Pro")
                     .font(.question(.title3))
 
-                if isTrialEnabled {
+                if isCheckingOffer {
+                    ProofLine(label: L10n.string("Today"), value: "…", emphasised: true)
+                } else if isTrialEnabled {
                     ProofLine(label: L10n.string("Today"), value: L10n.string("Free"))
                     ProofLine(label: firstChargeDate, value: chargeText, emphasised: true)
                     Text(L10n.string("Cancel by \(lastDayToCancel) in Settings and you pay nothing."))
@@ -378,14 +388,14 @@ struct StoreKitUpgradeView: View {
             Button {
                 Task { await attemptPurchase() }
             } label: {
-                if storeManager.isLoading && selectedProduct != nil {
+                if (storeManager.isLoading && selectedProduct != nil) || isCheckingOffer {
                     ProgressView().tint(Color.paperInk)
                 } else {
                     Text(isTrialEnabled ? L10n.string("Start Free Trial") : L10n.string("Subscribe"))
                 }
             }
             .buttonStyle(.ink)
-            .disabled(selectedProduct == nil || storeManager.isLoading)
+            .disabled(selectedProduct == nil || storeManager.isLoading || isCheckingOffer)
             .accessibilityIdentifier("paywallPurchase")
 
             Group {
@@ -395,6 +405,8 @@ struct StoreKitUpgradeView: View {
                     } label: {
                         Text("Couldn't reach the App Store. Tap to try again.").underline()
                     }
+                } else if isCheckingOffer {
+                    Text(verbatim: " ")
                 } else if isTrialEnabled {
                     Text("After your free trial, you'll be charged \(chargeText) unless you cancel at least 24 hours before the trial ends.")
                 } else {

@@ -63,6 +63,25 @@ final class PaymentManagerTests: XCTestCase {
                                         renews: Date(timeIntervalSince1970: 1_800_000_000), isTrial: trial)
     }
 
+    /// Profile says when the plan renews, when a free trial ends, or (renewal switched off) when it ends.
+    func testThePlanSaysWhenItRenewsOrEnds() {
+        let english = Locale(identifier: "en_US")
+        var plan = own(.proAnnual, price: "29.99", currency: "USD")
+        let day = Date(timeIntervalSince1970: 1_800_000_000).formatted(.dateTime.month(.abbreviated).day().year().locale(english))
+        XCTAssertEqual(plan.statusLine(locale: english), "Renews \(day)")
+
+        plan.willRenew = false
+        XCTAssertEqual(plan.statusLine(locale: english), "Ends \(day)")
+
+        let trial = own(.proAnnual, price: "29.99", currency: "USD", trial: true)
+        XCTAssertEqual(trial.statusLine(locale: english), "Free trial ends \(day)")
+
+        let undated = StoreKitManager.OwnSubscription(tier: .pro, price: 4.99, currency: "USD", renews: nil, isTrial: false)
+        XCTAssertNil(undated.statusLine(locale: english))
+        XCTAssertFalse(undated.hasBillingProblem)
+        XCTAssertNil(undated.transactionId)
+    }
+
     /// The line is what the App Store states for this customer. It used to be able to go in at US
     /// launch prices, as "USD", with a next charge that was only a guess.
     @MainActor
