@@ -26,14 +26,11 @@ Source files (single source of truth, do not hand-edit generated output):
 
 | File | Role |
 |---|---|
-| `scripts/store_copy.py` | All store copy in six languages, limits, banned terms, generators |
-| `scripts/store_locales.py` | Per-locale name, subtitle, keywords, with the reasoning |
-| `metadata/app-info/<locale>.json`, `metadata/version/1.0.3/<locale>.json` | Generated, in the layout `asc metadata push` reads |
-| `AppStoreMetadata/<locale>/*.txt` | Generated plain text for proofreaders and translators |
-| `APP_STORE_LISTING.md` | Generated English master (what to paste, what never to claim) |
+| `metadata/app-info/<locale>.json`, `metadata/version/1.0.3/<locale>.json` | The listing itself, in the layout `asc metadata push` reads. Edited by hand; there is no generator (the old one, `scripts/store_copy.py`, held copy the app no longer keeps and was removed on 2026-11-12) |
+| `PauselyTests/Services/StoreListingTests.swift` | Holds the listing to the app: field limits, keywords spent once, every number counted from the code, the app's own names in each language, the same bullets in every language, nothing offered that the release build hides |
 | `ASO_KEYWORD_PLAN.md`, `scripts/aso_scan_*.json` | Competitor research and raw evidence |
 
-Check everything: `python3 scripts/store_copy.py --check` (11 locales, 0 problems) and `asc metadata validate --dir ./metadata --subscription-app --output table` (22 files, 0 errors, 0 warnings).
+Check everything: the test suite (`StoreListingTests`, 11 locales) and `asc metadata validate --dir ./metadata --subscription-app --output table` (22 files, 0 errors, 0 warnings).
 
 ---
 
@@ -109,7 +106,7 @@ Rules that drive every decision:
 | ja | Japan | Pausely - サブスク管理・解約リマインダー | 更新日と値上げを通知・固定費を見える化 | サブスクリプション, 定額, 固定費, 解約, 支払い, 契約, 家計簿, 節約, トライアル, 通知, 値上げ… | `サブスク` alone is 1.3M (avoid). `サブスク管理` 286, `サブスク 解約` 0, `解約 リマインダー` 0 |
 | ar-SA | Saudi Arabia, UAE, other Arabic storefronts | Pausely: إدارة الاشتراكات | تذكير التجديد، تتبع الفواتير | إلغاء, تجربة, تنبيه, سعر, ارتفاع, دفعات, متكررة, مصاريف… | `إدارة الاشتراكات` 0, `تتبع الاشتراكات` 0, `تذكير الفواتير` 0: the largest relative opportunity |
 
-Exact keyword strings are in `scripts/store_locales.py` and `metadata/version/1.0.3/<locale>.json`.
+Exact keyword strings are in `metadata/version/1.0.3/<locale>.json`.
 
 ### Strategy by market
 - **Win where competition is ~0:** French (Canada and France), Spanish, German, Japanese long-tail, Arabic. These are low-cost, high-relative-share, and a small app can be #1 for several terms within days of launch.
@@ -184,7 +181,7 @@ asc metadata push --app APP_ID --version 1.0.3 --platform IOS --dir ./metadata -
 asc metadata push --app APP_ID --version 1.0.3 --platform IOS --dir ./metadata
 ```
 
-Regenerate any time with `python3 scripts/store_copy.py --write`. Never edit the generated JSON by hand.
+Edit the JSON in `metadata/` directly, then run the test suite: `StoreListingTests` fails on a claim the app does not keep.
 
 ---
 
@@ -203,6 +200,6 @@ Regenerate any time with `python3 scripts/store_copy.py --write`. Never edit the
 4. **Seller name:** an individual membership shows a personal name on the App Store. If a company name is wanted, plan an organization enrollment (needs a D-U-N-S number).
 5. ~~"Scan from App Store" feature~~ **Resolved:** removed.
 6. ~~Pricing~~ **Done (owner delegated, 2026-10-19):** $4.99/month and $29.99/year, 7-day trial kept; raise yearly to about $39.99 when automatic detection ships (+33% / +$10 is inside Apple's no-consent window). The paywall reads real StoreKit prices, so later price changes need no code change.
-7. ~~Free tier~~ **Done:** 5 subscriptions (`FreeTier.subscriptionLimit`; `scripts/store_copy.py --check` fails if the store copy and the app disagree).
+7. ~~Free tier~~ **Done:** 5 subscriptions (`FreeTier.subscriptionLimit`; `StoreListingTests` fails if the listing and the app disagree).
 8. ~~Gmail import visible before Google approval~~ **Done:** hidden in Release builds.
 9. **Still the owner's:** the Terms page promises a 14-day refund on annual plans and the privacy page wording about Screen Time data was corrected on 2026-10-20. Both are legal wording, so they are left for the owner.

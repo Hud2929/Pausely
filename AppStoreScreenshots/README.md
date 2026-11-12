@@ -20,9 +20,8 @@ These are runnable SwiftUI views that compose the app's real components into scr
 | File | Contents |
 |------|----------|
 | `PreviewVideoScript.md` | 15-second silent App Preview video script with scene-by-scene breakdown, timestamps, transitions, and production notes |
-| `AppStoreMetadata.md` | Title, subtitle, keywords (100 char), description, What's New template, A/B testing plan, localization notes |
 | `ReviewPromptStrategy.md` | 5 positive trigger moments, pre-prompt wording, rate limiting logic, negative review response templates |
-| `PromotionalText.md` | Free trial promotion, cost-per-use feature announcement, seasonal messaging (New Year, back-to-school, Black Friday), localization templates |
+| `PromotionalText.md` | The promotional text in use and three seasonal variants (English); the listing itself is `metadata/`, held by `StoreListingTests` |
 
 ## Design System Reference
 
