@@ -116,12 +116,7 @@ struct SubscriptionBrowserView: View {
         VStack(spacing: 0) {
             VStack(alignment: .leading, spacing: 14) {
                 HStack {
-                    Button { dismiss() } label: {
-                        Text("Close")
-                            .font(.subheadline.weight(.semibold))
-                            .foregroundStyle(Color.inkTextMuted)
-                            .tapArea(.leading)
-                    }
+                    LeaveButton("Close") { dismiss() }
                     Spacer()
                     if !typeSize.isAccessibilitySize { addYourOwnButton }
                 }

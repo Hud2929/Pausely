@@ -1,4 +1,5 @@
 import XCTest
+@testable import Pausely
 
 /// The project file itself, held to a few rules that were each broken until 2026-11-12: the test
 /// bundles had the app's own bundle id, the shared scheme ran tests in parallel (simulator clones that
@@ -49,6 +50,26 @@ final class ProjectFileTests: XCTestCase {
             XCTAssertTrue(configuration.contains("SWIFT_VERSION = 6.0;"))
             XCTAssertTrue(configuration.contains("SWIFT_STRICT_CONCURRENCY = complete;"))
         }
+    }
+
+    /// Two colours the system draws for the app come from the palette. The accent colour was unset,
+    /// so the keyboard's search key and every text cursor were iOS blue; the launch screen was a dark
+    /// purple, which showed for a moment before the app's own ink.
+    func testTheSystemsColoursComeFromThePalette() throws {
+        func colours(_ name: String) throws -> [String] {
+            let url = root.appendingPathComponent("Pausely/Assets.xcassets/\(name).colorset/Contents.json")
+            try XCTSkipUnless(FileManager.default.fileExists(atPath: url.path), "Sources aren't readable from this test run")
+            let json = try XCTUnwrap(JSONSerialization.jsonObject(with: Data(contentsOf: url)) as? [String: Any])
+            let entries = try XCTUnwrap(json["colors"] as? [[String: Any]])
+            return try entries.map { entry in
+                let components = try XCTUnwrap((entry["color"] as? [String: Any])?["components"] as? [String: String])
+                let channels = try ["red", "green", "blue"].map { try XCTUnwrap(components[$0]) }
+                XCTAssertTrue(channels.allSatisfy { $0.hasPrefix("0x") }, "written as the palette writes them")
+                return "#" + channels.map { String($0.dropFirst(2)).uppercased() }.joined()
+            }
+        }
+        XCTAssertEqual(try colours("AccentColor"), [Palette.text, Palette.text], "light and dark: the app is dark only")
+        XCTAssertEqual(try colours("LaunchBackground"), [Palette.ink, Palette.ink])
     }
 
     func testNothingIsLinkedOrListedThatIsNotUsed() throws {

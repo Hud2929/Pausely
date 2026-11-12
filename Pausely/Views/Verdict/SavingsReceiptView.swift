@@ -13,12 +13,7 @@ struct SavingsReceiptView: View {
         ScrollView {
             VStack(alignment: .leading, spacing: 0) {
                 HStack {
-                    Button { dismiss() } label: {
-                        Text("Done")
-                            .font(.subheadline.weight(.semibold))
-                            .foregroundStyle(Color.inkTextMuted)
-                            .tapArea(.leading)
-                    }
+                    LeaveButton("Done") { dismiss() }
                     Spacer()
                     if !summary.isEmpty { shareMenu(summary) }
                 }

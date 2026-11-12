@@ -169,6 +169,9 @@ final class ScreenTourTests: XCTestCase {
             (["--empty-demo-data", "--demo-settings=export"], "export-empty"),
             (["--demo-age-gate=underage"], "age-underage"),
             (["--demo-age-gate=locked"], "age-locked"),
+            (["--demo-auth", "--demo-link-problem"], "welcome-linkproblem"),
+            (["--fresh-demo-data", "--demo-tab=0", "--demo-notice"], "home-notice"),
+            (["--fresh-demo-data", "--demo-tab=0", "--demo-banner"], "home-demobanner"),
         ]
         for screen in screens where wanted(screen.name) {
             let app = launch(screen.flags)
@@ -295,7 +298,9 @@ final class ScreenTourTests: XCTestCase {
     private func scrollCapture(_ app: XCUIApplication, _ name: String, times: Int) {
         for index in 1...times {
             app.swipeUp()
-            sleep(1)
+            // Until the scroll has come to rest: the audit measured rows where they had been a
+            // moment earlier and called their contrast failed.
+            sleep(2)
             capture(app, "\(name)-scroll\(index)")
         }
     }

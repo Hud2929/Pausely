@@ -78,12 +78,7 @@ struct RenewalVerdictView: View {
 
     private var closeRow: some View {
         HStack {
-            Button { dismiss() } label: {
-                Text("Close")
-                    .font(.subheadline.weight(.semibold))
-                    .foregroundStyle(Color.inkTextMuted)
-                    .tapArea(.leading)
-            }
+            LeaveButton("Close") { dismiss() }
             .accessibilityIdentifier("verdictCloseButton")
             Spacer()
         }

@@ -14,12 +14,7 @@ struct RenewalDatesSheet: View {
             ScrollView {
                 VStack(alignment: .leading, spacing: 0) {
                     HStack {
-                        Button { dismiss() } label: {
-                            Text("Not now")
-                                .font(.subheadline.weight(.semibold))
-                                .foregroundStyle(Color.inkTextMuted)
-                                .tapArea(.leading)
-                        }
+                        LeaveButton("Not now") { dismiss() }
                         Spacer()
                     }
 

@@ -50,12 +50,7 @@ struct CatalogAddSheet: View {
             ScrollView {
                 VStack(alignment: .leading, spacing: 24) {
                     HStack {
-                        Button { dismiss() } label: {
-                            Text("Cancel")
-                                .font(.subheadline.weight(.semibold))
-                                .foregroundStyle(Color.inkTextMuted)
-                                .tapArea(.leading)
-                        }
+                        LeaveButton("Cancel") { dismiss() }
                         Spacer()
                     }
                     .padding(.bottom, -12)

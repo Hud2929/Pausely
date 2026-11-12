@@ -254,12 +254,7 @@ struct SubscriptionWrappedView: View {
         ScrollView {
             VStack(alignment: .leading, spacing: 0) {
                 HStack {
-                    Button { dismiss() } label: {
-                        Text("Done")
-                            .font(.subheadline.weight(.semibold))
-                            .foregroundStyle(Color.inkTextMuted)
-                            .tapArea(.leading)
-                    }
+                    LeaveButton("Done") { dismiss() }
                     Spacer()
                     if !isEmpty, let image = YearSlip.image(stats: stats, currency: currencyManager.selectedCurrency) {
                         ShareLink(item: image, preview: SharePreview(L10n.string("Your year in subscriptions"), image: image)) {

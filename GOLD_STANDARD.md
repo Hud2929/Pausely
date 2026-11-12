@@ -503,6 +503,37 @@ Updated at every commit, so the work can be picked up from this file alone.
   button is a fingertip wide; "$54.99/mo" is read out as "$54.99 a month". Tapping a row on Home
   opens its verdict in a demo launch. 754 tests, 0 failures; Release builds; gold_check 0;
   string_usage 0. Next: the same pass in Arabic, at the largest size and on iPad.
+- E, the states in Arabic and the parts not yet rebuilt (11-12). The state pass in Arabic
+  (`/tmp/pausely_states_ar_1`, 78 captures, read on contact sheets): `tour_untranslated.py` prints
+  nothing, `tour_black_bands.swift` prints nothing, no narrow scroll view. Everything fixed in
+  English reads right in Arabic too (the trial that ends, the cancelled subscription's day, "البقية"
+  for everything else, the one-subscription dates sheet, the age check's refusals from the right).
+  Then the three parts that were still in the old style, each with a launch argument so the tour
+  sees it (`--demo-link-problem`, `--demo-notice`, `--demo-banner`):
+  the link-problem banner is stacked above the screen (laid over it, it cut the welcome screen's
+  mark in half) in ink with the coral mark and a full-size close; the notice ("Saved on this
+  iPhone…") sits above the tab bar instead of over each tab's one big number, is read out by
+  VoiceOver, and stays as long as its sentence takes to read (4 to 9 seconds;
+  `testANoticeStaysLongEnoughToRead`), not 4 seconds whatever its length; the demo banner is ink
+  with the amber mark. And five things that ran through the whole app:
+  1. The accent colour was unset, so every text cursor was iOS blue, and the launch screen was a
+     dark purple that showed before the app's ink. Both come from the palette now
+     (`testTheSystemsColoursComeFromThePalette`).
+  2. Six transitions slid, scaled or shifted whatever Reduce Motion said. They go through
+     `AnyTransition.arriving`, which only fades when it is on
+     (`testNoTransitionMovesWithoutAskingReduceMotion`).
+  3. Ten copies of the word that leaves a screen, and an X on the paywall. One part,
+     `LeaveButton`, in one place and weight; the paywall says "Close" like the verdict. Screens
+     with a navigation bar keep its button.
+  4. The day picked on Home's line was view state cleared when the drag reported its end; a drag
+     the scroll view takes over never does. It is gesture state now and lets go with the finger
+     (`testTheDayPickedOnHomesLineLetsGoWithTheFinger`).
+  5. The tour waits for a scroll to come to rest before it audits (rows were measured where they
+     had been a moment earlier and their contrast called failed).
+  Not changed, with the reason: the keyboard's blue search key is the system's; the serif in Arabic
+  is SF Arabic because New York has no Arabic and iOS pairs them itself (Japanese to be looked at).
+  758 tests, 0 failures; Release builds; gold_check 0; old_ui_check 0. Next: the state pass at the
+  largest size and on iPad, the inventory brought up to date, then the four whole tours.
 - Told by the other session at 22:04 (it has stood down and changed nothing): sections 2, 3, 4, 6, 7
   and 10 of the engineering audit were never done and there is no finished overlooked-details
   report. Those areas have been scanned by nobody; they are owed before Stage G can be called done.
@@ -790,8 +821,8 @@ and limits) is O37 and nothing else was found.
 |---|---|
 | 136 screens and states; 95 cannot be opened by a launch argument, so have not been seen in Arabic, at the largest text or on iPad | in progress 11-12: the tour's `testStates` opens 45 more through a varied demo list, named demo screens and taps; read in English, the other three variants to come. Not opened from here and listed for the end: states that need the network or a purchase to fail (sign-in errors, a wrong code, StoreKit not answering), the system's own sheets, widgets on a Home Screen |
 | Apple's audit, English tour: 307 issues (105 Dynamic Type, 98 contrast, 51 clipped text, 36 elements not detected, 13 hit regions, 4 descriptions) | open |
-| Not rebuilt: Pause Plan, age check, policy pages, error banner and toast, demo banner (both widgets were rebuilt on 11-12: S15) | open |
-| System-wide: accent colour is iOS blue; `Motion.unlessReduced` still moves; `StateMark` does not grow; iPad column is 680 pt wide; five ways to leave a sheet; ~~Title Case and sentence case mixed~~ (done 11-12, held by a test); ~~"iPhone" said on iPad~~ (done 11-12, held by a test); prices and dates not formatted in the app's language in 43 places; the serif is missing in Arabic and Japanese | open |
+| Not rebuilt: Pause Plan, age check, policy pages, error banner and toast, demo banner (both widgets were rebuilt on 11-12: S15) | closed 11-12: the age check, the banner, the notice and the demo banner are rebuilt and seen in English and Arabic; Pause Plan's wording, edges and tap areas are fixed from its captures (setup, running, empty, the end dialog); the in-app policy pages no longer exist (the policies are on the website); `old_ui_check` prints 0 |
+| System-wide: ~~accent colour is iOS blue~~ (done 11-12, from the palette); ~~`Motion.unlessReduced` still moves~~ (done 11-12: `AnyTransition.arriving`); ~~`StateMark` does not grow~~ (done in E slice 2); iPad column is 680 pt wide (seen on the iPad tour and kept: a readable column); ~~five ways to leave a sheet~~ (done 11-12: `LeaveButton`, or the navigation bar's own button); ~~Title Case and sentence case mixed~~ (done 11-12, held by a test); ~~"iPhone" said on iPad~~ (done 11-12, held by a test); prices and dates not formatted in the app's language in 43 places; the serif is missing in Arabic and Japanese | open |
 | Per-file findings (colour, type, layout, Dynamic Type, right to left, VoiceOver, motion, haptics, states) in `ui.md` | open |
 | Seen in passing on 11-12: on Insights, scrolled content runs under the status bar and the clock is drawn over it | closed 11-12: `inkScreen()` on the four tabs (E first slice) and on every other screen that draws its own top row (E fourth slice); `testAScreenWithoutANavigationBarKeepsTheStatusStripSolid` |
 | Arabic, whole tour read (11-12): untranslated rows on the edit screen and the age check, left-to-right sentences, Latin digits in sentences, a 15-point "Done", text under the clock, an unreadable footnote | closed 11-12 (E fourth slice): each held by a test; `scripts/tour_untranslated.py` prints nothing for the screens toured again. Still to do in Arabic: a whole tour on the final build for the count, and one native reader (6.7) |

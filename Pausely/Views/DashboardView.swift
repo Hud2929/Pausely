@@ -385,7 +385,10 @@ private struct HorizonSection: View {
     let rates: CurrencyRates
     let pendingIds: Set<UUID>
 
-    @State private var selectedDay: Int?
+    /// The day under the finger while it is on the line. Gesture state, not view state: it goes back
+    /// to nothing when the touch ends and also when the scroll view takes the touch away. Kept as view
+    /// state it stayed set after a scroll that began on the line, and the rows below stayed faded.
+    @GestureState private var selectedDay: Int?
     @Environment(\.layoutDirection) private var direction
 
     private var throughDay: Int { selectedDay ?? Horizon.days - 1 }
@@ -441,6 +444,7 @@ private struct HorizonSection: View {
                 }
             }
         }
+        .animation(Motion.unlessReduced(Motion.touch), value: selectedDay)
     }
 
     private func state(for charge: Horizon.Charge) -> MoneyState? {
@@ -478,16 +482,14 @@ private struct HorizonSection: View {
             .contentShape(Rectangle())
             .gesture(
                 DragGesture(minimumDistance: 0)
-                    .onChanged { value in
+                    .updating($selectedDay) { value, day, _ in
                         let fraction = min(max(value.location.x / max(width, 1), 0), 1)
-                        let day = Int(((direction == .rightToLeft ? 1 - fraction : fraction) * Double(Horizon.days - 1)).rounded())
-                        if day != selectedDay {
-                            Feel.selection()
-                            withAnimation(Motion.unlessReduced(Motion.touch)) { selectedDay = day }
-                        }
+                        day = Int(((direction == .rightToLeft ? 1 - fraction : fraction) * Double(Horizon.days - 1)).rounded())
                     }
-                    .onEnded { _ in withAnimation(Motion.unlessReduced(Motion.touch)) { selectedDay = nil } }
             )
+            .onChange(of: selectedDay) { _, day in
+                if day != nil { Feel.selection() }
+            }
         }
         .frame(height: 28)
         .accessibilityHidden(true)

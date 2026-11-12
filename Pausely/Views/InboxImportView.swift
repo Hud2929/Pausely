@@ -251,7 +251,7 @@ struct InboxImportView: View {
                     .foregroundStyle(Color.paperMuted)
                 ForEach(shown) { receipt in
                     ProofLine(label: receipt.name, value: InboxImportView.money(receipt.amount, receipt.currency))
-                        .transition(.opacity.combined(with: .move(edge: .top)))
+                        .transition(.arriving(.move(edge: .top)))
                 }
                 if more > 0 {
                     Text("and \(more) more")

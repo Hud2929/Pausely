@@ -49,12 +49,7 @@ struct CancelSubscriptionFlow: View {
             ScrollView {
                 VStack(alignment: .leading, spacing: 0) {
                     HStack {
-                        Button { dismiss() } label: {
-                            Text("Close")
-                                .font(.subheadline.weight(.semibold))
-                                .foregroundStyle(Color.inkTextMuted)
-                                .tapArea(.leading)
-                        }
+                        LeaveButton("Close") { dismiss() }
                         Spacer()
                     }
 

@@ -48,7 +48,7 @@ struct FirstRunView: View {
     }
 
     private var stepTransition: AnyTransition {
-        UIAccessibility.isReduceMotionEnabled ? .opacity : .opacity.combined(with: .offset(y: 12))
+        .arriving(.offset(y: 12))
     }
 
     private func go(_ next: Phase) {
@@ -268,7 +268,7 @@ private struct TallyStep: View {
                 if !typeSize.isAccessibilitySize {
                     ProofLine(label: last.name, value: MoneyFormat.string(last.amount, last.currency, locale: L10n.locale))
                         .id(last.name)
-                        .transition(.asymmetric(insertion: .opacity.combined(with: .offset(y: 8)), removal: .opacity))
+                        .transition(.asymmetric(insertion: .arriving(.offset(y: 8)), removal: .opacity))
                 }
                 ProofLine(label: L10n.string("On your slip"), value: L10n.number(tally.lines.count), emphasised: true)
                 Button(action: onReveal) { Text("Show me the total") }
@@ -348,7 +348,7 @@ private struct ServiceTile: View {
                         .frame(width: 20, height: 20)
                         .background(Color.paper, in: Circle())
                         .padding(7)
-                        .transition(.scale.combined(with: .opacity))
+                        .transition(.arriving(.scale))
                 }
             }
             .contentShape(Rectangle())
@@ -446,7 +446,7 @@ private struct RevealStep: View {
                         }
                         .buttonStyle(.plain)
                         .accessibilityHint(Text("Change the price"))
-                        .transition(.opacity.combined(with: .offset(y: -6)))
+                        .transition(.arriving(.offset(y: -6)))
                     }
                 }
 

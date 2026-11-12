@@ -24,6 +24,48 @@ final class ScreenRulesTests: XCTestCase {
         XCTAssertEqual(ServiceLogoView.initial(of: ""), "")
     }
 
+    /// A notice stays for as long as it takes to read. It used to be gone in four seconds whether it
+    /// was two words or two sentences.
+    func testANoticeStaysLongEnoughToRead() {
+        XCTAssertEqual(NoticeModifier.seconds(toRead: "Saved."), 4)
+        XCTAssertEqual(NoticeModifier.seconds(toRead: String(repeating: "a", count: 60)), 5.6, accuracy: 0.001)
+        let longest = "Saved on this iPhone. It hasn't reached your account yet. Pausely will keep trying."
+        XCTAssertGreaterThan(NoticeModifier.seconds(toRead: longest), 6.5)
+        XCTAssertEqual(NoticeModifier.seconds(toRead: String(repeating: "a", count: 400)), 9, "and never so long that it is in the way")
+    }
+
+    /// With Reduce Motion on, what arrives fades in and nothing slides, scales or shifts. Six
+    /// transitions did, whatever the setting said; they all go through `AnyTransition.arriving` now.
+    func testNoTransitionMovesWithoutAskingReduceMotion() throws {
+        let appFolder = root.appendingPathComponent("Pausely")
+        try XCTSkipUnless(FileManager.default.fileExists(atPath: appFolder.path), "Sources aren't readable from this test run")
+        var moving: [String] = []
+        var asking = 0
+        let files = try XCTUnwrap(FileManager.default.enumerator(at: appFolder, includingPropertiesForKeys: nil))
+        for case let file as URL in files where file.pathExtension == "swift" {
+            for (index, line) in try String(contentsOf: file, encoding: .utf8).components(separatedBy: "\n").enumerated()
+            where line.contains(".transition(") {
+                if line.contains(".arriving(") { asking += 1 }
+                let moves = [".move(", ".scale", ".offset(", ".slide", ".push("].contains(where: line.contains)
+                if moves, !line.contains(".arriving(") { moving.append("\(file.lastPathComponent):\(index + 1)") }
+            }
+        }
+        XCTAssertEqual(moving, [])
+        XCTAssertGreaterThanOrEqual(asking, 6)
+    }
+
+    /// The day picked on Home's line is held only while a finger is on it. Kept as ordinary view state
+    /// it was cleared when the drag reported its end, and a drag the scroll view takes over (a scroll
+    /// that begins on the line) never does: the rows after that day could stay faded to a third.
+    func testTheDayPickedOnHomesLineLetsGoWithTheFinger() throws {
+        let home = root.appendingPathComponent("Pausely/Views/DashboardView.swift")
+        try XCTSkipUnless(FileManager.default.fileExists(atPath: home.path), "Sources aren't readable from this test run")
+        let source = try String(contentsOf: home, encoding: .utf8)
+        XCTAssertTrue(source.contains("@GestureState private var selectedDay: Int?"))
+        XCTAssertFalse(source.contains("@State private var selectedDay"))
+        XCTAssertTrue(source.contains(".updating($selectedDay)"))
+    }
+
     func testAFingertipIsFortyFourPoints() {
         XCTAssertEqual(Layout.tapTarget, 44)
     }

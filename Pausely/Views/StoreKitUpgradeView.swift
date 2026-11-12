@@ -244,16 +244,9 @@ struct StoreKitUpgradeView: View {
     /// Always visible, never delayed.
     private var closeRow: some View {
         HStack {
+            LeaveButton("Close") { dismiss() }
+                .accessibilityIdentifier("paywallClose")
             Spacer()
-            Button { dismiss() } label: {
-                Image(systemName: "xmark")
-                    .font(.body.weight(.semibold))
-                    .foregroundStyle(Color.inkText)
-                    .frame(width: Layout.tapTarget, height: Layout.tapTarget, alignment: .trailing)
-                    .contentShape(Rectangle())
-            }
-            .accessibilityLabel(Text("Close"))
-            .accessibilityIdentifier("paywallClose")
         }
         .padding(.top, 8)
     }

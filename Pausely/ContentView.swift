@@ -325,12 +325,12 @@ struct RootView: View {
                 } else if isDemoMode || authManager.isAuthenticated {
                     // Authenticated: show main app
                     VStack(spacing: 0) {
-                        if supabaseManager.isUsingDemoMode {
+                        if supabaseManager.isUsingDemoMode || isDemoScreen("--demo-banner") {
                             DemoModeBanner()
                         }
                         MainTabView()
                     }
-                    .transition(.opacity.combined(with: .scale(0.98)))
+                    .transition(.arriving(.scale(scale: 0.98)))
                 } else if !showAuth && (!hasCompletedOnboarding || PendingTally.load() != nil) {
                     // New person: the guess, the tally and the reveal come before the account.
                     // Someone who made a list and then backed out of creating an account (or closed the
@@ -360,7 +360,7 @@ struct RootView: View {
                         guard !authManager.isAuthenticated, PendingTally.load() != nil else { return }
                         withAnimation(Motion.unlessReduced(Motion.arrive)) { showAuth = false }
                     })
-                        .transition(.opacity.combined(with: .move(edge: .bottom)))
+                        .transition(.arriving(.move(edge: .bottom)))
                 }
             }
             .opacity(showSplash ? 0 : 1)
@@ -401,6 +401,16 @@ struct RootView: View {
         .onAppear {
             #if DEBUG
             if isDemoScreen("--demo-savings") || isDemoScreen("--demo-receipt") { DemoSavings.seed() }
+            // The two messages that appear without being asked for, so they can be looked at.
+            if isDemoScreen("--demo-link-problem") {
+                authManager.linkProblem = L10n.string("That link has expired or was already used. Ask for a new one.")
+            }
+            if isDemoScreen("--demo-notice") {
+                Task {
+                    try? await Task.sleep(for: .seconds(2))
+                    SubscriptionStore.shared.lastErrorMessage = L10n.string("Saved on this iPhone. It hasn't reached your account yet. Pausely will keep trying.")
+                }
+            }
             #endif
         }
         .onChange(of: scenePhase) { _, phase in

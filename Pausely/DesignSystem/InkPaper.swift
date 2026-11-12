@@ -134,6 +134,15 @@ enum Motion {
     }
 }
 
+extension AnyTransition {
+    /// Fades in, and moves a little on the way unless Reduce Motion is on. Every transition that
+    /// slides, scales or shifts goes through this: six of them moved whatever the setting said.
+    @MainActor
+    static func arriving(_ movement: AnyTransition) -> AnyTransition {
+        UIAccessibility.isReduceMotionEnabled ? .opacity : .opacity.combined(with: movement)
+    }
+}
+
 // MARK: - Haptics (nothing else in the app vibrates)
 
 @MainActor

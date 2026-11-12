@@ -31,7 +31,9 @@ SAME_EVERYWHERE = {
     "English", "Deutsch", "Español", "Français",
     # What the system's own keyboard and password bar say on a simulator set to an English keyboard.
     "Passwords", "The", "I", "delete", "Delete", "next", "shift", "numbers", "return", "space",
-    "Padding-Left", "Padding-Right", "Next keyboard", "Dictate", "emoji",
+    "Padding-Left", "Padding-Right", "Next keyboard", "Dictate", "emoji", "Emoji",
+    # iOS's own offer to make a password, in the simulator's language, and what the tour types.
+    "Use Strong Password?", "Fill Strong Password", "Close", "Vertical scroll bar, 1 page", "Gym",
 }
 
 
@@ -42,6 +44,8 @@ def names_from_sources():
         text = open(path, encoding="utf-8").read()
         names.update(re.findall(r'(?:name|displayName|service): "([^"\\]+)"', text))
         names.update(re.findall(r'(?:priced|asked|pure|mixed)\("([^"\\]+)"', text))
+        if os.path.basename(path) == "CatalogData.swift":       # the catalog: every literal is a name or an address
+            names.update(re.findall(r'"([^"\\]+)"', text))
         if os.sep + "Mailbox" + os.sep in path:
             names.update(re.findall(r'case \.\w+: return "([^"\\]+)"', text))
     return names
@@ -59,6 +63,8 @@ def is_a_name(text, names):
     if "@" in text or text.startswith("http"):                  # an address
         return True
     if re.fullmatch(r"[A-Z]{0,3}[$€£¥]?[0-9.,:\s%+\-–]*", text):  # a number, a time, a version, a price, a currency sign
+        return True
+    if text.startswith("Protect your account with a strong"):  # the same iOS sheet's sentence
         return True
     return False
 
@@ -109,7 +115,7 @@ def main():
             if not ARABIC.search(text):
                 # "Netflix، Spotify…" and "Pausely ٢٠٢٦" are names with something between or after them.
                 parts = [re.sub(r"[٠-٩\s]+$", "", part).strip("‎‏ ") for part in re.split(r"[،,…·]", text)]
-                if any(re.search(r"[A-Za-z]{2,}", part) and not is_a_name(part, names) for part in parts):
+                if not is_a_name(text, names) and any(re.search(r"[A-Za-z]{2,}", part) and not is_a_name(part, names) for part in parts):
                     found.setdefault(("english", text), set()).add(screen)
                 continue
             # A row's spoken label joins its parts ("Netflix، kept، …") and is never drawn as one line.

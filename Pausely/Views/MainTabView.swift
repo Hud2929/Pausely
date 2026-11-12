@@ -47,7 +47,7 @@ struct MainTabView: View {
             .accessibilityIdentifier("tabProfile")
         }
         .tint(Color.inkText)
-        .errorToast(message: $subscriptionStore.lastErrorMessage)
+        .notice($subscriptionStore.lastErrorMessage)
         .onReceive(NotificationCenter.default.publisher(for: .switchToProfileTab)) { _ in
             withAnimation { selectedTab = 3 }
         }

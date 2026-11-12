@@ -16,7 +16,7 @@ final class LocalizationGuardTests: XCTestCase {
     /// Every way a literal reaches the screen: SwiftUI's own calls, and the labelled arguments of the app's
     /// own parts (`SettingsPage(title:)`, `SettingsSection(footer:)`, `FormHeader(detail:)` and the like).
     private static let screenCalls = [
-        "Text(\"", "Label(\"", "Button(\"", "Toggle(\"", "Picker(\"", "Section(\"", "Link(\"", "Menu(\"",
+        "Text(\"", "Label(\"", "Button(\"", "LeaveButton(\"", "Toggle(\"", "Picker(\"", "Section(\"", "Link(\"", "Menu(\"",
         ".navigationTitle(\"", ".accessibilityLabel(\"", ".accessibilityHint(\"", ".accessibilityValue(\"",
         "TextField(\"", "SecureField(\"", ".alert(\"", ".confirmationDialog(\"",
         "title: \"", "detail: \"", "footer: \"", "subtitle: \"", "label: \"", "header: \"", "message: \"", "prompt: \""

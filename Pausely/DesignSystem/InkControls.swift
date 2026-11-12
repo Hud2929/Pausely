@@ -66,3 +66,27 @@ struct OptionalDatePicker: View {
         }
     }
 }
+
+/// The way out of a screen that draws its own top row: one word at the leading edge, in the same
+/// place and the same quiet weight everywhere. "Done" where nothing is lost, "Cancel" where what was
+/// typed is dropped, "Close" for something left undecided, "Not now" for a question put off. (Screens
+/// with a navigation bar use its own button.) There were ten copies of this and an X on the paywall.
+struct LeaveButton: View {
+    private let title: LocalizedStringKey
+    private let action: () -> Void
+
+    init(_ title: LocalizedStringKey, action: @escaping () -> Void) {
+        self.title = title
+        self.action = action
+    }
+
+    var body: some View {
+        Button(action: action) {
+            Text(title)
+                .font(.subheadline.weight(.semibold))
+                .foregroundStyle(Color.inkTextMuted)
+                .tapArea(.leading)
+        }
+        .buttonStyle(.plain)
+    }
+}

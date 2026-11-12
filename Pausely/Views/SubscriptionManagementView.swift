@@ -61,12 +61,7 @@ struct SubscriptionManagementView: View {
 
     private var topBar: some View {
         HStack {
-            Button { dismiss() } label: {
-                Text("Done")
-                    .font(.subheadline.weight(.semibold))
-                    .foregroundStyle(Color.inkTextMuted)
-                    .tapArea(.leading)
-            }
+            LeaveButton("Done") { dismiss() }
             .accessibilityIdentifier("subscriptionDoneButton")
             Spacer()
             Button { route = .edit } label: {
@@ -430,12 +425,7 @@ private struct UsageSheet: View {
         ScrollView {
             VStack(alignment: .leading, spacing: 0) {
                 HStack {
-                    Button { dismiss() } label: {
-                        Text("Done")
-                            .font(.subheadline.weight(.semibold))
-                            .foregroundStyle(Color.inkTextMuted)
-                            .tapArea(.leading)
-                    }
+                    LeaveButton("Done") { dismiss() }
                     Spacer()
                 }
 
