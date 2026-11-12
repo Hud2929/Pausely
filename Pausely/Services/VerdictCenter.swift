@@ -17,12 +17,24 @@ final class VerdictCenter: ObservableObject {
     /// Set by a Pause Plan reminder tap.
     @Published var showingPausePlan = false
 
+    /// A reminder can still be on the Lock Screen after its owner signed out. It opens nothing and
+    /// records nothing then: whoever signs in next must not be shown someone else's subscription.
+    var isSignedIn: () -> Bool = { RevolutionaryAuthManager.shared.isAuthenticated }
+
     func openPausePlan() {
+        guard isSignedIn() else { return }
         showingPausePlan = true
     }
 
     func open(subscriptionId: UUID) {
+        guard isSignedIn() else { return }
         presented = Request(subscriptionId: subscriptionId)
+    }
+
+    /// Nothing waits to be shown: on sign-out, and when the iPhone's data is removed.
+    func forget() {
+        presented = nil
+        showingPausePlan = false
     }
 
     /// Opens the subscription itself (used when a reminder has no decision to make).
@@ -35,7 +47,8 @@ final class VerdictCenter: ObservableObject {
     /// The next renewal gets its own verdict.
     func keep(subscriptionId: UUID, now: Date = Date()) async {
         let store = SubscriptionStore.shared
-        guard let sub = store.subscriptions.first(where: { $0.id == subscriptionId }),
+        guard isSignedIn(),
+              let sub = store.subscriptions.first(where: { $0.id == subscriptionId }),
               let charge = RenewalDecisions.upcomingCharge(for: sub, now: now) else { return }
         LifecycleEventLog.shared.record(.kept, for: sub, date: now, renewalDate: charge.date)
         await ReminderScheduler.shared.reschedule(store.subscriptions, now: now)

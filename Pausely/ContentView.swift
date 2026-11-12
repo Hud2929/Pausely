@@ -1,6 +1,5 @@
 import SwiftUI
 import AuthenticationServices
-import os.log
 import TipKit
 import UserNotifications
 
@@ -97,9 +96,6 @@ class AppDelegate: NSObject, UIApplicationDelegate {
     }
 
     private func handleDeepLink(_ url: URL) {
-        #if DEBUG
-        os_log("🔗 AppDelegate handling URL: %{public}@", log: .default, type: .info, url.absoluteString)
-        #endif
         DeepLinkManager.shared.process(url)
     }
 }
@@ -384,10 +380,7 @@ struct RootView: View {
         }
         .errorBanner($authManager.linkProblem)
         .onOpenURL { url in
-            // Handle deep links (referral codes, auth callbacks, subscription management, etc.)
-            #if DEBUG
-            os_log("🔗 RootView received URL: %{public}@", log: .default, type: .info, url.absoluteString)
-            #endif
+            // Account links and links to a subscription. Never logged: an account link carries a code.
             DeepLinkManager.shared.process(url)
         }
         .preferredColorScheme(.dark)

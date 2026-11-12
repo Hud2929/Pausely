@@ -26,19 +26,58 @@ enum LocalUserData {
         return owner.caseInsensitiveCompare(userId) == .orderedSame
     }
 
+    /// Saved under a fixed name and belonging to a person, not to the iPhone. `wipe` removes every one.
+    /// `LocalDataGuardTests` reads the sources: a value saved under a new name has to be listed here,
+    /// or in the test as a setting of the device with the reason it may outlive an account.
+    static let personalKeys = [
+        ownerKey, "last_auth_email", "lifecycle_last_run",
+        SubscriptionStore.syncedUserKey, "cached_subscriptions", "subscriptions_cache_date", "sync_queue_operations",
+        "pausely_user_corrections_v1", "pausely_pro_auto_added", "pausely_pro_grant", "first_run_tally_waiting",
+        "gmail_connected_email", "gmail_last_history_id", "mailbox_accounts_v1",
+        "auth_reset_requested_at", "auth_link_requested_email", "auth_link_requested_at",
+        "subscription_price_history",
+    ]
+
+    /// Saved once per subscription, under its name: the hours a person typed in.
+    static let personalKeyPrefixes = ["usage_"]
+
+    static func removeSavedValues(from defaults: UserDefaults = .standard) {
+        for key in personalKeys { defaults.removeObject(forKey: key) }
+        for key in defaults.dictionaryRepresentation().keys where personalKeyPrefixes.contains(where: key.hasPrefix) {
+            defaults.removeObject(forKey: key)
+        }
+    }
+
     static func wipe() async {
-        // The name kept for this account, and an email address older versions saved and never read.
+        // The name kept for this account.
         if let owner = UserDefaults.standard.string(forKey: ownerKey) {
             RevolutionaryAuthManager.forgetProfile(userId: owner)
         }
-        UserDefaults.standard.removeObject(forKey: "last_auth_email")
+        RevolutionaryAuthManager.forgetPendingName()
         SubscriptionStore.shared.removeAllLocalData()
         LifecycleEventLog.shared.removeAll()
         PausePlanStore.shared.removeAll()
         await InboxScanner.shared.disconnectAll()
         await PaymentManager.shared.setProGrant(false)
-        UserDefaults.standard.removeObject(forKey: "lifecycle_last_run")
-        UserDefaults.standard.removeObject(forKey: ownerKey)
-        UNUserNotificationCenter.current().removeAllPendingNotificationRequests()
+        VerdictCenter.shared.forget()
+        LogoStore.removeSavedLogos()
+        removeSavedValues()
+        UsageLog.shared.objectWillChange.send()
+        removeReminders()
+    }
+
+    /// Signing out. What is the person's stays on the iPhone for when they sign back in (the history
+    /// behind the Savings Receipt exists nowhere else), but nothing shows it meanwhile: not a widget,
+    /// not Spotlight, not a reminder on the Lock Screen, not a Shortcut.
+    static func hideWhileSignedOut() {
+        SubscriptionStore.shared.hideList()
+        VerdictCenter.shared.forget()
+        removeReminders()
+    }
+
+    private static func removeReminders() {
+        let center = UNUserNotificationCenter.current()
+        center.removeAllPendingNotificationRequests()
+        center.removeAllDeliveredNotifications()
     }
 }

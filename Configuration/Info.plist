@@ -58,8 +58,6 @@
 			</dict>
 		</dict>
 	</dict>
-	<key>NSFaceIDUsageDescription</key>
-	<string>Use Face ID to securely sign in to your Pausely account.</string>
 	<key>PAUSELY_ENVIRONMENT</key>
 	<string>$(PAUSELY_ENVIRONMENT)</string>
 	<key>SUPABASE_ANON_KEY</key>

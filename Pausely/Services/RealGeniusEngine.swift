@@ -26,10 +26,6 @@ final class RealGeniusEngine: ObservableObject {
     private var currencyCancellable: AnyCancellable?
 
     private init() {
-        // Don't restore savings from cache — stale numbers are misleading.
-        // User must run analysis to see accurate savings.
-        lastAnalysisDate = UserDefaults.standard.object(forKey: "real_genius_date") as? Date
-
         currencyCancellable = CurrencyManager.shared.$selectedCurrency
             .dropFirst()
             .sink { [weak self] _ in
@@ -65,7 +61,6 @@ final class RealGeniusEngine: ObservableObject {
         defer {
             isAnalyzing = false
             lastAnalysisDate = Date()
-            UserDefaults.standard.set(Double(truncating: totalSavingsFound as NSNumber), forKey: "real_genius_savings")
         }
 
         var allInsights: [GeniusInsight] = []

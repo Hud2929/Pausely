@@ -277,6 +277,24 @@ class SubscriptionStore: ObservableObject {
         lastFetchDate = nil
     }
 
+    /// Signed out: the list leaves memory, the widgets and Spotlight. The copy kept on the iPhone and
+    /// the changes still waiting to be sent stay, for when the same person signs back in.
+    func hideList() {
+        subscriptions = []
+        calculateTotals()
+        WidgetDataStore.shared.publish(subscriptions: [])
+        SpotlightManager.shared.index(subscriptions: [])
+        lastFetchDate = nil
+    }
+
+    /// Signed in again: the copy kept on the iPhone comes back before the server is asked.
+    func showList() {
+        guard subscriptions.isEmpty else { return }
+        loadFromCache()
+        WidgetDataStore.shared.publish(subscriptions: subscriptions)
+        SpotlightManager.shared.index(subscriptions: subscriptions)
+    }
+
     // MARK: - Caching
 
     private func saveToCache() {

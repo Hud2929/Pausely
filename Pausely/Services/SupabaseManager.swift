@@ -201,7 +201,6 @@ enum PauselyAuthError: LocalizedError {
     case invalidCredentials
     case sessionExpired
     case networkError
-    case biometricFailed
     case invalidResponse
     case ageConsentRequired
     case unknown(Error)
@@ -216,8 +215,6 @@ enum PauselyAuthError: LocalizedError {
             return "Your session has expired. Please sign in again."
         case .networkError:
             return "Network error. Please check your connection and try again."
-        case .biometricFailed:
-            return "Biometric authentication failed. Please use your password."
         case .invalidResponse:
             return "Invalid response from server. Please try again."
         case .ageConsentRequired:

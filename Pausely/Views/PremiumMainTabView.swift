@@ -68,6 +68,7 @@ struct PremiumMainTabView: View {
             // Someone else's history must never show up after a different account signs in.
             await LocalUserData.claim(for: RevolutionaryAuthManager.shared.currentUser?.id)
             await NotificationManager.shared.refreshStatus()
+            subscriptionStore.showList()
             await subscriptionStore.fetchSubscriptions()
             // The slip made before the account existed joins the list once it has loaded.
             await TallyImporter.importPending(into: subscriptionStore)

@@ -152,6 +152,14 @@ final class LogoStore {
         try? FileManager.default.createDirectory(at: url.deletingLastPathComponent(), withIntermediateDirectories: true)
         try? data.write(to: url, options: .atomic)
     }
+
+    /// The logos kept on the iPhone say which services its last owner paid for: they go with the rest.
+    static func removeSavedLogos() {
+        shared.memory = [:]
+        shared.missing = []
+        guard let caches = FileManager.default.urls(for: .cachesDirectory, in: .userDomainMask).first else { return }
+        try? FileManager.default.removeItem(at: caches.appendingPathComponent("ServiceLogos", isDirectory: true))
+    }
 }
 
 // MARK: - Service Domain Lookup

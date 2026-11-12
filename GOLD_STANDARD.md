@@ -199,9 +199,11 @@ Updated at every commit, so the work can be picked up from this file alone.
   dead. 609 tests, 0 failures.
 - T42/T76 done: first-run prices are only ones read from the service's own page.
 - Scope C done (see its row). The run stopped here on 11-11 when the usage limit was reached.
-- 11-12, 00:40: the run resumed. Before any change, the overlooked report was checked against the
-  code (41 findings stand, rows O1 to O41 in 6.3a) and the rest of the run was planned as one piece:
-  section 5.3. The order there replaces the list that stood here. Next: D0 (O1 first).
+- 11-11, 23:30: the run resumed. Before any change, the overlooked report was checked against the
+  code (rows O1 to O41 in 6.3a) and the rest of the run was planned as one piece: section 5.3. The
+  order there replaces the list that stood here.
+- D0, first slice: O1, O23, O38, O40 closed (see their rows). Next in D0: O36 (universal links), O39
+  (Sign in with Apple revocation). Then D1, the scan.
 - Told by the other session at 22:04 (it has stood down and changed nothing): sections 2, 3, 4, 6, 7
   and 10 of the engineering audit were never done and there is no finished overlooked-details
   report. Those areas have been scanned by nobody; they are owed before Stage G can be called done.
@@ -240,11 +242,10 @@ The founder's instruction for this part: "plan before executing everything to ma
 things are all interconnected to make the truthful 9.5", "use the internet and find sources".
 
 **What was checked before writing this.** The overlooked-details report (`overlooked.md`) was only ever
-a first save. Every "wrong" or "missing" line in it was looked up in today's code. 41 still stand; they
-are now ledger rows O1 to O41 (6.3a). Two were thought closed and are not: B6 closed the link logging in
-`DeepLinkManager`, and two more lines in `ContentView.swift` still write whole incoming links, sign-in
-codes included, to the device log in release builds (O1). Six parts of the engineering audit and five
-of the overlooked report were never written, so nobody has scanned those areas.
+a first save. Every "wrong" or "missing" line in it was looked up in today's code and given a ledger
+row, O1 to O41 (6.3a). (O1 was written down wrongly at first: the two lines that log a whole link sit
+inside `#if DEBUG`, so no release build has them. Corrected in its row.) Six parts of the engineering
+audit and five of the overlooked report were never written, so nobody has scanned those areas.
 
 **Seven threads.** A small thing reaches 9.5 only when everything on its thread does, so the work is
 grouped by thread, not by file. Each thread ends in a guard that fails if the thread is cut again.
@@ -389,15 +390,15 @@ matters to a stranger: the customer round below scores "getting in" at 1.
 | T59, T66, T72–74 | "Open Cancellation Page" opens a web search for 794 of 994 names; a "pause" that pauses nothing and stops reminders; Shortcuts report wrong status | T59 closed 11-11 with T62: the button says what it opens. A known service: "Open Cancellation Page". A name the catalog lists: the catalog's own link for exactly that name, called "Open Website", with one line on where to cancel. Anything else: "Search How to Cancel" (and "&" in a name no longer cuts the search short). Seen on the simulator. T66, T72–74 closed 11-11: the "pause" set only by a Shortcut marked a subscription paused, stopped its reminders and took it out of the totals while it went on charging. It is removed: both Shortcuts, `pausedUntil`, the resume button, the paused row on Home and the reminder scheduled outside the planner. A subscription the person marks Paused themselves is still listed apart. The detail Shortcut reports the real status and no renewal for something that will not charge; the spend Shortcut says what it returns. The `paused_until` column stays in the database, unwritten, until it can be dropped by the two-step rule |
 | T96 | Pause Plan counts Audible, PlayStation Plus and Kindle as streaming | closed 11-11: eligibility is an explicit list of video streaming services by name; being filed under "Entertainment" is no longer enough. `testOnlyVideoStreamingByNameIsEligibleWhateverItsCategory` (12 that must not be, 18 that must) |
 
-### 6.3a Open: from the overlooked-details check (each verified in the code on 11-12)
+### 6.3a Open: from the overlooked-details check (each looked up in the code on the night of 11-11)
 
 | Id | Weight | What | Status |
 |---|---|---|---|
-| O1 | high | Two release-build log lines write every incoming link in full, sign-in codes included (`ContentView.swift`, the app delegate and the root view). B6 closed only `DeepLinkManager` | open |
+| O1 | low | Not what the report said: the two lines that log a whole incoming link are inside `#if DEBUG`, so no release build writes one. What was real: five log lines wrote the person's address or id (three of them in every build, through a logger that hides such values in release logs) | closed 11-11: all seven lines are gone, and `LogGuardTests` fails on any logging call that names a link, an address, a token or a code |
 | O2, O3 | high | All renewal maths runs in the device's calendar (27 places); on a Hijri, Buddhist or Japanese-calendar iPhone "monthly" is a lunar month or the year is 2569. Reminder trigger dates carry no calendar | open |
 | O4 | medium | The age check counts years in the device's calendar: 16 arrives about six months early on a Hijri iPhone | open |
 | O5 | medium | A renewal day is stored as a moment (local noon): after a long flight, or on a second device far away, every renewal is a day off | open |
-| O6 | medium | Trial end dates keep the time of day they were made | to verify |
+| O6 | medium | Trial end dates keep the time of day they were made | not a finding now: `withDaysAtNoon` sets both the renewal day and the trial end to noon on every add and change |
 | O7 | low | The usage month and the year slip's year come from the device's calendar | open |
 | O8 | high | An amount typed with the Arabic decimal mark is refused | open |
 | O9 | high | Amounts above 100,000 are refused in every currency (rupiah, dong, rial prices are normal above it) | open |
@@ -414,7 +415,7 @@ matters to a stranger: the customer round below scores "getting in" at 1.
 | O20 | low | Two StoreKit test files ship inside the app | open |
 | O21 | medium | "Keep it" on an old reminder keeps whichever charge is next, not the one the reminder was about | open |
 | O22 | medium | Reminders are rebuilt only when the app opens: with twenty subscriptions the 60 slots last about three weeks | open |
-| O23 | medium | A reminder tapped while signed out leaves a verdict waiting for whoever signs in next | to verify |
+| O23 | medium | A reminder tapped while signed out leaves a verdict waiting for whoever signs in next. With it: after sign-out the widgets, Spotlight, the reminders already on the Lock Screen and the Shortcuts all still showed the list | closed 11-11: signing out (or a session that has ended) empties the list from memory, the widgets and Spotlight and removes pending and delivered reminders, while the copy on the iPhone waits for the same person (`LocalUserData.hideWhileSignedOut`); a reminder tapped while signed out opens and records nothing. `LocalDataGuardTests` ×2 |
 | O24 | low | "Charges tomorrow" is an ordinary notification: in a Focus it can arrive after the charge | open |
 | O25 | low | "Reminders are on" is shown when banners are off or everything goes to the summary | open |
 | O26 | low | Badge permission is asked for and never used | open |
@@ -429,9 +430,9 @@ matters to a stranger: the customer round below scores "getting in" at 1.
 | O35 | unclear | Widgets in tinted, clear and StandBy rendering | simulator in Stage E; device for the owner |
 | O36 | high | The app claims universal links for pausely.pro and the site publishes no association file | open |
 | O37 | medium | The free plan's limit counts cancelled rows: cancelling, which is what the app is for, frees no room | open |
-| O38 | medium | Wiping misses typed hours, merchant corrections, the Pro flag and the waiting tally: the next account inherits them | open |
+| O38 | medium | Wiping misses typed hours, merchant corrections, the Pro flag and the waiting tally: the next account inherits them. Found with it: a name typed on a sign-up nobody finished was given to whichever account next signed in by code (the same fault B8 fixed for the password) | closed 11-11: one list of the person's saved values (`LocalUserData.personalKeys`, plus everything under `usage_`), removed together with the saved logos; the name is kept with the address it was typed for and given to no other. `LocalDataGuardTests` reads the sources and fails on a value saved under a name that is neither on that list nor named there as a setting of the iPhone with its reason (6 tests) |
 | O39 | medium | Deleting an account does not revoke the Sign in with Apple token (Apple asks for it) | open |
-| O40 | low | Biometric lock is dead code | open |
+| O40 | low | Biometric lock is dead code, with a Face ID usage string in Info.plist for a feature that does not exist | closed 11-11: the code, the error case and the usage string are deleted |
 | O41 | low | The app switcher shows amounts | open |
 
 Scan status (16 areas). Scanned: engineering 1, 5, 8, 9; overlooked 1 to 4 (calendars and locales,

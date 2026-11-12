@@ -17,7 +17,6 @@ class RevolutionaryAuthManager: ObservableObject {
     @Published var state: PauselyAuthState = .initial
     @Published var isAuthenticated = false
     @Published var currentUser: User?
-    @Published var isBiometricEnabled = false
     /// A password-reset code or link was accepted: the next thing the person sees is "choose a new password".
     @Published var needsNewPassword = false
     /// Why a link from an account email didn't work, in words the person can act on.
@@ -27,7 +26,6 @@ class RevolutionaryAuthManager: ObservableObject {
 
     // MARK: - Private Properties
     private var client: SupabaseClient { SupabaseManager.shared.client }
-    private let biometricKey = "biometric_auth_enabled"
     private var refreshTask: Task<Void, Never>?
     private var pendingPassword: String?
     /// The address `pendingPassword` was typed for. The password is saved only on that account.
@@ -74,6 +72,8 @@ class RevolutionaryAuthManager: ObservableObject {
     private static let cachedCreatedAtKey = "auth_cached_created_at"
     private static let pendingFirstNameKey = "pending_firstName"
     private static let pendingLastNameKey  = "pending_lastName"
+    /// The address the pending name was typed for.
+    private static let pendingNameEmailKey = "pending_nameEmail"
     
     // Keychain keys for secure storage
     private static let keychainAccessTokenKey = "auth_access_token"
@@ -81,7 +81,6 @@ class RevolutionaryAuthManager: ObservableObject {
 
     // MARK: - Initialization
     private init() {
-        isBiometricEnabled = UserDefaults.standard.bool(forKey: biometricKey)
 
         #if DEBUG
         // UI tests pass --reset-state to start signed out, whatever a previous run left behind.
@@ -123,7 +122,6 @@ class RevolutionaryAuthManager: ObservableObject {
             currentUser = user
             isAuthenticated = true
             state = .authenticated(user)
-            PauselyLogger.info("Restored cached session for: \(email ?? uid)", category: "auth")
         }
 
         // Async: verify the Supabase token is still valid and refresh user data.
@@ -177,6 +175,20 @@ class RevolutionaryAuthManager: ObservableObject {
     /// Removes the name kept for an account. Sign-out keeps it, because Apple gives a name only on the
     /// first sign-in and a returning person would otherwise come back nameless; deleting the account, or
     /// another account taking over this phone, removes it.
+    /// The name typed on a sign-up form, when it was typed for this address; nothing otherwise.
+    nonisolated static func nameTyped(for email: String?, first: String?, last: String?,
+                                      typedFor: String?) -> (first: String?, last: String?) {
+        guard let email, let typedFor, AuthLinkGate.sameAddress(typedFor, email) else { return (nil, nil) }
+        return (first, last)
+    }
+
+    /// Removes the name waiting for a sign-up to finish.
+    static func forgetPendingName() {
+        KeychainManager.shared.delete(key: pendingFirstNameKey)
+        KeychainManager.shared.delete(key: pendingLastNameKey)
+        KeychainManager.shared.delete(key: pendingNameEmailKey)
+    }
+
     static func forgetProfile(userId: String) {
         KeychainManager.shared.delete(key: "profile_\(userId)_firstName")
         KeychainManager.shared.delete(key: "profile_\(userId)_lastName")
@@ -248,7 +260,6 @@ class RevolutionaryAuthManager: ObservableObject {
             currentUser = user
             isAuthenticated = true
             state = .authenticated(user)
-            PauselyLogger.info("Session verified for: \(user.email ?? user.id)", category: "auth")
             startSessionRefresh()
             postAuthSetup(user: user)
 
@@ -259,6 +270,7 @@ class RevolutionaryAuthManager: ObservableObject {
             currentUser = nil
             isAuthenticated = false
             state = .unauthenticated
+            LocalUserData.hideWhileSignedOut()
         } else {
             state = .unauthenticated
         }
@@ -340,8 +352,10 @@ class RevolutionaryAuthManager: ObservableObject {
             pendingPassword = password
             pendingPasswordEmail = email
             noteCodeRequested(for: email)
+            Self.forgetPendingName()
             if let fn = firstName, !fn.isEmpty { KeychainManager.shared.save(fn, forKey: Self.pendingFirstNameKey) }
             if let ln = lastName, !ln.isEmpty { KeychainManager.shared.save(ln, forKey: Self.pendingLastNameKey) }
+            KeychainManager.shared.save(email, forKey: Self.pendingNameEmailKey)
 
             // Send OTP — creates user if they don't exist
             try await client.auth.signInWithOTP(
@@ -355,8 +369,7 @@ class RevolutionaryAuthManager: ObservableObject {
         } catch {
             pendingPassword = nil
             pendingPasswordEmail = nil
-            KeychainManager.shared.delete(key: Self.pendingFirstNameKey)
-            KeychainManager.shared.delete(key: Self.pendingLastNameKey)
+            Self.forgetPendingName()
             let authError = PauselyAuthError.unknown(error)
             state = .error(authError)
             throw authError
@@ -379,8 +392,13 @@ class RevolutionaryAuthManager: ObservableObject {
     /// The end of every email sign-up or sign-in, by code or by link: remember the session, apply the name
     /// and password typed on the sign-up form if this finishes one, and show the app.
     private func finishEmailSignIn(_ supabaseUser: Auth.User) async {
-        let firstName = KeychainManager.shared.get(Self.pendingFirstNameKey)
-        let lastName = KeychainManager.shared.get(Self.pendingLastNameKey)
+        // A name typed on a sign-up form belongs to the address on that form. Left behind by a sign-up
+        // nobody finished, it is never given to a different account that signs in later.
+        let (firstName, lastName) = Self.nameTyped(
+            for: supabaseUser.email,
+            first: KeychainManager.shared.get(Self.pendingFirstNameKey),
+            last: KeychainManager.shared.get(Self.pendingLastNameKey),
+            typedFor: KeychainManager.shared.get(Self.pendingNameEmailKey))
 
         let user = makeUser(from: supabaseUser, firstName: firstName, lastName: lastName)
         cacheSession(userId: supabaseUser.id.uuidString, email: supabaseUser.email, createdAt: supabaseUser.createdAt)
@@ -402,8 +420,7 @@ class RevolutionaryAuthManager: ObservableObject {
             }
         }
         forgetCodeRequest()
-        KeychainManager.shared.delete(key: Self.pendingFirstNameKey)
-        KeychainManager.shared.delete(key: Self.pendingLastNameKey)
+        Self.forgetPendingName()
 
         currentUser = user
         isAuthenticated = true
@@ -430,9 +447,6 @@ class RevolutionaryAuthManager: ObservableObject {
 
     func signIn(email: String, password: String) async throws {
         state = .loading
-        #if DEBUG
-        PauselyLogger.info("Attempting sign in for: \(email)", category: "auth")
-        #endif
         
         do {
             let session = try await client.auth.signIn(
@@ -451,9 +465,6 @@ class RevolutionaryAuthManager: ObservableObject {
             currentUser = user
             isAuthenticated = true
             state = .authenticated(user)
-            #if DEBUG
-            PauselyLogger.info("Sign in successful for: \(email)", category: "auth")
-            #endif
 
             startSessionRefresh()
             postAuthSetup(user: user)
@@ -519,9 +530,6 @@ class RevolutionaryAuthManager: ObservableObject {
             currentUser = user
             isAuthenticated = true
             state = .authenticated(user)
-            #if DEBUG
-            PauselyLogger.info("Apple Sign In successful for user: \(user.id)", category: "auth")
-            #endif
 
             startSessionRefresh()
             postAuthSetup(user: user)
@@ -586,6 +594,7 @@ class RevolutionaryAuthManager: ObservableObject {
         // then throws; a cache left behind would open the next launch as the person who just signed out.
         clearSessionCache()
         UserDefaults.standard.removeObject(forKey: "last_auth_email")
+        LocalUserData.hideWhileSignedOut()
         do {
             try await client.auth.signOut()
         } catch {
@@ -617,10 +626,6 @@ class RevolutionaryAuthManager: ObservableObject {
     }
     #endif
 
-    // MARK: - Biometric Authentication
-    
-    
-    
     // MARK: - Links from account emails
 
     /// A link from a sign-up, sign-in or reset email was opened. Whatever shape the account service gave
