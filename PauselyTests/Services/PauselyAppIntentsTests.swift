@@ -185,7 +185,7 @@ final class PauselyAppIntentsTests: XCTestCase {
         XCTAssertEqual(result.value, "Hulu: \(MoneyFormat.string(Decimal(10), "USD"))/month, Cancelled.")
         intent.name = "Crave"
         result = try await intent.perform()
-        XCTAssertEqual(result.value, "Crave: \(MoneyFormat.string(Decimal(10), "USD"))/month, Trial. No renewal date.")
+        XCTAssertEqual(result.value, "Crave: \(MoneyFormat.string(Decimal(10), "USD"))/month, Free trial. No renewal date.")
     }
 
     /// The person gave a name and a price, not a date, so none is saved as theirs.
