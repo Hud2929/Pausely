@@ -192,10 +192,11 @@ Updated at every commit, so the work can be picked up from this file alone.
   known failure.
 - Stage C is done: every row of 6.3 is closed. 609 tests, one failure (the translation guard, which
   Stage D closes); Debug and Release build.
-- Now: Stage D (6.4), top to bottom: T60/T61/T63 (cancel steps, phone numbers, the rating sheet),
-  T42/T76 (first-run prices), Scope C (catalog), T25–33 (Deep savings analysis), T50–56 (in-app
-  policy pages; this ends the 36 untranslated lines), then the untranslated screens, plurals, unused
-  keys, names, and the listing.
+- Stage D (6.4) has begun. T50–56 done first because it ended the suite's one failure: 609 tests, 0
+  failures.
+- Now, in order: T60/T61/T63 (cancel steps, phone numbers, the rating sheet), T42/T76 (first-run
+  prices), Scope C (catalog), T25–33 (Deep savings analysis), the untranslated screens and plurals
+  (T97–99, T80–86, T70, T67, T89), unused keys (T101), names (T102–108), the listing (T109–111).
 
 **Phase 0. Scan (read-only).** Four independent audits (dead code, truth, design rules on every
 view, engineering) plus mechanical scans. Output: the ledger.
@@ -306,7 +307,7 @@ matters to a stranger: the customer round below scores "getting in" at 1.
 | T42, T76 | 21 of 27 first-run prices come from press round-ups, not the service's page, and are saved as if confirmed | open |
 | Scope C | Catalog: 1,379 invented plan prices, invented descriptions (Pausely's own says "bank sync"), invented websites used for logos, plan variants listed as services | open |
 | T25–33 | "Deep savings analysis": English only, invented thresholds, a figure that always equals the price, overlap matched by substring on cancelled items too | open |
-| T50–56 | In-app Privacy Policy and Terms: untrue lines (analytics, push, price alerts, a licence to use data), English only, a second copy beside the website's | open |
+| T50–56 | In-app Privacy Policy and Terms: untrue lines (analytics, push, price alerts, a licence to use data), English only, a second copy beside the website's | closed 11-11: the in-app copies are deleted. Each policy has one copy, on the website, shown inside the app from Privacy & Security and from account creation (`LegalPage`; seen on the simulator). With the name placeholder on the add screen translated, `testEveryScreenIsTranslated` passes: the unit suite is fully green for the first time (609 tests). Still to check under the listing rows: that the website's own text is true |
 | T34–38 | Paywall: cancelling Apple's sheet raises "Purchase Error"; restore outcomes all read "Purchase failed"; "Apple ID" path is out of date; two different last days to cancel | closed 11-11: each outcome has its own words in five languages (`PaywallNotice`), and closing Apple's sheet says nothing (seen on the simulator: cancel, no alert). The path reads "open Settings, tap your name, then Subscriptions" on the paywall and in the delete-account warning. The slip says "Cancel by" the day before the first charge, which agrees with the 24-hour line under the button (seen: first charge Nov 18, cancel by Nov 17) |
 | T97–99, T80–86, T70, T67, T89 | Untranslated: the welcome screen's six lines, edit-screen rows, age gate buttons, every Shortcut result, a notification, every widget string; 15 counts with no plural forms ("1 subscriptions") | open |
 | T101 | About 940 unused string keys, some carrying old false claims in six languages | open |

@@ -149,11 +149,10 @@ struct PremiumSignUpView: View {
     @State private var problem: String?
     @State private var showEmailConfirmation = false
     @State private var pendingEmail = ""
-    @State private var legal: Legal?
+    @State private var legal: LegalPage?
     @FocusState private var focus: Field?
 
     private enum Field { case email, password }
-    private enum Legal: String, Identifiable { case terms, privacy; var id: String { rawValue } }
 
     private var trimmedEmail: String { email.trimmingCharacters(in: .whitespacesAndNewlines) }
     private var isValid: Bool {
@@ -231,12 +230,7 @@ struct PremiumSignUpView: View {
             .sheet(isPresented: $showEmailConfirmation) {
                 EmailConfirmationView(email: pendingEmail)
             }
-            .sheet(item: $legal) { page in
-                switch page {
-                case .terms: TermsOfServiceView()
-                case .privacy: PrivacyPolicyView()
-                }
-            }
+            .sheet(item: $legal) { $0.view }
             .fullScreenCover(isPresented: $showAgeGate) {
                 AgeGateView(
                     onPassed: { showAgeGate = false },

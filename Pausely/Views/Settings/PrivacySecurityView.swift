@@ -61,12 +61,9 @@ struct PrivacySecurityView: View {
                 }
             }
         }
-        .sheet(isPresented: $showingPrivacyPolicy) {
-            PrivacyPolicyView()
-        }
-        .sheet(isPresented: $showingTermsOfService) {
-            TermsOfServiceView()
-        }
+        // The policies have one copy, on the website. It opens here, without leaving the app.
+        .sheet(isPresented: $showingPrivacyPolicy) { LegalPage.privacy.view }
+        .sheet(isPresented: $showingTermsOfService) { LegalPage.terms.view }
     }
 
     private func deleteAccount() async {

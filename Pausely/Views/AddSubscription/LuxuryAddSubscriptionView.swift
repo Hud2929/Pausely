@@ -36,7 +36,7 @@ struct LuxuryAddSubscriptionView: View {
                     }
                     .padding(.bottom, -12)
 
-                    TextField("Netflix, Spotify...", text: $name)
+                    TextField("Netflix, Spotify…", text: $name)
                         .font(.question(.title))
                         .foregroundStyle(Color.inkText)
                         .textInputAutocapitalization(.words)

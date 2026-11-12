@@ -26883,7 +26883,6 @@
       }
     },
     "Netflix Standard": {},
-    "Netflix, Spotify...": {},
     "New Password": {
       "localizations": {
         "de": {
@@ -65893,6 +65892,40 @@
           "stringUnit": {
             "state": "translated",
             "value": "思っていたより年間約%@多く払っています。"
+          }
+        }
+      }
+    },
+    "Netflix, Spotify…": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Netflix، Spotify…"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Netflix, Spotify …"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Netflix, Spotify…"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Netflix, Spotify…"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Netflix、Spotifyなど"
           }
         }
       }
