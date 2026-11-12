@@ -30,7 +30,7 @@ report "numeric corner radii"          "$(search '\.cornerRadius\([0-9]|cornerRa
 report "full-screen covers off iPad width" "$(for f in $(grep -rlE 'fullScreenCover' --include='*.swift' Pausely); do grep -q 'readableWidth' "$f" || echo "$f"; done)"
 
 # --- Naming
-report "hype names"                    "$(search '\b(struct|class|enum|actor|protocol|typealias|extension)\s+(Revolutionary|Luxury|Premium|Genius|Neural|Singularity|Artistic|Ultimate|Magic|Real[A-Z])[A-Za-z]*|REVOLUTIONARY|[Ww]orld-class|1000s of ' Pausely PauselyWidget)"
+report "hype names"                    "$(search '\b(struct|class|enum|actor|protocol|typealias|extension)\s+(Revolutionary|Luxury|Premium|Genius|Neural|Singularity|Artistic|Ultimate|Magic|Real[A-Z])[A-Za-z]*|REVOLUTIONARY|[Ww]orld-class|1000s of ' Pausely PauselyWidget; find Pausely PauselyWidget Shared -name "*.swift" | grep -E "/(Revolutionary|Luxury|Premium|Genius|Neural|Singularity|Artistic|Ultimate|Magic)[A-Za-z]*\.swift$")"
 report "TODO / FIXME / HACK"           "$(grep -rnE --include='*.swift' '//.*\b(TODO|FIXME|HACK|XXX)\b' Pausely PauselyWidget Shared PauselyTests PauselyUITests 2>/dev/null)"
 
 # --- Dead code and size

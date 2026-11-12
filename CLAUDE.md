@@ -54,7 +54,7 @@ user; nothing reaches the server). `--reset-state` (UI tests) starts signed out 
 ### Entry and navigation
 `Pausely/ContentView.swift` holds `PauselyApp`, the `AppDelegate` (sets the notification delegate and
 categories at launch) and `RootView`: splash → `FirstRunView` (guess, tally, reveal) →
-`PremiumWelcomeFlow` (sign up / sign in) → `AgeGateView` when needed → `PremiumMainTabView`
+`WelcomeFlow` (sign up / sign in) → `AgeGateView` when needed → `MainTabView`
 (Dashboard, Subscriptions, Analysis, Profile). Deep links go through `DeepLinkManager`: only
 `pausely://` links are the app's (`URL.routeSegments`); it claims no web links.
 
@@ -69,7 +69,7 @@ All pure and unit-tested; they take `now` and a `Calendar`.
 - `PausePlan`: rotation schedule, savings estimate and its reminders.
 
 ### Services (`Pausely/Services/`)
-- `RevolutionaryAuthManager` (AuthManager.swift): auth, sign out, `deleteAccount()`.
+- `AuthManager` (AuthManager.swift): auth, sign out, `deleteAccount()`.
 - `SubscriptionStore` (ViewModels): offline-first list, synced to the Supabase `subscriptions` table.
   Every change lands on the device and in `Sync/SyncQueue` in one step (one pending add, change or
   remove per subscription; sent after each change, on foreground and when the network returns);

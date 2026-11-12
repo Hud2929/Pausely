@@ -178,7 +178,7 @@ enum CodeProblem {
 struct EmailConfirmationView: View {
     let email: String
 
-    @ObservedObject private var authManager = RevolutionaryAuthManager.shared
+    @ObservedObject private var authManager = AuthManager.shared
     @Environment(\.dismiss) private var dismiss
     @State private var code = ""
     @State private var isVerifying = false
@@ -279,7 +279,7 @@ struct EmailConfirmationView: View {
 struct PasswordResetView: View {
     let email: String
 
-    @ObservedObject private var authManager = RevolutionaryAuthManager.shared
+    @ObservedObject private var authManager = AuthManager.shared
     @Environment(\.dismiss) private var dismiss
     @State private var address = ""
     @State private var sentTo: String?
@@ -419,7 +419,7 @@ struct PasswordResetView: View {
 
 /// Shown once a reset code or link has been accepted. Saving signs the person in.
 struct NewPasswordView: View {
-    @ObservedObject private var authManager = RevolutionaryAuthManager.shared
+    @ObservedObject private var authManager = AuthManager.shared
     @State private var password = ""
     @State private var isSaving = false
     @State private var problem: String?

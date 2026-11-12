@@ -9,8 +9,8 @@ import Auth
 /// Revolutionary authentication manager with Pausely-branded custom emails,
 /// deep linking support for email verification, and comprehensive auth state management
 @MainActor
-class RevolutionaryAuthManager: ObservableObject {
-    static let shared = RevolutionaryAuthManager()
+class AuthManager: ObservableObject {
+    static let shared = AuthManager()
     
     // MARK: - Published State
     @Published var state: PauselyAuthState = .initial

@@ -1,7 +1,7 @@
 import SwiftUI
 
 /// The list of everything the person pays for, grouped by when each one next charges.
-struct PremiumSubscriptionsView: View {
+struct SubscriptionsView: View {
     @ObservedObject private var store = SubscriptionStore.shared
     @ObservedObject private var currencyManager = CurrencyManager.shared
     @ObservedObject private var eventLog = LifecycleEventLog.shared
@@ -299,5 +299,5 @@ private struct SubscriptionRow: View {
 }
 
 #Preview {
-    PremiumSubscriptionsView()
+    SubscriptionsView()
 }

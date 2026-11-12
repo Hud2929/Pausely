@@ -201,18 +201,18 @@ final class LocalDataGuardTests: XCTestCase {
     // MARK: - A name typed at sign-up
 
     func testANameTypedForOneAddressIsNeverGivenToAnotherAccount() {
-        let typed = RevolutionaryAuthManager.nameTyped(for: "sam@example.com", first: "Alex", last: "Lee",
+        let typed = AuthManager.nameTyped(for: "sam@example.com", first: "Alex", last: "Lee",
                                                        typedFor: "alex@example.com")
         XCTAssertNil(typed.first)
         XCTAssertNil(typed.last)
 
-        let own = RevolutionaryAuthManager.nameTyped(for: "Alex@Example.com ", first: "Alex", last: "Lee",
+        let own = AuthManager.nameTyped(for: "Alex@Example.com ", first: "Alex", last: "Lee",
                                                      typedFor: "alex@example.com")
         XCTAssertEqual(own.first, "Alex")
         XCTAssertEqual(own.last, "Lee")
 
         // Left by an older version, with no address beside it: nobody's.
-        let unknown = RevolutionaryAuthManager.nameTyped(for: "sam@example.com", first: "Alex", last: nil, typedFor: nil)
+        let unknown = AuthManager.nameTyped(for: "sam@example.com", first: "Alex", last: nil, typedFor: nil)
         XCTAssertNil(unknown.first)
     }
 }

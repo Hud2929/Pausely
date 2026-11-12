@@ -162,7 +162,7 @@ struct SubscriptionBrowserView: View {
             }
         }
         .sheet(isPresented: $showingCustomAdd) {
-            LuxuryAddSubscriptionView()
+            AddSubscriptionView()
         }
         .sheet(isPresented: $showingInbox) { InboxImportView() }
         .sheet(isPresented: $showingPaywall) {

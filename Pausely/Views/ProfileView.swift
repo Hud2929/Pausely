@@ -2,8 +2,8 @@ import StoreKit
 import SwiftUI
 
 /// Profile: who is signed in, which plan they are on, and every setting. One list, no cards.
-struct PremiumProfileView: View {
-    @ObservedObject private var authManager = RevolutionaryAuthManager.shared
+struct ProfileView: View {
+    @ObservedObject private var authManager = AuthManager.shared
     @ObservedObject private var paymentManager = PaymentManager.shared
     @ObservedObject private var store = SubscriptionStore.shared
     @ObservedObject private var currencyManager = CurrencyManager.shared
@@ -384,5 +384,5 @@ struct WrappedStats {
 }
 
 #Preview {
-    PremiumProfileView()
+    ProfileView()
 }

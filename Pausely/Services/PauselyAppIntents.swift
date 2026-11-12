@@ -180,7 +180,7 @@ enum ShortcutProblem: Error, Equatable, CustomLocalizedStringResourceConvertible
         }
     }
 
-    @MainActor static var isSignedIn: () -> Bool = { RevolutionaryAuthManager.shared.isAuthenticated }
+    @MainActor static var isSignedIn: () -> Bool = { AuthManager.shared.isAuthenticated }
 
     @MainActor
     static func requireSignedIn() throws {

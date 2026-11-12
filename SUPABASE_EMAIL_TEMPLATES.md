@@ -6,7 +6,7 @@ notes that disagreed with each other.
 
 **What the app expects:** every one of these emails carries a **6-digit code** (`{{ .Token }}`). The app
 asks for that code on the screen that follows. If a template carries a link instead, the app still signs
-the person in when the link is opened on the iPhone (`AuthLink`, `RevolutionaryAuthManager.handleDeepLink`),
+the person in when the link is opened on the iPhone (`AuthLink`, `AuthManager.handleDeepLink`),
 but a link opened on another device goes nowhere. Codes work everywhere, so the templates use codes only.
 
 ## Settings to check once (Supabase dashboard → Authentication)

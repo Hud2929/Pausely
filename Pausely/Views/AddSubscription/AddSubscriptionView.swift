@@ -1,6 +1,6 @@
 import SwiftUI
 
-struct LuxuryAddSubscriptionView: View {
+struct AddSubscriptionView: View {
     @Environment(\.dismiss) private var dismiss
     @State private var name = ""
     @State private var amount = ""

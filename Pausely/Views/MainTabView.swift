@@ -1,8 +1,8 @@
 import SwiftUI
 
 // MARK: - The four tabs
-struct PremiumMainTabView: View {
-    @State private var selectedTab = PremiumMainTabView.launchTab
+struct MainTabView: View {
+    @State private var selectedTab = MainTabView.launchTab
 
     /// DEBUG only: `--demo-tab=N` opens tab N (0 Dashboard, 1 Subscriptions, 2 Insights, 3 Profile) for screenshots.
     private static var launchTab: Int {
@@ -24,7 +24,7 @@ struct PremiumMainTabView: View {
 
             Tab(value: 1) {
                 NavigationStack {
-                    PremiumSubscriptionsView(deepLinkedSubscription: $deepLinkedSubscription)
+                    SubscriptionsView(deepLinkedSubscription: $deepLinkedSubscription)
                         .navigationBarHidden(true)
                 }
             } label: {
@@ -40,7 +40,7 @@ struct PremiumMainTabView: View {
             .accessibilityIdentifier("tabAnalysis")
 
             Tab(value: 3) {
-                NavigationStack { PremiumProfileView().navigationBarHidden(true) }
+                NavigationStack { ProfileView().navigationBarHidden(true) }
             } label: {
                 Label("Profile", systemImage: "person")
             }
@@ -67,7 +67,7 @@ struct PremiumMainTabView: View {
         }
         .task {
             // Someone else's history must never show up after a different account signs in.
-            await LocalUserData.claim(for: RevolutionaryAuthManager.shared.currentUser?.id)
+            await LocalUserData.claim(for: AuthManager.shared.currentUser?.id)
             await NotificationManager.shared.refreshStatus()
             subscriptionStore.showList()
             await subscriptionStore.fetchSubscriptions()
@@ -91,5 +91,5 @@ extension Notification.Name {
 }
 
 #Preview {
-    PremiumMainTabView()
+    MainTabView()
 }

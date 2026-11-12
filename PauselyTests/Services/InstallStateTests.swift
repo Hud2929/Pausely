@@ -103,7 +103,7 @@ final class InstallStateTests: XCTestCase {
         KeychainManager.shared.save("Jane", forKey: "profile_\(id)_firstName")
         KeychainManager.shared.save("Doe", forKey: "profile_\(id)_lastName")
 
-        RevolutionaryAuthManager.forgetProfile(userId: id)
+        AuthManager.forgetProfile(userId: id)
 
         XCTAssertNil(KeychainManager.shared.get("profile_\(id)_firstName"))
         XCTAssertNil(KeychainManager.shared.get("profile_\(id)_lastName"))

@@ -23,7 +23,7 @@ final class VerdictCenter: ObservableObject {
 
     /// A reminder can still be on the Lock Screen after its owner signed out. It opens nothing and
     /// records nothing then: whoever signs in next must not be shown someone else's subscription.
-    var isSignedIn: () -> Bool = { RevolutionaryAuthManager.shared.isAuthenticated }
+    var isSignedIn: () -> Bool = { AuthManager.shared.isAuthenticated }
 
     func openPausePlan() {
         guard isSignedIn() else { return }

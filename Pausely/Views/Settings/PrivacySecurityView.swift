@@ -70,7 +70,7 @@ struct PrivacySecurityView: View {
     /// comes next, so it isn't a surprise.
     private var deleteWarning: String {
         let warning = L10n.string("This permanently deletes your account, your subscription list and your history from Pausely's servers and this iPhone. It doesn't cancel any subscriptions, including Pausely Pro. To cancel those, open Settings, tap your name, then Subscriptions.")
-        guard RevolutionaryAuthManager.shared.signsInWithApple else { return warning }
+        guard AuthManager.shared.signsInWithApple else { return warning }
         return warning + "\n\n" + L10n.string("Apple will ask you to confirm first.")
     }
 
@@ -78,7 +78,7 @@ struct PrivacySecurityView: View {
         isDeleting = true
         defer { isDeleting = false }
         do {
-            try await RevolutionaryAuthManager.shared.deleteAccount()
+            try await AuthManager.shared.deleteAccount()
             Feel.landed()
             dismiss()
         } catch is CancellationError {

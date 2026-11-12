@@ -65,7 +65,7 @@ final class CurrencyGuardTests: XCTestCase {
              allowedPaths: [
                 "Pausely/Views/CatalogAddSheet.swift",              // prefix of the price input field
                 "Pausely/Views/Subscriptions/AmountStepView.swift", // prefix of the amount input field
-                "Pausely/Views/AddSubscription/LuxuryAddSubscriptionView.swift" // prefix of the amount input field
+                "Pausely/Views/AddSubscription/AddSubscriptionView.swift" // prefix of the amount input field
              ]),
         Rule(name: "currency symbol written into text",
              fix: "Format the amount with MoneyFormat and interpolate it; sample amounts use OnboardingSample.money.",

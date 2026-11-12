@@ -134,7 +134,7 @@ class AppDelegate: NSObject, UIApplicationDelegate {
 
 // MARK: - Root View
 struct RootView: View {
-    @ObservedObject private var authManager = RevolutionaryAuthManager.shared
+    @ObservedObject private var authManager = AuthManager.shared
     @ObservedObject private var ageConsent = AgeConsentManager.shared
     @State private var supabaseManager = SupabaseManager.shared
     @State private var showSplash = true
@@ -142,7 +142,7 @@ struct RootView: View {
     @State private var showAuth = false
     @State private var splashWorkItem: DispatchWorkItem?
     @AppStorage("hasCompletedOnboarding") private var hasCompletedOnboarding = false
-    @State private var authStart: PremiumWelcomeFlow.Start = .welcome
+    @State private var authStart: WelcomeFlow.Start = .welcome
     @Environment(\.scenePhase) private var scenePhase
 
     // DEBUG only, all three: a release build never reads a launch argument (see `LaunchFlag`).
@@ -192,9 +192,9 @@ struct RootView: View {
                     case "verify": EmailConfirmationView(email: "jane@example.com")
                     case "reset": PasswordResetView(email: "")
                     case "newpassword": NewPasswordView()
-                    case "signup": PremiumWelcomeFlow(start: .signUp)
-                    case "signin": PremiumWelcomeFlow(start: .signIn)
-                    default: PremiumWelcomeFlow(start: .welcome)
+                    case "signup": WelcomeFlow(start: .signUp)
+                    case "signin": WelcomeFlow(start: .signIn)
+                    default: WelcomeFlow(start: .welcome)
                     }
                     #endif
                 } else if isDemoScreen("--demo-age-gate") {
@@ -253,7 +253,7 @@ struct RootView: View {
                     #endif
                 } else if isDemoScreen("--demo-custom-add") {
                     #if DEBUG
-                    LuxuryAddSubscriptionView()
+                    AddSubscriptionView()
                     #endif
                 } else if isDemoScreen("--demo-tier") {
                     #if DEBUG
@@ -309,7 +309,7 @@ struct RootView: View {
                         if supabaseManager.isUsingDemoMode {
                             DemoModeBanner()
                         }
-                        PremiumMainTabView()
+                        MainTabView()
                     }
                     .transition(.opacity.combined(with: .scale(0.98)))
                 } else if !showAuth && (!hasCompletedOnboarding || PendingTally.load() != nil) {
@@ -337,7 +337,7 @@ struct RootView: View {
                     .transition(.opacity)
                 } else {
                     // Onboarding completed but not authenticated: show auth
-                    PremiumWelcomeFlow(start: authStart, onSignUpDismissed: {
+                    WelcomeFlow(start: authStart, onSignUpDismissed: {
                         guard !authManager.isAuthenticated, PendingTally.load() != nil else { return }
                         withAnimation(Motion.unlessReduced(Motion.arrive)) { showAuth = false }
                     })
@@ -347,7 +347,7 @@ struct RootView: View {
             .opacity(showSplash ? 0 : 1)
 
             if showSplash {
-                PremiumSplashScreen(animation: $splashAnimation)
+                SplashScreen(animation: $splashAnimation)
                     .transition(.opacity)
             }
         }
@@ -427,7 +427,7 @@ struct RootView: View {
 
 // MARK: - Premium Splash Screen
 /// The launch screen: the pause mark on ink, for a little over half a second. No tagline, no spinner.
-struct PremiumSplashScreen: View {
+struct SplashScreen: View {
     @Binding var animation: Bool
 
     var body: some View {
@@ -447,7 +447,7 @@ struct PremiumSplashScreen: View {
 // MARK: - Premium Welcome Flow
 /// The sign-up / sign-in screen. The carousel before it already explained the app, so this goes
 /// straight to the account step; `start` opens the form the customer asked for.
-struct PremiumWelcomeFlow: View {
+struct WelcomeFlow: View {
     enum Start { case welcome, signUp, signIn }
     var start: Start = .welcome
     /// The "Create your account" sheet was closed. After the first run this leads back to the reveal.
@@ -465,10 +465,10 @@ struct PremiumWelcomeFlow: View {
             }
             .navigationBarHidden(true)
             .sheet(isPresented: $showSignUp, onDismiss: { onSignUpDismissed?() }) {
-                PremiumSignUpView()
+                SignUpView()
             }
             .sheet(isPresented: $showSignIn) {
-                PremiumSignInView()
+                SignInView()
             }
         }
         .onAppear {
@@ -535,7 +535,7 @@ struct PremiumWelcomeFlow: View {
                 #if DEBUG
                 // Debug builds only (never in the App Store build): the app without an account.
                 if !LaunchFlag.uiTesting.isSet {
-                    Button(action: { RevolutionaryAuthManager.shared.enterAsDebugUser() }) {
+                    Button(action: { AuthManager.shared.enterAsDebugUser() }) {
                         Text(verbatim: "Test without an account (debug build)")
                             .font(.footnote.weight(.medium))
                             .foregroundStyle(Color.inkTextMuted)

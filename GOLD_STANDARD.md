@@ -275,6 +275,7 @@ Updated at every commit, so the work can be picked up from this file alone.
 - Stage G begun: dead code and the TODO check (see 6.6). 727 tests, 0 failures; `gold_check` 61.
   Next in G: hype names (9), then the design lint (colours 18, fonts 13, animations 5, radii 11),
   files over 700 lines (5), strict concurrency, the project file, S4, S5.
+- G: hype names closed (6.6). `gold_check` 52. Next: the design lint, one rule at a time.
 - Told by the other session at 22:04 (it has stood down and changed nothing): sections 2, 3, 4, 6, 7
   and 10 of the engineering audit were never done and there is no finished overlooked-details
   report. Those areas have been scanned by nobody; they are owed before Stage G can be called done.
@@ -581,6 +582,10 @@ Stage G, as it closes (each line: what, and the evidence):
   provider), and the checker now knows that rule instead of a list of names. Proven able to fail
   with a throwaway probe. The "TODO" check reads comments only ("XXX" is also the ISO code for no
   currency, used by two tests); probe-tested too. `gold_check` 61.
+- Hype names, 11-12: nine types and three files renamed to what they are (`AuthManager`,
+  `MainTabView`, `SubscriptionsView`, `ProfileView`, `SignUpView`, `SignInView`, `SplashScreen`,
+  `WelcomeFlow`, `AddSubscriptionView`; `CancelSubscriptionFlow.swift`). The check now reads file
+  names too (probe-tested). `gold_check` "hype names" 9 → 0, total 52. 727 tests, 0 failures.
 
 ### 6.7 For the owner (cannot or should not be done from here)
 

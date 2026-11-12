@@ -54,13 +54,13 @@ final class DeepLinkManager {
         case .authConfirm:
             authDeepLinkTask?.cancel()
             authDeepLinkTask = Task {
-                _ = await RevolutionaryAuthManager.shared.handleDeepLink(url)
+                _ = await AuthManager.shared.handleDeepLink(url)
             }
 
         case .authResetPassword:
             authDeepLinkTask?.cancel()
             authDeepLinkTask = Task {
-                _ = await RevolutionaryAuthManager.shared.handleDeepLink(url)
+                _ = await AuthManager.shared.handleDeepLink(url)
             }
 
         case .subscriptionManage(let id):

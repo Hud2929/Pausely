@@ -138,9 +138,9 @@ private struct AppleButton: View {
 
 // MARK: - Create an account
 
-struct PremiumSignUpView: View {
+struct SignUpView: View {
     @Environment(\.dismiss) private var dismiss
-    @ObservedObject private var authManager = RevolutionaryAuthManager.shared
+    @ObservedObject private var authManager = AuthManager.shared
     @ObservedObject private var ageConsent = AgeConsentManager.shared
     @State private var showAgeGate = false
     @State private var email = ""
@@ -291,9 +291,9 @@ struct PremiumSignUpView: View {
 
 // MARK: - Sign in
 
-struct PremiumSignInView: View {
+struct SignInView: View {
     @Environment(\.dismiss) private var dismiss
-    @ObservedObject private var authManager = RevolutionaryAuthManager.shared
+    @ObservedObject private var authManager = AuthManager.shared
     @State private var email = ""
     @State private var password = ""
     @State private var isLoading = false
