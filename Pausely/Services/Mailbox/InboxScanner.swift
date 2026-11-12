@@ -243,8 +243,7 @@ final class InboxScanner: ObservableObject {
         let connected = Set(accounts.map(\.id))
         newSignals.removeAll { !($0.sources ?? []).contains(where: connected.contains) }
 
-        let ledger = ReceiptLedger.merge(newSignals, into: ReceiptLedger.load())
-        ReceiptLedger.save(ledger)
+        let ledger = ReceiptLedger.add(newSignals)
         progress = 1
         analyze(ledger, catalog: catalog)
         stats.receipts = newSignals.count

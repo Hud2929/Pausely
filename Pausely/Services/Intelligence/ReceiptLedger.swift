@@ -14,15 +14,33 @@ enum ReceiptLedger {
         return dir.appendingPathComponent("receipt_ledger.json")
     }
 
-    static func load() -> [ReceiptSignal] {
-        guard let url = fileURL, let data = try? Data(contentsOf: url) else { return [] }
-        let decoder = JSONDecoder()
-        decoder.dateDecodingStrategy = .secondsSince1970
-        return (try? decoder.decode([ReceiptSignal].self, from: data)) ?? []
+    /// What reading the file gave. "Couldn't read it" is not "there is nothing": the file is readable
+    /// only while the iPhone is unlocked, and a scan can still be running when it locks.
+    enum Stored: Equatable {
+        case facts([ReceiptSignal])
+        case nothingYet
+        case unreadable
     }
 
-    static func save(_ signals: [ReceiptSignal]) {
-        guard let url = fileURL else { return }
+    static func read(from url: URL? = fileURL) -> Stored {
+        guard let url else { return .unreadable }
+        guard FileManager.default.fileExists(atPath: url.path) else { return .nothingYet }
+        guard let data = try? Data(contentsOf: url) else { return .unreadable }
+        let decoder = JSONDecoder()
+        decoder.dateDecodingStrategy = .secondsSince1970
+        // A file this version can't decode holds nothing it can use; the next scan rebuilds it.
+        guard let facts = try? decoder.decode([ReceiptSignal].self, from: data) else { return .nothingYet }
+        return .facts(facts)
+    }
+
+    /// Everything known, for showing and analysing. Empty when nothing is saved or it can't be read now.
+    static func load(from url: URL? = fileURL) -> [ReceiptSignal] {
+        if case .facts(let facts) = read(from: url) { return facts }
+        return []
+    }
+
+    static func save(_ signals: [ReceiptSignal], to url: URL? = fileURL) {
+        guard let url else { return }
         let encoder = JSONEncoder()
         encoder.dateEncodingStrategy = .secondsSince1970
         guard let data = try? encoder.encode(signals) else { return }
@@ -31,6 +49,25 @@ enum ReceiptLedger {
         values.isExcludedFromBackup = true
         var mutableURL = url
         try? mutableURL.setResourceValues(values)
+    }
+
+    /// Adds newly found facts to what is saved and returns everything known. While the saved facts
+    /// can't be read, nothing is written: saving then would replace up to three years of history with
+    /// the few facts of this scan. They are returned on their own for this scan, and the next scan
+    /// finds them again, because reading mail never uses it up.
+    static func add(_ new: [ReceiptSignal], to url: URL? = fileURL, now: Date = Date()) -> [ReceiptSignal] {
+        switch read(from: url) {
+        case .unreadable:
+            return merge(new, into: [], now: now)
+        case .nothingYet:
+            let all = merge(new, into: [], now: now)
+            save(all, to: url)
+            return all
+        case .facts(let existing):
+            let all = merge(new, into: existing, now: now)
+            save(all, to: url)
+            return all
+        }
     }
 
     /// Idempotent merge: dedupes by message id (the same receipt in two inboxes is one fact, remembering
@@ -55,7 +92,9 @@ enum ReceiptLedger {
     /// Forgets one inbox: its receipts go unless another connected inbox also has them. Receipts saved
     /// before inboxes were tracked go with the last inbox.
     static func removeSource(_ accountID: String, remainingAccounts: Int) -> [ReceiptSignal] {
-        let kept = load().compactMap { signal -> ReceiptSignal? in
+        // Facts that can't be read right now are left alone rather than replaced by an empty file.
+        guard case .facts(let saved) = read() else { return [] }
+        let kept = saved.compactMap { signal -> ReceiptSignal? in
             guard let sources = signal.sources else { return remainingAccounts > 0 ? signal : nil }
             let others = sources.filter { $0 != accountID }
             guard !others.isEmpty else { return nil }

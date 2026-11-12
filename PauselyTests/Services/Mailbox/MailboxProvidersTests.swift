@@ -161,6 +161,32 @@ final class MailboxProvidersTests: XCTestCase {
         XCTAssertEqual(merged.first?.sources, ["A", "B"])
     }
 
+    /// The file of facts is readable only while the iPhone is unlocked. A scan that finished after it
+    /// locked used to read "nothing", add its few facts to that, and save: up to three years of
+    /// history replaced by one scan's worth.
+    func testFactsThatCannotBeReadAreNotWrittenOver() throws {
+        let folder = FileManager.default.temporaryDirectory.appendingPathComponent("ledger-\(UUID().uuidString)")
+        try FileManager.default.createDirectory(at: folder, withIntermediateDirectories: true)
+        defer { try? FileManager.default.removeItem(at: folder) }
+        let file = folder.appendingPathComponent("receipt_ledger.json")
+
+        XCTAssertEqual(ReceiptLedger.read(from: file), .nothingYet)
+        XCTAssertEqual(ReceiptLedger.add([signal("first@x.com", sources: ["A"])], to: file).map(\.id), ["first@x.com"])
+        XCTAssertEqual(ReceiptLedger.add([signal("second@x.com", sources: ["A"])], to: file).map(\.id).sorted(),
+                       ["first@x.com", "second@x.com"])
+
+        // Stand-in for a locked iPhone: the file is there and reading it is refused.
+        try FileManager.default.setAttributes([.posixPermissions: 0o000], ofItemAtPath: file.path)
+        XCTAssertEqual(ReceiptLedger.read(from: file), .unreadable)
+        let thisScan = ReceiptLedger.add([signal("third@x.com", sources: ["A"])], to: file)
+        XCTAssertEqual(thisScan.map(\.id), ["third@x.com"], "the scan still has what it found")
+        XCTAssertTrue(ReceiptLedger.load(from: file).isEmpty, "and shows nothing rather than guessing")
+
+        try FileManager.default.setAttributes([.posixPermissions: 0o600], ofItemAtPath: file.path)
+        XCTAssertEqual(ReceiptLedger.load(from: file).map(\.id).sorted(), ["first@x.com", "second@x.com"],
+                       "what couldn't be read was not written over")
+    }
+
     func testDisconnectingKeepsReceiptsAnotherInboxStillHas() {
         ReceiptLedger.save([signal("shared@x.com", sources: ["A", "B"]), signal("onlyA@x.com", sources: ["A"]),
                             signal("legacy@x.com", sources: nil)])
