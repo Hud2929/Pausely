@@ -3,26 +3,16 @@
 //  Pausely
 //
 //  Insights: one sentence about the whole list, then what costs most, where it goes, what went up,
-//  and (Pro) the deep analysis.
+//  and what the hours the person typed say.
 //
 
 import SwiftUI
 
 struct AnalysisView: View {
-    @ObservedObject private var geniusEngine = RealGeniusEngine.shared
     @ObservedObject private var store = SubscriptionStore.shared
-    @ObservedObject private var paymentManager = PaymentManager.shared
     @ObservedObject private var currencyManager = CurrencyManager.shared
     @ObservedObject private var eventLog = LifecycleEventLog.shared
-
-    @State private var deep: DeepState = .idle
-    @State private var showingPaywall = false
-
-    private enum DeepState {
-        case idle, analyzing, results(GeniusReport), nothing, failed(String)
-    }
-
-    private var canAnalyze: Bool { paymentManager.isUnlocked(.deepAnalysis) }
+    @ObservedObject private var usageLog = UsageLog.shared
 
     private var live: [Subscription] { store.activeSubscriptions }
 
@@ -113,7 +103,7 @@ struct AnalysisView: View {
                         Hairline()
                     }
 
-                    deepSection
+                    usageSection
                 }
             }
             .padding(.horizontal, Layout.margin)
@@ -121,12 +111,6 @@ struct AnalysisView: View {
             .padding(.bottom, 32)
         }
         .background(Color.ink.ignoresSafeArea())
-        .task(id: store.subscriptions) {
-            if canAnalyze, !store.subscriptions.isEmpty, case .idle = deep { await runDeepAnalysis() }
-        }
-        .sheet(isPresented: $showingPaywall) {
-            StoreKitUpgradeView(currentSubscriptionCount: store.subscriptions.count)
-        }
     }
 
     private var sentence: String {
@@ -167,94 +151,75 @@ struct AnalysisView: View {
         }
     }
 
-    // MARK: - Deep analysis (Pro)
+    // MARK: - What the hours say
 
-    @ViewBuilder private var deepSection: some View {
-        section(L10n.string("Deep savings analysis")) {
-            if !canAnalyze {
-                Text("Pro looks for duplicates, unused subscriptions and trials about to charge.")
+    /// What an hour of use cost, and what wasn't used, from the hours the person typed this month
+    /// (`UsageFacts`). Until they have typed any, one line says where to.
+    @ViewBuilder private var usageSection: some View {
+        let facts = UsageFacts.lines(for: store.subscriptions,
+                                     minutesThisMonth: { usageLog.getUsage(for: $0.name)?.minutesUsed },
+                                     currency: currencyManager.selectedCurrency, rates: currencyManager.rates)
+        if facts.used.isEmpty && facts.unused.isEmpty {
+            section(L10n.string("What an hour of use costs")) {
+                Text("Enter how long you use a subscription on its page, and this page shows what an hour of it costs.")
                     .font(.subheadline)
                     .foregroundStyle(Color.inkTextMuted)
                     .fixedSize(horizontal: false, vertical: true)
-                    .padding(.bottom, 12)
-                Button { showingPaywall = true } label: { Text("See Pro") }
-                    .buttonStyle(.ink(.quiet))
-                    .accessibilityIdentifier("insightsSeePro")
-            } else {
-                switch deep {
-                case .idle, .analyzing:
-                    HStack(spacing: 10) {
-                        ProgressView().tint(Color.inkTextMuted)
-                        Text("Analyzing…").font(.subheadline).foregroundStyle(Color.inkTextMuted)
-                    }
-                    .padding(.vertical, 12)
-                case .nothing:
-                    Text("Nothing to cut right now. Pausely will keep asking before each renewal.")
-                        .font(.subheadline)
-                        .foregroundStyle(Color.inkTextMuted)
-                        .fixedSize(horizontal: false, vertical: true)
-                        .padding(.vertical, 8)
-                case .failed(let message):
-                    Text(verbatim: message)
-                        .font(.subheadline)
-                        .foregroundStyle(Color.inkTextMuted)
-                        .fixedSize(horizontal: false, vertical: true)
-                        .padding(.vertical, 8)
-                    Button { Task { await runDeepAnalysis() } } label: { Text("Try Again") }
-                        .buttonStyle(.ink(.quiet))
-                case .results(let report):
-                    ForEach(Array(report.insights.prefix(8).enumerated()), id: \.element.id) { index, insight in
+                    .padding(.vertical, 8)
+            }
+        } else {
+            if !facts.used.isEmpty {
+                section(L10n.string("What an hour of use costs")) {
+                    ForEach(Array(facts.used.enumerated()), id: \.element.id) { index, line in
                         if index > 0 { Hairline() }
-                        insightRow(insight)
+                        usageRow(line,
+                                 detail: L10n.string("This month") + ": " + Duration.seconds(line.minutes * 60)
+                                    .formatted(.units(allowed: [.hours, .minutes], width: .abbreviated).locale(L10n.locale)),
+                                 value: line.costPerHour.map {
+                                     L10n.string("\(MoneyFormat.total($0, currencyManager.selectedCurrency, converted: line.isConverted, locale: L10n.locale)) an hour")
+                                 } ?? "")
+                    }
+                }
+            }
+            if !facts.unused.isEmpty {
+                section(L10n.string("Not used this month")) {
+                    ForEach(Array(facts.unused.enumerated()), id: \.element.id) { index, line in
+                        if index > 0 { Hairline() }
+                        usageRow(line, detail: nil,
+                                 value: MoneyFormat.total(line.monthly, currencyManager.selectedCurrency,
+                                                          converted: line.isConverted, locale: L10n.locale) + L10n.string("/month"))
                     }
                 }
             }
         }
     }
 
-    private func insightRow(_ insight: GeniusInsight) -> some View {
-        Button {
-            if let id = insight.subscriptionId { VerdictCenter.shared.showSubscription(id) }
-        } label: {
+    private func usageRow(_ line: UsageFacts.Line, detail: String?, value: String) -> some View {
+        Button { VerdictCenter.shared.showSubscription(line.subscription.id) } label: {
             HStack(alignment: .firstTextBaseline, spacing: 12) {
-                VStack(alignment: .leading, spacing: 3) {
-                    Text(verbatim: insight.title)
-                        .font(.body.weight(.semibold))
+                VStack(alignment: .leading, spacing: 2) {
+                    Text(verbatim: line.subscription.name)
+                        .font(.body)
                         .foregroundStyle(Color.inkText)
                         .multilineTextAlignment(.leading)
-                    Text(verbatim: insight.description)
-                        .font(.subheadline)
-                        .foregroundStyle(Color.inkTextMuted)
-                        .multilineTextAlignment(.leading)
+                    if let detail {
+                        Text(verbatim: detail)
+                            .font(.subheadline)
+                            .foregroundStyle(Color.inkTextMuted)
+                            .multilineTextAlignment(.leading)
+                    }
                 }
-                .fixedSize(horizontal: false, vertical: true)
                 Spacer(minLength: 8)
-                if insight.potentialSavings > 0 {
-                    Text(verbatim: currencyManager.format(insight.potentialSavings) + L10n.string("/month"))
-                        .font(.subheadline.monospacedDigit())
-                        .foregroundStyle(Color.inkText)
-                }
+                Text(verbatim: value)
+                    .font(.body.monospacedDigit())
+                    .foregroundStyle(Color.inkText)
+                    .multilineTextAlignment(.trailing)
             }
             .padding(.vertical, 12)
             .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
-        .disabled(insight.subscriptionId == nil)
         .accessibilityElement(children: .combine)
-    }
-
-    private func runDeepAnalysis() async {
-        deep = .analyzing
-        guard !store.subscriptions.isEmpty else { deep = .nothing; return }
-        do {
-            let report = try await geniusEngine.analyze(subscriptions: store.subscriptions)
-            deep = report.insights.isEmpty ? .nothing : .results(report)
-        } catch is CancellationError {
-            // Restarted by .task(id:): go back to idle so the next run starts.
-            if case .analyzing = deep { deep = .idle }
-        } catch {
-            deep = .failed(error.localizedDescription)
-        }
     }
 }
 

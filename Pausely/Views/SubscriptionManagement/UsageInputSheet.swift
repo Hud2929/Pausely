@@ -27,9 +27,19 @@ struct UsageInputSheet: View {
         let h = hours.trimmingCharacters(in: .whitespaces)
         let m = minutes.trimmingCharacters(in: .whitespaces)
         guard !(h.isEmpty && m.isEmpty) else { return nil }
-        guard let hourCount = h.isEmpty ? 0 : Int(h), let minuteCount = m.isEmpty ? 0 : Int(m),
+        guard let hourCount = h.isEmpty ? 0 : wholeNumber(h), let minuteCount = m.isEmpty ? 0 : wholeNumber(m),
               (0...744).contains(hourCount), (0..<60).contains(minuteCount) else { return nil }
         return hourCount * 60 + minuteCount
+    }
+
+    /// A whole number typed with any keyboard's digits ("٣" and "３" are three).
+    private static func wholeNumber(_ text: String) -> Int? {
+        var value = 0
+        for character in text {
+            guard let digit = character.wholeNumberValue, value < 100_000 else { return nil }
+            value = value * 10 + digit
+        }
+        return text.isEmpty ? nil : value
     }
 
     private var total: Int? { Self.totalMinutes(hours: hours, minutes: minutes) }

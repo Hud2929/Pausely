@@ -66235,6 +66235,142 @@
           }
         }
       }
+    },
+    "What an hour of use costs": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "كم تكلّف ساعة الاستخدام"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Was eine Stunde Nutzung kostet"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lo que cuesta una hora de uso"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ce que coûte une heure d'utilisation"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "1時間あたりの利用コスト"
+          }
+        }
+      }
+    },
+    "Not used this month": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "لم تُستخدم هذا الشهر"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Diesen Monat nicht genutzt"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sin usar este mes"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Non utilisés ce mois-ci"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "今月使っていないもの"
+          }
+        }
+      }
+    },
+    "Enter how long you use a subscription on its page, and this page shows what an hour of it costs.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "أدخل مدة استخدامك لأي اشتراك في صفحته، وستعرض هذه الصفحة تكلفة الساعة منه."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tragen Sie auf der Seite eines Abos ein, wie lange Sie es nutzen, dann zeigt diese Seite, was eine Stunde davon kostet."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Indica en la página de una suscripción cuánto la usas y esta página mostrará lo que cuesta cada hora."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Indiquez sur la page d'un abonnement combien de temps vous l'utilisez, et cette page affichera ce que coûte une heure."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "サブスクのページで利用時間を入力すると、1時間あたりのコストがここに表示されます。"
+          }
+        }
+      }
+    },
+    "%@ an hour": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ للساعة"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ pro Stunde"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ por hora"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ par heure"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "1時間あたり %@"
+          }
+        }
+      }
     }
   },
   "version": "1.1"
