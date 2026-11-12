@@ -693,7 +693,7 @@ private struct FoundRow: View {
 
     private var accessibilitySummary: String {
         var parts = [found.name]
-        if let priceText { parts.append(priceText + " " + found.billingFrequency.billingPeriodLabel) }
+        if let priceText { parts.append(found.billingFrequency.priced(priceText)) }
         parts.append(evidenceLine)
         if let badge { parts.append(badge.text) }
         if !found.isCancelled { parts.append(isSelected ? L10n.string("selected") : L10n.string("not selected")) }

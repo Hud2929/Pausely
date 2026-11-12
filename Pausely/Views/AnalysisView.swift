@@ -186,8 +186,8 @@ struct AnalysisView: View {
                     ForEach(Array(facts.unused.enumerated()), id: \.element.id) { index, line in
                         if index > 0 { Hairline() }
                         usageRow(line, detail: nil,
-                                 value: MoneyFormat.total(line.monthly, currencyManager.selectedCurrency,
-                                                          converted: line.isConverted, locale: L10n.locale) + L10n.string("/month"))
+                                 value: BillingFrequency.monthly.priced(MoneyFormat.total(line.monthly, currencyManager.selectedCurrency,
+                                                                                         converted: line.isConverted, locale: L10n.locale)))
                     }
                 }
             }

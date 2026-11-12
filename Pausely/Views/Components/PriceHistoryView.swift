@@ -67,7 +67,7 @@ struct PriceHistoryView: View {
             detail = entry.amount > previous.amount ? L10n.string("\(difference) more than before") : L10n.string("\(difference) less than before")
         }
         return SettingsRow(title: date, detail: detail) {
-            Text(verbatim: MoneyFormat.string(entry.amount, entry.currency) + " " + entry.frequency.billingPeriodLabel)
+            Text(verbatim: entry.frequency.priced(MoneyFormat.string(entry.amount, entry.currency)))
                 .font(.proof(.body))
                 .foregroundStyle(Color.inkText)
                 .multilineTextAlignment(.trailing)

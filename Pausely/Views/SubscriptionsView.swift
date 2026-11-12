@@ -259,7 +259,7 @@ private struct SubscriptionRow: View {
         .contentShape(Rectangle())
         .onTapGesture(perform: onTap)
         .accessibilityElement(children: .ignore)
-        .accessibilityLabel(Text(verbatim: "\(subscription.name), \(subscription.chargeText) \(subscription.billingFrequency.billingPeriodLabel), \(detail)"))
+        .accessibilityLabel(Text(verbatim: "\(subscription.name), \(subscription.billingFrequency.priced(subscription.chargeText)), \(detail)"))
         .accessibilityAddTraits(.isButton)
         .accessibilityAction(.default, onTap)
     }

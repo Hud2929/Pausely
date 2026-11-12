@@ -6000,16 +6000,6 @@
         }
       }
     },
-    "%@ %@": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "new",
-            "value": "%1$@ %2$@"
-          }
-        }
-      }
-    },
     "%@/mo equivalent": {
       "localizations": {
         "de": {
@@ -11563,40 +11553,6 @@
         }
       }
     },
-    "a month": {
-      "localizations": {
-        "ar": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "شهريًا"
-          }
-        },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "pro Monat"
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "al mes"
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "par mois"
-          }
-        },
-        "ja": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "毎月"
-          }
-        }
-      }
-    },
     "One at a time": {
       "localizations": {
         "ar": {
@@ -11627,40 +11583,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "1つずつ"
-          }
-        }
-      }
-    },
-    "a month on average": {
-      "localizations": {
-        "ar": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "شهريًا في المتوسط"
-          }
-        },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "pro Monat im Schnitt"
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "al mes de media"
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "par mois en moyenne"
-          }
-        },
-        "ja": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "月平均"
           }
         }
       }
@@ -27435,6 +27357,210 @@
           "stringUnit": {
             "state": "translated",
             "value": "فتح الإعدادات"
+          }
+        }
+      }
+    },
+    "%@ a week": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ في الأسبوع"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ pro Woche"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ a la semana"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ par semaine"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "週%@"
+          }
+        }
+      }
+    },
+    "%@ every 2 weeks": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ كل أسبوعين"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ alle 2 Wochen"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ cada 2 semanas"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ toutes les 2 semaines"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "2週間ごとに%@"
+          }
+        }
+      }
+    },
+    "%@ every 3 months": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ كل 3 أشهر"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ alle 3 Monate"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ cada 3 meses"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ tous les 3 mois"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "3か月ごとに%@"
+          }
+        }
+      }
+    },
+    "%@ every 6 months": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ كل 6 أشهر"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ alle 6 Monate"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ cada 6 meses"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ tous les 6 mois"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "6か月ごとに%@"
+          }
+        }
+      }
+    },
+    "%@ a year": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ في السنة"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ im Jahr"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ al año"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ par an"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "年%@"
+          }
+        }
+      }
+    },
+    "%@ a month on average": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ شهريًا في المتوسط"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ pro Monat im Schnitt"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ al mes de media"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ par mois en moyenne"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "月平均%@"
           }
         }
       }

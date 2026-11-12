@@ -171,8 +171,25 @@ enum BillingFrequency: String, Codable, CaseIterable, Identifiable {
         case .yearly:     return L10n.string("per year")
         }
     }
-    
-    
+
+    /// A price with its period as one phrase ("$4.99 a month", "月¥500"). The words and their order
+    /// come from the reader's language; a price and a period are never joined by hand.
+    func priced(_ amount: String) -> String {
+        switch self {
+        case .weekly:     return L10n.string("\(amount) a week")
+        case .biweekly:   return L10n.string("\(amount) every 2 weeks")
+        case .monthly:    return L10n.string("\(amount) a month")
+        case .quarterly:  return L10n.string("\(amount) every 3 months")
+        case .semiannual: return L10n.string("\(amount) every 6 months")
+        case .yearly:     return L10n.string("\(amount) a year")
+        }
+    }
+
+    /// The compact form for a receipt line ("$4.99/mo"): price, slash, period reads the same way
+    /// round in all six languages, so this is the one place the two are put side by side.
+    func pricedShort(_ amount: String) -> String {
+        "\(amount)\(shortDisplay)"
+    }
 }
 
 // MARK: - Subscription Status

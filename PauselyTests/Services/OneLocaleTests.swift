@@ -245,4 +245,50 @@ final class OneLocaleTests: XCTestCase {
         }
         XCTAssertEqual(offenders, [])
     }
+
+    /// A price and its period are one phrase from the catalog, in the order the language wants.
+    /// Joined by hand, Japanese read "¥500 月額" and VoiceOver said the period as a stray word.
+    func testAPriceAndItsPeriodAreOnePhraseInTheReadersOrder() {
+        UserDefaults.standard.set("en", forKey: L10n.languageKey)
+        XCTAssertEqual(BillingFrequency.monthly.priced("$4.99"), "$4.99 a month")
+        XCTAssertEqual(BillingFrequency.biweekly.priced("$4.99"), "$4.99 every 2 weeks")
+        XCTAssertEqual(BillingFrequency.yearly.pricedShort("$29.99"), "$29.99/yr")
+
+        UserDefaults.standard.set("ja", forKey: L10n.languageKey)
+        XCTAssertEqual(BillingFrequency.monthly.priced("¥500"), "月¥500")
+        XCTAssertEqual(BillingFrequency.yearly.priced("¥5,000"), "年¥5,000")
+        XCTAssertEqual(BillingFrequency.quarterly.priced("¥1,500"), "3か月ごとに¥1,500")
+
+        UserDefaults.standard.set("de", forKey: L10n.languageKey)
+        XCTAssertEqual(BillingFrequency.weekly.priced("4,99 €"), "4,99 € pro Woche")
+    }
+
+    /// Outside the two functions that do it, no line puts a period word after a price with "+" or
+    /// drops one into a sentence the catalog never sees.
+    func testNoScreenJoinsAPriceToItsPeriodByHand() throws {
+        let root = URL(fileURLWithPath: #filePath)
+            .deletingLastPathComponent().deletingLastPathComponent().deletingLastPathComponent()
+        let appFolder = root.appendingPathComponent("Pausely")
+        try XCTSkipUnless(FileManager.default.fileExists(atPath: appFolder.path), "Sources aren't readable from this test run")
+        let joinedWithPlus = #"\+\s*("\s*"\s*\+\s*)?([A-Za-z_.]+\.(billingPeriodLabel|shortDisplay|period)\b|L10n\.string\("(/|a month|a year|per |every ))"#
+        let droppedIntoText = #"\\\([^)]*\.(billingPeriodLabel|shortDisplay)\)"#
+        var offenders: [String] = []
+        let files = try XCTUnwrap(FileManager.default.enumerator(at: appFolder, includingPropertiesForKeys: nil))
+        for case let file as URL in files where file.pathExtension == "swift" {
+            let name = String(file.path.dropFirst(root.path.count + 1))
+            if name == "Pausely/Models/Subscription.swift" { continue }
+            for (index, line) in try String(contentsOf: file, encoding: .utf8).components(separatedBy: "\n").enumerated() {
+                if line.trimmingCharacters(in: .whitespaces).hasPrefix("//") { continue }
+                let plus = line.range(of: joinedWithPlus, options: .regularExpression) != nil
+                let inText = line.range(of: droppedIntoText, options: .regularExpression) != nil && !line.contains("L10n.string(")
+                if plus || inText { offenders.append("\(name):\(index + 1)") }
+            }
+        }
+        XCTAssertEqual(offenders, [])
+        // The rule itself.
+        XCTAssertNotNil(#"priceText + " " + found.billingFrequency.billingPeriodLabel"#.range(of: joinedWithPlus, options: .regularExpression))
+        XCTAssertNotNil(#"format(now) + " " + L10n.string("a month")"#.range(of: joinedWithPlus, options: .regularExpression))
+        XCTAssertNotNil(#""\(charge) \(sub.billingFrequency.billingPeriodLabel)""#.range(of: droppedIntoText, options: .regularExpression))
+        XCTAssertNil(#"found.billingFrequency.priced(priceText)"#.range(of: joinedWithPlus, options: .regularExpression))
+    }
 }

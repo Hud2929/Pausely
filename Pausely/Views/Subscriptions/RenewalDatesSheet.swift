@@ -71,7 +71,7 @@ struct RenewalDatesSheet: View {
                 Text(verbatim: subscription.name)
                     .font(.body.weight(.medium))
                     .foregroundStyle(Color.inkText)
-                Text(verbatim: subscription.chargeText + subscription.billingFrequency.shortDisplay)
+                Text(verbatim: subscription.billingFrequency.pricedShort(subscription.chargeText))
                     .font(.subheadline)
                     .foregroundStyle(Color.inkTextMuted)
             }

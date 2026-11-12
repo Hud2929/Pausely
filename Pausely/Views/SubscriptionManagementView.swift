@@ -109,7 +109,7 @@ struct SubscriptionManagementView: View {
             }
             .padding(.top, 8)
             .accessibilityElement(children: .ignore)
-            .accessibilityLabel("\(MoneyFormat.string(current.amount, current.currency)) \(current.billingFrequency.billingPeriodLabel)")
+            .accessibilityLabel(Text(verbatim: current.billingFrequency.priced(MoneyFormat.string(current.amount, current.currency))))
 
             if current.currency != currencyManager.selectedCurrency,
                let converted = currencyManager.convertToSelected(current.amount, from: current.currency) {
@@ -420,7 +420,7 @@ private struct UsageSheet: View {
                                     ? Duration.seconds(minutes * 60).formatted(.units(allowed: [.hours, .minutes], width: .abbreviated).locale(L10n.locale))
                                     : L10n.string("Not entered"),
                                   emphasised: true)
-                        ProofLine(label: L10n.string("It costs"), value: subscription.chargeText + subscription.billingFrequency.shortDisplay)
+                        ProofLine(label: L10n.string("It costs"), value: subscription.billingFrequency.pricedShort(subscription.chargeText))
                         if let costPerHour {
                             Perforation()
                             ProofLine(label: L10n.string("Each hour of use"),

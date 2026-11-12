@@ -66,6 +66,11 @@ struct StoreKitUpgradeView: View {
             }
         }
 
+        /// The store's price with its period ("$4.99/month"), the one place the two meet.
+        func priced(_ amount: String) -> String {
+            "\(amount)\(period)"
+        }
+
         /// "Save N%" computed from the real App Store prices; nil until StoreKit has loaded them.
         @MainActor var savings: String? {
             switch self {
@@ -167,7 +172,7 @@ struct StoreKitUpgradeView: View {
     }
 
     private var chargeText: String {
-        priceText(selectedPlan.tier) + selectedPlan.period
+        selectedPlan.priced(priceText(selectedPlan.tier))
     }
 
     var body: some View {
@@ -335,7 +340,7 @@ struct StoreKitUpgradeView: View {
                             .foregroundStyle(Color.inkTextMuted)
                         if let badge = plan.badge { badgeView(badge) }
                     } else {
-                        Text(verbatim: priceText(plan.tier) + plan.period)
+                        Text(verbatim: plan.priced(priceText(plan.tier)))
                             .font(.title3.weight(.semibold))
                             .foregroundStyle(Color.inkText)
                             .monospacedDigit()
