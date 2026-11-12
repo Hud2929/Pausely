@@ -145,6 +145,15 @@ final class CurrencyManagerTests: XCTestCase {
         XCTAssertNotEqual(manager.convertToSelected(Decimal(100), from: "USD"), 100)
     }
 
+    /// No rate, no number. It used to hand back the same amount, which was then added to totals and
+    /// labelled with the display currency.
+    func testAnAmountWithNoRateIsNotConvertedAtAll() {
+        manager.selectedCurrency = "EUR"
+        manager.exchangeRates = ["EUR": 0.85]
+        XCTAssertNil(manager.convertToSelected(Decimal(100), from: "ZZZ"))
+        XCTAssertEqual(manager.convertToSelected(Decimal(100), from: "EUR"), 100)
+    }
+
     /// Live rates win over the built-in table; currencies the live rates lack still come from it.
     func testLiveRatesOverrideBuiltInRates() throws {
         manager.exchangeRates = ["CAD": 1.25]

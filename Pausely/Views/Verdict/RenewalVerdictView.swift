@@ -195,11 +195,11 @@ struct RenewalVerdictView: View {
 
     private func yearlyText(_ sub: Subscription) -> String {
         let yearly = MoneyFormat.string(sub.annualCost, sub.currency)
-        guard sub.currency != currencyManager.selectedCurrency else {
+        guard sub.currency != currencyManager.selectedCurrency,
+              let inDisplay = currencyManager.convertToSelected(sub.annualCost, from: sub.currency) else {
             return L10n.string("That's \(yearly) a year")
         }
-        let converted = currencyManager.format(currencyManager.convertToSelected(sub.annualCost, from: sub.currency))
-        return L10n.string("That's \(yearly) a year (about \(converted))")
+        return L10n.string("That's \(yearly) a year (about \(currencyManager.format(inDisplay)))")
     }
 
     private func usageText(_ sub: Subscription) -> String? {

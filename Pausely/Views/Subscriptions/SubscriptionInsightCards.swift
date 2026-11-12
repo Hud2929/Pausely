@@ -81,8 +81,12 @@ struct LifetimeCostCard: View {
     let subscription: Subscription
     @ObservedObject private var cm = CurrencyManager.shared
 
-    private var monthly: Decimal {
-        cm.convertToSelected(subscription.monthlyCost, from: subscription.currency)
+    /// In the display currency; in its own when there is no rate to convert it with.
+    private var monthly: (amount: Decimal, currency: String) {
+        if let converted = cm.convertToSelected(subscription.monthlyCost, from: subscription.currency) {
+            return (converted, cm.selectedCurrency)
+        }
+        return (subscription.monthlyCost, subscription.currency)
     }
 
     private let projections: [(label: LocalizedStringKey, years: Int)] = [
@@ -102,7 +106,8 @@ struct LifetimeCostCard: View {
                         .font(.body)
                         .foregroundStyle(Color.inkTextMuted)
                     Spacer(minLength: 12)
-                    Text(cm.format(LifetimeCostCalculator.projectedCost(monthly: monthly, years: projections[index].years)))
+                    Text(verbatim: MoneyFormat.total(LifetimeCostCalculator.projectedCost(monthly: monthly.amount, years: projections[index].years),
+                                                     monthly.currency, converted: monthly.currency != subscription.currency))
                         .font(.body.monospacedDigit())
                         .foregroundStyle(Color.inkText)
                 }

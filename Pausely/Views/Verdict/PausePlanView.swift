@@ -65,8 +65,13 @@ struct PausePlanView: View {
         .onAppear(perform: setDefaults)
     }
 
+    /// In the display currency ("≈" when converted); in its own when there is no rate for it.
     private func money(_ amount: Decimal, from currency: String) -> String {
-        currencyManager.format(currencyManager.convertToSelected(amount, from: currency))
+        guard let converted = currencyManager.convertToSelected(amount, from: currency) else {
+            return MoneyFormat.string(amount, currency)
+        }
+        return MoneyFormat.total(converted, currencyManager.selectedCurrency,
+                                 converted: MoneyFormat.normalizedCode(currency) != MoneyFormat.normalizedCode(currencyManager.selectedCurrency))
     }
 
     private func short(_ date: Date) -> String {
@@ -224,7 +229,7 @@ struct PausePlanView: View {
 
     /// The sum, printed: what all of them cost together, what one at a time costs, and the difference.
     private var estimateCard: some View {
-        let costs = chosen.map { currencyManager.convertToSelected($0.monthlyCost, from: $0.currency) }
+        let costs = chosen.compactMap { currencyManager.convertToSelected($0.monthlyCost, from: $0.currency) }
         let now = costs.reduce(0, +)
         let rotating = PausePlanSchedule.monthlyCostWhileRotating(monthlyCosts: costs)
         let yearly = PausePlanSchedule.yearlySavings(monthlyCosts: costs)
@@ -403,7 +408,7 @@ struct PausePlanView: View {
     private func savedCard(_ plan: PausePlan) -> some View {
         let members = Set(plan.subscriptionIds)
         let lines = SavingsSummary.current().lines.filter { members.contains($0.subscriptionId) && $0.cancelledOn >= Calendar.current.startOfDay(for: plan.startedOn) }
-        let saved = lines.reduce(Decimal(0)) { $0 + currencyManager.convertToSelected($1.savedSoFar, from: $1.currency) }
+        let saved = lines.compactMap { currencyManager.convertToSelected($0.savedSoFar, from: $0.currency) }.reduce(0, +)
         return HStack {
             Text("Saved by rotating so far")
                 .font(.subheadline)
@@ -485,7 +490,7 @@ struct PausePlanCard: View {
             return L10n.string("\(sub.name) is on until \(current.end.formatted(.dateTime.month(.abbreviated).day())).")
         }
         let eligible = store.subscriptions.filter { PausePlanSchedule.isEligible($0) && $0.status != .cancelled }
-        let costs = eligible.map { currencyManager.convertToSelected($0.monthlyCost, from: $0.currency) }
+        let costs = eligible.compactMap { currencyManager.convertToSelected($0.monthlyCost, from: $0.currency) }
         let savings = PausePlanSchedule.yearlySavings(monthlyCosts: costs)
         guard savings > 0 else {
             return L10n.string("Rotate your streaming services and watch one at a time.")

@@ -62,4 +62,18 @@ final class SubscriptionGroupsTests: XCTestCase {
         XCTAssertEqual(without.map(\.group), [.thisWeek])
         XCTAssertEqual(with.map(\.group), [.decide])
     }
+
+    /// Groups without a date are ordered by cost, and cost is compared in one currency: 1,500 yen
+    /// used to rank above 50 dollars because 1,500 is the bigger number.
+    func testGroupsOrderedByCostCompareInOneCurrency() {
+        let rates = CurrencyRates(perUSD: ["JPY": 150, "EUR": Decimal(string: "0.5")!])
+        let yen = TestFactories.makeSubscription(name: "Yen", amount: 1_500, currency: "JPY", nextBillingDate: nil)       // 10 dollars
+        let dollars = TestFactories.makeSubscription(name: "Dollars", amount: 50, currency: "USD", nextBillingDate: nil)
+        let euros = TestFactories.makeSubscription(name: "Euros", amount: 20, currency: "EUR", nextBillingDate: nil)      // 40 dollars
+        let unknown = TestFactories.makeSubscription(name: "No rate", amount: 9_999, currency: "ZZZ", nextBillingDate: nil)
+        let sections = SubscriptionGroups.sections([yen, unknown, euros, dollars], pending: [], now: now, calendar: calendar,
+                                                   currency: "USD", rates: rates)
+        XCTAssertEqual(sections.map(\.group), [.undated])
+        XCTAssertEqual(sections.first?.subscriptions.map(\.name), ["Dollars", "Euros", "Yen", "No rate"])
+    }
 }

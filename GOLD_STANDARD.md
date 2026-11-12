@@ -181,8 +181,11 @@ Updated at every commit, so the work can be picked up from this file alone.
   for an Apple Account until a plain test pass puts its local store back.
 - B14 and B17/T41 done (see their rows).
 - B18/T95 done (see its row). Whole suite 594 tests, one failure, the known translation guard (D).
-- Now: the Rules row of 6.3, one rule at a time, starting with the unconverted fallback in
-  `convertToSelected`.
+- Rules row: the unconverted fallback and the mixed-currency ranking are done (596 tests, one known
+  failure).
+- Now: remove the "pause" that pauses nothing (T66, T74, and the pause reminder outside the
+  planner): the Pause and Resume Shortcuts, `pausedUntil`, the resume button and the paused row. Then
+  dates normalised in the store, demo flags out of release, the rate host into `AppConfig`.
 
 **Phase 0. Scan (read-only).** Four independent audits (dead code, truth, design rules on every
 view, engineering) plus mechanical scans. Output: the ledger.
@@ -278,7 +281,7 @@ matters to a stranger: the customer round below scores "getting in" at 1.
 | B14 | `startDate` is never saved, so "lifetime" always starts the day the row was added | closed 11-11: nothing ever asked the person when they started paying, so the field, the "lifetime spend" sum built on it and the store's lifetime total (which no screen showed) are removed. "Tracking since" shows the day it was added to Pausely, which is what it says |
 | B17, T41 | Four definitions of "active": Home, Insights, paywall and the year slip show different yearly totals for one list | closed 11-11: one definition, `charging` (on, or a trial that will turn into a charge, and not paused), behind Home, the Subscriptions header, Insights by category, the paywall's yearly figure and comparison, the year slip, the widget, the Shortcuts and the PDF export. `testEveryTotalAndCountIsAboutTheSameSubscriptions` holds one list with a trial, a paused and a cancelled subscription against all of them. The unused `isActive` flag is gone. Still open under T66: Pausely's own "pause" does not pause anything real |
 | B18, T95 | Stale rates are never reported; converted totals are not marked "about" | closed 11-11: a total that had to convert something is shown as "≈" (`MoneyFormat.total`, decided once by `isConverted`): Home, the paused row, Coming up, the Subscriptions header, both Insights lists, the widget, the Shortcut and the PDF export. A total all in one currency stays exact. Currency settings says which day the rates are from (seen on the simulator). The dead fallback branch and the error nothing could read went with B5. Four tests |
-| Rules | Unconverted fallback in `convertToSelected`; groups ranked in mixed currencies; dates not normalised on update; pause reminder outside the planner; demo flags readable in release; rate host hard-coded; a writable no-op `isPremium` and a dormant client-side Pro grant | open |
+| Rules | Unconverted fallback in `convertToSelected`; groups ranked in mixed currencies; dates not normalised on update; pause reminder outside the planner; demo flags readable in release; rate host hard-coded; a writable no-op `isPremium` and a dormant client-side Pro grant | part closed 11-11. Closed: `convertToSelected` returns nothing when there is no rate and its ten callers leave the amount out of a sum or show it in its own currency (it used to hand back the same number, which was then labelled with the display currency); groups without a date are ranked in one currency (`testGroupsOrderedByCostCompareInOneCurrency`); the no-op `isPremium` setter and the client-side grant path went with the StoreKit slice. Open: dates not normalised on update; the pause reminder (with T66); demo flags in release; the rate host |
 | T71, T75, T-RenewalDates | Renewal dates the person never entered are saved as theirs (Shortcut add, add sheet pre-fill, "Add date" = today + 14) | open |
 | T5, T45–47 | "Went up" on a currency change or typo fix; year slip counts by `updatedAt` and raw category strings | open |
 | T15–19, T23, T43 | Estimates and forecasts stated as fact ("this year", "Back in your pocket", "avoided") | open |

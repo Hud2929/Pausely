@@ -108,16 +108,17 @@ final class RealGeniusEngine: ObservableObject {
         var insights: [GeniusInsight] = []
 
         for sub in subscriptions {
+            guard let monthly = monthlyInDisplay(sub) else { continue }
             let trajectory = calculateTrajectory(for: sub)
 
             if trajectory == .lowUsage && sub.monthlyCost > 5 {
                 insights.append(GeniusInsight(
                     type: .trajectoryWarning,
                     title: "Low usage: \(sub.name)",
-                    description: "Only \(screenTimeManager.getCurrentMonthUsage(for: sub.name)) minutes used this month. Consider pausing to save \(formatCurrency(monthlyInDisplay(sub)))/mo.",
+                    description: "Only \(screenTimeManager.getCurrentMonthUsage(for: sub.name)) minutes used this month. Consider pausing to save \(formatCurrency(monthly))/mo.",
                     icon: "chart.line.downtrend.xyaxis",
                     iconColor: .red,
-                    potentialSavings: monthlyInDisplay(sub),
+                    potentialSavings: monthly,
                     confidence: 0.75,
                     subscriptionId: sub.id,
                     action: .review,
@@ -176,17 +177,17 @@ final class RealGeniusEngine: ObservableObject {
             let daysUntil = Calendar.current.dateComponents([.day], from: Date(), to: trialEnd).day ?? 0
 
             // Only alert if conversion is within 14 days
-            guard daysUntil >= 0 && daysUntil <= 14 else { continue }
+            guard daysUntil >= 0 && daysUntil <= 14, let monthly = monthlyInDisplay(sub) else { continue }
 
-            let valueAtRisk = monthlyInDisplay(sub) * Decimal(max(1, daysUntil / 30))
+            let valueAtRisk = monthly * Decimal(max(1, daysUntil / 30))
 
             insights.append(GeniusInsight(
                 type: .trialExpiring,
                 title: "\(sub.name) trial ends in \(daysUntil) days",
-                description: "You'll be charged \(formatCurrency(monthlyInDisplay(sub)))/mo unless you cancel. Value at risk: \(formatCurrency(valueAtRisk))/mo",
+                description: "You'll be charged \(formatCurrency(monthly))/mo unless you cancel. Value at risk: \(formatCurrency(valueAtRisk))/mo",
                 icon: "clock.badge.exclamationmark",
                 iconColor: .orange,
-                potentialSavings: monthlyInDisplay(sub),
+                potentialSavings: monthly,
                 confidence: 0.95,
                 subscriptionId: sub.id,
                 action: .cancelTrial,
@@ -210,7 +211,7 @@ final class RealGeniusEngine: ObservableObject {
             // Only flag waste when we actually have ScreenTime data for this service.
             // usage == nil means no data collected — NOT that usage is zero.
             // Screen Time only tracks iOS app usage; most subscriptions have no data.
-            guard let usage = usage else { continue }
+            guard let usage = usage, let monthly = monthlyInDisplay(sub) else { continue }
             let minutes = usage.minutesUsed
 
             // Ghost subscription: tracked but zero usage
@@ -218,10 +219,10 @@ final class RealGeniusEngine: ObservableObject {
                 insights.append(GeniusInsight(
                     type: .waste,
                     title: "Ghost: \(sub.name)",
-                    description: "You logged no use this month. Consider cancelling to save \(formatCurrency(monthlyInDisplay(sub)))/month.",
+                    description: "You logged no use this month. Consider cancelling to save \(formatCurrency(monthly))/month.",
                     icon: "exclamationmark.triangle.fill",
                     iconColor: .red,
-                    potentialSavings: monthlyInDisplay(sub),
+                    potentialSavings: monthly,
                     confidence: 0.85,
                     subscriptionId: sub.id,
                     action: .cancel,
@@ -230,15 +231,15 @@ final class RealGeniusEngine: ObservableObject {
             }
             // Very low usage with high cost
             else if minutes < 60 && sub.monthlyCost > 5 {
-                let costPerHour = monthlyInDisplay(sub) / Decimal(minutes) * 60
+                let costPerHour = monthly / Decimal(minutes) * 60
                 if costPerHour > 5 {
                     insights.append(GeniusInsight(
                         type: .waste,
                         title: "Low value: \(sub.name)",
-                        description: "\(minutes) min used but costing \(formatCurrency(monthlyInDisplay(sub)))/mo (~\(formatCurrency(costPerHour))/hr)",
+                        description: "\(minutes) min used but costing \(formatCurrency(monthly))/mo (~\(formatCurrency(costPerHour))/hr)",
                         icon: "exclamationmark.triangle.fill",
                         iconColor: .orange,
-                        potentialSavings: monthlyInDisplay(sub),
+                        potentialSavings: monthly,
                         confidence: 0.88,
                         subscriptionId: sub.id,
                         action: .pause,
@@ -271,8 +272,8 @@ final class RealGeniusEngine: ObservableObject {
             }
 
             if matchingSubs.count > 1 {
-                let totalCost = matchingSubs.reduce(Decimal(0)) { $0 + monthlyInDisplay($1) }
-                let waste = totalCost - (matchingSubs.map { monthlyInDisplay($0) }.min() ?? 0)
+                let costs = matchingSubs.compactMap(monthlyInDisplay)
+                let waste = costs.reduce(0, +) - (costs.min() ?? 0)
 
                 if waste > 0 {
                     let names = matchingSubs.map { $0.name }.joined(separator: ", ")
@@ -301,9 +302,9 @@ final class RealGeniusEngine: ObservableObject {
         CurrencyManager.shared.format(amount)
     }
 
-    /// Converts a USD reference price to the user's selected display currency.
-    /// Used for comparing hardcoded USD pricing data against user subscriptions.
-    private func monthlyInDisplay(_ sub: Subscription) -> Decimal {
+    /// What it costs a month in the display currency; nil when there is no rate for its currency
+    /// (it is then left out of the analysis rather than counted at the wrong value).
+    private func monthlyInDisplay(_ sub: Subscription) -> Decimal? {
         CurrencyManager.shared.convertToSelected(sub.monthlyCost, from: sub.currency)
     }
 }

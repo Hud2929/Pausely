@@ -115,8 +115,8 @@ struct SubscriptionManagementView: View {
             .accessibilityElement(children: .ignore)
             .accessibilityLabel("\(MoneyFormat.string(current.amount, current.currency)) \(current.billingFrequency.billingPeriodLabel)")
 
-            if current.currency != currencyManager.selectedCurrency {
-                let converted = currencyManager.convertToSelected(current.amount, from: current.currency)
+            if current.currency != currencyManager.selectedCurrency,
+               let converted = currencyManager.convertToSelected(current.amount, from: current.currency) {
                 Text("About \(MoneyFormat.string(converted, currencyManager.selectedCurrency)) in your currency")
                     .font(.footnote)
                     .foregroundStyle(Color.inkTextFaint)

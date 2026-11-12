@@ -55,14 +55,15 @@ struct SavingsSummary {
             .filter { $0.name.caseInsensitiveCompare("Pausely Pro") != .orderedSame }
         let totals = SavingsLedger.totals(lines)
         func converted(_ byCurrency: [String: Decimal]) -> Decimal {
-            byCurrency.reduce(Decimal(0)) { $0 + currencies.convertToSelected($1.value, from: $1.key) }
+            // An amount with no rate is left out of the total; its own line still shows it in its currency.
+            byCurrency.compactMap { currencies.convertToSelected($0.value, from: $0.key) }.reduce(0, +)
         }
         return SavingsSummary(
             lines: lines,
             currency: currencies.selectedCurrency,
             savedSoFar: converted(totals.savedSoFar),
             onTrack: converted(totals.onTrack),
-            pauselyYearlyCost: pausely.map { currencies.convertToSelected($0.annualCost, from: $0.currency) }
+            pauselyYearlyCost: pausely.flatMap { currencies.convertToSelected($0.annualCost, from: $0.currency) }
         )
     }
 }

@@ -29,7 +29,9 @@ enum SubscriptionGroups {
     /// Sections in display order, empty ones left out. Inside a section the soonest charge comes
     /// first; groups without a date are ordered by cost, most expensive first.
     static func sections(_ subscriptions: [Subscription], pending: Set<UUID>, now: Date,
-                         calendar: Calendar = .current) -> [Section] {
+                         calendar: Calendar = .current,
+                         currency: String = CurrencyManager.shared.selectedCurrency,
+                         rates: CurrencyRates = CurrencyManager.shared.rates) -> [Section] {
         var buckets: [Group: [Subscription]] = [:]
         for sub in subscriptions {
             buckets[group(for: sub, pending: pending, now: now, calendar: calendar), default: []].append(sub)
@@ -44,7 +46,9 @@ enum SubscriptionGroups {
             case .decide, .thisWeek, .thisMonth, .later:
                 sorted = items.sorted { (chargeDay($0), $0.name) < (chargeDay($1), $1.name) }
             case .undated, .paused, .cancelled:
-                sorted = items.sorted { ($1.monthlyCost, $0.name) < ($0.monthlyCost, $1.name) }
+                // Ranked in one currency: ¥1,500 is not more than US$50. One with no rate goes last.
+                func cost(_ sub: Subscription) -> Decimal { sub.monthlyCost(in: currency, rates: rates) ?? -1 }
+                sorted = items.sorted { (cost($1), $0.name) < (cost($0), $1.name) }
             }
             return Section(group: group, subscriptions: sorted)
         }

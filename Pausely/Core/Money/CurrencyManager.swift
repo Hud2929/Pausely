@@ -250,12 +250,11 @@ final class CurrencyManager: ObservableObject {
         return rates.count >= 100 ? rates : nil
     }
 
-    /// `amount` in the user's display currency. A currency Pausely can't convert (not an ISO code it
-    /// knows) comes back unchanged and is logged; every currency in the picker always converts.
-    func convertToSelected(_ amount: Decimal, from sourceCurrency: String) -> Decimal {
-        if let converted = rates.convert(amount, from: sourceCurrency, to: selectedCurrency) { return converted }
-        os_log("CurrencyManager: no rate for %{public}@", log: .default, type: .error, sourceCurrency)
-        return amount
+    /// `amount` in the user's display currency, or nil when there is no rate for `sourceCurrency` (a
+    /// code Pausely doesn't know; every currency in the picker converts). Never the unconverted
+    /// number: a caller leaves the amount out of a sum, or shows it in its own currency.
+    func convertToSelected(_ amount: Decimal, from sourceCurrency: String) -> Decimal? {
+        rates.convert(amount, from: sourceCurrency, to: selectedCurrency)
     }
 
     /// `amount` in `currencyCode` (the display currency when nil). Goes through `MoneyFormat`.
