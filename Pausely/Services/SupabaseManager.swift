@@ -137,7 +137,7 @@ struct SubscriptionRecord: Codable {
             nextBillingDate: next_billing_date?.iso8601Date.map { BillingDay.local(fromStored: $0) },
             notifyBeforeDays: notify_before_days ?? 3,
             trialEndsAt: trial_ends_at?.iso8601Date.map { BillingDay.local(fromStored: $0) },
-            status: SubscriptionStatus(rawValue: status) ?? .active,
+            status: SubscriptionStatus(saved: status),
             createdAt: created_at?.iso8601Date ?? Date()
         )
     }
@@ -165,35 +165,14 @@ extension String {
 }
 
 // MARK: - Auth Errors
-/// Pausely-specific authentication errors
-/// Renamed from AuthError to avoid conflict with Supabase library
-enum PauselyAuthError: LocalizedError {
-    case emailNotConfirmed
-    case invalidCredentials
-    case sessionExpired
-    case networkError
-    case invalidResponse
+
+/// What can stop a sign-up or sign-in. The words a person reads are chosen by the screen
+/// (`AccountProblem`, `CodeProblem`), in their language; this only says which kind it was.
+enum PauselyAuthError: Error {
+    /// The age check hasn't been passed on this iPhone.
     case ageConsentRequired
+    /// Anything the account service or the network said.
     case unknown(Error)
-    
-    var errorDescription: String? {
-        switch self {
-        case .emailNotConfirmed:
-            return "Please verify your email before signing in. Check your inbox for the confirmation link."
-        case .invalidCredentials:
-            return "Invalid email or password. Please try again."
-        case .sessionExpired:
-            return "Your session has expired. Please sign in again."
-        case .networkError:
-            return "Network error. Please check your connection and try again."
-        case .invalidResponse:
-            return "Invalid response from server. Please try again."
-        case .ageConsentRequired:
-            return "Please confirm your age before creating an account."
-        case .unknown(let error):
-            return error.localizedDescription
-        }
-    }
 }
 
 // MARK: - Auth State

@@ -58,10 +58,23 @@ final class SubscriptionStatusTests: XCTestCase {
 
     func testDisplayNames() {
         XCTAssertEqual(SubscriptionStatus.active.displayName, "Active")
-        XCTAssertEqual(SubscriptionStatus.paused.displayName, "Paused")
         XCTAssertEqual(SubscriptionStatus.cancelled.displayName, "Cancelled")
-        XCTAssertEqual(SubscriptionStatus.trial.displayName, "Trial")
-        XCTAssertEqual(SubscriptionStatus.expired.displayName, "Expired")
+        XCTAssertEqual(SubscriptionStatus.trial.displayName, "Free trial")
+    }
+
+    /// Earlier versions had "paused" and "expired". The pause paused nothing at the service, so a row
+    /// left paused is still charging; an expired one had stopped. A status nobody knows counts as
+    /// charging, and none of them may stop the saved list from loading.
+    func testStatusesSavedByEarlierVersionsAreStillRead() throws {
+        XCTAssertEqual(SubscriptionStatus(saved: "paused"), .active)
+        XCTAssertEqual(SubscriptionStatus(saved: "expired"), .cancelled)
+        XCTAssertEqual(SubscriptionStatus(saved: "something new"), .active)
+        XCTAssertEqual(SubscriptionStatus(saved: "trial"), .trial)
+
+        let saved = #"[{"id":"7B8D7A51-3D59-4C1E-9E39-0A6D4D7F1C11","name":"Hulu","amount":7.99,"currency":"USD","billingFrequency":"monthly","notifyBeforeDays":3,"status":"paused","createdAt":700000000,"canPause":true,"isDetected":false,"monthlyUsageMinutes":0,"updatedAt":700000000}]"#
+        let list = try JSONDecoder().decode([Subscription].self, from: Data(saved.utf8))
+        XCTAssertEqual(list.map(\.status), [.active])
+        XCTAssertEqual(list.first?.renewsAutomatically, true)
     }
 
     func testCodableRoundTrip() throws {

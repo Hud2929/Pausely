@@ -78,7 +78,7 @@ final class PauselyAppIntentsTests: XCTestCase {
     func testGetSubscriptionCountIntent_mixed() async throws {
         SubscriptionStore.shared.subscriptions = [
             TestFactories.makeSubscription(name: "A", status: .active),
-            TestFactories.makeSubscription(name: "B", status: .paused)
+            TestFactories.makeSubscription(name: "B", status: .cancelled)
         ]
         let intent = GetSubscriptionCountIntent()
         let result = try await intent.perform()

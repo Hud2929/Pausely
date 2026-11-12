@@ -176,20 +176,32 @@ enum BillingFrequency: String, Codable, CaseIterable, Identifiable {
 }
 
 // MARK: - Subscription Status
+/// Where a subscription stands: charging, in a free trial that will turn into a charge, or cancelled.
 enum SubscriptionStatus: String, Codable, CaseIterable {
     case active = "active"
-    case paused = "paused"
     case cancelled = "cancelled"
     case trial = "trial"
-    case expired = "expired"
-    
+
+    /// A status as it was saved, by this version or an earlier one. Earlier versions had two more.
+    /// "Paused" paused nothing at the service, so that subscription is still charging; "expired" had
+    /// stopped. Anything unknown counts as charging: better a reminder too many than a charge unseen.
+    init(saved raw: String) {
+        switch raw {
+        case "cancelled", "expired": self = .cancelled
+        case "trial": self = .trial
+        default: self = .active
+        }
+    }
+
+    init(from decoder: Decoder) throws {
+        self.init(saved: try decoder.singleValueContainer().decode(String.self))
+    }
+
     var displayName: String {
         switch self {
-        case .active: return "Active"
-        case .paused: return "Paused"
-        case .cancelled: return "Cancelled"
-        case .trial: return "Trial"
-        case .expired: return "Expired"
+        case .active: return L10n.string("Active")
+        case .cancelled: return L10n.string("Cancelled")
+        case .trial: return L10n.string("Free trial")
         }
     }
 }

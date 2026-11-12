@@ -29,8 +29,6 @@ final class SubscriptionGroupsTests: XCTestCase {
             (sub("MonthEdge", anchor: day(2026, 12, 10)), .thisMonth),    // 30 days
             (sub("Tallied"), .undated),
             (sub("Gone", anchor: day(2026, 11, 12), status: .cancelled), .cancelled),
-            (sub("Expired", status: .expired), .cancelled),
-            (sub("Resting", anchor: day(2026, 11, 12), status: .paused), .paused),
         ]
         for (subscription, expected) in cases {
             XCTAssertEqual(SubscriptionGroups.group(for: subscription, pending: [decide.id], now: now, calendar: calendar),

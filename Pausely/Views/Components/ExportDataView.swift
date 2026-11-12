@@ -13,7 +13,6 @@ struct ExportDataView: View {
     @Environment(\.dismiss) private var dismiss
 
     @State private var selectedFormat: ExportFormat = .csv
-    @State private var includePaused = true
     @State private var includeCancelled = false
     @State private var isExporting = false
     @State private var exportURL: URL?
@@ -21,11 +20,7 @@ struct ExportDataView: View {
     @State private var exportError: String?
 
     var filteredCount: Int {
-        store.subscriptions.filter { sub in
-            if sub.status == .paused && !includePaused { return false }
-            if sub.status == .cancelled && !includeCancelled { return false }
-            return true
-        }.count
+        store.subscriptions.filter { includeCancelled || $0.status != .cancelled }.count
     }
 
     var body: some View {
@@ -40,10 +35,6 @@ struct ExportDataView: View {
             }
 
             SettingsSection(title: "Include") {
-                SettingsRow(title: L10n.string("Paused subscriptions")) {
-                    Toggle("", isOn: $includePaused).labelsHidden().tint(Color.inkTextMuted)
-                        .accessibilityLabel(Text("Paused subscriptions"))
-                }
                 SettingsRow(title: L10n.string("Cancelled subscriptions")) {
                     Toggle("", isOn: $includeCancelled).labelsHidden().tint(Color.inkTextMuted)
                         .accessibilityLabel(Text("Cancelled subscriptions"))
@@ -92,23 +83,19 @@ struct ExportDataView: View {
         isExporting = true
         exportError = nil
 
-        let options = ExportOptions(
-            includePaused: includePaused,
-            includeCancelled: includeCancelled,
-            format: selectedFormat
-        )
+        let options = ExportOptions(includeCancelled: includeCancelled, format: selectedFormat)
 
-        DispatchQueue.global(qos: .userInitiated).async {
+        // On the main thread, where the list, the history and the Pause Plan live: the export reads all
+        // three. It is a few hundred rows at most; the pause lets the button show that it is working.
+        Task { @MainActor in
+            await Task.yield()
             let url = SubscriptionExporter.shared.export(subscriptions: store.subscriptions, options: options)
-
-            DispatchQueue.main.async {
-                isExporting = false
-                if let url = url {
-                    exportURL = url
-                    showingShareSheet = true
-                } else {
-                    exportError = L10n.string("The file couldn't be made. Try again.")
-                }
+            isExporting = false
+            if let url {
+                exportURL = url
+                showingShareSheet = true
+            } else {
+                exportError = L10n.string("The file couldn't be made. Try again.")
             }
         }
     }

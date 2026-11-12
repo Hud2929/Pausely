@@ -44,7 +44,7 @@ enum PausePlanSchedule {
     /// to "watch one streaming service at a time" with Audible in the plan promised a saving that
     /// meant dropping something they use every day.
     static func isEligible(_ sub: Subscription) -> Bool {
-        guard sub.billingFrequency == .monthly, sub.status != .expired, !sub.isPausely else { return false }
+        guard sub.billingFrequency == .monthly, !sub.isPausely else { return false }
         let name = sub.name.lowercased()
         let words = name.split { !$0.isLetter && !$0.isNumber && $0 != "+" }.map(String.init)
         return streamingNames.contains { known in

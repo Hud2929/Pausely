@@ -33,7 +33,6 @@ final class CategoryTotalsTests: XCTestCase {
 
     func testOnlyActiveSubscriptionsCount_andNoCategoryIsOther() {
         let totals = [
-            sub("Paused", 50, "Music", status: .paused),
             sub("Cancelled", 50, "Music", status: .cancelled),
             sub("Mystery", 5, nil)
         ].categoryTotals(in: "USD", rates: rates)

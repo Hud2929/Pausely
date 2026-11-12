@@ -42,10 +42,9 @@ final class PaywallCaseTests: XCTestCase {
         XCTAssertEqual(result, .init(name: "Spotify", months: 3))
     }
 
-    func testCancelledAndPausedSubscriptionsAreNotUsed() {
+    func testCancelledSubscriptionsAreNotUsed() {
         let result = PaywallCase.comparison(proYearly: Decimal(string: "29.99")!, proCurrency: "USD",
-                                            subscriptions: [subscription("Old gym", "60.00", status: .cancelled),
-                                                            subscription("Paused", "50.00", status: .paused)],
+                                            subscriptions: [subscription("Old gym", "60.00", status: .cancelled)],
                                             rates: rates)
         XCTAssertNil(result)
     }

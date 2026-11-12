@@ -188,7 +188,7 @@ final class SubscriptionStoreTests: XCTestCase {
         await addOnline(sub)
 
         account.failure = URLError(.notConnectedToInternet)
-        await store.updateSubscriptionStatus(id: sub.id, status: .paused)
+        await store.updateSubscriptionStatus(id: sub.id, status: .cancelled)
         XCTAssertEqual(store.lastErrorMessage, offlineNotice)
 
         struct Refused: Error {}
@@ -239,8 +239,6 @@ final class SubscriptionStoreTests: XCTestCase {
     func testTotalsCountOnlyActiveSubscriptions() async {
         await add(TestFactories.makeSubscription(name: "Active", amount: 10, status: .active))
         await add(TestFactories.makeSubscription(name: "Cancelled", amount: 20, status: .cancelled))
-        await add(TestFactories.makeSubscription(name: "Paused", amount: 30, status: .paused))
-        await add(TestFactories.makeSubscription(name: "Expired", amount: 40, status: .expired))
         XCTAssertEqual(store.totalMonthlySpend, 10)
         XCTAssertEqual(store.totalAnnualSpend, 120)
     }
@@ -266,7 +264,6 @@ final class SubscriptionStoreTests: XCTestCase {
     func testEveryTotalAndCountIsAboutTheSameSubscriptions() async throws {
         await add(TestFactories.makeSubscription(name: "On", amount: 10, status: .active, category: "Music"))
         await add(TestFactories.makeSubscription(name: "Trial", amount: 5, status: .trial, category: "Music"))
-        await add(TestFactories.makeSubscription(name: "Paused", amount: 100, status: .paused, category: "Music"))
         await add(TestFactories.makeSubscription(name: "Cancelled", amount: 1000, status: .cancelled, category: "Music"))
 
         // Home and the Subscriptions tab

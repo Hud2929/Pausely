@@ -197,7 +197,6 @@ struct PremiumSubscriptionsView: View {
         case .thisMonth: return L10n.string("This month")
         case .later: return L10n.string("Later")
         case .undated: return L10n.string("No renewal date")
-        case .paused: return L10n.string("Paused")
         case .cancelled: return L10n.string("Cancelled")
         }
     }
@@ -205,7 +204,6 @@ struct PremiumSubscriptionsView: View {
     static func state(for group: SubscriptionGroups.Group) -> MoneyState? {
         switch group {
         case .decide: return .decide
-        case .paused: return .paused
         case .cancelled: return .kept
         case .thisWeek, .thisMonth, .later, .undated: return nil
         }
@@ -287,8 +285,6 @@ private struct SubscriptionRow: View {
         switch group {
         case .cancelled:
             return L10n.string("Cancelled")
-        case .paused:
-            return L10n.string("Paused")
         case .undated:
             return L10n.string("Add its renewal date")
         case .decide, .thisWeek, .thisMonth, .later:

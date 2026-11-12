@@ -183,17 +183,15 @@ class SubscriptionStore: ObservableObject {
 
     // MARK: - CRUD Operations
     
-    enum SubscriptionLimitError: Error, LocalizedError {
+    /// The free plan is full. Screens open the upgrade page; a Shortcut says it in a sentence.
+    enum SubscriptionLimitError: Error, CustomLocalizedStringResourceConvertible {
         case freeTierLimitReached
-        
-        var errorDescription: String? {
-            switch self {
-            case .freeTierLimitReached:
-                return "You've reached the free tier limit of \(FreeTier.subscriptionLimit) subscriptions. Upgrade to Pro for unlimited subscriptions."
-            }
+
+        var localizedStringResource: LocalizedStringResource {
+            "Free watches \(FreeTier.subscriptionLimit). Pro watches all of them."
         }
     }
-    
+
     /// Adds a subscription. It is on this iPhone, and waiting to be sent, before this returns; whether
     /// it has reached the account yet is the result (false: still waiting). The only thing that can
     /// stop an add is a refusal, like the free tier's limit.

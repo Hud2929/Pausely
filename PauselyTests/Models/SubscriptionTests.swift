@@ -77,9 +77,7 @@ final class SubscriptionTests: XCTestCase {
         let list = [
             TestFactories.makeSubscription(name: "On", status: .active),
             TestFactories.makeSubscription(name: "Trial", status: .trial),
-            TestFactories.makeSubscription(name: "Cancelled", status: .cancelled),
-            TestFactories.makeSubscription(name: "Expired", status: .expired),
-            TestFactories.makeSubscription(name: "Paused", status: .paused)
+            TestFactories.makeSubscription(name: "Cancelled", status: .cancelled)
         ]
         XCTAssertEqual(list.charging.map(\.name), ["On", "Trial"])
     }

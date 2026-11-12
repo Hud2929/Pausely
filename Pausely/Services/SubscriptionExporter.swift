@@ -18,7 +18,6 @@ enum ExportFormat: String, CaseIterable {
 }
 
 struct ExportOptions {
-    var includePaused: Bool = true
     var includeCancelled: Bool = false
     var format: ExportFormat = .csv
 }
@@ -30,11 +29,7 @@ final class SubscriptionExporter {
     private init() {}
 
     func export(subscriptions: [Subscription], options: ExportOptions = ExportOptions()) -> URL? {
-        let filtered = subscriptions.filter { sub in
-            if sub.status == .paused && !options.includePaused { return false }
-            if sub.status == .cancelled && !options.includeCancelled { return false }
-            return true
-        }
+        let filtered = subscriptions.filter { options.includeCancelled || $0.status != .cancelled }
 
         switch options.format {
         case .csv:

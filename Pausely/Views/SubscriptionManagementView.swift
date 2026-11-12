@@ -152,9 +152,7 @@ struct SubscriptionManagementView: View {
             switch current.status {
             case .active: return ("Active", nil)
             case .trial: return ("Free trial", .decide)
-            case .paused: return ("Paused", .paused)
             case .cancelled: return ("Cancelled", .kept)
-            case .expired: return ("Expired", nil)
             }
         }()
         return HStack(spacing: 6) {

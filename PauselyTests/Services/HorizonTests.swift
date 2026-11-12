@@ -58,7 +58,6 @@ final class HorizonTests: XCTestCase {
         let charges = Horizon.charges(for: [
             subscription("Trial", "9.99", anchor: day(2026, 11, 12), status: .trial, trialEnds: day(2026, 11, 14)),
             subscription("Cancelled", "9.99", anchor: day(2026, 11, 12), status: .cancelled),
-            subscription("Paused", "9.99", anchor: day(2026, 11, 12), status: .paused),
             subscription("No date", "9.99", anchor: nil),
         ], now: now, calendar: calendar)
         XCTAssertEqual(charges.count, 1)

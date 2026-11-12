@@ -4,7 +4,7 @@ import Foundation
 /// group a row is in, so rows don't need coloured badges.
 enum SubscriptionGroups {
     enum Group: Int, CaseIterable, Identifiable {
-        case decide, thisWeek, thisMonth, later, undated, paused, cancelled
+        case decide, thisWeek, thisMonth, later, undated, cancelled
         var id: Int { rawValue }
     }
 
@@ -16,8 +16,7 @@ enum SubscriptionGroups {
 
     /// Which group a subscription belongs to today.
     static func group(for sub: Subscription, pending: Set<UUID>, now: Date, calendar: Calendar = .billing) -> Group {
-        if sub.status == .cancelled || sub.status == .expired { return .cancelled }
-        if sub.status == .paused { return .paused }
+        if sub.status == .cancelled { return .cancelled }
         if pending.contains(sub.id) { return .decide }
         guard let charge = RenewalDecisions.upcomingCharge(for: sub, now: now, calendar: calendar) else { return .undated }
         let days = calendar.calendarDays(from: now, to: charge.date)
@@ -45,7 +44,7 @@ enum SubscriptionGroups {
             switch group {
             case .decide, .thisWeek, .thisMonth, .later:
                 sorted = items.sorted { (chargeDay($0), $0.name) < (chargeDay($1), $1.name) }
-            case .undated, .paused, .cancelled:
+            case .undated, .cancelled:
                 // Ranked in one currency: ¥1,500 is not more than US$50. One with no rate goes last.
                 func cost(_ sub: Subscription) -> Decimal { sub.monthlyCost(in: currency, rates: rates) ?? -1 }
                 sorted = items.sorted { (cost($1), $0.name) < (cost($0), $1.name) }

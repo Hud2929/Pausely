@@ -473,39 +473,14 @@ class RevolutionaryAuthManager: ObservableObject {
             startSessionRefresh()
             postAuthSetup(user: user)
 
-        } catch let error as PauselyAuthError {
-            #if DEBUG
-            PauselyLogger.error("Sign in failed with AuthError: \(error.localizedDescription)", category: "auth")
-            #endif
-            state = .error(error)
-            throw error
         } catch {
-            let authError: PauselyAuthError
-            if let authErr = error as? PauselyAuthError {
-                authError = authErr
-            } else {
-                let nsError = error as NSError
-                if nsError.domain == "PauselyAuthError" {
-                    switch nsError.code {
-                    case 400:
-                        authError = .invalidCredentials
-                    default:
-                        authError = .unknown(error)
-                    }
-                } else {
-                    authError = .unknown(error)
-                }
-            }
-            #if DEBUG
-            PauselyLogger.error("Sign in failed with error: \(authError.localizedDescription)", category: "auth")
-            #endif
+            // The screen says what went wrong in the reader's language (`AccountProblem`); here the
+            // error is only passed on.
+            let authError = (error as? PauselyAuthError) ?? .unknown(error)
             state = .error(authError)
             throw authError
         }
     }
-
-    
-    
 
     // MARK: - Sign in with Apple
 
