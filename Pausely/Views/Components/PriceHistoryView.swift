@@ -50,7 +50,7 @@ struct PriceHistoryView: View {
             L10n.string("\(from) in \($0.formatted(.dateTime.month(.abbreviated).year().locale(L10n.locale))), \(to) now.")
         } ?? L10n.string("\(from) before, \(to) now.")
         return HStack(alignment: .firstTextBaseline, spacing: 10) {
-            if rose { StateMark(state: .decide).accessibilityHidden(true) }
+            if rose { StateMark(state: .due).accessibilityHidden(true) }
             Text(verbatim: sentence)
                 .font(.question(.title3))
                 .foregroundStyle(Color.inkText)

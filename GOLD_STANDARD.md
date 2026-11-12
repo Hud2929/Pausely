@@ -488,6 +488,21 @@ Updated at every commit, so the work can be picked up from this file alone.
   plan sheet asks for a renewal date and a trial end; the dates sheet says "they" of one
   subscription; two tap areas (End Pause Plan, the catalog's clear button); "$54.99/mo" spoken as
   written. Then the same pass in Arabic, at the largest size and on iPad. 753 tests, 0 failures.
+- E, the states (11-12, second part): the rest of what the English reading showed, each seen again
+  on the simulator (`/tmp/pausely_states_en_2`). Insights' "Where it goes" showed five categories
+  and dropped the others without a word: the rest is one last row, "Everything else", so the rows
+  add up to the whole (`testTheRowsAlwaysAddUpToTheWhole`). A price rise has one mark (coral) on
+  Insights, the verdict and the price history. Pause Plan: a cancelled service is "Cancelled", not
+  "Paused now"; a trial's to-do says its free trial ends; one left edge; the empty state starts at
+  the margin; End Pause Plan is a full tap target. The year's page with nothing listed and nothing
+  cancelled says so and offers nothing to share (`hasNothingToShow`; everything cancelled is still a
+  year worth printing). The age check is in the app's style: no picture, the serif for its
+  question and its refusal, text from the margin. The catalog's empty search says "add your own",
+  the name on its button. The plan sheet asks for one date on a free trial (the day it ends is the
+  first charge), not two. The dates sheet speaks of one subscription as one. The catalog's clear
+  button is a fingertip wide; "$54.99/mo" is read out as "$54.99 a month". Tapping a row on Home
+  opens its verdict in a demo launch. 754 tests, 0 failures; Release builds; gold_check 0;
+  string_usage 0. Next: the same pass in Arabic, at the largest size and on iPad.
 - Told by the other session at 22:04 (it has stood down and changed nothing): sections 2, 3, 4, 6, 7
   and 10 of the engineering audit were never done and there is no finished overlooked-details
   report. Those areas have been scanned by nobody; they are owed before Stage G can be called done.

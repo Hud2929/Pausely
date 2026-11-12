@@ -24,6 +24,25 @@ final class CategoryTotalsTests: XCTestCase {
         XCTAssertEqual(totals.map(\.count), [2, 1, 1])
     }
 
+    /// The rows on Insights add up to what is paid, however many categories there are. It showed the
+    /// first five and dropped the rest without saying; the rest is one last row now.
+    func testTheRowsAlwaysAddUpToTheWhole() {
+        let list = [sub("A", 50, "Productivity"), sub("B", 40, "Entertainment"), sub("C", 30, "Music"),
+                    sub("D", 20, "Education"), sub("E", 10, "News"), sub("F", 6, "Travel", currency: "EUR"), sub("G", 4, "Gaming")]
+        let totals = list.categoryTotals(in: "USD", rates: rates)
+        XCTAssertEqual(totals.count, 7)
+
+        let rows = totals.fitted(to: 5)
+        XCTAssertEqual(rows.map(\.category), ["Productivity", "Entertainment", "Music", "Education", CategoryTotal.everythingElse])
+        XCTAssertEqual(rows.last?.amount, 10 + 12 + 4, "News, Travel (6 euros is 12 dollars here) and Gaming")
+        XCTAssertEqual(rows.last?.count, 3)
+        XCTAssertEqual(rows.last?.isConverted, true, "part of it is in another currency, so it is marked as about")
+        XCTAssertEqual(rows.reduce(0) { $0 + $1.amount }, totals.reduce(0) { $0 + $1.amount })
+
+        XCTAssertEqual(Array(totals.prefix(5)).fitted(to: 5), Array(totals.prefix(5)), "five fit in five rows as they are")
+        XCTAssertEqual(totals.fitted(to: 7), totals)
+    }
+
     func testEachSubscriptionIsConvertedFromItsOwnCurrency() {
         // 10 euros is 20 dollars at these rates; adding the raw numbers would give 20, not 30.
         let totals = [sub("Deezer", 10, "Music", currency: "EUR"), sub("Spotify", 10, "Music")].categoryTotals(in: "USD", rates: rates)

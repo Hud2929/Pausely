@@ -62,9 +62,11 @@ struct AnalysisView: View {
                     if categories.count > 1 {
                         section(L10n.string("Where it goes")) {
                             let top = categories.map(\.amount).max() ?? 1
-                            ForEach(Array(categories.prefix(5).enumerated()), id: \.element.id) { index, category in
+                            ForEach(Array(categories.fitted(to: 5).enumerated()), id: \.element.id) { index, category in
                                 if index > 0 { Hairline() }
-                                BarRow(title: SubscriptionCategory.localizedLabel(for: category.category),
+                                BarRow(title: category.category == CategoryTotal.everythingElse
+                                            ? L10n.string("Everything else")
+                                            : SubscriptionCategory.localizedLabel(for: category.category),
                                        value: MoneyFormat.total(category.amount, currencyManager.selectedCurrency,
                                                                 converted: category.isConverted, locale: L10n.locale),
                                        share: fraction(category.amount, of: top))

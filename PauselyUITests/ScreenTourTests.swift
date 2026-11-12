@@ -142,7 +142,7 @@ final class ScreenTourTests: XCTestCase {
         let varied = ["--varied-demo-data"]
 
         // What a list with one of everything shows on the tabs.
-        for (tab, name) in [(0, "home-varied"), (1, "list-varied"), (2, "insights-varied")] {
+        for (tab, name) in [(0, "home-varied"), (1, "list-varied"), (2, "insights-varied")] where wanted(name) {
             let app = launch(varied + ["--demo-tab=\(tab)"])
             capture(app, name)
             scrollCapture(app, name, times: 4)
@@ -170,7 +170,7 @@ final class ScreenTourTests: XCTestCase {
             (["--demo-age-gate=underage"], "age-underage"),
             (["--demo-age-gate=locked"], "age-locked"),
         ]
-        for screen in screens {
+        for screen in screens where wanted(screen.name) {
             let app = launch(screen.flags)
             capture(app, screen.name)
             scrollCapture(app, screen.name, times: 1)
@@ -231,10 +231,17 @@ final class ScreenTourTests: XCTestCase {
 
     /// Launches with `flags`, does `open`, and captures what is then on screen.
     private func state(_ name: String, _ flags: [String], open: (XCUIApplication) -> Void) {
+        guard wanted(name) else { return }
         let app = launch(flags)
         open(app)
         sleep(2)
         capture(app, name)
+    }
+
+    /// `PAUSELY_TOUR_ONLY=name1,name2` keeps a run to those screens or states.
+    private func wanted(_ name: String) -> Bool {
+        let only = Set((ProcessInfo.processInfo.environment["PAUSELY_TOUR_ONLY"] ?? "").split(separator: ",").map(String.init))
+        return only.isEmpty || only.contains(name)
     }
 
     private func launch(_ flags: [String]) -> XCUIApplication {

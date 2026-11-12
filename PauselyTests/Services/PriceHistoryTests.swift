@@ -137,6 +137,12 @@ final class YearSlipTests: XCTestCase {
         ]
         XCTAssertEqual(WrappedStats.cancelledThisYear(events, year: 2026, calendar: cal), 2)
         XCTAssertEqual(WrappedStats.cancelledThisYear(events, year: 2025, calendar: cal), 1)
+
+        // Everything cancelled is still a year worth printing: nothing is paid now, and something was kept.
+        let allCancelled = WrappedStats(subscriptions: [], events: events, now: day(2026, 11, 12), calendar: cal,
+                                        currency: "USD", rates: .fallback)
+        XCTAssertFalse(allCancelled.hasNothingToShow)
+        XCTAssertEqual(allCancelled.totalCount, 0)
     }
 
     func testTheSlipGroupsCategoriesAndComparesInOneCurrency() {

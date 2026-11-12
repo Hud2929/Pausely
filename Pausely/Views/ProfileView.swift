@@ -248,6 +248,7 @@ struct SubscriptionWrappedView: View {
     @ObservedObject private var currencyManager = CurrencyManager.shared
 
     private var stats: WrappedStats { WrappedStats(subscriptions: subscriptions, events: LifecycleEventLog.shared.events) }
+    private var isEmpty: Bool { stats.hasNothingToShow }
 
     var body: some View {
         ScrollView {
@@ -260,7 +261,7 @@ struct SubscriptionWrappedView: View {
                             .tapArea(.leading)
                     }
                     Spacer()
-                    if let image = YearSlip.image(stats: stats, currency: currencyManager.selectedCurrency) {
+                    if !isEmpty, let image = YearSlip.image(stats: stats, currency: currencyManager.selectedCurrency) {
                         ShareLink(item: image, preview: SharePreview(L10n.string("Your year in subscriptions"), image: image)) {
                             Image(systemName: "square.and.arrow.up")
                                 .font(.body.weight(.semibold))
@@ -271,15 +272,31 @@ struct SubscriptionWrappedView: View {
                     }
                 }
 
-                Text(L10n.string("Your subscriptions cost about \(MoneyFormat.string(stats.yearlyCost, currencyManager.selectedCurrency, locale: L10n.locale, wholeUnits: true)) a year."))
-                    .font(.question(.title))
-                    .foregroundStyle(Color.inkText)
-                    .fixedSize(horizontal: false, vertical: true)
-                    .padding(.top, 4)
-                    .accessibilityAddTraits(.isHeader)
+                if isEmpty {
+                    // Nothing listed and nothing cancelled: a slip of zeros with a share button said
+                    // "about $0 a year" as if it were a finding.
+                    Text("Nothing to add up yet.")
+                        .font(.question(.title))
+                        .foregroundStyle(Color.inkText)
+                        .fixedSize(horizontal: false, vertical: true)
+                        .padding(.top, 4)
+                        .accessibilityAddTraits(.isHeader)
+                    Text("Add what you pay for and this page shows what a year of it costs.")
+                        .font(.body)
+                        .foregroundStyle(Color.inkTextMuted)
+                        .fixedSize(horizontal: false, vertical: true)
+                        .padding(.top, 10)
+                } else {
+                    Text(L10n.string("Your subscriptions cost about \(MoneyFormat.string(stats.yearlyCost, currencyManager.selectedCurrency, locale: L10n.locale, wholeUnits: true)) a year."))
+                        .font(.question(.title))
+                        .foregroundStyle(Color.inkText)
+                        .fixedSize(horizontal: false, vertical: true)
+                        .padding(.top, 4)
+                        .accessibilityAddTraits(.isHeader)
 
-                YearSlip(stats: stats, currency: currencyManager.selectedCurrency)
-                    .padding(.top, 24)
+                    YearSlip(stats: stats, currency: currencyManager.selectedCurrency)
+                        .padding(.top, 24)
+                }
             }
             .padding(.horizontal, Layout.margin)
             .padding(.top, 8)
@@ -354,6 +371,10 @@ struct WrappedStats {
     let cancelledCount: Int
     let topService: String
     let topCategory: String
+
+    /// Nothing is being paid for and nothing was cancelled this year: there is no year to print.
+    /// (Everything cancelled is a year worth printing: it costs nothing now and something was kept.)
+    var hasNothingToShow: Bool { totalCount == 0 && cancelledCount == 0 }
 
     init(subscriptions: [Subscription], events: [LifecycleEvent],
          now: Date = Date(), calendar: Calendar = .billing,

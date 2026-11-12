@@ -256,6 +256,7 @@ struct SubscriptionBrowserView: View {
             if !searchText.isEmpty {
                 Button { searchText = "" } label: {
                     Image(systemName: "xmark.circle.fill").foregroundStyle(Color.inkTextFaint)
+                        .tapArea(.trailing)
                 }
                 .accessibilityLabel(Text("Clear"))
             }
@@ -301,7 +302,7 @@ struct SubscriptionBrowserView: View {
             Text("No results for \"\(searchText)\"")
                 .font(.question(.title3))
                 .foregroundStyle(Color.inkText)
-            Text("Try a different name, or add it as a custom subscription.")
+            Text("Try a different name, or add your own.")
                 .font(.subheadline)
                 .foregroundStyle(Color.inkTextMuted)
                 .fixedSize(horizontal: false, vertical: true)

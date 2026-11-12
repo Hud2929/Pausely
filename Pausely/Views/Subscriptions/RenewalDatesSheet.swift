@@ -23,14 +23,17 @@ struct RenewalDatesSheet: View {
                         Spacer()
                     }
 
-                    Text("When do they charge you?")
+                    Text(subscriptions.count == 1 ? L10n.string("When does \(subscriptions[0].name) charge you?")
+                                                  : L10n.string("When do they charge you?"))
                         .font(.question(.title))
                         .foregroundStyle(Color.inkText)
                         .fixedSize(horizontal: false, vertical: true)
                         .padding(.top, 4)
                         .accessibilityAddTraits(.isHeader)
 
-                    Text("Pausely asks you before each of these days whether to keep it. Your bank statement or the service's account page shows the date. Skip any you don't know.")
+                    Text(subscriptions.count == 1
+                         ? L10n.string("Pausely asks you before that day whether to keep it. Your bank statement or the service's account page shows the date.")
+                         : L10n.string("Pausely asks you before each of these days whether to keep it. Your bank statement or the service's account page shows the date. Skip any you don't know."))
                         .font(.subheadline)
                         .foregroundStyle(Color.inkTextMuted)
                         .fixedSize(horizontal: false, vertical: true)
@@ -73,6 +76,8 @@ struct RenewalDatesSheet: View {
                 Text(verbatim: subscription.billingFrequency.pricedShort(subscription.chargeText))
                     .font(.subheadline)
                     .foregroundStyle(Color.inkTextMuted)
+                    // "$54.99/mo" is read out as "$54.99 a month".
+                    .accessibilityLabel(Text(verbatim: subscription.billingFrequency.priced(subscription.chargeText)))
             }
             Spacer(minLength: 8)
             if let date = dates[subscription.id] {

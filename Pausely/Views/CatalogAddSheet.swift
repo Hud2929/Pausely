@@ -81,10 +81,14 @@ struct CatalogAddSheet: View {
                             .pickerStyle(.menu)
                             .tint(Color.inkText)
                         }
-                        Hairline()
-                        row(L10n.string("Next renewal")) {
-                            OptionalDatePicker(title: L10n.string("Next renewal"), date: $nextBillingDate,
-                                               earliest: Calendar.billing.startOfDay(for: Date()))
+                        // On a free trial the day it ends is the first charge, and it becomes the renewal
+                        // date then (`SubscriptionLifecycle.afterTrial`): one date is asked for, not two.
+                        if !hasFreeTrial {
+                            Hairline()
+                            row(L10n.string("Next renewal")) {
+                                OptionalDatePicker(title: L10n.string("Next renewal"), date: $nextBillingDate,
+                                                   earliest: Calendar.billing.startOfDay(for: Date()))
+                            }
                         }
                         Hairline()
                         Toggle(isOn: $hasFreeTrial.animation(Motion.unlessReduced(Motion.touch))) {
@@ -114,7 +118,7 @@ struct CatalogAddSheet: View {
                 Feel.tick()
                 // Saved as what the person confirmed, in their own currency.
                 guard let amount else { return }
-                onAdd(frequency, amount, nextBillingDate, hasFreeTrial ? trialEndsAt : nil)
+                onAdd(frequency, amount, hasFreeTrial ? nil : nextBillingDate, hasFreeTrial ? trialEndsAt : nil)
                 dismiss()
             } label: {
                 Text(L10n.string("Add \(entry.name)"))

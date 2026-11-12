@@ -115,6 +115,7 @@ final class BillingCalendarTests: XCTestCase {
 
     func testTheYearSlipCountsAGregorianYear() {
         let stats = WrappedStats(subscriptions: [], events: [], now: day(2026, 11, 12), currency: "USD", rates: .fallback)
+        XCTAssertTrue(stats.hasNothingToShow, "an empty list with nothing cancelled is not a year to print")
         XCTAssertEqual(stats.year, 2026)
     }
 }

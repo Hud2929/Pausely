@@ -95,17 +95,17 @@ struct PausePlanView: View {
         intro
 
         if eligible.count < 2 {
-            VStack(spacing: 8) {
+            VStack(alignment: .leading, spacing: 8) {
                 Text("Add two or more streaming services")
                     .font(.headline)
                     .foregroundStyle(Color.inkText)
+                    .fixedSize(horizontal: false, vertical: true)
                 Text("Netflix, Max, Disney+, Hulu, Prime Video and the like. Pause Plan rotates monthly video services; music and storage stay on.")
                     .font(.subheadline)
                     .foregroundStyle(Color.inkTextMuted)
-                    .multilineTextAlignment(.center)
+                    .fixedSize(horizontal: false, vertical: true)
             }
-            .padding(20)
-            .frame(maxWidth: .infinity)
+            .frame(maxWidth: .infinity, alignment: .leading)
         } else {
             VStack(alignment: .leading, spacing: 10) {
                 Text("Rotate these")
@@ -113,7 +113,7 @@ struct PausePlanView: View {
                     .foregroundStyle(Color.inkTextFaint)
                 VStack(spacing: 0) {
                     ForEach(Array(eligible.enumerated()), id: \.element.id) { index, sub in
-                        if index > 0 { Divider().overlay(Color.line).padding(.leading, 64) }
+                        if index > 0 { Hairline() }
                         selectableRow(sub)
                     }
                 }
@@ -188,11 +188,13 @@ struct PausePlanView: View {
                 ServiceLogoView(name: sub.name, category: sub.category, size: 34)
                     .accessibilityHidden(true)
                 VStack(alignment: .leading, spacing: 2) {
-                    Text(sub.name)
-                        .font(.subheadline.weight(.semibold))
+                    Text(verbatim: sub.name)
+                        .font(.body.weight(.medium))
                         .foregroundStyle(Color.inkText)
-                    Text(sub.status == .cancelled ? L10n.string("Paused now") : L10n.string("\(money(sub.amount, from: sub.currency)) a month"))
-                        .font(.caption)
+                    Text(verbatim: sub.status == .cancelled
+                         ? L10n.string("Cancelled") + " · " + L10n.string("\(money(sub.amount, from: sub.currency)) a month")
+                         : L10n.string("\(money(sub.amount, from: sub.currency)) a month"))
+                        .font(.subheadline)
                         .foregroundStyle(Color.inkTextMuted)
                 }
                 Spacer(minLength: 8)
@@ -212,7 +214,6 @@ struct PausePlanView: View {
                     .buttonStyle(.borderless)
                 }
             }
-            .padding(.horizontal, 14)
             .padding(.vertical, 12)
             .contentShape(Rectangle())
         }
@@ -266,9 +267,9 @@ struct PausePlanView: View {
             } label: {
                 Text("End Pause Plan")
                     .font(.subheadline)
-                    .foregroundStyle(Color.inkTextFaint)
-                    .frame(maxWidth: .infinity)
-                    .frame(height: 44)
+                    .foregroundStyle(Color.inkTextMuted)
+                    .frame(maxWidth: .infinity, minHeight: Layout.tapTarget)
+                    .contentShape(Rectangle())
             }
             .buttonStyle(PlainButtonStyle())
             .accessibilityIdentifier("endPausePlanButton")
@@ -318,7 +319,10 @@ struct PausePlanView: View {
             guard let sub = subs[id], sub.renewsAutomatically, let renewal = sub.nextRenewal(onOrAfter: today),
                   PausePlanSchedule.shouldPause(id, renewingOn: renewal, plan: plan, current: current) else { continue }
             items.append(Todo(id: "cancel-\(id)", sub: sub,
-                              text: L10n.string("Cancel \(sub.name) before it renews \(short(renewal))."),
+                              // A free trial doesn't renew: it ends, and that is its first charge.
+                              text: sub.status == .trial
+                                ? L10n.string("Cancel \(sub.name) before its free trial ends \(short(renewal)).")
+                                : L10n.string("Cancel \(sub.name) before it renews \(short(renewal))."),
                               action: .cancel))
         }
         // The handoff is close: cancel the current one before its month ends.
@@ -377,7 +381,6 @@ struct PausePlanView: View {
                 }
             }
         }
-        .padding(16)
         .frame(maxWidth: .infinity, alignment: .leading)
     }
 
@@ -403,7 +406,6 @@ struct PausePlanView: View {
                 }
             }
         }
-        .padding(16)
         .frame(maxWidth: .infinity, alignment: .leading)
     }
 

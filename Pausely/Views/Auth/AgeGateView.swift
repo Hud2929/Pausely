@@ -24,21 +24,16 @@ struct AgeGateView: View {
     var body: some View {
         ZStack {
             ScrollView {
-                VStack(spacing: 24) {
-                    Image(systemName: isBlocked ? "hand.raised.fill" : "calendar.badge.checkmark")
-                        .font(.largeTitle)
-                        .imageScale(.large)
-                        .foregroundStyle(Color.inkText)
-                        .padding(.top, 48)
-                        .accessibilityHidden(true)
-
+                // Words and one question, like every other screen: no picture standing in for them.
+                Group {
                     if isBlocked {
                         blockedContent
                     } else {
                         formContent
                     }
                 }
-                .padding(.horizontal, 24)
+                .padding(.horizontal, Layout.margin)
+                .padding(.top, 48)
                 .padding(.bottom, 32)
             }
         }
@@ -54,11 +49,12 @@ struct AgeGateView: View {
         VStack(spacing: 20) {
             VStack(alignment: .leading, spacing: 8) {
                 Text("Confirm your age")
-                    .font(.question(.title, weight: .bold))
+                    .font(.question(.title))
                     .foregroundStyle(Color.inkText)
+                    .fixedSize(horizontal: false, vertical: true)
                     .accessibilityAddTraits(.isHeader)
                 Text("Pausely is for people \(AgeConsentManager.minimumAge) and older. Enter your date of birth to continue.")
-                    .font(.subheadline)
+                    .font(.body)
                     .foregroundStyle(Color.inkTextMuted)
                     .fixedSize(horizontal: false, vertical: true)
             }
@@ -78,28 +74,31 @@ struct AgeGateView: View {
                 Text("That date is in the future. Please check your date of birth.")
                     .font(.footnote)
                     .foregroundStyle(Color.due)
-                    .multilineTextAlignment(.center)
+                    .frame(maxWidth: .infinity, alignment: .leading)
             }
 
             Button(action: submit) {
                 Text("Continue")
             }
-            .buttonStyle(InkButtonStyle())
+            .buttonStyle(.ink)
             .accessibilityIdentifier("ageGateContinueButton")
             .accessibilityHint("Confirms your age and continues")
 
             Text("We only use this to check eligibility. Your date of birth is not saved. We keep a record that you confirmed you are \(AgeConsentManager.minimumAge)+.")
-                .font(.caption)
+                .font(.footnote)
                 .foregroundStyle(Color.inkTextFaint)
-                .multilineTextAlignment(.center)
+                .fixedSize(horizontal: false, vertical: true)
+                .frame(maxWidth: .infinity, alignment: .leading)
 
             if let onCancel {
-                Button(cancelTitle, action: onCancel)
-                    .font(.subheadline)
-                    .foregroundStyle(Color.inkTextMuted)
-                    .frame(minWidth: Layout.tapTarget, minHeight: Layout.tapTarget)
-                    .contentShape(Rectangle())
-                    .accessibilityIdentifier("ageGateCancelButton")
+                Button(action: onCancel) {
+                    Text(cancelTitle)
+                        .font(.subheadline.weight(.semibold))
+                        .foregroundStyle(Color.inkTextMuted)
+                        .tapArea()
+                }
+                .buttonStyle(.plain)
+                .accessibilityIdentifier("ageGateCancelButton")
             }
         }
     }
@@ -107,27 +106,30 @@ struct AgeGateView: View {
     // MARK: - Blocked
 
     private var blockedContent: some View {
-        VStack(spacing: 16) {
+        VStack(alignment: .leading, spacing: 12) {
             Text("You can't use Pausely yet")
-                .font(.title2.weight(.bold))
+                .font(.question(.title2))
                 .foregroundStyle(Color.inkText)
-                .multilineTextAlignment(.center)
+                .fixedSize(horizontal: false, vertical: true)
+                .accessibilityAddTraits(.isHeader)
             Text("Pausely is only available to people \(AgeConsentManager.minimumAge) and older, so we can't create an account for you right now.")
-                .font(.subheadline)
+                .font(.body)
                 .foregroundStyle(Color.inkTextMuted)
-                .multilineTextAlignment(.center)
+                .fixedSize(horizontal: false, vertical: true)
             if let lockoutText {
-                Text(lockoutText)
-                    .font(.footnote)
-                    .foregroundStyle(Color.inkTextFaint)
+                Text(verbatim: lockoutText)
+                    .font(.subheadline)
+                    .foregroundStyle(Color.inkTextMuted)
+                    .fixedSize(horizontal: false, vertical: true)
             }
             if let onCancel {
                 Button(cancelTitle, action: onCancel)
-                    .buttonStyle(InkButtonStyle())
+                    .buttonStyle(.ink)
+                    .padding(.top, 12)
                     .accessibilityIdentifier("ageGateBlockedCloseButton")
             }
         }
-        .accessibilityElement(children: .combine)
+        .frame(maxWidth: .infinity, alignment: .leading)
     }
 
     // MARK: - Actions
