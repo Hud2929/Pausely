@@ -390,3 +390,8 @@ s3_secret_key = "env(S3_SECRET_KEY)"
 [functions.auth-email]
 # Called by Supabase Auth, which signs each request instead of sending a login.
 verify_jwt = false
+
+[functions.apple-revoke]
+# Called by the app for a signed-in person. The gateway checks the token, and the function then asks
+# the account service who the caller is before Apple is asked anything.
+verify_jwt = true

@@ -454,6 +454,7 @@ matters to a stranger: the customer round below scores "getting in" at 1.
 | S5 | low | The receipt-facts file is written "only while unlocked" and a failed read counts as empty, so a save after it writes over the facts (a rescan rebuilds them) | open |
 | S6 | low | A widget drawn before the first unlock reads nothing and shows the empty state until its next refresh (up to six hours for the trial widget) | open, with the widget work in D4 |
 | S7 | low | A reminder that fails to be scheduled is dropped without a trace | open |
+| S8 | low | A catalog seed file for a backend the project does not use (39 KB of invented plans and descriptions) | closed 11-12: deleted |
 
 Scan status (16 areas). Scanned: engineering 1, 5, 8, 9; overlooked 1 to 4 (calendars and locales,
 StoreKit, notifications, widgets and intents). Not scanned by anyone: engineering 2 (correctness), 3
