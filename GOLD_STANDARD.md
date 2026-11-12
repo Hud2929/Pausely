@@ -174,8 +174,12 @@ Updated at every commit, so the work can be picked up from this file alone.
   gone, and the catalog is built in and ready at first use, so the cancel screen and logos no longer
   depend on the browse screen having been opened. Whole suite: 574 tests, one failure, the known
   translation guard (D).
-- Stage B is done. Stage C (6.3), top to bottom: B9 done. Now: B11, B12, B13 (paywall prices, refunds
-  noticed while running, Pausely's own line in the right currency).
+- Stage B is done. Stage C (6.3), top to bottom: B9 done; B11, B12, B13 done, and T34–38 with them
+  (one owner for StoreKit). Whole suite 592 tests, one failure, the known translation guard (D).
+  Learned: never create an `SKTestSession` or call `AppStore.sync()` in a unit test here. Purchases
+  fail with "notEntitled", the real entitlement list never answers, and the simulator is left asking
+  for an Apple Account until a plain test pass puts its local store back.
+- Now: B14 (`startDate` never saved), then B17/T41 (four definitions of "active").
 
 **Phase 0. Scan (read-only).** Four independent audits (dead code, truth, design rules on every
 view, engineering) plus mechanical scans. Output: the ledger.
@@ -267,7 +271,7 @@ matters to a stranger: the customer round below scores "getting in" at 1.
 | Id | What | Status |
 |---|---|---|
 | B9 | Pause Plan overwrites the billing anchor with "a month after today" | closed 11-11: `PausePlanSchedule.restartAnchor`. A service started again renews on the day of the month it was started (31 Jan → 28 Feb, 31 Mar, 30 Apr; it used to become the 28th forever). A month later is stored only where that is the same schedule; otherwise the start day is stored and recorded as kept, so the day just paid is not asked about. One that is already on keeps its date. Six tests (`PausePlanTests`, `PausePlanStartTests`); the 31st ones fail on the old rule |
-| B11, B12, B13 | Paywall never retries prices after one failure; a refund or expiry is not noticed while the app runs; Pausely's own line can be created at USD launch prices for any country | open |
+| B11, B12, B13 | Paywall never retries prices after one failure; a refund or expiry is not noticed while the app runs; Pausely's own line can be created at USD launch prices for any country | closed 11-11: one class owns StoreKit (`StoreKitManager`); `PaymentManager` keeps only the tier. B11: a failed or empty price load is not counted as loaded, and the paywall keeps asking while it is open. B12: every transaction update, purchase, restore and return to the app reads the entitlements again, so Pro is taken away as well as given. B13: Pausely's own line is added only from the App Store's stated price, currency and renewal day, never an estimate, and a line an earlier version priced wrongly is corrected. `StoreKitManagerTests`, `ProTierTests`, `PaymentManagerTests` (16 new tests). Not proven: an actual purchase and refund. Apple's local test store refuses purchases inside the unit-test host ("notEntitled") and the simulator has no Apple Account, so that needs a sandbox account on a device (6.7) |
 | B14 | `startDate` is never saved, so "lifetime" always starts the day the row was added | open |
 | B17, T41 | Four definitions of "active": Home, Insights, paywall and the year slip show different yearly totals for one list | open |
 | B18, T95 | Stale rates are never reported; converted totals are not marked "about" | open |
@@ -287,7 +291,7 @@ matters to a stranger: the customer round below scores "getting in" at 1.
 | Scope C | Catalog: 1,379 invented plan prices, invented descriptions (Pausely's own says "bank sync"), invented websites used for logos, plan variants listed as services | open |
 | T25–33 | "Deep savings analysis": English only, invented thresholds, a figure that always equals the price, overlap matched by substring on cancelled items too | open |
 | T50–56 | In-app Privacy Policy and Terms: untrue lines (analytics, push, price alerts, a licence to use data), English only, a second copy beside the website's | open |
-| T34–38 | Paywall: cancelling Apple's sheet raises "Purchase Error"; restore outcomes all read "Purchase failed"; "Apple ID" path is out of date; two different last days to cancel | open |
+| T34–38 | Paywall: cancelling Apple's sheet raises "Purchase Error"; restore outcomes all read "Purchase failed"; "Apple ID" path is out of date; two different last days to cancel | closed 11-11: each outcome has its own words in five languages (`PaywallNotice`), and closing Apple's sheet says nothing (seen on the simulator: cancel, no alert). The path reads "open Settings, tap your name, then Subscriptions" on the paywall and in the delete-account warning. The slip says "Cancel by" the day before the first charge, which agrees with the 24-hour line under the button (seen: first charge Nov 18, cancel by Nov 17) |
 | T97–99, T80–86, T70, T67, T89 | Untranslated: the welcome screen's six lines, edit-screen rows, age gate buttons, every Shortcut result, a notification, every widget string; 15 counts with no plural forms ("1 subscriptions") | open |
 | T101 | About 940 unused string keys, some carrying old false claims in six languages | open |
 | T102–108 | Seven names for Find in Email; "Renewal Verdict" exists only in the listing; five names for Insights; "watch" and "track" | open |
@@ -319,6 +323,10 @@ two classes own StoreKit state; 7 Swift files over 700 lines; 17 hype names.
 - The README now says no licence is granted. It used to say MIT with no licence file. Confirm.
 - Everything already on the list in memory: Supabase email templates and redirect URLs, the pending
   SQL, the edited listing text and review notes, Microsoft client id, the "go" for 1.0.3.
+- One real purchase on a device with a sandbox Apple Account: start the free trial, see Pausely Pro
+  join the list at the App Store's price, then refund it in the sandbox and see Pro go without a
+  restart. The code paths are tested against stand-in answers; the App Store itself can't be reached
+  from the simulator here (no Apple Account, and the local test store refuses purchases in tests).
 
 ## 7. Scorecard
 

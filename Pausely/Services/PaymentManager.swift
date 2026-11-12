@@ -2,30 +2,22 @@
 //  PaymentManager.swift
 //  Pausely
 //
-//  Free tier, Pro tiers and StoreKit purchases. What Pro unlocks lives in ProFeature.swift.
+//  The free tier, the Pro tiers and which one this person has. StoreKit itself is StoreKitManager's;
+//  what Pro unlocks lives in ProFeature.swift.
 //
 
 import Foundation
-import StoreKit
 
-// MARK: - Payment Source (Backward Compatibility)
 /// The free tier. One value, used by the store limit, the paywall and the copy in the listing.
 enum FreeTier {
     static let subscriptionLimit = 5
 }
 
-/// Launch prices in USD. Only used for estimates before StoreKit has loaded; once it has, the paywall
-/// shows Apple's real price for the customer's storefront.
+/// Launch prices in USD, for internal sums only. Never shown and never saved as what someone pays:
+/// Apple sets each country's price, and only StoreKit knows it.
 enum ProPricing {
     static let monthlyUSD = Decimal(string: "4.99")!
     static let annualUSD = Decimal(string: "29.99")!
-}
-
-enum PaymentSource: String, Codable {
-    case storeKitMonthly = "storekit_monthly"
-    case storeKitAnnual = "storekit_annual"
-    case referral = "referral"
-    case promoCode = "promo_code"
 }
 
 // MARK: - Subscription Tier
@@ -40,10 +32,6 @@ enum SubscriptionTier: String, CaseIterable, Comparable, Codable {
               let rhsIndex = order.firstIndex(of: rhs) else { return false }
         return lhsIndex < rhsIndex
     }
-    
-    // MARK: - Backward Compatibility
-    static let premium = pro
-    static let premiumAnnual = proAnnual
     
     var displayName: String {
         switch self {
@@ -73,7 +61,6 @@ final class PaymentManager: ObservableObject {
             }
         }
     }
-    private(set) var products: [Product] = []
 
     // MARK: - Debug Override
     #if DEBUG
@@ -89,27 +76,18 @@ final class PaymentManager: ObservableObject {
     private var debugFreePro: Bool { false }
     #endif
 
-    // MARK: - Product IDs (must match App Store Connect)
-    private let productIDs: Set<String> = [
-        "com.pausely.premium.monthly",
-        "com.pausely.premium.annual"
-    ]
-
     /// The effective tier including debug override.
     /// Writes still go to `currentTier` so StoreKit and purchase flows work normally.
     private var resolvedTier: SubscriptionTier {
         debugFreePro ? .pro : currentTier
     }
 
-    // MARK: - Backward Compatibility Properties
+    /// Whether this person has Pro, by any route: an App Store subscription or a grant on the account.
     var isPremium: Bool {
-        get {
-            #if DEBUG
-            if debugPremiumOverride { return true }
-            #endif
-            return resolvedTier > .free
-        }
-        set { /* No-op - tier is managed by StoreKit */ }
+        #if DEBUG
+        if debugPremiumOverride { return true }
+        #endif
+        return resolvedTier > .free
     }
 
 
@@ -128,48 +106,20 @@ final class PaymentManager: ObservableObject {
         #endif
 
         Task {
-            await loadProducts()
-            // 2. Verify against StoreKit (may downgrade if subscription expired)
+            // 2. Ask the App Store (may lower the tier if the subscription ended or was refunded)
             await updateCurrentEntitlements()
-            // 3. Auto-add Pausely Pro if user is already Pro on launch
-            if self.currentTier > .free {
-                await autoAddPauselyProIfNeeded()
-            }
+            // 3. Pausely's own line, for someone who already has Pro
+            await autoAddPauselyProIfNeeded()
         }
+    }
 
-    }
-    
-    // MARK: - StoreKit Integration
-    
-    func loadProducts() async {
-        do {
-            products = try await Product.products(for: productIDs)
-                .sorted { $0.price < $1.price }
-        } catch {
-            PauselyLogger.error("Failed to load products: \(error)", category: "Payment")
-        }
-    }
-    
-    
-    
     // MARK: - Entitlements
-    
+
+    /// Reads what the App Store says is paid for and sets the tier from it: up when something was
+    /// bought, down when it ended, was refunded or was revoked. Runs at launch, after a purchase or
+    /// restore, on every transaction update and whenever the app comes to the front.
     func updateCurrentEntitlements() async {
-        var storeKitTier: SubscriptionTier = .free
-        var hasStoreKitEntitlement = false
-
-        for await result in Transaction.currentEntitlements {
-            guard let transaction = try? checkVerified(result),
-                  transaction.revocationDate == nil else { continue }
-
-            hasStoreKitEntitlement = true
-            let tier = tierForProduct(transaction.productID)
-            if tier > storeKitTier {
-                storeKitTier = tier
-            }
-        }
-
-        currentTier = Self.resolveTier(storeKit: hasStoreKitEntitlement ? storeKitTier : nil, hasGrant: hasProGrant)
+        currentTier = Self.resolveTier(storeKit: await StoreKitManager.shared.entitledTier(), hasGrant: hasProGrant)
     }
 
     /// Pro comes from an active App Store subscription (a billing grace period counts: StoreKit keeps
@@ -192,23 +142,6 @@ final class PaymentManager: ObservableObject {
         await updateCurrentEntitlements()
     }
     
-    private func tierForProduct(_ productID: String) -> SubscriptionTier {
-        switch productID {
-        case "com.pausely.premium.monthly":  return .pro
-        case "com.pausely.premium.annual":   return .proAnnual
-        default:                             return .free
-        }
-    }
-    
-    private func checkVerified<T>(_ result: VerificationResult<T>) throws -> T {
-        switch result {
-        case .unverified(_, let error):
-            throw error
-        case .verified(let safe):
-            return safe
-        }
-    }
-    
     // MARK: - Feature Checks
     
     /// Check if user can add more subscriptions
@@ -220,81 +153,64 @@ final class PaymentManager: ObservableObject {
         !canAddSubscription(currentCount: currentCount)
     }
 
-    // MARK: - Backward Compatibility Methods
-    
-    /// Legacy method for activating premium (now maps to Pro)
-    func activatePremium(source: PaymentSource) {
-        Task {
-            switch source {
-            case .storeKitMonthly, .storeKitAnnual:
-                await updateCurrentEntitlements()
-            case .referral, .promoCode:
-                await setProGrant(true)
-            }
-        }
-    }
-
-
-    // MARK: - Auto-Add Pausely Pro Subscription
+    // MARK: - Pausely's own line in the list
 
     private let pauselyProAutoAddedKey = "pausely_pro_auto_added"
+    static let ownBundleIdentifier = "com.pausely.app.Pausely"
 
-    /// Automatically adds Pausely Pro to the user's subscription list when they upgrade.
-    /// Uses a UserDefaults flag to prevent duplicate additions.
-    /// What Pausely itself costs this customer, from StoreKit: the storefront's price and currency,
-    /// whether the free trial is running, and when the next charge happens.
-    static func pauselyEntry(for tier: SubscriptionTier) async -> (amount: Decimal, currency: String, frequency: BillingFrequency, nextCharge: Date?, isTrial: Bool) {
-        let frequency: BillingFrequency = tier == .proAnnual ? .yearly : .monthly
-        let product = StoreKitManager.shared.product(for: tier)
-        var amount = product?.price ?? (tier == .proAnnual ? ProPricing.annualUSD : ProPricing.monthlyUSD)
-        let currency = product?.priceFormatStyle.currencyCode ?? "USD"
-        var nextCharge = Calendar.current.date(byAdding: frequency == .yearly ? .year : .month, value: 1, to: Date())
-        var isTrial = false
-        if let product, let latest = await Transaction.latest(for: product.id), case .verified(let transaction) = latest {
-            if let expires = transaction.expirationDate { nextCharge = expires }
-            isTrial = transaction.offer?.type == .introductory
-        }
-        if amount <= 0 { amount = tier == .proAnnual ? ProPricing.annualUSD : ProPricing.monthlyUSD }
-        return (amount, currency, frequency, nextCharge, isTrial)
+    /// Pausely Pro as a line in the person's own list, so the app watches its own cost like any other.
+    /// Everything on it is the App Store's: the price and currency for this storefront, whether the
+    /// free trial is running, and the day it next charges.
+    static func pauselyLine(_ own: StoreKitManager.OwnSubscription) -> Subscription {
+        Subscription(
+            name: "Pausely Pro",
+            bundleIdentifier: ownBundleIdentifier,
+            category: SubscriptionCategory.productivity.rawValue,
+            amount: own.price,
+            currency: own.currency,
+            billingFrequency: own.tier == .proAnnual ? .yearly : .monthly,
+            nextBillingDate: own.renews,
+            trialEndsAt: own.isTrial ? own.renews : nil,
+            status: own.isTrial ? .trial : .active,
+            isDetected: true
+        )
     }
 
+    /// A line that is already there, brought in step with the App Store's price and currency.
+    /// Earlier versions could add it at US launch prices for any country.
+    static func corrected(_ line: Subscription, to own: StoreKitManager.OwnSubscription) -> Subscription? {
+        let frequency: BillingFrequency = own.tier == .proAnnual ? .yearly : .monthly
+        guard line.amount != own.price || line.currency != own.currency || line.billingFrequency != frequency else { return nil }
+        var fixed = line
+        fixed.amount = own.price
+        fixed.currency = own.currency
+        fixed.billingFrequency = frequency
+        return fixed
+    }
+
+    /// Adds Pausely Pro to the list once, when the App Store has stated its price and a verified
+    /// purchase exists. Until both are known nothing is added (a person given Pro on their account
+    /// pays nothing, so gets no line); this runs again at launch, when prices load and when Pro begins.
     func autoAddPauselyProIfNeeded() async {
-        guard !UserDefaults.standard.bool(forKey: pauselyProAutoAddedKey) else { return }
-
+        guard currentTier > .free else { return }
         let store = SubscriptionStore.shared
+        guard let own = await StoreKitManager.shared.ownSubscription(for: currentTier) else { return }
 
-        // Check if Pausely Pro is already tracked
-        let alreadyAdded = store.subscriptions.contains {
-            $0.bundleIdentifier == "com.pausely.app.Pausely" ||
-            $0.name.lowercased().contains("pausely")
-        }
-        guard !alreadyAdded else {
+        if let existing = store.subscriptions.first(where: { $0.bundleIdentifier == Self.ownBundleIdentifier }) {
+            if let fixed = Self.corrected(existing, to: own) { await store.updateSubscription(fixed) }
             UserDefaults.standard.set(true, forKey: pauselyProAutoAddedKey)
             return
         }
-
-        guard currentTier > .free else { return }
-        let entry = await Self.pauselyEntry(for: currentTier)
-        let subscription = Subscription(
-            name: "Pausely Pro",
-            bundleIdentifier: "com.pausely.app.Pausely",
-            category: SubscriptionCategory.productivity.rawValue,
-            amount: entry.amount,
-            currency: entry.currency,
-            billingFrequency: entry.frequency,
-            nextBillingDate: entry.nextCharge,
-            trialEndsAt: entry.isTrial ? entry.nextCharge : nil,
-            status: entry.isTrial ? .trial : .active,
-            isDetected: true
-        )
+        // Added once. If the person removed it, or tracks it under their own name, it stays that way.
+        guard !UserDefaults.standard.bool(forKey: pauselyProAutoAddedKey),
+              !store.subscriptions.contains(where: { $0.name.lowercased().contains("pausely") }) else { return }
 
         do {
-            _ = try await store.addSubscription(subscription)
+            _ = try await store.addSubscription(Self.pauselyLine(own))
             UserDefaults.standard.set(true, forKey: pauselyProAutoAddedKey)
-            PauselyLogger.info("Auto-added Pausely Pro subscription (\(currentTier.displayName))", category: "Payment")
         } catch {
-            PauselyLogger.error("Failed to auto-add Pausely Pro: \(error)", category: "Payment")
+            // The free limit can't refuse it (Pro is unlimited); logged in case a new refusal appears.
+            PauselyLogger.error("Could not add Pausely Pro to the list: \(error)", category: "Payment")
         }
     }
-
 }

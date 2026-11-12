@@ -379,9 +379,8 @@ struct RootView: View {
             }
         }
         .task {
-            // Initialize StoreKit: starts the transaction listener and checks
-            // existing entitlements so returning subscribers are recognized immediately.
-            await StoreKitManager.shared.loadProductsIfNeeded()
+            // Starts listening for App Store transactions and fetches the plans' prices.
+            await StoreKitManager.shared.loadProducts()
         }
         .onAppear {
             #if DEBUG
@@ -402,6 +401,9 @@ struct RootView: View {
                     await SubscriptionStore.shared.sync.drain(force: true)
                     // An app left open for days still converts at today's rates (asks at most hourly).
                     await CurrencyManager.shared.refreshRates()
+                    // A subscription that ended or was refunded while the app was in the background stops
+                    // unlocking Pro now, not at the next cold launch.
+                    await PaymentManager.shared.updateCurrentEntitlements()
                 }
             }
         }

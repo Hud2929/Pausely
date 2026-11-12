@@ -17,12 +17,15 @@ struct StoreKitUpgradeView: View {
     /// (Apple allows one trial per subscription group).
     @State private var trialAvailable = false
     private var isTrialEnabled: Bool { trialAvailable }
-    @State private var showErrorAlert = false
-    @State private var errorMessage = ""
+    @State private var notice: PaywallNotice?
+    /// What "Try Again" on a notice repeats.
+    @State private var lastAttempt: Attempt = .purchase
     @State private var showSuccessAlert = false
     @AccessibilityFocusState private var focusedElement: FocusElement?
 
     let currentSubscriptionCount: Int
+
+    private enum Attempt { case purchase, restore }
 
     enum FocusElement {
         case title
@@ -34,8 +37,8 @@ struct StoreKitUpgradeView: View {
 
         var tier: SubscriptionTier {
             switch self {
-            case .monthly: return .premium
-            case .annual: return .premiumAnnual
+            case .monthly: return .pro
+            case .annual: return .proAnnual
             }
         }
 
@@ -147,8 +150,14 @@ struct StoreKitUpgradeView: View {
         return price + " " + against
     }
 
-    private var firstChargeDate: String {
-        let date = Calendar.current.date(byAdding: .day, value: 7, to: Date()) ?? Date()
+    private var firstChargeDate: String { shortDate(daysFromToday: 7) }
+
+    /// The last day a cancellation is certain to be in time: Apple needs it at least 24 hours before
+    /// the trial ends, so the day before the first charge, not the day of it.
+    private var lastDayToCancel: String { shortDate(daysFromToday: 6) }
+
+    private func shortDate(daysFromToday days: Int) -> String {
+        let date = Calendar.current.date(byAdding: .day, value: days, to: Date()) ?? Date()
         return date.formatted(.dateTime.month(.abbreviated).day().locale(L10n.locale))
     }
 
@@ -192,9 +201,16 @@ struct StoreKitUpgradeView: View {
             if !typeSize.isAccessibilitySize { actionBar }
         }
         .background(Color.ink.ignoresSafeArea())
-        .onAppear {
-            focusedElement = .title
-            Task { await storeManager.loadProducts() }
+        .onAppear { focusedElement = .title }
+        .task {
+            // Prices are the App Store's. If they can't be fetched, keep asking while this screen is open.
+            var wait: UInt64 = 2
+            while !Task.isCancelled {
+                await storeManager.loadProducts()
+                if !storeManager.products.isEmpty { break }
+                try? await Task.sleep(nanoseconds: wait * 1_000_000_000)
+                wait = min(wait * 2, 16)
+            }
         }
         .task(id: trialCheckID) { await refreshTrialEligibility() }
         .alert(Text("You have Pausely Pro"), isPresented: $showSuccessAlert) {
@@ -202,16 +218,16 @@ struct StoreKitUpgradeView: View {
         } message: {
             Text("Every subscription you add is watched from now on.")
         }
-        .alert("Purchase Error", isPresented: $showErrorAlert) {
+        .alert(Text(verbatim: notice?.title ?? ""), isPresented: Binding(get: { notice != nil }, set: { if !$0 { notice = nil } }),
+               presenting: notice) { shown in
             Button("OK", role: .cancel) {}
-            if storeManager.errorMessage != nil {
-                Button("Try Again") { Task { await attemptPurchase() } }
+            if shown.offersRetry {
+                Button("Try Again") {
+                    Task { lastAttempt == .purchase ? await attemptPurchase() : await restorePurchases() }
+                }
             }
-            Button("Contact Support") {
-                if let url = URL(string: "mailto:\(AppConfig.supportEmail)") { UIApplication.shared.open(url) }
-            }
-        } message: {
-            Text(errorMessage)
+        } message: { shown in
+            Text(verbatim: shown.message)
         }
     }
 
@@ -244,7 +260,7 @@ struct StoreKitUpgradeView: View {
                 if isTrialEnabled {
                     ProofLine(label: L10n.string("Today"), value: L10n.string("Free"))
                     ProofLine(label: firstChargeDate, value: chargeText, emphasised: true)
-                    Text(L10n.string("Cancel before \(firstChargeDate) in Settings and you pay nothing."))
+                    Text(L10n.string("Cancel by \(lastDayToCancel) in Settings and you pay nothing."))
                         .font(.footnote)
                         .foregroundStyle(Color.paperMuted)
                         .fixedSize(horizontal: false, vertical: true)
@@ -386,7 +402,7 @@ struct StoreKitUpgradeView: View {
                 } else if isTrialEnabled {
                     Text("After your free trial, you'll be charged \(chargeText) unless you cancel at least 24 hours before the trial ends.")
                 } else {
-                    Text("Subscription auto-renews. Cancel anytime in Settings → Apple ID → Subscriptions.")
+                    Text("Renews automatically. To cancel, open Settings, tap your name, then Subscriptions.")
                 }
             }
             .font(.caption)
@@ -420,44 +436,31 @@ struct StoreKitUpgradeView: View {
 
     // MARK: - Actions
     private func attemptPurchase() async {
-        guard let product = storeManager.product(for: selectedPlan.tier) else {
-            errorMessage = "Subscription not available. Please try again."
-            showErrorAlert = true
-            return
-        }
-
-        let success = await storeManager.purchase(product)
-
-        if success {
-            Feel.landed()
-            // Pro watches everything: the lines that didn't fit under the free limit join the list.
-            await TallyImporter.importWaiting(into: SubscriptionStore.shared)
-            showSuccessAlert = true
-        } else if let errorMsg = storeManager.errorMessage {
-            errorMessage = mapStoreKitError(errorMsg)
-            showErrorAlert = true
+        guard let product = storeManager.product(for: selectedPlan.tier) else { return }
+        lastAttempt = .purchase
+        let outcome = await storeManager.purchase(product)
+        if outcome == .purchased {
+            await welcomeToPro()
+        } else {
+            notice = PaywallNotice.after(outcome)
         }
     }
 
     private func restorePurchases() async {
-        let success = await storeManager.restorePurchases()
-
-        if success {
-            Feel.landed()
-            await TallyImporter.importWaiting(into: SubscriptionStore.shared)
-            showSuccessAlert = true
-        } else if let errorMsg = storeManager.errorMessage {
-            errorMessage = mapStoreKitError(errorMsg)
-            showErrorAlert = true
+        lastAttempt = .restore
+        let outcome = await storeManager.restorePurchases()
+        if outcome == .restored {
+            await welcomeToPro()
+        } else {
+            notice = PaywallNotice.after(outcome)
         }
     }
 
-    private func mapStoreKitError(_ raw: String) -> String {
-        let lower = raw.lowercased()
-        if lower.contains("cancel") { return "Purchase cancelled." }
-        if lower.contains("network") || lower.contains("internet") { return "No internet connection. Try again." }
-        if lower.contains("not allowed") || lower.contains("restricted") { return "Purchases are restricted on this device." }
-        return "Purchase failed. Please try again."
+    private func welcomeToPro() async {
+        Feel.landed()
+        // Pro watches everything: the lines that didn't fit under the free limit join the list.
+        await TallyImporter.importWaiting(into: SubscriptionStore.shared)
+        showSuccessAlert = true
     }
 }
 

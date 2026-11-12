@@ -52,7 +52,7 @@ struct PrivacySecurityView: View {
                     Button("Cancel", role: .cancel) {}
                     Button("Delete", role: .destructive) { Task { await deleteAccount() } }
                 } message: {
-                    Text("This permanently deletes your account, your subscription list and your history from Pausely's servers and this iPhone. It doesn't cancel any subscriptions, including Pausely Pro; Apple manages those in Settings → Apple ID → Subscriptions.")
+                    Text("This permanently deletes your account, your subscription list and your history from Pausely's servers and this iPhone. It doesn't cancel any subscriptions, including Pausely Pro. To cancel those, open Settings, tap your name, then Subscriptions.")
                 }
                 .alert("Couldn't delete your account", isPresented: Binding(get: { deleteError != nil }, set: { if !$0 { deleteError = nil } })) {
                     Button("OK", role: .cancel) {}
