@@ -28,7 +28,6 @@ enum FreeTier {
 /// Launch prices in USD, for internal sums only. Never shown and never saved as what someone pays:
 /// Apple sets each country's price, and only StoreKit knows it.
 enum ProPricing {
-    static let monthlyUSD = Decimal(string: "4.99")!
     static let annualUSD = Decimal(string: "29.99")!
 }
 

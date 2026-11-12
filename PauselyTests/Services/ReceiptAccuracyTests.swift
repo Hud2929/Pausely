@@ -24,7 +24,7 @@ final class ReceiptAccuracyTests: XCTestCase {
     }
 
     private func money(_ subject: String, _ body: String) -> ReceiptTextAnalyzer.Money? {
-        ReceiptTextAnalyzer.extractChargeAmount(subject: subject, body: body)
+        ReceiptTextAnalyzer.chargeCandidate(subject: subject, body: body)?.money
     }
 
     private let bulk = ["list-unsubscribe": "<mailto:unsubscribe@example.com>", "precedence": "bulk"]

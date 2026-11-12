@@ -193,17 +193,17 @@ final class SubscriptionIntelligenceEngineTests: XCTestCase {
 
     func testAmountExtraction_prefersChargedAmountOverMarketingFigures() {
         let body = "Order summary\nSubtotal $394.99\nSave $20 with code\nStarting at $4.99 for Plus\nTotal charged: $14.99 per month"
-        let money = ReceiptTextAnalyzer.extractChargeAmount(subject: "Your receipt", body: body)
+        let money = ReceiptTextAnalyzer.chargeCandidate(subject: "Your receipt", body: body)?.money
         XCTAssertEqual(money?.amount, 14.99)
     }
 
     func testAmountExtraction_readsCurrencyCodes() {
-        XCTAssertEqual(ReceiptTextAnalyzer.extractChargeAmount(subject: "", body: "You were charged C$12.50")?.currency, "CAD")
-        XCTAssertEqual(ReceiptTextAnalyzer.extractChargeAmount(subject: "", body: "Amount paid 9.99 EUR")?.currency, "EUR")
+        XCTAssertEqual(ReceiptTextAnalyzer.chargeCandidate(subject: "", body: "You were charged C$12.50")?.money.currency, "CAD")
+        XCTAssertEqual(ReceiptTextAnalyzer.chargeCandidate(subject: "", body: "Amount paid 9.99 EUR")?.money.currency, "EUR")
     }
 
     func testAmountExtraction_ignoresPurePromotions() {
-        XCTAssertNil(ReceiptTextAnalyzer.extractChargeAmount(subject: "Sale", body: "Save $5 on your first order. Up to $20 off"))
+        XCTAssertNil(ReceiptTextAnalyzer.chargeCandidate(subject: "Sale", body: "Save $5 on your first order. Up to $20 off")?.money)
     }
 
     func testOneTimeLanguage_isRecognized() {

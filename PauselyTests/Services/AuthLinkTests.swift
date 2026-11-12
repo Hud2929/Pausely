@@ -160,12 +160,10 @@ final class AuthLinkTests: XCTestCase {
         let sent = Date(timeIntervalSince1970: 1_000_000)
         let countdown = ResendCountdown(lastSent: sent)
         XCTAssertEqual(countdown.secondsLeft(at: sent), 60)
-        XCTAssertFalse(countdown.canResend(at: sent))
         XCTAssertEqual(countdown.secondsLeft(at: sent.addingTimeInterval(41.2)), 19)
-        XCTAssertFalse(countdown.canResend(at: sent.addingTimeInterval(59.5)))
+        XCTAssertEqual(countdown.secondsLeft(at: sent.addingTimeInterval(59.5)), 1, "half a second left still counts as waiting")
         XCTAssertEqual(countdown.secondsLeft(at: sent.addingTimeInterval(60)), 0)
-        XCTAssertTrue(countdown.canResend(at: sent.addingTimeInterval(60)), "the old screen never re-enabled the button")
-        XCTAssertTrue(countdown.canResend(at: sent.addingTimeInterval(600)))
+        XCTAssertEqual(countdown.secondsLeft(at: sent.addingTimeInterval(600)), 0, "it never goes below nothing: the old screen never re-enabled the button")
     }
 
     // MARK: Code entry

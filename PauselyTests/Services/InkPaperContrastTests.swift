@@ -53,3 +53,20 @@ final class InkPaperContrastTests: XCTestCase {
         XCTAssertEqual(Set(symbols).count, 4)
     }
 }
+
+/// WCAG 2 contrast, worked out here because only these tests need it.
+private enum Contrast {
+    /// WCAG 2 contrast ratio between two "#RRGGBB" colours.
+    static func ratio(_ a: String, _ b: String) -> Double {
+        let la = luminance(a), lb = luminance(b)
+        return (max(la, lb) + 0.05) / (min(la, lb) + 0.05)
+    }
+
+    static func luminance(_ hex: String) -> Double {
+        var value: UInt64 = 0
+        Scanner(string: hex.trimmingCharacters(in: CharacterSet(charactersIn: "#"))).scanHexInt64(&value)
+        let channels = [value >> 16 & 0xFF, value >> 8 & 0xFF, value & 0xFF].map { Double($0) / 255 }
+        let linear = channels.map { $0 <= 0.03928 ? $0 / 12.92 : pow(($0 + 0.055) / 1.055, 2.4) }
+        return 0.2126 * linear[0] + 0.7152 * linear[1] + 0.0722 * linear[2]
+    }
+}

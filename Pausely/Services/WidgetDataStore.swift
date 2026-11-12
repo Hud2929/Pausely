@@ -14,25 +14,16 @@ final class WidgetDataStore {
         injectedDefaults ?? UserDefaults(suiteName: WidgetFeed.suiteName)
     }
 
-    private init(defaults: UserDefaults? = nil,
-                 reloadWidgets: @escaping () -> Void = { WidgetCenter.shared.reloadAllTimelines() }) {
+    /// The app uses `shared`; a test passes its own settings and its own reload.
+    init(defaults: UserDefaults? = nil,
+         reloadWidgets: @escaping () -> Void = { WidgetCenter.shared.reloadAllTimelines() }) {
         self.injectedDefaults = defaults
         self.reloadWidgets = reloadWidgets
-    }
-
-    /// A store of its own for a test, with its own settings and nothing to reload unless asked.
-    static func forTesting(defaults: UserDefaults, reloadWidgets: @escaping () -> Void = {}) -> WidgetDataStore {
-        WidgetDataStore(defaults: defaults, reloadWidgets: reloadWidgets)
     }
 
     func publish(subscriptions: [Subscription], now: Date = Date()) {
         Self.feed(for: subscriptions, now: now).write(to: defaults)
         reloadWidgets()
-    }
-
-    /// What was last published, as the widgets read it.
-    func readFeed() -> WidgetFeed? {
-        WidgetFeed.read(from: defaults)
     }
 
     // MARK: - The feed

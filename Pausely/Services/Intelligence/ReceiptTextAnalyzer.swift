@@ -366,11 +366,6 @@ enum ReceiptTextAnalyzer {
         return (value, !fraction.isEmpty)
     }
 
-    /// Picks the amount that was actually charged, not the first figure in the email.
-    static func extractChargeAmount(subject: String, body: String) -> Money? {
-        chargeCandidate(subject: subject, body: body)?.money
-    }
-
     /// Every money figure in a text, in reading order: the building block for receipts that list several
     /// charges, where each figure belongs to the lines just above it.
     static func moneyFigures(in text: String) -> [(money: Money, range: NSRange)] {

@@ -272,6 +272,9 @@ Updated at every commit, so the work can be picked up from this file alone.
   and `site-next`, which now descends from it; nothing pushed, nothing deployed). 727 tests, 0 failures;
   `gold_check` 78. **D5 is done, and with it Stage D.** Next: Stage G (hygiene: `gold_check` to 0,
   the scan the other session never did, strict concurrency), then E, H, I.
+- Stage G begun: dead code and the TODO check (see 6.6). 727 tests, 0 failures; `gold_check` 61.
+  Next in G: hype names (9), then the design lint (colours 18, fonts 13, animations 5, radii 11),
+  files over 700 lines (5), strict concurrency, the project file, S4, S5.
 - Told by the other session at 22:04 (it has stood down and changed nothing): sections 2, 3, 4, 6, 7
   and 10 of the engineering audit were never done and there is no finished overlooked-details
   report. Those areas have been scanned by nobody; they are owed before Stage G can be called done.
@@ -569,6 +572,15 @@ Test bundles share the app's bundle id; the shared scheme runs tests in parallel
 off; project backups and per-user Xcode data are tracked; an empty build-file entry; development
 signing identity on Release; the xcconfig files are decoration (real values sit in the project file);
 two classes own StoreKit state; 7 Swift files over 700 lines; 17 hype names.
+
+Stage G, as it closes (each line: what, and the evidence):
+- Dead code, 11-12: `gold_check` "declarations nothing refers to" 13 → 0. Eight were code only tests
+  called (a contrast helper, now in its test file; `canResend`; `extractChargeAmount`; a test-only
+  factory and reader on `WidgetDataStore`; an unused launch price; an unused key name; an old-style
+  preview). Five were not dead: the system starts or lists them (`@main`, App Intents, the Shortcuts
+  provider), and the checker now knows that rule instead of a list of names. Proven able to fail
+  with a throwaway probe. The "TODO" check reads comments only ("XXX" is also the ISO code for no
+  currency, used by two tests); probe-tested too. `gold_check` 61.
 
 ### 6.7 For the owner (cannot or should not be done from here)
 

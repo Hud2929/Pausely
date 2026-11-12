@@ -162,9 +162,3 @@ struct LuxuryAddSubscriptionView: View {
         }
     }
 }
-
-struct LuxuryAddSubscriptionView_Previews: PreviewProvider {
-    static var previews: some View {
-        LuxuryAddSubscriptionView()
-    }
-}

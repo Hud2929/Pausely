@@ -136,11 +136,11 @@ final class WidgetFeedTests: XCTestCase {
         defaults.set("Netflix · $15.49 · in 3 days", forKey: "widget_topInsight")
         defaults.set("Netflix", forKey: "liveActivity_subscriptionName")
         var redraws = 0
-        let store = WidgetDataStore.forTesting(defaults: defaults) { redraws += 1 }
+        let store = WidgetDataStore(defaults: defaults) { redraws += 1 }
 
         store.publish(subscriptions: [sub("Netflix", anchor: day(2026, 11, 15))], now: day(2026, 11, 10))
 
-        XCTAssertEqual(store.readFeed()?.charges.map(\.name), ["Netflix"])
+        XCTAssertEqual(WidgetFeed.read(from: defaults)?.charges.map(\.name), ["Netflix"])
         XCTAssertNil(defaults.object(forKey: "widget_topInsight"))
         XCTAssertNil(defaults.object(forKey: "liveActivity_subscriptionName"))
         XCTAssertEqual(redraws, 1)
@@ -149,7 +149,7 @@ final class WidgetFeedTests: XCTestCase {
     /// Nothing published (or nothing readable) is not the same as an empty list.
     func testNothingPublishedIsNotAnEmptyList() {
         XCTAssertNil(WidgetFeed.read(from: defaults))
-        WidgetDataStore.forTesting(defaults: defaults).publish(subscriptions: [])
+        WidgetDataStore(defaults: defaults, reloadWidgets: {}).publish(subscriptions: [])
         XCTAssertEqual(WidgetFeed.read(from: defaults)?.hasSubscriptions, false)
     }
 

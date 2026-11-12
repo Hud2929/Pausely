@@ -33,6 +33,15 @@ DECL = re.compile(
     r"(struct|class|enum|protocol|actor|typealias|func|var|let|case)\s+`?([A-Za-z_][A-Za-z0-9_]*)")
 
 
+# A type the system finds by itself: where the app or the widget extension starts, and what the
+# Shortcuts app lists. No code names these, and that is not what "dead" means.
+ENTRY = re.compile(r":\s*[^{]*\b(AppIntent|AppShortcutsProvider|WidgetBundle)\b")
+
+
+def is_entry_point(line, previous):
+    return "@main" in line or previous.strip() == "@main" or bool(ENTRY.search(line))
+
+
 def swift_files():
     for source in SOURCES:
         for directory, _, files in os.walk(os.path.join(ROOT, source)):
@@ -69,12 +78,17 @@ def main():
 
     candidates = []
     for path, text in sorted(texts.items()):
-        override_next = False
+        previous = ""
         for number, line in enumerate(text.split("\n"), 1):
             match = DECL.match(line)
             if not match:
+                if line.strip():
+                    previous = line
                 continue
             kind, name = match.group(1), match.group(2)
+            if is_entry_point(line, previous):
+                previous = line
+                continue
             if "override " in line or name in BUILTIN or name in allow or name.startswith("_"):
                 continue
             if kind in ("var", "let") and not re.match(r"^\s{0,4}(?:@\w+\s+)*(?:(?:public|private|fileprivate|internal|static|final|lazy|nonisolated)\s+)*(?:var|let)\s", line):

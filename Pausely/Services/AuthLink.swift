@@ -112,8 +112,6 @@ struct ResendCountdown: Equatable {
     func secondsLeft(at now: Date) -> Int {
         max(0, Int((Self.wait - now.timeIntervalSince(lastSent)).rounded(.up)))
     }
-
-    func canResend(at now: Date) -> Bool { secondsLeft(at: now) == 0 }
 }
 
 /// The six digits of an emailed code, from whatever was typed or pasted ("123 456", "Your code is 123456").

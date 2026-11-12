@@ -31,7 +31,7 @@ report "full-screen covers off iPad width" "$(for f in $(grep -rlE 'fullScreenCo
 
 # --- Naming
 report "hype names"                    "$(search '\b(struct|class|enum|actor|protocol|typealias|extension)\s+(Revolutionary|Luxury|Premium|Genius|Neural|Singularity|Artistic|Ultimate|Magic|Real[A-Z])[A-Za-z]*|REVOLUTIONARY|[Ww]orld-class|1000s of ' Pausely PauselyWidget)"
-report "TODO / FIXME / HACK"           "$(grep -rnE --include='*.swift' 'TODO|FIXME|HACK|XXX' Pausely PauselyWidget PauselyTests PauselyUITests 2>/dev/null)"
+report "TODO / FIXME / HACK"           "$(grep -rnE --include='*.swift' '//.*\b(TODO|FIXME|HACK|XXX)\b' Pausely PauselyWidget Shared PauselyTests PauselyUITests 2>/dev/null)"
 
 # --- Dead code and size
 report "declarations nothing refers to" "$(python3 scripts/dead_code_check.py 2>/dev/null | grep -v 'declarations nothing refers to')"
