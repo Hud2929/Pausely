@@ -58,8 +58,6 @@
 			</dict>
 		</dict>
 	</dict>
-	<key>PAUSELY_ENVIRONMENT</key>
-	<string>$(PAUSELY_ENVIRONMENT)</string>
 	<key>SUPABASE_ANON_KEY</key>
 	<string>$(SUPABASE_ANON_KEY)</string>
 	<key>SUPABASE_URL</key>

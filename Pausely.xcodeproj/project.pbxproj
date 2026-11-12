@@ -13,9 +13,7 @@
 		7AFA884C2F589C860015E8E9 /* Functions in Frameworks */ = {isa = PBXBuildFile; productRef = 7AFA884B2F589C860015E8E9 /* Functions */; };
 		7AFA884E2F589C860015E8E9 /* PostgREST in Frameworks */ = {isa = PBXBuildFile; productRef = 7AFA884D2F589C860015E8E9 /* PostgREST */; };
 		7AFA88502F589C860015E8E9 /* Realtime in Frameworks */ = {isa = PBXBuildFile; productRef = 7AFA884F2F589C860015E8E9 /* Realtime */; };
-		7AFA88522F589C860015E8E9 /* (null) in Frameworks */ = {isa = PBXBuildFile; };
 		CCBB0001000000CCBB000001 /* WidgetKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = CCBB0005000000CCBB000005 /* WidgetKit.framework */; };
-		CCBB0002000000CCBB000002 /* ActivityKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = CCBB0006000000CCBB000006 /* ActivityKit.framework */; };
 		CCBB0003000000CCBB000003 /* PauselyWidget.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = CCBB0004000000CCBB000004 /* PauselyWidget.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 /* End PBXBuildFile section */
 
@@ -73,10 +71,8 @@
 		7A4E4A4D2F4A1A8400C89FBB /* PauselyTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = PauselyTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		7A4E4A572F4A1A8400C89FBB /* PauselyUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = PauselyUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		7AFA88462F589A8A0015E8E9 /* StoreKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = StoreKit.framework; path = System/Library/Frameworks/StoreKit.framework; sourceTree = SDKROOT; };
-		AA4E4A622F4A1A8400C89FBB /* Configuration/Development.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Configuration/Development.xcconfig; sourceTree = "<group>"; };
 		CCBB0004000000CCBB000004 /* PauselyWidget.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = PauselyWidget.appex; sourceTree = BUILT_PRODUCTS_DIR; };
 		CCBB0005000000CCBB000005 /* WidgetKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = WidgetKit.framework; path = System/Library/Frameworks/WidgetKit.framework; sourceTree = SDKROOT; };
-		CCBB0006000000CCBB000006 /* ActivityKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = ActivityKit.framework; path = System/Library/Frameworks/ActivityKit.framework; sourceTree = SDKROOT; };
 		D938F022D431CC17393100FA /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS18.0.sdk/System/Library/Frameworks/Foundation.framework; sourceTree = DEVELOPER_DIR; };
 /* End PBXFileReference section */
 
@@ -115,7 +111,6 @@
 			files = (
 				7A3239062F7ACC2D0075C808 /* Supabase in Frameworks */,
 				7A32426A2F87F1220075C808 /* StoreKit.framework in Frameworks */,
-				7AFA88522F589C860015E8E9 /* (null) in Frameworks */,
 				7AFA884E2F589C860015E8E9 /* PostgREST in Frameworks */,
 				7AFA884C2F589C860015E8E9 /* Functions in Frameworks */,
 				7AFA884A2F589C860015E8E9 /* Auth in Frameworks */,
@@ -142,7 +137,6 @@
 			buildActionMask = 2147483647;
 			files = (
 				CCBB0001000000CCBB000001 /* WidgetKit.framework in Frameworks */,
-				CCBB0002000000CCBB000002 /* ActivityKit.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -152,7 +146,6 @@
 		7A4E4A342F4A1A8000C89FBB = {
 			isa = PBXGroup;
 			children = (
-				AA4E4A622F4A1A8400C89FBB /* Configuration/Development.xcconfig */,
 				7A4E4A3F2F4A1A8100C89FBB /* Pausely */,
 				CCBB0007000000CCBB000007 /* PauselyWidget */,
 				DDEE0001000000DDEE000001 /* Shared */,
@@ -179,7 +172,6 @@
 			children = (
 				7AFA88462F589A8A0015E8E9 /* StoreKit.framework */,
 				CCBB0005000000CCBB000005 /* WidgetKit.framework */,
-				CCBB0006000000CCBB000006 /* ActivityKit.framework */,
 				9412E3F7C30969109669808A /* iOS */,
 				79DD6961F99A86B9F2064FA1 /* SwiftUI.framework */,
 			);
@@ -551,7 +543,6 @@
 		};
 		7A4E4A622F4A1A8400C89FBB /* Debug */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = AA4E4A622F4A1A8400C89FBB /* Configuration/Development.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
@@ -626,7 +617,7 @@
 				GENERATE_INFOPLIST_FILE = YES;
 				IPHONEOS_DEPLOYMENT_TARGET = 18.0;
 				MARKETING_VERSION = 1.0.3;
-				PRODUCT_BUNDLE_IDENTIFIER = com.pausely.app.Pausely;
+				PRODUCT_BUNDLE_IDENTIFIER = com.pausely.app.PauselyTests;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_EMIT_LOC_STRINGS = NO;
 				SWIFT_VERSION = 5.0;
@@ -645,7 +636,7 @@
 				GENERATE_INFOPLIST_FILE = YES;
 				IPHONEOS_DEPLOYMENT_TARGET = 18.0;
 				MARKETING_VERSION = 1.0.3;
-				PRODUCT_BUNDLE_IDENTIFIER = com.pausely.app.Pausely;
+				PRODUCT_BUNDLE_IDENTIFIER = com.pausely.app.PauselyTests;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_EMIT_LOC_STRINGS = NO;
 				SWIFT_VERSION = 5.0;
@@ -662,7 +653,7 @@
 				DEVELOPMENT_TEAM = 5LV4LWYXGD;
 				GENERATE_INFOPLIST_FILE = YES;
 				MARKETING_VERSION = 1.0.3;
-				PRODUCT_BUNDLE_IDENTIFIER = com.pausely.app.Pausely;
+				PRODUCT_BUNDLE_IDENTIFIER = com.pausely.app.PauselyUITests;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_EMIT_LOC_STRINGS = NO;
 				SWIFT_VERSION = 5.0;
@@ -679,7 +670,7 @@
 				DEVELOPMENT_TEAM = 5LV4LWYXGD;
 				GENERATE_INFOPLIST_FILE = YES;
 				MARKETING_VERSION = 1.0.3;
-				PRODUCT_BUNDLE_IDENTIFIER = com.pausely.app.Pausely;
+				PRODUCT_BUNDLE_IDENTIFIER = com.pausely.app.PauselyUITests;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_EMIT_LOC_STRINGS = NO;
 				SWIFT_VERSION = 5.0;

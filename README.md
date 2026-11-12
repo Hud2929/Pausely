@@ -31,8 +31,8 @@ xcodebuild test  -scheme Pausely -destination "id=<simulator id>" -derivedDataPa
 ```
 
 Debug builds show "Test without an account" on the welcome screen, so the app can be explored without
-a server. To use your own Supabase project, copy `Configuration/Development.xcconfig.template` to
-`Configuration/Development.xcconfig` and fill in the project URL and anon key.
+a server. To use your own Supabase project, change `SUPABASE_URL` and `SUPABASE_ANON_KEY` in the Pausely
+target's build settings (they reach the app through `Configuration/Info.plist`).
 
 ## Where things are
 

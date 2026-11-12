@@ -282,6 +282,8 @@ Updated at every commit, so the work can be picked up from this file alone.
   G, none of which the script sees: strict concurrency (58 warnings), the project file (test
   bundle ids, a serial scheme, the ActivityKit leftover, signing on Release), S4, S5, and the six
   audit sections nobody did.
+- G: the project file closed (6.6). 730 tests, 0 failures; Release builds. Next in G: S4, S5,
+  one owner of StoreKit state, strict concurrency, then the six audit sections nobody did.
 - Told by the other session at 22:04 (it has stood down and changed nothing): sections 2, 3, 4, 6, 7
   and 10 of the engineering audit were never done and there is no finished overlooked-details
   report. Those areas have been scanned by nobody; they are owed before Stage G can be called done.
@@ -615,6 +617,17 @@ Stage G, as it closes (each line: what, and the evidence):
   `gold_check` **0**. 727 tests, 0 failures. Not proven by a test: that a session is still restored
   at launch after the move (the code is the same lines in a new place; a test would write to the
   simulator's real Keychain). It is checked in Stage H's first walk from a signed-in start.
+- The project file, 11-12: the unit and UI test bundles have their own bundle ids; the shared
+  scheme runs tests one at a time (a run without the command-line flag made no simulator clones);
+  the widget no longer links ActivityKit; the build entry with no file is gone; the three
+  `.xcconfig` files and their template are deleted (one base file fed a setting nothing read, two
+  were attached to nothing, and one listed keys for RevenueCat, Plaid and OpenAI, which the app
+  never used), with the plist key they fed and the README line that sent people to them. No
+  backups or per-user Xcode data are tracked any more. `ProjectFileTests` (3 tests). Debug suite
+  730 tests, 0 failures; Release builds, with its server address in the built Info.plist. Left as
+  it is, on purpose: "Apple Development" as the signing identity on Release. Signing is automatic
+  and ten builds have been archived this way; changing it cannot be checked without an archive and
+  an upload, which are the owner's.
 
 ### 6.7 For the owner (cannot or should not be done from here)
 
