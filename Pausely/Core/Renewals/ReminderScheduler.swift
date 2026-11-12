@@ -43,14 +43,22 @@ final class ReminderScheduler {
         for reminder in ReminderPlanner.plan(for: subscriptions, now: now, preferences: Self.preferences, kept: kept,
                                              pausePlan: PausePlanStore.shared.activePlan) {
             guard let sub = byId[reminder.subscriptionId] else { continue }
-            let components = Calendar.current.dateComponents([.year, .month, .day, .hour, .minute], from: reminder.fireDate)
             let request = UNNotificationRequest(
                 identifier: reminder.identifier,
                 content: Self.content(for: reminder, subscription: sub),
-                trigger: UNCalendarNotificationTrigger(dateMatching: components, repeats: false)
+                trigger: UNCalendarNotificationTrigger(dateMatching: Self.triggerDate(for: reminder.fireDate), repeats: false)
             )
             try? await center.add(request)
         }
+    }
+
+    /// The moment a reminder fires, as the notification center wants it: year, month, day, hour and
+    /// minute in the Gregorian calendar, and saying so. Without the calendar, a phone that shows the
+    /// Buddhist calendar would look for the year 2026 of its own era.
+    nonisolated static func triggerDate(for fireDate: Date) -> DateComponents {
+        var components = Calendar.billing.dateComponents([.year, .month, .day, .hour, .minute], from: fireDate)
+        components.calendar = .billing
+        return components
     }
 
     /// The two switches in Settings → Notifications. Both default to on.
@@ -101,7 +109,7 @@ final class ReminderScheduler {
         content.userInfo = [
             "subscription_id": sub.id.uuidString,
             "type": reminder.kind.notificationType,
-            "renewal_date": ReminderPlanner.dayStamp(reminder.eventDate, .current)
+            "renewal_date": ReminderPlanner.dayStamp(reminder.eventDate, .billing)
         ]
         return content
     }

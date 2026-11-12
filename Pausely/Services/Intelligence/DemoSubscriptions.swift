@@ -7,7 +7,7 @@ enum DemoSubscriptions {
     static var netflix: Subscription {
         var sub = Subscription(name: "Netflix", price: 15.49, category: "Entertainment", billingFrequency: .monthly)
         sub.currency = "USD"
-        sub.nextBillingDate = Calendar.current.date(byAdding: .day, value: 9, to: Date())
+        sub.nextBillingDate = Calendar.billing.date(byAdding: .day, value: 9, to: Date())
         sub.notifyBeforeDays = 3
         return sub
     }

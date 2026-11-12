@@ -20,7 +20,7 @@ final class SubscriptionLifecycle {
 
     /// Pure: what changed between `lastRun` and `now`. On the very first run nothing is back-filled.
     static func changes(for subscriptions: [Subscription], since lastRun: Date?, now: Date,
-                        calendar: Calendar = .current) -> Changes {
+                        calendar: Calendar = .billing) -> Changes {
         var changes = Changes()
         let today = calendar.startOfDay(for: now)
         for sub in subscriptions {

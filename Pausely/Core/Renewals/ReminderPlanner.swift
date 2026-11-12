@@ -43,7 +43,7 @@ enum ReminderPlanner {
     ///   - budget: the soonest reminders win when there are more than iOS allows.
     ///   - kept: renewals the user already decided to keep (`RenewalDecisions.keptKeys`); no more
     ///     reminders about those.
-    static func plan(for subscriptions: [Subscription], now: Date, calendar: Calendar = .current,
+    static func plan(for subscriptions: [Subscription], now: Date, calendar: Calendar = .billing,
                      cyclesAhead: Int = 2, budget: Int = defaultBudget,
                      preferences: Preferences = Preferences(), kept: Set<String> = [],
                      pausePlan: PausePlan? = nil) -> [Reminder] {

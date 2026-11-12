@@ -15,7 +15,7 @@ enum SubscriptionGroups {
     }
 
     /// Which group a subscription belongs to today.
-    static func group(for sub: Subscription, pending: Set<UUID>, now: Date, calendar: Calendar = .current) -> Group {
+    static func group(for sub: Subscription, pending: Set<UUID>, now: Date, calendar: Calendar = .billing) -> Group {
         if sub.status == .cancelled || sub.status == .expired { return .cancelled }
         if sub.status == .paused { return .paused }
         if pending.contains(sub.id) { return .decide }
@@ -29,7 +29,7 @@ enum SubscriptionGroups {
     /// Sections in display order, empty ones left out. Inside a section the soonest charge comes
     /// first; groups without a date are ordered by cost, most expensive first.
     static func sections(_ subscriptions: [Subscription], pending: Set<UUID>, now: Date,
-                         calendar: Calendar = .current,
+                         calendar: Calendar = .billing,
                          currency: String = CurrencyManager.shared.selectedCurrency,
                          rates: CurrencyRates = CurrencyManager.shared.rates) -> [Section] {
         var buckets: [Group: [Subscription]] = [:]

@@ -17,17 +17,17 @@ enum DemoSavings {
             store.subscriptions.append(Subscription(
                 name: "Pausely Pro", bundleIdentifier: "com.pausely.app.Pausely", category: "Productivity",
                 amount: ProPricing.annualUSD, currency: "USD", billingFrequency: .yearly,
-                nextBillingDate: Calendar.current.date(byAdding: .month, value: 9, to: now)))
+                nextBillingDate: Calendar.billing.date(byAdding: .month, value: 9, to: now)))
         }
         let log = LifecycleEventLog.shared
         guard !log.events.contains(where: { $0.kind == .cancelled }) else { return }
         // A Netflix price rise and some usage, so a Renewal Verdict shows its full set of facts.
         if let netflix = store.subscriptions.first(where: { $0.name == "Netflix" }) {
-            log.record(.priceChanged, for: netflix, date: Calendar.current.date(byAdding: .month, value: -7, to: now) ?? now,
+            log.record(.priceChanged, for: netflix, date: Calendar.billing.date(byAdding: .month, value: -7, to: now) ?? now,
                        previousAmount: netflix.amount - 2)
             UsageLog.shared.setMonthlyUsage(minutes: 140, for: netflix.name)
         }
-        let calendar = Calendar.current
+        let calendar = Calendar.billing
         func daysAgo(_ n: Int) -> Date { calendar.date(byAdding: .day, value: -n, to: now) ?? now }
 
         let samples: [(name: String, amount: Decimal, anchorDaysAgo: Int, cancelledDaysAgo: Int)] = [

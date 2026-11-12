@@ -63,7 +63,7 @@ final class PausePlanStore: ObservableObject {
     /// "I started it": the subscription is on again from `date`, and renews on that day of the month
     /// from now on (see `PausePlanSchedule.restartAnchor`). The status change records a reactivation,
     /// which closes its Savings Receipt line. One that is already on keeps the date it has.
-    func markStarted(_ subscription: Subscription, on date: Date = Date(), calendar: Calendar = .current) async {
+    func markStarted(_ subscription: Subscription, on date: Date = Date(), calendar: Calendar = .billing) async {
         let store = SubscriptionStore.shared
         guard var updated = store.subscriptions.first(where: { $0.id == subscription.id }),
               !updated.renewsAutomatically else { return }

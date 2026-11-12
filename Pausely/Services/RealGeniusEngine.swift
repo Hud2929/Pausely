@@ -169,7 +169,7 @@ final class RealGeniusEngine: ObservableObject {
         for sub in subscriptions where sub.status == .trial {
             guard let trialEnd = sub.trialEndsAt else { continue }
 
-            let daysUntil = Calendar.current.dateComponents([.day], from: Date(), to: trialEnd).day ?? 0
+            let daysUntil = Calendar.billing.dateComponents([.day], from: Date(), to: trialEnd).day ?? 0
 
             // Only alert if conversion is within 14 days
             guard daysUntil >= 0 && daysUntil <= 14, let monthly = monthlyInDisplay(sub) else { continue }

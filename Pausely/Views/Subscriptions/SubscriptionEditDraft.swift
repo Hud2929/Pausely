@@ -73,7 +73,7 @@ struct SubscriptionEditDraft: Equatable {
     private func sameDay(_ a: Date?, _ b: Date?) -> Bool {
         switch (a, b) {
         case (nil, nil): return true
-        case let (x?, y?): return Calendar.current.isDate(x, inSameDayAs: y)
+        case let (x?, y?): return Calendar.billing.isDate(x, inSameDayAs: y)
         default: return false
         }
     }
@@ -89,7 +89,7 @@ struct SubscriptionEditDraft: Equatable {
         // The stored date is the renewal anchor. Keep it unless the user picked a different day, so a
         // subscription that renews on the 31st keeps doing so (see RenewalSchedule).
         if !sameDay(nextBillingDate, original.calculatedNextBillingDate) {
-            updated.nextBillingDate = nextBillingDate.map { Calendar.current.noon(of: $0) }
+            updated.nextBillingDate = nextBillingDate.map { Calendar.billing.noon(of: $0) }
         }
         updated.category = category
         updated.notifyBeforeDays = reminderDays

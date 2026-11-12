@@ -148,7 +148,7 @@ struct RenewalVerdictView: View {
     }
 
     private func daysUntil(_ date: Date) -> Int {
-        Calendar.current.calendarDays(from: Date(), to: date)
+        Calendar.billing.calendarDays(from: Date(), to: date)
     }
 
     // MARK: - Facts

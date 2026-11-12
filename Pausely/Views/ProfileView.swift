@@ -260,7 +260,7 @@ private struct YearSlip: View {
                         Capsule().frame(width: 4, height: 14)
                     }
                     .accessibilityHidden(true)
-                    Text(verbatim: "Pausely \(stats.year)").font(.headline)
+                    Text(verbatim: "Pausely \(stats.yearText)").font(.headline)
                 }
                 Perforation()
                 ProofLine(label: L10n.string("Subscriptions"), value: "\(stats.totalCount)")
@@ -294,6 +294,9 @@ private struct YearSlip: View {
 /// The numbers on the year slip. Pure: the list, the event history and the day go in.
 struct WrappedStats {
     let year: Int
+    /// The year the slip counts, as the reader writes it. It is a Gregorian year (the count runs from
+    /// 1 January), shown in their digits.
+    let yearText: String
     let yearlyCost: Decimal
     let monthlyCost: Decimal
     /// Some of it is charged in another currency, so the two costs are estimates ("≈").
@@ -304,9 +307,10 @@ struct WrappedStats {
     let topCategory: String
 
     init(subscriptions: [Subscription], events: [LifecycleEvent],
-         now: Date = Date(), calendar: Calendar = .current,
+         now: Date = Date(), calendar: Calendar = .billing,
          currency: String = CurrencyManager.shared.selectedCurrency, rates: CurrencyRates = CurrencyManager.shared.rates) {
         year = calendar.component(.year, from: now)
+        yearText = now.formatted(Date.FormatStyle(locale: L10n.locale, calendar: calendar).year())
         let active = subscriptions.charging
         totalCount = active.count
         // What the current list costs, in the display currency. Pausely doesn't know what was
@@ -325,7 +329,7 @@ struct WrappedStats {
 
     /// Subscriptions cancelled in `year` and still cancelled, counted from the history. The record's
     /// own "last changed" date moves on any edit or sync, so it says nothing about when it was cancelled.
-    static func cancelledThisYear(_ events: [LifecycleEvent], year: Int, calendar: Calendar = .current) -> Int {
+    static func cancelledThisYear(_ events: [LifecycleEvent], year: Int, calendar: Calendar = .billing) -> Int {
         var latest: [UUID: LifecycleEvent] = [:]
         for event in events where event.kind == .cancelled || event.kind == .reactivated {
             if let seen = latest[event.subscriptionId], seen.date > event.date { continue }

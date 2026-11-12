@@ -68,7 +68,7 @@ enum PausePlanSchedule {
 
     /// A sensible first service: the one whose next renewal is furthest away, so the others run out
     /// their paid time while it plays.
-    static func suggestedOrder(_ subs: [Subscription], now: Date, calendar: Calendar = .current) -> [UUID] {
+    static func suggestedOrder(_ subs: [Subscription], now: Date, calendar: Calendar = .billing) -> [UUID] {
         func next(_ s: Subscription) -> Date {
             s.renewsAutomatically ? (s.nextRenewal(onOrAfter: now, calendar: calendar) ?? .distantPast) : .distantPast
         }
@@ -88,7 +88,7 @@ enum PausePlanSchedule {
     /// 29 February), the start day is stored, `isStartDay` is true, and the caller records that day
     /// as decided.
     static func restartAnchor(startedOn day: Date, frequency: BillingFrequency,
-                              calendar: Calendar = .current) -> (anchor: Date, isStartDay: Bool) {
+                              calendar: Calendar = .billing) -> (anchor: Date, isStartDay: Bool) {
         let start = calendar.startOfDay(for: day)
         let first = RenewalSchedule.occurrence(1, anchorDay: start, frequency: frequency, calendar: calendar)
         let sameSchedule = (1...48).allSatisfy { cycle in
@@ -101,7 +101,7 @@ enum PausePlanSchedule {
     // MARK: - Turns
 
     /// When the first service hands over: its next renewal on or after the plan's start.
-    static func firstHandoff(_ plan: PausePlan, subscriptions: [UUID: Subscription], calendar: Calendar = .current) -> Date {
+    static func firstHandoff(_ plan: PausePlan, subscriptions: [UUID: Subscription], calendar: Calendar = .billing) -> Date {
         if let firstId = plan.subscriptionIds.first, let first = subscriptions[firstId], let anchor = first.nextBillingDate {
             return RenewalSchedule.nextRenewal(anchor: anchor, frequency: .monthly, onOrAfter: plan.startedOn, calendar: calendar)
         }
@@ -112,7 +112,7 @@ enum PausePlanSchedule {
     /// The first `count` turns. Handoffs are whole months after the first one (anchor-based, so the
     /// 31st stays the 31st where the month has one).
     static func turns(_ plan: PausePlan, subscriptions: [UUID: Subscription], count: Int,
-                      calendar: Calendar = .current) -> [Turn] {
+                      calendar: Calendar = .billing) -> [Turn] {
         let ids = plan.subscriptionIds
         guard ids.count >= 2, count > 0 else { return [] }
         let first = firstHandoff(plan, subscriptions: subscriptions, calendar: calendar)
@@ -126,7 +126,7 @@ enum PausePlanSchedule {
 
     /// The turn running on `now`.
     static func currentTurn(_ plan: PausePlan, subscriptions: [UUID: Subscription], now: Date,
-                            calendar: Calendar = .current) -> Turn? {
+                            calendar: Calendar = .billing) -> Turn? {
         let today = calendar.startOfDay(for: now)
         let first = calendar.startOfDay(for: firstHandoff(plan, subscriptions: subscriptions, calendar: calendar))
         var months = 0
@@ -145,7 +145,7 @@ enum PausePlanSchedule {
     /// A service that isn't on should be cancelled before it renews, unless it's the next one on and
     /// that renewal falls in its own turn (then the charge pays for the month it's on anyway).
     static func shouldPause(_ subscriptionId: UUID, renewingOn renewal: Date, plan: PausePlan, current: Turn,
-                            calendar: Calendar = .current) -> Bool {
+                            calendar: Calendar = .billing) -> Bool {
         guard subscriptionId != current.subscriptionId else { return false }
         let comingNext = plan.subscriptionIds[(current.index + 1) % plan.subscriptionIds.count]
         if subscriptionId == comingNext, calendar.startOfDay(for: renewal) >= calendar.startOfDay(for: current.end) {
@@ -157,7 +157,7 @@ enum PausePlanSchedule {
     /// Reminders that keep the rotation going: cancel the services that should be paused before they
     /// renew, and start the next one on its day. Rebuilt with the rest whenever anything changes.
     static func reminders(_ plan: PausePlan, subscriptions: [Subscription], now: Date,
-                          calendar: Calendar = .current, handoffsAhead: Int = 2) -> [ReminderPlanner.Reminder] {
+                          calendar: Calendar = .billing, handoffsAhead: Int = 2) -> [ReminderPlanner.Reminder] {
         let byId = Dictionary(subscriptions.map { ($0.id, $0) }, uniquingKeysWith: { a, _ in a })
         guard plan.subscriptionIds.count >= 2,
               let current = currentTurn(plan, subscriptions: byId, now: now, calendar: calendar) else { return [] }

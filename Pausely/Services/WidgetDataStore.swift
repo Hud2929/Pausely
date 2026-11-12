@@ -37,7 +37,7 @@ final class WidgetDataStore {
         let monthlySpend = NSDecimalNumber(decimal: monthlyTotal).doubleValue
         let upcoming = active.filter { sub in
             guard let next = sub.calculatedNextBillingDate else { return false }
-            return next <= Calendar.current.date(byAdding: .day, value: 7, to: Date())!
+            return next <= Calendar.billing.date(byAdding: .day, value: 7, to: Date())!
         }
 
         defaults.set(monthlySpend, forKey: "widget_monthlySpend")
@@ -110,7 +110,7 @@ final class WidgetDataStore {
 
     /// The subscription that charges soonest, with the day of that charge: its next renewal on or after
     /// `now`, not the stored anchor, which may be months old. Nil when nothing has a date.
-    static func nextCharge(in subscriptions: [Subscription], now: Date = Date(), calendar: Calendar = .current) -> (subscription: Subscription, date: Date)? {
+    static func nextCharge(in subscriptions: [Subscription], now: Date = Date(), calendar: Calendar = .billing) -> (subscription: Subscription, date: Date)? {
         subscriptions
             .compactMap { sub in sub.nextRenewal(onOrAfter: now, calendar: calendar).map { (subscription: sub, date: $0) } }
             .min { $0.date < $1.date }
@@ -121,7 +121,7 @@ final class WidgetDataStore {
     private func nextChargeLine(_ next: (subscription: Subscription, date: Date)?, hasSubscriptions: Bool) -> String {
         guard hasSubscriptions else { return L10n.string("Add what you pay for in Pausely") }
         guard let next else { return L10n.string("Add renewal dates to see what's next") }
-        let days = max(0, Calendar.current.calendarDays(from: Date(), to: next.date))
+        let days = max(0, Calendar.billing.calendarDays(from: Date(), to: next.date))
         let when: String
         switch days {
         case 0: when = L10n.string("today")

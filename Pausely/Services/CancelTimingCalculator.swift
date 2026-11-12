@@ -23,7 +23,7 @@ struct CancelTimingCalculator {
     /// Days elapsed since `lastBillingDate`, clamped to ≥0.
     /// Pass `today` for testing; defaults to `Date()`.
     static func daysUsed(from lastBillingDate: Date, today: Date = Date()) -> Int {
-        let raw = Calendar.current.dateComponents([.day], from: lastBillingDate, to: today).day ?? 0
+        let raw = Calendar.billing.dateComponents([.day], from: lastBillingDate, to: today).day ?? 0
         return max(0, raw)
     }
 

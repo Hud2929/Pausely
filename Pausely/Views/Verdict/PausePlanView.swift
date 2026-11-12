@@ -311,7 +311,7 @@ struct PausePlanView: View {
     private func todos(_ plan: PausePlan, current: PausePlanSchedule.Turn, currentSub: Subscription,
                        next: PausePlanSchedule.Turn?, today: Date) -> [Todo] {
         let subs = byId
-        let calendar = Calendar.current
+        let calendar = Calendar.billing
         var items: [Todo] = []
         // Its month has started: it should be on.
         if !currentSub.renewsAutomatically, current.start != nil {
@@ -412,7 +412,7 @@ struct PausePlanView: View {
 
     private func savedCard(_ plan: PausePlan) -> some View {
         let members = Set(plan.subscriptionIds)
-        let lines = SavingsSummary.current().lines.filter { members.contains($0.subscriptionId) && $0.cancelledOn >= Calendar.current.startOfDay(for: plan.startedOn) }
+        let lines = SavingsSummary.current().lines.filter { members.contains($0.subscriptionId) && $0.cancelledOn >= Calendar.billing.startOfDay(for: plan.startedOn) }
         let saved = lines.compactMap { currencyManager.convertToSelected($0.savedSoFar, from: $0.currency) }.reduce(0, +)
         return HStack {
             Text("Saved by rotating so far")

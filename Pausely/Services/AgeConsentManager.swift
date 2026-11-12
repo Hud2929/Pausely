@@ -38,14 +38,14 @@ final class AgeConsentManager: ObservableObject {
     // MARK: - Pure eligibility logic (unit tested)
 
     /// Whole years between `birthDate` and `now`, or nil when the date is in the future.
-    nonisolated static func age(on now: Date, birthDate: Date, calendar: Calendar = .current) -> Int? {
+    nonisolated static func age(on now: Date, birthDate: Date, calendar: Calendar = .billing) -> Int? {
         guard birthDate <= now else { return nil }
         return calendar.dateComponents([.year], from: birthDate, to: now).year
     }
 
     nonisolated static func isOldEnough(birthDate: Date,
                                         now: Date = Date(),
-                                        calendar: Calendar = .current,
+                                        calendar: Calendar = .billing,
                                         minimumAge: Int = AgeConsentManager.minimumAge) -> Bool {
         guard let years = age(on: now, birthDate: birthDate, calendar: calendar) else { return false }
         return years >= minimumAge

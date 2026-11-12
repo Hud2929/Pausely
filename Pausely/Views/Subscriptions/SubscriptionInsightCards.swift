@@ -11,12 +11,12 @@ struct CancelTimingCard: View {
 
     private var lastBillingDate: Date? {
         guard let next = subscription.calculatedNextBillingDate else { return nil }
-        return Calendar.current.date(byAdding: .day, value: -cycleDays, to: next)
+        return Calendar.billing.date(byAdding: .day, value: -cycleDays, to: next)
     }
 
     private var daysRemaining: Int {
         guard let next = subscription.calculatedNextBillingDate else { return 0 }
-        return max(0, Calendar.current.calendarDays(from: Date(), to: next))
+        return max(0, Calendar.billing.calendarDays(from: Date(), to: next))
     }
 
     private var progress: Double {

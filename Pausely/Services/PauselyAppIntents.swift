@@ -30,7 +30,7 @@ struct GetUpcomingRenewalsIntent: AppIntent {
     func perform() async throws -> some IntentResult & ReturnsValue<String> {
         try ShortcutProblem.requireSignedIn()
         let store = SubscriptionStore.shared
-        let calendar = Calendar.current
+        let calendar = Calendar.billing
         let cutoff = calendar.date(byAdding: .day, value: daysAhead, to: Date()) ?? Date()
 
         let upcoming = store.activeSubscriptions

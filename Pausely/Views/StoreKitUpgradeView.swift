@@ -155,7 +155,7 @@ struct StoreKitUpgradeView: View {
     private var lastDayToCancel: String { shortDate(daysFromToday: 6) }
 
     private func shortDate(daysFromToday days: Int) -> String {
-        let date = Calendar.current.date(byAdding: .day, value: days, to: Date()) ?? Date()
+        let date = Calendar.billing.date(byAdding: .day, value: days, to: Date()) ?? Date()
         return date.formatted(.dateTime.month(.abbreviated).day().locale(L10n.locale))
     }
 

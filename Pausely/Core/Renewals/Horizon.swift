@@ -26,7 +26,7 @@ enum Horizon {
 
     /// Every charge from today through the next `days - 1` days, soonest first. A trial is charged
     /// when it ends; paused and cancelled subscriptions, and ones without a renewal date, have none.
-    static func charges(for subscriptions: [Subscription], now: Date, calendar: Calendar = .current) -> [Charge] {
+    static func charges(for subscriptions: [Subscription], now: Date, calendar: Calendar = .billing) -> [Charge] {
         let today = calendar.startOfDay(for: now)
         var result: [Charge] = []
         for sub in subscriptions where sub.renewsAutomatically {

@@ -26,7 +26,7 @@ struct TrialCountdownProvider: TimelineProvider {
             WidgetTrialInfo(
                 id: "preview",
                 name: "Netflix",
-                trialEndsAt: Calendar.current.date(byAdding: .day, value: 2, to: Date())!,
+                trialEndsAt: Calendar.billing.date(byAdding: .day, value: 2, to: Date())!,
                 monthlyAmount: 15.99,
                 currencyCode: "USD",
                 billingFrequency: "Monthly",
@@ -44,7 +44,7 @@ struct TrialCountdownProvider: TimelineProvider {
         let trials = WidgetReader.readTrials()
         let entry = TrialCountdownEntry(date: Date(), trials: trials)
         // Refresh every 6 hours — trials don't change often
-        let nextUpdate = Calendar.current.date(byAdding: .hour, value: 6, to: Date()) ?? Date().addingTimeInterval(21600)
+        let nextUpdate = Calendar.billing.date(byAdding: .hour, value: 6, to: Date()) ?? Date().addingTimeInterval(21600)
         completion(Timeline(entries: [entry], policy: .after(nextUpdate)))
     }
 }
@@ -241,7 +241,7 @@ private func shortFrequency(_ frequency: String) -> String {
         WidgetTrialInfo(
             id: "1",
             name: "Spotify",
-            trialEndsAt: Calendar.current.date(byAdding: .day, value: 1, to: Date())!,
+            trialEndsAt: Calendar.billing.date(byAdding: .day, value: 1, to: Date())!,
             monthlyAmount: 9.99,
             currencyCode: "USD",
             billingFrequency: "Monthly",
@@ -255,8 +255,8 @@ private func shortFrequency(_ frequency: String) -> String {
     TrialCountdownWidget()
 } timeline: {
     TrialCountdownEntry(date: Date(), trials: [
-        WidgetTrialInfo(id: "1", name: "Spotify", trialEndsAt: Calendar.current.date(byAdding: .day, value: 1, to: Date())!, monthlyAmount: 9.99, currencyCode: "USD", billingFrequency: "Monthly", amountText: "$9.99"),  // money-guard: sample
-        WidgetTrialInfo(id: "2", name: "Hulu", trialEndsAt: Calendar.current.date(byAdding: .day, value: 3, to: Date())!, monthlyAmount: 17.99, currencyCode: "USD", billingFrequency: "Monthly", amountText: "$17.99"),  // money-guard: sample
-        WidgetTrialInfo(id: "3", name: "Disney+", trialEndsAt: Calendar.current.date(byAdding: .day, value: 6, to: Date())!, monthlyAmount: 13.99, currencyCode: "USD", billingFrequency: "Monthly", amountText: "$13.99")  // money-guard: sample
+        WidgetTrialInfo(id: "1", name: "Spotify", trialEndsAt: Calendar.billing.date(byAdding: .day, value: 1, to: Date())!, monthlyAmount: 9.99, currencyCode: "USD", billingFrequency: "Monthly", amountText: "$9.99"),  // money-guard: sample
+        WidgetTrialInfo(id: "2", name: "Hulu", trialEndsAt: Calendar.billing.date(byAdding: .day, value: 3, to: Date())!, monthlyAmount: 17.99, currencyCode: "USD", billingFrequency: "Monthly", amountText: "$17.99"),  // money-guard: sample
+        WidgetTrialInfo(id: "3", name: "Disney+", trialEndsAt: Calendar.billing.date(byAdding: .day, value: 6, to: Date())!, monthlyAmount: 13.99, currencyCode: "USD", billingFrequency: "Monthly", amountText: "$13.99")  // money-guard: sample
     ])
 }

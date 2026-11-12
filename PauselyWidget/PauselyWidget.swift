@@ -37,7 +37,7 @@ struct PauselyWidgetProvider: TimelineProvider {
             let entry = await fetchCurrentEntry()
             
             // Update every 15 minutes
-            let nextUpdate = Calendar.current.date(byAdding: .minute, value: 15, to: Date()) ?? Date().addingTimeInterval(900)
+            let nextUpdate = Calendar.billing.date(byAdding: .minute, value: 15, to: Date()) ?? Date().addingTimeInterval(900)
             let timeline = Timeline(entries: [entry], policy: .after(nextUpdate))
             
             completion(timeline)
@@ -72,7 +72,7 @@ struct PauselyWidgetEntry: TimelineEntry {
 
     var nextChargeDays: Int {
         guard let d = nextChargeDate else { return 0 }
-        return max(0, Calendar.current.dateComponents([.day], from: Date(), to: d).day ?? 0)
+        return max(0, Calendar.billing.dateComponents([.day], from: Date(), to: d).day ?? 0)
     }
 }
 
@@ -449,11 +449,11 @@ struct PauselyWidget: Widget {
 #Preview(as: .systemSmall) {
     PauselyWidget()
 } timeline: {
-    PauselyWidgetEntry(date: Date(), summary: WidgetSummaryData(activeCount: 12, upcomingCount: 2, topInsight: "Save $45 by pausing", monthlyText: "$142.99", monthlyWholeText: "$143", yearlyWholeText: "$1,716"), nextChargeName: "Netflix", nextChargeDate: Calendar.current.date(byAdding: .day, value: 2, to: Date()), nextChargeText: "$15.99")  // money-guard: sample
+    PauselyWidgetEntry(date: Date(), summary: WidgetSummaryData(activeCount: 12, upcomingCount: 2, topInsight: "Save $45 by pausing", monthlyText: "$142.99", monthlyWholeText: "$143", yearlyWholeText: "$1,716"), nextChargeName: "Netflix", nextChargeDate: Calendar.billing.date(byAdding: .day, value: 2, to: Date()), nextChargeText: "$15.99")  // money-guard: sample
 }
 
 #Preview(as: .systemMedium) {
     PauselyWidget()
 } timeline: {
-    PauselyWidgetEntry(date: Date(), summary: WidgetSummaryData(activeCount: 12, upcomingCount: 2, topInsight: "Save $45 by pausing unused subscriptions", monthlyText: "$142.99", monthlyWholeText: "$143", yearlyWholeText: "$1,716"), nextChargeName: "Netflix", nextChargeDate: Calendar.current.date(byAdding: .day, value: 2, to: Date()), nextChargeText: "$15.99")  // money-guard: sample
+    PauselyWidgetEntry(date: Date(), summary: WidgetSummaryData(activeCount: 12, upcomingCount: 2, topInsight: "Save $45 by pausing unused subscriptions", monthlyText: "$142.99", monthlyWholeText: "$143", yearlyWholeText: "$1,716"), nextChargeName: "Netflix", nextChargeDate: Calendar.billing.date(byAdding: .day, value: 2, to: Date()), nextChargeText: "$15.99")  // money-guard: sample
 }

@@ -79,7 +79,7 @@ struct LuxuryAddSubscriptionView: View {
                         Hairline()
                         row(L10n.string("Next payment")) {
                             OptionalDatePicker(title: L10n.string("Next payment"), date: $nextPayment,
-                                               earliest: Calendar.current.startOfDay(for: Date()))
+                                               earliest: Calendar.billing.startOfDay(for: Date()))
                                 .accessibilityIdentifier("nextPaymentPicker")
                         }
                         Hairline()

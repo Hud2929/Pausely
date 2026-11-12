@@ -79,7 +79,7 @@ struct RenewalDatesSheet: View {
             if let date = dates[subscription.id] {
                 DatePicker(L10n.string("Next payment"),
                            selection: Binding(get: { date }, set: { dates[subscription.id] = $0 }),
-                           in: Calendar.current.startOfDay(for: Date())..., displayedComponents: .date)
+                           in: Calendar.billing.startOfDay(for: Date())..., displayedComponents: .date)
                     .labelsHidden()
                     .tint(Color.inkText)
                     .accessibilityIdentifier("datePicker-\(subscription.name)")
@@ -114,7 +114,7 @@ struct RenewalDatesSheet: View {
         for subscription in subscriptions {
             guard let date = dates[subscription.id] else { continue }
             var updated = subscription
-            updated.nextBillingDate = Calendar.current.noon(of: date)
+            updated.nextBillingDate = Calendar.billing.noon(of: date)
             await SubscriptionStore.shared.updateSubscription(updated)
         }
         Feel.landed()

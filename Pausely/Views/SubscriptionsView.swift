@@ -279,7 +279,7 @@ private struct SubscriptionRow: View {
     private var detailColor: Color {
         guard group == .decide || group == .thisWeek,
               let charge = RenewalDecisions.upcomingCharge(for: subscription, now: Date()),
-              Calendar.current.calendarDays(from: Date(), to: charge.date) <= 1 else { return Color.inkTextMuted }
+              Calendar.billing.calendarDays(from: Date(), to: charge.date) <= 1 else { return Color.inkTextMuted }
         return Color.due
     }
 
@@ -293,7 +293,7 @@ private struct SubscriptionRow: View {
             return L10n.string("Add its renewal date")
         case .decide, .thisWeek, .thisMonth, .later:
             guard let charge = RenewalDecisions.upcomingCharge(for: subscription, now: Date()) else { return "" }
-            let days = Calendar.current.calendarDays(from: Date(), to: charge.date)
+            let days = Calendar.billing.calendarDays(from: Date(), to: charge.date)
             let day = charge.date.formatted(.dateTime.month(.abbreviated).day().locale(L10n.locale))
             let relative = days == 0 ? L10n.string("Today") : days == 1 ? L10n.string("Tomorrow") : L10n.string("in \(days) days")
             return charge.isTrialEnd ? L10n.string("Trial ends \(day) · \(relative)") : "\(day) · \(relative)"

@@ -5,7 +5,7 @@ extension InboxScanner {
     /// DEBUG only. Fills the results screen with a synthetic mailbox so the experience can be reviewed
     /// without a Google sign-in. Launch the app with `--demo-gmail-results`. Compiled out of release builds.
     func loadDemoResults() {
-        let calendar = Calendar.current
+        let calendar = Calendar.billing
         let now = Date()
         var signals: [ReceiptSignal] = []
         var counter = 0

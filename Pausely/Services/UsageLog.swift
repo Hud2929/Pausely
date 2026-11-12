@@ -13,7 +13,7 @@ final class UsageLog: ObservableObject {
     private let defaults: UserDefaults
     private let calendar: Calendar
 
-    init(defaults: UserDefaults = .standard, calendar: Calendar = .current) {
+    init(defaults: UserDefaults = .standard, calendar: Calendar = .billing) {
         self.defaults = defaults
         self.calendar = calendar
     }

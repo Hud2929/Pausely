@@ -51,7 +51,7 @@ enum PriceHistory {
     /// (often the catalog's typical price) or a slip of the finger, and fixing it is not the service
     /// raising its price.
     static func latestChange(for subscription: Subscription, events: [LifecycleEvent],
-                             calendar: Calendar = .current) -> Change? {
+                             calendar: Calendar = .billing) -> Change? {
         let all = points(for: subscription.id, events: events)
         guard all.count >= 2, let now = all.last, let changedOn = now.date else { return nil }
         let before = all[all.count - 2]

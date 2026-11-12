@@ -44,6 +44,16 @@ struct WidgetTrialInfo: Codable, Identifiable {
     let amountText: String?
 
     var daysRemaining: Int {
-        max(0, Calendar.current.dateComponents([.day], from: Date(), to: trialEndsAt).day ?? 0)
+        max(0, Calendar.billing.dateComponents([.day], from: Date(), to: trialEndsAt).day ?? 0)
     }
+}
+
+extension Calendar {
+    /// Gregorian, in the phone's time zone: the calendar the app works out days in (see the app's
+    /// `Calendar.billing`). The widgets count days the same way.
+    static let billing: Calendar = {
+        var calendar = Calendar(identifier: .gregorian)
+        calendar.timeZone = .autoupdatingCurrent
+        return calendar
+    }()
 }

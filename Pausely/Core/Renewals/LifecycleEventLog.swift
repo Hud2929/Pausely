@@ -23,10 +23,11 @@ struct LifecycleEvent: Codable, Equatable, Identifiable {
     let frequency: BillingFrequency
     let previousAmount: Decimal?
     /// The renewal this event is about: the one kept, or the next charge a cancellation avoids.
-    let renewalDate: Date?
+    /// A day, not a moment (`BillingDay`), like the anchor below.
+    @SavedDay var renewalDate: Date?
     /// The subscription's billing anchor when the event happened, so the charges a cancellation
     /// avoids can be computed even after the subscription is deleted.
-    let anchorDate: Date?
+    @SavedDay var anchorDate: Date?
 
     init(id: UUID = UUID(), kind: Kind, subscription: Subscription, date: Date,
          previousAmount: Decimal? = nil, renewalDate: Date? = nil) {
@@ -89,6 +90,13 @@ final class LifecycleEventLog: ObservableObject {
     func loadIfNeeded() {
         guard !historyIsLoaded else { return }
         save()
+    }
+
+    /// Reads the history again from its saved form. Its days are held as noon in the phone's time zone
+    /// (`BillingDay`), so after a change of zone they are read afresh.
+    func reload() {
+        guard historyIsLoaded, case .value(let saved) = DeviceFile.load([LifecycleEvent].self, from: fileURL) else { return }
+        events = saved
     }
 
     /// Wipes the log (used when the user deletes their account or data).

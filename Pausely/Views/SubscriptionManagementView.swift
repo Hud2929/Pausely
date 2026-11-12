@@ -213,7 +213,7 @@ struct SubscriptionManagementView: View {
     @ViewBuilder
     private var decisionGroup: some View {
         if let pending = RenewalDecisions.pending(for: current, kept: RenewalDecisions.keptKeys(in: eventLog.events), now: Date()) {
-            let days = Calendar.current.calendarDays(from: Date(), to: pending.date)
+            let days = Calendar.billing.calendarDays(from: Date(), to: pending.date)
             let when = days == 0 ? L10n.string("today") : days == 1 ? L10n.string("tomorrow") : L10n.string("in \(days) days")
             VStack(spacing: 0) {
                 toolRow(icon: "questionmark.circle", state: .decide,

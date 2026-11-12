@@ -16,7 +16,7 @@ struct AgeGateView: View {
 
     /// A neutral starting date so the picker doesn't hint at the "right" answer.
     private static var neutralDefaultDate: Date {
-        Calendar.current.date(byAdding: .year, value: -30, to: Date()) ?? Date()
+        Calendar.billing.date(byAdding: .year, value: -30, to: Date()) ?? Date()
     }
 
     private var isBlocked: Bool { outcome == .underAge || outcome == .lockedOut }

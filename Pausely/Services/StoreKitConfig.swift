@@ -53,7 +53,7 @@ final class ReviewPromptManager: ObservableObject {
 
 
     private func canRequestReview() -> Bool {
-        let calendar = Calendar.current
+        let calendar = Calendar.billing
         let now = Date()
         let currentYear = calendar.component(.year, from: now)
         let storedYear = UserDefaults.standard.integer(forKey: currentYearKey)
@@ -86,7 +86,7 @@ final class ReviewPromptManager: ObservableObject {
                   root.presentedViewController == nil else { return }
 
             markUsed()
-            let currentYear = Calendar.current.component(.year, from: Date())
+            let currentYear = Calendar.billing.component(.year, from: Date())
             let storedYear = UserDefaults.standard.integer(forKey: self.currentYearKey)
             let requestsThisYear = (storedYear == currentYear)
                 ? UserDefaults.standard.integer(forKey: self.requestsThisYearKey)

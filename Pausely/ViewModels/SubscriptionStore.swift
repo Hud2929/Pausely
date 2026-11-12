@@ -67,6 +67,10 @@ class SubscriptionStore: ObservableObject {
             .receive(on: DispatchQueue.main)
             .sink { [weak self] _ in self?.calculateTotals() }
             .store(in: &currencyCancellables)
+        NotificationCenter.default.publisher(for: .NSSystemTimeZoneDidChange)
+            .receive(on: DispatchQueue.main)
+            .sink { [weak self] _ in self?.timeZoneChanged() }
+            .store(in: &currencyCancellables)
     }
     
     // MARK: - Data Fetching
@@ -128,7 +132,11 @@ class SubscriptionStore: ObservableObject {
             // Send up what only this iPhone had, and renewal dates the server was missing.
             for sub in merge.upload { sync.noteAdded(sub.id) }
             for sub in merge.backfill { sync.noteChanged(sub.id) }
-            if !merge.upload.isEmpty || !merge.backfill.isEmpty {
+            // A row whose days an earlier version saved goes back once, with its days in the saved form.
+            let listed = Set(subscriptions.map(\.id))
+            let oldForm = response.filter(\.hasADayInTheOldForm).compactMap(\.id).filter(listed.contains)
+            for id in oldForm { sync.noteChanged(id) }
+            if !merge.upload.isEmpty || !merge.backfill.isEmpty || !oldForm.isEmpty {
                 await sync.drain()
             }
             await SubscriptionLifecycle.shared.run()
@@ -210,7 +218,7 @@ class SubscriptionStore: ObservableObject {
 
     /// A renewal day and the last day of a trial are calendar days, not moments. Whoever hands one in,
     /// it is kept at local noon, so a change of time zone can't move it to another day (see RenewalSchedule).
-    static func withDaysAtNoon(_ subscription: Subscription, calendar: Calendar = .current) -> Subscription {
+    static func withDaysAtNoon(_ subscription: Subscription, calendar: Calendar = .billing) -> Subscription {
         var fixed = subscription
         fixed.nextBillingDate = subscription.nextBillingDate.map { calendar.noon(of: $0) }
         fixed.trialEndsAt = subscription.trialEndsAt.map { calendar.noon(of: $0) }
@@ -280,6 +288,27 @@ class SubscriptionStore: ObservableObject {
         lastFetchDate = nil
     }
 
+    // MARK: - A change of time zone
+
+    /// The time zone the days in memory were read in. A renewal day is held as noon in the phone's
+    /// zone (`BillingDay`); after a flight that moment is another day, so the days are read again from
+    /// their saved form, which names the same day everywhere.
+    private var zoneOfDays = TimeZone.current.identifier
+
+    /// Called when the app comes to the foreground.
+    func noticeTimeZone() {
+        if TimeZone.current.identifier != zoneOfDays { timeZoneChanged() }
+    }
+
+    func timeZoneChanged() {
+        zoneOfDays = TimeZone.current.identifier
+        LifecycleEventLog.shared.reload()
+        guard !isHidden, !subscriptions.isEmpty else { return }
+        loadFromCache()
+        WidgetDataStore.shared.publish(subscriptions: subscriptions)
+        Task { await ReminderScheduler.shared.reschedule(subscriptions) }
+    }
+
     /// True while nobody is signed in: from signing out, or from a launch signed out, until someone
     /// signs in. (Tests set it back through `StoreSandbox`.)
     var isHidden = false
@@ -343,7 +372,7 @@ class SubscriptionStore: ObservableObject {
 
     #if DEBUG
     static func makeDemoSubscriptions() -> [Subscription] {
-        let calendar = Calendar.current
+        let calendar = Calendar.billing
         let now = Date()
         return [
             Subscription(

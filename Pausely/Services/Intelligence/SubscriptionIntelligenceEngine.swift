@@ -155,7 +155,7 @@ struct SubscriptionIntelligenceEngine {
 
     func analyze(signals: [ReceiptSignal],
                  now: Date = Date(),
-                 calendar: Calendar = .current,
+                 calendar: Calendar = .billing,
                  defaultCurrency: String = "USD",
                  corrections: [String: UserVerdict] = [:]) -> IntelligenceReport {
 

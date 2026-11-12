@@ -13,7 +13,7 @@ enum RenewalSchedule {
 
     /// The renewal on or after the calendar day of `day`. When the anchor is today or later, that is the anchor.
     static func nextRenewal(anchor: Date, frequency: BillingFrequency, onOrAfter day: Date,
-                            calendar: Calendar = .current) -> Date {
+                            calendar: Calendar = .billing) -> Date {
         let anchorDay = calendar.startOfDay(for: anchor)
         let target = calendar.startOfDay(for: day)
         guard target > anchorDay else { return noon(anchorDay, calendar) }
@@ -28,7 +28,7 @@ enum RenewalSchedule {
 
     /// The next `count` renewals on or after `day`, oldest first.
     static func upcomingRenewals(anchor: Date, frequency: BillingFrequency, onOrAfter day: Date, count: Int,
-                                 calendar: Calendar = .current) -> [Date] {
+                                 calendar: Calendar = .billing) -> [Date] {
         guard count > 0 else { return [] }
         let first = nextRenewal(anchor: anchor, frequency: frequency, onOrAfter: day, calendar: calendar)
         let anchorDay = calendar.startOfDay(for: anchor)
@@ -41,7 +41,7 @@ enum RenewalSchedule {
     /// Renewal days strictly after `start` and on or before `end` (both compared as calendar days).
     /// Used to notice renewals that happened while the app was closed.
     static func renewals(anchor: Date, frequency: BillingFrequency, after start: Date, through end: Date,
-                         calendar: Calendar = .current, limit: Int = 60) -> [Date] {
+                         calendar: Calendar = .billing, limit: Int = 60) -> [Date] {
         let startDay = calendar.startOfDay(for: start)
         let endDay = calendar.startOfDay(for: end)
         guard endDay > startDay else { return [] }

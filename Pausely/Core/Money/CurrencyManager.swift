@@ -213,10 +213,16 @@ final class CurrencyManager: ObservableObject {
         let filled = CurrencyRates(apiRates: exchangeRates).fillingGaps()
         table.withLock { $0 = filled }
 
-        // Unit tests set their own rates; a live answer arriving mid-test would replace them.
-        if NSClassFromString("XCTestCase") == nil {
-            Task { @MainActor [weak self] in await self?.refreshRates() }
-        }
+        Task { @MainActor [weak self] in await self?.refreshRatesWhenDue() }
+    }
+
+    /// The app's own refresh: at launch and each time it returns to the foreground. Unit tests set
+    /// their own rates and call `refreshRates` themselves; a live load started by the app under them
+    /// would replace those rates, or be in the way when a test asks for a refresh.
+    @MainActor
+    func refreshRatesWhenDue() async {
+        guard NSClassFromString("XCTestCase") == nil else { return }
+        await refreshRates()
     }
 
     /// Loads live rates when the ones held are more than an hour old. If they can't be loaded, the

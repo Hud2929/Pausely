@@ -365,13 +365,15 @@ struct RootView: View {
                 // The phone is unlocked now: anything a locked-screen action couldn't read can be.
                 LifecycleEventLog.shared.loadIfNeeded()
                 PausePlanStore.shared.loadIfNeeded()
+                // Landed somewhere else: every renewal is still on its day.
+                SubscriptionStore.shared.noticeTimeZone()
                 Task {
                     await NotificationManager.shared.refreshStatus()
                     await SubscriptionLifecycle.shared.run()
                     // Changes that couldn't be sent earlier go now, without waiting for a pull to refresh.
                     await SubscriptionStore.shared.sync.drain(force: true)
                     // An app left open for days still converts at today's rates (asks at most hourly).
-                    await CurrencyManager.shared.refreshRates()
+                    await CurrencyManager.shared.refreshRatesWhenDue()
                     // A subscription that ended or was refunded while the app was in the background stops
                     // unlocking Pro now, not at the next cold launch.
                     await PaymentManager.shared.updateCurrentEntitlements()

@@ -33,7 +33,7 @@ enum SavingsLedger {
 
     /// Lines in the order the cancellations happened.
     /// - Parameter excluding: subscriptions that never count, such as Pausely's own subscription.
-    static func lines(from events: [LifecycleEvent], now: Date, calendar: Calendar = .current,
+    static func lines(from events: [LifecycleEvent], now: Date, calendar: Calendar = .billing,
                       excluding: Set<UUID> = []) -> [Line] {
         let bySubscription = Dictionary(grouping: events.filter { !excluding.contains($0.subscriptionId) },
                                         by: \.subscriptionId)

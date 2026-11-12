@@ -83,7 +83,7 @@ struct CatalogAddSheet: View {
                         Hairline()
                         row(L10n.string("Next payment")) {
                             OptionalDatePicker(title: L10n.string("Next payment"), date: $nextBillingDate,
-                                               earliest: Calendar.current.startOfDay(for: Date()))
+                                               earliest: Calendar.billing.startOfDay(for: Date()))
                         }
                         Hairline()
                         Toggle(isOn: $hasFreeTrial.animation(Motion.unlessReduced(Motion.touch))) {
@@ -97,7 +97,7 @@ struct CatalogAddSheet: View {
                             Hairline()
                             row(L10n.string("Trial ends")) {
                                 OptionalDatePicker(title: L10n.string("Trial ends"), date: $trialEndsAt,
-                                                   earliest: Calendar.current.startOfDay(for: Date()))
+                                                   earliest: Calendar.billing.startOfDay(for: Date()))
                             }
                         }
                     }

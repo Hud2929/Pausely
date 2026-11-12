@@ -12,13 +12,15 @@ struct Subscription: Identifiable, Codable, Equatable {
     var amount: Decimal
     var currency: String
     var billingFrequency: BillingFrequency
-    var nextBillingDate: Date?
+    /// The renewal anchor: a day, not a moment (`BillingDay`).
+    @SavedDay var nextBillingDate: Date?
     var monthlyUsageMinutes: Int
     var costPerHour: Decimal?
     var roiScore: Decimal?
     var wasteScore: Decimal?  // NEW: 0.0 = total waste, 1.0 = great value
     var notifyBeforeDays: Int  // NEW: Days before renewal to notify
-    var trialEndsAt: Date?     // NEW: Trial expiration date
+    /// The last day of a free trial: a day, not a moment.
+    @SavedDay var trialEndsAt: Date?
     var status: SubscriptionStatus
     var isDetected: Bool
     var canPause: Bool
@@ -138,7 +140,7 @@ struct Subscription: Identifiable, Codable, Equatable {
         nextRenewal(onOrAfter: Date())
     }
 
-    func nextRenewal(onOrAfter day: Date, calendar: Calendar = .current) -> Date? {
+    func nextRenewal(onOrAfter day: Date, calendar: Calendar = .billing) -> Date? {
         guard let anchor = nextBillingDate else { return nil }
         guard renewsAutomatically else { return anchor }
         return RenewalSchedule.nextRenewal(anchor: anchor, frequency: billingFrequency, onOrAfter: day, calendar: calendar)
@@ -146,7 +148,7 @@ struct Subscription: Identifiable, Codable, Equatable {
 
     var daysUntilRenewal: Int? {
         guard let nextDate = calculatedNextBillingDate else { return nil }
-        let calendar = Calendar.current
+        let calendar = Calendar.billing
         // Compare calendar days, not elapsed hours: 9 days away at 3pm must not read as "in 8 days".
         return calendar.calendarDays(from: Date(), to: nextDate)
     }

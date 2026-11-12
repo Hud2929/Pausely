@@ -107,8 +107,9 @@ struct SubscriptionRecord: Codable {
         self.roi_score = subscription.roiScore
         self.waste_score = subscription.wasteScore
         self.notify_before_days = subscription.notifyBeforeDays
-        self.trial_ends_at = subscription.trialEndsAt?.iso8601String
-        self.next_billing_date = subscription.nextBillingDate?.iso8601String
+        // Days go up in their saved form: noon UTC on the day, the same day wherever it is read.
+        self.trial_ends_at = subscription.trialEndsAt.map { BillingDay.stored($0).iso8601String }
+        self.next_billing_date = subscription.nextBillingDate.map { BillingDay.stored($0).iso8601String }
         self.status = subscription.status.rawValue
         self.is_detected = subscription.isDetected
         self.can_pause = subscription.canPause
@@ -143,6 +144,15 @@ struct SubscriptionRecord: Codable {
         try c.encodeIfPresent(updated_at, forKey: .updated_at)
     }
     
+    /// True when a day in this row was saved by an earlier version (as noon where it was typed). Read on
+    /// the phone it was typed on it is right; sent back once in the saved form, it is right everywhere.
+    var hasADayInTheOldForm: Bool {
+        [next_billing_date, trial_ends_at].contains { text in
+            guard let date = text?.iso8601Date else { return false }
+            return !BillingDay.isStoredForm(date)
+        }
+    }
+
     func toSubscription() -> Subscription {
         var sub = Subscription(
             name: name,
@@ -160,8 +170,8 @@ struct SubscriptionRecord: Codable {
         sub.roiScore = roi_score
         sub.wasteScore = waste_score
         sub.notifyBeforeDays = notify_before_days ?? 3
-        sub.trialEndsAt = trial_ends_at?.iso8601Date
-        sub.nextBillingDate = next_billing_date?.iso8601Date
+        sub.trialEndsAt = trial_ends_at?.iso8601Date.map { BillingDay.local(fromStored: $0) }
+        sub.nextBillingDate = next_billing_date?.iso8601Date.map { BillingDay.local(fromStored: $0) }
         sub.status = SubscriptionStatus(rawValue: status) ?? .active
         sub.isDetected = is_detected
         sub.canPause = can_pause

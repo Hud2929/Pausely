@@ -14,12 +14,12 @@ enum RenewalDecisions {
         var id: UUID { subscriptionId }
     }
 
-    static func key(_ subscriptionId: UUID, _ date: Date, _ calendar: Calendar = .current) -> String {
+    static func key(_ subscriptionId: UUID, _ date: Date, _ calendar: Calendar = .billing) -> String {
         "\(subscriptionId.uuidString)|\(ReminderPlanner.dayStamp(date, calendar))"
     }
 
     /// Keys of every renewal the user chose to keep.
-    static func keptKeys(in events: [LifecycleEvent], calendar: Calendar = .current) -> Set<String> {
+    static func keptKeys(in events: [LifecycleEvent], calendar: Calendar = .billing) -> Set<String> {
         Set(events.compactMap { event in
             guard event.kind == .kept, let renewal = event.renewalDate else { return nil }
             return key(event.subscriptionId, renewal, calendar)
@@ -28,7 +28,7 @@ enum RenewalDecisions {
 
     /// The charge a decision is about right now: the trial end for a trial that hasn't ended,
     /// otherwise the next renewal. Nil when nothing will be charged.
-    static func upcomingCharge(for sub: Subscription, now: Date, calendar: Calendar = .current) -> (date: Date, isTrialEnd: Bool)? {
+    static func upcomingCharge(for sub: Subscription, now: Date, calendar: Calendar = .billing) -> (date: Date, isTrialEnd: Bool)? {
         guard sub.renewsAutomatically else { return nil }
         let today = calendar.startOfDay(for: now)
         if sub.status == .trial, let end = sub.trialEndsAt, calendar.startOfDay(for: end) >= today {
@@ -41,7 +41,7 @@ enum RenewalDecisions {
     /// The decision waiting for this subscription: its next charge falls inside its reminder window
     /// (at least the day before) and the user hasn't kept it yet. "Remind me: Off" means never ask.
     static func pending(for sub: Subscription, kept: Set<String>, now: Date,
-                        calendar: Calendar = .current) -> Pending? {
+                        calendar: Calendar = .billing) -> Pending? {
         guard sub.notifyBeforeDays > 0, let charge = upcomingCharge(for: sub, now: now, calendar: calendar) else { return nil }
         let days = calendar.calendarDays(from: calendar.startOfDay(for: now), to: charge.date)
         guard days >= 0, days <= max(sub.notifyBeforeDays, 1) else { return nil }
@@ -51,7 +51,7 @@ enum RenewalDecisions {
 
     /// Every decision waiting right now, soonest first.
     static func pending(in subscriptions: [Subscription], events: [LifecycleEvent], now: Date,
-                        calendar: Calendar = .current) -> [Pending] {
+                        calendar: Calendar = .billing) -> [Pending] {
         let kept = keptKeys(in: events, calendar: calendar)
         return subscriptions
             .compactMap { pending(for: $0, kept: kept, now: now, calendar: calendar) }

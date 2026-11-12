@@ -43,16 +43,18 @@ final class SubscriptionSyncTests: XCTestCase {
         """
         let record = try JSONDecoder().decode(SubscriptionRecord.self, from: Data(row.utf8))
         let sub = record.toSubscription()
-        XCTAssertEqual(sub.nextBillingDate, day("2026-11-20T12:00:00Z"))
+        // A renewal day comes back as that day, at noon on this phone (`BillingDay`), wherever it is read.
+        XCTAssertEqual(sub.nextBillingDate, Calendar.billing.date(from: DateComponents(year: 2026, month: 11, day: 20, hour: 12)))
         XCTAssertEqual(sub.createdAt.timeIntervalSince1970, day("2026-03-04T17:30:00Z").timeIntervalSince1970 + 0.123, accuracy: 0.001,
                        "the creation date must not reset to now on every fetch")
         XCTAssertEqual(sub.updatedAt.timeIntervalSince1970, day("2026-10-01T09:15:42Z").timeIntervalSince1970 + 0.5, accuracy: 0.001)
     }
 
     func testARoundTripKeepsEverythingTheServerStores() throws {
+        let fifteenth = Calendar.billing.date(from: DateComponents(year: 2027, month: 1, day: 15, hour: 12))
         var sub = TestFactories.makeSubscription(name: "Crave", amount: 22.6, currency: "CAD", billingFrequency: .yearly,
-                                                 status: .trial, nextBillingDate: day("2027-01-15T12:00:00Z"))
-        sub.trialEndsAt = day("2027-01-15T12:00:00Z")
+                                                 status: .trial, nextBillingDate: fifteenth)
+        sub.trialEndsAt = fifteenth
         let back = try JSONDecoder().decode(SubscriptionRecord.self, from: JSONEncoder().encode(SubscriptionRecord(from: sub))).toSubscription()
         XCTAssertEqual(back.id, sub.id)
         XCTAssertEqual(back.amount, sub.amount)
