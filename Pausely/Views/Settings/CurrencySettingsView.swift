@@ -6,11 +6,8 @@ struct CurrencySettingsView: View {
     @State private var searchText = ""
 
     /// Every currency Pausely can convert (the same list the exchange rates cover).
-    private var currencies: [(code: String, name: String)] {
-        let all = currencyManager.allCurrencies.map { (code: $0.code, name: $0.name) }
-        let query = searchText.trimmingCharacters(in: .whitespaces).lowercased()
-        guard !query.isEmpty else { return all }
-        return all.filter { $0.code.lowercased().contains(query) || $0.name.lowercased().contains(query) }
+    private var currencies: [Currency] {
+        currencyManager.allCurrencies.filter { $0.matches(searchText) }
     }
 
     private var ratesDay: String {
@@ -38,8 +35,8 @@ struct CurrencySettingsView: View {
                         .foregroundStyle(Color.inkTextMuted)
                         .padding(.vertical, 12)
                 }
-                ForEach(currencies, id: \.code) { currency in
-                    ChoiceRow(title: currency.name, detail: currency.code, isChosen: currencyManager.selectedCurrency == currency.code) {
+                ForEach(currencies) { currency in
+                    ChoiceRow(title: currency.localizedName(), detail: currency.code, isChosen: currencyManager.selectedCurrency == currency.code) {
                         currencyManager.setCurrency(currency.code)
                     }
                     .accessibilityIdentifier("currency-\(currency.code)")

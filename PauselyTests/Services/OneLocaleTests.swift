@@ -246,6 +246,33 @@ final class OneLocaleTests: XCTestCase {
         XCTAssertEqual(offenders, [])
     }
 
+    /// Currencies are named by the system in the reader's language and found by typing in it. They
+    /// were English names on every screen, and only English found them.
+    func testCurrenciesAreNamedAndFoundInTheReadersLanguage() throws {
+        let all = CurrencyManager.shared.allCurrencies
+        let dollar = try XCTUnwrap(all.first { $0.code == "USD" })
+        let yen = try XCTUnwrap(all.first { $0.code == "JPY" })
+        XCTAssertEqual(dollar.localizedName(in: Locale(identifier: "ja_JP")), "米ドル")
+        XCTAssertEqual(dollar.localizedName(in: Locale(identifier: "de_DE")), "US-Dollar")
+        XCTAssertEqual(dollar.localizedName(in: Locale(identifier: "fr_FR")), "Dollar des États-Unis")
+        XCTAssertEqual(dollar.localizedName(in: Locale(identifier: "es_ES")), "Dólar estadounidense")
+        XCTAssertEqual(yen.localizedName(in: Locale(identifier: "ar_SA")), "ين ياباني")
+
+        let spanish = Locale(identifier: "es_ES")
+        XCTAssertTrue(dollar.matches("dolar", in: spanish), "found without its accent")
+        XCTAssertTrue(dollar.matches("usd", in: spanish))
+        XCTAssertTrue(dollar.matches("US Dollar", in: spanish), "the English name still finds it")
+        XCTAssertFalse(dollar.matches("yen", in: spanish))
+        XCTAssertTrue(yen.matches("円", in: Locale(identifier: "ja_JP")))
+        XCTAssertTrue(dollar.matches("  ", in: spanish), "an empty search shows everything")
+
+        // Every currency offered has a name in each of the app's languages, never its bare code.
+        for language in ["ar", "de", "en", "es", "fr", "ja"] {
+            let locale = Locale(identifier: language)
+            XCTAssertEqual(all.filter { $0.localizedName(in: locale) == $0.code }.map(\.code), [], language)
+        }
+    }
+
     /// A price and its period are one phrase from the catalog, in the order the language wants.
     /// Joined by hand, Japanese read "¥500 月額" and VoiceOver said the period as a stray word.
     func testAPriceAndItsPeriodAreOnePhraseInTheReadersOrder() {

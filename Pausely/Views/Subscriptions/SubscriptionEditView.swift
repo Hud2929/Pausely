@@ -127,9 +127,9 @@ struct SubscriptionEditView: View {
                             draft.currency = currency.code
                         } label: {
                             if currency.code == draft.currency {
-                                Label("\(currency.code) · \(currency.name)", systemImage: "checkmark")
+                                Label("\(currency.code) · \(currency.localizedName())", systemImage: "checkmark")
                             } else {
-                                Text("\(currency.code) · \(currency.name)")
+                                Text("\(currency.code) · \(currency.localizedName())")
                             }
                         }
                     }
