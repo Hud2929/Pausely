@@ -166,7 +166,7 @@ struct PausePlanView: View {
                 .foregroundStyle(Color.inkText)
                 .fixedSize(horizontal: false, vertical: true)
                 .accessibilityAddTraits(.isHeader)
-            Text("Most people pay for several streaming services and watch one. Pause Plan keeps one on, pauses the rest, and rotates every month, so you still see everything.")
+            Text("Pause Plan keeps one streaming service on, pauses the rest, and rotates every month, so you still see everything.")
                 .font(.body)
                 .foregroundStyle(Color.inkTextMuted)
                 .fixedSize(horizontal: false, vertical: true)

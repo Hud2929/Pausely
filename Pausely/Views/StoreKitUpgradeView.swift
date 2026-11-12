@@ -131,10 +131,11 @@ struct StoreKitUpgradeView: View {
 
     private var headline: String {
         if waitingCount > 0 {
-            return L10n.string("You pay for \(activeSubscriptions.count + waitingCount) subscriptions. Free watches \(FreeTier.subscriptionLimit).")
+            return L10n.string("You pay for \(activeSubscriptions.count + waitingCount) subscriptions.") + " "
+                + L10n.string("Free tracks \(FreeTier.subscriptionLimit).")
         }
-        if atFreeLimit { return L10n.string("Free watches \(FreeTier.subscriptionLimit). Pro watches all of them.") }
-        guard !activeSubscriptions.isEmpty else { return L10n.string("Pro watches every subscription you have.") }
+        if atFreeLimit { return L10n.string("Free tracks \(FreeTier.subscriptionLimit). Pausely Pro tracks all of them.") }
+        guard !activeSubscriptions.isEmpty else { return L10n.string("Pausely Pro tracks every subscription you have.") }
         let yearly = MoneyFormat.string(activeSubscriptions.annualTotal(), currencyManager.selectedCurrency,
                                         locale: L10n.locale, wholeUnits: true)
         return L10n.string("Your subscriptions cost about \(yearly) a year.")
@@ -220,7 +221,7 @@ struct StoreKitUpgradeView: View {
         .alert(Text("You have Pausely Pro"), isPresented: $showSuccessAlert) {
             Button("Continue", role: .cancel) { dismiss() }
         } message: {
-            Text("Every subscription you add is watched from now on.")
+            Text("Every subscription you add is tracked from now on.")
         }
         .alert(Text(verbatim: notice?.title ?? ""), isPresented: Binding(get: { notice != nil }, set: { if !$0 { notice = nil } }),
                presenting: notice) { shown in
@@ -466,7 +467,7 @@ struct StoreKitUpgradeView: View {
 
     private func welcomeToPro() async {
         Feel.landed()
-        // Pro watches everything: the lines that didn't fit under the free limit join the list.
+        // Pro tracks everything: the lines that didn't fit under the free limit join the list.
         await TallyImporter.importWaiting(into: SubscriptionStore.shared)
         showSuccessAlert = true
     }

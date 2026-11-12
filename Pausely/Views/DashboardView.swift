@@ -156,9 +156,9 @@ struct DashboardView: View {
             if !waiting.isEmpty, !paymentManager.isUnlocked(.unlimitedSubscriptions) {
                 AttentionRow(state: nil, symbol: "eye.slash",
                              title: waiting.count == 1
-                                ? L10n.string("\(waiting[0].name) isn't watched")
-                                : L10n.string("\(waiting.count) of your subscriptions aren't watched"),
-                             detail: L10n.string("Free watches \(FreeTier.subscriptionLimit). Pro watches all of them."),
+                                ? L10n.string("\(waiting[0].name) isn't tracked")
+                                : L10n.string("\(waiting.count) of your subscriptions aren't tracked"),
+                             detail: L10n.string("Free tracks \(FreeTier.subscriptionLimit). Pausely Pro tracks all of them."),
                              action: L10n.string("See Pro")) { showingPaywall = true }
                     .accessibilityIdentifier("waitingRow")
                 Hairline()
@@ -554,7 +554,7 @@ private struct HomeEmpty: View {
                     .buttonStyle(.ink)
                     .accessibilityIdentifier("addSubscriptionButton")
                 if let onFindInEmail {
-                    Button(action: onFindInEmail) { Text("Find them in my email") }
+                    Button(action: onFindInEmail) { Text("Find in Email") }
                         .buttonStyle(.ink(.quiet))
                         .accessibilityIdentifier("homeFindInEmailButton")
                 }

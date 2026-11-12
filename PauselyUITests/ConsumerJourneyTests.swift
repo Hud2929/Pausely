@@ -171,7 +171,7 @@ final class ConsumerJourneyTests: XCTestCase {
         capture(app, "sixth-result")
         let notice = app.staticTexts["freeLimitNotice"]
         XCTAssertTrue(notice.waitForExistence(timeout: 4), "a sixth subscription on the free plan should explain the limit")
-        XCTAssertEqual(notice.label, "Free watches 5. Pro watches all of them.")
+        XCTAssertEqual(notice.label, "Free tracks 5. Pausely Pro tracks all of them.")
         // Back out to the list, whatever is showing.
         for _ in 0..<4 {
             if app.tab("tabSubscriptions").isHittable { break }

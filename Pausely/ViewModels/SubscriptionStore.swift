@@ -188,7 +188,7 @@ class SubscriptionStore: ObservableObject {
         case freeTierLimitReached
 
         var localizedStringResource: LocalizedStringResource {
-            "Free watches \(FreeTier.subscriptionLimit). Pro watches all of them."
+            "Free tracks \(FreeTier.subscriptionLimit). Pausely Pro tracks all of them."
         }
     }
 

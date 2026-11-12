@@ -546,8 +546,8 @@ struct InboxImportView: View {
                 if let slots = freeSlots, newlyChosen > slots {
                     // Said before the tap, not discovered after it.
                     Text(slots == 0
-                         ? L10n.string("Free watches \(FreeTier.subscriptionLimit) and your list is full. What you add now will wait until you make room or go Pro.")
-                         : L10n.string("Free watches \(FreeTier.subscriptionLimit). Added now, most expensive first: \(slots). Waiting until you make room or go Pro: \(newlyChosen - slots)."))
+                         ? L10n.string("Free tracks \(FreeTier.subscriptionLimit) and your list is full. What you add now will wait until you make room or go Pro.")
+                         : L10n.string("Free tracks \(FreeTier.subscriptionLimit). Added now, most expensive first: \(slots). Waiting until you make room or go Pro: \(newlyChosen - slots)."))
                         .font(.footnote)
                         .foregroundStyle(Color.inkTextMuted)
                         .fixedSize(horizontal: false, vertical: true)
@@ -599,7 +599,7 @@ struct InboxImportView: View {
                 }
                 if !outcome.waiting.isEmpty {
                     if !outcome.added.isEmpty { Hairline() }
-                    outcomeLine(L10n.string("Waiting: \(outcome.waiting.count). Free watches \(FreeTier.subscriptionLimit); Pro watches all of them."),
+                    outcomeLine(L10n.string("Waiting: \(outcome.waiting.count). Free tracks \(FreeTier.subscriptionLimit); Pausely Pro tracks all of them."),
                                 names: outcome.waiting)
                         .accessibilityIdentifier("importWaitingLine")
                 }

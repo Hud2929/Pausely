@@ -36,8 +36,8 @@ struct PremiumProfileView: View {
                     if FeatureFlags.inboxImportEnabled {
                         let inboxes = InboxScanner.shared.accounts
                         row("envelope",
-                            inboxes.isEmpty ? L10n.string("Find subscriptions in email") : L10n.string("Email inboxes"),
-                            value: inboxes.isEmpty ? nil : (inboxes.count == 1 ? inboxes[0].address : L10n.string("\(inboxes.count) connected")),
+                            L10n.string("Find in Email"),
+                            value: inboxes.isEmpty ? nil : (inboxes.count == 1 ? inboxes[0].address : "\(inboxes.count)"),
                             id: "inboxImportButton") { sheet = .inbox }
                     }
                     row("arrow.up.forward.app", L10n.string("Apple Subscriptions"), id: "importFromAppStoreButton", last: true) {
@@ -128,7 +128,7 @@ struct PremiumProfileView: View {
                     .foregroundStyle(Color.inkTextMuted)
             }
             Text(isPro ? L10n.string("Pausely Pro")
-                       : L10n.string("Free plan: Pausely watches up to \(FreeTier.subscriptionLimit) subscriptions."))
+                       : L10n.string("Free plan: Pausely tracks up to \(FreeTier.subscriptionLimit) subscriptions."))
                 .font(.subheadline)
                 .foregroundStyle(Color.inkTextMuted)
                 .fixedSize(horizontal: false, vertical: true)

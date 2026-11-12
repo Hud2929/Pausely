@@ -71,6 +71,40 @@ final class OneLocaleTests: XCTestCase {
         XCTAssertNil(L10n.isRightToLeft, "the iPhone decides")
     }
 
+    // MARK: - Counts
+
+    /// A count takes the form its number needs in each language: one or many in English, six forms in
+    /// Arabic, none in Japanese. Before, every language had one form, so English said "1 subscriptions"
+    /// and Arabic used the 3-to-10 form for every number.
+    func testCountsTakeTheFormTheirNumberNeeds() {
+        func subscriptions(_ count: Int) -> String { L10n.string("\(count) subscriptions") }
+
+        UserDefaults.standard.set("en", forKey: L10n.languageKey)
+        XCTAssertEqual(subscriptions(1), "1 subscription")
+        XCTAssertEqual(subscriptions(2), "2 subscriptions")
+        XCTAssertEqual(subscriptions(0), "0 subscriptions")
+        XCTAssertEqual(L10n.string("\(1) subscriptions have no renewal date"), "1 subscription has no renewal date")
+        XCTAssertEqual(L10n.string("Save \(1) dates"), "Save 1 date")
+
+        UserDefaults.standard.set("ar", forKey: L10n.languageKey)
+        let arabic = [0, 1, 2, 5, 11, 100].map(subscriptions)
+        XCTAssertEqual(Set(arabic).count, 6, "\(arabic)")
+        XCTAssertEqual(subscriptions(2), "اشتراكان")
+        XCTAssertEqual(subscriptions(1), "اشتراك واحد")
+
+        UserDefaults.standard.set("fr", forKey: L10n.languageKey)
+        XCTAssertEqual(subscriptions(1), "1 abonnement")
+        XCTAssertEqual(subscriptions(0), "0 abonnement", "French counts none as one")
+        XCTAssertEqual(subscriptions(2), "2 abonnements")
+
+        UserDefaults.standard.set("de", forKey: L10n.languageKey)
+        XCTAssertEqual(subscriptions(1), "1 Abo")
+        XCTAssertEqual(subscriptions(7), "7 Abos")
+
+        UserDefaults.standard.set("ja", forKey: L10n.languageKey)
+        XCTAssertEqual(subscriptions(3), "3件のサブスク")
+    }
+
     /// No date, duration or number is formatted without saying in which locale, no language is turned
     /// into a locale by its code alone, and no day phrase is put together by hand.
     func testNothingIsFormattedInAnotherLocale() throws {

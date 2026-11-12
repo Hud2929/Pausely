@@ -80,7 +80,7 @@ final class FreePlanTests: XCTestCase {
             if ["PaymentManager.swift", "ProFeature.swift"].contains(file.lastPathComponent) { continue }
             let text = try String(contentsOf: file, encoding: .utf8)
             for (index, line) in text.components(separatedBy: "\n").enumerated() {
-                // In a sentence ("Free watches \(FreeTier.subscriptionLimit)") the number is only shown.
+                // In a sentence ("Free tracks \(FreeTier.subscriptionLimit)") the number is only shown.
                 let outsideSentences = line.replacingOccurrences(of: "\\(FreeTier.subscriptionLimit)", with: "")
                 if outsideSentences.contains("FreeTier.subscriptionLimit") {
                     offenders.append("\(file.path.dropFirst(root.path.count + 1)):\(index + 1)")

@@ -69,7 +69,7 @@ struct SubscriptionBrowserView: View {
                         .background(Color.inkRaised, in: RoundedRectangle(cornerRadius: 9, style: .continuous))
                         .accessibilityHidden(true)
                     VStack(alignment: .leading, spacing: 2) {
-                        Text("Find them in your email")
+                        Text("Find in Email")
                             .font(.body.weight(.medium))
                             .foregroundStyle(Color.inkText)
                             .multilineTextAlignment(.leading)

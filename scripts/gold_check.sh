@@ -35,6 +35,7 @@ report "TODO / FIXME / HACK"           "$(grep -rnE --include='*.swift' 'TODO|FI
 
 # --- Dead code and size
 report "declarations nothing refers to" "$(python3 scripts/dead_code_check.py 2>/dev/null | grep -v 'declarations nothing refers to')"
+report "string keys unused or untranslated" "$(python3 scripts/string_usage.py 2>/dev/null)"
 report "Swift files over 700 lines"    "$(find Pausely PauselyWidget -name '*.swift' -exec wc -l {} + | awk '$1 > 700 && $2 != "total" {print $2 " (" $1 " lines)"}')"
 
 # --- Repository
