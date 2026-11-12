@@ -1,4 +1,5 @@
 import SwiftUI
+import UserNotifications
 
 /// Which reminders Pausely sends. The switches only matter once iOS allows notifications, so the page
 /// says first whether it does, and offers the one step that turns them on.
@@ -39,22 +40,48 @@ struct NotificationsSettingsView: View {
         Task { await ReminderScheduler.shared.reschedule(SubscriptionStore.shared.subscriptions) }
     }
 
+    /// Allowed, shown somewhere, and not held for a summary: a reminder arrives and is seen.
+    private var reachesThePerson: Bool {
+        notifications.isAuthorized && notifications.delivery == .shown
+    }
+
+    private var headline: String {
+        guard notifications.isAuthorized else { return L10n.string("Reminders are off") }
+        switch notifications.delivery {
+        case .shown: return L10n.string("Reminders are on")
+        case .hidden: return L10n.string("Reminders are allowed but hidden")
+        case .late: return L10n.string("Reminders can arrive late")
+        }
+    }
+
+    private func explanation(_ status: UNAuthorizationStatus) -> String {
+        guard notifications.isAuthorized else {
+            return status == .denied
+                ? L10n.string("Notifications for Pausely are off in iOS Settings.")
+                : L10n.string("Turn them on so renewals never surprise you.")
+        }
+        switch notifications.delivery {
+        case .shown:
+            return L10n.string("Pausely can warn you before you're charged.")
+        case .hidden:
+            return L10n.string("Banners, the Lock Screen and Notification Center are all off for Pausely in iOS Settings, so a reminder has nowhere to appear.")
+        case .late:
+            return L10n.string("Pausely is in your Scheduled Summary, so a reminder about tomorrow's charge can come after it. In iOS Settings, choose Immediate Delivery for Pausely.")
+        }
+    }
+
     /// Whether iOS lets Pausely notify, and the way to change it.
     @ViewBuilder
     private var permission: some View {
         let status = notifications.status
         VStack(alignment: .leading, spacing: 12) {
             HStack(alignment: .firstTextBaseline, spacing: 10) {
-                if !notifications.isAuthorized { StateMark(state: .decide).accessibilityHidden(true) }
+                if !reachesThePerson { StateMark(state: .decide).accessibilityHidden(true) }
                 VStack(alignment: .leading, spacing: 3) {
-                    Text(notifications.isAuthorized ? "Reminders are on" : "Reminders are off")
+                    Text(verbatim: headline)
                         .font(.headline)
                         .foregroundStyle(Color.inkText)
-                    Text(notifications.isAuthorized
-                         ? "Pausely can warn you before you're charged."
-                         : status == .denied
-                            ? "Notifications for Pausely are off in iOS Settings."
-                            : "Turn them on so renewals never surprise you.")
+                    Text(verbatim: explanation(status))
                         .font(.subheadline)
                         .foregroundStyle(Color.inkTextMuted)
                         .fixedSize(horizontal: false, vertical: true)
@@ -62,9 +89,9 @@ struct NotificationsSettingsView: View {
             }
             .accessibilityElement(children: .combine)
 
-            if !notifications.isAuthorized {
+            if !reachesThePerson {
                 Button {
-                    if status == .denied {
+                    if status == .denied || notifications.isAuthorized {
                         notifications.openSystemSettings()
                     } else {
                         isAsking = true
@@ -74,7 +101,7 @@ struct NotificationsSettingsView: View {
                         }
                     }
                 } label: {
-                    status == .denied ? Text("Settings") : Text("Turn on")
+                    status == .denied || notifications.isAuthorized ? Text("Settings") : Text("Turn on")
                 }
                 .buttonStyle(.ink)
                 .disabled(isAsking)

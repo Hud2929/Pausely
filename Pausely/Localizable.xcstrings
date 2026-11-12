@@ -66371,6 +66371,210 @@
           }
         }
       }
+    },
+    "Reminders are allowed but hidden": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "التذكيرات مسموحة لكنها مخفية"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Erinnerungen sind erlaubt, aber unsichtbar"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Los recordatorios están permitidos, pero ocultos"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Les rappels sont autorisés, mais invisibles"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "リマインダーは許可されていますが表示されません"
+          }
+        }
+      }
+    },
+    "Reminders can arrive late": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "قد تصل التذكيرات متأخرة"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Erinnerungen können verspätet ankommen"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Los recordatorios pueden llegar tarde"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Les rappels peuvent arriver en retard"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "リマインダーが遅れて届くことがあります"
+          }
+        }
+      }
+    },
+    "Banners, the Lock Screen and Notification Center are all off for Pausely in iOS Settings, so a reminder has nowhere to appear.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "الشعارات وشاشة القفل ومركز الإشعارات كلها متوقفة لـ Pausely في إعدادات iOS، فلا يوجد مكان يظهر فيه التذكير."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Banner, Sperrbildschirm und Mitteilungszentrale sind für Pausely in den iOS-Einstellungen alle aus. Eine Erinnerung kann deshalb nirgends erscheinen."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Las tiras, la pantalla de bloqueo y el centro de notificaciones están desactivados para Pausely en los Ajustes de iOS, así que un recordatorio no tiene dónde aparecer."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Les bannières, l'écran verrouillé et le centre de notifications sont tous désactivés pour Pausely dans les Réglages iOS : un rappel n'a nulle part où s'afficher."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "iOSの設定で、Pauselyのバナー、ロック画面、通知センターがすべてオフになっているため、リマインダーを表示できる場所がありません。"
+          }
+        }
+      }
+    },
+    "Pausely is in your Scheduled Summary, so a reminder about tomorrow's charge can come after it. In iOS Settings, choose Immediate Delivery for Pausely.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pausely ضمن الملخص المجدول، لذلك قد يصل التذكير بخصم الغد بعد وقوعه. في إعدادات iOS، اختر التسليم الفوري لـ Pausely."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pausely ist Teil Ihrer geplanten Übersicht. Eine Erinnerung an die Abbuchung von morgen kann deshalb erst danach ankommen. Wählen Sie in den iOS-Einstellungen für Pausely die sofortige Zustellung."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pausely está en tu resumen programado, así que un recordatorio del cobro de mañana puede llegar después. En los Ajustes de iOS, elige Entrega inmediata para Pausely."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pausely fait partie de votre résumé programmé : un rappel du prélèvement de demain peut arriver après celui-ci. Dans les Réglages iOS, choisissez Distribution immédiate pour Pausely."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pauselyが時刻指定要約に含まれているため、明日の請求のリマインダーが請求後に届くことがあります。iOSの設定でPauselyを即時配信にしてください。"
+          }
+        }
+      }
+    },
+    "Your renewal reminders need a refresh": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "تذكيرات التجديد تحتاج إلى تحديث"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ihre Verlängerungserinnerungen müssen aufgefrischt werden"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tus recordatorios de renovación necesitan actualizarse"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Vos rappels de renouvellement doivent être actualisés"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "更新リマインダーの再設定が必要です"
+          }
+        }
+      }
+    },
+    "Open Pausely once and it plans the next ones.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "افتح Pausely مرة واحدة ليجدول التذكيرات التالية."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Öffnen Sie Pausely einmal, dann plant es die nächsten."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Abre Pausely una vez y programará los siguientes."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ouvrez Pausely une fois et il planifiera les suivants."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pauselyを一度開くと、次のリマインダーが設定されます。"
+          }
+        }
+      }
     }
   },
   "version": "1.1"

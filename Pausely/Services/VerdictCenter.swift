@@ -43,13 +43,18 @@ final class VerdictCenter: ObservableObject {
                                         userInfo: ["subscription_id": subscriptionId.uuidString])
     }
 
-    /// Keep: records the decision for the coming charge, so no more reminders ask about it.
-    /// The next renewal gets its own verdict.
-    func keep(subscriptionId: UUID, now: Date = Date()) async {
+    /// Keep: records the decision for a charge, so no more reminders ask about it. The next renewal
+    /// gets its own verdict.
+    ///
+    /// From the app it is the coming charge. From a reminder it is the charge that reminder was about
+    /// (`renewalDay`, the day stamped on it): "Keep it" pressed on yesterday's reminder must not
+    /// silence next month's.
+    func keep(subscriptionId: UUID, renewalDay: String? = nil, now: Date = Date()) async {
         let store = SubscriptionStore.shared
-        guard isSignedIn(),
-              let sub = store.subscriptions.first(where: { $0.id == subscriptionId }),
-              let charge = RenewalDecisions.upcomingCharge(for: sub, now: now) else { return }
+        guard isSignedIn(), let sub = store.subscriptions.first(where: { $0.id == subscriptionId }) else { return }
+        let decided = renewalDay.map { RenewalDecisions.charge(for: sub, onDay: $0, now: now) }
+            ?? RenewalDecisions.upcomingCharge(for: sub, now: now)
+        guard let charge = decided else { return }
         LifecycleEventLog.shared.record(.kept, for: sub, date: now, renewalDate: charge.date)
         await ReminderScheduler.shared.reschedule(store.subscriptions, now: now)
     }

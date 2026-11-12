@@ -1,5 +1,6 @@
 import Foundation
 import UserNotifications
+import os.log
 
 /// Applies `ReminderPlanner`'s plan to the notification center: every pending Pausely reminder is
 /// removed and the current plan is added. Call it after any change to subscriptions and on each launch.
@@ -40,16 +41,44 @@ final class ReminderScheduler {
 
         let byId = Dictionary(subscriptions.map { ($0.id, $0) }, uniquingKeysWith: { first, _ in first })
         let kept = RenewalDecisions.keptKeys(in: LifecycleEventLog.shared.events)
+        let pausePlan = PausePlanStore.shared.activePlan
         for reminder in ReminderPlanner.plan(for: subscriptions, now: now, preferences: Self.preferences, kept: kept,
-                                             pausePlan: PausePlanStore.shared.activePlan) {
+                                             pausePlan: pausePlan) {
             guard let sub = byId[reminder.subscriptionId] else { continue }
-            let request = UNNotificationRequest(
+            await add(UNNotificationRequest(
                 identifier: reminder.identifier,
                 content: Self.content(for: reminder, subscription: sub),
                 trigger: UNCalendarNotificationTrigger(dateMatching: Self.triggerDate(for: reminder.fireDate), repeats: false)
-            )
-            try? await center.add(request)
+            ))
         }
+        // Reminders are planned a couple of renewals ahead. If the app isn't opened in all that time,
+        // the last thing it sends says so, instead of going quiet.
+        if let refill = ReminderPlanner.refillDate(for: subscriptions, now: now, preferences: Self.preferences, kept: kept,
+                                                   pausePlan: pausePlan) {
+            await add(UNNotificationRequest(
+                identifier: ReminderPlanner.refillIdentifier,
+                content: Self.refillContent(),
+                trigger: UNCalendarNotificationTrigger(dateMatching: Self.triggerDate(for: refill), repeats: false)
+            ))
+        }
+    }
+
+    /// A reminder iOS refuses is one the person won't get: it leaves a trace in the log.
+    private func add(_ request: UNNotificationRequest) async {
+        do {
+            try await center.add(request)
+        } catch {
+            os_log("A reminder could not be scheduled: %{public}@", log: .default, type: .error, String(describing: type(of: error)))
+        }
+    }
+
+    static func refillContent() -> UNMutableNotificationContent {
+        let content = UNMutableNotificationContent()
+        content.title = L10n.string("Your renewal reminders need a refresh")
+        content.body = L10n.string("Open Pausely once and it plans the next ones.")
+        content.sound = .default
+        content.userInfo = ["type": "refill"]
+        return content
     }
 
     /// The moment a reminder fires, as the notification center wants it: year, month, day, hour and

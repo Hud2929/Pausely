@@ -218,8 +218,11 @@ Updated at every commit, so the work can be picked up from this file alone.
 - D3 begun. The record's unused fields are gone (Scope C's row); the "paused" status (S13) and the
   dead error text (S3) too. "Deep savings analysis" is replaced by what was real in it (T25–33's
   row). The names are decided (T102–108's row) and are applied in D5. D3 is done.
-- D4 begun: the free plan counts what is charging (O37). 676 tests, 0 failures. Next in D4:
-  notifications (O21 to O27, S7), then widgets, Shortcuts, the paywall rows, the verdict's facts.
+- D4 begun: the free plan counts what is charging (O37).
+- D4, notifications: O21, O22, O25, O26, S7 closed; O24 waits on a capability (6.7); O27 accepted.
+  687 tests, 0 failures. Next in D4: the widgets as one rebuild (S15, O28 to O30, O33 to O35, S6),
+  then Shortcuts (S16, O31, O32), the paywall rows (O17 to O20), the app-switcher cover (O41), a way
+  back for a cancelled subscription (S19), the verdict's facts (Stage F).
 - Told by the other session at 22:04 (it has stood down and changed nothing): sections 2, 3, 4, 6, 7
   and 10 of the engineering audit were never done and there is no finished overlooked-details
   report. Those areas have been scanned by nobody; they are owed before Stage G can be called done.
@@ -429,13 +432,13 @@ matters to a stranger: the customer round below scores "getting in" at 1.
 | O18 | low | A failed card (billing retry, grace period) is never mentioned | open |
 | O19 | low | Manage, refund and offer codes go through a web link, not Apple's sheets | open |
 | O20 | low | Two StoreKit test files ship inside the app | open |
-| O21 | medium | "Keep it" on an old reminder keeps whichever charge is next, not the one the reminder was about | open |
-| O22 | medium | Reminders are rebuilt only when the app opens: with twenty subscriptions the 60 slots last about three weeks | open |
+| O21 | medium | "Keep it" on an old reminder keeps whichever charge is next, not the one the reminder was about | closed 11-12: a reminder carries the day of its charge and "Keep it" keeps that charge, if it is still ahead; answered after the charge, it keeps nothing. `ReminderReachTests` ×4 |
+| O22 | medium | Reminders are rebuilt only when the app opens: with twenty subscriptions the 60 slots last about three weeks | closed 11-12, in two parts. When there are more reminders than iOS holds, every subscription keeps the day-before reminder for its next charge before any keeps the others (the soonest sixty used to win, and whatever renewed late in the month got none). And the plan ends with one notification asking to open Pausely, the morning after its last reminder or before the first one left out, so reminders never stop without a word. `ReminderReachTests` ×6. Not done: waking in the background to plan more. iOS runs that least for an app that isn't opened, which is the case it would be for, and it can't be seen working from here |
 | O23 | medium | A reminder tapped while signed out leaves a verdict waiting for whoever signs in next. With it: after sign-out the widgets, Spotlight, the reminders already on the Lock Screen and the Shortcuts all still showed the list | closed 11-11: signing out (or a session that has ended) empties the list from memory, the widgets and Spotlight and removes pending and delivered reminders, while the copy on the iPhone waits for the same person (`LocalUserData.hideWhileSignedOut`); a reminder tapped while signed out opens and records nothing. `LocalDataGuardTests` ×2 |
-| O24 | low | "Charges tomorrow" is an ordinary notification: in a Focus it can arrive after the charge | open |
-| O25 | low | "Reminders are on" is shown when banners are off or everything goes to the summary | open |
-| O26 | low | Badge permission is asked for and never used | open |
-| O27 | low | "Keep it" on the iPhone is unknown to the iPad | open |
+| O24 | low | "Charges tomorrow" is an ordinary notification: in a Focus it can arrive after the charge | open, for the owner (6.7): Time Sensitive delivery needs a capability switched on for the app's identifier in the developer account. With it on, it is one entitlement and one line for the two "tomorrow" reminders |
+| O25 | low | "Reminders are on" is shown when banners are off or everything goes to the summary | closed 11-12: the page says "on" only when a reminder would be shown somewhere and at once. Allowed with every place switched off reads "allowed but hidden"; held for the Scheduled Summary reads "can arrive late"; both say what to change and open iOS Settings. Five languages, with Apple's own names for those settings. `testAllowedIsNotTheSameAsSeen`. Not seen on a device in those two states |
+| O26 | low | Badge permission is asked for and never used | closed 11-12: no longer asked for |
+| O27 | low | "Keep it" on the iPhone is unknown to the iPad | accepted, and said: decisions live in the history, which stays on the device (Privacy & Security says so). Someone with two devices is asked on each. Sharing them needs a table on the server, which is a product decision |
 | O28 | medium | The app never tells widgets to reload: a change shows up to six hours late | open |
 | O29 | medium | Widget lines such as "in 3 days" are written as finished text when the app last ran | to verify |
 | O30 | high | Widget text is English only (same work as T89) | open |
@@ -461,7 +464,7 @@ matters to a stranger: the customer round below scores "getting in" at 1.
 | S4 | medium | Debug builds only: an empty saved list is filled with demo subscriptions, and the next sync uploads them to whichever real account is signed in | open |
 | S5 | low | The receipt-facts file is written "only while unlocked" and a failed read counts as empty, so a save after it writes over the facts (a rescan rebuilds them) | open |
 | S6 | low | A widget drawn before the first unlock reads nothing and shows the empty state until its next refresh (up to six hours for the trial widget) | open, with the widget work in D4 |
-| S7 | low | A reminder that fails to be scheduled is dropped without a trace | open |
+| S7 | low | A reminder that fails to be scheduled is dropped without a trace | closed 11-12: logged |
 | S8 | low | A catalog seed file for a backend the project does not use (39 KB of invented plans and descriptions) | closed 11-12: deleted |
 | S9 | medium | The privacy manifest declared two protected APIs the app does not use (boot time, and disk space under a reason code that does not exist), did not declare the settings it shares with its widgets (reason 1C8F.1), and listed a name and usage data as collected though both stay on the iPhone. The widgets had no manifest at all, though they read shared settings (Apple asks one of every bundle that uses these APIs) | closed 11-12: both manifests rewritten from what the code does; `PrivacyManifestTests` ×3 fails when a declared API is unused or a used one undeclared, and pins what is collected (address, account id, the list and its prices, when age was confirmed) |
 | S10 | low | iPad multi-window was switched on, though the app is one phone-width column and nothing was built or tried for two windows | closed 11-12: off |
@@ -536,6 +539,9 @@ two classes own StoreKit state; 7 Swift files over 700 lines; 17 hype names.
   `APPLE_PRIVATE_KEY`, `APPLE_CLIENT_ID`), and the word to deploy `apple-revoke` to the live project.
   Then one deletion of an Apple-made test account on a device, to see Apple's sheet and the entry
   leave Settings → Apple Account → Sign in with Apple.
+- Time Sensitive reminders (O24): in the developer account, switch on "Time Sensitive Notifications"
+  for the identifier com.pausely.app.Pausely. Then the entitlement and one line are added here, and
+  "charges tomorrow" gets through a Focus.
 - One check on a real iPhone for S1 (the simulator has no data protection): with a renewal reminder
   due, restart the phone and leave it locked; when the reminder arrives, press and hold it and tap
   "Keep it"; then unlock and open Pausely. It must open signed in, with the list as it was.

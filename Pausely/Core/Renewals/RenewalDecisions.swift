@@ -38,6 +38,21 @@ enum RenewalDecisions {
         return (next, false)
     }
 
+    /// The charge a reminder was about, from the day stamped on it ("2026-11-15"), if it is still
+    /// ahead: today or later, and one of this subscription's charges. A reminder answered a day late
+    /// is about a charge that has happened, and there is nothing left to keep.
+    static func charge(for sub: Subscription, onDay stamp: String, now: Date,
+                       calendar: Calendar = .billing) -> (date: Date, isTrialEnd: Bool)? {
+        guard sub.renewsAutomatically, stamp >= ReminderPlanner.dayStamp(now, calendar) else { return nil }
+        if sub.status == .trial, let end = sub.trialEndsAt, ReminderPlanner.dayStamp(end, calendar) == stamp {
+            return (calendar.noon(of: end), true)
+        }
+        guard let anchor = sub.nextBillingDate else { return nil }
+        let renewals = RenewalSchedule.upcomingRenewals(anchor: anchor, frequency: sub.billingFrequency,
+                                                        onOrAfter: now, count: 4, calendar: calendar)
+        return renewals.first { ReminderPlanner.dayStamp($0, calendar) == stamp }.map { ($0, false) }
+    }
+
     /// The decision waiting for this subscription: its next charge falls inside its reminder window
     /// (at least the day before) and the user hasn't kept it yet. "Remind me: Off" means never ask.
     static func pending(for sub: Subscription, kept: Set<String>, now: Date,

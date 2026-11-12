@@ -38,6 +38,8 @@ final class NotificationManager {
 
     /// What iOS currently allows. Refreshed on launch and whenever the app becomes active.
     private(set) var status: UNAuthorizationStatus = .notDetermined
+    /// Whether an allowed reminder would actually be seen, and on time.
+    private(set) var delivery: ReminderDelivery = .shown
 
     var isAuthorized: Bool { [.authorized, .provisional, .ephemeral].contains(status) }
 
@@ -46,13 +48,18 @@ final class NotificationManager {
     private init() {}
 
     func refreshStatus() async {
-        status = await center.notificationSettings().authorizationStatus
+        let settings = await center.notificationSettings()
+        status = settings.authorizationStatus
+        delivery = ReminderDelivery(banners: settings.alertSetting == .enabled,
+                                    lockScreen: settings.lockScreenSetting == .enabled,
+                                    notificationCenter: settings.notificationCenterSetting == .enabled,
+                                    inScheduledSummary: settings.scheduledDeliverySetting == .enabled)
     }
 
     /// Shows the system prompt (iOS only shows it once), then rebuilds reminders so they start now.
     @discardableResult
     func requestPermission() async -> Bool {
-        let granted = (try? await center.requestAuthorization(options: [.alert, .sound, .badge])) ?? false
+        let granted = (try? await center.requestAuthorization(options: [.alert, .sound])) ?? false
         await refreshStatus()
         ReminderActions.registerCategories(on: center)
         await ReminderScheduler.shared.reschedule(SubscriptionStore.shared.subscriptions)
@@ -63,6 +70,28 @@ final class NotificationManager {
     func openSystemSettings() {
         guard let url = URL(string: UIApplication.openNotificationSettingsURLString) else { return }
         UIApplication.shared.open(url)
+    }
+}
+
+/// "Allowed" is not "seen". iOS lets a person keep an app's notifications allowed while switching off
+/// every place they could appear, or hold them for a summary twice a day; a reminder about tomorrow's
+/// charge is then invisible or late, and the app must not say "Reminders are on".
+enum ReminderDelivery: Equatable {
+    /// Shown as it arrives, in at least one place.
+    case shown
+    /// Allowed, but banners, the Lock Screen and Notification Center are all off.
+    case hidden
+    /// Held for the Scheduled Summary, so it can arrive hours late.
+    case late
+
+    init(banners: Bool, lockScreen: Bool, notificationCenter: Bool, inScheduledSummary: Bool) {
+        if !banners && !lockScreen && !notificationCenter {
+            self = .hidden
+        } else if inScheduledSummary {
+            self = .late
+        } else {
+            self = .shown
+        }
     }
 }
 
@@ -86,7 +115,9 @@ final class NotificationDelegate: NSObject, UNUserNotificationCenterDelegate {
         switch response.actionIdentifier {
         case ReminderActions.keep:
             // Handled without opening the app: record the decision and drop the remaining reminders.
-            if let subscriptionId { await VerdictCenter.shared.keep(subscriptionId: subscriptionId) }
+            if let subscriptionId {
+                await VerdictCenter.shared.keep(subscriptionId: subscriptionId, renewalDay: info["renewal_date"] as? String)
+            }
         case UNNotificationDismissActionIdentifier:
             break
         case _ where (info["type"] as? String)?.hasPrefix("pause_plan") == true:
