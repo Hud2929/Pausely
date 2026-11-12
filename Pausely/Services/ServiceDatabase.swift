@@ -119,6 +119,46 @@ enum ServiceDatabase {
             averageMonthlyPrice: 6.99
         ),
         SubscriptionService(
+            id: "appleone",
+            name: "Apple One",
+            category: .streaming,
+            domain: "apple.com",
+            cancelURL: "https://apps.apple.com/account/subscriptions",
+            pauseURL: nil,
+            supportURL: "https://support.apple.com/billing",
+            contacts: [.phone("1-800-275-2273", label: "Apple Support", hours: "9AM-9PM")],
+            canPause: false,
+            difficulty: .easy,
+            instructions: [
+                CancellationStep(order: 1, title: "Settings", description: "On iPhone/iPad, go to Settings > [Your Name] > Subscriptions"),
+                CancellationStep(order: 2, title: "Find Apple One", description: "Select Apple One from the list"),
+                CancellationStep(order: 3, title: "Cancel", description: "Tap 'Cancel Apple One'", actionURL: "https://apps.apple.com/account/subscriptions", isCritical: true),
+                CancellationStep(order: 4, title: "Confirm", description: "Confirm, or choose the services you want to keep paying for on their own")
+            ],
+            aliases: ["apple one premier", "appleone"],
+            averageMonthlyPrice: 19.95
+        ),
+        SubscriptionService(
+            id: "applenewsplus",
+            name: "Apple News+",
+            category: .news,
+            domain: "apple.com",
+            cancelURL: "https://apps.apple.com/account/subscriptions",
+            pauseURL: nil,
+            supportURL: "https://support.apple.com/billing",
+            contacts: [.phone("1-800-275-2273", label: "Apple Support", hours: "9AM-9PM")],
+            canPause: false,
+            difficulty: .easy,
+            instructions: [
+                CancellationStep(order: 1, title: "Settings", description: "On iPhone/iPad, go to Settings > [Your Name] > Subscriptions"),
+                CancellationStep(order: 2, title: "Find Apple News+", description: "Select Apple News+ from the list"),
+                CancellationStep(order: 3, title: "Cancel", description: "Tap 'Cancel Subscription'", actionURL: "https://apps.apple.com/account/subscriptions", isCritical: true),
+                CancellationStep(order: 4, title: "Confirm", description: "Confirm the cancellation")
+            ],
+            aliases: ["apple news", "apple news plus"],
+            averageMonthlyPrice: 12.99
+        ),
+        SubscriptionService(
             id: "amazonprimevideo",
             name: "Amazon Prime Video",
             category: .streaming,
@@ -158,7 +198,7 @@ enum ServiceDatabase {
                 CancellationStep(order: 3, title: "Account", description: "Select 'Account'"),
                 CancellationStep(order: 4, title: "Cancel", description: "Click 'Cancel subscription'", actionURL: "https://www.paramountplus.com/account/subscription/", isCritical: true)
             ],
-            aliases: ["paramount plus", "paramount+", "cbs all access"],
+            aliases: ["paramount plus", "paramount+", "cbs all access", "paramount+ with showtime"],
             averageMonthlyPrice: 5.99
         ),
         SubscriptionService(
@@ -282,7 +322,7 @@ enum ServiceDatabase {
                 CancellationStep(order: 4, title: "Manage", description: "Click 'Manage Membership'", actionURL: "https://www.youtube.com/paid_memberships", isCritical: true),
                 CancellationStep(order: 5, title: "Cancel", description: "Select 'Deactivate' next to Premium")
             ],
-            aliases: ["youtube red", "yt premium", "youtube music premium"],
+            aliases: ["youtube red", "yt premium"],
             averageMonthlyPrice: 13.99
         ),
         SubscriptionService(
@@ -385,7 +425,7 @@ enum ServiceDatabase {
                 CancellationStep(order: 3, title: "Cancel", description: "Click 'Cancel Subscription'", actionURL: "https://www.sling.com/account", isCritical: true),
                 CancellationStep(order: 4, title: "Confirm", description: "Follow prompts to confirm cancellation")
             ],
-            aliases: ["sling", "sling television"],
+            aliases: ["sling", "sling television", "sling tv orange", "sling tv blue", "sling orange", "sling blue", "sling orange & blue"],
             averageMonthlyPrice: 40.00
         ),
         SubscriptionService(
@@ -783,7 +823,7 @@ enum ServiceDatabase {
                 CancellationStep(order: 3, title: "Billing", description: "Click the Billing tab", actionURL: "https://www.notion.so/settings/billing", isCritical: true),
                 CancellationStep(order: 4, title: "Cancel", description: "Click 'Cancel Subscription'")
             ],
-            aliases: ["notion.so", "notion workspace"],
+            aliases: ["notion.so", "notion workspace", "notion team"],
             averageMonthlyPrice: 10.00
         ),
         SubscriptionService(
@@ -863,7 +903,7 @@ enum ServiceDatabase {
                 CancellationStep(order: 3, title: "Subscriptions", description: "Click 'More' next to your subscription", actionURL: "https://admin.google.com/AC_BillingAccounts", isCritical: true),
                 CancellationStep(order: 4, title: "Cancel", description: "Select 'Cancel Subscription'")
             ],
-            aliases: ["g suite", "google apps", "workspace"],
+            aliases: ["g suite", "google apps", "workspace", "google workspace business"],
             averageMonthlyPrice: 6.00
         ),
         SubscriptionService(
@@ -888,7 +928,7 @@ enum ServiceDatabase {
                 CancellationStep(order: 4, title: "Continue", description: "Continue through any retention offers"),
                 CancellationStep(order: 5, title: "Confirm", description: "Select reason and confirm cancellation")
             ],
-            aliases: ["adobe", "creative cloud", "adobe cc", "photoshop subscription"],
+            aliases: ["adobe", "creative cloud", "adobe cc", "photoshop subscription", "adobe creative cloud all apps", "adobe photoshop", "adobe illustrator", "adobe premiere pro", "adobe after effects", "adobe audition", "adobe photography plan", "adobe firefly", "adobe stock"],
             averageMonthlyPrice: 54.99
         ),
         SubscriptionService(
@@ -1028,7 +1068,7 @@ enum ServiceDatabase {
                 CancellationStep(order: 3, title: "Billing", description: "Click 'Billing'", actionURL: "https://app.clickup.com/settings/billing", isCritical: true),
                 CancellationStep(order: 4, title: "Cancel", description: "Click 'Cancel Subscription'")
             ],
-            aliases: ["click up", "clickup unlimited"],
+            aliases: ["click up", "clickup unlimited", "clickup business"],
             averageMonthlyPrice: 7.00
         ),
         SubscriptionService(
@@ -1401,7 +1441,7 @@ extension ServiceDatabase {
                 CancellationStep(order: 2, title: "Subscription", description: "Click on your subscription"),
                 CancellationStep(order: 3, title: "Cancel", description: "Click 'Cancel subscription'", actionURL: "https://account.surfshark.com/dashboard", isCritical: true)
             ],
-            aliases: ["surf shark", "surfshark vpn"],
+            aliases: ["surf shark", "surfshark vpn", "surfshark one"],
             averageMonthlyPrice: 12.95
         ),
         SubscriptionService(
@@ -1459,7 +1499,7 @@ extension ServiceDatabase {
                 CancellationStep(order: 2, title: "Subscription", description: "Go to Subscription"),
                 CancellationStep(order: 3, title: "Cancel", description: "Click 'Cancel Subscription'", actionURL: "https://account.ipvanish.com/dashboard.php", isCritical: true)
             ],
-            aliases: ["ip vanish"],
+            aliases: ["ip vanish", "ipvanish vpn"],
             averageMonthlyPrice: 10.99
         ),
         SubscriptionService(
@@ -1478,7 +1518,7 @@ extension ServiceDatabase {
                 CancellationStep(order: 2, title: "Billing", description: "Go to Billing"),
                 CancellationStep(order: 3, title: "Cancel", description: "Click 'Cancel Subscription'", actionURL: "https://my.1password.com/billing", isCritical: true)
             ],
-            aliases: ["1password", "one password"],
+            aliases: ["1password", "one password", "1password teams"],
             averageMonthlyPrice: 2.99
         ),
         SubscriptionService(
@@ -1537,7 +1577,7 @@ extension ServiceDatabase {
                 CancellationStep(order: 3, title: "Subscription", description: "Click 'Subscription'", actionURL: "https://app.dashlane.com/account/subscription", isCritical: true),
                 CancellationStep(order: 4, title: "Cancel", description: "Click 'Cancel Subscription'")
             ],
-            aliases: ["dashlane premium"],
+            aliases: ["dashlane premium", "dashlane friends & family"],
             averageMonthlyPrice: 3.33
         ),
         SubscriptionService(
@@ -1614,7 +1654,7 @@ extension ServiceDatabase {
                 CancellationStep(order: 3, title: "Details", description: "Click license details"),
                 CancellationStep(order: 4, title: "Cancel", description: "Disable Auto-Renewal", actionURL: "https://my.kaspersky.com/mylicenses", isCritical: true)
             ],
-            aliases: ["kaspersky antivirus", "kaspersky security"],
+            aliases: ["kaspersky antivirus", "kaspersky security", "kaspersky total security"],
             averageMonthlyPrice: 8.33
         ),
         SubscriptionService(
@@ -1633,7 +1673,7 @@ extension ServiceDatabase {
                 CancellationStep(order: 2, title: "Subscriptions", description: "Go to Subscriptions"),
                 CancellationStep(order: 3, title: "Cancel", description: "Click 'Unsubscribe'", actionURL: "https://id.avast.com/account/resume", isCritical: true)
             ],
-            aliases: ["avast antivirus", "avast premium"],
+            aliases: ["avast antivirus", "avast premium", "avast premium security"],
             averageMonthlyPrice: 4.19
         ),
         SubscriptionService(
@@ -1739,7 +1779,7 @@ extension ServiceDatabase {
                 CancellationStep(order: 2, title: "Xbox", description: "Find Xbox Game Pass"),
                 CancellationStep(order: 3, title: "Manage", description: "Click 'Manage' or 'Cancel'", actionURL: "https://account.microsoft.com/services", isCritical: true)
             ],
-            aliases: ["game pass", "xbox pass", "xgp", "gamepass"],
+            aliases: ["game pass", "xbox pass", "xgp", "gamepass", "pc game pass"],
             averageMonthlyPrice: 14.99
         ),
         SubscriptionService(
@@ -1977,7 +2017,7 @@ extension ServiceDatabase {
                 CancellationStep(order: 4, title: "Subscription", description: "Click 'Subscription'", actionURL: "https://members.onepeloton.com/settings/subscription", isCritical: true),
                 CancellationStep(order: 5, title: "Cancel", description: "Click 'Cancel Subscription'")
             ],
-            aliases: ["peloton app", "peloton digital", "peloton membership"],
+            aliases: ["peloton app", "peloton digital", "peloton membership", "peloton all-access", "peloton all-access membership"],
             averageMonthlyPrice: 12.99
         ),
         SubscriptionService(
@@ -2096,7 +2136,7 @@ extension ServiceDatabase {
                 CancellationStep(order: 3, title: "Subscription", description: "Click 'Manage Subscription'"),
                 CancellationStep(order: 4, title: "Cancel", description: "Click 'Cancel Subscription'", actionURL: "https://www.nike.com/membership/settings", isCritical: true)
             ],
-            aliases: ["nike training", "nike app", "ntc"],
+            aliases: ["nike training", "nike app", "ntc", "nike training club"],
             averageMonthlyPrice: 14.99
         ),
         SubscriptionService(
@@ -2233,7 +2273,7 @@ extension ServiceDatabase {
                 CancellationStep(order: 2, title: "Settings", description: "Go to Settings"),
                 CancellationStep(order: 3, title: "Cancel", description: "Click 'Cancel Subscription'", actionURL: "https://www.freeletics.com/settings", isCritical: true)
             ],
-            aliases: ["freeletics training"],
+            aliases: ["freeletics training", "freeletics training coach", "freeletics coach"],
             averageMonthlyPrice: 11.99
         )
     ]
@@ -3213,7 +3253,7 @@ extension ServiceDatabase {
                 CancellationStep(order: 3, title: "Subscription", description: "Click 'Subscription'"),
                 CancellationStep(order: 4, title: "Cancel", description: "Click 'Cancel Subscription'", actionURL: "https://app.ynab.com/settings", isCritical: true)
             ],
-            aliases: ["you need a budget", "ynab budget"],
+            aliases: ["you need a budget", "ynab budget", "ynab (you need a budget)"],
             averageMonthlyPrice: 14.99
         ),
         SubscriptionService(
@@ -3232,7 +3272,7 @@ extension ServiceDatabase {
                 CancellationStep(order: 2, title: "Settings", description: "Go to Settings"),
                 CancellationStep(order: 3, title: "Cancel", description: "Click 'Cancel'", actionURL: "https://home.empower.com/settings", isCritical: true)
             ],
-            aliases: ["personal capital", "empower"],
+            aliases: ["personal capital", "empower", "empower personal dashboard"],
             averageMonthlyPrice: 8.99
         ),
         SubscriptionService(
@@ -3253,7 +3293,7 @@ extension ServiceDatabase {
                 CancellationStep(order: 4, title: "Billing", description: "Click 'Billing & Subscription'"),
                 CancellationStep(order: 5, title: "Cancel", description: "Click 'Cancel'", actionURL: "https://qbo.intuit.com/app/accountsettings", isCritical: true)
             ],
-            aliases: ["quickbooks online", "qbo"],
+            aliases: ["quickbooks online", "qbo", "quickbooks simple start"],
             averageMonthlyPrice: 30.00
         ),
         SubscriptionService(
@@ -3272,7 +3312,7 @@ extension ServiceDatabase {
                 CancellationStep(order: 2, title: "Account", description: "Go to Account"),
                 CancellationStep(order: 3, title: "Cancel", description: "Click 'Cancel'", actionURL: "https://myturbotax.intuit.com", isCritical: true)
             ],
-            aliases: ["turbo tax"],
+            aliases: ["turbo tax", "turbotax live"],
             averageMonthlyPrice: 29.99
         ),
         SubscriptionService(
@@ -3310,7 +3350,7 @@ extension ServiceDatabase {
                 CancellationStep(order: 2, title: "Account", description: "Go to Account"),
                 CancellationStep(order: 3, title: "Cancel", description: "Click 'Cancel' - may require call", actionURL: "https://usa.experian.com/mycredit/report", isCritical: true)
             ],
-            aliases: ["experian credit", "experianworks"],
+            aliases: ["experian credit", "experianworks", "experian creditworks"],
             averageMonthlyPrice: 24.99
         ),
         SubscriptionService(
@@ -3370,96 +3410,35 @@ class SubscriptionActionManager: ObservableObject {
         allServices.first { $0.id == id }
     }
     
-    /// Fuzzy matching to find the best service match for a subscription name
+    private static let matcher = ServiceMatcher(services: ServiceDatabase.services)
+
+    /// The service a subscription with this name belongs to, or nil. Exact names only (see `ServiceMatcher`).
     func findService(for subscriptionName: String) -> SubscriptionService? {
-        let normalizedName = subscriptionName.lowercased().trimmingCharacters(in: .whitespacesAndNewlines)
-        
-        // 1. Try exact ID match
-        if let service = service(withId: normalizedName.replacingOccurrences(of: " ", with: "")) {
-            return service
-        }
-        
-        // 2. Try exact name match
-        if let service = allServices.first(where: { $0.name.lowercased() == normalizedName }) {
-            return service
-        }
-        
-        // 3. Try alias match
-        if let service = allServices.first(where: { 
-            $0.aliases.contains(where: { $0.lowercased() == normalizedName })
-        }) {
-            return service
-        }
-        
-        // 4. Try contains match (requires match to be at least 3 characters)
-        if let service = allServices.first(where: {
-            let serviceName = $0.name.lowercased()
-            return (normalizedName.contains(serviceName) && serviceName.count >= 3) ||
-                   (serviceName.contains(normalizedName) && normalizedName.count >= 3)
-        }) {
-            return service
-        }
-
-        // 5. Try partial word matching (stricter: min 3 chars per word, need 2+ matches)
-        let nameWords = normalizedName.split(separator: " ")
-        var bestMatch: SubscriptionService?
-        var bestScore = 0
-
-        for service in allServices {
-            let serviceWords = service.name.lowercased().split(separator: " ")
-            let aliasWords = service.aliases.flatMap { $0.lowercased().split(separator: " ") }
-            let allWords = Set(serviceWords + aliasWords)
-
-            let matchCount = nameWords.filter { word in
-                guard word.count >= 3 else { return false }
-                return allWords.contains(where: {
-                    let w = $0
-                    guard w.count >= 3 else { return false }
-                    return w.hasPrefix(word) || word.hasPrefix(w)
-                })
-            }.count
-
-            if matchCount > bestScore {
-                bestScore = matchCount
-                bestMatch = service
-            }
-        }
-
-        // Require at least 2 matching words, or if single-word query, exact prefix match
-        if bestScore >= 2 {
-            return bestMatch
-        }
-
-        // For single-word queries: only match if the word is a strong prefix (≥4 chars)
-        if nameWords.count == 1, let word = nameWords.first, word.count >= 4, bestScore >= 1 {
-            return bestMatch
-        }
-
-        return nil
+        Self.matcher.service(for: subscriptionName)
     }
-    
-    /// Alias for findService to maintain backward compatibility
-    func getService(for subscriptionName: String) -> SubscriptionService? {
-        return findService(for: subscriptionName)
-    }
-    
-    
-    // MARK: - URL Generation
-    
-    /// Generate the cancel URL for a subscription
-    func generateCancelURL(for subscription: Subscription) -> URL? {
-        if let service = findService(for: subscription.name) {
-            return URL(string: service.cancelURL)
+
+    // MARK: - Cancel help
+
+    /// What Pausely can offer someone cancelling this subscription, most exact first: a service it
+    /// knows (steps and its cancellation page), else the link the catalog holds for exactly this name
+    /// (the service's own site), else a web search that is labelled as one.
+    func cancelHelp(for subscription: Subscription) -> CancelHelp {
+        if let service = findService(for: subscription.name), let page = URL(string: service.cancelURL) {
+            return CancelHelp(kind: .cancellationPage, link: page, service: service)
         }
-        
-        // Fallback to generic search
-        let searchQuery = "cancel \(subscription.name) subscription"
-        let encodedQuery = searchQuery.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? ""
-        return URL(string: "https://www.google.com/search?q=\(encodedQuery)")
+        if let listed = SubscriptionCatalogService.shared.entry(named: subscription.name)?.cancellationURL,
+           let site = URL(string: listed), site.scheme == "https", site.host != nil {
+            return CancelHelp(kind: .website, link: site, service: nil)
+        }
+        return CancelHelp(kind: .search, link: Self.searchURL(for: subscription.name), service: nil)
     }
-    
-    
-    
+
+    static func searchURL(for name: String) -> URL? {
+        var search = URLComponents(string: "https://www.google.com/search")
+        search?.queryItems = [URLQueryItem(name: "q", value: "cancel \(name) subscription")]
+        return search?.url
+    }
+
     /// Get support contact information
     func getSupportContacts(for subscription: Subscription) -> [SupportContact] {
         guard let service = findService(for: subscription.name) else {

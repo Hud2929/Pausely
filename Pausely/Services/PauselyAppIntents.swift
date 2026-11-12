@@ -151,7 +151,7 @@ struct PauseSubscriptionIntent: AppIntent {
         let reminderDate = Calendar.current.date(byAdding: .day, value: 7, to: Date()) ?? Date()
         await store.pauseSubscription(id: sub.id, until: reminderDate)
 
-        let pauseURL = SubscriptionActionManager.shared.getService(for: sub.name)?.pauseURL
+        let pauseURL = SubscriptionActionManager.shared.findService(for: sub.name)?.pauseURL
         NotificationManager.shared.schedulePauseReminder(
             for: sub,
             reminderDate: reminderDate,

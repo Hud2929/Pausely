@@ -2,252 +2,41 @@
 //  SubscriptionCatalogService.swift
 //  Pausely
 //
-//  Remote catalog fetching with local cache fallback
+//  The built-in catalog of services people subscribe to, and lookups into it.
 //
 
 import Foundation
-import os.log
-
-// MARK: - Catalog Subscription (for tracking)
 
 @MainActor
 final class SubscriptionCatalogService: ObservableObject {
     static let shared = SubscriptionCatalogService()
 
-    @Published private(set) var catalog: [CatalogEntry] = []
-    @Published private(set) var isLoading = false
-    @Published private(set) var lastFetchDate: Date?
-    @Published private(set) var isFromCache = false
+    /// Every service in the catalog, one entry per name. Built in: there from the first moment,
+    /// without a network.
+    let catalog: [CatalogEntry]
+    private let entryByName: [String: CatalogEntry]
 
-    private let cacheKey = "subscription_catalog_cache"
-    private let cacheDateKey = "subscription_catalog_date"
-
-    // MARK: - Dictionary Indexes (O(1) lookups for 500+ entries)
-    private var entryByBundleId: [String: CatalogEntry] = [:]
-    private var entryByName: [String: CatalogEntry] = [:]
-
-    private init() {}
-
-    /// Set catalog and rebuild lookup indexes
-    private func setCatalog(_ entries: [CatalogEntry]) {
+    private init() {
         // One entry per service name: the sources overlap ("ChatGPT Plus" appeared under two categories).
         var seen = Set<String>()
-        catalog = entries.filter { seen.insert($0.name.trimmingCharacters(in: .whitespaces).lowercased()).inserted }
-        rebuildIndexes()
+        let entries = Self.builtIn().filter { seen.insert(Self.key($0.name)).inserted }
+        catalog = entries
+        entryByName = Dictionary(entries.map { (Self.key($0.name), $0) }, uniquingKeysWith: { first, _ in first })
+        CatalogValidator.validate(entries)
     }
 
-    private func rebuildIndexes() {
-        // Build indexes safely, handling duplicates by keeping the last occurrence
-        var bundleDict: [String: CatalogEntry] = [:]
-        var nameDict: [String: CatalogEntry] = [:]
-        for entry in catalog {
-            bundleDict[entry.bundleId] = entry
-            nameDict[entry.name.lowercased()] = entry
-        }
-        entryByBundleId = bundleDict
-        entryByName = nameDict
+    private static func key(_ name: String) -> String {
+        name.trimmingCharacters(in: .whitespaces).lowercased()
     }
-
-    // MARK: - Subscriptions (for tracking compatibility)
-
-    // MARK: - Load Catalog
-
-    func loadCatalog() async {
-        isLoading = true
-        defer { isLoading = false }
-
-        // Always start with hardcoded catalog as the base
-        var merged = buildHardcodedCatalog()
-
-        // 1. Try to supplement with remote Teenybase API
-        if let remote = await fetchFromRemote(), !remote.isEmpty {
-            merged = mergeCatalogs(base: merged, updates: remote)
-            lastFetchDate = Date()
-            isFromCache = false
-            cacheLocally(merged)
-        }
-        // 2. Fall back to local cache only if remote failed AND hardcoded is empty
-        else if merged.isEmpty, let cached = loadFromCache() {
-            merged = cached
-            isFromCache = true
-            lastFetchDate = UserDefaults.standard.object(forKey: cacheDateKey) as? Date
-        }
-
-        setCatalog(merged)
-        CatalogValidator.validate(merged)
-    }
-
-    /// Merge remote updates into the hardcoded base catalog.
-    /// Remote entries override hardcoded ones by bundleId; new entries are appended.
-    private func mergeCatalogs(base: [CatalogEntry], updates: [CatalogEntry]) -> [CatalogEntry] {
-        var dict = Dictionary(uniqueKeysWithValues: base.map { ($0.bundleId, $0) })
-        for entry in updates {
-            dict[entry.bundleId] = entry
-        }
-        return Array(dict.values).sorted { $0.name < $1.name }
-    }
-
-    // MARK: - Remote Fetch
-
-    private func fetchFromRemote() async -> [CatalogEntry]? {
-        // Get Teenybase URL and token from environment/backend
-        guard let baseURL = getTeenybaseURL() else { return nil }
-
-        let urlString = "\(baseURL)/api/v1/table/subscription_catalog/list"
-        guard let url = URL(string: urlString) else { return nil }
-
-        guard let token = getAdminToken() else { return nil }
-
-        var request = URLRequest(url: url)
-        request.httpMethod = "POST"
-        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
-        request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
-
-        let body: [String: Any] = [
-            "limit": 500,
-            "order": "name"
-        ]
-        request.httpBody = try? JSONSerialization.data(withJSONObject: body)
-
-        do {
-            let (data, response) = try await URLSession.shared.data(for: request)
-
-            guard let httpResponse = response as? HTTPURLResponse,
-                  httpResponse.statusCode == 200 else {
-                #if DEBUG
-                os_log("CatalogService: Remote fetch failed with status %d", log: .default, type: .error, (response as? HTTPURLResponse)?.statusCode ?? 0)
-                #endif
-                return nil
-            }
-
-            // Parse Teenybase response
-            if let json = try JSONSerialization.jsonObject(with: data) as? [String: Any],
-               let records = json["records"] as? [[String: Any]] {
-                return try parseCatalogRecords(records)
-            }
-
-            return nil
-        } catch {
-            #if DEBUG
-            os_log("CatalogService: Remote fetch error - %{public}@", log: .default, type: .error, error.localizedDescription)
-            #endif
-            return nil
-        }
-    }
-
-    private func parseCatalogRecords(_ records: [[String: Any]]) throws -> [CatalogEntry] {
-        var entries: [CatalogEntry] = []
-
-        for record in records {
-            guard let id = record["id"] as? String,
-                  let bundleId = record["bundle_id"] as? String,
-                  let name = record["name"] as? String,
-                  let categoryStr = record["category"] as? String,
-                  let description = record["description"] as? String,
-                  let supportedTiersData = record["supported_tiers"] as? [[String: Any]] else {
-                continue
-            }
-
-            let category = SubscriptionCategory(rawValue: categoryStr) ?? .other
-            let uuid = UUID(uuidString: id) ?? UUID()
-
-            // Parse supported tiers
-            var tierList: [TierPricing] = []
-            for tierData in supportedTiersData {
-                guard let tierStr = tierData["tier"] as? String,
-                      let regionStr = tierData["region"] as? String,
-                      let monthlyUSD = tierData["monthlyPriceUSD"] as? Double else {
-                    continue
-                }
-
-                let tier = PricingTier(rawValue: tierStr) ?? .individual
-                let region = Region(rawValue: regionStr) ?? .global
-                let annualUSD = tierData["annualPriceUSD"] as? Double
-                let bestValue = tierData["isBestValue"] as? Bool ?? false
-                let currencyCode = tierData["currencyCode"] as? String
-
-                tierList.append(TierPricing(
-                    tier: tier,
-                    region: region,
-                    monthlyPriceUSD: monthlyUSD,
-                    annualPriceUSD: annualUSD,
-                    isBestValue: bestValue,
-                    currencyCode: currencyCode
-                ))
-            }
-
-            let entry = CatalogEntry(
-                id: uuid,
-                bundleId: bundleId,
-                name: name,
-                category: category,
-                description: description,
-                iconName: record["icon_name"] as? String ?? "square.grid.2x2",
-                appStoreProductId: record["app_store_product_id"] as? String,
-                websiteURL: record["website_url"] as? String ?? "https://\(bundleId)",
-                cancellationURL: record["cancellation_url"] as? String,
-                trialDays: record["trial_days"] as? Int ?? 0,
-                canPause: record["can_pause"] as? Bool ?? true,
-                supportedTiers: tierList,
-                lastUpdated: Date()
-            )
-            entries.append(entry)
-        }
-
-        return entries
-    }
-
-    // MARK: - Cache
-
-    private func cacheLocally(_ entries: [CatalogEntry]) {
-        if let encoded = try? JSONEncoder().encode(entries) {
-            UserDefaults.standard.set(encoded, forKey: cacheKey)
-            UserDefaults.standard.set(Date(), forKey: cacheDateKey)
-        }
-    }
-
-    private func loadFromCache() -> [CatalogEntry]? {
-        guard let data = UserDefaults.standard.data(forKey: cacheKey),
-              let entries = try? JSONDecoder().decode([CatalogEntry].self, from: data) else {
-            return nil
-        }
-        return entries
-    }
-
-    // MARK: - Search
 
     /// The catalog entry with this exact name (case-insensitive).
     func entry(named name: String) -> CatalogEntry? {
-        entryByName[name.trimmingCharacters(in: .whitespaces).lowercased()]
+        entryByName[Self.key(name)]
     }
 
-    // MARK: - Helpers
+    // MARK: - The built-in catalog
 
-    private func getTeenybaseURL() -> String? {
-        // Try environment variable first
-        if let url = ProcessInfo.processInfo.environment["TEENYBASE_URL"] {
-            return url
-        }
-        // Default to local dev server
-        return "http://localhost:8787"
-    }
-
-    private func getAdminToken() -> String? {
-        // Read from backend .dev.vars
-        let devVarsPath = "backend/.dev.vars"
-        guard let content = try? String(contentsOfFile: devVarsPath, encoding: .utf8) else { return nil }
-
-        for line in content.components(separatedBy: .newlines) {
-            if line.hasPrefix("ADMIN_SERVICE_TOKEN=") {
-                return String(line.dropFirst("ADMIN_SERVICE_TOKEN=".count))
-            }
-        }
-        return nil
-    }
-
-    // MARK: - Hardcoded Fallback (50 popular subscriptions)
-
-    private func buildHardcodedCatalog() -> [CatalogEntry] {
+    private static func builtIn() -> [CatalogEntry] {
         var entries: [CatalogEntry] = []
 
         // ENTERTAINMENT
@@ -316,7 +105,7 @@ final class SubscriptionCatalogService: ObservableObject {
         return entries
     }
 
-    private func buildEntertainmentCatalog() -> [CatalogEntry] {
+    private static func buildEntertainmentCatalog() -> [CatalogEntry] {
         [
             makeEntry(bundleId: "com.netflix.Netflix", name: "Netflix", category: .entertainment,
                       description: "Stream thousands of TV shows, movies, and originals.",
@@ -379,6 +168,13 @@ final class SubscriptionCatalogService: ObservableObject {
                       cancellationURL: "https://apps.apple.com/account/subscriptions",
                       tiers: [
                           TierPricing(tier: .individual, region: .us, monthlyPriceUSD: 9.99, annualPriceUSD: 99.99, isBestValue: false),
+                      ]),
+            makeEntry(bundleId: "com.apple.one", name: "Apple One", category: .entertainment,
+                      description: "Apple Music, Apple TV+, Apple Arcade and iCloud+ in one plan.",
+                      cancellationURL: "https://apps.apple.com/account/subscriptions",
+                      tiers: [
+                          TierPricing(tier: .individual, region: .us, monthlyPriceUSD: 19.95, annualPriceUSD: nil, isBestValue: false),
+                          TierPricing(tier: .family, region: .us, monthlyPriceUSD: 25.95, annualPriceUSD: nil, isBestValue: true),
                       ]),
             makeEntry(bundleId: "com.peacocktv.peacock", name: "Peacock", category: .entertainment,
                       description: "Stream NBCUniversal content, sports, and news.",
@@ -529,7 +325,7 @@ final class SubscriptionCatalogService: ObservableObject {
         ]
     }
 
-    private func buildMusicCatalog() -> [CatalogEntry] {
+    private static func buildMusicCatalog() -> [CatalogEntry] {
         [
             makeEntry(bundleId: "com.spotify.client", name: "Spotify", category: .music,
                       description: "Stream millions of songs and podcasts ad-free.",
@@ -610,7 +406,7 @@ final class SubscriptionCatalogService: ObservableObject {
         ]
     }
 
-    private func buildProductivityCatalog() -> [CatalogEntry] {
+    private static func buildProductivityCatalog() -> [CatalogEntry] {
         [
             makeEntry(bundleId: "com.microsoft.Office", name: "Microsoft 365", category: .productivity,
                       description: "Word, Excel, PowerPoint, and more.",
@@ -744,7 +540,7 @@ final class SubscriptionCatalogService: ObservableObject {
         ]
     }
 
-    private func buildCloudStorageCatalog() -> [CatalogEntry] {
+    private static func buildCloudStorageCatalog() -> [CatalogEntry] {
         [
             makeEntry(bundleId: "com.apple.CloudServices", name: "iCloud+", category: .cloudStorage,
                       description: "Apple's cloud storage with Photos, Drive, and more.",
@@ -787,7 +583,7 @@ final class SubscriptionCatalogService: ObservableObject {
         ]
     }
 
-    private func buildHealthCatalog() -> [CatalogEntry] {
+    private static func buildHealthCatalog() -> [CatalogEntry] {
         [
             makeEntry(bundleId: "com.peloton.app", name: "Peloton", category: .healthFitness,
                       description: "Fitness classes, workouts, and training.",
@@ -846,7 +642,7 @@ final class SubscriptionCatalogService: ObservableObject {
         ]
     }
 
-    private func buildEducationCatalog() -> [CatalogEntry] {
+    private static func buildEducationCatalog() -> [CatalogEntry] {
         [
             makeEntry(bundleId: "com.duolingo.Duolingo", name: "Duolingo", category: .education,
                       description: "Language learning with gamified lessons.",
@@ -905,7 +701,7 @@ final class SubscriptionCatalogService: ObservableObject {
         ]
     }
 
-    private func buildNewsCatalog() -> [CatalogEntry] {
+    private static func buildNewsCatalog() -> [CatalogEntry] {
         [
             makeEntry(bundleId: "com.nytimes NYT", name: "New York Times", category: .news,
                       description: "News, investigations, and opinion.",
@@ -964,7 +760,7 @@ final class SubscriptionCatalogService: ObservableObject {
     }
 
     // MARK: - Utilities
-    private func buildUtilitiesCatalog() -> [CatalogEntry] {
+    private static func buildUtilitiesCatalog() -> [CatalogEntry] {
         [
             makeEntry(bundleId: "com.nordvpn.NordVPN", name: "NordVPN", category: .utilities,
                       description: "Secure VPN for privacy and security.",
@@ -1083,7 +879,7 @@ final class SubscriptionCatalogService: ObservableObject {
     }
 
     // MARK: - Social
-    private func buildSocialCatalog() -> [CatalogEntry] {
+    private static func buildSocialCatalog() -> [CatalogEntry] {
         [
             makeEntry(bundleId: "com.tinder.Tinder", name: "Tinder+", category: .social,
                       description: "Dating app with unlimited likes and more.",
@@ -1116,7 +912,7 @@ final class SubscriptionCatalogService: ObservableObject {
     }
 
     // MARK: - Shopping
-    private func buildShoppingCatalog() -> [CatalogEntry] {
+    private static func buildShoppingCatalog() -> [CatalogEntry] {
         [
             makeEntry(bundleId: "com.amazon.aiv.AIVApp", name: "Amazon Prime", category: .shopping,
                       description: "Free shipping, streaming, and more.",
@@ -1165,7 +961,7 @@ final class SubscriptionCatalogService: ObservableObject {
     }
 
     // MARK: - Food
-    private func buildFoodCatalog() -> [CatalogEntry] {
+    private static func buildFoodCatalog() -> [CatalogEntry] {
         [
             makeEntry(bundleId: "com.doordash.DoorDash", name: "DashPass", category: .food,
                       description: "Free delivery and reduced fees on orders.",
@@ -1215,7 +1011,7 @@ final class SubscriptionCatalogService: ObservableObject {
     }
 
     // MARK: - Sports
-    private func buildSportsCatalog() -> [CatalogEntry] {
+    private static func buildSportsCatalog() -> [CatalogEntry] {
         [
             makeEntry(bundleId: "com.espn.espn-plus", name: "ESPN+", category: .sports,
                       description: "Live sports, original shows, and exclusives.",
@@ -1300,7 +1096,7 @@ final class SubscriptionCatalogService: ObservableObject {
     }
 
     // MARK: - Finance
-    private func buildFinanceCatalog() -> [CatalogEntry] {
+    private static func buildFinanceCatalog() -> [CatalogEntry] {
         [
             makeEntry(bundleId: "com.ynab.YNAB", name: "YNAB", category: .finance,
                       description: "Budgeting app for financial peace of mind.",
@@ -1340,7 +1136,7 @@ final class SubscriptionCatalogService: ObservableObject {
 
     // MARK: - Helper
 
-    private func buildPhoneCatalog() -> [CatalogEntry] {
+    private static func buildPhoneCatalog() -> [CatalogEntry] {
         [
             makeEntry(bundleId: "com.verizon.vzw", name: "Verizon", category: .phone,
                       description: "Nationwide 5G wireless service.",
@@ -1407,7 +1203,7 @@ final class SubscriptionCatalogService: ObservableObject {
         ]
     }
 
-    private func buildInsuranceCatalog() -> [CatalogEntry] {
+    private static func buildInsuranceCatalog() -> [CatalogEntry] {
         [
             makeEntry(bundleId: "com.geico.geico", name: "Geico", category: .insurance,
                       description: "Auto insurance with competitive rates.",
@@ -1467,7 +1263,7 @@ final class SubscriptionCatalogService: ObservableObject {
         ]
     }
 
-    private func buildGymCatalog() -> [CatalogEntry] {
+    private static func buildGymCatalog() -> [CatalogEntry] {
         [
             makeEntry(bundleId: "com.planetfitness.pf", name: "Planet Fitness", category: .gym,
                       description: "Budget-friendly gym with 24/7 access.",
@@ -1541,7 +1337,7 @@ final class SubscriptionCatalogService: ObservableObject {
         ]
     }
 
-    private func buildAutomotiveCatalog() -> [CatalogEntry] {
+    private static func buildAutomotiveCatalog() -> [CatalogEntry] {
         [
             makeEntry(bundleId: "com.aaa.aaa", name: "AAA Membership", category: .automotive,
                       description: "Roadside assistance, travel discounts, and insurance.",
@@ -1577,7 +1373,7 @@ final class SubscriptionCatalogService: ObservableObject {
         ]
     }
 
-    private func buildHomeCatalog() -> [CatalogEntry] {
+    private static func buildHomeCatalog() -> [CatalogEntry] {
         [
             makeEntry(bundleId: "com.ring.ring", name: "Ring Protect", category: .home,
                       description: "Video doorbell and security camera cloud storage.",
@@ -1632,7 +1428,7 @@ final class SubscriptionCatalogService: ObservableObject {
         ]
     }
 
-    private func buildPetCatalog() -> [CatalogEntry] {
+    private static func buildPetCatalog() -> [CatalogEntry] {
         [
             makeEntry(bundleId: "com.chewy.autoship", name: "Chewy Autoship", category: .pet,
                       description: "Auto-delivered pet food and supplies.",
@@ -1661,7 +1457,7 @@ final class SubscriptionCatalogService: ObservableObject {
         ]
     }
 
-    private func buildPersonalCareCatalog() -> [CatalogEntry] {
+    private static func buildPersonalCareCatalog() -> [CatalogEntry] {
         [
             makeEntry(bundleId: "com.dollarshaveclub.dsc", name: "Dollar Shave Club", category: .personalCare,
                       description: "Monthly razor and grooming product delivery.",
@@ -1708,7 +1504,7 @@ final class SubscriptionCatalogService: ObservableObject {
         ]
     }
 
-    private func makeEntry(
+    private static func makeEntry(
         bundleId: String,
         name: String,
         category: SubscriptionCategory,
@@ -1733,7 +1529,7 @@ final class SubscriptionCatalogService: ObservableObject {
         )
     }
 
-    private func iconForCategory(_ category: SubscriptionCategory) -> String {
+    private static func iconForCategory(_ category: SubscriptionCategory) -> String {
         switch category {
         case .entertainment: return "tv"
         case .music: return "music.note"

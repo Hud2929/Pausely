@@ -16,13 +16,7 @@ struct CancelSubscriptionFlow: View {
     @State private var showingDifficultyRating = false
     @State private var showingReceipt = false
 
-    private var service: SubscriptionService? {
-        SubscriptionActionManager.shared.getService(for: subscription.name)
-    }
-
-    private var cancelURL: URL? {
-        SubscriptionActionManager.shared.generateCancelURL(for: subscription)
-    }
+    private var help: CancelHelp { SubscriptionActionManager.shared.cancelHelp(for: subscription) }
 
     var body: some View {
         ZStack {
@@ -35,7 +29,7 @@ struct CancelSubscriptionFlow: View {
         }
         .preferredColorScheme(.dark)
         .sheet(isPresented: $isShowingSafari, onDismiss: { didOpenPage = true }) {
-            if let url = cancelURL { SafariView(url: url).ignoresSafeArea() }
+            if let url = help.link { SafariView(url: url).ignoresSafeArea() }
         }
         .sheet(isPresented: $showingReceipt) { SavingsReceiptView() }
         .sheet(isPresented: $showingDifficultyRating, onDismiss: { dismiss() }) {
@@ -73,7 +67,7 @@ struct CancelSubscriptionFlow: View {
                                 .fixedSize(horizontal: false, vertical: true)
                                 .accessibilityAddTraits(.isHeader)
 
-                            if let service, !service.instructions.isEmpty {
+                            if let service = help.service, !service.instructions.isEmpty {
                                 Perforation()
                                 Text("How to cancel").font(.footnote.weight(.semibold))
                                 ForEach(service.instructions.prefix(4)) { step in
@@ -86,6 +80,11 @@ struct CancelSubscriptionFlow: View {
                                     }
                                     .accessibilityElement(children: .combine)
                                 }
+                            } else if help.kind == .website {
+                                Perforation()
+                                Text("Sign in there and cancel from your account or billing settings.")
+                                    .font(.footnote)
+                                    .fixedSize(horizontal: false, vertical: true)
                             }
                         }
                     }
@@ -102,23 +101,16 @@ struct CancelSubscriptionFlow: View {
             }
 
             VStack(spacing: 10) {
-                if cancelURL != nil {
-                    Button { isShowingSafari = true } label: { Text("Open Cancellation Page") }
-                        .buttonStyle(.ink(didOpenPage ? .quiet : .main))
-                        .accessibilityIdentifier("openCancellationPageButton")
-                } else {
-                    Text("No direct cancel link found. Search for \"cancel \(subscription.name)\" in your browser.")
-                        .font(.footnote)
-                        .foregroundStyle(Color.inkTextMuted)
-                        .multilineTextAlignment(.center)
-                        .fixedSize(horizontal: false, vertical: true)
-                }
+                // The button says what it opens: the service's cancellation page, its website, or a search.
+                Button { isShowingSafari = true } label: { Text(openLabel) }
+                    .buttonStyle(.ink(didOpenPage ? .quiet : .main))
+                    .accessibilityIdentifier("openCancellationPageButton")
 
                 // Once the person is back from the service's page, this becomes the main action.
                 Button { Task { await markCancelled() } } label: {
                     Text(isSaving ? "Saving…" : "I cancelled it")
                 }
-                .buttonStyle(.ink(didOpenPage || cancelURL == nil ? .main : .quiet))
+                .buttonStyle(.ink(didOpenPage ? .main : .quiet))
                 .disabled(isSaving)
                 .accessibilityIdentifier("iCancelledItButton")
             }
@@ -126,6 +118,14 @@ struct CancelSubscriptionFlow: View {
             .padding(.top, 12)
             .padding(.bottom, 8)
             .background(Color.ink)
+        }
+    }
+
+    private var openLabel: String {
+        switch help.kind {
+        case .cancellationPage: return L10n.string("Open Cancellation Page")
+        case .website: return L10n.string("Open Website")
+        case .search: return L10n.string("Search How to Cancel")
         }
     }
 

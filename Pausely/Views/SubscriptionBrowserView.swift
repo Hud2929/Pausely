@@ -136,12 +136,7 @@ struct SubscriptionBrowserView: View {
 
             ScrollView {
                 LazyVStack(alignment: .leading, spacing: 0) {
-                    if catalogService.catalog.isEmpty {
-                        Text("Loading…")
-                            .font(.subheadline)
-                            .foregroundStyle(Color.inkTextMuted)
-                            .padding(.vertical, 16)
-                    } else if filteredEntries.isEmpty {
+                    if filteredEntries.isEmpty {
                         noResultsView
                     } else {
                         if showFeatured {
@@ -175,9 +170,6 @@ struct SubscriptionBrowserView: View {
         .sheet(isPresented: $showingInbox) { InboxImportView() }
         .sheet(isPresented: $showingPaywall) {
             StoreKitUpgradeView(currentSubscriptionCount: store.subscriptions.count)
-        }
-        .task {
-            await catalogService.loadCatalog()
         }
     }
 

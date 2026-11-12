@@ -566,19 +566,12 @@ struct PremiumWelcomeFlow: View {
 }
 
 #if DEBUG
-/// `--demo-tier`: the plan sheet for Netflix, once the catalog has loaded.
+/// `--demo-tier`: the plan sheet for Netflix.
 private struct DemoTierSheet: View {
-    @ObservedObject private var catalog = SubscriptionCatalogService.shared
-
     var body: some View {
-        Group {
-            if let entry = catalog.entry(named: "Netflix") {
-                TierSelectionSheet(entry: entry) { _, _, _, _, _, _ in }
-            } else {
-                Color.ink.ignoresSafeArea()
-            }
+        if let entry = SubscriptionCatalogService.shared.entry(named: "Netflix") {
+            TierSelectionSheet(entry: entry) { _, _, _, _, _, _ in }
         }
-        .task { await catalog.loadCatalog() }
     }
 }
 #endif

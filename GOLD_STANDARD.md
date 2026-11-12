@@ -169,7 +169,12 @@ Updated at every commit, so the work can be picked up from this file alone.
   guard (D). Not proven: a sync against the real account from the app (needs a signed-in session on
   the simulator, which needs the owner's password or a test account).
 - B5 done (currency rates stored on the main thread; see its row).
-- Now: T62 (cancel help by exact service), then Stage C.
+- T62 done, and T59 with it (see their rows). On the way: the catalog service carried a remote-catalog
+  path that could never run (an admin token read from a file that does not exist on a phone); it is
+  gone, and the catalog is built in and ready at first use, so the cancel screen and logos no longer
+  depend on the browse screen having been opened. Whole suite: 574 tests, one failure, the known
+  translation guard (D).
+- Stage B is done. Now: Stage C (6.3), top to bottom, starting with B9.
 
 **Phase 0. Scan (read-only).** Four independent audits (dead code, truth, design rules on every
 view, engineering) plus mechanical scans. Output: the ledger.
@@ -254,7 +259,7 @@ matters to a stranger: the customer round below scores "getting in" at 1.
 | B10 | Fields are dropped the moment an add reaches the server; an edit made meanwhile is overwritten | closed 11-11: the server's answer is no longer written over the phone's copy (`testAnAddThatReachesTheAccountKeepsWhatOnlyThisIPhoneKnows`); a list fetched while a change was being made treats that change as newer than itself |
 | B15 | Signing out offline leaves the cached session: the next launch shows the signed-out person's list | closed 11-11: the cache is cleared before the server is asked, whatever it answers. No test: it is the order of two calls that need the account service |
 | B16 | Name and email are left on the device after sign-out and account deletion | closed 11-11: the unused saved email is no longer written and is removed; the kept name is removed on account deletion and when another account takes over the phone (sign-out keeps it, because Apple gives a name only once); `InstallStateTests` |
-| T62 | Cancel help matches by "name contains": Loom shows Bloomberg's steps, link and phone number (34 wrong companies measured) | open |
+| T62 | Cancel help matches by "name contains": Loom shows Bloomberg's steps, link and phone number (34 wrong companies measured) | closed 11-11: `ServiceMatcher` matches a name only when it is that service (its name or another of its names, written any way, plus plan words). Measured over the 992 catalog names before and after: 39 names that got another company's help now get none of it (Allstate had Paramount+'s, a pet insurer AWS's, BarkBox and seven others Box's); 291 names find a service and every one was read and is the right company. `CancelHelpTests`, 12 tests. Apple One and Apple News+ had no steps at all and now have Apple's |
 
 ### 6.3 Open: wrong money, dates or claims
 
@@ -269,7 +274,7 @@ matters to a stranger: the customer round below scores "getting in" at 1.
 | T71, T75, T-RenewalDates | Renewal dates the person never entered are saved as theirs (Shortcut add, add sheet pre-fill, "Add date" = today + 14) | open |
 | T5, T45–47 | "Went up" on a currency change or typo fix; year slip counts by `updatedAt` and raw category strings | open |
 | T15–19, T23, T43 | Estimates and forecasts stated as fact ("this year", "Back in your pocket", "avoided") | open |
-| T59, T66, T72–74 | "Open Cancellation Page" opens a web search for 794 of 994 names; a "pause" that pauses nothing and stops reminders; Shortcuts report wrong status | open |
+| T59, T66, T72–74 | "Open Cancellation Page" opens a web search for 794 of 994 names; a "pause" that pauses nothing and stops reminders; Shortcuts report wrong status | T59 closed 11-11 with T62: the button says what it opens. A known service: "Open Cancellation Page". A name the catalog lists: the catalog's own link for exactly that name, called "Open Website", with one line on where to cancel. Anything else: "Search How to Cancel" (and "&" in a name no longer cuts the search short). Seen on the simulator. T66, T72–74 open |
 | T96 | Pause Plan counts Audible, PlayStation Plus and Kindle as streaming | open |
 
 ### 6.4 Open: truth and need on screen, translation, the listing

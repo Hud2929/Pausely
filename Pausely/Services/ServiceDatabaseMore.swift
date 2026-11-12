@@ -82,7 +82,7 @@ extension ServiceDatabase {
                 CancellationStep(order: 2, title: "Account", description: "Go to Account Settings"),
                 CancellationStep(order: 3, title: "Cancel", description: "Click 'Cancel Membership'", actionURL: "https://www.masterclass.com/account/settings", isCritical: true)
             ],
-            aliases: ["master class"],
+            aliases: ["master class", "masterclass annual pass"],
             averageMonthlyPrice: 15.00
         ),
         SubscriptionService(
@@ -161,7 +161,7 @@ extension ServiceDatabase {
                 CancellationStep(order: 3, title: "Premium", description: "Click 'Premium Subscription'"),
                 CancellationStep(order: 4, title: "Cancel", description: "Click 'Cancel subscription'", actionURL: "https://www.linkedin.com/settings/premium", isCritical: true)
             ],
-            aliases: ["lynda", "linkedin premium"],
+            aliases: ["lynda", "linkedin premium", "linkedin premium career", "linkedin premium business"],
             averageMonthlyPrice: 29.99
         ),
         SubscriptionService(
@@ -218,7 +218,7 @@ extension ServiceDatabase {
                 CancellationStep(order: 2, title: "Account", description: "Go to Account"),
                 CancellationStep(order: 3, title: "Cancel", description: "Click 'Cancel'", actionURL: "https://www.pluralsight.com/account", isCritical: true)
             ],
-            aliases: ["plural sight"],
+            aliases: ["plural sight", "pluralsight skills"],
             averageMonthlyPrice: 29.00
         ),
         SubscriptionService(
@@ -636,7 +636,7 @@ extension ServiceDatabase {
                 CancellationStep(order: 3, title: "Billing", description: "Click 'Billing'"),
                 CancellationStep(order: 4, title: "Cancel", description: "Click 'Cancel Subscription'", actionURL: "https://dashboard.heroku.com/account/billing", isCritical: true)
             ],
-            aliases: ["heroku cloud"],
+            aliases: ["heroku cloud", "heroku eco"],
             averageMonthlyPrice: 7.00
         ),
         SubscriptionService(
@@ -694,7 +694,7 @@ extension ServiceDatabase {
                 CancellationStep(order: 2, title: "Billing", description: "Go to Billing"),
                 CancellationStep(order: 3, title: "Cancel", description: "Delete droplets/cancel subscription", actionURL: "https://cloud.digitalocean.com/account/billing", isCritical: true)
             ],
-            aliases: ["digital ocean"],
+            aliases: ["digital ocean", "digitalocean basic droplet"],
             averageMonthlyPrice: 6.00
         ),
         SubscriptionService(
@@ -713,7 +713,7 @@ extension ServiceDatabase {
                 CancellationStep(order: 2, title: "Account", description: "Go to Account Settings"),
                 CancellationStep(order: 3, title: "Cancel", description: "Delete Linodes/cancel", actionURL: "https://cloud.linode.com/account/settings", isCritical: true)
             ],
-            aliases: ["akamai linode"],
+            aliases: ["akamai linode", "linode nanode"],
             averageMonthlyPrice: 5.00
         )
     ]
