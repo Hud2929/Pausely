@@ -51,8 +51,9 @@ final class PaymentManagerTests: XCTestCase {
         for feature in ProFeature.allCases {
             XCTAssertEqual(payments.isUnlocked(feature), feature.isUnlocked(isPro: payments.isPremium))
         }
-        XCTAssertEqual(payments.hasReachedSubscriptionLimit(currentCount: FreeTier.subscriptionLimit),
-                       !ProFeature.canAddSubscription(currentCount: FreeTier.subscriptionLimit, isPro: payments.isPremium))
+        let full = (0..<FreeTier.subscriptionLimit).map { TestFactories.makeSubscription(name: "Charging \($0)") }
+        XCTAssertEqual(payments.hasRoom(in: full),
+                       ProFeature.canAddSubscription(currentCount: FreeTier.subscriptionLimit, isPro: payments.isPremium))
     }
 
     // MARK: - Pausely's own line in the list

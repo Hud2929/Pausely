@@ -294,7 +294,7 @@ enum TallyImporter {
         }
 
         let unlimited = payments.isUnlocked(.unlimitedSubscriptions)
-        let slots = unlimited ? nil : FreeTier.subscriptionLimit - store.subscriptions.count
+        let slots = unlimited ? nil : FreeTier.room(in: store.subscriptions)
         let display = CurrencyManager.shared.selectedCurrency
         let plan = PendingTally.plan(lines: lines, existingNames: store.subscriptions.map(\.name), freeSlots: slots) { line in
             // Ranked in one currency; a currency with no rate ranks last instead of by its raw number.

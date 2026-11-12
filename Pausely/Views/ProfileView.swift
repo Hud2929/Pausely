@@ -80,7 +80,7 @@ struct PremiumProfileView: View {
         }
         .sheet(item: $sheet) { sheet in
             switch sheet {
-            case .paywall: StoreKitUpgradeView(currentSubscriptionCount: store.subscriptions.count)
+            case .paywall: StoreKitUpgradeView()
             case .notifications: NotificationsSettingsView()
             case .receipt: SavingsReceiptView()
             case .currency: CurrencySettingsView()

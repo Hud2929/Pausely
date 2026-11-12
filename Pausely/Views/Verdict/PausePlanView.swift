@@ -51,7 +51,7 @@ struct PausePlanView: View {
         }
         .preferredColorScheme(.dark)
         .sheet(isPresented: $showPaywall) {
-            StoreKitUpgradeView(currentSubscriptionCount: store.subscriptions.count)
+            StoreKitUpgradeView()
         }
         .sheet(item: $cancelTarget) { sub in
             CancelSubscriptionFlow(subscription: sub)

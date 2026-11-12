@@ -73,7 +73,7 @@ struct InboxImportView: View {
                 .presentationDetents([.large])
             }
             .sheet(isPresented: $showingPaywall) {
-                StoreKitUpgradeView(currentSubscriptionCount: store.subscriptions.count)
+                StoreKitUpgradeView()
             }
         }
         // Connecting is the request to search: a new inbox is searched at once, without a second tap.
@@ -530,7 +530,7 @@ struct InboxImportView: View {
 
     /// How many of the chosen subscriptions fit under the free limit. Nil when there is no limit.
     private var freeSlots: Int? {
-        payments.isUnlocked(.unlimitedSubscriptions) ? nil : max(0, FreeTier.subscriptionLimit - store.subscriptions.count)
+        payments.isUnlocked(.unlimitedSubscriptions) ? nil : FreeTier.room(in: store.subscriptions)
     }
 
     /// The chosen ones that aren't on the list already: the ones the free limit applies to.

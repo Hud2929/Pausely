@@ -166,7 +166,7 @@ struct SubscriptionBrowserView: View {
         }
         .sheet(isPresented: $showingInbox) { InboxImportView() }
         .sheet(isPresented: $showingPaywall) {
-            StoreKitUpgradeView(currentSubscriptionCount: store.subscriptions.count)
+            StoreKitUpgradeView()
         }
     }
 
@@ -295,7 +295,7 @@ struct SubscriptionBrowserView: View {
 
     /// On the free plan's limit, the upgrade screen says so before any plan is picked.
     private func open(_ entry: CatalogEntry) {
-        if PaymentManager.shared.hasReachedSubscriptionLimit(currentCount: store.subscriptions.count) {
+        if !PaymentManager.shared.hasRoom(in: store.subscriptions) {
             showingPaywall = true
         } else {
             selectedEntry = entry

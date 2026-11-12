@@ -52,7 +52,7 @@ struct DashboardView: View {
         .background(Color.ink.ignoresSafeArea())
         .refreshable { await store.fetchSubscriptions(force: true) }
         .sheet(isPresented: $showingAdd) { SubscriptionBrowserView() }
-        .sheet(isPresented: $showingPaywall) { StoreKitUpgradeView(currentSubscriptionCount: store.subscriptions.count) }
+        .sheet(isPresented: $showingPaywall) { StoreKitUpgradeView() }
         .sheet(isPresented: $showingReceipt) { SavingsReceiptView() }
         .sheet(isPresented: $showingDates) { RenewalDatesSheet(subscriptions: Horizon.undated(store.subscriptions)) }
         .sheet(isPresented: $showingInbox) { InboxImportView() }

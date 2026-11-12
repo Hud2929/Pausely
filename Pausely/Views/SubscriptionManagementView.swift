@@ -344,7 +344,7 @@ struct SubscriptionManagementView: View {
         case .edit:
             SubscriptionEditView(subscription: current)
         case .paywall:
-            StoreKitUpgradeView(currentSubscriptionCount: store.subscriptions.count)
+            StoreKitUpgradeView()
         case .cancel:
             CancelSubscriptionFlow(subscription: current)
         case .priceHistory:

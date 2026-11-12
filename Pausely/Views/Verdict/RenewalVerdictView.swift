@@ -55,7 +55,7 @@ struct RenewalVerdictView: View {
             if let sub = subscription { CancelSubscriptionFlow(subscription: sub, showsOutcome: false) }
         }
         .sheet(isPresented: $showPaywall) {
-            StoreKitUpgradeView(currentSubscriptionCount: store.subscriptions.count)
+            StoreKitUpgradeView()
         }
         .sheet(isPresented: $showReceipt) {
             SavingsReceiptView()

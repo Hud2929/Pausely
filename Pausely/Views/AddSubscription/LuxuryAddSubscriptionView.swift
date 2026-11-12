@@ -114,7 +114,7 @@ struct LuxuryAddSubscriptionView: View {
         .preferredColorScheme(.dark)
         .onAppear { focusedField = .name }
         .sheet(isPresented: $showingPaywall) {
-            StoreKitUpgradeView(currentSubscriptionCount: store.subscriptions.count)
+            StoreKitUpgradeView()
         }
         .alert("Error", isPresented: $showError) {
             Button("OK", role: .cancel) {}

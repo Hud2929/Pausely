@@ -23,8 +23,6 @@ struct StoreKitUpgradeView: View {
     @State private var showSuccessAlert = false
     @AccessibilityFocusState private var focusedElement: FocusElement?
 
-    let currentSubscriptionCount: Int
-
     private enum Attempt { case purchase, restore }
 
     enum FocusElement {
@@ -120,7 +118,7 @@ struct StoreKitUpgradeView: View {
 
     /// True when the person got here by trying to add one more than the free plan watches.
     private var atFreeLimit: Bool {
-        !paymentManager.isUnlocked(.unlimitedSubscriptions) && currentSubscriptionCount >= FreeTier.subscriptionLimit
+        !paymentManager.hasRoom(in: store.subscriptions)
     }
 
     private var headline: String {
@@ -464,5 +462,5 @@ struct StoreKitUpgradeView: View {
 
 // MARK: - Preview
 #Preview {
-    StoreKitUpgradeView(currentSubscriptionCount: 3)
+    StoreKitUpgradeView()
 }

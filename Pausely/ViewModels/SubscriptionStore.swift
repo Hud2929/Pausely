@@ -200,7 +200,8 @@ class SubscriptionStore: ObservableObject {
         // Signed out, the list is out of memory and its copy on the iPhone waits for its owner. An add
         // now (a Shortcut can try) would save a list of one over that copy.
         guard !isHidden else { throw SyncFailure.signedOut }
-        if PaymentManager.shared.hasReachedSubscriptionLimit(currentCount: subscriptions.count) {
+        // The free plan's places are for what charges. Something already cancelled takes none.
+        if subscription.renewsAutomatically, !PaymentManager.shared.hasRoom(in: subscriptions) {
             throw SubscriptionLimitError.freeTierLimitReached
         }
 

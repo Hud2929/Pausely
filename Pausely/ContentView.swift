@@ -243,7 +243,7 @@ struct RootView: View {
                     #endif
                 } else if isDemoScreen("--demo-paywall") {
                     #if DEBUG
-                    StoreKitUpgradeView(currentSubscriptionCount: 3)
+                    StoreKitUpgradeView()
                     #endif
                 } else if isDemoScreen("--demo-wrapped") {
                     #if DEBUG

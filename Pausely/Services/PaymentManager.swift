@@ -11,6 +11,18 @@ import Foundation
 /// The free tier. One value, used by the store limit, the paywall and the copy in the listing.
 enum FreeTier {
     static let subscriptionLimit = 5
+
+    /// How many of the free plan's places a list takes: the subscriptions that are charging. A
+    /// cancelled one is history and takes none, so cancelling (which is what the app is for) makes
+    /// room. Every screen and importer asks here; nothing else compares a count with the limit.
+    static func used(by subscriptions: [Subscription]) -> Int {
+        subscriptions.charging.count
+    }
+
+    /// The places left on the free plan.
+    static func room(in subscriptions: [Subscription]) -> Int {
+        max(0, subscriptionLimit - used(by: subscriptions))
+    }
 }
 
 /// Launch prices in USD, for internal sums only. Never shown and never saved as what someone pays:
@@ -144,13 +156,10 @@ final class PaymentManager: ObservableObject {
     
     // MARK: - Feature Checks
     
-    /// Check if user can add more subscriptions
-    func canAddSubscription(currentCount: Int) -> Bool {
-        ProFeature.canAddSubscription(currentCount: currentCount, isPro: isPremium)
-    }
-
-    func hasReachedSubscriptionLimit(currentCount: Int) -> Bool {
-        !canAddSubscription(currentCount: currentCount)
+    /// Whether one more subscription that charges fits: always with Pro, otherwise while the free
+    /// plan has a place left (`FreeTier.room`).
+    func hasRoom(in subscriptions: [Subscription]) -> Bool {
+        ProFeature.canAddSubscription(currentCount: FreeTier.used(by: subscriptions), isPro: isPremium)
     }
 
     // MARK: - Pausely's own line in the list
