@@ -1753,33 +1753,111 @@
     "Check that your iPhone is online and try again.": {
       "localizations": {
         "ar": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "تأكّد من اتصال iPhone بالإنترنت وحاول مجددًا."
+          "variations": {
+            "device": {
+              "ipad": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "تأكّد من اتصال iPad بالإنترنت وحاول مجددًا."
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "تأكّد من اتصال iPhone بالإنترنت وحاول مجددًا."
+                }
+              }
+            }
           }
         },
         "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Prüfen Sie, ob Ihr iPhone online ist, und versuchen Sie es erneut."
+          "variations": {
+            "device": {
+              "ipad": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Prüfen Sie, ob Ihr iPad online ist, und versuchen Sie es erneut."
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Prüfen Sie, ob Ihr iPhone online ist, und versuchen Sie es erneut."
+                }
+              }
+            }
+          }
+        },
+        "en": {
+          "variations": {
+            "device": {
+              "ipad": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Check that your iPad is online and try again."
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Check that your iPhone is online and try again."
+                }
+              }
+            }
           }
         },
         "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Comprueba que tu iPhone tenga conexión a internet e inténtalo de nuevo."
+          "variations": {
+            "device": {
+              "ipad": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Comprueba que tu iPad tenga conexión a internet e inténtalo de nuevo."
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Comprueba que tu iPhone tenga conexión a internet e inténtalo de nuevo."
+                }
+              }
+            }
           }
         },
         "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Vérifiez que votre iPhone est connecté à Internet et réessayez."
+          "variations": {
+            "device": {
+              "ipad": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Vérifiez que votre iPad est connecté à Internet et réessayez."
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Vérifiez que votre iPhone est connecté à Internet et réessayez."
+                }
+              }
+            }
           }
         },
         "ja": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "iPhoneがオンラインになっているか確認して、もう一度お試しください。"
+          "variations": {
+            "device": {
+              "ipad": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "iPadがオンラインになっているか確認して、もう一度お試しください。"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "iPhoneがオンラインになっているか確認して、もう一度お試しください。"
+                }
+              }
+            }
           }
         }
       }
@@ -2059,33 +2137,111 @@
     "Couldn't save the password securely on this iPhone.": {
       "localizations": {
         "ar": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "تعذّر حفظ كلمة المرور بأمان على هذا الـ iPhone."
+          "variations": {
+            "device": {
+              "ipad": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "تعذّر حفظ كلمة المرور بأمان على هذا الـ iPad."
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "تعذّر حفظ كلمة المرور بأمان على هذا الـ iPhone."
+                }
+              }
+            }
           }
         },
         "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Das Passwort konnte nicht sicher auf diesem iPhone gespeichert werden."
+          "variations": {
+            "device": {
+              "ipad": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Das Passwort konnte nicht sicher auf diesem iPad gespeichert werden."
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Das Passwort konnte nicht sicher auf diesem iPhone gespeichert werden."
+                }
+              }
+            }
+          }
+        },
+        "en": {
+          "variations": {
+            "device": {
+              "ipad": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Couldn't save the password securely on this iPad."
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Couldn't save the password securely on this iPhone."
+                }
+              }
+            }
           }
         },
         "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "No se pudo guardar la contraseña de forma segura en este iPhone."
+          "variations": {
+            "device": {
+              "ipad": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "No se pudo guardar la contraseña de forma segura en este iPad."
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "No se pudo guardar la contraseña de forma segura en este iPhone."
+                }
+              }
+            }
           }
         },
         "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Impossible d'enregistrer le mot de passe en toute sécurité sur cet iPhone."
+          "variations": {
+            "device": {
+              "ipad": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Impossible d'enregistrer le mot de passe en toute sécurité sur cet iPad."
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Impossible d'enregistrer le mot de passe en toute sécurité sur cet iPhone."
+                }
+              }
+            }
           }
         },
         "ja": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "このiPhoneにパスワードを安全に保存できませんでした。"
+          "variations": {
+            "device": {
+              "ipad": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "このiPadにパスワードを安全に保存できませんでした。"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "このiPhoneにパスワードを安全に保存できませんでした。"
+                }
+              }
+            }
           }
         }
       }
@@ -2297,27 +2453,93 @@
     "Emails checked: %lld · read in full: %lld · all on your phone": {
       "localizations": {
         "ar": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "رسائل تم فحصها: %1$lld · قُرئت كاملة: %2$lld · كل ذلك على هاتفك"
+          "variations": {
+            "device": {
+              "ipad": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "رسائل تم فحصها: %1$lld · قُرئت كاملة: %2$lld · كل ذلك على الـ iPad"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "رسائل تم فحصها: %1$lld · قُرئت كاملة: %2$lld · كل ذلك على هاتفك"
+                }
+              }
+            }
           }
         },
         "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Geprüfte E-Mails: %1$lld · vollständig gelesen: %2$lld · alles auf Ihrem iPhone"
+          "variations": {
+            "device": {
+              "ipad": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Geprüfte E-Mails: %1$lld · vollständig gelesen: %2$lld · alles auf Ihrem iPad"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Geprüfte E-Mails: %1$lld · vollständig gelesen: %2$lld · alles auf Ihrem iPhone"
+                }
+              }
+            }
+          }
+        },
+        "en": {
+          "variations": {
+            "device": {
+              "ipad": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Emails checked: %1$lld · read in full: %2$lld · all on your iPad"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Emails checked: %1$lld · read in full: %2$lld · all on your phone"
+                }
+              }
+            }
           }
         },
         "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Correos revisados: %1$lld · leídos completos: %2$lld · todo en tu teléfono"
+          "variations": {
+            "device": {
+              "ipad": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Correos revisados: %1$lld · leídos completos: %2$lld · todo en tu iPad"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Correos revisados: %1$lld · leídos completos: %2$lld · todo en tu teléfono"
+                }
+              }
+            }
           }
         },
         "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "E-mails vérifiés : %1$lld · lus en entier : %2$lld · tout sur votre téléphone"
+          "variations": {
+            "device": {
+              "ipad": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "E-mails vérifiés : %1$lld · lus en entier : %2$lld · tout sur votre iPad"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "E-mails vérifiés : %1$lld · lus en entier : %2$lld · tout sur votre téléphone"
+                }
+              }
+            }
           }
         },
         "ja": {
@@ -4337,33 +4559,111 @@
     "Removed from this iPhone. It will sync when you're back online.": {
       "localizations": {
         "ar": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "تمت الإزالة من هذا الـ iPhone. ستتم المزامنة عند عودتك إلى الإنترنت."
+          "variations": {
+            "device": {
+              "ipad": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "تمت الإزالة من هذا الـ iPad. ستتم المزامنة عند عودتك إلى الإنترنت."
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "تمت الإزالة من هذا الـ iPhone. ستتم المزامنة عند عودتك إلى الإنترنت."
+                }
+              }
+            }
           }
         },
         "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Von diesem iPhone entfernt. Die Synchronisierung folgt, sobald Sie wieder online sind."
+          "variations": {
+            "device": {
+              "ipad": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Von diesem iPad entfernt. Die Synchronisierung folgt, sobald Sie wieder online sind."
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Von diesem iPhone entfernt. Die Synchronisierung folgt, sobald Sie wieder online sind."
+                }
+              }
+            }
+          }
+        },
+        "en": {
+          "variations": {
+            "device": {
+              "ipad": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Removed from this iPad. It will sync when you're back online."
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Removed from this iPhone. It will sync when you're back online."
+                }
+              }
+            }
           }
         },
         "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Quitado de este iPhone. Se sincronizará cuando vuelvas a estar en línea."
+          "variations": {
+            "device": {
+              "ipad": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Quitado de este iPad. Se sincronizará cuando vuelvas a estar en línea."
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Quitado de este iPhone. Se sincronizará cuando vuelvas a estar en línea."
+                }
+              }
+            }
           }
         },
         "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Retiré de cet iPhone. La synchronisation se fera dès que vous serez de nouveau en ligne."
+          "variations": {
+            "device": {
+              "ipad": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Retiré de cet iPad. La synchronisation se fera dès que vous serez de nouveau en ligne."
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Retiré de cet iPhone. La synchronisation se fera dès que vous serez de nouveau en ligne."
+                }
+              }
+            }
           }
         },
         "ja": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "このiPhoneから削除しました。オンラインに戻ると同期されます。"
+          "variations": {
+            "device": {
+              "ipad": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "このiPadから削除しました。オンラインに戻ると同期されます。"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "このiPhoneから削除しました。オンラインに戻ると同期されます。"
+                }
+              }
+            }
           }
         }
       }
@@ -4371,33 +4671,111 @@
     "Removed from this iPhone. Your account still has it. Pausely will keep trying.": {
       "localizations": {
         "ar": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "تمت الإزالة من هذا الـ iPhone. ما زال موجودًا في حسابك. سيواصل Pausely المحاولة."
+          "variations": {
+            "device": {
+              "ipad": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "تمت الإزالة من هذا الـ iPad. ما زال موجودًا في حسابك. سيواصل Pausely المحاولة."
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "تمت الإزالة من هذا الـ iPhone. ما زال موجودًا في حسابك. سيواصل Pausely المحاولة."
+                }
+              }
+            }
           }
         },
         "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Von diesem iPhone entfernt. In Ihrem Konto ist es noch vorhanden. Pausely versucht es weiter."
+          "variations": {
+            "device": {
+              "ipad": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Von diesem iPad entfernt. In Ihrem Konto ist es noch vorhanden. Pausely versucht es weiter."
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Von diesem iPhone entfernt. In Ihrem Konto ist es noch vorhanden. Pausely versucht es weiter."
+                }
+              }
+            }
+          }
+        },
+        "en": {
+          "variations": {
+            "device": {
+              "ipad": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Removed from this iPad. Your account still has it. Pausely will keep trying."
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Removed from this iPhone. Your account still has it. Pausely will keep trying."
+                }
+              }
+            }
           }
         },
         "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Quitado de este iPhone. Tu cuenta aún lo tiene. Pausely seguirá intentándolo."
+          "variations": {
+            "device": {
+              "ipad": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Quitado de este iPad. Tu cuenta aún lo tiene. Pausely seguirá intentándolo."
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Quitado de este iPhone. Tu cuenta aún lo tiene. Pausely seguirá intentándolo."
+                }
+              }
+            }
           }
         },
         "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Retiré de cet iPhone. Votre compte l'a encore. Pausely continuera d'essayer."
+          "variations": {
+            "device": {
+              "ipad": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Retiré de cet iPad. Votre compte l'a encore. Pausely continuera d'essayer."
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Retiré de cet iPhone. Votre compte l'a encore. Pausely continuera d'essayer."
+                }
+              }
+            }
           }
         },
         "ja": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "このiPhoneから削除しました。アカウントにはまだ残っています。Pauselyが引き続き試みます。"
+          "variations": {
+            "device": {
+              "ipad": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "このiPadから削除しました。アカウントにはまだ残っています。Pauselyが引き続き試みます。"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "このiPhoneから削除しました。アカウントにはまだ残っています。Pauselyが引き続き試みます。"
+                }
+              }
+            }
           }
         }
       }
@@ -4439,33 +4817,111 @@
     "Saved on this iPhone. It will sync when you're back online.": {
       "localizations": {
         "ar": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "تم الحفظ على هذا الـ iPhone. ستتم المزامنة عند عودتك إلى الإنترنت."
+          "variations": {
+            "device": {
+              "ipad": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "تم الحفظ على هذا الـ iPad. ستتم المزامنة عند عودتك إلى الإنترنت."
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "تم الحفظ على هذا الـ iPhone. ستتم المزامنة عند عودتك إلى الإنترنت."
+                }
+              }
+            }
           }
         },
         "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Auf diesem iPhone gespeichert. Die Synchronisierung folgt, sobald Sie wieder online sind."
+          "variations": {
+            "device": {
+              "ipad": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Auf diesem iPad gespeichert. Die Synchronisierung folgt, sobald Sie wieder online sind."
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Auf diesem iPhone gespeichert. Die Synchronisierung folgt, sobald Sie wieder online sind."
+                }
+              }
+            }
+          }
+        },
+        "en": {
+          "variations": {
+            "device": {
+              "ipad": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Saved on this iPad. It will sync when you're back online."
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Saved on this iPhone. It will sync when you're back online."
+                }
+              }
+            }
           }
         },
         "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Guardado en este iPhone. Se sincronizará cuando vuelvas a estar en línea."
+          "variations": {
+            "device": {
+              "ipad": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Guardado en este iPad. Se sincronizará cuando vuelvas a estar en línea."
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Guardado en este iPhone. Se sincronizará cuando vuelvas a estar en línea."
+                }
+              }
+            }
           }
         },
         "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Enregistré sur cet iPhone. La synchronisation se fera dès que vous serez de nouveau en ligne."
+          "variations": {
+            "device": {
+              "ipad": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Enregistré sur cet iPad. La synchronisation se fera dès que vous serez de nouveau en ligne."
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Enregistré sur cet iPhone. La synchronisation se fera dès que vous serez de nouveau en ligne."
+                }
+              }
+            }
           }
         },
         "ja": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "このiPhoneに保存しました。オンラインに戻ると同期されます。"
+          "variations": {
+            "device": {
+              "ipad": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "このiPadに保存しました。オンラインに戻ると同期されます。"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "このiPhoneに保存しました。オンラインに戻ると同期されます。"
+                }
+              }
+            }
           }
         }
       }
@@ -4473,33 +4929,111 @@
     "Saved on this iPhone. It hasn't reached your account yet. Pausely will keep trying.": {
       "localizations": {
         "ar": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "تم الحفظ على هذا الـ iPhone. لم يصل إلى حسابك بعد. سيواصل Pausely المحاولة."
+          "variations": {
+            "device": {
+              "ipad": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "تم الحفظ على هذا الـ iPad. لم يصل إلى حسابك بعد. سيواصل Pausely المحاولة."
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "تم الحفظ على هذا الـ iPhone. لم يصل إلى حسابك بعد. سيواصل Pausely المحاولة."
+                }
+              }
+            }
           }
         },
         "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Auf diesem iPhone gespeichert. In Ihrem Konto ist es noch nicht angekommen. Pausely versucht es weiter."
+          "variations": {
+            "device": {
+              "ipad": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Auf diesem iPad gespeichert. In Ihrem Konto ist es noch nicht angekommen. Pausely versucht es weiter."
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Auf diesem iPhone gespeichert. In Ihrem Konto ist es noch nicht angekommen. Pausely versucht es weiter."
+                }
+              }
+            }
+          }
+        },
+        "en": {
+          "variations": {
+            "device": {
+              "ipad": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Saved on this iPad. It hasn't reached your account yet. Pausely will keep trying."
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Saved on this iPhone. It hasn't reached your account yet. Pausely will keep trying."
+                }
+              }
+            }
           }
         },
         "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Guardado en este iPhone. Aún no ha llegado a tu cuenta. Pausely seguirá intentándolo."
+          "variations": {
+            "device": {
+              "ipad": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Guardado en este iPad. Aún no ha llegado a tu cuenta. Pausely seguirá intentándolo."
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Guardado en este iPhone. Aún no ha llegado a tu cuenta. Pausely seguirá intentándolo."
+                }
+              }
+            }
           }
         },
         "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Enregistré sur cet iPhone. Ce n'est pas encore arrivé sur votre compte. Pausely continuera d'essayer."
+          "variations": {
+            "device": {
+              "ipad": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Enregistré sur cet iPad. Ce n'est pas encore arrivé sur votre compte. Pausely continuera d'essayer."
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Enregistré sur cet iPhone. Ce n'est pas encore arrivé sur votre compte. Pausely continuera d'essayer."
+                }
+              }
+            }
           }
         },
         "ja": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "このiPhoneに保存しました。アカウントにはまだ届いていません。Pauselyが引き続き試みます。"
+          "variations": {
+            "device": {
+              "ipad": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "このiPadに保存しました。アカウントにはまだ届いていません。Pauselyが引き続き試みます。"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "このiPhoneに保存しました。アカウントにはまだ届いていません。Pauselyが引き続き試みます。"
+                }
+              }
+            }
           }
         }
       }
@@ -5799,33 +6333,111 @@
     "Your email never leaves your iPhone.": {
       "localizations": {
         "ar": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "بريدك لا يغادر جهاز iPhone أبدًا."
+          "variations": {
+            "device": {
+              "ipad": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "بريدك لا يغادر جهاز iPad أبدًا."
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "بريدك لا يغادر جهاز iPhone أبدًا."
+                }
+              }
+            }
           }
         },
         "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Ihre E-Mails verlassen nie Ihr iPhone."
+          "variations": {
+            "device": {
+              "ipad": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Ihre E-Mails verlassen nie Ihr iPad."
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Ihre E-Mails verlassen nie Ihr iPhone."
+                }
+              }
+            }
+          }
+        },
+        "en": {
+          "variations": {
+            "device": {
+              "ipad": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Your email never leaves your iPad."
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Your email never leaves your iPhone."
+                }
+              }
+            }
           }
         },
         "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Tu correo nunca sale de tu iPhone."
+          "variations": {
+            "device": {
+              "ipad": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Tu correo nunca sale de tu iPad."
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Tu correo nunca sale de tu iPhone."
+                }
+              }
+            }
           }
         },
         "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Vos e-mails ne quittent jamais votre iPhone."
+          "variations": {
+            "device": {
+              "ipad": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Vos e-mails ne quittent jamais votre iPad."
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Vos e-mails ne quittent jamais votre iPhone."
+                }
+              }
+            }
           }
         },
         "ja": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "メールがiPhoneの外に出ることはありません。"
+          "variations": {
+            "device": {
+              "ipad": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "メールがiPadの外に出ることはありません。"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "メールがiPhoneの外に出ることはありません。"
+                }
+              }
+            }
           }
         }
       }
@@ -19868,33 +20480,111 @@
     "No code in the email? Tap the link in it on this iPhone instead.": {
       "localizations": {
         "ar": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "لا يوجد رمز في الرسالة؟ اضغط على الرابط الموجود فيها من هذا الـ iPhone."
+          "variations": {
+            "device": {
+              "ipad": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "لا يوجد رمز في الرسالة؟ اضغط على الرابط الموجود فيها من هذا الـ iPad."
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "لا يوجد رمز في الرسالة؟ اضغط على الرابط الموجود فيها من هذا الـ iPhone."
+                }
+              }
+            }
           }
         },
         "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Kein Code in der E-Mail? Tippen Sie stattdessen auf diesem iPhone auf den Link darin."
+          "variations": {
+            "device": {
+              "ipad": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Kein Code in der E-Mail? Tippen Sie stattdessen auf diesem iPad auf den Link darin."
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Kein Code in der E-Mail? Tippen Sie stattdessen auf diesem iPhone auf den Link darin."
+                }
+              }
+            }
+          }
+        },
+        "en": {
+          "variations": {
+            "device": {
+              "ipad": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "No code in the email? Tap the link in it on this iPad instead."
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "No code in the email? Tap the link in it on this iPhone instead."
+                }
+              }
+            }
           }
         },
         "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "¿No hay código en el correo? Toca el enlace que incluye desde este iPhone."
+          "variations": {
+            "device": {
+              "ipad": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "¿No hay código en el correo? Toca el enlace que incluye desde este iPad."
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "¿No hay código en el correo? Toca el enlace que incluye desde este iPhone."
+                }
+              }
+            }
           }
         },
         "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Pas de code dans l’e-mail ? Touchez plutôt le lien qu’il contient sur cet iPhone."
+          "variations": {
+            "device": {
+              "ipad": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Pas de code dans l’e-mail ? Touchez plutôt le lien qu’il contient sur cet iPad."
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Pas de code dans l’e-mail ? Touchez plutôt le lien qu’il contient sur cet iPhone."
+                }
+              }
+            }
           }
         },
         "ja": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "メールにコードがない場合は、このiPhoneでメール内のリンクをタップしてください。"
+          "variations": {
+            "device": {
+              "ipad": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "メールにコードがない場合は、このiPadでメール内のリンクをタップしてください。"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "メールにコードがない場合は、このiPhoneでメール内のリンクをタップしてください。"
+                }
+              }
+            }
           }
         }
       }
@@ -20650,27 +21340,93 @@
     "Your list is saved to your account, so it's still there if you change phones.": {
       "localizations": {
         "ar": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "تُحفظ قائمتك في حسابك، فتبقى معك إذا غيّرت هاتفك."
+          "variations": {
+            "device": {
+              "ipad": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "تُحفظ قائمتك في حسابك، فتبقى معك إذا غيّرت جهازك."
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "تُحفظ قائمتك في حسابك، فتبقى معك إذا غيّرت هاتفك."
+                }
+              }
+            }
           }
         },
         "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Ihre Liste wird in Ihrem Konto gespeichert und ist auch nach einem Handywechsel noch da."
+          "variations": {
+            "device": {
+              "ipad": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Ihre Liste wird in Ihrem Konto gespeichert und ist auch nach einem Gerätewechsel noch da."
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Ihre Liste wird in Ihrem Konto gespeichert und ist auch nach einem Handywechsel noch da."
+                }
+              }
+            }
+          }
+        },
+        "en": {
+          "variations": {
+            "device": {
+              "ipad": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Your list is saved to your account, so it's still there on a new device."
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Your list is saved to your account, so it's still there if you change phones."
+                }
+              }
+            }
           }
         },
         "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Tu lista se guarda en tu cuenta, así que seguirá ahí si cambias de teléfono."
+          "variations": {
+            "device": {
+              "ipad": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Tu lista se guarda en tu cuenta, así que seguirá ahí si cambias de dispositivo."
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Tu lista se guarda en tu cuenta, así que seguirá ahí si cambias de teléfono."
+                }
+              }
+            }
           }
         },
         "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Votre liste est enregistrée dans votre compte : vous la retrouvez si vous changez de téléphone."
+          "variations": {
+            "device": {
+              "ipad": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Votre liste est enregistrée dans votre compte : vous la retrouvez si vous changez d'appareil."
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Votre liste est enregistrée dans votre compte : vous la retrouvez si vous changez de téléphone."
+                }
+              }
+            }
           }
         },
         "ja": {
@@ -21092,33 +21848,111 @@
     "Pausely connects straight to your email provider, reads receipts on this iPhone and keeps only the name, amount and date of each charge. It only reads: it never sends, changes or deletes email.": {
       "localizations": {
         "ar": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "يتصل Pausely مباشرةً بمزوّد بريدك، ويقرأ الإيصالات على هذا الـ iPhone، ويحتفظ فقط باسم كل عملية خصم ومبلغها وتاريخها. يقرأ فقط: لا يرسل أي بريد ولا يغيّره ولا يحذفه."
+          "variations": {
+            "device": {
+              "ipad": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "يتصل Pausely مباشرةً بمزوّد بريدك، ويقرأ الإيصالات على هذا الـ iPad، ويحتفظ فقط باسم كل عملية خصم ومبلغها وتاريخها. يقرأ فقط: لا يرسل أي بريد ولا يغيّره ولا يحذفه."
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "يتصل Pausely مباشرةً بمزوّد بريدك، ويقرأ الإيصالات على هذا الـ iPhone، ويحتفظ فقط باسم كل عملية خصم ومبلغها وتاريخها. يقرأ فقط: لا يرسل أي بريد ولا يغيّره ولا يحذفه."
+                }
+              }
+            }
           }
         },
         "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Pausely verbindet sich direkt mit Ihrem E-Mail-Anbieter, liest Belege auf diesem iPhone und behält nur Name, Betrag und Datum jeder Abbuchung. Es liest nur: Es sendet, ändert oder löscht nie E-Mails."
+          "variations": {
+            "device": {
+              "ipad": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Pausely verbindet sich direkt mit Ihrem E-Mail-Anbieter, liest Belege auf diesem iPad und behält nur Name, Betrag und Datum jeder Abbuchung. Es liest nur: Es sendet, ändert oder löscht nie E-Mails."
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Pausely verbindet sich direkt mit Ihrem E-Mail-Anbieter, liest Belege auf diesem iPhone und behält nur Name, Betrag und Datum jeder Abbuchung. Es liest nur: Es sendet, ändert oder löscht nie E-Mails."
+                }
+              }
+            }
+          }
+        },
+        "en": {
+          "variations": {
+            "device": {
+              "ipad": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Pausely connects straight to your email provider, reads receipts on this iPad and keeps only the name, amount and date of each charge. It only reads: it never sends, changes or deletes email."
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Pausely connects straight to your email provider, reads receipts on this iPhone and keeps only the name, amount and date of each charge. It only reads: it never sends, changes or deletes email."
+                }
+              }
+            }
           }
         },
         "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Pausely se conecta directamente con tu proveedor de correo, lee los recibos en este iPhone y guarda solo el nombre, el importe y la fecha de cada cargo. Solo lee: nunca envía, cambia ni borra correos."
+          "variations": {
+            "device": {
+              "ipad": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Pausely se conecta directamente con tu proveedor de correo, lee los recibos en este iPad y guarda solo el nombre, el importe y la fecha de cada cargo. Solo lee: nunca envía, cambia ni borra correos."
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Pausely se conecta directamente con tu proveedor de correo, lee los recibos en este iPhone y guarda solo el nombre, el importe y la fecha de cada cargo. Solo lee: nunca envía, cambia ni borra correos."
+                }
+              }
+            }
           }
         },
         "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Pausely se connecte directement à votre fournisseur de messagerie, lit les reçus sur cet iPhone et ne garde que le nom, le montant et la date de chaque prélèvement. Il ne fait que lire : il n’envoie, ne modifie ni ne supprime jamais d’e-mail."
+          "variations": {
+            "device": {
+              "ipad": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Pausely se connecte directement à votre fournisseur de messagerie, lit les reçus sur cet iPad et ne garde que le nom, le montant et la date de chaque prélèvement. Il ne fait que lire : il n’envoie, ne modifie ni ne supprime jamais d’e-mail."
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Pausely se connecte directement à votre fournisseur de messagerie, lit les reçus sur cet iPhone et ne garde que le nom, le montant et la date de chaque prélèvement. Il ne fait que lire : il n’envoie, ne modifie ni ne supprime jamais d’e-mail."
+                }
+              }
+            }
           }
         },
         "ja": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Pauselyはメールプロバイダに直接接続し、このiPhone上で領収書を読み取り、各請求の名前・金額・日付だけを保存します。読み取るだけで、メールの送信・変更・削除は一切行いません。"
+          "variations": {
+            "device": {
+              "ipad": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Pauselyはメールプロバイダに直接接続し、このiPad上で領収書を読み取り、各請求の名前・金額・日付だけを保存します。読み取るだけで、メールの送信・変更・削除は一切行いません。"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Pauselyはメールプロバイダに直接接続し、このiPhone上で領収書を読み取り、各請求の名前・金額・日付だけを保存します。読み取るだけで、メールの送信・変更・削除は一切行いません。"
+                }
+              }
+            }
           }
         }
       }
@@ -21908,33 +22742,111 @@
     "Pausely only reads. It opens your mailbox read-only and never marks anything as read. The app password stays in this iPhone's Keychain; you can remove it at your provider whenever you like.": {
       "localizations": {
         "ar": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "‏Pausely يقرأ فقط. يفتح صندوق بريدك للقراءة فقط ولا يضع علامة «مقروء» على أي رسالة. تبقى كلمة مرور التطبيق في سلسلة المفاتيح على هذا الـ iPhone، ويمكنك حذفها لدى مزوّدك متى شئت."
+          "variations": {
+            "device": {
+              "ipad": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "‏Pausely يقرأ فقط. يفتح صندوق بريدك للقراءة فقط ولا يضع علامة «مقروء» على أي رسالة. تبقى كلمة مرور التطبيق في سلسلة المفاتيح على هذا الـ iPad، ويمكنك حذفها لدى مزوّدك متى شئت."
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "‏Pausely يقرأ فقط. يفتح صندوق بريدك للقراءة فقط ولا يضع علامة «مقروء» على أي رسالة. تبقى كلمة مرور التطبيق في سلسلة المفاتيح على هذا الـ iPhone، ويمكنك حذفها لدى مزوّدك متى شئت."
+                }
+              }
+            }
           }
         },
         "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Pausely liest nur. Es öffnet Ihr Postfach schreibgeschützt und markiert nie etwas als gelesen. Das App-Passwort bleibt im Schlüsselbund dieses iPhones; Sie können es jederzeit bei Ihrem Anbieter entfernen."
+          "variations": {
+            "device": {
+              "ipad": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Pausely liest nur. Es öffnet Ihr Postfach schreibgeschützt und markiert nie etwas als gelesen. Das App-Passwort bleibt im Schlüsselbund dieses iPads; Sie können es jederzeit bei Ihrem Anbieter entfernen."
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Pausely liest nur. Es öffnet Ihr Postfach schreibgeschützt und markiert nie etwas als gelesen. Das App-Passwort bleibt im Schlüsselbund dieses iPhones; Sie können es jederzeit bei Ihrem Anbieter entfernen."
+                }
+              }
+            }
+          }
+        },
+        "en": {
+          "variations": {
+            "device": {
+              "ipad": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Pausely only reads. It opens your mailbox read-only and never marks anything as read. The app password stays in this iPad's Keychain; you can remove it at your provider whenever you like."
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Pausely only reads. It opens your mailbox read-only and never marks anything as read. The app password stays in this iPhone's Keychain; you can remove it at your provider whenever you like."
+                }
+              }
+            }
           }
         },
         "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Pausely solo lee. Abre tu buzón en modo de solo lectura y nunca marca nada como leído. La contraseña de aplicación se queda en el llavero de este iPhone; puedes eliminarla en tu proveedor cuando quieras."
+          "variations": {
+            "device": {
+              "ipad": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Pausely solo lee. Abre tu buzón en modo de solo lectura y nunca marca nada como leído. La contraseña de aplicación se queda en el llavero de este iPad; puedes eliminarla en tu proveedor cuando quieras."
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Pausely solo lee. Abre tu buzón en modo de solo lectura y nunca marca nada como leído. La contraseña de aplicación se queda en el llavero de este iPhone; puedes eliminarla en tu proveedor cuando quieras."
+                }
+              }
+            }
           }
         },
         "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Pausely ne fait que lire. Il ouvre votre boîte en lecture seule et ne marque jamais rien comme lu. Le mot de passe d’application reste dans le trousseau de cet iPhone ; vous pouvez le supprimer chez votre fournisseur quand vous voulez."
+          "variations": {
+            "device": {
+              "ipad": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Pausely ne fait que lire. Il ouvre votre boîte en lecture seule et ne marque jamais rien comme lu. Le mot de passe d’application reste dans le trousseau de cet iPad ; vous pouvez le supprimer chez votre fournisseur quand vous voulez."
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Pausely ne fait que lire. Il ouvre votre boîte en lecture seule et ne marque jamais rien comme lu. Le mot de passe d’application reste dans le trousseau de cet iPhone ; vous pouvez le supprimer chez votre fournisseur quand vous voulez."
+                }
+              }
+            }
           }
         },
         "ja": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Pauselyは読み取るだけです。メールボックスを読み取り専用で開き、既読にすることもありません。アプリパスワードはこのiPhoneのキーチェーンに保存され、いつでもプロバイダ側で削除できます。"
+          "variations": {
+            "device": {
+              "ipad": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Pauselyは読み取るだけです。メールボックスを読み取り専用で開き、既読にすることもありません。アプリパスワードはこのiPadのキーチェーンに保存され、いつでもプロバイダ側で削除できます。"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Pauselyは読み取るだけです。メールボックスを読み取り専用で開き、既読にすることもありません。アプリパスワードはこのiPhoneのキーチェーンに保存され、いつでもプロバイダ側で削除できます。"
+                }
+              }
+            }
           }
         }
       }
@@ -22214,33 +23126,111 @@
     "Pausely reads your receipts on this iPhone": {
       "localizations": {
         "ar": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "يقرأ Pausely إيصالاتك على هذا الـ iPhone"
+          "variations": {
+            "device": {
+              "ipad": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "يقرأ Pausely إيصالاتك على هذا الـ iPad"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "يقرأ Pausely إيصالاتك على هذا الـ iPhone"
+                }
+              }
+            }
           }
         },
         "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Pausely liest Ihre Belege auf diesem iPhone"
+          "variations": {
+            "device": {
+              "ipad": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Pausely liest Ihre Belege auf diesem iPad"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Pausely liest Ihre Belege auf diesem iPhone"
+                }
+              }
+            }
+          }
+        },
+        "en": {
+          "variations": {
+            "device": {
+              "ipad": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Pausely reads your receipts on this iPad"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Pausely reads your receipts on this iPhone"
+                }
+              }
+            }
           }
         },
         "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Pausely lee tus recibos en este iPhone"
+          "variations": {
+            "device": {
+              "ipad": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Pausely lee tus recibos en este iPad"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Pausely lee tus recibos en este iPhone"
+                }
+              }
+            }
           }
         },
         "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Pausely lit vos reçus sur cet iPhone"
+          "variations": {
+            "device": {
+              "ipad": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Pausely lit vos reçus sur cet iPad"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Pausely lit vos reçus sur cet iPhone"
+                }
+              }
+            }
           }
         },
         "ja": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Pauselyがこの iPhone 上で領収書を読み取ります"
+          "variations": {
+            "device": {
+              "ipad": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Pauselyがこの iPad 上で領収書を読み取ります"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Pauselyがこの iPhone 上で領収書を読み取ります"
+                }
+              }
+            }
           }
         }
       }
@@ -23194,33 +24184,111 @@
     "Pausely Pro is billed by Apple. Open Settings on your iPhone, tap your name, then Subscriptions, and choose Pausely Pro.": {
       "localizations": {
         "ar": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "يتم تحصيل رسوم Pausely Pro عبر Apple. افتح الإعدادات على الـ iPhone، واضغط على اسمك، ثم الاشتراكات، واختر Pausely Pro."
+          "variations": {
+            "device": {
+              "ipad": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "يتم تحصيل رسوم Pausely Pro عبر Apple. افتح الإعدادات على الـ iPad، واضغط على اسمك، ثم الاشتراكات، واختر Pausely Pro."
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "يتم تحصيل رسوم Pausely Pro عبر Apple. افتح الإعدادات على الـ iPhone، واضغط على اسمك، ثم الاشتراكات، واختر Pausely Pro."
+                }
+              }
+            }
           }
         },
         "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Pausely Pro wird über Apple abgerechnet. Öffnen Sie die Einstellungen Ihres iPhones, tippen Sie auf Ihren Namen, dann auf Abonnements und wählen Sie Pausely Pro."
+          "variations": {
+            "device": {
+              "ipad": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Pausely Pro wird über Apple abgerechnet. Öffnen Sie die Einstellungen Ihres iPads, tippen Sie auf Ihren Namen, dann auf Abonnements und wählen Sie Pausely Pro."
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Pausely Pro wird über Apple abgerechnet. Öffnen Sie die Einstellungen Ihres iPhones, tippen Sie auf Ihren Namen, dann auf Abonnements und wählen Sie Pausely Pro."
+                }
+              }
+            }
+          }
+        },
+        "en": {
+          "variations": {
+            "device": {
+              "ipad": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Pausely Pro is billed by Apple. Open Settings on your iPad, tap your name, then Subscriptions, and choose Pausely Pro."
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Pausely Pro is billed by Apple. Open Settings on your iPhone, tap your name, then Subscriptions, and choose Pausely Pro."
+                }
+              }
+            }
           }
         },
         "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Pausely Pro lo cobra Apple. Abre Ajustes en tu iPhone, toca tu nombre, luego Suscripciones y elige Pausely Pro."
+          "variations": {
+            "device": {
+              "ipad": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Pausely Pro lo cobra Apple. Abre Ajustes en tu iPad, toca tu nombre, luego Suscripciones y elige Pausely Pro."
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Pausely Pro lo cobra Apple. Abre Ajustes en tu iPhone, toca tu nombre, luego Suscripciones y elige Pausely Pro."
+                }
+              }
+            }
           }
         },
         "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Pausely Pro est facturé par Apple. Ouvrez Réglages sur votre iPhone, touchez votre nom, puis Abonnements, et choisissez Pausely Pro."
+          "variations": {
+            "device": {
+              "ipad": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Pausely Pro est facturé par Apple. Ouvrez Réglages sur votre iPad, touchez votre nom, puis Abonnements, et choisissez Pausely Pro."
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Pausely Pro est facturé par Apple. Ouvrez Réglages sur votre iPhone, touchez votre nom, puis Abonnements, et choisissez Pausely Pro."
+                }
+              }
+            }
           }
         },
         "ja": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Pausely ProはAppleを通じて請求されます。iPhoneの「設定」を開き、自分の名前、「サブスクリプション」の順にタップして、Pausely Proを選びます。"
+          "variations": {
+            "device": {
+              "ipad": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Pausely ProはAppleを通じて請求されます。iPadの「設定」を開き、自分の名前、「サブスクリプション」の順にタップして、Pausely Proを選びます。"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Pausely ProはAppleを通じて請求されます。iPhoneの「設定」を開き、自分の名前、「サブスクリプション」の順にタップして、Pausely Proを選びます。"
+                }
+              }
+            }
           }
         }
       }
@@ -23330,33 +24398,111 @@
     "Receipts are read on this iPhone. Only the name, amount and date of each charge are kept.": {
       "localizations": {
         "ar": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "تُقرأ الإيصالات على هذا الـ iPhone. يُحتفظ فقط باسم كل عملية خصم ومبلغها وتاريخها."
+          "variations": {
+            "device": {
+              "ipad": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "تُقرأ الإيصالات على هذا الـ iPad. يُحتفظ فقط باسم كل عملية خصم ومبلغها وتاريخها."
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "تُقرأ الإيصالات على هذا الـ iPhone. يُحتفظ فقط باسم كل عملية خصم ومبلغها وتاريخها."
+                }
+              }
+            }
           }
         },
         "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Belege werden auf diesem iPhone gelesen. Gespeichert werden nur Name, Betrag und Datum jeder Abbuchung."
+          "variations": {
+            "device": {
+              "ipad": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Belege werden auf diesem iPad gelesen. Gespeichert werden nur Name, Betrag und Datum jeder Abbuchung."
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Belege werden auf diesem iPhone gelesen. Gespeichert werden nur Name, Betrag und Datum jeder Abbuchung."
+                }
+              }
+            }
+          }
+        },
+        "en": {
+          "variations": {
+            "device": {
+              "ipad": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Receipts are read on this iPad. Only the name, amount and date of each charge are kept."
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Receipts are read on this iPhone. Only the name, amount and date of each charge are kept."
+                }
+              }
+            }
           }
         },
         "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Los recibos se leen en este iPhone. Solo se guardan el nombre, el importe y la fecha de cada cargo."
+          "variations": {
+            "device": {
+              "ipad": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Los recibos se leen en este iPad. Solo se guardan el nombre, el importe y la fecha de cada cargo."
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Los recibos se leen en este iPhone. Solo se guardan el nombre, el importe y la fecha de cada cargo."
+                }
+              }
+            }
           }
         },
         "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Les reçus sont lus sur cet iPhone. Seuls le nom, le montant et la date de chaque prélèvement sont conservés."
+          "variations": {
+            "device": {
+              "ipad": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Les reçus sont lus sur cet iPad. Seuls le nom, le montant et la date de chaque prélèvement sont conservés."
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Les reçus sont lus sur cet iPhone. Seuls le nom, le montant et la date de chaque prélèvement sont conservés."
+                }
+              }
+            }
           }
         },
         "ja": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "領収書はこのiPhone上で読み取られます。保存されるのは各請求の名前・金額・日付だけです。"
+          "variations": {
+            "device": {
+              "ipad": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "領収書はこのiPad上で読み取られます。保存されるのは各請求の名前・金額・日付だけです。"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "領収書はこのiPhone上で読み取られます。保存されるのは各請求の名前・金額・日付だけです。"
+                }
+              }
+            }
           }
         }
       }
@@ -23398,33 +24544,111 @@
     "Same as iPhone": {
       "localizations": {
         "ar": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "نفس لغة الـ iPhone"
+          "variations": {
+            "device": {
+              "ipad": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "نفس لغة الـ iPad"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "نفس لغة الـ iPhone"
+                }
+              }
+            }
           }
         },
         "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Wie das iPhone"
+          "variations": {
+            "device": {
+              "ipad": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Wie das iPad"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Wie das iPhone"
+                }
+              }
+            }
+          }
+        },
+        "en": {
+          "variations": {
+            "device": {
+              "ipad": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Same as iPad"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Same as iPhone"
+                }
+              }
+            }
           }
         },
         "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Igual que el iPhone"
+          "variations": {
+            "device": {
+              "ipad": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Igual que el iPad"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Igual que el iPhone"
+                }
+              }
+            }
           }
         },
         "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Comme l’iPhone"
+          "variations": {
+            "device": {
+              "ipad": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Comme l’iPad"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Comme l’iPhone"
+                }
+              }
+            }
           }
         },
         "ja": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "iPhoneと同じ"
+          "variations": {
+            "device": {
+              "ipad": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "iPadと同じ"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "iPhoneと同じ"
+                }
+              }
+            }
           }
         }
       }
@@ -23466,33 +24690,111 @@
     "Stay on this iPhone, protected by iOS data protection.": {
       "localizations": {
         "ar": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "تبقى على هذا الـ iPhone، محمية بحماية البيانات في iOS."
+          "variations": {
+            "device": {
+              "ipad": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "تبقى على هذا الـ iPad، محمية بحماية البيانات في iOS."
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "تبقى على هذا الـ iPhone، محمية بحماية البيانات في iOS."
+                }
+              }
+            }
           }
         },
         "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Bleiben auf diesem iPhone, geschützt durch die iOS-Datensicherheit."
+          "variations": {
+            "device": {
+              "ipad": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Bleiben auf diesem iPad, geschützt durch die iOS-Datensicherheit."
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Bleiben auf diesem iPhone, geschützt durch die iOS-Datensicherheit."
+                }
+              }
+            }
+          }
+        },
+        "en": {
+          "variations": {
+            "device": {
+              "ipad": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Stay on this iPad, protected by iOS data protection."
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Stay on this iPhone, protected by iOS data protection."
+                }
+              }
+            }
           }
         },
         "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Se quedan en este iPhone, protegidos por la protección de datos de iOS."
+          "variations": {
+            "device": {
+              "ipad": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Se quedan en este iPad, protegidos por la protección de datos de iOS."
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Se quedan en este iPhone, protegidos por la protección de datos de iOS."
+                }
+              }
+            }
           }
         },
         "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Restent sur cet iPhone, protégés par la protection des données d’iOS."
+          "variations": {
+            "device": {
+              "ipad": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Restent sur cet iPad, protégés par la protection des données d’iOS."
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Restent sur cet iPhone, protégés par la protection des données d’iOS."
+                }
+              }
+            }
           }
         },
         "ja": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "このiPhoneに保存され、iOSのデータ保護で守られます。"
+          "variations": {
+            "device": {
+              "ipad": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "このiPadに保存され、iOSのデータ保護で守られます。"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "このiPhoneに保存され、iOSのデータ保護で守られます。"
+                }
+              }
+            }
           }
         }
       }
@@ -24248,33 +25550,111 @@
     "This permanently deletes your account, your subscription list and your history from Pausely's servers and this iPhone. It doesn't cancel any subscriptions, including Pausely Pro. To cancel those, open Settings, tap your name, then Subscriptions.": {
       "localizations": {
         "ar": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "سيؤدي هذا إلى حذف حسابك وقائمة اشتراكاتك وسجلك نهائيًا من خوادم Pausely ومن هذا الـ iPhone. لن يُلغي أي اشتراكات، بما فيها Pausely Pro. لإلغائها، افتح الإعدادات، واضغط على اسمك، ثم الاشتراكات."
+          "variations": {
+            "device": {
+              "ipad": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "سيؤدي هذا إلى حذف حسابك وقائمة اشتراكاتك وسجلك نهائيًا من خوادم Pausely ومن هذا الـ iPad. لن يُلغي أي اشتراكات، بما فيها Pausely Pro. لإلغائها، افتح الإعدادات، واضغط على اسمك، ثم الاشتراكات."
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "سيؤدي هذا إلى حذف حسابك وقائمة اشتراكاتك وسجلك نهائيًا من خوادم Pausely ومن هذا الـ iPhone. لن يُلغي أي اشتراكات، بما فيها Pausely Pro. لإلغائها، افتح الإعدادات، واضغط على اسمك، ثم الاشتراكات."
+                }
+              }
+            }
           }
         },
         "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Dadurch werden Ihr Konto, Ihre Abo-Liste und Ihr Verlauf dauerhaft von den Servern von Pausely und diesem iPhone gelöscht. Es werden keine Abos gekündigt, auch nicht Pausely Pro. Um diese zu kündigen, öffnen Sie die Einstellungen, tippen Sie auf Ihren Namen und dann auf Abonnements."
+          "variations": {
+            "device": {
+              "ipad": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Dadurch werden Ihr Konto, Ihre Abo-Liste und Ihr Verlauf dauerhaft von den Servern von Pausely und diesem iPad gelöscht. Es werden keine Abos gekündigt, auch nicht Pausely Pro. Um diese zu kündigen, öffnen Sie die Einstellungen, tippen Sie auf Ihren Namen und dann auf Abonnements."
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Dadurch werden Ihr Konto, Ihre Abo-Liste und Ihr Verlauf dauerhaft von den Servern von Pausely und diesem iPhone gelöscht. Es werden keine Abos gekündigt, auch nicht Pausely Pro. Um diese zu kündigen, öffnen Sie die Einstellungen, tippen Sie auf Ihren Namen und dann auf Abonnements."
+                }
+              }
+            }
+          }
+        },
+        "en": {
+          "variations": {
+            "device": {
+              "ipad": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "This permanently deletes your account, your subscription list and your history from Pausely's servers and this iPad. It doesn't cancel any subscriptions, including Pausely Pro. To cancel those, open Settings, tap your name, then Subscriptions."
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "This permanently deletes your account, your subscription list and your history from Pausely's servers and this iPhone. It doesn't cancel any subscriptions, including Pausely Pro. To cancel those, open Settings, tap your name, then Subscriptions."
+                }
+              }
+            }
           }
         },
         "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Esto elimina para siempre tu cuenta, tu lista de suscripciones y tu historial de los servidores de Pausely y de este iPhone. No cancela ninguna suscripción, incluida Pausely Pro. Para cancelarlas, abre Ajustes, toca tu nombre y luego Suscripciones."
+          "variations": {
+            "device": {
+              "ipad": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Esto elimina para siempre tu cuenta, tu lista de suscripciones y tu historial de los servidores de Pausely y de este iPad. No cancela ninguna suscripción, incluida Pausely Pro. Para cancelarlas, abre Ajustes, toca tu nombre y luego Suscripciones."
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Esto elimina para siempre tu cuenta, tu lista de suscripciones y tu historial de los servidores de Pausely y de este iPhone. No cancela ninguna suscripción, incluida Pausely Pro. Para cancelarlas, abre Ajustes, toca tu nombre y luego Suscripciones."
+                }
+              }
+            }
           }
         },
         "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Cela supprime définitivement votre compte, votre liste d'abonnements et votre historique des serveurs de Pausely et de cet iPhone. Aucun abonnement n'est résilié, y compris Pausely Pro. Pour les résilier, ouvrez Réglages, touchez votre nom, puis Abonnements."
+          "variations": {
+            "device": {
+              "ipad": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Cela supprime définitivement votre compte, votre liste d'abonnements et votre historique des serveurs de Pausely et de cet iPad. Aucun abonnement n'est résilié, y compris Pausely Pro. Pour les résilier, ouvrez Réglages, touchez votre nom, puis Abonnements."
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Cela supprime définitivement votre compte, votre liste d'abonnements et votre historique des serveurs de Pausely et de cet iPhone. Aucun abonnement n'est résilié, y compris Pausely Pro. Pour les résilier, ouvrez Réglages, touchez votre nom, puis Abonnements."
+                }
+              }
+            }
           }
         },
         "ja": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "アカウント、サブスク一覧、履歴をPauselyのサーバーとこのiPhoneから完全に削除します。Pausely Proを含むサブスクは解約されません。解約するには「設定」を開き、自分の名前、「サブスクリプション」の順にタップします。"
+          "variations": {
+            "device": {
+              "ipad": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "アカウント、サブスク一覧、履歴をPauselyのサーバーとこのiPadから完全に削除します。Pausely Proを含むサブスクは解約されません。解約するには「設定」を開き、自分の名前、「サブスクリプション」の順にタップします。"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "アカウント、サブスク一覧、履歴をPauselyのサーバーとこのiPhoneから完全に削除します。Pausely Proを含むサブスクは解約されません。解約するには「設定」を開き、自分の名前、「サブスクリプション」の順にタップします。"
+                }
+              }
+            }
           }
         }
       }

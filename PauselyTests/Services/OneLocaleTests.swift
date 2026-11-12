@@ -118,11 +118,7 @@ final class OneLocaleTests: XCTestCase {
             let strings = try XCTUnwrap(catalog["strings"] as? [String: [String: Any]])
             for (_, entry) in strings {
                 guard let german = (entry["localizations"] as? [String: Any])?["de"] as? [String: Any] else { continue }
-                var texts: [String] = []
-                if let unit = german["stringUnit"] as? [String: Any], let value = unit["value"] as? String { texts.append(value) }
-                if let forms = (german["variations"] as? [String: Any])?["plural"] as? [String: [String: Any]] {
-                    texts += forms.values.compactMap { ($0["stringUnit"] as? [String: Any])?["value"] as? String }
-                }
+                let texts = CatalogTexts.all(in: german)
                 informal += texts.filter {
                     $0.range(of: #"\b(du|dich|dir|dein|deine|deinen|deiner|deinem|deines)\b"#, options: [.regularExpression, .caseInsensitive]) != nil
                 }
@@ -289,11 +285,7 @@ final class OneLocaleTests: XCTestCase {
             let strings = try XCTUnwrap(catalog["strings"] as? [String: [String: Any]])
             for (_, entry) in strings {
                 guard let arabic = (entry["localizations"] as? [String: Any])?["ar"] as? [String: Any] else { continue }
-                var texts: [String] = []
-                if let unit = arabic["stringUnit"] as? [String: Any], let value = unit["value"] as? String { texts.append(value) }
-                if let forms = (arabic["variations"] as? [String: Any])?["plural"] as? [String: [String: Any]] {
-                    texts += forms.values.compactMap { ($0["stringUnit"] as? [String: Any])?["value"] as? String }
-                }
+                let texts = CatalogTexts.all(in: arabic)
                 leftToRight += texts.filter { Self.beginsLeftToRight($0) }
                 marked += texts.filter { $0.hasPrefix("\u{200F}") }.count
             }
@@ -335,11 +327,7 @@ final class OneLocaleTests: XCTestCase {
             let strings = try XCTUnwrap(catalog["strings"] as? [String: [String: Any]])
             for (_, entry) in strings {
                 guard let arabic = (entry["localizations"] as? [String: Any])?["ar"] as? [String: Any] else { continue }
-                var texts: [String] = []
-                if let unit = arabic["stringUnit"] as? [String: Any], let value = unit["value"] as? String { texts.append(value) }
-                if let forms = (arabic["variations"] as? [String: Any])?["plural"] as? [String: [String: Any]] {
-                    texts += forms.values.compactMap { ($0["stringUnit"] as? [String: Any])?["value"] as? String }
-                }
+                let texts = CatalogTexts.all(in: arabic)
                 typed += texts.filter { Self.hasATypedDigit($0, besides: names) }
             }
         }

@@ -413,6 +413,16 @@ Updated at every commit, so the work can be picked up from this file alone.
   entered: `"amount" : 15.49`); each format writes the file it names, with cancelled ones left out
   when asked. 746 tests, 0 failures. The policy page is synced to the two local site branches,
   not pushed (6.7).
+- iPad (11-12): on an iPad the app says "iPad". Sixteen sentences said "iPhone" on both devices
+  ("Same as iPhone" for the language, "Saved on this iPhone", "Your email never leaves your
+  iPhone", "this iPhone's Keychain") and two said "phone". Each has its own wording for the iPad in
+  all six languages, as the catalog's per-device wording (compiled to
+  `NSStringDeviceSpecificRuleType`), so both `Text` and `L10n.string` get it.
+  `testOnAnIPadTheAppSaysIPad` fails for any text that says "iPhone" without an iPad wording beside
+  it. The tests that judge translations read every wording of an entry through one helper
+  (`CatalogTexts`). Seen on the iPad Pro 13-inch simulator (`/tmp/pausely_tour_ipad_1`, the whole
+  tour, 97 captures): the language page, the mail screens, the code screen and the catalog all say
+  iPad. 747 tests, 0 failures.
 - Told by the other session at 22:04 (it has stood down and changed nothing): sections 2, 3, 4, 6, 7
   and 10 of the engineering audit were never done and there is no finished overlooked-details
   report. Those areas have been scanned by nobody; they are owed before Stage G can be called done.
@@ -701,11 +711,11 @@ and limits) is O37 and nothing else was found.
 | 136 screens and states; 95 cannot be opened by a launch argument, so have not been seen in Arabic, at the largest text or on iPad | open |
 | Apple's audit, English tour: 307 issues (105 Dynamic Type, 98 contrast, 51 clipped text, 36 elements not detected, 13 hit regions, 4 descriptions) | open |
 | Not rebuilt: Pause Plan, age check, policy pages, error banner and toast, demo banner (both widgets were rebuilt on 11-12: S15) | open |
-| System-wide: accent colour is iOS blue; `Motion.unlessReduced` still moves; `StateMark` does not grow; iPad column is 680 pt wide; five ways to leave a sheet; ~~Title Case and sentence case mixed~~ (done 11-12, held by a test); "iPhone" said on iPad; prices and dates not formatted in the app's language in 43 places; the serif is missing in Arabic and Japanese | open |
+| System-wide: accent colour is iOS blue; `Motion.unlessReduced` still moves; `StateMark` does not grow; iPad column is 680 pt wide; five ways to leave a sheet; ~~Title Case and sentence case mixed~~ (done 11-12, held by a test); ~~"iPhone" said on iPad~~ (done 11-12, held by a test); prices and dates not formatted in the app's language in 43 places; the serif is missing in Arabic and Japanese | open |
 | Per-file findings (colour, type, layout, Dynamic Type, right to left, VoiceOver, motion, haptics, states) in `ui.md` | open |
 | Seen in passing on 11-12: on Insights, scrolled content runs under the status bar and the clock is drawn over it | closed 11-12: `inkScreen()` on the four tabs (E first slice) and on every other screen that draws its own top row (E fourth slice); `testAScreenWithoutANavigationBarKeepsTheStatusStripSolid` |
 | Arabic, whole tour read (11-12): untranslated rows on the edit screen and the age check, left-to-right sentences, Latin digits in sentences, a 15-point "Done", text under the clock, an unreadable footnote | closed 11-12 (E fourth slice): each held by a test; `scripts/tour_untranslated.py` prints nothing for the screens toured again. Still to do in Arabic: a whole tour on the final build for the count, and one native reader (6.7) |
-| "iPhone" said on iPad in 16 strings ("Same as iPhone", "Saved on this iPhone", "Your email never leaves your iPhone" …) and "phone" in two more | open |
+| "iPhone" said on iPad in 16 strings ("Same as iPhone", "Saved on this iPhone", "Your email never leaves your iPhone" …) and "phone" in two more | closed 11-12: per-device wording in the catalog for all 18, six languages; `testOnAnIPadTheAppSaysIPad`; read on the iPad tour's captures |
 | Export: the app makes CSV, PDF and JSON; the policy names CSV only and the JSON file has no test | closed 11-12: the policy names the two machine-readable copies and the PDF (`WebsiteTruthTests` ties the sentence to `ExportFormat.allCases`); the JSON file is a pure function that reads back as the same list and history, with the price as entered (`testTheFullFileReadsBackAsTheSameListAndHistory`), and each choice on the screen writes the file it names (`testEachFormatWritesItsOwnFile`) |
 
 ### 6.6 Open: engineering hygiene

@@ -42,6 +42,23 @@ extension XCTestCase {
 
 // MARK: - Date Helpers
 
+/// Every wording one catalog entry has in one language: its plain value, each plural form, and what
+/// it says on each kind of device. Tests that judge translations read all of them through this.
+enum CatalogTexts {
+    /// - Parameter skipping: forms left out wherever they appear ("one", "two" and "zero" may spell
+    ///   their number, so they are not expected to carry its placeholder).
+    static func all(in localization: [String: Any], skipping: Set<String> = []) -> [String] {
+        var texts: [String] = []
+        if let unit = localization["stringUnit"] as? [String: Any], let value = unit["value"] as? String { texts.append(value) }
+        for case let kind as [String: Any] in (localization["variations"] as? [String: Any] ?? [:]).values {
+            for (form, wording) in kind where !skipping.contains(form) {
+                if let wording = wording as? [String: Any] { texts += all(in: wording, skipping: skipping) }
+            }
+        }
+        return texts
+    }
+}
+
 enum TestDates {
     static var calendar: Calendar { Calendar.current }
 

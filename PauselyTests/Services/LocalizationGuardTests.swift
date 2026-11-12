@@ -240,20 +240,50 @@ final class LocalizationGuardTests: XCTestCase {
             let expected = specifiers(key)
             let localizations = entry["localizations"] as? [String: [String: Any]] ?? [:]
             for (language, localization) in localizations {
-                var values: [String] = []
-                if let unit = localization["stringUnit"] as? [String: Any], let value = unit["value"] as? String { values.append(value) }
-                if let plural = (localization["variations"] as? [String: Any])?["plural"] as? [String: [String: Any]] {
-                    // "one", "two" and "zero" forms may spell the number out ("Einmal", "مرتين").
-                    for (category, form) in plural where !["one", "two", "zero"].contains(category) {
-                        if let value = (form["stringUnit"] as? [String: Any])?["value"] as? String { values.append(value) }
-                    }
-                }
+                // "one", "two" and "zero" forms may spell the number out ("Einmal", "مرتين").
+                let values = CatalogTexts.all(in: localization, skipping: ["one", "two", "zero"])
                 for value in values where specifiers(value) != expected {
                     failures.append("\"\(key)\" [\(language)]: \(value)")
                 }
             }
         }
         XCTAssertTrue(failures.isEmpty, failures.sorted().joined(separator: "\n"))
+    }
+
+    /// The app runs on iPad, and there it says "iPad". Eighteen sentences said "iPhone" or "phone" on
+    /// both ("Same as iPhone" for the language, "Saved on this iPhone", "Your email never leaves your
+    /// iPhone"). Each now has its own wording for the iPad, in every language.
+    func testOnAnIPadTheAppSaysIPad() throws {
+        let strings = try catalog()
+        var wrong: [String] = []
+        var varied = 0
+        for (key, entry) in strings {
+            var localizations = entry["localizations"] as? [String: [String: Any]] ?? [:]
+            // With no English entry the key itself is what an English reader sees, on every device.
+            if localizations["en"] == nil { localizations["en"] = ["stringUnit": ["value": key]] }
+            for (language, localization) in localizations {
+                guard CatalogTexts.all(in: localization).contains(where: { $0.contains("iPhone") }) else { continue }
+                let devices = (localization["variations"] as? [String: Any])?["device"] as? [String: [String: Any]] ?? [:]
+                let onIPad = devices["ipad"].map { CatalogTexts.all(in: $0) } ?? []
+                let elsewhere = devices["other"].map { CatalogTexts.all(in: $0) } ?? []
+                let right = !onIPad.isEmpty && onIPad.allSatisfy { $0.contains("iPad") && !$0.contains("iPhone") }
+                    && !elsewhere.isEmpty && elsewhere.allSatisfy { !$0.contains("iPad") }
+                if right { varied += 1 } else { wrong.append("\(key) [\(language)]") }
+            }
+        }
+        XCTAssertEqual(wrong.sorted(), [])
+        XCTAssertGreaterThanOrEqual(varied, 16 * 6, "sixteen sentences in six languages")
+
+        func wording(_ key: String, _ language: String, on device: String) -> String? {
+            let localization = (strings[key]?["localizations"] as? [String: [String: Any]])?[language]
+            let devices = (localization?["variations"] as? [String: Any])?["device"] as? [String: [String: Any]]
+            return devices?[device].flatMap { CatalogTexts.all(in: $0).first }
+        }
+        XCTAssertEqual(wording("Same as iPhone", "en", on: "ipad"), "Same as iPad")
+        XCTAssertEqual(wording("Same as iPhone", "en", on: "other"), "Same as iPhone")
+        XCTAssertEqual(wording("Same as iPhone", "fr", on: "ipad")?.contains("iPad"), true)
+        XCTAssertEqual(wording("Your list is saved to your account, so it's still there if you change phones.", "en", on: "ipad"),
+                       "Your list is saved to your account, so it's still there on a new device.")
     }
 
     // MARK: The app language reaches code-built text
