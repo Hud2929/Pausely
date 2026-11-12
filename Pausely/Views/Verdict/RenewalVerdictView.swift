@@ -409,15 +409,15 @@ struct PauselyPromiseCard: View {
             // Free customers: nothing to weigh yet, but the promise holds if they ever pay.
             return summary.isEmpty
                 ? L10n.string("If you ever pay for Pausely and it doesn't save you more than it costs, it will tell you to cancel it.")
-                : L10n.string("Pausely is free for you and on track to save you \(summary.formatted(summary.onTrack)) this year. If you ever pay for it, it has to save you more than it costs.")
+                : L10n.string("Pausely is free for you, and your cancellations are on track to keep you \(summary.formatted(summary.onTrack)) over 12 months. If you ever pay for it, it has to save you more than it costs.")
         }
         if summary.isEmpty {
-            return L10n.string("Pausely hasn't saved you anything yet. If it doesn't save you more than its \(cost), we'd rather you cancel it.")
+            return L10n.string("Nothing is on your Savings Receipt yet. If Pausely doesn't save you more than its \(cost), we'd rather you cancel it.")
         }
         if summary.paysForItself, let multiple = summary.returnMultiple {
             let times = multiple.formatted(.number.precision(.fractionLength(1)))
-            return L10n.string("Pausely is on track to save you \(summary.formatted(summary.onTrack)) this year, \(times)× what it costs. Keeping it pays.")
+            return L10n.string("Your cancellations are on track to keep you \(summary.formatted(summary.onTrack)) over 12 months, \(times)× what Pausely costs. Keeping it pays.")
         }
-        return L10n.string("So far Pausely is on track to save you \(summary.formatted(summary.onTrack)), less than its \(cost). We'd rather you cancel than pay for nothing.")
+        return L10n.string("So far your cancellations are on track to keep you \(summary.formatted(summary.onTrack)) over 12 months, less than Pausely's \(cost). We'd rather you cancel than pay for nothing.")
     }
 }

@@ -18,7 +18,7 @@ struct DesignGalleryView: View {
                     Text(verbatim: total)
                         .font(.question(.largeTitle, weight: .bold))
                         .foregroundStyle(Color.inkText)
-                    Text(verbatim: "Kept with Pausely  \(keptTotal)")
+                    Text(verbatim: "Kept since you cancelled  \(keptTotal)")
                         .font(.subheadline.weight(.medium))
                         .foregroundStyle(Color.kept)
                 }

@@ -38,6 +38,19 @@ final class PausePlanTests: XCTestCase {
         XCTAssertTrue(PausePlanSchedule.isEligible(sub("ESPN+", anchor: nil, category: "Sports")))
     }
 
+    /// Eligibility used to include anything filed under "Entertainment", so Audible, PlayStation Plus
+    /// and Kindle Unlimited were listed as streaming services and counted in the yearly saving.
+    func testOnlyVideoStreamingByNameIsEligibleWhateverItsCategory() {
+        for name in ["Audible", "PlayStation Plus", "Kindle Unlimited", "Twitch", "Patreon", "Scribd", "AMC Stubs A-List",
+                     "Acorns", "Maximus Gym", "YouTube Music", "Apple Music", "Discovery Education"] {
+            XCTAssertFalse(PausePlanSchedule.isEligible(sub(name, anchor: nil, category: "Entertainment")), name)
+        }
+        for name in ["Netflix", "HBO Max", "Max", "Disney+", "Hulu", "Amazon Prime Video", "Apple TV+", "Paramount+ with Showtime",
+                     "Peacock Premium", "ESPN+", "FuboTV", "AMC+", "Acorn TV", "Discovery+", "MGM+", "Crave", "Shahid", "U-NEXT"] {
+            XCTAssertTrue(PausePlanSchedule.isEligible(sub(name, anchor: nil, category: "Other")), name)
+        }
+    }
+
     func testRotatingThreeServicesSavesTwoThirds() {
         // 20 + 15 + 10 = 45 a month today; one at a time averages 15; 30 a month back = 360 a year.
         XCTAssertEqual(PausePlanSchedule.yearlySavings(monthlyCosts: [20, 15, 10]), 360)

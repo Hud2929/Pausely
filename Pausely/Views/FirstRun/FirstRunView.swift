@@ -464,7 +464,7 @@ private struct RevealStep: View {
     private var gapLine: String {
         switch tally.verdict(rates: rates) {
         case .more(_, let yearlyGap):
-            return L10n.string("That's \(round(yearlyGap)) a year more than you thought.")
+            return L10n.string("That's about \(round(yearlyGap)) a year more than you thought.")
         case .close, .less:
             return L10n.string("That's \(yearlyRound) a year. Pausely asks before each renewal whether it's still worth it.")
         }

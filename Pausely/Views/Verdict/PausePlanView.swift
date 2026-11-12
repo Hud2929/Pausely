@@ -238,8 +238,13 @@ struct PausePlanView: View {
                 ProofLine(label: L10n.string("All at once"), value: currencyManager.format(now) + " " + L10n.string("a month"))
                 ProofLine(label: L10n.string("One at a time"), value: currencyManager.format(rotating) + " " + L10n.string("a month on average"))
                 Perforation()
-                ProofLine(label: L10n.string("Back in your pocket"), value: L10n.string("\(currencyManager.format(yearly)) a year"),
+                ProofLine(label: L10n.string("Back in your pocket"), value: L10n.string("About \(currencyManager.format(yearly)) a year"),
                           emphasised: true)
+                // An estimate, and what it assumes.
+                Text("If you rotate every month, at today's prices.")
+                    .font(.proof(.footnote))
+                    .foregroundStyle(Color.paperMuted)
+                    .fixedSize(horizontal: false, vertical: true)
             }
         }
         .accessibilityElement(children: .combine)

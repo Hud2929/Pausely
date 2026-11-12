@@ -26,21 +26,26 @@ enum PausePlanSchedule {
 
     // MARK: - Eligibility and savings
 
+    /// Video streaming services, by name. Short names ("max", "stan") must be a whole word; longer
+    /// ones and phrases can be part of the name ("Paramount+ with Showtime").
     private static let streamingNames = [
         "netflix", "hbo", "max", "disney", "hulu", "prime video", "apple tv", "paramount", "peacock",
-        "crunchyroll", "espn", "discovery", "starz", "showtime", "mubi", "fubo", "sling", "youtube tv",
-        "britbox", "acorn", "shudder", "curiositystream", "crave", "stan", "binge", "now tv", "dazn", "mgm"
+        "crunchyroll", "espn", "discovery+", "discovery plus", "starz", "showtime", "mubi", "fubo", "fubotv",
+        "sling", "youtube tv", "britbox", "acorn", "shudder", "curiositystream", "crave", "stan", "binge",
+        "now tv", "dazn", "mgm", "amc+", "criterion", "philo", "hidive", "viki", "bet+", "hallmark",
+        "directv", "frndly", "sundance now", "funimation", "dropout", "nebula", "fandor", "indieflix",
+        "eros now", "vix", "zee5", "hotstar", "viaplay", "canal+", "videoland", "rtl+", "joyn", "u-next",
+        "abema", "shahid", "osn+", "movistar plus", "filmin", "atresplayer", "molotov", "kayo", "foxtel",
+        "tving", "wavve", "iqiyi", "globoplay", "claro video"
     ]
 
-    /// Monthly video and entertainment services can rotate; the rest (music, storage, software)
-    /// people use every day.
+    /// Monthly video streaming services can rotate, and nothing else. Being filed under
+    /// "Entertainment" is not enough: audiobooks, games and reading are there too, and telling someone
+    /// to "watch one streaming service at a time" with Audible in the plan promised a saving that
+    /// meant dropping something they use every day.
     static func isEligible(_ sub: Subscription) -> Bool {
         guard sub.billingFrequency == .monthly, sub.status != .expired, !sub.isPausely else { return false }
-        let category = (sub.category ?? "").lowercased()
         let name = sub.name.lowercased()
-        if category.contains("music") || name.contains("music") || name.contains("spotify") { return false }
-        if category.contains("entertain") || category.contains("stream") || category.contains("video") { return true }
-        // Short names ("max", "stan") must be a whole word, so "Constant Contact" isn't streaming.
         let words = name.split { !$0.isLetter && !$0.isNumber && $0 != "+" }.map(String.init)
         return streamingNames.contains { known in
             if known.contains(" ") || known.count >= 6 { return name.contains(known) }

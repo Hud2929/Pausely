@@ -48534,13 +48534,13 @@
         "ar": {
           "stringUnit": {
             "state": "translated",
-            "value": "%@ متوقع خلال 12 شهرًا"
+            "value": "المتوقع خلال 12 شهرًا: %@"
           }
         },
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "%@ in 12 Monaten auf Kurs"
+            "value": "Voraussichtlich %@ in 12 Monaten"
           }
         },
         "es": {
@@ -52841,108 +52841,6 @@
         }
       }
     },
-    "Pausely hasn't saved you anything yet. If it doesn't save you more than its %@, we'd rather you cancel it.": {
-      "localizations": {
-        "ar": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "لم يوفّر لك Pausely شيئًا بعد. إذا لم يوفّر لك أكثر من %@، فنفضّل أن تلغيه."
-          }
-        },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Pausely hat Ihnen noch nichts gespart. Wenn es Ihnen nicht mehr als %@ spart, kündigen Sie es lieber."
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Pausely aún no te ha ahorrado nada. Si no te ahorra más de %@, preferimos que lo canceles."
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Pausely ne vous a encore rien fait économiser. S'il ne vous fait pas économiser plus que %@, nous préférons que vous le résiliiez."
-          }
-        },
-        "ja": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Pauselyはまだ節約につながっていません。料金の%@以上を節約できないなら、解約していただくほうが良いと考えています。"
-          }
-        }
-      }
-    },
-    "Pausely is on track to save you %@ this year, %@× what it costs. Keeping it pays.": {
-      "localizations": {
-        "ar": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Pausely في طريقه لتوفير %1$@ لك هذا العام، أي %2$@× تكلفته. الإبقاء عليه مجدٍ."
-          }
-        },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Pausely spart Ihnen dieses Jahr voraussichtlich %1$@, das %2$@-Fache seines Preises. Es lohnt sich."
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Pausely va camino de ahorrarte %1$@ este año, %2$@× lo que cuesta. Merece la pena."
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Pausely devrait vous faire économiser %1$@ cette année, soit %2$@× son prix. Il est rentable."
-          }
-        },
-        "ja": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Pauselyは今年%1$@の節約が見込まれ、料金の%2$@倍です。継続する価値があります。"
-          }
-        }
-      }
-    },
-    "So far Pausely is on track to save you %@, less than its %@. We'd rather you cancel than pay for nothing.": {
-      "localizations": {
-        "ar": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "حتى الآن Pausely في طريقه لتوفير %1$@، أي أقل من سعره %2$@. نفضّل أن تلغيه بدلًا من الدفع بلا فائدة."
-          }
-        },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Bisher spart Ihnen Pausely voraussichtlich %1$@, weniger als sein Preis von %2$@. Kündigen Sie lieber, als für nichts zu zahlen."
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Por ahora Pausely va camino de ahorrarte %1$@, menos que su precio de %2$@. Preferimos que lo canceles a que pagues por nada."
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Pour l'instant, Pausely devrait vous faire économiser %1$@, moins que son prix de %2$@. Nous préférons que vous résiliiez plutôt que de payer pour rien."
-          }
-        },
-        "ja": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "現時点でPauselyの節約見込みは%1$@で、料金の%2$@を下回っています。無駄に支払うより、解約していただくほうが良いと考えています。"
-          }
-        }
-      }
-    },
     "If you ever pay for Pausely and it doesn't save you more than it costs, it will tell you to cancel it.": {
       "localizations": {
         "ar": {
@@ -52973,40 +52871,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "Pauselyに料金を払っても料金以上の節約にならない場合は、Pausely自身が解約をおすすめします。"
-          }
-        }
-      }
-    },
-    "Pausely is free for you and on track to save you %@ this year. If you ever pay for it, it has to save you more than it costs.": {
-      "localizations": {
-        "ar": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Pausely مجاني لك وفي طريقه لتوفير %@ لك هذا العام. إذا دفعت مقابله يومًا، فعليه أن يوفّر لك أكثر مما يكلّف."
-          }
-        },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Pausely ist für Sie kostenlos und spart Ihnen dieses Jahr voraussichtlich %@. Wenn Sie je dafür zahlen, muss es Ihnen mehr sparen, als es kostet."
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Pausely es gratis para ti y va camino de ahorrarte %@ este año. Si algún día pagas, tendrá que ahorrarte más de lo que cuesta."
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Pausely est gratuit pour vous et devrait vous faire économiser %@ cette année. Si vous payez un jour, il devra vous faire économiser plus qu'il ne coûte."
-          }
-        },
-        "ja": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Pauselyは無料でご利用中で、今年%@の節約が見込まれます。有料にした場合は、料金以上の節約が条件です。"
           }
         }
       }
@@ -53143,40 +53007,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "節約レシート"
-          }
-        }
-      }
-    },
-    "How we count: only charges that would really have happened, worked out from the payment date you entered, for 12 months after you cancel. If a subscription starts again, its savings stop that day. Pausely's own subscription never counts.": {
-      "localizations": {
-        "ar": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "كيف نحسب: فقط الدفعات التي كانت ستحدث فعلًا، محسوبة من تاريخ الدفع الذي أدخلته، لمدة 12 شهرًا بعد الإلغاء. إذا بدأ الاشتراك مجددًا، يتوقف حساب التوفير في ذلك اليوم. لا يُحتسب اشتراك Pausely نفسه أبدًا."
-          }
-        },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "So zählen wir: nur Abbuchungen, die wirklich stattgefunden hätten, berechnet aus dem eingegebenen Zahlungsdatum, für 12 Monate nach der Kündigung. Startet ein Abo wieder, endet seine Ersparnis an diesem Tag. Das Pausely-Abo selbst zählt nie."
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Cómo contamos: solo los cobros que realmente se habrían producido, calculados a partir de la fecha de pago que introdujiste, durante 12 meses tras cancelar. Si una suscripción vuelve a empezar, su ahorro termina ese día. La suscripción de Pausely nunca cuenta."
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Notre calcul : uniquement les prélèvements qui auraient vraiment eu lieu, calculés à partir de la date de paiement saisie, pendant 12 mois après la résiliation. Si un abonnement reprend, ses économies s'arrêtent ce jour-là. L'abonnement Pausely ne compte jamais."
-          }
-        },
-        "ja": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "計算方法：入力された支払日をもとに、解約後12か月間に実際に発生していたはずの請求だけを数えます。再開した場合はその日で節約の計上を止めます。Pausely自体のサブスクリプションは含めません。"
           }
         }
       }
@@ -53347,40 +53177,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "%@に再開。節約の計上はここまでです。"
-          }
-        }
-      }
-    },
-    "Your receipt starts with your first decision": {
-      "localizations": {
-        "ar": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "يبدأ إيصالك مع أول قرار لك"
-          }
-        },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Ihr Beleg beginnt mit Ihrer ersten Entscheidung"
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Tu recibo empieza con tu primera decisión"
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Votre reçu commence avec votre première décision"
-          }
-        },
-        "ja": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "レシートは最初の判断から始まります"
           }
         }
       }
@@ -54095,40 +53891,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "節約レシートに記録済み"
-          }
-        }
-      }
-    },
-    "%@ avoided over 12 months": {
-      "localizations": {
-        "ar": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "تم تجنب %@ خلال 12 شهرًا"
-          }
-        },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "%@ in 12 Monaten vermieden"
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "%@ evitados en 12 meses"
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "%@ évités sur 12 mois"
-          }
-        },
-        "ja": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "12か月で%@を回避"
           }
         }
       }
@@ -56275,40 +56037,6 @@
         }
       }
     },
-    "That's %@ a year more than you thought.": {
-      "localizations": {
-        "ar": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "هذا يزيد %@ في السنة عمّا ظننت."
-          }
-        },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Das sind %@ im Jahr mehr, als du dachtest."
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Son %@ al año más de lo que pensabas."
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Cela fait %@ par an de plus que vous ne pensiez."
-          }
-        },
-        "ja": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "思っていたより年間%@多く払っています。"
-          }
-        }
-      }
-    },
     "That's %@ a year. Pausely asks before each renewal whether it's still worth it.": {
       "localizations": {
         "ar": {
@@ -57057,40 +56785,6 @@
         }
       }
     },
-    "Kept with Pausely": {
-      "localizations": {
-        "ar": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "ما وفّرته مع Pausely"
-          }
-        },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Mit Pausely behalten"
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Ahorrado con Pausely"
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Gardé grâce à Pausely"
-          }
-        },
-        "ja": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Pauselyで守ったお金"
-          }
-        }
-      }
-    },
     "Kept so far": {
       "localizations": {
         "ar": {
@@ -57155,40 +56849,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "12か月の見込み"
-          }
-        }
-      }
-    },
-    "Pausely has paid for itself %@× over.": {
-      "localizations": {
-        "ar": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "استردّ Pausely تكلفته %@ مرة."
-          }
-        },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Pausely hat sich %@-fach bezahlt gemacht."
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Pausely se ha pagado solo %@ veces."
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Pausely s'est remboursé %@ fois."
-          }
-        },
-        "ja": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Pauselyの料金の%@倍を取り戻しました。"
           }
         }
       }
@@ -65893,6 +65553,346 @@
           "stringUnit": {
             "state": "translated",
             "value": "以前は%@、現在は%@。"
+          }
+        }
+      }
+    },
+    "Pausely is free for you, and your cancellations are on track to keep you %@ over 12 months. If you ever pay for it, it has to save you more than it costs.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pausely مجاني لك، وإلغاءاتك في طريقها لتوفير %@ خلال 12 شهرًا. إذا دفعت مقابله يومًا، فعليه أن يوفّر لك أكثر مما يكلّف."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pausely ist für Sie kostenlos, und Ihre Kündigungen sparen Ihnen in 12 Monaten voraussichtlich %@. Wenn Sie je dafür zahlen, muss es Ihnen mehr sparen, als es kostet."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pausely es gratis para ti, y tus cancelaciones van camino de ahorrarte %@ en 12 meses. Si algún día pagas, tendrá que ahorrarte más de lo que cuesta."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pausely est gratuit pour vous, et vos résiliations devraient vous faire économiser %@ sur 12 mois. Si vous payez un jour, il devra vous faire économiser plus qu'il ne coûte."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pauselyは無料でご利用中で、解約により12か月で%@の節約が見込まれます。有料にした場合は、料金以上の節約が条件です。"
+          }
+        }
+      }
+    },
+    "Nothing is on your Savings Receipt yet. If Pausely doesn't save you more than its %@, we'd rather you cancel it.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "لا يوجد شيء في إيصال التوفير بعد. إذا لم يوفّر لك Pausely أكثر من %@، فنفضّل أن تلغيه."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Auf Ihrem Sparbeleg steht noch nichts. Wenn Pausely Ihnen nicht mehr als %@ spart, kündigen Sie es lieber."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tu recibo de ahorro aún está vacío. Si Pausely no te ahorra más de %@, preferimos que lo canceles."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Votre reçu d'économies est encore vide. Si Pausely ne vous fait pas économiser plus que %@, nous préférons que vous le résiliiez."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "節約レシートにはまだ何もありません。Pauselyが料金の%@以上を節約できないなら、解約していただくほうが良いと考えています。"
+          }
+        }
+      }
+    },
+    "Your cancellations are on track to keep you %@ over 12 months, %@× what Pausely costs. Keeping it pays.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "إلغاءاتك في طريقها لتوفير %1$@ خلال 12 شهرًا، أي %2$@× تكلفة Pausely. الإبقاء عليه مجدٍ."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ihre Kündigungen sparen Ihnen in 12 Monaten voraussichtlich %1$@, das %2$@-Fache des Preises von Pausely. Es lohnt sich."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tus cancelaciones van camino de ahorrarte %1$@ en 12 meses, %2$@× lo que cuesta Pausely. Merece la pena."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Vos résiliations devraient vous faire économiser %1$@ sur 12 mois, soit %2$@× le prix de Pausely. Il est rentable."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "解約により12か月で%1$@の節約が見込まれ、Pauselyの料金の%2$@倍です。継続する価値があります。"
+          }
+        }
+      }
+    },
+    "So far your cancellations are on track to keep you %@ over 12 months, less than Pausely's %@. We'd rather you cancel than pay for nothing.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "حتى الآن إلغاءاتك في طريقها لتوفير %1$@ خلال 12 شهرًا، أي أقل من سعر Pausely البالغ %2$@. نفضّل أن تلغيه بدلًا من الدفع بلا فائدة."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bisher sparen Ihnen Ihre Kündigungen in 12 Monaten voraussichtlich %1$@, weniger als der Preis von Pausely von %2$@. Kündigen Sie lieber, als für nichts zu zahlen."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Por ahora tus cancelaciones van camino de ahorrarte %1$@ en 12 meses, menos que el precio de Pausely de %2$@. Preferimos que lo canceles a que pagues por nada."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pour l'instant, vos résiliations devraient vous faire économiser %1$@ sur 12 mois, moins que le prix de Pausely de %2$@. Nous préférons que vous résiliiez plutôt que de payer pour rien."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "現時点で解約による12か月の節約見込みは%1$@で、Pauselyの料金の%2$@を下回っています。無駄に支払うより、解約していただくほうが良いと考えています。"
+          }
+        }
+      }
+    },
+    "Kept since you cancelled": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ما وفّرته منذ الإلغاء"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Seit der Kündigung behalten"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ahorrado desde que cancelaste"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Gardé depuis vos résiliations"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "解約してから守ったお金"
+          }
+        }
+      }
+    },
+    "On track for %@× what Pausely costs a year.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "في طريقه ليبلغ %@× تكلفة Pausely السنوية."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Voraussichtlich das %@-Fache dessen, was Pausely im Jahr kostet."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Va camino de ser %@× lo que cuesta Pausely al año."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "En voie d'atteindre %@× le prix annuel de Pausely."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pauselyの年間料金の%@倍になる見込みです。"
+          }
+        }
+      }
+    },
+    "How we count: only charges your renewal date and price say would have happened, for 12 months after you cancel. If a subscription starts again, its savings stop that day. Pausely's own subscription never counts.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "كيف نحسب: فقط الدفعات التي يدلّ تاريخ التجديد والسعر اللذان أدخلتهما على أنها كانت ستحدث، لمدة 12 شهرًا بعد الإلغاء. إذا بدأ الاشتراك مجددًا، يتوقف حساب التوفير في ذلك اليوم. لا يُحتسب اشتراك Pausely نفسه أبدًا."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "So zählen wir: nur Abbuchungen, die nach Ihrem Verlängerungsdatum und Preis angefallen wären, für 12 Monate nach der Kündigung. Startet ein Abo wieder, endet seine Ersparnis an diesem Tag. Das Pausely-Abo selbst zählt nie."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cómo contamos: solo los cobros que, según tu fecha de renovación y tu precio, se habrían producido, durante 12 meses tras cancelar. Si una suscripción vuelve a empezar, su ahorro termina ese día. La suscripción de Pausely nunca cuenta."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Notre calcul : uniquement les prélèvements qui auraient eu lieu d'après votre date de renouvellement et votre prix, pendant 12 mois après la résiliation. Si un abonnement reprend, ses économies s'arrêtent ce jour-là. L'abonnement Pausely ne compte jamais."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "計算方法：入力された更新日と金額から、解約後12か月間に発生していたはずの請求だけを数えます。再開した場合はその日で節約の計上を止めます。Pausely自体のサブスクリプションは含めません。"
+          }
+        }
+      }
+    },
+    "About %@ a year": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "حوالي %@ في السنة"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Etwa %@ im Jahr"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Unos %@ al año"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Environ %@ par an"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "年間約%@"
+          }
+        }
+      }
+    },
+    "If you rotate every month, at today's prices.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "إذا بدّلت كل شهر، بأسعار اليوم."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Wenn Sie jeden Monat wechseln, zu heutigen Preisen."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Si rotas cada mes, a los precios de hoy."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Si vous alternez chaque mois, aux prix d'aujourd'hui."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "毎月入れ替えた場合の、現在の料金での目安です。"
+          }
+        }
+      }
+    },
+    "That's about %@ a year more than you thought.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "هذا يزيد بنحو %@ في السنة عمّا ظننت."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Das sind etwa %@ im Jahr mehr, als du dachtest."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Son unos %@ al año más de lo que pensabas."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cela fait environ %@ par an de plus que vous ne pensiez."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "思っていたより年間約%@多く払っています。"
           }
         }
       }

@@ -74,7 +74,7 @@ struct SavingsReceiptView: View {
     private var emptyState: some View {
         PaperSlip(tornTop: true, tornBottom: true) {
             VStack(alignment: .leading, spacing: 10) {
-                Text("Your receipt starts with your first decision")
+                Text("Your Savings Receipt starts with your first cancel")
                     .font(.question(.title3))
                     .fixedSize(horizontal: false, vertical: true)
                 Text("Before each renewal Pausely asks: keep it or cancel it? Every subscription you cancel shows up here with the charges it avoided.")
@@ -82,13 +82,13 @@ struct SavingsReceiptView: View {
                     .foregroundStyle(Color.paperMuted)
                     .fixedSize(horizontal: false, vertical: true)
                 Perforation().padding(.vertical, 2)
-                ProofLine(label: L10n.string("Kept with Pausely"), value: SavingsSummary.current().formatted(0), emphasised: true)
+                ProofLine(label: L10n.string("Kept since you cancelled"), value: SavingsSummary.current().formatted(0), emphasised: true)
             }
         }
     }
 
     private var howWeCount: some View {
-        Text("How we count: only charges that would really have happened, worked out from the payment date you entered, for 12 months after you cancel. If a subscription starts again, its savings stop that day. Pausely's own subscription never counts.")
+        Text("How we count: only charges your renewal date and price say would have happened, for 12 months after you cancel. If a subscription starts again, its savings stop that day. Pausely's own subscription never counts.")
             .font(.footnote)
             .foregroundStyle(Color.inkTextFaint)
             .multilineTextAlignment(.leading)
@@ -121,7 +121,7 @@ struct ReceiptRoll: View {
                 }
 
                 Perforation()
-                ProofLine(label: L10n.string("Kept with Pausely"), value: amount(summary.formatted(summary.savedSoFar)),
+                ProofLine(label: L10n.string("Kept since you cancelled"), value: amount(summary.formatted(summary.savedSoFar)),
                           emphasised: true)
                     .foregroundStyle(Color.paperKept)
                 ProofLine(label: L10n.string("On track over 12 months"), value: amount(summary.formatted(summary.onTrack)))

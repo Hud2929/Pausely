@@ -232,7 +232,7 @@ struct SubscriptionManagementView: View {
             VStack(spacing: 0) {
                 toolRow(icon: "doc.text", state: .kept,
                         title: L10n.string("On your Savings Receipt"),
-                        subtitle: L10n.string("\(MoneyFormat.string(line.onTrack, line.currency)) avoided over 12 months")) {
+                        subtitle: L10n.string("\(MoneyFormat.string(line.onTrack, line.currency)) on track over 12 months")) {
                     route = .receipt
                 }
             }
