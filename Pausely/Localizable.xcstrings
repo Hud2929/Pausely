@@ -52194,40 +52194,6 @@
         }
       }
     },
-    "Cancel now and you usually keep it until %@.": {
-      "localizations": {
-        "ar": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "ألغِه الآن وعادةً يبقى متاحًا حتى %@."
-          }
-        },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Wenn Sie jetzt kündigen, können Sie es meist bis %@ nutzen."
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Si cancelas ahora, normalmente lo conservas hasta el %@."
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Résiliez maintenant et vous le gardez généralement jusqu'au %@."
-          }
-        },
-        "ja": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "今解約しても、通常は%@まで利用できます。"
-          }
-        }
-      }
-    },
     "You kept it on %@.": {
       "localizations": {
         "ar": {
@@ -66912,6 +66878,108 @@
           "stringUnit": {
             "state": "translated",
             "value": "AppleがPausely Proの支払いを処理できませんでした。継続するにはお支払い方法を更新してください。"
+          }
+        }
+      }
+    },
+    "How much did you use it this month?": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "كم استخدمته هذا الشهر؟"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Wie viel haben Sie es diesen Monat genutzt?"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "¿Cuánto la has usado este mes?"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Combien l'avez-vous utilisé ce mois-ci ?"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "今月はどれくらい使いましたか？"
+          }
+        }
+      }
+    },
+    "Renewals since %@: %@": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "التجديدات منذ %1$@: %2$@"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Verlängerungen seit %1$@: %2$@"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Renovaciones desde %1$@: %2$@"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Renouvellements depuis %1$@ : %2$@"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ 以降の更新：%2$@"
+          }
+        }
+      }
+    },
+    "I'm paying for this again": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "أدفع مقابله مجددًا"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ich zahle wieder dafür"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Vuelvo a pagarla"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Je paie de nouveau pour ça"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "また支払っています"
           }
         }
       }

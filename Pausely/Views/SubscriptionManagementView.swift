@@ -314,6 +314,16 @@ struct SubscriptionManagementView: View {
                 Button { route = .cancel } label: { Text("Cancel subscription") }
                     .buttonStyle(.ink(.quiet))
                     .accessibilityIdentifier("cancelSubscriptionButton")
+            } else {
+                // Signed up again, or cancelled here by mistake: it charges from today, on this day of
+                // the month. On the free plan it needs a place; without one, the upgrade page says so.
+                Button {
+                    Task {
+                        if await store.startAgain(id: current.id) { Feel.selection() } else { route = .paywall }
+                    }
+                } label: { Text("I'm paying for this again") }
+                    .buttonStyle(.ink(.quiet))
+                    .accessibilityIdentifier("startAgainButton")
             }
 
             Button { showRemoveConfirm = true } label: {

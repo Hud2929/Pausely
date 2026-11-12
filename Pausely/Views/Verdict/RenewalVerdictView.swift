@@ -17,6 +17,7 @@ struct RenewalVerdictView: View {
     @State private var showPaywall = false
     @State private var showReceipt = false
     @State private var isKeeping = false
+    @State private var enteringUsage = false
     @State private var outcome: Outcome?
 
     private enum Outcome: Equatable {
@@ -60,6 +61,13 @@ struct RenewalVerdictView: View {
         .sheet(isPresented: $showReceipt) {
             SavingsReceiptView()
         }
+        .sheet(isPresented: $enteringUsage) {
+            if let sub = subscription {
+                UsageInputSheet(subscriptionName: sub.name, currentMinutes: screenTime.getCurrentMonthUsage(for: sub.name)) { minutes in
+                    screenTime.setMonthlyUsage(minutes: minutes, for: sub.name)
+                }
+            }
+        }
         .onChange(of: subscription?.status) { _, status in
             if status == .cancelled, outcome == nil {
                 withAnimation(Motion.unlessReduced(Motion.arrive)) { outcome = .cancelled }
@@ -98,6 +106,21 @@ struct RenewalVerdictView: View {
                     }
                     .padding(.top, 4)
 
+                    // The one figure Pausely can't know. Entered here, it turns the price into a cost
+                    // per hour on the slip above.
+                    Button { enteringUsage = true } label: {
+                        Text(screenTime.getUsage(for: sub.name) == nil
+                             ? L10n.string("How much did you use it this month?")
+                             : L10n.string("Change this month's hours"))
+                            .underline()
+                            .font(.subheadline.weight(.semibold))
+                            .foregroundStyle(Color.inkText)
+                            .frame(minHeight: Layout.tapTarget, alignment: .leading)
+                            .contentShape(Rectangle())
+                    }
+                    .buttonStyle(.plain)
+                    .padding(.top, 12)
+                    .accessibilityIdentifier("verdictUsageButton")
                 }
                 .padding(.horizontal, Layout.margin)
                 .padding(.bottom, 16)
@@ -166,12 +189,17 @@ struct RenewalVerdictView: View {
                          color: up ? .paperDue : .paperKept)
             }
 
+            if let renewed = VerdictFacts.renewedSoFar(for: sub, events: eventLog.events) {
+                let since = renewed.since.formatted(.dateTime.month(.abbreviated).year().locale(L10n.locale))
+                factLine(L10n.string("Renewals since \(since): \(MoneyFormat.string(renewed.total, sub.currency, locale: L10n.locale))"))
+            }
+
             if let usage = usageText(sub) { factLine(usage) }
 
             if let charge {
-                factLine(charge.isTrialEnd
-                    ? L10n.string("Cancel before \(charge.date.formatted(.dateTime.month(.abbreviated).day())) and you won't be charged.")
-                    : L10n.string("Cancel now and you usually keep it until \(charge.date.formatted(.dateTime.month(.abbreviated).day()))."))
+                // The same promise for a renewal as for a trial's end, and one Pausely can make of any
+                // service: cancelled before the day, the charge doesn't happen.
+                factLine(L10n.string("Cancel before \(charge.date.formatted(.dateTime.month(.abbreviated).day().locale(L10n.locale))) and you won't be charged."))
             }
 
             if let kept = VerdictFacts.lastKept(for: sub.id, events: eventLog.events) {
@@ -203,8 +231,9 @@ struct RenewalVerdictView: View {
     }
 
     private func usageText(_ sub: Subscription) -> String? {
-        let minutes = screenTime.getCurrentMonthUsage(for: sub.name)
-        guard minutes > 0 else { return nil }
+        guard let usage = screenTime.getUsage(for: sub.name) else { return nil }
+        let minutes = usage.minutesUsed
+        guard minutes > 0 else { return L10n.string("Not used this month") }
         let duration = Duration.seconds(minutes * 60).formatted(.units(allowed: [.hours, .minutes], width: .abbreviated))
         if let perHour = screenTime.calculateCostPerHour(monthlyCost: sub.monthlyCost, subscriptionName: sub.name) {
             return L10n.string("Used \(duration) this month · \(MoneyFormat.string(perHour, sub.currency)) an hour")

@@ -20,10 +20,24 @@ enum MoneyMath {
             return sum + converted
         }
     }
+
+    /// The exact sum of amounts that are all in `currency`, or nil when one of them is not. For a
+    /// history of what one subscription charged: nothing is converted, because a rate from today
+    /// applied to a charge from last spring would be a guess.
+    static func exactTotal<S: Sequence>(_ items: S, allIn currency: String,
+                                        amount: (S.Element) -> Decimal,
+                                        currencyOf: (S.Element) -> String) -> Decimal? {
+        var sum = Decimal(0)
+        for item in items {
+            guard currencyOf(item).caseInsensitiveCompare(currency) == .orderedSame else { return nil }
+            sum += amount(item)
+        }
+        return sum
+    }
 }
 
 extension Collection where Element == Subscription {
-    /// The subscriptions that are charging: on, or in a trial that turns into a charge, and not paused.
+    /// The subscriptions that are charging: on, or in a trial that turns into a charge.
     /// Every total, count and "what you pay" on a screen, a widget, a Shortcut or an export starts
     /// from this list, so two of them can never disagree about the same subscriptions.
     var charging: [Subscription] { filter(\.renewsAutomatically) }

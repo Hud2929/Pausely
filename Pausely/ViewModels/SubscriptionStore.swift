@@ -287,6 +287,28 @@ class SubscriptionStore: ObservableObject {
         lastFetchDate = nil
     }
 
+    // MARK: - Paying for it again
+
+    /// A cancelled subscription is on again from `date`, and renews on that day of the month from now
+    /// on (see `PausePlanSchedule.restartAnchor`). The status change records a reactivation, which
+    /// closes its Savings Receipt line. One that is already charging keeps the date it has.
+    /// - Returns: false when the free plan has no place left for it (the caller shows the upgrade page).
+    @discardableResult
+    func startAgain(id: UUID, on date: Date = Date(), calendar: Calendar = .billing) async -> Bool {
+        guard var updated = subscriptions.first(where: { $0.id == id }), !updated.renewsAutomatically else { return true }
+        guard PaymentManager.shared.hasRoom(in: subscriptions) else { return false }
+        let restart = PausePlanSchedule.restartAnchor(startedOn: date, frequency: updated.billingFrequency, calendar: calendar)
+        updated.nextBillingDate = restart.anchor
+        await updateSubscription(updated)
+        await updateSubscriptionStatus(id: id, status: .active)
+        if restart.isStartDay {
+            // Today's charge is the one just paid: nothing to decide and nothing to be reminded of.
+            LifecycleEventLog.shared.record(.kept, for: updated, date: date, renewalDate: restart.anchor)
+            await ReminderScheduler.shared.reschedule(subscriptions)
+        }
+        return true
+    }
+
     // MARK: - A change of time zone
 
     /// The time zone the days in memory were read in. A renewal day is held as noon in the phone's
