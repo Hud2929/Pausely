@@ -303,7 +303,9 @@ extension View {
     /// The screen's ink, with the status bar's strip kept solid: on a screen without a navigation bar,
     /// scrolled text otherwise slides under the clock and is drawn through it.
     func inkScreen() -> some View {
-        background(Color.ink.ignoresSafeArea())
+        // Full width first: a scroll view narrower than the screen must not leave black beside it.
+        frame(maxWidth: .infinity)
+            .background(Color.ink.ignoresSafeArea())
             .overlay(alignment: .top) {
                 GeometryReader { proxy in
                     Color.ink

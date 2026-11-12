@@ -41,6 +41,12 @@ struct PauselyApp: App {
             PendingTally.clear()
             TallyImporter.clearWaiting()
         }
+        // A launch that starts from a set list (the demo one, or none) takes in nothing an earlier
+        // run left waiting: an "empty" capture once opened on a Netflix from a first-run test.
+        if LaunchFlag.isSet("--fresh-demo-data") || LaunchFlag.isSet("--empty-demo-data") {
+            PendingTally.clear()
+            TallyImporter.clearWaiting()
+        }
         #endif
     }
 

@@ -434,6 +434,25 @@ Updated at every commit, so the work can be picked up from this file alone.
   still carries BGN at exactly 1.95583 times its euro and SLL at 1000 times SLE.
   `testARetiredCurrencyConvertsAtItsFixedRate`, `testNoRetiredCurrencyIsOfferedAndItsSuccessorIs`.
   130 currencies, as the listing says. 749 tests, 0 failures.
+- iPad tour and what it showed (11-12). The whole tour on the iPad Pro 13-inch simulator with the
+  audit (`/tmp/pausely_tour_ipad_1`, 97 captures), the first capture of every screen read on
+  contact sheets. Counted 180, of which 124 were the four titles of iPad's own tab bar on every
+  tab capture (bare `UILabel`s the system sizes itself): the tour now files those with the other
+  system-bar titles, which leaves 56. One real fault, on every device: the empty Insights tab had
+  a black band down each side in Arabic, at the largest text size and on iPad. A scroll view is
+  only as wide as what it holds; with two short lines it shrank, sat in the middle and left the
+  navigation stack's black beside it. The content is full width now, `inkScreen()` paints the
+  whole width whatever it is put on, and two instruments find the fault again:
+  `scripts/tour_black_bands.swift` reads the captures for unpainted bands (it finds the old ones
+  and nothing in today's four tours), and the tour itself reports a scroll view narrower than its
+  screen. The tour is also repeatable now: the tabs open on the demo list every time (they showed
+  whatever the test before had left: the iPad's Home was a first-run list of four), and a demo
+  launch takes in no tally an earlier run left waiting (an "empty" Home once opened on a Netflix).
+  Seen on iPad and right: the 680-point column, the tab bar at the top, sheets, the keyboard.
+  749 tests, 0 failures; Release builds; gold_check 0. Next: the states with no launch argument
+  (a richer demo list, then the dialogs, error lines and data-dependent rows through the tour),
+  the parts not yet rebuilt (Pause Plan, the notice toast), then the four whole tours for the
+  counts and the scores.
 - Told by the other session at 22:04 (it has stood down and changed nothing): sections 2, 3, 4, 6, 7
   and 10 of the engineering audit were never done and there is no finished overlooked-details
   report. Those areas have been scanned by nobody; they are owed before Stage G can be called done.
@@ -726,6 +745,7 @@ and limits) is O37 and nothing else was found.
 | Per-file findings (colour, type, layout, Dynamic Type, right to left, VoiceOver, motion, haptics, states) in `ui.md` | open |
 | Seen in passing on 11-12: on Insights, scrolled content runs under the status bar and the clock is drawn over it | closed 11-12: `inkScreen()` on the four tabs (E first slice) and on every other screen that draws its own top row (E fourth slice); `testAScreenWithoutANavigationBarKeepsTheStatusStripSolid` |
 | Arabic, whole tour read (11-12): untranslated rows on the edit screen and the age check, left-to-right sentences, Latin digits in sentences, a 15-point "Done", text under the clock, an unreadable footnote | closed 11-12 (E fourth slice): each held by a test; `scripts/tour_untranslated.py` prints nothing for the screens toured again. Still to do in Arabic: a whole tour on the final build for the count, and one native reader (6.7) |
+| Empty Insights tab: a black band down each side in Arabic, at the largest text size and on iPad (found 11-12 on the iPad tour) | closed 11-12: the scroll content is full width and `inkScreen()` paints the whole width; `scripts/tour_black_bands.swift` and the tour's own "scroll view narrower than its screen" finding catch it again |
 | "iPhone" said on iPad in 16 strings ("Same as iPhone", "Saved on this iPhone", "Your email never leaves your iPhone" …) and "phone" in two more | closed 11-12: per-device wording in the catalog for all 18, six languages; `testOnAnIPadTheAppSaysIPad`; read on the iPad tour's captures |
 | Export: the app makes CSV, PDF and JSON; the policy names CSV only and the JSON file has no test | closed 11-12: the policy names the two machine-readable copies and the PDF (`WebsiteTruthTests` ties the sentence to `ExportFormat.allCases`); the JSON file is a pure function that reads back as the same list and history, with the price as entered (`testTheFullFileReadsBackAsTheSameListAndHistory`), and each choice on the screen writes the file it names (`testEachFormatWritesItsOwnFile`) |
 

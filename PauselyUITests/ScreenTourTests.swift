@@ -139,7 +139,8 @@ final class ScreenTourTests: XCTestCase {
 
     private func launchDemo(tab: Int? = nil) -> XCUIApplication {
         let app = XCUIApplication()
-        app.launchArguments = ["--uitesting", "--demo-mode"] + (tab.map { ["--demo-tab=\($0)"] } ?? []) + variantArguments
+        // The demo list on every launch: without it the tabs show whatever the test before left behind.
+        app.launchArguments = ["--uitesting", "--demo-mode", "--fresh-demo-data"] + (tab.map { ["--demo-tab=\($0)"] } ?? []) + variantArguments
         app.launch()
         sleep(4)
         return app
@@ -198,7 +199,9 @@ final class ScreenTourTests: XCTestCase {
                 let detail = issue.detailedDescription.replacingOccurrences(of: "\n", with: " ")
                 let place = "\(Int(frame.minX)),\(Int(frame.minY)) \(Int(frame.width))x\(Int(frame.height))"
                 let line = "\(screen) | \(issue.auditType.name) | \(issue.compactDescription) | \(element.prefix(80)) | \(place) | \(detail.prefix(200))"
-                if issue.auditType == .dynamicType, barButtons.contains(element) {
+                // The app draws its text with SwiftUI; a bare UILabel is the system's own (on iPad, the
+                // four titles in the tab bar at the top), which iOS sizes itself.
+                if issue.auditType == .dynamicType, barButtons.contains(element) || detail.contains("this UILabel") {
                     systemBar.append(line)
                 } else if frame != .zero, frame.maxY > tabBarTop || frame.minY < statusBarBottom {
                     behindBars.append(line)
@@ -209,6 +212,18 @@ final class ScreenTourTests: XCTestCase {
             }
         } catch {
             counted.append("\(screen) | audit could not run | \(error.localizedDescription)")
+        }
+        // Not the system's audit, the tour's own: a scroll view is only as wide as what it holds, so
+        // one with little in it shrinks, sits in the middle and leaves its screen unpainted beside it
+        // (the empty Insights tab did, in Arabic, at the largest text and on iPad).
+        // Checked at phone width, where a screen and a sheet are both as wide as the window; on iPad a
+        // sheet is rightly narrower than the window, so the same states are caught on the phone.
+        let window = app.windows.firstMatch.frame.width
+        if window < 500 {
+            for scroll in app.scrollViews.allElementsBoundByIndex + app.collectionViews.allElementsBoundByIndex
+            where scroll.exists && scroll.frame.height > 200 && scroll.frame.width < window - 1 {
+                counted.append("\(screen) | layout | Scroll view narrower than its screen |  | \(Int(scroll.frame.minX)),\(Int(scroll.frame.minY)) \(Int(scroll.frame.width))x\(Int(scroll.frame.height)) | \(Int(scroll.frame.width)) points wide in a \(Int(window))-point window")
+            }
         }
         append(counted, to: "audit.txt")
         append(behindBars, to: "audit_behind_bars.txt")

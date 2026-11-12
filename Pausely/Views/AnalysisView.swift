@@ -106,6 +106,9 @@ struct AnalysisView: View {
                     usageSection
                 }
             }
+            // A scroll view is only as wide as what it holds: with two short lines (the empty state)
+            // it shrank, sat in the middle and left the navigation stack's black on either side.
+            .frame(maxWidth: .infinity, alignment: .leading)
             .padding(.horizontal, Layout.margin)
             .padding(.top, 16)
             .padding(.bottom, 32)
