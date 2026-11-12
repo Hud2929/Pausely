@@ -10,55 +10,57 @@ import Foundation
 struct TallyService: Identifiable, Hashable {
     let name: String
     let category: SubscriptionCategory
-    /// The monthly price of the plan most people have, by currency. A currency that is missing
-    /// has no figure Pausely can stand behind, so the person is asked instead.
+    /// The monthly price of the plan most people have, by currency, each read from the service's
+    /// own page. A currency that is missing has no figure Pausely can stand behind, so the person
+    /// is asked what they pay instead.
     let prices: [String: Decimal]
-    /// True when every price was read from the service's own pricing page (see `pricesCheckedOn`).
-    /// False for US prices taken from press round-ups, which are less certain.
-    var official = false
+    /// The page the prices were read from, and the day. Nil for a service with no prices.
+    var source: String?
+    var checkedOn: String?
     /// Sold only in the United States; hidden for people who pay in another currency.
     var usOnly = false
 
     var id: String { name }
-
-    /// For tests and previews: the US price.
-    var typicalUSD: Decimal { prices["USD"] ?? 0 }
 }
 
 enum TallyCatalog {
-    /// When the prices below were last read. Official ones come from each service's own page for
-    /// that country (Netflix help centre, spotify.com, apple.com, Apple's iCloud+ price list,
-    /// claude.com); the rest are US prices from press round-ups dated April to September 2026.
-    static let pricesCheckedOn = "2026-11-10"
-
+    /// Every price here was read from the service's own page, named beside it with the day it was
+    /// read. Nothing comes from press round-ups any more: of the eight such prices that could be
+    /// checked against the service's own page on 2026-11-11, two were wrong (PlayStation Plus,
+    /// Disney+). A service whose page could not be read has no price, and the person is asked.
     static let services: [TallyService] = [
-        official("Netflix", .entertainment, usd: "19.99", cad: "18.99", gbp: "13.99", eur: "15.99", aud: "20.99"),
-        official("Spotify", .music, usd: "12.99", cad: "13.99", gbp: "12.99", eur: "12.99", aud: "15.99"),
-        reported("YouTube Premium", .entertainment, usd: "13.99"),
-        reported("Amazon Prime", .shopping, usd: "14.99"),
-        reported("Disney+", .entertainment, usd: "11.99"),
-        official("Apple Music", .music, usd: "11.99", cad: "11.99", gbp: "11.99", eur: "11.99", aud: "14.99"),
-        official("iCloud+", .cloudStorage, usd: "2.99", cad: "3.99", gbp: "2.99", eur: "2.99", aud: "4.49"),
-        reported("ChatGPT Plus", .productivity, usd: "20.00"),
-        reported("Hulu", .entertainment, usd: "11.99", usOnly: true),
-        reported("HBO Max", .entertainment, usd: "10.99"),
-        official("Apple TV", .entertainment, usd: "14.99", cad: "14.99", gbp: "9.99", eur: "9.99", aud: nil),
-        reported("Paramount+", .entertainment, usd: "8.99"),
-        reported("Peacock", .entertainment, usd: "10.99", usOnly: true),
-        reported("Google One", .cloudStorage, usd: "1.99"),
-        reported("PlayStation Plus", .entertainment, usd: "9.99"),
-        reported("Audible", .entertainment, usd: "14.95"),
-        reported("Microsoft 365", .productivity, usd: "9.99"),
-        official("Claude Pro", .productivity, usd: "20.00", cad: nil, gbp: nil, eur: nil, aud: nil),
-        reported("Duolingo", .education, usd: "12.99"),
-        reported("Crunchyroll", .entertainment, usd: "7.99"),
-        reported("Discord Nitro", .social, usd: "9.99"),
-        reported("Kindle Unlimited", .entertainment, usd: "11.99"),
-        reported("Dropbox", .cloudStorage, usd: "11.99"),
-        reported("Uber One", .food, usd: "9.99"),
-        reported("DoorDash DashPass", .food, usd: "9.99", usOnly: true),
-        reported("Walmart+", .shopping, usd: "12.95", usOnly: true),
-        reported("Planet Fitness", .gym, usd: "15.00", usOnly: true),
+        priced("Netflix", .entertainment, usd: "19.99", cad: "18.99", gbp: "13.99", eur: "15.99", aud: "20.99",
+               from: "help.netflix.com", on: "2026-11-10"),
+        priced("Spotify", .music, usd: "12.99", cad: "13.99", gbp: "12.99", eur: "12.99", aud: "15.99",
+               from: "spotify.com", on: "2026-11-10"),
+        asked("YouTube Premium", .entertainment),
+        asked("Amazon Prime", .shopping),
+        priced("Disney+", .entertainment, usd: "12.49", from: "disneyplus.com/en-us", on: "2026-11-11"),
+        priced("Apple Music", .music, usd: "11.99", cad: "11.99", gbp: "11.99", eur: "11.99", aud: "14.99",
+               from: "apple.com", on: "2026-11-10"),
+        priced("iCloud+", .cloudStorage, usd: "2.99", cad: "3.99", gbp: "2.99", eur: "2.99", aud: "4.49",
+               from: "support.apple.com (iCloud+ price list)", on: "2026-11-10"),
+        asked("ChatGPT Plus", .productivity),
+        asked("Hulu", .entertainment, usOnly: true),
+        priced("HBO Max", .entertainment, usd: "10.99", from: "hbomax.com/us/en", on: "2026-11-11"),
+        priced("Apple TV", .entertainment, usd: "14.99", cad: "14.99", gbp: "9.99", eur: "9.99",
+               from: "apple.com", on: "2026-11-10"),
+        priced("Paramount+", .entertainment, cad: "7.99", from: "paramountplus.com/ca", on: "2026-11-11"),
+        asked("Peacock", .entertainment, usOnly: true),
+        priced("Google One", .cloudStorage, cad: "2.79", from: "one.google.com/about/plans", on: "2026-11-11"),
+        priced("PlayStation Plus", .entertainment, usd: "10.99", from: "playstation.com/en-us/ps-plus", on: "2026-11-11"),
+        priced("Audible", .entertainment, usd: "14.95", from: "audible.com/ep/memberbenefits", on: "2026-11-11"),
+        priced("Microsoft 365", .productivity, usd: "9.99", from: "microsoft.com/en-us/microsoft-365", on: "2026-11-11"),
+        priced("Claude Pro", .productivity, usd: "20.00", from: "claude.com", on: "2026-11-10"),
+        asked("Duolingo", .education),
+        asked("Crunchyroll", .entertainment),
+        priced("Discord Nitro", .social, usd: "9.99", from: "discord.com/nitro", on: "2026-11-11"),
+        asked("Kindle Unlimited", .entertainment),
+        priced("Dropbox", .cloudStorage, cad: "12.99", from: "dropbox.com/plans", on: "2026-11-11"),
+        priced("Uber One", .food, usd: "9.99", from: "uber.com/us/en/u/uber-one", on: "2026-11-11"),
+        asked("DoorDash DashPass", .food, usOnly: true),
+        asked("Walmart+", .shopping, usOnly: true),
+        asked("Planet Fitness", .gym, usOnly: true),
     ]
 
     /// The grid for someone who pays in `currency`.
@@ -72,17 +74,19 @@ enum TallyCatalog {
         return services.first { $0.name.lowercased() == key }?.prices[MoneyFormat.normalizedCode(currency)]
     }
 
-    private static func official(_ name: String, _ category: SubscriptionCategory, usd: String, cad: String?, gbp: String?,
-                                 eur: String?, aud: String?) -> TallyService {
+    private static func priced(_ name: String, _ category: SubscriptionCategory, usd: String? = nil, cad: String? = nil,
+                               gbp: String? = nil, eur: String? = nil, aud: String? = nil,
+                               from source: String, on day: String) -> TallyService {
         var prices: [String: Decimal] = [:]
         for (code, text) in [("USD", usd), ("CAD", cad), ("GBP", gbp), ("EUR", eur), ("AUD", aud)] {
             if let text, let value = Decimal(string: text) { prices[code] = value }
         }
-        return TallyService(name: name, category: category, prices: prices, official: true)
+        return TallyService(name: name, category: category, prices: prices, source: source, checkedOn: day)
     }
 
-    private static func reported(_ name: String, _ category: SubscriptionCategory, usd: String, usOnly: Bool = false) -> TallyService {
-        TallyService(name: name, category: category, prices: ["USD": Decimal(string: usd) ?? 0], usOnly: usOnly)
+    /// On the grid, with no price: the person is asked what they pay.
+    private static func asked(_ name: String, _ category: SubscriptionCategory, usOnly: Bool = false) -> TallyService {
+        TallyService(name: name, category: category, prices: [:], usOnly: usOnly)
     }
 }
 
@@ -336,9 +340,11 @@ enum DemoTally {
         var tally = Tally(currency: CurrencyManager.shared.selectedCurrency)
         tally.guess = 40
         for name in ["Netflix", "Spotify", "YouTube Premium", "Amazon Prime", "iCloud+", "ChatGPT Plus", "Disney+", "Audible"] {
-            if let service = TallyCatalog.services.first(where: { $0.name == name }) {
-                tally.toggle(service, amount: Tally.typicalAmount(service, payingIn: tally.currency) ?? service.typicalUSD)
-            }
+            guard let service = TallyCatalog.services.first(where: { $0.name == name }) else { continue }
+            // A demo slip is full: where there is no typical price, a sample one stands in for what
+            // the person would have typed.
+            tally.toggle(service, amount: Tally.typicalAmount(service, payingIn: tally.currency) ?? Decimal(string: "13.99"),
+                         confirmed: Tally.typicalAmount(service, payingIn: tally.currency) == nil)
         }
         return tally
     }

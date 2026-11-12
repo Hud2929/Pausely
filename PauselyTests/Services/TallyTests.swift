@@ -32,9 +32,16 @@ final class TallyTests: XCTestCase {
     }
 
     func testAServiceWithoutAPriceInThisCurrencyIsAskedNotGuessed() {
-        // YouTube Premium's price is only known in US dollars.
-        XCTAssertNil(Tally.typicalAmount(service("YouTube Premium"), payingIn: "CAD"))
-        XCTAssertEqual(Tally.typicalAmount(service("YouTube Premium"), payingIn: "USD"), Decimal(string: "13.99"))
+        // Discord's page states its price in US dollars only.
+        XCTAssertNil(Tally.typicalAmount(service("Discord Nitro"), payingIn: "CAD"))
+        XCTAssertEqual(Tally.typicalAmount(service("Discord Nitro"), payingIn: "USD"), Decimal(string: "9.99"))
+        // YouTube's page shows no price to read, so there is none in any currency.
+        XCTAssertNil(Tally.typicalAmount(service("YouTube Premium"), payingIn: "USD"))
+        var tally = Tally(currency: "USD")
+        tally.toggle(service("YouTube Premium"))
+        XCTAssertTrue(tally.lines.isEmpty, "nothing is added at a made-up price")
+        tally.toggle(service("YouTube Premium"), amount: Decimal(string: "13.99"), confirmed: true)
+        XCTAssertEqual(tally.lines.map(\.amount), [Decimal(string: "13.99")], "it goes on at the price the person types")
         XCTAssertNil(TallyCatalog.price(forServiceNamed: "netflix", payingIn: "JPY"))
         XCTAssertEqual(TallyCatalog.price(forServiceNamed: " netflix ", payingIn: "eur"), Decimal(string: "15.99"))
     }
@@ -65,7 +72,7 @@ final class TallyTests: XCTestCase {
     func testVerdictComparesTheGuessWithTheTotal() {
         var tally = Tally(currency: "USD")
         tally.toggle(service("Netflix"))       // 19.99
-        tally.toggle(service("ChatGPT Plus"))  // 20.00 → 39.99
+        tally.toggle(service("Claude Pro"))    // 20.00 → 39.99
 
         tally.guess = 20
         XCTAssertEqual(tally.verdict(rates: rates),
@@ -84,14 +91,24 @@ final class TallyTests: XCTestCase {
         XCTAssertTrue(TallyCatalog.services(payingIn: "CAD").contains { $0.name == "Netflix" })
     }
 
-    func testCatalogHasNoDuplicatesAndEveryPriceIsPositive() {
+    /// A price is on the grid only with the page it was read from and the day. Prices used to come
+    /// from press round-ups as well; two of the eight that could be checked were wrong.
+    func testEveryPriceNamesThePageItWasReadFromAndTheDay() {
         XCTAssertEqual(Set(TallyCatalog.services.map(\.name)).count, TallyCatalog.services.count)
         for service in TallyCatalog.services {
-            XCTAssertGreaterThan(service.typicalUSD, 0, service.name)
             for (currency, price) in service.prices {
                 XCTAssertGreaterThan(price, 0, "\(service.name) \(currency)")
             }
+            if service.prices.isEmpty {
+                XCTAssertNil(service.source, service.name)
+            } else {
+                XCTAssertEqual(service.source?.isEmpty, false, service.name)
+                XCTAssertNotNil(service.checkedOn?.range(of: #"^2026-\d{2}-\d{2}$"#, options: .regularExpression), service.name)
+            }
         }
+        XCTAssertEqual(TallyCatalog.services.filter { !$0.prices.isEmpty }.count, 16)
+        XCTAssertEqual(Tally.typicalAmount(service("PlayStation Plus"), payingIn: "USD"), Decimal(string: "10.99"), "not the 9.99 a round-up gave")
+        XCTAssertEqual(Tally.typicalAmount(service("Disney+"), payingIn: "USD"), Decimal(string: "12.49"), "not 11.99")
     }
 
     func testSubscriptionsAreMonthlyWithNoRenewalDateInvented() {
