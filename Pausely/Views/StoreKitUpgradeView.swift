@@ -107,9 +107,7 @@ struct StoreKitUpgradeView: View {
     private var store: SubscriptionStore { SubscriptionStore.shared }
     private var waitingCount: Int { TallyImporter.waitingLines().count }
 
-    private var activeSubscriptions: [Subscription] {
-        store.subscriptions.filter { $0.status == .active || $0.status == .trial }
-    }
+    private var activeSubscriptions: [Subscription] { store.activeSubscriptions }
 
     private var selectedProduct: Product? { storeManager.product(for: selectedPlan.tier) }
 

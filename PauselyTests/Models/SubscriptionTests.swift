@@ -72,17 +72,24 @@ final class SubscriptionTests: XCTestCase {
 
     // MARK: - Status
 
-    func testIsActive() {
-        let active = TestFactories.makeSubscription(status: .active)
-        XCTAssertTrue(active.isActive)
-        XCTAssertFalse(active.isPaused)
-    }
-
-    func testIsPaused() {
-        var paused = TestFactories.makeSubscription(status: .active)
-        paused.pausedUntil = Calendar.current.date(byAdding: .day, value: 7, to: Date())
+    /// What is being paid for: on, or a trial that will turn into a charge, and not paused.
+    func testWhatIsCharging() {
+        let soon = Calendar.current.date(byAdding: .day, value: 7, to: Date())
+        var paused = TestFactories.makeSubscription(name: "Paused", status: .active)
+        paused.pausedUntil = soon
+        var pauseOver = TestFactories.makeSubscription(name: "Pause over", status: .active)
+        pauseOver.pausedUntil = Calendar.current.date(byAdding: .day, value: -1, to: Date())
+        let list = [
+            TestFactories.makeSubscription(name: "On", status: .active),
+            TestFactories.makeSubscription(name: "Trial", status: .trial),
+            paused, pauseOver,
+            TestFactories.makeSubscription(name: "Cancelled", status: .cancelled),
+            TestFactories.makeSubscription(name: "Expired", status: .expired),
+            TestFactories.makeSubscription(name: "Marked paused", status: .paused)
+        ]
         XCTAssertTrue(paused.isPaused)
-        XCTAssertTrue(paused.isActive)
+        XCTAssertFalse(pauseOver.isPaused)
+        XCTAssertEqual(list.charging.map(\.name), ["On", "Trial", "Pause over"])
     }
 
     // MARK: - Days Until Renewal

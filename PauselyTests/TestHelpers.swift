@@ -142,7 +142,7 @@ final class StoreSandbox {
     private static let defaultsKeys = ["debug_premium_override", "debug_free_pro", "review_receipt_milestone_last"]
     let transport = FakeSyncTransport()
     private let subscriptions: [Subscription]
-    private let totals: (monthly: Decimal, annual: Decimal, lifetime: Decimal)
+    private let totals: (monthly: Decimal, annual: Decimal)
     private let cache: Data
     private let cacheDate: Date
     private let sync: SyncQueue
@@ -153,7 +153,7 @@ final class StoreSandbox {
     init() {
         let store = SubscriptionStore.shared
         subscriptions = store.subscriptions
-        totals = (store.totalMonthlySpend, store.totalAnnualSpend, store.totalLifetimeSpend)
+        totals = (store.totalMonthlySpend, store.totalAnnualSpend)
         cache = AppSettings.shared.cachedSubscriptions
         cacheDate = AppSettings.shared.subscriptionsCacheDate
         sync = store.sync
@@ -165,13 +165,13 @@ final class StoreSandbox {
         SubscriptionStore.cloudSyncEnabled = false
         store.sync = SyncQueue(transport: transport, load: { Data() }, store: { _ in })
         store.subscriptions = []
-        (store.totalMonthlySpend, store.totalAnnualSpend, store.totalLifetimeSpend) = (0, 0, 0)
+        (store.totalMonthlySpend, store.totalAnnualSpend) = (0, 0)
     }
 
     func restore() async {
         let store = SubscriptionStore.shared
         store.subscriptions = subscriptions
-        (store.totalMonthlySpend, store.totalAnnualSpend, store.totalLifetimeSpend) = totals
+        (store.totalMonthlySpend, store.totalAnnualSpend) = totals
         AppSettings.shared.cachedSubscriptions = cache
         AppSettings.shared.subscriptionsCacheDate = cacheDate
         store.sync = sync

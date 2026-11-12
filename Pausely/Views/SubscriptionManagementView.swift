@@ -183,8 +183,7 @@ struct SubscriptionManagementView: View {
     // MARK: - Facts
 
     private var factsCard: some View {
-        let startedOn = current.startDate ?? current.createdAt
-        return VStack(spacing: 0) {
+        VStack(spacing: 0) {
             fact(L10n.string("Billing cycle"), current.billingFrequency.displayName)
             divider
             fact(L10n.string("Next payment"), current.calculatedNextBillingDate.map { $0.formatted(.dateTime.month(.abbreviated).day().year().locale(L10n.locale)) } ?? L10n.string("Not set"))
@@ -193,7 +192,7 @@ struct SubscriptionManagementView: View {
             divider
             fact(L10n.string("Per year"), MoneyFormat.string(current.amount * ProvenSubscription.periodsPerYear(current.billingFrequency), current.currency))
             divider
-            fact(L10n.string("Tracking since"), startedOn.formatted(.dateTime.month(.abbreviated).year().locale(L10n.locale)))
+            fact(L10n.string("Tracking since"), current.createdAt.formatted(.dateTime.month(.abbreviated).year().locale(L10n.locale)))
         }
         .accessibilityElement(children: .contain)
     }

@@ -17,7 +17,7 @@ enum PaywallCase {
                            subscriptions: [Subscription], rates: CurrencyRates) -> Comparison? {
         guard proYearly > 0 else { return nil }
         let candidates: [(name: String, monthly: Decimal)] = subscriptions.compactMap { subscription in
-            guard subscription.status == .active || subscription.status == .trial,
+            guard subscription.renewsAutomatically,
                   let monthly = rates.convert(subscription.monthlyCost, from: subscription.currency, to: proCurrency),
                   monthly > 0 else { return nil }
             return (subscription.name, monthly)

@@ -219,4 +219,37 @@ final class SubscriptionStoreTests: XCTestCase {
         XCTAssertEqual(store.totalMonthlySpend, 10)
         XCTAssertEqual(store.totalAnnualSpend, 120)
     }
+
+    /// One list, one answer. Home counted paused subscriptions and left trials out, Insights left
+    /// both out, the paywall and the year slip counted both: someone with one trial and one paused
+    /// subscription saw three different yearly figures.
+    func testEveryTotalAndCountIsAboutTheSameSubscriptions() async throws {
+        await add(TestFactories.makeSubscription(name: "On", amount: 10, status: .active, category: "Music"))
+        await add(TestFactories.makeSubscription(name: "Trial", amount: 5, status: .trial, category: "Music"))
+        let paused = TestFactories.makeSubscription(name: "Paused", amount: 100, status: .active, category: "Music")
+        await add(paused)
+        await store.pauseSubscription(id: paused.id, until: days(30))
+        await add(TestFactories.makeSubscription(name: "Cancelled", amount: 1000, status: .cancelled, category: "Music"))
+
+        // Home and the Subscriptions tab
+        XCTAssertEqual(store.totalMonthlySpend, 15)
+        XCTAssertEqual(store.totalAnnualSpend, 180)
+        XCTAssertEqual(store.activeSubscriptions.map(\.name).sorted(), ["On", "Trial"])
+        XCTAssertEqual(store.pausedSubscriptions.map(\.name), ["Paused"], "listed apart, and not in the big number")
+        // Insights, by category
+        XCTAssertEqual(store.subscriptions.categoryTotals(in: "USD"), [CategoryTotal(category: "Music", amount: 15, count: 2)])
+        // The paywall's "about … a year" and the year slip
+        XCTAssertEqual(store.activeSubscriptions.annualTotal(in: "USD"), 180)
+        let slip = WrappedStats(subscriptions: store.subscriptions)
+        XCTAssertEqual(slip.yearlyCost, 180)
+        XCTAssertEqual(slip.totalCount, 2)
+        // The paywall's comparison never names something that isn't charging
+        let comparison = PaywallCase.comparison(proYearly: 30, proCurrency: "USD", subscriptions: store.subscriptions,
+                                                rates: CurrencyManager.shared.rates)
+        XCTAssertEqual(comparison?.name, "On")
+        // The widget
+        let widget = WidgetDataStore.shared.readSummary()
+        XCTAssertEqual(widget.monthlySpend, 15, accuracy: 0.001)
+        XCTAssertEqual(widget.activeCount, 2)
+    }
 }

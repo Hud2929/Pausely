@@ -24,7 +24,6 @@ struct Subscription: Identifiable, Codable, Equatable {
     var canPause: Bool
     var pauseUrl: String?
     var pausedUntil: Date?
-    var startDate: Date?       // Actual subscription start date (defaults to createdAt if nil)
     var createdAt: Date
     var updatedAt: Date
 
@@ -68,7 +67,6 @@ struct Subscription: Identifiable, Codable, Equatable {
         canPause: Bool = true,
         pauseUrl: String? = nil,
         pausedUntil: Date? = nil,
-        startDate: Date? = nil,
         createdAt: Date = Date(),
         updatedAt: Date = Date(),
         selectedTier: PricingTier = .individual,
@@ -97,7 +95,6 @@ struct Subscription: Identifiable, Codable, Equatable {
         self.canPause = canPause
         self.pauseUrl = pauseUrl
         self.pausedUntil = pausedUntil
-        self.startDate = startDate
         self.createdAt = createdAt
         self.updatedAt = updatedAt
         self.selectedTier = selectedTier
@@ -126,12 +123,6 @@ struct Subscription: Identifiable, Codable, Equatable {
         amount * ProvenSubscription.periodsPerYear(billingFrequency)
     }
     
-    var lifetimeSpend: Decimal {
-        let referenceDate = startDate ?? createdAt
-        let monthsSinceStart = Date().timeIntervalSince(referenceDate) / (30.44 * 24 * 60 * 60)
-        return monthlyCost * Decimal(monthsSinceStart)
-    }
-
     var monthlyCost: Decimal {
         switch billingFrequency {
         case .weekly:
@@ -147,10 +138,6 @@ struct Subscription: Identifiable, Codable, Equatable {
         case .yearly:
             return amount / 12
         }
-    }
-    
-    var isActive: Bool {
-        status == .active
     }
     
     var isPaused: Bool {

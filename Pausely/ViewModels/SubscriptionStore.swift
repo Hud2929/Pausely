@@ -9,7 +9,6 @@ class SubscriptionStore: ObservableObject {
     @Published var subscriptions: [Subscription] = []
     @Published var totalMonthlySpend: Decimal = 0
     @Published var totalAnnualSpend: Decimal = 0
-    @Published var totalLifetimeSpend: Decimal = 0
     @Published var isLoading = false
     @Published var lastErrorMessage: String?
     @Published var lastFetchDate: Date?
@@ -337,8 +336,7 @@ class SubscriptionStore: ObservableObject {
                 billingFrequency: .monthly,
                 nextBillingDate: calendar.date(byAdding: .day, value: 5, to: now),
                 status: .active,
-                canPause: true,
-                startDate: calendar.date(byAdding: .year, value: -2, to: now)
+                canPause: true
             ),
             Subscription(
                 id: UUID(),
@@ -349,8 +347,7 @@ class SubscriptionStore: ObservableObject {
                 billingFrequency: .monthly,
                 nextBillingDate: calendar.date(byAdding: .day, value: 12, to: now),
                 status: .active,
-                canPause: true,
-                startDate: calendar.date(byAdding: .year, value: -1, to: now)
+                canPause: true
             ),
             Subscription(
                 id: UUID(),
@@ -360,8 +357,7 @@ class SubscriptionStore: ObservableObject {
                 billingFrequency: .monthly,
                 nextBillingDate: calendar.date(byAdding: .day, value: 18, to: now),
                 status: .active,
-                canPause: false,
-                startDate: calendar.date(byAdding: .month, value: -8, to: now)
+                canPause: false
             ),
             Subscription(
                 id: UUID(),
@@ -371,8 +367,7 @@ class SubscriptionStore: ObservableObject {
                 billingFrequency: .monthly,
                 nextBillingDate: calendar.date(byAdding: .day, value: 2, to: now),
                 status: .active,
-                canPause: true,
-                startDate: calendar.date(byAdding: .month, value: -6, to: now)
+                canPause: true
             ),
             Subscription(
                 id: UUID(),
@@ -382,8 +377,7 @@ class SubscriptionStore: ObservableObject {
                 billingFrequency: .monthly,
                 nextBillingDate: calendar.date(byAdding: .day, value: 24, to: now),
                 status: .active,
-                canPause: true,
-                startDate: calendar.date(byAdding: .year, value: -3, to: now)
+                canPause: true
             ),
             Subscription(
                 id: UUID(),
@@ -393,8 +387,7 @@ class SubscriptionStore: ObservableObject {
                 billingFrequency: .monthly,
                 nextBillingDate: calendar.date(byAdding: .day, value: 8, to: now),
                 status: .active,
-                canPause: true,
-                startDate: calendar.date(byAdding: .month, value: -4, to: now)
+                canPause: true
             ),
             Subscription(
                 id: UUID(),
@@ -404,8 +397,7 @@ class SubscriptionStore: ObservableObject {
                 billingFrequency: .monthly,
                 nextBillingDate: calendar.date(byAdding: .day, value: 15, to: now),
                 status: .active,
-                canPause: true,
-                startDate: calendar.date(byAdding: .month, value: -3, to: now)
+                canPause: true
             )
         ]
     }
@@ -417,24 +409,19 @@ class SubscriptionStore: ObservableObject {
     
     // MARK: - Totals
 
-    /// Monthly, yearly and lifetime totals of active subscriptions in the display currency. Every
+    /// Monthly and yearly totals of active subscriptions in the display currency. Every
     /// subscription is converted from its own currency first (see MoneyMath); cheap enough to redo
     /// on every change, so there's no cache to go stale.
     private func calculateTotals(in currency: String = CurrencyManager.shared.selectedCurrency) {
-        let active = subscriptions.filter { $0.status == .active }
-        let rates = CurrencyManager.shared.rates
-        let monthly = active.monthlyTotal(in: currency, rates: rates)
+        let monthly = subscriptions.charging.monthlyTotal(in: currency, rates: CurrencyManager.shared.rates)
         totalMonthlySpend = monthly
         totalAnnualSpend = monthly * 12
-        totalLifetimeSpend = MoneyMath.total(active, in: currency, rates: rates,
-                                             amount: \.lifetimeSpend, currencyOf: \.currency)
     }
 
     // MARK: - Computed Properties
     
-    var activeSubscriptions: [Subscription] {
-        subscriptions.filter { $0.status == .active && !$0.isPaused }
-    }
+    /// What is being paid for (see `charging`): the list behind the totals above.
+    var activeSubscriptions: [Subscription] { subscriptions.charging }
 
     var pausedSubscriptions: [Subscription] {
         subscriptions.filter { $0.isPaused }

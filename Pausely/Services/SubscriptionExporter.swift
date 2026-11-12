@@ -122,7 +122,7 @@ final class SubscriptionExporter {
         let renderer = UIGraphicsPDFRenderer(bounds: CGRect(x: 0, y: 0, width: pageWidth, height: pageHeight), format: format)
 
         // Totals in the display currency, each subscription converted from its own currency.
-        let active = subscriptions.filter { $0.status == .active }
+        let active = subscriptions.charging
         let displayCurrency = CurrencyManager.shared.selectedCurrency
         let totalMonthly = MoneyFormat.string(active.monthlyTotal(in: displayCurrency), displayCurrency)
         let totalAnnual = MoneyFormat.string(active.annualTotal(in: displayCurrency), displayCurrency)
@@ -161,7 +161,7 @@ final class SubscriptionExporter {
                 .font: UIFont.systemFont(ofSize: 12),
                 .foregroundColor: UIColor.label
             ]
-            NSAttributedString(string: "Active Subscriptions: \(subscriptions.filter { $0.isActive }.count)", attributes: bodyAttr).draw(at: CGPoint(x: 40, y: y))
+            NSAttributedString(string: "Active Subscriptions: \(active.count)", attributes: bodyAttr).draw(at: CGPoint(x: 40, y: y))
             y += 20
             NSAttributedString(string: "Total Monthly Spend: \(totalMonthly)", attributes: bodyAttr).draw(at: CGPoint(x: 40, y: y))
             y += 20

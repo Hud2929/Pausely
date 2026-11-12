@@ -22,6 +22,13 @@ enum MoneyMath {
     }
 }
 
+extension Collection where Element == Subscription {
+    /// The subscriptions that are charging: on, or in a trial that turns into a charge, and not paused.
+    /// Every total, count and "what you pay" on a screen, a widget, a Shortcut or an export starts
+    /// from this list, so two of them can never disagree about the same subscriptions.
+    var charging: [Subscription] { filter(\.renewsAutomatically) }
+}
+
 extension CurrencyManager {
     /// The rates every conversion uses: live rates where loaded, the built-in table elsewhere.
     var rates: CurrencyRates { ratesTable }

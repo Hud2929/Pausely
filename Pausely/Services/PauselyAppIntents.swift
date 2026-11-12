@@ -30,8 +30,7 @@ struct GetUpcomingRenewalsIntent: AppIntent {
         let calendar = Calendar.current
         let cutoff = calendar.date(byAdding: .day, value: daysAhead, to: Date()) ?? Date()
 
-        let upcoming = store.subscriptions
-            .filter { $0.status == .active }
+        let upcoming = store.activeSubscriptions
             .filter { sub in
                 guard let nextDate = sub.calculatedNextBillingDate else { return false }
                 return nextDate <= cutoff
@@ -61,7 +60,7 @@ struct GetSubscriptionCountIntent: AppIntent {
     @MainActor
     func perform() async throws -> some IntentResult & ReturnsValue<String> {
         let store = SubscriptionStore.shared
-        let active = store.subscriptions.filter { $0.status == .active }.count
+        let active = store.activeSubscriptions.count
         let total = store.subscriptions.count
 
         return .result(value: "You're tracking \(total) subscriptions, \(active) active.")

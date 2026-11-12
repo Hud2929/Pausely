@@ -299,7 +299,7 @@ struct WrappedStats {
 
     init(subscriptions: [Subscription]) {
         year = Calendar.current.component(.year, from: Date())
-        let active = subscriptions.filter { $0.status == .active || $0.status == .trial }
+        let active = subscriptions.charging
         let yearStart = Calendar.current.date(from: DateComponents(year: year, month: 1, day: 1)) ?? Date()
         let cancelled = subscriptions.filter {
             $0.status == .cancelled &&

@@ -30,7 +30,7 @@ final class WidgetDataStore {
             return
         }
 
-        let active = subscriptions.filter { $0.status == .active }
+        let active = subscriptions.charging
         // Totals in the display currency, every subscription converted from its own currency.
         let displayCurrency = CurrencyManager.shared.selectedCurrency
         let monthlyTotal = active.monthlyTotal(in: displayCurrency)
