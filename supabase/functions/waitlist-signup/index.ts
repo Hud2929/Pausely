@@ -141,8 +141,8 @@ async function sendWelcomeEmail(address: string): Promise<void> {
             }
           },
           Destination: { ToAddresses: [address] },
-          FromEmailAddress: Deno.env.get('SES_FROM_EMAIL') || 'hello@pausely.app',
-          ReplyToAddresses: [Deno.env.get('SES_REPLY_TO') || 'support@pausely.app']
+          FromEmailAddress: Deno.env.get('SES_FROM_EMAIL') || 'hello@pausely.pro',
+          ReplyToAddresses: [Deno.env.get('SES_REPLY_TO') || 'pausely@proton.me']
         })
       })
 
@@ -164,6 +164,8 @@ async function sendWelcomeEmail(address: string): Promise<void> {
         },
         body: JSON.stringify({
           from: 'Pausely <hello@pausely.pro>',
+          // The email says "reply to leave the list": a reply has to reach a mailbox someone reads.
+          reply_to: 'pausely@proton.me',
           to: address,
           subject: "You're on the Pausely waitlist!",
           html: htmlBody
@@ -311,7 +313,7 @@ function getWelcomeEmailHTML(email: string): string {
                 You're on the list
               </h1>
               <p style="margin:0 0 40px 0;font-size:16px;color:#4B5563;text-align:center;line-height:1.6;">
-                Thanks for joining the Pausely waitlist. You're first in line for early access.
+                Thanks for joining the Pausely list. We'll write to you when the next version is on the App Store.
               </p>
 
               <!-- What to expect -->
@@ -319,25 +321,25 @@ function getWelcomeEmailHTML(email: string): string {
                 <tr>
                   <td style="background-color:#F9FAFB;border-radius:12px;padding:24px;border:1px solid #E5E7EB;">
                     <p style="margin:0 0 16px 0;font-size:13px;font-weight:600;color:#6B7280;text-transform:uppercase;letter-spacing:0.5px;">
-                      What's coming
+                      What the next version does
                     </p>
                     <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
                       <tr>
                         <td style="padding:10px 0;border-bottom:1px solid #E5E7EB;">
-                          <p style="margin:0;font-size:15px;color:#111827;font-weight:600;">Early Access</p>
-                          <p style="margin:4px 0 0 0;font-size:14px;color:#6B7280;">Be the first to try new features before anyone else.</p>
+                          <p style="margin:0;font-size:15px;color:#111827;font-weight:600;">One question before every renewal</p>
+                          <p style="margin:4px 0 0 0;font-size:14px;color:#6B7280;">Keep it or cancel it? You answer right from the reminder.</p>
                         </td>
                       </tr>
                       <tr>
                         <td style="padding:10px 0;border-bottom:1px solid #E5E7EB;">
-                          <p style="margin:0;font-size:15px;color:#111827;font-weight:600;">Advanced Analytics</p>
-                          <p style="margin:4px 0 0 0;font-size:14px;color:#6B7280;">Deep insights into your subscriptions and spending.</p>
+                          <p style="margin:0;font-size:15px;color:#111827;font-weight:600;">A receipt of what you saved</p>
+                          <p style="margin:4px 0 0 0;font-size:14px;color:#6B7280;">Every charge your cancellations avoided, with its date.</p>
                         </td>
                       </tr>
                       <tr>
                         <td style="padding:10px 0 0 0;">
-                          <p style="margin:0;font-size:15px;color:#111827;font-weight:600;">Launch Perks</p>
-                          <p style="margin:4px 0 0 0;font-size:14px;color:#6B7280;">Exclusive perks for waitlist members only.</p>
+                          <p style="margin:0;font-size:15px;color:#111827;font-weight:600;">Pause Plan</p>
+                          <p style="margin:4px 0 0 0;font-size:14px;color:#6B7280;">Watch one streaming service at a time, and be told when to switch.</p>
                         </td>
                       </tr>
                     </table>
@@ -347,7 +349,7 @@ function getWelcomeEmailHTML(email: string): string {
 
               <!-- Message -->
               <p style="margin:0 0 32px 0;font-size:15px;color:#4B5563;text-align:center;line-height:1.6;">
-                We'll email you as soon as the new version is ready. No spam — just a heads up when it's time to take control of your subscriptions.
+                That is the only email we'll send. To leave the list, reply to this email or write to pausely@proton.me and we'll remove your address.
               </p>
 
               <!-- CTA -->
