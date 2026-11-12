@@ -159,8 +159,8 @@ struct RenewalVerdictView: View {
         VStack(alignment: .leading, spacing: 10) {
             factLine(yearlyText(sub))
 
-            if let change = VerdictFacts.priceChange(for: sub.id, currentAmount: sub.amount, events: eventLog.events) {
-                let up = sub.amount > change.from
+            if let change = PriceHistory.latestChange(for: sub, events: eventLog.events) {
+                let up = change.isIncrease
                 factLine(up ? L10n.string("Up from \(MoneyFormat.string(change.from, sub.currency)) since \(change.since.formatted(.dateTime.month(.abbreviated).day()))")
                             : L10n.string("Down from \(MoneyFormat.string(change.from, sub.currency)) since \(change.since.formatted(.dateTime.month(.abbreviated).day()))"),
                          color: up ? .paperDue : .paperKept)

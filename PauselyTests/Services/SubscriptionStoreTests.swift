@@ -97,6 +97,27 @@ final class SubscriptionStoreTests: XCTestCase {
         XCTAssertEqual(change.amount, 12)
     }
 
+    /// The history holds every change to what it costs: the amount, its currency, how often it charges.
+    func testAChangeOfCurrencyOrBillingPeriodGoesInTheHistoryToo() async throws {
+        let sub = TestFactories.makeSubscription(name: "Crave", amount: 10, currency: "USD")
+        await add(sub)
+        var inDollarsCanadian = sub
+        inDollarsCanadian.currency = "CAD"
+        await store.updateSubscription(inDollarsCanadian)
+        var yearly = inDollarsCanadian
+        yearly.billingFrequency = .yearly
+        await store.updateSubscription(yearly)
+        var renamed = yearly
+        renamed.name = "Crave Premium"
+        await store.updateSubscription(renamed)
+
+        let recorded = LifecycleEventLog.shared.events.filter { $0.subscriptionId == sub.id }
+        XCTAssertEqual(recorded.map(\.kind), [.added, .priceChanged, .priceChanged], "a new name is not a new price")
+        let points = PriceHistory.points(for: sub.id, events: LifecycleEventLog.shared.events)
+        XCTAssertEqual(points.map(\.currency), ["USD", "CAD", "CAD"])
+        XCTAssertEqual(points.map(\.frequency), [.monthly, .monthly, .yearly])
+    }
+
     // MARK: Reaching the account
 
     /// What came back from the server used to replace the subscription, and the server doesn't store
@@ -258,7 +279,7 @@ final class SubscriptionStoreTests: XCTestCase {
         XCTAssertEqual(store.subscriptions.categoryTotals(in: "USD"), [CategoryTotal(category: "Music", amount: 15, count: 2)])
         // The paywall's "about … a year" and the year slip
         XCTAssertEqual(store.activeSubscriptions.annualTotal(in: "USD"), 180)
-        let slip = WrappedStats(subscriptions: store.subscriptions)
+        let slip = WrappedStats(subscriptions: store.subscriptions, events: LifecycleEventLog.shared.events)
         XCTAssertEqual(slip.yearlyCost, 180)
         XCTAssertEqual(slip.totalCount, 2)
         // The paywall's comparison never names something that isn't charging

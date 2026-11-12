@@ -176,18 +176,6 @@ final class VerdictAndSavingsTests: XCTestCase {
 
     // MARK: - Verdict facts
 
-    func testPriceChangeComparesWithTheFirstRecordedPrice() {
-        let spotify = sub("Spotify", amount: 13, anchor: day(2026, 11, 1))
-        let events = [
-            LifecycleEvent(kind: .priceChanged, subscription: spotify, date: day(2026, 3, 1), previousAmount: 11),
-            LifecycleEvent(kind: .priceChanged, subscription: spotify, date: day(2026, 6, 1), previousAmount: 12)
-        ]
-        let change = VerdictFacts.priceChange(for: spotify.id, currentAmount: 13, events: events)
-        XCTAssertEqual(change?.from, 11)
-        XCTAssertEqual(change.map { ymd($0.since) }, "2026-03-01")
-        XCTAssertNil(VerdictFacts.priceChange(for: spotify.id, currentAmount: 11, events: events), "back to the original price")
-    }
-
     func testRenewalAfterAChargeForAskAgainText() {
         let netflix = sub(anchor: day(2026, 1, 31))
         XCTAssertEqual(VerdictFacts.renewal(after: day(2026, 10, 31), for: netflix, calendar: cal).map(ymd), "2026-11-30")

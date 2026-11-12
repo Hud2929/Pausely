@@ -123,7 +123,6 @@ class SubscriptionStore: ObservableObject {
             listChanged()
             lastFetchDate = Date()
             lastErrorMessage = nil
-            PriceIncreaseMonitor.shared.checkForPriceChanges(subscriptions: subscriptions)
             UserDefaults.standard.set(userId.uuidString, forKey: Self.syncedUserKey)
 
             // Send up what only this iPhone had, and renewal dates the server was missing.
@@ -221,13 +220,15 @@ class SubscriptionStore: ObservableObject {
     func updateSubscription(_ changed: Subscription) async {
         let subscription = Self.withDaysAtNoon(changed)
         guard let index = subscriptions.firstIndex(where: { $0.id == subscription.id }) else { return }
-        let oldAmount = subscriptions[index].amount
+        let before = subscriptions[index]
         subscriptions[index] = subscription
         listChanged()
         sync.noteChanged(subscription.id)
-        PriceHistoryTracker.shared.recordPriceIfChanged(subscription)
-        if subscription.amount != oldAmount {
-            LifecycleEventLog.shared.record(.priceChanged, for: subscription, previousAmount: oldAmount)
+        // What it costs is the amount, its currency and how often it is charged: a change to any of
+        // them goes in the history (`PriceHistory` reads it from there).
+        if subscription.amount != before.amount || subscription.currency != before.currency
+            || subscription.billingFrequency != before.billingFrequency {
+            LifecycleEventLog.shared.record(.priceChanged, for: subscription, previousAmount: before.amount)
         }
         await ReminderScheduler.shared.reschedule(subscriptions)
         await send(subscription.id)

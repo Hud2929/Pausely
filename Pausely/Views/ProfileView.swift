@@ -197,7 +197,7 @@ struct SubscriptionWrappedView: View {
     @Environment(\.dismiss) private var dismiss
     @ObservedObject private var currencyManager = CurrencyManager.shared
 
-    private var stats: WrappedStats { WrappedStats(subscriptions: subscriptions) }
+    private var stats: WrappedStats { WrappedStats(subscriptions: subscriptions, events: LifecycleEventLog.shared.events) }
 
     var body: some View {
         ScrollView {
@@ -246,7 +246,9 @@ private struct YearSlip: View {
     let stats: WrappedStats
     let currency: String
 
-    private func money(_ amount: Decimal) -> String { MoneyFormat.string(amount, currency, locale: L10n.locale) }
+    private func money(_ amount: Decimal) -> String {
+        MoneyFormat.total(amount, currency, converted: stats.isConverted, locale: L10n.locale)
+    }
 
     var body: some View {
         let kept = SavingsSummary.current()
@@ -271,7 +273,8 @@ private struct YearSlip: View {
                     Perforation()
                     ProofLine(label: L10n.string("Cancelled this year"), value: "\(stats.cancelledCount)")
                     if !kept.isEmpty {
-                        ProofLine(label: L10n.string("Kept with Pausely"), value: kept.formatted(kept.savedSoFar), emphasised: true)
+                        // Every cancellation's charges so far, not only this calendar year's: said as that.
+                        ProofLine(label: L10n.string("Kept so far"), value: kept.formatted(kept.savedSoFar), emphasised: true)
                             .foregroundStyle(Color.paperKept)
                     }
                 }
@@ -288,32 +291,47 @@ private struct YearSlip: View {
     }
 }
 
+/// The numbers on the year slip. Pure: the list, the event history and the day go in.
 struct WrappedStats {
     let year: Int
     let yearlyCost: Decimal
     let monthlyCost: Decimal
+    /// Some of it is charged in another currency, so the two costs are estimates ("≈").
+    let isConverted: Bool
     let totalCount: Int
     let cancelledCount: Int
     let topService: String
     let topCategory: String
 
-    init(subscriptions: [Subscription]) {
-        year = Calendar.current.component(.year, from: Date())
+    init(subscriptions: [Subscription], events: [LifecycleEvent],
+         now: Date = Date(), calendar: Calendar = .current,
+         currency: String = CurrencyManager.shared.selectedCurrency, rates: CurrencyRates = CurrencyManager.shared.rates) {
+        year = calendar.component(.year, from: now)
         let active = subscriptions.charging
-        let yearStart = Calendar.current.date(from: DateComponents(year: year, month: 1, day: 1)) ?? Date()
-        let cancelled = subscriptions.filter {
-            $0.status == .cancelled &&
-            $0.updatedAt >= yearStart
-        }
         totalCount = active.count
-        cancelledCount = cancelled.count
         // What the current list costs, in the display currency. Pausely doesn't know what was
-        // charged before a subscription was added, so Wrapped never claims an amount "spent".
-        yearlyCost = active.annualTotal()
-        monthlyCost = active.monthlyTotal()
-        topService = active.max(by: { [$0].monthlyTotal() < [$1].monthlyTotal() })?.name ?? "–"
-        let grouped = Dictionary(grouping: active) { $0.category ?? "Other" }
-        topCategory = grouped.max(by: { $0.value.monthlyTotal() < $1.value.monthlyTotal() })?.key ?? "–"
+        // charged before a subscription was added, so the slip never claims an amount "spent".
+        yearlyCost = active.annualTotal(in: currency, rates: rates)
+        monthlyCost = active.monthlyTotal(in: currency, rates: rates)
+        isConverted = active.isConverted(to: currency)
+        cancelledCount = Self.cancelledThisYear(events, year: year, calendar: calendar)
+        // Compared in one currency; one with no rate is never "the biggest".
+        topService = active.max(by: {
+            ($0.monthlyCost(in: currency, rates: rates) ?? -1) < ($1.monthlyCost(in: currency, rates: rates) ?? -1)
+        })?.name ?? "–"
+        // The same grouping Insights uses, so "entertainment" and "Entertainment" are one category.
+        topCategory = subscriptions.categoryTotals(in: currency, rates: rates).first?.category ?? "–"
+    }
+
+    /// Subscriptions cancelled in `year` and still cancelled, counted from the history. The record's
+    /// own "last changed" date moves on any edit or sync, so it says nothing about when it was cancelled.
+    static func cancelledThisYear(_ events: [LifecycleEvent], year: Int, calendar: Calendar = .current) -> Int {
+        var latest: [UUID: LifecycleEvent] = [:]
+        for event in events where event.kind == .cancelled || event.kind == .reactivated {
+            if let seen = latest[event.subscriptionId], seen.date > event.date { continue }
+            latest[event.subscriptionId] = event
+        }
+        return latest.values.filter { $0.kind == .cancelled && calendar.component(.year, from: $0.date) == year }.count
     }
 }
 

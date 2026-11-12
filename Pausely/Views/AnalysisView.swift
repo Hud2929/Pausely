@@ -38,8 +38,7 @@ struct AnalysisView: View {
 
     private var increases: [(subscription: Subscription, from: Decimal, since: Date)] {
         live.compactMap { sub in
-            guard let change = VerdictFacts.priceChange(for: sub.id, currentAmount: sub.amount, events: eventLog.events),
-                  sub.amount > change.from else { return nil }
+            guard let change = PriceHistory.latestChange(for: sub, events: eventLog.events), change.isIncrease else { return nil }
             return (sub, change.from, change.since)
         }
     }

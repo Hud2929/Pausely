@@ -17,7 +17,6 @@ struct DashboardView: View {
     @State private var showingDates = false
     @State private var showingInbox = false
     @State private var showsYear = false
-    @State private var dismissedAlerts: Set<UUID> = []
     @ScaledMetric(relativeTo: .largeTitle) private var numberSize: CGFloat = 52
 
     private var hasKept: Bool { !SavingsSummary.current().isEmpty }
@@ -120,7 +119,6 @@ struct DashboardView: View {
         let pending = VerdictCenter.shared.pendingDecisions()
         let waiting = TallyImporter.waitingLines()
         let undated = Horizon.undated(store.subscriptions)
-        let alerts = PriceIncreaseMonitor.shared.alerts.filter { !dismissedAlerts.contains($0.id) }
         let showReminderAsk = !NotificationManager.shared.isAuthorized && !DemoSavings.isScreenshotRun
 
         VStack(spacing: 0) {
@@ -166,16 +164,6 @@ struct DashboardView: View {
                 Hairline()
             }
 
-            ForEach(alerts) { alert in
-                AttentionRow(state: .due, symbol: "arrow.up.right",
-                             title: L10n.string("\(alert.subscriptionName) went up"),
-                             detail: L10n.string("\(alert.formattedIncrease) more each time it charges."),
-                             action: L10n.string("OK")) {
-                    dismissedAlerts.insert(alert.id)
-                    PriceIncreaseMonitor.shared.dismissAlert(id: alert.id)
-                }
-                Hairline()
-            }
         }
     }
 

@@ -3,17 +3,23 @@
 //  Pausely
 //
 //  What a subscription has cost over time: each price the person recorded, newest first.
+//  Read from the event log (`PriceHistory`), the same record the Renewal Verdict and Insights use.
 //
 
 import SwiftUI
 
 struct PriceHistoryView: View {
     let subscription: Subscription
-    @ObservedObject private var tracker = PriceHistoryTracker.shared
+    @ObservedObject private var eventLog = LifecycleEventLog.shared
 
     /// Oldest first, as recorded.
-    private var history: [PriceHistoryEntry] {
-        tracker.history(for: subscription.id).sorted { $0.date < $1.date }
+    private var history: [PriceHistory.Point] {
+        PriceHistory.points(for: subscription.id, events: eventLog.events)
+    }
+
+    /// The day a price was recorded; "Earlier" for one from before Pausely kept its date.
+    private func day(_ point: PriceHistory.Point, _ style: Date.FormatStyle) -> String {
+        point.date.map { $0.formatted(style.locale(L10n.locale)) } ?? L10n.string("Earlier")
     }
 
     var body: some View {
@@ -36,14 +42,16 @@ struct PriceHistoryView: View {
     }
 
     /// From what to what, since when: the one sentence the list adds up to.
-    private func summary(first: PriceHistoryEntry, last: PriceHistoryEntry) -> some View {
-        let since = first.date.formatted(.dateTime.month(.abbreviated).year().locale(L10n.locale))
+    private func summary(first: PriceHistory.Point, last: PriceHistory.Point) -> some View {
         let from = MoneyFormat.string(first.amount, first.currency)
         let to = MoneyFormat.string(last.amount, last.currency)
-        let rose = last.amount > first.amount && last.currency == first.currency
+        let rose = last.amount > first.amount && last.currency == first.currency && last.frequency == first.frequency
+        let sentence = first.date.map {
+            L10n.string("\(from) in \($0.formatted(.dateTime.month(.abbreviated).year().locale(L10n.locale))), \(to) now.")
+        } ?? L10n.string("\(from) before, \(to) now.")
         return HStack(alignment: .firstTextBaseline, spacing: 10) {
             if rose { StateMark(state: .decide).accessibilityHidden(true) }
-            Text(verbatim: L10n.string("\(from) in \(since), \(to) now."))
+            Text(verbatim: sentence)
                 .font(.question(.title3))
                 .foregroundStyle(Color.inkText)
                 .fixedSize(horizontal: false, vertical: true)
@@ -51,15 +59,15 @@ struct PriceHistoryView: View {
         .frame(maxWidth: .infinity, alignment: .leading)
     }
 
-    private func row(_ entry: PriceHistoryEntry, previous: PriceHistoryEntry?) -> some View {
-        let date = entry.date.formatted(.dateTime.month(.abbreviated).day().year().locale(L10n.locale))
+    private func row(_ entry: PriceHistory.Point, previous: PriceHistory.Point?) -> some View {
+        let date = day(entry, .dateTime.month(.abbreviated).day().year())
         var detail: String?
-        if let previous, previous.currency == entry.currency, previous.amount != entry.amount {
+        if let previous, previous.currency == entry.currency, previous.frequency == entry.frequency, previous.amount != entry.amount {
             let difference = MoneyFormat.string(abs(entry.amount - previous.amount), entry.currency)
             detail = entry.amount > previous.amount ? L10n.string("\(difference) more than before") : L10n.string("\(difference) less than before")
         }
         return SettingsRow(title: date, detail: detail) {
-            Text(verbatim: MoneyFormat.string(entry.amount, entry.currency) + " " + entry.billingFrequency.billingPeriodLabel)
+            Text(verbatim: MoneyFormat.string(entry.amount, entry.currency) + " " + entry.frequency.billingPeriodLabel)
                 .font(.proof(.body))
                 .foregroundStyle(Color.inkText)
                 .multilineTextAlignment(.trailing)

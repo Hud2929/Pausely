@@ -17,6 +17,9 @@ struct PauselyApp: App {
     init() {
         // Has to be read before anything is saved in this launch (see `InstallState`).
         _ = InstallState.firstLaunch
+        // Two earlier price trackers wrote different things under this one key and overwrote each
+        // other. The event log is the price history now, and what they left is removed.
+        UserDefaults.standard.removeObject(forKey: "subscription_price_history")
         #if DEBUG
         // UI tests pass --reset-state to start from a first launch, whatever an earlier run left behind.
         if LaunchFlag.isSet("--reset-state") {
