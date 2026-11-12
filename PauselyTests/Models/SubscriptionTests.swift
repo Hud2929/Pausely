@@ -116,11 +116,24 @@ final class SubscriptionTests: XCTestCase {
 
     // MARK: - Equatable
 
-    func testEquatable_sameId() {
-        let id = UUID()
-        let a = TestFactories.makeSubscription(id: id, name: "A")
-        let b = TestFactories.makeSubscription(id: id, name: "B")
-        XCTAssertEqual(a, b)
+    /// Two subscriptions are equal when everything about them is. With "same id means equal", a test
+    /// comparing lists could not tell a wrong price or date from a right one, and nothing that watches
+    /// for a change would see an edit.
+    func testAnEditedSubscriptionIsNotEqualToWhatItWas() {
+        let original = TestFactories.makeSubscription(id: UUID(), name: "Netflix", amount: 15.49)
+        XCTAssertEqual(original, original)
+
+        var repriced = original
+        repriced.amount = 17.99
+        XCTAssertNotEqual(repriced, original)
+
+        var renamed = original
+        renamed.name = "Netflix Premium"
+        XCTAssertNotEqual(renamed, original)
+
+        var redated = original
+        redated.nextBillingDate = Calendar.billing.date(from: DateComponents(year: 2027, month: 1, day: 15, hour: 12))
+        XCTAssertNotEqual(redated, original)
     }
 
     func testEquatable_differentId() {

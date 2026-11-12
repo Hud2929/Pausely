@@ -214,8 +214,9 @@ Updated at every commit, so the work can be picked up from this file alone.
 - Whole suite after D0 and D1: 634 tests, 0 failures (7 need a mail server and are skipped).
 - D2, typed amounts: O8, O9, O10 closed (see their rows).
 - D2, the billing calendar and the day that survives a flight: O2, O3, O4, O5, O7 closed (see their
-  rows). Whole suite 660 tests, 0 failures. Left in D2: S17 (what "equal" means for two
-  subscriptions). Then D3: cut before translating.
+  rows). S17 closed. Whole suite 660 tests, 0 failures; Release builds. D2 is done.
+- Next: D3, cut before translating: the eight unused fields on the record, the "paused" status
+  (S13), dead error text (S3), "Deep savings analysis" (T25–33), names (T102–108).
 - Told by the other session at 22:04 (it has stood down and changed nothing): sections 2, 3, 4, 6, 7
   and 10 of the engineering audit were never done and there is no finished overlooked-details
   report. Those areas have been scanned by nobody; they are owed before Stage G can be called done.
@@ -467,7 +468,7 @@ matters to a stranger: the customer round below scores "getting in" at 1.
 | S14 | medium | The export: the PDF is English throughout, statuses and frequencies are English words, dates in the spreadsheet file follow the phone's short style (11/12/26 reads two ways) | open (D5, with the export screen) |
 | S15 | medium | Widgets, read line by line: "days until" counts whole 24-hour periods, so from noon the day before a charge the small widget says "today"; once the published charge has passed, the widget keeps showing it as "today" until the app is next opened; one timeline entry reloaded every 15 minutes (the system throttles that); an English fallback line | open (D4, with O28 to O35 and S6: one rebuild) |
 | S18 | low | A unit test sometimes failed because the test app's own return to the foreground started a real download of exchange rates under it | closed 11-12: the app's automatic refresh stands down under tests (`refreshRatesWhenDue`); the suite no longer touches the network for rates |
-| S17 | medium | Two subscriptions count as equal whenever their ids match, whatever else differs. Nothing in the app is wrong because of it today, but every test that compares lists of subscriptions checks ids only, so those tests cannot fail on a wrong price or date; and the Analysis tab reruns only when the count changes, not when a price does | open (D2, after the billing day) |
+| S17 | medium | Two subscriptions count as equal whenever their ids match, whatever else differs. Nothing in the app is wrong because of it today, but every test that compares lists of subscriptions checks ids only, so those tests cannot fail on a wrong price or date; and the Analysis tab reruns only when the count changes, not when a price does | closed 11-12: two subscriptions are equal when every field is. Run against the whole suite, every list comparison still held, so those tests were right and can now fail; the one test that pinned the old rule is replaced by its opposite |
 | S16 | low | Shortcuts, read line by line: results are English with hand-made plurals (T86), Delete asks for no confirmation, Add takes zero, negative and empty values (O31 confirmed) | open (D4) |
 
 Scan status (16 areas). Done before the run resumed: engineering 1, 5, 8, 9; overlooked 1 to 4. Done

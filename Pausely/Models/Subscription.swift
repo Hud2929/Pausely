@@ -163,11 +163,6 @@ struct Subscription: Identifiable, Codable, Equatable {
 
     // MARK: - StoreKit Integration
 
-    // MARK: - Equatable
-    
-    static func == (lhs: Subscription, rhs: Subscription) -> Bool {
-        lhs.id == rhs.id
-    }
 }
 
 // MARK: - Billing Frequency

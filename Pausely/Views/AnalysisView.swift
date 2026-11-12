@@ -121,7 +121,7 @@ struct AnalysisView: View {
             .padding(.bottom, 32)
         }
         .background(Color.ink.ignoresSafeArea())
-        .task(id: store.subscriptions.count) {
+        .task(id: store.subscriptions) {
             if canAnalyze, !store.subscriptions.isEmpty, case .idle = deep { await runDeepAnalysis() }
         }
         .sheet(isPresented: $showingPaywall) {
