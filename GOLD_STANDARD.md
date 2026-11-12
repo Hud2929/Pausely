@@ -553,6 +553,11 @@ Updated at every commit, so the work can be picked up from this file alone.
   `tour_untranslated.py` and `tour_black_bands.swift`, then the scores; (7) H, the personas;
   (8) I, the proof and section 7. Section 7 is still the stale scorecard: nothing in it has been
   rewritten yet, and no screen has a recorded score from this run.
+- Resumed and stopped again at once (11-12, usage limit). The largest-size state pass had finished:
+  `/tmp/pausely_states_big_1` holds 63 captures (the English and Arabic passes made 78, so about 15
+  states were not reached at that size and need finding), 29 counted audit lines, 39 behind bars,
+  12 system bar; `tour_black_bands.swift` prints nothing for it. None of its captures has been
+  opened: step (1) above is still the next thing to do, and the order after it is unchanged.
 - Told by the other session at 22:04 (it has stood down and changed nothing): sections 2, 3, 4, 6, 7
   and 10 of the engineering audit were never done and there is no finished overlooked-details
   report. Those areas have been scanned by nobody; they are owed before Stage G can be called done.
