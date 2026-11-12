@@ -52,9 +52,9 @@ enum LocalUserData {
     static func wipe() async {
         // The name kept for this account.
         if let owner = UserDefaults.standard.string(forKey: ownerKey) {
-            AuthManager.forgetProfile(userId: owner)
+            AccountMemory.forgetName(userId: owner)
         }
-        AuthManager.forgetPendingName()
+        AccountMemory.forgetHeldName()
         SubscriptionStore.shared.removeAllLocalData()
         LifecycleEventLog.shared.removeAll()
         PausePlanStore.shared.removeAll()

@@ -42,7 +42,6 @@ class AuthManager: ObservableObject {
     static let resetRedirect = URL(string: "pausely://auth/reset-password")
 
     // MARK: - Scale Optimizations
-    private var pendingRequests: [String: Task<Any, Error>] = [:]
     private var lastTokenRefresh: Date?
     private let minRefreshInterval: TimeInterval = 60 // Minimum 60 seconds between refresh
     
@@ -65,26 +64,14 @@ class AuthManager: ObservableObject {
     }
     private let requestManager = RequestManager()
 
-    // UserDefaults keys for session cache
-    private static let cachedUserIdKey    = "auth_cached_user_id"
-    private static let cachedEmailKey     = "auth_cached_email"
-    private static let cachedCreatedAtKey = "auth_cached_created_at"
-    private static let pendingFirstNameKey = "pending_firstName"
-    private static let pendingLastNameKey  = "pending_lastName"
-    /// The address the pending name was typed for.
-    private static let pendingNameEmailKey = "pending_nameEmail"
-    
-    // Keychain keys for secure storage
-    private static let keychainAccessTokenKey = "auth_access_token"
-    private static let keychainRefreshTokenKey = "auth_refresh_token"
-
     // MARK: - Initialization
     private init() {
 
         #if DEBUG
         // UI tests pass --reset-state to start signed out, whatever a previous run left behind.
         if LaunchFlag.isSet("--reset-state") {
-            Self.forgetSessionForUITests()
+            AccountMemory.forgetSession()
+            UserDefaults.standard.removeObject(forKey: "debug_auth_bypass")
             Task { [client] in try? await client.auth.signOut(scope: .local) }
             return
         }
@@ -111,13 +98,10 @@ class AuthManager: ObservableObject {
 
         // Restore session synchronously so the UI is correct on the very first frame,
         // with no flash of the login screen for returning users.
-        if let uid = KeychainManager.shared.get(Self.cachedUserIdKey) {
-            let email     = KeychainManager.shared.get(Self.cachedEmailKey)
-            let createdAtString = KeychainManager.shared.get(Self.cachedCreatedAtKey)
-            let createdAt = createdAtString.flatMap { ISO8601DateFormatter().date(from: $0) }
-            let profile   = Self.loadProfileStatic(userId: uid)
-            let user = User(id: uid, email: email, createdAt: createdAt,
-                            firstName: profile.firstName, lastName: profile.lastName)
+        if let remembered = AccountMemory.session {
+            let name = AccountMemory.name(userId: remembered.userId)
+            let user = User(id: remembered.userId, email: remembered.email, createdAt: remembered.createdAt,
+                            firstName: name.firstName, lastName: name.lastName)
             currentUser = user
             isAuthenticated = true
             state = .authenticated(user)
@@ -133,76 +117,10 @@ class AuthManager: ObservableObject {
         }
     }
 
-    // MARK: - Session Cache
-
-    private func cacheSession(userId: String, email: String?, createdAt: Date?) {
-        KeychainManager.shared.save(userId, forKey: Self.cachedUserIdKey)
-        if let email = email { KeychainManager.shared.save(email, forKey: Self.cachedEmailKey) }
-        if let createdAt = createdAt {
-            KeychainManager.shared.save(ISO8601DateFormatter().string(from: createdAt), forKey: Self.cachedCreatedAtKey)
-        }
-    }
-
-    private func clearSessionCache() {
-        KeychainManager.shared.delete(key: Self.cachedUserIdKey)
-        KeychainManager.shared.delete(key: Self.cachedEmailKey)
-        KeychainManager.shared.delete(key: Self.cachedCreatedAtKey)
-        clearKeychainTokens()
-    }
-
-    #if DEBUG
-    /// UI tests (`--reset-state`): forget any session a previous run left, before it's restored.
-    static func forgetSessionForUITests() {
-        for key in [cachedUserIdKey, cachedEmailKey, cachedCreatedAtKey, keychainAccessTokenKey, keychainRefreshTokenKey] {
-            KeychainManager.shared.delete(key: key)
-        }
-        UserDefaults.standard.removeObject(forKey: "debug_auth_bypass")
-    }
-    #endif
-
-    // MARK: - Profile Persistence
-
-    private func saveProfile(userId: String, firstName: String?, lastName: String?) {
-        if let fn = firstName { KeychainManager.shared.save(fn, forKey: "profile_\(userId)_firstName") }
-        if let ln = lastName  { KeychainManager.shared.save(ln, forKey: "profile_\(userId)_lastName") }
-    }
-
-    private func loadProfile(userId: String) -> (firstName: String?, lastName: String?) {
-        Self.loadProfileStatic(userId: userId)
-    }
-
-    /// Removes the name kept for an account. Sign-out keeps it, because Apple gives a name only on the
-    /// first sign-in and a returning person would otherwise come back nameless; deleting the account, or
-    /// another account taking over this phone, removes it.
-    /// The name typed on a sign-up form, when it was typed for this address; nothing otherwise.
-    nonisolated static func nameTyped(for email: String?, first: String?, last: String?,
-                                      typedFor: String?) -> (first: String?, last: String?) {
-        guard let email, let typedFor, AuthLinkGate.sameAddress(typedFor, email) else { return (nil, nil) }
-        return (first, last)
-    }
-
-    /// Removes the name waiting for a sign-up to finish.
-    static func forgetPendingName() {
-        KeychainManager.shared.delete(key: pendingFirstNameKey)
-        KeychainManager.shared.delete(key: pendingLastNameKey)
-        KeychainManager.shared.delete(key: pendingNameEmailKey)
-    }
-
-    static func forgetProfile(userId: String) {
-        KeychainManager.shared.delete(key: "profile_\(userId)_firstName")
-        KeychainManager.shared.delete(key: "profile_\(userId)_lastName")
-    }
-
-    private static func loadProfileStatic(userId: String) -> (firstName: String?, lastName: String?) {
-        let fn = KeychainManager.shared.get("profile_\(userId)_firstName")
-        let ln = KeychainManager.shared.get("profile_\(userId)_lastName")
-        return (fn, ln)
-    }
-
     private func makeUser(from supabaseUser: Auth.User,
                           firstName: String? = nil,
                           lastName: String? = nil) -> User {
-        let profile = loadProfile(userId: supabaseUser.id.uuidString)
+        let profile = AccountMemory.name(userId: supabaseUser.id.uuidString)
         return User(
             id: supabaseUser.id.uuidString,
             email: supabaseUser.email,
@@ -253,7 +171,7 @@ class AuthManager: ObservableObject {
     private func verifySession() async {
         if let session = client.auth.currentSession {
             let user = makeUser(from: session.user)
-            cacheSession(userId: session.user.id.uuidString,
+            AccountMemory.rememberSession(userId: session.user.id.uuidString,
                          email: session.user.email,
                          createdAt: session.user.createdAt)
             currentUser = user
@@ -265,7 +183,7 @@ class AuthManager: ObservableObject {
         } else if isAuthenticated {
             // Cache said we're logged in but Supabase disagrees — token expired.
             PauselyLogger.info("Cached session invalid — signing out", category: "auth")
-            clearSessionCache()
+            AccountMemory.forgetSession()
             currentUser = nil
             isAuthenticated = false
             state = .unauthenticated
@@ -331,18 +249,7 @@ class AuthManager: ObservableObject {
         _ = try? await task.value
     }
     
-    // MARK: - Secure Token Storage (Using KeychainManager)
-
-
-    private func clearKeychainTokens() {
-        KeychainManager.shared.delete(key: Self.keychainAccessTokenKey)
-        KeychainManager.shared.delete(key: Self.keychainRefreshTokenKey)
-    }
-    
-    // MARK: - Sign Up with Pausely-branded Email
-    
-
-    // MARK: - OTP-based Email Verification (REVOLUTIONARY)
+    // MARK: - Sign up and sign in with an emailed code
 
     /// Signs up using OTP instead of link-based confirmation.
     /// Sends a 6-digit code to the user's email for verification.
@@ -356,10 +263,7 @@ class AuthManager: ObservableObject {
             pendingPassword = password
             pendingPasswordEmail = email
             noteCodeRequested(for: email)
-            Self.forgetPendingName()
-            if let fn = firstName, !fn.isEmpty { KeychainManager.shared.save(fn, forKey: Self.pendingFirstNameKey) }
-            if let ln = lastName, !ln.isEmpty { KeychainManager.shared.save(ln, forKey: Self.pendingLastNameKey) }
-            KeychainManager.shared.save(email, forKey: Self.pendingNameEmailKey)
+            AccountMemory.holdName(first: firstName, last: lastName, for: email)
 
             // Send OTP — creates user if they don't exist
             try await client.auth.signInWithOTP(
@@ -373,7 +277,7 @@ class AuthManager: ObservableObject {
         } catch {
             pendingPassword = nil
             pendingPasswordEmail = nil
-            Self.forgetPendingName()
+            AccountMemory.forgetHeldName()
             let authError = PauselyAuthError.unknown(error)
             state = .error(authError)
             throw authError
@@ -396,17 +300,11 @@ class AuthManager: ObservableObject {
     /// The end of every email sign-up or sign-in, by code or by link: remember the session, apply the name
     /// and password typed on the sign-up form if this finishes one, and show the app.
     private func finishEmailSignIn(_ supabaseUser: Auth.User) async {
-        // A name typed on a sign-up form belongs to the address on that form. Left behind by a sign-up
-        // nobody finished, it is never given to a different account that signs in later.
-        let (firstName, lastName) = Self.nameTyped(
-            for: supabaseUser.email,
-            first: KeychainManager.shared.get(Self.pendingFirstNameKey),
-            last: KeychainManager.shared.get(Self.pendingLastNameKey),
-            typedFor: KeychainManager.shared.get(Self.pendingNameEmailKey))
+        let (firstName, lastName) = AccountMemory.heldName(for: supabaseUser.email)
 
         let user = makeUser(from: supabaseUser, firstName: firstName, lastName: lastName)
-        cacheSession(userId: supabaseUser.id.uuidString, email: supabaseUser.email, createdAt: supabaseUser.createdAt)
-        if let firstName { saveProfile(userId: supabaseUser.id.uuidString, firstName: firstName, lastName: lastName) }
+        AccountMemory.rememberSession(userId: supabaseUser.id.uuidString, email: supabaseUser.email, createdAt: supabaseUser.createdAt)
+        if let firstName { AccountMemory.saveName(userId: supabaseUser.id.uuidString, firstName: firstName, lastName: lastName) }
 
         if let password = pendingPassword {
             let typedFor = pendingPasswordEmail
@@ -424,7 +322,7 @@ class AuthManager: ObservableObject {
             }
         }
         forgetCodeRequest()
-        Self.forgetPendingName()
+        AccountMemory.forgetHeldName()
 
         currentUser = user
         isAuthenticated = true
@@ -462,7 +360,7 @@ class AuthManager: ObservableObject {
             let supabaseUser = session.user
 
             let user = makeUser(from: supabaseUser)
-            cacheSession(userId: supabaseUser.id.uuidString,
+            AccountMemory.rememberSession(userId: supabaseUser.id.uuidString,
                          email: supabaseUser.email,
                          createdAt: supabaseUser.createdAt)
 
@@ -496,11 +394,11 @@ class AuthManager: ObservableObject {
             // Apple only provides fullName on first sign-in; persist it immediately
             let firstName = fullName?.givenName?.nilIfEmpty
             let lastName  = fullName?.familyName?.nilIfEmpty
-            let existingProfile = loadProfile(userId: supabaseUser.id.uuidString)
-            saveProfile(userId: supabaseUser.id.uuidString,
+            let existingProfile = AccountMemory.name(userId: supabaseUser.id.uuidString)
+            AccountMemory.saveName(userId: supabaseUser.id.uuidString,
                         firstName: firstName ?? existingProfile.firstName,
                         lastName:  lastName  ?? existingProfile.lastName)
-            cacheSession(userId: supabaseUser.id.uuidString,
+            AccountMemory.rememberSession(userId: supabaseUser.id.uuidString,
                          email: supabaseUser.email,
                          createdAt: supabaseUser.createdAt)
 
@@ -520,13 +418,6 @@ class AuthManager: ObservableObject {
         }
     }
 
-    // MARK: - Magic Link Sign In
-    
-
-    // MARK: - Email Confirmation Polling
-    
-    
-    
     // MARK: - Password Reset
     
     func sendPasswordReset(email: String) async throws {
@@ -582,13 +473,9 @@ class AuthManager: ObservableObject {
         refreshTask?.cancel()
         refreshTask = nil
         
-        // Cancel all pending auth requests (async-safe)
-        pendingRequests.values.forEach { $0.cancel() }
-        pendingRequests.removeAll()
-        
         // The cache goes first, whatever the server says. Offline, the library drops its own session and
         // then throws; a cache left behind would open the next launch as the person who just signed out.
-        clearSessionCache()
+        AccountMemory.forgetSession()
         UserDefaults.standard.removeObject(forKey: "last_auth_email")
         LocalUserData.hideWhileSignedOut()
         do {

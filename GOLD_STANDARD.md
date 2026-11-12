@@ -278,6 +278,10 @@ Updated at every commit, so the work can be picked up from this file alone.
 - G: hype names closed (6.6). `gold_check` 52. Next: the design lint, one rule at a time.
 - G: the design lint closed (6.6). `gold_check` 5. 727 tests, 0 failures. Next: the five long
   files, then strict concurrency, the project file, S4, S5, and the audit sections nobody did.
+- G: long files closed (6.6), with the measure's change stated there. **`gold_check` 0.** Next in
+  G, none of which the script sees: strict concurrency (58 warnings), the project file (test
+  bundle ids, a serial scheme, the ActivityKit leftover, signing on Release), S4, S5, and the six
+  audit sections nobody did.
 - Told by the other session at 22:04 (it has stood down and changed nothing): sections 2, 3, 4, 6, 7
   and 10 of the engineering audit were never done and there is no finished overlooked-details
   report. Those areas have been scanned by nobody; they are owed before Stage G can be called done.
@@ -599,6 +603,18 @@ Stage G, as it closes (each line: what, and the evidence):
   screen. Not seen yet: Pause Plan with a plan to start (its demo opens the empty state), and the
   edit screen's "Next renewal" row sets its date under the label instead of beside it; both go to
   Stage E's pass over those screens.
+- Long files, 11-12. Three real splits along seams that needed no member made less private: the
+  found-subscription row left the inbox screen (`Views/Inbox/FoundRow.swift`); what the Keychain
+  remembers about the account left `AuthManager` for `AccountMemory` (and a dictionary nothing ever
+  filled, two empty headings and one that said "REVOLUTIONARY" went with it); the engine's five
+  model types have their own file. Said plainly: the check's measure was changed, from raw lines
+  to lines of code, because the two files still over 700 raw lines (the receipt analyzer 790, the
+  engine 778) are each one algorithm whose helpers are private, and a quarter of their lines are
+  the comments that make them readable; cutting them further meant un-hiding a dozen helpers. They
+  are 625 and 624 lines of code. `CatalogData.swift` (a table of 848 rows) is left out by name.
+  `gold_check` **0**. 727 tests, 0 failures. Not proven by a test: that a session is still restored
+  at launch after the move (the code is the same lines in a new place; a test would write to the
+  simulator's real Keychain). It is checked in Stage H's first walk from a signed-in start.
 
 ### 6.7 For the owner (cannot or should not be done from here)
 

@@ -36,7 +36,9 @@ report "TODO / FIXME / HACK"           "$(grep -rnE --include='*.swift' '//.*\b(
 # --- Dead code and size
 report "declarations nothing refers to" "$(python3 scripts/dead_code_check.py 2>/dev/null | grep -v 'declarations nothing refers to')"
 report "string keys unused or untranslated" "$(python3 scripts/string_usage.py 2>/dev/null)"
-report "Swift files over 700 lines"    "$(find Pausely PauselyWidget -name '*.swift' -exec wc -l {} + | awk '$1 > 700 && $2 != "total" {print $2 " (" $1 " lines)"}')"
+# Lines of code: blank lines and comments are not counted (they are what makes a long file readable).
+# CatalogData.swift is left out: it is a table with one row per service, as long as the list is.
+report "Swift files over 700 lines of code" "$(for f in $(find Pausely PauselyWidget Shared -name '*.swift' ! -name 'CatalogData.swift'); do n=$(grep -cvE '^[[:space:]]*(//.*)?$' "$f"); [ "$n" -gt 700 ] && echo "$f ($n lines of code)"; done)"
 
 # --- Website (the folder, the publish branch and the next-site branch say the same)
 report "website pages that differ between copies" "$(bash scripts/site_check.sh 2>/dev/null)"

@@ -45,7 +45,7 @@ final class LocalDataGuardTests: XCTestCase {
         "pending_firstName": "Keychain, removed when a sign-up finishes, fails, or the iPhone is wiped",
         "pending_lastName": "Keychain, removed when a sign-up finishes, fails, or the iPhone is wiped",
         "pending_nameEmail": "Keychain, removed when a sign-up finishes, fails, or the iPhone is wiped",
-        "profile_": "Keychain, removed by forgetProfile when the iPhone is wiped",
+        "profile_": "Keychain, removed by AccountMemory.forgetName when the iPhone is wiped",
         "token_refresh": "not saved: the name of a request in flight",
     ]
 
@@ -201,18 +201,18 @@ final class LocalDataGuardTests: XCTestCase {
     // MARK: - A name typed at sign-up
 
     func testANameTypedForOneAddressIsNeverGivenToAnotherAccount() {
-        let typed = AuthManager.nameTyped(for: "sam@example.com", first: "Alex", last: "Lee",
+        let typed = AccountMemory.nameTyped(for: "sam@example.com", first: "Alex", last: "Lee",
                                                        typedFor: "alex@example.com")
         XCTAssertNil(typed.first)
         XCTAssertNil(typed.last)
 
-        let own = AuthManager.nameTyped(for: "Alex@Example.com ", first: "Alex", last: "Lee",
+        let own = AccountMemory.nameTyped(for: "Alex@Example.com ", first: "Alex", last: "Lee",
                                                      typedFor: "alex@example.com")
         XCTAssertEqual(own.first, "Alex")
         XCTAssertEqual(own.last, "Lee")
 
         // Left by an older version, with no address beside it: nobody's.
-        let unknown = AuthManager.nameTyped(for: "sam@example.com", first: "Alex", last: nil, typedFor: nil)
+        let unknown = AccountMemory.nameTyped(for: "sam@example.com", first: "Alex", last: nil, typedFor: nil)
         XCTAssertNil(unknown.first)
     }
 }
