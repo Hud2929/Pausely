@@ -341,6 +341,23 @@ Updated at every commit, so the work can be picked up from this file alone.
   unit test: a layout at a text size is proven by its capture, and the audit count is the number.
   736 tests, 0 failures. Next: contrast (what the audit measures against what the palette
   computes), then the other 37 screens at the largest size, then Arabic, then iPad.
+- E, third slice (11-12): what the audit's contrast findings are, and more of the largest size.
+  Every named contrast finding on the four tabs was looked up by its frame: each one sat behind
+  the floating tab bar or under the status bar's strip at that scroll position (the audit
+  measures a row through the bar). The tour now writes three files: `audit.txt` (counted),
+  `audit_behind_bars.txt` and `audit_system_bar.txt` (navigation-bar button titles, which iOS
+  does not grow), each with its reason in the code; nothing is dropped. Whole English tour on
+  this build (`/tmp/pausely_tour_en_4`, 97 captures): **173 counted** (336 at the start), 17
+  behind bars, 39 system bar. Of the 173: Dynamic Type 82, contrast 47, clipped 39, undetected 5;
+  the catalog holds 73 and first run 22. The catalog's "cannot change font size" findings are
+  contradicted by its capture at the largest size (the rows do grow); its clipped-text findings
+  were real and are fixed: "Add your own" was cut to "Add yo…", names broke mid-word ("Spoti-fy")
+  and "Added" letter by letter, so at accessibility sizes the rows are words only and the button
+  sits under the title. Also fixed from captures at that size: Profile's row values were cut
+  short (they stack now); the shared text field had no room above and below its text; a receipt
+  line was truncated ("On your sl…") where space was tight; the first-run slip keeps to its count
+  and its button so the services stay reachable. 736 tests, 0 failures. Next: rerun the tour for
+  the new count, then Arabic, then iPad, then the states with no launch argument.
 - Told by the other session at 22:04 (it has stood down and changed nothing): sections 2, 3, 4, 6, 7
   and 10 of the engineering audit were never done and there is no finished overlooked-details
   report. Those areas have been scanned by nobody; they are owed before Stage G can be called done.

@@ -167,19 +167,48 @@ final class ScreenTourTests: XCTestCase {
 
     /// Runs the system accessibility audit on what is showing and records each issue instead of failing,
     /// so one run lists everything there is to fix.
+    ///
+    /// Two kinds of finding are written to their own files instead of `audit.txt`, each with the reason:
+    /// - `audit_behind_bars.txt`: an element that, at this scroll position, sits behind the tab bar or the
+    ///   status bar's strip. The audit measures the row through the bar and calls it low contrast or
+    ///   clipped; scrolled clear of the bar, the same row passes. (Found by looking up the frame of
+    ///   every contrast finding on the four tabs: all of them were under a bar.)
+    /// - `audit_system_bar.txt`: titles of navigation-bar buttons. iOS does not grow those with the text
+    ///   size; it offers the Large Content Viewer for them instead.
     private func audit(_ app: XCUIApplication, _ screen: String) {
-        var lines: [String] = []
+        var counted: [String] = [], behindBars: [String] = [], systemBar: [String] = []
+        let tabBar = app.tabBars.firstMatch
+        let tabBarTop = tabBar.exists ? tabBar.frame.minY - 12 : CGFloat.infinity
+        let statusBarBottom = app.windows.firstMatch.exists ? max(54, app.windows.firstMatch.frame.minY + 54) : 54
+        let barButtons = Set(app.navigationBars.buttons.allElementsBoundByIndex.map { $0.identifier.isEmpty ? $0.label : $0.identifier })
         do {
             try app.performAccessibilityAudit { issue in
                 let element = issue.element.map { $0.identifier.isEmpty ? $0.label : $0.identifier } ?? ""
-                lines.append("\(screen) | \(issue.auditType.name) | \(issue.compactDescription) | \(element.prefix(80))")
+                let frame = issue.element?.frame ?? .zero
+                // The detail carries what the audit says it measured.
+                let detail = issue.detailedDescription.replacingOccurrences(of: "\n", with: " ")
+                let place = "\(Int(frame.minX)),\(Int(frame.minY)) \(Int(frame.width))x\(Int(frame.height))"
+                let line = "\(screen) | \(issue.auditType.name) | \(issue.compactDescription) | \(element.prefix(80)) | \(place) | \(detail.prefix(200))"
+                if issue.auditType == .dynamicType, barButtons.contains(element) {
+                    systemBar.append(line)
+                } else if frame != .zero, frame.maxY > tabBarTop || frame.minY < statusBarBottom {
+                    behindBars.append(line)
+                } else {
+                    counted.append(line)
+                }
                 return true
             }
         } catch {
-            lines.append("\(screen) | audit could not run | \(error.localizedDescription)")
+            counted.append("\(screen) | audit could not run | \(error.localizedDescription)")
         }
+        append(counted, to: "audit.txt")
+        append(behindBars, to: "audit_behind_bars.txt")
+        append(systemBar, to: "audit_system_bar.txt")
+    }
+
+    private func append(_ lines: [String], to file: String) {
         guard !lines.isEmpty else { return }
-        let url = outputDir.appendingPathComponent("audit.txt")
+        let url = outputDir.appendingPathComponent(file)
         let existing = (try? String(contentsOf: url, encoding: .utf8)) ?? ""
         try? (existing + lines.joined(separator: "\n") + "\n").write(to: url, atomically: true, encoding: .utf8)
     }

@@ -252,12 +252,15 @@ struct ProofLine: View {
 
     private var labelText: some View {
         Text(label).font(.proof(.subheadline, weight: emphasised ? .semibold : .regular))
+            // A receipt line wraps; it is never cut short ("On your sl…") when space is tight.
+            .fixedSize(horizontal: false, vertical: true)
     }
 
     private var valueText: some View {
         Text(value)
             .font(.proof(.subheadline, weight: emphasised ? .bold : .medium))
             .monospacedDigit()
+            .fixedSize(horizontal: false, vertical: true)
     }
 }
 

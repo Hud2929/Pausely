@@ -196,6 +196,7 @@ private struct TallyStep: View {
     let onSkip: () -> Void
 
     @State private var asking: TallyService?
+    @Environment(\.dynamicTypeSize) private var typeSize
 
     private var services: [TallyService] { TallyCatalog.services(payingIn: tally.currency) }
     private let columns = [GridItem(.adaptive(minimum: 96, maximum: 160), spacing: 10)]
@@ -218,6 +219,16 @@ private struct TallyStep: View {
                         .foregroundStyle(Color.inkTextMuted)
                         .padding(.top, 8)
                         .padding(.bottom, 20)
+
+                    // At the largest text sizes the slip below keeps to its count and its button, and
+                    // what it would say sits here, so the services keep most of the screen.
+                    if typeSize.isAccessibilitySize, tally.lines.isEmpty {
+                        Text("Your slip is empty. Tap the first thing you pay for.")
+                            .font(.subheadline)
+                            .foregroundStyle(Color.inkTextMuted)
+                            .fixedSize(horizontal: false, vertical: true)
+                            .padding(.bottom, 20)
+                    }
 
                     LazyVGrid(columns: columns, spacing: 10) {
                         ForEach(services) { service in
@@ -257,17 +268,21 @@ private struct TallyStep: View {
     private var slipBar: some View {
         VStack(alignment: .leading, spacing: 12) {
             if let last = tally.lines.last {
-                ProofLine(label: last.name, value: MoneyFormat.string(last.amount, last.currency, locale: L10n.locale))
-                    .id(last.name)
-                    .transition(.asymmetric(insertion: .opacity.combined(with: .offset(y: 8)), removal: .opacity))
+                if !typeSize.isAccessibilitySize {
+                    ProofLine(label: last.name, value: MoneyFormat.string(last.amount, last.currency, locale: L10n.locale))
+                        .id(last.name)
+                        .transition(.asymmetric(insertion: .opacity.combined(with: .offset(y: 8)), removal: .opacity))
+                }
                 ProofLine(label: L10n.string("On your slip"), value: "\(tally.lines.count)", emphasised: true)
                 Button(action: onReveal) { Text("Show me the total") }
                     .buttonStyle(.ink(.onPaper))
                     .accessibilityIdentifier("showTotalButton")
             } else {
-                Text("Your slip is empty. Tap the first thing you pay for.")
-                    .font(.proof(.subheadline))
-                    .fixedSize(horizontal: false, vertical: true)
+                if !typeSize.isAccessibilitySize {
+                    Text("Your slip is empty. Tap the first thing you pay for.")
+                        .font(.proof(.subheadline))
+                        .fixedSize(horizontal: false, vertical: true)
+                }
                 Button(action: onSkip) {
                     Text("None of these")
                         .font(.subheadline.weight(.semibold))

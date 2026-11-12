@@ -202,16 +202,20 @@ struct ProfileView: View {
                         .foregroundStyle(Color.inkTextMuted)
                         .frame(width: iconWidth)
                         .accessibilityHidden(true)
-                    Text(verbatim: title)
-                        .font(.body)
-                        .foregroundStyle(Color.inkText)
-                        .multilineTextAlignment(.leading)
-                    Spacer(minLength: 8)
-                    if let value {
-                        Text(verbatim: value)
+                    // The value sits beside the title, or under it at accessibility text sizes: on one
+                    // line it was cut short ("Same as iP…") as the text grew.
+                    SideBySide(alignment: .center) {
+                        Text(verbatim: title)
                             .font(.body)
-                            .foregroundStyle(Color.inkTextMuted)
-                            .lineLimit(1)
+                            .foregroundStyle(Color.inkText)
+                            .multilineTextAlignment(.leading)
+                    } trailing: {
+                        if let value {
+                            Text(verbatim: value)
+                                .font(.body)
+                                .foregroundStyle(Color.inkTextMuted)
+                                .multilineTextAlignment(.leading)
+                        }
                     }
                     Image(systemName: "chevron.forward")
                         .font(.footnote.weight(.semibold))

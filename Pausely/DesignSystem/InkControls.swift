@@ -22,6 +22,9 @@ struct InkTextField: View {
         .foregroundStyle(Color.inkText)
         .tint(Color.inkText)
         .padding(.horizontal, 16)
+        // Room above and below the text at every size: with a height alone, the largest text
+        // touched the tile's edges.
+        .padding(.vertical, 12)
         .frame(minHeight: 52)
         .background(Color.inkRaised, in: RoundedRectangle(cornerRadius: Layout.tileRadius, style: .continuous))
         .overlay(

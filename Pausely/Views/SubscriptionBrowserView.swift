@@ -19,6 +19,7 @@ struct SubscriptionBrowserView: View {
     @State private var justAdded: String?
     @State private var selectedEntry: CatalogEntry?
     @State private var showingTierSheet = false
+    @Environment(\.dynamicTypeSize) private var typeSize
     @State private var showingCustomAdd = false
     @State private var showingPaywall = false
     @State private var showingInbox = false
@@ -62,12 +63,15 @@ struct SubscriptionBrowserView: View {
         VStack(spacing: 0) {
             Button(action: { showingInbox = true }) {
                 HStack(spacing: 12) {
-                    Image(systemName: "envelope")
-                        .font(.body)
-                        .foregroundStyle(Color.inkText)
-                        .frame(width: 36, height: 36)
-                        .background(Color.inkRaised, in: RoundedRectangle(cornerRadius: Layout.tileRadius, style: .continuous))
-                        .accessibilityHidden(true)
+                    // At accessibility text sizes the words take the row; the pictures step aside.
+                    if !typeSize.isAccessibilitySize {
+                        Image(systemName: "envelope")
+                            .font(.body)
+                            .foregroundStyle(Color.inkText)
+                            .frame(width: 36, height: 36)
+                            .background(Color.inkRaised, in: RoundedRectangle(cornerRadius: Layout.tileRadius, style: .continuous))
+                            .accessibilityHidden(true)
+                    }
                     VStack(alignment: .leading, spacing: 2) {
                         Text("Find in Email")
                             .font(.body.weight(.medium))
@@ -94,6 +98,21 @@ struct SubscriptionBrowserView: View {
         }
     }
 
+    private var addYourOwnButton: some View {
+        Button { showingCustomAdd = true } label: {
+            Text("Add your own")
+                .font(.subheadline.weight(.semibold))
+                .foregroundStyle(Color.inkText)
+                .padding(.horizontal, 14)
+                .padding(.vertical, 6)
+                .frame(minHeight: 34)
+                .overlay(Capsule().stroke(Color.outline, lineWidth: 1))
+                .frame(minHeight: Layout.tapTarget)
+                .contentShape(Rectangle())
+        }
+        .accessibilityIdentifier("customAddButton")
+    }
+
     var body: some View {
         VStack(spacing: 0) {
             VStack(alignment: .leading, spacing: 14) {
@@ -106,17 +125,7 @@ struct SubscriptionBrowserView: View {
                             .contentShape(Rectangle())
                     }
                     Spacer()
-                    Button { showingCustomAdd = true } label: {
-                        Text("Add your own")
-                            .font(.subheadline.weight(.semibold))
-                            .foregroundStyle(Color.inkText)
-                            .padding(.horizontal, 14)
-                            .frame(minHeight: 34)
-                            .overlay(Capsule().stroke(Color.outline, lineWidth: 1))
-                            .frame(minHeight: Layout.tapTarget)
-                            .contentShape(Rectangle())
-                    }
-                    .accessibilityIdentifier("customAddButton")
+                    if !typeSize.isAccessibilitySize { addYourOwnButton }
                 }
 
                 Text("Add subscriptions")
@@ -124,6 +133,10 @@ struct SubscriptionBrowserView: View {
                     .foregroundStyle(Color.inkText)
                     .fixedSize(horizontal: false, vertical: true)
                     .accessibilityAddTraits(.isHeader)
+
+                // Beside "Close" it was cut to "Add yo…" at the largest text sizes; under the title it
+                // has the width for all three words.
+                if typeSize.isAccessibilitySize { addYourOwnButton }
 
                 searchBar
             }
@@ -185,8 +198,12 @@ struct SubscriptionBrowserView: View {
         let added = isAlreadyAdded(entry)
         return VStack(spacing: 0) {
             Button { open(entry) } label: {
+                // At accessibility text sizes the row is words only, one under the other: beside a
+                // logo and a mark, names broke in the middle ("Spoti-fy") and "Added" letter by letter.
                 HStack(spacing: 12) {
-                    ServiceLogoView(name: entry.name, category: entry.category.rawValue, size: 40)
+                    if !typeSize.isAccessibilitySize {
+                        ServiceLogoView(name: entry.name, category: entry.category.rawValue, size: 40)
+                    }
                     VStack(alignment: .leading, spacing: 2) {
                         Text(verbatim: entry.name)
                             .font(.body.weight(.medium))
@@ -195,17 +212,19 @@ struct SubscriptionBrowserView: View {
                         Text(verbatim: entry.category.localizedName)
                             .font(.subheadline)
                             .foregroundStyle(Color.inkTextMuted)
+                            .multilineTextAlignment(.leading)
+                        if added, typeSize.isAccessibilitySize { addedMark }
                     }
                     Spacer(minLength: 8)
-                    if added {
-                        Label(L10n.string("Added"), systemImage: "checkmark")
-                            .font(.subheadline.weight(.medium))
-                            .foregroundStyle(Color.inkTextMuted)
-                    } else {
-                        Image(systemName: "plus")
-                            .font(.body.weight(.semibold))
-                            .foregroundStyle(Color.inkText)
-                            .accessibilityHidden(true)
+                    if !typeSize.isAccessibilitySize {
+                        if added {
+                            addedMark
+                        } else {
+                            Image(systemName: "plus")
+                                .font(.body.weight(.semibold))
+                                .foregroundStyle(Color.inkText)
+                                .accessibilityHidden(true)
+                        }
                     }
                 }
                 .padding(.vertical, 12)
@@ -215,6 +234,12 @@ struct SubscriptionBrowserView: View {
             .accessibilityElement(children: .combine)
             Hairline()
         }
+    }
+
+    private var addedMark: some View {
+        Label(L10n.string("Added"), systemImage: "checkmark")
+            .font(.subheadline.weight(.medium))
+            .foregroundStyle(Color.inkTextMuted)
     }
 
     private var searchBar: some View {
