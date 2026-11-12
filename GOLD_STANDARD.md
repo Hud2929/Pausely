@@ -295,6 +295,23 @@ Updated at every commit, so the work can be picked up from this file alone.
   the reader's language (they said "$15.49 • Monthly" with English keywords for everyone).
 - The note above about six audit sections nobody did is from before D1; D1 read all sixteen areas
   (scan status under 6.3b). Nothing is owed there.
+- **Stage G is done**: `gold_check` 0, Swift 6 mode, 734 unit tests and 15 UI tests green, Release
+  builds. Not done in G and said in 6.6: the signing identity on Release (the owner's archive).
+- **Stage E begun** (11-12, late). Baseline with today's build: the English tour opens 41 screens
+  (97 captures, in `/tmp/pausely_tour_en_1112b`, no crash on the Swift 6 build) and Apple's audit
+  lists **336** issues: Dynamic Type 105, contrast 88, element not detected 68, text clipped 64, hit
+  region 8, description 3. By screen: Insights 54, Home 38, catalog 55, Find in Email 26, Profile
+  25, first run 24. Contact sheets are made by `contact_sheet` (a small Swift tool kept in the
+  session's scratch folder; four captures a sheet, labelled). Seen on the first sheet: on Home,
+  scrolled content runs under the status bar and the clock is drawn over it (as on Insights).
+  Order inside E: (1) the audit to zero by cause: status-bar backdrop on the four tabs; disabled
+  buttons that fail contrast (40% opacity); top-bar buttons and pills that stop growing with text
+  size; clipped pills, rows and fields; text the audit sees but VoiceOver does not; four small hit
+  regions; one unreadable label (`spendTotal`). (2) The same tour in Arabic, at the largest text
+  and on iPad, sheets read, faults fixed. (3) A launch argument for each state the inventory in
+  `private/audits/2026-11-11/ui.md` marks NO and that still exists (several are gone: deep
+  analysis, paused, the rating sheet, in-app policies, Live Activity). (4) Each screen scored on the
+  eight dimensions from sheets that were opened; section 7 rewritten from that.
 - Told by the other session at 22:04 (it has stood down and changed nothing): sections 2, 3, 4, 6, 7
   and 10 of the engineering audit were never done and there is no finished overlooked-details
   report. Those areas have been scanned by nobody; they are owed before Stage G can be called done.
