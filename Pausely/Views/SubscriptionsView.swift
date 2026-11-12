@@ -8,6 +8,7 @@ struct SubscriptionsView: View {
     @State private var searchText = ""
     @State private var activeSheet: ActiveSheet?
     @State private var pendingRemoval: Subscription?
+    @Environment(\.dynamicTypeSize) private var typeSize
     @Binding var deepLinkedSubscription: Subscription?
 
     init(deepLinkedSubscription: Binding<Subscription?> = .constant(nil)) {
@@ -72,27 +73,39 @@ struct SubscriptionsView: View {
     // MARK: - Header
 
     private var header: some View {
-        HStack(alignment: .top, spacing: 12) {
-            VStack(alignment: .leading, spacing: 4) {
+        VStack(alignment: .leading, spacing: 4) {
+            HStack(alignment: .top, spacing: 12) {
                 ScreenTitle(text: L10n.string("Subscriptions"))
-                if !store.subscriptions.isEmpty {
-                    Text(L10n.string("\(store.activeSubscriptions.count) subscriptions") + " · "
-                         + L10n.string("\(MoneyFormat.total(store.totalMonthlySpend, currencyManager.selectedCurrency, converted: store.totalIsConverted)) a month"))
-                        .font(.subheadline)
-                        .foregroundStyle(Color.inkTextMuted)
+                Spacer(minLength: 8)
+                Button { activeSheet = .browser } label: {
+                    Image(systemName: "plus")
+                        .font(.title3.weight(.semibold))
+                        .foregroundStyle(Color.inkText)
+                        .frame(width: Layout.tapTarget, height: Layout.tapTarget)
+                        .overlay(Circle().stroke(Color.outline, lineWidth: 1))
+                        .contentShape(Circle())
                 }
+                .accessibilityLabel(Text("Add subscription"))
+                .accessibilityIdentifier("addSubscriptionButton")
             }
-            Spacer(minLength: 8)
-            Button { activeSheet = .browser } label: {
-                Image(systemName: "plus")
-                    .font(.title3.weight(.semibold))
-                    .foregroundStyle(Color.inkText)
-                    .frame(width: Layout.tapTarget, height: Layout.tapTarget)
-                    .overlay(Circle().stroke(Color.outline, lineWidth: 1))
-                    .contentShape(Circle())
+            // Under the title and the button, so it has the whole width: beside the button, the count
+            // and the total broke into four lines at the largest text sizes.
+            if !store.subscriptions.isEmpty {
+                let count = L10n.string("\(store.activeSubscriptions.count) subscriptions")
+                let monthly = L10n.string("\(MoneyFormat.total(store.totalMonthlySpend, currencyManager.selectedCurrency, converted: store.totalIsConverted)) a month")
+                Group {
+                    if typeSize.isAccessibilitySize {
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text(verbatim: count)
+                            Text(verbatim: monthly)
+                        }
+                    } else {
+                        Text(verbatim: count + " · " + monthly)
+                    }
+                }
+                .font(.subheadline)
+                .foregroundStyle(Color.inkTextMuted)
             }
-            .accessibilityLabel(Text("Add subscription"))
-            .accessibilityIdentifier("addSubscriptionButton")
         }
     }
 

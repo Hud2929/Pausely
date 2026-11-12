@@ -39,11 +39,11 @@ struct CancelTimingCard: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 10) {
-            HStack(alignment: .firstTextBaseline) {
+            SideBySide {
                 Text("When to cancel")
                     .font(.headline)
                     .foregroundStyle(Color.inkText)
-                Spacer(minLength: 8)
+            } trailing: {
                 Text(verbatim: L10n.relativeDay(daysRemaining, capitalized: true))
                     .font(.subheadline)
                     .foregroundStyle(daysRemaining <= 1 ? Color.due : Color.inkTextMuted)

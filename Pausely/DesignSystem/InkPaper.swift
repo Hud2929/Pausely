@@ -324,14 +324,42 @@ struct Hairline: View {
 /// A small coloured mark with a symbol, so state is never shown by colour alone.
 struct StateMark: View {
     let state: MoneyState
+    /// The disc grows with the reader's text size, like the symbol inside it.
+    @ScaledMetric(relativeTo: .caption2) private var side: CGFloat = 18
 
     var body: some View {
         Image(systemName: state.symbol)
             .font(.caption2.weight(.bold))
             .foregroundStyle(Color.ink)
-            .frame(width: 18, height: 18)
+            .frame(width: side, height: side)
             .background(state.color, in: Circle())
             .accessibilityHidden(true)
+    }
+}
+
+/// A name and its value: side by side, or one above the other at accessibility text sizes, where
+/// two columns break words in the middle and split a price across lines.
+struct SideBySide<Leading: View, Trailing: View>: View {
+    @Environment(\.dynamicTypeSize) private var typeSize
+    var alignment: VerticalAlignment = .firstTextBaseline
+    var spacing: CGFloat = 8
+    @ViewBuilder var leading: Leading
+    @ViewBuilder var trailing: Trailing
+
+    var body: some View {
+        if typeSize.isAccessibilitySize {
+            VStack(alignment: .leading, spacing: 2) {
+                leading
+                trailing
+            }
+            .frame(maxWidth: .infinity, alignment: .leading)
+        } else {
+            HStack(alignment: alignment) {
+                leading
+                Spacer(minLength: spacing)
+                trailing
+            }
+        }
     }
 }
 

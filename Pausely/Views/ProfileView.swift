@@ -15,6 +15,8 @@ struct ProfileView: View {
     /// Pausely Pro as the App Store states it, for someone paying through it. Nil for the free plan and
     /// for Pro given on the account, where there is nothing to manage or refund.
     @State private var plan: StoreKitManager.OwnSubscription?
+    /// The column the row icons sit in; it widens with the reader's text size, as the icons do.
+    @ScaledMetric(relativeTo: .body) private var iconWidth: CGFloat = 24
     @State private var managingPlan = false
     @State private var requestingRefund = false
 
@@ -198,7 +200,7 @@ struct ProfileView: View {
                     Image(systemName: icon)
                         .font(.body)
                         .foregroundStyle(Color.inkTextMuted)
-                        .frame(width: 24)
+                        .frame(width: iconWidth)
                         .accessibilityHidden(true)
                     Text(verbatim: title)
                         .font(.body)

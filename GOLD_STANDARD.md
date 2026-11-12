@@ -329,6 +329,18 @@ Updated at every commit, so the work can be picked up from this file alone.
   Top-bar buttons (Done, Cancel, Save) are system bar items, which iOS does not scale and offers
   the Large Content Viewer for; the audit lists them as "partially unsupported" (about 40 of the
   105) and they will be reported separately, not hidden.
+- E, second slice (11-12): the four tabs at the largest text size. A design-system layout,
+  `SideBySide`, puts a name and its value side by side and one above the other at accessibility
+  sizes; it carries Home's "Coming up" total (which no longer splits a price across lines),
+  the Insights rows (names broke mid-word: "ChatG-PT Plus") and the "When to cancel" header.
+  Subscriptions puts its count and total under the title with the full width (two lines, not
+  four); Home keeps "Each month" and "7 subscriptions" on one line each; state marks and Profile's
+  row icons grow with the text. Read from captures at the largest size (`sheets/big2`, `ax3`).
+  The audit on the four tabs at that size: Dynamic Type, clipped text and undetected text all 0
+  (they were 39, 20 and 8 across the whole tour); 27 contrast findings remain there. Not held by a
+  unit test: a layout at a text size is proven by its capture, and the audit count is the number.
+  736 tests, 0 failures. Next: contrast (what the audit measures against what the palette
+  computes), then the other 37 screens at the largest size, then Arabic, then iPad.
 - Told by the other session at 22:04 (it has stood down and changed nothing): sections 2, 3, 4, 6, 7
   and 10 of the engineering audit were never done and there is no finished overlooked-details
   report. Those areas have been scanned by nobody; they are owed before Stage G can be called done.

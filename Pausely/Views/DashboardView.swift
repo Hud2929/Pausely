@@ -81,6 +81,10 @@ struct DashboardView: View {
                 } label: {
                     HStack(spacing: 6) {
                         Text(showsYear ? L10n.string("Each year") : L10n.string("Each month"))
+                            // Two words that belong together: at the largest sizes they shrink a
+                            // little before they part.
+                            .lineLimit(1)
+                            .minimumScaleFactor(0.7)
                         Image(systemName: "arrow.up.arrow.down").font(.caption2.weight(.semibold))
                             .accessibilityHidden(true)
                     }
@@ -107,6 +111,9 @@ struct DashboardView: View {
                     Text(L10n.string("\(store.activeSubscriptions.count) subscriptions"))
                         .font(.subheadline)
                         .foregroundStyle(Color.inkTextMuted)
+                        // A number stays with its noun.
+                        .lineLimit(1)
+                        .minimumScaleFactor(0.75)
                 }
             }
             Spacer(minLength: 8)
@@ -386,16 +393,19 @@ private struct HorizonSection: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
-            HStack(alignment: .firstTextBaseline) {
+            SideBySide {
                 Text(selectedDay == nil ? L10n.string("Coming up") : L10n.string("By \(dayText(throughDay))"))
                     .font(.headline)
                     .foregroundStyle(Color.inkText)
-                Spacer(minLength: 8)
+            } trailing: {
                 Text(verbatim: MoneyFormat.total(total, currency, converted: Horizon.isConverted(charges, through: throughDay, to: currency),
                                                  locale: L10n.locale))
                     .font(.headline.monospacedDigit())
                     .foregroundStyle(Color.inkText)
                     .contentTransition(.numericText())
+                    // An amount is one thing: it shrinks before it breaks across lines.
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.5)
             }
             .accessibilityElement(children: .combine)
 

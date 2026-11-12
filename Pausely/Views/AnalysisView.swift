@@ -231,14 +231,16 @@ private struct BarRow: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
-            HStack(alignment: .firstTextBaseline) {
+            SideBySide(spacing: 12) {
                 Text(verbatim: title)
                     .font(.body)
                     .foregroundStyle(Color.inkText)
-                Spacer(minLength: 12)
+            } trailing: {
                 Text(verbatim: value)
                     .font(.body.monospacedDigit())
                     .foregroundStyle(Color.inkText)
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.5)
             }
             GeometryReader { geo in
                 ZStack(alignment: .leading) {
