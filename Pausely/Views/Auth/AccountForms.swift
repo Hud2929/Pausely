@@ -22,6 +22,13 @@ enum AccountProblem {
         return CodeProblem.sending(error)
     }
 
+    /// `--demo-form-problem` (DEBUG) opens a form with its problem line showing. The line otherwise
+    /// needs a server to refuse or a connection to fail, so nobody had looked at it in another
+    /// language or at a large text size.
+    static func forDemo(_ sentence: @autoclosure () -> String) -> String? {
+        LaunchFlag.isSet("--demo-form-problem") ? sentence() : nil
+    }
+
     static func apple(_ error: Error) -> String {
         isOffline(error)
             ? L10n.string("Couldn't reach Pausely. Check your connection and try again.")
@@ -146,7 +153,7 @@ struct SignUpView: View {
     @State private var email = ""
     @State private var password = ""
     @State private var isLoading = false
-    @State private var problem: String?
+    @State private var problem: String? = AccountProblem.forDemo(AccountProblem.signingUp(URLError(.notConnectedToInternet)))
     @State private var showEmailConfirmation = false
     @State private var pendingEmail = ""
     @State private var legal: LegalPage?
@@ -297,7 +304,7 @@ struct SignInView: View {
     @State private var email = ""
     @State private var password = ""
     @State private var isLoading = false
-    @State private var problem: String?
+    @State private var problem: String? = AccountProblem.forDemo(AccountProblem.signingIn(CancellationError()))
     @State private var showPasswordReset = false
     @FocusState private var focus: Field?
 

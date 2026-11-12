@@ -30,6 +30,7 @@ enum LaunchFlag: String {
         return ProcessInfo.processInfo.arguments.contains { argument in
             argument.hasPrefix("--demo") || argument == LaunchFlag.screenshots.rawValue
                 || argument == "--fresh-demo-data" || argument == "--empty-demo-data" || argument == "--varied-demo-data"
+                || argument == "--quiet-demo-data"
         }
         #else
         return false

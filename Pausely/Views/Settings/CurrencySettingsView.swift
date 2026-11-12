@@ -24,7 +24,7 @@ struct CurrencySettingsView: View {
                 .padding(.top, -14)
                 .accessibilityIdentifier("ratesDate")
 
-            InkTextField(placeholder: L10n.string("Search currencies"), text: $searchText, autocapitalization: .never)
+            InkTextField(placeholder: L10n.string("Search"), text: $searchText, autocapitalization: .never)
                 .autocorrectionDisabled()
                 .accessibilityIdentifier("currencySearch")
 

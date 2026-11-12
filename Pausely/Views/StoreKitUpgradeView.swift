@@ -176,39 +176,34 @@ struct StoreKitUpgradeView: View {
     }
 
     var body: some View {
-        VStack(spacing: 0) {
-            ScrollView {
-                VStack(alignment: .leading, spacing: 0) {
-                    closeRow
+        ActionScreen {
+            VStack(alignment: .leading, spacing: 0) {
+                closeRow
 
-                    Text(verbatim: headline)
-                        .font(.question(.title))
-                        .foregroundStyle(Color.inkText)
-                        .fixedSize(horizontal: false, vertical: true)
-                        .padding(.top, 4)
-                        .accessibilityAddTraits(.isHeader)
-                        .accessibilityFocused($focusedElement, equals: .title)
-                        .accessibilityIdentifier(atFreeLimit ? "freeLimitNotice" : "paywallHeadline")
+                Text(verbatim: headline)
+                    .font(.question(.title))
+                    .foregroundStyle(Color.inkText)
+                    .fixedSize(horizontal: false, vertical: true)
+                    .padding(.top, 4)
+                    .accessibilityAddTraits(.isHeader)
+                    .accessibilityFocused($focusedElement, equals: .title)
+                    .accessibilityIdentifier(atFreeLimit ? "freeLimitNotice" : "paywallHeadline")
 
-                    Text(verbatim: valueLine)
-                        .font(.body)
-                        .foregroundStyle(Color.inkTextMuted)
-                        .fixedSize(horizontal: false, vertical: true)
-                        .padding(.top, 10)
+                Text(verbatim: valueLine)
+                    .font(.body)
+                    .foregroundStyle(Color.inkTextMuted)
+                    .fixedSize(horizontal: false, vertical: true)
+                    .padding(.top, 10)
 
-                    planPicker.padding(.top, 16)
+                planPicker.padding(.top, 16)
 
-                    slip.padding(.top, 20)
+                slip.padding(.top, 20)
 
-                    promise.padding(.top, 24).padding(.bottom, 24)
-                }
-                .padding(.horizontal, Layout.margin)
-
-                // At the largest text sizes a pinned bar would cover the screen, so it scrolls.
-                if typeSize.isAccessibilitySize { actionBar }
+                promise.padding(.top, 24).padding(.bottom, 24)
             }
-
-            if !typeSize.isAccessibilitySize { actionBar }
+            .padding(.horizontal, Layout.margin)
+        } actions: {
+            actionBar
         }
         .inkScreen()
         .onAppear { focusedElement = .title }

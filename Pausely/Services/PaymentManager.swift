@@ -96,7 +96,8 @@ final class PaymentManager: ObservableObject {
     /// Whether this person has Pro, by any route: an App Store subscription or a grant on the account.
     var isPremium: Bool {
         #if DEBUG
-        if debugPremiumOverride { return true }
+        // `--demo-pro` (captures and UI tests): the app as someone with Pro sees it.
+        if debugPremiumOverride || LaunchFlag.isSet("--demo-pro") { return true }
         #endif
         return resolvedTier > .free
     }

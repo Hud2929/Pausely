@@ -43,7 +43,8 @@ struct PauselyApp: App {
         }
         // A launch that starts from a set list (the demo one, or none) takes in nothing an earlier
         // run left waiting: an "empty" capture once opened on a Netflix from a first-run test.
-        if LaunchFlag.isSet("--fresh-demo-data") || LaunchFlag.isSet("--empty-demo-data") || LaunchFlag.isSet("--varied-demo-data") {
+        if LaunchFlag.isSet("--fresh-demo-data") || LaunchFlag.isSet("--empty-demo-data") || LaunchFlag.isSet("--varied-demo-data")
+            || LaunchFlag.isSet("--quiet-demo-data") {
             PendingTally.clear()
             TallyImporter.clearWaiting()
         }
@@ -301,11 +302,15 @@ struct RootView: View {
                 } else if isDemoScreen("--demo-pause-plan") {
                     #if DEBUG
                     PausePlanView()
-                        .task {
-                            guard isDemoScreen("--demo-plan-active"), PausePlanStore.shared.activePlan == nil else { return }
-                            let eligible = SubscriptionStore.shared.subscriptions.filter(PausePlanSchedule.isEligible)
-                            await PausePlanStore.shared.start(order: PausePlanSchedule.suggestedOrder(eligible, now: Date()))
-                        }
+                    #endif
+                } else if isDemoScreen("--demo-dates") {
+                    #if DEBUG
+                    // Several subscriptions with no renewal date, as a first-run list arrives.
+                    RenewalDatesSheet(subscriptions: SubscriptionStore.makeDemoSubscriptions().prefix(3).map { subscription in
+                        var undated = subscription
+                        undated.nextBillingDate = nil
+                        return undated
+                    })
                     #endif
                 } else if demoValue("--demo-receipt") != nil {
                     #if DEBUG
@@ -373,6 +378,10 @@ struct RootView: View {
         .animation(Motion.unlessReduced(Motion.arrive), value: authManager.isAuthenticated)
         .animation(Motion.unlessReduced(Motion.arrive), value: showAuth)
         .onAppear {
+            #if DEBUG
+            // `--demo-splash` holds the launch mark so the tour can capture it (it is gone in 0.6 s).
+            if LaunchFlag.isSet("--demo-splash") { return }
+            #endif
             let workItem = DispatchWorkItem {
                 withAnimation(Motion.fade) {
                     showSplash = false
@@ -405,6 +414,17 @@ struct RootView: View {
             if isDemoScreen("--demo-link-problem") {
                 authManager.linkProblem = L10n.string("That link has expired or was already used. Ask for a new one.")
             }
+            // A Pause Plan already running, on whichever screen is opened: Home's row, the Insights
+            // card and the subscription's own row all change when one is.
+            if isDemoScreen("--demo-plan-active") {
+                Task {
+                    guard PausePlanStore.shared.activePlan == nil else { return }
+                    let rotating = SubscriptionStore.shared.subscriptions.filter { PausePlanSchedule.isEligible($0) && $0.status != .cancelled }
+                    await PausePlanStore.shared.start(order: PausePlanSchedule.suggestedOrder(rotating, now: Date()))
+                }
+            }
+            // What the first-run slip could not fit under the free limit, waiting for a place.
+            if isDemoScreen("--demo-waiting") { TallyImporter.keepWaitingForDemo() }
             if isDemoScreen("--demo-notice") {
                 Task {
                     try? await Task.sleep(for: .seconds(2))
@@ -514,11 +534,12 @@ struct WelcomeFlow: View {
     // MARK: - The door: create an account or sign in
 
     private var authWallContent: some View {
-        ScrollView {
+        ActionScreen {
             authWallText
+        } actions: {
+            authWallButtons
         }
         .scrollBounceBehavior(.basedOnSize)
-        .safeAreaInset(edge: .bottom) { authWallButtons }
     }
 
     private var authWallText: some View {

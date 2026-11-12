@@ -12,6 +12,14 @@ enum DemoSubscriptions {
         return sub
     }
 
+    /// `--quiet-demo-data`: one yearly subscription that renews five months from now, so Home's
+    /// "Nothing is due in the next month." can be opened and looked at.
+    static func quiet(now: Date = Date(), currency home: String = CurrencyManager.shared.selectedCurrency) -> [Subscription] {
+        [Subscription(name: "Duolingo", category: SubscriptionCategory.education.displayName,
+                      amount: Decimal(string: "59.99")!, currency: home, billingFrequency: .yearly,
+                      nextBillingDate: Calendar.billing.date(byAdding: .month, value: 5, to: now))]
+    }
+
     /// `--varied-demo-data`: a list with one of everything a list can hold, so every row and state
     /// that depends on what is in the list can be opened and looked at. The plain demo list is seven
     /// monthly subscriptions in one currency, which leaves most of those states unseen.
@@ -55,21 +63,35 @@ enum DemoSubscriptions {
     }
 
     /// The history that goes with `varied`: Spotify went up three months ago, Hulu was cancelled
-    /// twenty days ago (so the charge nine days ago is one it avoided), and Netflix was watched for a
-    /// couple of hours this month.
-    @MainActor
-    static func seedVariedHistory(for list: [Subscription], now: Date = Date()) {
+    /// twenty days ago (so the charge nine days ago is one it avoided), Max was cancelled and then
+    /// started again (the receipt says where its savings stop), and Netflix was watched for a couple
+    /// of hours this month.
+    static func variedEvents(for list: [Subscription], now: Date = Date()) -> [LifecycleEvent] {
         let calendar = Calendar.billing
-        let log = LifecycleEventLog.shared
-        log.removeAll()
+        func ago(_ days: Int) -> Date { calendar.date(byAdding: .day, value: -days, to: now) ?? now }
+        var events: [LifecycleEvent] = []
         if let spotify = list.first(where: { $0.name == "Spotify" }) {
-            log.record(.priceChanged, for: spotify, date: calendar.date(byAdding: .month, value: -3, to: now) ?? now,
-                       previousAmount: spotify.amount - 1)
+            events.append(LifecycleEvent(kind: .priceChanged, subscription: spotify,
+                                         date: calendar.date(byAdding: .month, value: -3, to: now) ?? now,
+                                         previousAmount: spotify.amount - 1, renewalDate: nil))
+        }
+        if let max = list.first(where: { $0.name == "Max" }) {
+            // As it was when it was cancelled: its next charge was five days away.
+            var then = max
+            then.nextBillingDate = ago(75)
+            events.append(LifecycleEvent(kind: .cancelled, subscription: then, date: ago(80), previousAmount: nil, renewalDate: ago(75)))
+            events.append(LifecycleEvent(kind: .reactivated, subscription: max, date: ago(40), previousAmount: nil, renewalDate: nil))
         }
         if let hulu = list.first(where: { $0.name == "Hulu" }) {
-            log.record(.cancelled, for: hulu, date: calendar.date(byAdding: .day, value: -20, to: now) ?? now,
-                       renewalDate: hulu.nextBillingDate)
+            events.append(LifecycleEvent(kind: .cancelled, subscription: hulu, date: ago(20), previousAmount: nil,
+                                         renewalDate: hulu.nextBillingDate))
         }
+        return events
+    }
+
+    @MainActor
+    static func seedVariedHistory(for list: [Subscription], now: Date = Date()) {
+        LifecycleEventLog.shared.restore(variedEvents(for: list, now: now))
         if let netflix = list.first(where: { $0.name == "Netflix" }) {
             UsageLog.shared.setMonthlyUsage(minutes: 140, for: netflix.name)
         }

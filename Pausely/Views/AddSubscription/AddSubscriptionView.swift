@@ -22,81 +22,79 @@ struct AddSubscriptionView: View {
     }
 
     var body: some View {
-        VStack(spacing: 0) {
-            ScrollView {
-                VStack(alignment: .leading, spacing: 24) {
-                    HStack {
-                        LeaveButton("Cancel") { dismiss() }
-                        .accessibilityIdentifier("cancelButton")
-                        Spacer()
-                    }
-                    .padding(.bottom, -12)
+        ActionScreen(dismissesKeyboard: true) {
+            VStack(alignment: .leading, spacing: 24) {
+                HStack {
+                    LeaveButton("Cancel") { dismiss() }
+                    .accessibilityIdentifier("cancelButton")
+                    Spacer()
+                }
+                .padding(.bottom, -12)
 
-                    TextField("Netflix, Spotify…", text: $name, axis: .vertical)
-                        .lineLimit(1...3)
-                        .font(.question(.title))
-                        .foregroundStyle(Color.inkText)
-                        .textInputAutocapitalization(.words)
-                        .focused($focusedField, equals: .name)
-                        .submitLabel(.next)
-                        .onSubmit { focusedField = .amount }
-                        .accessibilityLabel(Text("Service name"))
-                        .accessibilityIdentifier("serviceNameTextField")
+                TextField("Netflix, Spotify…", text: $name, axis: .vertical)
+                    .lineLimit(1...3)
+                    .font(.question(.title))
+                    .foregroundStyle(Color.inkText)
+                    .textInputAutocapitalization(.words)
+                    .focused($focusedField, equals: .name)
+                    .submitLabel(.next)
+                    .onSubmit { focusedField = .amount }
+                    .returnMovesOn(from: $name) { focusedField = .amount }
+                    .accessibilityLabel(Text("Service name"))
+                    .accessibilityIdentifier("serviceNameTextField")
 
-                    VStack(alignment: .leading, spacing: 6) {
-                        Text(frequency == .yearly ? L10n.string("What do you pay each year?") : L10n.string("What do you pay each month?"))
-                            .font(.subheadline)
+                VStack(alignment: .leading, spacing: 6) {
+                    Text(frequency == .yearly ? L10n.string("What do you pay each year?") : L10n.string("What do you pay each month?"))
+                        .font(.subheadline)
+                        .foregroundStyle(Color.inkTextMuted)
+                        .opacity(frequency == .monthly || frequency == .yearly ? 1 : 0)
+                        .accessibilityHidden(!(frequency == .monthly || frequency == .yearly))
+                    HStack(alignment: .firstTextBaseline, spacing: 8) {
+                        TextField(text: $amount, prompt: Text(verbatim: AmountText.text(for: 0, currency: currencyManager.selectedCurrency))) { EmptyView() }
+                            .font(.total(amountSize))
+                            .foregroundStyle(Color.inkText)
+                            .keyboardType(.decimalPad)
+                            .focused($focusedField, equals: .amount)
+                            .accessibilityLabel(Text("Amount"))
+                            .accessibilityIdentifier("amountTextField")
+                        Text(verbatim: currencyManager.selectedCurrency)
+                            .font(.proof(.subheadline))
                             .foregroundStyle(Color.inkTextMuted)
-                            .opacity(frequency == .monthly || frequency == .yearly ? 1 : 0)
-                            .accessibilityHidden(!(frequency == .monthly || frequency == .yearly))
-                        HStack(alignment: .firstTextBaseline, spacing: 8) {
-                            TextField(text: $amount, prompt: Text(verbatim: AmountText.text(for: 0, currency: currencyManager.selectedCurrency))) { EmptyView() }
-                                .font(.total(amountSize))
-                                .foregroundStyle(Color.inkText)
-                                .keyboardType(.decimalPad)
-                                .focused($focusedField, equals: .amount)
-                                .accessibilityLabel(Text("Amount"))
-                                .accessibilityIdentifier("amountTextField")
-                            Text(verbatim: currencyManager.selectedCurrency)
-                                .font(.proof(.subheadline))
-                                .foregroundStyle(Color.inkTextMuted)
-                        }
-                    }
-
-                    VStack(spacing: 0) {
-                        row(L10n.string("Billing cycle")) {
-                            Picker("Frequency", selection: $frequency) {
-                                ForEach(BillingFrequency.allCases, id: \.self) { freq in
-                                    Text(freq.displayName).tag(freq)
-                                }
-                            }
-                            .pickerStyle(.menu)
-                            .tint(Color.inkText)
-                        }
-                        Hairline()
-                        row(L10n.string("Next renewal")) {
-                            OptionalDatePicker(title: L10n.string("Next renewal"), date: $nextPayment,
-                                               earliest: Calendar.billing.startOfDay(for: Date()))
-                                .accessibilityIdentifier("nextPaymentPicker")
-                        }
-                        Hairline()
-                        row(L10n.string("Category")) {
-                            Picker("Category", selection: $category) {
-                                ForEach(SubscriptionCategory.allCases, id: \.self) { cat in
-                                    Text(verbatim: cat.localizedName).tag(cat)
-                                }
-                            }
-                            .pickerStyle(.menu)
-                            .tint(Color.inkText)
-                        }
                     }
                 }
-                .padding(.horizontal, Layout.margin)
-                .padding(.top, 8)
-                .padding(.bottom, 24)
-            }
-            .scrollDismissesKeyboard(.interactively)
 
+                VStack(spacing: 0) {
+                    row(L10n.string("Billing cycle")) {
+                        Picker("Frequency", selection: $frequency) {
+                            ForEach(BillingFrequency.allCases, id: \.self) { freq in
+                                Text(freq.displayName).tag(freq)
+                            }
+                        }
+                        .pickerStyle(.menu)
+                        .tint(Color.inkText)
+                    }
+                    Hairline()
+                    row(L10n.string("Next renewal")) {
+                        OptionalDatePicker(title: L10n.string("Next renewal"), date: $nextPayment,
+                                           earliest: Calendar.billing.startOfDay(for: Date()))
+                            .accessibilityIdentifier("nextPaymentPicker")
+                    }
+                    Hairline()
+                    row(L10n.string("Category")) {
+                        Picker("Category", selection: $category) {
+                            ForEach(SubscriptionCategory.allCases, id: \.self) { cat in
+                                Text(verbatim: cat.localizedName).tag(cat)
+                            }
+                        }
+                        .pickerStyle(.menu)
+                        .tint(Color.inkText)
+                    }
+                }
+            }
+            .padding(.horizontal, Layout.margin)
+            .padding(.top, 8)
+            .padding(.bottom, 24)
+        } actions: {
             Button(action: saveSubscription) { Text("Add subscription") }
                 .buttonStyle(.ink)
                 .disabled(name.isEmpty || amount.isEmpty)
@@ -105,7 +103,6 @@ struct AddSubscriptionView: View {
                 .padding(.horizontal, Layout.margin)
                 .padding(.top, 12)
                 .padding(.bottom, 8)
-                .background(Color.ink)
         }
         .inkScreen()
         .preferredColorScheme(.dark)

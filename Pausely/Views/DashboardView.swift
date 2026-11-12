@@ -27,7 +27,7 @@ struct DashboardView: View {
             VStack(alignment: .leading, spacing: 0) {
                 header
 
-                if store.isLoading && store.subscriptions.isEmpty {
+                if isFirstLoad {
                     HomeLoading().padding(.top, 32)
                 } else if store.subscriptions.isEmpty {
                     HomeEmpty(onAdd: { showingAdd = true },
@@ -72,6 +72,18 @@ struct DashboardView: View {
         return L10n.string("Your subscriptions cost \(MoneyFormat.total(store.totalMonthlySpend, currency, converted: store.totalIsConverted)) a month.")
     }
 
+    /// The list is being fetched for the first time and nothing is on the phone yet: what the
+    /// person pays is not known, so no figure is drawn. (It said "$0.00" until the list arrived.)
+    nonisolated static func isFirstLoad(isLoading: Bool, listIsEmpty: Bool) -> Bool {
+        isLoading && listIsEmpty
+    }
+
+    private var isFirstLoad: Bool {
+        // `--demo-loading` (DEBUG) holds this state so it can be looked at.
+        Self.isFirstLoad(isLoading: store.isLoading || LaunchFlag.isSet("--demo-loading"),
+                         listIsEmpty: store.subscriptions.isEmpty)
+    }
+
     private var header: some View {
         HStack(alignment: .top, spacing: 12) {
             VStack(alignment: .leading, spacing: 6) {
@@ -97,15 +109,23 @@ struct DashboardView: View {
                 .accessibilityHint(Text("Switches between a month and a year"))
                 .accessibilityIdentifier("spendPeriodToggle")
 
-                Text(verbatim: MoneyFormat.total(showsYear ? store.totalAnnualSpend : store.totalMonthlySpend,
-                                                 currencyManager.selectedCurrency, converted: store.totalIsConverted))
-                    .font(.total(numberSize))
-                    .foregroundStyle(Color.inkText)
-                    .contentTransition(.numericText())
-                    .lineLimit(1)
-                    .minimumScaleFactor(0.5)
-                    .accessibilityLabel(Text(verbatim: spokenTotal))
-                    .accessibilityIdentifier("spendTotal")
+                if isFirstLoad {
+                    RoundedRectangle(cornerRadius: Layout.markRadius, style: .continuous)
+                        .fill(Color.inkRaised)
+                        .frame(width: 168, height: numberSize * 0.8)
+                        .padding(.vertical, numberSize * 0.1)
+                        .accessibilityHidden(true)
+                } else {
+                    Text(verbatim: MoneyFormat.total(showsYear ? store.totalAnnualSpend : store.totalMonthlySpend,
+                                                     currencyManager.selectedCurrency, converted: store.totalIsConverted))
+                        .font(.total(numberSize))
+                        .foregroundStyle(Color.inkText)
+                        .contentTransition(.numericText())
+                        .lineLimit(1)
+                        .minimumScaleFactor(0.5)
+                        .accessibilityLabel(Text(verbatim: spokenTotal))
+                        .accessibilityIdentifier("spendTotal")
+                }
 
                 if !store.subscriptions.isEmpty {
                     Text(L10n.string("\(store.activeSubscriptions.count) subscriptions"))

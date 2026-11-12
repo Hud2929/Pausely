@@ -46,69 +46,66 @@ struct CatalogAddSheet: View {
     // MARK: - Body
 
     var body: some View {
-        VStack(spacing: 0) {
-            ScrollView {
-                VStack(alignment: .leading, spacing: 24) {
-                    HStack {
-                        LeaveButton("Cancel") { dismiss() }
-                        Spacer()
-                    }
-                    .padding(.bottom, -12)
+        ActionScreen(dismissesKeyboard: true) {
+            VStack(alignment: .leading, spacing: 24) {
+                HStack {
+                    LeaveButton("Cancel") { dismiss() }
+                    Spacer()
+                }
+                .padding(.bottom, -12)
 
-                    HStack(spacing: 12) {
-                        ServiceLogoView(name: entry.name, category: entry.category.rawValue, size: 48)
-                        Text(verbatim: entry.name)
-                            .font(.question(.title))
-                            .foregroundStyle(Color.inkText)
-                            .fixedSize(horizontal: false, vertical: true)
-                            .accessibilityAddTraits(.isHeader)
-                    }
+                HStack(spacing: 12) {
+                    ServiceLogoView(name: entry.name, category: entry.category.rawValue, size: 48)
+                    Text(verbatim: entry.name)
+                        .font(.question(.title))
+                        .foregroundStyle(Color.inkText)
+                        .fixedSize(horizontal: false, vertical: true)
+                        .accessibilityAddTraits(.isHeader)
+                }
 
-                    amountSection
+                amountSection
 
-                    VStack(spacing: 0) {
-                        row(L10n.string("Billing cycle")) {
-                            Picker(L10n.string("Billing cycle"), selection: $frequency) {
-                                ForEach(BillingFrequency.allCases, id: \.self) { option in
-                                    Text(option.displayName).tag(option)
-                                }
-                            }
-                            .pickerStyle(.menu)
-                            .tint(Color.inkText)
-                        }
-                        // On a free trial the day it ends is the first charge, and it becomes the renewal
-                        // date then (`SubscriptionLifecycle.afterTrial`): one date is asked for, not two.
-                        if !hasFreeTrial {
-                            Hairline()
-                            row(L10n.string("Next renewal")) {
-                                OptionalDatePicker(title: L10n.string("Next renewal"), date: $nextBillingDate,
-                                                   earliest: Calendar.billing.startOfDay(for: Date()))
+                VStack(spacing: 0) {
+                    row(L10n.string("Billing cycle")) {
+                        Picker(L10n.string("Billing cycle"), selection: $frequency) {
+                            ForEach(BillingFrequency.allCases, id: \.self) { option in
+                                Text(option.displayName).tag(option)
                             }
                         }
+                        .pickerStyle(.menu)
+                        .tint(Color.inkText)
+                    }
+                    // On a free trial the day it ends is the first charge, and it becomes the renewal
+                    // date then (`SubscriptionLifecycle.afterTrial`): one date is asked for, not two.
+                    if !hasFreeTrial {
                         Hairline()
-                        Toggle(isOn: $hasFreeTrial.animation(Motion.unlessReduced(Motion.touch))) {
-                            Text("I'm on a free trial")
-                                .font(.body)
-                                .foregroundStyle(Color.inkText)
+                        row(L10n.string("Next renewal")) {
+                            OptionalDatePicker(title: L10n.string("Next renewal"), date: $nextBillingDate,
+                                               earliest: Calendar.billing.startOfDay(for: Date()))
                         }
-                        .tint(Color.inkTextMuted)
-                        .frame(minHeight: 54)
-                        .accessibilityIdentifier("tierTrialToggle")
-                        if hasFreeTrial {
-                            Hairline()
-                            row(L10n.string("Trial ends")) {
-                                OptionalDatePicker(title: L10n.string("Trial ends"), date: $trialEndsAt,
-                                                   earliest: Calendar.billing.startOfDay(for: Date()))
-                            }
+                    }
+                    Hairline()
+                    Toggle(isOn: $hasFreeTrial.animation(Motion.unlessReduced(Motion.touch))) {
+                        Text("I'm on a free trial")
+                            .font(.body)
+                            .foregroundStyle(Color.inkText)
+                    }
+                    .tint(Color.inkTextMuted)
+                    .frame(minHeight: 54)
+                    .accessibilityIdentifier("tierTrialToggle")
+                    if hasFreeTrial {
+                        Hairline()
+                        row(L10n.string("Trial ends")) {
+                            OptionalDatePicker(title: L10n.string("Trial ends"), date: $trialEndsAt,
+                                               earliest: Calendar.billing.startOfDay(for: Date()))
                         }
                     }
                 }
-                .padding(.horizontal, Layout.margin)
-                .padding(.top, 8)
-                .padding(.bottom, 24)
             }
-            .scrollDismissesKeyboard(.interactively)
-
+            .padding(.horizontal, Layout.margin)
+            .padding(.top, 8)
+            .padding(.bottom, 24)
+        } actions: {
             Button {
                 Feel.tick()
                 // Saved as what the person confirmed, in their own currency.
@@ -124,7 +121,6 @@ struct CatalogAddSheet: View {
             .padding(.horizontal, Layout.margin)
             .padding(.top, 12)
             .padding(.bottom, 8)
-            .background(Color.ink)
         }
         .inkScreen()
         .preferredColorScheme(.dark)

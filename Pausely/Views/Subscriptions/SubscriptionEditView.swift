@@ -100,13 +100,15 @@ struct SubscriptionEditView: View {
             HStack(spacing: 12) {
                 ServiceLogoView(name: draft.trimmedName.isEmpty ? original.name : draft.trimmedName,
                                 category: draft.category, size: 48)
-                TextField("Name", text: $draft.name)
+                TextField("Name", text: $draft.name, axis: .vertical)
+                    .lineLimit(1...3)
                     .font(.question(.title))
                     .foregroundStyle(Color.inkText)
                     .textInputAutocapitalization(.words)
                     .submitLabel(.next)
                     .focused($focus, equals: .name)
                     .onSubmit { focus = .amount }
+                    .returnMovesOn(from: $draft.name) { focus = .amount }
                     .accessibilityLabel("Name")
                     .accessibilityIdentifier("editNameField")
             }

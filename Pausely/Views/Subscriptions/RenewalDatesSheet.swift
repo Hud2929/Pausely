@@ -10,41 +10,39 @@ struct RenewalDatesSheet: View {
     @State private var isSaving = false
 
     var body: some View {
-        VStack(spacing: 0) {
-            ScrollView {
-                VStack(alignment: .leading, spacing: 0) {
-                    HStack {
-                        LeaveButton("Not now") { dismiss() }
-                        Spacer()
-                    }
-
-                    Text(subscriptions.count == 1 ? L10n.string("When does \(subscriptions[0].name) charge you?")
-                                                  : L10n.string("When do they charge you?"))
-                        .font(.question(.title))
-                        .foregroundStyle(Color.inkText)
-                        .fixedSize(horizontal: false, vertical: true)
-                        .padding(.top, 4)
-                        .accessibilityAddTraits(.isHeader)
-
-                    Text(subscriptions.count == 1
-                         ? L10n.string("Pausely asks you before that day whether to keep it. Your bank statement or the service's account page shows the date.")
-                         : L10n.string("Pausely asks you before each of these days whether to keep it. Your bank statement or the service's account page shows the date. Skip any you don't know."))
-                        .font(.subheadline)
-                        .foregroundStyle(Color.inkTextMuted)
-                        .fixedSize(horizontal: false, vertical: true)
-                        .padding(.top, 10)
-                        .padding(.bottom, 12)
-
-                    ForEach(Array(subscriptions.enumerated()), id: \.element.id) { index, subscription in
-                        if index > 0 { Hairline() }
-                        row(subscription)
-                    }
+        ActionScreen {
+            VStack(alignment: .leading, spacing: 0) {
+                HStack {
+                    LeaveButton("Not now") { dismiss() }
+                    Spacer()
                 }
-                .padding(.horizontal, Layout.margin)
-                .padding(.top, 8)
-                .padding(.bottom, 16)
-            }
 
+                Text(subscriptions.count == 1 ? L10n.string("When does \(subscriptions[0].name) charge you?")
+                                              : L10n.string("When do they charge you?"))
+                    .font(.question(.title))
+                    .foregroundStyle(Color.inkText)
+                    .fixedSize(horizontal: false, vertical: true)
+                    .padding(.top, 4)
+                    .accessibilityAddTraits(.isHeader)
+
+                Text(subscriptions.count == 1
+                     ? L10n.string("Pausely asks you before that day whether to keep it. Your bank statement or the service's account page shows the date.")
+                     : L10n.string("Pausely asks you before each of these days whether to keep it. Your bank statement or the service's account page shows the date. Skip any you don't know."))
+                    .font(.subheadline)
+                    .foregroundStyle(Color.inkTextMuted)
+                    .fixedSize(horizontal: false, vertical: true)
+                    .padding(.top, 10)
+                    .padding(.bottom, 12)
+
+                ForEach(Array(subscriptions.enumerated()), id: \.element.id) { index, subscription in
+                    if index > 0 { Hairline() }
+                    row(subscription)
+                }
+            }
+            .padding(.horizontal, Layout.margin)
+            .padding(.top, 8)
+            .padding(.bottom, 16)
+        } actions: {
             Button { Task { await save() } } label: {
                 Text(isSaving ? L10n.string("Saving…")
                      : dates.isEmpty ? L10n.string("Save dates") : L10n.string("Save \(dates.count) dates"))
@@ -55,26 +53,30 @@ struct RenewalDatesSheet: View {
             .padding(.horizontal, Layout.margin)
             .padding(.top, 12)
             .padding(.bottom, 8)
-            .background(Color.ink)
         }
         .inkScreen()
         .preferredColorScheme(.dark)
     }
 
     private func row(_ subscription: Subscription) -> some View {
-        HStack(spacing: 12) {
-            ServiceLogoView(name: subscription.name, category: subscription.category, size: 40)
-            VStack(alignment: .leading, spacing: 2) {
-                Text(verbatim: subscription.name)
-                    .font(.body.weight(.medium))
-                    .foregroundStyle(Color.inkText)
-                Text(verbatim: subscription.billingFrequency.pricedShort(subscription.chargeText))
-                    .font(.subheadline)
-                    .foregroundStyle(Color.inkTextMuted)
-                    // "$54.99/mo" is read out as "$54.99 a month".
-                    .accessibilityLabel(Text(verbatim: subscription.billingFrequency.priced(subscription.chargeText)))
+        // Side by side, or the date under the name at the accessibility sizes: beside the button the
+        // name had a third of the row ("Net-flix") and the price broke inside its number.
+        SideBySide(alignment: .center) {
+            HStack(spacing: 12) {
+                ServiceLogoView(name: subscription.name, category: subscription.category, size: 40)
+                VStack(alignment: .leading, spacing: 2) {
+                    Text(verbatim: subscription.name)
+                        .font(.body.weight(.medium))
+                        .foregroundStyle(Color.inkText)
+                        .fixedSize(horizontal: false, vertical: true)
+                    Text(verbatim: subscription.billingFrequency.pricedShort(subscription.chargeText))
+                        .font(.subheadline)
+                        .foregroundStyle(Color.inkTextMuted)
+                        // "$54.99/mo" is read out as "$54.99 a month".
+                        .accessibilityLabel(Text(verbatim: subscription.billingFrequency.priced(subscription.chargeText)))
+                }
             }
-            Spacer(minLength: 8)
+        } trailing: {
             if let date = dates[subscription.id] {
                 DatePicker(L10n.string("Next renewal"),
                            selection: Binding(get: { date }, set: { dates[subscription.id] = $0 }),

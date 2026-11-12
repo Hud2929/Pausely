@@ -3,6 +3,21 @@ import Foundation
 /// Facts from the event log that a Renewal Verdict shows. Pure, so they can be tested.
 enum VerdictFacts {
 
+    /// Why a verdict has no charge to decide on. A reminder that was delivered can still be tapped
+    /// after its subscription lost its date or was cancelled; "Keep it" is about one charge, and a
+    /// button that can do nothing is never shown without the way forward.
+    enum NoCharge: Equatable {
+        /// It renews, but Pausely was never told when: the verdict asks for the date instead.
+        case noDate
+        /// It was cancelled: the verdict shows the cancelled slip.
+        case notRenewing
+    }
+
+    static func noCharge(for sub: Subscription, now: Date, calendar: Calendar = .billing) -> NoCharge? {
+        guard RenewalDecisions.upcomingCharge(for: sub, now: now, calendar: calendar) == nil else { return nil }
+        return sub.renewsAutomatically ? .noDate : .notRenewing
+    }
+
     /// When the user last chose to keep it.
     static func lastKept(for subscriptionId: UUID, events: [LifecycleEvent]) -> Date? {
         events.filter { $0.subscriptionId == subscriptionId && $0.kind == .kept }.map(\.date).max()

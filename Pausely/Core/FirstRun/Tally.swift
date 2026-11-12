@@ -257,6 +257,17 @@ enum TallyImporter {
 
     static func clearWaiting(defaults: UserDefaults = .standard) { defaults.removeObject(forKey: waitingKey) }
 
+    #if DEBUG
+    /// `--demo-waiting`: three lines that did not fit, so Home's row about them can be looked at.
+    static func keepWaitingForDemo() {
+        let currency = CurrencyManager.shared.selectedCurrency
+        saveWaiting([TallyLine(name: "Hulu", category: "Entertainment", amount: Decimal(string: "18.99")!, currency: currency),
+                     TallyLine(name: "Audible", category: "Entertainment", amount: Decimal(string: "14.95")!, currency: currency),
+                     TallyLine(name: "Dropbox", category: "Cloud Storage", amount: Decimal(string: "11.99")!, currency: currency)],
+                    defaults: .standard)
+    }
+    #endif
+
     private static func saveWaiting(_ lines: [TallyLine], defaults: UserDefaults) {
         if lines.isEmpty {
             clearWaiting(defaults: defaults)
@@ -337,7 +348,9 @@ enum DemoTally {
     /// A filled slip for `--demo-first-run=tally` and `=reveal`.
     static func make() -> Tally {
         var tally = Tally(currency: CurrencyManager.shared.selectedCurrency)
-        tally.guess = 40
+        // `--demo-guess=N` sets the guess, so the reveal's three answers can each be looked at
+        // (more than guessed, a good guess, less than guessed).
+        tally.guess = LaunchFlag.value(of: "--demo-guess").flatMap { Decimal(string: $0) } ?? 40
         for name in ["Netflix", "Spotify", "YouTube Premium", "Amazon Prime", "iCloud+", "ChatGPT Plus", "Disney+", "Audible"] {
             guard let service = TallyCatalog.services.first(where: { $0.name == name }) else { continue }
             // A demo slip is full: where there is no typical price, a sample one stands in for what

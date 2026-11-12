@@ -13,6 +13,9 @@ struct SubscriptionManagementView: View {
     @ObservedObject private var currencyManager = CurrencyManager.shared
 
     @State private var route: Route?
+    /// The column the row marks sit in. It grows with the text: at the largest sizes a mark was
+    /// twice as wide as a fixed column and lay over the words beside it.
+    @ScaledMetric(relativeTo: .body) private var markColumn: CGFloat = 24
     @State private var showRemoveConfirm = false
     @State private var isRemoving = false
 
@@ -298,12 +301,12 @@ struct SubscriptionManagementView: View {
         } label: {
             HStack(spacing: 14) {
                 if let state {
-                    StateMark(state: state).frame(width: 24)
+                    StateMark(state: state).frame(width: markColumn)
                 } else {
                     Image(systemName: icon)
                         .font(.body)
                         .foregroundStyle(Color.inkTextMuted)
-                        .frame(width: 24)
+                        .frame(width: markColumn)
                         .accessibilityHidden(true)
                 }
                 VStack(alignment: .leading, spacing: 2) {

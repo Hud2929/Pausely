@@ -77,6 +77,7 @@ struct FoundRow: View {
                         .contentShape(Rectangle())
                 }
                 .buttonStyle(.plain)
+                .accessibilityIdentifier("foundRowWhy")
                 .accessibilityLabel(isExpanded ? Text("Hide why") : Text("Show why we think this is a subscription"))
             }
             .padding(.vertical, 10)

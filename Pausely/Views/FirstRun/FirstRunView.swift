@@ -256,8 +256,6 @@ private struct TallyStep: View {
                 }
                 Feel.tick()
             }
-            .presentationDetents([.height(300)])
-            .presentationBackground(Color.inkRaised)
         }
     }
 
@@ -381,34 +379,32 @@ private struct RevealStep: View {
     }
 
     var body: some View {
-        VStack(spacing: 0) {
-            ScrollView {
-                VStack(alignment: .leading, spacing: 0) {
-                    BackButton(action: onBack)
+        ActionScreen {
+            VStack(alignment: .leading, spacing: 0) {
+                BackButton(action: onBack)
 
-                    Text(verbatim: headline)
-                        .font(.question(.title))
-                        .foregroundStyle(Color.inkText)
-                        .fixedSize(horizontal: false, vertical: true)
-                        .padding(.top, 8)
-                        .opacity(showTotals ? 1 : 0)
-                        .accessibilityAddTraits(.isHeader)
+                Text(verbatim: headline)
+                    .font(.question(.title))
+                    .foregroundStyle(Color.inkText)
+                    .fixedSize(horizontal: false, vertical: true)
+                    .padding(.top, 8)
+                    .opacity(showTotals ? 1 : 0)
+                    .accessibilityAddTraits(.isHeader)
 
-                    Text(verbatim: gapLine)
-                        .font(.body)
-                        .foregroundStyle(Color.inkTextMuted)
-                        .fixedSize(horizontal: false, vertical: true)
-                        .padding(.top, 10)
-                        .padding(.bottom, 24)
-                        .opacity(showTotals ? 1 : 0)
+                Text(verbatim: gapLine)
+                    .font(.body)
+                    .foregroundStyle(Color.inkTextMuted)
+                    .fixedSize(horizontal: false, vertical: true)
+                    .padding(.top, 10)
+                    .padding(.bottom, 24)
+                    .opacity(showTotals ? 1 : 0)
 
-                    slip
-                        .padding(.bottom, 24)
-                }
-                .padding(.horizontal, Layout.margin)
-                .padding(.top, 8)
+                slip
+                    .padding(.bottom, 24)
             }
-
+            .padding(.horizontal, Layout.margin)
+            .padding(.top, 8)
+        } actions: {
             VStack(spacing: 10) {
                 Button(action: onKeep) { Text("Keep my list") }
                     .buttonStyle(.ink)
@@ -421,15 +417,12 @@ private struct RevealStep: View {
             .padding(.horizontal, Layout.margin)
             .padding(.top, 12)
             .padding(.bottom, 12)
-            .background(Color.ink)
         }
         .task { await printSlip() }
         .sheet(item: $editing) { line in
             PriceSheet(name: line.name, placeholder: line.amount, currency: tally.currency) { amount in
                 tally.setAmount(amount, for: line.name)
             }
-            .presentationDetents([.height(300)])
-            .presentationBackground(Color.inkRaised)
         }
     }
 
@@ -445,6 +438,7 @@ private struct RevealStep: View {
                                 .contentShape(Rectangle())
                         }
                         .buttonStyle(.plain)
+                        .accessibilityIdentifier("revealLine")
                         .accessibilityHint(Text("Change the price"))
                         .transition(.arriving(.offset(y: -6)))
                     }
@@ -531,12 +525,24 @@ private struct PriceSheet: View {
     let onSave: (Decimal) -> Void
 
     @Environment(\.dismiss) private var dismiss
+    @Environment(\.dynamicTypeSize) private var typeSize
     @State private var text = ""
     @FocusState private var focused: Bool
 
     private var amount: Decimal? { AmountText.parse(text, currency: currency) }
 
     var body: some View {
+        // A short sheet at ordinary text sizes. At the accessibility sizes the question alone is
+        // taller than that, so the sheet is full height and scrolls (300 points cut its first line).
+        ScrollView {
+            form
+        }
+        .scrollBounceBehavior(.basedOnSize)
+        .presentationDetents(typeSize.isAccessibilitySize ? [.large] : [.height(300)])
+        .presentationBackground(Color.inkRaised)
+    }
+
+    private var form: some View {
         VStack(alignment: .leading, spacing: 16) {
             Text(L10n.string("What do you pay for \(name) each month?"))
                 .font(.question(.title3))
@@ -566,8 +572,6 @@ private struct PriceSheet: View {
                 .buttonStyle(.ink)
                 .disabled(amount == nil)
                 .accessibilityIdentifier("priceSaveButton")
-
-            Spacer(minLength: 0)
         }
         .padding(Layout.margin)
         .padding(.top, 8)

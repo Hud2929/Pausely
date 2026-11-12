@@ -37,12 +37,21 @@ struct SubscriptionsView: View {
 
     var body: some View {
         VStack(spacing: 0) {
-            header
-                .padding(.horizontal, Layout.margin)
-                .padding(.top, 16)
+            // The title stays put at ordinary text sizes. At the accessibility sizes it scrolls away
+            // with the list: pinned, it and a section header left two fifths of the screen for rows.
+            if !typeSize.isAccessibilitySize {
+                header
+                    .padding(.horizontal, Layout.margin)
+                    .padding(.top, 16)
+            }
 
             if store.subscriptions.isEmpty {
                 ScrollView {
+                    if typeSize.isAccessibilitySize {
+                        header
+                            .padding(.horizontal, Layout.margin)
+                            .padding(.top, 16)
+                    }
                     empty
                         .padding(.horizontal, Layout.margin)
                         .padding(.top, 40)
@@ -96,8 +105,8 @@ struct SubscriptionsView: View {
                 Group {
                     if typeSize.isAccessibilitySize {
                         VStack(alignment: .leading, spacing: 2) {
-                            Text(verbatim: count)
-                            Text(verbatim: monthly)
+                            Text(verbatim: count).fixedSize(horizontal: false, vertical: true)
+                            Text(verbatim: monthly).fixedSize(horizontal: false, vertical: true)
                         }
                     } else {
                         Text(verbatim: count + " · " + monthly)
@@ -113,12 +122,19 @@ struct SubscriptionsView: View {
 
     private var list: some View {
         List {
+            if typeSize.isAccessibilitySize {
+                header
+                    .listRowInsets(EdgeInsets(top: 16, leading: Layout.margin, bottom: 0, trailing: Layout.margin))
+                    .listRowBackground(Color.clear)
+                    .listRowSeparator(.hidden)
+            }
+
             // Search earns its place only once the list is long enough to lose something in.
             if store.subscriptions.count > 8 {
                 HStack(spacing: 10) {
                     Image(systemName: "magnifyingglass").foregroundStyle(Color.inkTextFaint)
                         .accessibilityHidden(true)
-                    TextField("Search subscriptions...", text: $searchText)
+                    TextField(L10n.string("Search"), text: $searchText)
                         .foregroundStyle(Color.inkText)
                         .submitLabel(.search)
                         .accessibilityIdentifier("subscriptionSearchField")

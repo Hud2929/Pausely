@@ -70,6 +70,32 @@ final class SubscriptionStoreTests: XCTestCase {
         XCTAssertEqual(DemoSubscriptions.varied(now: now, currency: "EUR").first { $0.name == "Duolingo" }?.currency, "GBP")
     }
 
+    /// The varied list's history is how the tour sees a price that went up, a receipt line that is
+    /// still saving and one that says "Started again".
+    func testTheVariedHistoryHoldsEachKindOfReceiptLine() {
+        let now = Date()
+        let list = DemoSubscriptions.varied(now: now, currency: "USD")
+        let events = DemoSubscriptions.variedEvents(for: list, now: now)
+        XCTAssertEqual(events.filter { $0.kind == .priceChanged }.map(\.subscriptionName), ["Spotify"])
+
+        let lines = SavingsLedger.lines(from: events, now: now)
+        XCTAssertEqual(lines.map(\.name), ["Max", "Hulu"])
+        XCTAssertNotNil(lines[0].endedOn, "Max was started again: its savings stop there")
+        XCTAssertFalse(lines[0].avoidedSoFar.isEmpty, "and it avoided a charge in between")
+        XCTAssertNil(lines[1].endedOn, "Hulu is still cancelled")
+        XCTAssertFalse(lines[1].avoidedSoFar.isEmpty, "the charge nine days ago is one it avoided")
+    }
+
+    /// `--quiet-demo-data` is how the tour opens Home's "Nothing is due in the next month.": a list
+    /// that is charging, has a date, and has no charge on the line.
+    func testTheQuietDemoListHasNothingDueThisMonth() {
+        let now = Date()
+        let list = DemoSubscriptions.quiet(now: now, currency: "USD")
+        XCTAssertEqual(list.charging.count, 1)
+        XCTAssertEqual(Horizon.undated(list), [], "Home doesn't ask for a date instead")
+        XCTAssertEqual(Horizon.charges(for: list, now: now), [])
+    }
+
     func testTheDemoSetIsOnlyForDemoLaunchesAndNeverOutlivesThem() {
         XCTAssertTrue(SubscriptionStore.fillsWithDemoList(listIsEmpty: true, isDemoLaunch: true))
         XCTAssertFalse(SubscriptionStore.fillsWithDemoList(listIsEmpty: true, isDemoLaunch: false))

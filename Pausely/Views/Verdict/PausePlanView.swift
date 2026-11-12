@@ -18,6 +18,7 @@ struct PausePlanView: View {
     @State private var cancelTarget: Subscription?
     @State private var confirmEnd = false
     @State private var isWorking = false
+    @Environment(\.dynamicTypeSize) private var typeSize
 
     private var eligible: [Subscription] {
         store.subscriptions.filter(PausePlanSchedule.isEligible).sorted { $0.name < $1.name }
@@ -171,7 +172,10 @@ struct PausePlanView: View {
     private func selectableRow(_ sub: Subscription) -> some View {
         let isSelected = selected.contains(sub.id)
         let isFirst = isSelected && firstId == sub.id
-        return Button {
+        let price = sub.status == .cancelled
+            ? L10n.string("Cancelled") + " · " + L10n.string("\(money(sub.amount, from: sub.currency)) a month")
+            : L10n.string("\(money(sub.amount, from: sub.currency)) a month")
+        let toggle = {
             if isSelected {
                 selected.remove(sub.id)
                 if firstId == sub.id { firstId = PausePlanSchedule.suggestedOrder(chosen, now: Date()).first }
@@ -179,47 +183,80 @@ struct PausePlanView: View {
                 selected.insert(sub.id)
                 if firstId == nil { firstId = sub.id }
             }
-        } label: {
-            HStack(spacing: 12) {
-                Image(systemName: isSelected ? "checkmark.circle.fill" : "circle")
-                    .font(.title3)
-                    .foregroundStyle(isSelected ? Color.inkText : Color.inkTextFaint)
-                    .accessibilityHidden(true)
-                ServiceLogoView(name: sub.name, category: sub.category, size: 34)
-                    .accessibilityHidden(true)
-                VStack(alignment: .leading, spacing: 2) {
-                    Text(verbatim: sub.name)
-                        .font(.body.weight(.medium))
-                        .foregroundStyle(Color.inkText)
-                    Text(verbatim: sub.status == .cancelled
-                         ? L10n.string("Cancelled") + " · " + L10n.string("\(money(sub.amount, from: sub.currency)) a month")
-                         : L10n.string("\(money(sub.amount, from: sub.currency)) a month"))
-                        .font(.subheadline)
-                        .foregroundStyle(Color.inkTextMuted)
-                }
-                Spacer(minLength: 8)
-                if isFirst {
-                    Text("On first")
-                        .font(.caption2.weight(.bold))
-                        .foregroundStyle(Color.paperInk)
-                        .padding(.horizontal, 8)
-                        .padding(.vertical, 4)
-                        .background(Capsule().fill(Color.paper))
-                } else if isSelected {
-                    Button("Put first") {
-                        firstId = sub.id
+        }
+        let check = Image(systemName: isSelected ? "checkmark.circle.fill" : "circle")
+            .font(.title3)
+            .foregroundStyle(isSelected ? Color.inkText : Color.inkTextFaint)
+            .accessibilityHidden(true)
+        let words = VStack(alignment: .leading, spacing: 2) {
+            Text(verbatim: sub.name)
+                .font(.body.weight(.medium))
+                .foregroundStyle(Color.inkText)
+                .fixedSize(horizontal: false, vertical: true)
+            Text(verbatim: price)
+                .font(.subheadline)
+                .foregroundStyle(Color.inkTextMuted)
+                .fixedSize(horizontal: false, vertical: true)
+        }
+        // Two things to tap, side by side and not one inside the other: the service (in or out of the
+        // rotation) and which one goes first.
+        return Group {
+            if typeSize.isAccessibilitySize {
+                // Words only, one under the other. Beside a logo and "Put first", a name had a column
+                // three letters wide and "a month" broke after "mont".
+                VStack(alignment: .leading, spacing: 4) {
+                    Button(action: toggle) {
+                        HStack(alignment: .firstTextBaseline, spacing: 10) { check; words }
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                            .contentShape(Rectangle())
                     }
-                    .font(.caption.weight(.semibold))
-                    .foregroundStyle(Color.inkText)
-                    .buttonStyle(.borderless)
+                    .buttonStyle(.plain)
+                    .accessibilityElement(children: .combine)
+                    .accessibilityAddTraits(isSelected ? .isSelected : [])
+                    firstControl(sub, isSelected: isSelected, isFirst: isFirst)
+                }
+            } else {
+                HStack(spacing: 12) {
+                    Button(action: toggle) {
+                        HStack(spacing: 12) {
+                            check
+                            ServiceLogoView(name: sub.name, category: sub.category, size: 34)
+                                .accessibilityHidden(true)
+                            words
+                            Spacer(minLength: 8)
+                        }
+                        .contentShape(Rectangle())
+                    }
+                    .buttonStyle(.plain)
+                    .accessibilityElement(children: .combine)
+                    .accessibilityAddTraits(isSelected ? .isSelected : [])
+                    firstControl(sub, isSelected: isSelected, isFirst: isFirst)
                 }
             }
-            .padding(.vertical, 12)
-            .contentShape(Rectangle())
         }
-        .buttonStyle(PlainButtonStyle())
-        .accessibilityElement(children: .combine)
-        .accessibilityAddTraits(isSelected ? .isSelected : [])
+        .padding(.vertical, 12)
+    }
+
+    /// Which service the rotation starts with: said of the one that does, offered on the others.
+    @ViewBuilder
+    private func firstControl(_ sub: Subscription, isSelected: Bool, isFirst: Bool) -> some View {
+        if isFirst {
+            Text("On first")
+                .font(.caption.weight(.bold))
+                .foregroundStyle(Color.paperInk)
+                .padding(.horizontal, 8)
+                .padding(.vertical, 4)
+                .background(Capsule().fill(Color.paper))
+        } else if isSelected {
+            Button { firstId = sub.id } label: {
+                Text("Put first")
+                    .font(.subheadline.weight(.semibold))
+                    .foregroundStyle(Color.inkText)
+                    .tapArea(typeSize.isAccessibilitySize ? .leading : .trailing)
+            }
+            .buttonStyle(.plain)
+            .accessibilityLabel(Text(verbatim: L10n.string("Put first") + ", " + sub.name))
+        }
     }
 
     /// The sum, printed: what all of them cost together, what one at a time costs, and the difference.
@@ -353,14 +390,20 @@ struct PausePlanView: View {
                 }
             } else {
                 ForEach(items) { item in
-                    HStack(alignment: .center, spacing: 12) {
-                        ServiceLogoView(name: item.sub.name, category: item.sub.category, size: 32)
-                            .accessibilityHidden(true)
-                        Text(item.text)
-                            .font(.subheadline)
-                            .foregroundStyle(Color.inkText)
-                            .fixedSize(horizontal: false, vertical: true)
-                        Spacer(minLength: 8)
+                    // What to do, and the button for it: side by side, or the button underneath at
+                    // accessibility sizes, where the sentence needs the whole width.
+                    SideBySide(alignment: .center, spacing: 8) {
+                        HStack(alignment: .center, spacing: 12) {
+                            if !typeSize.isAccessibilitySize {
+                                ServiceLogoView(name: item.sub.name, category: item.sub.category, size: 32)
+                                    .accessibilityHidden(true)
+                            }
+                            Text(verbatim: item.text)
+                                .font(.subheadline)
+                                .foregroundStyle(Color.inkText)
+                                .fixedSize(horizontal: false, vertical: true)
+                        }
+                    } trailing: {
                         Button {
                             switch item.action {
                             case .cancel: cancelTarget = item.sub
@@ -391,15 +434,20 @@ struct PausePlanView: View {
                 .foregroundStyle(Color.inkText)
             ForEach(upcoming, id: \.index) { turn in
                 if let sub = byId[turn.subscriptionId], let start = turn.start {
-                    HStack(spacing: 12) {
-                        ServiceLogoView(name: sub.name, category: sub.category, size: 28)
-                            .accessibilityHidden(true)
-                        Text(sub.name)
-                            .font(.subheadline.weight(.semibold))
-                            .foregroundStyle(Color.inkText)
-                        Spacer()
+                    SideBySide(alignment: .center) {
+                        HStack(spacing: 12) {
+                            if !typeSize.isAccessibilitySize {
+                                ServiceLogoView(name: sub.name, category: sub.category, size: 28)
+                                    .accessibilityHidden(true)
+                            }
+                            Text(verbatim: sub.name)
+                                .font(.subheadline.weight(.semibold))
+                                .foregroundStyle(Color.inkText)
+                                .fixedSize(horizontal: false, vertical: true)
+                        }
+                    } trailing: {
                         Text("\(short(start)) – \(short(turn.end))")
-                            .font(.caption)
+                            .font(.footnote)
                             .foregroundStyle(Color.inkTextMuted)
                     }
                     .accessibilityElement(children: .combine)
@@ -413,14 +461,15 @@ struct PausePlanView: View {
         let members = Set(plan.subscriptionIds)
         let lines = SavingsSummary.current().lines.filter { members.contains($0.subscriptionId) && $0.cancelledOn >= Calendar.billing.startOfDay(for: plan.startedOn) }
         let saved = lines.compactMap { currencyManager.convertToSelected($0.savedSoFar, from: $0.currency) }.reduce(0, +)
-        return HStack {
+        return SideBySide {
             Text("Saved by rotating so far")
                 .font(.subheadline)
                 .foregroundStyle(Color.inkTextMuted)
-            Spacer()
-            Text(currencyManager.format(saved))
+        } trailing: {
+            // Money kept is mint once there is some; nothing yet is not.
+            Text(verbatim: currencyManager.format(saved))
                 .font(.headline.weight(.bold))
-                .foregroundStyle(Color.inkText)
+                .foregroundStyle(saved > 0 ? Color.kept : Color.inkText)
         }
         .padding(.vertical, 12)
         .accessibilityElement(children: .combine)

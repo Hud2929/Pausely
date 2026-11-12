@@ -9,9 +9,8 @@ struct WhatsNewSheet: View {
     private let displayVersion = Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? ""
 
     var body: some View {
-        // The words scroll and the button stays put: at the largest text sizes three items do not fit
-        // above it, and a fixed column cut them off.
-        ScrollView {
+        // The words scroll and the button stays put (at the accessibility sizes it follows them).
+        ActionScreen {
             VStack(alignment: .leading, spacing: 0) {
                 Text(displayVersion.isEmpty ? "What's new" : "What's new in \(displayVersion)")
                     .font(.question(.title))
@@ -31,15 +30,13 @@ struct WhatsNewSheet: View {
                 .padding(.top, 20)
             }
             .frame(maxWidth: .infinity, alignment: .leading)
-        }
-        .scrollBounceBehavior(.basedOnSize)
-        .safeAreaInset(edge: .bottom) {
+        } actions: {
             Button { dismiss() } label: { Text("Continue") }
                 .buttonStyle(.ink)
                 .padding(.top, 12)
                 .padding(.bottom, 12)
-                .background(Color.ink)
         }
+        .scrollBounceBehavior(.basedOnSize)
         .padding(.horizontal, Layout.margin)
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
         .inkScreen()

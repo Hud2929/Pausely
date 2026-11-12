@@ -45,67 +45,65 @@ struct CancelSubscriptionFlow: View {
     }
 
     private var steps: some View {
-        VStack(spacing: 0) {
-            ScrollView {
-                VStack(alignment: .leading, spacing: 0) {
-                    HStack {
-                        LeaveButton("Close") { dismiss() }
-                        Spacer()
-                    }
+        ActionScreen {
+            VStack(alignment: .leading, spacing: 0) {
+                HStack {
+                    LeaveButton("Close") { dismiss() }
+                    Spacer()
+                }
 
-                    PaperSlip(tornTop: true, tornBottom: true) {
-                        VStack(alignment: .leading, spacing: 14) {
-                            HStack(spacing: 10) {
-                                ServiceLogoView(name: subscription.name, category: subscription.category, size: 36)
-                                Text(L10n.string("That's \(MoneyFormat.string(subscription.annualCost, subscription.currency)) a year"))
-                                    .font(.subheadline.weight(.medium))
-                                    .foregroundStyle(Color.paperMuted)
-                            }
-                            Text("Cancel \(subscription.name)")
-                                .font(.question(.title))
-                                .fixedSize(horizontal: false, vertical: true)
-                                .accessibilityAddTraits(.isHeader)
+                PaperSlip(tornTop: true, tornBottom: true) {
+                    VStack(alignment: .leading, spacing: 14) {
+                        HStack(spacing: 10) {
+                            ServiceLogoView(name: subscription.name, category: subscription.category, size: 36)
+                            Text(L10n.string("That's \(MoneyFormat.string(subscription.annualCost, subscription.currency)) a year"))
+                                .font(.subheadline.weight(.medium))
+                                .foregroundStyle(Color.paperMuted)
+                        }
+                        Text("Cancel \(subscription.name)")
+                            .font(.question(.title))
+                            .fixedSize(horizontal: false, vertical: true)
+                            .accessibilityAddTraits(.isHeader)
 
-                            switch help.kind {
-                            case .appleSubscription:
-                                Perforation()
-                                Text("How to cancel").font(.footnote.weight(.semibold))
-                                ForEach(Array(appleSteps.enumerated()), id: \.offset) { index, step in
-                                    HStack(alignment: .firstTextBaseline, spacing: 10) {
-                                        Text(verbatim: L10n.number(index + 1))
-                                            .font(.proof(.footnote, weight: .bold))
-                                        Text(verbatim: step)
-                                            .font(.footnote)
-                                            .fixedSize(horizontal: false, vertical: true)
-                                    }
-                                    .accessibilityElement(children: .combine)
+                        switch help.kind {
+                        case .appleSubscription:
+                            Perforation()
+                            Text("How to cancel").font(.footnote.weight(.semibold))
+                            ForEach(Array(appleSteps.enumerated()), id: \.offset) { index, step in
+                                HStack(alignment: .firstTextBaseline, spacing: 10) {
+                                    Text(verbatim: L10n.number(index + 1))
+                                        .font(.proof(.footnote, weight: .bold))
+                                    Text(verbatim: step)
+                                        .font(.footnote)
+                                        .fixedSize(horizontal: false, vertical: true)
                                 }
-                                Text("If there's no Cancel button, it's already cancelled.")
-                                    .font(.footnote)
-                                    .foregroundStyle(Color.paperMuted)
-                                    .fixedSize(horizontal: false, vertical: true)
-                            case .cancellationPage, .website:
-                                Perforation()
-                                Text(L10n.string("You cancel on \(subscription.name)'s own site: sign in, then look under account or billing."))
-                                    .font(.footnote)
-                                    .fixedSize(horizontal: false, vertical: true)
-                            case .search:
-                                EmptyView()
+                                .accessibilityElement(children: .combine)
                             }
+                            Text("If there's no Cancel button, it's already cancelled.")
+                                .font(.footnote)
+                                .foregroundStyle(Color.paperMuted)
+                                .fixedSize(horizontal: false, vertical: true)
+                        case .cancellationPage, .website:
+                            Perforation()
+                            Text(L10n.string("You cancel on \(subscription.name)'s own site: sign in, then look under account or billing."))
+                                .font(.footnote)
+                                .fixedSize(horizontal: false, vertical: true)
+                        case .search:
+                            EmptyView()
                         }
                     }
-                    .padding(.top, 4)
-
-                    Text("Pausely keeps it in your list as cancelled and adds the charges you avoid to your Savings Receipt.")
-                        .font(.footnote)
-                        .foregroundStyle(Color.inkTextFaint)
-                        .fixedSize(horizontal: false, vertical: true)
-                        .padding(.top, 16)
                 }
-                .padding(.horizontal, Layout.margin)
-                .padding(.bottom, 16)
-            }
+                .padding(.top, 4)
 
+                Text("Pausely keeps it in your list as cancelled and adds the charges you avoid to your Savings Receipt.")
+                    .font(.footnote)
+                    .foregroundStyle(Color.inkTextFaint)
+                    .fixedSize(horizontal: false, vertical: true)
+                    .padding(.top, 16)
+            }
+            .padding(.horizontal, Layout.margin)
+            .padding(.bottom, 16)
+        } actions: {
             VStack(spacing: 10) {
                 // The button says what it opens: the service's cancellation page, its website, or a search.
                 Button {
@@ -131,7 +129,6 @@ struct CancelSubscriptionFlow: View {
             .padding(.horizontal, Layout.margin)
             .padding(.top, 12)
             .padding(.bottom, 8)
-            .background(Color.ink)
         }
     }
 
@@ -145,10 +142,9 @@ struct CancelSubscriptionFlow: View {
     }
 
     private var outcome: some View {
-        VStack(spacing: 0) {
-            Spacer(minLength: 24)
+        OutcomeScreen {
             CancelledSlip(subscription: subscription)
-            Spacer(minLength: 24)
+        } actions: {
             VStack(spacing: 10) {
                 Button { showingReceipt = true } label: { Text("See your Savings Receipt") }
                     .buttonStyle(.ink)
@@ -157,8 +153,6 @@ struct CancelSubscriptionFlow: View {
                     .accessibilityIdentifier("cancelDoneButton")
             }
         }
-        .padding(.horizontal, Layout.margin)
-        .padding(.bottom, 12)
     }
 
     private func markCancelled() async {

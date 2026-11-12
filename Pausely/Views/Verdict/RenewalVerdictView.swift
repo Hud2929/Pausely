@@ -18,6 +18,7 @@ struct RenewalVerdictView: View {
     @State private var showReceipt = false
     @State private var isKeeping = false
     @State private var enteringUsage = false
+    @State private var addingDate = false
     @State private var outcome: Outcome?
 
     private enum Outcome: Equatable {
@@ -69,9 +70,19 @@ struct RenewalVerdictView: View {
                 }
             }
         }
+        .sheet(isPresented: $addingDate) {
+            if let sub = subscription { RenewalDatesSheet(subscriptions: [sub]) }
+        }
         .onChange(of: subscription?.status) { _, status in
             if status == .cancelled, outcome == nil {
                 withAnimation(Motion.unlessReduced(Motion.arrive)) { outcome = .cancelled }
+            }
+        }
+        .onAppear {
+            // An old reminder tapped after the subscription was cancelled: there is no question left
+            // to ask, so it opens on what the cancellation keeps.
+            if let sub = subscription, outcome == nil, VerdictFacts.noCharge(for: sub, now: Date()) == .notRenewing {
+                outcome = .cancelled
             }
         }
     }
@@ -88,43 +99,41 @@ struct RenewalVerdictView: View {
 
     private func verdict(_ sub: Subscription) -> some View {
         let charge = RenewalDecisions.upcomingCharge(for: sub, now: Date())
-        return VStack(spacing: 0) {
-            ScrollView {
-                VStack(alignment: .leading, spacing: 0) {
-                    closeRow
-                    PaperSlip(tornTop: true, tornBottom: true) {
-                        VStack(alignment: .leading, spacing: 14) {
-                            header(sub, charge: charge)
-                            Perforation()
-                            facts(sub, charge: charge)
-                        }
+        return ActionScreen {
+            VStack(alignment: .leading, spacing: 0) {
+                closeRow
+                PaperSlip(tornTop: true, tornBottom: true) {
+                    VStack(alignment: .leading, spacing: 14) {
+                        header(sub, charge: charge)
+                        Perforation()
+                        facts(sub, charge: charge)
                     }
-                    .padding(.top, 4)
-
-                    // The one figure Pausely can't know. Entered here, it turns the price into a cost
-                    // per hour on the slip above.
-                    Button { enteringUsage = true } label: {
-                        Text(screenTime.getUsage(for: sub.name) == nil
-                             ? L10n.string("How much did you use it this month?")
-                             : L10n.string("Change this month's hours"))
-                            .underline()
-                            .font(.subheadline.weight(.semibold))
-                            .foregroundStyle(Color.inkText)
-                            .frame(minHeight: Layout.tapTarget, alignment: .leading)
-                            .contentShape(Rectangle())
-                    }
-                    .buttonStyle(.plain)
-                    .padding(.top, 12)
-                    .accessibilityIdentifier("verdictUsageButton")
                 }
-                .padding(.horizontal, Layout.margin)
-                .padding(.bottom, 16)
+                .padding(.top, 4)
+
+                // The one figure Pausely can't know. Entered here, it turns the price into a cost
+                // per hour on the slip above.
+                Button { enteringUsage = true } label: {
+                    Text(screenTime.getUsage(for: sub.name) == nil
+                         ? L10n.string("How much did you use it this month?")
+                         : L10n.string("Change this month's hours"))
+                        .underline()
+                        .font(.subheadline.weight(.semibold))
+                        .foregroundStyle(Color.inkText)
+                        .frame(minHeight: Layout.tapTarget, alignment: .leading)
+                        .contentShape(Rectangle())
+                }
+                .buttonStyle(.plain)
+                .padding(.top, 12)
+                .accessibilityIdentifier("verdictUsageButton")
             }
+            .padding(.horizontal, Layout.margin)
+            .padding(.bottom, 16)
+        } actions: {
             decisionButtons(sub, hasCharge: charge != nil)
                 .padding(.horizontal, Layout.margin)
                 .padding(.top, 12)
                 .padding(.bottom, 8)
-                .background(Color.ink)
         }
     }
 
@@ -136,6 +145,11 @@ struct RenewalVerdictView: View {
                     Text(whenText(charge))
                         .font(.subheadline.weight(.medium))
                         .foregroundStyle(daysUntil(charge.date) <= 1 ? Color.paperDue : Color.paperMuted)
+                        .fixedSize(horizontal: false, vertical: true)
+                } else {
+                    Text("No renewal date")
+                        .font(.subheadline.weight(.medium))
+                        .foregroundStyle(Color.paperMuted)
                         .fixedSize(horizontal: false, vertical: true)
                 }
             }
@@ -195,6 +209,8 @@ struct RenewalVerdictView: View {
                 // The same promise for a renewal as for a trial's end, and one Pausely can make of any
                 // service: cancelled before the day, the charge doesn't happen.
                 factLine(L10n.string("Cancel before \(charge.date.formatted(.dateTime.month(.abbreviated).day().locale(L10n.locale))) and you won't be charged."))
+            } else {
+                factLine(L10n.string("Add the date and Pausely will ask you before it charges."))
             }
 
             if let kept = VerdictFacts.lastKept(for: sub.id, events: eventLog.events) {
@@ -244,14 +260,22 @@ struct RenewalVerdictView: View {
 
     private func decisionButtons(_ sub: Subscription, hasCharge: Bool) -> some View {
         VStack(spacing: 10) {
-            Button {
-                Task { await keep(sub) }
-            } label: {
-                Text(isKeeping ? L10n.string("Keeping…") : L10n.string("Keep it"))
+            if hasCharge {
+                Button {
+                    Task { await keep(sub) }
+                } label: {
+                    Text(isKeeping ? L10n.string("Keeping…") : L10n.string("Keep it"))
+                }
+                .buttonStyle(.ink(.keep))
+                .disabled(isKeeping)
+                .accessibilityIdentifier("verdictKeepButton")
+            } else {
+                // Keeping is about one charge. With no date there is none to keep, so the main button
+                // is the way to give Pausely the date (it was "Keep it", greyed out, with no reason).
+                Button { addingDate = true } label: { Text("Add its renewal date") }
+                    .buttonStyle(.ink)
+                    .accessibilityIdentifier("verdictAddDateButton")
             }
-            .buttonStyle(.ink(.keep))
-            .disabled(isKeeping || !hasCharge)
-            .accessibilityIdentifier("verdictKeepButton")
 
             Button {
                 if sub.isPausely, let url = URL(string: "https://apps.apple.com/account/subscriptions") {
@@ -292,8 +316,7 @@ struct RenewalVerdictView: View {
     // MARK: - After the answer
 
     private func outcomeView(_ outcome: Outcome, _ sub: Subscription) -> some View {
-        VStack(alignment: .leading, spacing: 0) {
-            Spacer(minLength: 24)
+        OutcomeScreen {
             switch outcome {
             case .kept(let askAgain):
                 OutcomeSlip(name: sub.name, category: sub.category, stamp: L10n.string("Kept"), torn: false) {
@@ -305,8 +328,7 @@ struct RenewalVerdictView: View {
             case .cancelled:
                 CancelledSlip(subscription: sub)
             }
-            Spacer(minLength: 24)
-
+        } actions: {
             VStack(spacing: 10) {
                 if outcome == .cancelled {
                     Button { showReceipt = true } label: { Text("See your Savings Receipt") }
@@ -319,8 +341,37 @@ struct RenewalVerdictView: View {
                 }
             }
         }
-        .padding(.horizontal, Layout.margin)
-        .padding(.bottom, 12)
+    }
+}
+
+/// A decided slip in the middle of the screen, its buttons at the foot. When slip and buttons are
+/// taller than the screen (the largest text sizes) they scroll: laid out in a fixed column, the
+/// cancelled slip's stamp sat under the clock and its first button over the slip's last line.
+struct OutcomeScreen<Slip: View, Actions: View>: View {
+    @ViewBuilder var slip: Slip
+    @ViewBuilder var actions: Actions
+
+    var body: some View {
+        ViewThatFits(in: .vertical) {
+            VStack(spacing: 0) {
+                Spacer(minLength: 24)
+                slip
+                Spacer(minLength: 24)
+                actions
+            }
+            .padding(.horizontal, Layout.margin)
+            .padding(.bottom, 12)
+            // The margin is inside the scroll view, which is as wide as the screen.
+            ScrollView {
+                VStack(spacing: 24) {
+                    slip
+                    actions
+                }
+                .padding(.horizontal, Layout.margin)
+                .padding(.top, 24)
+                .padding(.bottom, 12)
+            }
+        }
     }
 }
 
@@ -360,9 +411,13 @@ struct OutcomeSlip<Detail: View>: View {
                         Text(verbatim: name).font(.question(.title2))
                             .fixedSize(horizontal: false, vertical: true)
                     }
+                    // One word, on one line, whole: a stamp that ends in "…" at the largest text
+                    // size ("CANCELL…") says nothing, so it shrinks to the slip's width instead.
                     Text(verbatim: stamp)
                         .font(.proof(.title3, weight: .bold))
                         .textCase(.uppercase)
+                        .lineLimit(1)
+                        .minimumScaleFactor(0.5)
                         .foregroundStyle(torn ? Color.paperInk : Color.paperKept)
                         .padding(.horizontal, 12)
                         .padding(.vertical, 6)

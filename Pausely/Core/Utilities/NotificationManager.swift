@@ -48,6 +48,15 @@ final class NotificationManager {
     private init() {}
 
     func refreshStatus() async {
+        #if DEBUG
+        // `--demo-reminders=ask|denied|on|hidden|late` shows a permission state the simulator is
+        // not in, so each one's row on Home and its page in Settings can be looked at.
+        if let shown = LaunchFlag.value(of: "--demo-reminders"), let demo = Self.demoState(shown) {
+            status = demo.status
+            delivery = demo.delivery
+            return
+        }
+        #endif
         let settings = await center.notificationSettings()
         status = settings.authorizationStatus
         delivery = ReminderDelivery(banners: settings.alertSetting == .enabled,
@@ -55,6 +64,19 @@ final class NotificationManager {
                                     notificationCenter: settings.notificationCenterSetting == .enabled,
                                     inScheduledSummary: settings.scheduledDeliverySetting == .enabled)
     }
+
+    #if DEBUG
+    nonisolated static func demoState(_ name: String) -> (status: UNAuthorizationStatus, delivery: ReminderDelivery)? {
+        switch name {
+        case "ask": return (.notDetermined, .shown)
+        case "denied": return (.denied, .shown)
+        case "on": return (.authorized, .shown)
+        case "hidden": return (.authorized, .hidden)
+        case "late": return (.authorized, .late)
+        default: return nil
+        }
+    }
+    #endif
 
     /// Shows the system prompt (iOS only shows it once), then rebuilds reminders so they start now.
     @discardableResult

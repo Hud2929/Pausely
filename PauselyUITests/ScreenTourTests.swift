@@ -26,10 +26,15 @@ final class ScreenTourTests: XCTestCase {
     // MARK: - Tours
 
     /// Extra launch arguments for a variant of the tour: `PAUSELY_TOUR_VARIANT=ar` (Arabic, right
-    /// to left) or `big` (the largest text size).
+    /// to left), `de`, `es`, `fr`, `ja` (the other languages, each in its own country's formats) or
+    /// `big` (the largest text size).
     private var variantArguments: [String] {
         switch ProcessInfo.processInfo.environment["PAUSELY_TOUR_VARIANT"] ?? "" {
         case "ar": return ["-AppleLanguages", "(ar)", "-AppleLocale", "ar_SA"]
+        case "de": return ["-AppleLanguages", "(de)", "-AppleLocale", "de_DE"]
+        case "es": return ["-AppleLanguages", "(es)", "-AppleLocale", "es_ES"]
+        case "fr": return ["-AppleLanguages", "(fr)", "-AppleLocale", "fr_FR"]
+        case "ja": return ["-AppleLanguages", "(ja)", "-AppleLocale", "ja_JP"]
         case "big": return ["-UIPreferredContentSizeCategoryName", "UICTContentSizeCategoryAccessibilityXXXL"]
         default: return []
         }
@@ -127,7 +132,7 @@ final class ScreenTourTests: XCTestCase {
         let only = Set((ProcessInfo.processInfo.environment["PAUSELY_TOUR_ONLY"] ?? "").split(separator: ",").map(String.init))
         for screen in screens where only.isEmpty || only.contains(screen.name) {
             let app = XCUIApplication()
-            app.launchArguments = ["--uitesting", "--demo-mode"] + screen.flags + variantArguments
+            app.launchArguments = ["--uitesting", "--demo-mode"] + withList(screen.flags) + variantArguments
             app.launch()
             sleep(3)
             capture(app, screen.name)
@@ -169,6 +174,39 @@ final class ScreenTourTests: XCTestCase {
             (["--empty-demo-data", "--demo-settings=export"], "export-empty"),
             (["--demo-age-gate=underage"], "age-underage"),
             (["--demo-age-gate=locked"], "age-locked"),
+            (varied + ["--demo-verdict=Netflix"], "verdict-usage"),
+            (varied + ["--demo-verdict=Adobe Creative Cloud"], "verdict-undated"),
+            (varied + ["--demo-verdict=Hulu"], "verdict-cancelled"),
+            (["--fresh-demo-data", "--demo-savings", "--demo-verdict=Pausely Pro"], "verdict-own"),
+            (["--empty-demo-data", "--demo-verdict"], "verdict-gone"),
+            (varied + ["--demo-cancel=Apple One"], "cancel-apple"),
+            (["--demo-first-run=reveal", "--demo-guess=105"], "reveal-good"),
+            (["--demo-first-run=reveal", "--demo-guess=400"], "reveal-less"),
+            (["--demo-dates"], "dates-several"),
+            (varied + ["--demo-tab=0", "--demo-plan-active"], "home-plan"),
+            (varied + ["--demo-tab=2", "--demo-plan-active"], "insights-plan"),
+            (varied + ["--demo-subscription=Netflix", "--demo-plan-active"], "manage-plan"),
+            (varied + ["--demo-tab=3", "--demo-pro"], "profile-pro"),
+            (varied + ["--demo-pause-plan", "--demo-pro"], "pauseplan-pro"),
+            (["--fresh-demo-data", "--demo-tab=0", "--demo-waiting"], "home-waiting"),
+            (["--quiet-demo-data", "--demo-tab=0"], "home-quiet"),
+            (["--demo-splash"], "splash"),
+            (["--demo-auth=signup", "--demo-form-problem"], "signup-problem"),
+            (["--demo-auth=signin", "--demo-form-problem"], "signin-problem"),
+            (["--demo-auth=verify", "--demo-form-problem"], "emailcode-problem"),
+            (["--demo-auth=reset", "--demo-form-problem"], "resetpassword-problem"),
+            (["--demo-auth=reset", "--demo-reset-code"], "resetpassword-code"),
+            (["--demo-auth=newpassword", "--demo-form-problem"], "newpassword-problem"),
+            (["--fresh-demo-data", "--demo-tab=0", "--demo-reminders=ask"], "home-reminders-ask"),
+            (["--fresh-demo-data", "--demo-tab=0", "--demo-reminders=denied"], "home-reminders-denied"),
+            (["--demo-settings=notifications", "--demo-reminders=ask"], "notifications-ask"),
+            (["--demo-settings=notifications", "--demo-reminders=denied"], "notifications-denied"),
+            (["--demo-settings=notifications", "--demo-reminders=on"], "notifications-on"),
+            (["--demo-settings=notifications", "--demo-reminders=hidden"], "notifications-hidden"),
+            (["--demo-settings=notifications", "--demo-reminders=late"], "notifications-late"),
+            (["--empty-demo-data", "--demo-tab=0", "--demo-loading"], "home-loading"),
+            (["--quiet-demo-data", "--demo-pause-plan"], "pauseplan-few"),
+            (varied + ["--demo-subscription=Apple One"], "manage-decide"),
             (["--demo-auth", "--demo-link-problem"], "welcome-linkproblem"),
             (["--fresh-demo-data", "--demo-tab=0", "--demo-notice"], "home-notice"),
             (["--fresh-demo-data", "--demo-tab=0", "--demo-banner"], "home-demobanner"),
@@ -184,12 +222,11 @@ final class ScreenTourTests: XCTestCase {
         state("home-dates", varied + ["--demo-tab=0"]) { app in self.tap(app, "undatedRow") }
         state("home-decide", varied + ["--demo-tab=0"]) { app in self.tap(app, "decideRow") }
         state("list-nomatch", varied + ["--demo-tab=1"]) { app in self.type(app, "subscriptionSearchField", "zzzz") }
-        state("list-swipe", varied + ["--demo-tab=1"]) { app in
-            app.buttons.matching(NSPredicate(format: "label CONTAINS 'Netflix'")).firstMatch.swipeLeft()
-        }
+        // The list's first row: a list builds its rows as they come near, so one further down does
+        // not exist yet at the largest text size.
+        state("list-swipe", varied + ["--demo-tab=1"]) { app in self.swipeRow(app, named: "iCloud+") }
         state("list-remove", varied + ["--demo-tab=1"]) { app in
-            app.buttons.matching(NSPredicate(format: "label CONTAINS 'Netflix'")).firstMatch.swipeLeft()
-            self.tap(app, "swipeRemove")
+            if self.swipeRow(app, named: "iCloud+") { self.tap(app, "swipeRemove") }
         }
         state("profile-signout", ["--fresh-demo-data", "--demo-tab=3"]) { app in self.tap(app, "signOutButton") }
         state("help-open", ["--demo-settings=help"]) { app in self.tap(app, "faq-0") }
@@ -197,8 +234,9 @@ final class ScreenTourTests: XCTestCase {
         state("privacy-delete", ["--demo-settings=privacy"]) { app in self.tap(app, "deleteAccountButton") }
         state("browser-nomatch", ["--demo-browser"]) { app in self.type(app, "catalogSearchField", "zzzzzz") }
         state("browser-category", ["--demo-browser"]) { app in
-            let pills = app.buttons.matching(identifier: "categoryPill")
-            if pills.count > 2 { pills.element(boundBy: 2).tap() }
+            // The second pill: the first is "All", and at the largest size the third is off the screen.
+            let pill = app.buttons.matching(identifier: "categoryPill").element(boundBy: 1)
+            if pill.waitForExistence(timeout: 4), pill.isHittable { pill.tap() }
         }
         state("plan-trial", ["--demo-tier"]) { app in self.tap(app, "tierTrialToggle") }
         state("custom-limit", varied + ["--demo-custom-add"]) { app in
@@ -208,9 +246,13 @@ final class ScreenTourTests: XCTestCase {
         }
         state("edit-noname", ["--demo-subscription-edit"]) { app in
             let name = app.descendants(matching: .any)["editNameField"].firstMatch
-            if name.waitForExistence(timeout: 3) {
-                name.tap()
-                name.typeText(String(repeating: XCUIKeyboardKey.delete.rawValue, count: 12))
+            if name.waitForExistence(timeout: 3), name.isHittable {
+                // At the end of the name, wherever it wraps: a tap in the middle of the field left
+                // the cursor in front of the name and deleted nothing.
+                name.coordinate(withNormalizedOffset: CGVector(dx: 0.97, dy: 0.9)).tap()
+                if app.keyboards.firstMatch.waitForExistence(timeout: 3) {
+                    name.typeText(String(repeating: XCUIKeyboardKey.delete.rawValue, count: 12))
+                }
             }
             self.tap(app, "editSaveButton")   // the form says what is missing when asked to save
         }
@@ -225,11 +267,16 @@ final class ScreenTourTests: XCTestCase {
             self.tap(app, "enterUsageButton")
         }
         state("verdict-kept", varied + ["--demo-verdict=Apple One"]) { app in self.tap(app, "verdictKeepButton") }
+        state("verdict-adddate", varied + ["--demo-verdict=Adobe Creative Cloud"]) { app in self.tap(app, "verdictAddDateButton") }
         state("cancel-done", ["--demo-cancel"]) { app in self.tap(app, "iCancelledItButton") }
         state("receipt-share", ["--demo-receipt"]) { app in self.tap(app, "receiptShare") }
         state("pauseplan-end", varied + ["--demo-pause-plan", "--demo-plan-active"]) { app in self.tap(app, "endPausePlanButton") }
         state("inbox-add", ["--demo-gmail-results"]) { app in self.tap(app, "addInboxButton") }
         state("signup-rules", ["--demo-auth=signup"]) { app in self.type(app, "passwordTextField", "abc") }
+        state("newpassword-rules", ["--demo-auth=newpassword"]) { app in self.type(app, "newPasswordField", "abc") }
+        state("firstrun-tally-empty", ["--demo-first-run"]) { app in self.tap(app, "getStartedButton") }
+        state("reveal-price", ["--demo-first-run=reveal"]) { app in self.tap(app, "revealLine") }
+        state("inbox-why", ["--demo-gmail-results"]) { app in self.tap(app, "foundRowWhy") }
     }
 
     /// Launches with `flags`, does `open`, and captures what is then on screen.
@@ -247,28 +294,80 @@ final class ScreenTourTests: XCTestCase {
         return only.isEmpty || only.contains(name)
     }
 
+    /// Every launch starts from a list it names; one that names none gets the demo list as it is
+    /// first seen. Without this a screen opened on whatever the launch before it had left behind
+    /// (a quiet Home showed another list's cancellation on its Savings Receipt).
+    private func withList(_ flags: [String]) -> [String] {
+        let lists = ["--fresh-demo-data", "--varied-demo-data", "--empty-demo-data", "--quiet-demo-data"]
+        return flags.contains(where: lists.contains) ? flags : flags + ["--fresh-demo-data"]
+    }
+
     private func launch(_ flags: [String]) -> XCUIApplication {
         let app = XCUIApplication()
-        app.launchArguments = ["--uitesting", "--demo-mode"] + flags + variantArguments
+        app.launchArguments = ["--uitesting", "--demo-mode"] + withList(flags) + variantArguments
         app.launch()
         sleep(3)
         return app
     }
 
+    /// Scrolls until the element is on the screen, clear of its edges. `isHittable` is true for a
+    /// field that sits just below the bottom edge at the largest text size, where a tap then lands
+    /// on nothing and the keyboard never comes.
+    private func bringIntoView(_ app: XCUIApplication, _ element: XCUIElement) {
+        let screen = app.windows.firstMatch.frame
+        for _ in 0..<8 {
+            let frame = element.frame
+            let below = frame.maxY > screen.maxY - 70
+            let above = frame.minY < screen.minY + 70
+            if element.isHittable && !below && !above { return }
+            let from = app.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: above ? 0.4 : 0.6))
+            let to = app.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: above ? 0.65 : 0.35))
+            from.press(forDuration: 0.05, thenDragTo: to)
+            sleep(1)
+        }
+    }
+
     /// Taps the element with this identifier, scrolling to it if it is below the fold.
     private func tap(_ app: XCUIApplication, _ identifier: String) {
         let element = app.descendants(matching: .any)[identifier].firstMatch
-        guard element.waitForExistence(timeout: 4) else { return }
-        for _ in 0..<5 where !element.isHittable { app.swipeUp() }
+        // A row far down a long page is not built until the page is scrolled towards it.
+        if !element.waitForExistence(timeout: 4) {
+            for _ in 0..<12 where !element.exists {
+                app.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.7))
+                    .press(forDuration: 0.05, thenDragTo: app.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.2)))
+                sleep(1)
+            }
+        }
+        guard element.exists else { return }
+        bringIntoView(app, element)
         if element.isHittable { element.tap() }
+    }
+
+    /// Swipes the list's row for this subscription, scrolling to it first: at the largest text size
+    /// it is below the fold, and swiping a row that is not there ended the whole pass.
+    @discardableResult
+    private func swipeRow(_ app: XCUIApplication, named name: String) -> Bool {
+        let row = app.buttons.matching(NSPredicate(format: "label CONTAINS %@", name)).firstMatch
+        guard row.waitForExistence(timeout: 4) else { return false }
+        bringIntoView(app, row)
+        guard row.isHittable else { return false }
+        row.swipeLeft()
+        return true
     }
 
     private func type(_ app: XCUIApplication, _ identifier: String, _ text: String) {
         let field = app.descendants(matching: .any)[identifier].firstMatch
         guard field.waitForExistence(timeout: 4) else { return }
-        for _ in 0..<5 where !field.isHittable { app.swipeUp() }
+        bringIntoView(app, field)
         guard field.isHittable else { return }
         field.tap()
+        // Typing into a field that did not take the keyboard stops the whole run ("no keyboard focus").
+        // At the largest text size the first tap can land before the screen has settled, so it is
+        // made again at the field's centre, and nothing is typed when the keyboard still stays away.
+        if !app.keyboards.firstMatch.waitForExistence(timeout: 3) {
+            field.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5)).tap()
+            guard app.keyboards.firstMatch.waitForExistence(timeout: 3) else { return }
+        }
         field.typeText(text)
     }
 
@@ -326,7 +425,7 @@ final class ScreenTourTests: XCTestCase {
     ///   size; it offers the Large Content Viewer for them instead. Also iPad's tab-bar titles and the
     ///   system keyboard with its suggestions.
     private func audit(_ app: XCUIApplication, _ screen: String) {
-        var counted: [String] = [], behindBars: [String] = [], systemBar: [String] = []
+        var counted: [String] = [], behindBars: [String] = [], systemBar: [String] = [], noElement: [String] = []
         let tabBar = app.tabBars.firstMatch
         let tabBarTop = tabBar.exists ? tabBar.frame.minY - 12 : CGFloat.infinity
         let statusBarBottom = app.windows.firstMatch.exists ? max(54, app.windows.firstMatch.frame.minY + 54) : 54
@@ -340,10 +439,21 @@ final class ScreenTourTests: XCTestCase {
                 // The detail carries what the audit says it measured.
                 let detail = issue.detailedDescription.replacingOccurrences(of: "\n", with: " ")
                 let place = "\(Int(frame.minX)),\(Int(frame.minY)) \(Int(frame.width))x\(Int(frame.height))"
-                let line = "\(screen) | \(issue.auditType.name) | \(issue.compactDescription) | \(element.prefix(80)) | \(place) | \(detail.prefix(200))"
+                // An issue with no place and no name cannot be looked up on the capture, so the line
+                // says what the audit did hand over: no element at all, or one that is not on screen.
+                var unplaced = ""
+                if frame == .zero, element.isEmpty {
+                    unplaced = issue.element.map { " | element: type \($0.elementType.rawValue), \($0.exists ? "exists" : "not in the tree")" } ?? " | no element given"
+                }
+                let line = "\(screen) | \(issue.auditType.name) | \(issue.compactDescription) | \(element.prefix(80)) | \(place) | \(detail.prefix(200))\(unplaced)"
                 // The app draws its text with SwiftUI; a bare UILabel is the system's own (on iPad, the
                 // four titles in the tab bar at the top), which iOS sizes itself.
-                if issue.auditType == .dynamicType, barButtons.contains(element) || detail.contains("this UILabel") {
+                if issue.element == nil {
+                    // The audit hands over no element for these (it does on the launch mark, a
+                    // screen with no text at all), so there is nothing to look up or change. They
+                    // are kept in a file of their own and counted there.
+                    noElement.append(line)
+                } else if issue.auditType == .dynamicType, barButtons.contains(element) || detail.contains("this UILabel") {
                     systemBar.append(line)
                 } else if frame != .zero, frame.minY >= keyboardTop {
                     systemBar.append(line)
@@ -372,6 +482,7 @@ final class ScreenTourTests: XCTestCase {
         append(counted, to: "audit.txt")
         append(behindBars, to: "audit_behind_bars.txt")
         append(systemBar, to: "audit_system_bar.txt")
+        append(noElement, to: "audit_no_element.txt")
     }
 
     private func append(_ lines: [String], to file: String) {

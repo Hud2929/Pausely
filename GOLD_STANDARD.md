@@ -562,6 +562,59 @@ Updated at every commit, so the work can be picked up from this file alone.
   and 10 of the engineering audit were never done and there is no finished overlooked-details
   report. Those areas have been scanned by nobody; they are owed before Stage G can be called done.
 
+- E, the states at the largest text size, read and fixed (11-12). Three passes at that size
+  (`/tmp/pausely_states_big_5`, 125 captures, then `_big_6` and `_big_7` for what changed), every
+  capture read on contact sheets. What they showed, each fixed and seen fixed:
+  1. Buttons held at the bottom edge covered more than half the screen: the verdict showed two words
+     of its slip above three buttons, and on the welcome screen with a banner the second button was
+     drawn over its own border. One part, `ActionScreen`, keeps buttons at the bottom at ordinary
+     sizes and puts them after the content at the accessibility sizes. Nine screens use it (verdict,
+     reveal, cancel steps, dates sheet, the plan sheet, add your own, What's New, welcome, paywall);
+     `testButtonsLeaveTheBottomEdgeAtAccessibilitySizes`, `testNoScreenPinsItsOwnButtons`.
+  2. The kept and cancelled slips were a fixed column: the stamp sat under the clock and the first
+     button over the slip's last line. `OutcomeScreen` centres them when they fit and scrolls when
+     they do not. The stamp shrinks to fit ("CANCELL…" before; `testAStampIsNeverCutShort`), and a
+     button takes the height its words need (`testAButtonGrowsToHoldItsWords`).
+  3. A verdict for a subscription with no renewal date had "Keep it" greyed out and no reason (a
+     delivered reminder can still be tapped after the date is removed). It now says "No renewal
+     date", why, and its main button is "Add its renewal date"; one that was cancelled since opens
+     on its cancelled slip (`testAVerdictWithNoChargeSaysWhy`).
+  4. The banner's sentence was a column two words wide between its mark and its close button; at the
+     accessibility sizes it has the whole width.
+  5. The Subscriptions title and the catalog's top (title, search, categories) stayed put and left
+     two fifths of the screen for rows, none above the keyboard; at the accessibility sizes they
+     scroll away with the list.
+  6. The dates sheet broke a price inside its number ("$15.9 / 9/mo") beside its button; the row
+     stacks. The first-run price sheet was 300 points tall whatever the text size and cut its own
+     question; it is full height and scrolls there.
+  7. The notice had been held to a smaller text size the day before, so the people who read at the
+     largest could not read it. It is their size again and a tap closes it. One place still holds
+     text lower, the six code boxes (`testOnlyTheCodeBoxesHoldTheirTextSize`).
+  8. Home said "$0.00 each month" while the list was being fetched for the first time; it draws a
+     blank block until the list arrives (`testHomeShowsNoTotalBeforeTheListHasArrived`).
+  9. A long name in the edit form was cut ("Adobe Cr…"): the field wraps and Return still moves on
+     (`testANameNeverHoldsALineBreak`). The marks beside the subscription screen's tools grow with
+     the text instead of sitting on it. Pause Plan's rows stack at those sizes.
+  Ways in added for the states that had none, each a DEBUG launch argument or a tap in `testStates`
+  (about 55 more states than the pass before): `--demo-plan-active` on any screen, `--demo-pro`,
+  `--demo-dates`, `--demo-waiting`, `--demo-guess=N`, `--quiet-demo-data` (nothing due this month),
+  `--demo-splash`, `--demo-loading`, `--demo-reminders=ask|denied|on|hidden|late`,
+  `--demo-form-problem` (the problem line on all five account forms), `--demo-reset-code`; a
+  subscription cancelled and started again in the varied history ("Started again" on the receipt;
+  `testTheVariedHistoryHoldsEachKindOfReceiptLine`). The 136-row inventory is reconciled in 6.5.
+  The tour itself: every launch starts from a list it names (a quiet Home showed another list's
+  cancellation), it scrolls a field into view before typing (a tap on one just below the edge
+  landed on nothing), it types only once the keyboard is up, and audit issues for which iOS hands
+  over no element go to `audit_no_element.txt` (26 of the last 43 lines; one is on the launch mark,
+  which has no text at all).
+  Left as they are, with the reason: iOS draws its confirmation dialogs as narrow bubbles that
+  hyphenate at the largest size ("Re-move"); a long placeholder in a one-line field is shrunk by
+  iOS to fit and is whole (the audit's "may be clipped"); the same warning on the Subscriptions
+  title inside the list is not borne out by the capture. Not yet reached at this size: the inbox's
+  "why" row. 768 tests, 0 failures; Release builds; gold_check 0; old_ui_check 0; string_usage 0.
+  Next, in order: the state pass on iPad; English and Arabic for the states added here; Japanese
+  for the serif; then the four whole tours and the scores.
+
 **Phase 0. Scan (read-only).** Four independent audits (dead code, truth, design rules on every
 view, engineering) plus mechanical scans. Output: the ledger.
 
@@ -843,7 +896,7 @@ and limits) is O37 and nothing else was found.
 
 | What | Status |
 |---|---|
-| 136 screens and states; 95 cannot be opened by a launch argument, so have not been seen in Arabic, at the largest text or on iPad | in progress 11-12: the tour's `testStates` opens 45 more through a varied demo list, named demo screens and taps; read in English, the other three variants to come. Not opened from here and listed for the end: states that need the network or a purchase to fail (sign-in errors, a wrong code, StoreKit not answering), the system's own sheets, widgets on a Home Screen |
+| The 136 rows of 11-11 (`ui.md`), set against what the tour opens | closed 11-12, by number. **Opened by the tour** (first launch, tabs, single screens, `testStates`), so captured in whichever variant it is run in: 1 (the launch mark, held by `--demo-splash`), 2 to 13 (welcome, the link problem, new password, the demo banner, the guess, the tally empty and filled, the reveal's three answers, the price sheet, changing a price, sign up, its problem line), 16 to 24 (the code screen and its problem line, sign in and its problem line, reset: address step, code step and problem line, new password with its rules and problem line, the age check and both refusals), 26 to 28 (Home full, empty, loading), 30 to 35 (each year, no date, "Keep X?", reminders not asked and refused, "N aren't watched"), 37 to 39, 41 to 45, 47 to 53, 59 to 65, 67 to 72 (with the five permission states on the Notifications page), 73 (nothing to export), 74, 75 (the question), 78, 79, 81 to 85, 89 to 104, 107, 109 to 115 (with "Started again" on the receipt and too few services for a plan), 117, 118, 121, 125, 126. **Gone from the app:** 14 (the policies open on the website), 36, 54 to 58 (deep analysis), 76, 77, 108, 134, 135, and "paused" in 42, 50 and 90. **Cannot occur:** 25 (the picker stops at today; the line stays as a guard), 46 (no such state), 116 (a plan needs two members). **Not opened from here, each with its reason:** a server has to be waited for: the "loading" halves of 13, 19, 22 and 75, and 17 (verifying, the resend wait), 29, 80, 119, 120, 122 to 124, 127; the App Store has to answer: 85 (no trial offered), 86 to 88; iOS draws it: 66 and the pictures in 111 (they go straight into the share sheet), 73 (share sheet), 96 (the currency menu), 105 and 106 (Safari and the way back from it), 136, and on sign up the password rules (iOS lays its own offer of a strong password over them; the same list is seen on the new-password screen); a finger has to be on the screen: 40; a past the demo lists do not have: 115 ("You're all set"); the same view as another row: 15 (the age check as a cover is row 23); not a customer's screen: 62 and 128 (DEBUG only); widgets: 129 to 133 (iOS draws them on a Home Screen; their words are held by `WidgetWordsTests`, their look is a device check in 6.7). Section 7 carries the unopened ones by name |
 | Apple's audit, English tour: 307 issues (105 Dynamic Type, 98 contrast, 51 clipped text, 36 elements not detected, 13 hit regions, 4 descriptions) | open |
 | Not rebuilt: Pause Plan, age check, policy pages, error banner and toast, demo banner (both widgets were rebuilt on 11-12: S15) | closed 11-12: the age check, the banner, the notice and the demo banner are rebuilt and seen in English and Arabic; Pause Plan's wording, edges and tap areas are fixed from its captures (setup, running, empty, the end dialog); the in-app policy pages no longer exist (the policies are on the website); `old_ui_check` prints 0 |
 | System-wide: ~~accent colour is iOS blue~~ (done 11-12, from the palette); ~~`Motion.unlessReduced` still moves~~ (done 11-12: `AnyTransition.arriving`); ~~`StateMark` does not grow~~ (done in E slice 2); iPad column is 680 pt wide (seen on the iPad tour and kept: a readable column); ~~five ways to leave a sheet~~ (done 11-12: `LeaveButton`, or the navigation bar's own button); ~~Title Case and sentence case mixed~~ (done 11-12, held by a test); ~~"iPhone" said on iPad~~ (done 11-12, held by a test); prices and dates not formatted in the app's language in 43 places; the serif is missing in Arabic and Japanese | open |

@@ -56,7 +56,13 @@ class SubscriptionStore: ObservableObject {
             let varied = DemoSubscriptions.varied()
             useDemoList(varied)
             DemoSubscriptions.seedVariedHistory(for: varied)
+        } else if LaunchFlag.isSet("--quiet-demo-data") {
+            // No history either: the varied list's cancellation showed on this list's Home.
+            LifecycleEventLog.shared.removeAll()
+            useDemoList(DemoSubscriptions.quiet())
         } else if LaunchFlag.isSet("--fresh-demo-data") {
+            // The demo list as it is first seen. `--demo-savings` puts its own history in afterwards.
+            LifecycleEventLog.shared.removeAll()
             useDemoList()
         } else if LaunchFlag.isSet("--empty-demo-data") {
             // A new person's empty list (an empty array, so the demo data isn't loaded in its place)

@@ -145,6 +145,30 @@ final class VerdictAndSavingsTests: XCTestCase {
         XCTAssertEqual(lines[1].avoidedSoFar.map(ymd), ["2027-01-31", "2027-02-28"])
     }
 
+    /// A delivered reminder can be tapped after its subscription lost its date or was cancelled. The
+    /// verdict then has no charge to keep: with no date it asks for the date, and a cancelled one
+    /// opens on its cancelled slip. A dated one that still renews has a charge and neither applies.
+    func testAVerdictWithNoChargeSaysWhy() {
+        let now = day(2026, 11, 12)
+        XCTAssertNil(VerdictFacts.noCharge(for: sub(anchor: day(2026, 11, 20)), now: now, calendar: cal))
+        XCTAssertEqual(VerdictFacts.noCharge(for: sub(anchor: nil), now: now, calendar: cal), .noDate)
+
+        var cancelled = sub(anchor: day(2026, 11, 20))
+        cancelled.status = .cancelled
+        XCTAssertEqual(VerdictFacts.noCharge(for: cancelled, now: now, calendar: cal), .notRenewing)
+
+        var cancelledUndated = sub(anchor: nil)
+        cancelledUndated.status = .cancelled
+        XCTAssertEqual(VerdictFacts.noCharge(for: cancelledUndated, now: now, calendar: cal), .notRenewing,
+                       "cancelled comes first: asking for a date would restart nothing")
+
+        // A trial with an end date has a charge even when no renewal date was entered.
+        var trial = sub(anchor: nil)
+        trial.status = .trial
+        trial.trialEndsAt = day(2026, 11, 15)
+        XCTAssertNil(VerdictFacts.noCharge(for: trial, now: now, calendar: cal))
+    }
+
     /// Under the price, the slip says what a year of it comes to. For a yearly price that is the price
     /// again ("€59.99 /yr … That's €59.99 a year"), so it says only what the person doesn't know yet.
     func testTheSlipDoesNotSayAYearlyPriceTwice() {

@@ -183,7 +183,7 @@ struct EmailConfirmationView: View {
     @State private var code = ""
     @State private var isVerifying = false
     @State private var isSending = false
-    @State private var problem: String?
+    @State private var problem: String? = AccountProblem.forDemo(CodeProblem.verifying(CancellationError()))
     @State private var countdown = ResendCountdown(lastSent: Date())
     @FocusState private var codeFocused: Bool
 
@@ -282,10 +282,11 @@ struct PasswordResetView: View {
     @ObservedObject private var authManager = AuthManager.shared
     @Environment(\.dismiss) private var dismiss
     @State private var address = ""
-    @State private var sentTo: String?
+    /// `--demo-reset-code` (DEBUG) opens on the code step, which otherwise needs a code to be sent.
+    @State private var sentTo: String? = LaunchFlag.isSet("--demo-reset-code") ? "you@example.com" : nil
     @State private var code = ""
     @State private var isWorking = false
-    @State private var problem: String?
+    @State private var problem: String? = AccountProblem.forDemo(CodeProblem.sending(CancellationError()))
     @State private var countdown = ResendCountdown(lastSent: Date())
     @FocusState private var codeFocused: Bool
 
@@ -422,7 +423,7 @@ struct NewPasswordView: View {
     @ObservedObject private var authManager = AuthManager.shared
     @State private var password = ""
     @State private var isSaving = false
-    @State private var problem: String?
+    @State private var problem: String? = AccountProblem.forDemo(CodeProblem.sending(URLError(.notConnectedToInternet)))
 
     private var isValid: Bool { PasswordStrength.rulesMet(password) == 4 }
 

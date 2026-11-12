@@ -90,3 +90,70 @@ struct LeaveButton: View {
         .buttonStyle(.plain)
     }
 }
+
+/// A name is one line of text, but its field may need two or three lines to show it (a long name
+/// at a large text size was cut to "Adobe Cr…"). A field that wraps treats Return as a line
+/// break, so this takes the break back out and moves on, as Return does in a one-line field.
+enum NameField {
+    /// The text without line breaks, and whether there was one to take out.
+    static func withoutBreaks(_ text: String) -> (text: String, hadBreak: Bool) {
+        let cleaned = text.components(separatedBy: .newlines).joined()
+        return (cleaned, cleaned != text)
+    }
+}
+
+extension View {
+    func returnMovesOn(from text: Binding<String>, to next: @escaping () -> Void) -> some View {
+        onChange(of: text.wrappedValue) { _, new in
+            let name = NameField.withoutBreaks(new)
+            guard name.hadBreak else { return }
+            text.wrappedValue = name.text
+            next()
+        }
+    }
+}
+
+/// A screen whose content scrolls above its buttons.
+///
+/// At ordinary text sizes the buttons stay at the bottom edge, where a thumb expects them. At the
+/// accessibility sizes they come after the content, inside the scroll. Pinned, three buttons at the
+/// largest size cover more than half the screen and leave a slot to read through (the verdict showed
+/// two words of its slip), and where the screen is shorter still they do not fit at all (the
+/// welcome screen's second button was drawn over its own border).
+struct ActionScreen<Content: View, Actions: View>: View {
+    @Environment(\.dynamicTypeSize) private var typeSize
+    private let dismissesKeyboard: Bool
+    private let content: Content
+    private let actions: Actions
+
+    /// `dismissesKeyboard`: a form, where dragging the content down puts the keyboard away.
+    init(dismissesKeyboard: Bool = false, @ViewBuilder content: () -> Content, @ViewBuilder actions: () -> Actions) {
+        self.dismissesKeyboard = dismissesKeyboard
+        self.content = content()
+        self.actions = actions()
+    }
+
+    /// Whether the buttons stay at the bottom edge at this text size.
+    nonisolated static func pinsActions(at size: DynamicTypeSize) -> Bool {
+        !size.isAccessibilitySize
+    }
+
+    var body: some View {
+        if Self.pinsActions(at: typeSize) {
+            VStack(spacing: 0) {
+                ScrollView { content }
+                    .scrollDismissesKeyboard(dismissesKeyboard ? .interactively : .automatic)
+                actions
+                    .background(Color.ink)
+            }
+        } else {
+            ScrollView {
+                VStack(spacing: 0) {
+                    content
+                    actions
+                }
+            }
+            .scrollDismissesKeyboard(dismissesKeyboard ? .interactively : .automatic)
+        }
+    }
+}

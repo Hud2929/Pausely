@@ -398,6 +398,9 @@ struct InkButtonStyle: ButtonStyle {
         configuration.label
             .font(.headline)
             .multilineTextAlignment(.center)
+            // A button grows to hold its words. Squeezed for height (the welcome screen under a
+            // banner at the largest text size), it cut them: "I already have an acc…".
+            .fixedSize(horizontal: false, vertical: true)
             .foregroundStyle(isEnabled ? foreground : Color.inkTextMuted)
             .padding(.horizontal, 20)
             .padding(.vertical, 14)

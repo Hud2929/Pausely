@@ -112,7 +112,8 @@ struct SubscriptionBrowserView: View {
         .accessibilityIdentifier("customAddButton")
     }
 
-    var body: some View {
+    /// The way out, the title, the search field and the categories.
+    private var top: some View {
         VStack(spacing: 0) {
             VStack(alignment: .leading, spacing: 14) {
                 HStack {
@@ -137,8 +138,17 @@ struct SubscriptionBrowserView: View {
             .padding(.top, 8)
 
             categoryPills.padding(.top, 12)
+        }
+    }
+
+    var body: some View {
+        VStack(spacing: 0) {
+            // Fixed above the list at ordinary text sizes. At the accessibility sizes it scrolls away
+            // with the list: fixed, it filled the screen above the keyboard and no result could be seen.
+            if !typeSize.isAccessibilitySize { top }
 
             ScrollView {
+                if typeSize.isAccessibilitySize { top }
                 LazyVStack(alignment: .leading, spacing: 0) {
                     if filteredEntries.isEmpty {
                         noResultsView
