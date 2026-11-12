@@ -73,7 +73,7 @@ struct WhatsNewSheetModifier: ViewModifier {
         content
             .onAppear {
                 // UI tests drive the app; release notes over the first screen would block them.
-                if ProcessInfo.processInfo.arguments.contains("--uitesting") { return }
+                if LaunchFlag.uiTesting.isSet { return }
                 if lastSeenVersion.isEmpty {
                     // Brand-new install: nothing is "new" yet, so do not greet a first-time
                     // customer with release notes before they have seen any value.

@@ -37,7 +37,7 @@ final class ReviewPromptManager: ObservableObject {
     }
 
     func requestReviewIfAppropriate(after trigger: ReviewTrigger) {
-        guard !ProcessInfo.processInfo.arguments.contains("--uitesting"), !DemoSavings.isScreenshotRun,
+        guard !LaunchFlag.uiTesting.isSet, !DemoSavings.isScreenshotRun,
               canRequestReview() else { return }
 
         // A trigger only counts as "used" once the system prompt has really been shown, so a request that

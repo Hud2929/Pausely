@@ -35,7 +35,7 @@ final class CurrencyManager: ObservableObject {
 
     /// Where live rates come from. The app asks exchangerate-api.com; tests put their own answer here.
     var loadLiveRates: () async throws -> ExchangeRateResponse = {
-        guard let url = URL(string: "https://api.exchangerate-api.com/v4/latest/USD") else { throw URLError(.badURL) }
+        guard let url = URL(string: AppConfig.exchangeRatesURL) else { throw URLError(.badURL) }
         let (data, _) = try await CurrencyManager.session.data(from: url)
         return try JSONDecoder().decode(ExchangeRateResponse.self, from: data)
     }

@@ -5,11 +5,7 @@ import Foundation
 enum DemoSavings {
     /// `--screenshots` (DEBUG): App Store captures without the one-time permission card. Always false in release.
     static var isScreenshotRun: Bool {
-        #if DEBUG
-        return ProcessInfo.processInfo.arguments.contains("--screenshots")
-        #else
-        return false
-        #endif
+        LaunchFlag.screenshots.isSet
     }
 
     #if DEBUG

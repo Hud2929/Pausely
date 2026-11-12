@@ -18,6 +18,10 @@ enum AppConfig {
     static let supportURL = "https://pausely.pro/support.html"
     static let privacyPolicyURL = "https://pausely.pro/privacy.html"
     static let termsOfServiceURL = "https://pausely.pro/terms.html"
+
+    /// Daily exchange rates per US dollar. The only outside service the app calls besides Supabase,
+    /// Apple and the mail providers a person connects; nothing about the person is sent to it.
+    static let exchangeRatesURL = "https://api.exchangerate-api.com/v4/latest/USD"
     // MARK: - Deep Link Configuration
     
     // MARK: - Email Template Configuration

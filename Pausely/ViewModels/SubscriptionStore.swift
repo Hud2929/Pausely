@@ -39,12 +39,12 @@ class SubscriptionStore: ObservableObject {
         sync.currentCopy = copyForSync
         #if DEBUG
         // UI tests: start from the demo list on every launch and never write to the cloud.
-        if ProcessInfo.processInfo.arguments.contains("--fresh-demo-data") {
+        if LaunchFlag.isSet("--fresh-demo-data") {
             Self.cloudSyncEnabled = false
             subscriptions = Self.makeDemoSubscriptions()
             calculateTotals()
             saveToCache()
-        } else if ProcessInfo.processInfo.arguments.contains("--empty-demo-data") {
+        } else if LaunchFlag.isSet("--empty-demo-data") {
             // A new person's empty list (an empty array, so the demo data isn't loaded in its place)
             // and no history from earlier runs.
             Self.cloudSyncEnabled = false
@@ -196,10 +196,7 @@ class SubscriptionStore: ObservableObject {
             throw SubscriptionLimitError.freeTierLimitReached
         }
 
-        var added = subscription
-        // A renewal date is a calendar day, not a moment: store it at local noon (see RenewalSchedule).
-        added.nextBillingDate = added.nextBillingDate.map { Calendar.current.noon(of: $0) }
-
+        let added = Self.withDaysAtNoon(subscription)
         subscriptions.insert(added, at: 0)
         listChanged()
         sync.noteAdded(added.id)
@@ -209,10 +206,20 @@ class SubscriptionStore: ObservableObject {
         return await send(added.id)
     }
 
+    /// A renewal day and the last day of a trial are calendar days, not moments. Whoever hands one in,
+    /// it is kept at local noon, so a change of time zone can't move it to another day (see RenewalSchedule).
+    static func withDaysAtNoon(_ subscription: Subscription, calendar: Calendar = .current) -> Subscription {
+        var fixed = subscription
+        fixed.nextBillingDate = subscription.nextBillingDate.map { calendar.noon(of: $0) }
+        fixed.trialEndsAt = subscription.trialEndsAt.map { calendar.noon(of: $0) }
+        return fixed
+    }
+
     /// Every change below lands on this iPhone and in the sync queue in one step, with nothing able to
     /// come between, and cannot fail: if the account can't be reached the change waits and a notice says so.
 
-    func updateSubscription(_ subscription: Subscription) async {
+    func updateSubscription(_ changed: Subscription) async {
+        let subscription = Self.withDaysAtNoon(changed)
         guard let index = subscriptions.firstIndex(where: { $0.id == subscription.id }) else { return }
         let oldAmount = subscriptions[index].amount
         subscriptions[index] = subscription

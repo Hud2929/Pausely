@@ -19,7 +19,7 @@ struct PauselyApp: App {
         _ = InstallState.firstLaunch
         #if DEBUG
         // UI tests pass --reset-state to start from a first launch, whatever an earlier run left behind.
-        if ProcessInfo.processInfo.arguments.contains("--reset-state") {
+        if LaunchFlag.isSet("--reset-state") {
             UserDefaults.standard.removeObject(forKey: "hasCompletedOnboarding")
             PendingTally.clear()
             TallyImporter.clearWaiting()
@@ -114,55 +114,21 @@ struct RootView: View {
     @State private var authStart: PremiumWelcomeFlow.Start = .welcome
     @Environment(\.scenePhase) private var scenePhase
 
-    /// Detects if app was launched for UI testing
-    private var isUITesting: Bool {
-        ProcessInfo.processInfo.arguments.contains("--uitesting")
-    }
-
-    /// Detects if app should run in demo mode (no auth required)
-    private var isDemoMode: Bool {
-        ProcessInfo.processInfo.arguments.contains("--demo-mode")
-    }
-
-    /// DEBUG only: open a single screen directly via launch argument.
-    private func isDemoScreen(_ argument: String) -> Bool {
-        #if DEBUG
-        return ProcessInfo.processInfo.arguments.contains(argument)
-        #else
-        return false
-        #endif
-    }
+    // DEBUG only, all three: a release build never reads a launch argument (see `LaunchFlag`).
+    private var isUITesting: Bool { LaunchFlag.uiTesting.isSet }
+    private var isDemoMode: Bool { LaunchFlag.demoMode.isSet }
+    private func isDemoScreen(_ argument: String) -> Bool { LaunchFlag.isSet(argument) }
 
     /// DEBUG only: the value of `--demo-name=value`, or "" for a bare `--demo-name`. Nil when it isn't there.
-    private func demoValue(_ name: String) -> String? {
-        #if DEBUG
-        for argument in ProcessInfo.processInfo.arguments {
-            if argument == name { return "" }
-            if argument.hasPrefix(name + "=") { return String(argument.dropFirst(name.count + 1)) }
-        }
-        #endif
-        return nil
-    }
+    private func demoValue(_ name: String) -> String? { LaunchFlag.value(of: name) }
 
     /// DEBUG only: `--demo-imap-connect` (iCloud) or `--demo-imap-connect=<preset id>`; `=other` for any server.
     private var demoIMAPPreset: String? {
-        #if DEBUG
-        for argument in ProcessInfo.processInfo.arguments {
-            if argument == "--demo-imap-connect" { return "icloud" }
-            if argument.hasPrefix("--demo-imap-connect=") { return String(argument.dropFirst("--demo-imap-connect=".count)) }
-        }
-        #endif
-        return nil
+        LaunchFlag.value(of: "--demo-imap-connect").map { $0.isEmpty ? "icloud" : $0 }
     }
 
     /// DEBUG only: open the Gmail results screen with a synthetic mailbox (no Google sign-in needed).
-    private var isDemoGmailResults: Bool {
-        #if DEBUG
-        return ProcessInfo.processInfo.arguments.contains("--demo-gmail-results")
-        #else
-        return false
-        #endif
-    }
+    private var isDemoGmailResults: Bool { LaunchFlag.isSet("--demo-gmail-results") }
 
 
     /// Signed-in users (existing accounts, Apple sign-ins) who haven't confirmed their age yet.
@@ -534,7 +500,7 @@ struct PremiumWelcomeFlow: View {
                     .accessibilityIdentifier("signInButton")
                 #if DEBUG
                 // Debug builds only (never in the App Store build): the app without an account.
-                if !ProcessInfo.processInfo.arguments.contains("--uitesting") {
+                if !LaunchFlag.uiTesting.isSet {
                     Button(action: { RevolutionaryAuthManager.shared.enterAsDebugUser() }) {
                         Text(verbatim: "Test without an account (debug build)")
                             .font(.footnote.weight(.medium))

@@ -85,7 +85,7 @@ class RevolutionaryAuthManager: ObservableObject {
 
         #if DEBUG
         // UI tests pass --reset-state to start signed out, whatever a previous run left behind.
-        if ProcessInfo.processInfo.arguments.contains("--reset-state") {
+        if LaunchFlag.isSet("--reset-state") {
             Self.forgetSessionForUITests()
             Task { [client] in try? await client.auth.signOut(scope: .local) }
             return

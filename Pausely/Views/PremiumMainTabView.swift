@@ -6,12 +6,7 @@ struct PremiumMainTabView: View {
 
     /// DEBUG only: `--demo-tab=N` opens tab N (0 Dashboard, 1 Subscriptions, 2 Insights, 3 Profile) for screenshots.
     private static var launchTab: Int {
-        #if DEBUG
-        for argument in ProcessInfo.processInfo.arguments where argument.hasPrefix("--demo-tab=") {
-            if let index = Int(argument.dropFirst("--demo-tab=".count)) { return index }
-        }
-        #endif
-        return 0
+        LaunchFlag.value(of: "--demo-tab").flatMap(Int.init) ?? 0
     }
     @State private var deepLinkedSubscription: Subscription?
     @ObservedObject private var subscriptionStore = SubscriptionStore.shared

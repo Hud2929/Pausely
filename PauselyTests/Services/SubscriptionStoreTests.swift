@@ -60,6 +60,28 @@ final class SubscriptionStoreTests: XCTestCase {
         XCTAssertEqual(LifecycleEventLog.shared.events.filter { $0.subscriptionId == sub.id }.map(\.kind), [.added])
     }
 
+    /// Dates are days. Only an add used to be put at noon, and only its renewal date: an edit at
+    /// 11 pm, or any trial end, was stored as that moment and could land on another day elsewhere.
+    func testRenewalAndTrialDaysAreKeptAtNoonOnAddAndOnEdit() async throws {
+        let calendar = Calendar.current
+        func at(_ hour: Int, _ minute: Int, daysFromNow: Int) -> Date {
+            calendar.date(bySettingHour: hour, minute: minute, second: 0, of: days(daysFromNow))!
+        }
+        var sub = TestFactories.makeSubscription(name: "Crave", status: .trial, nextBillingDate: at(23, 40, daysFromNow: 9))
+        sub.trialEndsAt = at(0, 5, daysFromNow: 9)
+        await add(sub)
+        var saved = try XCTUnwrap(store.subscriptions.first)
+        XCTAssertEqual(saved.nextBillingDate, calendar.noon(of: days(9)))
+        XCTAssertEqual(saved.trialEndsAt, calendar.noon(of: days(9)))
+
+        saved.nextBillingDate = at(23, 59, daysFromNow: 20)
+        saved.trialEndsAt = at(6, 0, daysFromNow: 20)
+        await store.updateSubscription(saved)
+        let edited = try XCTUnwrap(store.subscriptions.first)
+        XCTAssertEqual(edited.nextBillingDate, calendar.noon(of: days(20)))
+        XCTAssertEqual(edited.trialEndsAt, calendar.noon(of: days(20)))
+    }
+
     // MARK: Changing
 
     func testEditingTheAmountUpdatesTotalsAndRecordsThePriceChange() async throws {
