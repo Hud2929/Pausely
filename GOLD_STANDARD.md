@@ -199,9 +199,9 @@ Updated at every commit, so the work can be picked up from this file alone.
   dead. 609 tests, 0 failures.
 - T42/T76 done: first-run prices are only ones read from the service's own page.
 - Scope C done (see its row). The run stopped here on 11-11 when the usage limit was reached.
-- Next, in order: the unused fields on the subscription record (end of Scope C), T25–33 (Deep savings
-  analysis), the untranslated screens and plurals (T97–99, T80–86, T70, T67, T89), unused keys
-  (T101), names (T102–108), the listing (T109–111). Then Stages E to I, none of which has begun.
+- 11-12, 00:40: the run resumed. Before any change, the overlooked report was checked against the
+  code (41 findings stand, rows O1 to O41 in 6.3a) and the rest of the run was planned as one piece:
+  section 5.3. The order there replaces the list that stood here. Next: D0 (O1 first).
 - Told by the other session at 22:04 (it has stood down and changed nothing): sections 2, 3, 4, 6, 7
   and 10 of the engineering audit were never done and there is no finished overlooked-details
   report. Those areas have been scanned by nobody; they are owed before Stage G can be called done.
@@ -233,6 +233,88 @@ with the app as built; pushing them is the owner's step.
 
 **Phase 8. Proof.** Everything green three serial runs in a row; Debug and Release build; the final
 scorecard; what is left for the owner.
+
+### 5.3 The plan for what is left (written on the night of 11-11 to 11-12, before any further change)
+
+The founder's instruction for this part: "plan before executing everything to make sure even the small
+things are all interconnected to make the truthful 9.5", "use the internet and find sources".
+
+**What was checked before writing this.** The overlooked-details report (`overlooked.md`) was only ever
+a first save. Every "wrong" or "missing" line in it was looked up in today's code. 41 still stand; they
+are now ledger rows O1 to O41 (6.3a). Two were thought closed and are not: B6 closed the link logging in
+`DeepLinkManager`, and two more lines in `ContentView.swift` still write whole incoming links, sign-in
+codes included, to the device log in release builds (O1). Six parts of the engineering audit and five
+of the overlooked report were never written, so nobody has scanned those areas.
+
+**Seven threads.** A small thing reaches 9.5 only when everything on its thread does, so the work is
+grouped by thread, not by file. Each thread ends in a guard that fails if the thread is cut again.
+
+| Thread | What hangs on it | The guard |
+|---|---|---|
+| 1. One billing day | Renewal maths (27 uses of the device's calendar), reminder trigger dates, the age check, the usage month, the year slip, widget day counts, how a renewal day is stored and sent (O2 to O7, O16) | A test class that runs the engine under the Buddhist, Hijri and Japanese calendars and in Auckland, Tokyo and Honolulu and gets the Gregorian answers; a source guard like `CurrencyGuardTests` for `Calendar.current` in `Core/Renewals` |
+| 2. One locale for text the code builds | Money and date text (about 70 calls), reminder text, plural forms, layout direction, tab titles, notification buttons, widget text, Shortcut answers, currency names, amounts typed with Arabic digits and marks (O8 to O14, T97–99, T80–86, T70, T67, T89) | `LocalizationGuardTests` widened to widgets and Shortcuts; a plural guard (every count string has the forms its language needs); a test that types amounts as each of the six locales writes them |
+| 3. One count of what the free plan holds | The store, the browser, the first-run importer, inbox import, the paywall sentence, the listing (O37, T109–111) | One function, one test, and a source guard that nothing else compares a count with the limit |
+| 4. One record, every field shown | The eight unused fields, the sync record, the export, the database columns (two-step drop), the insights engine (T25–33), the verdict's facts (Stage F) | A test that every stored field of `Subscription` is read by a screen, the export or the engine |
+| 5. One wipe list | Every key and file the app writes: typed hours, corrections, the Pro flag, the waiting tally, Keychain names, Spotlight, widgets, reminders (O38, O23, O40) | A source guard: every `UserDefaults` key and file name in the app is either removed by `LocalUserData.wipe` or on a short list of device settings with a reason |
+| 6. One name per thing | Catalog keys, the listing, the website, accessibility labels, Shortcut titles, widget names, type names (T102–108, 15 hype names) | A name check in `gold_check` (banned variants of each name) |
+| 7. One way a screen is proven | Launch argument per state → tour in English, Arabic, largest text, iPad → Apple's audit → contact sheet opened → a score row | The tour fails on a state without an argument or with an audit issue |
+
+**The order, and why.** Everything that adds, removes or rewords a string or a state comes before the
+screens are scored, and hygiene comes before that too, so each screen is scored once, on the code that
+ships. Leaks come first because they are live in the build attached to the store.
+
+1. **D0. Leaks and dead claims.** O1 (log lines), O38 (wipe list, thread 5), O40 (biometric dead
+   code), O36 (the universal-link claim: publish the association file with the site, or drop the
+   entitlement), O39 (Sign in with Apple revocation: the app and SQL sides here; the Apple key is the
+   owner's). Exit: thread 5's guard is green.
+2. **D1. Finish the scan.** Engineering parts 2, 3, 4, 6, 7, 10 and overlooked parts 5 to 9, one area
+   per slice, read by me, findings into the ledger with ids. No fix starts in an area before its scan,
+   so nothing is fixed around an unknown. Exit: the ledger says "scanned" for all sixteen areas.
+3. **D2. The billing day and typed amounts (threads 1 and 2's amount part).** O2 to O10, O16.
+4. **D3. Cut before translating.** The unused record fields (thread 4), T25–33 (rebuild "Deep savings
+   analysis" on figures the app has, or remove it), names (T102–108, thread 6). Nothing is translated
+   that is about to be deleted.
+5. **D4. Platform details that add words or states.** Notifications (O21 to O27), widgets, Shortcuts
+   and Spotlight (O28 to O35), the paywall and the plan row in Settings (O17 to O20), the free count
+   (O37, thread 3), the app-switcher cover (O41). Then Stage F as written in 5.1 (the verdict's facts).
+6. **D5. Words (thread 2).** One locale (O11 to O14), plural forms, every untranslated string, then the
+   unused keys (T101), then the listing and the website's own policy text (T109–111).
+7. **G. Hygiene** as in 5.1, plus what D1 finds. Exit: `gold_check` prints 0 (93 tonight).
+8. **E. Every screen** (thread 7), as in 5.1, on frozen code: after this only screen repairs.
+9. **H. Customer rounds**, then **I. The listing files and the proof**, as in 5.1. Section 7 is
+   rewritten from evidence at the end of each stage, never from memory.
+
+**What each stage is measured against (read, not remembered).** The earlier research is in
+`private/audits/2026-11-11/` with 131 sources. The rules this plan leans on, each read at its source:
+
+- Contrast 4.5:1 for text up to 17 pt, 3:1 for 18 pt or bold; controls 44×44 pt; text enlargeable to
+  at least 200%; with Reduce Motion, movement becomes a fade; never colour alone (Apple HIG,
+  Accessibility: developer.apple.com/design/human-interface-guidelines/accessibility; WCAG 2.2 1.4.3,
+  1.4.4, 1.4.11, 2.5.8: w3.org/WAI/WCAG22/quickref).
+- Plural categories: Arabic has six (0; 1; 2; 3–10; 11–99; 100–102), German and Spanish one/other,
+  French counts 0 and 1 as "one", Japanese has one form (Unicode CLDR, language plural rules:
+  unicode.org/cldr/charts/latest/supplemental/language_plural_rules.html).
+- Account deletion: easy to find, deletes the whole record, says billing continues through Apple and
+  how to cancel, and "apps that support Sign in with Apple should use the Sign in with Apple REST API
+  to revoke user tokens" (developer.apple.com/support/offering-account-deletion-in-your-app).
+- Universal links: `https://<domain>/.well-known/apple-app-site-association`, no extension, HTTPS, no
+  redirects, one file per subdomain in the entitlement; Apple's CDN fetches it within 24 hours
+  (developer.apple.com/documentation/xcode/supporting-associated-domains).
+- Time Sensitive notifications "break through system controls such as Notification Summary and
+  Focus": for "charges tomorrow" only (developer.apple.com/documentation/usernotifications/
+  unnotificationinterruptionlevel/timesensitive).
+- Widgets: accented and vibrant rendering, `widgetAccentable`, removable backgrounds,
+  `isLuminanceReduced`; accessory families have no full colour (developer.apple.com/documentation/
+  widgetkit/preparing-widgets-for-additional-contexts-and-appearances).
+- Paywall, first run, permission priming, empty and error states, trust page, export and deletion:
+  the "TAKE THIS" lists in `best_apps.md`, `part3a.md`, `part3b.md`, `part45.md` (Apple HIG and App
+  Review 3.1.2 and 5.1.1, NN/g, RevenueCat's State of Subscription Apps, the FTC and UK subscription
+  rules). Each list item becomes a line in the screen's score row in Stage E: met, or what is missing.
+
+**What cannot reach 9.5 from here** (true scores in section 7, steps in 6.7): a sign-up by an outsider,
+a real purchase and refund, VoiceOver and Sign in with Apple on a device, widgets in tinted and clear
+mode on a device, the Apple key for token revocation, publishing the website, anything waiting on App
+Review, and US prices for eleven first-run services.
 
 ## 6. The ledger
 
@@ -306,6 +388,56 @@ matters to a stranger: the customer round below scores "getting in" at 1.
 | T15–19, T23, T43 | Estimates and forecasts stated as fact ("this year", "Back in your pocket", "avoided") | closed 11-11, in five languages: the promise sentences say "your cancellations are on track to keep you … over 12 months" (not "Pausely is on track to save you … this year"); "Kept with Pausely" is "Kept since you cancelled"; "paid for itself N× over" is "on track for N× what Pausely costs a year"; one sentence for an empty receipt on both screens; "How we count" says the charges are what the renewal date and price entered say would have happened; "avoided over 12 months" is "on track over 12 months"; the Pause Plan slip says "About … a year" and what it assumes; the first run says "about … a year more" |
 | T59, T66, T72–74 | "Open Cancellation Page" opens a web search for 794 of 994 names; a "pause" that pauses nothing and stops reminders; Shortcuts report wrong status | T59 closed 11-11 with T62: the button says what it opens. A known service: "Open Cancellation Page". A name the catalog lists: the catalog's own link for exactly that name, called "Open Website", with one line on where to cancel. Anything else: "Search How to Cancel" (and "&" in a name no longer cuts the search short). Seen on the simulator. T66, T72–74 closed 11-11: the "pause" set only by a Shortcut marked a subscription paused, stopped its reminders and took it out of the totals while it went on charging. It is removed: both Shortcuts, `pausedUntil`, the resume button, the paused row on Home and the reminder scheduled outside the planner. A subscription the person marks Paused themselves is still listed apart. The detail Shortcut reports the real status and no renewal for something that will not charge; the spend Shortcut says what it returns. The `paused_until` column stays in the database, unwritten, until it can be dropped by the two-step rule |
 | T96 | Pause Plan counts Audible, PlayStation Plus and Kindle as streaming | closed 11-11: eligibility is an explicit list of video streaming services by name; being filed under "Entertainment" is no longer enough. `testOnlyVideoStreamingByNameIsEligibleWhateverItsCategory` (12 that must not be, 18 that must) |
+
+### 6.3a Open: from the overlooked-details check (each verified in the code on 11-12)
+
+| Id | Weight | What | Status |
+|---|---|---|---|
+| O1 | high | Two release-build log lines write every incoming link in full, sign-in codes included (`ContentView.swift`, the app delegate and the root view). B6 closed only `DeepLinkManager` | open |
+| O2, O3 | high | All renewal maths runs in the device's calendar (27 places); on a Hijri, Buddhist or Japanese-calendar iPhone "monthly" is a lunar month or the year is 2569. Reminder trigger dates carry no calendar | open |
+| O4 | medium | The age check counts years in the device's calendar: 16 arrives about six months early on a Hijri iPhone | open |
+| O5 | medium | A renewal day is stored as a moment (local noon): after a long flight, or on a second device far away, every renewal is a day off | open |
+| O6 | medium | Trial end dates keep the time of day they were made | to verify |
+| O7 | low | The usage month and the year slip's year come from the device's calendar | open |
+| O8 | high | An amount typed with the Arabic decimal mark is refused | open |
+| O9 | high | Amounts above 100,000 are refused in every currency (rupiah, dong, rial prices are normal above it) | open |
+| O10 | medium | The edit field always shows two decimals: dinar prices are rounded on save, yen shows "1500.00" | open |
+| O11 | medium | The language chosen in the app has no region ("CA$" for a Canadian), does not set layout direction, and about 45 money and 25 date texts ignore it; tab titles and notification buttons are built once | open |
+| O12 | medium | Count strings without plural forms (same work as T99) | open |
+| O13 | low | Currency names are English and searched in English only | open |
+| O14 | low | A price and its period are joined in code ("$4.99" + "/month") | open |
+| O15 | unclear | Whether a nine-digit total fits on Home, Analysis and the receipt | check in Stage E with rupiah data |
+| O16 | unclear | If the live `next_billing_date` column were DATE, no fetched renewal would parse | read-only check |
+| O17 | low | The paywall shows "Subscribe" and today's price for a moment before the trial is known | open |
+| O18 | low | A failed card (billing retry, grace period) is never mentioned | open |
+| O19 | low | Manage, refund and offer codes go through a web link, not Apple's sheets | open |
+| O20 | low | Two StoreKit test files ship inside the app | open |
+| O21 | medium | "Keep it" on an old reminder keeps whichever charge is next, not the one the reminder was about | open |
+| O22 | medium | Reminders are rebuilt only when the app opens: with twenty subscriptions the 60 slots last about three weeks | open |
+| O23 | medium | A reminder tapped while signed out leaves a verdict waiting for whoever signs in next | to verify |
+| O24 | low | "Charges tomorrow" is an ordinary notification: in a Focus it can arrive after the charge | open |
+| O25 | low | "Reminders are on" is shown when banners are off or everything goes to the summary | open |
+| O26 | low | Badge permission is asked for and never used | open |
+| O27 | low | "Keep it" on the iPhone is unknown to the iPad | open |
+| O28 | medium | The app never tells widgets to reload: a change shows up to six hours late | open |
+| O29 | medium | Widget lines such as "in 3 days" are written as finished text when the app last ran | to verify |
+| O30 | high | Widget text is English only (same work as T89) | open |
+| O31 | low | The Add Subscription shortcut takes zero and negative prices | to verify |
+| O32 | low | No Siri phrases (`AppShortcutsProvider`) | open |
+| O33 | low | A widget tap or a Spotlight result opens the app, not the subscription | open |
+| O34 | low | Lock Screen widgets show amounts while the iPhone is locked | open |
+| O35 | unclear | Widgets in tinted, clear and StandBy rendering | simulator in Stage E; device for the owner |
+| O36 | high | The app claims universal links for pausely.pro and the site publishes no association file | open |
+| O37 | medium | The free plan's limit counts cancelled rows: cancelling, which is what the app is for, frees no room | open |
+| O38 | medium | Wiping misses typed hours, merchant corrections, the Pro flag and the waiting tally: the next account inherits them | open |
+| O39 | medium | Deleting an account does not revoke the Sign in with Apple token (Apple asks for it) | open |
+| O40 | low | Biometric lock is dead code | open |
+| O41 | low | The app switcher shows amounts | open |
+
+Scan status (16 areas). Scanned: engineering 1, 5, 8, 9; overlooked 1 to 4 (calendars and locales,
+StoreKit, notifications, widgets and intents). Not scanned by anyone: engineering 2 (correctness), 3
+(concurrency), 4 (error handling), 6 (persistence), 7 (backend files), 10 (widget and App Intents);
+overlooked 5 to 9 in full (only the eight findings above were saved).
 
 ### 6.4 Open: truth and need on screen, translation, the listing
 
