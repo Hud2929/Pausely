@@ -195,10 +195,11 @@ Updated at every commit, so the work can be picked up from this file alone.
 - Stage D (6.4) has begun. T50–56 done first because it ended the suite's one failure: 609 tests, 0
   failures.
 - T60/T61/T63 done (cancel help holds only what can be checked). 606 tests, 0 failures.
-- Now, in order: check every cancellation link by requesting it (`scripts/check_links.py`), T42/T76
-  (first-run prices), Scope C (catalog), T25–33 (Deep savings analysis), the untranslated screens and
-  plurals (T97–99, T80–86, T70, T67, T89), unused keys (T101), names (T102–108), the listing
-  (T109–111).
+- Every cancellation link was requested and the dead ones repaired (T60's row): 416 of 1,120 were
+  dead. 609 tests, 0 failures.
+- Now, in order: T42/T76 (first-run prices), Scope C (catalog), T25–33 (Deep savings analysis), the
+  untranslated screens and plurals (T97–99, T80–86, T70, T67, T89), unused keys (T101), names
+  (T102–108), the listing (T109–111).
 - Told by the other session at 22:04 (it has stood down and changed nothing): sections 2, 3, 4, 6, 7
   and 10 of the engineering audit were never done and there is no finished overlooked-details
   report. Those areas have been scanned by nobody; they are owed before Stage G can be called done.
@@ -308,7 +309,7 @@ matters to a stranger: the customer round below scores "getting in" at 1.
 
 | Id | What | Status |
 |---|---|---|
-| T60, T61, T63 | 717 unsourced English cancel steps; 68 US phone numbers shown worldwide; a rating sheet whose ratings nobody can see | closed 11-11. The service data keeps only each service's cancellation link and names (4,225 lines to 428; 202 services). The unsourced steps, phone numbers, e-mail addresses and chat links are gone, with the "Call support" rows. Steps are shown only where they can be checked: a subscription Apple bills gets Apple's own four steps, read from support.apple.com/118428 (published 2026-09-29), in five languages, and Apple's link opens the person's subscriptions. Everything else gets the link and one sentence saying cancelling happens on that service's own site. The rating sheet and its service are deleted (the `cancel_difficulty_ratings` table stays until it can be dropped by the two-step rule). Seen on the simulator for Apple One and Netflix. Not done: the 202 + 992 links have never been opened by anyone; a script that requests each one is the next thing |
+| T60, T61, T63 | 717 unsourced English cancel steps; 68 US phone numbers shown worldwide; a rating sheet whose ratings nobody can see | closed 11-11. The service data keeps only each service's cancellation link and names (4,225 lines to 428; 202 services). The unsourced steps, phone numbers, e-mail addresses and chat links are gone, with the "Call support" rows. Steps are shown only where they can be checked: a subscription Apple bills gets Apple's own four steps, read from support.apple.com/118428 (published 2026-09-29), in five languages, and Apple's link opens the person's subscriptions. Everything else gets the link and one sentence saying cancelling happens on that service's own site. The rating sheet and its service are deleted (the `cancel_difficulty_ratings` table stays until it can be dropped by the two-step rule). Seen on the simulator for Apple One and Netflix. The links: `scripts/links/check_links.py` requested all 1,120 on 11-11. 416 were dead (404, or no such domain), 44 of them among the known services: more than one tap in three on "Open Cancellation Page" would have met "page not found". Each dead link now points at its site's front page where that answers (the screen then says "Open Website"), and is removed where the whole site is gone (40 uses; Showtime's entry with it). Six of the most used (Amazon Prime, Paramount+, HBO Max, Strava, Coursera, Box) were given their account page after each was requested and seen to lead to sign-in for that page. 1,018 links now: 809 answer, 184 exist behind sign-in or a robot check, 25 gave no clear answer (kept, to be asked again), none gone. `LinkCheckTests` fails if the app offers a link that was never requested or is recorded as gone. Honest limit: a request shows a page exists, not that it is the right page |
 | T42, T76 | 21 of 27 first-run prices come from press round-ups, not the service's page, and are saved as if confirmed | open |
 | Scope C | Catalog: 1,379 invented plan prices, invented descriptions (Pausely's own says "bank sync"), invented websites used for logos, plan variants listed as services | open |
 | T25–33 | "Deep savings analysis": English only, invented thresholds, a figure that always equals the price, overlap matched by substring on cancelled items too | open |

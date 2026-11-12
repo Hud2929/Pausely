@@ -106,6 +106,19 @@ final class CancelHelpTests: XCTestCase {
         XCTAssertEqual(help, CancelHelp(kind: .cancellationPage, link: URL(string: "https://www.netflix.com/cancelplan")))
     }
 
+    /// Where the page Pausely had for a service turned out not to exist, the link is the service's
+    /// front page, and the screen calls it a website, not a cancellation page.
+    func testALinkToAFrontPageIsCalledAWebsite() throws {
+        let frontPage = try XCTUnwrap(ServiceDatabase.services.first {
+            !$0.isBilledByApple && URL(string: $0.cancelURL).map(CancelHelp.isFrontPage) == true
+        })
+        let help = CancelHelp.find(for: TestFactories.makeSubscription(name: frontPage.name))
+        XCTAssertEqual(help, CancelHelp(kind: .website, link: URL(string: frontPage.cancelURL)))
+        XCTAssertTrue(CancelHelp.isFrontPage(URL(string: "https://www.example.com")!))
+        XCTAssertTrue(CancelHelp.isFrontPage(URL(string: "https://www.example.com/")!))
+        XCTAssertFalse(CancelHelp.isFrontPage(URL(string: "https://www.example.com/account/cancel")!))
+    }
+
     /// Anything Apple bills is cancelled in Settings by the same steps, so it gets those steps and
     /// Apple's own link, whether Pausely knows it as a service or only from the catalog.
     func testASubscriptionBilledByAppleGetsApplesSteps() {
@@ -123,8 +136,8 @@ final class CancelHelpTests: XCTestCase {
 
     /// The data holds a link and names for each service, and nothing that was never checked.
     func testEveryServiceHasASecureCancellationLinkOfItsOwn() {
-        XCTAssertEqual(ServiceDatabase.services.count, 202)
-        XCTAssertEqual(Set(ServiceDatabase.services.map(\.id)).count, 202, "no id twice")
+        XCTAssertEqual(ServiceDatabase.services.count, 201)
+        XCTAssertEqual(Set(ServiceDatabase.services.map(\.id)).count, 201, "no id twice")
         for service in ServiceDatabase.services {
             let url = URL(string: service.cancelURL)
             XCTAssertEqual(url?.scheme, "https", service.name)

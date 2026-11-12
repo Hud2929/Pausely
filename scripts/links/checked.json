@@ -1,0 +1,5092 @@
+{
+ "https://aaptiv.com/": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://account.adobe.com/plans": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://account.box.com/settings": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://account.buffer.com/billing": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://account.carbonite.com": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://account.cyberghostvpn.com/": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://account.docusign.com/": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://account.edx.org/account/settings": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://account.gotinder.com/": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://account.grammarly.com/subscription": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://account.ipvanish.com/": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://account.jetbrains.com/licenses": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://account.jetbrains.com/login": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://account.komoot.com/": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://account.mcafee.com/en-US/": {
+  "checked": "2026-11-11",
+  "result": "unclear",
+  "status": "[SSL: CERTIFICATE_VERIFY_FAILED] certificate verify failed: "
+ },
+ "https://account.microsoft.com/services": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://account.microsoft.com/services/": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://account.mojang.com/": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://account.nytimes.com/": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://account.proton.me/account-password": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://account.protonvpn.com/account": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://account.protonvpn.com/dashboard": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://account.ring.com/account": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://account.ring.com/account/subscriptions": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://account.shodan.io/billing": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://account.sonyentertainmentnetwork.com": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://account.sonyentertainmentnetwork.com/subscriptions": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://account.squarespace.com/billing": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://account.surfshark.com/dashboard": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://account.tidal.com": {
+  "checked": "2026-11-11",
+  "result": "walled",
+  "status": 403
+ },
+ "https://account.tidal.com/subscription": {
+  "checked": "2026-11-11",
+  "result": "walled",
+  "status": 403
+ },
+ "https://account.ubisoft.com": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://account.ubisoft.com/": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://account.viber.com": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://account.wyze.com/service-plan": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://accounts.freshdesk.com/": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://accounts.ft.com": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://accounts.intuit.com/": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://accounts.nintendo.com": {
+  "checked": "2026-11-11",
+  "result": "unclear",
+  "status": "The read operation timed out"
+ },
+ "https://accounts.snapchat.com/": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://accounts.zoho.com/": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://acorn.tv/": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://admin.google.com/AC_BillingAccounts": {
+  "checked": "2026-11-11",
+  "result": "walled",
+  "status": 302
+ },
+ "https://admin.google.com/ac/billing/subscriptions": {
+  "checked": "2026-11-11",
+  "result": "walled",
+  "status": 302
+ },
+ "https://admin.mailchimp.com/account/billing": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://admin.mailchimp.com/account/billing-history/": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://admin.microsoft.com/": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://admin.monday.com/": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://admin.typeform.com/account#/plan": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://airtable.com/account": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://alison.com/": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://analytics.amplitude.com/org/settings/billing": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://analyze.intezer.com/account/billing": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://apnews.com/account": {
+  "checked": "2026-11-11",
+  "result": "walled",
+  "status": 403
+ },
+ "https://app.acorns.com/user/account": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://app.agorapulse.com/billing": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://app.ahrefs.com/billing": {
+  "checked": "2026-11-11",
+  "result": "walled",
+  "status": 403
+ },
+ "https://app.asana.com/-/account_api#billing": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://app.asana.com/account/billing": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://app.asana.com/admin": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://app.asana.com/admin/billing": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://app.attio.com/settings/billing": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://app.bamboohr.com/account/billing": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://app.beehiiv.com/settings": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://app.beehiiv.com/settings/billing": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://app.bench.co/account/billing": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://app.box.com/account": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://app.brandwatch.com/": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://app.brevo.com/account/billing": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://app.buzzsumo.com/": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://app.circle.so/": {
+  "checked": "2026-11-11",
+  "result": "walled",
+  "status": 403
+ },
+ "https://app.circleci.com/settings/plan": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://app.clerky.com/": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://app.clickup.com/account/billing": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://app.clickup.com/settings": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://app.clickup.com/settings/billing": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://app.clio.com/settings/billing": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://app.close.com/settings/billing/": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://app.convertkit.com/": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://app.convertkit.com/account/billing": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://app.copper.com/": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://app.copy.ai/": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://app.coterieinsurance.com/account": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://app.crisp.chat/settings/billing/": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://app.dashlane.com/account": {
+  "checked": "2026-11-11",
+  "result": "walled",
+  "status": 403
+ },
+ "https://app.dashlane.com/account/subscription": {
+  "checked": "2026-11-11",
+  "result": "walled",
+  "status": 403
+ },
+ "https://app.dashlane.com/settings/subscription": {
+  "checked": "2026-11-11",
+  "result": "walled",
+  "status": 403
+ },
+ "https://app.datadoghq.com/account/billing": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://app.deel.com/settings/billing": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://app.dollarflightclub.com/account": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://app.drift.com/settings/billing": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://app.embroker.com/account/billing": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://app.fireflies.ai/": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://app.flodesk.com/account/billing": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://app.fullstory.com/ui/org/billing": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://app.getresponse.com/": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://app.going.com/": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://app.gorgias.com/": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://app.greenhouse.io/account/billing": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://app.gumroad.com/": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://app.gusto.com/settings/plan": {
+  "checked": "2026-11-11",
+  "result": "walled",
+  "status": 403
+ },
+ "https://app.hellosign.com/home/myAccount#billing": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://app.heygen.com/account": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://app.hubspot.com/": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://app.intercom.com/a/billing": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://app.intercom.com/a/billing/": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://app.jasper.ai/account": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://app.jasper.ai/billing": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://app.joinroot.com/account": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://app.kajabi.com/": {
+  "checked": "2026-11-11",
+  "result": "walled",
+  "status": 403
+ },
+ "https://app.kajabi.com/admin/settings/billing": {
+  "checked": "2026-11-11",
+  "result": "walled",
+  "status": 403
+ },
+ "https://app.kajabi.com/settings/billing": {
+  "checked": "2026-11-11",
+  "result": "walled",
+  "status": 403
+ },
+ "https://app.later.com/account/billing": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://app.logrocket.com/settings/billing": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://app.mailerlite.com/account/billing": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://app.mailgun.com/account/billing/history": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://app.mailgun.com/account/billing/overview": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://app.metricool.com/": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://app.monarchmoney.com/settings": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://app.monarchmoney.com/settings/subscription": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://app.moosend.com/account/billing": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://app.napster.com/account/subscription": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://app.napster.com/settings": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://app.netlify.com/account/billing": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://app.netlify.com/user/billing": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://app.omnisend.com/account/billing": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://app.omnisend.com/settings/billing": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://app.opsgenie.com/settings/billing": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://app.pagerduty.com/": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://app.pandadoc.com/": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://app.pendo.io/settings/billing": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://app.pinecone.io/account": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://app.pipedrive.com/settings/billing": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://app.planetscale.com/billing": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://app.planetscale.com/settings/billing": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://app.pluralsight.com/": {
+  "checked": "2026-11-11",
+  "result": "walled",
+  "status": 403
+ },
+ "https://app.pocketguard.com/settings/subscription": {
+  "checked": "2026-11-11",
+  "result": "unclear",
+  "status": 500
+ },
+ "https://app.podia.com/": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://app.podia.com/account/billing": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://app.posthog.com/organization/billing": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://app.practicepanther.com/account/billing": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://app.publer.io/billing": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://app.pulumi.com/account/billing": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://app.ramp.com/settings/billing": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://app.reclaim.ai/account/billing": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://app.recordedfuture.com/settings/billing": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://app.rently.com/": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://app.rippling.com/settings/billing": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://app.rocketmoney.com/": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://app.runwayml.com/billing": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://app.segment.com/workspace/settings/billing": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://app.sendgrid.com/settings/billing": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://app.sendible.com/settings/billing": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://app.shortcut.com/settings/billing": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://app.simplifimoney.com/settings/account": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://app.slack.com/": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://app.smartsheet.com/": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://app.socialbee.com/billing": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://app.sproutsocial.com/settings/billing": {
+  "checked": "2026-11-11",
+  "result": "walled",
+  "status": 403
+ },
+ "https://app.stash.com/account/subscription": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://app.stessa.com/": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://app.supabase.com/account/billing": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://app.surferseo.com/account/subscription": {
+  "checked": "2026-11-11",
+  "result": "walled",
+  "status": 403
+ },
+ "https://app.synthesia.io/account/plan": {
+  "checked": "2026-11-11",
+  "result": "walled",
+  "status": 403
+ },
+ "https://app.teachable.com/": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://app.terraform.io/app/settings/billing": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://app.thimble.com/account": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://app.thinkific.com/": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://app.tidio.com/panel/billing": {
+  "checked": "2026-11-11",
+  "result": "walled",
+  "status": 403
+ },
+ "https://app.tillerhq.com/account": {
+  "checked": "2026-11-11",
+  "result": "unclear",
+  "status": "[SSL: CERTIFICATE_VERIFY_FAILED] certificate verify failed: "
+ },
+ "https://app.tillerhq.com/settings/billing": {
+  "checked": "2026-11-11",
+  "result": "unclear",
+  "status": "[SSL: CERTIFICATE_VERIFY_FAILED] certificate verify failed: "
+ },
+ "https://app.vouch.us/account/billing": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://app.wakingup.com/account": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://app.warp.dev/account": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://app.whoop.com/account/membership": {
+  "checked": "2026-11-11",
+  "result": "walled",
+  "status": 403
+ },
+ "https://app.whoop.com/settings": {
+  "checked": "2026-11-11",
+  "result": "walled",
+  "status": 403
+ },
+ "https://app.writesonic.com/": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://app.ynab.com/settings": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://app.youneedabudget.com/": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://app.youneedabudget.com/settings": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://app.zubie.com/account/billing": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://apps.apple.com/account/subscriptions": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://artlist.io/account/billing": {
+  "checked": "2026-11-11",
+  "result": "walled",
+  "status": 403
+ },
+ "https://asana.com/": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://atlascoffeeclub.com/account": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://atlasvpn.com/account/subscription": {
+  "checked": "2026-11-11",
+  "result": "unclear",
+  "status": 509
+ },
+ "https://audiomack.com/": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://auth.hbomax.com/subscription": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://auth.monday.com/users/microsoft_login_options": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://basecamp.com/": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://battlbox.com/account": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://beacons.ai/dashboard/settings": {
+  "checked": "2026-11-11",
+  "result": "walled",
+  "status": 403
+ },
+ "https://beanbox.com/account": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://billing.purevpn.com/index.php": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://blinkforhome.com/": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://bloomscape.com/": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://boosteroid.com/": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://brilliant.org/account": {
+  "checked": "2026-11-11",
+  "result": "walled",
+  "status": 403
+ },
+ "https://brilliant.org/account/": {
+  "checked": "2026-11-11",
+  "result": "walled",
+  "status": 403
+ },
+ "https://brilliant.org/profile": {
+  "checked": "2026-11-11",
+  "result": "walled",
+  "status": 403
+ },
+ "https://bumble.com/": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://business.udemy.com/admin/settings/billing/": {
+  "checked": "2026-11-11",
+  "result": "walled",
+  "status": 403
+ },
+ "https://business.whatsapp.com/": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://calendly.com/": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://carrd.co/": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://central.bitdefender.com/": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://cerebral.com/account/subscription": {
+  "checked": "2026-11-11",
+  "result": "walled",
+  "status": 403
+ },
+ "https://character.ai/": {
+  "checked": "2026-11-11",
+  "result": "walled",
+  "status": 403
+ },
+ "https://character.ai/subscribe": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://chat.openai.com/account": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://chat.openai.com/account/manage": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://chat.openai.com/my-account/subscription": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://classpass.com/": {
+  "checked": "2026-11-11",
+  "result": "walled",
+  "status": 403
+ },
+ "https://classpass.com/account/membership": {
+  "checked": "2026-11-11",
+  "result": "walled",
+  "status": 403
+ },
+ "https://claude.ai/settings": {
+  "checked": "2026-11-11",
+  "result": "walled",
+  "status": 403
+ },
+ "https://clickup.com/settings/billing": {
+  "checked": "2026-11-11",
+  "result": "walled",
+  "status": 403
+ },
+ "https://cloud.boosteroid.com/dashboard": {
+  "checked": "2026-11-11",
+  "result": "walled",
+  "status": 307
+ },
+ "https://cloud.digitalocean.com/account/billing": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://cloud.linode.com/account/billing": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://cloud.linode.com/account/settings": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://cloud.mongodb.com/account": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://cloud.ouraring.com/": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://cloud.ouraring.com/account": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://cloud.ouraring.com/user/settings": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://coda.io/": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://coda.io/account": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://codeium.com/account": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://coffeemeetsbagel.com/": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://connect.garmin.com/modern/subscription": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://console.aws.amazon.com/billing": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://console.aws.amazon.com/billing/home": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://console.cloud.google.com/billing": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://console.firebase.google.com/u/0/project/_/usage/details": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://console.neon.tech/app/billing": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://contractable.ai/": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://create.vista.com/": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://curiositystream.com/": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://cursor.sh/settings": {
+  "checked": "2026-11-11",
+  "result": "walled",
+  "status": 403
+ },
+ "https://cursor.sh/settings/billing": {
+  "checked": "2026-11-11",
+  "result": "walled",
+  "status": 403
+ },
+ "https://customercenter.wsj.com": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://dailyburn.com/account": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://dash.cloudflare.com/billing": {
+  "checked": "2026-11-11",
+  "result": "walled",
+  "status": 403
+ },
+ "https://dash.cloudflare.com/profile/billing": {
+  "checked": "2026-11-11",
+  "result": "walled",
+  "status": 403
+ },
+ "https://dashboard.brex.com/settings/billing": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://dashboard.heroku.com/account/billing": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://dashboard.realtor.com/billing": {
+  "checked": "2026-11-11",
+  "result": "walled",
+  "status": 302
+ },
+ "https://dashboard.render.com/billing": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://dashboard.transistor.fm/": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://daylio.net/": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://discord.com/settings/billing": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://discord.com/settings/subscription": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://discord.com/settings/subscriptions": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://dynamic.wakingup.com/": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://egghead.io/": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://elements.envato.com/": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://elevenlabs.io/subscription": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://employ.remote.com/settings/billing": {
+  "checked": "2026-11-11",
+  "result": "walled",
+  "status": 403
+ },
+ "https://erosnow.com/account/subscription": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://feedly.com/i/account/billing": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://fi.google.com/account": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://fiber.google.com/support/": {
+  "checked": "2026-11-11",
+  "result": "walled",
+  "status": 308
+ },
+ "https://fly.io/dashboard/billing": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://framer.com/": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://frontendmasters.com/": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://frontier.com/helpcenter/categories/cancelling": {
+  "checked": "2026-11-11",
+  "result": "walled",
+  "status": 403
+ },
+ "https://get.mem.ai/": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://getpocket.com/premium/manage": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://ghost.org/": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://ghost.org/settings/billing/": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://github.com/": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://github.com/organizations/billing": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://github.com/settings/copilot": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://gitlab.com/profile/billings": {
+  "checked": "2026-11-11",
+  "result": "walled",
+  "status": 403
+ },
+ "https://glorify-app.com/account": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://go.skype.com/account": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://goabode.com/": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://greenblender.com/account": {
+  "checked": "2026-11-11",
+  "result": "unclear",
+  "status": "[SSL: CERTIFICATE_VERIFY_FAILED] certificate verify failed: "
+ },
+ "https://gumroad.com/settings": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://hallow.com/account": {
+  "checked": "2026-11-11",
+  "result": "unclear",
+  "status": "The read operation timed out"
+ },
+ "https://haveibeenpwned.com/NotifyMe": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://havenlife.com/account": {
+  "checked": "2026-11-11",
+  "result": "unclear",
+  "status": "[Errno 61] Connection refused"
+ },
+ "https://heapanalytics.com/app/billing": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://height.app/settings/billing": {
+  "checked": "2026-11-11",
+  "result": "unclear",
+  "status": "[Errno 54] Connection reset by peer"
+ },
+ "https://help.salesforce.com/s/articleView?id=billing.htm": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://help.tubitv.com/subscription": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://hinge.co/": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://hire.lever.co/settings/billing": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://home.nest.com/settings": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://home.personalcapital.com/": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://hootsuite.com/": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://hub.docker.com/billing": {
+  "checked": "2026-11-11",
+  "result": "walled",
+  "status": 302
+ },
+ "https://huggingface.co/settings": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://id.atlassian.com/manage-profile": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://id.avast.com/account": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://id.avast.com/account/resume": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://insights.hotjar.com/organization/settings/billing": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://insighttimer.com/": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://ironclad.ai/contact/": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://katkin.com/": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://keepersecurity.com/": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://keepersecurity.com/vault": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://ko-fi.com/manage": {
+  "checked": "2026-11-11",
+  "result": "walled",
+  "status": 403
+ },
+ "https://lastpass.com/": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://lastpass.com/my.php": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://lattice.com/": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://launchpad.37signals.com/": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://libro.fm/": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://lifesum.com/account/subscription": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://line.me/": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://linear.app/settings/billing": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://linear.app/settings/subscription": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://linktr.ee/": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://linktr.ee/admin/settings": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://listen.tidal.com/account/subscription": {
+  "checked": "2026-11-11",
+  "result": "walled",
+  "status": 403
+ },
+ "https://liveone.com/": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://login.constantcontact.com/login/": {
+  "checked": "2026-11-11",
+  "result": "walled",
+  "status": 403
+ },
+ "https://login.norton.com": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://lookerstudio.google.com/settings/billing": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://loungebuddy.com/account": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://lumalabs.ai/dream-machine/subscription": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://mailchimp.com/": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://manage.fastly.com/account/billing": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://manage.theguardian.com": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://manage.wix.com/premium-purchase-plan/": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://manager.linode.com/account/billing": {
+  "checked": "2026-11-11",
+  "result": "walled",
+  "status": 403
+ },
+ "https://medium.com/me/membership/billing": {
+  "checked": "2026-11-11",
+  "result": "walled",
+  "status": 403
+ },
+ "https://medium.com/me/settings": {
+  "checked": "2026-11-11",
+  "result": "walled",
+  "status": 403
+ },
+ "https://medium.com/me/settings/membership": {
+  "checked": "2026-11-11",
+  "result": "walled",
+  "status": 403
+ },
+ "https://meetfabric.com/": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://members.onepeloton.com/": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://members.wework.com": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://minecraft.net/profile": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://mint.intuit.com/settings": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://miro.com/app/settings/billing/": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://mixpanel.com/": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://molekule.com/account": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://monday.com/": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://motionarray.com/account/billing": {
+  "checked": "2026-11-11",
+  "result": "walled",
+  "status": 403
+ },
+ "https://mouseflow.com/": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://moz.com/account/subscription": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://mubi.com/": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://mullvad.net/": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://mullvad.net/account/": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://mullvad.net/en/account": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://music.amazon.com/settings": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://music.youtube.com/account_settings": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://my.15five.com/": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://my.1password.com/billing": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://my.1password.com/profile": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://my.1password.com/settings/subscription": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://my.arlo.com/#/account": {
+  "checked": "2026-11-11",
+  "result": "walled",
+  "status": 403
+ },
+ "https://my.avast.com/en-us/subscriptions": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://my.avg.com/en-us/subscriptions": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://my.captivate.fm/billing": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://my.cyberghostvpn.com/en_US/account": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://my.eset.com/home/manage-license": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://my.freshbooks.com/#/settings/subscription": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://my.geotab.com/account": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://my.goabode.com/": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://my.happify.com/hd/account/subscription": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://my.kaspersky.com": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://my.kaspersky.com/": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://my.kaspersky.com/mylicenses": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://my.lunchmoney.app/billing": {
+  "checked": "2026-11-11",
+  "result": "walled",
+  "status": 403
+ },
+ "https://my.malwarebytes.com": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://my.malwarebytes.com/account": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://my.malwarebytes.com/consumer/subscription": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://my.monday.com/account/billing": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://my.nordaccount.com/billing/subscriptions/": {
+  "checked": "2026-11-11",
+  "result": "walled",
+  "status": 403
+ },
+ "https://my.nordaccount.com/dashboard/nordvpn": {
+  "checked": "2026-11-11",
+  "result": "walled",
+  "status": 403
+ },
+ "https://my.nordaccount.com/dashboard/nordvpn/subscription/": {
+  "checked": "2026-11-11",
+  "result": "walled",
+  "status": 403
+ },
+ "https://my.norton.com/extspa/login": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://my.norton.com/extspa/nortoncenter#/account": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://my.pcloud.com/billing": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://my.slack.com/admin/billing": {
+  "checked": "2026-11-11",
+  "result": "walled",
+  "status": 403
+ },
+ "https://my.surfshark.com/account/billing": {
+  "checked": "2026-11-11",
+  "result": "walled",
+  "status": 403
+ },
+ "https://my.surfshark.com/subscription": {
+  "checked": "2026-11-11",
+  "result": "walled",
+  "status": 403
+ },
+ "https://my.tidal.com/subscription": {
+  "checked": "2026-11-11",
+  "result": "walled",
+  "status": 403
+ },
+ "https://my.tractive.com/account": {
+  "checked": "2026-11-11",
+  "result": "walled",
+  "status": 403
+ },
+ "https://my.vultr.com/billing": {
+  "checked": "2026-11-11",
+  "result": "walled",
+  "status": 403
+ },
+ "https://my.vultr.com/billing/": {
+  "checked": "2026-11-11",
+  "result": "walled",
+  "status": 403
+ },
+ "https://my.zwift.com/": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://myaccount.ea.com": {
+  "checked": "2026-11-11",
+  "result": "walled",
+  "status": 302
+ },
+ "https://myaccount.ea.com/cp-ui/billing/index": {
+  "checked": "2026-11-11",
+  "result": "walled",
+  "status": 302
+ },
+ "https://myaccount.nytimes.com": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://myaccount.nytimes.com/seg/manage": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://myaccount.nytimes.com/seg/subscription": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://mybillie.com/account": {
+  "checked": "2026-11-11",
+  "result": "walled",
+  "status": 403
+ },
+ "https://myfirstam.com/": {
+  "checked": "2026-11-11",
+  "result": "walled",
+  "status": 403
+ },
+ "https://myteamspeak.com": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://myturbotax.intuit.com": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://myturbotax.intuit.com/": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://nebula.tv/": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://niftypm.com/account/billing": {
+  "checked": "2026-11-11",
+  "result": "unclear",
+  "status": "[SSL: TLSV1_ALERT_PROTOCOL_VERSION] tlsv1 alert protocol ver"
+ },
+ "https://nordpass.com/account": {
+  "checked": "2026-11-11",
+  "result": "walled",
+  "status": 403
+ },
+ "https://nordvpn.com/account": {
+  "checked": "2026-11-11",
+  "result": "walled",
+  "status": 403
+ },
+ "https://obsidian.md/account": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://one.google.com/": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://one.google.com/about/plans": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://one.google.com/storage": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://one.newrelic.com/admin-portal/billing": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://opus.pro/": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://otter.ai/account/subscription": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://parsec.app/": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://pawp.com/": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://petcube.com/": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://pi.ai/account": {
+  "checked": "2026-11-11",
+  "result": "walled",
+  "status": 403
+ },
+ "https://play.google.com/store/account/subscriptions": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://plus.espn.com/": {
+  "checked": "2026-11-11",
+  "result": "walled",
+  "status": 403
+ },
+ "https://pluto.tv/account": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://pocketguard.com/": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://podcasters.spotify.com/": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://poe.com/subscription": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://porch.com/": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://portal.azure.com/#blade/Microsoft_Azure_Billing": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://premieragent.zillow.com/account/": {
+  "checked": "2026-11-11",
+  "result": "walled",
+  "status": 403
+ },
+ "https://preply.com/": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://pro.homeadvisor.com/": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://product.costar.com/account": {
+  "checked": "2026-11-11",
+  "result": "walled",
+  "status": 403
+ },
+ "https://qbo.intuit.com/app/accountsettings": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://railway.app/account/billing": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://readingeggs.com/": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://readwise.io/": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://replit.com/account": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://restream.io/": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://retool.com/": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://riverside.fm/": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://roadtrippers.com/": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://roamresearch.com/": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://roamresearch.com/#/account": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://robinhood.com/account/gold/": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://robinhood.com/account/settings/subscription": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://runwayml.com/": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://scottscheapflights.com/": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://scratch.mit.edu/": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://secure.backblaze.com/account/subscriptions": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://secure.fleetio.com/": {
+  "checked": "2026-11-11",
+  "result": "walled",
+  "status": 403
+ },
+ "https://secure.helpscout.net/": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://secure.helpscout.net/settings/company/billing/": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://secure.hulu.com/account": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://secure.hulu.com/account/cancel": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://secure.justworks.com/billing": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://secure.zenefits.com/": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://sentry.io/settings/billing": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://sentry.io/settings/billing/": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://services.wyze.com/": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://setapp.com/account": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://shadow.tech/": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://shadow.tech/account": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://signal.org": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://simplifi.quicken.com/account": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://simplisafe.com/account": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://slack.com/": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://soundcloud.com/account/subscription": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://soundcloud.com/settings": {
+  "checked": "2026-11-11",
+  "result": "walled",
+  "status": 401
+ },
+ "https://soundcloud.com/settings/subscription": {
+  "checked": "2026-11-11",
+  "result": "walled",
+  "status": 401
+ },
+ "https://sourcegraph.com/": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://spothero.com/": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://stability.ai/account": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://statuspage.io/manage/billing": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://store.google.com/subscriptions": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://store.google.com/us/category/connected_home?hl=en-US": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://store.playstation.com/subscriptions": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://store.wsj.com/shop/wsj/wsjplus/cancel": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://stream.directv.com/accounts/manage": {
+  "checked": "2026-11-11",
+  "result": "walled",
+  "status": 403
+ },
+ "https://streamlabs.com/dashboard#/settings/subscription": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://streamyard.com/account": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://studio.d-id.com/account": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://subscribe.washingtonpost.com/profile/#/": {
+  "checked": "2026-11-11",
+  "result": "unclear",
+  "status": "The read operation timed out"
+ },
+ "https://substack.com/": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://substack.com/account": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://substack.com/settings": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://sunbasket.com/account": {
+  "checked": "2026-11-11",
+  "result": "walled",
+  "status": 403
+ },
+ "https://sunbasket.com/account/subscriptions": {
+  "checked": "2026-11-11",
+  "result": "walled",
+  "status": 403
+ },
+ "https://suno.com/account": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://supabase.com/dashboard/account/billing": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://support.apple.com/billing": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://support.freshdesk.com/": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://support.simplisafe.com/": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://surfshark.com/account": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://t.me/premiumbot": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://tally.so/": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://teachable.com/": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://teamtreehouse.com/account/billing": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://teamtreehouse.com/subscribe/cancel": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://thistle.co/": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://thrivemarket.com/account": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://ticktick.com/": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://tinder.com/profile/subscription": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://todoist.com/": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://todoist.com/app/settings/subscription": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://trello.com/billing": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://tresorit.com/": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://trupanion.com/manage": {
+  "checked": "2026-11-11",
+  "result": "walled",
+  "status": 403
+ },
+ "https://tryfi.com/": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://tubitv.com/account": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://turo.com/us/en/account/subscription": {
+  "checked": "2026-11-11",
+  "result": "walled",
+  "status": 403
+ },
+ "https://tv.apple.com/settings": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://tv.youtube.com/manage/account": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://tv.youtube.com/settings/membership": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://twitter.com/settings/twitter_blue_subscribe": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://unboxboardom.com/": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://usa.experian.com/": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://vault.bitwarden.com/#/settings/subscription": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://vercel.com/account/billing": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://vercel.com/dashboard/settings/billing": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://vetcheck.app/account/plan": {
+  "checked": "2026-11-11",
+  "result": "unclear",
+  "status": "timed out"
+ },
+ "https://wagwalking.com/": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://watch.sling.com/": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://web.descript.com/settings/billing": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://web.mention.com/": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://web.noom.com/": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://web.postman.co/billing": {
+  "checked": "2026-11-11",
+  "result": "walled",
+  "status": 403
+ },
+ "https://web.postman.co/settings/account/billing": {
+  "checked": "2026-11-11",
+  "result": "walled",
+  "status": 403
+ },
+ "https://webapp.simplisafe.com/": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://webflow.com/": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://webflow.com/dashboard/account/billing": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://wechat.com": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://whereby.com/user/profile/subscription": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://whop.com/": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://windscribe.com/": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://windscribe.com/myaccount": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://wordpress.com/me/purchases": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://www.24hourfitness.com/membership/cancellation": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://www.aaa.com/": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://www.abcmouse.com/": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://www.activecampaign.com/": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://www.adp.com/contact/cancel": {
+  "checked": "2026-11-11",
+  "result": "walled",
+  "status": 403
+ },
+ "https://www.adt.com/account": {
+  "checked": "2026-11-11",
+  "result": "walled",
+  "status": 403
+ },
+ "https://www.adt.com/help": {
+  "checked": "2026-11-11",
+  "result": "walled",
+  "status": 403
+ },
+ "https://www.ahs.com/": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://www.allianztravelinsurance.com/": {
+  "checked": "2026-11-11",
+  "result": "walled",
+  "status": 403
+ },
+ "https://www.allstate.com/": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://www.alltrails.com/account/subscription": {
+  "checked": "2026-11-11",
+  "result": "walled",
+  "status": 403
+ },
+ "https://www.amazon.com/": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 202
+ },
+ "https://www.amazon.com/gp/primecentral": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://www.amazon.com/gp/video/settings": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://www.amazon.com/kindleunlimited": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://www.amazon.com/mc/pipeline/prime/cancel": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://www.amazon.com/mc/settings/musicsubscriptions": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://www.amazon.com/services": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://www.amcplus.com/account": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://www.amcplus.com/account/subscription": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://www.ancestry.com/": {
+  "checked": "2026-11-11",
+  "result": "walled",
+  "status": 403
+ },
+ "https://www.angi.com/": {
+  "checked": "2026-11-11",
+  "result": "walled",
+  "status": 403
+ },
+ "https://www.antstream.com/account": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://www.anytimefitness.com/": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://www.anytimefitness.com/membership/": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://www.anytimemailbox.com/": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://www.apartments.com/landlord/": {
+  "checked": "2026-11-11",
+  "result": "walled",
+  "status": 403
+ },
+ "https://www.appfolio.com/": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://www.atlassian.com/software/confluence": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://www.atlassian.com/software/jira": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://www.att.com/support/article/wireless/KM1218200/": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://www.audible.com/account/billing-summary": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://www.audible.com/account/cancellation": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://www.audiobooks.com/": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://www.autocheck.com/": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://www.aweber.com/": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://www.babbel.com/": {
+  "checked": "2026-11-11",
+  "result": "walled",
+  "status": 307
+ },
+ "https://www.barkbox.com/": {
+  "checked": "2026-11-11",
+  "result": "walled",
+  "status": 403
+ },
+ "https://www.barkbox.com/account": {
+  "checked": "2026-11-11",
+  "result": "walled",
+  "status": 403
+ },
+ "https://www.barkbox.com/account/subscription": {
+  "checked": "2026-11-11",
+  "result": "walled",
+  "status": 403
+ },
+ "https://www.barrys.com/": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://www.betterhelp.com/": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://www.birchbox.com/": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://www.bjs.com/account/subscription": {
+  "checked": "2026-11-11",
+  "result": "walled",
+  "status": 403
+ },
+ "https://www.blackmagicdesign.com/": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://www.blackmagicdesign.com/store": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://www.blacknut.com/account": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://www.blacknut.com/en/account": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://www.bloomberg.com/account": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://www.bloomberg.com/account/manage": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://www.blueapron.com/account": {
+  "checked": "2026-11-11",
+  "result": "walled",
+  "status": 403
+ },
+ "https://www.blueapron.com/account/billing": {
+  "checked": "2026-11-11",
+  "result": "walled",
+  "status": 403
+ },
+ "https://www.blueapron.com/account/subscription": {
+  "checked": "2026-11-11",
+  "result": "walled",
+  "status": 403
+ },
+ "https://www.bookofthemonth.com/account": {
+  "checked": "2026-11-11",
+  "result": "walled",
+  "status": 403
+ },
+ "https://www.boost.com/support": {
+  "checked": "2026-11-11",
+  "result": "walled",
+  "status": 403
+ },
+ "https://www.borrowlenses.com/": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://www.britbox.com/": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://www.britbox.com/account": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://www.buildium.com/": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://www.butcherbox.com/account": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://www.buymeacoffee.com/dashboard": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://www.buzzsprout.com/": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://www.calm.com/": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://www.campaignmonitor.com/": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://www.canva.com/account": {
+  "checked": "2026-11-11",
+  "result": "walled",
+  "status": 403
+ },
+ "https://www.canva.com/account/billing": {
+  "checked": "2026-11-11",
+  "result": "walled",
+  "status": 403
+ },
+ "https://www.canva.com/settings/billing": {
+  "checked": "2026-11-11",
+  "result": "walled",
+  "status": 403
+ },
+ "https://www.capcut.com/": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://www.carbonite.com/": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://www.carfax.com/account/": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://www.cargurus.com/": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://www.carvana.com/": {
+  "checked": "2026-11-11",
+  "result": "walled",
+  "status": 403
+ },
+ "https://www.centr.com/": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://www.centurylink.com/": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://www.chegg.com/": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://www.chegg.com/my/account": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://www.chewy.com/": {
+  "checked": "2026-11-11",
+  "result": "walled",
+  "status": 429
+ },
+ "https://www.chewy.com/app/account": {
+  "checked": "2026-11-11",
+  "result": "walled",
+  "status": 429
+ },
+ "https://www.chewy.com/app/content/autoship": {
+  "checked": "2026-11-11",
+  "result": "walled",
+  "status": 429
+ },
+ "https://www.choicehomewarranty.com/homeowners/": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://www.cigna.com/": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://www.cinchhomeservices.com/": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://www.clearme.com/": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://www.clearscope.io/": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://www.codecademy.com/account/billing": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://www.codemonkey.com/": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://www.cookunity.com/": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://www.costarastrology.com/account": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://www.costco.com/": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://www.costco.com/join-costco.html": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://www.couchsurfing.com/": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://www.coursera.org/": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://www.coursera.org/account": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://www.coursera.org/account-profile": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://www.coursera.org/my-purchases": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://www.cox.com/": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://www.craft.do/": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://www.creditkarma.com/account": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://www.cricketwireless.com/": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://www.criterionchannel.com/account": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://www.crunchyroll.com/account": {
+  "checked": "2026-11-11",
+  "result": "walled",
+  "status": 403
+ },
+ "https://www.crunchyroll.com/account/membership": {
+  "checked": "2026-11-11",
+  "result": "walled",
+  "status": 403
+ },
+ "https://www.crunchyroll.com/account/subscription": {
+  "checked": "2026-11-11",
+  "result": "walled",
+  "status": 403
+ },
+ "https://www.crunchyroll.com/nAnimePass": {
+  "checked": "2026-11-11",
+  "result": "walled",
+  "status": 403
+ },
+ "https://www.cultureamp.com/": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://www.curology.com/": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://www.cyberghostvpn.com/": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://www.daily-harvest.com/": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://www.daily-harvest.com/account": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://www.dailyharvest.com/": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://www.dailyharvest.com/account": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://www.datacamp.com/account": {
+  "checked": "2026-11-11",
+  "result": "walled",
+  "status": 403
+ },
+ "https://www.datacamp.com/profile/account_settings": {
+  "checked": "2026-11-11",
+  "result": "walled",
+  "status": 403
+ },
+ "https://www.dayforward.com/account": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://www.dazn.com/account/subscription": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://www.deezer.com/account/subscription": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://www.dehashed.com/settings/billing": {
+  "checked": "2026-11-11",
+  "result": "walled",
+  "status": 403
+ },
+ "https://www.deltadental.com/": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://www.descript.com/": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://www.directv.com/support/account-management/cancel": {
+  "checked": "2026-11-11",
+  "result": "walled",
+  "status": 403
+ },
+ "https://www.discoveryplus.com/account": {
+  "checked": "2026-11-11",
+  "result": "unclear",
+  "status": "[SSL: TLSV1_ALERT_INTERNAL_ERROR] tlsv1 alert internal error"
+ },
+ "https://www.discoveryplus.com/account/subscription": {
+  "checked": "2026-11-11",
+  "result": "unclear",
+  "status": "[SSL: TLSV1_ALERT_INTERNAL_ERROR] tlsv1 alert internal error"
+ },
+ "https://www.discoveryplus.com/my-account": {
+  "checked": "2026-11-11",
+  "result": "unclear",
+  "status": "[SSL: TLSV1_ALERT_INTERNAL_ERROR] tlsv1 alert internal error"
+ },
+ "https://www.disneyplus.com/account/billing": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://www.disneyplus.com/account/subscription": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://www.dollarshaveclub.com/account": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://www.doordash.com/account/manage-dashpass/": {
+  "checked": "2026-11-11",
+  "result": "walled",
+  "status": 403
+ },
+ "https://www.doordash.com/account/subscription": {
+  "checked": "2026-11-11",
+  "result": "walled",
+  "status": 403
+ },
+ "https://www.doordash.com/consumer/subscription": {
+  "checked": "2026-11-11",
+  "result": "walled",
+  "status": 403
+ },
+ "https://www.drinktrade.com/account": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://www.drip.com/app/billing": {
+  "checked": "2026-11-11",
+  "result": "walled",
+  "status": 403
+ },
+ "https://www.dropbox.com/account/plan": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://www.dropout.tv/": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://www.duolingo.com/settings": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://www.duolingo.com/settings/plus": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://www.duolingo.com/settings/subscription": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://www.e-zpassny.com/": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://www.ea.com/": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://www.earthclassmail.com/account": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://www.ecamm.com/mac/ecammlive/": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://www.ecobee.com/": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://www.economist.com/account": {
+  "checked": "2026-11-11",
+  "result": "walled",
+  "status": 403
+ },
+ "https://www.economist.com/account/manage": {
+  "checked": "2026-11-11",
+  "result": "walled",
+  "status": 403
+ },
+ "https://www.economist.com/myeconomist": {
+  "checked": "2026-11-11",
+  "result": "walled",
+  "status": 403
+ },
+ "https://www.eharmony.com/": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://www.eightsleep.com/": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://www.empower.com/": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://www.epicgames.com/account": {
+  "checked": "2026-11-11",
+  "result": "walled",
+  "status": 403
+ },
+ "https://www.epidemicsound.com/": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://www.equinox.com/": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://www.espn.com/account/subscription": {
+  "checked": "2026-11-11",
+  "result": "walled",
+  "status": 406
+ },
+ "https://www.espnplus.com/subscription": {
+  "checked": "2026-11-11",
+  "result": "walled",
+  "status": 403
+ },
+ "https://www.ethoslife.com/account": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://www.evernote.com/BillingInfo.action": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://www.evernote.com/Settings.action": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://www.everyplate.com/": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://www.expensify.com/": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://www.experian.com/": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://www.expressvpn.com/": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://www.expressvpn.com/subscriptions": {
+  "checked": "2026-11-11",
+  "result": "unclear",
+  "status": "[SSL: TLSV1_ALERT_PROTOCOL_VERSION] tlsv1 alert protocol ver"
+ },
+ "https://www.expressvpn.com/support": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://www.factor75.com/": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://www.fandor.com/": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://www.figma.com/": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://www.figma.com/settings/billing": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://www.findmypast.com/": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://www.firstleaf.club/account": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://www.fitbit.com/settings/subscription": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://www.fitbod.me/account": {
+  "checked": "2026-11-11",
+  "result": "walled",
+  "status": 403
+ },
+ "https://www.forhims.com/": {
+  "checked": "2026-11-11",
+  "result": "walled",
+  "status": 403
+ },
+ "https://www.framer.com/": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://www.freckle.com/": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://www.freeletics.com/": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://www.freeletics.com/settings": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://www.ft.com/myaccount/subscription": {
+  "checked": "2026-11-11",
+  "result": "walled",
+  "status": 403
+ },
+ "https://www.fubo.tv/account/plan-details": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://www.fubo.tv/account/subscription": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://www.fubo.tv/account/subscriptions": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://www.funimation.com/account/subscriptions": {
+  "checked": "2026-11-11",
+  "result": "walled",
+  "status": 403
+ },
+ "https://www.future.co/": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://www.gamefly.com/member/account": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://www.geico.com/manageyourpolicy/": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://www.getepic.com/account": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://www.getepic.com/app/account": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://www.git-tower.com/account": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://www.goldbelly.com/account": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://www.goldsgym.com/": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://www.gotinder.com/settings": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://www.gousto.co.uk/account": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://www.greenchef.com/": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://www.grindr.com/": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://www.grove.co/account": {
+  "checked": "2026-11-11",
+  "result": "walled",
+  "status": 429
+ },
+ "https://www.grubhub.com/": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://www.grubhub.com/account/gh-plus": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://www.grubhub.com/account/manage-grubhub-plus": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://www.handy.com/": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://www.harrys.com/": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://www.hccmis.com/": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://www.headspace.com/": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://www.healthypawspetinsurance.com/": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://www.hellofresh.com/": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://www.hellofresh.com/account-settings/subscription-settings": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://www.hioscar.com/": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://www.hipcamp.com/": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://www.hiscox.com/account": {
+  "checked": "2026-11-11",
+  "result": "walled",
+  "status": 403
+ },
+ "https://www.homechef.com/account": {
+  "checked": "2026-11-11",
+  "result": "walled",
+  "status": 403
+ },
+ "https://www.homechef.com/account/profile": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://www.hotspotshield.com/": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://www.humblebundle.com/subscription": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://www.humblebundle.com/subscription/home": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://www.humblebundle.com/user/settings": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://www.hungryroot.com/": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://www.idrive.com/": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://www.idrive.com/idrive/account/userProfile": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 202
+ },
+ "https://www.ifit.com/account/subscription": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://www.iheart.com/": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://www.indieflix.com/": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://www.instacart.com/": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://www.instacart.com/store/account/instacart+": {
+  "checked": "2026-11-11",
+  "result": "walled",
+  "status": 422
+ },
+ "https://www.insureandgo.com/": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://www.invisionapp.com/": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://www.ipsy.com/": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://www.italki.com/": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://www.jefit.com/account/subscription": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://www.joinhello.com/account": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://www.joinroot.com/": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://www.jotform.com/myaccount/billing": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://www.jump.gg/": {
+  "checked": "2026-11-11",
+  "result": "walled",
+  "status": 403
+ },
+ "https://www.keeps.com/": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://www.khanacademy.org/account/subscription": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://www.khanacademy.org/settings": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://www.kidsacademy.mobi/": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://www.klaviyo.com/": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://www.ladderlife.com/": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://www.lafitness.com/Pages/EmailUsForm.aspx": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://www.lawdepot.com/": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://www.lawnstarter.com/account/subscription": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://www.legalzoom.com/account/": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://www.lemonade.com/": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://www.lensrentals.com/": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://www.linkedin.com/": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://www.linkedin.com/learning/me/subscription": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://www.linkedin.com/learning/settings": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://www.linkedin.com/learning/settings/subscription/": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://www.linkedin.com/mypreferences/d/manage-subscription": {
+  "checked": "2026-11-11",
+  "result": "walled",
+  "status": 403
+ },
+ "https://www.linkedin.com/settings/premium": {
+  "checked": "2026-11-11",
+  "result": "walled",
+  "status": 403
+ },
+ "https://www.literati.com/": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://www.loom.com/": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://www.loom.com/settings/billing": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://www.loom.com/settings/plans": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://www.lootcrate.com/account": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://www.loseit.com/": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://www.loungebuddy.com/account": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://www.loungekey.com/": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://www.masterclass.com/account": {
+  "checked": "2026-11-11",
+  "result": "walled",
+  "status": 403
+ },
+ "https://www.masterclass.com/account/settings": {
+  "checked": "2026-11-11",
+  "result": "walled",
+  "status": 403
+ },
+ "https://www.masterclass.com/account/subscription": {
+  "checked": "2026-11-11",
+  "result": "walled",
+  "status": 403
+ },
+ "https://www.match.com/account": {
+  "checked": "2026-11-11",
+  "result": "walled",
+  "status": 403
+ },
+ "https://www.match.com/accountsettings/change/cancel": {
+  "checked": "2026-11-11",
+  "result": "walled",
+  "status": 403
+ },
+ "https://www.max.com/": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://www.max.com/settings/subscription": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://www.mcafee.com/myaccount": {
+  "checked": "2026-11-11",
+  "result": "walled",
+  "status": 403
+ },
+ "https://www.medjetassist.com/": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://www.meta.com/": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://www.metromile.com/account/": {
+  "checked": "2026-11-11",
+  "result": "unclear",
+  "status": "[SSL: TLSV1_ALERT_PROTOCOL_VERSION] tlsv1 alert protocol ver"
+ },
+ "https://www.mgmplus.com/": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://www.midjourney.com/account": {
+  "checked": "2026-11-11",
+  "result": "unclear",
+  "status": "[SSL: TLSV1_ALERT_PROTOCOL_VERSION] tlsv1 alert protocol ver"
+ },
+ "https://www.midjourney.com/account/": {
+  "checked": "2026-11-11",
+  "result": "unclear",
+  "status": "[SSL: TLSV1_ALERT_PROTOCOL_VERSION] tlsv1 alert protocol ver"
+ },
+ "https://www.mightynetworks.com/": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://www.mintmobile.com/help/": {
+  "checked": "2026-11-11",
+  "result": "walled",
+  "status": 403
+ },
+ "https://www.misfitsmarket.com/account": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://www.mistercarwash.com/": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://www.mlb.com/": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://www.mlb.com/account/subscription": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://www.musicbed.com/account/subscription": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://www.myfitnesspal.com/": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://www.myfitnesspal.com/account": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://www.myfitnesspal.com/account/settings": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://www.myheritage.com/": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://www.myollie.com/": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://www.myollie.com/account/": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://www.mytoggle.com/account": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://www.nba.com/": {
+  "checked": "2026-11-11",
+  "result": "walled",
+  "status": 403
+ },
+ "https://www.nba.com/account/subscription": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://www.nerdwallet.com/": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://www.netflix.com/cancelplan": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://www.newyorker.com/": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://www.nextinsurance.com/": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://www.nfl.com/": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://www.nhl.com/subscribe": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://www.nhl.com/subscription": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://www.nickjr.com/settings": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://www.nike.com/": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://www.noggin.com/account/subscription": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://www.nomnomnow.com/account/subscription": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://www.noom.com/": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://www.notarize.com/": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://www.notion.so/": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://www.notion.so/my-account": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://www.notion.so/settings": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://www.notion.so/settings/billing": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://www.nuuly.com/account": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://www.nvidia.com/": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://www.nvidia.com/account": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://www.nvidia.com/en-us/account/subscriptions": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://www.okcupid.com/settings": {
+  "checked": "2026-11-11",
+  "result": "walled",
+  "status": 403
+ },
+ "https://www.omnigroup.com/": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://www.omnigroup.com/omnifocus": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://www.onepeloton.com/": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://www.onepeloton.com/profile/overview": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://www.onstar.com/": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://www.orangetheory.com/en-us": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://www.oreilly.com/member/account/": {
+  "checked": "2026-11-11",
+  "result": "walled",
+  "status": 403
+ },
+ "https://www.ourtime.com/account": {
+  "checked": "2026-11-11",
+  "result": "walled",
+  "status": 403
+ },
+ "https://www.ovid.tv/": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://www.pagerduty.com/": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://www.pandora.com/account/subscription": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://www.pandora.com/settings": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://www.pandora.com/settings/subscription": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://www.paramountplus.com/": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://www.paramountplus.com/account": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://www.paramountplus.com/account/": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://www.paramountplus.com/account/cancel/": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://www.parkwhiz.com/account/": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://www.patreon.com/settings/billing": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://www.patreon.com/settings/memberships": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://www.paychex.com/": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://www.pbs.org/": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://www.pcloud.com/account.html": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://www.peacocktv.com/account": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://www.peacocktv.com/account/cancel-plan": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://www.peacocktv.com/account/plans": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://www.peacocktv.com/account/subscription": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://www.perplexity.ai/settings": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://www.perplexity.ai/settings/account": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://www.philips-hue.com/": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://www.philo.com/": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://www.philo.com/account": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://www.phind.com/settings": {
+  "checked": "2026-11-11",
+  "result": "walled",
+  "status": 403
+ },
+ "https://www.photopea.com": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://www.planetfitness.com/": {
+  "checked": "2026-11-11",
+  "result": "walled",
+  "status": 403
+ },
+ "https://www.planetfitness.com/guest/membership": {
+  "checked": "2026-11-11",
+  "result": "walled",
+  "status": 403
+ },
+ "https://www.playstation.com/": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://www.plex.tv/": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://www.plex.tv/subscription": {
+  "checked": "2026-11-11",
+  "result": "walled",
+  "status": 403
+ },
+ "https://www.pluralsight.com/": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://www.pluralsight.com/account": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://www.podbean.com/": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://www.pof.com/account": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://www.policygenius.com/": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://www.pond5.com/": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://www.prioritypass.com/en-us/account": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://www.prioritypass.com/en/member-login": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://www.prioritypass.com/en/members": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://www.privateinternetaccess.com/": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://www.privateinternetaccess.com/pages/client-sign-in": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://www.prodigygame.com/": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://www.progressive.com/": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://www.purplecarrot.com/account": {
+  "checked": "2026-11-11",
+  "result": "walled",
+  "status": 403
+ },
+ "https://www.qobuz.com/": {
+  "checked": "2026-11-11",
+  "result": "walled",
+  "status": 403
+ },
+ "https://www.qobuz.com/account": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://www.quicken.com/": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://www.reddit.com/premium": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://www.remove.bg/": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://www.renttherunway.com/account": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://www.reuters.com/account": {
+  "checked": "2026-11-11",
+  "result": "walled",
+  "status": 401
+ },
+ "https://www.rewind.ai/account/billing": {
+  "checked": "2026-11-11",
+  "result": "walled",
+  "status": 403
+ },
+ "https://www.roblox.com/my/account": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://www.roblox.com/premium/membership": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://www.roboform.com/": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://www.rocketlawyer.com/": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://www.rosettastone.com/profile": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://www.rover.com/account/": {
+  "checked": "2026-11-11",
+  "result": "walled",
+  "status": 403
+ },
+ "https://www.sakara.com/account": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://www.salesforce.com/": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://www.samsclub.com/account": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://www.samsclub.com/account/subscription": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://www.samsclub.com/my-account/membership": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://www.sanctuaryworld.com/": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://www.scoutalarm.com/account": {
+  "checked": "2026-11-11",
+  "result": "walled",
+  "status": 429
+ },
+ "https://www.screamingfrog.co.uk/seo-spider/#licence": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://www.scribd.com/": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://www.scruff.com/": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://www.semrush.com/": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://www.shipt.com/account": {
+  "checked": "2026-11-11",
+  "result": "walled",
+  "status": 406
+ },
+ "https://www.shipt.com/members/account": {
+  "checked": "2026-11-11",
+  "result": "walled",
+  "status": 406
+ },
+ "https://www.shopify.com/admin/settings/billing": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://www.shudder.com/account": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://www.shudder.com/account/subscription": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://www.shudder.com/my-account": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://www.shutterstock.com/account/subscriptions": {
+  "checked": "2026-11-11",
+  "result": "walled",
+  "status": 403
+ },
+ "https://www.siriusxm.com/": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://www.sketch.com/": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://www.skillshare.com/": {
+  "checked": "2026-11-11",
+  "result": "walled",
+  "status": 403
+ },
+ "https://www.skillshare.com/settings": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://www.sling.com/": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://www.sling.com/account": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://www.soul-cycle.com/": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://www.spectrum.net/support/cancel-service": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://www.spotangels.com/": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://www.spotify.com/account/cancel": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://www.spotify.com/account/subscription/": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://www.stan.store/": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://www.starz.com/account": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://www.starz.com/account/subscription": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://www.starz.com/settings/subscription": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://www.statefarm.com/": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://www.stitchfix.com/": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://www.storyblocks.com/": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://www.strava.com/": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://www.strava.com/account": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://www.sundancenow.com/": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://www.sunrun.com/": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://www.surveymonkey.com/": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://www.sync.com/": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://www.synthesia.io/": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://www.t-mobile.com/responsibility/legal/cancel-service": {
+  "checked": "2026-11-11",
+  "result": "walled",
+  "status": 403
+ },
+ "https://www.tableau.com/account/billing": {
+  "checked": "2026-11-11",
+  "result": "walled",
+  "status": 403
+ },
+ "https://www.tabnine.com/account": {
+  "checked": "2026-11-11",
+  "result": "unclear",
+  "status": 502
+ },
+ "https://www.talkspace.com/": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://www.target.com/": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://www.target.com/circle": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://www.taskrabbit.com/account/subscription": {
+  "checked": "2026-11-11",
+  "result": "walled",
+  "status": 302
+ },
+ "https://www.teamwork.com/": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://www.techsmith.com/store/": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://www.telestream.net/": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://www.tenantcloud.com/": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://www.tenpercent.com/": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://www.territoryfoods.com/account": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://www.tesla.com/teslaaccount/subscriptions": {
+  "checked": "2026-11-11",
+  "result": "walled",
+  "status": 403
+ },
+ "https://www.theatlantic.com/account": {
+  "checked": "2026-11-11",
+  "result": "walled",
+  "status": 403
+ },
+ "https://www.theatlantic.com/manage-account/": {
+  "checked": "2026-11-11",
+  "result": "walled",
+  "status": 403
+ },
+ "https://www.theatlantic.com/subscription/": {
+  "checked": "2026-11-11",
+  "result": "walled",
+  "status": 403
+ },
+ "https://www.theblacktux.com/account": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://www.thefarmersdog.com/": {
+  "checked": "2026-11-11",
+  "result": "walled",
+  "status": 403
+ },
+ "https://www.theleague.com/": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://www.thesill.com/account": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://www.thinkific.com/billing": {
+  "checked": "2026-11-11",
+  "result": "unclear",
+  "status": "[SSL: TLSV1_ALERT_PROTOCOL_VERSION] tlsv1 alert protocol ver"
+ },
+ "https://www.thredup.com/account": {
+  "checked": "2026-11-11",
+  "result": "walled",
+  "status": 403
+ },
+ "https://www.thumbtack.com/": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://www.tinder.com/settings": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://www.tradingview.com/": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://www.trainerroad.com/app/profile/subscription": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://www.tripadvisor.com/": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://www.tripit.com/account": {
+  "checked": "2026-11-11",
+  "result": "walled",
+  "status": 403
+ },
+ "https://www.tripit.com/account/billing": {
+  "checked": "2026-11-11",
+  "result": "walled",
+  "status": 403
+ },
+ "https://www.tumblr.com/settings/account": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://www.tunnelbear.com/account": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://www.twitch.tv/settings/subscription": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://www.twitch.tv/subscriptions": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://www.twitch.tv/turbo": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://www.uber.com/": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://www.ubereats.com/": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://www.ubereats.com/settings/eats-pass": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://www.ubisoft.com/": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://www.udacity.com/account#!/settings": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://www.udemy.com/account": {
+  "checked": "2026-11-11",
+  "result": "walled",
+  "status": 403
+ },
+ "https://www.udemy.com/dashboard/subscriptions": {
+  "checked": "2026-11-11",
+  "result": "walled",
+  "status": 403
+ },
+ "https://www.udemy.com/home/account-security/subscriptions/": {
+  "checked": "2026-11-11",
+  "result": "walled",
+  "status": 403
+ },
+ "https://www.udio.com/account/billing": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://www.utomik.com/account": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://www.verizon.com/support/manage-account/": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://www.vinylmeplease.com/": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://www.virustotal.com/gui/account": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://www.visible.com/help": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://www.vyprvpn.com/": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://www.walmart.com/": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://www.walmart.com/plus/cancel": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://www.washingtonpost.com/account": {
+  "checked": "2026-11-11",
+  "result": "unclear",
+  "status": "The read operation timed out"
+ },
+ "https://www.washingtonpost.com/subscribe/manage/": {
+  "checked": "2026-11-11",
+  "result": "unclear",
+  "status": "The read operation timed out"
+ },
+ "https://www.washingtonpost.com/subscriptionmanagement": {
+  "checked": "2026-11-11",
+  "result": "unclear",
+  "status": "The read operation timed out"
+ },
+ "https://www.waze.com/account": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://www.weightwatchers.com/": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://www.whistle.com/": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://www.whoop.com/account/": {
+  "checked": "2026-11-11",
+  "result": "walled",
+  "status": 403
+ },
+ "https://www.winc.com/account": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://www.wired.com/": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://www.wired.com/account/sign-in": {
+  "checked": "2026-11-11",
+  "result": "walled",
+  "status": 302
+ },
+ "https://www.workday.com/": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://www.worldnomads.com/": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://www.wrike.com/workspace.htm#path=account-billing": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://www.wsj.com/account": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://www.xero.com/": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://www.xfinity.com/support/articles/cancel-xfinity-internet": {
+  "checked": "2026-11-11",
+  "result": "walled",
+  "status": 403
+ },
+ "https://www.xfinity.com/support/articles/cancel-xfinity-mobile": {
+  "checked": "2026-11-11",
+  "result": "walled",
+  "status": 403
+ },
+ "https://www.ymca.org/": {
+  "checked": "2026-11-11",
+  "result": "walled",
+  "status": 403
+ },
+ "https://www.youper.ai/": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://www.youtube.com/paid_memberships": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://www.zendesk.com/": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://www.zoosk.com/": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://you.23andme.com/settings/membership/": {
+  "checked": "2026-11-11",
+  "result": "walled",
+  "status": 403
+ },
+ "https://you.23andme.com/user/membership/": {
+  "checked": "2026-11-11",
+  "result": "walled",
+  "status": 403
+ },
+ "https://you.com/settings": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://zerotomastery.io/": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ },
+ "https://zoom.us/billing": {
+  "checked": "2026-11-11",
+  "result": "ok",
+  "status": 200
+ }
+}

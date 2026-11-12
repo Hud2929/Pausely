@@ -96,7 +96,9 @@ struct CancelHelp: Equatable {
     @MainActor
     static func find(for subscription: Subscription) -> CancelHelp {
         if let service = service(named: subscription.name), let page = URL(string: service.cancelURL) {
-            return CancelHelp(kind: service.isBilledByApple ? .appleSubscription : .cancellationPage, link: page)
+            if service.isBilledByApple { return CancelHelp(kind: .appleSubscription, link: page) }
+            // A link to a site's front page is its website, not its cancellation page: said as that.
+            return CancelHelp(kind: isFrontPage(page) ? .website : .cancellationPage, link: page)
         }
         if let listed = SubscriptionCatalogService.shared.entry(named: subscription.name)?.cancellationURL,
            let site = URL(string: listed), site.scheme == "https", site.host != nil {
@@ -107,6 +109,10 @@ struct CancelHelp: Equatable {
 
     /// Apple's own page for a person's subscriptions. iOS opens it in Settings.
     static let applesSubscriptions = URL(string: "https://apps.apple.com/account/subscriptions")
+
+    static func isFrontPage(_ url: URL) -> Bool {
+        url.path.isEmpty || url.path == "/"
+    }
 
     static func isApples(_ address: String) -> Bool {
         URL(string: address)?.host == "apps.apple.com"
