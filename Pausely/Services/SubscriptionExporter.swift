@@ -100,17 +100,20 @@ final class SubscriptionExporter {
         let pausePlan: PausePlan?
     }
 
+    /// The full file: the list, the history that lives only on this device, and the Pause Plan.
+    /// Dates are ISO 8601 and keys are sorted, so the same data always makes the same file.
+    static func json(for subscriptions: [Subscription], history: [LifecycleEvent], pausePlan: PausePlan?) throws -> Data {
+        let encoder = JSONEncoder()
+        encoder.dateEncodingStrategy = .iso8601
+        encoder.outputFormatting = [.prettyPrinted, .sortedKeys]
+        return try encoder.encode(FullExport(subscriptions: subscriptions, history: history, pausePlan: pausePlan))
+    }
+
     private func exportJSON(subscriptions: [Subscription]) -> URL? {
         do {
-            let encoder = JSONEncoder()
-            encoder.dateEncodingStrategy = .iso8601
-            encoder.outputFormatting = [.prettyPrinted, .sortedKeys]
-            let export = FullExport(subscriptions: subscriptions,
-                                    history: LifecycleEventLog.shared.events,
-                                    pausePlan: PausePlanStore.shared.plan)
-            let data = try encoder.encode(export)
-            guard let json = String(data: data, encoding: .utf8) else { return nil }
-            return writeToFile(content: json, extension: "json")
+            let data = try Self.json(for: subscriptions, history: LifecycleEventLog.shared.events,
+                                     pausePlan: PausePlanStore.shared.plan)
+            return writeDataToFile(data: data, extension: "json")
         } catch {
             os_log("JSON export failed: %{public}@", log: .default, type: .error, error.localizedDescription)
             return nil

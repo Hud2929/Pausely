@@ -406,6 +406,13 @@ Updated at every commit, so the work can be picked up from this file alone.
   string_usage 0. Next: the export formats against the policy (the app makes CSV, PDF and JSON;
   the policy names one and the JSON file has no test), "iPhone" said on iPad, the retired
   currencies, then the English tour for the new count and the iPad tour.
+- Export (11-12, found while reading the Arabic export screen): the screen offers CSV, PDF and
+  JSON; the policy promised "a CSV spreadsheet file" and nothing tested the other two. The policy
+  now names what the screen makes, and a test holds the sentence to `ExportFormat.allCases`. The
+  JSON file is built by a pure function and reads back as the same list and history (price as
+  entered: `"amount" : 15.49`); each format writes the file it names, with cancelled ones left out
+  when asked. 746 tests, 0 failures. The policy page is synced to the two local site branches,
+  not pushed (6.7).
 - Told by the other session at 22:04 (it has stood down and changed nothing): sections 2, 3, 4, 6, 7
   and 10 of the engineering audit were never done and there is no finished overlooked-details
   report. Those areas have been scanned by nobody; they are owed before Stage G can be called done.
@@ -699,7 +706,7 @@ and limits) is O37 and nothing else was found.
 | Seen in passing on 11-12: on Insights, scrolled content runs under the status bar and the clock is drawn over it | closed 11-12: `inkScreen()` on the four tabs (E first slice) and on every other screen that draws its own top row (E fourth slice); `testAScreenWithoutANavigationBarKeepsTheStatusStripSolid` |
 | Arabic, whole tour read (11-12): untranslated rows on the edit screen and the age check, left-to-right sentences, Latin digits in sentences, a 15-point "Done", text under the clock, an unreadable footnote | closed 11-12 (E fourth slice): each held by a test; `scripts/tour_untranslated.py` prints nothing for the screens toured again. Still to do in Arabic: a whole tour on the final build for the count, and one native reader (6.7) |
 | "iPhone" said on iPad in 16 strings ("Same as iPhone", "Saved on this iPhone", "Your email never leaves your iPhone" …) and "phone" in two more | open |
-| Export: the app makes CSV, PDF and JSON; the policy names CSV only and the JSON file has no test | open |
+| Export: the app makes CSV, PDF and JSON; the policy names CSV only and the JSON file has no test | closed 11-12: the policy names the two machine-readable copies and the PDF (`WebsiteTruthTests` ties the sentence to `ExportFormat.allCases`); the JSON file is a pure function that reads back as the same list and history, with the price as entered (`testTheFullFileReadsBackAsTheSameListAndHistory`), and each choice on the screen writes the file it names (`testEachFormatWritesItsOwnFile`) |
 
 ### 6.6 Open: engineering hygiene
 

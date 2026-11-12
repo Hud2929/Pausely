@@ -79,7 +79,9 @@ final class WebsiteTruthTests: XCTestCase {
         XCTAssertTrue(privacy.contains("Pausely does not read Screen Time. The hours you enter stay on your device."))
         XCTAssertTrue(LocalUserData.personalKeyPrefixes.contains("usage_"), "hours of use are kept on the device and wiped with it")
         XCTAssertTrue(privacy.contains("no analytics, advertising or crash-reporting software"))
-        XCTAssertTrue(privacy.contains("a CSV spreadsheet file, from Profile → Export your list"))
+        // The copies the policy promises are the ones the export screen makes.
+        XCTAssertEqual(ExportFormat.allCases.map(\.rawValue), ["CSV", "PDF", "JSON"])
+        XCTAssertTrue(privacy.contains("a CSV spreadsheet, or a JSON file with your list and its history; both from Profile → Export your list, which can also make a PDF to print"))
         XCTAssertTrue(privacy.contains("Profile → Privacy & security → Delete account"))
         XCTAssertTrue(try text(of: "delete.html").contains("Profile → Privacy & security → Delete account"))
         XCTAssertTrue(privacy.contains("not yet switched on in the App Store version"), "Find in Email is off in release builds")

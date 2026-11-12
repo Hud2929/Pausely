@@ -86,4 +86,69 @@ final class SubscriptionExporterTests: XCTestCase {
         XCTAssertTrue(german.madeOn.contains("November"), german.madeOn)
         XCTAssertNotEqual(german.headings, english.headings)
     }
+
+    /// The full file (JSON): the list, the history and the Pause Plan, in a form another tool can
+    /// read back exactly. The privacy policy names it as one of the two machine-readable copies.
+    @MainActor
+    func testTheFullFileReadsBackAsTheSameListAndHistory() throws {
+        let renews = day(2026, 11, 30)
+        let netflix = Subscription(name: "Netflix", category: "entertainment", amount: Decimal(string: "15.49")!, currency: "USD",
+                                   billingFrequency: .monthly, nextBillingDate: renews, createdAt: day(2026, 1, 3))
+        let dazn = Subscription(name: "DAZN \"Total\"", category: "sports", amount: Decimal(string: "44.99")!, currency: "EUR",
+                                billingFrequency: .yearly, status: .cancelled, createdAt: day(2025, 8, 1))
+        let cancelled = LifecycleEvent(kind: .cancelled, subscription: dazn, date: day(2026, 10, 2))
+
+        let data = try SubscriptionExporter.json(for: [netflix, dazn], history: [cancelled], pausePlan: nil)
+        let text = try XCTUnwrap(String(data: data, encoding: .utf8))
+        XCTAssertTrue(text.contains("\"amount\" : 15.49"), "the price as it was entered, not a rounding of it: \(text)")
+        XCTAssertTrue(text.contains("\"amount\" : 44.99"))
+        XCTAssertTrue(text.contains("\"currency\" : \"EUR\""))
+
+        struct File: Decodable { let subscriptions: [Subscription]; let history: [LifecycleEvent]; let pausePlan: PausePlan? }
+        let decoder = JSONDecoder()
+        decoder.dateDecodingStrategy = .iso8601
+        let file = try decoder.decode(File.self, from: data)
+        XCTAssertEqual(file.subscriptions.map(\.name), ["Netflix", "DAZN \"Total\""])
+        XCTAssertEqual(file.subscriptions.map(\.amount), [netflix.amount, dazn.amount])
+        XCTAssertEqual(file.subscriptions.map(\.status), [.active, .cancelled])
+        XCTAssertEqual(file.subscriptions[0].nextBillingDate, netflix.nextBillingDate)
+        XCTAssertEqual(file.history, [cancelled])
+        XCTAssertNil(file.pausePlan)
+
+        XCTAssertEqual(try SubscriptionExporter.json(for: [netflix, dazn], history: [cancelled], pausePlan: nil), data,
+                       "the same data makes the same file")
+    }
+
+    /// Each choice on the export screen makes the file it names, with only what was asked for.
+    @MainActor
+    func testEachFormatWritesItsOwnFile() throws {
+        XCTAssertEqual(ExportFormat.allCases, [.csv, .pdf, .json])
+        let list = [Subscription(name: "Netflix", category: "entertainment", amount: 10, currency: "USD", billingFrequency: .monthly),
+                    Subscription(name: "DAZN", category: "sports", amount: 20, currency: "EUR", billingFrequency: .monthly, status: .cancelled)]
+        func file(_ format: ExportFormat, cancelled: Bool) throws -> URL {
+            let url = try XCTUnwrap(SubscriptionExporter.shared.export(subscriptions: list,
+                                                                       options: ExportOptions(includeCancelled: cancelled, format: format)))
+            addTeardownBlock { try? FileManager.default.removeItem(at: url) }
+            return url
+        }
+
+        let spreadsheet = try file(.csv, cancelled: false)
+        XCTAssertEqual(spreadsheet.pathExtension, "csv")
+        let rows = try String(contentsOf: spreadsheet, encoding: .utf8).split(separator: "\n")
+        XCTAssertEqual(rows.count, 2, "the headings and the one subscription still charging")
+
+        let page = try file(.pdf, cancelled: true)
+        XCTAssertEqual(page.pathExtension, "pdf")
+        XCTAssertEqual(try Data(contentsOf: page).prefix(5), Data("%PDF-".utf8))
+
+        let full = try file(.json, cancelled: true)
+        XCTAssertEqual(full.pathExtension, "json")
+        let parsed = try XCTUnwrap(JSONSerialization.jsonObject(with: Data(contentsOf: full)) as? [String: Any])
+        XCTAssertEqual((parsed["subscriptions"] as? [[String: Any]])?.compactMap { $0["name"] as? String }, ["Netflix", "DAZN"])
+        XCTAssertNotNil(parsed["history"] as? [Any], "the history is in the file even when it is empty")
+
+        let withoutCancelled = try file(.json, cancelled: false)
+        let fewer = try XCTUnwrap(JSONSerialization.jsonObject(with: Data(contentsOf: withoutCancelled)) as? [String: Any])
+        XCTAssertEqual((fewer["subscriptions"] as? [[String: Any]])?.count, 1)
+    }
 }
