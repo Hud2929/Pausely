@@ -60,11 +60,12 @@ struct PremiumSubscriptionsView: View {
                 SubscriptionManagementView(subscription: subscription)
             }
         }
-        .onChange(of: deepLinkedSubscription) { oldValue, newValue in
-            if oldValue == nil, let subscription = newValue {
-                activeSheet = .detail(subscription)
-                deepLinkedSubscription = nil
-            }
+        // A widget, a search result or a link asked for one subscription. The request can be set before
+        // this tab is first drawn (a tap that started the app), so it is read on arrival as well.
+        .onChange(of: deepLinkedSubscription, initial: true) { _, requested in
+            guard let subscription = requested else { return }
+            activeSheet = .detail(subscription)
+            deepLinkedSubscription = nil
         }
     }
 

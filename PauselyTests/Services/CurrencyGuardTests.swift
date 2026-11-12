@@ -109,7 +109,7 @@ final class CurrencyGuardTests: XCTestCase {
                           "Sources aren't readable from this test run")
 
         var violations: [String] = []
-        for folder in ["Pausely", "PauselyWidget"] {
+        for folder in ["Pausely", "PauselyWidget", "Shared"] {
             let base = root.appendingPathComponent(folder)
             guard let files = FileManager.default.enumerator(at: base, includingPropertiesForKeys: nil) else { continue }
             for case let file as URL in files where file.pathExtension == "swift" {

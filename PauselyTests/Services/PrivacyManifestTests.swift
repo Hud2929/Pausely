@@ -27,12 +27,15 @@ final class PrivacyManifestTests: XCTestCase {
         })
     }
 
-    /// Whether any source file under `folder` mentions one of the API names.
+    /// Whether any source file of a bundle mentions one of the API names. A bundle is its own folder
+    /// and the shared one, which is compiled into both the app and the widgets.
     private func sources(in folder: String, mention names: [String]) throws -> Bool {
-        let files = try XCTUnwrap(FileManager.default.enumerator(at: root.appendingPathComponent(folder), includingPropertiesForKeys: nil))
-        for case let file as URL in files where file.pathExtension == "swift" {
-            let text = try String(contentsOf: file, encoding: .utf8)
-            if names.contains(where: text.contains) { return true }
+        for folder in [folder, "Shared"] {
+            let files = try XCTUnwrap(FileManager.default.enumerator(at: root.appendingPathComponent(folder), includingPropertiesForKeys: nil))
+            for case let file as URL in files where file.pathExtension == "swift" {
+                let text = try String(contentsOf: file, encoding: .utf8)
+                if names.contains(where: text.contains) { return true }
+            }
         }
         return false
     }

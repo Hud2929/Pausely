@@ -16,6 +16,10 @@ final class VerdictCenter: ObservableObject {
     @Published var presented: Request?
     /// Set by a Pause Plan reminder tap.
     @Published var showingPausePlan = false
+    /// The subscription the main screen should open: a tap on a widget, a Spotlight result, a link,
+    /// or a reminder with nothing to decide. Held here until the main screen exists to show it, so a
+    /// tap that starts the app is not lost.
+    @Published var subscriptionToShow: Request?
 
     /// A reminder can still be on the Lock Screen after its owner signed out. It opens nothing and
     /// records nothing then: whoever signs in next must not be shown someone else's subscription.
@@ -35,12 +39,13 @@ final class VerdictCenter: ObservableObject {
     func forget() {
         presented = nil
         showingPausePlan = false
+        subscriptionToShow = nil
     }
 
-    /// Opens the subscription itself (used when a reminder has no decision to make).
+    /// Opens the subscription itself.
     func showSubscription(_ subscriptionId: UUID) {
-        NotificationCenter.default.post(name: .showSubscriptionManagement, object: nil,
-                                        userInfo: ["subscription_id": subscriptionId.uuidString])
+        guard isSignedIn() else { return }
+        subscriptionToShow = Request(subscriptionId: subscriptionId)
     }
 
     /// Keep: records the decision for a charge, so no more reminders ask about it. The next renewal

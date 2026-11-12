@@ -282,8 +282,7 @@ final class SubscriptionStoreTests: XCTestCase {
                                                 rates: CurrencyManager.shared.rates)
         XCTAssertEqual(comparison?.name, "On")
         // The widget
-        let widget = WidgetDataStore.shared.readSummary()
-        XCTAssertEqual(widget.monthlySpend, 15, accuracy: 0.001)
-        XCTAssertEqual(widget.activeCount, 2)
+        let widget = WidgetDataStore.feed(for: store.subscriptions, now: Date())
+        XCTAssertEqual(widget.monthlyText, MoneyFormat.string(Decimal(15), "USD"))
     }
 }

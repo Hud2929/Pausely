@@ -1,3 +1,4 @@
+import CoreSpotlight
 import XCTest
 @testable import Pausely
 
@@ -34,8 +35,8 @@ final class LocalDataGuardTests: XCTestCase {
 
     /// Kept somewhere other than the app's settings, and removed by the store that owns them.
     private static let keptElsewhere: [String: String] = [
-        "widget_": "the widgets' copy, rewritten from the list and empty when the list is",
-        "liveActivity_": "the widgets' copy of the next charge, cleared when nothing charges",
+        "widget_": "the widgets' copy, rewritten from the list and empty when the list is (and what earlier versions published, removed on the next publish)",
+        "liveActivity_": "published by earlier versions, removed on the next publish",
         "auth_cached_user_id": "Keychain, removed at sign-out",
         "auth_cached_email": "Keychain, removed at sign-out",
         "auth_cached_created_at": "Keychain, removed at sign-out",
@@ -136,7 +137,7 @@ final class LocalDataGuardTests: XCTestCase {
         XCTAssertEqual(store.subscriptions, [])
         XCTAssertEqual(store.totalMonthlySpend, 0)
         XCTAssertEqual(AppSettings.shared.cachedSubscriptions, saved, "The copy on the iPhone waits for the same person to sign back in")
-        XCTAssertEqual(WidgetDataStore.shared.readSummary().activeCount, 0)
+        XCTAssertEqual(WidgetDataStore.feed(for: store.subscriptions, now: Date()).charges, [])
 
         // A Shortcut can still try to add. It is refused, and the copy on the iPhone stays whole.
         do {
@@ -167,6 +168,34 @@ final class LocalDataGuardTests: XCTestCase {
         XCTAssertEqual(center.presented?.subscriptionId, id)
         center.forget()
         XCTAssertNil(center.presented)
+    }
+
+    /// A tap on a widget or a search result that starts the app asks for a subscription before the main
+    /// screen exists. The request is held until it does; before, it was announced once to nobody.
+    func testARequestToOpenASubscriptionWaitsForTheMainScreen() {
+        let center = VerdictCenter()
+        center.isSignedIn = { true }
+        let id = UUID()
+        center.showSubscription(id)
+        XCTAssertEqual(center.subscriptionToShow?.subscriptionId, id)
+
+        center.forget()
+        XCTAssertNil(center.subscriptionToShow)
+
+        center.isSignedIn = { false }
+        center.showSubscription(id)
+        XCTAssertNil(center.subscriptionToShow, "Signed out, a widget or a search result opens nothing")
+    }
+
+    func testASearchResultNamesItsSubscription() {
+        let id = UUID()
+        let activity = NSUserActivity(activityType: CSSearchableItemActionType)
+        activity.userInfo = [CSSearchableItemActivityIdentifier: id.uuidString]
+        XCTAssertEqual(SpotlightManager.subscriptionId(in: activity), id)
+
+        let other = NSUserActivity(activityType: "com.example.other")
+        other.userInfo = [CSSearchableItemActivityIdentifier: id.uuidString]
+        XCTAssertNil(SpotlightManager.subscriptionId(in: other))
     }
 
     // MARK: - A name typed at sign-up

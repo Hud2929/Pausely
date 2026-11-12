@@ -47,6 +47,12 @@ final class SpotlightManager {
         return task
     }
 
+    /// The subscription a tapped search result stands for.
+    nonisolated static func subscriptionId(in activity: NSUserActivity) -> UUID? {
+        guard activity.activityType == CSSearchableItemActionType else { return nil }
+        return (activity.userInfo?[CSSearchableItemActivityIdentifier] as? String).flatMap(UUID.init(uuidString:))
+    }
+
     // MARK: - Helpers
 
     func searchableItem(for subscription: Subscription) -> CSSearchableItem {

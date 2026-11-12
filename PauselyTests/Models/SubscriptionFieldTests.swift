@@ -27,7 +27,7 @@ final class SubscriptionFieldTests: XCTestCase {
 
         // Read somewhere other than the model itself and the record that carries it to the server.
         var sources = ""
-        for folder in ["Pausely", "PauselyWidget"] {
+        for folder in ["Pausely", "PauselyWidget", "Shared"] {
             let files = try XCTUnwrap(FileManager.default.enumerator(at: root.appendingPathComponent(folder), includingPropertiesForKeys: nil))
             for case let file as URL in files where file.pathExtension == "swift" {
                 if file.lastPathComponent == "Subscription.swift" || file.lastPathComponent == "SupabaseManager.swift" { continue }

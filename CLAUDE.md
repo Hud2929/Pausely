@@ -82,6 +82,10 @@ All pure and unit-tested; they take `now` and a `Calendar`.
 - `Core/Money`: `MoneyFormat` (all money text), `CurrencyRates` (conversion, built-in rates),
   `MoneyMath` (totals across currencies). `CurrencyManager` (also in Core/Money) holds the
   display currency and live rates.
+- `WidgetDataStore` writes `WidgetFeed` (the days each subscription charges on, about a year ahead) for
+  the widgets, which work out "what is next" on the day they draw. `Shared/` is compiled into both the
+  app and `PauselyWidget` (the feed, the day wording, the billing calendar, the palette); the widgets
+  have their own string catalog.
 - `SupabaseManager`, `UsageLog` (hours the person types in, counted for the month they were entered),
   `KeychainManager`, `AppConfig`.
 

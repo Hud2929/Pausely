@@ -323,11 +323,13 @@ class SubscriptionStore: ObservableObject {
         lastFetchDate = nil
     }
 
-    /// Signed in again: the copy kept on the iPhone comes back before the server is asked.
+    /// The main screen is up for a signed-in person: the copy kept on the iPhone comes back if it was
+    /// hidden, and the widgets and Spotlight are given the list as it stands today. The widgets hold
+    /// about a year of charge days from the day they were last told, so they are told at every start,
+    /// not only when the list changes.
     func showList() {
         isHidden = false
-        guard subscriptions.isEmpty else { return }
-        loadFromCache()
+        if subscriptions.isEmpty { loadFromCache() }
         WidgetDataStore.shared.publish(subscriptions: subscriptions)
         SpotlightManager.shared.index(subscriptions: subscriptions)
     }

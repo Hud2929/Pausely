@@ -54,14 +54,15 @@ struct PremiumMainTabView: View {
         .onReceive(NotificationCenter.default.publisher(for: .switchToAnalysisTab)) { _ in
             withAnimation { selectedTab = 2 }
         }
-        .onReceive(NotificationCenter.default.publisher(for: .showSubscriptionManagement)) { notification in
-            if let idString = notification.userInfo?["subscription_id"] as? String,
-               let id = UUID(uuidString: idString),
-               let subscription = subscriptionStore.subscriptions.first(where: { $0.id == id }) {
-                withAnimation {
-                    selectedTab = 1
-                    deepLinkedSubscription = subscription
-                }
+        // A tap on a widget, a Spotlight result or a link asked for one subscription. It may have come
+        // before this screen existed (a tap that started the app), so the request is read on arrival too.
+        .onChange(of: verdictCenter.subscriptionToShow, initial: true) { _, request in
+            guard let request else { return }
+            verdictCenter.subscriptionToShow = nil
+            guard let subscription = subscriptionStore.subscriptions.first(where: { $0.id == request.subscriptionId }) else { return }
+            withAnimation {
+                selectedTab = 1
+                deepLinkedSubscription = subscription
             }
         }
         .task {

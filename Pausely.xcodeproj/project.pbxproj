@@ -101,6 +101,11 @@
 			path = PauselyWidget;
 			sourceTree = "<group>";
 		};
+		DDEE0001000000DDEE000001 /* Shared */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			path = Shared;
+			sourceTree = "<group>";
+		};
 /* End PBXFileSystemSynchronizedRootGroup section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -150,6 +155,7 @@
 				AA4E4A622F4A1A8400C89FBB /* Configuration/Development.xcconfig */,
 				7A4E4A3F2F4A1A8100C89FBB /* Pausely */,
 				CCBB0007000000CCBB000007 /* PauselyWidget */,
+				DDEE0001000000DDEE000001 /* Shared */,
 				7A4E4A502F4A1A8400C89FBB /* PauselyTests */,
 				7A4E4A5A2F4A1A8400C89FBB /* PauselyUITests */,
 				7AFA88452F589A8A0015E8E9 /* Frameworks */,
@@ -208,6 +214,7 @@
 			);
 			fileSystemSynchronizedGroups = (
 				7A4E4A3F2F4A1A8100C89FBB /* Pausely */,
+				DDEE0001000000DDEE000001 /* Shared */,
 			);
 			name = Pausely;
 			packageProductDependencies = (
@@ -277,6 +284,7 @@
 			);
 			fileSystemSynchronizedGroups = (
 				CCBB0007000000CCBB000007 /* PauselyWidget */,
+				DDEE0001000000DDEE000001 /* Shared */,
 			);
 			name = PauselyWidget;
 			productName = PauselyWidget;

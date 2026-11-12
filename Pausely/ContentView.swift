@@ -1,5 +1,6 @@
 import SwiftUI
 import AuthenticationServices
+import CoreSpotlight
 import TipKit
 import UserNotifications
 
@@ -390,6 +391,10 @@ struct RootView: View {
         .onOpenURL { url in
             // Account links and links to a subscription. Never logged: an account link carries a code.
             DeepLinkManager.shared.process(url)
+        }
+        // A subscription found in the iPhone's search opens that subscription.
+        .onContinueUserActivity(CSSearchableItemActionType) { activity in
+            if let id = SpotlightManager.subscriptionId(in: activity) { VerdictCenter.shared.showSubscription(id) }
         }
         .preferredColorScheme(.dark)
     }

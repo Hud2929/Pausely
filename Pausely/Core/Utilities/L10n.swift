@@ -14,6 +14,12 @@ enum L10n {
         return Locale(identifier: code)
     }
 
+    /// The language chosen in Settings → Language ("ar", "de"…), or nil to follow the iPhone.
+    static var chosenLanguage: String? {
+        guard let code = UserDefaults.standard.string(forKey: languageKey), code != "system" else { return nil }
+        return code
+    }
+
     /// The locale for formatting dates and numbers in code-built text.
     static var locale: Locale { chosenLocale ?? .current }
 

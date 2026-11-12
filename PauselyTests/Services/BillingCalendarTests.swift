@@ -27,7 +27,7 @@ final class BillingCalendarTests: XCTestCase {
         let root = URL(fileURLWithPath: #filePath)
             .deletingLastPathComponent().deletingLastPathComponent().deletingLastPathComponent()
         var offenders: [String] = []
-        for folder in ["Pausely", "PauselyWidget"] {
+        for folder in ["Pausely", "PauselyWidget", "Shared"] {
             let folderURL = root.appendingPathComponent(folder)
             try XCTSkipUnless(FileManager.default.fileExists(atPath: folderURL.path), "Sources aren't readable from this test run")
             let files = try XCTUnwrap(FileManager.default.enumerator(at: folderURL, includingPropertiesForKeys: nil))

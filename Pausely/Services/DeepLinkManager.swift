@@ -64,22 +64,12 @@ final class DeepLinkManager {
             }
 
         case .subscriptionManage(let id):
-            NotificationCenter.default.post(
-                name: .showSubscriptionManagement,
-                object: nil,
-                userInfo: ["subscription_id": id.uuidString]
-            )
+            VerdictCenter.shared.showSubscription(id)
 
         case .unknown:
             os_log("A link the app has no screen for was opened (scheme %{public}@)", log: .default, type: .info, url.scheme ?? "none")
         }
     }
-}
-
-// MARK: - Notification Names
-
-extension Notification.Name {
-    static let showSubscriptionManagement = Notification.Name("showSubscriptionManagement")
 }
 
 // MARK: - URL Query Parameters Helper
