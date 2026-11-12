@@ -63,7 +63,7 @@ final class CurrencyGuardTests: XCTestCase {
              fix: "Use MoneyFormat.string(...) for amounts, or MoneyFormat.symbol(for:) for an input prefix.",
              matches: { CurrencyGuardTests.has(CurrencyGuardTests.symbolIdentifier, $0) },
              allowedPaths: [
-                "Pausely/Views/TierSelectionSheet.swift",           // prefix of the price input field
+                "Pausely/Views/CatalogAddSheet.swift",              // prefix of the price input field
                 "Pausely/Views/Subscriptions/AmountStepView.swift", // prefix of the amount input field
                 "Pausely/Views/AddSubscription/LuxuryAddSubscriptionView.swift" // prefix of the amount input field
              ]),

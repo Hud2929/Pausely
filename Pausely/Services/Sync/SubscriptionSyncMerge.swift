@@ -4,7 +4,7 @@ import Foundation
 ///
 /// The server is the shared truth, with three exceptions that keep this iPhone's work from being lost:
 /// a change still waiting to be sent wins over the server; fields only this iPhone stores
-/// (app bundle id, plan tier, price override) are kept; and a renewal date the server doesn't have yet
+/// (the app bundle id) are kept; and a renewal date the server doesn't have yet
 /// (older app versions never sent it) is kept and sent back up.
 struct SubscriptionSyncMerge {
     /// The list to show and cache.
@@ -51,9 +51,6 @@ struct SubscriptionSyncMerge {
             }
             var merged = remote
             merged.bundleIdentifier = mine.bundleIdentifier
-            merged.selectedTier = mine.selectedTier
-            merged.userPriceUSD = mine.userPriceUSD
-            merged.isPriceOverridden = mine.isPriceOverridden
             if remote.nextBillingDate == nil, let date = mine.nextBillingDate {
                 merged.nextBillingDate = date
                 result.backfill.append(merged)

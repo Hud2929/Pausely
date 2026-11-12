@@ -1,16 +1,17 @@
 //
-//  TierSelectionSheet.swift
+//  CatalogAddSheet.swift
 //  Pausely
 //
-//  Adding a service from the catalog: which plan, what it costs, how often, and when it next charges.
+//  Adding a service from the catalog: what the person pays, how often, and when it next charges.
 //
 
 import SwiftUI
 
-struct TierSelectionSheet: View {
+struct CatalogAddSheet: View {
     let entry: CatalogEntry
-    /// Parameters: tier, billingFreq, isPriceOverridden, overridePrice, nextBillingDate, trialEndsAt
-    let onSelect: (PricingTier, BillingFrequency, Bool, Decimal?, Date?, Date?) -> Void
+    /// How often it bills, what the person pays, the next payment if they set one, and the day a free
+    /// trial ends if they are in one.
+    let onAdd: (BillingFrequency, Decimal, Date?, Date?) -> Void
 
     @Environment(\.dismiss) private var dismiss
     @ObservedObject private var currencyManager = CurrencyManager.shared
@@ -26,8 +27,8 @@ struct TierSelectionSheet: View {
 
     // MARK: - Price
 
-    /// A price Pausely read from the service's own page for this currency, if it has one. The
-    /// catalog's own plans and prices are not shown: they are not reliable enough to present as fact.
+    /// A price Pausely read from the service's own page for this currency, if it has one
+    /// (`TallyCatalog`). Otherwise the field starts empty and the person types what they pay.
     private var typical: Decimal? {
         frequency == .monthly
             ? TallyCatalog.price(forServiceNamed: entry.name, payingIn: currencyManager.selectedCurrency)
@@ -109,8 +110,9 @@ struct TierSelectionSheet: View {
 
             Button {
                 Feel.tick()
-                // Always saved as what the person confirmed, in their own currency.
-                onSelect(.individual, frequency, true, amount, nextBillingDate, hasFreeTrial ? trialEndsAt : nil)
+                // Saved as what the person confirmed, in their own currency.
+                guard let amount else { return }
+                onAdd(frequency, amount, nextBillingDate, hasFreeTrial ? trialEndsAt : nil)
                 dismiss()
             } label: {
                 Text(L10n.string("Add \(entry.name)"))

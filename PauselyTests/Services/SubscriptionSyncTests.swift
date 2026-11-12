@@ -120,19 +120,15 @@ final class SubscriptionSyncTests: XCTestCase {
         XCTAssertEqual(merge.backfill.map(\.id), [mine.id])
     }
 
-    func testFieldsOnlyThisIPhoneStoresSurviveAFetch() {
-        var mine = TestFactories.makeSubscription(name: "Spotify", userPriceUSD: 5.99, isPriceOverridden: true)
-        mine.bundleIdentifier = "com.spotify.client"
+    func testWhatOnlyThisIPhoneStoresSurvivesAFetch() {
+        var mine = TestFactories.makeSubscription(name: "Pausely Pro")
+        mine.bundleIdentifier = "com.pausely.app.Pausely"
         var theirs = mine
         theirs.bundleIdentifier = nil
-        theirs.userPriceUSD = nil
-        theirs.isPriceOverridden = false
         theirs.amount = 12.99   // changed on another device
         let merged = SubscriptionSyncMerge.merge(server: [theirs], local: [mine], pending: [:], firstSyncForUser: false).subscriptions
         XCTAssertEqual(merged.first?.amount, 12.99, "the server's change comes through")
-        XCTAssertEqual(merged.first?.bundleIdentifier, "com.spotify.client")
-        XCTAssertEqual(merged.first?.userPriceUSD, 5.99)
-        XCTAssertEqual(merged.first?.isPriceOverridden, true)
+        XCTAssertEqual(merged.first?.bundleIdentifier, "com.pausely.app.Pausely")
     }
 
     // MARK: Pro

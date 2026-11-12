@@ -54,7 +54,7 @@ final class CancelHelpTests: XCTestCase {
             XCTAssertTrue(names.contains { !$0.isEmpty && wanted.hasPrefix($0) },
                           "\(entry.name) got \(service.name)")
         }
-        XCTAssertGreaterThanOrEqual(found, 285, "help that exists must not be lost either (291 when this was written)")
+        XCTAssertGreaterThanOrEqual(found, 195, "help that exists must not be lost either (200 of the catalog's 848 rows when this was written)")
     }
 
     // MARK: Always the right one

@@ -97,13 +97,16 @@ final class LogoStore {
 
     // MARK: Network
 
-    /// The service's own touch icon (180px, made for home screens), then Google's favicon service.
+    /// The service's own icon, asked of the service's own site and nobody else: its touch icon
+    /// (180px, made for home screens), then its favicon. A lookup service was used as a last resort
+    /// before; it was told the address of every service whose own icon was missing, which is a list
+    /// of what someone subscribes to. Where a site has no usable icon the initial is shown instead.
     nonisolated static func sources(for domain: String) -> [URL] {
         let host = domain.hasPrefix("www.") ? String(domain.dropFirst(4)) : domain
         return [
             "https://\(host)/apple-touch-icon.png",
             "https://www.\(host)/apple-touch-icon.png",
-            "https://www.google.com/s2/favicons?domain=\(host)&sz=128"
+            "https://\(host)/favicon.ico"
         ].compactMap(URL.init(string:))
     }
 
@@ -365,13 +368,26 @@ enum ServiceDomains {
         "zendesk": "zendesk.com",
     ]
 
-    /// The known domain for a service: the list above, then the website in the subscription catalog.
+    /// The known domain for a service: the list above, then the site of the catalog's link for it
+    /// (a real address that was requested and answered). Never a guess: the catalog used to invent a
+    /// website from the name with ".com" on the end, and whoever owned that address supplied the logo.
     @MainActor
     static func domain(for serviceName: String) -> String? {
         let key = serviceName.trimmingCharacters(in: .whitespaces).lowercased()
         if let known = domains[key] { return known }
-        guard let website = SubscriptionCatalogService.shared.entry(named: key)?.websiteURL,
-              let host = URL(string: website.hasPrefix("http") ? website : "https://\(website)")?.host else { return nil }
-        return host.hasPrefix("www.") ? String(host.dropFirst(4)) : host
+        guard let link = SubscriptionCatalogService.shared.entry(named: key)?.cancellationURL else { return nil }
+        return siteDomain(ofLink: link)
+    }
+
+    /// "account.adobe.com" is adobe.com's. Apple's subscriptions page stands for no service in
+    /// particular (anything billed through the App Store is cancelled there), so it gives no logo.
+    static func siteDomain(ofLink link: String) -> String? {
+        guard let host = URL(string: link)?.host?.lowercased(), host != "apps.apple.com" else { return nil }
+        let labels = host.split(separator: ".").map(String.init)
+        guard labels.count >= 2 else { return nil }
+        // Two-part endings such as "co.uk" and "com.au" keep three labels.
+        let secondLevel: Set<String> = ["co", "com", "org", "net", "ac", "gov", "edu"]
+        let keep = labels.count >= 3 && labels[labels.count - 1].count == 2 && secondLevel.contains(labels[labels.count - 2]) ? 3 : 2
+        return labels.suffix(keep).joined(separator: ".")
     }
 }

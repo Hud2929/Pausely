@@ -40,9 +40,7 @@ struct SubscriptionBrowserView: View {
         if !searchText.isEmpty {
             let query = searchText.lowercased()
             entries = entries.filter {
-                $0.name.lowercased().contains(query) ||
-                $0.category.rawValue.lowercased().contains(query) ||
-                $0.description.lowercased().contains(query)
+                $0.name.lowercased().contains(query) || $0.category.localizedName.lowercased().contains(query)
             }
         }
         return entries
@@ -143,7 +141,7 @@ struct SubscriptionBrowserView: View {
                             if FeatureFlags.inboxImportEnabled { findInEmailRow }
                             sectionTitle(L10n.string("Popular"))
                             ForEach(popularEntries) { entry in row(entry) }
-                            sectionTitle(L10n.string("\(catalogService.catalog.count) services"))
+                            sectionTitle(L10n.string("All services"))
                         }
                         ForEach(filteredEntries) { entry in row(entry) }
                     }
@@ -157,9 +155,8 @@ struct SubscriptionBrowserView: View {
         .navigationBarHidden(true)
         .sheet(isPresented: $showingTierSheet) {
             if let entry = selectedEntry {
-                TierSelectionSheet(entry: entry) { tier, billingFreq, isOverridden, userPrice, billingDate, trialDate in
-                    addSubscription(entry: entry, tier: tier, billingFrequency: billingFreq,
-                                    isOverridden: isOverridden, userPrice: userPrice,
+                CatalogAddSheet(entry: entry) { frequency, amount, billingDate, trialDate in
+                    addSubscription(entry: entry, billingFrequency: frequency, amount: amount,
                                     nextBillingDate: billingDate, trialEndDate: trialDate)
                 }
             }
@@ -225,7 +222,7 @@ struct SubscriptionBrowserView: View {
             Image(systemName: "magnifyingglass")
                 .foregroundStyle(Color.inkTextFaint)
                 .accessibilityHidden(true)
-            TextField(L10n.string("Search \(catalogService.catalog.count) services"), text: $searchText)
+            TextField(L10n.string("Search"), text: $searchText)
                 .font(.body)
                 .foregroundStyle(Color.inkText)
                 .textInputAutocapitalization(.never)
@@ -293,7 +290,7 @@ struct SubscriptionBrowserView: View {
     }
 
     private func isAlreadyAdded(_ entry: CatalogEntry) -> Bool {
-        store.subscriptions.contains { $0.bundleIdentifier == entry.bundleId }
+        store.subscriptions.contains { $0.name.caseInsensitiveCompare(entry.name) == .orderedSame }
     }
 
     /// On the free plan's limit, the upgrade screen says so before any plan is picked.
@@ -306,36 +303,18 @@ struct SubscriptionBrowserView: View {
         }
     }
 
-    private func addSubscription(entry: CatalogEntry, tier: PricingTier, billingFrequency: BillingFrequency,
-                                  isOverridden: Bool, userPrice: Decimal?, nextBillingDate: Date?, trialEndDate: Date?) {
-        // The same price the tier sheet showed, in the currency it showed it in.
-        let tierPricing = entry.pricing(for: tier, payingIn: currencyManager.selectedCurrency)
-            ?? entry.defaultIndividualPricing
-        let storedCurrency = tierPricing?.currencyCode ?? "USD"
-
-        let price: Double
-        if isOverridden, let override = userPrice {
-            price = Double(truncating: override as NSDecimalNumber)
-        } else if billingFrequency == .yearly, let annual = tierPricing?.annualPriceUSD, annual > 0 {
-            price = annual
-        } else {
-            price = tierPricing?.monthlyPriceUSD ?? 0
-        }
-
+    private func addSubscription(entry: CatalogEntry, billingFrequency: BillingFrequency, amount: Decimal,
+                                 nextBillingDate: Date?, trialEndDate: Date?) {
         let subscription = Subscription(
             name: entry.name,
-            bundleIdentifier: entry.bundleId,
             category: entry.category.rawValue,
-            amount: MoneyFormat.decimal(price),
-            currency: isOverridden ? currencyManager.selectedCurrency : storedCurrency,
+            amount: amount,
+            currency: currencyManager.selectedCurrency,
             billingFrequency: billingFrequency,
             nextBillingDate: nextBillingDate,
             trialEndsAt: trialEndDate,
             status: trialEndDate != nil ? .trial : .active,
-            isDetected: true,
-            selectedTier: tier,
-            userPriceUSD: userPrice,
-            isPriceOverridden: isOverridden
+            isDetected: true
         )
 
         Task {
@@ -348,11 +327,10 @@ struct SubscriptionBrowserView: View {
                 return
             }
             await MainActor.run {
-                addedIds.insert(entry.bundleId)
-                justAdded = entry.bundleId
-                NotificationCenter.default.post(name: Notification.Name("subscriptionAdded"), object: nil)
+                addedIds.insert(entry.name)
+                justAdded = entry.name
                 DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) {
-                    if justAdded == entry.bundleId { justAdded = nil }
+                    if justAdded == entry.name { justAdded = nil }
                 }
             }
         }

@@ -94,8 +94,7 @@ struct AddSubscriptionIntent: AppIntent {
             // No renewal date was given, so none is made up: Home asks "When does it renew?".
             nextBillingDate: nil,
             status: .active,
-            isDetected: false,
-            selectedTier: .individual
+            isDetected: false
         )
 
         try await store.addSubscription(sub)

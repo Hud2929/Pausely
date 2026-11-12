@@ -26,11 +26,6 @@ struct Subscription: Identifiable, Codable, Equatable {
     var createdAt: Date
     var updatedAt: Date
 
-    // MARK: - Tier & Price Override (Revolutionary Database)
-    var selectedTier: PricingTier = .individual
-    var userPriceUSD: Decimal?
-    var isPriceOverridden: Bool = false
-
 
     // MARK: - Coding Keys
     enum CodingKeys: String, CodingKey {
@@ -38,7 +33,6 @@ struct Subscription: Identifiable, Codable, Equatable {
         case billingFrequency, nextBillingDate, monthlyUsageMinutes, costPerHour
         case roiScore, wasteScore, notifyBeforeDays, trialEndsAt, status, isDetected, canPause, pauseUrl
         case createdAt, updatedAt
-        case selectedTier, userPriceUSD, isPriceOverridden
     }
     
     // MARK: - Initializers
@@ -66,10 +60,7 @@ struct Subscription: Identifiable, Codable, Equatable {
         canPause: Bool = true,
         pauseUrl: String? = nil,
         createdAt: Date = Date(),
-        updatedAt: Date = Date(),
-        selectedTier: PricingTier = .individual,
-        userPriceUSD: Decimal? = nil,
-        isPriceOverridden: Bool = false
+        updatedAt: Date = Date()
     ) {
         self.id = id
         self.userId = userId
@@ -94,9 +85,6 @@ struct Subscription: Identifiable, Codable, Equatable {
         self.pauseUrl = pauseUrl
         self.createdAt = createdAt
         self.updatedAt = updatedAt
-        self.selectedTier = selectedTier
-        self.userPriceUSD = userPriceUSD
-        self.isPriceOverridden = isPriceOverridden
     }
 
     init(name: String, price: Double, category: String, billingFrequency: BillingFrequency = .monthly) {

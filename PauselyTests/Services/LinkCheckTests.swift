@@ -26,7 +26,7 @@ final class LinkCheckTests: XCTestCase {
         let record = try record()
         var links = Set(ServiceDatabase.services.map(\.cancelURL))
         links.formUnion(SubscriptionCatalogService.shared.catalog.compactMap(\.cancellationURL))
-        XCTAssertGreaterThan(links.count, 900)
+        XCTAssertGreaterThan(links.count, 800)
 
         let neverChecked = links.filter { record[$0] == nil }.sorted()
         XCTAssertEqual(neverChecked, [], "run python3 scripts/links/check_links.py")

@@ -24,8 +24,9 @@ import concurrent.futures, datetime, json, pathlib, re, socket, ssl, sys, urllib
 
 ROOT = pathlib.Path(__file__).resolve().parents[2]
 RECORD = pathlib.Path(__file__).with_name("checked.json")
-SOURCES = ["Pausely/Services/ServiceDatabase.swift", "Pausely/Services/CatalogData.swift",
-           "Pausely/Services/SubscriptionCatalogService.swift"]
+SOURCES = ["Pausely/Services/ServiceDatabase.swift", "Pausely/Services/CatalogData.swift"]
+# A service: `cancelURL: "…"`. A catalog row: `.init("Name", .category, "…")`.
+LINK = re.compile(r'cancelURL: "([^"]+)"|\.init\("(?:[^"\\]|\\.)*", \.\w+, "([^"]+)"\)')
 AGENT = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.6 Safari/605.1.15"
 
 
@@ -33,7 +34,7 @@ def links():
     found = set()
     for source in SOURCES:
         text = (ROOT / source).read_text(encoding="utf-8")
-        found.update(re.findall(r'(?:cancelURL|cancellationURL): "([^"]+)"', text))
+        found.update(first or second for first, second in LINK.findall(text))
     return sorted(found)
 
 
@@ -90,14 +91,13 @@ def repair():
             home = origin(url)
             alive = record.get(home, {}).get("result") in ("ok", "walled") and home != url
             if alive:
-                count = text.count(f'"{url}"')
-                text = text.replace(f'cancelURL: "{url}"', f'cancelURL: "{home}"')
-                text = text.replace(f'cancellationURL: "{url}"', f'cancellationURL: "{home}"')
-                replaced += count
+                replaced += text.count(f'"{url}"')
+                text = text.replace(f'"{url}"', f'"{home}"')
             else:
-                # A service entry is two lines: its link is on the first.
+                # A service entry is two lines with its link on the first; a service with no link is dropped.
                 text, dropped = re.subn(r'        \.init\(id: "[^"]+", name: "[^"]+", cancelURL: "' + re.escape(url) + r'",\n[^\n]*\n', "", text)
-                text, cleared = re.subn(r'cancellationURL: "' + re.escape(url) + '"', "cancellationURL: nil", text)
+                # A catalog row keeps its name and loses its link.
+                text, cleared = re.subn(r', "' + re.escape(url) + r'"\),', ", nil),", text)
                 removed += dropped + cleared
         path.write_text(text, encoding="utf-8")
     RECORD.write_text(json.dumps(record, indent=1, sort_keys=True, ensure_ascii=False) + "\n")

@@ -121,17 +121,16 @@ final class SubscriptionStoreTests: XCTestCase {
     // MARK: Reaching the account
 
     /// What came back from the server used to replace the subscription, and the server doesn't store
-    /// everything: the app it belongs to, the plan and a corrected price were gone the moment it synced.
+    /// everything: the app it belongs to was gone the moment it synced.
     func testAnAddThatReachesTheAccountKeepsWhatOnlyThisIPhoneKnows() async throws {
-        var sub = TestFactories.makeSubscription(name: "Spotify", userPriceUSD: 5.99, isPriceOverridden: true)
-        sub.bundleIdentifier = "com.spotify.client"
-        sub.selectedTier = .family
+        var sub = TestFactories.makeSubscription(name: "Pausely Pro")
+        sub.bundleIdentifier = "com.pausely.app.Pausely"
         account.canSend = true
         store.lastErrorMessage = nil
         let reached = try await store.addSubscription(sub)
         XCTAssertTrue(reached)
         XCTAssertEqual(store.subscriptions, [sub], "exactly what was added, nothing dropped")
-        XCTAssertEqual(account.rows[sub.id]?.name, "Spotify")
+        XCTAssertEqual(account.rows[sub.id]?.name, "Pausely Pro")
         XCTAssertTrue(store.sync.pending.isEmpty)
         XCTAssertNil(store.lastErrorMessage, "nothing is said when nothing is waiting")
     }

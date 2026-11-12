@@ -541,7 +541,7 @@ struct PremiumWelcomeFlow: View {
 private struct DemoTierSheet: View {
     var body: some View {
         if let entry = SubscriptionCatalogService.shared.entry(named: "Netflix") {
-            TierSelectionSheet(entry: entry) { _, _, _, _, _, _ in }
+            CatalogAddSheet(entry: entry) { _, _, _, _ in }
         }
     }
 }

@@ -2,55 +2,10 @@
 //  CatalogModels.swift
 //  Pausely
 //
-//  Multi-tier, multi-region subscription database models
+//  The categories a subscription is filed under, and one row of the catalog.
 //
 
 import Foundation
-
-// MARK: - Region
-
-enum Region: String, Codable, CaseIterable {
-    case us = "US"
-    case uk = "UK"
-    case ca = "CA"
-    case eu = "EU"
-    case au = "AU"
-    case global = "Global"
-
-    var currencyCode: String {
-        switch self {
-        case .us, .global: return "USD"
-        case .ca: return "CAD"
-        case .uk: return "GBP"
-        case .eu: return "EUR"
-        case .au: return "AUD"
-        }
-    }
-
-    /// The catalog region whose prices are in `currency`, or `.us` when the catalog has none.
-    static func forCurrency(_ currency: String) -> Region {
-        switch MoneyFormat.normalizedCode(currency) {
-        case "CAD": return .ca
-        case "GBP": return .uk
-        case "EUR": return .eu
-        case "AUD": return .au
-        default:    return .us
-        }
-    }
-
-    var displayName: String {
-        switch self {
-        case .us: return "United States"
-        case .uk: return "United Kingdom"
-        case .ca: return "Canada"
-        case .eu: return "Europe"
-        case .au: return "Australia"
-        case .global: return "Global"
-        }
-    }
-}
-
-// MARK: - Subscription Category
 
 enum SubscriptionCategory: String, Codable, CaseIterable, Identifiable {
 
@@ -194,122 +149,18 @@ enum SubscriptionCategory: String, Codable, CaseIterable, Identifiable {
 
 // MARK: - Pricing Tier
 
-enum PricingTier: String, Codable, CaseIterable, Identifiable {
-    case individual
-    case family
-    case student
-    case duo
-    case team
-    case enterprise
-
-    var id: String { rawValue }
-}
-
-// MARK: - Tier Pricing
-
-struct TierPricing: Codable, Equatable, Identifiable {
-    var id: String { "\(tier.rawValue)-\(region.rawValue)" }
-
-    let tier: PricingTier
-    let region: Region
-    let monthlyPriceUSD: Double
-    let annualPriceUSD: Double?
-    let isBestValue: Bool
-    let currencyCode: String
-
-    // MARK: - Coding Keys
-    enum CodingKeys: String, CodingKey {
-        case tier, region, monthlyPriceUSD, annualPriceUSD, isBestValue, currencyCode
-    }
-
-    // MARK: - Memberwise Initializer
-    init(
-        tier: PricingTier,
-        region: Region,
-        monthlyPriceUSD: Double,
-        annualPriceUSD: Double? = nil,
-        isBestValue: Bool = false,
-        currencyCode: String? = nil
-    ) {
-        self.tier = tier
-        self.region = region
-        self.monthlyPriceUSD = monthlyPriceUSD
-        self.annualPriceUSD = annualPriceUSD
-        self.isBestValue = isBestValue
-        self.currencyCode = currencyCode ?? region.currencyCode
-    }
-}
-
-// MARK: - Catalog Entry
-
-struct CatalogEntry: Identifiable, Codable, Equatable {
-    let id: UUID
-    let bundleId: String
+/// One service in the catalog: what it is called, where it is filed, and the link to its own site
+/// where it is cancelled, when Pausely has one that was requested and answered.
+struct CatalogEntry: Identifiable, Equatable {
     let name: String
     let category: SubscriptionCategory
-    let description: String
-    let iconName: String
-    let appStoreProductId: String?
-    let websiteURL: String
     let cancellationURL: String?
-    let trialDays: Int
-    let canPause: Bool
-    let supportedTiers: [TierPricing]
-    let lastUpdated: Date
 
-    // MARK: - Memberwise Initializer
-    init(
-        id: UUID = UUID(),
-        bundleId: String,
-        name: String,
-        category: SubscriptionCategory,
-        description: String,
-        iconName: String,
-        appStoreProductId: String? = nil,
-        websiteURL: String,
-        cancellationURL: String? = nil,
-        trialDays: Int = 0,
-        canPause: Bool = true,
-        supportedTiers: [TierPricing] = [],
-        lastUpdated: Date = Date()
-    ) {
-        self.id = id
-        self.bundleId = bundleId
+    var id: String { name }
+
+    init(_ name: String, _ category: SubscriptionCategory, _ cancellationURL: String?) {
         self.name = name
         self.category = category
-        self.description = description
-        self.iconName = iconName
-        self.appStoreProductId = appStoreProductId
-        self.websiteURL = websiteURL
         self.cancellationURL = cancellationURL
-        self.trialDays = trialDays
-        self.canPause = canPause
-        self.supportedTiers = supportedTiers
-        self.lastUpdated = lastUpdated
     }
-
-    /// The price the add flow shows and saves for `tier` and someone paying in `currency`:
-    /// their region's price, else the global one, else the US one, else any.
-    func pricing(for tier: PricingTier, payingIn currency: String) -> TierPricing? {
-        let region = Region.forCurrency(currency)
-        return supportedTiers.first { $0.tier == tier && $0.region == region }
-            ?? supportedTiers.first { $0.tier == tier && $0.region == .global }
-            ?? supportedTiers.first { $0.tier == tier && $0.region == .us }
-            ?? supportedTiers.first { $0.tier == tier }
-    }
-
-    func pricing(for tier: PricingTier, in region: Region = .us) -> TierPricing? {
-        // Try exact region match first
-        supportedTiers.first { $0.tier == tier && $0.region == region }
-            // Fall back to global
-            ?? supportedTiers.first { $0.tier == tier && $0.region == .global }
-            // Fall back to any region
-            ?? supportedTiers.first { $0.tier == tier }
-    }
-
-    var defaultIndividualPricing: TierPricing? { pricing(for: .individual) }
-    var bestValueTier: TierPricing? { supportedTiers.first { $0.isBestValue } }
 }
-
-// MARK: - Subscription Info
-
