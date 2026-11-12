@@ -114,7 +114,9 @@ final class ScreenTourTests: XCTestCase {
             (["--empty-demo-data", "--demo-tab=0"], "home-empty"), (["--empty-demo-data", "--demo-tab=1"], "list-empty"),
             (["--empty-demo-data", "--demo-tab=2"], "insights-empty"),
         ]
-        for screen in screens {
+        // `PAUSELY_TOUR_ONLY=paywall,age` captures only those screens: a quick second look after a fix.
+        let only = Set((ProcessInfo.processInfo.environment["PAUSELY_TOUR_ONLY"] ?? "").split(separator: ",").map(String.init))
+        for screen in screens where only.isEmpty || only.contains(screen.name) {
             let app = XCUIApplication()
             app.launchArguments = ["--uitesting", "--demo-mode"] + screen.flags + variantArguments
             app.launch()

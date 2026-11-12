@@ -59,6 +59,8 @@ struct ServiceLogoView: View {
         Text(String(name.prefix(1)).uppercased())
             .font(.total(size * 0.44, weight: .semibold))
             .foregroundStyle(Color.inkText)
+            // A stand-in for a logo, sized to its tile like one: a picture, not text to be read or scaled.
+            .accessibilityHidden(true)
     }
 }
 

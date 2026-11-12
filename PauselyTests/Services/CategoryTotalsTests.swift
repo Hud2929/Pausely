@@ -56,4 +56,22 @@ final class UsageInputTests: XCTestCase {
         XCTAssertNil(UsageInputSheet.totalMinutes(hours: "two", minutes: ""))
         XCTAssertNil(UsageInputSheet.totalMinutes(hours: "-1", minutes: "10"))
     }
+
+    /// A known category reads in the reader's language whichever of its names was saved. Insights
+    /// showed "AI Tools" beside "Health & fitness", because only two of a category's names were known
+    /// to the label and five to everything else.
+    func testAKnownCategoryIsNamedInTheReadersLanguageWhateverWasSaved() {
+        let saved = UserDefaults.standard.object(forKey: L10n.languageKey)
+        defer { UserDefaults.standard.set(saved, forKey: L10n.languageKey) }
+        UserDefaults.standard.set("en", forKey: L10n.languageKey)
+        XCTAssertEqual(SubscriptionCategory.localizedLabel(for: "AI Tools"), "AI & creativity")
+        XCTAssertEqual(SubscriptionCategory.localizedLabel(for: "AI & Creativity"), "AI & creativity")
+        XCTAssertEqual(SubscriptionCategory.localizedLabel(for: "aiTools"), "AI & creativity")
+        XCTAssertEqual(SubscriptionCategory.localizedLabel(for: "Utilities"), "Utilities & internet")
+        XCTAssertEqual(SubscriptionCategory.localizedLabel(for: "Dog walking"), "Dog walking", "what a person typed stays as typed")
+        XCTAssertEqual(SubscriptionCategory.localizedLabel(for: nil), "Other")
+
+        UserDefaults.standard.set("de", forKey: L10n.languageKey)
+        XCTAssertEqual(SubscriptionCategory.localizedLabel(for: "AI Tools"), "KI & Kreativität")
+    }
 }

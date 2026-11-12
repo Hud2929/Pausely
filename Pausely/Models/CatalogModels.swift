@@ -22,6 +22,12 @@ enum SubscriptionCategory: String, Codable, CaseIterable, Identifiable {
     /// a raw value, a display name, or one of a few names that differ. "Other" when nothing fits.
     static func matching(_ text: String?) -> SubscriptionCategory {
         guard let text = text?.trimmingCharacters(in: .whitespaces), !text.isEmpty else { return .other }
+        return known(text) ?? .other
+    }
+
+    /// The category a name stands for, or nil when it is none of them: a raw value, a display name,
+    /// or one of the few names other lists use for the same thing.
+    private static func known(_ text: String) -> SubscriptionCategory? {
         if let match = allCases.first(where: {
             $0.rawValue.caseInsensitiveCompare(text) == .orderedSame || $0.displayName.caseInsensitiveCompare(text) == .orderedSame
         }) { return match }
@@ -31,7 +37,7 @@ enum SubscriptionCategory: String, Codable, CaseIterable, Identifiable {
         case "food & delivery": return .food
         case "transportation": return .travel
         case "design": return .productivity
-        default: return .other
+        default: return nil
         }
     }
 
@@ -140,10 +146,9 @@ enum SubscriptionCategory: String, Codable, CaseIterable, Identifiable {
     /// typed themselves is shown as typed.
     static func localizedLabel(for stored: String?) -> String {
         guard let stored, !stored.isEmpty else { return SubscriptionCategory.other.localizedName }
-        let match = allCases.first {
-            $0.rawValue.caseInsensitiveCompare(stored) == .orderedSame || $0.displayName.caseInsensitiveCompare(stored) == .orderedSame
-        }
-        return match?.localizedName ?? stored
+        // A category Pausely knows is shown in the reader's language, whichever of its names was
+        // saved; one a person typed themselves is shown as they typed it.
+        return known(stored.trimmingCharacters(in: .whitespaces))?.localizedName ?? stored
     }
 }
 

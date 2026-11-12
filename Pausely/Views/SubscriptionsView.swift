@@ -51,7 +51,7 @@ struct SubscriptionsView: View {
                 list
             }
         }
-        .background(Color.ink.ignoresSafeArea())
+        .inkScreen()
         .sheet(item: $activeSheet) { sheet in
             switch sheet {
             case .browser:

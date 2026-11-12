@@ -110,7 +110,7 @@ struct AnalysisView: View {
             .padding(.top, 16)
             .padding(.bottom, 32)
         }
-        .background(Color.ink.ignoresSafeArea())
+        .inkScreen()
     }
 
     private var sentence: String {

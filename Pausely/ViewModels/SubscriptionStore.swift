@@ -451,7 +451,7 @@ class SubscriptionStore: ObservableObject {
             Subscription(
                 id: UUID(),
                 name: "ChatGPT Plus",
-                category: "AI Tools",
+                category: "AI & Creativity",
                 amount: 20.00,
                 billingFrequency: .monthly,
                 nextBillingDate: calendar.date(byAdding: .day, value: 18, to: now),

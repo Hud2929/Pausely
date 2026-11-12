@@ -426,7 +426,7 @@ struct StoreKitUpgradeView: View {
 
             ViewThatFits {
                 HStack(spacing: 16) { footerLinks }
-                VStack(spacing: 4) { footerLinks }
+                VStack(spacing: 0) { footerLinks }
             }
             .font(.caption.weight(.medium))
             .foregroundStyle(Color.inkTextMuted)
@@ -438,10 +438,15 @@ struct StoreKitUpgradeView: View {
         .overlay(alignment: .top) { Hairline() }
     }
 
+    /// Small words, full-size places to tap.
     @ViewBuilder private var footerLinks: some View {
-        Button("Restore purchases") { Task { await restorePurchases() } }
-        Button("Terms of Service") { open(AppConfig.termsOfServiceURL) }
-        Button("Privacy Policy") { open(AppConfig.privacyPolicyURL) }
+        Group {
+            Button("Restore purchases") { Task { await restorePurchases() } }
+            Button("Terms of Service") { open(AppConfig.termsOfServiceURL) }
+            Button("Privacy Policy") { open(AppConfig.privacyPolicyURL) }
+        }
+        .frame(minWidth: Layout.tapTarget, minHeight: Layout.tapTarget)
+        .contentShape(Rectangle())
     }
 
     private func open(_ address: String) {

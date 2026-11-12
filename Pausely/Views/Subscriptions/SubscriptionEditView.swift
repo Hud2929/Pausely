@@ -147,7 +147,7 @@ struct SubscriptionEditView: View {
                 .accessibilityLabel("Currency, \(draft.currency)")
 
                 TextField(text: $draft.amountText, prompt: Text(verbatim: AmountText.text(for: 0, currency: draft.currency))) { EmptyView() }
-                    .font(.total(min(amountSize, 76)))
+                    .font(.total(amountSize))
                     .foregroundStyle(Color.inkText)
                     .keyboardType(.decimalPad)
                     .fixedSize(horizontal: true, vertical: false)

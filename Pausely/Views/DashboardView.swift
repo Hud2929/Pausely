@@ -49,7 +49,7 @@ struct DashboardView: View {
             .padding(.top, 16)
             .padding(.bottom, 32)
         }
-        .background(Color.ink.ignoresSafeArea())
+        .inkScreen()
         .refreshable { await store.fetchSubscriptions(force: true) }
         .sheet(isPresented: $showingAdd) { SubscriptionBrowserView() }
         .sheet(isPresented: $showingPaywall) { StoreKitUpgradeView() }
@@ -62,6 +62,15 @@ struct DashboardView: View {
     }
 
     // MARK: - The number
+
+    /// What VoiceOver says for the big figure: the whole sentence, because "$147.92" alone says nothing.
+    private var spokenTotal: String {
+        let currency = currencyManager.selectedCurrency
+        if showsYear {
+            return L10n.string("Your subscriptions cost about \(MoneyFormat.total(store.totalAnnualSpend, currency, converted: store.totalIsConverted)) a year.")
+        }
+        return L10n.string("Your subscriptions cost \(MoneyFormat.total(store.totalMonthlySpend, currency, converted: store.totalIsConverted)) a month.")
+    }
 
     private var header: some View {
         HStack(alignment: .top, spacing: 12) {
@@ -91,6 +100,7 @@ struct DashboardView: View {
                     .contentTransition(.numericText())
                     .lineLimit(1)
                     .minimumScaleFactor(0.5)
+                    .accessibilityLabel(Text(verbatim: spokenTotal))
                     .accessibilityIdentifier("spendTotal")
 
                 if !store.subscriptions.isEmpty {

@@ -56,7 +56,7 @@ struct AddSubscriptionView: View {
                             .accessibilityHidden(!(frequency == .monthly || frequency == .yearly))
                         HStack(alignment: .firstTextBaseline, spacing: 8) {
                             TextField(text: $amount, prompt: Text(verbatim: AmountText.text(for: 0, currency: currencyManager.selectedCurrency))) { EmptyView() }
-                                .font(.total(min(amountSize, 64)))
+                                .font(.total(amountSize))
                                 .foregroundStyle(Color.inkText)
                                 .keyboardType(.decimalPad)
                                 .focused($focusedField, equals: .amount)

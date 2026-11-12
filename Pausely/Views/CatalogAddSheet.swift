@@ -146,7 +146,7 @@ struct CatalogAddSheet: View {
                           prompt: Text(verbatim: typical.map { MoneyFormat.string($0, currency, locale: L10n.locale) }
                                                    ?? AmountText.text(for: 0, currency: currency))
                             .foregroundStyle(typical == nil ? Color.inkTextFaint : Color.inkText))
-                    .font(.total(min(amountSize, 64)))
+                    .font(.total(amountSize))
                     .foregroundStyle(Color.inkText)
                     .keyboardType(.decimalPad)
                     .focused($amountFocused)

@@ -97,6 +97,8 @@ struct AgeGateView: View {
                 Button(cancelTitle, action: onCancel)
                     .font(.subheadline)
                     .foregroundStyle(Color.inkTextMuted)
+                    .frame(minWidth: Layout.tapTarget, minHeight: Layout.tapTarget)
+                    .contentShape(Rectangle())
                     .accessibilityIdentifier("ageGateCancelButton")
             }
         }

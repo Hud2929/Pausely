@@ -312,6 +312,23 @@ Updated at every commit, so the work can be picked up from this file alone.
   `private/audits/2026-11-11/ui.md` marks NO and that still exists (several are gone: deep
   analysis, paused, the rating sheet, in-app policies, Live Activity). (4) Each screen scored on the
   eight dimensions from sheets that were opened; section 7 rewritten from that.
+- E, first slice (11-12): the four tabs keep the status bar's strip solid (seen on the simulator:
+  scrolled Insights no longer draws a row through the clock; the first attempt, a zero-height
+  strip, did nothing and was caught by looking); a button that isn't available yet keeps readable
+  text on its own fill instead of the enabled colours at 40%; VoiceOver reads the Home total as a
+  sentence; the paywall's three links and the age check's link have a 44-point place to tap; the
+  big amount fields grow all the way with text size; the logo's stand-in letter is a picture to
+  the audit. Found in a capture and fixed: Insights showed the stored name "AI Tools" beside
+  translated categories; a known category now reads in the reader's language whichever of its
+  names was saved (`CategoryTotalsTests.testAKnownCategoryIsNamedInTheReadersLanguageWhateverWasSaved`).
+  The tour can capture a chosen subset (`PAUSELY_TOUR_ONLY`). 736 tests, 0 failures.
+  The same tour at the largest text size (95 captures, `/tmp/pausely_tour_big_1`, audit 131) shows
+  what is next: on Home the "Coming up" amount breaks across two lines ("$147." / "92"), the
+  "Each month" switch and the count wrap word by word, and the state marks stay small; on
+  Subscriptions the subtitle breaks into four lines and pinned section headers stack up.
+  Top-bar buttons (Done, Cancel, Save) are system bar items, which iOS does not scale and offers
+  the Large Content Viewer for; the audit lists them as "partially unsupported" (about 40 of the
+  105) and they will be reported separately, not hidden.
 - Told by the other session at 22:04 (it has stood down and changed nothing): sections 2, 3, 4, 6, 7
   and 10 of the engineering audit were never done and there is no finished overlooked-details
   report. Those areas have been scanned by nobody; they are owed before Stage G can be called done.

@@ -81,7 +81,7 @@ struct ProfileView: View {
             .padding(.top, 16)
             .padding(.bottom, 32)
         }
-        .background(Color.ink.ignoresSafeArea())
+        .inkScreen()
         .task(id: paymentManager.currentTier) {
             plan = paymentManager.isPremium ? await StoreKitManager.shared.ownSubscription(for: paymentManager.currentTier) : nil
         }

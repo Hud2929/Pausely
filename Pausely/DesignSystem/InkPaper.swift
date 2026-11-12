@@ -296,6 +296,24 @@ struct ScreenTitle: View {
     }
 }
 
+extension View {
+    /// The screen's ink, with the status bar's strip kept solid: on a screen without a navigation bar,
+    /// scrolled text otherwise slides under the clock and is drawn through it.
+    func inkScreen() -> some View {
+        background(Color.ink.ignoresSafeArea())
+            .overlay(alignment: .top) {
+                GeometryReader { proxy in
+                    Color.ink
+                        .frame(height: proxy.safeAreaInsets.top)
+                        .frame(maxHeight: .infinity, alignment: .top)
+                        .ignoresSafeArea(edges: .top)
+                }
+                .allowsHitTesting(false)
+                .accessibilityHidden(true)
+            }
+    }
+}
+
 /// A hairline between rows, in place of a card per row.
 struct Hairline: View {
     var body: some View {
@@ -331,18 +349,20 @@ struct InkButtonStyle: ButtonStyle {
         configuration.label
             .font(.headline)
             .multilineTextAlignment(.center)
-            .foregroundStyle(foreground)
+            .foregroundStyle(isEnabled ? foreground : Color.inkTextMuted)
             .padding(.horizontal, 20)
             .padding(.vertical, 14)
             .frame(maxWidth: .infinity, minHeight: 54)
-            .background(fill, in: RoundedRectangle(cornerRadius: Layout.cardRadius, style: .continuous))
+            .background(isEnabled ? fill : (kind == .quiet ? Color.clear : Color.inkLifted),
+                        in: RoundedRectangle(cornerRadius: Layout.cardRadius, style: .continuous))
             .overlay {
                 if kind == .quiet {
                     RoundedRectangle(cornerRadius: Layout.cardRadius, style: .continuous)
                         .stroke(Color.outline, lineWidth: 1)
                 }
             }
-            .opacity(isEnabled ? (configuration.isPressed ? 0.8 : 1) : 0.4)
+            // Not available yet reads as quiet, never as faint: its text keeps a contrast of 7 to 1.
+            .opacity(configuration.isPressed ? 0.8 : 1)
             .scaleEffect(configuration.isPressed ? 0.985 : 1)
             .animation(Motion.unlessReduced(Motion.touch), value: configuration.isPressed)
             .contentShape(Rectangle())
