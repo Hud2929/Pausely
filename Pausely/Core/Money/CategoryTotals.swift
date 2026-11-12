@@ -6,6 +6,8 @@ struct CategoryTotal: Identifiable, Equatable {
     let category: String
     let amount: Decimal
     let count: Int
+    /// Some of it is charged in another currency, so the amount is an estimate.
+    var isConverted = false
 
     var id: String { category }
 }
@@ -15,7 +17,8 @@ extension Array where Element == Subscription {
     /// "entertainment" (from the catalog) and "Entertainment" (from the edit screen) are one category.
     func categoryTotals(in currency: String, rates: CurrencyRates = CurrencyManager.shared.rates) -> [CategoryTotal] {
         return Dictionary(grouping: charging) { SubscriptionCategory.label(for: $0.category) }
-            .map { CategoryTotal(category: $0.key, amount: $0.value.monthlyTotal(in: currency, rates: rates), count: $0.value.count) }
+            .map { CategoryTotal(category: $0.key, amount: $0.value.monthlyTotal(in: currency, rates: rates), count: $0.value.count,
+                                 isConverted: $0.value.isConverted(to: currency)) }
             .sorted { ($0.amount, $1.category) > ($1.amount, $0.category) }
     }
 }

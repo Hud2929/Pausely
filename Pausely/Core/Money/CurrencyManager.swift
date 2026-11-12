@@ -23,6 +23,14 @@ final class CurrencyManager: ObservableObject {
 
     /// When the rates held were loaded. Nil until live rates have been loaded once on this iPhone.
     var lastUpdated: Date?
+
+    /// The day the rates in use are from: the last live load, or the day of the built-in table.
+    var ratesDate: Date {
+        if let lastUpdated { return lastUpdated }
+        let day = ISO8601DateFormatter()
+        day.formatOptions = [.withFullDate]
+        return day.date(from: CurrencyRates.fallbackDate) ?? .distantPast
+    }
     private var isRefreshing = false
 
     /// Where live rates come from. The app asks exchangerate-api.com; tests put their own answer here.

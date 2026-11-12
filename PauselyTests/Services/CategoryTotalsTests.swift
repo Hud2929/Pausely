@@ -27,7 +27,8 @@ final class CategoryTotalsTests: XCTestCase {
     func testEachSubscriptionIsConvertedFromItsOwnCurrency() {
         // 10 euros is 20 dollars at these rates; adding the raw numbers would give 20, not 30.
         let totals = [sub("Deezer", 10, "Music", currency: "EUR"), sub("Spotify", 10, "Music")].categoryTotals(in: "USD", rates: rates)
-        XCTAssertEqual(totals, [CategoryTotal(category: "Music", amount: 30, count: 2)])
+        XCTAssertEqual(totals, [CategoryTotal(category: "Music", amount: 30, count: 2, isConverted: true)])
+        XCTAssertEqual(MoneyFormat.total(totals[0].amount, "USD", converted: totals[0].isConverted), "≈" + MoneyFormat.string(Decimal(30), "USD"))
     }
 
     func testOnlyActiveSubscriptionsCount_andNoCategoryIsOther() {

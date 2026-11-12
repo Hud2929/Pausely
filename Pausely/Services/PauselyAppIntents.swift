@@ -10,7 +10,8 @@ struct GetMonthlySpendIntent: AppIntent {
     @MainActor
     func perform() async throws -> some IntentResult & ReturnsValue<String> {
         let store = SubscriptionStore.shared
-        let formatted = MoneyFormat.string(store.totalMonthlySpend, CurrencyManager.shared.selectedCurrency)
+        let formatted = MoneyFormat.total(store.totalMonthlySpend, CurrencyManager.shared.selectedCurrency,
+                                          converted: store.totalIsConverted)
 
         return .result(value: "Your monthly subscription spend is \(formatted)")
     }

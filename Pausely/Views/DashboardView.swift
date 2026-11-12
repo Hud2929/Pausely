@@ -85,7 +85,8 @@ struct DashboardView: View {
                 .accessibilityHint(Text("Switches between a month and a year"))
                 .accessibilityIdentifier("spendPeriodToggle")
 
-                Text(verbatim: currencyManager.format(showsYear ? store.totalAnnualSpend : store.totalMonthlySpend))
+                Text(verbatim: MoneyFormat.total(showsYear ? store.totalAnnualSpend : store.totalMonthlySpend,
+                                                 currencyManager.selectedCurrency, converted: store.totalIsConverted))
                     .font(.system(size: numberSize, weight: .bold, design: .serif))
                     .foregroundStyle(Color.inkText)
                     .contentTransition(.numericText())
@@ -255,7 +256,8 @@ struct DashboardView: View {
                     Text(L10n.string("\(store.pausedSubscriptions.count) paused"))
                         .font(.body).foregroundStyle(Color.inkText)
                     Spacer(minLength: 8)
-                    Text(verbatim: currencyManager.format(store.pausedSubscriptions.monthlyTotal()))
+                    Text(verbatim: MoneyFormat.total(store.pausedSubscriptions.monthlyTotal(), currencyManager.selectedCurrency,
+                                                     converted: store.pausedSubscriptions.isConverted()))
                         .font(.body.monospacedDigit()).foregroundStyle(Color.inkTextMuted)
                 }
                 .padding(.vertical, 14)
@@ -405,7 +407,8 @@ private struct HorizonSection: View {
                     .font(.headline)
                     .foregroundStyle(Color.inkText)
                 Spacer(minLength: 8)
-                Text(verbatim: MoneyFormat.string(total, currency, locale: L10n.locale))
+                Text(verbatim: MoneyFormat.total(total, currency, converted: Horizon.isConverted(charges, through: throughDay, to: currency),
+                                                 locale: L10n.locale))
                     .font(.headline.monospacedDigit())
                     .foregroundStyle(Color.inkText)
                     .contentTransition(.numericText())

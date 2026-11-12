@@ -63,7 +63,8 @@ struct AnalysisView: View {
                         ForEach(Array(ranked.prefix(6).enumerated()), id: \.element.subscription.id) { index, item in
                             if index > 0 { Hairline() }
                             BarRow(title: item.subscription.name,
-                                   value: currencyManager.format(item.monthly),
+                                   value: MoneyFormat.total(item.monthly, currencyManager.selectedCurrency,
+                                                            converted: [item.subscription].isConverted()),
                                    share: fraction(item.monthly, of: top))
                         }
                     }
@@ -75,7 +76,8 @@ struct AnalysisView: View {
                             ForEach(Array(categories.prefix(5).enumerated()), id: \.element.id) { index, category in
                                 if index > 0 { Hairline() }
                                 BarRow(title: SubscriptionCategory.localizedLabel(for: category.category),
-                                       value: MoneyFormat.string(category.amount, currencyManager.selectedCurrency, locale: L10n.locale),  // money-guard: category totals are already in the display currency
+                                       value: MoneyFormat.total(category.amount, currencyManager.selectedCurrency,
+                                                                converted: category.isConverted, locale: L10n.locale),
                                        share: fraction(category.amount, of: top))
                             }
                         }

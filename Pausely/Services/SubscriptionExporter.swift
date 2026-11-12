@@ -124,8 +124,9 @@ final class SubscriptionExporter {
         // Totals in the display currency, each subscription converted from its own currency.
         let active = subscriptions.charging
         let displayCurrency = CurrencyManager.shared.selectedCurrency
-        let totalMonthly = MoneyFormat.string(active.monthlyTotal(in: displayCurrency), displayCurrency)
-        let totalAnnual = MoneyFormat.string(active.annualTotal(in: displayCurrency), displayCurrency)
+        let converted = active.isConverted(to: displayCurrency)
+        let totalMonthly = MoneyFormat.total(active.monthlyTotal(in: displayCurrency), displayCurrency, converted: converted)
+        let totalAnnual = MoneyFormat.total(active.annualTotal(in: displayCurrency), displayCurrency, converted: converted)
 
         let data = renderer.pdfData { context in
             context.beginPage()

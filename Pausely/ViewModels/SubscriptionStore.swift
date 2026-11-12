@@ -9,6 +9,8 @@ class SubscriptionStore: ObservableObject {
     @Published var subscriptions: [Subscription] = []
     @Published var totalMonthlySpend: Decimal = 0
     @Published var totalAnnualSpend: Decimal = 0
+    /// Some of what is being paid for is charged in another currency, so the totals are estimates ("≈").
+    @Published private(set) var totalIsConverted = false
     @Published var isLoading = false
     @Published var lastErrorMessage: String?
     @Published var lastFetchDate: Date?
@@ -413,7 +415,9 @@ class SubscriptionStore: ObservableObject {
     /// subscription is converted from its own currency first (see MoneyMath); cheap enough to redo
     /// on every change, so there's no cache to go stale.
     private func calculateTotals(in currency: String = CurrencyManager.shared.selectedCurrency) {
-        let monthly = subscriptions.charging.monthlyTotal(in: currency, rates: CurrencyManager.shared.rates)
+        let charging = subscriptions.charging
+        let monthly = charging.monthlyTotal(in: currency, rates: CurrencyManager.shared.rates)
+        totalIsConverted = charging.isConverted(to: currency)
         totalMonthlySpend = monthly
         totalAnnualSpend = monthly * 12
     }

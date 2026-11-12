@@ -45,9 +45,10 @@ final class WidgetDataStore {
         defaults.set(upcoming.count, forKey: "widget_upcomingCount")
         defaults.set(displayCurrency, forKey: "widget_currencyCode")
         // The widget shows these exactly as written; it never formats money itself.
-        defaults.set(MoneyFormat.string(monthlyTotal, displayCurrency), forKey: "widget_monthlySpendText")
-        defaults.set(MoneyFormat.string(monthlyTotal, displayCurrency, wholeUnits: true), forKey: "widget_monthlySpendWholeText")
-        defaults.set(MoneyFormat.string(monthlyTotal * 12, displayCurrency, wholeUnits: true), forKey: "widget_yearlySpendWholeText")
+        let converted = active.isConverted(to: displayCurrency)
+        defaults.set(MoneyFormat.total(monthlyTotal, displayCurrency, converted: converted), forKey: "widget_monthlySpendText")
+        defaults.set(MoneyFormat.total(monthlyTotal, displayCurrency, converted: converted, wholeUnits: true), forKey: "widget_monthlySpendWholeText")
+        defaults.set(MoneyFormat.total(monthlyTotal * 12, displayCurrency, converted: converted, wholeUnits: true), forKey: "widget_yearlySpendWholeText")
 
         let next = Self.nextCharge(in: active)
         defaults.set(nextChargeLine(next, hasSubscriptions: !active.isEmpty), forKey: "widget_topInsight")

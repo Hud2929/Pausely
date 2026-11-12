@@ -134,8 +134,11 @@ final class WidgetDataStoreTests: XCTestCase {
 
         XCTAssertEqual(summary.monthlySpend, 20, accuracy: 0.001)
         XCTAssertEqual(summary.currencyCode, "USD")
-        XCTAssertEqual(summary.monthlySpendText, MoneyFormat.string(Decimal(20), "USD"))
-        XCTAssertEqual(summary.yearlySpendWholeText, MoneyFormat.string(Decimal(240), "USD", wholeUnits: true))
+        XCTAssertEqual(summary.monthlySpendText, "≈" + MoneyFormat.string(Decimal(20), "USD"), "part of it was converted")
+        XCTAssertEqual(summary.yearlySpendWholeText, "≈" + MoneyFormat.string(Decimal(240), "USD", wholeUnits: true))
+
+        sut.publish(subscriptions: [subs[0]])
+        XCTAssertEqual(sut.readSummary().monthlySpendText, MoneyFormat.string(Decimal(10), "USD"), "all in dollars: exact")
     }
 
     // MARK: - Next charge (PauselyWidget/WidgetReader reads these values exactly as written)

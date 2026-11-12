@@ -13,8 +13,20 @@ struct CurrencySettingsView: View {
         return all.filter { $0.code.lowercased().contains(query) || $0.name.lowercased().contains(query) }
     }
 
+    private var ratesDay: String {
+        currencyManager.ratesDate.formatted(.dateTime.month(.abbreviated).day().year().locale(L10n.locale))
+    }
+
     var body: some View {
         SettingsPage(title: "Currency", detail: "Totals are shown in this currency. Each subscription keeps the currency it's charged in.") {
+            // The age of the rates, said before the long list rather than under it.
+            Text(L10n.string("Totals that mix currencies are converted at rates from \(ratesDay) and marked ≈."))
+                .font(.footnote)
+                .foregroundStyle(Color.inkTextMuted)
+                .fixedSize(horizontal: false, vertical: true)
+                .padding(.top, -14)
+                .accessibilityIdentifier("ratesDate")
+
             InkTextField(placeholder: L10n.string("Search currencies"), text: $searchText, autocapitalization: .never)
                 .autocorrectionDisabled()
                 .accessibilityIdentifier("currencySearch")

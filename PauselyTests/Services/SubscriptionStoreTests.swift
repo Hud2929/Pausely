@@ -220,6 +220,22 @@ final class SubscriptionStoreTests: XCTestCase {
         XCTAssertEqual(store.totalAnnualSpend, 120)
     }
 
+    /// A total that had to convert something is an estimate and says so; one that didn't is exact.
+    func testATotalIsMarkedAsAnEstimateOnlyWhenSomethingWasConverted() async throws {
+        await add(TestFactories.makeSubscription(name: "Netflix", amount: 10, currency: "USD"))
+        XCTAssertFalse(store.totalIsConverted)
+        XCTAssertEqual(MoneyFormat.total(store.totalMonthlySpend, "USD", converted: store.totalIsConverted), MoneyFormat.string(Decimal(10), "USD"))
+
+        let crave = TestFactories.makeSubscription(name: "Crave", amount: 14, currency: "CAD")
+        await add(crave)
+        XCTAssertTrue(store.totalIsConverted)
+        XCTAssertTrue(MoneyFormat.total(store.totalMonthlySpend, "USD", converted: store.totalIsConverted).hasPrefix("≈"))
+
+        // Cancelled, it is no longer in the total, so the total is exact again.
+        await store.updateSubscriptionStatus(id: crave.id, status: .cancelled)
+        XCTAssertFalse(store.totalIsConverted)
+    }
+
     /// One list, one answer. Home counted paused subscriptions and left trials out, Insights left
     /// both out, the paywall and the year slip counted both: someone with one trial and one paused
     /// subscription saw three different yearly figures.

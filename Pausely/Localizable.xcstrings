@@ -66032,6 +66032,40 @@
           }
         }
       }
+    },
+    "Totals that mix currencies are converted at rates from %@ and marked ≈.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "تُحوَّل الإجماليات التي تجمع أكثر من عملة بأسعار صرف بتاريخ %@ وتُعلَّم بالعلامة ≈."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Summen mit mehreren Währungen werden zu Kursen vom %@ umgerechnet und mit ≈ gekennzeichnet."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Los totales con varias monedas se convierten con tipos de cambio del %@ y se marcan con ≈."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Les totaux qui mêlent plusieurs devises sont convertis aux taux du %@ et marqués d'un ≈."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "複数の通貨を含む合計は%@時点のレートで換算され、≈が付きます。"
+          }
+        }
+      }
     }
   },
   "version": "1.1"

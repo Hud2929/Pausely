@@ -28,6 +28,13 @@ enum MoneyFormat {
         string(decimal(amount), currency, locale: locale, wholeUnits: wholeUnits)
     }
 
+    /// A total across several things: exact when all of them are charged in `currency`, and "≈" in
+    /// front when some had to be converted, because a converted total moves with the exchange rate.
+    static func total(_ amount: Decimal, _ currency: String, converted: Bool,
+                      locale: Locale = .autoupdatingCurrent, wholeUnits: Bool = false) -> String {
+        (converted ? "≈" : "") + string(amount, currency, locale: locale, wholeUnits: wholeUnits)
+    }
+
     /// A plain number for files such as CSV: no symbol, no grouping, "." as the decimal point, and the
     /// currency's own decimals ("15.49", "1500", "1.250").
     static func plainNumber(_ amount: Decimal, _ currency: String) -> String {

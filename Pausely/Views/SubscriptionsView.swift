@@ -76,7 +76,7 @@ struct PremiumSubscriptionsView: View {
                 ScreenTitle(text: L10n.string("Subscriptions"))
                 if !store.subscriptions.isEmpty {
                     Text(L10n.string("\(store.activeSubscriptions.count) subscriptions") + " · "
-                         + L10n.string("\(currencyManager.format(store.totalMonthlySpend)) a month"))
+                         + L10n.string("\(MoneyFormat.total(store.totalMonthlySpend, currencyManager.selectedCurrency, converted: store.totalIsConverted)) a month"))
                         .font(.subheadline)
                         .foregroundStyle(Color.inkTextMuted)
                 }

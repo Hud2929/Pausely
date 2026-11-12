@@ -67,6 +67,17 @@ final class CurrencyManagerTests: XCTestCase {
         XCTAssertEqual(manager.ratesTable.convert(100, from: "USD", to: "CAD"), 150)
     }
 
+    /// What Currency settings says the rates are from: the last live load, else the built-in table's day.
+    func testTheDateOfTheRatesInUse() async {
+        manager.lastUpdated = nil
+        XCTAssertEqual(ReminderPlanner.dayStamp(manager.ratesDate, Calendar(identifier: .gregorian)).prefix(7), CurrencyRates.fallbackDate.prefix(7))
+        let live = answer(Self.world(cad: 1.5))
+        manager.loadLiveRates = { live }
+        let loaded = later
+        await manager.refreshRates(now: loaded)
+        XCTAssertEqual(manager.ratesDate, loaded)
+    }
+
     func testRatesLoadedWithinTheHourAreNotAskedForAgain() async {
         var asked = 0
         let live = answer(Self.world(cad: 1.5))
