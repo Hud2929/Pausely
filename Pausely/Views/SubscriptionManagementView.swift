@@ -6,9 +6,7 @@ struct SubscriptionManagementView: View {
     let subscription: Subscription
 
     @Environment(\.dismiss) private var dismiss
-    @Environment(\.openURL) private var openURL
     @ObservedObject private var store = SubscriptionStore.shared
-    @ObservedObject private var actionManager = SubscriptionActionManager.shared
     @ObservedObject private var paymentManager = PaymentManager.shared
     @ObservedObject private var eventLog = LifecycleEventLog.shared
     @ObservedObject private var screenTimeManager = UsageLog.shared
@@ -28,7 +26,6 @@ struct SubscriptionManagementView: View {
         store.subscriptions.first { $0.id == subscription.id } ?? subscription
     }
 
-    private var contacts: [SupportContact] { actionManager.getSupportContacts(for: current) }
 
     var body: some View {
         ScrollView {
@@ -42,7 +39,6 @@ struct SubscriptionManagementView: View {
                 }
                 toolsGroup
                 LifetimeCostCard(subscription: current)
-                supportGroup
                 actions
             }
             .padding(.horizontal, Layout.margin)
@@ -311,38 +307,6 @@ struct SubscriptionManagementView: View {
         .accessibilityElement(children: .combine)
     }
 
-
-    @ViewBuilder
-    private var supportGroup: some View {
-        let phone = contacts.first { $0.type == .phone }
-        let chat = contacts.first { $0.type == .chat || $0.type == .email }
-        if phone != nil || chat != nil {
-            VStack(spacing: 0) {
-                if let phone, let url = Self.url(for: phone) {
-                    toolRow(icon: "phone", title: L10n.string("Call support"), subtitle: phone.value) { openURL(url) }
-                }
-                if phone != nil, chat != nil { divider }
-                if let chat, let url = Self.url(for: chat) {
-                    toolRow(icon: chat.type == .email ? "envelope" : "bubble.left", title: L10n.string("Contact support"), subtitle: chat.label) { openURL(url) }
-                }
-            }
-        }
-    }
-
-    /// Phone numbers, e-mail addresses and links all become real, tappable URLs.
-    static func url(for contact: SupportContact) -> URL? {
-        let value = contact.value.trimmingCharacters(in: .whitespacesAndNewlines)
-        switch contact.type {
-        case .phone:
-            let digits = value.filter { $0.isNumber || $0 == "+" }
-            return digits.isEmpty ? nil : URL(string: "tel:\(digits)")
-        case .email:
-            return value.contains("@") ? URL(string: "mailto:\(value)") : URL(string: value)
-        default:
-            if value.contains("@"), !value.contains("/") { return URL(string: "mailto:\(value)") }
-            return URL(string: value.hasPrefix("http") ? value : "https://\(value)")
-        }
-    }
 
     // MARK: - Actions
 

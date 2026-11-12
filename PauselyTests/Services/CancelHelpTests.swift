@@ -7,7 +7,6 @@ import XCTest
 final class CancelHelpTests: XCTestCase {
 
     private let matcher = ServiceMatcher(services: ServiceDatabase.services)
-    private let manager = SubscriptionActionManager.shared
     private func service(_ name: String) -> String? { matcher.service(for: name)?.name }
 
     // MARK: Never the wrong company
@@ -41,13 +40,6 @@ final class CancelHelpTests: XCTestCase {
                      "Spotify for Podcasters", "Dropbox Sign", "Box of Style", "Zoom Phone", "Max Mara", "Prime Gaming"] {
             XCTAssertNil(service(name), name)
         }
-    }
-
-    func testAPhoneNumberIsOnlyEverTheServicesOwn() {
-        let barkBox = TestFactories.makeSubscription(name: "BarkBox")
-        XCTAssertTrue(manager.getSupportContacts(for: barkBox).isEmpty, "not Box's phone number")
-        let netflix = TestFactories.makeSubscription(name: "Netflix")
-        XCTAssertEqual(manager.getSupportContacts(for: netflix).first?.value, "1-866-579-7172")
     }
 
     /// Across the whole catalog: whatever service a name gets, one of that service's names is how the
@@ -109,28 +101,52 @@ final class CancelHelpTests: XCTestCase {
 
     // MARK: What the cancel screen offers
 
-    func testAKnownServiceGetsItsStepsAndItsOwnCancellationPage() {
-        let help = manager.cancelHelp(for: TestFactories.makeSubscription(name: "Netflix Premium"))
-        XCTAssertEqual(help.kind, .cancellationPage)
-        XCTAssertEqual(help.link?.absoluteString, "https://www.netflix.com/cancelplan")
-        XCTAssertEqual(help.service?.instructions.count, 4)
+    func testAKnownServiceGetsItsOwnCancellationPage() {
+        let help = CancelHelp.find(for: TestFactories.makeSubscription(name: "Netflix Premium"))
+        XCTAssertEqual(help, CancelHelp(kind: .cancellationPage, link: URL(string: "https://www.netflix.com/cancelplan")))
+    }
+
+    /// Anything Apple bills is cancelled in Settings by the same steps, so it gets those steps and
+    /// Apple's own link, whether Pausely knows it as a service or only from the catalog.
+    func testASubscriptionBilledByAppleGetsApplesSteps() {
+        let apples = CancelHelp(kind: .appleSubscription, link: URL(string: "https://apps.apple.com/account/subscriptions"))
+        for name in ["Apple One", "Apple TV+", "iCloud+ 200GB", "Apple Music Student", "Apple News+"] {
+            XCTAssertEqual(CancelHelp.find(for: TestFactories.makeSubscription(name: name)), apples, name)
+        }
+        let listedByTheCatalog = SubscriptionCatalogService.shared.catalog.first {
+            CancelHelp.isApples($0.cancellationURL ?? "") && CancelHelp.service(named: $0.name) == nil
+        }
+        if let entry = listedByTheCatalog {
+            XCTAssertEqual(CancelHelp.find(for: TestFactories.makeSubscription(name: entry.name)), apples, entry.name)
+        }
+    }
+
+    /// The data holds a link and names for each service, and nothing that was never checked.
+    func testEveryServiceHasASecureCancellationLinkOfItsOwn() {
+        XCTAssertEqual(ServiceDatabase.services.count, 202)
+        XCTAssertEqual(Set(ServiceDatabase.services.map(\.id)).count, 202, "no id twice")
+        for service in ServiceDatabase.services {
+            let url = URL(string: service.cancelURL)
+            XCTAssertEqual(url?.scheme, "https", service.name)
+            XCTAssertNotNil(url?.host, service.name)
+        }
+        XCTAssertEqual(ServiceDatabase.services.filter(\.isBilledByApple).map(\.name).sorted(),
+                       ["Apple Arcade", "Apple Fitness+", "Apple Music", "Apple News+", "Apple One", "Apple TV+", "iCloud+"])
     }
 
     /// In the catalog under exactly this name, but not a service with steps: the catalog's own link,
     /// which is the service's site. Called a website, with no steps claimed.
     func testACatalogNameGetsTheCatalogsLinkForExactlyThatName() {
-        let help = manager.cancelHelp(for: TestFactories.makeSubscription(name: "barkbox"))
+        let help = CancelHelp.find(for: TestFactories.makeSubscription(name: "barkbox"))
         XCTAssertEqual(help.kind, .website)
         XCTAssertEqual(help.link?.host, URL(string: SubscriptionCatalogService.shared.entry(named: "BarkBox")?.cancellationURL ?? "")?.host)
         XCTAssertNotNil(help.link?.host)
-        XCTAssertNil(help.service)
     }
 
     /// Unknown: a search, called a search. The name goes in whole ("&" used to cut the question short).
     func testAnUnknownNameGetsASearchForExactlyThatName() throws {
-        let help = manager.cancelHelp(for: TestFactories.makeSubscription(name: "Tom & Ann's Gym #2"))
+        let help = CancelHelp.find(for: TestFactories.makeSubscription(name: "Tom & Ann's Gym #2"))
         XCTAssertEqual(help.kind, .search)
-        XCTAssertNil(help.service)
         let link = try XCTUnwrap(help.link)
         XCTAssertEqual(link.host, "www.google.com")
         let question = URLComponents(url: link, resolvingAgainstBaseURL: false)?.queryItems

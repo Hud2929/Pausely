@@ -70,19 +70,51 @@ struct ServiceMatcher {
     ]
 }
 
-/// What Pausely can offer someone who wants to cancel a subscription.
-struct CancelHelp {
+/// What Pausely can offer someone who wants to cancel a subscription, most exact first.
+struct CancelHelp: Equatable {
     enum Kind: Equatable {
-        /// A service Pausely knows: its own cancellation page, with steps.
+        /// Billed by Apple: cancelled in Settings, by the same steps for every Apple subscription.
+        case appleSubscription
+        /// A service Pausely knows: its own cancellation page.
         case cancellationPage
-        /// The service's own site, from the catalog entry of exactly this name. No steps.
+        /// The service's own site, from the catalog entry of exactly this name.
         case website
-        /// Nothing known: a web search for how to cancel it.
+        /// Nothing known: a web search for how to cancel it, said to be one.
         case search
     }
 
     let kind: Kind
     let link: URL?
-    /// Steps and contacts, when the service is one Pausely knows.
-    let service: SubscriptionService?
+
+    private static let matcher = ServiceMatcher(services: ServiceDatabase.services)
+
+    /// The service a subscription with this name belongs to, or nil. Exact names only (see `ServiceMatcher`).
+    static func service(named name: String) -> SubscriptionService? {
+        matcher.service(for: name)
+    }
+
+    @MainActor
+    static func find(for subscription: Subscription) -> CancelHelp {
+        if let service = service(named: subscription.name), let page = URL(string: service.cancelURL) {
+            return CancelHelp(kind: service.isBilledByApple ? .appleSubscription : .cancellationPage, link: page)
+        }
+        if let listed = SubscriptionCatalogService.shared.entry(named: subscription.name)?.cancellationURL,
+           let site = URL(string: listed), site.scheme == "https", site.host != nil {
+            return CancelHelp(kind: isApples(listed) ? .appleSubscription : .website, link: isApples(listed) ? applesSubscriptions : site)
+        }
+        return CancelHelp(kind: .search, link: searchURL(for: subscription.name))
+    }
+
+    /// Apple's own page for a person's subscriptions. iOS opens it in Settings.
+    static let applesSubscriptions = URL(string: "https://apps.apple.com/account/subscriptions")
+
+    static func isApples(_ address: String) -> Bool {
+        URL(string: address)?.host == "apps.apple.com"
+    }
+
+    static func searchURL(for name: String) -> URL? {
+        var search = URLComponents(string: "https://www.google.com/search")
+        search?.queryItems = [URLQueryItem(name: "q", value: "cancel \(name) subscription")]
+        return search?.url
+    }
 }

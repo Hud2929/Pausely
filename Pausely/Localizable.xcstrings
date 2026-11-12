@@ -29005,40 +29005,6 @@
         }
       }
     },
-    "Sign in there and cancel from your account or billing settings.": {
-      "localizations": {
-        "ar": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "سجّل الدخول هناك وألغِ من إعدادات الحساب أو الفوترة."
-          }
-        },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Melden Sie sich dort an und kündigen Sie in den Konto- oder Abrechnungseinstellungen."
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Inicia sesión allí y cancela desde los ajustes de tu cuenta o de facturación."
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Connectez-vous sur le site et annulez depuis les réglages de votre compte ou de facturation."
-          }
-        },
-        "ja": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "サイトにサインインし、アカウントまたは請求の設定からキャンセルしてください。"
-          }
-        }
-      }
-    },
     "Optimize": {
       "localizations": {
         "ar": {
@@ -60286,74 +60252,6 @@
         }
       }
     },
-    "Call support": {
-      "localizations": {
-        "ar": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "اتصل بالدعم"
-          }
-        },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Support anrufen"
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Llamar a soporte"
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Appeler l'assistance"
-          }
-        },
-        "ja": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "サポートに電話"
-          }
-        }
-      }
-    },
-    "Contact support": {
-      "localizations": {
-        "ar": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "تواصل مع الدعم"
-          }
-        },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Support kontaktieren"
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Contactar con soporte"
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Contacter l'assistance"
-          }
-        },
-        "ja": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "サポートに連絡"
-          }
-        }
-      }
-    },
     "Payment was due %lld days ago": {
       "localizations": {
         "ar": {
@@ -65926,6 +65824,244 @@
           "stringUnit": {
             "state": "translated",
             "value": "Netflix、Spotifyなど"
+          }
+        }
+      }
+    },
+    "Open Settings and tap your name.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "افتح الإعدادات واضغط على اسمك."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Öffne die Einstellungen und tippe auf deinen Namen."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Abre Ajustes y toca tu nombre."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ouvrez Réglages et touchez votre nom."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "「設定」を開き、自分の名前をタップします。"
+          }
+        }
+      }
+    },
+    "Tap Subscriptions.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "اضغط على الاشتراكات."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tippe auf „Abonnements“."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Toca Suscripciones."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Touchez Abonnements."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "「サブスクリプション」をタップします。"
+          }
+        }
+      }
+    },
+    "Tap %@.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "اضغط على %@."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tippe auf %@."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Toca %@."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Touchez %@."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@をタップします。"
+          }
+        }
+      }
+    },
+    "Tap Cancel Subscription. You may need to scroll down to find it.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "اضغط على «إلغاء الاشتراك». قد تحتاج إلى التمرير للأسفل للعثور عليه."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tippe auf „Abo kündigen“. Eventuell musst du dafür nach unten scrollen."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Toca Cancelar suscripción. Puede que tengas que desplazarte hacia abajo para encontrarlo."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Touchez Annuler l'abonnement. Vous devrez peut-être faire défiler l'écran pour le trouver."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "「サブスクリプションをキャンセルする」をタップします。下にスクロールしないと表示されない場合があります。"
+          }
+        }
+      }
+    },
+    "If there's no Cancel button, it's already cancelled.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "إذا لم يظهر زر الإلغاء، فالاشتراك ملغى بالفعل."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Wenn es keine Taste zum Kündigen gibt, ist das Abo bereits gekündigt."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Si no aparece el botón de cancelar, ya está cancelada."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "S'il n'y a pas de bouton Annuler, l'abonnement est déjà annulé."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "キャンセルボタンがない場合は、すでにキャンセル済みです。"
+          }
+        }
+      }
+    },
+    "Open Your Subscriptions": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "فتح اشتراكاتك"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Deine Abos öffnen"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Abrir tus suscripciones"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ouvrir vos abonnements"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "サブスクリプションを開く"
+          }
+        }
+      }
+    },
+    "You cancel on %@'s own site: sign in, then look under account or billing.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "يتم الإلغاء على موقع %@ نفسه: سجّل الدخول ثم ابحث في إعدادات الحساب أو الفوترة."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Gekündigt wird auf der Website von %@: Melde dich an und sieh unter Konto oder Abrechnung nach."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Se cancela en el sitio de %@: inicia sesión y busca en los ajustes de cuenta o facturación."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "La résiliation se fait sur le site de %@ : connectez-vous, puis regardez dans les réglages du compte ou de la facturation."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "解約は%@のサイトで行います。サインインして、アカウントまたは請求の設定を確認してください。"
           }
         }
       }

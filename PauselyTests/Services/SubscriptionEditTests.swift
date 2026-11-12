@@ -168,29 +168,3 @@ final class RenewalDayCountTests: XCTestCase {
         }
     }
 }
-
-// MARK: - Support links
-
-final class SupportLinkTests: XCTestCase {
-
-    func testPhoneBecomesTelURL() {
-        let url = SubscriptionManagementView.url(for: SupportContact(type: .phone, value: "1-800-555-0100", label: "Support", hours: nil))
-        XCTAssertEqual(url?.absoluteString, "tel:18005550100")
-    }
-
-    func testEmailBecomesMailto() {
-        let url = SubscriptionManagementView.url(for: SupportContact(type: .email, value: "help@example.com", label: "Email", hours: nil))
-        XCTAssertEqual(url?.absoluteString, "mailto:help@example.com")
-    }
-
-    func testChatLinkGetsAScheme() {
-        let url = SubscriptionManagementView.url(for: SupportContact(type: .chat, value: "help.example.com/chat", label: "Chat", hours: nil))
-        XCTAssertEqual(url?.absoluteString, "https://help.example.com/chat")
-        let full = SubscriptionManagementView.url(for: SupportContact(type: .chat, value: "https://help.example.com", label: "Chat", hours: nil))
-        XCTAssertEqual(full?.absoluteString, "https://help.example.com")
-    }
-
-    func testEmptyPhoneIsNotALink() {
-        XCTAssertNil(SubscriptionManagementView.url(for: SupportContact(type: .phone, value: "   ", label: "Support", hours: nil)))
-    }
-}

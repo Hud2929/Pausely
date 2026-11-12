@@ -13,10 +13,19 @@ struct CancelSubscriptionFlow: View {
     @State private var didOpenPage = false
     @State private var isSaving = false
     @State private var cancelled = false
-    @State private var showingDifficultyRating = false
     @State private var showingReceipt = false
+    @Environment(\.openURL) private var openURL
 
-    private var help: CancelHelp { SubscriptionActionManager.shared.cancelHelp(for: subscription) }
+    private var help: CancelHelp { CancelHelp.find(for: subscription) }
+
+    /// Apple's own steps for a subscription it bills, as published on 29 September 2026
+    /// (support.apple.com/118428). The same for every Apple subscription, so they can be checked.
+    private var appleSteps: [String] {
+        [L10n.string("Open Settings and tap your name."),
+         L10n.string("Tap Subscriptions."),
+         L10n.string("Tap \(subscription.name)."),
+         L10n.string("Tap Cancel Subscription. You may need to scroll down to find it.")]
+    }
 
     var body: some View {
         ZStack {
@@ -32,11 +41,6 @@ struct CancelSubscriptionFlow: View {
             if let url = help.link { SafariView(url: url).ignoresSafeArea() }
         }
         .sheet(isPresented: $showingReceipt) { SavingsReceiptView() }
-        .sheet(isPresented: $showingDifficultyRating, onDismiss: { dismiss() }) {
-            CancelDifficultyRatingView(serviceName: subscription.name) {
-                showingDifficultyRating = false
-            }
-        }
     }
 
     private var steps: some View {
@@ -67,24 +71,31 @@ struct CancelSubscriptionFlow: View {
                                 .fixedSize(horizontal: false, vertical: true)
                                 .accessibilityAddTraits(.isHeader)
 
-                            if let service = help.service, !service.instructions.isEmpty {
+                            switch help.kind {
+                            case .appleSubscription:
                                 Perforation()
                                 Text("How to cancel").font(.footnote.weight(.semibold))
-                                ForEach(service.instructions.prefix(4)) { step in
+                                ForEach(Array(appleSteps.enumerated()), id: \.offset) { index, step in
                                     HStack(alignment: .firstTextBaseline, spacing: 10) {
-                                        Text(verbatim: "\(step.order)")
+                                        Text(verbatim: "\(index + 1)")
                                             .font(.proof(.footnote, weight: .bold))
-                                        Text(step.description)
+                                        Text(verbatim: step)
                                             .font(.footnote)
                                             .fixedSize(horizontal: false, vertical: true)
                                     }
                                     .accessibilityElement(children: .combine)
                                 }
-                            } else if help.kind == .website {
+                                Text("If there's no Cancel button, it's already cancelled.")
+                                    .font(.footnote)
+                                    .foregroundStyle(Color.paperMuted)
+                                    .fixedSize(horizontal: false, vertical: true)
+                            case .cancellationPage, .website:
                                 Perforation()
-                                Text("Sign in there and cancel from your account or billing settings.")
+                                Text(L10n.string("You cancel on \(subscription.name)'s own site: sign in, then look under account or billing."))
                                     .font(.footnote)
                                     .fixedSize(horizontal: false, vertical: true)
+                            case .search:
+                                EmptyView()
                             }
                         }
                     }
@@ -102,7 +113,15 @@ struct CancelSubscriptionFlow: View {
 
             VStack(spacing: 10) {
                 // The button says what it opens: the service's cancellation page, its website, or a search.
-                Button { isShowingSafari = true } label: { Text(openLabel) }
+                Button {
+                    // Apple's link opens the person's subscriptions in Settings; the rest open here.
+                    if help.kind == .appleSubscription, let link = help.link {
+                        openURL(link)
+                        didOpenPage = true
+                    } else {
+                        isShowingSafari = true
+                    }
+                } label: { Text(openLabel) }
                     .buttonStyle(.ink(didOpenPage ? .quiet : .main))
                     .accessibilityIdentifier("openCancellationPageButton")
 
@@ -123,6 +142,7 @@ struct CancelSubscriptionFlow: View {
 
     private var openLabel: String {
         switch help.kind {
+        case .appleSubscription: return L10n.string("Open Your Subscriptions")
         case .cancellationPage: return L10n.string("Open Cancellation Page")
         case .website: return L10n.string("Open Website")
         case .search: return L10n.string("Search How to Cancel")
@@ -137,7 +157,7 @@ struct CancelSubscriptionFlow: View {
             VStack(spacing: 10) {
                 Button { showingReceipt = true } label: { Text("See your Savings Receipt") }
                     .buttonStyle(.ink)
-                Button { showingDifficultyRating = true } label: { Text("Done") }
+                Button { dismiss() } label: { Text("Done") }
                     .buttonStyle(.ink(.quiet))
                     .accessibilityIdentifier("cancelDoneButton")
             }
