@@ -423,6 +423,17 @@ Updated at every commit, so the work can be picked up from this file alone.
   (`CatalogTexts`). Seen on the iPad Pro 13-inch simulator (`/tmp/pausely_tour_ipad_1`, the whole
   tour, 97 captures): the language page, the mail screens, the code screen and the catalog all say
   iPad. 747 tests, 0 failures.
+- Cur-1 (11-12): the currency list offers what people are charged in today. The Bulgarian lev is
+  gone (Bulgaria took the euro on 2026-01-01 at 1 EUR = 1.95583 BGN, Council Regulation (EU)
+  2025/1409; the lev stopped being legal tender on 2026-02-01) and so is Sierra Leone's old leone
+  (redenominated 1000 to 1 as SLE on 2022-07-01; ISO 4217 amendments 171 and 172); the new leone
+  is offered. What was saved in either still converts, at the fixed rate and not at whatever a feed
+  says or leaves out (`CurrencyRates.retired`, applied wherever rates are built); a display
+  currency saved as the lev, or an iPhone whose system still names it for Bulgaria, becomes the
+  euro (`CurrencyManager.current`). The public feed was read once to check it (read-only): it
+  still carries BGN at exactly 1.95583 times its euro and SLL at 1000 times SLE.
+  `testARetiredCurrencyConvertsAtItsFixedRate`, `testNoRetiredCurrencyIsOfferedAndItsSuccessorIs`.
+  130 currencies, as the listing says. 749 tests, 0 failures.
 - Told by the other session at 22:04 (it has stood down and changed nothing): sections 2, 3, 4, 6, 7
   and 10 of the engineering audit were never done and there is no finished overlooked-details
   report. Those areas have been scanned by nobody; they are owed before Stage G can be called done.
@@ -608,7 +619,7 @@ matters to a stranger: the customer round below scores "getting in" at 1.
 | T15–19, T23, T43 | Estimates and forecasts stated as fact ("this year", "Back in your pocket", "avoided") | closed 11-11, in five languages: the promise sentences say "your cancellations are on track to keep you … over 12 months" (not "Pausely is on track to save you … this year"); "Kept with Pausely" is "Kept since you cancelled"; "paid for itself N× over" is "on track for N× what Pausely costs a year"; one sentence for an empty receipt on both screens; "How we count" says the charges are what the renewal date and price entered say would have happened; "avoided over 12 months" is "on track over 12 months"; the Pause Plan slip says "About … a year" and what it assumes; the first run says "about … a year more" |
 | T59, T66, T72–74 | "Open Cancellation Page" opens a web search for 794 of 994 names; a "pause" that pauses nothing and stops reminders; Shortcuts report wrong status | T59 closed 11-11 with T62: the button says what it opens. A known service: "Open Cancellation Page". A name the catalog lists: the catalog's own link for exactly that name, called "Open Website", with one line on where to cancel. Anything else: "Search How to Cancel" (and "&" in a name no longer cuts the search short). Seen on the simulator. T66, T72–74 closed 11-11: the "pause" set only by a Shortcut marked a subscription paused, stopped its reminders and took it out of the totals while it went on charging. It is removed: both Shortcuts, `pausedUntil`, the resume button, the paused row on Home and the reminder scheduled outside the planner. A subscription the person marks Paused themselves is still listed apart. The detail Shortcut reports the real status and no renewal for something that will not charge; the spend Shortcut says what it returns. The `paused_until` column stays in the database, unwritten, until it can be dropped by the two-step rule |
 | T96 | Pause Plan counts Audible, PlayStation Plus and Kindle as streaming | closed 11-11: eligibility is an explicit list of video streaming services by name; being filed under "Entertainment" is no longer enough. `testOnlyVideoStreamingByNameIsEligibleWhateverItsCategory` (12 that must not be, 18 that must) |
-| Cur-1 (found 11-12) | The currency list offers two currencies nobody is charged in any more and lacks one that people are: the Bulgarian lev (BGN; Bulgaria took the euro on 2026-01-01 at 1 EUR = 1.95583 BGN and the lev stopped being legal tender on 2026-02-01: evroto.bg, trade.ec.europa.eu), Sierra Leone's old leone (SLL; redenominated 1000:1 as SLE on 2022-07-01 and moved to ISO 4217's historic list: SIX amendments 171 and 172), and no SLE at all, so someone in Sierra Leone cannot choose their own money | open |
+| Cur-1 (found 11-12) | The currency list offers two currencies nobody is charged in any more and lacks one that people are: the Bulgarian lev (BGN; Bulgaria took the euro on 2026-01-01 at 1 EUR = 1.95583 BGN and the lev stopped being legal tender on 2026-02-01: evroto.bg, trade.ec.europa.eu), Sierra Leone's old leone (SLL; redenominated 1000:1 as SLE on 2022-07-01 and moved to ISO 4217's historic list: SIX amendments 171 and 172), and no SLE at all, so someone in Sierra Leone cannot choose their own money | closed 11-12: neither is offered, SLE is; old entries convert at the fixed rates (`CurrencyRates.retired`), and a saved or system choice of a retired currency becomes its successor; two tests in `MoneyTests` |
 
 ### 6.3a Open: from the overlooked-details check (each looked up in the code on the night of 11-11)
 

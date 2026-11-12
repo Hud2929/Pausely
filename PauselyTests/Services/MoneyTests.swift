@@ -118,6 +118,47 @@ final class CurrencyRatesTests: XCTestCase {
         XCTAssertEqual(unknown, [])
     }
 
+    /// A currency nobody is charged in any more converts at the fixed rate that replaced it, whatever
+    /// a feed says about it or leaves out. The lev became the euro on 2026-01-01 at 1.95583 (Council
+    /// Regulation (EU) 2025/1409); the old leone became the new on 2022-07-01 at 1000 to 1.
+    func testARetiredCurrencyConvertsAtItsFixedRate() {
+        XCTAssertEqual(CurrencyRates.retired, [
+            CurrencyRates.Retired(code: "BGN", replacedBy: "EUR", unitsPerNew: Decimal(string: "1.95583")!, since: "2026-01-01"),
+            CurrencyRates.Retired(code: "SLL", replacedBy: "SLE", unitsPerNew: 1000, since: "2022-07-01"),
+        ])
+        // To the cent, as it is shown: a division by a rate does not come back to a round number.
+        func cents(_ amount: Decimal?) -> Decimal? {
+            guard var value = amount else { return nil }
+            var rounded = Decimal()
+            NSDecimalRound(&rounded, &value, 2, .plain)
+            return rounded
+        }
+        // A feed that has dropped the lev and misprices the old leone.
+        let live = CurrencyRates(apiRates: ["EUR": 0.9, "SLE": 23.07, "SLL": 5]).fillingGaps()
+        XCTAssertEqual(live.perUSD["BGN"], Decimal(string: "1.760247"), "0.9 euros to the dollar, 1.95583 leva to the euro")
+        XCTAssertEqual(live.perUSD["SLL"], 23_070, "the feed's own figure for a retired currency is not used")
+        XCTAssertEqual(cents(live.convert(Decimal(string: "19.56")!, from: "BGN", to: "EUR")), 10)
+        XCTAssertEqual(cents(live.convert(10, from: "EUR", to: "BGN")), Decimal(string: "19.56"))
+        XCTAssertEqual(cents(live.convert(1000, from: "SLL", to: "SLE")), 1)
+        // Offline, from the built-in table.
+        XCTAssertEqual(cents(CurrencyRates.fallback.convert(Decimal(string: "1.95583")!, from: "BGN", to: "EUR")), 1)
+        XCTAssertEqual(cents(CurrencyRates.fallback.convert(23_000, from: "SLL", to: "SLE")), 23)
+    }
+
+    /// The picker offers what people are charged in today: the new leone, not the old, and no lev.
+    /// A choice made in a retired currency, or an iPhone that still names one, becomes its successor.
+    func testNoRetiredCurrencyIsOfferedAndItsSuccessorIs() {
+        let offered = Set(CurrencyManager.shared.allCurrencies.map(\.code))
+        for old in CurrencyRates.retired {
+            XCTAssertFalse(offered.contains(old.code), "\(old.code) was retired on \(old.since)")
+            XCTAssertTrue(offered.contains(old.replacedBy), "\(old.replacedBy) replaced \(old.code)")
+            XCTAssertEqual(CurrencyManager.current(old.code), old.replacedBy)
+        }
+        XCTAssertEqual(CurrencyManager.current("BGN"), "EUR")
+        XCTAssertEqual(CurrencyManager.current("SLL"), "SLE")
+        XCTAssertEqual(CurrencyManager.current("USD"), "USD")
+    }
+
     func testBuiltInRatesArePlausible() {
         XCTAssertEqual(CurrencyRates.fallback.perUSD["USD"], 1)
         XCTAssertTrue(CurrencyRates.fallback.perUSD.values.allSatisfy { $0 > 0 })

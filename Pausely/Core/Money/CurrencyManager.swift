@@ -96,7 +96,6 @@ final class CurrencyManager: ObservableObject, @unchecked Sendable {
         Currency(code: "CZK", name: "Czech Koruna"),
         Currency(code: "HUF", name: "Hungarian Forint"),
         Currency(code: "RON", name: "Romanian Leu"),
-        Currency(code: "BGN", name: "Bulgarian Lev"),
         Currency(code: "RSD", name: "Serbian Dinar"),
         Currency(code: "ISK", name: "Icelandic Króna"),
         Currency(code: "UAH", name: "Ukrainian Hryvnia"),
@@ -182,7 +181,7 @@ final class CurrencyManager: ObservableObject, @unchecked Sendable {
         Currency(code: "MZN", name: "Mozambican Metical"),
         Currency(code: "MWK", name: "Malawian Kwacha"),
         Currency(code: "RWF", name: "Rwandan Franc"),
-        Currency(code: "SLL", name: "Sierra Leonean Leone"),
+        Currency(code: "SLE", name: "Sierra Leonean Leone"),
         Currency(code: "SOS", name: "Somali Shilling"),
         Currency(code: "SDG", name: "Sudanese Pound"),
         Currency(code: "TMT", name: "Turkmenistani Manat"),
@@ -198,9 +197,9 @@ final class CurrencyManager: ObservableObject, @unchecked Sendable {
     private let ratesDateKey = "exchange_rates_date"
 
     private init() {
-        let deviceCurrency = Locale.current.currency?.identifier ?? "USD"
+        let deviceCurrency = Self.current(Locale.current.currency?.identifier ?? "USD")
         let offered = Set(currencies.map(\.code))
-        if let saved = UserDefaults.standard.string(forKey: userDefaultsKey), offered.contains(saved) {
+        if let saved = UserDefaults.standard.string(forKey: userDefaultsKey).map(Self.current), offered.contains(saved) {
             selectedCurrency = saved
         } else {
             selectedCurrency = offered.contains(deviceCurrency) ? deviceCurrency : "USD"
@@ -275,9 +274,16 @@ final class CurrencyManager: ObservableObject, @unchecked Sendable {
         UserDefaults.standard.set(code, forKey: userDefaultsKey)
     }
 
-    /// All available currencies
+    /// Every currency someone can choose: what people are charged in today. A retired one
+    /// (`CurrencyRates.retired`) is not offered; what was saved in it still converts.
     var allCurrencies: [Currency] {
         currencies
+    }
+
+    /// What a currency is today: itself, or what replaced it. Totals chosen in the lev are shown in
+    /// euros from 2026, and an iPhone whose system still names the lev for Bulgaria starts in euros.
+    nonisolated static func current(_ code: String) -> String {
+        CurrencyRates.retired.first { $0.code == code }?.replacedBy ?? code
     }
 }
 
