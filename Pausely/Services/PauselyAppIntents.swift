@@ -149,7 +149,7 @@ struct PauseSubscriptionIntent: AppIntent {
         }
 
         let reminderDate = Calendar.current.date(byAdding: .day, value: 7, to: Date()) ?? Date()
-        try await store.pauseSubscription(id: sub.id, until: reminderDate)
+        await store.pauseSubscription(id: sub.id, until: reminderDate)
 
         let pauseURL = SubscriptionActionManager.shared.getService(for: sub.name)?.pauseURL
         NotificationManager.shared.schedulePauseReminder(
@@ -179,7 +179,7 @@ struct ResumeSubscriptionIntent: AppIntent {
             return .result(value: "No subscription found matching '\(name)'.")
         }
 
-        try await store.resumeSubscription(id: sub.id)
+        await store.resumeSubscription(id: sub.id)
         return .result(value: "Cleared pause reminder for \(sub.name).")
     }
 }
@@ -201,7 +201,7 @@ struct DeleteSubscriptionIntent: AppIntent {
             return .result(value: "No subscription found matching '\(name)'.")
         }
 
-        try await store.deleteSubscription(id: sub.id)
+        await store.deleteSubscription(id: sub.id)
         return .result(value: "Deleted \(sub.name).")
     }
 }

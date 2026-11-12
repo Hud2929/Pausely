@@ -12,7 +12,6 @@ struct CancelSubscriptionFlow: View {
     @State private var isShowingSafari = false
     @State private var didOpenPage = false
     @State private var isSaving = false
-    @State private var errorMessage: String?
     @State private var cancelled = false
     @State private var showingDifficultyRating = false
     @State private var showingReceipt = false
@@ -44,7 +43,6 @@ struct CancelSubscriptionFlow: View {
                 showingDifficultyRating = false
             }
         }
-        .errorBanner($errorMessage)
     }
 
     private var steps: some View {
@@ -151,15 +149,11 @@ struct CancelSubscriptionFlow: View {
     private func markCancelled() async {
         isSaving = true
         defer { isSaving = false }
-        do {
-            try await SubscriptionStore.shared.updateSubscriptionStatus(id: subscription.id, status: .cancelled)
-            if showsOutcome {
-                withAnimation(Motion.unlessReduced(Motion.arrive)) { cancelled = true }
-            } else {
-                dismiss()
-            }
-        } catch {
-            errorMessage = "Couldn't save: \(error.localizedDescription)"
+        await SubscriptionStore.shared.updateSubscriptionStatus(id: subscription.id, status: .cancelled)
+        if showsOutcome {
+            withAnimation(Motion.unlessReduced(Motion.arrive)) { cancelled = true }
+        } else {
+            dismiss()
         }
     }
 }
@@ -168,7 +162,6 @@ struct CancelSubscriptionFlow: View {
 struct RevolutionaryResumeButton: View {
     let subscription: Subscription
     @State private var isProcessing = false
-    @State private var errorMessage: String?
 
     var body: some View {
         Button { Task { await performResume() } } label: {
@@ -197,19 +190,13 @@ struct RevolutionaryResumeButton: View {
         }
         .buttonStyle(.plain)
         .disabled(isProcessing)
-        .errorBanner($errorMessage)
     }
 
     private func performResume() async {
         isProcessing = true
         defer { isProcessing = false }
-        errorMessage = nil
-        do {
-            try await SubscriptionStore.shared.resumeSubscription(id: subscription.id)
-            NotificationManager.shared.cancelPauseReminder(for: subscription.id)
-            Feel.landed()
-        } catch {
-            errorMessage = "Could not resume: \(error.localizedDescription)"
-        }
+        await SubscriptionStore.shared.resumeSubscription(id: subscription.id)
+        NotificationManager.shared.cancelPauseReminder(for: subscription.id)
+        Feel.landed()
     }
 }

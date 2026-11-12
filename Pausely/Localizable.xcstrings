@@ -5779,6 +5779,40 @@
         }
       }
     },
+    "Removed from this iPhone. Your account still has it. Pausely will keep trying.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "تمت الإزالة من هذا الـ iPhone. ما زال موجودًا في حسابك. سيواصل Pausely المحاولة."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Von diesem iPhone entfernt. In Ihrem Konto ist es noch vorhanden. Pausely versucht es weiter."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Eliminado de este iPhone. Tu cuenta aún lo tiene. Pausely seguirá intentándolo."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Supprimé de cet iPhone. Votre compte l'a encore. Pausely continuera d'essayer."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "このiPhoneから削除しました。アカウントにはまだ残っています。Pauselyが引き続き試みます。"
+          }
+        }
+      }
+    },
     "Renewal Date": {
       "localizations": {
         "ar": {
@@ -5877,6 +5911,40 @@
           "stringUnit": {
             "state": "translated",
             "value": "このiPhoneに保存しました。オンラインに戻ると同期されます。"
+          }
+        }
+      }
+    },
+    "Saved on this iPhone. It hasn't reached your account yet. Pausely will keep trying.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "تم الحفظ على هذا الـ iPhone. لم يصل إلى حسابك بعد. سيواصل Pausely المحاولة."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Auf diesem iPhone gespeichert. In Ihrem Konto ist es noch nicht angekommen. Pausely versucht es weiter."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Guardado en este iPhone. Aún no ha llegado a tu cuenta. Pausely seguirá intentándolo."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Enregistré sur cet iPhone. Ce n'est pas encore arrivé sur votre compte. Pausely continuera d'essayer."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "このiPhoneに保存しました。アカウントにはまだ届いていません。Pauselyが引き続き試みます。"
           }
         }
       }
@@ -53627,40 +53695,6 @@
         }
       }
     },
-    "Couldn't save": {
-      "localizations": {
-        "ar": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "تعذّر الحفظ"
-          }
-        },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Speichern fehlgeschlagen"
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "No se pudo guardar"
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Impossible d'enregistrer"
-          }
-        },
-        "ja": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "保存できませんでした"
-          }
-        }
-      }
-    },
     "Discard Changes": {
       "localizations": {
         "ar": {
@@ -54031,40 +54065,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "「%@」を削除しますか？"
-          }
-        }
-      }
-    },
-    "Something went wrong": {
-      "localizations": {
-        "ar": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "حدث خطأ ما"
-          }
-        },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Etwas ist schiefgelaufen"
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Algo salió mal"
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Une erreur s'est produite"
-          }
-        },
-        "ja": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "問題が発生しました"
           }
         }
       }
@@ -59403,40 +59403,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "%lld件の日付を保存"
-          }
-        }
-      }
-    },
-    "Some dates couldn't be saved. Try again.": {
-      "localizations": {
-        "ar": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "تعذّر حفظ بعض التواريخ. حاول مجددًا."
-          }
-        },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Einige Daten konnten nicht gespeichert werden. Versuch es noch einmal."
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "No se pudieron guardar algunas fechas. Inténtalo de nuevo."
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Certaines dates n'ont pas pu être enregistrées. Réessayez."
-          }
-        },
-        "ja": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "一部の日付を保存できませんでした。もう一度お試しください。"
           }
         }
       }

@@ -160,7 +160,7 @@ struct PremiumSubscriptionsView: View {
                             titleVisibility: .visible,
                             presenting: pendingRemoval) { subscription in
             Button("Remove", role: .destructive) {
-                Task { try? await store.deleteSubscription(id: subscription.id) }
+                Task { await store.deleteSubscription(id: subscription.id) }
             }
             Button("Keep", role: .cancel) {}
         } message: { _ in

@@ -2,8 +2,9 @@ import XCTest
 @testable import Pausely
 
 /// The subscription list the whole app reads from. Changes land on the device first (offline-first);
-/// totals, filters and history follow; whatever the cloud didn't get is queued for sync. Runs offline in
-/// a `StoreSandbox`, so the live database is never touched and nothing is left behind.
+/// totals, filters and history follow; whatever the account didn't get waits in the sync queue. Runs in a
+/// `StoreSandbox` against a stand-in for the account (offline unless a test puts it online), so the live
+/// database is never touched and nothing is left behind.
 @MainActor
 final class SubscriptionStoreTests: XCTestCase {
 
@@ -23,7 +24,16 @@ final class SubscriptionStoreTests: XCTestCase {
 
     private func days(_ n: Int) -> Date { Calendar.current.date(byAdding: .day, value: n, to: Date())! }
     private func add(_ sub: Subscription) async { _ = try? await store.addSubscription(sub) }
-    private var queued: [SyncOperationType] { SyncQueue.shared.pendingOperations.map(\.type) }
+    private var waiting: [SyncIntent.Kind] { store.sync.pending.map(\.kind) }
+    private var account: FakeSyncTransport { sandbox.transport }
+    private var offlineNotice: String { L10n.string("Saved on this iPhone. It will sync when you're back online.") }
+
+    /// A subscription the account already has: added while online, nothing waiting.
+    private func addOnline(_ sub: Subscription) async {
+        account.canSend = true
+        await add(sub)
+        XCTAssertTrue(store.sync.pending.isEmpty)
+    }
 
     // MARK: Adding
 
@@ -42,10 +52,11 @@ final class SubscriptionStoreTests: XCTestCase {
         store.lastErrorMessage = nil
         let synced = try await store.addSubscription(sub)
         XCTAssertFalse(synced)
-        XCTAssertEqual(store.lastErrorMessage, L10n.string("Saved on this iPhone. It will sync when you're back online."))
+        XCTAssertEqual(store.lastErrorMessage, offlineNotice)
         XCTAssertEqual(store.subscriptions.map(\.id), [sub.id], "the subscription stays on the device")
-        XCTAssertEqual(SyncQueue.shared.pendingOperations.last?.subscriptionId, sub.id)
-        XCTAssertEqual(queued.last, .create)
+        XCTAssertEqual(store.sync.pending.map(\.subscriptionId), [sub.id])
+        XCTAssertEqual(waiting, [.create])
+        XCTAssertTrue(account.calls.isEmpty)
         XCTAssertEqual(LifecycleEventLog.shared.events.filter { $0.subscriptionId == sub.id }.map(\.kind), [.added])
     }
 
@@ -56,39 +67,133 @@ final class SubscriptionStoreTests: XCTestCase {
         await add(sub)
         var edited = try XCTUnwrap(store.subscriptions.first)
         edited.amount = 12
-        try await store.updateSubscription(edited)
+        await store.updateSubscription(edited)
         XCTAssertEqual(store.totalMonthlySpend, 12)
         let change = try XCTUnwrap(LifecycleEventLog.shared.events.filter { $0.subscriptionId == sub.id }.last)
         XCTAssertEqual(change.kind, .priceChanged)
         XCTAssertEqual(change.previousAmount, 10)
         XCTAssertEqual(change.amount, 12)
-        XCTAssertEqual(queued.suffix(1), [.update])
+    }
+
+    // MARK: Reaching the account
+
+    /// What came back from the server used to replace the subscription, and the server doesn't store
+    /// everything: the app it belongs to, the plan and a corrected price were gone the moment it synced.
+    func testAnAddThatReachesTheAccountKeepsWhatOnlyThisIPhoneKnows() async throws {
+        var sub = TestFactories.makeSubscription(name: "Spotify", userPriceUSD: 5.99, isPriceOverridden: true)
+        sub.bundleIdentifier = "com.spotify.client"
+        sub.selectedTier = .family
+        account.canSend = true
+        store.lastErrorMessage = nil
+        let reached = try await store.addSubscription(sub)
+        XCTAssertTrue(reached)
+        XCTAssertEqual(store.subscriptions, [sub], "exactly what was added, nothing dropped")
+        XCTAssertEqual(account.rows[sub.id]?.name, "Spotify")
+        XCTAssertTrue(store.sync.pending.isEmpty)
+        XCTAssertNil(store.lastErrorMessage, "nothing is said when nothing is waiting")
+    }
+
+    /// The old queue sent an edit as a change to a row the server had never been given, which changed
+    /// nothing, and then counted it as sent: the next fetch put the old price back.
+    func testAnEditMadeBeforeTheAddWasSentGoesUpWithIt() async throws {
+        let sub = TestFactories.makeSubscription(name: "Netflix", amount: 10)
+        await add(sub)
+        var edited = sub
+        edited.amount = 12
+        await store.updateSubscription(edited)
+        XCTAssertEqual(waiting, [.create], "still one thing to send: the add, as it is now")
+
+        account.canSend = true
+        await store.sync.drain(force: true)
+        XCTAssertEqual(account.calls, ["create Netflix"])
+        XCTAssertEqual(account.rows[sub.id]?.amount, 12)
+        XCTAssertTrue(store.sync.pending.isEmpty)
+    }
+
+    func testACancelMadeBeforeTheAddWasSentGoesUpWithIt() async throws {
+        let sub = TestFactories.makeSubscription(name: "Hulu", amount: 10)
+        await add(sub)
+        await store.updateSubscriptionStatus(id: sub.id, status: .cancelled)
+        account.canSend = true
+        await store.sync.drain(force: true)
+        XCTAssertEqual(account.rows[sub.id]?.status, .cancelled)
+    }
+
+    func testADeleteMadeBeforeTheAddWasSentLeavesNothingOnTheAccount() async throws {
+        let sub = TestFactories.makeSubscription(name: "Gone")
+        await add(sub)
+        await store.deleteSubscription(id: sub.id)
+        XCTAssertEqual(waiting, [.delete])
+        account.canSend = true
+        await store.sync.drain(force: true)
+        XCTAssertEqual(account.calls, ["delete"])
+        XCTAssertTrue(account.rows.isEmpty)
+    }
+
+    func testOnceTheAccountHasItAnEditIsSentAsAnEditStraightAway() async throws {
+        let sub = TestFactories.makeSubscription(name: "Netflix", amount: 10)
+        await addOnline(sub)
+        var edited = sub
+        edited.amount = 12
+        await store.updateSubscription(edited)
+        XCTAssertEqual(account.calls, ["create Netflix", "update Netflix"])
+        XCTAssertEqual(account.rows[sub.id]?.amount, 12)
+        XCTAssertTrue(store.sync.pending.isEmpty)
+    }
+
+    /// "When you're back online" is only said when being offline is the reason.
+    func testTheNoticeSaysWhyAChangeIsStillWaiting() async throws {
+        let sub = TestFactories.makeSubscription(name: "Netflix")
+        await addOnline(sub)
+
+        account.failure = URLError(.notConnectedToInternet)
+        await store.pauseSubscription(id: sub.id, until: days(30))
+        XCTAssertEqual(store.lastErrorMessage, offlineNotice)
+
+        struct Refused: Error {}
+        account.failure = Refused()
+        await store.resumeSubscription(id: sub.id)
+        XCTAssertEqual(store.lastErrorMessage,
+                       L10n.string("Saved on this iPhone. It hasn't reached your account yet. Pausely will keep trying."))
+
+        await store.deleteSubscription(id: sub.id)
+        XCTAssertEqual(store.lastErrorMessage,
+                       L10n.string("Removed from this iPhone. Your account still has it. Pausely will keep trying."))
+        XCTAssertNotNil(account.rows[sub.id], "and it does")
+
+        account.failure = URLError(.timedOut)
+        let other = TestFactories.makeSubscription(name: "Other")
+        await add(other)
+        await store.deleteSubscription(id: other.id)
+        XCTAssertEqual(store.lastErrorMessage, L10n.string("Removed from this iPhone. It will sync when you're back online."))
     }
 
     func testCancellingStopsCountingItAndReactivatingCountsItAgain() async throws {
         let sub = TestFactories.makeSubscription(name: "Hulu", amount: 10)
-        await add(sub)
-        try await store.updateSubscriptionStatus(id: sub.id, status: .cancelled)
+        await addOnline(sub)
+        await store.updateSubscriptionStatus(id: sub.id, status: .cancelled)
         XCTAssertEqual(store.totalMonthlySpend, 0)
-        try await store.updateSubscriptionStatus(id: sub.id, status: .active)
+        XCTAssertEqual(account.rows[sub.id]?.status, .cancelled)
+        await store.updateSubscriptionStatus(id: sub.id, status: .active)
         XCTAssertEqual(store.totalMonthlySpend, 10)
+        XCTAssertEqual(account.rows[sub.id]?.status, .active)
         XCTAssertEqual(LifecycleEventLog.shared.events.filter { $0.subscriptionId == sub.id }.map(\.kind), [.added, .cancelled, .reactivated])
-        XCTAssertEqual(queued.suffix(2), [.updateStatus, .updateStatus])
     }
 
     func testPauseAndResume() async throws {
         let sub = TestFactories.makeSubscription(name: "Spotify")
-        await add(sub)
+        await addOnline(sub)
         let until = Calendar.current.noon(of: days(30))
-        try await store.pauseSubscription(id: sub.id, until: until)
+        await store.pauseSubscription(id: sub.id, until: until)
         XCTAssertEqual(store.subscriptions.first?.pausedUntil, until)
         XCTAssertEqual(store.pausedSubscriptions.map(\.id), [sub.id])
         XCTAssertTrue(store.activeSubscriptions.isEmpty)
+        XCTAssertEqual(account.rows[sub.id]?.pausedUntil, until)
 
-        try await store.resumeSubscription(id: sub.id)
+        await store.resumeSubscription(id: sub.id)
         XCTAssertNil(store.subscriptions.first?.pausedUntil)
         XCTAssertEqual(store.activeSubscriptions.map(\.id), [sub.id])
-        XCTAssertEqual(queued.suffix(2), [.pause, .resume])
+        XCTAssertEqual(account.rows[sub.id]?.pausedUntil, .some(nil), "the pause is cleared on the account too")
     }
 
     func testDeletingRemovesItItsTotalAndRecordsIt() async throws {
@@ -97,11 +202,11 @@ final class SubscriptionStoreTests: XCTestCase {
         await add(keep)
         await add(gone)
         XCTAssertEqual(store.totalMonthlySpend, 12)
-        try await store.deleteSubscription(id: gone.id)
+        await store.deleteSubscription(id: gone.id)
         XCTAssertEqual(store.subscriptions.map(\.id), [keep.id])
         XCTAssertEqual(store.totalMonthlySpend, 5)
         XCTAssertEqual(LifecycleEventLog.shared.events.filter { $0.subscriptionId == gone.id }.last?.kind, .deleted)
-        XCTAssertEqual(queued.suffix(1), [.delete])
+        XCTAssertEqual(waiting, [.create, .delete])
     }
 
     // MARK: Lists and totals

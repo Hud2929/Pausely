@@ -8,7 +8,6 @@ struct RenewalDatesSheet: View {
     @Environment(\.dismiss) private var dismiss
     @State private var dates: [UUID: Date] = [:]
     @State private var isSaving = false
-    @State private var errorMessage: String?
 
     var body: some View {
         VStack(spacing: 0) {
@@ -63,7 +62,6 @@ struct RenewalDatesSheet: View {
         }
         .background(Color.ink.ignoresSafeArea())
         .preferredColorScheme(.dark)
-        .errorBanner($errorMessage)
     }
 
     private func row(_ subscription: Subscription) -> some View {
@@ -112,18 +110,13 @@ struct RenewalDatesSheet: View {
     private func save() async {
         isSaving = true
         defer { isSaving = false }
-        var failed = 0
         for subscription in subscriptions {
             guard let date = dates[subscription.id] else { continue }
             var updated = subscription
             updated.nextBillingDate = Calendar.current.noon(of: date)
-            do { try await SubscriptionStore.shared.updateSubscription(updated) } catch { failed += 1 }
+            await SubscriptionStore.shared.updateSubscription(updated)
         }
-        if failed == 0 {
-            Feel.landed()
-            dismiss()
-        } else {
-            errorMessage = L10n.string("Some dates couldn't be saved. Try again.")
-        }
+        Feel.landed()
+        dismiss()
     }
 }

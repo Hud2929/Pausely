@@ -19,6 +19,13 @@ enum LocalUserData {
         defaults.set(userId, forKey: ownerKey)
     }
 
+    /// False when what's on this iPhone was left by a different account. Until `claim` has removed
+    /// it, nothing of it is sent anywhere and nothing is fetched into it.
+    static func belongs(to userId: String) -> Bool {
+        guard let owner = UserDefaults.standard.string(forKey: ownerKey) else { return true }
+        return owner.caseInsensitiveCompare(userId) == .orderedSame
+    }
+
     static func wipe() async {
         // The name kept for this account, and an email address older versions saved and never read.
         if let owner = UserDefaults.standard.string(forKey: ownerKey) {

@@ -12,6 +12,7 @@ struct LuxuryAddSubscriptionView: View {
     @ObservedObject private var currencyManager = CurrencyManager.shared
     @FocusState private var focusedField: Field?
     @State private var showError = false
+    @State private var showingPaywall = false
     @State private var errorMessage = ""
 
     enum Field {
@@ -117,6 +118,9 @@ struct LuxuryAddSubscriptionView: View {
         .background(Color.ink.ignoresSafeArea())
         .preferredColorScheme(.dark)
         .onAppear { focusedField = .name }
+        .sheet(isPresented: $showingPaywall) {
+            StoreKitUpgradeView(currentSubscriptionCount: store.subscriptions.count)
+        }
         .alert("Error", isPresented: $showError) {
             Button("OK", role: .cancel) {}
         } message: {
@@ -156,7 +160,6 @@ struct LuxuryAddSubscriptionView: View {
             showError = true
             return
         }
-        Feel.landed()
         let newSub = Subscription(
             name: trimmedName,
             category: category.rawValue,
@@ -168,71 +171,14 @@ struct LuxuryAddSubscriptionView: View {
         Task {
             do {
                 _ = try await store.addSubscription(newSub)
-                await MainActor.run { dismiss() }
+                Feel.landed()
+                dismiss()
             } catch {
-                PauselyLogger.error("Error adding subscription: \(error)", category: "AddSubscription")
-                await MainActor.run {
-                    errorMessage = formatErrorMessage(error)
-                    showError = true
-                }
+                // Only a refusal throws (the free plan's limit): what's typed stays, and the way past it opens.
+                showingPaywall = true
             }
         }
     }
-
-    /// Formats database errors into user-friendly messages
-    private func formatErrorMessage(_ error: Error) -> String {
-        // Check if it's our custom DatabaseError
-        if let dbError = error as? SubscriptionStore.DatabaseError {
-            return dbError.detailedMessage
-        }
-
-        let errorString = String(describing: error).lowercased()
-        let localizedError = error.localizedDescription.lowercased()
-
-        // Check for table not found error (multiple patterns)
-        let tableNotFoundPatterns = [
-            "could not find the table",
-            "does not exist",
-            "42p01",
-            "relation",
-            "schema cache"
-        ]
-
-        for pattern in tableNotFoundPatterns {
-            if errorString.contains(pattern) || localizedError.contains(pattern) {
-                return """
-                Database Not Set Up
-
-                To fix this:
-                1. Go to Supabase Dashboard
-                2. Open SQL Editor
-                3. Run FINAL_SUPABASE_SETUP.sql
-                4. Return and try again
-
-                Need help? Contact pausely@proton.me
-                """
-            }
-        }
-
-        // Check for authentication errors
-        if errorString.contains("not authenticated") ||
-           errorString.contains("jwt") ||
-           localizedError.contains("unauthorized") {
-            return "Please sign in to add subscriptions."
-        }
-
-        // Check for network errors
-        if errorString.contains("network") ||
-           errorString.contains("connection") ||
-           errorString.contains("offline") ||
-           errorString.contains("timeout") {
-            return "Network error. Please check your internet connection and try again."
-        }
-
-        // Default: return the error description
-        return error.localizedDescription
-    }
-
 }
 
 struct LuxuryAddSubscriptionView_Previews: PreviewProvider {

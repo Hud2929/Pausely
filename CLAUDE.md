@@ -33,9 +33,10 @@ DEBUG-only code must not be referenced from release code paths.
 
 Tests must be able to fail: assert exact outcomes (not "not nil" or "didn't crash"), never test code the
 app doesn't call (delete the dead code instead), and never skip on every run. Tests that use the shared
-`SubscriptionStore` wrap themselves in `StoreSandbox` (TestHelpers.swift): cloud writes off, and the list,
-sync queue, history, widget data, Spotlight and reminders put back afterwards. Nothing touches the live
-database from tests.
+`SubscriptionStore` wrap themselves in `StoreSandbox` (TestHelpers.swift): the account is replaced by a
+stand-in (`sandbox.transport`, offline until the test puts it online; it can refuse and be changed
+mid-send), and the list, history, widget data, Spotlight and reminders are put back afterwards. Nothing
+touches the live database from tests.
 
 DEBUG launch arguments open single screens with demo data (see `RootView` in `ContentView.swift`):
 `--demo-mode`, `--demo-tab=N`, `--demo-verdict`, `--demo-receipt`, `--demo-savings`,
@@ -70,6 +71,10 @@ All pure and unit-tested; they take `now` and a `Calendar`.
 ### Services (`Pausely/Services/`)
 - `RevolutionaryAuthManager` (AuthManager.swift): auth, sign out, `deleteAccount()`.
 - `SubscriptionStore` (ViewModels): offline-first list, synced to the Supabase `subscriptions` table.
+  Every change lands on the device and in `Sync/SyncQueue` in one step (one pending add, change or
+  remove per subscription; sent after each change, on foreground and when the network returns);
+  `Sync/SubscriptionSyncMerge` joins the server's list with the phone's. Changes cannot fail; only
+  `addSubscription` throws, for the free limit.
 - `PaymentManager`, `StoreKitManager`, `ProFeature`: tiers and the single list of what Pro unlocks.
 - `VerdictCenter`, `SavingsSummary`, `PausePlanStore`, `LocalUserData`: the decision flow, receipt
   totals in the user's currency, the saved Pause Plan, and wiping on-device data.

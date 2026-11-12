@@ -49,8 +49,7 @@ final class SubscriptionLifecycle {
             guard var sub = store.subscriptions.first(where: { $0.id == id }) else { continue }
             sub.status = .active
             sub.updatedAt = now
-            // Offline-first: the store keeps the change locally and retries the upload if this throws.
-            try? await store.updateSubscription(sub)
+            await store.updateSubscription(sub)
             LifecycleEventLog.shared.record(.trialEnded, for: sub, date: endDate)
         }
         for renewal in changes.renewals {

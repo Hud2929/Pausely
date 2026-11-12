@@ -398,6 +398,8 @@ struct RootView: View {
                 Task {
                     await NotificationManager.shared.refreshStatus()
                     await SubscriptionLifecycle.shared.run()
+                    // Changes that couldn't be sent earlier go now, without waiting for a pull to refresh.
+                    await SubscriptionStore.shared.sync.drain(force: true)
                 }
             }
         }

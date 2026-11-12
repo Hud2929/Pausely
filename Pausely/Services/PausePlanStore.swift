@@ -67,9 +67,8 @@ final class PausePlanStore: ObservableObject {
         var updated = subscription
         updated.nextBillingDate = calendar.date(byAdding: .month, value: 1, to: calendar.startOfDay(for: date)).map { calendar.noon(of: $0) }
         updated.updatedAt = date
-        // Offline-first: the store keeps the change locally and retries the upload if this throws.
-        try? await store.updateSubscription(updated)
-        try? await store.updateSubscriptionStatus(id: subscription.id, status: .active)
+        await store.updateSubscription(updated)
+        await store.updateSubscriptionStatus(id: subscription.id, status: .active)
     }
 
     /// Wipes the plan (account deletion).

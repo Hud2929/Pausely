@@ -197,15 +197,6 @@ extension String {
     }
 }
 
-/// `{"paused_until": null}`: resuming must send the null, which a plain optional would leave out.
-struct ClearPausePayload: Encodable {
-    private enum CodingKeys: String, CodingKey { case paused_until }
-    func encode(to encoder: Encoder) throws {
-        var c = encoder.container(keyedBy: CodingKeys.self)
-        try c.encodeNil(forKey: .paused_until)
-    }
-}
-
 // MARK: - Auth Errors
 /// Pausely-specific authentication errors
 /// Renamed from AuthError to avoid conflict with Supabase library

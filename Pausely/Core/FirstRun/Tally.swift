@@ -285,7 +285,8 @@ enum TallyImporter {
             if existing.nextBillingDate == nil, let anchor = line.anchor, existing.billingFrequency == (line.frequency ?? .monthly) {
                 var updated = existing
                 updated.nextBillingDate = anchor
-                if (try? await store.updateSubscription(updated)) != nil { outcome.datesFilled.append(existing.name) }
+                await store.updateSubscription(updated)
+                outcome.datesFilled.append(existing.name)
             }
         }
 

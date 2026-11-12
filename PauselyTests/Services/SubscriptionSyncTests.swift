@@ -32,12 +32,6 @@ final class SubscriptionSyncTests: XCTestCase {
         XCTAssertNil(sent["created_at"])
     }
 
-    func testResumeSendsAnExplicitNull() throws {
-        let sent = try XCTUnwrap(JSONSerialization.jsonObject(with: JSONEncoder().encode(ClearPausePayload())) as? [String: Any])
-        XCTAssertEqual(sent.count, 1)
-        XCTAssertTrue(sent["paused_until"] is NSNull)
-    }
-
     // MARK: What comes back
 
     func testDatabaseRowsKeepTheirDates() throws {
@@ -74,43 +68,48 @@ final class SubscriptionSyncTests: XCTestCase {
 
     // MARK: Merging the server's list with this iPhone's
 
-    private func op(_ type: SyncOperationType, _ sub: Subscription) -> SyncOperation {
-        SyncOperation(type: type, subscriptionId: sub.id, payload: Data())
-    }
-
     func testAChangeStillQueuedWinsOverTheServer() {
         var mine = TestFactories.makeSubscription(name: "Netflix", amount: 15.49)
         mine.amount = 17.99
         var theirs = mine
         theirs.amount = 15.49
-        let merge = SubscriptionSyncMerge.merge(server: [theirs], local: [mine], pending: [op(.update, mine)], firstSyncForUser: false)
+        let merge = SubscriptionSyncMerge.merge(server: [theirs], local: [mine], pending: [mine.id: .update], firstSyncForUser: false)
         XCTAssertEqual(merge.subscriptions.map(\.amount), [17.99])
     }
 
     func testADeleteStillQueuedStaysDeleted() {
         let gone = TestFactories.makeSubscription(name: "Hulu")
-        let merge = SubscriptionSyncMerge.merge(server: [gone], local: [], pending: [op(.delete, gone)], firstSyncForUser: false)
+        let merge = SubscriptionSyncMerge.merge(server: [gone], local: [], pending: [gone.id: .delete], firstSyncForUser: false)
         XCTAssertTrue(merge.subscriptions.isEmpty)
     }
 
     func testAnOfflineAddIsKeptAndUploaded() {
         let added = TestFactories.makeSubscription(name: "Added offline")
         let onServer = TestFactories.makeSubscription(name: "Netflix")
-        let merge = SubscriptionSyncMerge.merge(server: [onServer], local: [added, onServer], pending: [op(.create, added)], firstSyncForUser: false)
+        let merge = SubscriptionSyncMerge.merge(server: [onServer], local: [added, onServer], pending: [added.id: .create], firstSyncForUser: false)
         XCTAssertEqual(merge.subscriptions.map(\.name), ["Added offline", "Netflix"])
         XCTAssertEqual(merge.upload.map(\.id), [added.id])
     }
 
     func testTheFirstSyncUploadsWhatOnlyThisIPhoneHad() {
         let local = [TestFactories.makeSubscription(name: "Spotify"), TestFactories.makeSubscription(name: "Max")]
-        let merge = SubscriptionSyncMerge.merge(server: [], local: local, pending: [], firstSyncForUser: true)
+        let merge = SubscriptionSyncMerge.merge(server: [], local: local, pending: [:], firstSyncForUser: true)
         XCTAssertEqual(merge.subscriptions.map(\.name), ["Spotify", "Max"], "nothing is wiped when the server is empty")
         XCTAssertEqual(merge.upload.count, 2)
     }
 
     func testLaterARowMissingFromTheServerWasDeletedElsewhere() {
         let stale = TestFactories.makeSubscription(name: "Deleted on iPad")
-        let merge = SubscriptionSyncMerge.merge(server: [], local: [stale], pending: [], firstSyncForUser: false)
+        let merge = SubscriptionSyncMerge.merge(server: [], local: [stale], pending: [:], firstSyncForUser: false)
+        XCTAssertTrue(merge.subscriptions.isEmpty)
+        XCTAssertTrue(merge.upload.isEmpty)
+    }
+
+    /// An edit is not an add. Without this, a trial ending by itself on this iPhone (the app changes
+    /// its status) would bring back a subscription the person had just deleted on their iPad.
+    func testAnEditDoesNotBringBackWhatAnotherDeviceDeleted() {
+        let mine = TestFactories.makeSubscription(name: "Deleted on iPad, edited here")
+        let merge = SubscriptionSyncMerge.merge(server: [], local: [mine], pending: [mine.id: .update], firstSyncForUser: false)
         XCTAssertTrue(merge.subscriptions.isEmpty)
         XCTAssertTrue(merge.upload.isEmpty)
     }
@@ -119,7 +118,7 @@ final class SubscriptionSyncTests: XCTestCase {
         let mine = TestFactories.makeSubscription(name: "Netflix", nextBillingDate: day("2026-11-20T12:00:00Z"))
         var theirs = mine
         theirs.nextBillingDate = nil   // saved by an app version that never sent dates
-        let merge = SubscriptionSyncMerge.merge(server: [theirs], local: [mine], pending: [], firstSyncForUser: false)
+        let merge = SubscriptionSyncMerge.merge(server: [theirs], local: [mine], pending: [:], firstSyncForUser: false)
         XCTAssertEqual(merge.subscriptions.first?.nextBillingDate, day("2026-11-20T12:00:00Z"))
         XCTAssertEqual(merge.backfill.map(\.id), [mine.id])
     }
@@ -132,7 +131,7 @@ final class SubscriptionSyncTests: XCTestCase {
         theirs.userPriceUSD = nil
         theirs.isPriceOverridden = false
         theirs.amount = 12.99   // changed on another device
-        let merged = SubscriptionSyncMerge.merge(server: [theirs], local: [mine], pending: [], firstSyncForUser: false).subscriptions
+        let merged = SubscriptionSyncMerge.merge(server: [theirs], local: [mine], pending: [:], firstSyncForUser: false).subscriptions
         XCTAssertEqual(merged.first?.amount, 12.99, "the server's change comes through")
         XCTAssertEqual(merged.first?.bundleIdentifier, "com.spotify.client")
         XCTAssertEqual(merged.first?.userPriceUSD, 5.99)

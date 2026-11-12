@@ -156,13 +156,19 @@ Updated at every commit, so the work can be picked up from this file alone.
 - Done before the run began: the live database fix, the waitlist function, sign-in settings, mail
   delivery, Apple sign-in (all in 6.1 and 6.1a); B1, B7, B8; G5, G6.
 - Stage A is done (G3, G4, B15, B16), walked on the simulator from a clean install.
-- Now: Stage B, the sync queue as one design (B2, B3, B4, B10). The design: every change to a
-  subscription goes through the queue; the queue holds one pending intent per subscription (the
-  latest whole record to upsert, or a delete), so an edit after an unsent add is one upsert; it drains
-  after every change, on foreground and when the network returns; a finished intent is removed only if
-  it has not been replaced while it was being sent; failures back off and are shown; a successful
-  write never replaces the copy on the phone. Proven against a stand-in transport that can fail.
-- Next: B5, T62, then Stage C.
+- Stage B, sync queue (B2, B3, B4, B10): done. Every change to a subscription goes through
+  `SyncQueue`: one pending intent per subscription (add, change or remove), sent as the phone's copy at
+  that moment; an add is an upsert so a repeat is harmless; an edit never brings back what another
+  device deleted; one account's unsent changes are never sent into another account
+  (`LocalUserData.belongs`). Found on the way and fixed: the five change functions were marked as able
+  to fail and never could, so seven error paths and three alerts that could never show are gone; a
+  hand-typed add at the free limit showed an "Error" alert in English and now opens the paywall (seen
+  on the simulator). Proof: 47 tests in three classes against a stand-in account that can be offline,
+  refuse and be changed mid-send; the queue's three requests run against the database rules in
+  `scripts/dbtest/run.sh` (619 checks); whole suite 559 tests, one failure, the known translation
+  guard (D). Not proven: a sync against the real account from the app (needs a signed-in session on
+  the simulator, which needs the owner's password or a test account).
+- Now: B5 (currency rates data race), then T62 (cancel help by exact service), then Stage C.
 
 **Phase 0. Scan (read-only).** Four independent audits (dead code, truth, design rules on every
 view, engineering) plus mechanical scans. Output: the ledger.
@@ -238,13 +244,13 @@ matters to a stranger: the customer round below scores "getting in" at 1.
 | Id | What | Status |
 |---|---|---|
 | B1 | History file unreadable on a locked phone → "Keep it" from a notification can overwrite the whole Savings Receipt history | closed 11-11: `DeviceFile` tells "missing" from "unreadable"; nothing is saved until the history has been read; six tests |
-| B2 | Sync queue drops changes queued while it is sending | open |
-| B3 | Edits, cancels and deletes made before a failed add has synced are silently undone | open |
-| B4 | The queue only drains on launch or pull-to-refresh, while the app says "It will sync when you're back online"; failures retry forever, silently | open |
+| B2 | Sync queue drops changes queued while it is sending | closed 11-11: the queue was rebuilt (`Services/Sync/SyncQueue.swift`); a change noted during a pass makes the pass go round again. `SyncQueueTests.testAnAddMadeWhileAnotherIsBeingSentIsSentToo` failed against the first version of the new queue and found exactly this |
+| B3 | Edits, cancels and deletes made before a failed add has synced are silently undone | closed 11-11: one thing to send per subscription (add it, change it, remove it), and what is sent is the copy on the phone at that moment, so an edit before the add went up goes up with the add. Four store tests and three queue tests |
+| B4 | The queue only drains on launch or pull-to-refresh, while the app says "It will sync when you're back online"; failures retry forever, silently | closed 11-11: sent after every change, when the app comes to the front, when the network comes back, and when a failed change is due again (2 s doubling to 5 min). The notice says "back online" only when offline is the reason; a refusal by the server gets its own sentence, in five languages. Not built: a standing "N changes waiting" line on the list (goes with the Subscriptions screen in Stage E) |
 | B5 | Currency rates are written off the main thread while every screen reads them (data race) | open |
 | B7 | Any `pausely://auth/...` link is accepted without the app having asked for one (sign-in into someone else's account, then the local history is wiped) | closed 11-11: `AuthLinkGate`, seven tests |
 | B8 | A password typed on an abandoned sign-up is applied to whichever account next signs in by email | closed 11-11: saved only on the address it was typed for |
-| B10 | Fields are dropped the moment an add reaches the server; an edit made meanwhile is overwritten | open |
+| B10 | Fields are dropped the moment an add reaches the server; an edit made meanwhile is overwritten | closed 11-11: the server's answer is no longer written over the phone's copy (`testAnAddThatReachesTheAccountKeepsWhatOnlyThisIPhoneKnows`); a list fetched while a change was being made treats that change as newer than itself |
 | B15 | Signing out offline leaves the cached session: the next launch shows the signed-out person's list | closed 11-11: the cache is cleared before the server is asked, whatever it answers. No test: it is the order of two calls that need the account service |
 | B16 | Name and email are left on the device after sign-out and account deletion | closed 11-11: the unused saved email is no longer written and is removed; the kept name is removed on account deletion and when another account takes over the phone (sign-out keeps it, because Apple gives a name only once); `InstallStateTests` |
 | T62 | Cancel help matches by "name contains": Loom shows Bloomberg's steps, link and phone number (34 wrong companies measured) | open |

@@ -17,7 +17,6 @@ struct SubscriptionManagementView: View {
     @State private var route: Route?
     @State private var showRemoveConfirm = false
     @State private var isRemoving = false
-    @State private var errorMessage: String?
 
     private enum Route: String, Identifiable {
         case edit, paywall, cancel, priceHistory, usage, verdict, receipt, pausePlan
@@ -60,11 +59,6 @@ struct SubscriptionManagementView: View {
             Button("Keep", role: .cancel) {}
         } message: {
             Text("This only removes it from Pausely. It won't cancel the subscription itself.")
-        }
-        .alert("Something went wrong", isPresented: Binding(get: { errorMessage != nil }, set: { if !$0 { errorMessage = nil } })) {
-            Button("OK", role: .cancel) {}
-        } message: {
-            Text(errorMessage ?? "")
         }
     }
 
@@ -381,12 +375,8 @@ struct SubscriptionManagementView: View {
     private func remove() async {
         isRemoving = true
         defer { isRemoving = false }
-        do {
-            try await store.deleteSubscription(id: current.id)
-            dismiss()
-        } catch {
-            errorMessage = "\"\(current.name)\" couldn't be removed. \(error.localizedDescription)"
-        }
+        await store.deleteSubscription(id: current.id)
+        dismiss()
     }
 
     // MARK: - Sheets

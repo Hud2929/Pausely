@@ -9,7 +9,6 @@ struct SubscriptionEditView: View {
     @ObservedObject private var currencyManager = CurrencyManager.shared
     @State private var draft: SubscriptionEditDraft
     @State private var isSaving = false
-    @State private var saveError: String?
     @State private var showDiscardConfirm = false
     @State private var showValidation = false
     @FocusState private var focus: Field?
@@ -89,11 +88,6 @@ struct SubscriptionEditView: View {
         .confirmationDialog("Discard your changes?", isPresented: $showDiscardConfirm, titleVisibility: .visible) {
             Button("Discard Changes", role: .destructive) { dismiss() }
             Button("Keep Editing", role: .cancel) {}
-        }
-        .alert("Couldn't save", isPresented: Binding(get: { saveError != nil }, set: { if !$0 { saveError = nil } })) {
-            Button("OK", role: .cancel) {}
-        } message: {
-            Text(saveError ?? "")
         }
     }
 
@@ -322,18 +316,8 @@ struct SubscriptionEditView: View {
         }
         isSaving = true
         defer { isSaving = false }
-        do {
-            try await SubscriptionStore.shared.updateSubscription(updated)
-            finishSaving(updated)
-        } catch {
-            // The store is offline-first: it applies the edit locally, queues the cloud write for retry,
-            // then reports the network error. If the edit is in the local store, it IS saved.
-            if SubscriptionStore.shared.subscriptions.contains(where: { $0.id == updated.id && $0.updatedAt == updated.updatedAt }) {
-                finishSaving(updated)
-            } else {
-                saveError = "Your changes weren't saved. \(error.localizedDescription)"
-            }
-        }
+        await SubscriptionStore.shared.updateSubscription(updated)
+        finishSaving(updated)
     }
 }
 

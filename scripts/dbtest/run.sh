@@ -232,6 +232,21 @@ checks() {
   gives   "a signed-out visitor sees no subscriptions" 0        "$db" anon - "select count(*) from public.subscriptions"
   refused "a signed-out visitor cannot add a subscription"      "$db" anon - "insert into public.subscriptions (user_id, name, amount) values ('$A', 'Planted', 1)"
 
+  # The three requests the app's sync queue makes (SyncQueue.swift), as the API runs them. An add is an
+  # upsert so that sending it twice, when the first answer was lost, is harmless.
+  local synced=5eed0000-0000-4000-8000-000000000001 theirs
+  local upsert="insert into public.subscriptions (id, user_id, name, amount) values ('%s', '$A', 'Synced', %s) on conflict (id) do update set user_id = excluded.user_id, name = excluded.name, amount = excluded.amount"
+  works   "the app's add creates the subscription"              "$db" authenticated "$A" "$(printf "$upsert" "$synced" 5)"
+  works   "the same add sent again is accepted"                 "$db" authenticated "$A" "$(printf "$upsert" "$synced" 6)"
+  owner_sees "and is still one subscription, with the later copy" "1|6" "$db" "select count(*), max(amount)::int from public.subscriptions where id = '$synced'"
+  theirs=$(printf "select id from public.subscriptions where user_id = '$B' limit 1;\n" | admin "$db")
+  refused "the app's add cannot take over someone else's subscription" "$db" authenticated "$A" "$(printf "$upsert" "$theirs" 1)"
+  owner_sees "which still belongs to them, unchanged" "$B|Spotify" "$db" "select user_id, name from public.subscriptions where id = '$theirs'"
+  gives   "the app's edit of a subscription another device deleted changes nothing, without an error" 0 "$db" authenticated "$A" "with changed as (update public.subscriptions set amount = 9 where id = '5eed0000-0000-4000-8000-00000000dead' returning 1) select count(*) from changed"
+  works   "the app's delete removes it"                         "$db" authenticated "$A" "delete from public.subscriptions where id = '$synced'"
+  works   "the same delete sent again is not an error"          "$db" authenticated "$A" "delete from public.subscriptions where id = '$synced'"
+  owner_sees "and it is gone" 0 "$db" "select count(*) from public.subscriptions where id = '$synced'"
+
   # Cancel-difficulty ratings
   owner_sees "an earlier double rating was reduced to the latest one" "1|4" "$db" "select count(*), max(difficulty_rating) from public.cancel_difficulty_ratings where user_id = '$B' and service_name = 'Netflix'"
   works   "a person can rate a service"                         "$db" authenticated "$A" "insert into public.cancel_difficulty_ratings (service_name, difficulty_rating, user_id) values ('Netflix', 5, '$A')"
