@@ -53,7 +53,7 @@ struct LuxuryAddSubscriptionView: View {
                             .opacity(frequency == .monthly || frequency == .yearly ? 1 : 0)
                             .accessibilityHidden(!(frequency == .monthly || frequency == .yearly))
                         HStack(alignment: .firstTextBaseline, spacing: 8) {
-                            TextField("0.00", text: $amount)
+                            TextField(text: $amount, prompt: Text(verbatim: AmountText.text(for: 0, currency: currencyManager.selectedCurrency))) { EmptyView() }
                                 .font(.system(size: 44, weight: .bold, design: .serif))
                                 .foregroundStyle(Color.inkText)
                                 .keyboardType(.decimalPad)
@@ -137,7 +137,7 @@ struct LuxuryAddSubscriptionView: View {
     func saveSubscription() {
         let trimmedName = name.trimmingCharacters(in: .whitespacesAndNewlines)
         // "9,99" and "9.99" both work, and the amount stays an exact decimal.
-        guard !trimmedName.isEmpty, let price = SubscriptionEditDraft.parseAmount(amount), price > 0 else {
+        guard !trimmedName.isEmpty, let price = AmountText.parse(amount, currency: currencyManager.selectedCurrency) else {
             errorMessage = L10n.string("Enter a name and an amount.")
             showError = true
             return

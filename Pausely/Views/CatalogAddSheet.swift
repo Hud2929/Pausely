@@ -35,7 +35,7 @@ struct CatalogAddSheet: View {
             : nil
     }
 
-    private var typed: Decimal? { SubscriptionEditDraft.parseAmount(amountText) }
+    private var typed: Decimal? { AmountText.parse(amountText, currency: currency) }
     private var amount: Decimal? { amountText.isEmpty ? typical : typed }
     /// A trial is tracked for the day it ends, so saying "I'm on a free trial" needs that day.
     private var canAdd: Bool { (amount ?? 0) > 0 && (!hasFreeTrial || trialEndsAt != nil) }
@@ -141,7 +141,8 @@ struct CatalogAddSheet: View {
                 // The typical price is shown as a real figure, not a greyed-out hint: it is what
                 // will be saved unless the person types over it.
                 TextField("", text: $amountText,
-                          prompt: Text(verbatim: typical.map { MoneyFormat.string($0, currency, locale: L10n.locale) } ?? "0.00")
+                          prompt: Text(verbatim: typical.map { MoneyFormat.string($0, currency, locale: L10n.locale) }
+                                                   ?? AmountText.text(for: 0, currency: currency))
                             .foregroundStyle(typical == nil ? Color.inkTextFaint : Color.inkText))
                     .font(.system(size: 44, weight: .bold, design: .serif))
                     .foregroundStyle(Color.inkText)

@@ -509,7 +509,7 @@ private struct PriceSheet: View {
     @State private var text = ""
     @FocusState private var focused: Bool
 
-    private var amount: Decimal? { SubscriptionEditDraft.parseAmount(text) }
+    private var amount: Decimal? { AmountText.parse(text, currency: currency) }
 
     var body: some View {
         VStack(alignment: .leading, spacing: 16) {

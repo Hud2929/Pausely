@@ -212,7 +212,8 @@ Updated at every commit, so the work can be picked up from this file alone.
 - D1 done: every area is read (scan status under 6.3b). Rows S1 to S16. Fixed at once because they
   lose or expose data: S1, S2, S9, S10, S11. The rest are placed in D3 to D5 and G.
 - Whole suite after D0 and D1: 634 tests, 0 failures (7 need a mail server and are skipped).
-- Next: D2, the billing day and typed amounts (O2 to O10).
+- D2, typed amounts: O8, O9, O10 closed (see their rows). Next in D2: the billing calendar (O2 to
+  O4, O7), then the day that survives a change of time zone (O5).
 - Told by the other session at 22:04 (it has stood down and changed nothing): sections 2, 3, 4, 6, 7
   and 10 of the engineering audit were never done and there is no finished overlooked-details
   report. Those areas have been scanned by nobody; they are owed before Stage G can be called done.
@@ -409,9 +410,9 @@ matters to a stranger: the customer round below scores "getting in" at 1.
 | O5 | medium | A renewal day is stored as a moment (local noon): after a long flight, or on a second device far away, every renewal is a day off | open |
 | O6 | medium | Trial end dates keep the time of day they were made | not a finding now: `withDaysAtNoon` sets both the renewal day and the trial end to noon on every add and change |
 | O7 | low | The usage month and the year slip's year come from the device's calendar | open |
-| O8 | high | An amount typed with the Arabic decimal mark is refused | open |
-| O9 | high | Amounts above 100,000 are refused in every currency (rupiah, dong, rial prices are normal above it) | open |
-| O10 | medium | The edit field always shows two decimals: dinar prices are rounded on save, yen shows "1500.00" | open |
+| O8 | high | An amount typed with the Arabic decimal mark is refused | closed 11-12 with O9 and O10: every amount field (edit, custom add, catalog add, first run) reads and shows amounts through one place, `Core/Money/AmountText`. Digits of any script and the Arabic and full-width marks are read; a single mark is read the way the reader's language writes numbers ("1.299" is 1299 in German and 1.30 in English). `SubscriptionEditDraftTests`, 17 tests, among them: what a field shows reads back as the same amount in seven locales and six currencies |
+| O9 | high | Amounts above 100,000 are refused in every currency (rupiah, dong, rial prices are normal above it) | closed 11-12: the ceiling is what 100,000 US dollars come to in the currency, never less than 100,000, and going over it says so ("That is more than Pausely can track.") instead of "Enter a valid amount" |
+| O10 | medium | The edit field always shows two decimals: dinar prices are rounded on save, yen shows "1500.00" | closed 11-12: a field shows the currency's own decimals with the reader's decimal mark, the placeholder too; opening a dinar price and saving something else leaves the price as it was (test). The three messages under the edit fields were English only and are translated |
 | O11 | medium | The language chosen in the app has no region ("CA$" for a Canadian), does not set layout direction, and about 45 money and 25 date texts ignore it; tab titles and notification buttons are built once | open |
 | O12 | medium | Count strings without plural forms (same work as T99) | open |
 | O13 | low | Currency names are English and searched in English only | open |
