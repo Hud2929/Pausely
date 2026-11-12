@@ -1,80 +1,48 @@
-
 import AppIntents
 import Foundation
 
-// MARK: - Get Monthly Spend Intent
+// Shortcuts and Siri: what renews next, what it all costs a month, one subscription's details, and
+// adding one. Every answer is built in the reader's language (`ShortcutAnswers`), from the same pieces
+// the screens use. Nothing here deletes: removing a subscription by voice has no undo.
+
+// MARK: - What it all costs
+
 struct GetMonthlySpendIntent: AppIntent {
-    static var title: LocalizedStringResource = "Get Monthly Spend"
-    static var description = IntentDescription("What your subscriptions cost each month.")
+    static let title: LocalizedStringResource = "Get Monthly Spend"
+    static let description = IntentDescription("What your subscriptions cost each month.")
 
     @MainActor
-    func perform() async throws -> some IntentResult & ReturnsValue<String> {
+    func perform() async throws -> some IntentResult & ReturnsValue<String> & ProvidesDialog {
         try ShortcutProblem.requireSignedIn()
         let store = SubscriptionStore.shared
-        let formatted = MoneyFormat.total(store.totalMonthlySpend, CurrencyManager.shared.selectedCurrency,
-                                          converted: store.totalIsConverted)
-
-        return .result(value: "Your subscriptions cost \(formatted) a month.")
+        let answer = ShortcutAnswers.monthlySpend(store.totalMonthlySpend, currency: CurrencyManager.shared.selectedCurrency,
+                                                  converted: store.totalIsConverted)
+        return .result(value: answer, dialog: "\(answer)")
     }
 }
 
-// MARK: - Get Upcoming Renewals Intent
-struct GetUpcomingRenewalsIntent: AppIntent {
-    static var title: LocalizedStringResource = "Get Upcoming Renewals"
-    static var description = IntentDescription("See which subscriptions are renewing soon.")
+// MARK: - What renews next
 
-    @Parameter(title: "Days Ahead", default: 7)
+struct GetUpcomingRenewalsIntent: AppIntent {
+    static let title: LocalizedStringResource = "Get Upcoming Renewals"
+    static let description = IntentDescription("See which subscriptions are renewing soon.")
+
+    @Parameter(title: "Days Ahead", default: 7, inclusiveRange: (1, 365))
     var daysAhead: Int
 
     @MainActor
-    func perform() async throws -> some IntentResult & ReturnsValue<String> {
+    func perform() async throws -> some IntentResult & ReturnsValue<String> & ProvidesDialog {
         try ShortcutProblem.requireSignedIn()
-        let store = SubscriptionStore.shared
-        let calendar = Calendar.billing
-        let cutoff = calendar.date(byAdding: .day, value: daysAhead, to: Date()) ?? Date()
-
-        let upcoming = store.activeSubscriptions
-            .filter { sub in
-                guard let nextDate = sub.calculatedNextBillingDate else { return false }
-                return nextDate <= cutoff
-            }
-            .sorted { ($0.calculatedNextBillingDate ?? .distantFuture) < ($1.calculatedNextBillingDate ?? .distantFuture) }
-
-        guard !upcoming.isEmpty else {
-            return .result(value: "No subscriptions renewing in the next \(daysAhead) days.")
-        }
-
-        let lines = upcoming.map { sub in
-            let days = sub.daysUntilRenewal ?? 0
-            let amount = sub.chargeText  // the real charge, in its own currency
-            let dayText = days == 0 ? "today" : days == 1 ? "tomorrow" : "in \(days) days"
-            return "\(sub.name): \(amount) \(dayText)"
-        }
-
-        return .result(value: lines.joined(separator: ". "))
+        let answer = ShortcutAnswers.upcoming(SubscriptionStore.shared.subscriptions, daysAhead: daysAhead, now: Date())
+        return .result(value: answer, dialog: "\(answer)")
     }
 }
 
-// MARK: - Get Subscription Count Intent
-struct GetSubscriptionCountIntent: AppIntent {
-    static var title: LocalizedStringResource = "Count Subscriptions"
-    static var description = IntentDescription("Count how many subscriptions you're tracking.")
+// MARK: - Add one
 
-    @MainActor
-    func perform() async throws -> some IntentResult & ReturnsValue<String> {
-        try ShortcutProblem.requireSignedIn()
-        let store = SubscriptionStore.shared
-        let active = store.activeSubscriptions.count
-        let total = store.subscriptions.count
-
-        return .result(value: "You're tracking \(total) subscriptions, \(active) active.")
-    }
-}
-
-// MARK: - Add Subscription Intent
 struct AddSubscriptionIntent: AppIntent {
-    static var title: LocalizedStringResource = "Add Subscription"
-    static var description = IntentDescription("Quickly add a new subscription to track.")
+    static let title: LocalizedStringResource = "Add Subscription"
+    static let description = IntentDescription("Quickly add a new subscription to track.")
 
     @Parameter(title: "Name", requestValueDialog: "What's the name of the subscription?")
     var name: String
@@ -83,95 +51,133 @@ struct AddSubscriptionIntent: AppIntent {
     var monthlyCost: Double
 
     @MainActor
-    func perform() async throws -> some IntentResult & ReturnsValue<String> {
+    func perform() async throws -> some IntentResult & ReturnsValue<String> & ProvidesDialog {
         try ShortcutProblem.requireSignedIn()
-        let store = SubscriptionStore.shared
-
-        let sub = Subscription(
-            name: name,
-            category: SubscriptionCategory.other.rawValue,
-            amount: MoneyFormat.decimal(monthlyCost),
-            currency: CurrencyManager.shared.selectedCurrency,
-            billingFrequency: .monthly,
-            // No renewal date was given, so none is made up: Home asks "When does it renew?".
-            nextBillingDate: nil,
-            status: .active
-        )
-
-        try await store.addSubscription(sub)
-
-        let amount = sub.chargeText
-
-        return .result(value: "Added \(name) at \(amount) per month.")
+        let currency = CurrencyManager.shared.selectedCurrency
+        let subscription = try ShortcutAnswers.newSubscription(name: name, monthlyCost: monthlyCost, currency: currency)
+        // At the free plan's limit this throws, and the Shortcut says the paywall's own sentence.
+        try await SubscriptionStore.shared.addSubscription(subscription)
+        let answer = ShortcutAnswers.added(subscription)
+        return .result(value: answer, dialog: "\(answer)")
     }
 }
 
-// MARK: - Get Subscription Detail Intent
+// MARK: - One subscription
+
 struct GetSubscriptionDetailIntent: AppIntent {
-    static var title: LocalizedStringResource = "Get Subscription Detail"
-    static var description = IntentDescription("Get details about a specific subscription.")
+    static let title: LocalizedStringResource = "Get Subscription Detail"
+    static let description = IntentDescription("Get details about a specific subscription.")
 
     @Parameter(title: "Subscription Name", requestValueDialog: "Which subscription?")
     var name: String
 
     @MainActor
-    func perform() async throws -> some IntentResult & ReturnsValue<String> {
+    func perform() async throws -> some IntentResult & ReturnsValue<String> & ProvidesDialog {
         try ShortcutProblem.requireSignedIn()
-        let store = SubscriptionStore.shared
-
-        let sub: Subscription
-        switch NamedSubscription.find(name, in: store.subscriptions) {
-        case .one(let found): sub = found
-        case .none, .several: return .result(value: NamedSubscription.find(name, in: store.subscriptions).problem(for: name))
-        }
-
-        let amount = MoneyFormat.string(sub.monthlyCost, sub.currency)
-        // Only something that will charge has a renewal to report.
-        let renewal: String
-        if !sub.renewsAutomatically {
-            renewal = ""
-        } else if let days = sub.daysUntilRenewal {
-            renewal = days == 0 ? " Renews today." : " Renews in \(days) day\(days == 1 ? "" : "s")."
-        } else {
-            renewal = " No renewal date."
-        }
-        return .result(value: "\(sub.name): \(amount)/month, \(sub.status.displayName).\(renewal)")
+        let subscription = try NamedSubscription.find(name, in: SubscriptionStore.shared.subscriptions).one(asked: name)
+        let answer = ShortcutAnswers.detail(for: subscription, now: Date())
+        return .result(value: answer, dialog: "\(answer)")
     }
 }
 
-// MARK: - Delete Subscription Intent
-struct DeleteSubscriptionIntent: AppIntent {
-    static var title: LocalizedStringResource = "Delete Subscription"
-    static var description = IntentDescription("Remove a subscription from tracking.")
+// MARK: - Siri
 
-    @Parameter(title: "Subscription Name", requestValueDialog: "Which subscription do you want to delete?")
-    var name: String
-
-    @MainActor
-    func perform() async throws -> some IntentResult & ReturnsValue<String> {
-        try ShortcutProblem.requireSignedIn()
-        let store = SubscriptionStore.shared
-
-        // Removing is not undone, so the name has to mean exactly one subscription.
-        switch NamedSubscription.find(name, in: store.subscriptions) {
-        case .one(let sub):
-            await store.deleteSubscription(id: sub.id)
-            return .result(value: "Deleted \(sub.name).")
-        case let other:
-            return .result(value: other.problem(for: name))
-        }
+/// The two questions worth asking out loud.
+struct PauselyShortcuts: AppShortcutsProvider {
+    static var appShortcuts: [AppShortcut] {
+        AppShortcut(intent: GetUpcomingRenewalsIntent(),
+                    phrases: ["What renews next in \(.applicationName)", "What charges next in \(.applicationName)"],
+                    shortTitle: "Get Upcoming Renewals", systemImageName: "calendar")
+        AppShortcut(intent: GetMonthlySpendIntent(),
+                    phrases: ["What do my subscriptions cost in \(.applicationName)"],
+                    shortTitle: "Get Monthly Spend", systemImageName: "sum")
     }
 }
 
-// MARK: - Who a Shortcut answers
+// MARK: - The answers
 
-/// Shortcuts answer only for the person signed in on this iPhone. Signed out, the list is out of
-/// memory (`SubscriptionStore.hideList`), so an answer would be wrong and an add would be lost.
-enum ShortcutProblem: Error, CustomLocalizedStringResourceConvertible {
+/// What a Shortcut says, in the reader's language. Pure, so every sentence has a test.
+enum ShortcutAnswers {
+
+    static func monthlySpend(_ total: Decimal, currency: String, converted: Bool) -> String {
+        L10n.string("Your subscriptions cost \(MoneyFormat.total(total, currency, converted: converted, locale: L10n.locale)) a month.")
+    }
+
+    /// One line for each charge in the next `daysAhead` days, soonest first: "Netflix · $15.49 · tomorrow".
+    /// A free trial about to end is a charge.
+    static func upcoming(_ subscriptions: [Subscription], daysAhead: Int, now: Date, calendar: Calendar = .billing,
+                         locale: Locale = L10n.locale) -> String {
+        let lines = subscriptions.compactMap { subscription -> (day: Date, line: String)? in
+            guard let charge = RenewalDecisions.upcomingCharge(for: subscription, now: now, calendar: calendar) else { return nil }
+            let daysAway = calendar.calendarDays(from: now, to: charge.date)
+            guard daysAway <= daysAhead else { return nil }
+            let when = DayText.text(daysAway: daysAway, day: charge.date, locale: locale)
+            let amount = MoneyFormat.string(subscription.amount, subscription.currency, locale: locale)
+            return (charge.date, "\(subscription.name) · \(amount) · \(when)")
+        }
+        .sorted { ($0.day, $0.line) < ($1.day, $1.line) }
+        .map(\.line)
+        return lines.isEmpty ? L10n.string("Nothing renews in that time.") : lines.joined(separator: "\n")
+    }
+
+    /// "Netflix · $15.49 a month · Active · Renews tomorrow". The last part only for something that
+    /// will charge; "No renewal date" when it will and no date was given.
+    static func detail(for subscription: Subscription, now: Date, calendar: Calendar = .billing,
+                       locale: Locale = L10n.locale) -> String {
+        var parts = [subscription.name,
+                     L10n.string("\(MoneyFormat.string(subscription.monthlyCost, subscription.currency, locale: locale)) a month"),
+                     subscription.status.displayName]
+        if subscription.renewsAutomatically {
+            if let charge = RenewalDecisions.upcomingCharge(for: subscription, now: now, calendar: calendar) {
+                let when = DayText.text(daysAway: calendar.calendarDays(from: now, to: charge.date), day: charge.date, locale: locale)
+                parts.append(L10n.string("Renews \(when)"))
+            } else {
+                parts.append(L10n.string("No renewal date"))
+            }
+        }
+        return parts.joined(separator: " · ")
+    }
+
+    /// The subscription a Shortcut adds: a name, and a price that is a price. No renewal date is made
+    /// up: Home asks "When does it renew?".
+    static func newSubscription(name: String, monthlyCost: Double, currency: String) throws -> Subscription {
+        let trimmed = name.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmed.isEmpty else { throw ShortcutProblem.noName }
+        guard monthlyCost.isFinite, monthlyCost > 0 else { throw ShortcutProblem.notAPrice }
+        let amount = AmountText.rounded(MoneyFormat.decimal(monthlyCost), currency: currency)
+        guard amount > 0 else { throw ShortcutProblem.notAPrice }
+        guard amount <= AmountText.ceiling(for: currency) else { throw ShortcutProblem.tooLarge }
+        return Subscription(name: trimmed, category: SubscriptionCategory.other.rawValue, amount: amount,
+                            currency: currency, billingFrequency: .monthly, nextBillingDate: nil, status: .active)
+    }
+
+    static func added(_ subscription: Subscription, locale: Locale = L10n.locale) -> String {
+        L10n.string("Added \(subscription.name) at \(MoneyFormat.string(subscription.amount, subscription.currency, locale: locale)) a month.")
+    }
+}
+
+// MARK: - What can stop a Shortcut
+
+/// Said by Siri or shown by Shortcuts, in the reader's language.
+enum ShortcutProblem: Error, Equatable, CustomLocalizedStringResourceConvertible {
+    /// Shortcuts answer only for the person signed in on this iPhone. Signed out, the list is out of
+    /// memory (`SubscriptionStore.hideList`), so an answer would be wrong and an add would be lost.
     case signedOut
+    case noName
+    case notAPrice
+    case tooLarge
+    case notFound(String)
+    case several(String, [String])
 
     var localizedStringResource: LocalizedStringResource {
-        "Open Pausely and sign in first."
+        switch self {
+        case .signedOut: "Open Pausely and sign in first."
+        case .noName: "A subscription needs a name."
+        case .notAPrice: "Enter a valid amount"
+        case .tooLarge: "That is more than Pausely can track."
+        case .notFound(let name): "No subscription is called \(name)."
+        case .several(let name, let names): "More than one subscription matches \(name): \(names.joined(separator: ", "))."
+        }
     }
 
     @MainActor static var isSignedIn: () -> Bool = { RevolutionaryAuthManager.shared.isAuthenticated }
@@ -203,12 +209,12 @@ enum NamedSubscription {
         }
     }
 
-    /// What to say when the name didn't mean exactly one.
-    func problem(for name: String) -> String {
+    /// The one it means, or the reason there isn't one.
+    func one(asked name: String) throws -> Subscription {
         switch self {
-        case .one: return ""
-        case .none: return "No subscription found matching '\(name)'."
-        case .several(let names): return "\(names.count) subscriptions match '\(name)': \(names.joined(separator: ", ")). Say the full name."
+        case .one(let subscription): return subscription
+        case .none: throw ShortcutProblem.notFound(name)
+        case .several(let names): throw ShortcutProblem.several(name, names)
         }
     }
 }
