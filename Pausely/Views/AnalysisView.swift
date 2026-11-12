@@ -82,7 +82,7 @@ struct AnalysisView: View {
                                         Text(verbatim: item.subscription.name)
                                             .font(.body)
                                             .foregroundStyle(Color.inkText)
-                                        Text(L10n.string("Up from \(MoneyFormat.string(item.from, item.subscription.currency)) since \(item.since.formatted(.dateTime.month(.abbreviated).day()))"))
+                                        Text(L10n.string("Up from \(MoneyFormat.string(item.from, item.subscription.currency)) since \(item.since.formatted(.dateTime.month(.abbreviated).day().locale(L10n.locale)))"))
                                             .font(.subheadline)
                                             .foregroundStyle(Color.inkTextMuted)
                                     }

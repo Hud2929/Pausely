@@ -292,7 +292,7 @@ private struct SubscriptionRow: View {
             guard let charge = RenewalDecisions.upcomingCharge(for: subscription, now: Date()) else { return "" }
             let days = Calendar.billing.calendarDays(from: Date(), to: charge.date)
             let day = charge.date.formatted(.dateTime.month(.abbreviated).day().locale(L10n.locale))
-            let relative = days == 0 ? L10n.string("Today") : days == 1 ? L10n.string("Tomorrow") : L10n.string("in \(days) days")
+            let relative = L10n.relativeDay(days, capitalized: true)
             return charge.isTrialEnd ? L10n.string("Trial ends \(day) · \(relative)") : "\(day) · \(relative)"
         }
     }

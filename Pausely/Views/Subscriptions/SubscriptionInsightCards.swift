@@ -25,7 +25,7 @@ struct CancelTimingCard: View {
 
     private var nextChargeText: String? {
         guard let next = subscription.calculatedNextBillingDate else { return nil }
-        let day = next.formatted(.dateTime.month(.abbreviated).day())
+        let day = next.formatted(.dateTime.month(.abbreviated).day().locale(L10n.locale))
         return L10n.string("Next charge: \(MoneyFormat.string(subscription.amount, subscription.currency)) on \(day)")
     }
 
@@ -33,8 +33,8 @@ struct CancelTimingCard: View {
         guard let next = subscription.calculatedNextBillingDate else {
             return L10n.string("Add a payment date to see when to cancel.")
         }
-        let day = next.formatted(.dateTime.month(.abbreviated).day())
-        return L10n.string("Cancel any day before \(day) to avoid it. Most services let you keep using it until then.")
+        let day = next.formatted(.dateTime.month(.abbreviated).day().locale(L10n.locale))
+        return L10n.string("Cancel any day before \(day) to avoid it.")
     }
 
     var body: some View {
@@ -44,7 +44,7 @@ struct CancelTimingCard: View {
                     .font(.headline)
                     .foregroundStyle(Color.inkText)
                 Spacer(minLength: 8)
-                Text(daysRemaining == 1 ? L10n.string("1 day left") : L10n.string("\(daysRemaining) days left"))
+                Text(verbatim: L10n.relativeDay(daysRemaining, capitalized: true))
                     .font(.subheadline)
                     .foregroundStyle(daysRemaining <= 1 ? Color.due : Color.inkTextMuted)
             }

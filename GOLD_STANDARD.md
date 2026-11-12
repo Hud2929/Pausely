@@ -230,7 +230,11 @@ Updated at every commit, so the work can be picked up from this file alone.
   when that was entered, and promises only what is certain ("Cancel before Nov 17 and you won't be
   charged" replaces "you usually keep it until"). Seen on the simulator. Whether that makes it worth
   paying for is scored by the buyer and the returner in Stage H, not here. 700 tests, 0 failures.
-  D4 is done. Next: D5, the words.
+  D4 is done.
+- D5 begun, with its foundation: one locale (O11 closed), day wording by the system (part of O12),
+  and one unsourced sentence gone from the cancel-timing card ("Most services let you keep using it
+  until then"). 705 tests, 0 failures. Next in D5: plural forms for the seven counting sentences, the
+  names (track, Find in Email), the screens still in English, the export, unused keys, the listing.
 - Told by the other session at 22:04 (it has stood down and changed nothing): sections 2, 3, 4, 6, 7
   and 10 of the engineering audit were never done and there is no finished overlooked-details
   report. Those areas have been scanned by nobody; they are owed before Stage G can be called done.
@@ -430,8 +434,8 @@ matters to a stranger: the customer round below scores "getting in" at 1.
 | O8 | high | An amount typed with the Arabic decimal mark is refused | closed 11-12 with O9 and O10: every amount field (edit, custom add, catalog add, first run) reads and shows amounts through one place, `Core/Money/AmountText`. Digits of any script and the Arabic and full-width marks are read; a single mark is read the way the reader's language writes numbers ("1.299" is 1299 in German and 1.30 in English). `SubscriptionEditDraftTests`, 17 tests, among them: what a field shows reads back as the same amount in seven locales and six currencies |
 | O9 | high | Amounts above 100,000 are refused in every currency (rupiah, dong, rial prices are normal above it) | closed 11-12: the ceiling is what 100,000 US dollars come to in the currency, never less than 100,000, and going over it says so ("That is more than Pausely can track.") instead of "Enter a valid amount" |
 | O10 | medium | The edit field always shows two decimals: dinar prices are rounded on save, yen shows "1500.00" | closed 11-12: a field shows the currency's own decimals with the reader's decimal mark, the placeholder too; opening a dinar price and saving something else leaves the price as it was (test). The three messages under the edit fields were English only and are translated |
-| O11 | medium | The language chosen in the app has no region ("CA$" for a Canadian), does not set layout direction, and about 45 money and 25 date texts ignore it; tab titles and notification buttons are built once | open |
-| O12 | medium | Count strings without plural forms (same work as T99) | open |
+| O11 | medium | The language chosen in the app has no region ("CA$" for a Canadian), does not set layout direction, and about 45 money and 25 date texts ignore it; tab titles and notification buttons are built once | closed 11-12: one locale for everything the code builds (`L10n.locale`): the chosen language with the iPhone's own region, so numbers and currency signs read as on an iPhone set to that language there. Money uses it by default; every date, duration and number names it (a source guard fails on one that doesn't); a chosen language sets the layout direction; the tab titles follow; changing the language rewrites the reminder buttons, the waiting reminders and the widgets. `OneLocaleTests` ×5. Seen on the simulator: Arabic chosen on an English iPhone, right to left, with Arabic day wording |
+| O12 | medium | Count strings without plural forms (same work as T99) | part done 11-12: every "today / tomorrow / in N days / N days ago" is worded by the system, with its plural forms, in place of seven hand-built phrases (seen in Arabic: 2, 5 and 12 days each take their own form). Open: the seven sentences that count subscriptions, dates or months |
 | O13 | low | Currency names are English and searched in English only | open |
 | O14 | low | A price and its period are joined in code ("$4.99" + "/month") | open |
 | O15 | unclear | Whether a nine-digit total fits on Home, Analysis and the receipt | check in Stage E with rupiah data |

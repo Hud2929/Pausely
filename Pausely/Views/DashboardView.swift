@@ -169,7 +169,7 @@ struct DashboardView: View {
 
     private func whenText(_ item: RenewalDecisions.Pending) -> String {
         let days = Calendar.billing.calendarDays(from: Date(), to: item.date)
-        let relative = days == 0 ? L10n.string("today") : days == 1 ? L10n.string("tomorrow") : L10n.string("in \(days) days")
+        let relative = L10n.relativeDay(days)
         return item.isTrialEnd ? L10n.string("Trial ends \(relative)") : L10n.string("Renews \(relative)")
     }
 
@@ -527,8 +527,7 @@ private struct ChargeRow: View {
 
     private var when: String {
         let day = charge.date.formatted(.dateTime.month(.abbreviated).day().locale(L10n.locale))
-        let relative = charge.dayOffset == 0 ? L10n.string("Today")
-            : charge.dayOffset == 1 ? L10n.string("Tomorrow") : L10n.string("in \(charge.dayOffset) days")
+        let relative = L10n.relativeDay(charge.dayOffset, capitalized: true)
         return charge.isTrialEnd ? L10n.string("Trial ends \(day) · \(relative)") : "\(day) · \(relative)"
     }
 }

@@ -162,9 +162,9 @@ struct RenewalVerdictView: View {
     }
 
     private func whenText(_ charge: (date: Date, isTrialEnd: Bool)) -> String {
-        let day = charge.date.formatted(.dateTime.weekday(.abbreviated).month(.abbreviated).day())
+        let day = charge.date.formatted(.dateTime.weekday(.abbreviated).month(.abbreviated).day().locale(L10n.locale))
         let days = daysUntil(charge.date)
-        let relative = days == 0 ? L10n.string("today") : days == 1 ? L10n.string("tomorrow") : L10n.string("in \(days) days")
+        let relative = L10n.relativeDay(days)
         return charge.isTrialEnd
             ? L10n.string("Free trial ends \(day) · \(relative)")
             : L10n.string("Renews \(day) · \(relative)")
@@ -184,8 +184,8 @@ struct RenewalVerdictView: View {
 
             if let change = PriceHistory.latestChange(for: sub, events: eventLog.events) {
                 let up = change.isIncrease
-                factLine(up ? L10n.string("Up from \(MoneyFormat.string(change.from, sub.currency)) since \(change.since.formatted(.dateTime.month(.abbreviated).day()))")
-                            : L10n.string("Down from \(MoneyFormat.string(change.from, sub.currency)) since \(change.since.formatted(.dateTime.month(.abbreviated).day()))"),
+                factLine(up ? L10n.string("Up from \(MoneyFormat.string(change.from, sub.currency)) since \(change.since.formatted(.dateTime.month(.abbreviated).day().locale(L10n.locale)))")
+                            : L10n.string("Down from \(MoneyFormat.string(change.from, sub.currency)) since \(change.since.formatted(.dateTime.month(.abbreviated).day().locale(L10n.locale)))"),
                          color: up ? .paperDue : .paperKept)
             }
 
@@ -203,7 +203,7 @@ struct RenewalVerdictView: View {
             }
 
             if let kept = VerdictFacts.lastKept(for: sub.id, events: eventLog.events) {
-                factLine(L10n.string("You kept it on \(kept.formatted(.dateTime.month(.abbreviated).day()))."))
+                factLine(L10n.string("You kept it on \(kept.formatted(.dateTime.month(.abbreviated).day().locale(L10n.locale)))."))
             }
 
             if sub.isPausely {
@@ -234,7 +234,7 @@ struct RenewalVerdictView: View {
         guard let usage = screenTime.getUsage(for: sub.name) else { return nil }
         let minutes = usage.minutesUsed
         guard minutes > 0 else { return L10n.string("Not used this month") }
-        let duration = Duration.seconds(minutes * 60).formatted(.units(allowed: [.hours, .minutes], width: .abbreviated))
+        let duration = Duration.seconds(minutes * 60).formatted(.units(allowed: [.hours, .minutes], width: .abbreviated).locale(L10n.locale))
         if let perHour = screenTime.calculateCostPerHour(monthlyCost: sub.monthlyCost, subscriptionName: sub.name) {
             return L10n.string("Used \(duration) this month · \(MoneyFormat.string(perHour, sub.currency)) an hour")
         }
@@ -298,7 +298,7 @@ struct RenewalVerdictView: View {
             switch outcome {
             case .kept(let askAgain):
                 OutcomeSlip(name: sub.name, category: sub.category, stamp: L10n.string("Kept"), torn: false) {
-                    Text(askAgain.map { L10n.string("No more reminders about this charge. We'll ask again before \($0.formatted(.dateTime.month(.abbreviated).day())).") }
+                    Text(askAgain.map { L10n.string("No more reminders about this charge. We'll ask again before \($0.formatted(.dateTime.month(.abbreviated).day().locale(L10n.locale))).") }
                          ?? L10n.string("No more reminders about this charge."))
                         .font(.proof(.footnote))
                         .fixedSize(horizontal: false, vertical: true)
@@ -444,7 +444,7 @@ struct PauselyPromiseCard: View {
             return L10n.string("Nothing is on your Savings Receipt yet. If Pausely doesn't save you more than its \(cost), we'd rather you cancel it.")
         }
         if summary.paysForItself, let multiple = summary.returnMultiple {
-            let times = multiple.formatted(.number.precision(.fractionLength(1)))
+            let times = multiple.formatted(.number.precision(.fractionLength(1)).locale(L10n.locale))
             return L10n.string("Your cancellations are on track to keep you \(summary.formatted(summary.onTrack)) over 12 months, \(times)× what Pausely costs. Keeping it pays.")
         }
         return L10n.string("So far your cancellations are on track to keep you \(summary.formatted(summary.onTrack)) over 12 months, less than Pausely's \(cost). We'd rather you cancel than pay for nothing.")

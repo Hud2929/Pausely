@@ -884,11 +884,7 @@ struct SubscriptionIntelligenceEngine {
 
     /// "today", "tomorrow", "in 3 days": the time phrase in insight titles.
     private func whenPhrase(_ days: Int) -> String {
-        switch days {
-        case ...0: return L10n.string("today")
-        case 1: return L10n.string("tomorrow")
-        default: return L10n.string("in \(days) days")
-        }
+        L10n.relativeDay(max(days, 0))
     }
 
     private func format(_ amount: Decimal, _ currency: String) -> String {

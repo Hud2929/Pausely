@@ -9,9 +9,17 @@ struct PauselyApp: App {
     @UIApplicationDelegateAdaptor(AppDelegate.self) var appDelegate
     @AppStorage("app_language") private var appLanguage = "system"
 
+    /// The language chosen in the app, with the iPhone's region (`L10n.locale`). Read through
+    /// `appLanguage` so the whole app redraws when it changes.
     private var resolvedLocale: Locale {
-        if appLanguage == "system" { return .current }
-        return Locale(identifier: appLanguage)
+        appLanguage == "system" ? .current : L10n.locale(language: appLanguage, onDevice: .current)
+    }
+
+    /// Right to left for Arabic chosen in the app, left to right for the others. Nil when the app
+    /// follows the iPhone: iOS then sets the direction of the language the app is actually shown in.
+    private var chosenDirection: LayoutDirection? {
+        guard appLanguage != "system" else { return nil }
+        return Locale.Language(identifier: appLanguage).characterDirection == .rightToLeft ? .rightToLeft : .leftToRight
     }
 
     init() {
@@ -40,7 +48,21 @@ struct PauselyApp: App {
         WindowGroup {
             RootView()
                 .environment(\.locale, resolvedLocale)
+                .modifier(ChosenDirection(direction: chosenDirection))
                 .readableWidth()
+        }
+    }
+}
+
+/// Sets the layout direction only when a language was chosen in the app.
+private struct ChosenDirection: ViewModifier {
+    let direction: LayoutDirection?
+
+    func body(content: Content) -> some View {
+        if let direction {
+            content.environment(\.layoutDirection, direction)
+        } else {
+            content
         }
     }
 }

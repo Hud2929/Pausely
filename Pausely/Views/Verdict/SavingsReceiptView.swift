@@ -140,18 +140,18 @@ struct ReceiptRoll: View {
         VStack(alignment: .leading, spacing: 5) {
             ProofLine(label: line.name, value: amount(summary.formatted(line.savedSoFar, from: line.currency)),
                       emphasised: true)
-            Text(L10n.string("Cancelled \(line.cancelledOn.formatted(.dateTime.month(.abbreviated).day().year())) · \(line.avoidedSoFar.count) of \(line.avoidedCharges.count) charges avoided so far"))
+            Text(L10n.string("Cancelled \(line.cancelledOn.formatted(.dateTime.month(.abbreviated).day().year().locale(L10n.locale))) · \(line.avoidedSoFar.count) of \(line.avoidedCharges.count) charges avoided so far"))
                 .font(.proof(.caption))
                 .foregroundStyle(Color.paperMuted)
                 .fixedSize(horizontal: false, vertical: true)
             if !hideAmounts, let next = line.avoidedCharges.first(where: { !line.avoidedSoFar.contains($0) }) {
-                Text(L10n.string("Next avoided charge: \(MoneyFormat.string(line.amountPerCharge, line.currency)) on \(next.formatted(.dateTime.month(.abbreviated).day()))"))
+                Text(L10n.string("Next avoided charge: \(MoneyFormat.string(line.amountPerCharge, line.currency)) on \(next.formatted(.dateTime.month(.abbreviated).day().locale(L10n.locale)))"))
                     .font(.proof(.caption))
                     .foregroundStyle(Color.paperMuted)
                     .fixedSize(horizontal: false, vertical: true)
             }
             if let ended = line.endedOn {
-                Text(L10n.string("Started again \(ended.formatted(.dateTime.month(.abbreviated).day())). Savings stop there."))
+                Text(L10n.string("Started again \(ended.formatted(.dateTime.month(.abbreviated).day().locale(L10n.locale))). Savings stop there."))
                     .font(.proof(.caption))
                     .foregroundStyle(Color.paperDue)
                     .fixedSize(horizontal: false, vertical: true)

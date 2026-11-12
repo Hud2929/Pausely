@@ -28,5 +28,13 @@ struct LanguageSettingsView: View {
                 }
             }
         }
+        // What was already written in the old language is written again: the buttons on reminders,
+        // the reminders waiting to fire, and the widgets.
+        .onChange(of: selectedLanguage) { _, _ in
+            ReminderActions.registerCategories()
+            let subscriptions = SubscriptionStore.shared.subscriptions
+            WidgetDataStore.shared.publish(subscriptions: subscriptions)
+            Task { await ReminderScheduler.shared.reschedule(subscriptions) }
+        }
     }
 }

@@ -2,7 +2,7 @@ import Foundation
 
 /// The only place Pausely turns an amount and an ISO 4217 currency code into text.
 ///
-/// - The reader's locale picks the symbol and separators, so nobody sees a bare "$" for a currency
+/// - The reader's locale (`L10n.locale`: the app's language with the iPhone's region) picks the symbol and separators, so nobody sees a bare "$" for a currency
 ///   that isn't theirs: in Canada CAD is "$12.99" and USD is "US$12.99"; in the US, USD is "$12.99"
 ///   and CAD is "CA$12.99"; in Germany EUR is "12,99 €".
 /// - Decimals follow the currency: ¥1,500, $12.99, KWD 1.250.
@@ -14,7 +14,7 @@ enum MoneyFormat {
     /// `amount` in `currency`, for example "$12.99", "US$12.99" or "12,99 €".
     /// - Parameter wholeUnits: drop the decimals, for large headline numbers ("$1,480").
     static func string(_ amount: Decimal, _ currency: String,
-                       locale: Locale = .autoupdatingCurrent, wholeUnits: Bool = false) -> String {
+                       locale: Locale = L10n.locale, wholeUnits: Bool = false) -> String {
         let code = normalizedCode(currency)
         guard isWellFormed(code) else {
             return "\(currency) \(NSDecimalNumber(decimal: amount).stringValue)"
@@ -24,14 +24,14 @@ enum MoneyFormat {
     }
 
     static func string(_ amount: Double, _ currency: String,
-                       locale: Locale = .autoupdatingCurrent, wholeUnits: Bool = false) -> String {
+                       locale: Locale = L10n.locale, wholeUnits: Bool = false) -> String {
         string(decimal(amount), currency, locale: locale, wholeUnits: wholeUnits)
     }
 
     /// A total across several things: exact when all of them are charged in `currency`, and "≈" in
     /// front when some had to be converted, because a converted total moves with the exchange rate.
     static func total(_ amount: Decimal, _ currency: String, converted: Bool,
-                      locale: Locale = .autoupdatingCurrent, wholeUnits: Bool = false) -> String {
+                      locale: Locale = L10n.locale, wholeUnits: Bool = false) -> String {
         (converted ? "≈" : "") + string(amount, currency, locale: locale, wholeUnits: wholeUnits)
     }
 
@@ -51,7 +51,7 @@ enum MoneyFormat {
     }
 
     /// The symbol a reader in `locale` sees for `currency`: "$", "US$", "CA$", "€", "¥".
-    static func symbol(for currency: String, locale: Locale = .autoupdatingCurrent) -> String {
+    static func symbol(for currency: String, locale: Locale = L10n.locale) -> String {
         let code = normalizedCode(currency)
         guard isWellFormed(code) else { return code }
         return cachedFormatter(code: code, locale: locale, wholeUnits: false).currencySymbol ?? code

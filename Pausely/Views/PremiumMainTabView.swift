@@ -18,7 +18,7 @@ struct PremiumMainTabView: View {
             Tab(value: 0) {
                 NavigationStack { DashboardView().navigationBarHidden(true) }
             } label: {
-                Label(L10n.string("Home"), systemImage: "house")
+                Label("Home", systemImage: "house")
             }
             .accessibilityIdentifier("tabHome")
 
@@ -28,21 +28,21 @@ struct PremiumMainTabView: View {
                         .navigationBarHidden(true)
                 }
             } label: {
-                Label(L10n.string("Subscriptions"), systemImage: "list.bullet")
+                Label("Subscriptions", systemImage: "list.bullet")
             }
             .accessibilityIdentifier("tabSubscriptions")
 
             Tab(value: 2) {
                 NavigationStack { AnalysisView().navigationBarHidden(true) }
             } label: {
-                Label(L10n.string("Insights"), systemImage: "chart.bar")
+                Label("Insights", systemImage: "chart.bar")
             }
             .accessibilityIdentifier("tabAnalysis")
 
             Tab(value: 3) {
                 NavigationStack { PremiumProfileView().navigationBarHidden(true) }
             } label: {
-                Label(L10n.string("Profile"), systemImage: "person")
+                Label("Profile", systemImage: "person")
             }
             .accessibilityIdentifier("tabProfile")
         }

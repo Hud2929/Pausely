@@ -168,10 +168,9 @@ struct SubscriptionManagementView: View {
         guard current.status == .active || current.status == .trial,
               let date = current.calculatedNextBillingDate, let days = current.daysUntilRenewal else { return nil }
         let dateText = date.formatted(.dateTime.month(.abbreviated).day().locale(L10n.locale))
-        if days < 0 { return (L10n.string("Payment was due \(-days) days ago"), Color.due) }
-        if days == 0 { return (L10n.string("Renews \(L10n.string("today"))"), Color.due) }
-        if days == 1 { return (L10n.string("Renews \(L10n.string("tomorrow"))"), Color.due) }
-        return (L10n.string("Renews \(dateText) · \(L10n.string("in \(days) days"))"), Color.inkTextMuted)
+        if days < 0 { return (L10n.string("Payment was due \(L10n.relativeDay(days))"), Color.due) }
+        if days <= 1 { return (L10n.string("Renews \(L10n.relativeDay(days))"), Color.due) }
+        return (L10n.string("Renews \(dateText) · \(L10n.relativeDay(days))"), Color.inkTextMuted)
     }
 
     // MARK: - Facts
@@ -212,7 +211,7 @@ struct SubscriptionManagementView: View {
     private var decisionGroup: some View {
         if let pending = RenewalDecisions.pending(for: current, kept: RenewalDecisions.keptKeys(in: eventLog.events), now: Date()) {
             let days = Calendar.billing.calendarDays(from: Date(), to: pending.date)
-            let when = days == 0 ? L10n.string("today") : days == 1 ? L10n.string("tomorrow") : L10n.string("in \(days) days")
+            let when = L10n.relativeDay(days)
             VStack(spacing: 0) {
                 toolRow(icon: "questionmark.circle", state: .decide,
                         title: L10n.string("Keep it or cancel it?"),
@@ -418,7 +417,7 @@ private struct UsageSheet: View {
                     VStack(alignment: .leading, spacing: 10) {
                         ProofLine(label: L10n.string("This month"),
                                   value: minutes > 0
-                                    ? Duration.seconds(minutes * 60).formatted(.units(allowed: [.hours, .minutes], width: .abbreviated))
+                                    ? Duration.seconds(minutes * 60).formatted(.units(allowed: [.hours, .minutes], width: .abbreviated).locale(L10n.locale))
                                     : L10n.string("Not entered"),
                                   emphasised: true)
                         ProofLine(label: L10n.string("It costs"), value: subscription.chargeText + subscription.billingFrequency.shortDisplay)

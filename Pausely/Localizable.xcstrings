@@ -51514,40 +51514,6 @@
         }
       }
     },
-    "%@ renews in %lld days": {
-      "localizations": {
-        "ar": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "يتجدد %1$@ خلال %2$lld أيام"
-          }
-        },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "%1$@ verlängert sich in %2$lld Tagen"
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "%1$@ se renueva en %2$lld días"
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "%1$@ se renouvelle dans %2$lld jours"
-          }
-        },
-        "ja": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "%1$@は%2$lld日後に更新されます"
-          }
-        }
-      }
-    },
     "%@ on %@. Keep it or cancel it?": {
       "localizations": {
         "ar": {
@@ -54604,108 +54570,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "支払日を追加すると、解約のタイミングがわかります。"
-          }
-        }
-      }
-    },
-    "Cancel any day before %@ to avoid it. Most services let you keep using it until then.": {
-      "localizations": {
-        "ar": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "ألغِ في أي يوم قبل %@ لتتجنب الخصم. معظم الخدمات تبقى متاحة لك حتى ذلك التاريخ."
-          }
-        },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Kündigen Sie an einem beliebigen Tag vor dem %@, um die Abbuchung zu vermeiden. Die meisten Dienste können Sie bis dahin weiter nutzen."
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Cancela cualquier día antes del %@ para evitar el cargo. La mayoría de los servicios te dejan seguir usándolos hasta entonces."
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Résiliez n'importe quel jour avant le %@ pour l'éviter. La plupart des services restent utilisables jusque-là."
-          }
-        },
-        "ja": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "%@より前に解約すれば請求されません。ほとんどのサービスはその日まで利用できます。"
-          }
-        }
-      }
-    },
-    "1 day left": {
-      "localizations": {
-        "ar": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "بقي يوم واحد"
-          }
-        },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Noch 1 Tag"
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Queda 1 día"
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "1 jour restant"
-          }
-        },
-        "ja": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "残り1日"
-          }
-        }
-      }
-    },
-    "%lld days left": {
-      "localizations": {
-        "ar": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "بقي %lld يومًا"
-          }
-        },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Noch %lld Tage"
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Quedan %lld días"
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "%lld jours restants"
-          }
-        },
-        "ja": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "残り%lld日"
           }
         }
       }
@@ -60146,40 +60010,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "%lld件の選択肢"
-          }
-        }
-      }
-    },
-    "Payment was due %lld days ago": {
-      "localizations": {
-        "ar": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "كان الدفع مستحقًا قبل %lld أيام"
-          }
-        },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Zahlung war vor %lld Tagen fällig"
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "El pago venció hace %lld días"
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Le paiement était dû il y a %lld jours"
-          }
-        },
-        "ja": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "%lld日前が支払日でした"
           }
         }
       }
@@ -66980,6 +66810,74 @@
           "stringUnit": {
             "state": "translated",
             "value": "また支払っています"
+          }
+        }
+      }
+    },
+    "Payment was due %@": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "كان الدفع مستحقًا %@"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Zahlung war %@ fällig"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "El pago venció %@"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Le paiement était dû %@"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "支払い期限は%@でした"
+          }
+        }
+      }
+    },
+    "Cancel any day before %@ to avoid it.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ألغِ في أي يوم قبل %@ لتتجنّبه."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kündigen Sie an einem beliebigen Tag vor dem %@, um sie zu vermeiden."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cancela cualquier día antes del %@ para evitarlo."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Annulez n'importe quel jour avant le %@ pour l'éviter."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@より前にキャンセルすれば請求されません。"
           }
         }
       }

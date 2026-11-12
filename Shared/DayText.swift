@@ -4,12 +4,14 @@ import Foundation
 /// that. The words and their plural forms are the system's own, in every language, so the widgets
 /// need no translated sentence for them.
 enum DayText {
-    /// "today", "tomorrow", "in 3 days", in `locale`.
-    static func relative(daysAway: Int, locale: Locale) -> String {
+    /// "today", "tomorrow", "in 3 days", "3 days ago", in `locale`. `capitalized` for a line of its own
+    /// ("Tomorrow"), in the languages that capitalise.
+    static func relative(daysAway: Int, locale: Locale, capitalized: Bool = false) -> String {
         let formatter = RelativeDateTimeFormatter()
         formatter.locale = locale
         formatter.dateTimeStyle = .named
         formatter.unitsStyle = .full
+        formatter.formattingContext = capitalized ? .beginningOfSentence : .middleOfSentence
         return formatter.localizedString(from: DateComponents(day: daysAway))
     }
 
