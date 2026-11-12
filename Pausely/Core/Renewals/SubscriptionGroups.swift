@@ -17,7 +17,7 @@ enum SubscriptionGroups {
     /// Which group a subscription belongs to today.
     static func group(for sub: Subscription, pending: Set<UUID>, now: Date, calendar: Calendar = .current) -> Group {
         if sub.status == .cancelled || sub.status == .expired { return .cancelled }
-        if sub.isPaused || sub.status == .paused { return .paused }
+        if sub.status == .paused { return .paused }
         if pending.contains(sub.id) { return .decide }
         guard let charge = RenewalDecisions.upcomingCharge(for: sub, now: now, calendar: calendar) else { return .undated }
         let days = calendar.calendarDays(from: now, to: charge.date)

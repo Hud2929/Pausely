@@ -147,12 +147,12 @@ final class SubscriptionStoreTests: XCTestCase {
         await addOnline(sub)
 
         account.failure = URLError(.notConnectedToInternet)
-        await store.pauseSubscription(id: sub.id, until: days(30))
+        await store.updateSubscriptionStatus(id: sub.id, status: .paused)
         XCTAssertEqual(store.lastErrorMessage, offlineNotice)
 
         struct Refused: Error {}
         account.failure = Refused()
-        await store.resumeSubscription(id: sub.id)
+        await store.updateSubscriptionStatus(id: sub.id, status: .active)
         XCTAssertEqual(store.lastErrorMessage,
                        L10n.string("Saved on this iPhone. It hasn't reached your account yet. Pausely will keep trying."))
 
@@ -178,22 +178,6 @@ final class SubscriptionStoreTests: XCTestCase {
         XCTAssertEqual(store.totalMonthlySpend, 10)
         XCTAssertEqual(account.rows[sub.id]?.status, .active)
         XCTAssertEqual(LifecycleEventLog.shared.events.filter { $0.subscriptionId == sub.id }.map(\.kind), [.added, .cancelled, .reactivated])
-    }
-
-    func testPauseAndResume() async throws {
-        let sub = TestFactories.makeSubscription(name: "Spotify")
-        await addOnline(sub)
-        let until = Calendar.current.noon(of: days(30))
-        await store.pauseSubscription(id: sub.id, until: until)
-        XCTAssertEqual(store.subscriptions.first?.pausedUntil, until)
-        XCTAssertEqual(store.pausedSubscriptions.map(\.id), [sub.id])
-        XCTAssertTrue(store.activeSubscriptions.isEmpty)
-        XCTAssertEqual(account.rows[sub.id]?.pausedUntil, until)
-
-        await store.resumeSubscription(id: sub.id)
-        XCTAssertNil(store.subscriptions.first?.pausedUntil)
-        XCTAssertEqual(store.activeSubscriptions.map(\.id), [sub.id])
-        XCTAssertEqual(account.rows[sub.id]?.pausedUntil, .some(nil), "the pause is cleared on the account too")
     }
 
     func testDeletingRemovesItItsTotalAndRecordsIt() async throws {
@@ -236,22 +220,18 @@ final class SubscriptionStoreTests: XCTestCase {
         XCTAssertFalse(store.totalIsConverted)
     }
 
-    /// One list, one answer. Home counted paused subscriptions and left trials out, Insights left
-    /// both out, the paywall and the year slip counted both: someone with one trial and one paused
-    /// subscription saw three different yearly figures.
+    /// One list, one answer. Home left trials out and Insights did too, while the paywall and the
+    /// year slip counted them: someone with a trial saw different yearly figures for the same list.
     func testEveryTotalAndCountIsAboutTheSameSubscriptions() async throws {
         await add(TestFactories.makeSubscription(name: "On", amount: 10, status: .active, category: "Music"))
         await add(TestFactories.makeSubscription(name: "Trial", amount: 5, status: .trial, category: "Music"))
-        let paused = TestFactories.makeSubscription(name: "Paused", amount: 100, status: .active, category: "Music")
-        await add(paused)
-        await store.pauseSubscription(id: paused.id, until: days(30))
+        await add(TestFactories.makeSubscription(name: "Paused", amount: 100, status: .paused, category: "Music"))
         await add(TestFactories.makeSubscription(name: "Cancelled", amount: 1000, status: .cancelled, category: "Music"))
 
         // Home and the Subscriptions tab
         XCTAssertEqual(store.totalMonthlySpend, 15)
         XCTAssertEqual(store.totalAnnualSpend, 180)
         XCTAssertEqual(store.activeSubscriptions.map(\.name).sorted(), ["On", "Trial"])
-        XCTAssertEqual(store.pausedSubscriptions.map(\.name), ["Paused"], "listed apart, and not in the big number")
         // Insights, by category
         XCTAssertEqual(store.subscriptions.categoryTotals(in: "USD"), [CategoryTotal(category: "Music", amount: 15, count: 2)])
         // The paywall's "about … a year" and the year slip

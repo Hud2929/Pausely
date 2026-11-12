@@ -19,8 +19,7 @@ enum TestFactories {
         createdAt: Date = Date(timeIntervalSince1970: 1_700_000_000),
         userPriceUSD: Decimal? = nil,
         isPriceOverridden: Bool = false,
-        canPause: Bool = true,
-        pausedUntil: Date? = nil
+        canPause: Bool = true
     ) -> Subscription {
         Subscription(
             id: id,
@@ -33,7 +32,6 @@ enum TestFactories {
             monthlyUsageMinutes: monthlyUsageMinutes,
             status: status,
             canPause: canPause,
-            pausedUntil: pausedUntil,
             createdAt: createdAt,
             updatedAt: createdAt,
             userPriceUSD: userPriceUSD,

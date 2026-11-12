@@ -72,24 +72,16 @@ final class SubscriptionTests: XCTestCase {
 
     // MARK: - Status
 
-    /// What is being paid for: on, or a trial that will turn into a charge, and not paused.
+    /// What is being paid for: on, or a trial that will turn into a charge.
     func testWhatIsCharging() {
-        let soon = Calendar.current.date(byAdding: .day, value: 7, to: Date())
-        var paused = TestFactories.makeSubscription(name: "Paused", status: .active)
-        paused.pausedUntil = soon
-        var pauseOver = TestFactories.makeSubscription(name: "Pause over", status: .active)
-        pauseOver.pausedUntil = Calendar.current.date(byAdding: .day, value: -1, to: Date())
         let list = [
             TestFactories.makeSubscription(name: "On", status: .active),
             TestFactories.makeSubscription(name: "Trial", status: .trial),
-            paused, pauseOver,
             TestFactories.makeSubscription(name: "Cancelled", status: .cancelled),
             TestFactories.makeSubscription(name: "Expired", status: .expired),
-            TestFactories.makeSubscription(name: "Marked paused", status: .paused)
+            TestFactories.makeSubscription(name: "Paused", status: .paused)
         ]
-        XCTAssertTrue(paused.isPaused)
-        XCTAssertFalse(pauseOver.isPaused)
-        XCTAssertEqual(list.charging.map(\.name), ["On", "Trial", "Pause over"])
+        XCTAssertEqual(list.charging.map(\.name), ["On", "Trial"])
     }
 
     // MARK: - Days Until Renewal
@@ -151,16 +143,6 @@ final class SubscriptionTests: XCTestCase {
 
     // MARK: - ROI / Waste Score Edge Cases
 
-
-    func testIsPaused_pausedUntilExactlyNow_isNotPaused() {
-        // pausedUntil <= Date() → isPaused must return false (boundary: > not >=)
-        var sub = TestFactories.makeSubscription()
-        sub.pausedUntil = Date()    // right now — the condition is `pausedUntil > Date()`
-        // Allow a tiny tolerance: if the system processes instantly, Date() might be equal
-        // The important thing is it never crashes and returns a Bool
-        let result = sub.isPaused
-        XCTAssertTrue(result == true || result == false, "isPaused must return a valid Bool at boundary")
-    }
 
     // MARK: - Date Math for Billing
 

@@ -94,8 +94,7 @@ final class RenewalEngineTests: XCTestCase {
 
     func testPausedSubscriptionDoesNotRoll() {
         let past = Calendar.current.date(byAdding: .day, value: -3, to: Date())!
-        let until = Calendar.current.date(byAdding: .month, value: 1, to: Date())!
-        let sub = TestFactories.makeSubscription(status: .active, nextBillingDate: past, pausedUntil: until)
+        let sub = TestFactories.makeSubscription(status: .paused, nextBillingDate: past)
         XCTAssertFalse(sub.renewsAutomatically)
         XCTAssertEqual(sub.calculatedNextBillingDate, past)
     }

@@ -231,7 +231,7 @@ struct DashboardView: View {
         .accessibilityIdentifier("savingsReceiptCard")
     }
 
-    // MARK: - Pause Plan and paused
+    // MARK: - Pause Plan
 
     @ViewBuilder private var quietRows: some View {
         VStack(spacing: 0) {
@@ -248,20 +248,6 @@ struct DashboardView: View {
                     .contentShape(Rectangle())
                 }
                 .buttonStyle(.plain)
-            }
-            if !store.pausedSubscriptions.isEmpty {
-                Hairline()
-                HStack(spacing: 12) {
-                    StateMark(state: .paused)
-                    Text(L10n.string("\(store.pausedSubscriptions.count) paused"))
-                        .font(.body).foregroundStyle(Color.inkText)
-                    Spacer(minLength: 8)
-                    Text(verbatim: MoneyFormat.total(store.pausedSubscriptions.monthlyTotal(), currencyManager.selectedCurrency,
-                                                     converted: store.pausedSubscriptions.isConverted()))
-                        .font(.body.monospacedDigit()).foregroundStyle(Color.inkTextMuted)
-                }
-                .padding(.vertical, 14)
-                .accessibilityElement(children: .combine)
             }
         }
     }

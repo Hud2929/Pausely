@@ -1,7 +1,7 @@
 import XCTest
 @testable import Pausely
 
-/// What reaches the database and what comes back: renewal and pause dates survive the round trip,
+/// What reaches the database and what comes back: renewal dates survive the round trip,
 /// cleared dates clear on the server, and merging never loses this iPhone's work.
 @MainActor
 final class SubscriptionSyncTests: XCTestCase {
@@ -14,19 +14,17 @@ final class SubscriptionSyncTests: XCTestCase {
 
     // MARK: The record sent to the database
 
-    func testRenewalAndPauseDatesAreSent() throws {
-        var sub = TestFactories.makeSubscription(name: "Netflix", nextBillingDate: day("2026-11-20T12:00:00Z"))
-        sub.pausedUntil = day("2026-12-01T12:00:00Z")
+    func testTheRenewalDateIsSent() throws {
+        let sub = TestFactories.makeSubscription(name: "Netflix", nextBillingDate: day("2026-11-20T12:00:00Z"))
         let sent = try json(SubscriptionRecord(from: sub))
         XCTAssertEqual(sent["next_billing_date"] as? String, "2026-11-20T12:00:00Z")
-        XCTAssertEqual(sent["paused_until"] as? String, "2026-12-01T12:00:00Z")
+        XCTAssertNil(sent["paused_until"], "the removed pause is never written, so an older row's value is left alone")
     }
 
     func testClearedDatesAreSentAsNullAndServerOwnedFieldsAreLeftOut() throws {
         let sub = TestFactories.makeSubscription(name: "Hulu", nextBillingDate: nil)
         let sent = try json(SubscriptionRecord(from: sub))
         XCTAssertTrue(sent["next_billing_date"] is NSNull, "a cleared renewal date must clear on the server")
-        XCTAssertTrue(sent["paused_until"] is NSNull, "resuming must clear the pause on the server")
         XCTAssertTrue(sent["trial_ends_at"] is NSNull)
         XCTAssertNil(sent["user_id"], "an update must never null the owner")
         XCTAssertNil(sent["created_at"])
@@ -46,7 +44,6 @@ final class SubscriptionSyncTests: XCTestCase {
         let record = try JSONDecoder().decode(SubscriptionRecord.self, from: Data(row.utf8))
         let sub = record.toSubscription()
         XCTAssertEqual(sub.nextBillingDate, day("2026-11-20T12:00:00Z"))
-        XCTAssertEqual(sub.pausedUntil, day("2026-12-01T12:00:00Z"))
         XCTAssertEqual(sub.createdAt.timeIntervalSince1970, day("2026-03-04T17:30:00Z").timeIntervalSince1970 + 0.123, accuracy: 0.001,
                        "the creation date must not reset to now on every fetch")
         XCTAssertEqual(sub.updatedAt.timeIntervalSince1970, day("2026-10-01T09:15:42Z").timeIntervalSince1970 + 0.5, accuracy: 0.001)

@@ -48,8 +48,7 @@ final class VerdictAndSavingsTests: XCTestCase {
     func testCancelledAndPausedNeverAsk() {
         let cancelled = sub(anchor: day(2026, 10, 31), status: .cancelled)
         XCTAssertNil(RenewalDecisions.pending(for: cancelled, kept: [], now: day(2026, 10, 30), calendar: cal))
-        var paused = sub(anchor: day(2026, 10, 31))
-        paused.pausedUntil = day(2026, 12, 1)
+        let paused = sub(anchor: day(2026, 10, 31), status: .paused)
         XCTAssertNil(RenewalDecisions.pending(for: paused, kept: [], now: day(2026, 10, 30), calendar: cal))
     }
 

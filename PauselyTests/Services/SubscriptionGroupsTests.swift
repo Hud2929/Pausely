@@ -15,9 +15,9 @@ final class SubscriptionGroupsTests: XCTestCase {
     }
 
     private func sub(_ name: String, _ amount: String = "10.00", anchor: Date? = nil,
-                     status: SubscriptionStatus = .active, pausedUntil: Date? = nil) -> Subscription {
+                     status: SubscriptionStatus = .active) -> Subscription {
         Subscription(name: name, amount: Decimal(string: amount)!, currency: "USD", nextBillingDate: anchor,
-                     status: status, pausedUntil: pausedUntil)
+                     status: status)
     }
 
     func testEachSubscriptionLandsInTheRightGroup() {
@@ -30,7 +30,7 @@ final class SubscriptionGroupsTests: XCTestCase {
             (sub("Tallied"), .undated),
             (sub("Gone", anchor: day(2026, 11, 12), status: .cancelled), .cancelled),
             (sub("Expired", status: .expired), .cancelled),
-            (sub("Resting", anchor: day(2026, 11, 12), pausedUntil: day(2027, 1, 1)), .paused),
+            (sub("Resting", anchor: day(2026, 11, 12), status: .paused), .paused),
         ]
         for (subscription, expected) in cases {
             XCTAssertEqual(SubscriptionGroups.group(for: subscription, pending: [decide.id], now: now, calendar: calendar),

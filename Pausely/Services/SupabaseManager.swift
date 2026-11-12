@@ -90,7 +90,6 @@ struct SubscriptionRecord: Codable {
     var is_detected: Bool
     var can_pause: Bool
     var pause_url: String?
-    var paused_until: String?
     var created_at: String?
     var updated_at: String?
     
@@ -110,7 +109,6 @@ struct SubscriptionRecord: Codable {
         self.notify_before_days = subscription.notifyBeforeDays
         self.trial_ends_at = subscription.trialEndsAt?.iso8601String
         self.next_billing_date = subscription.nextBillingDate?.iso8601String
-        self.paused_until = subscription.pausedUntil?.iso8601String
         self.status = subscription.status.rawValue
         self.is_detected = subscription.isDetected
         self.can_pause = subscription.canPause
@@ -141,7 +139,6 @@ struct SubscriptionRecord: Codable {
         try c.encode(is_detected, forKey: .is_detected)
         try c.encode(can_pause, forKey: .can_pause)
         try c.encodeIfPresent(pause_url, forKey: .pause_url)
-        try c.encode(paused_until, forKey: .paused_until)
         try c.encodeIfPresent(created_at, forKey: .created_at)
         try c.encodeIfPresent(updated_at, forKey: .updated_at)
     }
@@ -165,7 +162,6 @@ struct SubscriptionRecord: Codable {
         sub.notifyBeforeDays = notify_before_days ?? 3
         sub.trialEndsAt = trial_ends_at?.iso8601Date
         sub.nextBillingDate = next_billing_date?.iso8601Date
-        sub.pausedUntil = paused_until?.iso8601Date
         sub.status = SubscriptionStatus(rawValue: status) ?? .active
         sub.isDetected = is_detected
         sub.canPause = can_pause

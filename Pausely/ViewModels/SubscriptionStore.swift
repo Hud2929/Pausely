@@ -256,24 +256,6 @@ class SubscriptionStore: ObservableObject {
         await send(id)
     }
 
-    func pauseSubscription(id: UUID, until date: Date) async {
-        guard let index = subscriptions.firstIndex(where: { $0.id == id }) else { return }
-        subscriptions[index].pausedUntil = date
-        listChanged()
-        sync.noteChanged(id)
-        await ReminderScheduler.shared.reschedule(subscriptions)
-        await send(id)
-    }
-
-    func resumeSubscription(id: UUID) async {
-        guard let index = subscriptions.firstIndex(where: { $0.id == id }) else { return }
-        subscriptions[index].pausedUntil = nil
-        listChanged()
-        sync.noteChanged(id)
-        await ReminderScheduler.shared.reschedule(subscriptions)
-        await send(id)
-    }
-
     /// Removes every subscription from this device (account deletion, or a different person signing in).
     /// The server copy is not touched.
     func removeAllLocalData() {
@@ -427,9 +409,6 @@ class SubscriptionStore: ObservableObject {
     /// What is being paid for (see `charging`): the list behind the totals above.
     var activeSubscriptions: [Subscription] { subscriptions.charging }
 
-    var pausedSubscriptions: [Subscription] {
-        subscriptions.filter { $0.isPaused }
-    }
 
 }
 

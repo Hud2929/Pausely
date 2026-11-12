@@ -20,20 +20,14 @@ enum ReminderActions {
     /// Pause Plan handoffs: a tap opens the plan.
     static let pausePlanCategory = "PAUSE_PLAN"
 
-    /// Reminders created by the "Pause" Shortcut.
-    static let pauseCategory = "PAUSE_REMINDER"
-    static let openPausePage = "OPEN_PAUSE_PAGE"
-
     /// Registered on every launch; iOS forgets categories that aren't re-registered.
     static func registerCategories(on center: UNUserNotificationCenter = .current()) {
         let keepAction = UNNotificationAction(identifier: keep, title: L10n.string("Keep it"), options: [])
         let reviewAction = UNNotificationAction(identifier: review, title: L10n.string("Review"), options: [.foreground])
         let decision = UNNotificationCategory(identifier: decisionCategory, actions: [keepAction, reviewAction],
                                               intentIdentifiers: [], options: [])
-        let openPause = UNNotificationAction(identifier: openPausePage, title: L10n.string("Open Pause Page"), options: [.foreground])
-        let pause = UNNotificationCategory(identifier: pauseCategory, actions: [openPause], intentIdentifiers: [], options: [])
         let plan = UNNotificationCategory(identifier: pausePlanCategory, actions: [], intentIdentifiers: [], options: [])
-        center.setNotificationCategories([decision, pause, plan])
+        center.setNotificationCategories([decision, plan])
     }
 }
 
@@ -70,43 +64,6 @@ final class NotificationManager {
         guard let url = URL(string: UIApplication.openNotificationSettingsURLString) else { return }
         UIApplication.shared.open(url)
     }
-
-    // MARK: - Pause reminders (Shortcuts)
-
-    func schedulePauseReminder(for subscription: Subscription, reminderDate: Date, pauseURL: String?) {
-        cancelPauseReminder(for: subscription.id)
-        guard reminderDate > Date() else { return }
-        let content = UNMutableNotificationContent()
-        content.title = "Reminder: Pause \(subscription.name)"
-        content.body = "Tap to open \(subscription.name)'s pause page."
-        content.sound = .default
-        content.categoryIdentifier = ReminderActions.pauseCategory
-        content.userInfo = [
-            "subscription_id": subscription.id.uuidString,
-            "type": "pause_reminder",
-            "pause_url": pauseURL ?? ""
-        ]
-        var dateComponents = Calendar.current.dateComponents([.year, .month, .day], from: reminderDate)
-        dateComponents.hour = 9
-        dateComponents.minute = 0
-        let request = UNNotificationRequest(
-            identifier: "pause-reminder-\(subscription.id.uuidString)",
-            content: content,
-            trigger: UNCalendarNotificationTrigger(dateMatching: dateComponents, repeats: false)
-        )
-        Task {
-            await refreshStatus()
-            guard isAuthorized else { return }
-            try? await center.add(request)
-        }
-    }
-
-    func cancelPauseReminder(for subscriptionId: UUID) {
-        center.removePendingNotificationRequests(withIdentifiers: [
-            "pause-\(subscriptionId.uuidString)",
-            "pause-reminder-\(subscriptionId.uuidString)"
-        ])
-    }
 }
 
 // MARK: - Delegate
@@ -125,18 +82,11 @@ final class NotificationDelegate: NSObject, UNUserNotificationCenterDelegate {
                                 didReceive response: UNNotificationResponse) async {
         let info = response.notification.request.content.userInfo
         let subscriptionId = (info["subscription_id"] as? String).flatMap(UUID.init(uuidString:))
-        let pauseURL = (info["pause_url"] as? String).flatMap { $0.isEmpty ? nil : URL(string: $0) }
 
         switch response.actionIdentifier {
         case ReminderActions.keep:
             // Handled without opening the app: record the decision and drop the remaining reminders.
             if let subscriptionId { await VerdictCenter.shared.keep(subscriptionId: subscriptionId) }
-        case ReminderActions.openPausePage:
-            if let pauseURL {
-                await MainActor.run { UIApplication.shared.open(pauseURL) }
-            } else if let subscriptionId {
-                await VerdictCenter.shared.showSubscription(subscriptionId)
-            }
         case UNNotificationDismissActionIdentifier:
             break
         case _ where (info["type"] as? String)?.hasPrefix("pause_plan") == true:

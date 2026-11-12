@@ -348,10 +348,6 @@ struct SubscriptionManagementView: View {
 
     private var actions: some View {
         VStack(spacing: 10) {
-            if current.isPaused {
-                RevolutionaryResumeButton(subscription: current)
-            }
-
             if current.status != .cancelled {
                 Button { route = .cancel } label: { Text("Cancel subscription") }
                     .buttonStyle(.ink(.quiet))

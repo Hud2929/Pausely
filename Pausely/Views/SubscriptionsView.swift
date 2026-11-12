@@ -288,9 +288,6 @@ private struct SubscriptionRow: View {
         case .cancelled:
             return L10n.string("Cancelled")
         case .paused:
-            if let until = subscription.pausedUntil {
-                return L10n.string("Paused until \(until.formatted(.dateTime.month(.abbreviated).day().locale(L10n.locale)))")
-            }
             return L10n.string("Paused")
         case .undated:
             return L10n.string("Add its renewal date")

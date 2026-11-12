@@ -23,7 +23,6 @@ struct Subscription: Identifiable, Codable, Equatable {
     var isDetected: Bool
     var canPause: Bool
     var pauseUrl: String?
-    var pausedUntil: Date?
     var createdAt: Date
     var updatedAt: Date
 
@@ -37,7 +36,7 @@ struct Subscription: Identifiable, Codable, Equatable {
     enum CodingKeys: String, CodingKey {
         case id, userId, name, bundleIdentifier, description, logoUrl, category, amount, currency
         case billingFrequency, nextBillingDate, monthlyUsageMinutes, costPerHour
-        case roiScore, wasteScore, notifyBeforeDays, trialEndsAt, status, isDetected, canPause, pauseUrl, pausedUntil
+        case roiScore, wasteScore, notifyBeforeDays, trialEndsAt, status, isDetected, canPause, pauseUrl
         case createdAt, updatedAt
         case selectedTier, userPriceUSD, isPriceOverridden
     }
@@ -66,7 +65,6 @@ struct Subscription: Identifiable, Codable, Equatable {
         isDetected: Bool = false,
         canPause: Bool = true,
         pauseUrl: String? = nil,
-        pausedUntil: Date? = nil,
         createdAt: Date = Date(),
         updatedAt: Date = Date(),
         selectedTier: PricingTier = .individual,
@@ -94,7 +92,6 @@ struct Subscription: Identifiable, Codable, Equatable {
         self.isDetected = isDetected
         self.canPause = canPause
         self.pauseUrl = pauseUrl
-        self.pausedUntil = pausedUntil
         self.createdAt = createdAt
         self.updatedAt = updatedAt
         self.selectedTier = selectedTier
@@ -140,14 +137,9 @@ struct Subscription: Identifiable, Codable, Equatable {
         }
     }
     
-    var isPaused: Bool {
-        guard let pausedUntil = pausedUntil else { return false }
-        return pausedUntil > Date()
-    }
-
     /// Whether this subscription keeps charging on its own. Only these roll forward to the next cycle.
     var renewsAutomatically: Bool {
-        (status == .active || status == .trial) && !isPaused
+        status == .active || status == .trial
     }
 
     /// The next renewal. `nextBillingDate` is the anchor the user entered and is never overwritten;

@@ -5,7 +5,7 @@ import Foundation
 // MARK: - Get Monthly Spend Intent
 struct GetMonthlySpendIntent: AppIntent {
     static var title: LocalizedStringResource = "Get Monthly Spend"
-    static var description = IntentDescription("Find out how much you're spending on subscriptions this month.")
+    static var description = IntentDescription("What your subscriptions cost each month.")
 
     @MainActor
     func perform() async throws -> some IntentResult & ReturnsValue<String> {
@@ -13,7 +13,7 @@ struct GetMonthlySpendIntent: AppIntent {
         let formatted = MoneyFormat.total(store.totalMonthlySpend, CurrencyManager.shared.selectedCurrency,
                                           converted: store.totalIsConverted)
 
-        return .result(value: "Your monthly subscription spend is \(formatted)")
+        return .result(value: "Your subscriptions cost \(formatted) a month.")
     }
 }
 
@@ -91,10 +91,10 @@ struct AddSubscriptionIntent: AppIntent {
             amount: MoneyFormat.decimal(monthlyCost),
             currency: CurrencyManager.shared.selectedCurrency,
             billingFrequency: .monthly,
-            nextBillingDate: Calendar.current.date(byAdding: .month, value: 1, to: Date()),
+            // No renewal date was given, so none is made up: Home asks "When does it renew?".
+            nextBillingDate: nil,
             status: .active,
             isDetected: false,
-            canPause: true,
             selectedTier: .individual
         )
 
@@ -117,70 +117,24 @@ struct GetSubscriptionDetailIntent: AppIntent {
     @MainActor
     func perform() async throws -> some IntentResult & ReturnsValue<String> {
         let store = SubscriptionStore.shared
-        let query = name.lowercased()
 
-        guard let sub = store.subscriptions.first(where: { $0.name.lowercased().contains(query) }) else {
-            return .result(value: "No subscription found matching '\(name)'.")
+        let sub: Subscription
+        switch NamedSubscription.find(name, in: store.subscriptions) {
+        case .one(let found): sub = found
+        case .none, .several: return .result(value: NamedSubscription.find(name, in: store.subscriptions).problem(for: name))
         }
 
         let amount = MoneyFormat.string(sub.monthlyCost, sub.currency)
-        let status = sub.status == .active ? "Active" : "Paused"
-        let renewal = sub.daysUntilRenewal.map { "Renews in \($0) day\($0 == 1 ? "" : "s")" } ?? "No renewal date"
-
-        return .result(value: "\(sub.name): \(amount)/month, \(status). \(renewal).")
-    }
-}
-
-// MARK: - Pause Subscription Intent
-struct PauseSubscriptionIntent: AppIntent {
-    static var title: LocalizedStringResource = "Pause Subscription"
-    static var description = IntentDescription("Pause a subscription to stop tracking it temporarily.")
-
-    @Parameter(title: "Subscription Name", requestValueDialog: "Which subscription do you want to pause?")
-    var name: String
-
-    @MainActor
-    func perform() async throws -> some IntentResult & ReturnsValue<String> {
-        let store = SubscriptionStore.shared
-        let query = name.lowercased()
-
-        guard let sub = store.subscriptions.first(where: { $0.name.lowercased().contains(query) }) else {
-            return .result(value: "No subscription found matching '\(name)'.")
+        // Only something that will charge has a renewal to report.
+        let renewal: String
+        if !sub.renewsAutomatically {
+            renewal = ""
+        } else if let days = sub.daysUntilRenewal {
+            renewal = days == 0 ? " Renews today." : " Renews in \(days) day\(days == 1 ? "" : "s")."
+        } else {
+            renewal = " No renewal date."
         }
-
-        let reminderDate = Calendar.current.date(byAdding: .day, value: 7, to: Date()) ?? Date()
-        await store.pauseSubscription(id: sub.id, until: reminderDate)
-
-        let pauseURL = SubscriptionActionManager.shared.findService(for: sub.name)?.pauseURL
-        NotificationManager.shared.schedulePauseReminder(
-            for: sub,
-            reminderDate: reminderDate,
-            pauseURL: pauseURL
-        )
-
-        return .result(value: "Set pause reminder for \(sub.name) for 1 week from now.")
-    }
-}
-
-// MARK: - Resume Subscription Intent
-struct ResumeSubscriptionIntent: AppIntent {
-    static var title: LocalizedStringResource = "Resume Subscription"
-    static var description = IntentDescription("Resume a paused subscription.")
-
-    @Parameter(title: "Subscription Name", requestValueDialog: "Which subscription do you want to resume?")
-    var name: String
-
-    @MainActor
-    func perform() async throws -> some IntentResult & ReturnsValue<String> {
-        let store = SubscriptionStore.shared
-        let query = name.lowercased()
-
-        guard let sub = store.subscriptions.first(where: { $0.name.lowercased().contains(query) }) else {
-            return .result(value: "No subscription found matching '\(name)'.")
-        }
-
-        await store.resumeSubscription(id: sub.id)
-        return .result(value: "Cleared pause reminder for \(sub.name).")
+        return .result(value: "\(sub.name): \(amount)/month, \(sub.status.displayName).\(renewal)")
     }
 }
 
@@ -195,13 +149,45 @@ struct DeleteSubscriptionIntent: AppIntent {
     @MainActor
     func perform() async throws -> some IntentResult & ReturnsValue<String> {
         let store = SubscriptionStore.shared
-        let query = name.lowercased()
 
-        guard let sub = store.subscriptions.first(where: { $0.name.lowercased().contains(query) }) else {
-            return .result(value: "No subscription found matching '\(name)'.")
+        // Removing is not undone, so the name has to mean exactly one subscription.
+        switch NamedSubscription.find(name, in: store.subscriptions) {
+        case .one(let sub):
+            await store.deleteSubscription(id: sub.id)
+            return .result(value: "Deleted \(sub.name).")
+        case let other:
+            return .result(value: other.problem(for: name))
         }
+    }
+}
 
-        await store.deleteSubscription(id: sub.id)
-        return .result(value: "Deleted \(sub.name).")
+// MARK: - Which subscription a name means
+
+/// The subscription a spoken or typed name means: the one with exactly that name, or the only one
+/// whose name contains it. Never a pick between several ("Apple" with Apple One and Apple Music).
+enum NamedSubscription {
+    case one(Subscription)
+    case none
+    case several([String])
+
+    static func find(_ name: String, in subscriptions: [Subscription]) -> NamedSubscription {
+        let wanted = name.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
+        guard !wanted.isEmpty else { return .none }
+        if let exact = subscriptions.first(where: { $0.name.lowercased() == wanted }) { return .one(exact) }
+        let containing = subscriptions.filter { $0.name.lowercased().contains(wanted) }
+        switch containing.count {
+        case 0: return .none
+        case 1: return .one(containing[0])
+        default: return .several(containing.map(\.name))
+        }
+    }
+
+    /// What to say when the name didn't mean exactly one.
+    func problem(for name: String) -> String {
+        switch self {
+        case .one: return ""
+        case .none: return "No subscription found matching '\(name)'."
+        case .several(let names): return "\(names.count) subscriptions match '\(name)': \(names.joined(separator: ", ")). Say the full name."
+        }
     }
 }
