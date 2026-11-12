@@ -35,6 +35,32 @@ final class SubscriptionStoreTests: XCTestCase {
         XCTAssertTrue(store.sync.pending.isEmpty)
     }
 
+    // MARK: The demo list (debug builds)
+
+    /// A debug build with an empty list used to fill it with twelve made-up subscriptions on any
+    /// launch, and a build signed in to a real account then uploaded them to it. The test app is an
+    /// ordinary launch: an empty saved list stays empty.
+    func testAnEmptyListIsNotFilledWithTheDemoSetInAnOrdinaryLaunch() {
+        XCTAssertFalse(LaunchFlag.isDemoLaunch, "the tests run in an ordinary launch")
+        AppSettings.shared.cachedSubscriptions = Data()
+        store.subscriptions = []
+        store.showList()   // reads the saved list again
+        XCTAssertEqual(store.subscriptions, [])
+        XCTAssertTrue(AppSettings.shared.cachedSubscriptions.isEmpty, "and nothing made up is saved")
+    }
+
+    func testTheDemoSetIsOnlyForDemoLaunchesAndNeverOutlivesThem() {
+        XCTAssertTrue(SubscriptionStore.fillsWithDemoList(listIsEmpty: true, isDemoLaunch: true))
+        XCTAssertFalse(SubscriptionStore.fillsWithDemoList(listIsEmpty: true, isDemoLaunch: false))
+        XCTAssertFalse(SubscriptionStore.fillsWithDemoList(listIsEmpty: false, isDemoLaunch: true), "a real list is never replaced")
+
+        XCTAssertEqual(SubscriptionStore.savedDemoList(isDemo: true, isDemoLaunch: false), .discarded,
+                       "an ordinary launch throws a saved demo list away before it can be synced as the person's own")
+        XCTAssertEqual(SubscriptionStore.savedDemoList(isDemo: true, isDemoLaunch: true), .shownOffline)
+        XCTAssertEqual(SubscriptionStore.savedDemoList(isDemo: false, isDemoLaunch: false), .none)
+        XCTAssertEqual(SubscriptionStore.savedDemoList(isDemo: false, isDemoLaunch: true), .none)
+    }
+
     // MARK: Adding
 
     func testAddingPutsItFirstAndUpdatesTheTotals() async {

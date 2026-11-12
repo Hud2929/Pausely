@@ -35,15 +35,24 @@ class SubscriptionStore: ObservableObject {
     private var currencyCancellables: Set<AnyCancellable> = []
 
     private init() {
+        #if DEBUG
+        // A demo list saved by an earlier demo launch is shown offline in another demo launch, and
+        // thrown away by an ordinary one, before anything can load it as the person's own.
+        switch Self.savedDemoList(isDemo: UserDefaults.standard.bool(forKey: Self.savedListIsDemoKey),
+                                  isDemoLaunch: LaunchFlag.isDemoLaunch) {
+        case .none: break
+        case .shownOffline: Self.cloudSyncEnabled = false
+        case .discarded:
+            AppSettings.shared.cachedSubscriptions = Data()
+            UserDefaults.standard.removeObject(forKey: Self.savedListIsDemoKey)
+        }
+        #endif
         loadFromCache()
         sync.currentCopy = copyForSync
         #if DEBUG
         // UI tests: start from the demo list on every launch and never write to the cloud.
         if LaunchFlag.isSet("--fresh-demo-data") {
-            Self.cloudSyncEnabled = false
-            subscriptions = Self.makeDemoSubscriptions()
-            calculateTotals()
-            saveToCache()
+            useDemoList()
         } else if LaunchFlag.isSet("--empty-demo-data") {
             // A new person's empty list (an empty array, so the demo data isn't loaded in its place)
             // and no history from earlier runs.
@@ -371,13 +380,9 @@ class SubscriptionStore: ObservableObject {
     private func loadFromCache() {
         let data = AppSettings.shared.cachedSubscriptions
         guard !data.isEmpty else {
-            // Demo data for screenshots / simulator
             #if DEBUG
-            if subscriptions.isEmpty {
-                let demoSubs = Self.makeDemoSubscriptions()
-                self.subscriptions = demoSubs
-                self.calculateTotals()
-                self.saveToCache()
+            if Self.fillsWithDemoList(listIsEmpty: subscriptions.isEmpty, isDemoLaunch: LaunchFlag.isDemoLaunch) {
+                useDemoList()
             }
             #endif
             return
@@ -394,6 +399,33 @@ class SubscriptionStore: ObservableObject {
     }
 
     #if DEBUG
+    /// Set while the saved list is the demo set.
+    static let savedListIsDemoKey = "saved_list_is_demo"
+
+    /// An empty list is filled with the demo set only in a demo launch (captures, UI tests, demos).
+    /// Any debug build with an empty list used to get it, and when that build was signed in to a real
+    /// account the next sync uploaded twelve made-up subscriptions to it.
+    nonisolated static func fillsWithDemoList(listIsEmpty: Bool, isDemoLaunch: Bool) -> Bool {
+        listIsEmpty && isDemoLaunch
+    }
+
+    enum SavedDemoList { case none, shownOffline, discarded }
+
+    /// What a launch does with a saved list that is the demo set.
+    nonisolated static func savedDemoList(isDemo: Bool, isDemoLaunch: Bool) -> SavedDemoList {
+        guard isDemo else { return .none }
+        return isDemoLaunch ? .shownOffline : .discarded
+    }
+
+    /// The demo set becomes the list: marked as such, and never sent anywhere.
+    private func useDemoList() {
+        Self.cloudSyncEnabled = false
+        UserDefaults.standard.set(true, forKey: Self.savedListIsDemoKey)
+        subscriptions = Self.makeDemoSubscriptions()
+        calculateTotals()
+        saveToCache()
+    }
+
     static func makeDemoSubscriptions() -> [Subscription] {
         let calendar = Calendar.billing
         let now = Date()

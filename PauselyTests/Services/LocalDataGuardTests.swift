@@ -31,6 +31,7 @@ final class LocalDataGuardTests: XCTestCase {
         "debug_auth_bypass": "debug builds only",
         "debug_premium_override": "debug builds only",
         "debug_free_pro": "debug builds only",
+        "saved_list_is_demo": "debug builds only: marks a saved list as the demo set, so an ordinary launch throws it away",
     ]
 
     /// Kept somewhere other than the app's settings, and removed by the store that owns them.
