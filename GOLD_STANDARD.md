@@ -168,7 +168,8 @@ Updated at every commit, so the work can be picked up from this file alone.
   `scripts/dbtest/run.sh` (619 checks); whole suite 559 tests, one failure, the known translation
   guard (D). Not proven: a sync against the real account from the app (needs a signed-in session on
   the simulator, which needs the owner's password or a test account).
-- Now: B5 (currency rates data race), then T62 (cancel help by exact service), then Stage C.
+- B5 done (currency rates stored on the main thread; see its row).
+- Now: T62 (cancel help by exact service), then Stage C.
 
 **Phase 0. Scan (read-only).** Four independent audits (dead code, truth, design rules on every
 view, engineering) plus mechanical scans. Output: the ledger.
@@ -247,7 +248,7 @@ matters to a stranger: the customer round below scores "getting in" at 1.
 | B2 | Sync queue drops changes queued while it is sending | closed 11-11: the queue was rebuilt (`Services/Sync/SyncQueue.swift`); a change noted during a pass makes the pass go round again. `SyncQueueTests.testAnAddMadeWhileAnotherIsBeingSentIsSentToo` failed against the first version of the new queue and found exactly this |
 | B3 | Edits, cancels and deletes made before a failed add has synced are silently undone | closed 11-11: one thing to send per subscription (add it, change it, remove it), and what is sent is the copy on the phone at that moment, so an edit before the add went up goes up with the add. Four store tests and three queue tests |
 | B4 | The queue only drains on launch or pull-to-refresh, while the app says "It will sync when you're back online"; failures retry forever, silently | closed 11-11: sent after every change, when the app comes to the front, when the network comes back, and when a failed change is due again (2 s doubling to 5 min). The notice says "back online" only when offline is the reason; a refusal by the server gets its own sentence, in five languages. Not built: a standing "N changes waiting" line on the list (goes with the Subscriptions screen in Stage E) |
-| B5 | Currency rates are written off the main thread while every screen reads them (data race) | open |
+| B5 | Currency rates are written off the main thread while every screen reads them (data race) | closed 11-11: `CurrencyManager` moved to `Core/Money`; rates are stored on the main thread whoever asks, and the table every conversion reads is behind a lock. `testLiveRatesAreStoredOnTheMainThreadWhoeverAsks` fails with the fix taken out (`[false]`). Also: a live answer is used only when it is a full list priced in USD; rates refresh when the app comes to the front (at most hourly), not only at launch; unit tests no longer call the rates service |
 | B7 | Any `pausely://auth/...` link is accepted without the app having asked for one (sign-in into someone else's account, then the local history is wiped) | closed 11-11: `AuthLinkGate`, seven tests |
 | B8 | A password typed on an abandoned sign-up is applied to whichever account next signs in by email | closed 11-11: saved only on the address it was typed for |
 | B10 | Fields are dropped the moment an add reaches the server; an edit made meanwhile is overwritten | closed 11-11: the server's answer is no longer written over the phone's copy (`testAnAddThatReachesTheAccountKeepsWhatOnlyThisIPhoneKnows`); a list fetched while a change was being made treats that change as newer than itself |

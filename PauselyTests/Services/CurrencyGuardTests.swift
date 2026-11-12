@@ -63,7 +63,6 @@ final class CurrencyGuardTests: XCTestCase {
              fix: "Use MoneyFormat.string(...) for amounts, or MoneyFormat.symbol(for:) for an input prefix.",
              matches: { CurrencyGuardTests.has(CurrencyGuardTests.symbolIdentifier, $0) },
              allowedPaths: [
-                "Pausely/Services/SupabaseManager.swift",          // CurrencyManager.currencySymbol(for:) itself
                 "Pausely/Views/TierSelectionSheet.swift",           // prefix of the price input field
                 "Pausely/Views/Subscriptions/AmountStepView.swift", // prefix of the amount input field
                 "Pausely/Views/AddSubscription/LuxuryAddSubscriptionView.swift" // prefix of the amount input field
@@ -93,7 +92,6 @@ final class CurrencyGuardTests: XCTestCase {
              fix: "Default to CurrencyManager.shared.selectedCurrency, or require the currency.",
              matches: { CurrencyGuardTests.has(CurrencyGuardTests.usdDefault, $0) },
              allowedPaths: [
-                "Pausely/Services/SupabaseManager.swift",       // formatCatalogPrice: the catalog's prices are in USD
                 "Pausely/Services/ServiceDatabaseMore.swift",   // parsed catalog patterns carry US list prices
                 "Pausely/Services/WidgetDataStore.swift",       // empty widget summary before the first publish
                 "Pausely/Services/Intelligence/SubscriptionIntelligenceEngine.swift", // mailbox fallback, tested in USD

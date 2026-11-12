@@ -400,6 +400,8 @@ struct RootView: View {
                     await SubscriptionLifecycle.shared.run()
                     // Changes that couldn't be sent earlier go now, without waiting for a pull to refresh.
                     await SubscriptionStore.shared.sync.drain(force: true)
+                    // An app left open for days still converts at today's rates (asks at most hourly).
+                    await CurrencyManager.shared.refreshRates()
                 }
             }
         }

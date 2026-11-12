@@ -1,3 +1,4 @@
+import Combine
 import Foundation
 import XCTest
 @testable import Pausely
@@ -9,18 +10,103 @@ final class CurrencyManagerTests: XCTestCase {
     private var manager: CurrencyManager!
     private var savedCurrency = "USD"
     private var savedRates: [String: Double] = [:]
+    private var savedSource: (() async throws -> ExchangeRateResponse)!
+    private var savedDate: Date?
+    private var savedDefaults: [String: Any] = [:]
+    private let defaultsKeys = ["cached_exchange_rates", "exchange_rates_date"]
 
     override func setUp() {
         super.setUp()
         manager = CurrencyManager.shared
         savedCurrency = manager.selectedCurrency
         savedRates = manager.exchangeRates
+        savedSource = manager.loadLiveRates
+        savedDate = manager.lastUpdated
+        savedDefaults = Dictionary(uniqueKeysWithValues: defaultsKeys.compactMap { key in
+            UserDefaults.standard.object(forKey: key).map { (key, $0) }
+        })
     }
 
     override func tearDown() {
         manager.exchangeRates = savedRates
         manager.selectedCurrency = savedCurrency
+        manager.loadLiveRates = savedSource
+        manager.lastUpdated = savedDate
+        for key in defaultsKeys { UserDefaults.standard.set(savedDefaults[key], forKey: key) }
         super.tearDown()
+    }
+
+    /// A full answer from the rates service: every currency the app knows, with one rate chosen by the test.
+    private static func world(cad: Double) -> [String: Double] {
+        var rates = CurrencyRates.fallback.perUSD.mapValues { NSDecimalNumber(decimal: $0).doubleValue }
+        rates["CAD"] = cad
+        return rates
+    }
+
+    private func answer(_ rates: [String: Double], base: String = "USD") -> ExchangeRateResponse {
+        ExchangeRateResponse(rates: rates, base: base, date: "2026-11-11")
+    }
+
+    /// Later than any rates this simulator holds, so a refresh is due.
+    private var later: Date { Date().addingTimeInterval(86_400) }
+
+    // MARK: - Live rates
+
+    /// Live rates used to be stored from whichever thread the download finished on, while every
+    /// screen was reading them on the main thread.
+    func testLiveRatesAreStoredOnTheMainThreadWhoeverAsks() async {
+        let manager = self.manager!
+        let later = self.later
+        let live = answer(Self.world(cad: 1.5))
+        manager.loadLiveRates = { live }
+        var storedOnMainThread: [Bool] = []
+        let watching = manager.$exchangeRates.dropFirst().sink { _ in storedOnMainThread.append(Thread.isMainThread) }
+        await Task.detached { await manager.refreshRates(now: later) }.value
+        watching.cancel()
+        XCTAssertEqual(storedOnMainThread, [true])
+        XCTAssertEqual(manager.ratesTable.convert(100, from: "USD", to: "CAD"), 150)
+    }
+
+    func testRatesLoadedWithinTheHourAreNotAskedForAgain() async {
+        var asked = 0
+        let live = answer(Self.world(cad: 1.5))
+        manager.loadLiveRates = { asked += 1; return live }
+        let start = later
+        await manager.refreshRates(now: start)
+        await manager.refreshRates(now: start.addingTimeInterval(3_599))
+        XCTAssertEqual(asked, 1)
+        await manager.refreshRates(now: start.addingTimeInterval(3_601))
+        XCTAssertEqual(asked, 2)
+    }
+
+    func testWhenLiveRatesCannotBeLoadedTheOnesHeldStay() async {
+        manager.exchangeRates = ["CAD": 1.25]
+        manager.loadLiveRates = { throw URLError(.notConnectedToInternet) }
+        await manager.refreshRates(now: later, tries: 1)
+        XCTAssertEqual(manager.exchangeRates, ["CAD": 1.25])
+
+        let cutShort = answer(["USD": 1, "CAD": 99])
+        manager.loadLiveRates = { cutShort }
+        await manager.refreshRates(now: later, tries: 1)
+        XCTAssertEqual(manager.exchangeRates, ["CAD": 1.25], "an answer that can't be trusted is the same as no answer")
+    }
+
+    /// Used whole or not at all: a list priced in another currency, or cut short, would misprice every total.
+    func testOnlyAFullListPricedInDollarsIsUsed() {
+        let full = Self.world(cad: 1.5)
+        XCTAssertEqual(CurrencyManager.usable(answer(full))?["CAD"], 1.5)
+        XCTAssertNil(CurrencyManager.usable(answer(full, base: "EUR")))
+        var dollarIsNotOne = full
+        dollarIsNotOne["USD"] = 0.92
+        XCTAssertNil(CurrencyManager.usable(answer(dollarIsNotOne)))
+        XCTAssertNil(CurrencyManager.usable(answer(["USD": 1, "CAD": 1.5])))
+
+        var twoBroken = full
+        twoBroken["CAD"] = 0
+        twoBroken["EUR"] = .infinity
+        let kept = CurrencyManager.usable(answer(twoBroken))
+        XCTAssertEqual(kept?.count, full.count - 2, "a rate that isn't a positive number is left out; the built-in one covers it")
+        XCTAssertNil(kept?["CAD"])
     }
 
     private func d(_ text: String) -> Decimal { Decimal(string: text)! }

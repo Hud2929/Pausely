@@ -80,7 +80,7 @@ All pure and unit-tested; they take `now` and a `Calendar`.
   totals in the user's currency, the saved Pause Plan, and wiping on-device data.
 - `NotificationManager` (Core/Utilities): permission, categories, delegate.
 - `Core/Money`: `MoneyFormat` (all money text), `CurrencyRates` (conversion, built-in rates),
-  `MoneyMath` (totals across currencies). `CurrencyManager` (in SupabaseManager.swift) holds the
+  `MoneyMath` (totals across currencies). `CurrencyManager` (also in Core/Money) holds the
   display currency and live rates.
 - `SupabaseManager`, `UsageLog` (hours the person types in, counted for the month they were entered),
   `KeychainManager`, `AppConfig`.
