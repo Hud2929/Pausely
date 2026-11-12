@@ -6,7 +6,9 @@ import os
 ///
 /// Everything published here changes on the main thread only: the screens read it there. The rates
 /// table every conversion uses can also be read from anywhere, so it sits behind a lock.
-final class CurrencyManager: ObservableObject {
+///
+/// That is the whole of its thread-safety, and the compiler cannot see it: hence `@unchecked`.
+final class CurrencyManager: ObservableObject, @unchecked Sendable {
     static let shared = CurrencyManager()
 
     @Published var selectedCurrency: String

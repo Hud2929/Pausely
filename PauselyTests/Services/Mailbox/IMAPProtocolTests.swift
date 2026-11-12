@@ -2,6 +2,7 @@ import XCTest
 @testable import Pausely
 
 /// The IMAP client's pure half: framing, parsing and query building, byte for byte.
+@MainActor
 final class IMAPProtocolTests: XCTestCase {
 
     private func bytes(_ text: String) -> [UInt8] { Array(text.utf8) }

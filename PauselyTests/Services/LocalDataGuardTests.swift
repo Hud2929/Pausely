@@ -47,7 +47,6 @@ final class LocalDataGuardTests: XCTestCase {
         "pending_lastName": "Keychain, removed when a sign-up finishes, fails, or the iPhone is wiped",
         "pending_nameEmail": "Keychain, removed when a sign-up finishes, fails, or the iPhone is wiped",
         "profile_": "Keychain, removed by AccountMemory.forgetName when the iPhone is wiped",
-        "token_refresh": "not saved: the name of a request in flight",
     ]
 
     func testEverySavedNameIsThePersonsOrTheDevices() throws {

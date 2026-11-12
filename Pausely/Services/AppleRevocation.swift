@@ -9,6 +9,7 @@ import Foundation
 /// Backing out of Apple's sheet stops the deletion. Any other trouble does not: deleting the account
 /// is what the person asked for, and Apple lets them remove Pausely themselves under Sign in with Apple
 /// in Settings.
+@MainActor
 struct AppleRevocation {
     enum Outcome: Equatable {
         case revoked

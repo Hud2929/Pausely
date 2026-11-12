@@ -128,6 +128,7 @@ enum Motion {
 
     /// The animation to use, or nil when Reduce Motion is on and the change should be instant
     /// or cross-faded by the caller.
+    @MainActor
     static func unlessReduced(_ animation: Animation) -> Animation? {
         UIAccessibility.isReduceMotionEnabled ? fade : animation
     }

@@ -2,6 +2,7 @@ import Foundation
 
 /// Gmail through the Gmail API, read-only (`gmail.readonly`). Whole messages are read as raw MIME so every
 /// provider goes through the same parser (and every character set is decoded correctly).
+@MainActor
 final class GmailMailboxProvider: MailboxProvider {
     let account: MailboxAccount
 

@@ -35,6 +35,22 @@ final class ProjectFileTests: XCTestCase {
         XCTAssertEqual(scheme.components(separatedBy: "parallelizable = \"NO\"").count - 1, 2, "the unit tests and the UI tests")
     }
 
+    /// The app and the widgets are built in the Swift 6 language mode: a value shared between threads
+    /// without protection is a build error there, not a warning someone may read. (Getting here took
+    /// 58 warnings to zero; one of them was a real fault, the export reading the list off the main thread.)
+    func testTheAppAndTheWidgetsAreBuiltWithDataRaceChecking() throws {
+        let settings = try project().components(separatedBy: "isa = XCBuildConfiguration;").map { $0.components(separatedBy: "name = ")[0] }
+        let shipped = settings.filter {
+            $0.contains("PRODUCT_BUNDLE_IDENTIFIER = com.pausely.app.Pausely;")
+                || $0.contains("PRODUCT_BUNDLE_IDENTIFIER = com.pausely.app.Pausely.PauselyWidget;")
+        }
+        XCTAssertEqual(shipped.count, 4, "the app and the widgets, Debug and Release")
+        for configuration in shipped {
+            XCTAssertTrue(configuration.contains("SWIFT_VERSION = 6.0;"))
+            XCTAssertTrue(configuration.contains("SWIFT_STRICT_CONCURRENCY = complete;"))
+        }
+    }
+
     func testNothingIsLinkedOrListedThatIsNotUsed() throws {
         let project = try project()
         XCTAssertFalse(project.contains("ActivityKit"), "Live Activities were removed; the widget must not link their framework")

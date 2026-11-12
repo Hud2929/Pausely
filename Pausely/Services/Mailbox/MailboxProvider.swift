@@ -1,13 +1,13 @@
 import Foundation
 
 /// A message in a provider's own terms (Gmail id, Graph id, or IMAP folder + UID).
-struct MessageRef: Hashable, Codable {
+struct MessageRef: Hashable, Codable, Sendable {
     let id: String
     var folder: String? = nil
 }
 
 /// What triage needs to decide whether a message is worth reading in full.
-struct MessageSummary {
+struct MessageSummary: Sendable {
     let ref: MessageRef
     var from: String
     var subject: String
@@ -19,6 +19,9 @@ struct MessageSummary {
 
 /// One inbox, reached one way (Gmail API, Microsoft Graph or IMAP). Every provider is read-only.
 /// The scanner drives it: open → candidates → summaries → rawMessage for the few worth reading → close.
+/// Providers live on the main actor, like the scanner that drives them: their work is waiting on the
+/// network, and it means a provider's own state is only ever touched from one place.
+@MainActor
 protocol MailboxProvider: AnyObject {
     var account: MailboxAccount { get }
     /// Signs in or refreshes tokens, and for IMAP opens a TLS connection.

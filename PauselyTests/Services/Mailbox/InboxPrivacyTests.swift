@@ -10,6 +10,7 @@ import XCTest
 ///
 /// The source-scanning tests fail when someone adds a host, a scope or a command that breaks a promise,
 /// which is the moment the wording on screen would become untrue.
+@MainActor
 final class InboxPrivacyTests: XCTestCase {
 
     private static var root: URL {

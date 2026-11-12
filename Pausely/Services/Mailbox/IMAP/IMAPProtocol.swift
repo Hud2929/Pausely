@@ -328,7 +328,7 @@ enum IMAPParser {
 
 /// A piece of a command: plain text, or a string the client sends safely (quoted, or as a literal when it
 /// holds characters a quoted string can't).
-enum IMAPArgument: Equatable {
+enum IMAPArgument: Equatable, Sendable {
     case raw(String)
     case string(String)
 
@@ -343,7 +343,7 @@ enum IMAPArgument: Equatable {
 }
 
 /// Search criteria (RFC 3501 §6.4.4), built from the search plan.
-indirect enum IMAPSearchKey: Equatable {
+indirect enum IMAPSearchKey: Equatable, Sendable {
     case since(Date)
     case from(String)
     case subject(String)

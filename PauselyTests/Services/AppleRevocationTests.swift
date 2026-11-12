@@ -4,6 +4,7 @@ import XCTest
 
 /// Deleting an account that signs in with Apple: confirm with Apple, hand the code to the server,
 /// and never let trouble on Apple's side stand between a person and deleting their account.
+@MainActor
 final class AppleRevocationTests: XCTestCase {
 
     func testTheCodeAppleIssuesIsWhatTheServerIsGiven() async {

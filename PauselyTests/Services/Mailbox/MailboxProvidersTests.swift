@@ -3,6 +3,7 @@ import XCTest
 
 /// Microsoft Graph and Gmail requests and responses, sign-in security, forged senders, and how receipts
 /// from several inboxes are kept.
+@MainActor
 final class MailboxProvidersTests: XCTestCase {
 
     private let since = Date(timeIntervalSince1970: 1_767_225_600)  // 2026-01-01

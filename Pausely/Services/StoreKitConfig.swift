@@ -22,7 +22,7 @@ final class ReviewPromptManager: ObservableObject {
         case moneyKept(receiptLines: Int)
     }
 
-    static let receiptMilestones = [1, 3, 10]
+    nonisolated static let receiptMilestones = [1, 3, 10]
 
     /// The highest milestone a receipt with this many cancellations has reached (0 when none).
     nonisolated static func milestone(forReceiptLines lines: Int) -> Int {

@@ -3,6 +3,7 @@ import XCTest
 
 /// Tests against real servers. Each is skipped unless its environment variable is set, so the regular
 /// suite stays offline. Run with TEST_RUNNER_<NAME>=… on the xcodebuild command line.
+@MainActor
 final class LiveMailboxTests: XCTestCase {
 
     private func environment(_ name: String) -> String? {

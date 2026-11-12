@@ -8,6 +8,7 @@ import XCTest
 ///
 /// Nothing in this file uses the phone's calendar either, so the class can be run on a simulator set
 /// to the Buddhist or the Islamic calendar and must pass there unchanged (see GOLD_STANDARD.md, O2).
+@MainActor
 final class BillingCalendarTests: XCTestCase {
 
     private var gregorian: Calendar { .billing }

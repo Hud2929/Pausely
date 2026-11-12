@@ -98,7 +98,8 @@ enum ReminderDelivery: Equatable {
 // MARK: - Delegate
 
 /// Set as the notification center's delegate at launch (see AppDelegate).
-final class NotificationDelegate: NSObject, UNUserNotificationCenterDelegate {
+/// It keeps nothing of its own, so one instance can be used from anywhere.
+final class NotificationDelegate: NSObject, UNUserNotificationCenterDelegate, Sendable {
     static let shared = NotificationDelegate()
 
     /// Reminders still show while Pausely is open.

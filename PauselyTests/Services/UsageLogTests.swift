@@ -2,6 +2,7 @@ import XCTest
 @testable import Pausely
 
 /// Hours a person types in for a subscription. "This month" has to mean this month.
+@MainActor
 final class UsageLogTests: XCTestCase {
 
     private var defaults: UserDefaults!

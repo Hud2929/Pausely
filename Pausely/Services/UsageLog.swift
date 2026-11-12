@@ -3,6 +3,7 @@ import Foundation
 /// The time a person says they used each subscription this month. They type it (Pausely does not read
 /// Screen Time), it stays on this device, and it counts only for the month it was entered in: last
 /// month's hours are not this month's.
+@MainActor
 final class UsageLog: ObservableObject {
     static let shared = UsageLog()
 

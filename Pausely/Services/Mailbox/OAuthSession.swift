@@ -213,6 +213,8 @@ enum MailboxHTTP {
 
     /// Sends a request with a bearer token. Retries once after refreshing on 401, and waits out 429/503
     /// (Retry-After, at most 30 seconds, up to three times).
+    /// Called by the providers, on the main actor like them; the waiting is on the network.
+    @MainActor
     static func data(_ request: URLRequest, token: () async throws -> String, refresh: () async throws -> String) async throws -> Data {
         var current = try await token()
         var refreshed = false

@@ -3,6 +3,7 @@ import Foundation
 /// Outlook.com, Hotmail, Live, MSN and Microsoft 365 through Microsoft Graph, read-only (`Mail.Read`).
 /// Search results come with sender, subject and date; whole messages are read as raw MIME (`$value`),
 /// so every provider goes through the same parser.
+@MainActor
 final class MicrosoftGraphProvider: MailboxProvider {
     let account: MailboxAccount
     private var cachedSummaries: [String: MessageSummary] = [:]

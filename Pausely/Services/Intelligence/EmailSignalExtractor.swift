@@ -23,6 +23,7 @@ enum ReceiptVerdict: Equatable {
 }
 
 /// Optional on-device classifier for receipts the rules cannot decide (e.g. Apple's on-device language model).
+@MainActor
 protocol AmbiguousReceiptClassifier {
     func classify(merchantGuess: String?, subject: String, excerpt: String) async -> ReceiptVerdict
 }

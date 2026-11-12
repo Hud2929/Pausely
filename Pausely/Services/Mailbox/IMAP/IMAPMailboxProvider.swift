@@ -1,6 +1,7 @@
 import Foundation
 
 /// iCloud, Yahoo, AOL, Gmail (app password), GMX, WEB.DE, Zoho, Fastmail and any IMAP server, read-only.
+@MainActor
 final class IMAPMailboxProvider: MailboxProvider {
     let account: MailboxAccount
     private let client: IMAPClient

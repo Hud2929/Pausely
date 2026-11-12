@@ -6,8 +6,8 @@ import os.log
 // MARK: - Supabase Integration
 import Auth
 
-/// Revolutionary authentication manager with Pausely-branded custom emails,
-/// deep linking support for email verification, and comprehensive auth state management
+/// Who is signed in: sign-up and sign-in by emailed code or with Apple, the session between launches,
+/// links from account emails, sign-out and account deletion.
 @MainActor
 class AuthManager: ObservableObject {
     static let shared = AuthManager()
@@ -40,29 +40,6 @@ class AuthManager: ObservableObject {
     /// list of allowed redirect addresses; if it isn't, the service uses its own default address instead.
     static let confirmRedirect = URL(string: "pausely://auth/confirm")
     static let resetRedirect = URL(string: "pausely://auth/reset-password")
-
-    // MARK: - Scale Optimizations
-    private var lastTokenRefresh: Date?
-    private let minRefreshInterval: TimeInterval = 60 // Minimum 60 seconds between refresh
-    
-    // Actor for thread-safe request management
-    private actor RequestManager {
-        private var requests: [String: Task<Any, Error>] = [:]
-        
-        func getRequest(for key: String) -> Task<Any, Error>? {
-            return requests[key]
-        }
-        
-        func setRequest(_ task: Task<Any, Error>, for key: String) {
-            requests[key] = task
-        }
-        
-        func removeRequest(for key: String) {
-            requests.removeValue(forKey: key)
-        }
-        
-    }
-    private let requestManager = RequestManager()
 
     // MARK: - Initialization
     private init() {
@@ -198,57 +175,19 @@ class AuthManager: ObservableObject {
         }
     }
     
+    /// Every fifteen minutes while signed in, asks the account service for the session, which renews
+    /// the token when it is close to expiring. One loop, so two refreshes never overlap.
     private func startSessionRefresh() {
         refreshTask?.cancel()
         refreshTask = Task { [weak self] in
-            guard let self = self else { return }
-            
             while !Task.isCancelled {
-                try? await Task.sleep(nanoseconds: 15 * 60 * 1_000_000_000) // 15 minutes (was 5)
-                
-                if Task.isCancelled { break }
-                
-                // Throttle refresh to prevent hammering
-                if let lastRefresh = self.lastTokenRefresh,
-                   Date().timeIntervalSince(lastRefresh) < self.minRefreshInterval {
-                    continue
-                }
-                
-                await self.performTokenRefresh()
+                try? await Task.sleep(nanoseconds: 15 * 60 * 1_000_000_000)
+                guard !Task.isCancelled, let self else { break }
+                _ = try? await self.client.auth.session
             }
         }
     }
-    
-    /// Optimized token refresh with deduplication using actor
-    private func performTokenRefresh() async {
-        let requestKey = "token_refresh"
-        
-        // Check for existing request
-        if let existingTask = await requestManager.getRequest(for: requestKey) {
-            _ = try? await existingTask.value
-            return
-        }
-        
-        let task = Task<Any, Error> { [weak self] in
-            guard let self = self else { throw PauselyAuthError.unknown(NSError(domain: "Auth", code: -1)) }
 
-            self.lastTokenRefresh = Date()
-            _ = try await self.client.auth.session
-            return true
-        }
-        
-        await requestManager.setRequest(task, for: requestKey)
-        
-        defer {
-            Task { [weak self] in
-                guard let self = self else { return }
-                await requestManager.removeRequest(for: requestKey)
-            }
-        }
-        
-        _ = try? await task.value
-    }
-    
     // MARK: - Sign up and sign in with an emailed code
 
     /// Signs up using OTP instead of link-based confirmation.
