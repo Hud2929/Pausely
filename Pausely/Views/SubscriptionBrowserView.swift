@@ -66,7 +66,7 @@ struct SubscriptionBrowserView: View {
                         .font(.body)
                         .foregroundStyle(Color.inkText)
                         .frame(width: 36, height: 36)
-                        .background(Color.inkRaised, in: RoundedRectangle(cornerRadius: 9, style: .continuous))
+                        .background(Color.inkRaised, in: RoundedRectangle(cornerRadius: Layout.tileRadius, style: .continuous))
                         .accessibilityHidden(true)
                     VStack(alignment: .leading, spacing: 2) {
                         Text("Find in Email")
@@ -112,7 +112,7 @@ struct SubscriptionBrowserView: View {
                             .foregroundStyle(Color.inkText)
                             .padding(.horizontal, 14)
                             .frame(minHeight: 34)
-                            .overlay(Capsule().stroke(Color.white.opacity(0.22), lineWidth: 1))
+                            .overlay(Capsule().stroke(Color.outline, lineWidth: 1))
                             .frame(minHeight: Layout.tapTarget)
                             .contentShape(Rectangle())
                     }
@@ -265,7 +265,7 @@ struct SubscriptionBrowserView: View {
                 .padding(.horizontal, 14)
                 .frame(minHeight: 36)
                 .background(isOn ? Color.paper : Color.clear, in: Capsule())
-                .overlay(Capsule().stroke(Color.white.opacity(isOn ? 0 : 0.18), lineWidth: 1))
+                .overlay(Capsule().stroke(isOn ? Color.clear : Color.outline, lineWidth: 1))
                 .frame(minHeight: Layout.tapTarget)
                 .contentShape(Rectangle())
         }

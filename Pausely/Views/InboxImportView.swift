@@ -780,10 +780,10 @@ private struct FoundRow: View {
 
     private var checkbox: some View {
         ZStack {
-            RoundedRectangle(cornerRadius: 6, style: .continuous)
+            RoundedRectangle(cornerRadius: Layout.markRadius, style: .continuous)
                 .fill(isSelected ? Color.paper : Color.clear)
                 .overlay(
-                    RoundedRectangle(cornerRadius: 6, style: .continuous)
+                    RoundedRectangle(cornerRadius: Layout.markRadius, style: .continuous)
                         .stroke(isSelected ? Color.clear : Color.inkTextFaint, lineWidth: 1.5)
                 )
                 .frame(width: 22, height: 22)

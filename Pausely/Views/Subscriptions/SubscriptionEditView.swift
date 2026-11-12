@@ -8,6 +8,8 @@ struct SubscriptionEditView: View {
     @Environment(\.dismiss) private var dismiss
     @ObservedObject private var currencyManager = CurrencyManager.shared
     @State private var draft: SubscriptionEditDraft
+    /// The amount is the one big thing on this screen; it grows with the reader's text size.
+    @ScaledMetric(relativeTo: .largeTitle) private var amountSize: CGFloat = 52
     @State private var isSaving = false
     @State private var showDiscardConfirm = false
     @State private var showValidation = false
@@ -136,16 +138,16 @@ struct SubscriptionEditView: View {
                 } label: {
                     HStack(spacing: 3) {
                         Text(amountPrefix)
-                            .font(.system(size: 30, weight: .semibold, design: .serif))
+                            .font(.question(.title))
                         Image(systemName: "chevron.up.chevron.down")
-                            .font(.system(size: 10, weight: .bold))
+                            .font(.caption2.weight(.bold))
                     }
                     .foregroundStyle(Color.inkTextMuted)
                 }
                 .accessibilityLabel("Currency, \(draft.currency)")
 
                 TextField(text: $draft.amountText, prompt: Text(verbatim: AmountText.text(for: 0, currency: draft.currency))) { EmptyView() }
-                    .font(.system(size: 52, weight: .bold, design: .serif))
+                    .font(.total(min(amountSize, 76)))
                     .foregroundStyle(Color.inkText)
                     .keyboardType(.decimalPad)
                     .fixedSize(horizontal: true, vertical: false)
@@ -278,7 +280,7 @@ struct SubscriptionEditView: View {
                 .font(.body)
                 .foregroundStyle(Color.inkTextMuted)
             Image(systemName: "chevron.up.chevron.down")
-                .font(.system(size: 11, weight: .semibold))
+                .font(.caption2.weight(.semibold))
                 .foregroundStyle(Color.inkTextFaint)
         }
     }

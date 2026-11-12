@@ -343,7 +343,7 @@ struct OutcomeSlip<Detail: View>: View {
                 PaperSlip(tornTop: true, tornBottom: true) {
                     VStack(alignment: .leading, spacing: 12) {
                         ForEach(0..<3, id: \.self) { _ in
-                            RoundedRectangle(cornerRadius: 2).fill(Color.paperShade).frame(height: 10)
+                            RoundedRectangle(cornerRadius: Layout.markRadius, style: .continuous).fill(Color.paperShade).frame(height: 10)
                         }
                     }
                 }
@@ -367,7 +367,7 @@ struct OutcomeSlip<Detail: View>: View {
                         .foregroundStyle(torn ? Color.paperInk : Color.paperKept)
                         .padding(.horizontal, 12)
                         .padding(.vertical, 6)
-                        .overlay(RoundedRectangle(cornerRadius: 6).stroke(torn ? Color.paperInk : Color.paperKept, lineWidth: 2))
+                        .overlay(RoundedRectangle(cornerRadius: Layout.markRadius, style: .continuous).stroke(torn ? Color.paperInk : Color.paperKept, lineWidth: 2))
                         .rotationEffect(.degrees(-4))
                         .scaleEffect(landed ? 1 : 1.5)
                         .opacity(landed ? 1 : 0)

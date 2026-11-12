@@ -113,7 +113,7 @@ struct PausePlanView: View {
                     .foregroundStyle(Color.inkTextFaint)
                 VStack(spacing: 0) {
                     ForEach(Array(eligible.enumerated()), id: \.element.id) { index, sub in
-                        if index > 0 { Divider().overlay(Color.white.opacity(0.06)).padding(.leading, 64) }
+                        if index > 0 { Divider().overlay(Color.line).padding(.leading, 64) }
                         selectableRow(sub)
                     }
                 }
@@ -141,14 +141,8 @@ struct PausePlanView: View {
             } label: {
                 Label(paymentManager.isUnlocked(.pausePlan) ? L10n.string("Start Pause Plan") : L10n.string("Start Pause Plan with Pro"),
                       systemImage: paymentManager.isUnlocked(.pausePlan) ? "arrow.triangle.2.circlepath" : "lock.fill")
-                    .font(.body.weight(.semibold))
-                    .foregroundStyle(.black)
-                    .frame(maxWidth: .infinity)
-                    .frame(height: 54)
-                    .background(RoundedRectangle(cornerRadius: 16, style: .continuous)
-                        .fill(chosen.count >= 2 ? Color.inkText : Color.inkTextMuted))
             }
-            .buttonStyle(PlainButtonStyle())
+            .buttonStyle(.ink)
             .disabled(chosen.count < 2 || isWorking)
             .accessibilityIdentifier("startPausePlanButton")
 
@@ -188,7 +182,7 @@ struct PausePlanView: View {
         } label: {
             HStack(spacing: 12) {
                 Image(systemName: isSelected ? "checkmark.circle.fill" : "circle")
-                    .font(.system(size: 20))
+                    .font(.title3)
                     .foregroundStyle(isSelected ? Color.inkText : Color.inkTextFaint)
                     .accessibilityHidden(true)
                 ServiceLogoView(name: sub.name, category: sub.category, size: 34)
@@ -205,7 +199,7 @@ struct PausePlanView: View {
                 if isFirst {
                     Text("On first")
                         .font(.caption2.weight(.bold))
-                        .foregroundStyle(.black)
+                        .foregroundStyle(Color.paperInk)
                         .padding(.horizontal, 8)
                         .padding(.vertical, 4)
                         .background(Capsule().fill(Color.paper))
@@ -370,10 +364,13 @@ struct PausePlanView: View {
                         } label: {
                             Text(item.action == .cancel ? L10n.string("How") : L10n.string("I started it"))
                                 .font(.caption.weight(.bold))
-                                .foregroundStyle(.black)
+                                .foregroundStyle(item.action == .cancel ? Color.ink : Color.paperInk)
                                 .padding(.horizontal, 10)
-                                .frame(height: 30)
+                                .frame(minHeight: 30)
                                 .background(Capsule().fill(item.action == .cancel ? Color.decide : Color.paper))
+                                // The pill is small; the place to tap is not.
+                                .frame(minHeight: Layout.tapTarget)
+                                .contentShape(Rectangle())
                         }
                         .buttonStyle(PlainButtonStyle())
                     }
@@ -450,10 +447,10 @@ struct PausePlanCard: View {
         } label: {
             HStack(spacing: 14) {
                 Image(systemName: "arrow.triangle.2.circlepath")
-                    .font(.system(size: 18, weight: .semibold))
+                    .font(.headline)
                     .foregroundStyle(Color.inkText)
                     .frame(width: 44, height: 44)
-                    .background(Circle().fill(Color.white.opacity(0.06)))
+                    .background(Circle().fill(Color.track))
                     .accessibilityHidden(true)
                 VStack(alignment: .leading, spacing: 3) {
                     HStack(spacing: 6) {
@@ -466,7 +463,7 @@ struct PausePlanCard: View {
                                 .foregroundStyle(Color.inkText)
                                 .padding(.horizontal, 6)
                                 .padding(.vertical, 2)
-                                .background(Capsule().fill(Color.white.opacity(0.06)))
+                                .background(Capsule().fill(Color.track))
                         }
                     }
                     Text(subtitle)
@@ -476,7 +473,7 @@ struct PausePlanCard: View {
                 }
                 Spacer(minLength: 8)
                 Image(systemName: "chevron.forward")
-                    .font(.system(size: 12, weight: .semibold))
+                    .font(.caption.weight(.semibold))
                     .foregroundStyle(Color.inkTextFaint)
                     .accessibilityHidden(true)
             }

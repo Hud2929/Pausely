@@ -28,7 +28,8 @@ struct AgeGateView: View {
             ScrollView {
                 VStack(spacing: 24) {
                     Image(systemName: isBlocked ? "hand.raised.fill" : "calendar.badge.checkmark")
-                        .font(.system(size: 44))
+                        .font(.largeTitle)
+                        .imageScale(.large)
                         .foregroundStyle(Color.inkText)
                         .padding(.top, 48)
                         .accessibilityHidden(true)

@@ -17,6 +17,12 @@ extension Color {
     static let inkLifted = Color(hex: Palette.inkLifted)
     /// Hairlines, in place of card borders.
     static let line = Color.white.opacity(0.08)
+    /// The unfilled part of a bar or a time line, and the faint disc behind a small symbol.
+    static let track = Color.white.opacity(0.12)
+    /// The edge of a control that has no fill of its own: a quiet button, a chip, a round "+".
+    static let outline = Color.white.opacity(0.22)
+    /// The edge of the field being typed in.
+    static let outlineFocused = Color.white.opacity(0.45)
 
     /// Slip, receipt and share card. Warm, not white, so it doesn't glare on a dark screen.
     static let paper = Color(hex: Palette.paper)
@@ -75,6 +81,13 @@ extension Font {
         .system(style, design: .serif, weight: weight)
     }
 
+    /// The one number a screen is about, larger than any text style goes. Hand it a size that is
+    /// already scaled (`@ScaledMetric(relativeTo: .largeTitle)`), so it grows with the reader's text
+    /// size; a size written as a bare number would not.
+    static func total(_ scaledSize: CGFloat, weight: Font.Weight = .bold) -> Font {
+        .system(size: scaledSize, weight: weight, design: .serif)
+    }
+
     /// Proof: receipt lines, amounts in a column, dates on a slip.
     static func proof(_ style: Font.TextStyle = .subheadline, weight: Font.Weight = .regular) -> Font {
         // A monospaced face pulls the letters of a joined script apart, so Arabic (and other
@@ -95,6 +108,8 @@ enum Layout {
     static let margin: CGFloat = 20
     static let cardRadius: CGFloat = 18
     static let tileRadius: CGFloat = 10
+    /// Small marks: a tick box, a stamp's border, a placeholder bar.
+    static let markRadius: CGFloat = 6
     /// Smallest tap target.
     static let tapTarget: CGFloat = 44
 }
@@ -108,11 +123,13 @@ enum Motion {
     static let arrive = Animation.spring(duration: 0.5, bounce: 0.18)
     /// A slip leaving or tearing.
     static let leave = Animation.spring(duration: 0.42, bounce: 0)
+    /// Something appearing in place without moving: a logo that has loaded, a screen replacing another.
+    static let fade = Animation.easeOut(duration: 0.2)
 
     /// The animation to use, or nil when Reduce Motion is on and the change should be instant
     /// or cross-faded by the caller.
     static func unlessReduced(_ animation: Animation) -> Animation? {
-        UIAccessibility.isReduceMotionEnabled ? .easeInOut(duration: 0.2) : animation
+        UIAccessibility.isReduceMotionEnabled ? fade : animation
     }
 }
 
@@ -321,7 +338,7 @@ struct InkButtonStyle: ButtonStyle {
             .overlay {
                 if kind == .quiet {
                     RoundedRectangle(cornerRadius: Layout.cardRadius, style: .continuous)
-                        .stroke(Color.white.opacity(0.18), lineWidth: 1)
+                        .stroke(Color.outline, lineWidth: 1)
                 }
             }
             .opacity(isEnabled ? (configuration.isPressed ? 0.8 : 1) : 0.4)

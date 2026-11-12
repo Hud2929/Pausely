@@ -369,7 +369,7 @@ struct StoreKitUpgradeView: View {
             .foregroundStyle(Color.inkText)
             .padding(.horizontal, 10)
             .padding(.vertical, 5)
-            .overlay(Capsule().stroke(Color.white.opacity(0.25), lineWidth: 1))
+            .overlay(Capsule().stroke(Color.outline, lineWidth: 1))
     }
 
     // MARK: - The Promise

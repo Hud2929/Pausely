@@ -98,7 +98,7 @@ class AppDelegate: NSObject, UIApplicationDelegate {
             let tabBarAppearance = UITabBarAppearance()
             tabBarAppearance.configureWithOpaqueBackground()
             tabBarAppearance.backgroundColor = UIColor(Color.ink)
-            tabBarAppearance.shadowColor = UIColor.white.withAlphaComponent(0.08)
+            tabBarAppearance.shadowColor = UIColor(Color.line)
             UITabBar.appearance().standardAppearance = tabBarAppearance
             UITabBar.appearance().scrollEdgeAppearance = tabBarAppearance
         }
@@ -351,11 +351,11 @@ struct RootView: View {
                     .transition(.opacity)
             }
         }
-        .animation(.easeInOut(duration: 0.5), value: authManager.isAuthenticated)
-        .animation(.easeInOut(duration: 0.5), value: showAuth)
+        .animation(Motion.unlessReduced(Motion.arrive), value: authManager.isAuthenticated)
+        .animation(Motion.unlessReduced(Motion.arrive), value: showAuth)
         .onAppear {
             let workItem = DispatchWorkItem {
-                withAnimation(.easeOut(duration: 0.25)) {
+                withAnimation(Motion.fade) {
                     showSplash = false
                 }
             }

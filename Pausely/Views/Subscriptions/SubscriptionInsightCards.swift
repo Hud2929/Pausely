@@ -51,7 +51,7 @@ struct CancelTimingCard: View {
 
             GeometryReader { geo in
                 ZStack(alignment: .leading) {
-                    Capsule().fill(Color.white.opacity(0.12)).frame(height: 4)
+                    Capsule().fill(Color.track).frame(height: 4)
                     Capsule()
                         .fill(daysRemaining <= 1 ? Color.due : Color.inkText)
                         .frame(width: max(4, geo.size.width * progress), height: 4)

@@ -26,7 +26,7 @@ struct InkTextField: View {
         .background(Color.inkRaised, in: RoundedRectangle(cornerRadius: Layout.tileRadius, style: .continuous))
         .overlay(
             RoundedRectangle(cornerRadius: Layout.tileRadius, style: .continuous)
-                .stroke(isFocused ? Color.white.opacity(0.45) : Color.line, lineWidth: 1)
+                .stroke(isFocused ? Color.outlineFocused : Color.line, lineWidth: 1)
         )
         .focused($isFocused)
         .keyboardType(keyboardType)

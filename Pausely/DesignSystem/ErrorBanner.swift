@@ -65,10 +65,10 @@ struct ErrorToastModifier: ViewModifier {
                     .padding(.horizontal, 16)
                     .padding(.vertical, 12)
                     .background(
-                        RoundedRectangle(cornerRadius: 14, style: .continuous)
+                        RoundedRectangle(cornerRadius: Layout.cardRadius, style: .continuous)
                             .fill(Color.inkRaised)
                             .overlay(
-                                RoundedRectangle(cornerRadius: 14, style: .continuous)
+                                RoundedRectangle(cornerRadius: Layout.cardRadius, style: .continuous)
                                     .stroke(Color.line, lineWidth: 1)
                             )
                     )
@@ -78,7 +78,7 @@ struct ErrorToastModifier: ViewModifier {
                     .zIndex(999)
                 }
             }
-            .animation(.spring(response: 0.4, dampingFraction: 0.8), value: isVisible)
+            .animation(Motion.unlessReduced(Motion.arrive), value: isVisible)
             .onChange(of: message) { _, newMessage in
                 if newMessage != nil {
                     isVisible = true

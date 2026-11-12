@@ -242,7 +242,7 @@ private struct BarRow: View {
             }
             GeometryReader { geo in
                 ZStack(alignment: .leading) {
-                    Capsule().fill(Color.white.opacity(0.08)).frame(height: 3)
+                    Capsule().fill(Color.track).frame(height: 3)
                     Capsule().fill(Color.inkText).frame(width: max(3, geo.size.width * share), height: 3)
                 }
             }

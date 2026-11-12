@@ -142,7 +142,7 @@ private struct GuessStep: View {
             // The number and its control sit low, where a thumb reaches them.
             VStack(alignment: .leading, spacing: 8) {
                 Text(verbatim: amountText)
-                    .font(.system(size: numberSize, weight: .bold, design: .serif))
+                    .font(.total(numberSize))
                     .foregroundStyle(Color.inkText)
                     .contentTransition(.numericText(value: guess))
                     .minimumScaleFactor(0.5)

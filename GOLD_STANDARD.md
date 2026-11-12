@@ -276,6 +276,8 @@ Updated at every commit, so the work can be picked up from this file alone.
   Next in G: hype names (9), then the design lint (colours 18, fonts 13, animations 5, radii 11),
   files over 700 lines (5), strict concurrency, the project file, S4, S5.
 - G: hype names closed (6.6). `gold_check` 52. Next: the design lint, one rule at a time.
+- G: the design lint closed (6.6). `gold_check` 5. 727 tests, 0 failures. Next: the five long
+  files, then strict concurrency, the project file, S4, S5, and the audit sections nobody did.
 - Told by the other session at 22:04 (it has stood down and changed nothing): sections 2, 3, 4, 6, 7
   and 10 of the engineering audit were never done and there is no finished overlooked-details
   report. Those areas have been scanned by nobody; they are owed before Stage G can be called done.
@@ -586,6 +588,17 @@ Stage G, as it closes (each line: what, and the evidence):
   `MainTabView`, `SubscriptionsView`, `ProfileView`, `SignUpView`, `SignInView`, `SplashScreen`,
   `WelcomeFlow`, `AddSubscriptionView`; `CancelSubscriptionFlow.swift`). The check now reads file
   names too (probe-tested). `gold_check` "hype names" 9 → 0, total 52. 727 tests, 0 failures.
+- Design lint, 11-12: 47 findings → 0. Colours: three named tokens (`Color.outline`, `.track`,
+  `.outlineFocused`) replace eighteen hand-mixed whites, and the check now sees plain `.black` and
+  `.white` (probe-tested; it found two more in Pause Plan). Type: every size written as a bare
+  number is gone; the big amounts use `Font.total` with a size that scales with the reader's text
+  (three amount fields did not scale at all), symbols use text styles. Motion: `Motion.fade` added;
+  five raw curves replaced. Radii: `Layout.markRadius`; eleven numbers replaced. Pause Plan's start
+  button is the design system's main button, not a hand-made white one, and its small pill buttons
+  have a 44-point place to tap. `gold_check` 5 (the long files). Seen on the simulator: the edit
+  screen. Not seen yet: Pause Plan with a plan to start (its demo opens the empty state), and the
+  edit screen's "Next renewal" row sets its date under the label instead of beside it; both go to
+  Stage E's pass over those screens.
 
 ### 6.7 For the owner (cannot or should not be done from here)
 

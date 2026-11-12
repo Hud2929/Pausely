@@ -88,7 +88,7 @@ struct SubscriptionsView: View {
                     .font(.title3.weight(.semibold))
                     .foregroundStyle(Color.inkText)
                     .frame(width: Layout.tapTarget, height: Layout.tapTarget)
-                    .overlay(Circle().stroke(Color.white.opacity(0.18), lineWidth: 1))
+                    .overlay(Circle().stroke(Color.outline, lineWidth: 1))
                     .contentShape(Circle())
             }
             .accessibilityLabel(Text("Add subscription"))

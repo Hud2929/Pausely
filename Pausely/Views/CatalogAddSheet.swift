@@ -15,6 +15,8 @@ struct CatalogAddSheet: View {
 
     @Environment(\.dismiss) private var dismiss
     @ObservedObject private var currencyManager = CurrencyManager.shared
+    /// The amount is the one big thing on this screen; it grows with the reader's text size.
+    @ScaledMetric(relativeTo: .largeTitle) private var amountSize: CGFloat = 44
 
     @State private var frequency: BillingFrequency = .monthly
     /// What the person typed. Empty means "the typical price is right".
@@ -144,7 +146,7 @@ struct CatalogAddSheet: View {
                           prompt: Text(verbatim: typical.map { MoneyFormat.string($0, currency, locale: L10n.locale) }
                                                    ?? AmountText.text(for: 0, currency: currency))
                             .foregroundStyle(typical == nil ? Color.inkTextFaint : Color.inkText))
-                    .font(.system(size: 44, weight: .bold, design: .serif))
+                    .font(.total(min(amountSize, 64)))
                     .foregroundStyle(Color.inkText)
                     .keyboardType(.decimalPad)
                     .focused($amountFocused)

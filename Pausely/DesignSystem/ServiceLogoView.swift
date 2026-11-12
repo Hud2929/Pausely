@@ -51,13 +51,13 @@ struct ServiceLogoView: View {
                 return
             }
             let loaded = await LogoStore.shared.image(for: domain)
-            withAnimation(Motion.unlessReduced(.easeOut(duration: 0.2))) { image = loaded }
+            withAnimation(Motion.fade) { image = loaded }
         }
     }
 
     private var initialView: some View {
         Text(String(name.prefix(1)).uppercased())
-            .font(.system(size: size * 0.44, weight: .semibold, design: .serif))
+            .font(.total(size * 0.44, weight: .semibold))
             .foregroundStyle(Color.inkText)
     }
 }

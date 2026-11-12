@@ -86,7 +86,7 @@ struct DashboardView: View {
 
                 Text(verbatim: MoneyFormat.total(showsYear ? store.totalAnnualSpend : store.totalMonthlySpend,
                                                  currencyManager.selectedCurrency, converted: store.totalIsConverted))
-                    .font(.system(size: numberSize, weight: .bold, design: .serif))
+                    .font(.total(numberSize))
                     .foregroundStyle(Color.inkText)
                     .contentTransition(.numericText())
                     .lineLimit(1)
@@ -105,7 +105,7 @@ struct DashboardView: View {
                     .font(.title3.weight(.semibold))
                     .foregroundStyle(Color.inkText)
                     .frame(width: Layout.tapTarget, height: Layout.tapTarget)
-                    .overlay(Circle().stroke(Color.white.opacity(0.18), lineWidth: 1))
+                    .overlay(Circle().stroke(Color.outline, lineWidth: 1))
                     .contentShape(Circle())
             }
             .accessibilityLabel(Text("Add subscription"))
@@ -314,7 +314,7 @@ private struct AttentionRow: View {
             .foregroundStyle(Color.inkText)
             .padding(.horizontal, 14)
             .frame(minHeight: 34)
-            .overlay(Capsule().stroke(Color.white.opacity(0.22), lineWidth: 1))
+            .overlay(Capsule().stroke(Color.outline, lineWidth: 1))
     }
 }
 
@@ -438,7 +438,7 @@ private struct HorizonSection: View {
             let width = geo.size.width
             let largest = charges.compactMap { rates.convert($0.amount, from: $0.currency, to: currency) }.max() ?? 1
             ZStack(alignment: .leading) {
-                Rectangle().fill(Color.white.opacity(0.14)).frame(height: 1)
+                Rectangle().fill(Color.track).frame(height: 1)
                 if let selectedDay {
                     Rectangle().fill(Color.inkText).frame(width: x(selectedDay, width), height: 1)
                 }
@@ -570,10 +570,10 @@ private struct HomeLoading: View {
             ForEach(0..<4, id: \.self) { index in
                 if index > 0 { Hairline() }
                 HStack(spacing: 12) {
-                    RoundedRectangle(cornerRadius: 9, style: .continuous).fill(Color.inkRaised).frame(width: 36, height: 36)
-                    RoundedRectangle(cornerRadius: 4).fill(Color.inkRaised).frame(width: 140, height: 14)
+                    RoundedRectangle(cornerRadius: Layout.tileRadius, style: .continuous).fill(Color.inkRaised).frame(width: 36, height: 36)
+                    RoundedRectangle(cornerRadius: Layout.markRadius, style: .continuous).fill(Color.inkRaised).frame(width: 140, height: 14)
                     Spacer()
-                    RoundedRectangle(cornerRadius: 4).fill(Color.inkRaised).frame(width: 56, height: 14)
+                    RoundedRectangle(cornerRadius: Layout.markRadius, style: .continuous).fill(Color.inkRaised).frame(width: 56, height: 14)
                 }
                 .padding(.vertical, 12)
             }

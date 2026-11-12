@@ -75,7 +75,7 @@ struct SubscriptionManagementView: View {
                     .foregroundStyle(Color.inkText)
                     .padding(.horizontal, 14)
                     .frame(minHeight: 34)
-                    .overlay(Capsule().stroke(Color.white.opacity(0.22), lineWidth: 1))
+                    .overlay(Capsule().stroke(Color.outline, lineWidth: 1))
                     .frame(minHeight: Layout.tapTarget)
                     .contentShape(Rectangle())
             }
@@ -290,7 +290,7 @@ struct SubscriptionManagementView: View {
                         .foregroundStyle(Color.inkText)
                         .padding(.horizontal, 8)
                         .padding(.vertical, 3)
-                        .overlay(Capsule().stroke(Color.white.opacity(0.25), lineWidth: 1))
+                        .overlay(Capsule().stroke(Color.outline, lineWidth: 1))
                 }
                 Image(systemName: "chevron.forward")
                     .font(.footnote.weight(.semibold))

@@ -2,6 +2,8 @@ import SwiftUI
 
 struct AddSubscriptionView: View {
     @Environment(\.dismiss) private var dismiss
+    /// The amount is the one big thing on this screen; it grows with the reader's text size.
+    @ScaledMetric(relativeTo: .largeTitle) private var amountSize: CGFloat = 44
     @State private var name = ""
     @State private var amount = ""
     @State private var frequency: BillingFrequency = .monthly
@@ -54,7 +56,7 @@ struct AddSubscriptionView: View {
                             .accessibilityHidden(!(frequency == .monthly || frequency == .yearly))
                         HStack(alignment: .firstTextBaseline, spacing: 8) {
                             TextField(text: $amount, prompt: Text(verbatim: AmountText.text(for: 0, currency: currencyManager.selectedCurrency))) { EmptyView() }
-                                .font(.system(size: 44, weight: .bold, design: .serif))
+                                .font(.total(min(amountSize, 64)))
                                 .foregroundStyle(Color.inkText)
                                 .keyboardType(.decimalPad)
                                 .focused($focusedField, equals: .amount)
