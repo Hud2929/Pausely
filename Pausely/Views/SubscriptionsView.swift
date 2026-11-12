@@ -124,7 +124,7 @@ struct SubscriptionsView: View {
                 }
                 .font(.body)
                 .padding(.horizontal, 14)
-                .frame(minHeight: Layout.tapTarget)
+                .frame(maxWidth: .infinity, minHeight: Layout.tapTarget)
                 .background(Color.inkRaised, in: RoundedRectangle(cornerRadius: Layout.tileRadius, style: .continuous))
                 .listRowInsets(EdgeInsets(top: 12, leading: Layout.margin, bottom: 4, trailing: Layout.margin))
                 .listRowBackground(Color.clear)
@@ -189,7 +189,7 @@ struct SubscriptionsView: View {
                 .font(.subheadline.weight(.semibold))
                 .foregroundStyle(Self.state(for: section.group)?.color ?? Color.inkTextMuted)
             Spacer()
-            Text(verbatim: "\(section.subscriptions.count)")
+            Text(verbatim: L10n.number(section.subscriptions.count))
                 .font(.subheadline.monospacedDigit())
                 .foregroundStyle(Color.inkTextFaint)
         }

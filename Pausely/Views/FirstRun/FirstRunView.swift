@@ -25,7 +25,6 @@ struct FirstRunView: View {
 
     var body: some View {
         ZStack {
-            Color.ink.ignoresSafeArea()
             switch phase {
             case .guess:
                 GuessStep(guess: $guess, currency: tally.currency, onNext: {
@@ -43,6 +42,8 @@ struct FirstRunView: View {
                     .transition(stepTransition)
             }
         }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .inkScreen()
         .readableWidth()
     }
 
@@ -116,7 +117,7 @@ private struct GuessStep: View {
                     Text("Sign in")
                         .font(.subheadline.weight(.semibold))
                         .foregroundStyle(Color.inkTextMuted)
-                        .frame(minHeight: Layout.tapTarget)
+                        .tapArea(.trailing)
                 }
                 .accessibilityIdentifier("firstRunSignIn")
             }
@@ -199,7 +200,11 @@ private struct TallyStep: View {
     @Environment(\.dynamicTypeSize) private var typeSize
 
     private var services: [TallyService] { TallyCatalog.services(payingIn: tally.currency) }
-    private let columns = [GridItem(.adaptive(minimum: 96, maximum: 160), spacing: 10)]
+    /// Tiles three or four across; one service to a row at accessibility text sizes, where a name
+    /// no longer fits in a third of the screen.
+    private var columns: [GridItem] {
+        typeSize.isAccessibilitySize ? [GridItem(.flexible())] : [GridItem(.adaptive(minimum: 96, maximum: 160), spacing: 10)]
+    }
 
     var body: some View {
         VStack(spacing: 0) {
@@ -221,15 +226,7 @@ private struct TallyStep: View {
                         .padding(.bottom, 20)
 
                     // At the largest text sizes the slip below keeps to its count and its button, and
-                    // what it would say sits here, so the services keep most of the screen.
-                    if typeSize.isAccessibilitySize, tally.lines.isEmpty {
-                        Text("Your slip is empty. Tap the first thing you pay for.")
-                            .font(.subheadline)
-                            .foregroundStyle(Color.inkTextMuted)
-                            .fixedSize(horizontal: false, vertical: true)
-                            .padding(.bottom, 20)
-                    }
-
+                    // the heading above already says what to do, so the first service is on screen.
                     LazyVGrid(columns: columns, spacing: 10) {
                         ForEach(services) { service in
                             ServiceTile(service: service, isOn: tally.contains(service)) {
@@ -273,7 +270,7 @@ private struct TallyStep: View {
                         .id(last.name)
                         .transition(.asymmetric(insertion: .opacity.combined(with: .offset(y: 8)), removal: .opacity))
                 }
-                ProofLine(label: L10n.string("On your slip"), value: "\(tally.lines.count)", emphasised: true)
+                ProofLine(label: L10n.string("On your slip"), value: L10n.number(tally.lines.count), emphasised: true)
                 Button(action: onReveal) { Text("Show me the total") }
                     .buttonStyle(.ink(.onPaper))
                     .accessibilityIdentifier("showTotalButton")
@@ -287,7 +284,7 @@ private struct TallyStep: View {
                     Text("None of these")
                         .font(.subheadline.weight(.semibold))
                         .underline()
-                        .frame(minHeight: Layout.tapTarget)
+                        .tapArea()
                 }
                 .accessibilityIdentifier("noneOfTheseButton")
             }
@@ -310,20 +307,33 @@ private struct ServiceTile: View {
     let isOn: Bool
     let action: () -> Void
 
+    @Environment(\.dynamicTypeSize) private var typeSize
+
     var body: some View {
         Button(action: action) {
-            VStack(spacing: 8) {
-                ServiceLogoView(name: service.name, category: service.category.rawValue, size: 40)
-                Text(verbatim: service.name)
-                    .font(.caption.weight(.medium))
-                    .foregroundStyle(Color.inkText)
-                    .multilineTextAlignment(.center)
-                    .lineLimit(2)
-                    .frame(maxWidth: .infinity)
+            Group {
+                if typeSize.isAccessibilitySize {
+                    Text(verbatim: service.name)
+                        .font(.body.weight(.medium))
+                        .foregroundStyle(Color.inkText)
+                        .multilineTextAlignment(.leading)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .padding(.trailing, 28)
+                } else {
+                    VStack(spacing: 8) {
+                        ServiceLogoView(name: service.name, category: service.category.rawValue, size: 40)
+                        Text(verbatim: service.name)
+                            .font(.caption.weight(.medium))
+                            .foregroundStyle(Color.inkText)
+                            .multilineTextAlignment(.center)
+                            .fixedSize(horizontal: false, vertical: true)
+                            .frame(maxWidth: .infinity)
+                    }
+                }
             }
             .padding(.vertical, 14)
-            .padding(.horizontal, 6)
-            .frame(maxWidth: .infinity, minHeight: 104)
+            .padding(.horizontal, typeSize.isAccessibilitySize ? 14 : 6)
+            .frame(maxWidth: .infinity, minHeight: typeSize.isAccessibilitySize ? Layout.tapTarget : 104)
             .background(isOn ? Color.inkLifted : Color.clear,
                         in: RoundedRectangle(cornerRadius: Layout.cardRadius, style: .continuous))
             .overlay {
@@ -540,6 +550,7 @@ private struct PriceSheet: View {
                     .foregroundStyle(Color.inkText)
                     .focused($focused)
                     .accessibilityLabel(Text("Price each month"))
+                    .accessibilityIdentifier("priceField")
                 Text(verbatim: currency)
                     .font(.proof(.subheadline))
                     .foregroundStyle(Color.inkTextMuted)
@@ -554,6 +565,7 @@ private struct PriceSheet: View {
             } label: { Text("Save") }
                 .buttonStyle(.ink)
                 .disabled(amount == nil)
+                .accessibilityIdentifier("priceSaveButton")
 
             Spacer(minLength: 0)
         }

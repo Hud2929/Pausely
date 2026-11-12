@@ -107,8 +107,7 @@ struct SubscriptionBrowserView: View {
                 .padding(.vertical, 6)
                 .frame(minHeight: 34)
                 .overlay(Capsule().stroke(Color.outline, lineWidth: 1))
-                .frame(minHeight: Layout.tapTarget)
-                .contentShape(Rectangle())
+                .tapArea()
         }
         .accessibilityIdentifier("customAddButton")
     }
@@ -121,8 +120,7 @@ struct SubscriptionBrowserView: View {
                         Text("Close")
                             .font(.subheadline.weight(.semibold))
                             .foregroundStyle(Color.inkTextMuted)
-                            .frame(minHeight: Layout.tapTarget)
-                            .contentShape(Rectangle())
+                            .tapArea(.leading)
                     }
                     Spacer()
                     if !typeSize.isAccessibilitySize { addYourOwnButton }
@@ -164,7 +162,7 @@ struct SubscriptionBrowserView: View {
             }
             .scrollDismissesKeyboard(.interactively)
         }
-        .background(Color.ink.ignoresSafeArea())
+        .inkScreen()
         .navigationBarHidden(true)
         .sheet(isPresented: $showingTierSheet) {
             if let entry = selectedEntry {
@@ -291,8 +289,7 @@ struct SubscriptionBrowserView: View {
                 .frame(minHeight: 36)
                 .background(isOn ? Color.paper : Color.clear, in: Capsule())
                 .overlay(Capsule().stroke(isOn ? Color.clear : Color.outline, lineWidth: 1))
-                .frame(minHeight: Layout.tapTarget)
-                .contentShape(Rectangle())
+                .tapArea()
         }
         .buttonStyle(.plain)
         .accessibilityAddTraits(isOn ? [.isSelected] : [])

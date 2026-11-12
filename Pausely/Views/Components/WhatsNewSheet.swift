@@ -9,33 +9,40 @@ struct WhatsNewSheet: View {
     private let displayVersion = Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? ""
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 0) {
-            Text(displayVersion.isEmpty ? "What's new" : "What's new in \(displayVersion)")
-                .font(.question(.title))
-                .foregroundStyle(Color.inkText)
-                .fixedSize(horizontal: false, vertical: true)
-                .padding(.top, 32)
-                .accessibilityAddTraits(.isHeader)
-
-            // Only what this build really does.
+        // The words scroll and the button stays put: at the largest text sizes three items do not fit
+        // above it, and a fixed column cut them off.
+        ScrollView {
             VStack(alignment: .leading, spacing: 0) {
-                item("A new look", "Pausely is ink and paper now: your decisions and your savings are printed on slips.")
-                Hairline()
-                item("The next 30 days on one line", "Home shows every charge that's coming and what leaves by any day.")
-                Hairline()
-                item("Keep or cancel, on a slip", "Keeping stamps it. Cancelling tears it and adds it to your Savings Receipt.")
+                Text(displayVersion.isEmpty ? "What's new" : "What's new in \(displayVersion)")
+                    .font(.question(.title))
+                    .foregroundStyle(Color.inkText)
+                    .fixedSize(horizontal: false, vertical: true)
+                    .padding(.top, 32)
+                    .accessibilityAddTraits(.isHeader)
+
+                // Only what this build really does.
+                VStack(alignment: .leading, spacing: 0) {
+                    item("A new look", "Pausely is ink and paper now: your decisions and your savings are printed on slips.")
+                    Hairline()
+                    item("The next 30 days on one line", "Home shows every charge that's coming and what leaves by any day.")
+                    Hairline()
+                    item("Keep or cancel, on a slip", "Keeping stamps it. Cancelling tears it and adds it to your Savings Receipt.")
+                }
+                .padding(.top, 20)
             }
-            .padding(.top, 20)
-
-            Spacer(minLength: 24)
-
+            .frame(maxWidth: .infinity, alignment: .leading)
+        }
+        .scrollBounceBehavior(.basedOnSize)
+        .safeAreaInset(edge: .bottom) {
             Button { dismiss() } label: { Text("Continue") }
                 .buttonStyle(.ink)
+                .padding(.top, 12)
                 .padding(.bottom, 12)
+                .background(Color.ink)
         }
         .padding(.horizontal, Layout.margin)
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
-        .background(Color.ink.ignoresSafeArea())
+        .inkScreen()
         .preferredColorScheme(.dark)
     }
 

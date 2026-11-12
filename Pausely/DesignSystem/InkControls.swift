@@ -61,8 +61,7 @@ struct OptionalDatePicker: View {
                 Text("Set date")
                     .font(.body.weight(.semibold))
                     .foregroundStyle(Color.inkText)
-                    .frame(minHeight: Layout.tapTarget)
-                    .contentShape(Rectangle())
+                    .tapArea(.leading)
             }
         }
     }

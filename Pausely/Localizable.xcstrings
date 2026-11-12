@@ -1096,37 +1096,37 @@
               "zero": {
                 "stringUnit": {
                   "state": "translated",
-                  "value": "تم الخصم %lld مرة، كل 3 أشهر تقريبًا"
+                  "value": "تم الخصم %lld مرة، كل ثلاثة أشهر تقريبًا"
                 }
               },
               "one": {
                 "stringUnit": {
                   "state": "translated",
-                  "value": "تم الخصم مرة واحدة، كل 3 أشهر تقريبًا"
+                  "value": "تم الخصم مرة واحدة، كل ثلاثة أشهر تقريبًا"
                 }
               },
               "two": {
                 "stringUnit": {
                   "state": "translated",
-                  "value": "تم الخصم مرتين، كل 3 أشهر تقريبًا"
+                  "value": "تم الخصم مرتين، كل ثلاثة أشهر تقريبًا"
                 }
               },
               "few": {
                 "stringUnit": {
                   "state": "translated",
-                  "value": "تم الخصم %lld مرات، كل 3 أشهر تقريبًا"
+                  "value": "تم الخصم %lld مرات، كل ثلاثة أشهر تقريبًا"
                 }
               },
               "many": {
                 "stringUnit": {
                   "state": "translated",
-                  "value": "تم الخصم %lld مرة، كل 3 أشهر تقريبًا"
+                  "value": "تم الخصم %lld مرة، كل ثلاثة أشهر تقريبًا"
                 }
               },
               "other": {
                 "stringUnit": {
                   "state": "translated",
-                  "value": "تم الخصم %lld مرة، كل 3 أشهر تقريبًا"
+                  "value": "تم الخصم %lld مرة، كل ثلاثة أشهر تقريبًا"
                 }
               }
             }
@@ -1208,37 +1208,37 @@
               "zero": {
                 "stringUnit": {
                   "state": "translated",
-                  "value": "تم الخصم %lld مرة، كل 6 أشهر تقريبًا"
+                  "value": "تم الخصم %lld مرة، كل ستة أشهر تقريبًا"
                 }
               },
               "one": {
                 "stringUnit": {
                   "state": "translated",
-                  "value": "تم الخصم مرة واحدة، كل 6 أشهر تقريبًا"
+                  "value": "تم الخصم مرة واحدة، كل ستة أشهر تقريبًا"
                 }
               },
               "two": {
                 "stringUnit": {
                   "state": "translated",
-                  "value": "تم الخصم مرتين، كل 6 أشهر تقريبًا"
+                  "value": "تم الخصم مرتين، كل ستة أشهر تقريبًا"
                 }
               },
               "few": {
                 "stringUnit": {
                   "state": "translated",
-                  "value": "تم الخصم %lld مرات، كل 6 أشهر تقريبًا"
+                  "value": "تم الخصم %lld مرات، كل ستة أشهر تقريبًا"
                 }
               },
               "many": {
                 "stringUnit": {
                   "state": "translated",
-                  "value": "تم الخصم %lld مرة، كل 6 أشهر تقريبًا"
+                  "value": "تم الخصم %lld مرة، كل ستة أشهر تقريبًا"
                 }
               },
               "other": {
                 "stringUnit": {
                   "state": "translated",
-                  "value": "تم الخصم %lld مرة، كل 6 أشهر تقريبًا"
+                  "value": "تم الخصم %lld مرة، كل ستة أشهر تقريبًا"
                 }
               }
             }
@@ -2775,7 +2775,7 @@
         "ar": {
           "stringUnit": {
             "state": "translated",
-            "value": "GMX وWEB.DE وZoho وFastmail وغيرها"
+            "value": "‏GMX وWEB.DE وZoho وFastmail وغيرها"
           }
         },
         "de": {
@@ -2809,7 +2809,7 @@
         "ar": {
           "stringUnit": {
             "state": "translated",
-            "value": "Gmail (كلمة مرور التطبيق)"
+            "value": "‏Gmail (كلمة مرور التطبيق)"
           }
         },
         "de": {
@@ -3897,7 +3897,7 @@
         "ar": {
           "stringUnit": {
             "state": "translated",
-            "value": "الصق كلمة المرور المكونة من 16 حرفًا هنا."
+            "value": "الصق كلمة المرور المكوّنة من ستة عشر حرفًا هنا."
           }
         },
         "de": {
@@ -6444,7 +6444,7 @@
         "ar": {
           "stringUnit": {
             "state": "translated",
-            "value": "بعد انتهاء فترة التجربة المجانية، سيتم خصم %@ ما لم تلغِ قبل 24 ساعة على الأقل من نهاية التجربة."
+            "value": "بعد انتهاء فترة التجربة المجانية، سيتم خصم %@ ما لم تلغِ قبل أربع وعشرين ساعة على الأقل من نهاية التجربة."
           }
         }
       }
@@ -9898,7 +9898,7 @@
         "ar": {
           "stringUnit": {
             "state": "translated",
-            "value": "Pausely مخصص لمن تبلغ أعمارهم %lld عامًا فأكثر. أدخل تاريخ ميلادك للمتابعة."
+            "value": "‏Pausely مخصص لمن تبلغ أعمارهم %lld عامًا فأكثر. أدخل تاريخ ميلادك للمتابعة."
           }
         },
         "de": {
@@ -9966,7 +9966,7 @@
         "ar": {
           "stringUnit": {
             "state": "translated",
-            "value": "Pausely متاح فقط لمن تبلغ أعمارهم %lld عامًا فأكثر، لذا لا يمكننا إنشاء حساب لك الآن."
+            "value": "‏Pausely متاح فقط لمن تبلغ أعمارهم %lld عامًا فأكثر، لذا لا يمكننا إنشاء حساب لك الآن."
           }
         },
         "de": {
@@ -10306,7 +10306,7 @@
         "ar": {
           "stringUnit": {
             "state": "translated",
-            "value": "المتوقع خلال 12 شهرًا: %@"
+            "value": "المتوقع خلال اثني عشر شهرًا: %@"
           }
         },
         "de": {
@@ -10776,7 +10776,7 @@
         "ar": {
           "stringUnit": {
             "state": "translated",
-            "value": "تصل تذكيرات التجديد في الساعة 9 صباحًا قبل عدد الأيام الذي تختاره لكل اشتراك («ذكّرني» عند تعديله)، ثم في اليوم السابق، وصباح يوم التجديد. الضغط على «أبقِه» في التذكير يوقف بقية التذكيرات لتلك الدفعة."
+            "value": "تصل تذكيرات التجديد في الساعة التاسعة صباحًا قبل عدد الأيام الذي تختاره لكل اشتراك («ذكّرني» عند تعديله)، ثم في اليوم السابق، وصباح يوم التجديد. الضغط على «أبقِه» في التذكير يوقف بقية التذكيرات لتلك الدفعة."
           }
         },
         "de": {
@@ -11218,7 +11218,7 @@
         "ar": {
           "stringUnit": {
             "state": "translated",
-            "value": "مثل Netflix وMax وDisney+ وHulu وPrime Video. تناوب خطة الإيقاف خدمات الفيديو الشهرية، بينما تبقى الموسيقى والتخزين قيد التشغيل."
+            "value": "مثل Netflix وMax وDisney+‎ وHulu وPrime Video. تناوب خطة الإيقاف خدمات الفيديو الشهرية، بينما تبقى الموسيقى والتخزين قيد التشغيل."
           }
         },
         "de": {
@@ -13258,7 +13258,7 @@
         "ar": {
           "stringUnit": {
             "state": "translated",
-            "value": "أي %@ لن تدفعها خلال الأشهر الـ 12 القادمة. تمت إضافتها إلى إيصال التوفير."
+            "value": "أي %@ لن تدفعها خلال الأشهر الاثني عشر القادمة. تمت إضافتها إلى إيصال التوفير."
           }
         },
         "de": {
@@ -14035,6 +14035,74 @@
         }
       }
     },
+    "Remind me": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ذكّرني"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Erinnern"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Recordarme"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Me rappeler"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "リマインド"
+          }
+        }
+      }
+    },
+    "Off": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "إيقاف"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aus"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Desactivado"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Désactivé"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "オフ"
+          }
+        }
+      }
+    },
     "Add its renewal date to get reminders.": {
       "localizations": {
         "ar": {
@@ -14516,7 +14584,7 @@
         "ar": {
           "stringUnit": {
             "state": "translated",
-            "value": "كل 3 أشهر"
+            "value": "كل ثلاثة أشهر"
           }
         },
         "de": {
@@ -14550,7 +14618,7 @@
         "ar": {
           "stringUnit": {
             "state": "translated",
-            "value": "كل 6 أشهر"
+            "value": "كل ستة أشهر"
           }
         },
         "de": {
@@ -14652,7 +14720,7 @@
         "ar": {
           "stringUnit": {
             "state": "translated",
-            "value": "/3 أشهر"
+            "value": "/ثلاثة أشهر"
           }
         },
         "de": {
@@ -14686,7 +14754,7 @@
         "ar": {
           "stringUnit": {
             "state": "translated",
-            "value": "/6 أشهر"
+            "value": "/ستة أشهر"
           }
         },
         "de": {
@@ -14822,7 +14890,7 @@
         "ar": {
           "stringUnit": {
             "state": "translated",
-            "value": "كل 3 أشهر"
+            "value": "كل ثلاثة أشهر"
           }
         },
         "de": {
@@ -14856,7 +14924,7 @@
         "ar": {
           "stringUnit": {
             "state": "translated",
-            "value": "كل 6 أشهر"
+            "value": "كل ستة أشهر"
           }
         },
         "de": {
@@ -16012,7 +16080,7 @@
         "ar": {
           "stringUnit": {
             "state": "translated",
-            "value": "Pausely Pro بسعر %@ في السنة."
+            "value": "‏Pausely Pro بسعر %@ في السنة."
           }
         },
         "de": {
@@ -16046,7 +16114,7 @@
         "ar": {
           "stringUnit": {
             "state": "translated",
-            "value": "Pausely Pro بسعر %@ في الشهر."
+            "value": "‏Pausely Pro بسعر %@ في الشهر."
           }
         },
         "de": {
@@ -16680,7 +16748,7 @@
         "ar": {
           "stringUnit": {
             "state": "translated",
-            "value": "المتوقع خلال 12 شهرًا"
+            "value": "المتوقع خلال اثني عشر شهرًا"
           }
         },
         "de": {
@@ -19700,7 +19768,7 @@
         "ar": {
           "stringUnit": {
             "state": "translated",
-            "value": "رمز من 6 أرقام"
+            "value": "رمز من ستة أرقام"
           }
         },
         "de": {
@@ -20210,7 +20278,7 @@
         "ar": {
           "stringUnit": {
             "state": "translated",
-            "value": "8 أحرف على الأقل، تتضمن حرفًا كبيرًا وحرفًا صغيرًا ورقمًا."
+            "value": "ثمانية أحرف على الأقل، تتضمن حرفًا كبيرًا وحرفًا صغيرًا ورقمًا."
           }
         },
         "de": {
@@ -20618,7 +20686,7 @@
         "ar": {
           "stringUnit": {
             "state": "translated",
-            "value": "8 أحرف على الأقل"
+            "value": "ثمانية أحرف على الأقل"
           }
         },
         "de": {
@@ -20788,7 +20856,7 @@
         "ar": {
           "stringUnit": {
             "state": "translated",
-            "value": "8 أحرف أو أكثر"
+            "value": "ثمانية أحرف أو أكثر"
           }
         },
         "de": {
@@ -20992,7 +21060,7 @@
         "ar": {
           "stringUnit": {
             "state": "translated",
-            "value": "أرسلنا رمزًا من 6 أرقام إلى:"
+            "value": "أرسلنا رمزًا من ستة أرقام إلى:"
           }
         },
         "de": {
@@ -21842,7 +21910,7 @@
         "ar": {
           "stringUnit": {
             "state": "translated",
-            "value": "Pausely يقرأ فقط. يفتح صندوق بريدك للقراءة فقط ولا يضع علامة «مقروء» على أي رسالة. تبقى كلمة مرور التطبيق في سلسلة المفاتيح على هذا الـ iPhone، ويمكنك حذفها لدى مزوّدك متى شئت."
+            "value": "‏Pausely يقرأ فقط. يفتح صندوق بريدك للقراءة فقط ولا يضع علامة «مقروء» على أي رسالة. تبقى كلمة مرور التطبيق في سلسلة المفاتيح على هذا الـ iPhone، ويمكنك حذفها لدى مزوّدك متى شئت."
           }
         },
         "de": {
@@ -22318,7 +22386,7 @@
         "ar": {
           "stringUnit": {
             "state": "translated",
-            "value": "تحقّق من اتصالك وحاول مرة أخرى. إذا استمرّ الفشل، راسل %@ وسنحذفه خلال 30 يومًا."
+            "value": "تحقّق من اتصالك وحاول مرة أخرى. إذا استمرّ الفشل، راسل %@ وسنحذفه خلال ثلاثين يومًا."
           }
         },
         "de": {
@@ -24658,7 +24726,7 @@
         "ar": {
           "stringUnit": {
             "state": "translated",
-            "value": "Pausely مجاني لك، وإلغاءاتك في طريقها لتوفير %@ خلال 12 شهرًا. إذا دفعت مقابله يومًا، فعليه أن يوفّر لك أكثر مما يكلّف."
+            "value": "‏Pausely مجاني لك، وإلغاءاتك في طريقها لتوفير %@ خلال اثني عشر شهرًا. إذا دفعت مقابله يومًا، فعليه أن يوفّر لك أكثر مما يكلّف."
           }
         },
         "de": {
@@ -24726,7 +24794,7 @@
         "ar": {
           "stringUnit": {
             "state": "translated",
-            "value": "إلغاءاتك في طريقها لتوفير %1$@ خلال 12 شهرًا، أي %2$@× تكلفة Pausely. الإبقاء عليه مجدٍ."
+            "value": "إلغاءاتك في طريقها لتوفير %1$@ خلال اثني عشر شهرًا، أي %2$@× تكلفة Pausely. الإبقاء عليه مجدٍ."
           }
         },
         "de": {
@@ -24760,7 +24828,7 @@
         "ar": {
           "stringUnit": {
             "state": "translated",
-            "value": "حتى الآن إلغاءاتك في طريقها لتوفير %1$@ خلال 12 شهرًا، أي أقل من سعر Pausely البالغ %2$@. نفضّل أن تلغيه بدلًا من الدفع بلا فائدة."
+            "value": "حتى الآن إلغاءاتك في طريقها لتوفير %1$@ خلال اثني عشر شهرًا، أي أقل من سعر Pausely البالغ %2$@. نفضّل أن تلغيه بدلًا من الدفع بلا فائدة."
           }
         },
         "de": {
@@ -24862,7 +24930,7 @@
         "ar": {
           "stringUnit": {
             "state": "translated",
-            "value": "كيف نحسب: فقط الدفعات التي يدلّ تاريخ التجديد والسعر اللذان أدخلتهما على أنها كانت ستحدث، لمدة 12 شهرًا بعد الإلغاء. إذا بدأ الاشتراك مجددًا، يتوقف حساب التوفير في ذلك اليوم. لا يُحتسب اشتراك Pausely نفسه أبدًا."
+            "value": "كيف نحسب: فقط الدفعات التي يدلّ تاريخ التجديد والسعر اللذان أدخلتهما على أنها كانت ستحدث، لمدة اثني عشر شهرًا بعد الإلغاء. إذا بدأ الاشتراك مجددًا، يتوقف حساب التوفير في ذلك اليوم. لا يُحتسب اشتراك Pausely نفسه أبدًا."
           }
         },
         "de": {
@@ -24998,7 +25066,7 @@
         "ar": {
           "stringUnit": {
             "state": "translated",
-            "value": "Netflix، Spotify…"
+            "value": "‏Netflix، Spotify…"
           }
         },
         "de": {
@@ -25746,7 +25814,7 @@
         "ar": {
           "stringUnit": {
             "state": "translated",
-            "value": "Pausely ضمن الملخص المجدول، لذلك قد يصل التذكير بخصم الغد بعد وقوعه. في إعدادات iOS، اختر التسليم الفوري لـ Pausely."
+            "value": "‏Pausely ضمن الملخص المجدول، لذلك قد يصل التذكير بخصم الغد بعد وقوعه. في إعدادات iOS، اختر التسليم الفوري لـ Pausely."
           }
         },
         "de": {
@@ -26720,7 +26788,7 @@
         "ar": {
           "stringUnit": {
             "state": "translated",
-            "value": "Pausely Pro يتابع كل اشتراكاتك."
+            "value": "‏Pausely Pro يتابع كل اشتراكاتك."
           }
         },
         "de": {
@@ -26992,7 +27060,7 @@
         "ar": {
           "stringUnit": {
             "state": "translated",
-            "value": "5 سنوات"
+            "value": "خمس سنوات"
           }
         },
         "de": {
@@ -27026,7 +27094,7 @@
         "ar": {
           "stringUnit": {
             "state": "translated",
-            "value": "10 سنوات"
+            "value": "عشر سنوات"
           }
         },
         "de": {
@@ -27434,7 +27502,7 @@
         "ar": {
           "stringUnit": {
             "state": "translated",
-            "value": "%@ كل 3 أشهر"
+            "value": "%@ كل ثلاثة أشهر"
           }
         },
         "de": {
@@ -27468,7 +27536,7 @@
         "ar": {
           "stringUnit": {
             "state": "translated",
-            "value": "%@ كل 6 أشهر"
+            "value": "%@ كل ستة أشهر"
           }
         },
         "de": {
@@ -27561,6 +27629,136 @@
           "stringUnit": {
             "state": "translated",
             "value": "月平均%@"
+          }
+        }
+      }
+    },
+    "%lld days before": {
+      "localizations": {
+        "en": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld day before"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld days before"
+                }
+              }
+            }
+          }
+        },
+        "ar": {
+          "variations": {
+            "plural": {
+              "zero": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "قبل %lld يوم"
+                }
+              },
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "قبل يوم واحد"
+                }
+              },
+              "two": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "قبل يومين"
+                }
+              },
+              "few": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "قبل %lld أيام"
+                }
+              },
+              "many": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "قبل %lld يومًا"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "قبل %lld يوم"
+                }
+              }
+            }
+          }
+        },
+        "de": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld Tag vorher"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld Tage vorher"
+                }
+              }
+            }
+          }
+        },
+        "es": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld día antes"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld días antes"
+                }
+              }
+            }
+          }
+        },
+        "fr": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld jour avant"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld jours avant"
+                }
+              }
+            }
+          }
+        },
+        "ja": {
+          "variations": {
+            "plural": {
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld日前"
+                }
+              }
+            }
           }
         }
       }

@@ -18,8 +18,7 @@ struct RenewalDatesSheet: View {
                             Text("Not now")
                                 .font(.subheadline.weight(.semibold))
                                 .foregroundStyle(Color.inkTextMuted)
-                                .frame(minHeight: Layout.tapTarget)
-                                .contentShape(Rectangle())
+                                .tapArea(.leading)
                         }
                         Spacer()
                     }
@@ -60,7 +59,7 @@ struct RenewalDatesSheet: View {
             .padding(.bottom, 8)
             .background(Color.ink)
         }
-        .background(Color.ink.ignoresSafeArea())
+        .inkScreen()
         .preferredColorScheme(.dark)
     }
 
@@ -96,8 +95,7 @@ struct RenewalDatesSheet: View {
                         .padding(.horizontal, 14)
                         .frame(minHeight: 34)
                         .overlay(Capsule().stroke(Color.outline, lineWidth: 1))
-                        .frame(minHeight: Layout.tapTarget)
-                        .contentShape(Rectangle())
+                        .tapArea()
                 }
                 .buttonStyle(.plain)
                 .accessibilityLabel(Text(L10n.string("Add date") + ", " + subscription.name))

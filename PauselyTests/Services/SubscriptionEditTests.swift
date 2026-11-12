@@ -214,10 +214,24 @@ final class SubscriptionEditDraftTests: XCTestCase {
         XCTAssertNil(draft.yearlyCost)
     }
 
+    /// The reminder choices, in the language chosen in the app. They were bare English in every one.
     func testReminderLabels() {
+        let saved = UserDefaults.standard.object(forKey: L10n.languageKey)
+        defer { UserDefaults.standard.set(saved, forKey: L10n.languageKey) }
+
+        UserDefaults.standard.set("en", forKey: L10n.languageKey)
         XCTAssertEqual(SubscriptionEditDraft.reminderLabel(0), "Off")
         XCTAssertEqual(SubscriptionEditDraft.reminderLabel(1), "1 day before")
         XCTAssertEqual(SubscriptionEditDraft.reminderLabel(7), "7 days before")
+
+        UserDefaults.standard.set("de", forKey: L10n.languageKey)
+        XCTAssertEqual(SubscriptionEditDraft.reminderLabel(0), "Aus")
+        XCTAssertEqual(SubscriptionEditDraft.reminderLabel(1), "1 Tag vorher")
+        XCTAssertEqual(SubscriptionEditDraft.reminderLabel(3), "3 Tage vorher")
+
+        UserDefaults.standard.set("ar", forKey: L10n.languageKey)
+        XCTAssertEqual(SubscriptionEditDraft.reminderLabel(1), "قبل يوم واحد")
+        XCTAssertEqual(SubscriptionEditDraft.reminderLabel(3), "قبل \(L10n.number(3)) أيام")
     }
 }
 

@@ -172,7 +172,7 @@ struct FoundRow: View {
                     Text("This isn't a subscription")
                         .font(.subheadline.weight(.semibold))
                         .foregroundStyle(Color.inkText)
-                        .frame(minHeight: Layout.tapTarget)
+                        .tapArea(.leading)
                 }
                 .buttonStyle(.plain)
                 .accessibilityHint("Removes it and Pausely will remember, so it won't appear again")

@@ -54,8 +54,7 @@ struct CatalogAddSheet: View {
                             Text("Cancel")
                                 .font(.subheadline.weight(.semibold))
                                 .foregroundStyle(Color.inkTextMuted)
-                                .frame(minHeight: Layout.tapTarget)
-                                .contentShape(Rectangle())
+                                .tapArea(.leading)
                         }
                         Spacer()
                     }
@@ -127,7 +126,7 @@ struct CatalogAddSheet: View {
             .padding(.bottom, 8)
             .background(Color.ink)
         }
-        .background(Color.ink.ignoresSafeArea())
+        .inkScreen()
         .preferredColorScheme(.dark)
     }
 

@@ -163,6 +163,54 @@ final class LocalizationGuardTests: XCTestCase {
         XCTAssertTrue(failures.isEmpty, "\(failures.count) untranslated:\n" + failures.joined(separator: "\n"))
     }
 
+    /// A translation is only used when the words reach a `LocalizedStringKey` or `L10n.string`. Handed
+    /// to a parameter typed `String` they stay English in every language, and the test above is content
+    /// because the catalog has them. The edit screen's four rows did this from the day it was built
+    /// ("Billing cycle", "Next renewal", "Category", "Remind me"), and so did "Sign out" on the age check.
+    func testNoTranslatedWordsAreHandedToAPlainStringParameter() throws {
+        let keys = Array(try catalog().keys)
+        func names(_ pattern: String, in text: String) throws -> [String] {
+            let regex = try NSRegularExpression(pattern: pattern, options: [.anchorsMatchLines])
+            return regex.matches(in: text, range: NSRange(text.startIndex..., in: text)).compactMap {
+                Range($0.range(at: 1), in: text).map { String(text[$0]) }
+            }
+        }
+        var files: [URL] = []
+        for path in Self.screenFiles {
+            let base = root.appendingPathComponent(path)
+            files += path.hasSuffix(".swift") ? [base]
+                : (FileManager.default.enumerator(at: base, includingPropertiesForKeys: nil)?.compactMap { $0 as? URL } ?? [])
+        }
+        files = files.filter { $0.pathExtension == "swift" && !Self.notScreens.contains($0.lastPathComponent) }
+        XCTAssertGreaterThan(files.count, 40, "the scan should see the app's screens")
+
+        // Read from the declarations. A helper whose first argument is a plain String is checked in its
+        // own file (they are private, and two files may each have a `row`). An argument or property
+        // typed String is checked everywhere by its name, unless the same name is declared as a
+        // localised key somewhere: those can't be told apart by name, and are left to the Arabic
+        // screen tour (`scripts/tour_untranslated.py`), which reads what the screens really show.
+        var plain: Set<String> = [], keyed: Set<String> = []
+        var found: [Found] = []
+        var helpersSeen: Set<String> = []
+        for file in files {
+            let text = try String(contentsOf: file, encoding: .utf8)
+            let helpers = Set(try names(#"func (\w+)(?:<[^>]*>)?\(_ \w+: String\b"#, in: text))
+            helpersSeen.formUnion(helpers)
+            plain.formUnion(try names(#"\b(\w+): String\??(?: =|,|\)|$)"#, in: text))
+            keyed.formUnion(try names(#"\b(\w+): (?:LocalizedStringKey|LocalizedStringResource|Text)\b"#, in: text))
+            let path = file.path.replacingOccurrences(of: root.path + "/", with: "")
+            found += try scan([path], calls: helpers.map { "\($0)(\"" })
+        }
+        XCTAssertTrue(helpersSeen.contains("valueLabel"), "the scan should see the edit screen's helpers")
+        XCTAssertTrue(keyed.contains("cancelTitle"), "the age check's button takes a localised key")
+        // A category is stored under its English name and shown through `localizedLabel`.
+        let storedValues: Set = ["category"]
+        found += try scan(Self.screenFiles, calls: plain.subtracting(keyed).subtracting(storedValues).map { "\($0): \"" })
+            .filter { item in !Self.notScreens.contains { item.file.hasSuffix($0) } }
+        let stayEnglish = found.filter { Self.matchingKey($0.literal, in: keys) != nil }
+        XCTAssertEqual(stayEnglish.map { "\($0.file):\($0.line) \"\($0.literal)\" is in the catalog but stays English here" }, [])
+    }
+
     /// `Text(verbatim:)` is for names, numbers and addresses. An English sentence in it stays English.
     func testNoEnglishSentenceIsShownVerbatim() throws {
         let found = try scan(Self.screenFiles, calls: ["Text(verbatim: \""])

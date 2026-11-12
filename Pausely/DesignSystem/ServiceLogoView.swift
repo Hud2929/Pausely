@@ -55,8 +55,15 @@ struct ServiceLogoView: View {
         }
     }
 
+    /// The letter on the tile: the first letter or digit of the name. A name can begin with something
+    /// that is neither (a direction mark in front of "Gmail" in Arabic left the tile blank).
+    static func initial(of name: String) -> String {
+        let first = name.first { $0.isLetter || $0.isNumber } ?? name.first
+        return first.map { String($0).uppercased() } ?? ""
+    }
+
     private var initialView: some View {
-        Text(String(name.prefix(1)).uppercased())
+        Text(Self.initial(of: name))
             .font(.total(size * 0.44, weight: .semibold))
             .foregroundStyle(Color.inkText)
             // A stand-in for a logo, sized to its tile like one: a picture, not text to be read or scaled.

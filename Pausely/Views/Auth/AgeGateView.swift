@@ -7,7 +7,7 @@ struct AgeGateView: View {
     let onPassed: () -> Void
     /// Optional escape hatch (e.g. cancel sign-up, or sign out for an existing user).
     var onCancel: (() -> Void)?
-    var cancelTitle: String = "Cancel"
+    var cancelTitle: LocalizedStringKey = "Cancel"
 
     @ObservedObject private var consent = AgeConsentManager.shared
     @State private var birthDate = AgeGateView.neutralDefaultDate
@@ -23,8 +23,6 @@ struct AgeGateView: View {
 
     var body: some View {
         ZStack {
-            Color.ink.ignoresSafeArea()
-
             ScrollView {
                 VStack(spacing: 24) {
                     Image(systemName: isBlocked ? "hand.raised.fill" : "calendar.badge.checkmark")
@@ -44,6 +42,8 @@ struct AgeGateView: View {
                 .padding(.bottom, 32)
             }
         }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .inkScreen()
         .onAppear(perform: refreshLockout)
         .accessibilityElement(children: .contain)
     }

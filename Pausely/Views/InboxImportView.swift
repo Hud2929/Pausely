@@ -498,7 +498,7 @@ struct InboxImportView: View {
                         (allSelected ? Text("Deselect all") : Text("Select all"))
                             .font(.subheadline.weight(.semibold))
                             .foregroundStyle(Color.inkText)
-                            .frame(minHeight: Layout.tapTarget)
+                            .tapArea(.trailing)
                     }
                 }
             }

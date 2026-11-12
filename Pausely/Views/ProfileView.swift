@@ -39,7 +39,7 @@ struct ProfileView: View {
                         let inboxes = InboxScanner.shared.accounts
                         row("envelope",
                             L10n.string("Find in Email"),
-                            value: inboxes.isEmpty ? nil : (inboxes.count == 1 ? inboxes[0].address : "\(inboxes.count)"),
+                            value: inboxes.isEmpty ? nil : (inboxes.count == 1 ? inboxes[0].address : L10n.number(inboxes.count)),
                             id: "inboxImportButton") { sheet = .inbox }
                     }
                     row("arrow.up.forward.app", L10n.string("Apple subscriptions"), id: "importFromAppStoreButton", last: true) {
@@ -257,8 +257,7 @@ struct SubscriptionWrappedView: View {
                         Text("Done")
                             .font(.subheadline.weight(.semibold))
                             .foregroundStyle(Color.inkTextMuted)
-                            .frame(minHeight: Layout.tapTarget)
-                            .contentShape(Rectangle())
+                            .tapArea(.leading)
                     }
                     Spacer()
                     if let image = YearSlip.image(stats: stats, currency: currencyManager.selectedCurrency) {
@@ -286,7 +285,7 @@ struct SubscriptionWrappedView: View {
             .padding(.top, 8)
             .padding(.bottom, 32)
         }
-        .background(Color.ink.ignoresSafeArea())
+        .inkScreen()
         .preferredColorScheme(.dark)
     }
 }
@@ -313,7 +312,7 @@ private struct YearSlip: View {
                     Text(verbatim: "Pausely \(stats.yearText)").font(.headline)
                 }
                 Perforation()
-                ProofLine(label: L10n.string("Subscriptions"), value: "\(stats.totalCount)")
+                ProofLine(label: L10n.string("Subscriptions"), value: L10n.number(stats.totalCount))
                 ProofLine(label: L10n.string("Each month"), value: money(stats.monthlyCost))
                 ProofLine(label: L10n.string("Each year"), value: money(stats.yearlyCost), emphasised: true)
                 Perforation()
@@ -321,7 +320,7 @@ private struct YearSlip: View {
                 ProofLine(label: L10n.string("Most goes to"), value: SubscriptionCategory.localizedLabel(for: stats.topCategory))
                 if stats.cancelledCount > 0 || !kept.isEmpty {
                     Perforation()
-                    ProofLine(label: L10n.string("Cancelled this year"), value: "\(stats.cancelledCount)")
+                    ProofLine(label: L10n.string("Cancelled this year"), value: L10n.number(stats.cancelledCount))
                     if !kept.isEmpty {
                         // Every cancellation's charges so far, not only this calendar year's: said as that.
                         ProofLine(label: L10n.string("Kept so far"), value: kept.formatted(kept.savedSoFar), emphasised: true)

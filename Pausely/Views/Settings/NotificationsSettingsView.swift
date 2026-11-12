@@ -28,8 +28,10 @@ struct NotificationsSettingsView: View {
                         .accessibilityIdentifier("trialRemindersToggle")
                 }
             }
+            // Until iOS allows notifications the switches can't be used, and iOS greys them itself.
+            // The words stay at full strength: they say what turning reminders on would bring, and
+            // at half strength the footnote could not be read (the system's audit failed it).
             .disabled(!notifications.isAuthorized)
-            .opacity(notifications.isAuthorized ? 1 : 0.5)
         }
         .task { await notifications.refreshStatus() }
         .onChange(of: renewalAlerts) { _, _ in reschedule() }

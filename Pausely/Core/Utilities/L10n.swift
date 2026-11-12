@@ -46,6 +46,12 @@ enum L10n {
     /// The locale for everything the code builds: sentences, money, dates, numbers.
     static var locale: Locale { chosenLocale ?? .current }
 
+    /// A whole number as the reader writes it: "5" in English, "٥" where Arabic digits are used. A
+    /// count put on screen as a bare `"\(n)"` stayed in Latin digits beside Arabic ones.
+    static func number(_ value: Int, locale: Locale = L10n.locale) -> String {
+        value.formatted(.number.locale(locale))
+    }
+
     static func string(_ resource: LocalizedStringResource) -> String {
         var resource = resource
         if let chosen = chosenLocale { resource.locale = chosen }

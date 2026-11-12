@@ -210,7 +210,7 @@ struct StoreKitUpgradeView: View {
 
             if !typeSize.isAccessibilitySize { actionBar }
         }
-        .background(Color.ink.ignoresSafeArea())
+        .inkScreen()
         .onAppear { focusedElement = .title }
         .task {
             // Prices are the App Store's. If they can't be fetched, keep asking while this screen is open.

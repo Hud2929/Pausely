@@ -45,7 +45,7 @@ struct SubscriptionManagementView: View {
             .padding(.top, 8)
             .padding(.bottom, 40)
         }
-        .background(Color.ink.ignoresSafeArea())
+        .inkScreen()
         .preferredColorScheme(.dark)
         .sheet(item: $route) { route in
             sheetContent(for: route)
@@ -64,8 +64,7 @@ struct SubscriptionManagementView: View {
                 Text("Done")
                     .font(.subheadline.weight(.semibold))
                     .foregroundStyle(Color.inkTextMuted)
-                    .frame(minHeight: Layout.tapTarget)
-                    .contentShape(Rectangle())
+                    .tapArea(.leading)
             }
             .accessibilityIdentifier("subscriptionDoneButton")
             Spacer()
@@ -76,8 +75,7 @@ struct SubscriptionManagementView: View {
                     .padding(.horizontal, 14)
                     .frame(minHeight: 34)
                     .overlay(Capsule().stroke(Color.outline, lineWidth: 1))
-                    .frame(minHeight: Layout.tapTarget)
-                    .contentShape(Rectangle())
+                    .tapArea()
             }
             .accessibilityIdentifier("editSubscriptionButton")
         }
@@ -394,8 +392,7 @@ private struct UsageSheet: View {
                         Text("Done")
                             .font(.subheadline.weight(.semibold))
                             .foregroundStyle(Color.inkTextMuted)
-                            .frame(minHeight: Layout.tapTarget)
-                            .contentShape(Rectangle())
+                            .tapArea(.leading)
                     }
                     Spacer()
                 }
@@ -442,7 +439,7 @@ private struct UsageSheet: View {
             .padding(.top, 8)
             .padding(.bottom, 32)
         }
-        .background(Color.ink.ignoresSafeArea())
+        .inkScreen()
         .preferredColorScheme(.dark)
         .sheet(isPresented: $showInput) {
             UsageInputSheet(subscriptionName: subscription.name, currentMinutes: minutes) { newMinutes in

@@ -246,6 +246,116 @@ final class OneLocaleTests: XCTestCase {
         XCTAssertEqual(offenders, [])
     }
 
+    /// A count on screen is written in the reader's digits. Section counts and the first-run slip
+    /// showed "5" beside "٧ اشتراكات" in Arabic, because a bare number in a string is always Latin.
+    func testACountIsWrittenInTheReadersDigits() throws {
+        XCTAssertEqual(L10n.number(5, locale: Locale(identifier: "en_CA")), "5")
+        XCTAssertEqual(L10n.number(5, locale: Locale(identifier: "ar_SA")), "٥")
+        XCTAssertEqual(L10n.number(1234, locale: Locale(identifier: "de_DE")), "1.234")
+
+        // No view puts a bare count on screen.
+        let root = URL(fileURLWithPath: #filePath)
+            .deletingLastPathComponent().deletingLastPathComponent().deletingLastPathComponent()
+        let views = root.appendingPathComponent("Pausely/Views")
+        try XCTSkipUnless(FileManager.default.fileExists(atPath: views.path), "Sources aren't readable from this test run")
+        let bareCount = #""\\\([A-Za-z_.\[\]0-9]*(\.count|Count|index \+ 1)\)""#
+        var offenders: [String] = []
+        let files = try XCTUnwrap(FileManager.default.enumerator(at: views, includingPropertiesForKeys: nil))
+        for case let file as URL in files where file.pathExtension == "swift" {
+            for (index, line) in try String(contentsOf: file, encoding: .utf8).components(separatedBy: "\n").enumerated()
+            where line.range(of: bareCount, options: .regularExpression) != nil && !line.contains("L10n.string(") {
+                offenders.append("\(file.lastPathComponent):\(index + 1)")
+            }
+        }
+        XCTAssertEqual(offenders, [])
+        XCTAssertNotNil(#"Text(verbatim: "\(section.subscriptions.count)")"#.range(of: bareCount, options: .regularExpression))
+        XCTAssertNotNil(#"ProofLine(label: label, value: "\(stats.cancelledCount)")"#.range(of: bareCount, options: .regularExpression),
+                        "the year's slip said 7 and 3 in Latin digits beside Arabic amounts")
+    }
+
+    /// A sentence takes its direction from its first letter. An Arabic one that begins with a name in
+    /// Latin letters ("Pausely Pro بسعر …") was laid out left to right, so on two lines it read from
+    /// the middle: the name sat at the end of the first line and the full stop at the start of the
+    /// second. A right-to-left mark in front of the name keeps the sentence Arabic.
+    func testAnArabicSentenceThatBeginsWithANameIsStillReadRightToLeft() throws {
+        let root = URL(fileURLWithPath: #filePath)
+            .deletingLastPathComponent().deletingLastPathComponent().deletingLastPathComponent()
+        var leftToRight: [String] = []
+        var marked = 0
+        for path in ["Pausely/Localizable.xcstrings", "PauselyWidget/Localizable.xcstrings", "Pausely/AppShortcuts.xcstrings"] {
+            let url = root.appendingPathComponent(path)
+            try XCTSkipUnless(FileManager.default.fileExists(atPath: url.path), "Sources aren't readable from this test run")
+            let catalog = try XCTUnwrap(JSONSerialization.jsonObject(with: Data(contentsOf: url)) as? [String: Any])
+            let strings = try XCTUnwrap(catalog["strings"] as? [String: [String: Any]])
+            for (_, entry) in strings {
+                guard let arabic = (entry["localizations"] as? [String: Any])?["ar"] as? [String: Any] else { continue }
+                var texts: [String] = []
+                if let unit = arabic["stringUnit"] as? [String: Any], let value = unit["value"] as? String { texts.append(value) }
+                if let forms = (arabic["variations"] as? [String: Any])?["plural"] as? [String: [String: Any]] {
+                    texts += forms.values.compactMap { ($0["stringUnit"] as? [String: Any])?["value"] as? String }
+                }
+                leftToRight += texts.filter { Self.beginsLeftToRight($0) }
+                marked += texts.filter { $0.hasPrefix("\u{200F}") }.count
+            }
+        }
+        XCTAssertEqual(leftToRight.sorted(), [])
+        XCTAssertGreaterThanOrEqual(marked, 11, "the sentences that begin with Pausely, Gmail or GMX")
+        XCTAssertTrue(Self.beginsLeftToRight("Pausely Pro بسعر %@ في السنة."))
+        XCTAssertFalse(Self.beginsLeftToRight("\u{200F}Pausely Pro بسعر %@ في السنة."))
+        XCTAssertFalse(Self.beginsLeftToRight("%@ يتجدد غدًا"), "a name that arrives as an argument is kept apart by the system")
+        XCTAssertFalse(Self.beginsLeftToRight("Pausely Pro"), "a name alone is not a sentence")
+    }
+
+    /// True for text with Arabic in it whose first letter is not Arabic and has no right-to-left
+    /// mark before it. Placeholders are skipped: what fills them is set apart from the sentence.
+    private static func beginsLeftToRight(_ text: String) -> Bool {
+        let arabic: ClosedRange<UInt32> = 0x0600...0x06FF
+        guard text.unicodeScalars.contains(where: { arabic.contains($0.value) }) else { return false }
+        let sentence = text.replacingOccurrences(of: #"%(\d+\$)?(lld|ld|d|@)"#, with: "", options: .regularExpression)
+        for scalar in sentence.unicodeScalars {
+            if scalar.value == 0x200F || arabic.contains(scalar.value) { return false }
+            if scalar.properties.isAlphabetic { return true }
+        }
+        return false
+    }
+
+    /// Arabic is written with Arabic-Indic digits in some regions and Latin ones in others, and the
+    /// system picks for every number the code formats. A digit typed into a translation cannot follow,
+    /// so the receipt read "خلال 12 شهرًا" beside "٤٧٫٩٧": the sentences spell their numbers instead.
+    func testArabicSentencesSpellTheirNumbers() throws {
+        let root = URL(fileURLWithPath: #filePath)
+            .deletingLastPathComponent().deletingLastPathComponent().deletingLastPathComponent()
+        // Names that are written with a digit everywhere: a protocol and the port it uses.
+        let names = ["POP3", "993"]
+        var typed: [String] = []
+        for path in ["Pausely/Localizable.xcstrings", "PauselyWidget/Localizable.xcstrings", "Pausely/AppShortcuts.xcstrings"] {
+            let url = root.appendingPathComponent(path)
+            try XCTSkipUnless(FileManager.default.fileExists(atPath: url.path), "Sources aren't readable from this test run")
+            let catalog = try XCTUnwrap(JSONSerialization.jsonObject(with: Data(contentsOf: url)) as? [String: Any])
+            let strings = try XCTUnwrap(catalog["strings"] as? [String: [String: Any]])
+            for (_, entry) in strings {
+                guard let arabic = (entry["localizations"] as? [String: Any])?["ar"] as? [String: Any] else { continue }
+                var texts: [String] = []
+                if let unit = arabic["stringUnit"] as? [String: Any], let value = unit["value"] as? String { texts.append(value) }
+                if let forms = (arabic["variations"] as? [String: Any])?["plural"] as? [String: [String: Any]] {
+                    texts += forms.values.compactMap { ($0["stringUnit"] as? [String: Any])?["value"] as? String }
+                }
+                typed += texts.filter { Self.hasATypedDigit($0, besides: names) }
+            }
+        }
+        XCTAssertEqual(typed.sorted(), [])
+        XCTAssertTrue(Self.hasATypedDigit("المتوقع خلال 12 شهرًا: %@", besides: names))
+        XCTAssertFalse(Self.hasATypedDigit("إلغاءاتك في طريقها لتوفير %1$@ خلال اثني عشر شهرًا، أي %2$@× تكلفة Pausely", besides: names))
+        XCTAssertFalse(Self.hasATypedDigit("عادةً المنفذ 993", besides: names))
+    }
+
+    /// A digit in the text itself: not one inside a placeholder ("%1$@", "%lld") or a name.
+    private static func hasATypedDigit(_ text: String, besides names: [String]) -> Bool {
+        var rest = text.replacingOccurrences(of: #"%(\d+\$)?(lld|ld|d|@)"#, with: "", options: .regularExpression)
+        for name in names { rest = rest.replacingOccurrences(of: name, with: "") }
+        return rest.range(of: "[0-9]", options: .regularExpression) != nil
+    }
+
     /// Currencies are named by the system in the reader's language and found by typing in it. They
     /// were English names on every screen, and only English found them.
     func testCurrenciesAreNamedAndFoundInTheReadersLanguage() throws {

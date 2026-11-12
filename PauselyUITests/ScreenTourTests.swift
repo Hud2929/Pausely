@@ -43,8 +43,17 @@ final class ScreenTourTests: XCTestCase {
         capture(app, "firstrun-guess")
         if tapFirst(app, ["getStartedButton"]) {
             sleep(1)
+            var sawPriceSheet = false
             for name in ["Netflix", "Spotify", "Apple Music", "iCloud+"] where app.buttons[name].exists && app.buttons[name].isHittable {
                 app.buttons[name].tap()
+                // Where the catalog has no dated price in this currency, the slip asks for one.
+                let price = app.textFields["priceField"]
+                if price.waitForExistence(timeout: 1) {
+                    if !sawPriceSheet { capture(app, "firstrun-price"); sawPriceSheet = true }
+                    price.typeText("10")
+                    app.buttons["priceSaveButton"].tap()
+                    sleep(1)
+                }
             }
             capture(app, "firstrun-tally")
             if tapFirst(app, ["showTotalButton"]) {

@@ -98,12 +98,9 @@ struct SubscriptionEditDraft: Equatable {
 
     // MARK: Display helpers
 
+    /// "Off", "1 day before", "3 days before", in the reader's language and digits.
     static func reminderLabel(_ days: Int) -> String {
-        switch days {
-        case 0: return "Off"
-        case 1: return "1 day before"
-        default: return "\(days) days before"
-        }
+        days == 0 ? L10n.string("Off") : L10n.string("\(days) days before")
     }
 
     /// Yearly cost for the live "that's X a year" hint.

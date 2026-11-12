@@ -369,8 +369,7 @@ struct PausePlanView: View {
                                 .frame(minHeight: 30)
                                 .background(Capsule().fill(item.action == .cancel ? Color.decide : Color.paper))
                                 // The pill is small; the place to tap is not.
-                                .frame(minHeight: Layout.tapTarget)
-                                .contentShape(Rectangle())
+                                .tapArea()
                         }
                         .buttonStyle(PlainButtonStyle())
                     }

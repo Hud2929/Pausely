@@ -358,6 +358,54 @@ Updated at every commit, so the work can be picked up from this file alone.
   line was truncated ("On your sl…") where space was tight; the first-run slip keeps to its count
   and its button so the services stay reachable. 736 tests, 0 failures. Next: rerun the tour for
   the new count, then Arabic, then iPad, then the states with no launch argument.
+- E, fourth slice (11-12): Arabic. The whole tour in Arabic with the audit
+  (`/tmp/pausely_tour_ar_1`, 92 captures: 119 counted, 15 behind bars, 38 system bar), every capture
+  opened on contact sheets, and a new scan of what the screens really show,
+  `scripts/tour_untranslated.py` (it reads the tour's element trees): 32 findings before (6 English,
+  21 Latin digits, 5 left-to-right sentences), 0 on the screens toured again afterwards
+  (`/tmp/pausely_tour_ar_2`, `_ar_3`). What was wrong, each now held by a test:
+  1. The edit screen's four row names and its reminder choices were English in every language
+     since the day the screen was built ("Billing cycle", "Next renewal", "Category", "Remind me",
+     "3 days before"), and so was "Sign out" on the age check. The catalog had the translations;
+     the words were handed to a parameter typed `String`, where no translation is looked up
+     (`testNoTranslatedWordsAreHandedToAPlainStringParameter`, `testReminderLabels` in three
+     languages; new keys "Remind me", "Off", "%lld days before").
+  2. An Arabic sentence that begins with a Latin name ("Pausely Pro بسعر …") was laid out left to
+     right: on two lines the name sat at the end of the first and the full stop at the start of
+     the second. Paywall, age check, mail screens. Eleven translations now begin with a
+     right-to-left mark (`testAnArabicSentenceThatBeginsWithANameIsStillReadRightToLeft`), and
+     "Disney+" inside a sentence no longer shows as "+Disney". A logo tile then took the mark for
+     the name's first letter and went blank: the letter is the first letter or digit now
+     (`testALogoTileShowsTheNamesFirstLetter`).
+  3. Latin digits typed into Arabic sentences beside Arabic-Indic amounts ("خلال 12 شهرًا",
+     "5 سنوات", "8 أحرف", "6 أرقام", "24 ساعة", "9 صباحًا"). 38 values spell their numbers, which
+     reads right in every Arabic region whichever digits it uses
+     (`testArabicSentencesSpellTheirNumbers`). Counts the code put on screen bare (section counts,
+     the year slip's "7" and "3", the cancel steps, "On your slip") go through `L10n.number`
+     (`testACountIsWrittenInTheReadersDigits`).
+  4. "Done" in Arabic ("تم") is 15 points wide and text buttons were sized by height alone. One
+     rule, `tapArea`, on 20 buttons (`ScreenRulesTests`); the audit's hit-region findings on the
+     receipt, the year and the subscription screen are gone.
+  5. The paywall and the subscription screen scrolled their text under the clock. Every screen that
+     draws its own top row uses `inkScreen()` now (18;
+     `testAScreenWithoutANavigationBarKeepsTheStatusStripSolid`).
+  6. The notifications page drew its rows and its footnote at half strength while reminders were
+     off, and the footnote could not be read: the audit's contrast failure there was real, not the
+     grey. The words are at full strength; iOS greys the switches itself.
+  7. From the first half of the slice: `textMuted` and `textFaint` are lighter (#B4B6BC, #9C9EA5),
+     What's new scrolls with its button pinned, the add-your-own name wraps, first-run services
+     are rows at accessibility sizes and the hint that repeated the heading there is gone. The tour
+     types a price where the slip asks for one, so the reveal and the account step are seen in
+     every currency and at the largest size (`/tmp/pausely_tour_big_3`).
+  Seen and left as they are, with the reason: dates follow the iPhone's calendar (Hijri on a Saudi
+  simulator) while billing arithmetic and the age check stay Gregorian (`Calendar.billing`);
+  StoreKit's price keeps the store's digits; an amount in "ر.س." before a full stop reads "..";
+  Home's rows after the chosen day fade while a day is selected; the add-your-own placeholder is
+  cut at the largest size (what is typed wraps). New rows: Cur-1 (two retired currencies offered,
+  one current one missing), and the two below. 744 tests, 0 failures; Release builds; gold_check 0;
+  string_usage 0. Next: the export formats against the policy (the app makes CSV, PDF and JSON;
+  the policy names one and the JSON file has no test), "iPhone" said on iPad, the retired
+  currencies, then the English tour for the new count and the iPad tour.
 - Told by the other session at 22:04 (it has stood down and changed nothing): sections 2, 3, 4, 6, 7
   and 10 of the engineering audit were never done and there is no finished overlooked-details
   report. Those areas have been scanned by nobody; they are owed before Stage G can be called done.
@@ -543,6 +591,7 @@ matters to a stranger: the customer round below scores "getting in" at 1.
 | T15–19, T23, T43 | Estimates and forecasts stated as fact ("this year", "Back in your pocket", "avoided") | closed 11-11, in five languages: the promise sentences say "your cancellations are on track to keep you … over 12 months" (not "Pausely is on track to save you … this year"); "Kept with Pausely" is "Kept since you cancelled"; "paid for itself N× over" is "on track for N× what Pausely costs a year"; one sentence for an empty receipt on both screens; "How we count" says the charges are what the renewal date and price entered say would have happened; "avoided over 12 months" is "on track over 12 months"; the Pause Plan slip says "About … a year" and what it assumes; the first run says "about … a year more" |
 | T59, T66, T72–74 | "Open Cancellation Page" opens a web search for 794 of 994 names; a "pause" that pauses nothing and stops reminders; Shortcuts report wrong status | T59 closed 11-11 with T62: the button says what it opens. A known service: "Open Cancellation Page". A name the catalog lists: the catalog's own link for exactly that name, called "Open Website", with one line on where to cancel. Anything else: "Search How to Cancel" (and "&" in a name no longer cuts the search short). Seen on the simulator. T66, T72–74 closed 11-11: the "pause" set only by a Shortcut marked a subscription paused, stopped its reminders and took it out of the totals while it went on charging. It is removed: both Shortcuts, `pausedUntil`, the resume button, the paused row on Home and the reminder scheduled outside the planner. A subscription the person marks Paused themselves is still listed apart. The detail Shortcut reports the real status and no renewal for something that will not charge; the spend Shortcut says what it returns. The `paused_until` column stays in the database, unwritten, until it can be dropped by the two-step rule |
 | T96 | Pause Plan counts Audible, PlayStation Plus and Kindle as streaming | closed 11-11: eligibility is an explicit list of video streaming services by name; being filed under "Entertainment" is no longer enough. `testOnlyVideoStreamingByNameIsEligibleWhateverItsCategory` (12 that must not be, 18 that must) |
+| Cur-1 (found 11-12) | The currency list offers two currencies nobody is charged in any more and lacks one that people are: the Bulgarian lev (BGN; Bulgaria took the euro on 2026-01-01 at 1 EUR = 1.95583 BGN and the lev stopped being legal tender on 2026-02-01: evroto.bg, trade.ec.europa.eu), Sierra Leone's old leone (SLL; redenominated 1000:1 as SLE on 2022-07-01 and moved to ISO 4217's historic list: SIX amendments 171 and 172), and no SLE at all, so someone in Sierra Leone cannot choose their own money | open |
 
 ### 6.3a Open: from the overlooked-details check (each looked up in the code on the night of 11-11)
 
@@ -647,7 +696,10 @@ and limits) is O37 and nothing else was found.
 | Not rebuilt: Pause Plan, age check, policy pages, error banner and toast, demo banner (both widgets were rebuilt on 11-12: S15) | open |
 | System-wide: accent colour is iOS blue; `Motion.unlessReduced` still moves; `StateMark` does not grow; iPad column is 680 pt wide; five ways to leave a sheet; ~~Title Case and sentence case mixed~~ (done 11-12, held by a test); "iPhone" said on iPad; prices and dates not formatted in the app's language in 43 places; the serif is missing in Arabic and Japanese | open |
 | Per-file findings (colour, type, layout, Dynamic Type, right to left, VoiceOver, motion, haptics, states) in `ui.md` | open |
-| Seen in passing on 11-12: on Insights, scrolled content runs under the status bar and the clock is drawn over it | open |
+| Seen in passing on 11-12: on Insights, scrolled content runs under the status bar and the clock is drawn over it | closed 11-12: `inkScreen()` on the four tabs (E first slice) and on every other screen that draws its own top row (E fourth slice); `testAScreenWithoutANavigationBarKeepsTheStatusStripSolid` |
+| Arabic, whole tour read (11-12): untranslated rows on the edit screen and the age check, left-to-right sentences, Latin digits in sentences, a 15-point "Done", text under the clock, an unreadable footnote | closed 11-12 (E fourth slice): each held by a test; `scripts/tour_untranslated.py` prints nothing for the screens toured again. Still to do in Arabic: a whole tour on the final build for the count, and one native reader (6.7) |
+| "iPhone" said on iPad in 16 strings ("Same as iPhone", "Saved on this iPhone", "Your email never leaves your iPhone" …) and "phone" in two more | open |
+| Export: the app makes CSV, PDF and JSON; the policy names CSV only and the JSON file has no test | open |
 
 ### 6.6 Open: engineering hygiene
 

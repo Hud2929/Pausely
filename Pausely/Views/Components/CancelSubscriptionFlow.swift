@@ -29,13 +29,14 @@ struct CancelSubscriptionFlow: View {
 
     var body: some View {
         ZStack {
-            Color.ink.ignoresSafeArea()
             if cancelled && showsOutcome {
                 outcome.transition(.opacity)
             } else {
                 steps
             }
         }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .inkScreen()
         .preferredColorScheme(.dark)
         .sheet(isPresented: $isShowingSafari, onDismiss: { didOpenPage = true }) {
             if let url = help.link { SafariView(url: url).ignoresSafeArea() }
@@ -52,8 +53,7 @@ struct CancelSubscriptionFlow: View {
                             Text("Close")
                                 .font(.subheadline.weight(.semibold))
                                 .foregroundStyle(Color.inkTextMuted)
-                                .frame(minHeight: Layout.tapTarget)
-                                .contentShape(Rectangle())
+                                .tapArea(.leading)
                         }
                         Spacer()
                     }
@@ -77,7 +77,7 @@ struct CancelSubscriptionFlow: View {
                                 Text("How to cancel").font(.footnote.weight(.semibold))
                                 ForEach(Array(appleSteps.enumerated()), id: \.offset) { index, step in
                                     HStack(alignment: .firstTextBaseline, spacing: 10) {
-                                        Text(verbatim: "\(index + 1)")
+                                        Text(verbatim: L10n.number(index + 1))
                                             .font(.proof(.footnote, weight: .bold))
                                         Text(verbatim: step)
                                             .font(.footnote)

@@ -315,6 +315,13 @@ extension View {
                 .accessibilityHidden(true)
             }
     }
+
+    /// The place to tap is a fingertip in both directions, however short the word on it: "Done" in
+    /// Arabic ("تم") is 15 points wide. The words stay at the edge they were on.
+    func tapArea(_ alignment: Alignment = .center) -> some View {
+        frame(minWidth: Layout.tapTarget, minHeight: Layout.tapTarget, alignment: alignment)
+            .contentShape(Rectangle())
+    }
 }
 
 /// A hairline between rows, in place of a card per row.

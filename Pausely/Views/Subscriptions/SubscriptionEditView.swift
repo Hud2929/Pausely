@@ -219,7 +219,7 @@ struct SubscriptionEditView: View {
                 } label: {
                     valueLabel(SubscriptionCategory.localizedLabel(for: draft.category))
                 }
-                .accessibilityLabel("Category, \(SubscriptionCategory.label(for: draft.category))")
+                .accessibilityLabel("Category, \(SubscriptionCategory.localizedLabel(for: draft.category))")
             }
 
             divider
@@ -263,7 +263,7 @@ struct SubscriptionEditView: View {
 
     // MARK: - Pieces
 
-    private func row<Content: View>(_ title: String, @ViewBuilder content: () -> Content) -> some View {
+    private func row<Content: View>(_ title: LocalizedStringKey, @ViewBuilder content: () -> Content) -> some View {
         AdaptiveRow {
             Text(title)
                 .font(.body)

@@ -29,7 +29,6 @@ struct RenewalVerdictView: View {
 
     var body: some View {
         ZStack {
-            Color.ink.ignoresSafeArea()
             if let sub = subscription {
                 if let outcome {
                     outcomeView(outcome, sub)
@@ -51,6 +50,8 @@ struct RenewalVerdictView: View {
                 .padding(.horizontal, Layout.margin)
             }
         }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .inkScreen()
         .preferredColorScheme(.dark)
         .sheet(isPresented: $showCancelFlow) {
             if let sub = subscription { CancelSubscriptionFlow(subscription: sub, showsOutcome: false) }
@@ -81,8 +82,7 @@ struct RenewalVerdictView: View {
                 Text("Close")
                     .font(.subheadline.weight(.semibold))
                     .foregroundStyle(Color.inkTextMuted)
-                    .frame(minHeight: Layout.tapTarget)
-                    .contentShape(Rectangle())
+                    .tapArea(.leading)
             }
             .accessibilityIdentifier("verdictCloseButton")
             Spacer()

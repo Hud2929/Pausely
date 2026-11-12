@@ -30,15 +30,15 @@ struct AddSubscriptionView: View {
                             Text("Cancel")
                                 .font(.subheadline.weight(.semibold))
                                 .foregroundStyle(Color.inkTextMuted)
-                                .frame(minHeight: Layout.tapTarget)
-                                .contentShape(Rectangle())
+                                .tapArea(.leading)
                         }
                         .accessibilityIdentifier("cancelButton")
                         Spacer()
                     }
                     .padding(.bottom, -12)
 
-                    TextField("Netflix, Spotify…", text: $name)
+                    TextField("Netflix, Spotify…", text: $name, axis: .vertical)
+                        .lineLimit(1...3)
                         .font(.question(.title))
                         .foregroundStyle(Color.inkText)
                         .textInputAutocapitalization(.words)
@@ -112,7 +112,7 @@ struct AddSubscriptionView: View {
                 .padding(.bottom, 8)
                 .background(Color.ink)
         }
-        .background(Color.ink.ignoresSafeArea())
+        .inkScreen()
         .preferredColorScheme(.dark)
         .onAppear { focusedField = .name }
         .sheet(isPresented: $showingPaywall) {

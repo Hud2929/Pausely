@@ -17,8 +17,7 @@ struct SavingsReceiptView: View {
                         Text("Done")
                             .font(.subheadline.weight(.semibold))
                             .foregroundStyle(Color.inkTextMuted)
-                            .frame(minHeight: Layout.tapTarget)
-                            .contentShape(Rectangle())
+                            .tapArea(.leading)
                     }
                     Spacer()
                     if !summary.isEmpty { shareMenu(summary) }
@@ -42,7 +41,7 @@ struct SavingsReceiptView: View {
             .padding(.top, 8)
             .padding(.bottom, 40)
         }
-        .background(Color.ink.ignoresSafeArea())
+        .inkScreen()
         .preferredColorScheme(.dark)
     }
 
