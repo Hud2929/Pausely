@@ -105,6 +105,51 @@ final class OneLocaleTests: XCTestCase {
         XCTAssertEqual(subscriptions(3), "3件のサブスク")
     }
 
+    /// German addresses the reader one way throughout: formally. It used to say "du" on some screens and
+    /// "Sie" on others, sometimes in the same flow.
+    func testGermanAddressesTheReaderOneWay() throws {
+        let root = URL(fileURLWithPath: #filePath)
+            .deletingLastPathComponent().deletingLastPathComponent().deletingLastPathComponent()
+        var informal: [String] = []
+        for path in ["Pausely/Localizable.xcstrings", "PauselyWidget/Localizable.xcstrings", "Pausely/AppShortcuts.xcstrings"] {
+            let url = root.appendingPathComponent(path)
+            try XCTSkipUnless(FileManager.default.fileExists(atPath: url.path), "Sources aren't readable from this test run")
+            let catalog = try XCTUnwrap(JSONSerialization.jsonObject(with: Data(contentsOf: url)) as? [String: Any])
+            let strings = try XCTUnwrap(catalog["strings"] as? [String: [String: Any]])
+            for (_, entry) in strings {
+                guard let german = (entry["localizations"] as? [String: Any])?["de"] as? [String: Any] else { continue }
+                var texts: [String] = []
+                if let unit = german["stringUnit"] as? [String: Any], let value = unit["value"] as? String { texts.append(value) }
+                if let forms = (german["variations"] as? [String: Any])?["plural"] as? [String: [String: Any]] {
+                    texts += forms.values.compactMap { ($0["stringUnit"] as? [String: Any])?["value"] as? String }
+                }
+                informal += texts.filter {
+                    $0.range(of: #"\b(du|dich|dir|dein|deine|deinen|deiner|deinem|deines)\b"#, options: [.regularExpression, .caseInsensitive]) != nil
+                }
+                // A command needs no pronoun to be informal ("Tippe auf …"). These are the forms a
+                // translator reaches for; the formal ones end in "-en Sie".
+                informal += texts.filter { text in
+                    text.components(separatedBy: CharacterSet(charactersIn: ".!?:\n")).contains { sentence in
+                        sentence.trimmingCharacters(in: .whitespaces)
+                            .range(of: Self.informalGermanCommand, options: .regularExpression) != nil
+                    }
+                }
+            }
+        }
+        XCTAssertEqual(informal.sorted(), [])
+        // The rule itself: it must catch the informal command and let the formal one through.
+        XCTAssertNotNil("Tippe auf %@".range(of: Self.informalGermanCommand, options: .regularExpression))
+        XCTAssertNil("Tippen Sie auf %@".range(of: Self.informalGermanCommand, options: .regularExpression))
+        XCTAssertNil("Suche läuft".range(of: Self.informalGermanCommand, options: .regularExpression), "a noun, not a command")
+    }
+
+    /// A sentence that opens with the "du" form of a command, not followed by "Sie". Words that are also
+    /// nouns ("Suche", "Teile", "Stelle") are left out: a heading may open with them.
+    private static let informalGermanCommand = "^(Tippe|Füge|Wähle|Gib|Öffne|Prüfe|Kündige|Behalte|Schau|Schaue|Sieh|Lies|Melde|Erstelle"
+        + "|Verbinde|Aktiviere|Lass|Versuch|Versuche|Geh|Gehe|Nimm|Trag|Trage|Starte|Entscheide|Bestätige|Ändere|Setze"
+        + "|Zeig|Zeige|Lösche|Entferne|Schalte|Erlaube|Warte|Hol|Hole|Schreib|Schreibe|Sende|Fordere|Nutze"
+        + "|Verwende|Mach|Mache|Lege|Finde|Halte|Scrolle|Ziehe|Wische|Drücke|Klicke) (?!Sie\\b)"
+
     /// No date, duration or number is formatted without saying in which locale, no language is turned
     /// into a locale by its code alone, and no day phrase is put together by hand.
     func testNothingIsFormattedInAnotherLocale() throws {

@@ -6396,7 +6396,7 @@
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Nach der kostenlosen Testphase werden %@ berechnet, sofern du nicht mindestens 24 Stunden vor Ende der Testphase kündigst."
+            "value": "Nach der kostenlosen Testphase werden %@ berechnet, sofern Sie nicht mindestens 24 Stunden vor Ende der Testphase kündigen."
           }
         },
         "es": {
@@ -8923,7 +8923,7 @@
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Sieh, welche Abos bald verlängert werden."
+            "value": "Zeigt, welche Abos bald verlängert werden."
           }
         },
         "es": {
@@ -15314,7 +15314,7 @@
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Was glaubst du, zahlst du jeden Monat für Abos?"
+            "value": "Was glauben Sie, zahlen Sie jeden Monat für Abos?"
           }
         },
         "es": {
@@ -15382,7 +15382,7 @@
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Deine Schätzung"
+            "value": "Ihre Schätzung"
           }
         },
         "es": {
@@ -15450,7 +15450,7 @@
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Tippe jetzt alles an, wofür du zahlst."
+            "value": "Tippen Sie jetzt alles an, wofür Sie zahlen."
           }
         },
         "es": {
@@ -15484,7 +15484,7 @@
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Was fehlt, kannst du danach hinzufügen."
+            "value": "Was fehlt, können Sie danach hinzufügen."
           }
         },
         "es": {
@@ -15518,7 +15518,7 @@
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Auf deinem Beleg"
+            "value": "Auf Ihrem Beleg"
           }
         },
         "es": {
@@ -15552,7 +15552,7 @@
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Zeig mir die Summe"
+            "value": "Summe anzeigen"
           }
         },
         "es": {
@@ -15586,7 +15586,7 @@
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Dein Beleg ist leer. Tippe das Erste an, wofür du zahlst."
+            "value": "Ihr Beleg ist leer. Tippen Sie das Erste an, wofür Sie zahlen."
           }
         },
         "es": {
@@ -15688,7 +15688,7 @@
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Als Nächstes: ein kostenloses Konto, damit deine Liste gespeichert wird."
+            "value": "Als Nächstes: ein kostenloses Konto, damit Ihre Liste gespeichert wird."
           }
         },
         "es": {
@@ -15892,7 +15892,7 @@
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Das sind übliche Preise. Tippe eine Zeile an, um einzutragen, was du wirklich zahlst."
+            "value": "Das sind übliche Preise. Tippen Sie eine Zeile an, um einzutragen, was Sie wirklich zahlen."
           }
         },
         "es": {
@@ -15926,7 +15926,7 @@
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Du hast %1$@ geschätzt. Es sind etwa %2$@ im Monat."
+            "value": "Sie haben %1$@ geschätzt. Es sind etwa %2$@ im Monat."
           }
         },
         "es": {
@@ -15960,7 +15960,7 @@
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Du hast %1$@ geschätzt. Es sind %2$@ im Monat."
+            "value": "Sie haben %1$@ geschätzt. Es sind %2$@ im Monat."
           }
         },
         "es": {
@@ -16096,7 +16096,7 @@
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Was zahlst du jeden Monat für %@?"
+            "value": "Was zahlen Sie jeden Monat für %@?"
           }
         },
         "es": {
@@ -16164,7 +16164,7 @@
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Deine Abos kosten etwa %@ im Jahr."
+            "value": "Ihre Abos kosten etwa %@ im Jahr."
           }
         },
         "es": {
@@ -16430,7 +16430,7 @@
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Du hast Pausely Pro"
+            "value": "Sie haben Pausely Pro"
           }
         },
         "es": {
@@ -16464,7 +16464,7 @@
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "App Store nicht erreichbar. Tippe, um es erneut zu versuchen."
+            "value": "App Store nicht erreichbar. Tippen Sie, um es erneut zu versuchen."
           }
         },
         "es": {
@@ -16764,7 +16764,7 @@
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Trag das Datum ein, dann fragt Pausely vor der Abbuchung."
+            "value": "Tragen Sie das Datum ein, dann fragt Pausely vor der Abbuchung."
           }
         },
         "es": {
@@ -16900,7 +16900,7 @@
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Öffnet deinen Sparbeleg"
+            "value": "Öffnet Ihren Sparbeleg"
           }
         },
         "es": {
@@ -17070,7 +17070,7 @@
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Noch nichts auf deiner Liste."
+            "value": "Noch nichts auf Ihrer Liste."
           }
         },
         "es": {
@@ -17104,7 +17104,7 @@
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Trag ein, wofür du zahlst. Pausely fragt vor jeder Verlängerung, ob es sich noch lohnt."
+            "value": "Tragen Sie ein, wofür Sie zahlen. Pausely fragt vor jeder Verlängerung, ob es sich noch lohnt."
           }
         },
         "es": {
@@ -17546,7 +17546,7 @@
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Was zahlst du pro Jahr?"
+            "value": "Was zahlen Sie pro Jahr?"
           }
         },
         "es": {
@@ -17580,7 +17580,7 @@
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Was zahlst du pro Monat?"
+            "value": "Was zahlen Sie pro Monat?"
           }
         },
         "es": {
@@ -17614,7 +17614,7 @@
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Das ist ein üblicher Preis. Überschreibe ihn, wenn du etwas anderes zahlst."
+            "value": "Das ist ein üblicher Preis. Überschreiben Sie ihn, wenn Sie etwas anderes zahlen."
           }
         },
         "es": {
@@ -17784,7 +17784,7 @@
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Trag ein, wofür du zahlst, und diese Seite zeigt, was am meisten kostet und was teurer wurde."
+            "value": "Tragen Sie ein, wofür Sie zahlen, und diese Seite zeigt, was am meisten kostet und was teurer wurde."
           }
         },
         "es": {
@@ -17818,7 +17818,7 @@
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Dein Jahr in Abos"
+            "value": "Ihr Jahr in Abos"
           }
         },
         "es": {
@@ -18022,7 +18022,7 @@
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Pausely ist jetzt Tinte und Papier: Deine Entscheidungen und Ersparnisse stehen auf Belegen."
+            "value": "Pausely ist jetzt Tinte und Papier: Ihre Entscheidungen und Ersparnisse stehen auf Belegen."
           }
         },
         "es": {
@@ -18158,7 +18158,7 @@
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Behalten stempelt ihn. Kündigen reißt ihn ab und setzt ihn auf deinen Sparbeleg."
+            "value": "Behalten stempelt ihn. Kündigen reißt ihn ab und setzt ihn auf Ihren Sparbeleg."
           }
         },
         "es": {
@@ -18260,7 +18260,7 @@
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Pausely fragt dich vor jedem dieser Tage, ob du es behältst. Das Datum steht auf deinem Kontoauszug oder in deinem Konto beim Dienst. Überspringe, was du nicht weißt."
+            "value": "Pausely fragt Sie vor jedem dieser Tage, ob Sie es behalten. Das Datum steht auf Ihrem Kontoauszug oder in Ihrem Konto beim Dienst. Überspringen Sie, was Sie nicht wissen."
           }
         },
         "es": {
@@ -18526,7 +18526,7 @@
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Wie viel nutzt du %@?"
+            "value": "Wie viel nutzen Sie %@?"
           }
         },
         "es": {
@@ -18560,7 +18560,7 @@
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Das trägst du selbst ein. Pausely liest deine Bildschirmzeit nicht."
+            "value": "Das tragen Sie selbst ein. Pausely liest Ihre Bildschirmzeit nicht."
           }
         },
         "es": {
@@ -18764,7 +18764,7 @@
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Was zahlst du jedes Mal?"
+            "value": "Was zahlen Sie jedes Mal?"
           }
         },
         "es": {
@@ -19988,7 +19988,7 @@
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Kein Code in der E-Mail? Tippe stattdessen auf diesem iPhone auf den Link darin."
+            "value": "Kein Code in der E-Mail? Tippen Sie stattdessen auf diesem iPhone auf den Link darin."
           }
         },
         "es": {
@@ -20022,7 +20022,7 @@
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Pausely ist nicht erreichbar. Prüfe deine Verbindung und versuche es erneut."
+            "value": "Pausely ist nicht erreichbar. Prüfen Sie Ihre Verbindung und versuchen Sie es erneut."
           }
         },
         "es": {
@@ -20056,7 +20056,7 @@
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Dieser Code hat nicht funktioniert. Prüfe ihn oder sende einen neuen."
+            "value": "Dieser Code hat nicht funktioniert. Prüfen Sie ihn oder lassen Sie sich einen neuen senden."
           }
         },
         "es": {
@@ -20090,7 +20090,7 @@
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Das war zu kurz nach der letzten E-Mail. Warte eine Minute und versuche es erneut."
+            "value": "Das war zu kurz nach der letzten E-Mail. Warten Sie eine Minute und versuchen Sie es erneut."
           }
         },
         "es": {
@@ -20124,7 +20124,7 @@
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Diese E-Mail-Adresse sieht nicht richtig aus. Prüfe sie und versuche es erneut."
+            "value": "Diese E-Mail-Adresse sieht nicht richtig aus. Prüfen Sie sie und versuchen Sie es erneut."
           }
         },
         "es": {
@@ -20158,7 +20158,7 @@
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Wir konnten die E-Mail nicht senden. Das Problem liegt bei uns. Versuche es in ein paar Minuten erneut."
+            "value": "Wir konnten die E-Mail nicht senden. Das Problem liegt bei uns. Versuchen Sie es in ein paar Minuten erneut."
           }
         },
         "es": {
@@ -20192,7 +20192,7 @@
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Gib den Code aus unserer E-Mail ein"
+            "value": "Geben Sie den Code aus unserer E-Mail ein"
           }
         },
         "es": {
@@ -20294,7 +20294,7 @@
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Gib die E-Mail-Adresse ein, mit der du dich registriert hast. Wir senden dir einen Code, um zu bestätigen, dass du es bist."
+            "value": "Geben Sie die E-Mail-Adresse ein, mit der Sie sich registriert haben. Wir senden Ihnen einen Code, um zu bestätigen, dass Sie es sind."
           }
         },
         "es": {
@@ -20498,7 +20498,7 @@
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Dieses Passwort hat das Konto bereits. Wähle ein anderes."
+            "value": "Dieses Passwort hat das Konto bereits. Wählen Sie ein anderes."
           }
         },
         "es": {
@@ -20532,7 +20532,7 @@
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Das Passwort konnte nicht gespeichert werden. Prüfe deine Verbindung und versuche es erneut."
+            "value": "Das Passwort konnte nicht gespeichert werden. Prüfen Sie Ihre Verbindung und versuchen Sie es erneut."
           }
         },
         "es": {
@@ -20566,7 +20566,7 @@
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Dieser Link ist abgelaufen oder wurde schon verwendet. Fordere einen neuen an."
+            "value": "Dieser Link ist abgelaufen oder wurde schon verwendet. Fordern Sie einen neuen an."
           }
         },
         "es": {
@@ -20600,7 +20600,7 @@
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Diese E-Mail-Adresse wurde noch nicht bestätigt. Erstelle das Konto erneut, um einen neuen Code zu erhalten."
+            "value": "Diese E-Mail-Adresse wurde noch nicht bestätigt. Erstellen Sie das Konto erneut, um einen neuen Code zu erhalten."
           }
         },
         "es": {
@@ -20634,7 +20634,7 @@
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Diese E-Mail-Adresse und dieses Passwort passen zu keinem Konto. Prüfe sie oder setze dein Passwort zurück."
+            "value": "Diese E-Mail-Adresse und dieses Passwort passen zu keinem Konto. Prüfen Sie beides oder setzen Sie Ihr Passwort zurück."
           }
         },
         "es": {
@@ -20668,7 +20668,7 @@
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Bestätige dein Alter, bevor du ein Konto erstellst."
+            "value": "Bestätigen Sie Ihr Alter, bevor Sie ein Konto erstellen."
           }
         },
         "es": {
@@ -20702,7 +20702,7 @@
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Die Anmeldung mit Apple wurde nicht abgeschlossen. Versuche es erneut."
+            "value": "Die Anmeldung mit Apple wurde nicht abgeschlossen. Versuchen Sie es erneut."
           }
         },
         "es": {
@@ -20770,7 +20770,7 @@
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Deine Liste wird in deinem Konto gespeichert und ist auch nach einem Handywechsel noch da."
+            "value": "Ihre Liste wird in Ihrem Konto gespeichert und ist auch nach einem Handywechsel noch da."
           }
         },
         "es": {
@@ -20872,7 +20872,7 @@
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Mit dem Erstellen eines Kontos stimmst du den [Nutzungsbedingungen](pausely-legal:terms) und der [Datenschutzerklärung](pausely-legal:privacy) zu."
+            "value": "Mit dem Erstellen eines Kontos stimmen Sie den [Nutzungsbedingungen](pausely-legal:terms) und der [Datenschutzerklärung](pausely-legal:privacy) zu."
           }
         },
         "es": {
@@ -20906,7 +20906,7 @@
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Dein Passwort"
+            "value": "Ihr Passwort"
           }
         },
         "es": {
@@ -21212,7 +21212,7 @@
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Pausely verbindet sich direkt mit deinem E-Mail-Anbieter, liest Belege auf diesem iPhone und behält nur Name, Betrag und Datum jeder Abbuchung. Es liest nur: Es sendet, ändert oder löscht nie E-Mails."
+            "value": "Pausely verbindet sich direkt mit Ihrem E-Mail-Anbieter, liest Belege auf diesem iPhone und behält nur Name, Betrag und Datum jeder Abbuchung. Es liest nur: Es sendet, ändert oder löscht nie E-Mails."
           }
         },
         "es": {
@@ -21246,7 +21246,7 @@
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Deine E-Mails werden durchsucht"
+            "value": "Ihre E-Mails werden durchsucht"
           }
         },
         "es": {
@@ -21450,7 +21450,7 @@
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Geprüfte E-Mails: %lld. Belege gehen vielleicht an eine andere Adresse: Füge auch dieses Postfach hinzu."
+            "value": "Geprüfte E-Mails: %lld. Belege gehen vielleicht an eine andere Adresse: Fügen Sie auch dieses Postfach hinzu."
           }
         },
         "es": {
@@ -21518,7 +21518,7 @@
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Deine Belege zeigen, dass diese sich verlängern"
+            "value": "Ihre Belege zeigen, dass diese sich verlängern"
           }
         },
         "es": {
@@ -21552,7 +21552,7 @@
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Prüfe diese, bevor du sie hinzufügst"
+            "value": "Prüfen Sie diese, bevor Sie sie hinzufügen"
           }
         },
         "es": {
@@ -21756,7 +21756,7 @@
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "%@ ist auf deiner Liste"
+            "value": "%@ ist auf Ihrer Liste"
           }
         },
         "es": {
@@ -21790,7 +21790,7 @@
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "%lld zu deiner Liste hinzugefügt"
+            "value": "%lld zu Ihrer Liste hinzugefügt"
           }
         },
         "es": {
@@ -21824,7 +21824,7 @@
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Bereits auf deiner Liste: %lld."
+            "value": "Bereits auf Ihrer Liste: %lld."
           }
         },
         "es": {
@@ -21858,7 +21858,7 @@
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Bereits auf deiner Liste: %lld. Fehlende Verlängerungsdaten wurden aus deinen Belegen ergänzt."
+            "value": "Bereits auf Ihrer Liste: %lld. Fehlende Verlängerungsdaten wurden aus Ihren Belegen ergänzt."
           }
         },
         "es": {
@@ -22028,7 +22028,7 @@
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Pausely liest nur. Es öffnet dein Postfach schreibgeschützt und markiert nie etwas als gelesen. Das App-Passwort bleibt im Schlüsselbund dieses iPhones; du kannst es jederzeit bei deinem Anbieter entfernen."
+            "value": "Pausely liest nur. Es öffnet Ihr Postfach schreibgeschützt und markiert nie etwas als gelesen. Das App-Passwort bleibt im Schlüsselbund dieses iPhones; Sie können es jederzeit bei Ihrem Anbieter entfernen."
           }
         },
         "es": {
@@ -22130,7 +22130,7 @@
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Du brauchst ein App-Passwort: ein eigenes Passwort nur für Pausely, damit dein Hauptpasswort privat bleibt."
+            "value": "Sie brauchen ein App-Passwort: ein eigenes Passwort nur für Pausely, damit Ihr Hauptpasswort privat bleibt."
           }
         },
         "es": {
@@ -22300,7 +22300,7 @@
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Für jedes siehst du jetzt die nächste Abbuchung auf der Startseite."
+            "value": "Für jedes sehen Sie jetzt die nächste Abbuchung auf der Startseite."
           }
         },
         "es": {
@@ -22334,7 +22334,7 @@
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Pausely liest deine Belege auf diesem iPhone"
+            "value": "Pausely liest Ihre Belege auf diesem iPhone"
           }
         },
         "es": {
@@ -22368,7 +22368,7 @@
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Eine Datei mit deinen Abos, die du überall speichern oder versenden kannst."
+            "value": "Eine Datei mit Ihren Abos, die Sie überall speichern oder versenden können."
           }
         },
         "es": {
@@ -22436,7 +22436,7 @@
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Vor jeder Verlängerung, damit du behalten oder kündigen kannst"
+            "value": "Vor jeder Verlängerung, damit Sie behalten oder kündigen können"
           }
         },
         "es": {
@@ -22504,7 +22504,7 @@
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Prüfe deine Verbindung und versuche es erneut. Wenn es weiter fehlschlägt, schreibe an %@ und wir löschen es innerhalb von 30 Tagen."
+            "value": "Prüfen Sie Ihre Verbindung und versuchen Sie es erneut. Wenn es weiter fehlschlägt, schreiben Sie an %@, und wir löschen es innerhalb von 30 Tagen."
           }
         },
         "es": {
@@ -22674,7 +22674,7 @@
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Schreib uns"
+            "value": "Schreiben Sie uns"
           }
         },
         "es": {
@@ -23212,7 +23212,7 @@
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Nichts auf deiner Liste passt zu dieser Auswahl."
+            "value": "Nichts auf Ihrer Liste passt zu dieser Auswahl."
           }
         },
         "es": {
@@ -23246,7 +23246,7 @@
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Öffne Profil und dann Währung. Die Summen ändern sich; jedes Abo behält die Währung, in der es abgebucht wird."
+            "value": "Öffnen Sie Profil und dann Währung. Die Summen ändern sich; jedes Abo behält die Währung, in der es abgebucht wird."
           }
         },
         "es": {
@@ -23280,7 +23280,7 @@
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Öffne es und tippe auf „Abo kündigen“. Pausely zeigt die Schritte und öffnet die Kündigungsseite des Dienstes; gekündigt wird immer beim Dienst selbst. Tippe danach auf „Ich habe gekündigt“, damit es in deinen Sparbeleg wandert."
+            "value": "Öffnen Sie es und tippen Sie auf „Abo kündigen“. Pausely zeigt die Schritte und öffnet die Kündigungsseite des Dienstes; gekündigt wird immer beim Dienst selbst. Tippen Sie danach auf „Ich habe gekündigt“, damit es in Ihren Sparbeleg wandert."
           }
         },
         "es": {
@@ -23314,7 +23314,7 @@
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Pausely Pro wird über Apple abgerechnet. Öffne die Einstellungen deines iPhones, tippe auf deinen Namen, dann auf Abonnements und wähle Pausely Pro."
+            "value": "Pausely Pro wird über Apple abgerechnet. Öffnen Sie die Einstellungen Ihres iPhones, tippen Sie auf Ihren Namen, dann auf Abonnements und wählen Sie Pausely Pro."
           }
         },
         "es": {
@@ -23348,7 +23348,7 @@
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Pausely enthält keine Werbe- oder Tracking-SDKs und verkauft deine Daten nie."
+            "value": "Pausely enthält keine Werbe- oder Tracking-SDKs und verkauft Ihre Daten nie."
           }
         },
         "es": {
@@ -23688,7 +23688,7 @@
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Tippe auf der Startseite auf +, suche den Dienst oder wähle „Eigenes“, und gib dann ein, was du zahlst und wann es sich verlängert."
+            "value": "Tippen Sie auf der Startseite auf +, suchen Sie den Dienst oder wählen Sie „Eigenes“, und geben Sie dann ein, was Sie zahlen und wann es sich verlängert."
           }
         },
         "es": {
@@ -23790,7 +23790,7 @@
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Die Datei konnte nicht erstellt werden. Versuche es erneut."
+            "value": "Die Datei konnte nicht erstellt werden. Versuchen Sie es erneut."
           }
         },
         "es": {
@@ -23892,7 +23892,7 @@
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Dein Konto"
+            "value": "Ihr Konto"
           }
         },
         "es": {
@@ -23926,7 +23926,7 @@
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Deine Daten"
+            "value": "Ihre Daten"
           }
         },
         "es": {
@@ -23960,7 +23960,7 @@
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Deine Abo-Liste"
+            "value": "Ihre Abo-Liste"
           }
         },
         "es": {
@@ -23994,7 +23994,7 @@
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Deine Abos werden in deinem Konto gespeichert und über verschlüsselte Verbindungen übertragen. Wir verkaufen deine Daten nie. Details stehen in der Datenschutzerklärung."
+            "value": "Ihre Abos werden in Ihrem Konto gespeichert und über verschlüsselte Verbindungen übertragen. Wir verkaufen Ihre Daten nie. Details stehen in der Datenschutzerklärung."
           }
         },
         "es": {
@@ -24096,7 +24096,7 @@
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Noch keine Preisänderungen. Wenn du änderst, was %@ kostet, werden der alte und der neue Preis hier festgehalten."
+            "value": "Noch keine Preisänderungen. Wenn Sie ändern, was %@ kostet, werden der alte und der neue Preis hier festgehalten."
           }
         },
         "es": {
@@ -24232,7 +24232,7 @@
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Wie lange hast du %@ diesen Monat genutzt?"
+            "value": "Wie lange haben Sie %@ diesen Monat genutzt?"
           }
         },
         "es": {
@@ -24300,7 +24300,7 @@
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Kündige bis zum %@ in den Einstellungen und du zahlst nichts."
+            "value": "Kündigen Sie bis zum %@ in den Einstellungen, und Sie zahlen nichts."
           }
         },
         "es": {
@@ -24334,7 +24334,7 @@
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Verlängert sich automatisch. Zum Kündigen öffne die Einstellungen, tippe auf deinen Namen und dann auf Abonnements."
+            "value": "Verlängert sich automatisch. Zum Kündigen öffnen Sie die Einstellungen, tippen Sie auf Ihren Namen und dann auf Abonnements."
           }
         },
         "es": {
@@ -24504,7 +24504,7 @@
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Der App Store konnte diesen Kauf nicht bestätigen. Falls dir etwas berechnet wurde, tippe auf „Käufe wiederherstellen“."
+            "value": "Der App Store konnte diesen Kauf nicht bestätigen. Falls Ihnen etwas berechnet wurde, tippen Sie auf „Käufe wiederherstellen“."
           }
         },
         "es": {
@@ -24572,7 +24572,7 @@
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Der App Store hat ihn nicht abgeschlossen. Prüfe deine Verbindung und versuche es erneut."
+            "value": "Der App Store hat ihn nicht abgeschlossen. Prüfen Sie Ihre Verbindung und versuchen Sie es erneut."
           }
         },
         "es": {
@@ -24708,7 +24708,7 @@
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Der App Store war nicht erreichbar. Versuche es gleich noch einmal."
+            "value": "Der App Store war nicht erreichbar. Versuchen Sie es gleich noch einmal."
           }
         },
         "es": {
@@ -25150,7 +25150,7 @@
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Das sind etwa %@ im Jahr mehr, als du dachtest."
+            "value": "Das sind etwa %@ im Jahr mehr, als Sie dachten."
           }
         },
         "es": {
@@ -25218,7 +25218,7 @@
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Öffne die Einstellungen und tippe auf deinen Namen."
+            "value": "Öffnen Sie die Einstellungen und tippen Sie auf Ihren Namen."
           }
         },
         "es": {
@@ -25252,7 +25252,7 @@
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Tippe auf „Abonnements“."
+            "value": "Tippen Sie auf „Abonnements“."
           }
         },
         "es": {
@@ -25286,7 +25286,7 @@
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Tippe auf %@."
+            "value": "Tippen Sie auf %@."
           }
         },
         "es": {
@@ -25320,7 +25320,7 @@
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Tippe auf „Abo kündigen“. Eventuell musst du dafür nach unten scrollen."
+            "value": "Tippen Sie auf „Abo kündigen“. Eventuell müssen Sie dafür nach unten scrollen."
           }
         },
         "es": {
@@ -25388,7 +25388,7 @@
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Deine Abos öffnen"
+            "value": "Ihre Abos öffnen"
           }
         },
         "es": {
@@ -25422,7 +25422,7 @@
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Gekündigt wird auf der Website von %@: Melde dich an und sieh unter Konto oder Abrechnung nach."
+            "value": "Gekündigt wird auf der Website von %@: Melden Sie sich an und sehen Sie unter Konto oder Abrechnung nach."
           }
         },
         "es": {
@@ -27435,6 +27435,74 @@
           "stringUnit": {
             "state": "translated",
             "value": "解約で節約できた金額を正確に"
+          }
+        }
+      }
+    },
+    "Your subscriptions": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "اشتراكاتك"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ihre Abos"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tus suscripciones"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Vos abonnements"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "あなたのサブスク"
+          }
+        }
+      }
+    },
+    "Status": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "الحالة"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Status"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Estado"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Statut"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "状態"
           }
         }
       }
