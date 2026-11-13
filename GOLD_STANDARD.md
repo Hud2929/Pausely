@@ -728,6 +728,13 @@ Updated at every commit, so the work can be picked up from this file alone.
      the same layout. The iPhone tour was running beside the two that failed. The new
      assertions in `testFirstLaunch` settle it: run it on iPad alone (`/tmp/pausely_fix_ipad4`
      was started and had no result yet).
+     *Result, after this was written:* `/tmp/pausely_fix_ipad4` passed on iPad with the one-page
+     guess step and the new assertions (guess, tally, total, account: four captures, not yet
+     opened), with the iPhone tour still running beside it; `ScreenRulesTests` 30 of 30 there.
+     That build was taken before the last wordmark edit (mark beside the first line, "Pausely
+     2026" breaking at its space, and the assertions for it), so that edit is still unbuilt.
+     Whether the old layout or the load dropped the tap is not known; the walk now fails if it
+     happens again.
   3. *Not started:* inbox results at accessibility sizes: the pinned bar (free-limit note plus
      a two-line button) leaves a sliver of the list (`InboxImportView.addBar`); the note
      belongs under the heading there and the bar keeps only the button.
