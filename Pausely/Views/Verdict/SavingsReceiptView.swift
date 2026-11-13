@@ -135,7 +135,7 @@ struct ReceiptRoll: View {
         VStack(alignment: .leading, spacing: 4) {
             ProofLine(label: line.name, value: amount(summary.formatted(line.savedSoFar, from: line.currency)),
                       emphasised: true)
-            Text(L10n.string("Cancelled \(line.cancelledOn.formatted(.dateTime.month(.abbreviated).day().year().locale(L10n.locale))) · \(line.avoidedSoFar.count) of \(line.avoidedCharges.count) charges avoided so far"))
+            Facts(L10n.string("Cancelled \(line.cancelledOn.formatted(.dateTime.month(.abbreviated).day().year().locale(L10n.locale))) · \(line.avoidedSoFar.count) of \(line.avoidedCharges.count) charges avoided so far"))
                 .font(.proof(.caption))
                 .foregroundStyle(Color.paperMuted)
                 .fixedSize(horizontal: false, vertical: true)

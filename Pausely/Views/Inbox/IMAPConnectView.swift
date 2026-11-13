@@ -109,18 +109,22 @@ struct IMAPConnectView: View {
                         .font(.proof(.subheadline, weight: .semibold))
                         .foregroundStyle(Color.inkText)
                         .frame(minWidth: 16, alignment: .leading)
-                    Text(verbatim: step)
+                    // An address in a step is never hyphenated: the person types it as written.
+                    Text(verbatim: AddressText.inSentence(step))
                         .font(.subheadline)
                         .foregroundStyle(Color.inkTextMuted)
                         .fixedSize(horizontal: false, vertical: true)
+                        .accessibilityLabel(Text(verbatim: step))
                 }
                 .accessibilityElement(children: .combine)
             }
             if let page = preset.passwordPage {
+                let name = Self.pageName(page)
                 Button(action: { openURL(page) }) {
-                    Label("Open \(Self.pageName(page) ?? preset.name)", systemImage: "arrow.up.forward")
+                    Label("Open \(name.map(AddressText.breakable) ?? preset.name)", systemImage: "arrow.up.forward")
                 }
                 .buttonStyle(.ink(.quiet))
+                .accessibilityLabel(Text("Open \(name ?? preset.name)"))
                 .accessibilityIdentifier("imapOpenPasswordPage")
             }
         }

@@ -54,6 +54,8 @@ user; nothing reaches the server). `--reset-state` (UI tests) starts signed out 
 `--demo-dates`, `--demo-waiting`, `--demo-guess=N`. `PauselyUITests/ScreenTourTests` captures every screen
 and state when `TEST_RUNNER_PAUSELY_TOUR_DIR` is set (`TEST_RUNNER_PAUSELY_TOUR_VARIANT=ar|de|es|fr|ja|big|xxxl`,
 `TEST_RUNNER_PAUSELY_TOUR_AUDIT=1` for Apple's accessibility audit, `TEST_RUNNER_PAUSELY_TOUR_ONLY=a,b` for a few).
+A step the tour could not take (a button it never reached) is listed in `tour_misses.txt` in the tour folder: the capture
+under that state's name is then of the screen before it.
 Don't use `ViewThatFits` (the audit reports its text as unable to grow; `LineOrStack` does the same with one copy).
 
 ## Architecture

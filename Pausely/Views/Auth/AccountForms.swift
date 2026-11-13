@@ -236,12 +236,8 @@ struct SignUpView: View {
                 )
                 .readableWidth()
             }
-            .onAppear {
-                // Age is confirmed BEFORE any account can be created. (A capture of the form
-                // itself, `--demo-auth=signup`, opens on the form; creating an account from it
-                // still asks first. Launch arguments do not exist in a release build.)
-                if !ageConsent.hasPassedDeviceGate, LaunchFlag.value(of: "--demo-auth") == nil { showAgeGate = true }
-            }
+            // Age is confirmed BEFORE any account can be created: `SignUpDoor` asks before this
+            // form opens, and `createAccount` asks again if it has somehow not been answered.
             .onChange(of: authManager.isAuthenticated) { _, signedIn in
                 if signedIn { dismiss() }
             }

@@ -18,6 +18,12 @@ struct DashboardView: View {
     @State private var showingInbox = false
     @State private var showsYear = false
     @ScaledMetric(relativeTo: .largeTitle) private var numberSize: CGFloat = 52
+    @Environment(\.dynamicTypeSize) private var typeSize
+
+    /// How many lines the total may take. One; two at the accessibility text sizes, where a total
+    /// in the millions, already at half its size, was cut off on one line ("IDR 9,573,4…"). On
+    /// two, the currency sits above the figure and all of it shows.
+    nonisolated static func totalLines(largeText: Bool) -> Int { largeText ? 2 : 1 }
 
     private var hasKept: Bool { !SavingsSummary.current().isEmpty }
     private var charges: [Horizon.Charge] { Horizon.charges(for: store.subscriptions, now: Date()) }
@@ -75,69 +81,102 @@ struct DashboardView: View {
     }
 
     private var header: some View {
-        HStack(alignment: .top, spacing: 12) {
-            VStack(alignment: .leading, spacing: 6) {
-                Button {
-                    Feel.selection()
-                    withAnimation(Motion.unlessReduced(Motion.touch)) { showsYear.toggle() }
-                } label: {
-                    HStack(spacing: 6) {
-                        Text(showsYear ? L10n.string("Each year") : L10n.string("Each month"))
-                            // Two words that belong together: at the largest sizes they shrink a
-                            // little before they part.
-                            .lineLimit(1)
-                            .minimumScaleFactor(0.7)
-                        Image(systemName: "arrow.up.arrow.down").font(.caption2.weight(.semibold))
-                            .accessibilityHidden(true)
+        Group {
+            if Self.totalHasTheWholeWidth(largeText: typeSize.isAccessibilitySize) {
+                VStack(alignment: .leading, spacing: 6) {
+                    HStack(alignment: .top, spacing: 12) {
+                        periodToggle
+                        Spacer(minLength: 8)
+                        addButton
                     }
-                    .font(.subheadline)
-                    .foregroundStyle(Color.inkTextMuted)
-                    .tapArea(.leading)
+                    totalFigure
+                    countLine
                 }
-                .buttonStyle(.plain)
-                .accessibilityHint(Text("Switches between a month and a year"))
-                .accessibilityIdentifier("spendPeriodToggle")
-
-                // No figure before the list has arrived: "$0.00" was on screen until it did.
-                if !store.listState.totalIsKnown {
-                    RoundedRectangle(cornerRadius: Layout.markRadius, style: .continuous)
-                        .fill(Color.inkRaised)
-                        .frame(width: 168, height: numberSize * 0.8)
-                        .padding(.vertical, numberSize * 0.1)
-                        .accessibilityHidden(true)
-                } else {
-                    Text(verbatim: MoneyFormat.total(showsYear ? store.totalAnnualSpend : store.totalMonthlySpend,
-                                                     currencyManager.selectedCurrency, converted: store.totalIsConverted))
-                        .font(.total(numberSize))
-                        .foregroundStyle(Color.inkText)
-                        .contentTransition(.numericText())
-                        .lineLimit(1)
-                        .minimumScaleFactor(0.5)
-                        .accessibilityLabel(Text(verbatim: spokenTotal))
-                        .accessibilityIdentifier("spendTotal")
-                }
-
-                if !store.subscriptions.isEmpty {
-                    Text(L10n.string("\(store.activeSubscriptions.count) subscriptions"))
-                        .font(.subheadline)
-                        .foregroundStyle(Color.inkTextMuted)
-                        // A number stays with its noun.
-                        .lineLimit(1)
-                        .minimumScaleFactor(0.75)
+            } else {
+                HStack(alignment: .top, spacing: 12) {
+                    VStack(alignment: .leading, spacing: 6) {
+                        periodToggle
+                        totalFigure
+                        countLine
+                    }
+                    Spacer(minLength: 8)
+                    addButton
                 }
             }
-            Spacer(minLength: 8)
-            Button { showingAdd = true } label: {
-                Image(systemName: "plus")
-                    .font(.title3.weight(.semibold))
-                    .foregroundStyle(Color.inkText)
-                    .frame(width: Layout.tapTarget, height: Layout.tapTarget)
-                    .overlay(Circle().stroke(Color.outline, lineWidth: 1))
-                    .contentShape(Circle())
-            }
-            .accessibilityLabel(Text("Add subscription"))
-            .accessibilityIdentifier("homeAddButton")
         }
+    }
+
+    /// Whether the total sits under the row that holds "+", with the whole width to itself. At
+    /// the accessibility text sizes, yes: beside "+" a total in the millions had four fifths of
+    /// the width and was cut off ("IDR 9,573,4…").
+    nonisolated static func totalHasTheWholeWidth(largeText: Bool) -> Bool { largeText }
+
+    private var periodToggle: some View {
+        Button {
+            Feel.selection()
+            withAnimation(Motion.unlessReduced(Motion.touch)) { showsYear.toggle() }
+        } label: {
+            HStack(spacing: 6) {
+                Text(showsYear ? L10n.string("Each year") : L10n.string("Each month"))
+                    // Two words that belong together: at the largest sizes they shrink a
+                    // little before they part.
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.7)
+                Image(systemName: "arrow.up.arrow.down").font(.caption2.weight(.semibold))
+                    .accessibilityHidden(true)
+            }
+            .font(.subheadline)
+            .foregroundStyle(Color.inkTextMuted)
+            .tapArea(.leading)
+        }
+        .buttonStyle(.plain)
+        .accessibilityHint(Text("Switches between a month and a year"))
+        .accessibilityIdentifier("spendPeriodToggle")
+    }
+
+    @ViewBuilder private var totalFigure: some View {
+        // No figure before the list has arrived: "$0.00" was on screen until it did.
+        if !store.listState.totalIsKnown {
+            RoundedRectangle(cornerRadius: Layout.markRadius, style: .continuous)
+                .fill(Color.inkRaised)
+                .frame(width: 168, height: numberSize * 0.8)
+                .padding(.vertical, numberSize * 0.1)
+                .accessibilityHidden(true)
+        } else {
+            Text(verbatim: MoneyFormat.total(showsYear ? store.totalAnnualSpend : store.totalMonthlySpend,
+                                             currencyManager.selectedCurrency, converted: store.totalIsConverted))
+                .font(.total(numberSize))
+                .foregroundStyle(Color.inkText)
+                .contentTransition(.numericText())
+                .lineLimit(Self.totalLines(largeText: typeSize.isAccessibilitySize))
+                .minimumScaleFactor(0.5)
+                .accessibilityLabel(Text(verbatim: spokenTotal))
+                .accessibilityIdentifier("spendTotal")
+        }
+    }
+
+    @ViewBuilder private var countLine: some View {
+        if !store.subscriptions.isEmpty {
+            Text(L10n.string("\(store.activeSubscriptions.count) subscriptions"))
+                .font(.subheadline)
+                .foregroundStyle(Color.inkTextMuted)
+                // A number stays with its noun.
+                .lineLimit(1)
+                .minimumScaleFactor(0.75)
+        }
+    }
+
+    private var addButton: some View {
+        Button { showingAdd = true } label: {
+            Image(systemName: "plus")
+                .font(.title3.weight(.semibold))
+                .foregroundStyle(Color.inkText)
+                .frame(width: Layout.tapTarget, height: Layout.tapTarget)
+                .overlay(Circle().stroke(Color.outline, lineWidth: 1))
+                .contentShape(Circle())
+        }
+        .accessibilityLabel(Text("Add subscription"))
+        .accessibilityIdentifier("homeAddButton")
     }
 
     // MARK: - What needs attention
@@ -271,6 +310,8 @@ private struct AttentionRow: View {
     let action: String
     let perform: () -> Void
     @Environment(\.dynamicTypeSize) private var typeSize
+    /// The room a symbol is given grows with it.
+    @ScaledMetric(relativeTo: .footnote) private var symbolSide: CGFloat = 18
 
     var body: some View {
         Button {
@@ -299,7 +340,7 @@ private struct AttentionRow: View {
             Image(systemName: symbol ?? "circle")
                 .font(.footnote.weight(.semibold))
                 .foregroundStyle(state?.color ?? Color.inkTextMuted)
-                .frame(width: 18, height: 18)
+                .frame(width: symbolSide, height: symbolSide)
                 .accessibilityHidden(true)
         }
     }
@@ -310,7 +351,7 @@ private struct AttentionRow: View {
                 .font(.body.weight(.semibold))
                 .foregroundStyle(Color.inkText)
                 .multilineTextAlignment(.leading)
-            Text(verbatim: detail)
+            Facts(detail)
                 .font(.subheadline)
                 .foregroundStyle(Color.inkTextMuted)
                 .multilineTextAlignment(.leading)
@@ -554,7 +595,7 @@ private struct ChargeRow: View {
                 .fixedSize(horizontal: false, vertical: true)
             HStack(spacing: 6) {
                 if let state { StateMark(state: state) }
-                Text(verbatim: when)
+                Facts(when)
                     .font(.subheadline)
                     .foregroundStyle(state?.color ?? Color.inkTextMuted)
                     .fixedSize(horizontal: false, vertical: true)

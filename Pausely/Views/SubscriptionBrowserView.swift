@@ -144,7 +144,7 @@ struct SubscriptionBrowserView: View {
             // with the list: fixed, it filled the screen above the keyboard and no result could be seen.
             if !typeSize.isAccessibilitySize { top }
 
-            ScrollView {
+            SearchableScroll {
                 if typeSize.isAccessibilitySize { top }
                 LazyVStack(alignment: .leading, spacing: 0) {
                     if filteredEntries.isEmpty {

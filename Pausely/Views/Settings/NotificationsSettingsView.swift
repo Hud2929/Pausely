@@ -77,8 +77,9 @@ struct NotificationsSettingsView: View {
     private var permission: some View {
         let status = notifications.status
         VStack(alignment: .leading, spacing: 12) {
-            HStack(alignment: .firstTextBaseline, spacing: 10) {
+            MarkedWords {
                 if !reachesThePerson { StateMark(state: .decide).accessibilityHidden(true) }
+            } words: {
                 VStack(alignment: .leading, spacing: 4) {
                     Text(verbatim: headline)
                         .font(.headline)

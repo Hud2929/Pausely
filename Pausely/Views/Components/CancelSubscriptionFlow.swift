@@ -54,11 +54,13 @@ struct CancelSubscriptionFlow: View {
 
                 PaperSlip(tornTop: true, tornBottom: true) {
                     VStack(alignment: .leading, spacing: 14) {
-                        HStack(spacing: 10) {
+                        MarkedWords(alignment: .center) {
                             ServiceLogoView(name: subscription.name, category: subscription.category, size: 36)
+                        } words: {
                             Text(L10n.string("That's \(MoneyFormat.string(subscription.annualCost, subscription.currency)) a year"))
                                 .font(.subheadline.weight(.medium))
                                 .foregroundStyle(Color.paperMuted)
+                                .fixedSize(horizontal: false, vertical: true)
                         }
                         Text("Cancel \(subscription.name)")
                             .font(.question(.title))

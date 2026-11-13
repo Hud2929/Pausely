@@ -16,7 +16,7 @@ struct SettingsPage<Content: View>: View {
 
     var body: some View {
         NavigationStack {
-            ScrollView {
+            SearchableScroll {
                 VStack(alignment: .leading, spacing: 28) {
                     VStack(alignment: .leading, spacing: 10) {
                         Text(title)
@@ -106,13 +106,18 @@ struct SettingsRow<Trailing: View>: View {
                     VStack(alignment: .leading, spacing: 8) {
                         words
                         trailing
+                            .multilineTextAlignment(.leading)
                     }
                     .frame(maxWidth: .infinity, alignment: .leading)
                 } else {
                     HStack(alignment: .center, spacing: 12) {
                         words
                         Spacer(minLength: 8)
+                        // Lines of a value at the end of a row end at that edge. Underneath its
+                        // title they start where the title does: set from the end there, "$10.99"
+                        // sat over "a month" in the middle of the row.
                         trailing
+                            .multilineTextAlignment(.trailing)
                     }
                 }
             }

@@ -57,11 +57,10 @@ struct PausePlanView: View {
         .sheet(item: $cancelTarget) { sub in
             CancelSubscriptionFlow(subscription: sub)
         }
-        .confirmationDialog("End your Pause Plan?", isPresented: $confirmEnd, titleVisibility: .visible) {
+        .asksFirst(Text("End your Pause Plan?"), isPresented: $confirmEnd,
+                   message: Text("Your subscriptions stay as they are. Pausely goes back to its usual renewal reminders.")) {
             Button("End Pause Plan", role: .destructive) { Task { await planStore.end() } }
             Button("Keep it", role: .cancel) {}
-        } message: {
-            Text("Your subscriptions stay as they are. Pausely goes back to its usual renewal reminders.")
         }
         .onAppear(perform: setDefaults)
     }
@@ -196,7 +195,7 @@ struct PausePlanView: View {
                 .font(.body.weight(.medium))
                 .foregroundStyle(Color.inkText)
                 .fixedSize(horizontal: false, vertical: true)
-            Text(verbatim: price)
+            Facts(price)
                 .font(.subheadline)
                 .foregroundStyle(Color.inkTextMuted)
                 .fixedSize(horizontal: false, vertical: true)
@@ -514,7 +513,9 @@ struct PausePlanCard: View {
                 // While a plan runs the row carries the paused mark, as every state does.
                 if planStore.activePlan != nil { StateMark(state: .paused) }
                 VStack(alignment: .leading, spacing: 4) {
-                    HStack(spacing: 8) {
+                    // "Pro" beside the name, or under it where the two do not fit a line: beside
+                    // it at the largest text size the name was "Pause" above "Plan".
+                    LineOrStack(spacing: 8, lineSpacing: 4) {
                         Text("Pause Plan")
                             .font(.body.weight(.medium))
                             .foregroundStyle(Color.inkText)

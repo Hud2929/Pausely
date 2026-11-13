@@ -49,6 +49,15 @@ enum L10n {
         line.replacingOccurrences(of: " · ", with: "\u{00A0}· ")
     }
 
+    /// Facts joined by " · ". Side by side they break after a dot, never before one. One to a
+    /// line, the dots go: at the accessibility text sizes "Wed, Nov 18 ·" was a character too
+    /// wide for its line, so the dot began the next one ("· in 5 days"), on the verdict, on the
+    /// receipt and on Home.
+    static func facts(_ line: String, oneToALine: Bool) -> String {
+        let joined = line.replacingOccurrences(of: "\u{00A0}· ", with: " · ")
+        return oneToALine ? joined.replacingOccurrences(of: " · ", with: "\n") : breakingAfterDots(joined)
+    }
+
     /// The language chosen in Settings → Language ("ar", "de"…), or nil to follow the iPhone.
     static var chosenLanguage: String? {
         guard let code = UserDefaults.standard.string(forKey: languageKey), code != "system" else { return nil }

@@ -98,11 +98,10 @@ struct ProfileView: View {
         // Apple's own sheets: changing or cancelling the plan, and asking for money back.
         .manageSubscriptionsSheet(isPresented: $managingPlan)
         .refundRequestSheet(for: plan?.transactionId ?? 0, isPresented: $requestingRefund)
-        .confirmationDialog("Sign out of Pausely?", isPresented: $confirmSignOut, titleVisibility: .visible) {
+        .asksFirst(Text("Sign out of Pausely?"), isPresented: $confirmSignOut,
+                   message: Text("Your data is saved and will be here when you return.")) {
             Button("Sign out", role: .destructive) { Task { await authManager.signOut() } }
             Button("Cancel", role: .cancel) {}
-        } message: {
-            Text("Your data is saved and will be here when you return.")
         }
         .sheet(item: $sheet) { sheet in
             switch sheet {

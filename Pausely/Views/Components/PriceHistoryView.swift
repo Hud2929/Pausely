@@ -49,8 +49,9 @@ struct PriceHistoryView: View {
         let sentence = first.date.map {
             L10n.string("\(from) in \($0.formatted(.dateTime.month(.abbreviated).year().locale(L10n.locale))), \(to) now.")
         } ?? L10n.string("\(from) before, \(to) now.")
-        return HStack(alignment: .firstTextBaseline, spacing: 10) {
+        return MarkedWords {
             if rose { StateMark(state: .due).accessibilityHidden(true) }
+        } words: {
             Text(verbatim: sentence)
                 .font(.question(.title3))
                 .foregroundStyle(Color.inkText)
@@ -70,7 +71,6 @@ struct PriceHistoryView: View {
             Text(verbatim: entry.frequency.priced(MoneyFormat.string(entry.amount, entry.currency)))
                 .font(.proof(.body))
                 .foregroundStyle(Color.inkText)
-                .multilineTextAlignment(.trailing)
         }
         .accessibilityElement(children: .combine)
     }

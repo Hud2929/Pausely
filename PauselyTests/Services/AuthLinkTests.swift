@@ -203,10 +203,49 @@ final class AuthLinkTests: XCTestCase {
         XCTAssertEqual(countdown.ticks(from: sent.addingTimeInterval(300)).count, 1, "no wait, nothing to count")
     }
 
-    /// An address is shown whole. It may break after "@" and after a dot, and nowhere gets a hyphen.
+    /// An address is shown whole. It may break after "@", after a dot and before a slash, and
+    /// nowhere else: every other pair of characters is joined, so iOS cannot hyphenate inside it
+    /// at the accessibility text sizes ("accoun-t.apple.-com" was what the button said).
     func testAnAddressBreaksOnlyWhereItsPartsMeet() {
+        func marked(_ text: String) -> String {
+            text.replacingOccurrences(of: AddressText.gap, with: "|").replacingOccurrences(of: AddressText.joiner, with: "")
+        }
+        func plain(_ text: String) -> String {
+            text.replacingOccurrences(of: AddressText.gap, with: "").replacingOccurrences(of: AddressText.joiner, with: "")
+        }
         let shown = AddressText.breakable("jane.doe@example.co.uk")
-        XCTAssertEqual(shown.replacingOccurrences(of: "\u{200B}", with: "|"), "jane.|doe@|example.|co.|uk")
-        XCTAssertEqual(shown.replacingOccurrences(of: "\u{200B}", with: ""), "jane.doe@example.co.uk", "nothing else is changed")
+        XCTAssertEqual(marked(shown), "jane.|doe@|example.|co.|uk")
+        XCTAssertEqual(plain(shown), "jane.doe@example.co.uk", "nothing else is changed")
+        XCTAssertEqual(AddressText.breakable("ab.cd"), "a\u{2060}b\u{2060}.\u{200B}c\u{2060}d", "joined wherever it may not break")
+        XCTAssertEqual(marked(AddressText.breakable("myaccount.google.com/apppasswords")), "myaccount.|google.|com|/apppasswords")
+        XCTAssertEqual(AddressText.breakable(""), "")
+        XCTAssertEqual(AddressText.breakable("x"), "x")
+
+        // Inside a sentence only the address is touched, and the full stop that ends the sentence
+        // is not part of it.
+        XCTAssertEqual(AddressText.inSentence("Open account.apple.com and sign in."),
+                       "Open " + AddressText.breakable("account.apple.com") + " and sign in.")
+        XCTAssertEqual(AddressText.inSentence("Open myaccount.google.com/apppasswords and create one named Pausely."),
+                       "Open " + AddressText.breakable("myaccount.google.com/apppasswords") + " and create one named Pausely.")
+        XCTAssertEqual(AddressText.inSentence("account.apple.comを開いてサインインします。"),
+                       AddressText.breakable("account.apple.com") + "を開いてサインインします。")
+        XCTAssertEqual(AddressText.inSentence("Write to jane.doe@example.co.uk."),
+                       "Write to " + AddressText.breakable("jane.doe@example.co.uk") + ".")
+        for untouched in ["Choose Generate app password and name it Pausely.", "Version 1.0.3 is here.",
+                          "People 16+. No more.", "e.g. this", ""] {
+            XCTAssertEqual(AddressText.inSentence(untouched), untouched)
+        }
+
+        // Every step of every provider: the words are the same, and a step that names a page has
+        // it protected.
+        var protected = 0
+        for preset in IMAPPreset.all {
+            for step in preset.steps {
+                let drawn = AddressText.inSentence(step)
+                XCTAssertEqual(plain(drawn), step, preset.id)
+                if drawn != step { protected += 1 }
+            }
+        }
+        XCTAssertGreaterThanOrEqual(protected, 2, "iCloud's and Gmail's steps name the page to open")
     }
 }

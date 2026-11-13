@@ -87,7 +87,7 @@ struct SubscriptionEditView: View {
         }
         .preferredColorScheme(.dark)
         .interactiveDismissDisabled(isDirty)
-        .confirmationDialog("Discard your changes?", isPresented: $showDiscardConfirm, titleVisibility: .visible) {
+        .asksFirst(Text("Discard your changes?"), isPresented: $showDiscardConfirm) {
             Button("Discard changes", role: .destructive) { dismiss() }
             Button("Keep editing", role: .cancel) {}
         }

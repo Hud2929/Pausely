@@ -6,6 +6,7 @@ struct SubscriptionManagementView: View {
     let subscription: Subscription
 
     @Environment(\.dismiss) private var dismiss
+    @Environment(\.dynamicTypeSize) private var typeSize
     @ObservedObject private var store = SubscriptionStore.shared
     @ObservedObject private var paymentManager = PaymentManager.shared
     @ObservedObject private var eventLog = LifecycleEventLog.shared
@@ -57,11 +58,10 @@ struct SubscriptionManagementView: View {
         .sheet(item: $route) { route in
             sheetContent(for: route)
         }
-        .confirmationDialog("Remove \"\(current.name)\"?", isPresented: $showRemoveConfirm, titleVisibility: .visible) {
+        .asksFirst(Text("Remove \"\(current.name)\"?"), isPresented: $showRemoveConfirm,
+                   message: Text("This only removes it from Pausely. It won't cancel the subscription itself.")) {
             Button("Remove", role: .destructive) { Task { await remove() } }
             Button("Keep", role: .cancel) {}
-        } message: {
-            Text("This only removes it from Pausely. It won't cancel the subscription itself.")
         }
     }
 
@@ -135,7 +135,7 @@ struct SubscriptionManagementView: View {
 
     @ViewBuilder private var renewalText: some View {
         if let line = renewalLine {
-            Text(line.text)
+            Facts(line.text)
                 .font(.subheadline)
                 .foregroundStyle(line.tint)
                 .fixedSize(horizontal: false, vertical: true)
@@ -281,6 +281,7 @@ struct SubscriptionManagementView: View {
                     // The feature's name is the row; what it does is under it (they were the other way round).
                     toolRow(icon: "arrow.triangle.2.circlepath", title: L10n.string("Pause Plan"),
                             subtitle: L10n.string("Rotate with your other streaming"), isPro: !paymentManager.isUnlocked(.pausePlan)) { route = .pausePlan }
+                        .accessibilityIdentifier("pausePlanRow")
                 }
             }
 
@@ -292,6 +293,9 @@ struct SubscriptionManagementView: View {
             }
         }
     }
+
+    /// Whether "Pro" sits under a row's words instead of at the end of the row.
+    nonisolated static func proSitsUnderTheWords(largeText: Bool) -> Bool { largeText }
 
     private func toolRow(icon: String, state: MoneyState? = nil, title: String, subtitle: String?, isPro: Bool = false,
                          action: @escaping () -> Void) -> some View {
@@ -320,9 +324,14 @@ struct SubscriptionManagementView: View {
                             .foregroundStyle(state?.color ?? Color.inkTextMuted)
                             .multilineTextAlignment(.leading)
                     }
+                    // Under the words at the accessibility text sizes. Beside them it left the
+                    // words a fifth of the row: "Paus", "e", "Plan", and "strea" above "ming".
+                    if isPro, Self.proSitsUnderTheWords(largeText: typeSize.isAccessibilitySize) {
+                        ProPill().padding(.top, 4)
+                    }
                 }
                 Spacer(minLength: 8)
-                if isPro { ProPill() }
+                if isPro, !Self.proSitsUnderTheWords(largeText: typeSize.isAccessibilitySize) { ProPill() }
                 RowChevron()
             }
             .padding(.vertical, 14)

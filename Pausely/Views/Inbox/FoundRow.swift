@@ -11,6 +11,9 @@ struct FoundRow: View {
     let onReject: () -> Void
 
     @Environment(\.dynamicTypeSize) private var typeSize
+    /// The box grows with the tick inside it (at the largest text size the tick was twice as
+    /// wide as a fixed box).
+    @ScaledMetric(relativeTo: .caption2) private var boxSide: CGFloat = 22
 
     private var proven: ProvenSubscription { found.proven }
 
@@ -46,48 +49,79 @@ struct FoundRow: View {
 
     var body: some View {
         VStack(spacing: 0) {
-            HStack(spacing: 8) {
-                Button(action: onToggle) {
-                    HStack(spacing: 12) {
-                        if !found.isCancelled { checkbox }
-                        ServiceLogoView(name: found.name, category: nil, size: 36)
-                        if typeSize.isAccessibilitySize {
-                            VStack(alignment: .leading, spacing: 4) { nameAndEvidence; price }
-                            Spacer(minLength: 0)
-                        } else {
-                            // As on the Subscriptions list: the price keeps its width, 8 points
-                            // from the words (a spacer between them took 32, and "Last charged
-                            // Nov 9" broke in two for want of 4).
-                            LineOrStack(spacing: 8, lineSpacing: 4, spread: true, besideShare: 0.5) {
-                                nameAndEvidence
-                                price
+            Group {
+                if Self.wordsHaveTheWholeRow(largeText: typeSize.isAccessibilitySize) {
+                    VStack(alignment: .leading, spacing: 6) {
+                        HStack(spacing: 8) {
+                            // The box is a second place to tap; the words under it say what it is.
+                            if !found.isCancelled {
+                                Button(action: onToggle) { checkbox }
+                                    .buttonStyle(.plain)
+                                    .accessibilityHidden(true)
                             }
-                            .frame(maxWidth: .infinity, alignment: .leading)
+                            Spacer(minLength: 8)
+                            whyButton
+                        }
+                        choose {
+                            VStack(alignment: .leading, spacing: 4) { nameAndEvidence; price }
+                                .frame(maxWidth: .infinity, alignment: .leading)
                         }
                     }
-                    .contentShape(Rectangle())
+                } else {
+                    HStack(spacing: 8) {
+                        choose {
+                            HStack(spacing: 12) {
+                                if !found.isCancelled { checkbox }
+                                ServiceLogoView(name: found.name, category: nil, size: 36)
+                                // As on the Subscriptions list: the price keeps its width, 8 points
+                                // from the words (a spacer between them took 32, and "Last charged
+                                // Nov 9" broke in two for want of 4).
+                                LineOrStack(spacing: 8, lineSpacing: 4, spread: true, besideShare: 0.5) {
+                                    nameAndEvidence
+                                    price
+                                }
+                                .frame(maxWidth: .infinity, alignment: .leading)
+                            }
+                        }
+                        whyButton
+                    }
                 }
-                .buttonStyle(.plain)
-                .disabled(found.isCancelled)
-                .accessibilityElement(children: .ignore)
-                .accessibilityLabel(accessibilitySummary)
-                .accessibilityAddTraits(isSelected ? [.isButton, .isSelected] : .isButton)
-
-                Button(action: onExpand) {
-                    Image(systemName: isExpanded ? "chevron.up" : "chevron.down")
-                        .font(.footnote.weight(.semibold))
-                        .foregroundStyle(Color.inkTextFaint)
-                        .frame(width: Layout.tapTarget, height: Layout.tapTarget)
-                        .contentShape(Rectangle())
-                }
-                .buttonStyle(.plain)
-                .accessibilityIdentifier("foundRowWhy")
-                .accessibilityLabel(isExpanded ? Text("Hide why") : Text("Show why we think this is a subscription"))
             }
             .padding(.vertical, 10)
 
             if isExpanded { evidenceDetail }
         }
+    }
+
+    /// Whether the name, what was found and the price run the width of the row, with the box and
+    /// the way to "why" on a line above them. At the accessibility text sizes, yes: between the
+    /// box, the logo and the chevron the words had a third of the row, and broke inside
+    /// themselves ("Spoti-fy", "Last charge" above "d Nov 8").
+    nonisolated static func wordsHaveTheWholeRow(largeText: Bool) -> Bool { largeText }
+
+    /// The part of the row that chooses this subscription, read out as one sentence.
+    private func choose(@ViewBuilder _ label: () -> some View) -> some View {
+        Button(action: onToggle) {
+            label().contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+        .disabled(found.isCancelled)
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel(accessibilitySummary)
+        .accessibilityAddTraits(isSelected ? [.isButton, .isSelected] : .isButton)
+    }
+
+    private var whyButton: some View {
+        Button(action: onExpand) {
+            Image(systemName: isExpanded ? "chevron.up" : "chevron.down")
+                .font(.footnote.weight(.semibold))
+                .foregroundStyle(Color.inkTextFaint)
+                .frame(width: Layout.tapTarget, height: Layout.tapTarget)
+                .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+        .accessibilityIdentifier("foundRowWhy")
+        .accessibilityLabel(isExpanded ? Text("Hide why") : Text("Show why we think this is a subscription"))
     }
 
     private var nameAndEvidence: some View {
@@ -135,7 +169,7 @@ struct FoundRow: View {
                     RoundedRectangle(cornerRadius: Layout.markRadius, style: .continuous)
                         .stroke(isSelected ? Color.clear : Color.inkTextFaint, lineWidth: 1.5)
                 )
-                .frame(width: 22, height: 22)
+                .frame(width: boxSide, height: boxSide)
             if isSelected {
                 Image(systemName: "checkmark")
                     .font(.caption2.weight(.bold))

@@ -43,11 +43,25 @@ final class OnboardingFlowTests: XCTestCase {
         }
         keep.tap()
 
-        // Keeping the list leads to creating an account, which starts with the age check (16+).
-        let ageCheck = app.staticTexts["Confirm your age"]
-        let signIn = app.buttons["signInButton"]
-        XCTAssertTrue(ageCheck.waitForExistence(timeout: 10) || signIn.waitForExistence(timeout: 2),
+        // Keeping the list leads to creating an account, which starts with the age check (16+)
+        // on a device that has not answered it yet, and with the form on one that has.
+        let ageCheck = app.buttons["ageGateContinueButton"]
+        let form = app.buttons["createAccountButton"]
+        XCTAssertTrue(ageCheck.waitForExistence(timeout: 10) || form.waitForExistence(timeout: 3),
                       "Keep my list should lead to the age check and sign-up")
+
+        // Leaving it puts the person back on their own total: the list they made is still there.
+        let leave = ageCheck.exists ? app.buttons["ageGateCancelButton"] : app.buttons["cancelButton"]
+        XCTAssertTrue(waitUntilHittable(leave, timeout: 5))
+        leave.tap()
+        XCTAssertTrue(waitUntilHittable(keep, timeout: 8), "closing the account step returns to the total")
+        let netflix2 = app.buttons.matching(NSPredicate(format: "label BEGINSWITH %@", "Netflix")).firstMatch
+        XCTAssertTrue(netflix2.exists, "with the list still on it")
+
+        // And the button works a second time.
+        keep.tap()
+        XCTAssertTrue(ageCheck.waitForExistence(timeout: 10) || form.waitForExistence(timeout: 3),
+                      "Keep my list opens the account step again")
     }
 
     func testSignInSkipsTheTally() {

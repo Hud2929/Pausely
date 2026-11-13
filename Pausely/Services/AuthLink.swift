@@ -120,13 +120,45 @@ struct ResendCountdown: Equatable {
     }
 }
 
-/// An email address as it is shown back to its owner: whole, on as many lines as it needs. It may
-/// break after "@" and after a dot (never with a hyphen, which would look like part of the
-/// address), so a long one is not cut in the middle the way "firstname.las…pany.co.uk" was.
+/// An email or web address as it is shown: whole, on as many lines as it needs. It may break
+/// after "@", after a dot and before a slash, so a long one is not cut in the middle the way
+/// "firstname.las…pany.co.uk" was. Everywhere else its characters are joined, so the line can
+/// neither break there nor be given a hyphen: at the accessibility text sizes iOS hyphenates
+/// long words, and "account.apple.com" was drawn as "accoun-t.apple.-com", a different address.
 enum AddressText {
+    /// A place where the address may go on to the next line (zero-width space).
+    static let gap = "\u{200B}"
+    /// Between two characters that stay together (word joiner).
+    static let joiner = "\u{2060}"
+
     static func breakable(_ address: String) -> String {
-        address.replacingOccurrences(of: "@", with: "@\u{200B}").replacingOccurrences(of: ".", with: ".\u{200B}")
+        let characters = Array(address)
+        var shown = ""
+        for (index, character) in characters.enumerated() {
+            shown.append(character)
+            guard index + 1 < characters.count else { break }
+            shown += character == "@" || character == "." || characters[index + 1] == "/" ? gap : joiner
+        }
+        return shown
     }
+
+    /// A sentence with every address in it made `breakable` ("Open account.apple.com and sign
+    /// in."). The words around the addresses are left as they are.
+    static func inSentence(_ sentence: String) -> String {
+        guard let addresses = try? NSRegularExpression(pattern: pattern) else { return sentence }
+        var shown = sentence
+        let whole = NSRange(sentence.startIndex..., in: sentence)
+        for match in addresses.matches(in: sentence, range: whole).reversed() {
+            guard let range = Range(match.range, in: shown) else { continue }
+            shown.replaceSubrange(range, with: breakable(String(shown[range])))
+        }
+        return shown
+    }
+
+    /// name@host.tld, or host.tld with an optional path. A full stop that ends the sentence is
+    /// not part of either.
+    private static let pattern = "[A-Za-z0-9._%+-]+@[A-Za-z0-9-]+(?:\\.[A-Za-z0-9-]+)+"
+        + "|[A-Za-z0-9-]+(?:\\.[A-Za-z0-9-]+)*\\.[A-Za-z]{2,}(?:/[A-Za-z0-9_~/-]+)*"
 }
 
 /// The six digits of an emailed code, from whatever was typed or pasted ("123 456", "Your code is 123456").

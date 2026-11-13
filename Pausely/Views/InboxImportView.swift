@@ -13,6 +13,7 @@ struct InboxImportView: View {
     @ObservedObject private var store = SubscriptionStore.shared
     @ObservedObject private var payments = PaymentManager.shared
     @Environment(\.dismiss) private var dismiss
+    @Environment(\.dynamicTypeSize) private var typeSize
     @State private var selected: Set<String> = []
     @State private var expanded: Set<String> = []
     @State private var didPreselect = false
@@ -345,7 +346,7 @@ struct InboxImportView: View {
                     .foregroundStyle(Color.inkText)
                     .fixedSize(horizontal: false, vertical: true)
                     .accessibilityLabel(Text(verbatim: account.address))
-                Text(verbatim: accountDetail(account))
+                Facts(accountDetail(account))
                     .font(.subheadline)
                     .foregroundStyle(failed ? Color.due : Color.inkTextMuted)
                     .fixedSize(horizontal: false, vertical: true)
@@ -429,13 +430,16 @@ struct InboxImportView: View {
                 .fixedSize(horizontal: false, vertical: true)
                 .accessibilityAddTraits(.isHeader)
 
+            // Still said before the tap: under the heading, where it is read on arrival.
+            if Self.barHoldsOnlyTheButton(largeText: typeSize.isAccessibilitySize) { freeLimitNote }
+
             PaperSlip(tornTop: true, tornBottom: true) {
                 VStack(alignment: .leading, spacing: 10) {
                     ProofLine(label: L10n.string("Each month"), value: InboxImportView.money(monthly, currency), emphasised: true)
                     ProofLine(label: L10n.string("Each year"), value: InboxImportView.money(monthly * 12, currency))
                     if ignored > 0 || stats.emailsChecked > 0 { Perforation() }
                     if stats.emailsChecked > 0 {
-                        Text("Emails checked: \(stats.emailsChecked) · read in full: \(stats.bodiesRead) · all on your phone")
+                        Facts(L10n.string("Emails checked: \(stats.emailsChecked) · read in full: \(stats.bodiesRead) · all on your phone"))
                             .font(.proof(.caption))
                             .foregroundStyle(Color.paperMuted)
                             .fixedSize(horizontal: false, vertical: true)
@@ -559,21 +563,31 @@ struct InboxImportView: View {
         return chosen.filter { !listed.contains($0.name.lowercased()) }.count
     }
 
+    /// Whether the bar at the bottom edge holds only "Add to my list", with the free-limit note
+    /// under the heading instead. At the accessibility text sizes, yes: the note (six lines) and
+    /// a button of two lines took most of the screen and left one line of what was found.
+    nonisolated static func barHoldsOnlyTheButton(largeText: Bool) -> Bool { largeText }
+
+    /// What the free limit will do with this choice. Said before the tap, not discovered after it.
+    @ViewBuilder
+    private var freeLimitNote: some View {
+        if !chosen.isEmpty, let slots = freeSlots, newlyChosen > slots {
+            Text(slots == 0
+                 ? L10n.string("Free tracks \(FreeTier.subscriptionLimit) and your list is full. What you add now will wait until you make room or go Pro.")
+                 : L10n.string("Free tracks \(FreeTier.subscriptionLimit). Added now, most expensive first: \(slots). Waiting until you make room or go Pro: \(newlyChosen - slots)."))
+                .font(.footnote)
+                .foregroundStyle(Color.inkTextMuted)
+                .fixedSize(horizontal: false, vertical: true)
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .accessibilityIdentifier("freeLimitNote")
+        }
+    }
+
     @ViewBuilder
     private var addBar: some View {
         if outcome == nil, !scanner.isScanning, !scanner.foundSubscriptions.isEmpty, scanner.hasAccounts, !chosen.isEmpty {
             VStack(spacing: 8) {
-                if let slots = freeSlots, newlyChosen > slots {
-                    // Said before the tap, not discovered after it.
-                    Text(slots == 0
-                         ? L10n.string("Free tracks \(FreeTier.subscriptionLimit) and your list is full. What you add now will wait until you make room or go Pro.")
-                         : L10n.string("Free tracks \(FreeTier.subscriptionLimit). Added now, most expensive first: \(slots). Waiting until you make room or go Pro: \(newlyChosen - slots)."))
-                        .font(.footnote)
-                        .foregroundStyle(Color.inkTextMuted)
-                        .fixedSize(horizontal: false, vertical: true)
-                        .frame(maxWidth: .infinity, alignment: .leading)
-                        .accessibilityIdentifier("freeLimitNote")
-                }
+                if !Self.barHoldsOnlyTheButton(largeText: typeSize.isAccessibilitySize) { freeLimitNote }
                 Button(action: { Task { await addChosen() } }) {
                     if importing { ProgressView().tint(Color.paperInk) } else { Text("Add \(chosen.count) to my list") }
                 }

@@ -148,7 +148,9 @@ struct RootView: View {
     @State private var showAuth = false
     @State private var splashWorkItem: DispatchWorkItem?
     @AppStorage("hasCompletedOnboarding") private var hasCompletedOnboarding = false
-    @State private var authStart: WelcomeFlow.Start = .welcome
+    /// "Create your account" and "Sign in", when the first run asks for them.
+    @State private var signingUp = false
+    @State private var signingIn = false
     @Environment(\.scenePhase) private var scenePhase
 
     // DEBUG only, all three: a release build never reads a launch argument (see `LaunchFlag`).
@@ -343,31 +345,34 @@ struct RootView: View {
                         startAt: PendingTally.load() == nil ? .guess : .reveal,
                         tally: PendingTally.load(),
                         onKeepList: {
-                            authStart = .signUp
-                            withAnimation(Motion.unlessReduced(Motion.arrive)) {
-                                showAuth = true
-                                hasCompletedOnboarding = true
-                            }
+                            // The account form rises over the total, which stays where it is:
+                            // closing the form leaves the person on their own list. (With nothing
+                            // on the list there is no total to keep, and the welcome screen is
+                            // what is underneath.)
+                            withAnimation(Motion.unlessReduced(Motion.arrive)) { hasCompletedOnboarding = true }
+                            signingUp = true
                         },
                         onSignIn: {
-                            authStart = .signIn
                             withAnimation(Motion.unlessReduced(Motion.arrive)) {
                                 showAuth = true
                                 hasCompletedOnboarding = true
                             }
+                            signingIn = true
                         }
                     )
                     .transition(.opacity)
                 } else {
                     // Onboarding completed but not authenticated: show auth
-                    WelcomeFlow(start: authStart, onSignUpDismissed: {
-                        guard !authManager.isAuthenticated, PendingTally.load() != nil else { return }
-                        withAnimation(Motion.unlessReduced(Motion.arrive)) { showAuth = false }
-                    })
+                    WelcomeFlow()
                         .transition(.arriving(.move(edge: .bottom)))
                 }
             }
             .opacity(showSplash ? 0 : 1)
+            // Opened from here, by the screen that is always on: a form opened by a screen as it
+            // arrived (the welcome screen sliding in) was a second thing happening at once, and on
+            // iPad "Keep my list" ended back on the total with no form.
+            .signUpDoor(isOpen: $signingUp)
+            .sheet(isPresented: $signingIn) { SignInView() }
 
             if showSplash {
                 SplashScreen()
@@ -491,9 +496,9 @@ struct SplashScreen: View {
 /// straight to the account step; `start` opens the form the customer asked for.
 struct WelcomeFlow: View {
     enum Start { case welcome, signUp, signIn }
+    /// Which form is open on arrival. Only the captures of the forms themselves ask for one
+    /// (`--demo-auth`); the first run opens its forms from the root (`RootView`).
     var start: Start = .welcome
-    /// The "Create your account" sheet was closed. After the first run this leads back to the reveal.
-    var onSignUpDismissed: (() -> Void)?
 
     @State private var showSignUp = false
     @State private var showSignIn = false
@@ -506,9 +511,7 @@ struct WelcomeFlow: View {
                 authWallContent
             }
             .navigationBarHidden(true)
-            .sheet(isPresented: $showSignUp, onDismiss: { onSignUpDismissed?() }) {
-                SignUpView()
-            }
+            .signUpDoor(isOpen: $showSignUp)
             .sheet(isPresented: $showSignIn) {
                 SignInView()
             }

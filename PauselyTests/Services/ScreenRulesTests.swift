@@ -173,16 +173,459 @@ final class ScreenRulesTests: XCTestCase {
 
     /// The first question keeps its answer beside it on iPad: at the bottom edge, the number, its
     /// slider and the button were a thousand points below "What do you think you pay?". On an
-    /// iPhone they stay low, where a thumb reaches them.
-    func testOnIPadTheFirstQuestionKeepsItsAnswerBesideIt() throws {
-        XCTAssertTrue(GuessStep.answerSitsLow(onPad: false))
-        XCTAssertFalse(GuessStep.answerSitsLow(onPad: true))
+    /// iPhone they stay low, where a thumb reaches them, until the text is at an accessibility
+    /// size: there they took the screen and the question was cut after its third line, so the
+    /// step is one page read from the top.
+    func testTheFirstQuestionIsOnePageOnIPadAndAtTheLargestText() throws {
+        XCTAssertTrue(GuessStep.answerSitsLow(onPad: false, largeText: false))
+        XCTAssertFalse(GuessStep.answerSitsLow(onPad: true, largeText: false))
+        XCTAssertFalse(GuessStep.answerSitsLow(onPad: false, largeText: true))
+        XCTAssertFalse(GuessStep.answerSitsLow(onPad: true, largeText: true))
+
+        // Beside the track the two ends left it a third of the width at those sizes.
+        XCTAssertFalse(GuessStep.endsSitUnderTheTrack(largeText: false))
+        XCTAssertTrue(GuessStep.endsSitUnderTheTrack(largeText: true))
 
         let url = root.appendingPathComponent("Pausely/Views/FirstRun/FirstRunView.swift")
         try XCTSkipUnless(FileManager.default.fileExists(atPath: url.path), "Sources aren't readable from this test run")
         let source = try String(contentsOf: url, encoding: .utf8)
-        XCTAssertTrue(source.contains(".fixedSize(horizontal: false, vertical: !Self.answerSitsLow(onPad: onPad))"))
-        XCTAssertTrue(source.contains("if !Self.answerSitsLow(onPad: onPad) { Spacer(minLength: 0) }"))
+        let step = try XCTUnwrap(source.range(of: "struct GuessStep: View"))
+        let body = String(source[step.lowerBound...].prefix(2600))
+        XCTAssertTrue(body.contains("if Self.answerSitsLow(onPad: onPad, largeText: typeSize.isAccessibilitySize) {"))
+        // The other arrangement is one scroll that holds all four parts, in reading order.
+        let onePage = try XCTUnwrap(body.range(of: "} else {"))
+        let parts = ["ScrollView {", "header", "question", "answer", "nextButton"]
+        var from = onePage.upperBound
+        for part in parts {
+            let found = try XCTUnwrap(body.range(of: part, range: from..<body.endIndex), "\(part) is missing from the one-page arrangement")
+            from = found.upperBound
+        }
+    }
+
+    /// "Pausely" is one word and is never broken: beside "Sign in" at the largest text size it was
+    /// "Pausel" above "y". Measured, not read from the source: the same word without the rule does
+    /// break when it is given less than its width.
+    @MainActor
+    func testTheWordmarkIsNeverBrokenInsideTheName() {
+        func size(_ view: some View, width: CGFloat) -> CGSize {
+            UIHostingController(rootView: view).sizeThatFits(in: CGSize(width: width, height: 2000))
+        }
+        let whole = size(Wordmark(), width: 1000)
+        let squeezed = size(Wordmark(), width: 40)
+        XCTAssertGreaterThan(whole.width, 40, "The check means nothing unless the name is wider than the room it is given")
+        XCTAssertEqual(squeezed.height, whole.height, accuracy: 0.5)
+        XCTAssertEqual(squeezed.width, whole.width, accuracy: 0.5)
+
+        let plain = Text(verbatim: "Pausely").font(.headline)
+        XCTAssertGreaterThan(size(plain, width: 40).height, size(plain, width: 1000).height + 1,
+                             "Without the rule the word breaks, so this measurement can tell")
+
+        // With the year after it (the slip of "Your year in subscriptions") it still breaks, at
+        // the space: held to one line it ran off the slip at the largest text size.
+        let dated = Wordmark(text: "Pausely 2026")
+        let oneLine = size(dated, width: 1000)
+        XCTAssertEqual(oneLine.height, whole.height, accuracy: 0.5)
+        let twoLines = size(dated, width: whole.width + 8)
+        XCTAssertGreaterThan(twoLines.height, oneLine.height + 1)
+        XCTAssertLessThanOrEqual(twoLines.width, whole.width + 8.5)
+    }
+
+    /// At the accessibility text sizes the tally keeps services on screen: they come straight
+    /// after the heading, and the slip at the bottom edge holds only the way on. With "Anything
+    /// missing…" on three lines above the list and the count on three lines above a two-line
+    /// button, the slip met the heading and there was nothing left to tap.
+    func testAtTheLargestTextTheTallyLeavesRoomForItsServices() throws {
+        XCTAssertFalse(TallyStep.listComesStraightAfterTheHeading(largeText: false))
+        XCTAssertTrue(TallyStep.listComesStraightAfterTheHeading(largeText: true))
+        XCTAssertFalse(TallyStep.slipHoldsOnlyTheWayOn(largeText: false))
+        XCTAssertTrue(TallyStep.slipHoldsOnlyTheWayOn(largeText: true))
+
+        let url = root.appendingPathComponent("Pausely/Views/FirstRun/FirstRunView.swift")
+        try XCTSkipUnless(FileManager.default.fileExists(atPath: url.path), "Sources aren't readable from this test run")
+        let source = try String(contentsOf: url, encoding: .utf8)
+        // The sentence is still said once at every size: above the list, or after it.
+        XCTAssertEqual(source.components(separatedBy: "Text(\"Anything missing can be added afterwards.\")").count - 1, 1)
+        XCTAssertEqual(source.components(separatedBy: "addedAfterwards\n").count - 1, 2)
+        XCTAssertTrue(source.contains("if !Self.listComesStraightAfterTheHeading(largeText: typeSize.isAccessibilitySize) {"))
+        XCTAssertTrue(source.contains("if Self.listComesStraightAfterTheHeading(largeText: typeSize.isAccessibilitySize) {"))
+        // Both the last line printed and the count are left out there; the button is not.
+        let slip = try XCTUnwrap(source.range(of: "private var slipBar: some View"))
+        let bar = String(source[slip.lowerBound...].prefix(1500))
+        let guarded = try XCTUnwrap(bar.range(of: "if !onlyTheWayOn {"))
+        let button = try XCTUnwrap(bar.range(of: "Button(action: onReveal)"))
+        let count = try XCTUnwrap(bar.range(of: "L10n.string(\"On your slip\")"))
+        XCTAssertTrue(guarded.upperBound < count.lowerBound && count.upperBound < button.lowerBound)
+    }
+
+    /// Facts joined by " · " sit one to a line at the accessibility text sizes, with no dot: where
+    /// "Wed, Nov 18 ·" was a character too wide, the dot began the next line ("· in 5 days").
+    func testFactsSitOneToALineAtTheLargestText() throws {
+        let nb = "\u{00A0}"
+        let date = "Wed,\(nb)Nov\(nb)18", away = "in\(nb)5\(nb)days"
+        XCTAssertEqual(L10n.facts("\(date) · \(away)", oneToALine: false), "\(date)\(nb)· \(away)", "side by side: breaks after the dot")
+        XCTAssertEqual(L10n.facts("\(date) · \(away)", oneToALine: true), "\(date)\n\(away)")
+        // A line that was already made to break after its dots comes out the same.
+        XCTAssertEqual(L10n.facts(L10n.breakingAfterDots("\(date) · \(away)"), oneToALine: true), "\(date)\n\(away)")
+        XCTAssertEqual(L10n.facts(L10n.breakingAfterDots("\(date) · \(away)"), oneToALine: false), "\(date)\(nb)· \(away)")
+        XCTAssertEqual(L10n.facts("Emails checked: 412 · read in full: 37 · all on your phone", oneToALine: true),
+                       "Emails checked: 412\nread in full: 37\nall on your phone")
+        XCTAssertEqual(L10n.facts("Cancelled", oneToALine: true), "Cancelled")
+        XCTAssertEqual(L10n.facts("Cancelled", oneToALine: false), "Cancelled")
+
+        // Each place that shows such a line draws it through `Facts`, which reads the text size.
+        let sources = root.appendingPathComponent("Pausely")
+        try XCTSkipUnless(FileManager.default.fileExists(atPath: sources.path), "Sources aren't readable from this test run")
+        let drawn: [(file: String, with: String)] = [
+            ("Views/SubscriptionsView.swift", "Facts(detail)"),
+            ("Views/DashboardView.swift", "Facts(detail)"),
+            ("Views/DashboardView.swift", "Facts(when)"),
+            ("Views/Verdict/RenewalVerdictView.swift", "Facts(whenText(charge))"),
+            ("Views/Verdict/RenewalVerdictView.swift", "Facts(text)"),
+            ("Views/SubscriptionManagementView.swift", "Facts(line.text)"),
+            ("Views/Verdict/SavingsReceiptView.swift", "Facts(L10n.string(\"Cancelled "),
+            ("Views/Verdict/PausePlanView.swift", "Facts(price)"),
+            ("Views/InboxImportView.swift", "Facts(accountDetail(account))"),
+            ("Views/InboxImportView.swift", "Facts(L10n.string(\"Emails checked: ")
+        ]
+        for place in drawn {
+            let source = try String(contentsOf: sources.appendingPathComponent(place.file), encoding: .utf8)
+            XCTAssertTrue(source.contains(place.with), "\(place.file) no longer draws \(place.with)")
+        }
+        let design = try String(contentsOf: sources.appendingPathComponent("DesignSystem/InkPaper.swift"), encoding: .utf8)
+        XCTAssertTrue(design.contains("Text(verbatim: L10n.facts(line, oneToALine: typeSize.isAccessibilitySize))"))
+    }
+
+    /// The empty name field on "Add your own" shows a hint that fits. A field shows its hint on
+    /// one line: at the accessibility text sizes "Netflix, Spotify…" was cut to "Netflix, Spo…",
+    /// so there it says "Name", in every language.
+    func testTheNameHintFitsAtTheLargestText() throws {
+        XCTAssertEqual(AddSubscriptionView.nameHint(largeText: false), L10n.string("Netflix, Spotify…"))
+        XCTAssertEqual(AddSubscriptionView.nameHint(largeText: true), L10n.string("Name"))
+
+        // Measured in the face the field uses, at the largest size, on the narrowest iPhone.
+        let largest = UITraitCollection(preferredContentSizeCategory: .accessibilityExtraExtraExtraLarge)
+        let size = UIFont.preferredFont(forTextStyle: .title1, compatibleWith: largest).pointSize
+        let system = UIFont.systemFont(ofSize: size, weight: .semibold)
+        let serif = system.fontDescriptor.withDesign(.serif).map { UIFont(descriptor: $0, size: size) } ?? system
+        func width(_ text: String) -> CGFloat { (text as NSString).size(withAttributes: [.font: serif]).width }
+        let room: CGFloat = 375 - 2 * Layout.margin
+        XCTAssertGreaterThan(width("Netflix, Spotify…"), room, "The examples do not fit there, which is why the rule exists")
+
+        let url = root.appendingPathComponent("Pausely/Localizable.xcstrings")
+        try XCTSkipUnless(FileManager.default.fileExists(atPath: url.path), "Sources aren't readable from this test run")
+        let catalog = try XCTUnwrap(JSONSerialization.jsonObject(with: Data(contentsOf: url)) as? [String: Any])
+        let strings = try XCTUnwrap(catalog["strings"] as? [String: [String: Any]])
+        let name = try XCTUnwrap(strings["Name"]?["localizations"] as? [String: [String: Any]])
+        var hints = ["en": "Name"]
+        for language in ["ar", "de", "es", "fr", "ja"] {
+            hints[language] = try XCTUnwrap((name[language]?["stringUnit"] as? [String: Any])?["value"] as? String, language)
+        }
+        for (language, hint) in hints {
+            XCTAssertLessThanOrEqual(width(hint), room, "\(language): \(hint)")
+        }
+    }
+
+    /// On the results of a search, at the accessibility text sizes, the bar at the bottom edge
+    /// holds only "Add to my list". The free-limit note is still said before the tap: under the
+    /// heading. In the bar, with a button of two lines, it left one line of what was found.
+    func testAtTheLargestTextTheResultsBarHoldsOnlyItsButton() throws {
+        XCTAssertFalse(InboxImportView.barHoldsOnlyTheButton(largeText: false))
+        XCTAssertTrue(InboxImportView.barHoldsOnlyTheButton(largeText: true))
+
+        let url = root.appendingPathComponent("Pausely/Views/InboxImportView.swift")
+        try XCTSkipUnless(FileManager.default.fileExists(atPath: url.path), "Sources aren't readable from this test run")
+        let source = try String(contentsOf: url, encoding: .utf8)
+        // Written once, shown in one of two places.
+        XCTAssertEqual(source.components(separatedBy: ".accessibilityIdentifier(\"freeLimitNote\")").count - 1, 1)
+        XCTAssertTrue(source.contains("if Self.barHoldsOnlyTheButton(largeText: typeSize.isAccessibilitySize) { freeLimitNote }"))
+        XCTAssertTrue(source.contains("if !Self.barHoldsOnlyTheButton(largeText: typeSize.isAccessibilitySize) { freeLimitNote }"))
+        // Under the heading, above the slip.
+        let heading = try XCTUnwrap(source.range(of: "Text(\"We found \\(count) subscriptions\")"))
+        let under = try XCTUnwrap(source.range(of: "if Self.barHoldsOnlyTheButton(largeText: typeSize.isAccessibilitySize) { freeLimitNote }"))
+        let slip = try XCTUnwrap(source.range(of: "PaperSlip(tornTop: true, tornBottom: true) {", range: heading.upperBound..<source.endIndex))
+        XCTAssertTrue(heading.upperBound < under.lowerBound && under.upperBound < slip.lowerBound)
+    }
+
+    /// A figure is never broken in the middle. Where the longest part a line cannot break is wider
+    /// than the line, the line is drawn smaller until that part fits: a year of rupiah on a slip
+    /// at the largest text size was "114,881,88" with "0" on the line below.
+    func testAFigureIsDrawnSmallerBeforeItIsBroken() {
+        let largest = WordFit.font(.subheadline, weight: .bold, monospaced: true, at: .accessibility5)
+        let ordinary = WordFit.font(.subheadline, weight: .bold, monospaced: true, at: .large)
+        XCTAssertGreaterThan(largest.pointSize, ordinary.pointSize * 2, "The measuring face follows the text size")
+
+        // What cannot break: a no-break space joins, a space or a zero-width space parts.
+        let figure = WordFit.widestWord(of: "114,881,880", in: largest)
+        XCTAssertEqual(WordFit.widestWord(of: "IDR 114,881,880", in: largest), figure)
+        XCTAssertEqual(WordFit.widestWord(of: "a\u{200B}114,881,880\nb", in: largest), figure)
+        XCTAssertGreaterThan(WordFit.widestWord(of: "IDR\u{00A0}114,881,880", in: largest), figure)
+        XCTAssertEqual(WordFit.widestWord(of: "", in: largest), 0)
+
+        // A slip on an iPhone 17: the screen less its margins and the slip's own.
+        let slip: CGFloat = 402 - 2 * Layout.margin - 2 * 18
+        XCTAssertGreaterThan(figure, slip, "At full size the figure is wider than the slip, which is how it was broken")
+        let scale = WordFit.scale(for: "IDR 114,881,880", in: largest, width: slip)
+        XCTAssertLessThan(scale, 1)
+        XCTAssertGreaterThanOrEqual(scale, WordFit.smallest)
+        XCTAssertLessThanOrEqual(WordFit.widestWord(of: "114,881,880", in: largest.withSize((largest.pointSize * scale).rounded(.down))), slip,
+                                 "Drawn at that scale, all of it is on one line")
+
+        // Under its label a currency and its figure may part, so the figure is as large as the
+        // line allows: the amount as money is written (a space that cannot break) was one
+        // part, and took half the size to fit.
+        let written = "IDR\u{00A0}114,881,880"
+        XCTAssertEqual(ProofLine.partsThatMayPart(written), "IDR 114,881,880")
+        XCTAssertEqual(ProofLine.partsThatMayPart("12\u{202F}345,67\u{00A0}€"), "12 345,67 €")
+        XCTAssertLessThan(WordFit.scale(for: written, in: largest, width: slip), scale)
+        XCTAssertEqual(WordFit.scale(for: ProofLine.partsThatMayPart(written), in: largest, width: slip), scale)
+
+        // Nothing changes where it fits, or before the line has been measured.
+        XCTAssertEqual(WordFit.scale(for: "IDR 114,881,880", in: ordinary, width: slip), 1)
+        XCTAssertEqual(WordFit.scale(for: "$18.99", in: largest, width: slip), 1)
+        XCTAssertEqual(WordFit.scale(for: "IDR 114,881,880", in: largest, width: 0), 1)
+        // And never so small that it is no longer large text.
+        XCTAssertEqual(WordFit.scale(for: "1,000,000,000,000,000,000,000", in: largest, width: 100), WordFit.smallest)
+    }
+
+    /// A receipt line at the accessibility text sizes starts at the leading edge and takes the
+    /// width it is given. Given a row as wide as the slip it used to sit centred, each pair of
+    /// name and price on its own centre ("Netflix" indented, "YouTube Premium" less so).
+    @MainActor
+    func testAReceiptLineStartsAtTheLeadingEdgeAtTheLargestText() throws {
+        func width(_ size: DynamicTypeSize) -> CGFloat {
+            let line = ProofLine(label: "Netflix", value: "$18.99").environment(\.dynamicTypeSize, size)
+            return UIHostingController(rootView: line).sizeThatFits(in: CGSize(width: 326, height: 4000)).width
+        }
+        XCTAssertEqual(width(.accessibility5), 326, accuracy: 0.5)
+        XCTAssertEqual(width(.accessibility1), 326, accuracy: 0.5)
+        XCTAssertEqual(width(.large), 326, accuracy: 0.5, "Side by side it always did")
+
+        let url = root.appendingPathComponent("Pausely/DesignSystem/InkPaper.swift")
+        try XCTSkipUnless(FileManager.default.fileExists(atPath: url.path), "Sources aren't readable from this test run")
+        let source = try String(contentsOf: url, encoding: .utf8)
+        XCTAssertTrue(source.contains("VStack(alignment: .leading, spacing: 2) { labelText; valueUnderItsLabel }"))
+        let under = try XCTUnwrap(source.range(of: "private var valueUnderItsLabel: some View"))
+        XCTAssertTrue(source[under.lowerBound...].prefix(400).contains(".wholeWords(parts, font: .proof(.subheadline"))
+    }
+
+    /// A state's mark or a service's logo sits above its words at the accessibility text sizes,
+    /// so the words have the whole line. Beside the logo "IDR 102,000,000 a year" lost its last
+    /// digit to the next line; beside a mark "Spotify" was hyphenated and its price broken.
+    func testAMarkSitsAboveItsWordsAtTheLargestText() throws {
+        XCTAssertFalse(MarkPlacement.sitsAbove(largeText: false))
+        XCTAssertTrue(MarkPlacement.sitsAbove(largeText: true))
+
+        let sources = root.appendingPathComponent("Pausely")
+        try XCTSkipUnless(FileManager.default.fileExists(atPath: sources.path), "Sources aren't readable from this test run")
+        let design = try String(contentsOf: sources.appendingPathComponent("DesignSystem/InkPaper.swift"), encoding: .utf8)
+        XCTAssertTrue(design.contains("if MarkPlacement.sitsAbove(largeText: typeSize.isAccessibilitySize) {"))
+        let places: [(file: String, after: String)] = [
+            ("Views/Verdict/RenewalVerdictView.swift", "private func header("),
+            ("Views/Components/CancelSubscriptionFlow.swift", "PaperSlip(tornTop: true, tornBottom: true) {"),
+            ("Views/AnalysisView.swift", "L10n.string(\"What went up\")"),
+            ("Views/Settings/NotificationsSettingsView.swift", "let status = notifications.status"),
+            ("Views/Components/PriceHistoryView.swift", "private func summary(")
+        ]
+        for place in places {
+            let source = try String(contentsOf: sources.appendingPathComponent(place.file), encoding: .utf8)
+            let start = try XCTUnwrap(source.range(of: place.after), place.file)
+            XCTAssertTrue(source[start.upperBound...].prefix(900).contains("MarkedWords"), "\(place.file): the mark is beside its words at every size")
+        }
+    }
+
+    /// Home's total is never cut off. At the accessibility text sizes it has the whole width
+    /// (it sat beside "+") and may take two lines, the currency above the figure: on one line
+    /// beside "+", already at half its size, a total in the millions ended "IDR 9,573,4…".
+    func testHomesTotalIsNeverCutOff() throws {
+        XCTAssertEqual(DashboardView.totalLines(largeText: false), 1)
+        XCTAssertEqual(DashboardView.totalLines(largeText: true), 2)
+        XCTAssertFalse(DashboardView.totalHasTheWholeWidth(largeText: false))
+        XCTAssertTrue(DashboardView.totalHasTheWholeWidth(largeText: true))
+
+        // Measured in the face the total uses, at the largest size, on the narrowest iPhone.
+        let largest = UITraitCollection(preferredContentSizeCategory: .accessibilityExtraExtraExtraLarge)
+        let size = UIFontMetrics(forTextStyle: .largeTitle).scaledValue(for: 52, compatibleWith: largest)
+        let page: CGFloat = 375 - 2 * Layout.margin
+        let besideAdd = page - 12 - Layout.tapTarget
+        XCTAssertGreaterThan(AmountFit.width(of: "IDR 114,881,880", size: size * 0.5), besideAdd,
+                             "Beside the button it does not fit on one line even at half size, which is how it was cut off")
+        XCTAssertLessThanOrEqual(AmountFit.width(of: "114,881,880", size: size * 0.5), page,
+                                 "On a line of its own, across the page, the figure fits")
+
+        let url = root.appendingPathComponent("Pausely/Views/DashboardView.swift")
+        try XCTSkipUnless(FileManager.default.fileExists(atPath: url.path), "Sources aren't readable from this test run")
+        let source = try String(contentsOf: url, encoding: .utf8)
+        let total = try XCTUnwrap(source.range(of: ".accessibilityIdentifier(\"spendTotal\")"))
+        let drawn = String(source[..<total.lowerBound].suffix(500))
+        XCTAssertTrue(drawn.contains(".lineLimit(Self.totalLines(largeText: typeSize.isAccessibilitySize))"))
+        XCTAssertTrue(drawn.contains(".minimumScaleFactor(0.5)"))
+        // With the whole width, the row that holds "+" ends before the total begins.
+        let wide = try XCTUnwrap(source.range(of: "if Self.totalHasTheWholeWidth(largeText: typeSize.isAccessibilitySize) {"))
+        let arrangement = String(source[wide.upperBound...].prefix(420))
+        let button = try XCTUnwrap(arrangement.range(of: "addButton"))
+        let figure = try XCTUnwrap(arrangement.range(of: "totalFigure"))
+        XCTAssertTrue(button.upperBound < figure.lowerBound)
+        XCTAssertTrue(arrangement[button.upperBound..<figure.lowerBound].contains("}"))
+    }
+
+    /// In the list, "/mo" goes under the amount before the amount is broken, and a value that
+    /// has gone under its title in a settings row reads from the leading edge.
+    func testAnAmountIsNotBrokenToMakeRoomForItsUnit() throws {
+        let sources = root.appendingPathComponent("Pausely")
+        try XCTSkipUnless(FileManager.default.fileExists(atPath: sources.path), "Sources aren't readable from this test run")
+        let list = try String(contentsOf: sources.appendingPathComponent("Views/SubscriptionsView.swift"), encoding: .utf8)
+        let price = try XCTUnwrap(list.range(of: "private var price: some View {"))
+        XCTAssertTrue(list[price.upperBound...].prefix(120).contains("LineOrStack(spacing: 2, lineSpacing: 0, alignment: .firstTextBaseline) {"),
+                      "Side by side in an HStack the unit took its width first and the amount broke after its currency")
+
+        // Two parts that do not fit a line: the second goes under, and the first keeps its width.
+        XCTAssertEqual(LineOrStack.arrangement(widths: [330, 75], spacing: 2, in: 362, besideShare: 0), .stack)
+        XCTAssertEqual(LineOrStack.arrangement(widths: [200, 75], spacing: 2, in: 362, besideShare: 0), .line)
+
+        let rows = try String(contentsOf: sources.appendingPathComponent("DesignSystem/SettingsParts.swift"), encoding: .utf8)
+        let stacked = try XCTUnwrap(rows.range(of: "// Large text gets the full width; what was at the end goes underneath."))
+        let sideBySide = try XCTUnwrap(rows.range(of: "HStack(alignment: .center, spacing: 12) {", range: stacked.upperBound..<rows.endIndex))
+        XCTAssertTrue(rows[stacked.upperBound..<sideBySide.lowerBound].contains("trailing\n                            .multilineTextAlignment(.leading)"))
+        XCTAssertTrue(rows[sideBySide.upperBound...].prefix(600).contains(".multilineTextAlignment(.trailing)"))
+        let history = try String(contentsOf: sources.appendingPathComponent("Views/Components/PriceHistoryView.swift"), encoding: .utf8)
+        XCTAssertFalse(history.contains(".multilineTextAlignment(.trailing)"), "The row decides, by where the value sits")
+    }
+
+    /// What a search finds can be seen while typing. At the accessibility text sizes the field
+    /// moves to the top of its page when it is typed in: under a heading and its explanation it
+    /// sat just above the keyboard, with the results behind the keys.
+    func testASearchFieldMovesToTheTopWhenTypedInAtTheLargestText() throws {
+        XCTAssertFalse(SearchField.movesToTheTopWhenTypedIn(largeText: false))
+        XCTAssertTrue(SearchField.movesToTheTopWhenTypedIn(largeText: true))
+
+        let sources = root.appendingPathComponent("Pausely")
+        try XCTSkipUnless(FileManager.default.fileExists(atPath: sources.path), "Sources aren't readable from this test run")
+        let controls = try String(contentsOf: sources.appendingPathComponent("DesignSystem/InkControls.swift"), encoding: .utf8)
+        XCTAssertTrue(controls.contains("if isTyping, Self.movesToTheTopWhenTypedIn(largeText: typeSize.isAccessibilitySize) { bringToTop?(identifier) }"))
+        XCTAssertTrue(controls.contains("page.scrollTo(id, anchor: .top)"))
+        // The two pages whose field sits under a heading can be asked to move it.
+        let settings = try String(contentsOf: sources.appendingPathComponent("DesignSystem/SettingsParts.swift"), encoding: .utf8)
+        XCTAssertTrue(settings.contains("SearchableScroll {"))
+        let catalog = try String(contentsOf: sources.appendingPathComponent("Views/SubscriptionBrowserView.swift"), encoding: .utf8)
+        XCTAssertTrue(catalog.contains("SearchableScroll {\n                if typeSize.isAccessibilitySize { top }"))
+    }
+
+    /// "Pro" sits under a row's words at the accessibility text sizes. At the end of the row,
+    /// with the chevron, it left the words a fifth of the width: "Paus", "e", "Plan".
+    func testProSitsUnderTheWordsAtTheLargestText() throws {
+        XCTAssertFalse(SubscriptionManagementView.proSitsUnderTheWords(largeText: false))
+        XCTAssertTrue(SubscriptionManagementView.proSitsUnderTheWords(largeText: true))
+
+        let url = root.appendingPathComponent("Pausely/Views/SubscriptionManagementView.swift")
+        try XCTSkipUnless(FileManager.default.fileExists(atPath: url.path), "Sources aren't readable from this test run")
+        let source = try String(contentsOf: url, encoding: .utf8)
+        // Drawn in exactly one of the two places.
+        XCTAssertTrue(source.contains("if isPro, Self.proSitsUnderTheWords(largeText: typeSize.isAccessibilitySize) {"))
+        XCTAssertTrue(source.contains("if isPro, !Self.proSitsUnderTheWords(largeText: typeSize.isAccessibilitySize) { ProPill() }"))
+        XCTAssertEqual(source.components(separatedBy: "ProPill()").count - 1, 2)
+    }
+
+    /// The way into "Create your account" shows one thing at a time: the age check, then the
+    /// form. The form used to put the age check over itself as it opened, and on iPad neither
+    /// stayed: "Keep my list" ended back on the total. The screen underneath opens both now.
+    func testTheAccountFormOpensAfterTheAgeCheckNotUnderIt() throws {
+        XCTAssertEqual(SignUpDoor.first(agePassed: false, capturingTheForm: false), .ageCheck)
+        XCTAssertEqual(SignUpDoor.first(agePassed: true, capturingTheForm: false), .form)
+        XCTAssertEqual(SignUpDoor.first(agePassed: false, capturingTheForm: true), .form, "a capture of the form itself (debug builds)")
+        XCTAssertTrue(SignUpDoor.formFollowsTheAgeCheck(agePassed: true))
+        XCTAssertFalse(SignUpDoor.formFollowsTheAgeCheck(agePassed: false), "under age, or the check was closed: no form")
+
+        let sources = root.appendingPathComponent("Pausely")
+        try XCTSkipUnless(FileManager.default.fileExists(atPath: sources.path), "Sources aren't readable from this test run")
+        // The form opens when the age check has closed, not while it is opening.
+        let door = try String(contentsOf: sources.appendingPathComponent("Views/Auth/SignUpDoor.swift"), encoding: .utf8)
+        let closed = try XCTUnwrap(door.range(of: ".fullScreenCover(isPresented: $showAgeCheck, onDismiss: {"))
+        XCTAssertTrue(door[closed.upperBound...].prefix(200).contains("showForm = true"))
+        // The form no longer opens the age check as it appears; it still refuses to create an
+        // account without one.
+        let forms = try String(contentsOf: sources.appendingPathComponent("Views/Auth/AccountForms.swift"), encoding: .utf8)
+        XCTAssertFalse(forms.contains(".onAppear {\n                // Age is confirmed"))
+        XCTAssertFalse(forms.contains("if !ageConsent.hasPassedDeviceGate, LaunchFlag"))
+        XCTAssertTrue(forms.contains("guard ageConsent.hasPassedDeviceGate else {\n            showAgeGate = true\n            return\n        }"))
+        // Every way into the form goes through the door, and the first run opens it from the
+        // root, over the total, without changing the screen underneath.
+        let app = try String(contentsOf: sources.appendingPathComponent("ContentView.swift"), encoding: .utf8)
+        var presentations = 0
+        for file in try FileManager.default.subpathsOfDirectory(atPath: sources.path) where file.hasSuffix(".swift") {
+            let text = try String(contentsOf: sources.appendingPathComponent(file), encoding: .utf8)
+            presentations += text.components(separatedBy: "SignUpView()").count - 1
+        }
+        XCTAssertEqual(presentations, 1, "SignUpView is opened in one place, the door")
+        XCTAssertEqual(app.components(separatedBy: ".signUpDoor(isOpen:").count - 1, 2, "the root and the welcome screen")
+        let keep = try XCTUnwrap(app.range(of: "onKeepList: {\n"))   // not the demo screen's empty one
+        let keeping = String(app[keep.upperBound...].prefix(700))
+        let signIn = try XCTUnwrap(keeping.range(of: "onSignIn: {"))
+        XCTAssertTrue(keeping[..<signIn.lowerBound].contains("signingUp = true"))
+        XCTAssertFalse(keeping[..<signIn.lowerBound].contains("showAuth = true"), "the total stays underneath")
+    }
+
+    /// Words are not broken inside themselves to make room for what sits beside them. At the
+    /// accessibility text sizes a found subscription's words run the width of the row, the cost
+    /// of an hour's use goes under the words it belongs to, and "Pro" goes under the name it
+    /// marks: beside their neighbours these read "Spoti-fy", "Last charge" over "d Nov 8",
+    /// "$6.85" over "an" over "hour", and "Pause" over "Plan".
+    func testWordsAreNotBrokenToMakeRoomForTheirNeighbours() throws {
+        XCTAssertFalse(FoundRow.wordsHaveTheWholeRow(largeText: false))
+        XCTAssertTrue(FoundRow.wordsHaveTheWholeRow(largeText: true))
+
+        let sources = root.appendingPathComponent("Pausely")
+        try XCTSkipUnless(FileManager.default.fileExists(atPath: sources.path), "Sources aren't readable from this test run")
+        let found = try String(contentsOf: sources.appendingPathComponent("Views/Inbox/FoundRow.swift"), encoding: .utf8)
+        let wide = try XCTUnwrap(found.range(of: "if Self.wordsHaveTheWholeRow(largeText: typeSize.isAccessibilitySize) {"))
+        let narrow = try XCTUnwrap(found.range(of: "} else {", range: wide.upperBound..<found.endIndex))
+        let stacked = String(found[wide.upperBound..<narrow.lowerBound])
+        // The box and the way to "why" share the first line; the words follow, as wide as the row,
+        // with no logo beside them.
+        let controls = try XCTUnwrap(stacked.range(of: "whyButton"))
+        let words = try XCTUnwrap(stacked.range(of: "nameAndEvidence; price"))
+        XCTAssertTrue(controls.upperBound < words.lowerBound)
+        XCTAssertTrue(stacked.contains(".frame(maxWidth: .infinity, alignment: .leading)"))
+        XCTAssertFalse(stacked.contains("ServiceLogoView"))
+
+        let insights = try String(contentsOf: sources.appendingPathComponent("Views/AnalysisView.swift"), encoding: .utf8)
+        let usage = try XCTUnwrap(insights.range(of: "private func usageRow("))
+        XCTAssertTrue(insights[usage.upperBound...].prefix(900).contains("AdaptiveRow {"))
+
+        let plan = try String(contentsOf: sources.appendingPathComponent("Views/Verdict/PausePlanView.swift"), encoding: .utf8)
+        let name = try XCTUnwrap(plan.range(of: "Text(\"Pause Plan\")\n                            .font(.body.weight(.medium))"))
+        XCTAssertTrue(plan[..<name.lowerBound].suffix(80).contains("LineOrStack(spacing: 8, lineSpacing: 4) {"))
+        // The pill is as wide as it is; the name beside it is not: they share a line only when
+        // both fit.
+        XCTAssertEqual(LineOrStack.arrangement(widths: [270, 75], spacing: 8, in: 330, besideShare: 0), .stack)
+        XCTAssertEqual(LineOrStack.arrangement(widths: [90, 40], spacing: 8, in: 330, besideShare: 0), .line)
+    }
+
+    /// The app asks first in one way: choices from the place that was tapped, or an alert at
+    /// the accessibility text sizes, where iOS drew those choices in a narrow bubble and broke
+    /// the words to fit ("Re-move", "Sign out of Pause-ly?").
+    func testAskingFirstIsAnAlertAtTheLargestText() throws {
+        XCTAssertFalse(Asking.isAnAlert(largeText: false))
+        XCTAssertTrue(Asking.isAnAlert(largeText: true))
+
+        let sources = root.appendingPathComponent("Pausely")
+        try XCTSkipUnless(FileManager.default.fileExists(atPath: sources.path), "Sources aren't readable from this test run")
+        var asked = 0
+        for file in try FileManager.default.subpathsOfDirectory(atPath: sources.path) where file.hasSuffix(".swift") {
+            let text = try String(contentsOf: sources.appendingPathComponent(file), encoding: .utf8)
+            asked += text.components(separatedBy: ".asksFirst(").count - 1
+            if !file.hasPrefix("DesignSystem/") {
+                XCTAssertFalse(text.contains(".confirmationDialog("), "\(file) asks in its own way")
+            }
+        }
+        XCTAssertEqual(asked, 5, "sign out, remove (twice), discard changes, end Pause Plan")
+        // Both shapes are attached and one is shown, so the screen underneath is not rebuilt
+        // when the text size changes.
+        let controls = try String(contentsOf: sources.appendingPathComponent("DesignSystem/InkControls.swift"), encoding: .utf8)
+        let asking = try XCTUnwrap(controls.range(of: "private struct AsksFirst"))
+        let body = String(controls[asking.upperBound...].prefix(1600))
+        XCTAssertTrue(body.contains(".confirmationDialog(title, isPresented: asking(asAlert: false)"))
+        XCTAssertTrue(body.contains(".alert(title, isPresented: asking(asAlert: true)"))
+        XCTAssertFalse(body.contains("if Asking.isAnAlert"))
     }
 
     /// A service under "Popular" is listed again under "All services". The two rows have different

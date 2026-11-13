@@ -77,6 +77,7 @@ private struct BackButton: View {
                 .contentShape(Rectangle())
         }
         .accessibilityLabel(Text("Back"))
+        .accessibilityIdentifier("firstRunBack")
     }
 }
 
@@ -93,88 +94,142 @@ struct GuessStep: View {
     private var step: Double { 5 * unit }
     private var top: Double { 400 * unit }
     @ScaledMetric(relativeTo: .largeTitle) private var numberSize: CGFloat = 76
+    @Environment(\.dynamicTypeSize) private var typeSize
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 0) {
-            HStack {
-                Wordmark().foregroundStyle(Color.inkText)
-                Spacer()
-                Button(action: onSignIn) {
-                    Text("Sign in")
-                        .font(.subheadline.weight(.semibold))
-                        .foregroundStyle(Color.inkTextMuted)
-                        .tapArea(.trailing)
-                }
-                .accessibilityIdentifier("firstRunSignIn")
-            }
-
-            ScrollView {
+        Group {
+            if Self.answerSitsLow(onPad: onPad, largeText: typeSize.isAccessibilitySize) {
+                // The question takes the room above the number and its control, which sit low,
+                // where a thumb reaches them.
                 VStack(alignment: .leading, spacing: 0) {
-                    Text("What do you think you pay for subscriptions each month?")
-                        .font(.question(.title))
-                        .foregroundStyle(Color.inkText)
-                        .fixedSize(horizontal: false, vertical: true)
-                        .padding(.top, 36)
-                        .accessibilityAddTraits(.isHeader)
-
-                    Text("Just guess. Don't look anything up.")
-                        .font(.subheadline)
-                        .foregroundStyle(Color.inkTextMuted)
-                        .padding(.top, 10)
+                    header
+                    ScrollView { question }
+                        .scrollBounceBehavior(.basedOnSize)
+                    answer
+                        .padding(.bottom, 28)
+                    nextButton
                 }
-                .frame(maxWidth: .infinity, alignment: .leading)
-            }
-            .scrollBounceBehavior(.basedOnSize)
-            // On an iPhone the question takes the room above the controls. On iPad it is only as
-            // tall as its words, so the controls come straight after it.
-            .fixedSize(horizontal: false, vertical: !Self.answerSitsLow(onPad: onPad))
-
-            // The number and its control sit low, where a thumb reaches them. Not on iPad: its
-            // bottom edge is not where a thumb rests, and there they were a thousand points
-            // below the question they answer.
-            VStack(alignment: .leading, spacing: 8) {
-                Text(verbatim: amountText)
-                    .font(.total(numberSize))
-                    .foregroundStyle(Color.inkText)
-                    .contentTransition(.numericText(value: guess))
-                    .minimumScaleFactor(0.5)
-                    .lineLimit(1)
-                    .accessibilityHidden(true)
-
-                Slider(value: snapped, in: 0...top) {
-                    Text("Your guess")
-                } minimumValueLabel: {
-                    Text(verbatim: MoneyFormat.string(Decimal(0), currency, locale: L10n.locale, wholeUnits: true))
-                } maximumValueLabel: {
-                    Text(verbatim: MoneyFormat.string(Decimal(Int(top)), currency, locale: L10n.locale, wholeUnits: true) + "+")
+                .padding(.horizontal, Layout.margin)
+            } else {
+                // One page, read from the top. On iPad the bottom edge is not where a thumb rests,
+                // and there the number was a thousand points below the question it answers. At
+                // the accessibility text sizes the number, the slider and the button took the
+                // screen and the question was cut after its third line.
+                ScrollView {
+                    VStack(alignment: .leading, spacing: 0) {
+                        header
+                        question
+                        answer
+                            .padding(.top, 48)
+                            .padding(.bottom, 28)
+                        nextButton
+                    }
+                    .padding(.horizontal, Layout.margin)
                 }
-                .font(.caption)
-                .foregroundStyle(Color.inkTextFaint)
-                .tint(Color.inkText)
-                .accessibilityValue(Text(verbatim: amountText))
-                .accessibilityIdentifier("guessSlider")
-                .onChange(of: guess) { _, _ in Feel.selection() }
+                .scrollBounceBehavior(.basedOnSize)
             }
-            .animation(Motion.unlessReduced(Motion.touch), value: guess)
-            .padding(.top, Self.answerSitsLow(onPad: onPad) ? 0 : 48)
-            .padding(.bottom, 28)
-
-            Button(action: onNext) { Text("That's my guess") }
-                .buttonStyle(.ink)
-                .accessibilityIdentifier("getStartedButton")
-                .padding(.bottom, 12)
-
-            if !Self.answerSitsLow(onPad: onPad) { Spacer(minLength: 0) }
         }
-        .padding(.horizontal, Layout.margin)
         .padding(.top, 8)
     }
+
+    /// The name and the way in for someone who has an account. Side by side, or the way in under
+    /// the name where the two no longer fit on a line.
+    private var header: some View {
+        LineOrStack(spacing: 12, lineSpacing: 0, spread: true) {
+            Wordmark().foregroundStyle(Color.inkText)
+            Button(action: onSignIn) {
+                Text("Sign in")
+                    .font(.subheadline.weight(.semibold))
+                    .foregroundStyle(Color.inkTextMuted)
+                    .tapArea(.trailing)
+            }
+            .accessibilityIdentifier("firstRunSignIn")
+        }
+    }
+
+    private var question: some View {
+        VStack(alignment: .leading, spacing: 0) {
+            Text("What do you think you pay for subscriptions each month?")
+                .font(.question(.title))
+                .foregroundStyle(Color.inkText)
+                .fixedSize(horizontal: false, vertical: true)
+                .padding(.top, 36)
+                .accessibilityAddTraits(.isHeader)
+                .accessibilityIdentifier("firstRunQuestion")
+
+            Text("Just guess. Don't look anything up.")
+                .font(.subheadline)
+                .foregroundStyle(Color.inkTextMuted)
+                .fixedSize(horizontal: false, vertical: true)
+                .padding(.top, 10)
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+    }
+
+    private var answer: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            Text(verbatim: amountText)
+                .font(.total(numberSize))
+                .foregroundStyle(Color.inkText)
+                .contentTransition(.numericText(value: guess))
+                .minimumScaleFactor(0.5)
+                .lineLimit(1)
+                .accessibilityHidden(true)
+
+            Group {
+                if Self.endsSitUnderTheTrack(largeText: typeSize.isAccessibilitySize) {
+                    VStack(spacing: 4) {
+                        guessSlider(Slider(value: snapped, in: 0...top) { Text("Your guess") })
+                        HStack(alignment: .firstTextBaseline) {
+                            Text(verbatim: lowest)
+                            Spacer(minLength: 8)
+                            Text(verbatim: highest)
+                        }
+                    }
+                } else {
+                    guessSlider(Slider(value: snapped, in: 0...top) {
+                        Text("Your guess")
+                    } minimumValueLabel: {
+                        Text(verbatim: lowest)
+                    } maximumValueLabel: {
+                        Text(verbatim: highest)
+                    })
+                }
+            }
+            .font(.caption)
+            .foregroundStyle(Color.inkTextFaint)
+        }
+        .animation(Motion.unlessReduced(Motion.touch), value: guess)
+    }
+
+    private func guessSlider(_ slider: some View) -> some View {
+        slider
+            .tint(Color.inkText)
+            .accessibilityValue(Text(verbatim: amountText))
+            .accessibilityIdentifier("guessSlider")
+            .onChange(of: guess) { _, _ in Feel.selection() }
+    }
+
+    private var nextButton: some View {
+        Button(action: onNext) { Text("That's my guess") }
+            .buttonStyle(.ink)
+            .accessibilityIdentifier("getStartedButton")
+            .padding(.bottom, 12)
+    }
+
+    private var lowest: String { MoneyFormat.string(Decimal(0), currency, locale: L10n.locale, wholeUnits: true) }
+    private var highest: String { MoneyFormat.string(Decimal(Int(top)), currency, locale: L10n.locale, wholeUnits: true) + "+" }
 
     private var onPad: Bool { UIDevice.current.userInterfaceIdiom == .pad }
 
     /// Whether the number, its slider and the button sit at the bottom edge, under whatever room
-    /// the question leaves. On an iPhone, yes. On iPad they follow the question.
-    nonisolated static func answerSitsLow(onPad: Bool) -> Bool { !onPad }
+    /// the question leaves. On an iPhone at the ordinary text sizes, yes. On iPad and at the
+    /// accessibility sizes they follow the question on one page.
+    nonisolated static func answerSitsLow(onPad: Bool, largeText: Bool) -> Bool { !onPad && !largeText }
+
+    /// Whether the lowest and highest amounts go under the slider. Beside it, at the accessibility
+    /// text sizes, they left the track a third of the width: two points of travel for each step.
+    nonisolated static func endsSitUnderTheTrack(largeText: Bool) -> Bool { largeText }
 
     /// Snaps to steps of five without the tick marks a stepped slider draws.
     private var snapped: Binding<Double> {
@@ -189,7 +244,7 @@ struct GuessStep: View {
 
 // MARK: - 2. The tally
 
-private struct TallyStep: View {
+struct TallyStep: View {
     @Binding var tally: Tally
     let rates: CurrencyRates
     let onBack: () -> Void
@@ -219,14 +274,11 @@ private struct TallyStep: View {
                         .padding(.top, 8)
                         .accessibilityAddTraits(.isHeader)
 
-                    Text("Anything missing can be added afterwards.")
-                        .font(.subheadline)
-                        .foregroundStyle(Color.inkTextMuted)
-                        .padding(.top, 8)
-                        .padding(.bottom, 20)
+                    if !Self.listComesStraightAfterTheHeading(largeText: typeSize.isAccessibilitySize) {
+                        addedAfterwards
+                            .padding(.top, 8)
+                    }
 
-                    // At the largest text sizes the slip below keeps to its count and its button, and
-                    // the heading above already says what to do, so the first service is on screen.
                     LazyVGrid(columns: columns, spacing: 10) {
                         ForEach(services) { service in
                             ServiceTile(service: service, isOn: tally.contains(service),
@@ -243,7 +295,15 @@ private struct TallyStep: View {
                             }
                         }
                     }
+                    .padding(.top, 20)
                     .padding(.bottom, 24)
+
+                    // Said where the question comes up: at the end of the list, by someone who did
+                    // not find theirs.
+                    if Self.listComesStraightAfterTheHeading(largeText: typeSize.isAccessibilitySize) {
+                        addedAfterwards
+                            .padding(.bottom, 24)
+                    }
                 }
                 .padding(.horizontal, Layout.margin)
                 .padding(.top, 8)
@@ -261,21 +321,40 @@ private struct TallyStep: View {
         }
     }
 
+    private var addedAfterwards: some View {
+        Text("Anything missing can be added afterwards.")
+            .font(.subheadline)
+            .foregroundStyle(Color.inkTextMuted)
+            .fixedSize(horizontal: false, vertical: true)
+    }
+
+    /// Whether the services come straight after the heading, with "Anything missing can be added
+    /// afterwards." at the end of the list. At the accessibility text sizes, yes: that sentence
+    /// took three lines between the heading and the first service.
+    nonisolated static func listComesStraightAfterTheHeading(largeText: Bool) -> Bool { largeText }
+
+    /// Whether the slip at the bottom edge holds only the way on. At the accessibility text sizes,
+    /// yes: with its count ("On your slip", then the number, on three lines) and a button of two
+    /// lines it met the heading, and no service was left on screen to tap. Each service tapped
+    /// shows its own tick and its price (`ServiceTile`).
+    nonisolated static func slipHoldsOnlyTheWayOn(largeText: Bool) -> Bool { largeText }
+
     /// The slip, feeding out of the bottom of the screen: the last line printed, and the way on.
     private var slipBar: some View {
-        VStack(alignment: .leading, spacing: 12) {
+        let onlyTheWayOn = Self.slipHoldsOnlyTheWayOn(largeText: typeSize.isAccessibilitySize)
+        return VStack(alignment: .leading, spacing: 12) {
             if let last = tally.lines.last {
-                if !typeSize.isAccessibilitySize {
+                if !onlyTheWayOn {
                     ProofLine(label: last.name, value: MoneyFormat.string(last.amount, last.currency, locale: L10n.locale))
                         .id(last.name)
                         .transition(.asymmetric(insertion: .arriving(.offset(y: 8)), removal: .opacity))
+                    ProofLine(label: L10n.string("On your slip"), value: L10n.number(tally.lines.count), emphasised: true)
                 }
-                ProofLine(label: L10n.string("On your slip"), value: L10n.number(tally.lines.count), emphasised: true)
                 Button(action: onReveal) { Text("Show me the total") }
                     .buttonStyle(.ink(.onPaper))
                     .accessibilityIdentifier("showTotalButton")
             } else {
-                if !typeSize.isAccessibilitySize {
+                if !onlyTheWayOn {
                     Text("Your slip is empty. Tap the first thing you pay for.")
                         .font(.proof(.subheadline))
                         .fixedSize(horizontal: false, vertical: true)
@@ -310,17 +389,29 @@ private struct ServiceTile: View {
     let action: () -> Void
 
     @Environment(\.dynamicTypeSize) private var typeSize
+    /// The tick's disc grows with its glyph: at the largest text size the glyph was twice the
+    /// width of a fixed disc and hung over the tile's corner.
+    @ScaledMetric(relativeTo: .caption2) private var tickSize: CGFloat = 20
 
     var body: some View {
         Button(action: action) {
             Group {
                 if typeSize.isAccessibilitySize {
-                    Text(verbatim: service.name)
-                        .font(.body.weight(.medium))
-                        .foregroundStyle(Color.inkText)
-                        .multilineTextAlignment(.leading)
-                        .frame(maxWidth: .infinity, alignment: .leading)
-                        .padding(.trailing, 28)
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text(verbatim: service.name)
+                            .font(.body.weight(.medium))
+                            .foregroundStyle(Color.inkText)
+                            .multilineTextAlignment(.leading)
+                        // What the tap put on the slip. The slip at the foot of the screen shows
+                        // only the way on at these sizes, so the price is said here.
+                        if isOn, let price {
+                            Text(verbatim: price)
+                                .font(.proof(.subheadline))
+                                .foregroundStyle(Color.inkTextMuted)
+                        }
+                    }
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .padding(.trailing, tickSize + 8)
                 } else {
                     VStack(spacing: 8) {
                         ServiceLogoView(name: service.name, category: service.category.rawValue, size: 40)
@@ -347,7 +438,7 @@ private struct ServiceTile: View {
                     Image(systemName: "checkmark")
                         .font(.caption2.weight(.bold))
                         .foregroundStyle(Color.paperInk)
-                        .frame(width: 20, height: 20)
+                        .frame(width: tickSize, height: tickSize)
                         .background(Color.paper, in: Circle())
                         .padding(8)
                         .transition(.arriving(.scale))
@@ -443,7 +534,7 @@ private struct RevealStep: View {
                                 ProofLine(label: line.name,
                                           value: MoneyFormat.string(line.amount, line.currency, locale: L10n.locale))
                                     // A line is a place to tap: a fingertip tall (it was 28 points).
-                                    .frame(maxWidth: .infinity, minHeight: Layout.tapTarget)
+                                    .frame(maxWidth: .infinity, minHeight: Layout.tapTarget, alignment: .leading)
                                     .contentShape(Rectangle())
                             }
                             .buttonStyle(.plain)

@@ -13,6 +13,7 @@ struct AnalysisView: View {
     @ObservedObject private var currencyManager = CurrencyManager.shared
     @ObservedObject private var eventLog = LifecycleEventLog.shared
     @ObservedObject private var usageLog = UsageLog.shared
+    @Environment(\.dynamicTypeSize) private var typeSize
 
     private var live: [Subscription] { store.activeSubscriptions }
 
@@ -82,20 +83,28 @@ struct AnalysisView: View {
                         section(L10n.string("What went up")) {
                             ForEach(Array(increases.enumerated()), id: \.element.subscription.id) { index, item in
                                 if index > 0 { Hairline() }
-                                HStack(alignment: .firstTextBaseline, spacing: 12) {
+                                // Mark, name and price side by side; at the accessibility
+                                // text sizes one under the other. Side by side there the name
+                                // was hyphenated ("Spoti-fy") and the price broke at its point.
+                                MarkedWords(spacing: 12) {
                                     StateMark(state: .due)
-                                    VStack(alignment: .leading, spacing: 2) {
-                                        Text(verbatim: item.subscription.name)
-                                            .font(.body)
+                                } words: {
+                                    AdaptiveRow {
+                                        VStack(alignment: .leading, spacing: 2) {
+                                            Text(verbatim: item.subscription.name)
+                                                .font(.body)
+                                                .foregroundStyle(Color.inkText)
+                                                .fixedSize(horizontal: false, vertical: true)
+                                            Text(L10n.string("Up from \(MoneyFormat.string(item.from, item.subscription.currency)) since \(item.since.formatted(.dateTime.month(.abbreviated).day().locale(L10n.locale)))"))
+                                                .font(.subheadline)
+                                                .foregroundStyle(Color.inkTextMuted)
+                                                .fixedSize(horizontal: false, vertical: true)
+                                        }
+                                    } value: {
+                                        Text(verbatim: item.subscription.chargeText)
+                                            .font(.body.monospacedDigit())
                                             .foregroundStyle(Color.inkText)
-                                        Text(L10n.string("Up from \(MoneyFormat.string(item.from, item.subscription.currency)) since \(item.since.formatted(.dateTime.month(.abbreviated).day().locale(L10n.locale)))"))
-                                            .font(.subheadline)
-                                            .foregroundStyle(Color.inkTextMuted)
                                     }
-                                    Spacer(minLength: 8)
-                                    Text(verbatim: item.subscription.chargeText)
-                                        .font(.body.monospacedDigit())
-                                        .foregroundStyle(Color.inkText)
                                 }
                                 .padding(.vertical, 12)
                                 .accessibilityElement(children: .combine)
@@ -210,24 +219,29 @@ struct AnalysisView: View {
             Feel.selection()
             VerdictCenter.shared.showSubscription(line.subscription.id)
         } label: {
-            HStack(alignment: .firstTextBaseline, spacing: 12) {
+            // Side by side; at the accessibility text sizes the cost goes under the words. Beside
+            // them it took a third of the row ("$6.85", "an", "hour" on three lines) and the
+            // words took what was left ("This", "month:", "2 hrs,", "20 mins").
+            AdaptiveRow {
                 VStack(alignment: .leading, spacing: 2) {
                     Text(verbatim: line.subscription.name)
                         .font(.body)
                         .foregroundStyle(Color.inkText)
                         .multilineTextAlignment(.leading)
+                        .fixedSize(horizontal: false, vertical: true)
                     if let detail {
                         Text(verbatim: detail)
                             .font(.subheadline)
                             .foregroundStyle(Color.inkTextMuted)
                             .multilineTextAlignment(.leading)
+                            .fixedSize(horizontal: false, vertical: true)
                     }
                 }
-                Spacer(minLength: 8)
+            } value: {
                 Text(verbatim: value)
                     .font(.body.monospacedDigit())
                     .foregroundStyle(Color.inkText)
-                    .multilineTextAlignment(.trailing)
+                    .multilineTextAlignment(typeSize.isAccessibilitySize ? .leading : .trailing)
             }
             .padding(.vertical, 12)
             .contentShape(Rectangle())

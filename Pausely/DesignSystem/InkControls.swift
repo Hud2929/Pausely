@@ -166,6 +166,14 @@ struct ProPill: View {
 struct SearchField: View {
     @Binding var text: String
     let identifier: String
+    @FocusState private var typing: Bool
+    @Environment(\.dynamicTypeSize) private var typeSize
+    @Environment(\.bringToTop) private var bringToTop
+
+    /// Whether the field moves to the top of its page when it is typed in. At the accessibility
+    /// text sizes, yes: under a heading and its explanation the field sat just above the
+    /// keyboard, and what the search found was behind the keys.
+    nonisolated static func movesToTheTopWhenTypedIn(largeText: Bool) -> Bool { largeText }
 
     var body: some View {
         HStack(spacing: 10) {
@@ -179,6 +187,7 @@ struct SearchField: View {
                 .autocorrectionDisabled()
                 .submitLabel(.search)
                 .tint(Color.inkText)
+                .focused($typing)
                 .accessibilityIdentifier(identifier)
             if !text.isEmpty {
                 Button { text = "" } label: {
@@ -193,6 +202,85 @@ struct SearchField: View {
         .padding(.horizontal, 14)
         .frame(minHeight: 48)
         .background(Color.inkRaised, in: RoundedRectangle(cornerRadius: Layout.tileRadius, style: .continuous))
+        .id(identifier)
+        .onChange(of: typing) { _, isTyping in
+            if isTyping, Self.movesToTheTopWhenTypedIn(largeText: typeSize.isAccessibilitySize) { bringToTop?(identifier) }
+        }
+    }
+}
+
+/// How the app asks before something that is not undone.
+enum Asking {
+    /// As an alert at the accessibility text sizes; as choices from the place that was tapped
+    /// otherwise. iOS draws those choices in a narrow bubble, and at the largest text it broke
+    /// the words to fit ("Re-move", "Sign out of Pause-ly?"). An alert has the width of the
+    /// screen and scrolls.
+    static func isAnAlert(largeText: Bool) -> Bool { largeText }
+}
+
+private struct AsksFirst<Item, Actions: View>: ViewModifier {
+    let title: Text
+    @Binding var item: Item?
+    let message: Text?
+    @ViewBuilder let actions: (Item) -> Actions
+    @Environment(\.dynamicTypeSize) private var typeSize
+
+    /// True while there is something to ask about and this is the shape to ask in.
+    private func asking(asAlert: Bool) -> Binding<Bool> {
+        let shape = Asking.isAnAlert(largeText: typeSize.isAccessibilitySize)
+        return Binding(get: { item != nil && shape == asAlert }, set: { if !$0 { item = nil } })
+    }
+
+    func body(content: Content) -> some View {
+        // Both are attached and one is ever shown: choosing between them with `if` would rebuild
+        // the screen underneath whenever the text size crossed the line.
+        content
+            .confirmationDialog(title, isPresented: asking(asAlert: false), titleVisibility: .visible, presenting: item) { item in
+                actions(item)
+            } message: { _ in
+                if let message { message }
+            }
+            .alert(title, isPresented: asking(asAlert: true), presenting: item) { item in
+                actions(item)
+            } message: { _ in
+                if let message { message }
+            }
+    }
+}
+
+extension View {
+    /// Asks before doing something to `item` that is not undone (`Asking`). The buttons are the
+    /// ones the system draws: give the one that goes ahead the destructive role and the other
+    /// the cancel role.
+    func asksFirst<Item, Actions: View>(_ title: Text, about item: Binding<Item?>, message: Text? = nil,
+                                        @ViewBuilder actions: @escaping (Item) -> Actions) -> some View {
+        modifier(AsksFirst(title: title, item: item, message: message, actions: actions))
+    }
+
+    /// The same, for a question that is about nothing in particular.
+    func asksFirst<Actions: View>(_ title: Text, isPresented: Binding<Bool>, message: Text? = nil,
+                                  @ViewBuilder actions: @escaping () -> Actions) -> some View {
+        let item = Binding<Bool?>(get: { isPresented.wrappedValue ? true : nil }, set: { if $0 == nil { isPresented.wrappedValue = false } })
+        return modifier(AsksFirst(title: title, item: item, message: message, actions: { _ in actions() }))
+    }
+}
+
+extension EnvironmentValues {
+    /// Moves the part with this id to the top of the page it is on. Set by `SearchableScroll`.
+    @Entry var bringToTop: (@MainActor (String) -> Void)?
+}
+
+/// A scroll view that a search field inside it can move itself to the top of (`SearchField`).
+struct SearchableScroll<Content: View>: View {
+    @ViewBuilder var content: Content
+
+    var body: some View {
+        ScrollViewReader { page in
+            ScrollView { content }
+                .environment(\.bringToTop, { id in
+                    withAnimation(Motion.unlessReduced(Motion.touch)) { page.scrollTo(id, anchor: .top) }
+                })
+        }
     }
 }
 

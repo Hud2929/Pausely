@@ -99,6 +99,11 @@ extension Font {
     }
 
     private static let joinedScripts: Set<String> = ["ar", "fa", "ur", "ps", "ckb"]
+
+    /// Whether `proof` is the monospaced face in the app's language (not for joined scripts).
+    static var proofIsMonospaced: Bool {
+        !joinedScripts.contains(L10n.locale.language.languageCode?.identifier ?? "")
+    }
 }
 
 // MARK: - Layout
@@ -259,7 +264,10 @@ struct ProofLine: View {
     var body: some View {
         Group {
             if typeSize.isAccessibilitySize {
-                VStack(alignment: .leading, spacing: 2) { labelText; valueText }
+                // From the leading edge, whatever frame the line is given: inside a row a
+                // fingertip tall and as wide as the slip, each pair sat centred on its own.
+                VStack(alignment: .leading, spacing: 2) { labelText; valueUnderItsLabel }
+                    .frame(maxWidth: .infinity, alignment: .leading)
             } else {
                 // On one line; or the label wraps beside its value (an amount stays in its
                 // column); or, when the value is long, it goes under the label.
@@ -283,6 +291,108 @@ struct ProofLine: View {
             .font(.proof(.subheadline, weight: emphasised ? .bold : .medium))
             .monospacedDigit()
             .fixedSize(horizontal: false, vertical: true)
+    }
+
+    /// On its own line, a figure is never broken in the middle ("114,881,88" above "0", a year
+    /// of rupiah at the largest text size): it is drawn smaller until its longest part fits.
+    private var valueUnderItsLabel: some View {
+        let parts = Self.partsThatMayPart(value)
+        return Text(parts)
+            .wholeWords(parts, font: .proof(.subheadline, weight: emphasised ? .bold : .medium),
+                        measuredIn: .subheadline, weight: emphasised ? .bold : .medium, monospaced: Font.proofIsMonospaced)
+            .monospacedDigit()
+            .fixedSize(horizontal: false, vertical: true)
+    }
+
+    /// A value as it is written under its label: a currency and its figure may sit on two lines
+    /// there ("IDR" above "114,881,880"). Money is written with a space that cannot break, and
+    /// held to one line the whole amount was drawn at half the size of its own label.
+    nonisolated static func partsThatMayPart(_ value: String) -> String {
+        value.replacingOccurrences(of: "\u{00A0}", with: " ").replacingOccurrences(of: "\u{202F}", with: " ")
+    }
+}
+
+/// A word or a figure is never broken in the middle. Where the longest unbreakable part of a line
+/// is wider than the line, the line is drawn smaller until that part fits.
+enum WordFit {
+    /// Below half its size the text is no longer read at the size the person asked for; it stays
+    /// there and breaks as any text does.
+    static let smallest: CGFloat = 0.5
+
+    /// The widest part the line cannot break: parts end at a space, a line end or a zero-width
+    /// space. A no-break space joins what is on either side of it.
+    static func widestWord(of text: String, in font: UIFont) -> CGFloat {
+        text.split(whereSeparator: { $0 == " " || $0 == "\n" || $0 == "\u{200B}" })
+            .map { ceil((String($0) as NSString).size(withAttributes: [.font: font]).width) }
+            .max() ?? 0
+    }
+
+    /// How much smaller the text is drawn so that its widest part fits `width`: 1 when it does.
+    static func scale(for text: String, in font: UIFont, width: CGFloat) -> CGFloat {
+        let widest = widestWord(of: text, in: font)
+        guard width > 0, widest > width else { return 1 }
+        return max(smallest, (width / widest * 100).rounded(.down) / 100)
+    }
+
+    /// The face a text style is drawn in at a text size, for measuring.
+    static func font(_ style: UIFont.TextStyle, weight: UIFont.Weight, monospaced: Bool, at size: DynamicTypeSize) -> UIFont {
+        let traits = UITraitCollection(preferredContentSizeCategory: UIContentSizeCategory(size))
+        let points = UIFont.preferredFont(forTextStyle: style, compatibleWith: traits).pointSize
+        return monospaced ? .monospacedSystemFont(ofSize: points, weight: weight) : .systemFont(ofSize: points, weight: weight)
+    }
+}
+
+private struct WholeWords: ViewModifier {
+    let text: String
+    let font: Font
+    let style: UIFont.TextStyle
+    let weight: UIFont.Weight
+    let monospaced: Bool
+    @State private var width: CGFloat = 0
+    @Environment(\.dynamicTypeSize) private var typeSize
+
+    func body(content: Content) -> some View {
+        let measured = WordFit.font(style, weight: weight, monospaced: monospaced, at: typeSize)
+        let scale = WordFit.scale(for: text, in: measured, width: width)
+        content
+            .font(scale < 1 ? Font(measured.withSize((measured.pointSize * scale).rounded(.down))) : font)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .onGeometryChange(for: CGFloat.self) { $0.size.width } action: { width = $0 }
+    }
+}
+
+extension View {
+    /// The font of a line that holds a figure: `font`, or smaller where the longest unbreakable
+    /// part of `text` would not fit the line (`WordFit`). `style`, `weight` and `monospaced`
+    /// describe the same face to UIKit, which is what can measure it. Takes the whole width.
+    func wholeWords(_ text: String, font: Font, measuredIn style: UIFont.TextStyle,
+                    weight: UIFont.Weight = .regular, monospaced: Bool = false) -> some View {
+        modifier(WholeWords(text: text, font: font, style: style, weight: weight, monospaced: monospaced))
+    }
+}
+
+/// Where a mark (a state's symbol, a service's logo) sits against the words it marks.
+enum MarkPlacement {
+    /// Above them at the accessibility text sizes, so the words have the whole line: beside a
+    /// logo "IDR 102,000,000 a year" lost its last digit to the next line, and beside a state's
+    /// mark every line of an explanation was a fifth shorter.
+    static func sitsAbove(largeText: Bool) -> Bool { largeText }
+}
+
+/// A mark and the words it marks: side by side, or the mark above (`MarkPlacement`).
+struct MarkedWords<Mark: View, Words: View>: View {
+    var alignment: VerticalAlignment = .firstTextBaseline
+    var spacing: CGFloat = 10
+    @ViewBuilder var mark: Mark
+    @ViewBuilder var words: Words
+    @Environment(\.dynamicTypeSize) private var typeSize
+
+    var body: some View {
+        if MarkPlacement.sitsAbove(largeText: typeSize.isAccessibilitySize) {
+            VStack(alignment: .leading, spacing: 8) { mark; words }
+        } else {
+            HStack(alignment: alignment, spacing: spacing) { mark; words }
+        }
     }
 }
 
@@ -395,10 +505,32 @@ struct Wordmark: View {
     @ScaledMetric(relativeTo: .headline) private var markHeight: CGFloat = 15
 
     var body: some View {
-        HStack(spacing: 8) {
+        // The mark's foot sits a tenth of its height under the baseline, where centring puts it
+        // beside one line of text.
+        let drop = markHeight * 0.1
+        return HStack(alignment: .firstTextBaseline, spacing: 8) {
+            // Beside the first line, where it sits when there is only one. Centred, with
+            // "Pausely 2026" on two lines, it was between them.
             PauseMark(height: markHeight)
+                .alignmentGuide(.firstTextBaseline) { $0[.bottom] - drop }
+            // A single word has nowhere to break: beside "Sign in" at the largest text size it
+            // was "Pausel" above "y". With a year after it, it breaks at the space.
             Text(verbatim: text).font(.headline)
+                .fixedSize(horizontal: !text.contains(" "), vertical: true)
         }
+    }
+}
+
+/// A line of facts joined by " · " ("Nov 24 · In 12 days"). At the accessibility text sizes each
+/// fact has its own line (`L10n.facts`).
+struct Facts: View {
+    private let line: String
+    @Environment(\.dynamicTypeSize) private var typeSize
+
+    init(_ line: String) { self.line = line }
+
+    var body: some View {
+        Text(verbatim: L10n.facts(line, oneToALine: typeSize.isAccessibilitySize))
     }
 }
 

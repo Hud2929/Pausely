@@ -43,48 +43,96 @@ final class ScreenTourTests: XCTestCase {
         }
     }
 
+    /// The first launch, walked the way a new person walks it. Every step has to arrive: a walk
+    /// that carried on without one filed the first question under the tally's name, twice, and
+    /// nobody was told.
     func testFirstLaunch() throws {
         let app = XCUIApplication()
         app.launchArguments = ["--uitesting", "--reset-state"] + variantArguments
         app.launch()
-        sleep(3)
+        let myGuess = app.buttons["getStartedButton"]
+        XCTAssertTrue(myGuess.waitForExistence(timeout: 30), "The first question did not appear")
+        sleep(2)
         capture(app, "firstrun-guess")
-        if tapFirst(app, ["getStartedButton"]) {
+
+        // The question is whole: it ends above the slider that answers it. At the largest text
+        // size the number and the slider were drawn across its fourth line.
+        let question = app.staticTexts["firstRunQuestion"]
+        let slider = app.sliders["guessSlider"]
+        XCTAssertTrue(question.exists && slider.exists)
+        XCTAssertLessThanOrEqual(question.frame.maxY, slider.frame.minY, "The slider is drawn over the question")
+
+        if !myGuess.isHittable {
+            bringIntoView(app, myGuess)
             sleep(1)
-            var sawPriceSheet = false
-            for name in ["Netflix", "Spotify", "Apple Music", "iCloud+"] where app.buttons[name].exists && app.buttons[name].isHittable {
-                app.buttons[name].tap()
-                // Where the catalog has no dated price in this currency, the slip asks for one.
-                let price = app.textFields["priceField"]
-                if price.waitForExistence(timeout: 1) {
-                    if !sawPriceSheet { capture(app, "firstrun-price"); sawPriceSheet = true }
-                    price.typeText("10")
-                    app.buttons["priceSaveButton"].tap()
-                    sleep(1)
-                }
-            }
-            capture(app, "firstrun-tally")
-            if tapFirst(app, ["showTotalButton"]) {
-                sleep(3)
-                capture(app, "firstrun-reveal")
-                if tapFirst(app, ["keepListButton"]) {
-                    sleep(2)
-                    capture(app, "firstrun-account")
-                }
+            capture(app, "firstrun-guess-scroll1")
+        }
+        XCTAssertTrue(myGuess.isHittable, "\"That's my guess\" cannot be reached")
+        myGuess.tap()
+        XCTAssertTrue(app.buttons["noneOfTheseButton"].waitForExistence(timeout: 20), "\"That's my guess\" did not lead to the tally")
+        sleep(1)
+
+        var sawPriceSheet = false
+        for name in ["Netflix", "Spotify", "Apple Music", "iCloud+"] where app.buttons[name].exists && app.buttons[name].isHittable {
+            app.buttons[name].tap()
+            // Where the catalog has no dated price in this currency, the slip asks for one.
+            let price = app.textFields["priceField"]
+            if price.waitForExistence(timeout: 1) {
+                if !sawPriceSheet { capture(app, "firstrun-price"); sawPriceSheet = true }
+                price.typeText("10")
+                app.buttons["priceSaveButton"].tap()
+                sleep(1)
             }
         }
+        let showTotal = app.buttons["showTotalButton"]
+        XCTAssertTrue(showTotal.waitForExistence(timeout: 10), "None of the four services could be tapped")
+        sleep(1)
+        capture(app, "firstrun-tally")
+
+        // With something on the slip there is still a service on screen to tap. At the largest
+        // text size the slip met the heading and there was none.
+        let services = app.scrollViews.firstMatch.buttons.allElementsBoundByIndex.filter { $0.identifier != "firstRunBack" }
+        XCTAssertTrue(services.contains { $0.isHittable }, "The slip leaves no service on screen")
+
+        showTotal.tap()
+        let keep = app.buttons["keepListButton"]
+        XCTAssertTrue(keep.waitForExistence(timeout: 20), "\"Show me the total\" did not lead to the total")
+        sleep(3)
+        capture(app, "firstrun-reveal")
+        if !keep.isHittable {
+            // More than one screen down at the largest text size.
+            bringIntoView(app, keep)
+            sleep(1)
+            capture(app, "firstrun-reveal-scroll1")
+        }
+        XCTAssertTrue(keep.isHittable, "\"Keep my list\" cannot be reached")
+        keep.tap()
+        // The age check on a device that has not answered it, the account form on one that has.
+        // On iPad the two used to open at once and neither stayed: the walk was back on the total.
+        let ageCheck = app.buttons["ageGateContinueButton"]
+        let form = app.buttons["createAccountButton"]
+        XCTAssertTrue(ageCheck.waitForExistence(timeout: 20) || form.waitForExistence(timeout: 5),
+                      "\"Keep my list\" led to neither the age check nor the account form")
+        sleep(2)
+        capture(app, "firstrun-account")
     }
 
     func testMainTabs() throws {
         let app = launchDemo()
         capture(app, "dashboard")
-        scrollCapture(app, "dashboard", times: 4)
+        scrollCapture(app, "dashboard", times: tabScrolls)
 
         for (index, name) in ["subscriptions", "insights", "profile"].enumerated() {
             let app = launchDemo(tab: index + 1)
             capture(app, name)
-            scrollCapture(app, name, times: 4)
+            scrollCapture(app, name, times: tabScrolls)
         }
+    }
+
+    /// How far down a tab is followed. At the largest text size a page is two to three times as
+    /// long: four screens stopped above the last section of Insights ("What went up").
+    private var tabScrolls: Int {
+        ProcessInfo.processInfo.environment["PAUSELY_TOUR_VARIANT"] == "big" ? 10 : 4
     }
 
     func testSubscriptionScreens() throws {
@@ -154,7 +202,7 @@ final class ScreenTourTests: XCTestCase {
         for (tab, name) in [(0, "home-varied"), (1, "list-varied"), (2, "insights-varied")] where wanted(name) {
             let app = launch(varied + ["--demo-tab=\(tab)"])
             capture(app, name)
-            scrollCapture(app, name, times: 4)
+            scrollCapture(app, name, times: tabScrolls)
         }
 
         // One subscription of each kind on its own screens, and the screens that read the list.
@@ -291,6 +339,8 @@ final class ScreenTourTests: XCTestCase {
             self.tap(app, "editCancelButton")
         }
         state("manage-remove", ["--demo-subscription"]) { app in self.tap(app, "removeSubscriptionButton") }
+        // The rows under the facts, which the screen's own capture stops above at large text.
+        state("manage-tools", ["--demo-subscription"]) { app in self.show(app, "pausePlanRow") }
         state("manage-usage", ["--demo-subscription"]) { app in self.tap(app, "usageRow") }
         state("manage-hours", ["--demo-subscription"]) { app in
             self.tap(app, "usageRow")
@@ -345,16 +395,42 @@ final class ScreenTourTests: XCTestCase {
     /// on nothing and the keyboard never comes.
     private func bringIntoView(_ app: XCUIApplication, _ element: XCUIElement) {
         let screen = app.windows.firstMatch.frame
-        for _ in 0..<8 {
+        // Far off in long drags, near in short ones so it is not carried past. Eight short drags
+        // were two screens: at the largest text size "Sign out", "Delete account" and "Remove"
+        // are further down than that, and their dialogs were captured as the page above them.
+        for _ in 0..<40 {
             let frame = element.frame
             let below = frame.maxY > screen.maxY - 70
             let above = frame.minY < screen.minY + 70
             if element.isHittable && !below && !above { return }
-            let from = app.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: above ? 0.4 : 0.6))
-            let to = app.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: above ? 0.65 : 0.35))
+            let far = frame.minY > screen.maxY + screen.height / 2 || frame.maxY < screen.minY - screen.height / 2
+            let reach: CGFloat = far ? 0.25 : 0.125
+            let from = app.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: above ? 0.5 - reach : 0.5 + reach))
+            let to = app.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: above ? 0.5 + reach : 0.5 - reach))
             from.press(forDuration: 0.05, thenDragTo: to)
             sleep(1)
         }
+    }
+
+    /// A step the walk could not take is written down: the capture that follows is then of the
+    /// screen before it, under the name of the state that was meant.
+    private func missed(_ what: String) {
+        let file = outputDir.appendingPathComponent("tour_misses.txt")
+        let line = "\(what)\n"
+        if let handle = try? FileHandle(forWritingTo: file) {
+            handle.seekToEndOfFile()
+            handle.write(Data(line.utf8))
+            try? handle.close()
+        } else {
+            try? line.write(to: file, atomically: true, encoding: .utf8)
+        }
+    }
+
+    /// Scrolls to the element with this identifier and leaves it on screen.
+    private func show(_ app: XCUIApplication, _ identifier: String) {
+        let element = app.descendants(matching: .any)[identifier].firstMatch
+        guard element.waitForExistence(timeout: 6) else { return missed("\(identifier): not on the page") }
+        bringIntoView(app, element)
     }
 
     /// Taps the element with this identifier, scrolling to it if it is below the fold.
@@ -362,15 +438,15 @@ final class ScreenTourTests: XCTestCase {
         let element = app.descendants(matching: .any)[identifier].firstMatch
         // A row far down a long page is not built until the page is scrolled towards it.
         if !element.waitForExistence(timeout: 4) {
-            for _ in 0..<12 where !element.exists {
+            for _ in 0..<40 where !element.exists {
                 app.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.7))
                     .press(forDuration: 0.05, thenDragTo: app.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.2)))
                 sleep(1)
             }
         }
-        guard element.exists else { return }
+        guard element.exists else { return missed("\(identifier): not on the page") }
         bringIntoView(app, element)
-        if element.isHittable { element.tap() }
+        if element.isHittable { element.tap() } else { missed("\(identifier): could not be brought into reach") }
     }
 
     /// Swipes the list's row for this subscription, scrolling to it first: at the largest text size

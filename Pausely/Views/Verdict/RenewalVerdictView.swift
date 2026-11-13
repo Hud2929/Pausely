@@ -139,10 +139,11 @@ struct RenewalVerdictView: View {
 
     private func header(_ sub: Subscription, charge: (date: Date, isTrialEnd: Bool)?) -> some View {
         VStack(alignment: .leading, spacing: 10) {
-            HStack(spacing: 10) {
+            MarkedWords(alignment: .center) {
                 ServiceLogoView(name: sub.name, category: sub.category, size: 36)
+            } words: {
                 if let charge {
-                    Text(whenText(charge))
+                    Facts(whenText(charge))
                         .font(.subheadline.weight(.medium))
                         .foregroundStyle(daysUntil(charge.date) <= 1 ? Color.paperDue : Color.paperMuted)
                         .fixedSize(horizontal: false, vertical: true)
@@ -226,7 +227,7 @@ struct RenewalVerdictView: View {
     }
 
     private func factLine(_ text: String, color: Color = .paperInk) -> some View {
-        Text(text)
+        Facts(text)
             .font(.proof(.footnote))
             .foregroundStyle(color)
             .frame(maxWidth: .infinity, alignment: .leading)

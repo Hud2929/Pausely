@@ -185,16 +185,12 @@ struct SubscriptionsView: View {
         .listStyle(.plain)
         .scrollContentBackground(.hidden)
         .contentMargins(.bottom, 24, for: .scrollContent)
-        .confirmationDialog(Text("Remove \"\(pendingRemoval?.name ?? "")\"?"),
-                            isPresented: Binding(get: { pendingRemoval != nil }, set: { if !$0 { pendingRemoval = nil } }),
-                            titleVisibility: .visible,
-                            presenting: pendingRemoval) { subscription in
+        .asksFirst(Text("Remove \"\(pendingRemoval?.name ?? "")\"?"), about: $pendingRemoval,
+                   message: Text("This only removes it from Pausely. It won't cancel the subscription itself.")) { subscription in
             Button("Remove", role: .destructive) {
                 Task { await store.deleteSubscription(id: subscription.id) }
             }
             Button("Keep", role: .cancel) {}
-        } message: { _ in
-            Text("This only removes it from Pausely. It won't cancel the subscription itself.")
         }
     }
 
@@ -302,7 +298,7 @@ private struct SubscriptionRow: View {
                 .foregroundStyle(Color.inkText)
                 .strikethrough(group == .cancelled, color: Color.inkTextFaint)
                 .fixedSize(horizontal: false, vertical: true)
-            Text(verbatim: detail)
+            Facts(detail)
                 .font(.subheadline)
                 .foregroundStyle(detailColor)
                 .fixedSize(horizontal: false, vertical: true)
@@ -310,8 +306,11 @@ private struct SubscriptionRow: View {
         }
     }
 
+    /// The amount and how often, on a line. Where the two do not fit (millions of rupiah at the
+    /// largest text size), "/mo" goes under the amount: beside it, it took its width first and
+    /// the amount broke after its currency ("IDR", "/mo", then "8,500,000" on the next line).
     private var price: some View {
-        HStack(alignment: .firstTextBaseline, spacing: 2) {
+        LineOrStack(spacing: 2, lineSpacing: 0, alignment: .firstTextBaseline) {
             Text(verbatim: subscription.chargeText)
                 .font(.body.monospacedDigit())
                 .foregroundStyle(group == .cancelled ? Color.inkTextFaint : Color.inkText)

@@ -2,6 +2,7 @@ import SwiftUI
 
 struct AddSubscriptionView: View {
     @Environment(\.dismiss) private var dismiss
+    @Environment(\.dynamicTypeSize) private var typeSize
     /// The amount is the one big thing on this screen; it grows with the reader's text size.
     @ScaledMetric(relativeTo: .largeTitle) private var amountSize: CGFloat = 44
     @State private var name = ""
@@ -21,6 +22,13 @@ struct AddSubscriptionView: View {
         case name, amount
     }
 
+    /// What the empty name field says: two examples, or "Name" at the accessibility text sizes.
+    /// An empty field shows its hint on one line, and there the examples were cut off
+    /// ("Netflix, Spo…").
+    nonisolated static func nameHint(largeText: Bool) -> String {
+        largeText ? L10n.string("Name") : L10n.string("Netflix, Spotify…")
+    }
+
     var body: some View {
         ActionScreen(dismissesKeyboard: true) {
             VStack(alignment: .leading, spacing: 24) {
@@ -28,7 +36,7 @@ struct AddSubscriptionView: View {
                 VStack(alignment: .leading, spacing: 12) {
                     LeaveButton("Cancel") { dismiss() }
                         .accessibilityIdentifier("cancelButton")
-                    TextField("Netflix, Spotify…", text: $name, axis: .vertical)
+                    TextField(Self.nameHint(largeText: typeSize.isAccessibilitySize), text: $name, axis: .vertical)
                         .lineLimit(1...3)
                         .font(.question(.title))
                         .foregroundStyle(Color.inkText)
