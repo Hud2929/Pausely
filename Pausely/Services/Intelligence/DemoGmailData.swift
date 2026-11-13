@@ -56,5 +56,41 @@ extension InboxScanner {
                                                       presetID: "icloud", host: "imap.mail.me.com", addedAt: now),
                     checked: 312, read: 87)
     }
+
+    /// DEBUG only. The page with inboxes connected and nothing found, which no search of a
+    /// made-up mailbox reaches: `--demo-inbox=connected` (not searched yet), `=nothing` (searched,
+    /// nothing found) or `=failed` (one inbox refused the search).
+    func loadDemoConnected(_ state: String) {
+        let demo = Self.demoInboxes(state, now: Date())
+        presentDemo(connected: demo.accounts, outcome: demo.outcome, refused: demo.refused, checked: demo.checked)
+    }
+
+    /// What `loadDemoConnected` puts on the page: two inboxes (one with an address long enough to
+    /// wrap), what the search reported, and which inbox refused it.
+    struct DemoInboxes {
+        let accounts: [MailboxAccount]
+        let outcome: String?
+        let refused: [String: String]
+        let checked: Int
+    }
+
+    nonisolated static func demoInboxes(_ state: String, now: Date) -> DemoInboxes {
+        let searched = state == "connected" ? nil : now.addingTimeInterval(-2 * 3600)
+        let inboxes = [
+            MailboxAccount(id: "demo-icloud", kind: .imap, address: "jane.doe@icloud.com", presetID: "icloud",
+                           host: "imap.mail.me.com", addedAt: now, lastScan: searched),
+            MailboxAccount(id: "demo-work", kind: .imap, address: "jane.doe@longer-company-name.example.co.uk",
+                           presetID: "fastmail", host: "imap.fastmail.com", addedAt: now, lastScan: searched)
+        ]
+        switch state {
+        case "nothing":
+            return DemoInboxes(accounts: inboxes, outcome: L10n.string("No subscriptions found"), refused: [:], checked: 312)
+        case "failed":
+            return DemoInboxes(accounts: inboxes, outcome: L10n.string("The search couldn't be finished."),
+                               refused: ["demo-work": MailboxError.authExpired.localizedDescription], checked: 140)
+        default:
+            return DemoInboxes(accounts: inboxes, outcome: nil, refused: [:], checked: 0)
+        }
+    }
 }
 #endif

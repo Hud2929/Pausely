@@ -121,8 +121,8 @@ struct ResendCountdown: Equatable {
 }
 
 /// An email or web address as it is shown: whole, on as many lines as it needs. It may break
-/// after "@", after a dot and before a slash, so a long one is not cut in the middle the way
-/// "firstname.las…pany.co.uk" was. Everywhere else its characters are joined, so the line can
+/// after "@", after a dot, after a hyphen of its own and before a slash, so a long one is not
+/// cut in the middle the way "firstname.las…pany.co.uk" was. Everywhere else its characters are joined, so the line can
 /// neither break there nor be given a hyphen: at the accessibility text sizes iOS hyphenates
 /// long words, and "account.apple.com" was drawn as "accoun-t.apple.-com", a different address.
 enum AddressText {
@@ -137,7 +137,7 @@ enum AddressText {
         for (index, character) in characters.enumerated() {
             shown.append(character)
             guard index + 1 < characters.count else { break }
-            shown += character == "@" || character == "." || characters[index + 1] == "/" ? gap : joiner
+            shown += character == "@" || character == "." || character == "-" || characters[index + 1] == "/" ? gap : joiner
         }
         return shown
     }

@@ -41,7 +41,7 @@ touches the live database from tests.
 DEBUG launch arguments open single screens with demo data (see `RootView` in `ContentView.swift`):
 `--demo-mode`, `--demo-tab=N`, `--demo-verdict`, `--demo-receipt`, `--demo-savings`,
 `--demo-pause-plan` (`--demo-plan-active`), `--demo-subscription`, `--demo-subscription-edit`,
-`--demo-paywall`, `--demo-browser`, `--demo-gmail-results`, `--demo-inbox`, `--demo-imap-connect` (`=yahoo`, `=aol`, `=other`…),
+`--demo-paywall`, `--demo-browser`, `--demo-gmail-results`, `--demo-inbox` (`=connected`, `=nothing`, `=failed`), `--demo-imap-connect` (`=yahoo`, `=aol`, `=other`…),
 `--demo-wrapped`, `--demo-auth` (`=signup`, `=signin`, `=verify`, `=reset`, `=newpassword`), `--demo-age-gate`,
 `--demo-settings=notifications|privacy|help|currency|export|language`, `--demo-whats-new`, and `--screenshots`
 for App Store captures. Debug builds show "Test without an account" on the welcome screen (a local test

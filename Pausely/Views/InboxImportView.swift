@@ -332,42 +332,62 @@ struct InboxImportView: View {
 
     private func accountRow(_ account: MailboxAccount) -> some View {
         let failed = scanner.accountErrors[account.id] != nil
-        return HStack(spacing: 12) {
-            Image(systemName: failed ? "exclamationmark.circle" : "envelope")
-                .font(.body)
+        let mark = Image(systemName: failed ? "exclamationmark.circle" : "envelope")
+            .font(.body)
+            .foregroundStyle(failed ? Color.due : Color.inkTextMuted)
+            .accessibilityHidden(true)
+        let words = VStack(alignment: .leading, spacing: 2) {
+            // Whole, on as many lines as it needs: cut in the middle, two addresses at one
+            // provider could not be told apart.
+            Text(verbatim: AddressText.breakable(account.address))
+                .font(.body.weight(.medium))
+                .foregroundStyle(Color.inkText)
+                .fixedSize(horizontal: false, vertical: true)
+                .accessibilityLabel(Text(verbatim: account.address))
+            Facts(accountDetail(account))
+                .font(.subheadline)
                 .foregroundStyle(failed ? Color.due : Color.inkTextMuted)
-                .frame(width: 28)
-                .accessibilityHidden(true)
-            VStack(alignment: .leading, spacing: 2) {
-                // Whole, on as many lines as it needs: cut in the middle, two addresses at one
-                // provider could not be told apart.
-                Text(verbatim: AddressText.breakable(account.address))
-                    .font(.body.weight(.medium))
-                    .foregroundStyle(Color.inkText)
-                    .fixedSize(horizontal: false, vertical: true)
-                    .accessibilityLabel(Text(verbatim: account.address))
-                Facts(accountDetail(account))
-                    .font(.subheadline)
-                    .foregroundStyle(failed ? Color.due : Color.inkTextMuted)
-                    .fixedSize(horizontal: false, vertical: true)
-            }
-            Spacer(minLength: 8)
-            Menu {
-                Button(role: .destructive) {
-                    Task { await scanner.disconnect(account) }
-                } label: {
-                    Label("Disconnect", systemImage: "xmark.circle")
-                }
-                .accessibilityIdentifier("disconnectInbox")
+                .fixedSize(horizontal: false, vertical: true)
+        }
+        let options = Menu {
+            Button(role: .destructive) {
+                Task { await scanner.disconnect(account) }
             } label: {
-                Image(systemName: "ellipsis")
-                    .font(.body.weight(.semibold))
-                    .foregroundStyle(Color.inkTextMuted)
-                    .frame(minWidth: Layout.tapTarget, minHeight: Layout.tapTarget)
-                    .contentShape(Rectangle())
+                Label("Disconnect", systemImage: "xmark.circle")
             }
-            .accessibilityLabel("Options for \(account.address)")
-            .accessibilityIdentifier("inboxOptions")
+            .accessibilityIdentifier("disconnectInbox")
+        } label: {
+            Image(systemName: "ellipsis")
+                .font(.body.weight(.semibold))
+                .foregroundStyle(Color.inkTextMuted)
+                .frame(minWidth: Layout.tapTarget, minHeight: Layout.tapTarget)
+                .contentShape(Rectangle())
+        }
+        .accessibilityLabel("Options for \(account.address)")
+        .accessibilityIdentifier("inboxOptions")
+
+        return Group {
+            if MarkPlacement.sitsAbove(largeText: typeSize.isAccessibilitySize) {
+                // The mark and the options share a line and the address has the row: between
+                // them at the largest text size it had half, the envelope lay over its first
+                // letters, and "longer-company-name" was cut wherever the line ran out.
+                VStack(alignment: .leading, spacing: 6) {
+                    HStack(spacing: 8) {
+                        mark
+                        Spacer(minLength: 8)
+                        options
+                    }
+                    words
+                }
+                .frame(maxWidth: .infinity, alignment: .leading)
+            } else {
+                HStack(spacing: 12) {
+                    mark.frame(width: 28)
+                    words
+                    Spacer(minLength: 8)
+                    options
+                }
+            }
         }
         .padding(.vertical, 8)
     }

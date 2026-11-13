@@ -351,7 +351,11 @@ final class ScreenTourTests: XCTestCase {
         state("cancel-done", ["--demo-cancel"]) { app in self.tap(app, "iCancelledItButton") }
         state("receipt-share", ["--demo-receipt"]) { app in self.tap(app, "receiptShare") }
         state("pauseplan-end", varied + ["--demo-pause-plan", "--demo-plan-active"]) { app in self.tap(app, "endPausePlanButton") }
-        state("inbox-add", ["--demo-gmail-results"]) { app in self.tap(app, "addInboxButton") }
+        // The page with inboxes connected and nothing found (no made-up search ends there).
+        state("inbox-connected", ["--demo-inbox=connected"]) { _ in }
+        state("inbox-nothing", ["--demo-inbox=nothing"]) { _ in }
+        state("inbox-failed", ["--demo-inbox=failed"]) { _ in }
+        state("inbox-add", ["--demo-inbox=nothing"]) { app in self.tap(app, "addInboxButton") }
         state("signup-rules", ["--demo-auth=signup"]) { app in self.type(app, "passwordTextField", "abc") }
         state("newpassword-rules", ["--demo-auth=newpassword"]) { app in self.type(app, "newPasswordField", "abc") }
         state("firstrun-tally-empty", ["--demo-first-run"]) { app in self.tap(app, "getStartedButton") }

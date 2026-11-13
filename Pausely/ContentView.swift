@@ -200,6 +200,11 @@ struct RootView: View {
                     InboxImportView()
                         .task { if isDemoScreen("--reset-inbox") { await InboxScanner.shared.disconnectAll() } }
                     #endif
+                } else if let state = demoValue("--demo-inbox"), !state.isEmpty {
+                    #if DEBUG
+                    InboxImportView()
+                        .onAppear { InboxScanner.shared.loadDemoConnected(state) }
+                    #endif
                 } else if let presetID = demoIMAPPreset {
                     #if DEBUG
                     IMAPConnectView(preset: IMAPPreset.find(presetID))

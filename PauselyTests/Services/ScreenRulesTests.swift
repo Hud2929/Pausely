@@ -431,6 +431,17 @@ final class ScreenRulesTests: XCTestCase {
             let start = try XCTUnwrap(source.range(of: place.after), place.file)
             XCTAssertTrue(source[start.upperBound...].prefix(900).contains("MarkedWords"), "\(place.file): the mark is beside its words at every size")
         }
+        // A connected inbox: its mark shares a line with its options there, and the address
+        // has the row (the envelope lay over the address's first letters).
+        let inbox = try String(contentsOf: sources.appendingPathComponent("Views/InboxImportView.swift"), encoding: .utf8)
+        let row = try XCTUnwrap(inbox.range(of: "private func accountRow("))
+        let body = String(inbox[row.upperBound...].prefix(2600))
+        let above = try XCTUnwrap(body.range(of: "if MarkPlacement.sitsAbove(largeText: typeSize.isAccessibilitySize) {"))
+        let beside = try XCTUnwrap(body.range(of: "} else {", range: above.upperBound..<body.endIndex))
+        let stacked = body[above.upperBound..<beside.lowerBound]
+        XCTAssertTrue(stacked.contains("mark\n                        Spacer(minLength: 8)\n                        options"))
+        XCTAssertTrue(stacked.contains("words"))
+        XCTAssertFalse(stacked.contains(".frame(width: 28)"), "the mark is as wide as its glyph there")
     }
 
     /// Home's total is never cut off. At the accessibility text sizes it has the whole width
@@ -626,6 +637,38 @@ final class ScreenRulesTests: XCTestCase {
         XCTAssertTrue(body.contains(".confirmationDialog(title, isPresented: asking(asAlert: false)"))
         XCTAssertTrue(body.contains(".alert(title, isPresented: asking(asAlert: true)"))
         XCTAssertFalse(body.contains("if Asking.isAnAlert"))
+    }
+
+    /// The page with inboxes connected and nothing found has a way in for the tour. No search
+    /// of a made-up mailbox ends there, and for eleven tours the state named "inbox-add" was a
+    /// capture of the results list: "Add another inbox" is not on that page.
+    func testTheConnectedInboxPageCanBeOpenedInEachOfItsStates() throws {
+        let now = Date()
+        let connected = InboxScanner.demoInboxes("connected", now: now)
+        XCTAssertEqual(connected.accounts.map(\.address), ["jane.doe@icloud.com", "jane.doe@longer-company-name.example.co.uk"])
+        XCTAssertNil(connected.outcome, "not searched yet: nothing to report")
+        XCTAssertTrue(connected.accounts.allSatisfy { $0.lastScan == nil })
+        XCTAssertTrue(connected.refused.isEmpty)
+
+        let nothing = InboxScanner.demoInboxes("nothing", now: now)
+        XCTAssertEqual(nothing.outcome, L10n.string("No subscriptions found"))
+        XCTAssertTrue(nothing.refused.isEmpty)
+        XCTAssertEqual(nothing.checked, 312)
+        XCTAssertEqual(nothing.accounts.map(\.lastScan), [now.addingTimeInterval(-7200), now.addingTimeInterval(-7200)])
+
+        let failed = InboxScanner.demoInboxes("failed", now: now)
+        XCTAssertEqual(failed.outcome, L10n.string("The search couldn't be finished."))
+        XCTAssertEqual(failed.refused, ["demo-work": L10n.string("Your sign-in expired. Reconnect this inbox.")])
+        XCTAssertTrue(failed.accounts.contains { $0.id == "demo-work" }, "the inbox that refused is one of those listed")
+
+        // The tour opens each, and looks for "Add another inbox" on a page that has it.
+        let url = root.appendingPathComponent("PauselyUITests/ScreenTourTests.swift")
+        try XCTSkipUnless(FileManager.default.fileExists(atPath: url.path), "Sources aren't readable from this test run")
+        let tour = try String(contentsOf: url, encoding: .utf8)
+        for state in ["connected", "nothing", "failed"] {
+            XCTAssertTrue(tour.contains("state(\"inbox-\(state)\", [\"--demo-inbox=\(state)\"])"), state)
+        }
+        XCTAssertTrue(tour.contains("state(\"inbox-add\", [\"--demo-inbox=nothing\"]) { app in self.tap(app, \"addInboxButton\") }"))
     }
 
     /// A service under "Popular" is listed again under "All services". The two rows have different

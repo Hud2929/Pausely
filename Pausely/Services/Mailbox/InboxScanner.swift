@@ -426,6 +426,18 @@ final class InboxScanner: ObservableObject {
                           purchasesIgnored: analysis.ignoredPurchaseGroups,
                           confirmed: analysis.subscriptions.filter { $0.tier == .confirmed }.count)
     }
+
+    /// DEBUG only: made-up inboxes with nothing found in them, as the page stands before a search,
+    /// after one that found nothing, or after one that an inbox refused (`--demo-inbox=…`).
+    func presentDemo(connected: [MailboxAccount], outcome: String?, refused: [String: String], checked: Int) {
+        isShowingDemo = true
+        accounts = connected
+        report = nil
+        foundSubscriptions = []
+        error = outcome
+        accountErrors = refused
+        stats = ScanStats(emailsChecked: checked, bodiesRead: 0, receipts: 0, aiAssisted: 0, purchasesIgnored: 0, confirmed: 0)
+    }
     #endif
 
     // MARK: - Migration

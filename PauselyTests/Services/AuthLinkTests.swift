@@ -218,6 +218,8 @@ final class AuthLinkTests: XCTestCase {
         XCTAssertEqual(plain(shown), "jane.doe@example.co.uk", "nothing else is changed")
         XCTAssertEqual(AddressText.breakable("ab.cd"), "a\u{2060}b\u{2060}.\u{200B}c\u{2060}d", "joined wherever it may not break")
         XCTAssertEqual(marked(AddressText.breakable("myaccount.google.com/apppasswords")), "myaccount.|google.|com|/apppasswords")
+        // After a hyphen that is part of the address, never one that was added.
+        XCTAssertEqual(marked(AddressText.breakable("jane@longer-company-name.example")), "jane@|longer-|company-|name.|example")
         XCTAssertEqual(AddressText.breakable(""), "")
         XCTAssertEqual(AddressText.breakable("x"), "x")
 
