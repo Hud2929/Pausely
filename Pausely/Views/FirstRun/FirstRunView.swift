@@ -82,7 +82,7 @@ private struct BackButton: View {
 
 // MARK: - 1. The guess
 
-private struct GuessStep: View {
+struct GuessStep: View {
     @Binding var guess: Double
     let currency: String
     let onNext: () -> Void
@@ -125,8 +125,13 @@ private struct GuessStep: View {
                 .frame(maxWidth: .infinity, alignment: .leading)
             }
             .scrollBounceBehavior(.basedOnSize)
+            // On an iPhone the question takes the room above the controls. On iPad it is only as
+            // tall as its words, so the controls come straight after it.
+            .fixedSize(horizontal: false, vertical: !Self.answerSitsLow(onPad: onPad))
 
-            // The number and its control sit low, where a thumb reaches them.
+            // The number and its control sit low, where a thumb reaches them. Not on iPad: its
+            // bottom edge is not where a thumb rests, and there they were a thousand points
+            // below the question they answer.
             VStack(alignment: .leading, spacing: 8) {
                 Text(verbatim: amountText)
                     .font(.total(numberSize))
@@ -151,16 +156,25 @@ private struct GuessStep: View {
                 .onChange(of: guess) { _, _ in Feel.selection() }
             }
             .animation(Motion.unlessReduced(Motion.touch), value: guess)
+            .padding(.top, Self.answerSitsLow(onPad: onPad) ? 0 : 48)
             .padding(.bottom, 28)
 
             Button(action: onNext) { Text("That's my guess") }
                 .buttonStyle(.ink)
                 .accessibilityIdentifier("getStartedButton")
                 .padding(.bottom, 12)
+
+            if !Self.answerSitsLow(onPad: onPad) { Spacer(minLength: 0) }
         }
         .padding(.horizontal, Layout.margin)
         .padding(.top, 8)
     }
+
+    private var onPad: Bool { UIDevice.current.userInterfaceIdiom == .pad }
+
+    /// Whether the number, its slider and the button sit at the bottom edge, under whatever room
+    /// the question leaves. On an iPhone, yes. On iPad they follow the question.
+    nonisolated static func answerSitsLow(onPad: Bool) -> Bool { !onPad }
 
     /// Snaps to steps of five without the tick marks a stepped slider draws.
     private var snapped: Binding<Double> {

@@ -381,7 +381,9 @@ final class ScreenTourTests: XCTestCase {
         guard row.waitForExistence(timeout: 4) else { return false }
         bringIntoView(app, row)
         guard row.isHittable else { return false }
-        row.swipeLeft()
+        // The row's own actions are at its far end: the left in English, the right in Arabic
+        // (a swipe to the left there opened "Details", and the remove dialog was never captured).
+        if ProcessInfo.processInfo.environment["PAUSELY_TOUR_VARIANT"] == "ar" { row.swipeRight() } else { row.swipeLeft() }
         return true
     }
 

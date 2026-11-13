@@ -153,7 +153,7 @@ struct SubscriptionBrowserView: View {
                         if showFeatured {
                             if FeatureFlags.inboxImportEnabled { findInEmailRow }
                             sectionTitle(L10n.string("Popular"))
-                            ForEach(popularEntries) { entry in row(entry) }
+                            ForEach(popularEntries, id: \.popularRowID) { entry in row(entry) }
                             sectionTitle(L10n.string("All services"))
                         }
                         ForEach(filteredEntries) { entry in row(entry) }

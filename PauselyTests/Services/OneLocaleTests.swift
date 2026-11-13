@@ -73,6 +73,33 @@ final class OneLocaleTests: XCTestCase {
 
     // MARK: - Counts
 
+    /// A sentence that ends on an amount has one full stop, also where the currency's own sign
+    /// ends in one: in riyals the first run's reveal read "خمّنت ٠ ر.س.." (two).
+    func testASentenceThatEndsOnAnAmountHasOneFullStop() {
+        let mark = "\u{200F}"
+        XCTAssertEqual(L10n.withOneStop("خمّنت ٠ ر.س.\(mark). المبلغ ٤٠ ر.س.\(mark) في الشهر."),
+                       "خمّنت ٠ ر.س.\(mark) المبلغ ٤٠ ر.س.\(mark) في الشهر.")
+        XCTAssertEqual(L10n.withOneStop("من ١١٫٩٩ ر.س.. أي"), "من ١١٫٩٩ ر.س. أي")
+        // As the system sets it on screen: the amount inside an isolate, a mark after the sign.
+        // (Read from the first run's reveal in Arabic, character by character.)
+        let isolated = "خمّنت \u{2068}\u{200F}٠\u{00A0}ر.س.\u{200F}\u{2069}. المبلغ"
+        XCTAssertEqual(L10n.withOneStop(isolated), "خمّنت \u{2068}\u{200F}٠\u{00A0}ر.س.\u{200F}\u{2069} المبلغ")
+        XCTAssertEqual(L10n.withOneStop("You guessed $40. It's about $107 a month."), "You guessed $40. It's about $107 a month.")
+        XCTAssertEqual(L10n.withOneStop("Wait..."), "Wait...", "Three dots are somebody's ellipsis")
+        XCTAssertEqual(L10n.withOneStop("Version 1.0.3."), "Version 1.0.3.")
+        XCTAssertEqual(L10n.withOneStop("No stop here"), "No stop here")
+
+        // The whole way: the reveal's sentence, in Arabic, in riyals.
+        UserDefaults.standard.set("ar", forKey: L10n.languageKey)
+        defer { UserDefaults.standard.set("system", forKey: L10n.languageKey) }
+        let arabic = L10n.locale(language: "ar", onDevice: Locale(identifier: "ar_SA"))
+        let guess = MoneyFormat.string(Decimal(0), "SAR", locale: arabic)
+        let total = MoneyFormat.string(Decimal(40), "SAR", locale: arabic)
+        XCTAssertTrue(guess.contains("."), "The riyal's sign ends in a stop, or this test proves nothing")
+        let sentence = L10n.string("You guessed \(guess). It's \(total) a month.")
+        XCTAssertNil(sentence.range(of: "\\.[\u{200E}\u{200F}\u{061C}]*\\.", options: String.CompareOptions.regularExpression), sentence)
+    }
+
     /// A date and how far off it is break after the dot between them and nowhere else. One text
     /// size up, a row's second line read "Nov 24 · In" with "12 days" under it.
     func testADateAndItsDistanceBreakOnlyAfterTheDot() {

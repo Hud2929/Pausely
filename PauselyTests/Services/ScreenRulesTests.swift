@@ -171,6 +171,38 @@ final class ScreenRulesTests: XCTestCase {
         XCTAssertTrue(controls.contains("content.id(typeSize)"))
     }
 
+    /// The first question keeps its answer beside it on iPad: at the bottom edge, the number, its
+    /// slider and the button were a thousand points below "What do you think you pay?". On an
+    /// iPhone they stay low, where a thumb reaches them.
+    func testOnIPadTheFirstQuestionKeepsItsAnswerBesideIt() throws {
+        XCTAssertTrue(GuessStep.answerSitsLow(onPad: false))
+        XCTAssertFalse(GuessStep.answerSitsLow(onPad: true))
+
+        let url = root.appendingPathComponent("Pausely/Views/FirstRun/FirstRunView.swift")
+        try XCTSkipUnless(FileManager.default.fileExists(atPath: url.path), "Sources aren't readable from this test run")
+        let source = try String(contentsOf: url, encoding: .utf8)
+        XCTAssertTrue(source.contains(".fixedSize(horizontal: false, vertical: !Self.answerSitsLow(onPad: onPad))"))
+        XCTAssertTrue(source.contains("if !Self.answerSitsLow(onPad: onPad) { Spacer(minLength: 0) }"))
+    }
+
+    /// A service under "Popular" is listed again under "All services". The two rows have different
+    /// names in the list: with one name, the second row was blank ("All services" on iPad had holes
+    /// where Netflix, Disney+ and Hulu belong).
+    func testAServiceListedTwiceIsTwoRows() throws {
+        let netflix = CatalogEntry("Netflix", .entertainment, nil)
+        XCTAssertNotEqual(netflix.popularRowID, netflix.id)
+        let all = CatalogData.entries
+        XCTAssertFalse(all.isEmpty)
+        XCTAssertTrue(Set(all.map(\.popularRowID)).isDisjoint(with: Set(all.map(\.id))))
+        XCTAssertEqual(Set(all.map(\.id)).count, all.count, "And within one section every service is listed once")
+
+        let url = root.appendingPathComponent("Pausely/Views/SubscriptionBrowserView.swift")
+        try XCTSkipUnless(FileManager.default.fileExists(atPath: url.path), "Sources aren't readable from this test run")
+        let source = try String(contentsOf: url, encoding: .utf8)
+        XCTAssertTrue(source.contains("ForEach(popularEntries, id: \\.popularRowID)"))
+        XCTAssertFalse(source.contains("ForEach(popularEntries) {"))
+    }
+
     /// Where the paywall's button stays at the bottom edge, its bar holds the button and the sentence
     /// about the charge and nothing else. The three links were there too, and took three more rows
     /// at the edge whenever they did not fit on one line (German at any size, English one size up).
@@ -240,6 +272,19 @@ final class ScreenRulesTests: XCTestCase {
             }
         }
         XCTAssertEqual(offenders, [])
+    }
+
+    /// An amount sits beside its currency in every language. In Arabic the row starts at the right
+    /// and the amount was at the far left of its field, a row's width from "US$".
+    func testAnAmountSitsAtTheEdgeItsRowStartsFrom() throws {
+        XCTAssertEqual(AmountFit.alignment(inRightToLeftRow: false), .leading)
+        XCTAssertEqual(AmountFit.alignment(inRightToLeftRow: true), .trailing)
+
+        let url = root.appendingPathComponent("Pausely/DesignSystem/InkControls.swift")
+        try XCTSkipUnless(FileManager.default.fileExists(atPath: url.path), "Sources aren't readable from this test run")
+        let source = try String(contentsOf: url, encoding: .utf8)
+        // The two go together: trailing means "right" only inside a left-to-right field.
+        XCTAssertTrue(source.contains(".multilineTextAlignment(AmountFit.alignment(inRightToLeftRow: direction == .rightToLeft))\n            .environment(\\.layoutDirection, .leftToRight)"))
     }
 
     /// An amount field shows all of the amount. A short one keeps the size the form gives it; a long

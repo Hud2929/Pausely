@@ -107,6 +107,12 @@ enum AmountFit {
         return size
     }
 
+    /// Inside its left-to-right field, the amount sits at the far end when the row around it
+    /// runs right to left (that end is where the row begins), and at the near end otherwise.
+    static func alignment(inRightToLeftRow: Bool) -> TextAlignment {
+        inRightToLeftRow ? .trailing : .leading
+    }
+
     /// The width of the text in `Font.total` at this size.
     static func width(of text: String, size: CGFloat) -> CGFloat {
         let system = UIFont.systemFont(ofSize: size, weight: .bold)
@@ -119,10 +125,17 @@ private struct AmountFont: ViewModifier {
     let text: String
     let base: CGFloat
     @State private var width: CGFloat = 0
+    @Environment(\.layoutDirection) private var direction
 
     func body(content: Content) -> some View {
         content
             .font(.total(AmountFit.size(for: text, base: base, width: width)))
+            // Beside its currency in every language. Digits have no direction of their own, so in
+            // Arabic iOS set the amount at the far left of the row, away from "US$" at the right
+            // (asking for the leading edge changed nothing). A number is written left to right
+            // in every language: the field is, and its text sits at the edge the row starts from.
+            .multilineTextAlignment(AmountFit.alignment(inRightToLeftRow: direction == .rightToLeft))
+            .environment(\.layoutDirection, .leftToRight)
             .onGeometryChange(for: CGFloat.self) { $0.size.width } action: { width = $0 }
     }
 }

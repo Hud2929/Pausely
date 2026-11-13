@@ -74,6 +74,38 @@ enum L10n {
     static func string(_ resource: LocalizedStringResource) -> String {
         var resource = resource
         if let chosen = chosenLocale { resource.locale = chosen }
-        return String(localized: resource)
+        return withOneStop(String(localized: resource))
+    }
+
+    /// A currency sign can end in a full stop ("ر.س." for riyals, "د.إ." for dirhams), and a
+    /// sentence that ends on an amount then showed two: "خمّنت ٠ ر.س..". The sign's stop ends the
+    /// sentence, as an abbreviation's does. Three dots in a row are left alone.
+    static func withOneStop(_ sentence: String) -> String {
+        guard sentence.contains(".") else { return sentence }
+        // What can stand between the two stops and takes no room: the direction mark a formatter
+        // puts after a sign that ends in a stop, and the isolates the system wraps round a value
+        // set into a right-to-left sentence.
+        let marks: Set<Unicode.Scalar> = ["\u{200E}", "\u{200F}", "\u{061C}",
+                                          "\u{2066}", "\u{2067}", "\u{2068}", "\u{2069}",
+                                          "\u{202A}", "\u{202B}", "\u{202C}", "\u{202D}", "\u{202E}"]
+        let stop: Unicode.Scalar = "."
+        let scalars = Array(sentence.unicodeScalars)
+        var kept = String.UnicodeScalarView()
+        var index = 0
+        while index < scalars.count {
+            let scalar = scalars[index]
+            kept.append(scalar)
+            index += 1
+            // A stop that does not follow another stop…
+            guard scalar == stop, index < 2 || scalars[index - 2] != stop else { continue }
+            var next = index
+            while next < scalars.count, marks.contains(scalars[next]) { next += 1 }
+            // …then, after any marks, exactly one more: that one is dropped.
+            guard next < scalars.count, scalars[next] == stop,
+                  next + 1 >= scalars.count || scalars[next + 1] != stop else { continue }
+            kept.append(contentsOf: scalars[index..<next])
+            index = next + 1
+        }
+        return String(kept)
     }
 }

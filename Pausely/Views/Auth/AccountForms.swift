@@ -237,8 +237,10 @@ struct SignUpView: View {
                 .readableWidth()
             }
             .onAppear {
-                // Age is confirmed BEFORE any account can be created.
-                if !ageConsent.hasPassedDeviceGate { showAgeGate = true }
+                // Age is confirmed BEFORE any account can be created. (A capture of the form
+                // itself, `--demo-auth=signup`, opens on the form; creating an account from it
+                // still asks first. Launch arguments do not exist in a release build.)
+                if !ageConsent.hasPassedDeviceGate, LaunchFlag.value(of: "--demo-auth") == nil { showAgeGate = true }
             }
             .onChange(of: authManager.isAuthenticated) { _, signedIn in
                 if signedIn { dismiss() }
@@ -248,6 +250,10 @@ struct SignUpView: View {
 
     private func createAccount() {
         guard isValid, !isLoading else { return }
+        guard ageConsent.hasPassedDeviceGate else {
+            showAgeGate = true
+            return
+        }
         isLoading = true
         problem = nil
         let address = trimmedEmail

@@ -163,6 +163,11 @@ struct CatalogEntry: Identifiable, Equatable {
 
     var id: String { name }
 
+    /// What the row under "Popular" is called. The same service is listed again under "All
+    /// services", and two rows with one name in a lazy list leave the second blank: on iPad, where
+    /// both sections are on screen, "All services" had holes where Netflix and Disney+ belong.
+    var popularRowID: String { "popular:" + name }
+
     init(_ name: String, _ category: SubscriptionCategory, _ cancellationURL: String?) {
         self.name = name
         self.category = category

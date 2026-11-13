@@ -51,7 +51,14 @@ struct ExportDataView: View {
                         .foregroundStyle(Color.inkTextMuted)
                 }
                 Button(action: performExport) {
-                    if isExporting { ProgressView().tint(Color.paperInk) } else { Text("Export \(filteredCount) subscriptions") }
+                    if isExporting {
+                        ProgressView().tint(Color.paperInk)
+                    } else if filteredCount == 0 {
+                        // In words: the button read "Export 0 subscriptions".
+                        Text("Nothing to export")
+                    } else {
+                        Text("Export \(filteredCount) subscriptions")
+                    }
                 }
                 .buttonStyle(.ink)
                 .disabled(filteredCount == 0 || isExporting)
