@@ -704,6 +704,46 @@ Updated at every commit, so the work can be picked up from this file alone.
   ordinary size, whole tour, read; (3) English with the audit, counted (closes the audit row);
   (4) Japanese single screens for the serif; (5) the scores, screen by screen, from what was
   read; (6) H; (7) I and section 7, which is still the stale scorecard.
+- **11-13, where the run stopped (usage limit). The tree is NOT clean: four files edited, not
+  yet built on the iPhone, not committed.** Step (1) was under way: the whole tour at the largest
+  text size on `14a14a8` (`/tmp/pausely_final4_big`, still running when this was written, 124
+  captures; the first 109 were read on contact sheets `gb`, `gc`, `gd-01`, `gd-02`).
+  Whole at that size, as read: Home, Subscriptions, Insights, Profile, verdict, kept, cancelled,
+  cancel, Pause Plan, paywall, catalog, plan sheet, subscription screen, edit, price history,
+  welcome, sign-up, sign-in, age check, every settings page, what's new, the code and password
+  screens, the three empty tabs.
+  Faults found, in the order to finish them:
+  1. *Edited, unverified* (`FirstRunView.swift`, `InkPaper.swift`, `ScreenRulesTests.swift`,
+     `ScreenTourTests.swift`): the first question was cut after three lines by the number and
+     slider, so the guess step is one page at accessibility sizes as on iPad
+     (`GuessStep.answerSitsLow(onPad:largeText:)`, slider ends under the track); the wordmark
+     broke as "Pausel / y" (header is a `LineOrStack`; a one-word wordmark is never broken,
+     "Pausely 2026" still breaks at its space, mark beside the first line); the tally's slip
+     left no service on screen (`TallyStep.slipHoldsOnlyTheWayOn`, the "Anything missing"
+     sentence after the list). Three unit tests written, and `testFirstLaunch` now asserts
+     every step arrives. First thing to do: build, run `ScreenRulesTests`, then the walk at
+     `big` and on iPad.
+  2. *Not confirmed either way:* on iPad the walk's tap on "That's my guess" did not reach the
+     tally in two runs (`/tmp/pausely_fix_ipad2`, `_ipad3`) and did in one (`_fix_ipad`), with
+     the same layout. The iPhone tour was running beside the two that failed. The new
+     assertions in `testFirstLaunch` settle it: run it on iPad alone (`/tmp/pausely_fix_ipad4`
+     was started and had no result yet).
+  3. *Not started:* inbox results at accessibility sizes: the pinned bar (free-limit note plus
+     a two-line button) leaves a sliver of the list (`InboxImportView.addBar`); the note
+     belongs under the heading there and the bar keeps only the button.
+  4. *Not started:* a web address is hyphenated ("Open accoun-t.apple.-com",
+     `IMAPConnectView.steps`); addresses and the e-mail on the code screen should break only
+     after a dot or "@", with nothing inserted.
+  5. *Not started:* the custom-add name placeholder is cut ("Netflix, Spo…",
+     `AddSubscriptionView`); "Name" (already in the catalog) fits at those sizes.
+  6. *Not started:* where "date ·" is a character too wide the dot starts the next line
+     (verdict header, receipt lines, Home's "Renews in 2 days · $32.95"). Planned:
+     `L10n.facts(_:oneToALine:)` and a `Facts` view, one fact to a line at accessibility
+     sizes, for the ten places listed by `grep -rn "·" Pausely`.
+  Still unread from this tour: captures 110 onwards (the varied list's later states and all of
+  `testStates`), including the `*-large` states that close O15.
+  After that, unchanged: (2) xxxl whole tour; (3) English with the audit, counted; (4) Japanese
+  serif; (5) the scores; (6) H; (7) I and section 7, which is still the stale scorecard.
 
 **Phase 0. Scan (read-only).** Four independent audits (dead code, truth, design rules on every
 view, engineering) plus mechanical scans. Output: the ledger.
