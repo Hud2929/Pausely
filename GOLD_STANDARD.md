@@ -615,6 +615,40 @@ Updated at every commit, so the work can be picked up from this file alone.
   Next, in order: the state pass on iPad; English and Arabic for the states added here; Japanese
   for the serif; then the four whole tours and the scores.
 
+- Where the run stopped (11-12 evening, usage limit). Last commit `bef103c`. **The working tree is
+  not committed and its last seven edits are not built.** What is in it, on top of `bef103c`:
+  the old per-file findings list (`private/audits/2026-11-11/ui.md`, about 280 lines) looked up
+  finding by finding and what was still open fixed (Home: VoiceOver headers, a 44-point switch, the
+  30-day line stepped with VoiceOver, readable dimmed rows; `SubscriptionStore.ListState` and
+  `ListPlaceholders.swift` so a failed first load is not called an empty list; one `SearchField`,
+  `ProblemLine`, `ProPill`, `PauseMark`/`Wordmark`; list rows as buttons; the add form without its
+  "Error" alert; no negative paddings; spacing on a 2-point grid with a lint in `gold_check`; shared
+  pictures drawn in the app's language; "Rate Pausely" opens the review form; the Pause Plan row on
+  Insights rebuilt; `CancelTimingCalculator` and its tests deleted), buttons that follow the
+  content on iPad as well (`ActionScreen.pinsActions(at:onPad:)`), and new ways in for the tour
+  (`--large-demo-data` with `--demo-currency=IDR` for nine-digit totals, `--demo-load-failed`,
+  `--demo-store-offline`, `--demo-no-trial`, `--demo-pro=trial|ending|problem`, the demo inbox no
+  longer searched so `--demo-gmail-results` shows results again). The unit suite was green on this
+  tree (763 tests, 0 failures; gold_check 0; string_usage 0) **before** these seven edits, which
+  have not been compiled: the inbox's privacy promise taken off paper, its address shown whole,
+  its tick only when something was added, a "connecting" state on the Gmail and Outlook rows
+  (`InboxImportView.swift`); scroll captures skipped when the screen did not move
+  (`ScreenTourTests.swift`); "When to cancel" cut to its one sentence
+  (`SubscriptionInsightCards.swift`); a control centred beside its label (`AdaptiveRow`, three
+  forms). Captures: `/tmp/pausely_states_ipad_1` (85, six of eleven sheets read: the iPad column
+  is right, the only fault was buttons pinned half a screen below their slip, fixed above);
+  `/tmp/pausely_states_en_6` (the new and changed states in English; still being written when the
+  run stopped; the first 75 read, nothing wrong beyond what is fixed above). A draft of the ledger
+  row that closes "Per-file findings" is in `~/.claude/jobs/5806cd3f/tmp/perfile_row.md`.
+  Next, in order: (1) build, run the unit suite, Release, `gold_check`, `string_usage`; fix what
+  the seven unbuilt edits break; (2) on Home, use `PausePlanCard` for the Pause Plan row (it says
+  only "Pause Plan" today) and replace the four hand-drawn chevrons with `RowChevron`; (3) read
+  the rest of `_en_6` and the last five iPad sheets; (4) put the drafted row into 6.5, strike
+  "formats in the app's language" from the system-wide row (closed under O11), close O15 from the
+  `*-large` captures, write this slice's entry and commit it; (5) Arabic for the states added
+  today; (6) a Japanese capture for the serif; (7) E5, the four whole tours on the final build and
+  the scores; (8) H; (9) I and section 7, which is still the stale scorecard.
+
 **Phase 0. Scan (read-only).** Four independent audits (dead code, truth, design rules on every
 view, engineering) plus mechanical scans. Output: the ledger.
 
