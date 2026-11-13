@@ -751,6 +751,59 @@ Updated at every commit, so the work can be picked up from this file alone.
   `testStates`), including the `*-large` states that close O15.
   After that, unchanged: (2) xxxl whole tour; (3) English with the audit, counted; (4) Japanese
   serif; (5) the scores; (6) H; (7) I and section 7, which is still the stale scorecard.
+- **11-13, later: the largest text size, all of the tour read; fixes made; NOT committed (30
+  files changed, one new: `Views/Auth/SignUpDoor.swift`). The last capture run was stopped by the
+  machine running short of memory, so four late changes have no capture yet.**
+  Read: 254 captures of `/tmp/pausely_final4_big` (sheets `gb` to `gg`), then re-captures of
+  what changed in `/tmp/pausely_big_fix1` (69) and `/tmp/pausely_big_fix2` (31), each opened.
+  The `*-large` states at this size are in both (O15).
+  **Fixed and seen fixed at that size** (unit test named for each in `ScreenRulesTests` or
+  `AuthLinkTests`; 792 unit tests, 0 failures, 7 skipped needing a mail server, on the final
+  tree): the first question whole and one page (`GuessStep.answerSitsLow(onPad:largeText:)`,
+  slider ends under the track); the wordmark never broken, "Pausely 2026" at its space, mark
+  beside the first line; the tally keeps services on screen, each ticked tile shows its price,
+  the tick's disc grows with its glyph; facts joined by a dot sit one to a line with no dot
+  (`L10n.facts`, `Facts`, ten places); a web or e-mail address is never hyphenated
+  (`AddressText`: "Open account. / apple.com"); the custom-add hint says "Name"; the inbox
+  results' bar holds only its button with the free-limit note under the heading; a slip line
+  starts at the leading edge (`ProofLine`: the first-run total was centred pair by pair); a
+  figure is never broken in the middle (`WordFit`: "IDR / 114,881,880" on the year slip);
+  Home's total has the whole width and two lines ("IDR / 9,573,490", was "IDR 9,573,4…"); in
+  the list "/mo" goes under the amount; a mark or logo sits above its words (`MarkedWords`:
+  verdict, cancel, Insights' price rise, Notifications, price history); a value under its
+  title in a settings row reads from the leading edge; search results are not behind the
+  keyboard (`SearchableScroll`: currency, catalog); "Pro" sits under the words on the
+  subscription screen's tool row.
+  **A fault for new customers on iPad, found by the walk's new assertions:** "Keep my list"
+  ended back on the total (seen three times at the default size before the change, once on a
+  quiet machine with a probe that sampled the screen for 14 seconds). The account form opened
+  and put the age check over itself in the same moment; neither stayed. `SignUpDoor` shows the
+  age check first and opens the form when it has closed, from the root, over the person's own
+  total. After: three iPad walks pass, and by hand on the iPad simulator Keep my list leads to
+  "Confirm your age", then "Create your account" over the total. `OnboardingFlowTests` now
+  also closes the account step, checks the total and list are still there, and opens it again
+  (green on the iPhone).
+  **Not established:** on the iPad simulator `OnboardingFlowTests` lost a tap in three runs
+  (a different tap each time); by hand every one of those taps worked, and on the iPhone the
+  tests are green when nothing else is building. Taps are also lost when a second build runs
+  beside a UI test (Blitz starts one at every source edit). Treated as the test tooling until
+  seen by hand; a change to the launch mark made for it was taken back because it fixed
+  nothing and made the first-run test tap too early.
+  **Changed, unit-tested, NOT yet seen at that size** (the capture run for them was the one
+  stopped): a found subscription's words take the whole row (`FoundRow.wordsHaveTheWholeRow`;
+  they read "Spoti-fy", "Last charge / d Nov 8"); the cost of an hour's use goes under its
+  words in Insights; "Pro" under the Pause Plan card's name; the five confirmations are
+  alerts at accessibility sizes (`asksFirst`, `Asking.isAnAlert`: the system's bubble read
+  "Re-move", "Sign out of Pause-ly?"; the delete-account alert at that size is whole).
+  **Also owed before this slice is committed:** a Release build on the final tree (the last one,
+  two edits earlier, succeeded); the ledger row in 6.5 and O15 closed with the paths above.
+  The tour now writes `tour_misses.txt` for any step it could not take, follows a tab ten
+  screens down at this size, and reaches rows far down a page.
+  To carry on: `TEST_RUNNER_PAUSELY_TOUR_DIR=/tmp/pausely_big_fix3 TEST_RUNNER_PAUSELY_TOUR_VARIANT=big
+  TEST_RUNNER_PAUSELY_TOUR_ONLY=insights-varied,manage-remove,profile-signout,inbox-add,inbox-why,inbox-results,list-remove,edit-discard,pauseplan-end,insights`
+  with `testFirstLaunch`, `testSingleScreens` and `testStates`, alone, then the Release build,
+  the ledger, the commit. Then, unchanged: (2) xxxl whole tour; (3) English with the audit,
+  counted; (4) Japanese serif; (5) the scores; (6) H; (7) I and section 7 (still stale).
 
 **Phase 0. Scan (read-only).** Four independent audits (dead code, truth, design rules on every
 view, engineering) plus mechanical scans. Output: the ledger.
