@@ -274,7 +274,9 @@ struct PausePlanView: View {
         return PaperSlip(tornTop: true, tornBottom: true) {
             VStack(alignment: .leading, spacing: 10) {
                 ProofLine(label: L10n.string("All at once"), value: BillingFrequency.monthly.priced(currencyManager.format(now)))
-                ProofLine(label: L10n.string("One at a time"), value: L10n.string("\(currencyManager.format(rotating)) a month on average"))
+                // "on average" is part of the name, so the figure stands alone in the amounts' column
+                // (as the value it made that line the one long value on the slip).
+                ProofLine(label: L10n.string("One at a time, on average"), value: BillingFrequency.monthly.priced(currencyManager.format(rotating)))
                 Perforation()
                 ProofLine(label: L10n.string("Back in your pocket"), value: L10n.string("About \(currencyManager.format(yearly)) a year"),
                           emphasised: true)

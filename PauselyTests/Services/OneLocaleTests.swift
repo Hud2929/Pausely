@@ -73,6 +73,20 @@ final class OneLocaleTests: XCTestCase {
 
     // MARK: - Counts
 
+    /// A date and how far off it is break after the dot between them and nowhere else. One text
+    /// size up, a row's second line read "Nov 24 · In" with "12 days" under it.
+    func testADateAndItsDistanceBreakOnlyAfterTheDot() {
+        let nbsp = "\u{00A0}"
+        XCTAssertEqual(L10n.whole("Nov 24"), "Nov\(nbsp)24")
+        XCTAssertEqual(L10n.whole("In 12 days"), "In\(nbsp)12\(nbsp)days")
+        XCTAssertEqual(L10n.whole("Tomorrow"), "Tomorrow")
+        let line = L10n.breakingAfterDots("Trial ends \(L10n.whole("Nov 15")) · \(L10n.whole("In 3 days"))")
+        XCTAssertEqual(line, "Trial ends Nov\(nbsp)15\(nbsp)· In\(nbsp)3\(nbsp)days")
+        // The only places a line can end: after "Trial", after "ends", after the dot.
+        XCTAssertEqual(line.components(separatedBy: " "), ["Trial", "ends", "Nov\(nbsp)15\(nbsp)·", "In\(nbsp)3\(nbsp)days"])
+        XCTAssertEqual(L10n.breakingAfterDots("No dot here"), "No dot here")
+    }
+
     /// Two sentences shown as one line are joined the way the language writes them: with a space,
     /// except in Japanese.
     func testSentencesAreJoinedAsTheLanguageWritesThem() {

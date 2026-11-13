@@ -55,9 +55,14 @@ struct FoundRow: View {
                             VStack(alignment: .leading, spacing: 4) { nameAndEvidence; price }
                             Spacer(minLength: 0)
                         } else {
-                            nameAndEvidence
-                            Spacer(minLength: 8)
-                            price
+                            // As on the Subscriptions list: the price keeps its width, 8 points
+                            // from the words (a spacer between them took 32, and "Last charged
+                            // Nov 9" broke in two for want of 4).
+                            LineOrStack(spacing: 8, lineSpacing: 4, spread: true, besideShare: 0.5) {
+                                nameAndEvidence
+                                price
+                            }
+                            .frame(maxWidth: .infinity, alignment: .leading)
                         }
                     }
                     .contentShape(Rectangle())
@@ -95,9 +100,9 @@ struct FoundRow: View {
                 .font(.subheadline)
                 .foregroundStyle(Color.inkTextMuted)
                 .multilineTextAlignment(.leading)
-                // One line beside a price at ordinary sizes; free to wrap when the text is large.
-                .lineLimit(typeSize.isAccessibilitySize ? nil : 1)
-                .minimumScaleFactor(0.8)
+                // It wraps: held to one line beside the price, "Last charged Nov 9" became
+                // "Last charge…" one text size up.
+                .fixedSize(horizontal: false, vertical: true)
             if let badge {
                 HStack(spacing: 6) {
                     if let state = badge.state { StateMark(state: state) }

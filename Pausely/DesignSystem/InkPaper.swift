@@ -261,9 +261,10 @@ struct ProofLine: View {
             if typeSize.isAccessibilitySize {
                 VStack(alignment: .leading, spacing: 2) { labelText; valueText }
             } else {
-                HStack(alignment: .firstTextBaseline, spacing: 12) {
+                // On one line; or the label wraps beside its value (an amount stays in its
+                // column); or, when the value is long, it goes under the label.
+                LineOrStack(spacing: 20, lineSpacing: 2, spread: true, alignment: .firstTextBaseline, besideShare: 0.6) {
                     labelText
-                    Spacer(minLength: 8)
                     valueText
                 }
             }
@@ -431,6 +432,13 @@ struct SideBySide<Leading: View, Trailing: View>: View {
 /// value at any text size, any value at a large one. It is one layout, so each part is the same
 /// view at every size. `ViewThatFits` draws a second copy instead, and Apple's accessibility audit
 /// then reports that the text in the first copy cannot grow.
+///
+/// A label and its value have a third arrangement, between those: a value that takes no more
+/// than its share of the width (an amount) keeps its place at the far end and a long label wraps
+/// beside it, as on a printed receipt. A wider value goes under its label. The value itself is
+/// never squeezed: side by side, two long halves each broke in the middle ("Most / goes to"
+/// beside "Health / & fitness"), and a price broke between its currency and its figure
+/// ("IDR" above "8,500,000").
 struct LineOrStack: SwiftUI.Layout {
     /// Between parts that share a line.
     var spacing: CGFloat = 8
@@ -440,6 +448,13 @@ struct LineOrStack: SwiftUI.Layout {
     var spread = false
     /// Where stacked parts sit across the width: at the leading edge, or in the middle.
     var centred = false
+    /// How parts that share a line sit against each other.
+    var alignment: VerticalAlignment = .center
+    /// For a label and its value: the share of the width the value may take and still keep its
+    /// place at the far end while the label wraps beside it. Zero means the two stack instead.
+    var besideShare: CGFloat = 0
+
+    enum Arrangement: Equatable { case line, labelWraps, stack }
 
     /// Whether parts of these widths share a line of this width. No width at all means "as wide as
     /// you like", which is a line.
@@ -449,26 +464,51 @@ struct LineOrStack: SwiftUI.Layout {
         return needed <= available + 0.5
     }
 
+    /// How parts of these widths are arranged in this width.
+    static func arrangement(widths: [CGFloat], spacing: CGFloat, in available: CGFloat?, besideShare: CGFloat) -> Arrangement {
+        if sharesALine(widths: widths, spacing: spacing, in: available) { return .line }
+        guard let available, widths.count == 2, besideShare > 0, widths[1] <= available * besideShare else { return .stack }
+        return .labelWraps
+    }
+
     private struct Plan {
-        var onOneLine: Bool
+        var arrangement: Arrangement
+        var proposals: [ProposedViewSize]
         var sizes: [CGSize]
+        /// How far down each part starts, when parts share a line.
+        var tops: [CGFloat]
         var size: CGSize
     }
 
     private func plan(_ proposal: ProposedViewSize, _ subviews: Subviews) -> Plan {
         let natural = subviews.map { $0.sizeThatFits(.unspecified) }
         let available = proposal.width
-        if Self.sharesALine(widths: natural.map(\.width), spacing: spacing, in: available) {
-            let width = natural.map(\.width).reduce(0, +) + spacing * CGFloat(max(0, natural.count - 1))
-            let filled = spread && available?.isFinite == true ? available ?? width : width
-            return Plan(onOneLine: true, sizes: natural,
-                        size: CGSize(width: filled, height: natural.map(\.height).max() ?? 0))
+        let arrangement = Self.arrangement(widths: natural.map(\.width), spacing: spacing, in: available, besideShare: besideShare)
+        switch arrangement {
+        case .line, .labelWraps:
+            var proposals = natural.map { ProposedViewSize($0) }
+            var sizes = natural
+            if arrangement == .labelWraps, let available {
+                // The value keeps its width; the label has what is left and wraps in it.
+                proposals[0] = ProposedViewSize(width: max(0, available - spacing - natural[1].width), height: nil)
+                sizes[0] = subviews[0].sizeThatFits(proposals[0])
+            }
+            let guides = subviews.indices.map { subviews[$0].dimensions(in: proposals[$0])[alignment] }
+            let lowest = guides.max() ?? 0
+            let tops = guides.map { lowest - $0 }
+            let height = zip(tops, sizes).map { $0 + $1.height }.max() ?? 0
+            let width = sizes.map(\.width).reduce(0, +) + spacing * CGFloat(max(0, sizes.count - 1))
+            let filled = (spread || arrangement != .line) && available?.isFinite == true ? available ?? width : width
+            return Plan(arrangement: arrangement, proposals: proposals, sizes: sizes, tops: tops,
+                        size: CGSize(width: filled, height: height))
+        case .stack:
+            let proposals = subviews.map { _ in ProposedViewSize(width: available, height: nil) }
+            let wrapped = subviews.indices.map { subviews[$0].sizeThatFits(proposals[$0]) }
+            let height = wrapped.map(\.height).reduce(0, +) + lineSpacing * CGFloat(max(0, wrapped.count - 1))
+            let widest = wrapped.map(\.width).max() ?? 0
+            return Plan(arrangement: .stack, proposals: proposals, sizes: wrapped, tops: [],
+                        size: CGSize(width: spread ? max(widest, available ?? widest) : widest, height: height))
         }
-        let wrapped = subviews.map { $0.sizeThatFits(ProposedViewSize(width: available, height: nil)) }
-        let height = wrapped.map(\.height).reduce(0, +) + lineSpacing * CGFloat(max(0, wrapped.count - 1))
-        let widest = wrapped.map(\.width).max() ?? 0
-        return Plan(onOneLine: false, sizes: wrapped,
-                    size: CGSize(width: spread ? max(widest, available ?? widest) : widest, height: height))
     }
 
     func sizeThatFits(proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) -> CGSize {
@@ -477,15 +517,17 @@ struct LineOrStack: SwiftUI.Layout {
 
     func placeSubviews(in bounds: CGRect, proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) {
         let plan = plan(ProposedViewSize(width: bounds.width, height: nil), subviews)
-        if plan.onOneLine {
+        switch plan.arrangement {
+        case .line, .labelWraps:
             var x = bounds.minX
             for (index, subview) in subviews.enumerated() {
                 let size = plan.sizes[index]
-                if spread, index == subviews.count - 1, subviews.count > 1 { x = max(x, bounds.maxX - size.width) }
-                subview.place(at: CGPoint(x: x, y: bounds.midY), anchor: .leading, proposal: ProposedViewSize(size))
+                let last = index == subviews.count - 1 && subviews.count > 1
+                if last, spread || plan.arrangement != .line { x = max(x, bounds.maxX - size.width) }
+                subview.place(at: CGPoint(x: x, y: bounds.minY + plan.tops[index]), anchor: .topLeading, proposal: plan.proposals[index])
                 x += size.width + spacing
             }
-        } else {
+        case .stack:
             var y = bounds.minY
             for (index, subview) in subviews.enumerated() {
                 let size = plan.sizes[index]

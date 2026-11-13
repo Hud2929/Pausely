@@ -171,12 +171,12 @@ struct RenewalVerdictView: View {
     }
 
     private func whenText(_ charge: (date: Date, isTrialEnd: Bool)) -> String {
-        let day = charge.date.formatted(.dateTime.weekday(.abbreviated).month(.abbreviated).day().locale(L10n.locale))
+        let day = L10n.whole(charge.date.formatted(.dateTime.weekday(.abbreviated).month(.abbreviated).day().locale(L10n.locale)))
         let days = daysUntil(charge.date)
-        let relative = L10n.relativeDay(days)
-        return charge.isTrialEnd
+        let relative = L10n.whole(L10n.relativeDay(days))
+        return L10n.breakingAfterDots(charge.isTrialEnd
             ? L10n.string("Free trial ends \(day) · \(relative)")
-            : L10n.string("Renews \(day) · \(relative)")
+            : L10n.string("Renews \(day) · \(relative)"))
     }
 
     private func daysUntil(_ date: Date) -> Int {

@@ -12265,36 +12265,36 @@
         }
       }
     },
-    "One at a time": {
+    "One at a time, on average": {
       "localizations": {
         "ar": {
           "stringUnit": {
             "state": "translated",
-            "value": "واحدة في كل مرة"
+            "value": "واحدة في كل مرة، في المتوسط"
           }
         },
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Einer nach dem anderen"
+            "value": "Einer nach dem anderen, im Schnitt"
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Uno a la vez"
+            "value": "Uno a la vez, de media"
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Un à la fois"
+            "value": "Un à la fois, en moyenne"
           }
         },
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "1つずつ"
+            "value": "1つずつ（平均）"
           }
         }
       }
@@ -28973,40 +28973,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "年%@"
-          }
-        }
-      }
-    },
-    "%@ a month on average": {
-      "localizations": {
-        "ar": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "%@ شهريًا في المتوسط"
-          }
-        },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "%@ pro Monat im Schnitt"
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "%@ al mes de media"
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "%@ par mois en moyenne"
-          }
-        },
-        "ja": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "月平均%@"
           }
         }
       }

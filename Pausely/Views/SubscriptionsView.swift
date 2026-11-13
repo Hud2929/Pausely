@@ -273,27 +273,41 @@ private struct SubscriptionRow: View {
             onTap()
         } label: {
             HStack(spacing: 12) {
-                if !typeSize.isAccessibilitySize {
+                if typeSize.isAccessibilitySize {
+                    words
+                    Spacer(minLength: 8)
+                } else {
                     ServiceLogoView(name: subscription.name, category: subscription.category, size: 40)
+                    // The price beside the name while it takes no more than half the row; a wider
+                    // one (millions of rupiah, one text size up) goes under the name. Squeezed
+                    // beside it, the price broke between its currency and its figure.
+                    LineOrStack(spacing: 8, lineSpacing: 2, spread: true, besideShare: 0.5) {
+                        words
+                        price
+                    }
+                    .frame(maxWidth: .infinity, alignment: .leading)
                 }
-                VStack(alignment: .leading, spacing: 2) {
-                    Text(verbatim: subscription.name)
-                        .font(.body.weight(.medium))
-                        .foregroundStyle(Color.inkText)
-                        .strikethrough(group == .cancelled, color: Color.inkTextFaint)
-                    Text(verbatim: detail)
-                        .font(.subheadline)
-                        .foregroundStyle(detailColor)
-                    if typeSize.isAccessibilitySize { price }
-                }
-                Spacer(minLength: 8)
-                if !typeSize.isAccessibilitySize { price }
             }
             .padding(.vertical, 12)
             .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
         .accessibilityLabel(Text(verbatim: "\(subscription.name), \(subscription.billingFrequency.priced(subscription.chargeText)), \(detail)"))
+    }
+
+    private var words: some View {
+        VStack(alignment: .leading, spacing: 2) {
+            Text(verbatim: subscription.name)
+                .font(.body.weight(.medium))
+                .foregroundStyle(Color.inkText)
+                .strikethrough(group == .cancelled, color: Color.inkTextFaint)
+                .fixedSize(horizontal: false, vertical: true)
+            Text(verbatim: detail)
+                .font(.subheadline)
+                .foregroundStyle(detailColor)
+                .fixedSize(horizontal: false, vertical: true)
+            if typeSize.isAccessibilitySize { price }
+        }
     }
 
     private var price: some View {
@@ -323,9 +337,9 @@ private struct SubscriptionRow: View {
         case .decide, .thisWeek, .thisMonth, .later:
             guard let charge = RenewalDecisions.upcomingCharge(for: subscription, now: Date()) else { return "" }
             let days = Calendar.billing.calendarDays(from: Date(), to: charge.date)
-            let day = charge.date.formatted(.dateTime.month(.abbreviated).day().locale(L10n.locale))
-            let relative = L10n.relativeDay(days, capitalized: true)
-            return charge.isTrialEnd ? L10n.string("Trial ends \(day) · \(relative)") : "\(day) · \(relative)"
+            let day = L10n.whole(charge.date.formatted(.dateTime.month(.abbreviated).day().locale(L10n.locale)))
+            let relative = L10n.whole(L10n.relativeDay(days, capitalized: true))
+            return L10n.breakingAfterDots(charge.isTrialEnd ? L10n.string("Trial ends \(day) · \(relative)") : "\(day) · \(relative)")
         }
     }
 }

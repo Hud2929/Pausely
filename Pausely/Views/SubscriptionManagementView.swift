@@ -170,16 +170,16 @@ struct SubscriptionManagementView: View {
     private var renewalLine: (text: String, tint: Color)? {
         if let end = trialEnd {
             let days = Calendar.billing.calendarDays(from: Date(), to: end)
-            let dateText = end.formatted(.dateTime.month(.abbreviated).day().locale(L10n.locale))
+            let dateText = L10n.whole(end.formatted(.dateTime.month(.abbreviated).day().locale(L10n.locale)))
             if days <= 1 { return (L10n.string("Trial ends \(L10n.relativeDay(days))"), Color.due) }
-            return (L10n.string("Trial ends \(dateText)") + " · " + L10n.relativeDay(days), Color.inkTextMuted)
+            return (L10n.breakingAfterDots(L10n.string("Trial ends \(dateText)") + " · " + L10n.whole(L10n.relativeDay(days))), Color.inkTextMuted)
         }
         guard current.status == .active || current.status == .trial,
               let date = current.calculatedNextBillingDate, let days = current.daysUntilRenewal else { return nil }
-        let dateText = date.formatted(.dateTime.month(.abbreviated).day().locale(L10n.locale))
+        let dateText = L10n.whole(date.formatted(.dateTime.month(.abbreviated).day().locale(L10n.locale)))
         if days < 0 { return (L10n.string("Payment was due \(L10n.relativeDay(days))"), Color.due) }
         if days <= 1 { return (L10n.string("Renews \(L10n.relativeDay(days))"), Color.due) }
-        return (L10n.string("Renews \(dateText) · \(L10n.relativeDay(days))"), Color.inkTextMuted)
+        return (L10n.breakingAfterDots(L10n.string("Renews \(dateText) · \(L10n.whole(L10n.relativeDay(days)))")), Color.inkTextMuted)
     }
 
     /// The day it was cancelled, from the history on this device.

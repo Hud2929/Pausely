@@ -522,23 +522,19 @@ private struct ChargeRow: View {
             VerdictCenter.shared.showSubscription(charge.subscriptionId)
         } label: {
             HStack(spacing: 12) {
-                if !typeSize.isAccessibilitySize {
+                if typeSize.isAccessibilitySize {
+                    words
+                    Spacer(minLength: 8)
+                } else {
                     ServiceLogoView(name: charge.name, category: charge.category, size: 36)
-                }
-                VStack(alignment: .leading, spacing: 2) {
-                    Text(verbatim: charge.name)
-                        .font(.body)
-                        .foregroundStyle(Color.inkText)
-                    HStack(spacing: 6) {
-                        if let state { StateMark(state: state) }
-                        Text(verbatim: when)
-                            .font(.subheadline)
-                            .foregroundStyle(state?.color ?? Color.inkTextMuted)
+                    // As on the Subscriptions list: the price beside the name while it takes no
+                    // more than half the row, under it when it is wider, and never broken.
+                    LineOrStack(spacing: 8, lineSpacing: 2, spread: true, besideShare: 0.5) {
+                        words
+                        price
                     }
-                    if typeSize.isAccessibilitySize { price }
+                    .frame(maxWidth: .infinity, alignment: .leading)
                 }
-                Spacer(minLength: 8)
-                if !typeSize.isAccessibilitySize { price }
             }
             .padding(.vertical, 12)
             // Past the picked day a row steps back, and can still be read: at this strength its
@@ -550,6 +546,23 @@ private struct ChargeRow: View {
         .accessibilityElement(children: .combine)
     }
 
+    private var words: some View {
+        VStack(alignment: .leading, spacing: 2) {
+            Text(verbatim: charge.name)
+                .font(.body)
+                .foregroundStyle(Color.inkText)
+                .fixedSize(horizontal: false, vertical: true)
+            HStack(spacing: 6) {
+                if let state { StateMark(state: state) }
+                Text(verbatim: when)
+                    .font(.subheadline)
+                    .foregroundStyle(state?.color ?? Color.inkTextMuted)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+            if typeSize.isAccessibilitySize { price }
+        }
+    }
+
     private var price: some View {
         Text(verbatim: MoneyFormat.string(charge.amount, charge.currency, locale: L10n.locale))
             .font(.body.monospacedDigit())
@@ -557,9 +570,9 @@ private struct ChargeRow: View {
     }
 
     private var when: String {
-        let day = charge.date.formatted(.dateTime.month(.abbreviated).day().locale(L10n.locale))
-        let relative = L10n.relativeDay(charge.dayOffset, capitalized: true)
-        return charge.isTrialEnd ? L10n.string("Trial ends \(day) · \(relative)") : "\(day) · \(relative)"
+        let day = L10n.whole(charge.date.formatted(.dateTime.month(.abbreviated).day().locale(L10n.locale)))
+        let relative = L10n.whole(L10n.relativeDay(charge.dayOffset, capitalized: true))
+        return L10n.breakingAfterDots(charge.isTrialEnd ? L10n.string("Trial ends \(day) · \(relative)") : "\(day) · \(relative)")
     }
 }
 

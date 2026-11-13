@@ -200,6 +200,29 @@ final class ScreenRulesTests: XCTestCase {
         XCTAssertTrue(LineOrStack.sharesALine(widths: [300], spacing: 12, in: 300))
     }
 
+    /// A label and its value: on one line when both fit; a value that takes no more than its share
+    /// of the width (an amount) keeps its place and the label wraps beside it; a wider value goes
+    /// under the label. The value is never squeezed: side by side, two long halves each broke in
+    /// the middle ("Most / goes to" beside "Health / & fitness"), and a price in a list row broke
+    /// between its currency and its figure ("IDR" above "8,500,000").
+    func testAValueKeepsItsPlaceOrGoesUnderItsLabelAndIsNeverSqueezed() {
+        typealias Row = LineOrStack
+        // Receipt lines (three fifths of the slip for the value).
+        XCTAssertEqual(Row.arrangement(widths: [100, 60], spacing: 20, in: 314, besideShare: 0.6), .line)
+        XCTAssertEqual(Row.arrangement(widths: [260, 70], spacing: 20, in: 314, besideShare: 0.6), .labelWraps, "\"Kept since you cancelled\" beside \"$112.93\"")
+        XCTAssertEqual(Row.arrangement(widths: [171, 180], spacing: 20, in: 314, besideShare: 0.6), .labelWraps, "\"Back in your pocket\" beside \"About $271.76 a year\"")
+        XCTAssertEqual(Row.arrangement(widths: [151, 202], spacing: 20, in: 314, besideShare: 0.6), .stack, "\"Most goes to\" above \"Health & fitness\"")
+        XCTAssertEqual(Row.arrangement(widths: [113, 195], spacing: 20, in: 314, besideShare: 0.6), .stack, "\"Each year\" above \"IDR 114,881,880\": the figure is not wrapped beside a short label")
+        // List rows (half the row for the price).
+        XCTAssertEqual(Row.arrangement(widths: [150, 90], spacing: 8, in: 306, besideShare: 0.5), .line)
+        XCTAssertEqual(Row.arrangement(widths: [240, 150], spacing: 8, in: 306, besideShare: 0.5), .labelWraps)
+        XCTAssertEqual(Row.arrangement(widths: [240, 175], spacing: 8, in: 306, besideShare: 0.5), .stack, "\"IDR 8,500,000/mo\" one text size up")
+        // Parts that are not a label and a value.
+        XCTAssertEqual(Row.arrangement(widths: [260, 70], spacing: 20, in: 314, besideShare: 0), .stack)
+        XCTAssertEqual(Row.arrangement(widths: [200, 70, 70], spacing: 20, in: 314, besideShare: 0.6), .stack)
+        XCTAssertEqual(Row.arrangement(widths: [900, 900], spacing: 20, in: nil, besideShare: 0.6), .line)
+    }
+
     /// No screen chooses between two copies of itself with `ViewThatFits`: Apple's accessibility
     /// audit reports the text in the copy that was not chosen at a larger size as text that cannot
     /// grow (the Profile rows, the subscription's status line and both outcome slips were reported).

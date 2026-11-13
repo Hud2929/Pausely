@@ -37,6 +37,18 @@ enum L10n {
         DayText.relative(daysAway: daysAway, locale: locale, capitalized: capitalized)
     }
 
+    /// A few words that stay on one line together: a date ("Nov 24"), how far off it is
+    /// ("In 12 days"). For short phrases only; a long one that cannot break is cut instead.
+    static func whole(_ words: String) -> String {
+        words.replacingOccurrences(of: " ", with: "\u{00A0}")
+    }
+
+    /// A line of parts joined by " · " breaks after a dot, never before one. With `whole` parts it
+    /// reads "Nov 24 ·" above "In 12 days"; it used to end "Nov 24 · In" with "12 days" under it.
+    static func breakingAfterDots(_ line: String) -> String {
+        line.replacingOccurrences(of: " · ", with: "\u{00A0}· ")
+    }
+
     /// The language chosen in Settings → Language ("ar", "de"…), or nil to follow the iPhone.
     static var chosenLanguage: String? {
         guard let code = UserDefaults.standard.string(forKey: languageKey), code != "system" else { return nil }
