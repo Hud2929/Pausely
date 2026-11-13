@@ -21,6 +21,9 @@ struct InboxImportView: View {
     @State private var imapPreset: IMAPPreset?
     @State private var showingIMAP = false
     @State private var showingProviders = false
+    /// The provider whose sign-in is being opened: its row shows that it was heard until the web
+    /// sheet arrives (nothing changed for a second or two, and a second tap started a second sign-in).
+    @State private var connectingID: String?
     @State private var showingPaywall = false
 
     var body: some View {
@@ -108,29 +111,31 @@ struct InboxImportView: View {
             providerButtons.padding(.top, 16)
 
             if let error = scanner.error {
-                Text(error)
-                    .font(.footnote)
-                    .foregroundStyle(Color.due)
-                    .fixedSize(horizontal: false, vertical: true)
+                ProblemLine(message: error, identifier: "inboxProblem")
                     .padding(.top, 12)
             }
         }
         .frame(maxWidth: .infinity, alignment: .leading)
     }
 
-    /// The promise, printed: it is the reason someone would let an app near their inbox. Each sentence is
-    /// held by a test (`InboxPrivacyTests`).
+    /// The promise: it is the reason someone would let an app near their inbox. Each sentence is held
+    /// by a test (`InboxPrivacyTests`). It is set on ink between two hairlines, not on paper: paper
+    /// is for money decided or proven, and a promise is neither.
     private var privacyNotice: some View {
-        PaperSlip(tornTop: true, tornBottom: true) {
+        VStack(alignment: .leading, spacing: 0) {
+            Hairline()
             VStack(alignment: .leading, spacing: 8) {
                 Text("Your email never leaves your iPhone.")
-                    .font(.question(.title3))
+                    .font(.headline)
+                    .foregroundStyle(Color.inkText)
                     .fixedSize(horizontal: false, vertical: true)
                 Text("Pausely connects straight to your email provider, reads receipts on this iPhone and keeps only the name, amount and date of each charge. It only reads: it never sends, changes or deletes email.")
-                    .font(.footnote)
-                    .foregroundStyle(Color.paperMuted)
+                    .font(.subheadline)
+                    .foregroundStyle(Color.inkTextMuted)
                     .fixedSize(horizontal: false, vertical: true)
             }
+            .padding(.vertical, 16)
+            Hairline()
         }
         .accessibilityElement(children: .combine)
     }
@@ -140,13 +145,13 @@ struct InboxImportView: View {
             if FeatureFlags.gmailImportEnabled && GmailMailboxProvider.isConfigured {
                 providerButton(Text(verbatim: "Gmail"), detail: Text("Sign in with Google"), icon: "Gmail", id: "connectGmail") {
                     showingProviders = false
-                    Task { await scanner.connectGmail() }
+                    connect("connectGmail") { await scanner.connectGmail() }
                 }
             }
             if FeatureFlags.microsoftImportEnabled && MicrosoftGraphProvider.isConfigured {
                 providerButton(Text(verbatim: "Outlook, Hotmail, Live, MSN"), detail: Text("Sign in with Microsoft"), icon: "Outlook", id: "connectMicrosoft") {
                     showingProviders = false
-                    Task { await scanner.connectMicrosoft() }
+                    connect("connectMicrosoft") { await scanner.connectMicrosoft() }
                 }
             }
             if FeatureFlags.imapImportEnabled {
@@ -161,6 +166,17 @@ struct InboxImportView: View {
                     openIMAP(nil)
                 }
             }
+        }
+    }
+
+    /// Opens a provider's sign-in once: while it is on its way, its row shows a spinner and no
+    /// row takes another tap.
+    private func connect(_ id: String, _ signIn: @escaping () async -> Void) {
+        guard connectingID == nil else { return }
+        connectingID = id
+        Task {
+            await signIn()
+            connectingID = nil
         }
     }
 
@@ -194,15 +210,17 @@ struct InboxImportView: View {
                             .multilineTextAlignment(.leading)
                     }
                     Spacer(minLength: 8)
-                    Image(systemName: "chevron.forward")
-                        .font(.footnote.weight(.semibold))
-                        .foregroundStyle(Color.inkTextFaint)
-                        .accessibilityHidden(true)
+                    if connectingID == id {
+                        ProgressView().tint(Color.inkTextMuted)
+                    } else {
+                        RowChevron()
+                    }
                 }
                 .padding(.vertical, 12)
                 .contentShape(Rectangle())
             }
             .buttonStyle(.plain)
+            .disabled(connectingID != nil)
             .accessibilityElement(children: .combine)
             .accessibilityIdentifier(id)
             Hairline()
@@ -320,11 +338,13 @@ struct InboxImportView: View {
                 .frame(width: 28)
                 .accessibilityHidden(true)
             VStack(alignment: .leading, spacing: 2) {
-                Text(verbatim: account.address)
+                // Whole, on as many lines as it needs: cut in the middle, two addresses at one
+                // provider could not be told apart.
+                Text(verbatim: AddressText.breakable(account.address))
                     .font(.body.weight(.medium))
                     .foregroundStyle(Color.inkText)
-                    .lineLimit(1)
-                    .truncationMode(.middle)
+                    .fixedSize(horizontal: false, vertical: true)
+                    .accessibilityLabel(Text(verbatim: account.address))
                 Text(verbatim: accountDetail(account))
                     .font(.subheadline)
                     .foregroundStyle(failed ? Color.due : Color.inkTextMuted)
@@ -578,7 +598,9 @@ struct InboxImportView: View {
         didPreselect = false
         importing = false
         outcome = result
-        Feel.landed()
+        // The landing is felt when something landed: nothing is, when every one was already listed
+        // or is waiting for room.
+        if !result.added.isEmpty || !result.datesFilled.isEmpty { Feel.landed() }
     }
 
     // MARK: - What was added

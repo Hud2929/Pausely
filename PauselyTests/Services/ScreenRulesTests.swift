@@ -106,15 +106,18 @@ final class ScreenRulesTests: XCTestCase {
         XCTAssertTrue(stamp.contains(".minimumScaleFactor(0.5)"), "shrinks instead of ending in an ellipsis")
     }
 
-    /// Buttons stay at the bottom edge at ordinary text sizes and follow the content at the
-    /// accessibility sizes, where pinned they covered more than half the screen.
-    func testButtonsLeaveTheBottomEdgeAtAccessibilitySizes() {
+    /// Buttons stay at the bottom edge on an iPhone at ordinary text sizes. They follow the content
+    /// at the accessibility sizes, where pinned they covered more than half the screen, and on iPad,
+    /// where pinned they sat half a screen below what they are about.
+    func testButtonsLeaveTheBottomEdgeAtAccessibilitySizesAndOnIPad() {
         typealias Screen = ActionScreen<EmptyView, EmptyView>
         for size in [DynamicTypeSize.xSmall, .large, .xxxLarge] {
-            XCTAssertTrue(Screen.pinsActions(at: size), "\(size)")
+            XCTAssertTrue(Screen.pinsActions(at: size, onPad: false), "\(size)")
+            XCTAssertFalse(Screen.pinsActions(at: size, onPad: true), "\(size) on iPad")
         }
         for size in [DynamicTypeSize.accessibility1, .accessibility3, .accessibility5] {
-            XCTAssertFalse(Screen.pinsActions(at: size), "\(size)")
+            XCTAssertFalse(Screen.pinsActions(at: size, onPad: false), "\(size)")
+            XCTAssertFalse(Screen.pinsActions(at: size, onPad: true), "\(size) on iPad")
         }
     }
 
@@ -144,6 +147,123 @@ final class ScreenRulesTests: XCTestCase {
         XCTAssertEqual(offenders, [])
     }
 
+    /// Every field that wraps goes through `returnMovesOn`, and that is where it is built again when
+    /// the text size changes: SwiftUI otherwise keeps the line count of the old size, and the edit
+    /// screen's header stayed three lines tall around a one-line name.
+    func testAWrappingFieldIsMeasuredAgainWhenTheTextSizeChanges() throws {
+        let sources = root.appendingPathComponent("Pausely")
+        try XCTSkipUnless(FileManager.default.fileExists(atPath: sources.path), "Sources aren't readable from this test run")
+        var wrapping = 0
+        let files = FileManager.default.enumerator(at: sources, includingPropertiesForKeys: nil)?.compactMap { $0 as? URL } ?? []
+        for file in files where file.pathExtension == "swift" {
+            let source = try String(contentsOf: file, encoding: .utf8)
+            let fields = source.components(separatedBy: "axis: .vertical").count - 1
+            let guarded = source.components(separatedBy: ".returnMovesOn(from:").count - 1
+            XCTAssertEqual(fields, guarded, "\(file.lastPathComponent): every wrapping field uses returnMovesOn")
+            wrapping += fields
+        }
+        XCTAssertEqual(wrapping, 2, "The two forms that take a name")
+
+        let controls = try String(contentsOf: sources.appendingPathComponent("DesignSystem/InkControls.swift"), encoding: .utf8)
+        let function = try XCTUnwrap(controls.range(of: "func returnMovesOn"))
+        let body = controls[function.lowerBound...].prefix(500)
+        XCTAssertTrue(body.contains(".modifier(MeasuredAgainAtEachTextSize())"))
+        XCTAssertTrue(controls.contains("content.id(typeSize)"))
+    }
+
+    /// Where the paywall's button stays at the bottom edge, its bar holds the button and the sentence
+    /// about the charge and nothing else. The three links were there too, and took three more rows
+    /// at the edge whenever they did not fit on one line (German at any size, English one size up).
+    func testThePaywallsPinnedBarHoldsOnlyTheButtonAndItsTerms() throws {
+        let url = root.appendingPathComponent("Pausely/Views/StoreKitUpgradeView.swift")
+        try XCTSkipUnless(FileManager.default.fileExists(atPath: url.path), "Sources aren't readable from this test run")
+        let source = try String(contentsOf: url, encoding: .utf8)
+        let start = try XCTUnwrap(source.range(of: "private var actionBar: some View {"))
+        let end = try XCTUnwrap(source.range(of: "private var linksEndThePage: Bool {"))
+        let bar = String(source[start.upperBound..<end.lowerBound])
+        XCTAssertEqual(bar.components(separatedBy: "footerLinks(").count - 1, 1)
+        let guardLine = try XCTUnwrap(bar.range(of: "if !linksEndThePage {"))
+        let links = try XCTUnwrap(bar.range(of: "footerLinks("))
+        XCTAssertLessThan(guardLine.lowerBound, links.lowerBound, "The links are in the bar only where the bar follows the content")
+        XCTAssertTrue(source.contains("ActionScreen<EmptyView, EmptyView>.pinsActions(at: typeSize, onPad:"))
+    }
+
+    /// Parts share a line only when all of them fit on it; one point too many and they stack. No
+    /// width at all means the line can be as long as it likes.
+    func testPartsShareALineOnlyWhenTheyFit() {
+        XCTAssertTrue(LineOrStack.sharesALine(widths: [100, 60], spacing: 12, in: 172))
+        XCTAssertFalse(LineOrStack.sharesALine(widths: [100, 60], spacing: 12, in: 171))
+        XCTAssertFalse(LineOrStack.sharesALine(widths: [100, 60, 40], spacing: 12, in: 220))
+        XCTAssertTrue(LineOrStack.sharesALine(widths: [100, 60, 40], spacing: 12, in: 224))
+        XCTAssertTrue(LineOrStack.sharesALine(widths: [100, 60], spacing: 12, in: nil))
+        XCTAssertTrue(LineOrStack.sharesALine(widths: [100, 60], spacing: 12, in: .infinity))
+        XCTAssertTrue(LineOrStack.sharesALine(widths: [300], spacing: 12, in: 300))
+    }
+
+    /// No screen chooses between two copies of itself with `ViewThatFits`: Apple's accessibility
+    /// audit reports the text in the copy that was not chosen at a larger size as text that cannot
+    /// grow (the Profile rows, the subscription's status line and both outcome slips were reported).
+    /// `LineOrStack` and a scroll view as tall as the screen do the same work with one copy.
+    func testNoScreenIsBuiltTwiceToSeeWhichFits() throws {
+        let sources = root.appendingPathComponent("Pausely")
+        try XCTSkipUnless(FileManager.default.fileExists(atPath: sources.path), "Sources aren't readable from this test run")
+        var offenders: [String] = []
+        let files = FileManager.default.enumerator(at: sources, includingPropertiesForKeys: nil)?.compactMap { $0 as? URL } ?? []
+        for file in files where file.pathExtension == "swift" {
+            let lines = try String(contentsOf: file, encoding: .utf8).components(separatedBy: "\n")
+            for (index, line) in lines.enumerated() {
+                let code = line.components(separatedBy: "//").first ?? ""
+                if code.contains("ViewThatFits") { offenders.append("\(file.lastPathComponent):\(index + 1)") }
+            }
+        }
+        XCTAssertEqual(offenders, [])
+    }
+
+    /// An amount field shows all of the amount. A short one keeps the size the form gives it; a long
+    /// one (a yearly price in rupiah at the largest text size) is drawn in the largest size that
+    /// still fits the field, and never below the smallest.
+    func testALongAmountIsDrawnSmallerSoAllOfItShows() {
+        XCTAssertEqual(AmountFit.size(for: "9.99", base: 52, width: 290), 52)
+        XCTAssertEqual(AmountFit.size(for: "", base: 52, width: 290), 52)
+        XCTAssertEqual(AmountFit.size(for: "9990000", base: 52, width: 0), 52, "Not measured yet: the form's size")
+
+        let fitted = AmountFit.size(for: "9990000", base: 92, width: 290)
+        XCTAssertLessThan(fitted, 92)
+        XCTAssertGreaterThan(fitted, AmountFit.smallest)
+        XCTAssertLessThanOrEqual(AmountFit.width(of: "9990000", size: fitted), 290)
+        XCTAssertGreaterThan(AmountFit.width(of: "9990000", size: fitted + 2), 290, "The largest size that fits, not merely a small one")
+
+        XCTAssertEqual(AmountFit.size(for: String(repeating: "9", count: 60), base: 92, width: 290), AmountFit.smallest)
+    }
+
+    /// A field is named above its box, never inside it: a name written inside is gone at the first
+    /// letter typed, and iOS draws it smaller (not larger) at the largest text sizes. Three boxes
+    /// keep an example inside, because it is what is used when the box is left empty: the mail
+    /// server, its port, and zero hours.
+    func testAFieldIsNamedAboveItsBoxNotInsideIt() throws {
+        let sources = root.appendingPathComponent("Pausely")
+        try XCTSkipUnless(FileManager.default.fileExists(atPath: sources.path), "Sources aren't readable from this test run")
+        var inside: [String] = []
+        let files = FileManager.default.enumerator(at: sources, includingPropertiesForKeys: nil)?.compactMap { $0 as? URL } ?? []
+        for file in files where file.pathExtension == "swift" {
+            for line in try String(contentsOf: file, encoding: .utf8).components(separatedBy: "\n") {
+                guard let start = line.range(of: "InkTextField(placeholder: "), let end = line.range(of: ", text:") else { continue }
+                let placeholder = String(line[start.upperBound..<end.lowerBound])
+                if placeholder != "\"\"" { inside.append(placeholder) }
+            }
+        }
+        XCTAssertEqual(inside.sorted(), ["\"0\"", "\"993\"", "suggestedHost ?? \"imap.example.com\""])
+    }
+
+    /// The short sheet that asks for a price is as tall as its form, whatever the language and
+    /// text size make that: no taller (344 points left a band of nothing under Save) and no shorter
+    /// (300 cut the question's first line).
+    func testThePriceSheetIsAsTallAsItsForm() {
+        XCTAssertEqual(PriceSheet.sheetHeight(forForm: 0), 280, "Not measured yet")
+        XCTAssertEqual(PriceSheet.sheetHeight(forForm: 277), 277)
+        XCTAssertEqual(PriceSheet.sheetHeight(forForm: 412.3), 413)
+    }
+
     /// Text is as large as the person asked for. One place holds it lower: the six code boxes, where
     /// six digits share a row. A notice held to a smaller size (it was, for a day) cannot be read by
     /// the people who chose the largest.
@@ -158,12 +278,66 @@ final class ScreenRulesTests: XCTestCase {
         XCTAssertEqual(holders, ["EmailCodeViews.swift"])
     }
 
-    /// While the list is fetched for the first time, Home draws no figure: "$0.00 each month" was
-    /// on screen until the real total arrived. Once anything is on the phone, the figure shows.
-    func testHomeShowsNoTotalBeforeTheListHasArrived() {
-        XCTAssertTrue(DashboardView.isFirstLoad(isLoading: true, listIsEmpty: true))
-        XCTAssertFalse(DashboardView.isFirstLoad(isLoading: true, listIsEmpty: false), "a refresh keeps the figure")
-        XCTAssertFalse(DashboardView.isFirstLoad(isLoading: false, listIsEmpty: true), "an empty list is $0, truly")
+    /// What the three tabs show where the list would be. A fetch that failed with nothing on the
+    /// phone is not an empty list: it said "Nothing on your list yet." to people who have one. And
+    /// before the list has arrived no monthly total is drawn ("$0.00" was, until it did).
+    func testAListThatCouldNotLoadIsNotCalledEmpty() {
+        typealias Store = SubscriptionStore
+        XCTAssertEqual(Store.listState(isEmpty: true, isLoading: true, lastFetchFailed: false), .loading)
+        XCTAssertEqual(Store.listState(isEmpty: true, isLoading: true, lastFetchFailed: true), .loading, "trying again")
+        XCTAssertEqual(Store.listState(isEmpty: true, isLoading: false, lastFetchFailed: true), .couldNotLoad)
+        XCTAssertEqual(Store.listState(isEmpty: true, isLoading: false, lastFetchFailed: false), .empty)
+        XCTAssertEqual(Store.listState(isEmpty: false, isLoading: true, lastFetchFailed: true), .shown,
+                       "whatever is on the phone is shown while it refreshes")
+
+        XCTAssertFalse(Store.ListState.loading.totalIsKnown)
+        XCTAssertFalse(Store.ListState.couldNotLoad.totalIsKnown)
+        XCTAssertTrue(Store.ListState.empty.totalIsKnown, "an empty list is $0, truly")
+        XCTAssertTrue(Store.ListState.shown.totalIsKnown)
+    }
+
+    /// The catalog offers a category only when it holds a service, so choosing one never lands on
+    /// an empty page that reads "nothing matches" with nothing typed.
+    func testTheCatalogOffersOnlyCategoriesThatHoldAService() {
+        let two = [CatalogEntry("Netflix", .entertainment, nil), CatalogEntry("Spotify", .music, nil)]
+        XCTAssertEqual(Set(SubscriptionBrowserView.offeredCategories(in: two)), [.entertainment, .music])
+        XCTAssertEqual(SubscriptionBrowserView.offeredCategories(in: []), [])
+        // In the usual order, whatever order the catalog is in.
+        let order = SubscriptionCategory.allCases.filter { [.entertainment, .music].contains($0) }
+        XCTAssertEqual(SubscriptionBrowserView.offeredCategories(in: two.reversed()), order)
+    }
+
+    /// A picture made to be shared is drawn outside the app's screens, so it does not inherit their
+    /// language or direction: each one asks for them. An Arabic year slip came out left to right.
+    func testASharedPictureIsDrawnInTheAppsLanguage() throws {
+        let views = root.appendingPathComponent("Pausely/Views")
+        try XCTSkipUnless(FileManager.default.fileExists(atPath: views.path), "Sources aren't readable from this test run")
+        var pictures = 0
+        let files = FileManager.default.enumerator(at: views, includingPropertiesForKeys: nil)?.compactMap { $0 as? URL } ?? []
+        for file in files where file.pathExtension == "swift" {
+            let source = try String(contentsOf: file, encoding: .utf8)
+            for range in source.ranges(of: "ImageRenderer(content:") {
+                pictures += 1
+                // The function that makes the picture: from its `static func` to the renderer.
+                let before = source[..<range.lowerBound]
+                let start = before.range(of: "static func", options: .backwards)?.lowerBound ?? before.startIndex
+                let end = source.index(range.upperBound, offsetBy: 200, limitedBy: source.endIndex) ?? source.endIndex
+                XCTAssertTrue(source[start..<end].contains(".inTheAppsLanguage()"), file.lastPathComponent)
+            }
+        }
+        XCTAssertEqual(pictures, 2, "the year slip and the Savings Receipt")
+    }
+
+    /// "Rate Pausely" opens the review form on Pausely's App Store page. It used to ask iOS for its
+    /// rating prompt, which iOS shows a few times a year at most: a row that often did nothing.
+    func testRatePauselyOpensTheReviewForm() throws {
+        let url = try XCTUnwrap(URL(string: AppConfig.writeReviewURL))
+        XCTAssertEqual(url.host, "apps.apple.com")
+        XCTAssertEqual(url.path, "/app/id6759973158")
+        XCTAssertEqual(url.query, "action=write-review")
+        let help = try String(contentsOf: root.appendingPathComponent("Pausely/Views/Settings/HelpSupportView.swift"), encoding: .utf8)
+        XCTAssertTrue(help.contains("AppConfig.writeReviewURL"))
+        XCTAssertFalse(help.contains("requestReview"))
     }
 
     func testAFingertipIsFortyFourPoints() {

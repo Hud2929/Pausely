@@ -38,7 +38,11 @@ struct AnalysisView: View {
             VStack(alignment: .leading, spacing: 0) {
                 ScreenTitle(text: L10n.string("Insights"))
 
-                if live.isEmpty {
+                if store.listState == .loading {
+                    ListLoading().padding(.top, 24)
+                } else if store.listState == .couldNotLoad {
+                    ListCouldNotLoad().padding(.top, 24)
+                } else if live.isEmpty {
                     empty.padding(.top, 24)
                 } else {
                     Text(verbatim: sentence)
@@ -123,8 +127,10 @@ struct AnalysisView: View {
         guard let top = ranked.first else {
             return L10n.string("Your subscriptions cost about \(yearly) a year.")
         }
-        return L10n.string("Your subscriptions cost about \(yearly) a year.") + " "
-            + L10n.string("\(top.subscription.name) is the biggest, at \(currencyManager.format(top.monthly)) a month.")
+        return L10n.sentences([
+            L10n.string("Your subscriptions cost about \(yearly) a year."),
+            L10n.string("\(top.subscription.name) is the biggest, at \(currencyManager.format(top.monthly)) a month."),
+        ])
     }
 
     private func fraction(_ amount: Decimal, of top: Decimal) -> Double {
@@ -200,7 +206,10 @@ struct AnalysisView: View {
     }
 
     private func usageRow(_ line: UsageFacts.Line, detail: String?, value: String) -> some View {
-        Button { VerdictCenter.shared.showSubscription(line.subscription.id) } label: {
+        Button {
+            Feel.selection()
+            VerdictCenter.shared.showSubscription(line.subscription.id)
+        } label: {
             HStack(alignment: .firstTextBaseline, spacing: 12) {
                 VStack(alignment: .leading, spacing: 2) {
                     Text(verbatim: line.subscription.name)

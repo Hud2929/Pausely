@@ -45,8 +45,10 @@ struct UsageInputSheet: View {
     private var total: Int? { Self.totalMinutes(hours: hours, minutes: minutes) }
 
     var body: some View {
+        // "Cancel", not "Done": this page saves with its own button, and leaving it keeps nothing.
         SettingsPage(title: "How long did you use \(subscriptionName) this month?",
-                     detail: "You enter this yourself. Pausely doesn't read your Screen Time.") {
+                     detail: "You enter this yourself. Pausely doesn't read your Screen Time.",
+                     leaveTitle: "Cancel") {
             HStack(alignment: .top, spacing: 12) {
                 field(L10n.string("Hours"), text: $hours, id: "hoursTextField", focus: .hours)
                 field(L10n.string("Minutes"), text: $minutes, id: "minutesTextField", focus: .minutes)

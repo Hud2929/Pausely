@@ -1,5 +1,4 @@
 import SwiftUI
-import StoreKit
 
 /// Answers to what people ask most, and how to reach a person. Every answer describes the app as it
 /// is: what is free is said to be free, and the steps name the screens they are on.
@@ -40,7 +39,8 @@ struct HelpSupportView: View {
                     }
                     .buttonStyle(.plain)
                     .accessibilityElement(children: .combine)
-                    .accessibilityHint(open == index ? Text("Double tap to hide the answer") : Text("Double tap to show the answer"))
+                    // What it does, not how to do it: VoiceOver says how itself.
+                    .accessibilityHint(open == index ? Text("Hides the answer") : Text("Shows the answer"))
                     .accessibilityIdentifier("faq-\(index)")
                 }
             }
@@ -73,9 +73,9 @@ struct HelpSupportView: View {
         if let url = URL(string: AppConfig.supportURL) { UIApplication.shared.open(url) }
     }
 
+    /// Opens Pausely's page in the App Store on the review form. Asking iOS for its rating prompt
+    /// from a button is a button that may do nothing: iOS shows that prompt only a few times a year.
     private func openAppStoreReview() {
-        if let windowScene = UIApplication.shared.connectedScenes.first as? UIWindowScene {
-            AppStore.requestReview(in: windowScene)
-        }
+        if let url = URL(string: AppConfig.writeReviewURL) { UIApplication.shared.open(url) }
     }
 }

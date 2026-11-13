@@ -71,10 +71,7 @@ struct AgeGateView: View {
                 .accessibilityHint("Select the year, month and day you were born")
 
             if outcome == .invalidDate {
-                Text("That date is in the future. Please check your date of birth.")
-                    .font(.footnote)
-                    .foregroundStyle(Color.due)
-                    .frame(maxWidth: .infinity, alignment: .leading)
+                ProblemLine(message: L10n.string("That date is in the future. Please check your date of birth."))
             }
 
             Button(action: submit) {

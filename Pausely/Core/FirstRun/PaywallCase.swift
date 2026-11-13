@@ -3,6 +3,21 @@ import Foundation
 /// The paywall's argument, made from the person's own list: what their subscriptions cost, and how
 /// little of that Pausely Pro is. Pure, so the numbers on the paywall are tested.
 enum PaywallCase {
+    /// What the paywall can say about prices. They are the App Store's: until it has answered there
+    /// are none, and the page prints no sentence with a hole in it ("Pausely Pro is … a year.").
+    enum Prices: Equatable {
+        case known
+        /// Asked for and not yet answered.
+        case loading
+        /// The App Store did not answer: no prices, no plans to pick, and a way to ask again.
+        case unavailable
+    }
+
+    static func prices(loaded: Bool, isLoading: Bool) -> Prices {
+        if loaded { return .known }
+        return isLoading ? .loading : .unavailable
+    }
+
     struct Comparison: Equatable {
         /// The person's most expensive subscription.
         let name: String

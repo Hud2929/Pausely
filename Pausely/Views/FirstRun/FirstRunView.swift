@@ -64,20 +64,6 @@ struct FirstRunView: View {
 
 // MARK: - Shared pieces
 
-/// The pause mark and the name, small, at the top of the first screen.
-private struct Wordmark: View {
-    var body: some View {
-        HStack(spacing: 8) {
-            HStack(spacing: 3) {
-                Capsule().frame(width: 4, height: 15)
-                Capsule().frame(width: 4, height: 15)
-            }
-            .accessibilityHidden(true)
-            Text(verbatim: "Pausely").font(.headline)
-        }
-        .foregroundStyle(Color.inkText)
-    }
-}
 
 private struct BackButton: View {
     let action: () -> Void
@@ -111,7 +97,7 @@ private struct GuessStep: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
             HStack {
-                Wordmark()
+                Wordmark().foregroundStyle(Color.inkText)
                 Spacer()
                 Button(action: onSignIn) {
                     Text("Sign in")
@@ -229,7 +215,9 @@ private struct TallyStep: View {
                     // the heading above already says what to do, so the first service is on screen.
                     LazyVGrid(columns: columns, spacing: 10) {
                         ForEach(services) { service in
-                            ServiceTile(service: service, isOn: tally.contains(service)) {
+                            ServiceTile(service: service, isOn: tally.contains(service),
+                                        price: tally.lines.first { $0.name == service.name }
+                                            .map { MoneyFormat.string($0.amount, $0.currency, locale: L10n.locale) }) {
                                 let adding = !tally.contains(service)
                                 // No honest typical price in this currency: ask what they pay.
                                 if adding, Tally.typicalAmount(service, payingIn: tally.currency) == nil {
@@ -303,6 +291,8 @@ private struct TallyStep: View {
 private struct ServiceTile: View {
     let service: TallyService
     let isOn: Bool
+    /// What it stands at on the slip, once tapped.
+    var price: String?
     let action: () -> Void
 
     @Environment(\.dynamicTypeSize) private var typeSize
@@ -345,7 +335,7 @@ private struct ServiceTile: View {
                         .foregroundStyle(Color.paperInk)
                         .frame(width: 20, height: 20)
                         .background(Color.paper, in: Circle())
-                        .padding(7)
+                        .padding(8)
                         .transition(.arriving(.scale))
                 }
             }
@@ -353,6 +343,8 @@ private struct ServiceTile: View {
         }
         .buttonStyle(.plain)
         .accessibilityLabel(Text(verbatim: service.name))
+        // The price a tap puts on the slip is drawn at the foot of the screen; VoiceOver hears it here.
+        .accessibilityValue(Text(verbatim: price ?? ""))
         .accessibilityAddTraits(isOn ? [.isSelected] : [])
     }
 }
@@ -429,18 +421,22 @@ private struct RevealStep: View {
     private var slip: some View {
         PaperSlip(tornTop: true, tornBottom: true) {
             VStack(alignment: .leading, spacing: 12) {
-                ForEach(Array(tally.lines.enumerated()), id: \.element.id) { index, line in
-                    if index < printed {
-                        Button { editing = line } label: {
-                            ProofLine(label: line.name,
-                                      value: MoneyFormat.string(line.amount, line.currency, locale: L10n.locale))
-                                .frame(minHeight: 28)
-                                .contentShape(Rectangle())
+                // The lines sit one fingertip apart, with no extra gap: each is its own place to tap.
+                VStack(alignment: .leading, spacing: 0) {
+                    ForEach(Array(tally.lines.enumerated()), id: \.element.id) { index, line in
+                        if index < printed {
+                            Button { editing = line } label: {
+                                ProofLine(label: line.name,
+                                          value: MoneyFormat.string(line.amount, line.currency, locale: L10n.locale))
+                                    // A line is a place to tap: a fingertip tall (it was 28 points).
+                                    .frame(maxWidth: .infinity, minHeight: Layout.tapTarget)
+                                    .contentShape(Rectangle())
+                            }
+                            .buttonStyle(.plain)
+                            .accessibilityIdentifier("revealLine")
+                            .accessibilityHint(Text("Change the price"))
+                            .transition(.arriving(.offset(y: -6)))
                         }
-                        .buttonStyle(.plain)
-                        .accessibilityIdentifier("revealLine")
-                        .accessibilityHint(Text("Change the price"))
-                        .transition(.arriving(.offset(y: -6)))
                     }
                 }
 
@@ -517,7 +513,7 @@ private struct RevealStep: View {
 }
 
 /// Correct one price on the slip.
-private struct PriceSheet: View {
+struct PriceSheet: View {
     let name: String
     /// The price already on the slip, shown until the person types.
     let placeholder: Decimal?
@@ -527,23 +523,36 @@ private struct PriceSheet: View {
     @Environment(\.dismiss) private var dismiss
     @Environment(\.dynamicTypeSize) private var typeSize
     @State private var text = ""
+    @State private var formHeight: CGFloat = 0
     @FocusState private var focused: Bool
 
     private var amount: Decimal? { AmountText.parse(text, currency: currency) }
 
+    /// How tall the short sheet is: as tall as its form, once that has been measured. Until then
+    /// (the first frame) it is about as tall as the form is in English at the ordinary text size.
+    nonisolated static func sheetHeight(forForm measured: CGFloat) -> CGFloat {
+        measured > 0 ? measured.rounded(.up) : 280
+    }
+
     var body: some View {
-        // A short sheet at ordinary text sizes. At the accessibility sizes the question alone is
-        // taller than that, so the sheet is full height and scrolls (300 points cut its first line).
+        // A short sheet, as tall as what it holds: a height written as a number fitted one text
+        // size and one language (300 points cut the question's first line, and 344 left a band of
+        // nothing under Save). At the accessibility
+        // sizes the question alone is most of a screen, so the sheet is full height and scrolls.
         ScrollView {
             form
+                .onGeometryChange(for: CGFloat.self) { $0.size.height } action: { formHeight = $0 }
         }
         .scrollBounceBehavior(.basedOnSize)
-        .presentationDetents(typeSize.isAccessibilitySize ? [.large] : [.height(300)])
+        .presentationDetents(typeSize.isAccessibilitySize ? [.large] : [.height(Self.sheetHeight(forForm: formHeight))])
         .presentationBackground(Color.inkRaised)
     }
 
     private var form: some View {
         VStack(alignment: .leading, spacing: 16) {
+            // A way out that is not a swipe: the sheet had "Save" and nothing else.
+            LeaveButton("Cancel") { dismiss() }
+                .accessibilityIdentifier("priceCancelButton")
             Text(L10n.string("What do you pay for \(name) each month?"))
                 .font(.question(.title3))
                 .foregroundStyle(Color.inkText)
@@ -573,7 +582,8 @@ private struct PriceSheet: View {
                 .disabled(amount == nil)
                 .accessibilityIdentifier("priceSaveButton")
         }
-        .padding(Layout.margin)
+        .padding(.horizontal, Layout.margin)
+        .padding(.bottom, Layout.margin)
         .padding(.top, 8)
         .onAppear { focused = true }
     }

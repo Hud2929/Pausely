@@ -2066,6 +2066,74 @@
         }
       }
     },
+    "Couldn't load your list.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "تعذّر تحميل قائمتك."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ihre Liste konnte nicht geladen werden."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No se pudo cargar tu lista."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Impossible de charger votre liste."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "リストを読み込めませんでした。"
+          }
+        }
+      }
+    },
+    "Check your connection, then try again.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "تحقّق من اتصالك ثم حاول مرة أخرى."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Prüfen Sie Ihre Verbindung und versuchen Sie es erneut."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Revisa tu conexión e inténtalo de nuevo."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Vérifiez votre connexion, puis réessayez."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "通信状況を確認して、もう一度お試しください。"
+          }
+        }
+      }
+    },
     "Couldn't open the sign-in page.": {
       "localizations": {
         "ar": {
@@ -6680,36 +6748,36 @@
         }
       }
     },
-    "%@/mo equivalent": {
+    "That's %@ a month.": {
       "localizations": {
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "entspricht %@/Monat"
+            "value": "Das sind %@ im Monat."
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "equivale a %@/mes"
+            "value": "Son %@ al mes."
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "soit %@/mois"
+            "value": "Soit %@ par mois."
           }
         },
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "月額換算%@"
+            "value": "ひと月あたり%@です。"
           }
         },
         "ar": {
           "stringUnit": {
             "state": "translated",
-            "value": "ما يعادل %@/شهر"
+            "value": "أي %@ في الشهر."
           }
         }
       }
@@ -7929,40 +7997,6 @@
         }
       }
     },
-    "Error": {
-      "localizations": {
-        "ar": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "خطأ"
-          }
-        },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Fehler"
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Error"
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Erreur"
-          }
-        },
-        "ja": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "エラー"
-          }
-        }
-      }
-    },
     "Format": {
       "localizations": {
         "de": {
@@ -8027,40 +8061,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "مجاني"
-          }
-        }
-      }
-    },
-    "Frequency": {
-      "localizations": {
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Häufigkeit"
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Frecuencia"
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Fréquence"
-          }
-        },
-        "ja": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "頻度"
-          }
-        },
-        "ar": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "التكرار"
           }
         }
       }
@@ -8582,6 +8582,40 @@
         }
       }
     },
+    "At today's price.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "بسعر اليوم."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Zum heutigen Preis."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Al precio de hoy."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Au prix d'aujourd'hui."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "現在の料金での計算です。"
+          }
+        }
+      }
+    },
     "Minutes": {
       "localizations": {
         "de": {
@@ -8714,42 +8748,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "الاسم"
-          }
-        }
-      }
-    },
-    "No results for \"%@\"": {
-      "comment": "A message displayed when there are no FAQ results for a given search term. The argument is the string “”.",
-      "isCommentAutoGenerated": true,
-      "localizations": {
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Keine Ergebnisse für „%@“"
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "No hay resultados para «%@»"
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Aucun résultat pour « %@ »"
-          }
-        },
-        "ja": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "「%@」の結果はありません"
-          }
-        },
-        "ar": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "لا توجد نتائج لـ «%@»"
           }
         }
       }
@@ -9407,6 +9405,74 @@
           "stringUnit": {
             "state": "translated",
             "value": "購入を復元"
+          }
+        }
+      }
+    },
+    "Getting the prices from the App Store…": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "جارٍ جلب الأسعار من App Store…"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Preise werden aus dem App Store geladen …"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Obteniendo los precios del App Store…"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Récupération des prix sur l'App Store…"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "App Storeから価格を取得しています…"
+          }
+        }
+      }
+    },
+    "Couldn't reach the App Store, so there are no prices to show. Check your connection.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "تعذّر الوصول إلى App Store، لذا لا توجد أسعار لعرضها. تحقّق من اتصالك."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Der App Store ist nicht erreichbar, daher können keine Preise angezeigt werden. Prüfen Sie Ihre Verbindung."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No se pudo conectar con el App Store, así que no hay precios que mostrar. Revisa tu conexión."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Impossible de joindre l'App Store : il n'y a donc aucun prix à afficher. Vérifiez votre connexion."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "App Storeに接続できないため、価格を表示できません。通信状況を確認してください。"
           }
         }
       }
@@ -10947,7 +11013,7 @@
         }
       }
     },
-    "Your Savings Receipt starts with your first cancel": {
+    "Your Savings Receipt starts with your first cancellation": {
       "localizations": {
         "ar": {
           "stringUnit": {
@@ -15633,74 +15699,6 @@
         }
       }
     },
-    "Next charge: %@ on %@": {
-      "localizations": {
-        "ar": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "الخصم التالي: %1$@ في %2$@"
-          }
-        },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Nächste Abbuchung: %1$@ am %2$@"
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Próximo cargo: %1$@ el %2$@"
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Prochain prélèvement : %1$@ le %2$@"
-          }
-        },
-        "ja": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "次回の請求：%2$@に%1$@"
-          }
-        }
-      }
-    },
-    "Add its renewal date to see when to cancel.": {
-      "localizations": {
-        "ar": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "أضف تاريخ تجديده لمعرفة متى تلغي."
-          }
-        },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Tragen Sie das Verlängerungsdatum ein, um zu sehen, wann Sie kündigen sollten."
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Añade su fecha de renovación para ver cuándo cancelar."
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Ajoutez sa date de renouvellement pour savoir quand résilier."
-          }
-        },
-        "ja": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "更新日を追加すると、解約のタイミングがわかります。"
-          }
-        }
-      }
-    },
     "/year": {
       "localizations": {
         "ar": {
@@ -15799,6 +15797,40 @@
           "stringUnit": {
             "state": "translated",
             "value": "今日"
+          }
+        }
+      }
+    },
+    "Total by day": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "الإجمالي حتى يوم محدد"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Summe bis zu einem Tag"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Total hasta un día"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Total jusqu'à un jour"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "指定日までの合計"
           }
         }
       }
@@ -17017,40 +17049,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "Pausely Proをご利用中です"
-          }
-        }
-      }
-    },
-    "Couldn't reach the App Store. Tap to try again.": {
-      "localizations": {
-        "ar": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "تعذّر الوصول إلى App Store. اضغط للمحاولة مجددًا."
-          }
-        },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "App Store nicht erreichbar. Tippen Sie, um es erneut zu versuchen."
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "No se pudo conectar con el App Store. Toca para reintentar."
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Impossible de joindre l'App Store. Touchez pour réessayer."
-          }
-        },
-        "ja": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "App Storeに接続できません。タップして再試行。"
           }
         }
       }
@@ -21167,40 +21165,6 @@
         }
       }
     },
-    "At least 8 characters, with a capital letter, a small letter and a number.": {
-      "localizations": {
-        "ar": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "ثمانية أحرف على الأقل، تتضمن حرفًا كبيرًا وحرفًا صغيرًا ورقمًا."
-          }
-        },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Mindestens 8 Zeichen, mit einem Großbuchstaben, einem Kleinbuchstaben und einer Zahl."
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Al menos 8 caracteres, con una mayúscula, una minúscula y un número."
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Au moins 8 caractères, avec une majuscule, une minuscule et un chiffre."
-          }
-        },
-        "ja": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "8文字以上で、大文字・小文字・数字をそれぞれ1つ以上含めてください。"
-          }
-        }
-      }
-    },
     "New password": {
       "localizations": {
         "ar": {
@@ -21641,40 +21605,6 @@
         }
       }
     },
-    "At least 8 characters": {
-      "localizations": {
-        "ar": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "ثمانية أحرف على الأقل"
-          }
-        },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Mindestens 8 Zeichen"
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Al menos 8 caracteres"
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Au moins 8 caractères"
-          }
-        },
-        "ja": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "8文字以上"
-          }
-        }
-      }
-    },
     "Create account": {
       "localizations": {
         "ar": {
@@ -21739,40 +21669,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "アカウントを作成すると、[利用規約](pausely-legal:terms)と[プライバシーポリシー](pausely-legal:privacy)に同意したことになります。"
-          }
-        }
-      }
-    },
-    "Your password": {
-      "localizations": {
-        "ar": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "كلمة المرور"
-          }
-        },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Ihr Passwort"
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Tu contraseña"
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Votre mot de passe"
-          }
-        },
-        "ja": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "パスワード"
           }
         }
       }
@@ -22841,40 +22737,6 @@
         }
       }
     },
-    "Double tap to select or deselect": {
-      "localizations": {
-        "ar": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "اضغط مرتين للتحديد أو إلغاء التحديد"
-          }
-        },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Doppeltippen zum Auswählen oder Abwählen"
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Toca dos veces para seleccionar o deseleccionar"
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Touchez deux fois pour sélectionner ou désélectionner"
-          }
-        },
-        "ja": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "ダブルタップで選択または解除"
-          }
-        }
-      }
-    },
     "The search couldn't be finished.": {
       "localizations": {
         "ar": {
@@ -23673,74 +23535,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "お問い合わせ"
-          }
-        }
-      }
-    },
-    "Double tap to hide the answer": {
-      "localizations": {
-        "ar": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "اضغط مرتين لإخفاء الإجابة"
-          }
-        },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Doppeltippen, um die Antwort auszublenden"
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Toca dos veces para ocultar la respuesta"
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Touchez deux fois pour masquer la réponse"
-          }
-        },
-        "ja": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "ダブルタップで回答を隠す"
-          }
-        }
-      }
-    },
-    "Double tap to show the answer": {
-      "localizations": {
-        "ar": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "اضغط مرتين لإظهار الإجابة"
-          }
-        },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Doppeltippen, um die Antwort anzuzeigen"
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Toca dos veces para ver la respuesta"
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Touchez deux fois pour afficher la réponse"
-          }
-        },
-        "ja": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "ダブルタップで回答を表示"
           }
         }
       }
@@ -24999,6 +24793,74 @@
           "stringUnit": {
             "state": "translated",
             "value": "サポートサイト"
+          }
+        }
+      }
+    },
+    "Shows the answer": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "يعرض الإجابة"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Zeigt die Antwort"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Muestra la respuesta"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Affiche la réponse"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "回答を表示します"
+          }
+        }
+      }
+    },
+    "Hides the answer": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "يخفي الإجابة"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Blendet die Antwort aus"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Oculta la respuesta"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Masque la réponse"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "回答を隠します"
           }
         }
       }
@@ -27933,40 +27795,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "支払い期限は%@でした"
-          }
-        }
-      }
-    },
-    "Cancel any day before %@ to avoid it.": {
-      "localizations": {
-        "ar": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "ألغِ في أي يوم قبل %@ لتتجنّبه."
-          }
-        },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Kündigen Sie an einem beliebigen Tag vor dem %@, um sie zu vermeiden."
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Cancela cualquier día antes del %@ para evitarlo."
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Résiliez n'importe quel jour avant le %@ pour l'éviter."
-          }
-        },
-        "ja": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "%@より前に解約すれば請求されません。"
           }
         }
       }

@@ -88,4 +88,22 @@ final class HorizonTests: XCTestCase {
         ])
         XCTAssertEqual(undated.map(\.name), ["Tallied"])
     }
+
+    /// Home's line is dragged with a finger; with VoiceOver it is stepped, one charge day at a time.
+    func testTheLineCanBeSteppedOneChargeDayAtATime() {
+        func charge(_ day: Int) -> Horizon.Charge {
+            Horizon.Charge(subscriptionId: UUID(), name: "Plan", category: nil, date: Date(), dayOffset: day,
+                           amount: 5, currency: "USD", isTrialEnd: false)
+        }
+        let charges = [charge(2), charge(2), charge(9), charge(20)]
+        let end = Horizon.days - 1
+        XCTAssertEqual(Horizon.stepDay(from: end, forward: false, charges: charges), 20)
+        XCTAssertEqual(Horizon.stepDay(from: 20, forward: false, charges: charges), 9)
+        XCTAssertEqual(Horizon.stepDay(from: 9, forward: false, charges: charges), 2, "two charges on one day are one step")
+        XCTAssertEqual(Horizon.stepDay(from: 2, forward: false, charges: charges), 2, "nothing before the first")
+        XCTAssertEqual(Horizon.stepDay(from: 2, forward: true, charges: charges), 9)
+        XCTAssertEqual(Horizon.stepDay(from: 20, forward: true, charges: charges), end, "after the last charge, the whole month")
+        XCTAssertEqual(Horizon.stepDay(from: end, forward: true, charges: charges), end)
+        XCTAssertEqual(Horizon.stepDay(from: end, forward: false, charges: []), end, "nothing to step to")
+    }
 }

@@ -97,7 +97,7 @@ final class PaymentManager: ObservableObject {
     var isPremium: Bool {
         #if DEBUG
         // `--demo-pro` (captures and UI tests): the app as someone with Pro sees it.
-        if debugPremiumOverride || LaunchFlag.isSet("--demo-pro") { return true }
+        if debugPremiumOverride || LaunchFlag.value(of: "--demo-pro") != nil { return true }
         #endif
         return resolvedTier > .free
     }

@@ -195,7 +195,8 @@ struct RenewalVerdictView: View {
                 let up = change.isIncrease
                 factLine(up ? L10n.string("Up from \(MoneyFormat.string(change.from, sub.currency)) since \(change.since.formatted(.dateTime.month(.abbreviated).day().locale(L10n.locale)))")
                             : L10n.string("Down from \(MoneyFormat.string(change.from, sub.currency)) since \(change.since.formatted(.dateTime.month(.abbreviated).day().locale(L10n.locale)))"),
-                         color: up ? .paperDue : .paperKept)
+                         // Mint is for money kept by cancelling. A price that went down is said in ink.
+                         color: up ? .paperDue : .paperInk)
             }
 
             if let renewed = VerdictFacts.renewedSoFar(for: sub, events: eventLog.events) {
@@ -352,25 +353,27 @@ struct OutcomeScreen<Slip: View, Actions: View>: View {
     @ViewBuilder var actions: Actions
 
     var body: some View {
-        ViewThatFits(in: .vertical) {
-            VStack(spacing: 0) {
-                Spacer(minLength: 24)
-                slip
-                Spacer(minLength: 24)
-                actions
-            }
-            .padding(.horizontal, Layout.margin)
-            .padding(.bottom, 12)
-            // The margin is inside the scroll view, which is as wide as the screen.
+        // On iPad the buttons sit under the slip, the two of them in the middle of the screen: at
+        // its bottom edge they were half a screen away from what they are about.
+        let onPad = UIDevice.current.userInterfaceIdiom == .pad
+        // One scroll view at least as tall as the screen: the slip sits in the middle when there is
+        // room and the page scrolls when there is not, and it is the same slip either way. (Two
+        // copies, one of them chosen by `ViewThatFits`, made Apple's audit report text that could
+        // not grow.)
+        return GeometryReader { screen in
             ScrollView {
-                VStack(spacing: 24) {
+                VStack(spacing: 0) {
+                    Spacer(minLength: 24)
                     slip
+                    if onPad { Color.clear.frame(height: 24) } else { Spacer(minLength: 24) }
                     actions
+                    if onPad { Spacer(minLength: 24) }
                 }
                 .padding(.horizontal, Layout.margin)
-                .padding(.top, 24)
                 .padding(.bottom, 12)
+                .frame(minHeight: screen.size.height)
             }
+            .scrollBounceBehavior(.basedOnSize)
         }
     }
 }
@@ -387,9 +390,36 @@ struct OutcomeSlip<Detail: View>: View {
     @State private var landed = false
 
     var body: some View {
-        ZStack(alignment: .top) {
+        PaperSlip(tornTop: true, tornBottom: true) {
+            VStack(alignment: .leading, spacing: 14) {
+                HStack(spacing: 10) {
+                    ServiceLogoView(name: name, category: category, size: 36)
+                    Text(verbatim: name).font(.question(.title2))
+                        .fixedSize(horizontal: false, vertical: true)
+                }
+                // One word, on one line, whole: a stamp that ends in "…" at the largest text
+                // size ("CANCELL…") says nothing, so it shrinks to the slip's width instead.
+                Text(verbatim: stamp)
+                    .font(.proof(.title3, weight: .bold))
+                    .textCase(.uppercase)
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.5)
+                    .foregroundStyle(torn ? Color.paperInk : Color.paperKept)
+                    .padding(.horizontal, 12)
+                    .padding(.vertical, 6)
+                    .overlay(RoundedRectangle(cornerRadius: Layout.markRadius, style: .continuous).stroke(torn ? Color.paperInk : Color.paperKept, lineWidth: 2))
+                    .rotationEffect(.degrees(-4))
+                    .scaleEffect(landed ? 1 : 1.5)
+                    .opacity(landed ? 1 : 0)
+                Perforation()
+                detail
+            }
+        }
+        // The half that tears off hangs from the slip's own bottom edge, however tall the slip is,
+        // and drops away from there. (It was placed 150 points down from the top, which at a large
+        // text size is somewhere behind the middle of the slip.)
+        .background(alignment: .bottom) {
             if torn {
-                // The half that tears off. It starts where the slip continues and drops away.
                 PaperSlip(tornTop: true, tornBottom: true) {
                     VStack(alignment: .leading, spacing: 12) {
                         ForEach(0..<3, id: \.self) { _ in
@@ -397,37 +427,10 @@ struct OutcomeSlip<Detail: View>: View {
                         }
                     }
                 }
-                .padding(.top, 150)
-                .offset(y: landed ? 420 : 0)
+                .offset(y: landed ? 420 : 44)
                 .rotationEffect(.degrees(landed ? 9 : 0), anchor: .topLeading)
                 .opacity(landed ? 0 : 1)
                 .accessibilityHidden(true)
-            }
-
-            PaperSlip(tornTop: true, tornBottom: true) {
-                VStack(alignment: .leading, spacing: 14) {
-                    HStack(spacing: 10) {
-                        ServiceLogoView(name: name, category: category, size: 36)
-                        Text(verbatim: name).font(.question(.title2))
-                            .fixedSize(horizontal: false, vertical: true)
-                    }
-                    // One word, on one line, whole: a stamp that ends in "…" at the largest text
-                    // size ("CANCELL…") says nothing, so it shrinks to the slip's width instead.
-                    Text(verbatim: stamp)
-                        .font(.proof(.title3, weight: .bold))
-                        .textCase(.uppercase)
-                        .lineLimit(1)
-                        .minimumScaleFactor(0.5)
-                        .foregroundStyle(torn ? Color.paperInk : Color.paperKept)
-                        .padding(.horizontal, 12)
-                        .padding(.vertical, 6)
-                        .overlay(RoundedRectangle(cornerRadius: Layout.markRadius, style: .continuous).stroke(torn ? Color.paperInk : Color.paperKept, lineWidth: 2))
-                        .rotationEffect(.degrees(-4))
-                        .scaleEffect(landed ? 1 : 1.5)
-                        .opacity(landed ? 1 : 0)
-                    Perforation()
-                    detail
-                }
             }
         }
         .accessibilityElement(children: .combine)

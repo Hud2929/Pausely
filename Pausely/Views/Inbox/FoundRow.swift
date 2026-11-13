@@ -52,7 +52,7 @@ struct FoundRow: View {
                         if !found.isCancelled { checkbox }
                         ServiceLogoView(name: found.name, category: nil, size: 36)
                         if typeSize.isAccessibilitySize {
-                            VStack(alignment: .leading, spacing: 3) { nameAndEvidence; price }
+                            VStack(alignment: .leading, spacing: 4) { nameAndEvidence; price }
                             Spacer(minLength: 0)
                         } else {
                             nameAndEvidence
@@ -66,7 +66,6 @@ struct FoundRow: View {
                 .disabled(found.isCancelled)
                 .accessibilityElement(children: .ignore)
                 .accessibilityLabel(accessibilitySummary)
-                .accessibilityHint(found.isCancelled ? Text(verbatim: "") : Text("Double tap to select or deselect"))
                 .accessibilityAddTraits(isSelected ? [.isButton, .isSelected] : .isButton)
 
                 Button(action: onExpand) {
@@ -87,7 +86,7 @@ struct FoundRow: View {
     }
 
     private var nameAndEvidence: some View {
-        VStack(alignment: .leading, spacing: 3) {
+        VStack(alignment: .leading, spacing: 4) {
             Text(verbatim: found.name)
                 .font(.body.weight(.medium))
                 .foregroundStyle(Color.inkText)
@@ -112,7 +111,7 @@ struct FoundRow: View {
 
     @ViewBuilder private var price: some View {
         if let priceText {
-            VStack(alignment: typeSize.isAccessibilitySize ? .leading : .trailing, spacing: 1) {
+            VStack(alignment: typeSize.isAccessibilitySize ? .leading : .trailing, spacing: 2) {
                 Text(verbatim: priceText)
                     .font(.body.weight(.semibold))
                     .foregroundStyle(Color.inkText)

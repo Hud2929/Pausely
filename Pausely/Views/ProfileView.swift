@@ -85,6 +85,14 @@ struct ProfileView: View {
         }
         .inkScreen()
         .task(id: paymentManager.currentTier) {
+            #if DEBUG
+            // `--demo-pro`, `=trial`, `=ending`, `=problem`: the plan group in each of its states,
+            // which otherwise needs a purchase through the App Store.
+            if let shown = LaunchFlag.value(of: "--demo-pro") {
+                plan = .demo(shown)
+                return
+            }
+            #endif
             plan = paymentManager.isPremium ? await StoreKitManager.shared.ownSubscription(for: paymentManager.currentTier) : nil
         }
         // Apple's own sheets: changing or cancelling the plan, and asking for money back.
@@ -189,6 +197,20 @@ struct ProfileView: View {
         .padding(.top, 28)
     }
 
+    private func rowTitle(_ title: String) -> some View {
+        Text(verbatim: title)
+            .font(.body)
+            .foregroundStyle(Color.inkText)
+            .multilineTextAlignment(.leading)
+    }
+
+    private func rowValue(_ value: String) -> some View {
+        Text(verbatim: value)
+            .font(.body)
+            .foregroundStyle(Color.inkTextMuted)
+            .multilineTextAlignment(.leading)
+    }
+
     private func row(_ icon: String, _ title: String, value: String? = nil, id: String, last: Bool = false,
                      action: @escaping () -> Void) -> some View {
         VStack(spacing: 0) {
@@ -202,25 +224,14 @@ struct ProfileView: View {
                         .foregroundStyle(Color.inkTextMuted)
                         .frame(width: iconWidth)
                         .accessibilityHidden(true)
-                    // The value sits beside the title, or under it at accessibility text sizes: on one
-                    // line it was cut short ("Same as iP…") as the text grew.
-                    SideBySide(alignment: .center) {
-                        Text(verbatim: title)
-                            .font(.body)
-                            .foregroundStyle(Color.inkText)
-                            .multilineTextAlignment(.leading)
-                    } trailing: {
-                        if let value {
-                            Text(verbatim: value)
-                                .font(.body)
-                                .foregroundStyle(Color.inkTextMuted)
-                                .multilineTextAlignment(.leading)
-                        }
+                    // The value sits beside the title when both fit on one line, and under it when
+                    // they do not: at accessibility text sizes ("Same as iP…" was cut short), and for a
+                    // long value at any size ("Manage subscription" broke in two beside its date).
+                    LineOrStack(spacing: 12, lineSpacing: 2, spread: true) {
+                        rowTitle(title)
+                        if let value { rowValue(value) }
                     }
-                    Image(systemName: "chevron.forward")
-                        .font(.footnote.weight(.semibold))
-                        .foregroundStyle(Color.inkTextFaint)
-                        .accessibilityHidden(true)
+                    RowChevron()
                 }
                 .padding(.vertical, 14)
                 .contentShape(Rectangle())
@@ -249,6 +260,9 @@ struct SubscriptionWrappedView: View {
 
     private var stats: WrappedStats { WrappedStats(subscriptions: subscriptions, events: LifecycleEventLog.shared.events) }
     private var isEmpty: Bool { stats.hasNothingToShow }
+    /// The slip as a picture for sharing, drawn once when the screen opens (it was drawn on every
+    /// pass of the screen's body).
+    @State private var picture: Image?
 
     var body: some View {
         ScrollView {
@@ -256,7 +270,7 @@ struct SubscriptionWrappedView: View {
                 HStack {
                     LeaveButton("Done") { dismiss() }
                     Spacer()
-                    if !isEmpty, let image = YearSlip.image(stats: stats, currency: currencyManager.selectedCurrency) {
+                    if !isEmpty, let image = picture {
                         ShareLink(item: image, preview: SharePreview(L10n.string("Your year in subscriptions"), image: image)) {
                             Image(systemName: "square.and.arrow.up")
                                 .font(.body.weight(.semibold))
@@ -299,6 +313,9 @@ struct SubscriptionWrappedView: View {
         }
         .inkScreen()
         .preferredColorScheme(.dark)
+        .task(id: "\(subscriptions.count)|\(currencyManager.selectedCurrency)") {
+            picture = isEmpty ? nil : YearSlip.image(stats: stats, currency: currencyManager.selectedCurrency)
+        }
     }
 }
 
@@ -315,14 +332,7 @@ private struct YearSlip: View {
         let kept = SavingsSummary.current()
         PaperSlip(tornTop: true, tornBottom: true) {
             VStack(alignment: .leading, spacing: 12) {
-                HStack(spacing: 8) {
-                    HStack(spacing: 3) {
-                        Capsule().frame(width: 4, height: 14)
-                        Capsule().frame(width: 4, height: 14)
-                    }
-                    .accessibilityHidden(true)
-                    Text(verbatim: "Pausely \(stats.yearText)").font(.headline)
-                }
+                Wordmark(text: "Pausely \(stats.yearText)")
                 Perforation()
                 ProofLine(label: L10n.string("Subscriptions"), value: L10n.number(stats.totalCount))
                 ProofLine(label: L10n.string("Each month"), value: money(stats.monthlyCost))
@@ -346,7 +356,8 @@ private struct YearSlip: View {
     @MainActor
     static func image(stats: WrappedStats, currency: String) -> Image? {
         let renderer = ImageRenderer(content: YearSlip(stats: stats, currency: currency)
-            .frame(width: 360).padding(24).background(Color.ink))
+            .frame(width: 360).padding(24).background(Color.ink)
+            .inTheAppsLanguage())
         renderer.scale = 3
         return renderer.uiImage.map(Image.init(uiImage:))
     }

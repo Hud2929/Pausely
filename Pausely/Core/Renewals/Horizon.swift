@@ -65,6 +65,17 @@ enum Horizon {
     }
 
     /// Active subscriptions Pausely can't remind about yet, because it doesn't know when they renew.
+    /// The next day along the line that has a charge, for stepping with VoiceOver (a finger drags;
+    /// VoiceOver swipes up and down). Forward past the last charge is the end of the line, which is
+    /// the whole month; back before the first charge stays on the first.
+    static func stepDay(from day: Int, forward: Bool, charges: [Charge]) -> Int {
+        let chargeDays = Set(charges.map(\.dayOffset)).sorted()
+        if forward {
+            return chargeDays.first { $0 > day } ?? days - 1
+        }
+        return chargeDays.last { $0 < day } ?? chargeDays.first ?? day
+    }
+
     static func undated(_ subscriptions: [Subscription]) -> [Subscription] {
         subscriptions.filter { $0.status == .active && $0.nextBillingDate == nil }
     }

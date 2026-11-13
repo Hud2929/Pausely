@@ -62,12 +62,16 @@ struct ServiceLogoView: View {
         return first.map { String($0).uppercased() } ?? ""
     }
 
+    /// The letter is drawn, not set as text: it stands in for a logo and is sized to its tile like
+    /// one, so it is a picture. (As text it was reported by Apple's audit as text that cannot grow.)
     private var initialView: some View {
-        Text(Self.initial(of: name))
+        let letter = Text(verbatim: Self.initial(of: name))
             .font(.total(size * 0.44, weight: .semibold))
             .foregroundStyle(Color.inkText)
-            // A stand-in for a logo, sized to its tile like one: a picture, not text to be read or scaled.
-            .accessibilityHidden(true)
+        return Canvas { context, area in
+            context.draw(letter, at: CGPoint(x: area.width / 2, y: area.height / 2))
+        }
+        .accessibilityHidden(true)
     }
 }
 

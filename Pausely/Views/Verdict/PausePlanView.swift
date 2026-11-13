@@ -101,6 +101,7 @@ struct PausePlanView: View {
                     .font(.headline)
                     .foregroundStyle(Color.inkText)
                     .fixedSize(horizontal: false, vertical: true)
+                    .accessibilityAddTraits(.isHeader)
                 Text("Netflix, Max, Disney+, Hulu, Prime Video and the like. Pause Plan rotates monthly video services; music and storage stay on.")
                     .font(.subheadline)
                     .foregroundStyle(Color.inkTextMuted)
@@ -110,8 +111,9 @@ struct PausePlanView: View {
         } else {
             VStack(alignment: .leading, spacing: 10) {
                 Text("Rotate these")
-                    .font(.caption.weight(.semibold))
-                    .foregroundStyle(Color.inkTextFaint)
+                    .font(.subheadline.weight(.semibold))
+                    .foregroundStyle(Color.inkTextMuted)
+                    .accessibilityAddTraits(.isHeader)
                 VStack(spacing: 0) {
                     ForEach(Array(eligible.enumerated()), id: \.element.id) { index, sub in
                         if index > 0 { Hairline() }
@@ -176,6 +178,7 @@ struct PausePlanView: View {
             ? L10n.string("Cancelled") + " · " + L10n.string("\(money(sub.amount, from: sub.currency)) a month")
             : L10n.string("\(money(sub.amount, from: sub.currency)) a month")
         let toggle = {
+            Feel.selection()
             if isSelected {
                 selected.remove(sub.id)
                 if firstId == sub.id { firstId = PausePlanSchedule.suggestedOrder(chosen, now: Date()).first }
@@ -248,7 +251,10 @@ struct PausePlanView: View {
                 .padding(.vertical, 4)
                 .background(Capsule().fill(Color.paper))
         } else if isSelected {
-            Button { firstId = sub.id } label: {
+            Button {
+                Feel.selection()
+                firstId = sub.id
+            } label: {
                 Text("Put first")
                     .font(.subheadline.weight(.semibold))
                     .foregroundStyle(Color.inkText)
@@ -308,7 +314,7 @@ struct PausePlanView: View {
                     .frame(maxWidth: .infinity, minHeight: Layout.tapTarget)
                     .contentShape(Rectangle())
             }
-            .buttonStyle(PlainButtonStyle())
+            .buttonStyle(.plain)
             .accessibilityIdentifier("endPausePlanButton")
         }
     }
@@ -318,6 +324,7 @@ struct PausePlanView: View {
             Text("On now")
                 .font(.subheadline.weight(.semibold))
                 .foregroundStyle(Color.inkTextMuted)
+                .accessibilityAddTraits(.isHeader)
             HStack(spacing: 12) {
                 ServiceLogoView(name: sub.name, category: sub.category, size: 48)
                 Text(sub.name)
@@ -379,6 +386,7 @@ struct PausePlanView: View {
             Text("To do")
                 .font(.headline)
                 .foregroundStyle(Color.inkText)
+                .accessibilityAddTraits(.isHeader)
             if items.isEmpty {
                 Label {
                     Text(next.flatMap { byId[$0.subscriptionId] }.map { L10n.string("You're all set. We'll remind you before \($0.name) starts.") }
@@ -419,7 +427,7 @@ struct PausePlanView: View {
                                 // The pill is small; the place to tap is not.
                                 .tapArea()
                         }
-                        .buttonStyle(PlainButtonStyle())
+                        .buttonStyle(.plain)
                     }
                 }
             }
@@ -432,6 +440,7 @@ struct PausePlanView: View {
             Text("Coming up")
                 .font(.headline)
                 .foregroundStyle(Color.inkText)
+                .accessibilityAddTraits(.isHeader)
             ForEach(upcoming, id: \.index) { turn in
                 if let sub = byId[turn.subscriptionId], let start = turn.start {
                     SideBySide(alignment: .center) {
@@ -493,44 +502,35 @@ struct PausePlanCard: View {
     }
 
     var body: some View {
+        // A row like the ones around it: words on the margin, no picture, the way in at the end.
+        // (It was an icon in a circle with caption-size text, set 16 points in from everything else.)
         Button {
+            Feel.selection()
             showPlan = true
         } label: {
-            HStack(spacing: 14) {
-                Image(systemName: "arrow.triangle.2.circlepath")
-                    .font(.headline)
-                    .foregroundStyle(Color.inkText)
-                    .frame(width: 44, height: 44)
-                    .background(Circle().fill(Color.track))
-                    .accessibilityHidden(true)
-                VStack(alignment: .leading, spacing: 3) {
-                    HStack(spacing: 6) {
+            HStack(spacing: 12) {
+                // While a plan runs the row carries the paused mark, as every state does.
+                if planStore.activePlan != nil { StateMark(state: .paused) }
+                VStack(alignment: .leading, spacing: 4) {
+                    HStack(spacing: 8) {
                         Text("Pause Plan")
-                            .font(.subheadline.weight(.semibold))
+                            .font(.body.weight(.medium))
                             .foregroundStyle(Color.inkText)
-                        if !paymentManager.isUnlocked(.pausePlan) && planStore.activePlan == nil {
-                            Text("Pro")
-                                .font(.caption2.weight(.bold))
-                                .foregroundStyle(Color.inkText)
-                                .padding(.horizontal, 6)
-                                .padding(.vertical, 2)
-                                .background(Capsule().fill(Color.track))
-                        }
+                        if !paymentManager.isUnlocked(.pausePlan) && planStore.activePlan == nil { ProPill() }
                     }
                     Text(subtitle)
-                        .font(.caption)
+                        .font(.subheadline)
                         .foregroundStyle(Color.inkTextMuted)
+                        .multilineTextAlignment(.leading)
                         .fixedSize(horizontal: false, vertical: true)
                 }
                 Spacer(minLength: 8)
-                Image(systemName: "chevron.forward")
-                    .font(.caption.weight(.semibold))
-                    .foregroundStyle(Color.inkTextFaint)
-                    .accessibilityHidden(true)
+                RowChevron()
             }
-            .padding(16)
+            .padding(.vertical, 14)
+            .contentShape(Rectangle())
         }
-        .buttonStyle(PlainButtonStyle())
+        .buttonStyle(.plain)
         .accessibilityIdentifier("pausePlanCard")
         .sheet(isPresented: $showPlan) { PausePlanView() }
     }

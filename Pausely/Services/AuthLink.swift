@@ -112,6 +112,21 @@ struct ResendCountdown: Equatable {
     func secondsLeft(at now: Date) -> Int {
         max(0, Int((Self.wait - now.timeIntervalSince(lastSent)).rounded(.up)))
     }
+
+    /// The moments the waiting line changes: one a second until the wait is over, and none after.
+    /// (The button was redrawn every second for as long as its screen was open.)
+    func ticks(from now: Date) -> [Date] {
+        (0...secondsLeft(at: now)).map { now.addingTimeInterval(TimeInterval($0)) }
+    }
+}
+
+/// An email address as it is shown back to its owner: whole, on as many lines as it needs. It may
+/// break after "@" and after a dot (never with a hyphen, which would look like part of the
+/// address), so a long one is not cut in the middle the way "firstname.las…pany.co.uk" was.
+enum AddressText {
+    static func breakable(_ address: String) -> String {
+        address.replacingOccurrences(of: "@", with: "@\u{200B}").replacingOccurrences(of: ".", with: ".\u{200B}")
+    }
 }
 
 /// The six digits of an emailed code, from whatever was typed or pasted ("123 456", "Your code is 123456").

@@ -7,6 +7,9 @@ struct SavingsReceiptView: View {
     @ObservedObject private var store = SubscriptionStore.shared
     @ObservedObject private var eventLog = LifecycleEventLog.shared
     @ObservedObject private var currencyManager = CurrencyManager.shared
+    /// The two pictures for sharing, drawn when the receipt opens and again when it changes. They
+    /// were drawn inside the screen's body: two full-size renders on every pass.
+    @State private var pictures: (whole: Image?, withoutAmounts: Image?) = (nil, nil)
 
     var body: some View {
         let summary = SavingsSummary.current()
@@ -15,7 +18,7 @@ struct SavingsReceiptView: View {
                 HStack {
                     LeaveButton("Done") { dismiss() }
                     Spacer()
-                    if !summary.isEmpty { shareMenu(summary) }
+                    if !summary.isEmpty { shareMenu }
                 }
 
                 Text("Savings Receipt")
@@ -38,18 +41,23 @@ struct SavingsReceiptView: View {
         }
         .inkScreen()
         .preferredColorScheme(.dark)
+        .task(id: "\(eventLog.events.count)|\(currencyManager.selectedCurrency)") {
+            let summary = SavingsSummary.current()
+            pictures = summary.isEmpty ? (nil, nil)
+                : (ReceiptRoll.image(summary: summary, hideAmounts: false), ReceiptRoll.image(summary: summary, hideAmounts: true))
+        }
     }
 
     // MARK: - Sharing
 
-    private func shareMenu(_ summary: SavingsSummary) -> some View {
+    private var shareMenu: some View {
         Menu {
-            if let image = ReceiptRoll.image(summary: summary, hideAmounts: false) {
+            if let image = pictures.whole {
                 ShareLink(item: image, preview: SharePreview(L10n.string("Savings Receipt"), image: image)) {
                     Label(L10n.string("Share"), systemImage: "square.and.arrow.up")
                 }
             }
-            if let image = ReceiptRoll.image(summary: summary, hideAmounts: true) {
+            if let image = pictures.withoutAmounts {
                 ShareLink(item: image, preview: SharePreview(L10n.string("Savings Receipt"), image: image)) {
                     Label(L10n.string("Share without amounts"), systemImage: "eye.slash")
                 }
@@ -68,7 +76,7 @@ struct SavingsReceiptView: View {
     private var emptyState: some View {
         PaperSlip(tornTop: true, tornBottom: true) {
             VStack(alignment: .leading, spacing: 10) {
-                Text("Your Savings Receipt starts with your first cancel")
+                Text("Your Savings Receipt starts with your first cancellation")
                     .font(.question(.title3))
                     .fixedSize(horizontal: false, vertical: true)
                 Text("Before each renewal Pausely asks: keep it or cancel it? Every subscription you cancel shows up here with the charges it avoided.")
@@ -100,14 +108,7 @@ struct ReceiptRoll: View {
     var body: some View {
         PaperSlip(tornTop: true, tornBottom: true) {
             VStack(alignment: .leading, spacing: 14) {
-                HStack(spacing: 8) {
-                    HStack(spacing: 3) {
-                        Capsule().frame(width: 4, height: 14)
-                        Capsule().frame(width: 4, height: 14)
-                    }
-                    .accessibilityHidden(true)
-                    Text(verbatim: "Pausely").font(.headline)
-                }
+                Wordmark()
 
                 ForEach(summary.lines.reversed()) { line in
                     Perforation()
@@ -131,7 +132,7 @@ struct ReceiptRoll: View {
     private func amount(_ text: String) -> String { hideAmounts ? "•••" : text }
 
     private func lineRow(_ line: SavingsLedger.Line) -> some View {
-        VStack(alignment: .leading, spacing: 5) {
+        VStack(alignment: .leading, spacing: 4) {
             ProofLine(label: line.name, value: amount(summary.formatted(line.savedSoFar, from: line.currency)),
                       emphasised: true)
             Text(L10n.string("Cancelled \(line.cancelledOn.formatted(.dateTime.month(.abbreviated).day().year().locale(L10n.locale))) · \(line.avoidedSoFar.count) of \(line.avoidedCharges.count) charges avoided so far"))
@@ -161,6 +162,7 @@ struct ReceiptRoll: View {
             .frame(width: 360)
             .padding(24)
             .background(Color.ink)
+            .inTheAppsLanguage()
         let renderer = ImageRenderer(content: card)
         renderer.scale = 3
         return renderer.uiImage.map(Image.init(uiImage:))

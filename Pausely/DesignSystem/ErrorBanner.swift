@@ -26,7 +26,7 @@ struct ErrorBanner: ViewModifier {
                     } else {
                         HStack(alignment: .top, spacing: 10) {
                             StateMark(state: .due)
-                                .padding(.top, 13)
+                                .padding(.top, 12)
                             sentence(error).padding(.vertical, 12)
                             closeButton
                         }

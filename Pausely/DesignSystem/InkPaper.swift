@@ -134,6 +134,18 @@ enum Motion {
     }
 }
 
+extension View {
+    /// The language and direction the app's screens get from the root, for a view that is drawn
+    /// outside them: a picture made to be shared. Without it the year slip and the Savings Receipt
+    /// were laid out left to right for an Arabic reader, with the device's formats.
+    @MainActor
+    func inTheAppsLanguage() -> some View {
+        let rightToLeft = L10n.isRightToLeft ?? (UIApplication.shared.userInterfaceLayoutDirection == .rightToLeft)
+        return environment(\.locale, L10n.locale)
+            .environment(\.layoutDirection, rightToLeft ? .rightToLeft : .leftToRight)
+    }
+}
+
 extension AnyTransition {
     /// Fades in, and moves a little on the way unless Reduce Motion is on. Every transition that
     /// slides, scales or shifts goes through this: six of them moved whatever the setting said.
@@ -276,6 +288,9 @@ struct ProofLine: View {
 /// A label on the leading side and a value or control on the trailing side. At accessibility text
 /// sizes the two stack, so neither is squeezed into breaking mid-word.
 struct AdaptiveRow<Label: View, Value: View>: View {
+    /// Two texts share a baseline. A control (a date, a switch, a menu) has none: beside a label it
+    /// is centred, or the label sits at the top of the row and the control hangs below it.
+    var alignment: VerticalAlignment = .firstTextBaseline
     @ViewBuilder var label: Label
     @ViewBuilder var value: Value
     @Environment(\.dynamicTypeSize) private var typeSize
@@ -285,7 +300,7 @@ struct AdaptiveRow<Label: View, Value: View>: View {
             VStack(alignment: .leading, spacing: 6) { label; value }
                 .frame(maxWidth: .infinity, alignment: .leading)
         } else {
-            HStack(alignment: .firstTextBaseline, spacing: 12) {
+            HStack(alignment: alignment, spacing: 12) {
                 label
                 Spacer(minLength: 12)
                 value
@@ -358,6 +373,34 @@ struct StateMark: View {
     }
 }
 
+/// The pause mark: two bars. One drawing at every size (it was drawn five times, in three
+/// different proportions).
+struct PauseMark: View {
+    var height: CGFloat
+
+    var body: some View {
+        HStack(spacing: height * 0.23) {
+            Capsule().frame(width: height * 0.27, height: height)
+            Capsule().frame(width: height * 0.27, height: height)
+        }
+        .accessibilityHidden(true)
+    }
+}
+
+/// The pause mark and the name, small: at the head of the first screen and of each slip that leaves
+/// the app as a picture. The mark grows with the text beside it.
+struct Wordmark: View {
+    var text = "Pausely"
+    @ScaledMetric(relativeTo: .headline) private var markHeight: CGFloat = 15
+
+    var body: some View {
+        HStack(spacing: 8) {
+            PauseMark(height: markHeight)
+            Text(verbatim: text).font(.headline)
+        }
+    }
+}
+
 /// A name and its value: side by side, or one above the other at accessibility text sizes, where
 /// two columns break words in the middle and split a price across lines.
 struct SideBySide<Leading: View, Trailing: View>: View {
@@ -379,6 +422,77 @@ struct SideBySide<Leading: View, Trailing: View>: View {
                 leading
                 Spacer(minLength: spacing)
                 trailing
+            }
+        }
+    }
+}
+
+/// Its parts on one line when they fit there, and one above the other when they don't: a long
+/// value at any text size, any value at a large one. It is one layout, so each part is the same
+/// view at every size. `ViewThatFits` draws a second copy instead, and Apple's accessibility audit
+/// then reports that the text in the first copy cannot grow.
+struct LineOrStack: SwiftUI.Layout {
+    /// Between parts that share a line.
+    var spacing: CGFloat = 8
+    /// Between parts that are stacked.
+    var lineSpacing: CGFloat = 4
+    /// The whole width is taken, and on a shared line the last part sits at its far end.
+    var spread = false
+    /// Where stacked parts sit across the width: at the leading edge, or in the middle.
+    var centred = false
+
+    /// Whether parts of these widths share a line of this width. No width at all means "as wide as
+    /// you like", which is a line.
+    static func sharesALine(widths: [CGFloat], spacing: CGFloat, in available: CGFloat?) -> Bool {
+        guard let available, available.isFinite else { return true }
+        let needed = widths.reduce(0, +) + spacing * CGFloat(max(0, widths.count - 1))
+        return needed <= available + 0.5
+    }
+
+    private struct Plan {
+        var onOneLine: Bool
+        var sizes: [CGSize]
+        var size: CGSize
+    }
+
+    private func plan(_ proposal: ProposedViewSize, _ subviews: Subviews) -> Plan {
+        let natural = subviews.map { $0.sizeThatFits(.unspecified) }
+        let available = proposal.width
+        if Self.sharesALine(widths: natural.map(\.width), spacing: spacing, in: available) {
+            let width = natural.map(\.width).reduce(0, +) + spacing * CGFloat(max(0, natural.count - 1))
+            let filled = spread && available?.isFinite == true ? available ?? width : width
+            return Plan(onOneLine: true, sizes: natural,
+                        size: CGSize(width: filled, height: natural.map(\.height).max() ?? 0))
+        }
+        let wrapped = subviews.map { $0.sizeThatFits(ProposedViewSize(width: available, height: nil)) }
+        let height = wrapped.map(\.height).reduce(0, +) + lineSpacing * CGFloat(max(0, wrapped.count - 1))
+        let widest = wrapped.map(\.width).max() ?? 0
+        return Plan(onOneLine: false, sizes: wrapped,
+                    size: CGSize(width: spread ? max(widest, available ?? widest) : widest, height: height))
+    }
+
+    func sizeThatFits(proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) -> CGSize {
+        plan(proposal, subviews).size
+    }
+
+    func placeSubviews(in bounds: CGRect, proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) {
+        let plan = plan(ProposedViewSize(width: bounds.width, height: nil), subviews)
+        if plan.onOneLine {
+            var x = bounds.minX
+            for (index, subview) in subviews.enumerated() {
+                let size = plan.sizes[index]
+                if spread, index == subviews.count - 1, subviews.count > 1 { x = max(x, bounds.maxX - size.width) }
+                subview.place(at: CGPoint(x: x, y: bounds.midY), anchor: .leading, proposal: ProposedViewSize(size))
+                x += size.width + spacing
+            }
+        } else {
+            var y = bounds.minY
+            for (index, subview) in subviews.enumerated() {
+                let size = plan.sizes[index]
+                subview.place(at: CGPoint(x: centred ? bounds.midX : bounds.minX, y: y),
+                              anchor: centred ? .top : .topLeading,
+                              proposal: ProposedViewSize(width: bounds.width, height: size.height))
+                y += size.height + lineSpacing
             }
         }
     }

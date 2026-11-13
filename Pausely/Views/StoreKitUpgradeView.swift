@@ -96,6 +96,11 @@ struct StoreKitUpgradeView: View {
         // Another plan was picked, or the plans have just loaded: what was known is for the other one.
         trialAvailable = nil
         guard let product = storeManager.products.first(where: { $0.id == selectedPlan.productID }) else { return }
+        // `--demo-no-trial` (DEBUG): the paywall as someone who has used their free trial sees it.
+        if LaunchFlag.isSet("--demo-no-trial") {
+            trialAvailable = false
+            return
+        }
         guard let subscription = product.subscription,
               let offer = subscription.introductoryOffer,
               offer.paymentMode == .freeTrial else {
@@ -136,8 +141,8 @@ struct StoreKitUpgradeView: View {
 
     private var headline: String {
         if waitingCount > 0 {
-            return L10n.string("You pay for \(activeSubscriptions.count + waitingCount) subscriptions.") + " "
-                + L10n.string("Free tracks \(FreeTier.subscriptionLimit).")
+            return L10n.sentences([L10n.string("You pay for \(activeSubscriptions.count + waitingCount) subscriptions."),
+                                   L10n.string("Free tracks \(FreeTier.subscriptionLimit).")])
         }
         if atFreeLimit { return L10n.string("Free tracks \(FreeTier.subscriptionLimit). Pausely Pro tracks all of them.") }
         guard !activeSubscriptions.isEmpty else { return L10n.string("Pausely Pro tracks every subscription you have.") }
@@ -157,7 +162,7 @@ struct StoreKitUpgradeView: View {
         let against = comparison.months == 1
             ? L10n.string("A year of it costs less than one month of \(comparison.name).")
             : L10n.string("A year of it costs less than \(comparison.months) months of \(comparison.name).")
-        return price + " " + against
+        return L10n.sentences([price, against])
     }
 
     private var firstChargeDate: String { shortDate(daysFromToday: 7) }
@@ -189,17 +194,29 @@ struct StoreKitUpgradeView: View {
                     .accessibilityFocused($focusedElement, equals: .title)
                     .accessibilityIdentifier(atFreeLimit ? "freeLimitNotice" : "paywallHeadline")
 
-                Text(verbatim: valueLine)
-                    .font(.body)
-                    .foregroundStyle(Color.inkTextMuted)
-                    .fixedSize(horizontal: false, vertical: true)
-                    .padding(.top, 10)
+                if prices == .known {
+                    Text(verbatim: valueLine)
+                        .font(.body)
+                        .foregroundStyle(Color.inkTextMuted)
+                        .fixedSize(horizontal: false, vertical: true)
+                        .padding(.top, 10)
 
-                planPicker.padding(.top, 16)
+                    planPicker.padding(.top, 16)
 
-                slip.padding(.top, 20)
+                    slip.padding(.top, 20)
+                } else {
+                    // No price, so no sentence about one, no plans to pick between and no slip.
+                    pricesMissing.padding(.top, 16)
+                }
 
-                promise.padding(.top, 24).padding(.bottom, 24)
+                promise.padding(.top, 24).padding(.bottom, linksEndThePage ? 12 : 24)
+
+                if linksEndThePage {
+                    LineOrStack(spacing: 16, lineSpacing: 0) { footerLinks(alignment: .leading) }
+                        .font(.footnote.weight(.medium))
+                        .foregroundStyle(Color.inkTextMuted)
+                        .padding(.bottom, 12)
+                }
             }
             .padding(.horizontal, Layout.margin)
         } actions: {
@@ -267,7 +284,7 @@ struct StoreKitUpgradeView: View {
                 } else {
                     ProofLine(label: L10n.string("Today"), value: chargeText, emphasised: true)
                     if selectedPlan == .annual, let perMonth = storeManager.annualPricePerMonth {
-                        Text("\(perMonth)/mo equivalent")
+                        Text("That's \(perMonth) a month.")
                             .font(.footnote)
                             .foregroundStyle(Color.paperMuted)
                     }
@@ -356,7 +373,7 @@ struct StoreKitUpgradeView: View {
             .font(.footnote.weight(.semibold))
             .foregroundStyle(Color.inkText)
             .padding(.horizontal, 10)
-            .padding(.vertical, 5)
+            .padding(.vertical, 4)
             .overlay(Capsule().stroke(Color.outline, lineWidth: 1))
     }
 
@@ -375,65 +392,103 @@ struct StoreKitUpgradeView: View {
         .accessibilityElement(children: .combine)
     }
 
+    // MARK: - Before the App Store has answered
+
+    private var prices: PaywallCase.Prices {
+        PaywallCase.prices(loaded: storeManager.product(for: .pro) != nil && storeManager.product(for: .proAnnual) != nil,
+                           isLoading: storeManager.isLoading)
+    }
+
+    @ViewBuilder private var pricesMissing: some View {
+        if prices == .loading {
+            HStack(spacing: 10) {
+                ProgressView().tint(Color.inkTextMuted)
+                Text("Getting the prices from the App Store…")
+                    .font(.body)
+                    .foregroundStyle(Color.inkTextMuted)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+            .accessibilityElement(children: .combine)
+        } else {
+            ProblemLine(message: L10n.string("Couldn't reach the App Store, so there are no prices to show. Check your connection."),
+                        identifier: "paywallNoPrices")
+        }
+    }
+
     // MARK: - The action, and the terms beside it
 
     private var actionBar: some View {
         VStack(spacing: 10) {
-            Button {
-                Task { await attemptPurchase() }
-            } label: {
-                if (storeManager.isLoading && selectedProduct != nil) || isCheckingOffer {
-                    ProgressView().tint(Color.paperInk)
-                } else {
-                    Text(isTrialEnabled ? L10n.string("Start free trial") : L10n.string("Subscribe"))
-                }
-            }
-            .buttonStyle(.ink)
-            .disabled(selectedProduct == nil || storeManager.isLoading || isCheckingOffer)
-            .accessibilityIdentifier("paywallPurchase")
-
-            Group {
-                if selectedProduct == nil && !storeManager.isLoading {
-                    Button {
-                        Task { await storeManager.loadProducts() }
-                    } label: {
-                        Text("Couldn't reach the App Store. Tap to try again.").underline()
+            if prices == .known {
+                Button {
+                    Task { await attemptPurchase() }
+                } label: {
+                    if (storeManager.isLoading && selectedProduct != nil) || isCheckingOffer {
+                        ProgressView().tint(Color.paperInk)
+                    } else {
+                        Text(isTrialEnabled ? L10n.string("Start free trial") : L10n.string("Subscribe"))
                     }
-                } else if isCheckingOffer {
-                    Text(verbatim: " ")
-                } else if isTrialEnabled {
-                    Text("After your free trial, you'll be charged \(chargeText) unless you cancel at least 24 hours before the trial ends.")
-                } else {
-                    Text("Renews automatically. To cancel, open Settings, tap your name, then Subscriptions.")
                 }
-            }
-            .font(.caption)
-            .foregroundStyle(Color.inkTextMuted)
-            .multilineTextAlignment(.center)
-            .fixedSize(horizontal: false, vertical: true)
+                .buttonStyle(.ink)
+                .disabled(selectedProduct == nil || storeManager.isLoading || isCheckingOffer)
+                .accessibilityIdentifier("paywallPurchase")
 
-            ViewThatFits {
-                HStack(spacing: 16) { footerLinks }
-                VStack(spacing: 0) { footerLinks }
+                Group {
+                    if isCheckingOffer {
+                        Text(verbatim: " ")
+                    } else if isTrialEnabled {
+                        Text("After your free trial, you'll be charged \(chargeText) unless you cancel at least 24 hours before the trial ends.")
+                    } else {
+                        Text("Renews automatically. To cancel, open Settings, tap your name, then Subscriptions.")
+                    }
+                }
+                .font(.caption)
+                .foregroundStyle(Color.inkTextMuted)
+                .multilineTextAlignment(.center)
+                .fixedSize(horizontal: false, vertical: true)
+            } else {
+                // Nothing can be bought without a price. The one thing to do is ask again (it was a
+                // greyed-out "Subscribe" above a caption-size underlined line).
+                Button {
+                    Task { await storeManager.loadProducts() }
+                } label: {
+                    if prices == .loading { ProgressView().tint(Color.paperInk) } else { Text("Try again") }
+                }
+                .buttonStyle(.ink)
+                .disabled(prices == .loading)
+                .accessibilityIdentifier("paywallTryAgain")
             }
-            .font(.caption.weight(.medium))
-            .foregroundStyle(Color.inkTextMuted)
+
+
+            if !linksEndThePage {
+                LineOrStack(spacing: 16, lineSpacing: 0, centred: true) { footerLinks(alignment: .center) }
+                    .font(.caption.weight(.medium))
+                    .foregroundStyle(Color.inkTextMuted)
+            }
         }
         .padding(.horizontal, Layout.margin)
         .padding(.top, 12)
-        .padding(.bottom, 8)
+        .padding(.bottom, linksEndThePage ? 12 : 8)
         .background(Color.ink)
         .overlay(alignment: .top) { Hairline() }
     }
 
+    /// Where the button stays at the bottom edge, the three links end the page instead of sitting
+    /// under it: there they held three more rows at the edge whenever they did not fit on one line
+    /// (German at any text size, English one size up), and the bar covered half the screen. Where
+    /// the button follows the content (accessibility sizes, iPad) they come after it, as before.
+    private var linksEndThePage: Bool {
+        ActionScreen<EmptyView, EmptyView>.pinsActions(at: typeSize, onPad: UIDevice.current.userInterfaceIdiom == .pad)
+    }
+
     /// Small words, full-size places to tap.
-    @ViewBuilder private var footerLinks: some View {
+    @ViewBuilder private func footerLinks(alignment: Alignment) -> some View {
         Group {
             Button("Restore purchases") { Task { await restorePurchases() } }
             Button("Terms of Service") { open(AppConfig.termsOfServiceURL) }
             Button("Privacy Policy") { open(AppConfig.privacyPolicyURL) }
         }
-        .frame(minWidth: Layout.tapTarget, minHeight: Layout.tapTarget)
+        .frame(minWidth: Layout.tapTarget, minHeight: Layout.tapTarget, alignment: alignment)
         .contentShape(Rectangle())
     }
 

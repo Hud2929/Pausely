@@ -46,8 +46,15 @@ DEBUG launch arguments open single screens with demo data (see `RootView` in `Co
 `--demo-settings=notifications|privacy|help|currency|export|language`, `--demo-whats-new`, and `--screenshots`
 for App Store captures. Debug builds show "Test without an account" on the welcome screen (a local test
 user; nothing reaches the server). `--reset-state` (UI tests) starts signed out with onboarding not yet seen;
-`--fresh-demo-data` starts the subscription list from the demo set on every launch, with cloud writes off. `PauselyUITests/ScreenTourTests` captures every screen when
-`TEST_RUNNER_PAUSELY_TOUR_DIR` is set.
+`--fresh-demo-data` starts the subscription list from the demo set on every launch, with cloud writes off
+(other lists: `--varied-demo-data`, `--empty-demo-data`, `--quiet-demo-data`, `--large-demo-data` with
+`--demo-currency=IDR` for nine-digit totals). States with no screen of their own: `--demo-splash`,
+`--demo-loading`, `--demo-load-failed`, `--demo-reminders=ask|denied|on|hidden|late`, `--demo-form-problem`,
+`--demo-reset-code`, `--demo-store-offline`, `--demo-no-trial`, `--demo-pro[=trial|ending|problem]`,
+`--demo-dates`, `--demo-waiting`, `--demo-guess=N`. `PauselyUITests/ScreenTourTests` captures every screen
+and state when `TEST_RUNNER_PAUSELY_TOUR_DIR` is set (`TEST_RUNNER_PAUSELY_TOUR_VARIANT=ar|de|es|fr|ja|big|xxxl`,
+`TEST_RUNNER_PAUSELY_TOUR_AUDIT=1` for Apple's accessibility audit, `TEST_RUNNER_PAUSELY_TOUR_ONLY=a,b` for a few).
+Don't use `ViewThatFits` (the audit reports its text as unable to grow; `LineOrStack` does the same with one copy).
 
 ## Architecture
 

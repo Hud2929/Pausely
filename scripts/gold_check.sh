@@ -27,6 +27,9 @@ report "fixed font sizes"              "$(search '\.font\(\.system\(size:|design
 report "raw animations and haptics"    "$(search '\.spring\(|\.easeInOut\(|\.easeIn\(|\.easeOut\(|\.linear\(|withAnimation\(\.default|\.animation\(\.default|repeatForever|UIImpactFeedbackGenerator|UINotificationFeedbackGenerator|UISelectionFeedbackGenerator' $VIEWS | grep -v 'DesignSystem/InkPaper.swift')"
 report "left/right instead of leading" "$(search 'chevron\.(right|left)\b|\.padding\(\.(left|right)|alignment: \.(left|right)\b|multilineTextAlignment\(\.(left|right)\)|arrow\.(right|left)\b' $VIEWS)"
 report "numeric corner radii"          "$(search '\.cornerRadius\([0-9]|cornerRadius: [0-9]' $VIEWS | grep -v 'DesignSystem/InkPaper.swift')"
+# Spacing sits on a 2-point grid (2, 4, 6 … 40). An odd number is a one-off, and a negative
+# padding pulls a view over its neighbour instead of grouping the two.
+report "spacing off the grid"          "$(search '(spacing: |\.padding\((\.[a-zA-Z]+, )?)-?[0-9]*[13579]\)?[,)]|\.padding\((\.[a-zA-Z]+, )?-[0-9]' $VIEWS)"
 report "full-screen covers off iPad width" "$(for f in $(grep -rlE 'fullScreenCover' --include='*.swift' Pausely); do grep -q 'readableWidth' "$f" || echo "$f"; done)"
 
 # --- Naming

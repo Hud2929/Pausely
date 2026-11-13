@@ -192,4 +192,21 @@ final class AuthLinkTests: XCTestCase {
         XCTAssertEqual(PasswordStrength.rulesMet("Abcdef1"), 3, "seven characters")
         XCTAssertEqual(PasswordStrength.rulesMet(""), 0)
     }
+    /// The waiting line under the code is redrawn once a second while there is a wait, and not at
+    /// all after it: the last moment it changes is the one at which it reads "Send a new code".
+    func testTheResendLineStopsTickingWhenTheWaitIsOver() {
+        let sent = Date(timeIntervalSince1970: 1_800_000_000)
+        let countdown = ResendCountdown(lastSent: sent)
+        let ticks = countdown.ticks(from: sent.addingTimeInterval(57.5))
+        XCTAssertEqual(ticks.count, 4, "3 seconds left: now, and one for each of them")
+        XCTAssertEqual(ticks.map { countdown.secondsLeft(at: $0) }, [3, 2, 1, 0])
+        XCTAssertEqual(countdown.ticks(from: sent.addingTimeInterval(300)).count, 1, "no wait, nothing to count")
+    }
+
+    /// An address is shown whole. It may break after "@" and after a dot, and nowhere gets a hyphen.
+    func testAnAddressBreaksOnlyWhereItsPartsMeet() {
+        let shown = AddressText.breakable("jane.doe@example.co.uk")
+        XCTAssertEqual(shown.replacingOccurrences(of: "\u{200B}", with: "|"), "jane.|doe@|example.|co.|uk")
+        XCTAssertEqual(shown.replacingOccurrences(of: "\u{200B}", with: ""), "jane.doe@example.co.uk", "nothing else is changed")
+    }
 }

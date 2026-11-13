@@ -73,6 +73,16 @@ final class OneLocaleTests: XCTestCase {
 
     // MARK: - Counts
 
+    /// Two sentences shown as one line are joined the way the language writes them: with a space,
+    /// except in Japanese.
+    func testSentencesAreJoinedAsTheLanguageWritesThem() {
+        XCTAssertEqual(L10n.sentences(["One.", "Two."], locale: Locale(identifier: "en_US")), "One. Two.")
+        XCTAssertEqual(L10n.sentences(["Un.", "Deux."], locale: Locale(identifier: "fr_FR")), "Un. Deux.")
+        XCTAssertEqual(L10n.sentences(["واحد.", "اثنان."], locale: Locale(identifier: "ar_SA")), "واحد. اثنان.")
+        XCTAssertEqual(L10n.sentences(["一つ。", "二つ。"], locale: Locale(identifier: "ja_JP")), "一つ。二つ。")
+        XCTAssertEqual(L10n.sentences(["Alone."], locale: Locale(identifier: "ja_JP")), "Alone.")
+    }
+
     /// A count takes the form its number needs in each language: one or many in English, six forms in
     /// Arabic, none in Japanese. Before, every language had one form, so English said "1 subscriptions"
     /// and Arabic used the 3-to-10 form for every number.

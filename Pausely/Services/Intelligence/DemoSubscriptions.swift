@@ -20,6 +20,22 @@ enum DemoSubscriptions {
                       nextBillingDate: Calendar.billing.date(byAdding: .month, value: 5, to: now))]
     }
 
+    /// `--large-demo-data`: prices in a currency that counts in millions, so a year of them is a
+    /// nine-digit number. Shows whether long amounts fit wherever an amount is drawn.
+    static func large(now: Date = Date()) -> [Subscription] {
+        let calendar = Calendar.billing
+        func entry(_ name: String, _ category: SubscriptionCategory, _ amount: Decimal, _ frequency: BillingFrequency, in days: Int) -> Subscription {
+            Subscription(name: name, category: category.displayName, amount: amount, currency: "IDR",
+                         billingFrequency: frequency, nextBillingDate: calendar.date(byAdding: .day, value: days, to: now))
+        }
+        return [
+            entry("Coworking space", .productivity, 8_500_000, .monthly, in: 6),
+            entry("Netflix", .entertainment, 186_000, .monthly, in: 3),
+            entry("Spotify", .music, 54_990, .monthly, in: 12),
+            entry("Adobe Creative Cloud", .productivity, 9_990_000, .yearly, in: 40),
+        ]
+    }
+
     /// `--varied-demo-data`: a list with one of everything a list can hold, so every row and state
     /// that depends on what is in the list can be opened and looked at. The plain demo list is seven
     /// monthly subscriptions in one currency, which leaves most of those states unseen.

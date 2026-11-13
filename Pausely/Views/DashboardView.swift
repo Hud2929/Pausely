@@ -27,8 +27,10 @@ struct DashboardView: View {
             VStack(alignment: .leading, spacing: 0) {
                 header
 
-                if isFirstLoad {
-                    HomeLoading().padding(.top, 32)
+                if store.listState == .loading {
+                    ListLoading().padding(.top, 32)
+                } else if store.listState == .couldNotLoad {
+                    ListCouldNotLoad().padding(.top, 40)
                 } else if store.subscriptions.isEmpty {
                     HomeEmpty(onAdd: { showingAdd = true },
                               onFindInEmail: FeatureFlags.inboxImportEnabled ? { showingInbox = true } : nil)
@@ -72,18 +74,6 @@ struct DashboardView: View {
         return L10n.string("Your subscriptions cost \(MoneyFormat.total(store.totalMonthlySpend, currency, converted: store.totalIsConverted)) a month.")
     }
 
-    /// The list is being fetched for the first time and nothing is on the phone yet: what the
-    /// person pays is not known, so no figure is drawn. (It said "$0.00" until the list arrived.)
-    nonisolated static func isFirstLoad(isLoading: Bool, listIsEmpty: Bool) -> Bool {
-        isLoading && listIsEmpty
-    }
-
-    private var isFirstLoad: Bool {
-        // `--demo-loading` (DEBUG) holds this state so it can be looked at.
-        Self.isFirstLoad(isLoading: store.isLoading || LaunchFlag.isSet("--demo-loading"),
-                         listIsEmpty: store.subscriptions.isEmpty)
-    }
-
     private var header: some View {
         HStack(alignment: .top, spacing: 12) {
             VStack(alignment: .leading, spacing: 6) {
@@ -102,14 +92,14 @@ struct DashboardView: View {
                     }
                     .font(.subheadline)
                     .foregroundStyle(Color.inkTextMuted)
-                    .frame(minHeight: 32)
-                    .contentShape(Rectangle())
+                    .tapArea(.leading)
                 }
                 .buttonStyle(.plain)
                 .accessibilityHint(Text("Switches between a month and a year"))
                 .accessibilityIdentifier("spendPeriodToggle")
 
-                if isFirstLoad {
+                // No figure before the list has arrived: "$0.00" was on screen until it did.
+                if !store.listState.totalIsKnown {
                     RoundedRectangle(cornerRadius: Layout.markRadius, style: .continuous)
                         .fill(Color.inkRaised)
                         .frame(width: 168, height: numberSize * 0.8)
@@ -225,13 +215,13 @@ struct DashboardView: View {
                         Text("Savings Receipt")
                             .font(.headline)
                             .foregroundStyle(Color.inkText)
-                        Text("Your Savings Receipt starts with your first cancel")
+                        Text("Your Savings Receipt starts with your first cancellation")
                             .font(.subheadline)
                             .foregroundStyle(Color.inkTextMuted)
                             .multilineTextAlignment(.leading)
                     }
                     Spacer(minLength: 8)
-                    Chevron()
+                    RowChevron()
                 }
                 .padding(.vertical, 14)
                 .contentShape(Rectangle())
@@ -258,36 +248,19 @@ struct DashboardView: View {
 
     // MARK: - Pause Plan
 
+    /// The running plan, said as on Insights: which service is on and until when. It used to be the
+    /// two words "Pause Plan" and nothing else.
     @ViewBuilder private var quietRows: some View {
-        VStack(spacing: 0) {
-            if pausePlanStore.activePlan != nil {
+        if pausePlanStore.activePlan != nil {
+            VStack(spacing: 0) {
                 Hairline()
-                Button { VerdictCenter.shared.openPausePlan() } label: {
-                    HStack(spacing: 12) {
-                        StateMark(state: .paused)
-                        Text("Pause Plan").font(.body).foregroundStyle(Color.inkText)
-                        Spacer(minLength: 8)
-                        Chevron()
-                    }
-                    .padding(.vertical, 14)
-                    .contentShape(Rectangle())
-                }
-                .buttonStyle(.plain)
+                PausePlanCard()
             }
         }
     }
 }
 
 // MARK: - Parts
-
-private struct Chevron: View {
-    var body: some View {
-        Image(systemName: "chevron.forward")
-            .font(.footnote.weight(.semibold))
-            .foregroundStyle(Color.inkTextFaint)
-            .accessibilityHidden(true)
-    }
-}
 
 /// One thing that wants a decision or an answer: a mark, a sentence, and the action.
 private struct AttentionRow: View {
@@ -332,7 +305,7 @@ private struct AttentionRow: View {
     }
 
     private var text: some View {
-        VStack(alignment: .leading, spacing: 3) {
+        VStack(alignment: .leading, spacing: 4) {
             Text(verbatim: title)
                 .font(.body.weight(.semibold))
                 .foregroundStyle(Color.inkText)
@@ -409,15 +382,19 @@ private struct HorizonSection: View {
     /// to nothing when the touch ends and also when the scroll view takes the touch away. Kept as view
     /// state it stayed set after a scroll that began on the line, and the rows below stayed faded.
     @GestureState private var selectedDay: Int?
+    /// The day chosen with VoiceOver (swipe up or down on the line). A finger's choice lasts while
+    /// it is down; this one stays until it is moved back to the end of the line.
+    @State private var spokenDay: Int?
     @Environment(\.layoutDirection) private var direction
 
-    private var throughDay: Int { selectedDay ?? Horizon.days - 1 }
+    private var pickedDay: Int? { selectedDay ?? spokenDay }
+    private var throughDay: Int { pickedDay ?? Horizon.days - 1 }
     private var total: Decimal { Horizon.total(of: charges, through: throughDay, in: currency, rates: rates) }
 
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
             SideBySide {
-                Text(selectedDay == nil ? L10n.string("Coming up") : L10n.string("By \(dayText(throughDay))"))
+                Text(pickedDay == nil ? L10n.string("Coming up") : L10n.string("By \(dayText(throughDay))"))
                     .font(.headline)
                     .foregroundStyle(Color.inkText)
             } trailing: {
@@ -431,6 +408,7 @@ private struct HorizonSection: View {
                     .minimumScaleFactor(0.5)
             }
             .accessibilityElement(children: .combine)
+            .accessibilityAddTraits(.isHeader)
 
             if charges.isEmpty {
                 Text("Nothing is due in the next month.")
@@ -438,7 +416,7 @@ private struct HorizonSection: View {
                     .foregroundStyle(Color.inkTextMuted)
                     .padding(.top, 10)
             } else {
-                line.padding(.top, 18)
+                line.padding(.top, 10)
                 HStack {
                     Text("Today")
                     Spacer()
@@ -446,7 +424,6 @@ private struct HorizonSection: View {
                 }
                 .font(.caption)
                 .foregroundStyle(Color.inkTextFaint)
-                .padding(.top, 6)
                 .padding(.bottom, 10)
                 .accessibilityHidden(true)
 
@@ -464,7 +441,7 @@ private struct HorizonSection: View {
                 }
             }
         }
-        .animation(Motion.unlessReduced(Motion.touch), value: selectedDay)
+        .animation(Motion.unlessReduced(Motion.touch), value: pickedDay)
     }
 
     private func state(for charge: Horizon.Charge) -> MoneyState? {
@@ -511,8 +488,18 @@ private struct HorizonSection: View {
                 if day != nil { Feel.selection() }
             }
         }
-        .frame(height: 28)
-        .accessibilityHidden(true)
+        // A fingertip tall, so the line can be found and held (it was 28 points).
+        .frame(height: Layout.tapTarget)
+        // What a drag does, VoiceOver does by swiping up and down: one charge day at a time.
+        .accessibilityElement()
+        .accessibilityLabel(Text("Total by day"))
+        .accessibilityValue(Text(verbatim: L10n.string("By \(dayText(throughDay))") + ", "
+                                 + MoneyFormat.total(total, currency, converted: Horizon.isConverted(charges, through: throughDay, to: currency),
+                                                     locale: L10n.locale)))
+        .accessibilityAdjustableAction { direction in
+            let day = Horizon.stepDay(from: throughDay, forward: direction == .increment, charges: charges)
+            spokenDay = day == Horizon.days - 1 ? nil : day
+        }
     }
 
     private func x(_ day: Int, _ width: CGFloat) -> CGFloat {
@@ -554,7 +541,9 @@ private struct ChargeRow: View {
                 if !typeSize.isAccessibilitySize { price }
             }
             .padding(.vertical, 12)
-            .opacity(dimmed ? 0.35 : 1)
+            // Past the picked day a row steps back, and can still be read: at this strength its
+            // name stays above 4.5 to 1 on ink (at 0.35 it was under 3).
+            .opacity(dimmed ? 0.5 : 1)
             .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
@@ -606,20 +595,3 @@ private struct HomeEmpty: View {
     }
 }
 
-private struct HomeLoading: View {
-    var body: some View {
-        VStack(spacing: 0) {
-            ForEach(0..<4, id: \.self) { index in
-                if index > 0 { Hairline() }
-                HStack(spacing: 12) {
-                    RoundedRectangle(cornerRadius: Layout.tileRadius, style: .continuous).fill(Color.inkRaised).frame(width: 36, height: 36)
-                    RoundedRectangle(cornerRadius: Layout.markRadius, style: .continuous).fill(Color.inkRaised).frame(width: 140, height: 14)
-                    Spacer()
-                    RoundedRectangle(cornerRadius: Layout.markRadius, style: .continuous).fill(Color.inkRaised).frame(width: 56, height: 14)
-                }
-                .padding(.vertical, 12)
-            }
-        }
-        .accessibilityLabel(Text("Loading"))
-    }
-}

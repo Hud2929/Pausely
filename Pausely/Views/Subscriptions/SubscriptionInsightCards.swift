@@ -1,78 +1,25 @@
 import SwiftUI
 
-/// The cancel window: how far through the billing period this is, the next charge, and the day
-/// to cancel by. A plain section, not a card.
+/// The day to cancel by, in one sentence. The screen's header already says when it renews, how many
+/// days away that is and what it costs; this used to say all three again above the one thing that
+/// is its own.
 struct CancelTimingCard: View {
     let subscription: Subscription
 
-    private var cycleDays: Int {
-        CancelTimingCalculator.cycleDays(for: subscription.billingFrequency)
-    }
-
-    private var lastBillingDate: Date? {
-        guard let next = subscription.calculatedNextBillingDate else { return nil }
-        return Calendar.billing.date(byAdding: .day, value: -cycleDays, to: next)
-    }
-
-    private var daysRemaining: Int {
-        guard let next = subscription.calculatedNextBillingDate else { return 0 }
-        return max(0, Calendar.billing.calendarDays(from: Date(), to: next))
-    }
-
-    private var progress: Double {
-        CancelTimingCalculator.progress(lastBillingDate: lastBillingDate, cycleDays: cycleDays)
-    }
-
-    private var nextChargeText: String? {
-        guard let next = subscription.calculatedNextBillingDate else { return nil }
-        let day = next.formatted(.dateTime.month(.abbreviated).day().locale(L10n.locale))
-        return L10n.string("Next charge: \(MoneyFormat.string(subscription.amount, subscription.currency)) on \(day)")
-    }
-
-    private var adviceText: String {
-        guard let next = subscription.calculatedNextBillingDate else {
-            return L10n.string("Add its renewal date to see when to cancel.")
-        }
-        let day = next.formatted(.dateTime.month(.abbreviated).day().locale(L10n.locale))
-        return L10n.string("Cancel any day before \(day) to avoid it.")
-    }
-
     var body: some View {
-        VStack(alignment: .leading, spacing: 10) {
-            SideBySide {
+        if let next = subscription.calculatedNextBillingDate {
+            VStack(alignment: .leading, spacing: 6) {
                 Text("When to cancel")
                     .font(.headline)
                     .foregroundStyle(Color.inkText)
-            } trailing: {
-                Text(verbatim: L10n.relativeDay(daysRemaining, capitalized: true))
-                    .font(.subheadline)
-                    .foregroundStyle(daysRemaining <= 1 ? Color.due : Color.inkTextMuted)
-            }
-
-            GeometryReader { geo in
-                ZStack(alignment: .leading) {
-                    Capsule().fill(Color.track).frame(height: 4)
-                    Capsule()
-                        .fill(daysRemaining <= 1 ? Color.due : Color.inkText)
-                        .frame(width: max(4, geo.size.width * progress), height: 4)
-                }
-            }
-            .frame(height: 4)
-            .accessibilityHidden(true)
-
-            if let nextChargeText {
-                Text(nextChargeText)
-                    .font(.body.weight(.semibold))
-                    .foregroundStyle(Color.inkText)
+                    .accessibilityAddTraits(.isHeader)
+                Text(L10n.string("Cancel before \(next.formatted(.dateTime.month(.abbreviated).day().locale(L10n.locale))) and you won't be charged."))
+                    .font(.body)
+                    .foregroundStyle(Color.inkTextMuted)
                     .fixedSize(horizontal: false, vertical: true)
             }
-
-            Text(adviceText)
-                .font(.subheadline)
-                .foregroundStyle(Color.inkTextMuted)
-                .fixedSize(horizontal: false, vertical: true)
+            .frame(maxWidth: .infinity, alignment: .leading)
         }
-        .accessibilityElement(children: .combine)
     }
 }
 
@@ -98,14 +45,20 @@ struct LifetimeCostCard: View {
             Text("Cost over time")
                 .font(.headline)
                 .foregroundStyle(Color.inkText)
+                .accessibilityAddTraits(.isHeader)
+            // A forecast says what it assumes: the price as it is today, for the whole time.
+            Text("At today's price.")
+                .font(.subheadline)
+                .foregroundStyle(Color.inkTextMuted)
+                .padding(.top, 2)
                 .padding(.bottom, 4)
             ForEach(projections.indices, id: \.self) { index in
                 if index > 0 { Hairline() }
-                HStack(alignment: .firstTextBaseline) {
+                SideBySide {
                     Text(projections[index].label)
                         .font(.body)
                         .foregroundStyle(Color.inkTextMuted)
-                    Spacer(minLength: 12)
+                } trailing: {
                     Text(verbatim: MoneyFormat.total(LifetimeCostCalculator.projectedCost(monthly: monthly.amount, years: projections[index].years),
                                                      monthly.currency, converted: monthly.currency != subscription.currency))
                         .font(.body.monospacedDigit())

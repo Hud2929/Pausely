@@ -44,7 +44,7 @@ struct PauselyApp: App {
         // A launch that starts from a set list (the demo one, or none) takes in nothing an earlier
         // run left waiting: an "empty" capture once opened on a Netflix from a first-run test.
         if LaunchFlag.isSet("--fresh-demo-data") || LaunchFlag.isSet("--empty-demo-data") || LaunchFlag.isSet("--varied-demo-data")
-            || LaunchFlag.isSet("--quiet-demo-data") {
+            || LaunchFlag.isSet("--quiet-demo-data") || LaunchFlag.isSet("--large-demo-data") {
             PendingTally.clear()
             TallyImporter.clearWaiting()
         }
@@ -145,7 +145,6 @@ struct RootView: View {
     @ObservedObject private var ageConsent = AgeConsentManager.shared
     @State private var supabaseManager = SupabaseManager.shared
     @State private var showSplash = true
-    @State private var splashAnimation = false
     @State private var showAuth = false
     @State private var splashWorkItem: DispatchWorkItem?
     @AppStorage("hasCompletedOnboarding") private var hasCompletedOnboarding = false
@@ -371,7 +370,7 @@ struct RootView: View {
             .opacity(showSplash ? 0 : 1)
 
             if showSplash {
-                SplashScreen(animation: $splashAnimation)
+                SplashScreen()
                     .transition(.opacity)
             }
         }
@@ -477,17 +476,11 @@ struct RootView: View {
 // MARK: - Premium Splash Screen
 /// The launch screen: the pause mark on ink, for a little over half a second. No tagline, no spinner.
 struct SplashScreen: View {
-    @Binding var animation: Bool
-
     var body: some View {
         ZStack {
             Color.ink.ignoresSafeArea()
-            HStack(spacing: 10) {
-                Capsule().frame(width: 12, height: 44)
-                Capsule().frame(width: 12, height: 44)
-            }
-            .foregroundStyle(Color.paper)
-            .accessibilityLabel(Text(verbatim: "Pausely"))
+            PauseMark(height: 44)
+                .foregroundStyle(Color.paper)
         }
     }
 }
@@ -544,13 +537,9 @@ struct WelcomeFlow: View {
 
     private var authWallText: some View {
         VStack(alignment: .leading, spacing: 0) {
-            HStack(spacing: 10) {
-                Capsule().frame(width: 8, height: 30)
-                Capsule().frame(width: 8, height: 30)
-            }
-            .foregroundStyle(Color.paper)
-            .accessibilityHidden(true)
-            .padding(.top, 48)
+            PauseMark(height: 30)
+                .foregroundStyle(Color.paper)
+                .padding(.top, 48)
 
             Text("Welcome to Pausely")
                 .font(.question(.largeTitle, weight: .bold))
@@ -603,7 +592,7 @@ struct WelcomeFlow: View {
     }
 
     private func promise(_ title: LocalizedStringKey, _ detail: LocalizedStringKey) -> some View {
-        VStack(alignment: .leading, spacing: 3) {
+        VStack(alignment: .leading, spacing: 4) {
             Text(title)
                 .font(.body.weight(.semibold))
                 .foregroundStyle(Color.inkText)

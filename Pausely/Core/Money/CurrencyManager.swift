@@ -204,6 +204,13 @@ final class CurrencyManager: ObservableObject, @unchecked Sendable {
         } else {
             selectedCurrency = offered.contains(deviceCurrency) ? deviceCurrency : "USD"
         }
+        #if DEBUG
+        // `--demo-currency=IDR`: this launch shows its totals in that currency, so long amounts can
+        // be looked at. Nothing is saved (property observers don't run during init).
+        if let shown = LaunchFlag.value(of: "--demo-currency").map(Self.current), offered.contains(shown) {
+            selectedCurrency = shown
+        }
+        #endif
 
         // The rates saved last time, until fresh ones arrive. Property observers don't run during
         // init, so the table is filled here.

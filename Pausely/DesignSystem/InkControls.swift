@@ -91,6 +91,118 @@ struct LeaveButton: View {
     }
 }
 
+/// How large an amount is drawn in its field. A text field holds one line and cuts off what does
+/// not fit, so a long amount (a yearly price in rupiah, any price at the largest text size) takes
+/// the largest size that still shows all of it.
+enum AmountFit {
+    /// Below this the figure is no longer the number the screen is about; it stays here and the
+    /// field scrolls as any text field does.
+    static let smallest: CGFloat = 20
+
+    static func size(for text: String, base: CGFloat, width: CGFloat) -> CGFloat {
+        guard width > 0, !text.isEmpty, self.width(of: text, size: base) > width else { return base }
+        var size = max(smallest, (base * width / self.width(of: text, size: base)).rounded(.down))
+        // The serif is cut differently at different sizes, so the first answer can be a point out.
+        while size > smallest, self.width(of: text, size: size) > width { size -= 1 }
+        return size
+    }
+
+    /// The width of the text in `Font.total` at this size.
+    static func width(of text: String, size: CGFloat) -> CGFloat {
+        let system = UIFont.systemFont(ofSize: size, weight: .bold)
+        let font = system.fontDescriptor.withDesign(.serif).map { UIFont(descriptor: $0, size: size) } ?? system
+        return ceil((text as NSString).size(withAttributes: [.font: font]).width)
+    }
+}
+
+private struct AmountFont: ViewModifier {
+    let text: String
+    let base: CGFloat
+    @State private var width: CGFloat = 0
+
+    func body(content: Content) -> some View {
+        content
+            .font(.total(AmountFit.size(for: text, base: base, width: width)))
+            .onGeometryChange(for: CGFloat.self) { $0.size.width } action: { width = $0 }
+    }
+}
+
+extension View {
+    /// The font of an amount field: `Font.total` at `base`, smaller when `text` (what the field
+    /// shows: the amount typed, or the example in an empty field) would not fit at that size.
+    func amountFont(for text: String, base: CGFloat) -> some View {
+        modifier(AmountFont(text: text, base: base))
+    }
+}
+
+/// "Pro", beside something the free plan does not include. One part: it was drawn twice, in two
+/// sizes and two shapes.
+struct ProPill: View {
+    var body: some View {
+        Text("Pro")
+            .font(.caption.weight(.semibold))
+            .foregroundStyle(Color.inkText)
+            .padding(.horizontal, 8)
+            .padding(.vertical, 4)
+            .overlay(Capsule().stroke(Color.outline, lineWidth: 1))
+    }
+}
+
+/// The one search field: a magnifier, the word "Search", and a way to clear what was typed. There
+/// were three (the list's, the catalog's and the currency page's), each a little different.
+struct SearchField: View {
+    @Binding var text: String
+    let identifier: String
+
+    var body: some View {
+        HStack(spacing: 10) {
+            Image(systemName: "magnifyingglass")
+                .foregroundStyle(Color.inkTextFaint)
+                .accessibilityHidden(true)
+            TextField(L10n.string("Search"), text: $text)
+                .font(.body)
+                .foregroundStyle(Color.inkText)
+                .textInputAutocapitalization(.never)
+                .autocorrectionDisabled()
+                .submitLabel(.search)
+                .tint(Color.inkText)
+                .accessibilityIdentifier(identifier)
+            if !text.isEmpty {
+                Button { text = "" } label: {
+                    Image(systemName: "xmark.circle.fill")
+                        .foregroundStyle(Color.inkTextFaint)
+                        .tapArea(.trailing)
+                }
+                .buttonStyle(.plain)
+                .accessibilityLabel(Text("Clear"))
+            }
+        }
+        .padding(.horizontal, 14)
+        .frame(minHeight: 48)
+        .background(Color.inkRaised, in: RoundedRectangle(cornerRadius: Layout.tileRadius, style: .continuous))
+    }
+}
+
+/// What went wrong, in words the person can act on: the coral mark and the sentence. Colour alone
+/// never carries it. One part for every form (there were four copies of it and three lines that were
+/// coral text with no mark).
+struct ProblemLine: View {
+    let message: String
+    var identifier = "formProblem"
+
+    var body: some View {
+        Label {
+            Text(verbatim: message).fixedSize(horizontal: false, vertical: true)
+        } icon: {
+            Image(systemName: "exclamationmark.circle")
+        }
+        .font(.subheadline)
+        .foregroundStyle(Color.due)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .accessibilityIdentifier(identifier)
+    }
+}
+
 /// A name is one line of text, but its field may need two or three lines to show it (a long name
 /// at a large text size was cut to "Adobe Cr…"). A field that wraps treats Return as a line
 /// break, so this takes the break back out and moves on, as Return does in a one-line field.
@@ -110,13 +222,26 @@ extension View {
             text.wrappedValue = name.text
             next()
         }
+        .modifier(MeasuredAgainAtEachTextSize())
+    }
+}
+
+/// A field that wraps is built again when the text size changes. SwiftUI keeps the number of lines
+/// the text took at the old size: a name that ran to three lines at a large size left the field
+/// three lines tall when the size came back down (seen on the edit screen, whose header jumped
+/// 67 points after the text size was changed and changed back).
+private struct MeasuredAgainAtEachTextSize: ViewModifier {
+    @Environment(\.dynamicTypeSize) private var typeSize
+
+    func body(content: Content) -> some View {
+        content.id(typeSize)
     }
 }
 
 /// A screen whose content scrolls above its buttons.
 ///
-/// At ordinary text sizes the buttons stay at the bottom edge, where a thumb expects them. At the
-/// accessibility sizes they come after the content, inside the scroll. Pinned, three buttons at the
+/// On an iPhone at ordinary text sizes the buttons stay at the bottom edge, where a thumb expects
+/// them. At the accessibility sizes, and on iPad, they come after the content, inside the scroll. Pinned, three buttons at the
 /// largest size cover more than half the screen and leave a slot to read through (the verdict showed
 /// two words of its slip), and where the screen is shorter still they do not fit at all (the
 /// welcome screen's second button was drawn over its own border).
@@ -133,13 +258,15 @@ struct ActionScreen<Content: View, Actions: View>: View {
         self.actions = actions()
     }
 
-    /// Whether the buttons stay at the bottom edge at this text size.
-    nonisolated static func pinsActions(at size: DynamicTypeSize) -> Bool {
-        !size.isAccessibilitySize
+    /// Whether the buttons stay at the bottom edge. Not at the accessibility text sizes, and not on
+    /// iPad: its bottom edge is not where a thumb rests, and pinned there the buttons sat half a
+    /// screen below the slip they are about.
+    nonisolated static func pinsActions(at size: DynamicTypeSize, onPad: Bool) -> Bool {
+        !size.isAccessibilitySize && !onPad
     }
 
     var body: some View {
-        if Self.pinsActions(at: typeSize) {
+        if Self.pinsActions(at: typeSize, onPad: UIDevice.current.userInterfaceIdiom == .pad) {
             VStack(spacing: 0) {
                 ScrollView { content }
                     .scrollDismissesKeyboard(dismissesKeyboard ? .interactively : .automatic)

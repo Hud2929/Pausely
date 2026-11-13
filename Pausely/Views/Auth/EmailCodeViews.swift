@@ -60,7 +60,7 @@ private struct ResendButton: View {
     let action: () -> Void
 
     var body: some View {
-        TimelineView(.periodic(from: .now, by: 1)) { context in
+        TimelineView(.explicit(countdown.ticks(from: Date()))) { context in
             let seconds = countdown.secondsLeft(at: context.date)
             Button(action: action) {
                 if isSending {
@@ -96,13 +96,12 @@ private struct CodeHeader: View {
                 Text("We sent a 6-digit code to:")
                     .foregroundStyle(Color.inkTextMuted)
                     .fixedSize(horizontal: false, vertical: true)
-                Text(verbatim: email)
+                Text(verbatim: AddressText.breakable(email))
                     .fontWeight(.semibold)
                     .foregroundStyle(Color.inkText)
-                    .lineLimit(1)
-                    .minimumScaleFactor(0.5)
-                    .truncationMode(.middle)
+                    .fixedSize(horizontal: false, vertical: true)
                     .environment(\.layoutDirection, .leftToRight)
+                    .accessibilityLabel(Text(verbatim: email))
                     .frame(maxWidth: .infinity, alignment: .leading)
             }
             .font(.body)
@@ -121,22 +120,6 @@ private struct LinkNote: View {
             .foregroundStyle(Color.inkTextFaint)
             .fixedSize(horizontal: false, vertical: true)
             .frame(maxWidth: .infinity, alignment: .leading)
-    }
-}
-
-private struct ProblemText: View {
-    let message: String
-
-    var body: some View {
-        Label {
-            Text(verbatim: message).fixedSize(horizontal: false, vertical: true)
-        } icon: {
-            Image(systemName: "exclamationmark.circle")
-        }
-        .font(.subheadline)
-        .foregroundStyle(Color.due)
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .accessibilityIdentifier("codeProblem")
     }
 }
 
@@ -194,7 +177,7 @@ struct EmailConfirmationView: View {
                     CodeHeader(title: "Enter the code we emailed you", email: email)
                     VStack(alignment: .leading, spacing: 12) {
                         CodeField(code: $code, isFocused: $codeFocused)
-                        if let problem { ProblemText(message: problem) }
+                        if let problem { ProblemLine(message: problem, identifier: "codeProblem") }
                         LinkNote()
                     }
                     VStack(spacing: 10) {
@@ -327,24 +310,17 @@ struct PasswordResetView: View {
 
     private var addressStep: some View {
         VStack(alignment: .leading, spacing: 24) {
-            VStack(alignment: .leading, spacing: 10) {
-                Text("Reset your password")
-                    .font(.question(.title, weight: .bold))
-                    .foregroundStyle(Color.inkText)
-                    .fixedSize(horizontal: false, vertical: true)
-                    .accessibilityAddTraits(.isHeader)
-                Text("Enter the email you signed up with. We'll send a code to prove it's you.")
-                    .font(.body)
-                    .foregroundStyle(Color.inkTextMuted)
-                    .fixedSize(horizontal: false, vertical: true)
-            }
+            FormHeader(title: "Reset your password",
+                       detail: "Enter the email you signed up with. We'll send a code to prove it's you.")
             VStack(alignment: .leading, spacing: 12) {
-                InkTextField(placeholder: "you@example.com", text: $address, keyboardType: .emailAddress, autocapitalization: .never)
-                    .textContentType(.emailAddress)
-                    .autocorrectionDisabled()
-                    .accessibilityLabel(Text("Email"))
-                    .accessibilityIdentifier("resetEmailTextField")
-                if let problem { ProblemText(message: problem) }
+                LabelledField(label: "Email") {
+                    InkTextField(placeholder: "", text: $address, keyboardType: .emailAddress, autocapitalization: .never)
+                        .textContentType(.emailAddress)
+                        .autocorrectionDisabled()
+                        .accessibilityLabel(Text("Email"))
+                        .accessibilityIdentifier("resetEmailTextField")
+                }
+                if let problem { ProblemLine(message: problem, identifier: "codeProblem") }
             }
             Button(action: send) {
                 if isWorking { ProgressView().tint(Color.paperInk) } else { Text("Send code") }
@@ -360,7 +336,7 @@ struct PasswordResetView: View {
             CodeHeader(title: "Enter the code we emailed you", email: sentTo)
             VStack(alignment: .leading, spacing: 12) {
                 CodeField(code: $code, isFocused: $codeFocused)
-                if let problem { ProblemText(message: problem) }
+                if let problem { ProblemLine(message: problem, identifier: "codeProblem") }
                 LinkNote()
             }
             VStack(spacing: 10) {
@@ -431,23 +407,17 @@ struct NewPasswordView: View {
         NavigationStack {
             ScrollView {
                 VStack(alignment: .leading, spacing: 24) {
-                    VStack(alignment: .leading, spacing: 10) {
-                        Text("Choose a new password")
-                            .font(.question(.title, weight: .bold))
-                            .foregroundStyle(Color.inkText)
-                            .fixedSize(horizontal: false, vertical: true)
-                            .accessibilityAddTraits(.isHeader)
-                        Text("At least 8 characters, with a capital letter, a small letter and a number.")
-                            .font(.body)
-                            .foregroundStyle(Color.inkTextMuted)
-                            .fixedSize(horizontal: false, vertical: true)
-                    }
+                    // What the password needs is listed under the box and ticked off as it is typed.
+                    FormHeader(title: "Choose a new password")
                     VStack(alignment: .leading, spacing: 12) {
-                        InkTextField(placeholder: L10n.string("New password"), text: $password, isSecure: true)
-                            .textContentType(.newPassword)
-                            .accessibilityIdentifier("newPasswordField")
-                        if !password.isEmpty { PasswordStrengthMeter(password: password) }
-                        if let problem { ProblemText(message: problem) }
+                        LabelledField(label: "New password") {
+                            InkTextField(placeholder: "", text: $password, isSecure: true)
+                                .textContentType(.newPassword)
+                                .accessibilityLabel(Text("New password"))
+                                .accessibilityIdentifier("newPasswordField")
+                        }
+                        PasswordStrengthMeter(password: password)
+                        if let problem { ProblemLine(message: problem, identifier: "codeProblem") }
                     }
                     Button(action: save) {
                         if isSaving { ProgressView().tint(Color.paperInk) } else { Text("Save and sign in") }

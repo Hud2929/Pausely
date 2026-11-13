@@ -187,7 +187,7 @@ struct ChargeRow: View {
     var body: some View {
         Link(destination: WidgetLink.subscription(item.charge.id) ?? URL(string: "pausely://")!) {
             HStack(alignment: .firstTextBaseline, spacing: 8) {
-                VStack(alignment: .leading, spacing: 1) {
+                VStack(alignment: .leading, spacing: 2) {
                     Text(verbatim: item.charge.name)
                         .font(.footnote.weight(.semibold))
                         .ink()
@@ -285,7 +285,7 @@ struct RectangularCharge: View {
 
     var body: some View {
         if let next = entry.upcoming.first {
-            VStack(alignment: .leading, spacing: 1) {
+            VStack(alignment: .leading, spacing: 2) {
                 Text(verbatim: next.charge.name)
                     .font(.headline)
                     .lineLimit(1)

@@ -86,6 +86,16 @@ final class SubscriptionStoreTests: XCTestCase {
         XCTAssertFalse(lines[1].avoidedSoFar.isEmpty, "the charge nine days ago is one it avoided")
     }
 
+    /// `--large-demo-data` is how the tour sees whether long amounts fit: a year of it has to be
+    /// a nine-digit number.
+    func testTheLargeDemoListCostsNineDigitsAYear() {
+        let list = DemoSubscriptions.large()
+        XCTAssertEqual(Set(list.map(\.currency)), ["IDR"])
+        let yearly = list.charging.annualTotal(in: "IDR")
+        XCTAssertGreaterThanOrEqual(yearly, 100_000_000)
+        XCTAssertLessThan(yearly, 1_000_000_000)
+    }
+
     /// `--quiet-demo-data` is how the tour opens Home's "Nothing is due in the next month.": a list
     /// that is charging, has a date, and has no charge on the line.
     func testTheQuietDemoListHasNothingDueThisMonth() {

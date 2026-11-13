@@ -15,18 +15,10 @@ struct CurrencySettingsView: View {
     }
 
     var body: some View {
-        SettingsPage(title: "Currency", detail: "Totals are shown in this currency. Each subscription keeps the currency it's charged in.") {
-            // The age of the rates, said before the long list rather than under it.
-            Text(L10n.string("Totals that mix currencies are converted at rates from \(ratesDay) and marked ≈."))
-                .font(.footnote)
-                .foregroundStyle(Color.inkTextMuted)
-                .fixedSize(horizontal: false, vertical: true)
-                .padding(.top, -14)
-                .accessibilityIdentifier("ratesDate")
-
-            InkTextField(placeholder: L10n.string("Search"), text: $searchText, autocapitalization: .never)
-                .autocorrectionDisabled()
-                .accessibilityIdentifier("currencySearch")
+        // The age of the rates is said before the long list rather than under it.
+        SettingsPage(title: "Currency", detail: "Totals are shown in this currency. Each subscription keeps the currency it's charged in.",
+                     note: L10n.string("Totals that mix currencies are converted at rates from \(ratesDay) and marked ≈.")) {
+            SearchField(text: $searchText, identifier: "currencySearch")
 
             SettingsSection {
                 if currencies.isEmpty {

@@ -43,13 +43,7 @@ struct ExportDataView: View {
 
             VStack(alignment: .leading, spacing: 12) {
                 if let error = exportError {
-                    Label {
-                        Text(verbatim: error).fixedSize(horizontal: false, vertical: true)
-                    } icon: {
-                        Image(systemName: "exclamationmark.circle")
-                    }
-                    .font(.subheadline)
-                    .foregroundStyle(Color.due)
+                    ProblemLine(message: error, identifier: "exportProblem")
                 }
                 if filteredCount == 0 {
                     Text("Nothing on your list matches these choices.")

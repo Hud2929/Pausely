@@ -48,19 +48,17 @@ struct CatalogAddSheet: View {
     var body: some View {
         ActionScreen(dismissesKeyboard: true) {
             VStack(alignment: .leading, spacing: 24) {
-                HStack {
+                // The way out and the name are one group, closer together than the groups below.
+                VStack(alignment: .leading, spacing: 12) {
                     LeaveButton("Cancel") { dismiss() }
-                    Spacer()
-                }
-                .padding(.bottom, -12)
-
-                HStack(spacing: 12) {
-                    ServiceLogoView(name: entry.name, category: entry.category.rawValue, size: 48)
-                    Text(verbatim: entry.name)
-                        .font(.question(.title))
-                        .foregroundStyle(Color.inkText)
-                        .fixedSize(horizontal: false, vertical: true)
-                        .accessibilityAddTraits(.isHeader)
+                    HStack(spacing: 12) {
+                        ServiceLogoView(name: entry.name, category: entry.category.rawValue, size: 48)
+                        Text(verbatim: entry.name)
+                            .font(.question(.title))
+                            .foregroundStyle(Color.inkText)
+                            .fixedSize(horizontal: false, vertical: true)
+                            .accessibilityAddTraits(.isHeader)
+                    }
                 }
 
                 amountSection
@@ -141,7 +139,10 @@ struct CatalogAddSheet: View {
                           prompt: Text(verbatim: typical.map { MoneyFormat.string($0, currency, locale: L10n.locale) }
                                                    ?? AmountText.text(for: 0, currency: currency))
                             .foregroundStyle(typical == nil ? Color.inkTextFaint : Color.inkText))
-                    .font(.total(amountSize))
+                    .amountFont(for: amountText.isEmpty
+                                ? typical.map { MoneyFormat.string($0, currency, locale: L10n.locale) } ?? AmountText.text(for: 0, currency: currency)
+                                : amountText,
+                                base: amountSize)
                     .foregroundStyle(Color.inkText)
                     .keyboardType(.decimalPad)
                     .focused($amountFocused)
@@ -161,7 +162,7 @@ struct CatalogAddSheet: View {
     }
 
     private func row<Content: View>(_ title: String, @ViewBuilder content: () -> Content) -> some View {
-        AdaptiveRow {
+        AdaptiveRow(alignment: .center) {
             Text(verbatim: title)
                 .font(.body)
                 .foregroundStyle(Color.inkText)

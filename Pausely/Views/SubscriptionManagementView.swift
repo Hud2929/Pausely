@@ -33,8 +33,11 @@ struct SubscriptionManagementView: View {
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 28) {
-                topBar
-                hero
+                // The bar and what it is about are one group, closer than the groups below.
+                VStack(alignment: .leading, spacing: 12) {
+                    topBar
+                    hero
+                }
                 decisionGroup
                 factsCard
                 if current.calculatedNextBillingDate != nil, current.renewsAutomatically {
@@ -78,7 +81,6 @@ struct SubscriptionManagementView: View {
             }
             .accessibilityIdentifier("editSubscriptionButton")
         }
-        .padding(.bottom, -16)
     }
 
     // MARK: - What it is and what it costs
@@ -115,10 +117,7 @@ struct SubscriptionManagementView: View {
                     .foregroundStyle(Color.inkTextFaint)
             }
 
-            ViewThatFits(in: .horizontal) {
-                HStack(spacing: 8) { statusChip; renewalText }
-                VStack(alignment: .leading, spacing: 4) { statusChip; renewalText }
-            }
+            LineOrStack(spacing: 8, lineSpacing: 4) { statusChip; renewalText }
 
             if current.nextBillingDate == nil, current.status == .active || current.status == .trial {
                 Button { route = .edit } label: {
@@ -279,8 +278,9 @@ struct SubscriptionManagementView: View {
                 if PausePlanStore.shared.contains(current.id) {
                     toolRow(icon: "arrow.triangle.2.circlepath", title: L10n.string("In your Pause Plan"), subtitle: nil) { route = .pausePlan }
                 } else {
-                    toolRow(icon: "arrow.triangle.2.circlepath", title: L10n.string("Rotate with your other streaming"),
-                            subtitle: L10n.string("Pause Plan"), isPro: !paymentManager.isUnlocked(.pausePlan)) { route = .pausePlan }
+                    // The feature's name is the row; what it does is under it (they were the other way round).
+                    toolRow(icon: "arrow.triangle.2.circlepath", title: L10n.string("Pause Plan"),
+                            subtitle: L10n.string("Rotate with your other streaming"), isPro: !paymentManager.isUnlocked(.pausePlan)) { route = .pausePlan }
                 }
             }
 
@@ -322,18 +322,8 @@ struct SubscriptionManagementView: View {
                     }
                 }
                 Spacer(minLength: 8)
-                if isPro {
-                    Text("Pro")
-                        .font(.caption.weight(.semibold))
-                        .foregroundStyle(Color.inkText)
-                        .padding(.horizontal, 8)
-                        .padding(.vertical, 3)
-                        .overlay(Capsule().stroke(Color.outline, lineWidth: 1))
-                }
-                Image(systemName: "chevron.forward")
-                    .font(.footnote.weight(.semibold))
-                    .foregroundStyle(Color.inkTextFaint)
-                    .accessibilityHidden(true)
+                if isPro { ProPill() }
+                RowChevron()
             }
             .padding(.vertical, 14)
             .contentShape(Rectangle())

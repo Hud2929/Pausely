@@ -113,9 +113,7 @@ struct SubscriptionEditView: View {
                     .accessibilityIdentifier("editNameField")
             }
             if showValidation, let error = draft.nameError {
-                Text(error)
-                    .font(.footnote)
-                    .foregroundStyle(Color.due)
+                ProblemLine(message: error, identifier: "editNameProblem")
             }
         }
         .frame(maxWidth: .infinity, alignment: .leading)
@@ -138,7 +136,7 @@ struct SubscriptionEditView: View {
                         }
                     }
                 } label: {
-                    HStack(spacing: 3) {
+                    HStack(spacing: 4) {
                         Text(amountPrefix)
                             .font(.question(.title))
                         Image(systemName: "chevron.up.chevron.down")
@@ -149,21 +147,19 @@ struct SubscriptionEditView: View {
                 .accessibilityLabel("Currency, \(draft.currency)")
 
                 TextField(text: $draft.amountText, prompt: Text(verbatim: AmountText.text(for: 0, currency: draft.currency))) { EmptyView() }
-                    .font(.total(amountSize))
+                    // As wide as the row, like the amount on the two forms that add a subscription, and
+                    // drawn smaller when it is too long for the row: a field cuts off what does not fit.
+                    .amountFont(for: draft.amountText.isEmpty ? AmountText.text(for: 0, currency: draft.currency) : draft.amountText,
+                                base: amountSize)
                     .foregroundStyle(Color.inkText)
                     .keyboardType(.decimalPad)
-                    .fixedSize(horizontal: true, vertical: false)
-                    .frame(minWidth: 90)
                     .focused($focus, equals: .amount)
                     .accessibilityLabel("Amount")
                     .accessibilityIdentifier("editAmountField")
-                Spacer(minLength: 0)
             }
 
             if showValidation, let error = draft.amountError {
-                Text(error)
-                    .font(.caption)
-                    .foregroundStyle(Color.due)
+                ProblemLine(message: error, identifier: "editAmountProblem")
             } else {
                 Text(draft.frequency.billingPeriodLabel)
                     .font(.subheadline)
@@ -266,7 +262,7 @@ struct SubscriptionEditView: View {
     // MARK: - Pieces
 
     private func row<Content: View>(_ title: LocalizedStringKey, @ViewBuilder content: () -> Content) -> some View {
-        AdaptiveRow {
+        AdaptiveRow(alignment: .center) {
             Text(title)
                 .font(.body)
                 .foregroundStyle(Color.inkText)

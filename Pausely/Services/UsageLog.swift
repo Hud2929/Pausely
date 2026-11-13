@@ -55,4 +55,15 @@ final class UsageLog: ObservableObject {
         defaults.set(max(0, minutes), forKey: minutesKey(subscriptionName))
         defaults.set(month(of: now), forKey: monthKey(subscriptionName))
     }
+
+    #if DEBUG
+    /// A demo list starts with no hours typed in. Without this the two hours of Netflix that one
+    /// demo list enters showed on every other list that has a Netflix.
+    func forgetAll() {
+        objectWillChange.send()
+        for key in defaults.dictionaryRepresentation().keys where key.hasPrefix("usage_") {
+            defaults.removeObject(forKey: key)
+        }
+    }
+    #endif
 }

@@ -327,6 +327,29 @@ final class ProviderWorkflowTests: XCTestCase {
         URLProtocol.unregisterClass(FakeMailAPI.self)
     }
 
+    /// `--demo-gmail-results` puts a made-up inbox and its findings on screen. Connecting an inbox
+    /// starts a search, and the search of that made-up inbox wiped the findings: the screen tour's
+    /// "results" capture was the first page for weeks. The demo's inbox is never searched (it would
+    /// also have dialled a real mail server), and disconnecting ends the demo.
+    func testTheDemosInboxIsNeverSearched() async throws {
+        scanner.loadDemoResults()
+        XCTAssertTrue(scanner.isShowingDemo)
+        XCTAssertEqual(scanner.accounts.map(\.address), ["demo@pausely.app"])
+        XCTAssertGreaterThan(scanner.foundSubscriptions.count, 5)
+
+        // Read from the source, not by running it: a search that did start would open a connection.
+        let root = URL(fileURLWithPath: #filePath).deletingLastPathComponent().deletingLastPathComponent()
+            .deletingLastPathComponent().deletingLastPathComponent()
+        let source = try String(contentsOf: root.appendingPathComponent("Pausely/Services/Mailbox/InboxScanner.swift"), encoding: .utf8)
+        let start = try XCTUnwrap(source.range(of: "func scanAll() async {"))
+        let run = try XCTUnwrap(source.range(of: "await runScan()", range: start.upperBound..<source.endIndex))
+        XCTAssertTrue(source[start.upperBound..<run.lowerBound].contains("if isShowingDemo { return }"))
+
+        await scanner.disconnectAll()
+        XCTAssertFalse(scanner.isShowingDemo)
+        XCTAssertEqual(scanner.foundSubscriptions.count, 0)
+    }
+
     /// Tokens as sign-in leaves them: a fresh access token and a refresh token.
     private func signedInTokens() -> OAuthSession.Tokens {
         FakeMailAPI.with { s in

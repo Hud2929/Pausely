@@ -52,10 +52,16 @@ struct SubscriptionsView: View {
                             .padding(.horizontal, Layout.margin)
                             .padding(.top, 16)
                     }
-                    empty
-                        .padding(.horizontal, Layout.margin)
-                        .padding(.top, 40)
-                        .padding(.bottom, 24)
+                    Group {
+                        switch store.listState {
+                        case .loading: ListLoading()
+                        case .couldNotLoad: ListCouldNotLoad()
+                        default: empty
+                        }
+                    }
+                    .padding(.horizontal, Layout.margin)
+                    .padding(.top, 40)
+                    .padding(.bottom, 24)
                 }
             } else {
                 list
@@ -131,27 +137,19 @@ struct SubscriptionsView: View {
 
             // Search earns its place only once the list is long enough to lose something in.
             if store.subscriptions.count > 8 {
-                HStack(spacing: 10) {
-                    Image(systemName: "magnifyingglass").foregroundStyle(Color.inkTextFaint)
-                        .accessibilityHidden(true)
-                    TextField(L10n.string("Search"), text: $searchText)
-                        .foregroundStyle(Color.inkText)
-                        .submitLabel(.search)
-                        .accessibilityIdentifier("subscriptionSearchField")
-                }
-                .font(.body)
-                .padding(.horizontal, 14)
-                .frame(maxWidth: .infinity, minHeight: Layout.tapTarget)
-                .background(Color.inkRaised, in: RoundedRectangle(cornerRadius: Layout.tileRadius, style: .continuous))
-                .listRowInsets(EdgeInsets(top: 12, leading: Layout.margin, bottom: 4, trailing: Layout.margin))
-                .listRowBackground(Color.clear)
-                .listRowSeparator(.hidden)
+                SearchField(text: $searchText, identifier: "subscriptionSearchField")
+                    .listRowInsets(EdgeInsets(top: 12, leading: Layout.margin, bottom: 4, trailing: Layout.margin))
+                    .listRowBackground(Color.clear)
+                    .listRowSeparator(.hidden)
             }
 
             if sections.isEmpty {
                 Text(L10n.string("Nothing matches \"\(searchText)\"."))
                     .font(.body)
                     .foregroundStyle(Color.inkTextMuted)
+                    .fixedSize(horizontal: false, vertical: true)
+                    // On the screen's margin, like the field above it (it sat four points to its left).
+                    .listRowInsets(EdgeInsets(top: 12, leading: Layout.margin, bottom: 12, trailing: Layout.margin))
                     .listRowBackground(Color.clear)
                     .listRowSeparator(.hidden)
             }
@@ -268,8 +266,13 @@ private struct SubscriptionRow: View {
     @Environment(\.dynamicTypeSize) private var typeSize
 
     var body: some View {
-        // One element, not a button wrapped around text: a single thing to tap, swipe and read.
-        HStack(spacing: 12) {
+        // One button, read as one sentence: a single thing to tap, swipe and hear. As a button it
+        // shows the press; as a tap gesture on a stack it gave no sign of being touched.
+        Button {
+            Feel.selection()
+            onTap()
+        } label: {
+            HStack(spacing: 12) {
                 if !typeSize.isAccessibilitySize {
                     ServiceLogoView(name: subscription.name, category: subscription.category, size: 40)
                 }
@@ -286,13 +289,11 @@ private struct SubscriptionRow: View {
                 Spacer(minLength: 8)
                 if !typeSize.isAccessibilitySize { price }
             }
-        .padding(.vertical, 12)
-        .contentShape(Rectangle())
-        .onTapGesture(perform: onTap)
-        .accessibilityElement(children: .ignore)
+            .padding(.vertical, 12)
+            .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
         .accessibilityLabel(Text(verbatim: "\(subscription.name), \(subscription.billingFrequency.priced(subscription.chargeText)), \(detail)"))
-        .accessibilityAddTraits(.isButton)
-        .accessibilityAction(.default, onTap)
     }
 
     private var price: some View {

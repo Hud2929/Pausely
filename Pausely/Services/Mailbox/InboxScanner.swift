@@ -177,12 +177,20 @@ final class InboxScanner: ObservableObject {
         report = nil
         stats = ScanStats()
         accountErrors = [:]
+        #if DEBUG
+        isShowingDemo = false
+        #endif
     }
 
     // MARK: - Scanning
 
     func scanAll() async {
         guard !isScanning else { return }
+        #if DEBUG
+        // The demo's inbox is made up, so there is nothing to search: connecting it used to start
+        // a search that wiped the demo's results, and the screen fell back to its first page.
+        if isShowingDemo { return }
+        #endif
         let task = Task { await runScan() }
         scanTask = task
         await task.value
@@ -405,8 +413,12 @@ final class InboxScanner: ObservableObject {
     }
 
     #if DEBUG
+    /// True once `presentDemo` has put a made-up inbox and its findings on screen.
+    private(set) var isShowingDemo = false
+
     /// DEBUG only: shows a synthetic result for screenshots and reviews (`--demo-gmail-results`).
     func presentDemo(_ analysis: IntelligenceReport, account: MailboxAccount, checked: Int, read: Int) {
+        isShowingDemo = true
         accounts = [account]
         report = analysis
         foundSubscriptions = analysis.subscriptions.map(Self.makeImport)

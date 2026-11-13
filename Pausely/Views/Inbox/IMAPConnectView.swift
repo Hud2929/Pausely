@@ -16,6 +16,8 @@ struct IMAPConnectView: View {
     @State private var connecting = false
     @State private var error: String?
     @FocusState private var focused: Field?
+    @Environment(\.dynamicTypeSize) private var typeSize
+    @ScaledMetric(relativeTo: .body) private var portWidth: CGFloat = 88
 
     private enum Field { case address, password, host, port }
 
@@ -51,14 +53,7 @@ struct IMAPConnectView: View {
                     fields
                     VStack(alignment: .leading, spacing: 12) {
                         if let error {
-                            Label {
-                                Text(verbatim: error).fixedSize(horizontal: false, vertical: true)
-                            } icon: {
-                                Image(systemName: "exclamationmark.circle")
-                            }
-                            .font(.subheadline)
-                            .foregroundStyle(Color.due)
-                            .accessibilityIdentifier("imapError")
+                            ProblemLine(message: error, identifier: "imapError")
                         }
                         Button(action: connect) {
                             if connecting { ProgressView().tint(Color.paperInk) } else { Text("Connect and search") }
@@ -132,46 +127,62 @@ struct IMAPConnectView: View {
         .frame(maxWidth: .infinity, alignment: .leading)
     }
 
+    /// Every field is named above its box, as on the account forms: a name written inside the box
+    /// is gone the moment something is typed. The server and the port keep an example inside,
+    /// because what it shows is what is used when the box is left empty.
     private var fields: some View {
-        VStack(alignment: .leading, spacing: 12) {
-            InkTextField(placeholder: "you@example.com", text: $address, keyboardType: .emailAddress, autocapitalization: .never)
-                .textContentType(.emailAddress)
-                .autocorrectionDisabled()
-                .focused($focused, equals: .address)
-                .submitLabel(.next)
-                .onSubmit { focused = .password }
-                .accessibilityLabel(Text("Email address"))
-                .accessibilityIdentifier("imapAddress")
-            HStack(spacing: 10) {
-                InkTextField(placeholder: L10n.string("App password"), text: $password, isSecure: true, autocapitalization: .never)
+        VStack(alignment: .leading, spacing: 16) {
+            LabelledField(label: "Email") {
+                InkTextField(placeholder: "", text: $address, keyboardType: .emailAddress, autocapitalization: .never)
+                    .textContentType(.emailAddress)
                     .autocorrectionDisabled()
-                    .focused($focused, equals: .password)
-                    .submitLabel(.go)
-                    .onSubmit { if canConnect { connect() } }
-                    .accessibilityLabel(Text("App password"))
-                    .accessibilityIdentifier("imapPassword")
-                // The system's own paste control: one tap after copying the password, and no permission prompt.
-                PasteButton(payloadType: String.self) { strings in
-                    if let pasted = strings.first { password = pasted.trimmingCharacters(in: .whitespacesAndNewlines) }
+                    .focused($focused, equals: .address)
+                    .submitLabel(.next)
+                    .onSubmit { focused = .password }
+                    .accessibilityLabel(Text("Email address"))
+                    .accessibilityIdentifier("imapAddress")
+            }
+            LabelledField(label: "App password") {
+                HStack(spacing: 10) {
+                    InkTextField(placeholder: "", text: $password, isSecure: true, autocapitalization: .never)
+                        .autocorrectionDisabled()
+                        .focused($focused, equals: .password)
+                        .submitLabel(.go)
+                        .onSubmit { if canConnect { connect() } }
+                        .accessibilityLabel(Text("App password"))
+                        .accessibilityIdentifier("imapPassword")
+                    // The system's own paste control: one tap after copying the password, and no permission prompt.
+                    PasteButton(payloadType: String.self) { strings in
+                        if let pasted = strings.first { password = pasted.trimmingCharacters(in: .whitespacesAndNewlines) }
+                    }
+                    .labelStyle(.iconOnly)
+                    .buttonBorderShape(.roundedRectangle(radius: Layout.tileRadius))
+                    .tint(Color.inkLifted)
+                    .accessibilityLabel(Text("Paste app password"))
+                    .accessibilityIdentifier("imapPastePassword")
                 }
-                .labelStyle(.iconOnly)
-                .buttonBorderShape(.roundedRectangle(radius: Layout.tileRadius))
-                .tint(Color.inkLifted)
-                .accessibilityLabel(Text("Paste app password"))
-                .accessibilityIdentifier("imapPastePassword")
             }
             if needsServer {
-                HStack(spacing: 10) {
-                    InkTextField(placeholder: suggestedHost ?? "imap.example.com", text: $customHost, keyboardType: .URL, autocapitalization: .never)
-                        .autocorrectionDisabled()
-                        .focused($focused, equals: .host)
-                        .accessibilityLabel(Text("IMAP server"))
-                        .accessibilityIdentifier("imapHost")
-                    InkTextField(placeholder: "993", text: $customPort, keyboardType: .numberPad)
-                        .focused($focused, equals: .port)
-                        .frame(width: 88)
-                        .accessibilityLabel(Text("Port"))
-                        .accessibilityIdentifier("imapPort")
+                // Side by side, or one above the other at accessibility text sizes, where "Port" no
+                // longer fits above a box that narrow.
+                let stacked = typeSize.isAccessibilitySize
+                let row = stacked ? AnyLayout(VStackLayout(alignment: .leading, spacing: 16))
+                                  : AnyLayout(HStackLayout(alignment: .bottom, spacing: 10))
+                row {
+                    LabelledField(label: "IMAP server") {
+                        InkTextField(placeholder: suggestedHost ?? "imap.example.com", text: $customHost, keyboardType: .URL, autocapitalization: .never)
+                            .autocorrectionDisabled()
+                            .focused($focused, equals: .host)
+                            .accessibilityLabel(Text("IMAP server"))
+                            .accessibilityIdentifier("imapHost")
+                    }
+                    LabelledField(label: "Port") {
+                        InkTextField(placeholder: "993", text: $customPort, keyboardType: .numberPad)
+                            .focused($focused, equals: .port)
+                            .accessibilityLabel(Text("Port"))
+                            .accessibilityIdentifier("imapPort")
+                    }
+                    .frame(width: stacked ? nil : portWidth)
                 }
                 Text("Pausely only connects over an encrypted connection (IMAP with SSL/TLS, usually port 993).")
                     .font(.footnote)

@@ -83,10 +83,7 @@ struct SubscriptionBrowserView: View {
                             .multilineTextAlignment(.leading)
                     }
                     Spacer(minLength: 8)
-                    Image(systemName: "chevron.forward")
-                        .font(.footnote.weight(.semibold))
-                        .foregroundStyle(Color.inkTextFaint)
-                        .accessibilityHidden(true)
+                    RowChevron()
                 }
                 .padding(.vertical, 12)
                 .contentShape(Rectangle())
@@ -246,36 +243,21 @@ struct SubscriptionBrowserView: View {
     }
 
     private var searchBar: some View {
-        HStack(spacing: 10) {
-            Image(systemName: "magnifyingglass")
-                .foregroundStyle(Color.inkTextFaint)
-                .accessibilityHidden(true)
-            TextField(L10n.string("Search"), text: $searchText)
-                .font(.body)
-                .foregroundStyle(Color.inkText)
-                .textInputAutocapitalization(.never)
-                .autocorrectionDisabled()
-                .submitLabel(.search)
-                .tint(Color.inkText)
-                .accessibilityIdentifier("catalogSearchField")
-            if !searchText.isEmpty {
-                Button { searchText = "" } label: {
-                    Image(systemName: "xmark.circle.fill").foregroundStyle(Color.inkTextFaint)
-                        .tapArea(.trailing)
-                }
-                .accessibilityLabel(Text("Clear"))
-            }
-        }
-        .padding(.horizontal, 14)
-        .frame(minHeight: 48)
-        .background(Color.inkRaised, in: RoundedRectangle(cornerRadius: Layout.tileRadius, style: .continuous))
+        SearchField(text: $searchText, identifier: "catalogSearchField")
+    }
+
+    /// The categories that hold at least one service, in their usual order. A category with none
+    /// is not offered: chosen, it showed "No results for """ under an empty search field.
+    nonisolated static func offeredCategories(in catalog: [CatalogEntry]) -> [SubscriptionCategory] {
+        let present = Set(catalog.map(\.category))
+        return SubscriptionCategory.allCases.filter(present.contains)
     }
 
     private var categoryPills: some View {
         ScrollView(.horizontal, showsIndicators: false) {
             HStack(spacing: 8) {
                 pill(L10n.string("All"), isOn: selectedCategory == nil) { selectedCategory = nil }
-                ForEach(SubscriptionCategory.allCases, id: \.self) { category in
+                ForEach(Self.offeredCategories(in: catalogService.catalog), id: \.self) { category in
                     pill(category.localizedName, isOn: selectedCategory == category) { selectedCategory = category }
                 }
             }
@@ -304,9 +286,11 @@ struct SubscriptionBrowserView: View {
 
     private var noResultsView: some View {
         VStack(alignment: .leading, spacing: 10) {
-            Text("No results for \"\(searchText)\"")
+            // The same words as the list's own search when nothing matches.
+            Text(L10n.string("Nothing matches \"\(searchText)\"."))
                 .font(.question(.title3))
                 .foregroundStyle(Color.inkText)
+                .fixedSize(horizontal: false, vertical: true)
             Text("Try a different name, or add your own.")
                 .font(.subheadline)
                 .foregroundStyle(Color.inkTextMuted)

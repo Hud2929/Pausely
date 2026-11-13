@@ -45,7 +45,8 @@ enum AccountProblem {
     }
 }
 
-private struct FormHeader: View {
+/// A form's title and the sentence under it. Shared by every account form.
+struct FormHeader: View {
     let title: LocalizedStringKey
     var detail: LocalizedStringKey?
 
@@ -67,7 +68,8 @@ private struct FormHeader: View {
     }
 }
 
-private struct LabelledField<Field: View>: View {
+/// A field with its name above it, so the name is still there once something is typed.
+struct LabelledField<Field: View>: View {
     let label: LocalizedStringKey
     @ViewBuilder var field: Field
 
@@ -79,22 +81,6 @@ private struct LabelledField<Field: View>: View {
                 .accessibilityHidden(true)
             field
         }
-    }
-}
-
-private struct FormProblem: View {
-    let message: String
-
-    var body: some View {
-        Label {
-            Text(verbatim: message).fixedSize(horizontal: false, vertical: true)
-        } icon: {
-            Image(systemName: "exclamationmark.circle")
-        }
-        .font(.subheadline)
-        .foregroundStyle(Color.due)
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .accessibilityIdentifier("formProblem")
     }
 }
 
@@ -175,7 +161,7 @@ struct SignUpView: View {
 
                     VStack(alignment: .leading, spacing: 16) {
                         LabelledField(label: "Email") {
-                            InkTextField(placeholder: "you@example.com", text: $email, keyboardType: .emailAddress, autocapitalization: .never)
+                            InkTextField(placeholder: "", text: $email, keyboardType: .emailAddress, autocapitalization: .never)
                                 .textContentType(.username)
                                 .autocorrectionDisabled()
                                 .focused($focus, equals: .email)
@@ -185,16 +171,18 @@ struct SignUpView: View {
                                 .accessibilityIdentifier("emailTextField")
                         }
                         LabelledField(label: "Password") {
-                            InkTextField(placeholder: L10n.string("At least 8 characters"), text: $password, isSecure: true)
+                            InkTextField(placeholder: "", text: $password, isSecure: true)
                                 .textContentType(.newPassword)
                                 .focused($focus, equals: .password)
                                 .submitLabel(.go)
                                 .onSubmit(createAccount)
                                 .accessibilityLabel(Text("Password"))
                                 .accessibilityIdentifier("passwordTextField")
-                            if !password.isEmpty { PasswordStrengthMeter(password: password) }
+                            // The rules sit under the box, where they stay while the password is
+                            // typed: written inside it, they were gone at the first letter.
+                            PasswordStrengthMeter(password: password)
                         }
-                        if let problem { FormProblem(message: problem) }
+                        if let problem { ProblemLine(message: problem) }
                     }
 
                     VStack(spacing: 16) {
@@ -321,7 +309,7 @@ struct SignInView: View {
 
                     VStack(alignment: .leading, spacing: 16) {
                         LabelledField(label: "Email") {
-                            InkTextField(placeholder: "you@example.com", text: $email, keyboardType: .emailAddress, autocapitalization: .never)
+                            InkTextField(placeholder: "", text: $email, keyboardType: .emailAddress, autocapitalization: .never)
                                 .textContentType(.username)
                                 .autocorrectionDisabled()
                                 .focused($focus, equals: .email)
@@ -331,7 +319,7 @@ struct SignInView: View {
                                 .accessibilityIdentifier("signInEmailTextField")
                         }
                         LabelledField(label: "Password") {
-                            InkTextField(placeholder: L10n.string("Your password"), text: $password, isSecure: true)
+                            InkTextField(placeholder: "", text: $password, isSecure: true)
                                 .textContentType(.password)
                                 .focused($focus, equals: .password)
                                 .submitLabel(.go)
@@ -339,7 +327,7 @@ struct SignInView: View {
                                 .accessibilityLabel(Text("Password"))
                                 .accessibilityIdentifier("signInPasswordTextField")
                         }
-                        if let problem { FormProblem(message: problem) }
+                        if let problem { ProblemLine(message: problem) }
                     }
 
                     VStack(spacing: 16) {

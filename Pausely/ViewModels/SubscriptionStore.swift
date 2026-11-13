@@ -12,6 +12,8 @@ class SubscriptionStore: ObservableObject {
     /// Some of what is being paid for is charged in another currency, so the totals are estimates ("≈").
     @Published private(set) var totalIsConverted = false
     @Published var isLoading = false
+    /// The last fetch failed while nothing was on this iPhone (see `ListState.couldNotLoad`).
+    @Published private(set) var lastFetchFailed = false
     @Published var lastErrorMessage: String?
     @Published var lastFetchDate: Date?
     static let shared = SubscriptionStore()
@@ -51,24 +53,28 @@ class SubscriptionStore: ObservableObject {
         sync.currentCopy = copyForSync
         #if DEBUG
         // UI tests: start from the demo list on every launch and never write to the cloud.
+        // Every demo list starts with no history and no hours typed in, then puts in its own: one
+        // list's cancellation and its two hours of Netflix showed on the lists opened after it.
+        let demoLists = ["--varied-demo-data", "--large-demo-data", "--quiet-demo-data", "--fresh-demo-data", "--empty-demo-data"]
+        if demoLists.contains(where: LaunchFlag.isSet) {
+            LifecycleEventLog.shared.removeAll()
+            UsageLog.shared.forgetAll()
+        }
         if LaunchFlag.isSet("--varied-demo-data") {
             // One of everything a list can hold, with its history (see `DemoSubscriptions.varied`).
             let varied = DemoSubscriptions.varied()
             useDemoList(varied)
             DemoSubscriptions.seedVariedHistory(for: varied)
+        } else if LaunchFlag.isSet("--large-demo-data") {
+            useDemoList(DemoSubscriptions.large())
         } else if LaunchFlag.isSet("--quiet-demo-data") {
-            // No history either: the varied list's cancellation showed on this list's Home.
-            LifecycleEventLog.shared.removeAll()
             useDemoList(DemoSubscriptions.quiet())
         } else if LaunchFlag.isSet("--fresh-demo-data") {
             // The demo list as it is first seen. `--demo-savings` puts its own history in afterwards.
-            LifecycleEventLog.shared.removeAll()
             useDemoList()
         } else if LaunchFlag.isSet("--empty-demo-data") {
-            // A new person's empty list (an empty array, so the demo data isn't loaded in its place)
-            // and no history from earlier runs.
+            // A new person's empty list (an empty array, so the demo data isn't loaded in its place).
             Self.cloudSyncEnabled = false
-            LifecycleEventLog.shared.removeAll()
             subscriptions = []
             calculateTotals()
             saveToCache()
@@ -97,6 +103,36 @@ class SubscriptionStore: ObservableObject {
     
     /// The account whose list was last fetched on this iPhone (see SubscriptionSyncMerge).
     static let syncedUserKey = "subscriptions_synced_user"
+
+    /// What a tab shows where the list would be.
+    enum ListState: Equatable {
+        /// There is a list, and it is on screen.
+        case shown
+        /// Being fetched for the first time, with nothing on this iPhone yet.
+        case loading
+        /// The fetch failed and nothing is on this iPhone. The person may well have a list.
+        case couldNotLoad
+        /// Nothing on the list, and nothing went wrong finding that out.
+        case empty
+
+        /// Whether "what you pay each month" can be said. Before the list has arrived it cannot:
+        /// Home said "$0.00" until it did.
+        var totalIsKnown: Bool { self == .shown || self == .empty }
+    }
+
+    nonisolated static func listState(isEmpty: Bool, isLoading: Bool, lastFetchFailed: Bool) -> ListState {
+        guard isEmpty else { return .shown }
+        if isLoading { return .loading }
+        return lastFetchFailed ? .couldNotLoad : .empty
+    }
+
+    var listState: ListState {
+        // `--demo-loading` and `--demo-load-failed` (DEBUG) hold the two states that otherwise last
+        // as long as a request does, so they can be looked at.
+        Self.listState(isEmpty: subscriptions.isEmpty,
+                       isLoading: isLoading || LaunchFlag.isSet("--demo-loading"),
+                       lastFetchFailed: lastFetchFailed || LaunchFlag.isSet("--demo-load-failed"))
+    }
 
     func fetchSubscriptions(force: Bool = false) async {
         guard Self.cloudSyncEnabled else { return }
@@ -147,6 +183,7 @@ class SubscriptionStore: ObservableObject {
             listChanged()
             lastFetchDate = Date()
             lastErrorMessage = nil
+            lastFetchFailed = false
             UserDefaults.standard.set(userId.uuidString, forKey: Self.syncedUserKey)
 
             // Send up what only this iPhone had, and renewal dates the server was missing.
@@ -166,6 +203,7 @@ class SubscriptionStore: ObservableObject {
             if subscriptions.isEmpty {
                 loadFromCache()
                 if subscriptions.isEmpty {
+                    lastFetchFailed = true
                     lastErrorMessage = L10n.string("Couldn't load subscriptions. Pull to refresh.")
                 }
             }

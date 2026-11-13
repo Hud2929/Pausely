@@ -79,7 +79,7 @@ struct NotificationsSettingsView: View {
         VStack(alignment: .leading, spacing: 12) {
             HStack(alignment: .firstTextBaseline, spacing: 10) {
                 if !reachesThePerson { StateMark(state: .decide).accessibilityHidden(true) }
-                VStack(alignment: .leading, spacing: 3) {
+                VStack(alignment: .leading, spacing: 4) {
                     Text(verbatim: headline)
                         .font(.headline)
                         .foregroundStyle(Color.inkText)

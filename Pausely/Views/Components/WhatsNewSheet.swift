@@ -30,21 +30,24 @@ struct WhatsNewSheet: View {
                 .padding(.top, 20)
             }
             .frame(maxWidth: .infinity, alignment: .leading)
+            // The margin is inside the scroll view, which is as wide as the sheet: around it, the
+            // words were cut at the margin as they scrolled.
+            .padding(.horizontal, Layout.margin)
         } actions: {
             Button { dismiss() } label: { Text("Continue") }
                 .buttonStyle(.ink)
+                .padding(.horizontal, Layout.margin)
                 .padding(.top, 12)
                 .padding(.bottom, 12)
         }
         .scrollBounceBehavior(.basedOnSize)
-        .padding(.horizontal, Layout.margin)
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
         .inkScreen()
         .preferredColorScheme(.dark)
     }
 
     private func item(_ title: LocalizedStringKey, _ detail: LocalizedStringKey) -> some View {
-        VStack(alignment: .leading, spacing: 3) {
+        VStack(alignment: .leading, spacing: 4) {
             Text(title)
                 .font(.body.weight(.semibold))
                 .foregroundStyle(Color.inkText)

@@ -13,9 +13,9 @@ struct AddSubscriptionView: View {
     @ObservedObject private var store = SubscriptionStore.shared
     @ObservedObject private var currencyManager = CurrencyManager.shared
     @FocusState private var focusedField: Field?
-    @State private var showError = false
+    /// What is missing, said under the amount when "Add" is pressed without it.
+    @State private var problem: String?
     @State private var showingPaywall = false
-    @State private var errorMessage = ""
 
     enum Field {
         case name, amount
@@ -24,34 +24,34 @@ struct AddSubscriptionView: View {
     var body: some View {
         ActionScreen(dismissesKeyboard: true) {
             VStack(alignment: .leading, spacing: 24) {
-                HStack {
+                // The way out and the name are one group, closer together than the groups below.
+                VStack(alignment: .leading, spacing: 12) {
                     LeaveButton("Cancel") { dismiss() }
-                    .accessibilityIdentifier("cancelButton")
-                    Spacer()
+                        .accessibilityIdentifier("cancelButton")
+                    TextField("Netflix, Spotify…", text: $name, axis: .vertical)
+                        .lineLimit(1...3)
+                        .font(.question(.title))
+                        .foregroundStyle(Color.inkText)
+                        .textInputAutocapitalization(.words)
+                        .focused($focusedField, equals: .name)
+                        .submitLabel(.next)
+                        .onSubmit { focusedField = .amount }
+                        .returnMovesOn(from: $name) { focusedField = .amount }
+                        .accessibilityLabel(Text("Service name"))
+                        .accessibilityIdentifier("serviceNameTextField")
                 }
-                .padding(.bottom, -12)
-
-                TextField("Netflix, Spotify…", text: $name, axis: .vertical)
-                    .lineLimit(1...3)
-                    .font(.question(.title))
-                    .foregroundStyle(Color.inkText)
-                    .textInputAutocapitalization(.words)
-                    .focused($focusedField, equals: .name)
-                    .submitLabel(.next)
-                    .onSubmit { focusedField = .amount }
-                    .returnMovesOn(from: $name) { focusedField = .amount }
-                    .accessibilityLabel(Text("Service name"))
-                    .accessibilityIdentifier("serviceNameTextField")
 
                 VStack(alignment: .leading, spacing: 6) {
-                    Text(frequency == .yearly ? L10n.string("What do you pay each year?") : L10n.string("What do you pay each month?"))
+                    // The question fits the billing cycle, as on the plan sheet (it used to vanish
+                    // for anything but monthly and yearly).
+                    Text(frequency == .yearly ? L10n.string("What do you pay each year?")
+                         : frequency == .monthly ? L10n.string("What do you pay each month?") : L10n.string("What do you pay each time?"))
                         .font(.subheadline)
                         .foregroundStyle(Color.inkTextMuted)
-                        .opacity(frequency == .monthly || frequency == .yearly ? 1 : 0)
-                        .accessibilityHidden(!(frequency == .monthly || frequency == .yearly))
                     HStack(alignment: .firstTextBaseline, spacing: 8) {
                         TextField(text: $amount, prompt: Text(verbatim: AmountText.text(for: 0, currency: currencyManager.selectedCurrency))) { EmptyView() }
-                            .font(.total(amountSize))
+                            .amountFont(for: amount.isEmpty ? AmountText.text(for: 0, currency: currencyManager.selectedCurrency) : amount,
+                                        base: amountSize)
                             .foregroundStyle(Color.inkText)
                             .keyboardType(.decimalPad)
                             .focused($focusedField, equals: .amount)
@@ -61,11 +61,12 @@ struct AddSubscriptionView: View {
                             .font(.proof(.subheadline))
                             .foregroundStyle(Color.inkTextMuted)
                     }
+                    if let problem { ProblemLine(message: problem, identifier: "addProblem") }
                 }
 
                 VStack(spacing: 0) {
                     row(L10n.string("Billing cycle")) {
-                        Picker("Frequency", selection: $frequency) {
+                        Picker(L10n.string("Billing cycle"), selection: $frequency) {
                             ForEach(BillingFrequency.allCases, id: \.self) { freq in
                                 Text(freq.displayName).tag(freq)
                             }
@@ -110,15 +111,12 @@ struct AddSubscriptionView: View {
         .sheet(isPresented: $showingPaywall) {
             StoreKitUpgradeView()
         }
-        .alert("Error", isPresented: $showError) {
-            Button("OK", role: .cancel) {}
-        } message: {
-            Text(errorMessage)
-        }
+        .onChange(of: name) { _, _ in problem = nil }
+        .onChange(of: amount) { _, _ in problem = nil }
     }
 
     private func row<Content: View>(_ title: String, @ViewBuilder content: () -> Content) -> some View {
-        AdaptiveRow {
+        AdaptiveRow(alignment: .center) {
             Text(verbatim: title)
                 .font(.body)
                 .foregroundStyle(Color.inkText)
@@ -132,8 +130,8 @@ struct AddSubscriptionView: View {
         let trimmedName = name.trimmingCharacters(in: .whitespacesAndNewlines)
         // "9,99" and "9.99" both work, and the amount stays an exact decimal.
         guard !trimmedName.isEmpty, let price = AmountText.parse(amount, currency: currencyManager.selectedCurrency) else {
-            errorMessage = L10n.string("Enter a name and an amount.")
-            showError = true
+            // Said on the form, beside what is missing (it was a system alert titled "Error").
+            problem = L10n.string("Enter a name and an amount.")
             return
         }
         let newSub = Subscription(

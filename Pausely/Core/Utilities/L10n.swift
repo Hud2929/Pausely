@@ -48,6 +48,13 @@ enum L10n {
 
     /// A whole number as the reader writes it: "5" in English, "٥" where Arabic digits are used. A
     /// count put on screen as a bare `"\(n)"` stayed in Latin digits beside Arabic ones.
+    /// Whole sentences, one after the other. Most languages put a space between two sentences;
+    /// Japanese does not ("…です。 次の文" with a space reads as a typing slip).
+    static func sentences(_ parts: [String], locale: Locale = L10n.locale) -> String {
+        let unspaced: Set<String> = ["ja", "zh"]
+        return parts.joined(separator: unspaced.contains(locale.language.languageCode?.identifier ?? "") ? "" : " ")
+    }
+
     static func number(_ value: Int, locale: Locale = L10n.locale) -> String {
         value.formatted(.number.locale(locale))
     }

@@ -64,4 +64,13 @@ final class PaywallCaseTests: XCTestCase {
                                             subscriptions: [subscription("Prime", "120.00", frequency: .yearly)], rates: rates)
         XCTAssertEqual(result, .init(name: "Prime", months: 3))
     }
+
+    /// Prices are the App Store's. Until it has answered the paywall has none to print, and it says
+    /// which of the two it is: still asking, or not answered.
+    func testThePaywallSaysWhetherItHasPrices() {
+        XCTAssertEqual(PaywallCase.prices(loaded: true, isLoading: false), .known)
+        XCTAssertEqual(PaywallCase.prices(loaded: true, isLoading: true), .known, "a purchase in flight keeps the prices on screen")
+        XCTAssertEqual(PaywallCase.prices(loaded: false, isLoading: true), .loading)
+        XCTAssertEqual(PaywallCase.prices(loaded: false, isLoading: false), .unavailable)
+    }
 }

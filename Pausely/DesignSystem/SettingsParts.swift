@@ -5,6 +5,11 @@ import SwiftUI
 struct SettingsPage<Content: View>: View {
     let title: LocalizedStringKey
     var detail: LocalizedStringKey?
+    /// A smaller line under the detail, for a fact with a date or a number in it.
+    var note: String?
+    /// The word that leaves the page. "Done" where every change is kept as it is made; "Cancel" on
+    /// a page with its own Save button, where leaving keeps nothing.
+    var leaveTitle: LocalizedStringKey = "Done"
     @ViewBuilder var content: Content
 
     @Environment(\.dismiss) private var dismiss
@@ -25,6 +30,13 @@ struct SettingsPage<Content: View>: View {
                                 .foregroundStyle(Color.inkTextMuted)
                                 .fixedSize(horizontal: false, vertical: true)
                         }
+                        if let note {
+                            Text(verbatim: note)
+                                .font(.footnote)
+                                .foregroundStyle(Color.inkTextMuted)
+                                .fixedSize(horizontal: false, vertical: true)
+                                .accessibilityIdentifier("settingsNote")
+                        }
                     }
                     content
                 }
@@ -38,7 +50,7 @@ struct SettingsPage<Content: View>: View {
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .topBarLeading) {
-                    Button("Done") { dismiss() }
+                    Button(leaveTitle) { dismiss() }
                         .foregroundStyle(Color.inkText)
                         .accessibilityIdentifier("settingsDone")
                 }
@@ -112,7 +124,7 @@ struct SettingsRow<Trailing: View>: View {
     }
 
     private var words: some View {
-        VStack(alignment: .leading, spacing: 3) {
+        VStack(alignment: .leading, spacing: 4) {
             Text(verbatim: title)
                 .font(.body)
                 .foregroundStyle(titleColor)

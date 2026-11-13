@@ -103,6 +103,9 @@ final class StoreKitManager: ObservableObject {
     /// no prices until the app was restarted).
     func loadProducts() async {
         guard products.count < ProductID.allCases.count, !isLoadingProducts else { return }
+        // `--demo-store-offline` (DEBUG): the App Store never answers, so the paywall without prices
+        // can be looked at.
+        if LaunchFlag.isSet("--demo-store-offline") { return }
         isLoadingProducts = true
         isLoading = true
         defer {
@@ -240,3 +243,19 @@ extension StoreKitManager {
         return Self.perMonth(annual: annual.price).formatted(annual.priceFormatStyle)
     }
 }
+
+#if DEBUG
+extension StoreKitManager.OwnSubscription {
+    /// The yearly plan as Profile shows it: renewing, in its free trial (`trial`), with renewal
+    /// turned off (`ending`), or with a payment Apple could not take (`problem`).
+    static func demo(_ state: String, now: Date = Date()) -> StoreKitManager.OwnSubscription {
+        var plan = StoreKitManager.OwnSubscription(
+            tier: .proAnnual, price: ProPricing.annualUSD, currency: "USD",
+            renews: Calendar.billing.date(byAdding: .month, value: state == "trial" ? 0 : 9, to: now)
+                .flatMap { Calendar.billing.date(byAdding: .day, value: state == "trial" ? 5 : 0, to: $0) },
+            isTrial: state == "trial", transactionId: 1, willRenew: state != "ending")
+        plan.hasBillingProblem = state == "problem"
+        return plan
+    }
+}
+#endif
