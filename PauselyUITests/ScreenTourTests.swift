@@ -356,6 +356,14 @@ final class ScreenTourTests: XCTestCase {
         state("inbox-nothing", ["--demo-inbox=nothing"]) { _ in }
         state("inbox-failed", ["--demo-inbox=failed"]) { _ in }
         state("inbox-add", ["--demo-inbox=nothing"]) { app in self.tap(app, "addInboxButton") }
+        // The mailbox page as it usually is: the app password has just been copied, so there is
+        // something to paste. With nothing on the clipboard the system greys its paste button
+        // out, and that was all the tour had ever captured of it.
+        if wanted("inbox-connect-paste") {
+            UIPasteboard.general.string = "abcd-efgh-ijkl-mnop"
+            state("inbox-connect-paste", ["--demo-imap-connect"]) { _ in }
+            UIPasteboard.general.items = []
+        }
         state("signup-rules", ["--demo-auth=signup"]) { app in self.type(app, "passwordTextField", "abc") }
         state("newpassword-rules", ["--demo-auth=newpassword"]) { app in self.type(app, "newPasswordField", "abc") }
         state("firstrun-tally-empty", ["--demo-first-run"]) { app in self.tap(app, "getStartedButton") }

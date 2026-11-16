@@ -100,7 +100,7 @@ struct SubscriptionEditView: View {
             HStack(spacing: 12) {
                 ServiceLogoView(name: draft.trimmedName.isEmpty ? original.name : draft.trimmedName,
                                 category: draft.category, size: 48)
-                TextField("Name", text: $draft.name, axis: .vertical)
+                TextField(text: $draft.name, prompt: Hint.text(L10n.string("Name")), axis: .vertical) { Text("Name") }
                     .lineLimit(1...3)
                     .font(.question(.title))
                     .foregroundStyle(Color.inkText)
@@ -146,7 +146,7 @@ struct SubscriptionEditView: View {
                 }
                 .accessibilityLabel("Currency, \(draft.currency)")
 
-                TextField(text: $draft.amountText, prompt: Text(verbatim: AmountText.text(for: 0, currency: draft.currency))) { EmptyView() }
+                TextField(text: $draft.amountText, prompt: Hint.text(AmountText.text(for: 0, currency: draft.currency))) { EmptyView() }
                     // As wide as the row, like the amount on the two forms that add a subscription, and
                     // drawn smaller when it is too long for the row: a field cuts off what does not fit.
                     .amountFont(for: draft.amountText.isEmpty ? AmountText.text(for: 0, currency: draft.currency) : draft.amountText,

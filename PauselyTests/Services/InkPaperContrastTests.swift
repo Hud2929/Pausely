@@ -21,6 +21,19 @@ final class InkPaperContrastTests: XCTestCase {
         }
     }
 
+    /// A field's hint. The system's placeholder grey, as it was drawn in every empty field of the
+    /// English tour of 2026-11-16, is not readable; the colour `Hint` draws is, on each surface a
+    /// field sits on.
+    func testAFieldsHintCanBeReadWhereTheSystemsGreyCouldNot() {
+        XCTAssertLessThan(Contrast.ratio("#55565B", Palette.inkRaised), 3, "the system's grey on a raised tile, as captured")
+        XCTAssertLessThan(Contrast.ratio("#4D4E52", Palette.ink), 3, "the system's grey on ink, as captured")
+        for surface in [Palette.ink, Palette.inkRaised, Palette.inkLifted] {
+            XCTAssertGreaterThanOrEqual(Contrast.ratio(Palette.textFaint, surface), 4.5, "a hint on \(surface)")
+        }
+        // And it is still plainly not what the person typed.
+        XCTAssertGreaterThanOrEqual(Contrast.ratio(Palette.text, Palette.inkRaised) / Contrast.ratio(Palette.textFaint, Palette.inkRaised), 2)
+    }
+
     func testTextOnPaperMeetsAA() {
         for background in [Palette.paper, Palette.paperShade] {
             for text in [Palette.paperInk, Palette.paperMuted, Palette.paperKept, Palette.paperDue] {

@@ -957,4 +957,46 @@ final class ScreenRulesTests: XCTestCase {
         XCTAssertEqual(bare.sorted(), [])
         XCTAssertGreaterThanOrEqual(withStrip, 17, "the four tabs, the paywall, the receipt, the verdict and the rest")
     }
+
+    /// What a field shows before anything is typed is drawn by `Hint`, in a colour that can be
+    /// read. Left to the system it was 2.5 to 1 on ink (measured from every empty field in the
+    /// English tour of 2026-11-16: search, the amount, the service name, the minutes).
+    func testEveryFieldsHintIsDrawnInTheHintColour() throws {
+        let sources = root.appendingPathComponent("Pausely")
+        try XCTSkipUnless(FileManager.default.fileExists(atPath: sources.path), "Sources aren't readable from this test run")
+        let controls = try String(contentsOf: sources.appendingPathComponent("DesignSystem/InkControls.swift"), encoding: .utf8)
+        let hint = try XCTUnwrap(controls.range(of: "enum Hint {"))
+        let hintEnd = try XCTUnwrap(controls.range(of: "\n}\n", range: hint.upperBound..<controls.endIndex))
+        XCTAssertTrue(controls[hint.upperBound..<hintEnd.lowerBound].contains("Text(verbatim: words).foregroundStyle(Color.inkTextFaint)"))
+
+        let files = FileManager.default.enumerator(at: sources, includingPropertiesForKeys: nil)?.compactMap { $0 as? URL } ?? []
+        var fields = 0
+        var unhinted: [String] = []
+        for file in files where file.pathExtension == "swift" {
+            let text = try String(contentsOf: file, encoding: .utf8)
+            for opening in ["TextField(", "SecureField("] {
+                var from = text.startIndex
+                while let found = text.range(of: opening, range: from..<text.endIndex) {
+                    from = found.upperBound
+                    // Not `InkTextField(`, which is the app's own and hands its hint on.
+                    if found.lowerBound > text.startIndex, text[text.index(before: found.lowerBound)].isLetter { continue }
+                    // The call's own arguments, to its closing bracket.
+                    var depth = 1
+                    var end = found.upperBound
+                    while end < text.endIndex, depth > 0 {
+                        if text[end] == "(" { depth += 1 } else if text[end] == ")" { depth -= 1 }
+                        end = text.index(after: end)
+                    }
+                    let arguments = String(text[found.upperBound..<end])
+                    fields += 1
+                    // A hint is made by `Hint`. A field with none starts with an empty title and has no prompt.
+                    let hinted = arguments.contains("Hint.text(")
+                    let bare = arguments.hasPrefix("\"\", text:") && !arguments.contains("prompt:")
+                    if !hinted && !bare { unhinted.append("\(file.lastPathComponent): \(opening)\(arguments.prefix(60))") }
+                }
+            }
+        }
+        XCTAssertEqual(unhinted, [])
+        XCTAssertGreaterThanOrEqual(fields, 10, "the design system's two, search, the three amounts, the two names, the first run's price and the code")
+    }
 }

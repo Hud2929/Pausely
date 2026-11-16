@@ -56,6 +56,10 @@ and state when `TEST_RUNNER_PAUSELY_TOUR_DIR` is set (`TEST_RUNNER_PAUSELY_TOUR_
 `TEST_RUNNER_PAUSELY_TOUR_AUDIT=1` for Apple's accessibility audit, `TEST_RUNNER_PAUSELY_TOUR_ONLY=a,b` for a few).
 A step the tour could not take (a button it never reached) is listed in `tour_misses.txt` in the tour folder: the capture
 under that state's name is then of the screen before it.
+`scripts/tour_read.swift` reads a tour folder (build it with `swiftc -O`): `contrast` measures every text from the pixels it was
+drawn with, `words` looks up every word readable on a capture in what accessibility says, and `audit` shows what is drawn where
+the system audit called low contrast (its contrast lines change from run to run on an unchanged screen, so they are checked this way).
+A field's hint is made by `Hint.text` (the system's placeholder grey is 2.5 to 1 on ink).
 Don't use `ViewThatFits` (the audit reports its text as unable to grow; `LineOrStack` does the same with one copy).
 
 ## Architecture

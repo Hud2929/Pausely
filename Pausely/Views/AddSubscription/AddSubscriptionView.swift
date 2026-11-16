@@ -36,7 +36,7 @@ struct AddSubscriptionView: View {
                 VStack(alignment: .leading, spacing: 12) {
                     LeaveButton("Cancel") { dismiss() }
                         .accessibilityIdentifier("cancelButton")
-                    TextField(Self.nameHint(largeText: typeSize.isAccessibilitySize), text: $name, axis: .vertical)
+                    TextField(text: $name, prompt: Hint.text(Self.nameHint(largeText: typeSize.isAccessibilitySize)), axis: .vertical) { EmptyView() }
                         .lineLimit(1...3)
                         .font(.question(.title))
                         .foregroundStyle(Color.inkText)
@@ -57,7 +57,7 @@ struct AddSubscriptionView: View {
                         .font(.subheadline)
                         .foregroundStyle(Color.inkTextMuted)
                     HStack(alignment: .firstTextBaseline, spacing: 8) {
-                        TextField(text: $amount, prompt: Text(verbatim: AmountText.text(for: 0, currency: currencyManager.selectedCurrency))) { EmptyView() }
+                        TextField(text: $amount, prompt: Hint.text(AmountText.text(for: 0, currency: currencyManager.selectedCurrency))) { EmptyView() }
                             .amountFont(for: amount.isEmpty ? AmountText.text(for: 0, currency: currencyManager.selectedCurrency) : amount,
                                         base: amountSize)
                             .foregroundStyle(Color.inkText)

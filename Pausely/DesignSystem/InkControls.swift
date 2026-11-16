@@ -1,5 +1,17 @@
 import SwiftUI
 
+/// The words a field shows before anything is typed.
+///
+/// Left to the system they are its placeholder grey, which on ink is 2.5 to 1 (measured from the
+/// captures of 2026-11-16: #55565B on #15171A): too faint for the people who most need the
+/// hint. Every field's hint is made here, in the faintest text colour the palette holds at 4.5
+/// to 1 on each ink surface (`InkPaperContrastTests`).
+enum Hint {
+    static func text(_ words: String) -> Text {
+        Text(verbatim: words).foregroundStyle(Color.inkTextFaint)
+    }
+}
+
 /// A text field on ink: a raised tile, a hairline that brightens with focus.
 struct InkTextField: View {
     let placeholder: String
@@ -13,9 +25,9 @@ struct InkTextField: View {
     var body: some View {
         Group {
             if isSecure {
-                SecureField(placeholder, text: $text)
+                SecureField(text: $text, prompt: placeholder.isEmpty ? nil : Hint.text(placeholder)) { EmptyView() }
             } else {
-                TextField(placeholder, text: $text)
+                TextField(text: $text, prompt: placeholder.isEmpty ? nil : Hint.text(placeholder)) { EmptyView() }
             }
         }
         .font(.body)
@@ -180,7 +192,7 @@ struct SearchField: View {
             Image(systemName: "magnifyingglass")
                 .foregroundStyle(Color.inkTextFaint)
                 .accessibilityHidden(true)
-            TextField(L10n.string("Search"), text: $text)
+            TextField(text: $text, prompt: Hint.text(L10n.string("Search"))) { Text("Search") }
                 .font(.body)
                 .foregroundStyle(Color.inkText)
                 .textInputAutocapitalization(.never)

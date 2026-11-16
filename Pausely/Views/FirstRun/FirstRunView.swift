@@ -664,7 +664,7 @@ struct PriceSheet: View {
                 .fixedSize(horizontal: false, vertical: true)
 
             HStack(spacing: 10) {
-                TextField(placeholder.map { MoneyFormat.string($0, currency, locale: L10n.locale) } ?? "", text: $text)
+                TextField(text: $text, prompt: placeholder.map { Hint.text(MoneyFormat.string($0, currency, locale: L10n.locale)) }) { EmptyView() }
                     .keyboardType(.decimalPad)
                     .font(.proof(.title2, weight: .medium))
                     .foregroundStyle(Color.inkText)

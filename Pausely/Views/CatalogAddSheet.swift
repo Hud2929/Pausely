@@ -135,10 +135,9 @@ struct CatalogAddSheet: View {
             HStack(alignment: .firstTextBaseline, spacing: 8) {
                 // The typical price is shown as a real figure, not a greyed-out hint: it is what
                 // will be saved unless the person types over it.
-                TextField("", text: $amountText,
-                          prompt: Text(verbatim: typical.map { MoneyFormat.string($0, currency, locale: L10n.locale) }
-                                                   ?? AmountText.text(for: 0, currency: currency))
-                            .foregroundStyle(typical == nil ? Color.inkTextFaint : Color.inkText))
+                TextField(text: $amountText,
+                          prompt: typical.map { Text(verbatim: MoneyFormat.string($0, currency, locale: L10n.locale)).foregroundStyle(Color.inkText) }
+                                  ?? Hint.text(AmountText.text(for: 0, currency: currency))) { EmptyView() }
                     .amountFont(for: amountText.isEmpty
                                 ? typical.map { MoneyFormat.string($0, currency, locale: L10n.locale) } ?? AmountText.text(for: 0, currency: currency)
                                 : amountText,
