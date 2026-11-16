@@ -839,6 +839,32 @@ Updated at every commit, so the work can be picked up from this file alone.
   Next, in order: (3) English with the audit, counted (closes the audit row); (4) Japanese
   single screens for the serif; (5) the scores, screen by screen, from what was read; (6) H;
   (7) I and section 7, still stale.
+- **11-16, step (3) under way: English with the audit. The tour is done; its captures are NOT
+  yet read and nothing is fixed. Tree clean at `32264ad`.** `/tmp/pausely_final6_en`: all six
+  tour tests passed, 221 captures, no missed steps. The audit's lines: `audit.txt` 181 counted
+  (on 49 captures), `audit_behind_bars.txt` 145, `audit_no_element.txt` 143,
+  `audit_system_bar.txt` 76, `audit_decided.txt` 1. The 181 counted, by kind:
+  1. *Dynamic Type "partially unsupported", 46*, all on the catalog (`add`, `browser`,
+     `browser-category`): names and categories of rows in the lower part of the list. Not yet
+     established. To check: at accessibility sizes the catalog's heading and search move into
+     the scroll, so when the audit raises the text size these rows leave the screen and it
+     cannot measure them again. Proof wanted: a UI test that reads the same row's height at two
+     text sizes (the captures at `xxxl` and `big` already show the names larger).
+  2. *Contrast, 126*, most on scrolled captures (`list-varied-scroll1` to `-scroll4`,
+     `insights-scroll1`, `insights-large-scroll1`, `home-*`, `privacy-scroll1`,
+     `pauseplan-setup-scroll1`), also three first-run tiles, the slip on Home at the tab bar's
+     edge, "Coming up" at y 757. To check for each: where the element sat against the tab bar,
+     the pinned section header and the navigation bar when captured (the tab bar may need the
+     12-point margin the navigation bar has), and the palette pair's own ratio
+     (`InkPaperContrastTests`): muted and faint text on ink, mint on ink, the tile's label.
+  3. *Text clipped, 3*: "Open account.apple.com" on the IMAP page (the joiners added on 11-13
+     make the line unbreakable where it used to wrap: real, to fix), and the price sheet's
+     question and its Cancel button (`reveal-price`).
+  4. *Description, 6*: the two addresses on the connected-inbox page in its three states (the
+     label set for VoiceOver differs from the text drawn with break marks: to look at).
+  Then: fix what is real, file what is not with its reason, re-run, read all 221 captures,
+  close the audit row, commit. After that, unchanged: (4) Japanese serif; (5) the scores;
+  (6) H; (7) I and section 7, still stale.
 
 **Phase 0. Scan (read-only).** Four independent audits (dead code, truth, design rules on every
 view, engineering) plus mechanical scans. Output: the ledger.
