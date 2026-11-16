@@ -961,6 +961,22 @@ Updated at every commit, so the work can be picked up from this file alone.
   folders; (d) the whole tour at the largest text size, then on iPad, each read; (e) the
   scores; (6) H; (7) I and section 7, still stale. Keep the simulator shut down between
   runs; this Mac has 8 GB.
+- **11-16 evening, read since, with no simulator running.** *Arabic:* the 191 captures of
+  `/tmp/pausely_final7_ar` are all opened and read (sheets `a7-01` to `a7-13`): every screen
+  mirrored and whole, Arabic digits throughout, the mailbox slip and the year's slip marked
+  "≈" where a total was converted, the swipe action on the left, the calendar and the date
+  wheel in the Hijri calendar (the system's own, following the region). `tour_read
+  contrast`: 3,407 texts at 4.5 to 1 or more, 22 below, all of the kinds already listed (the
+  calendar's days that cannot be chosen, rows under a bar, three red dialog buttons, the
+  paste button with nothing to paste). `tour_untranslated.py`: 26 lines, every one an amount
+  with its currency code or a made-up service's name. In Arabic `plan-trial` does show the
+  switch on ("Trial ends: Set date"), so that state has been seen once; the English capture
+  is the one that missed it. Still missing in Arabic: the 21 states and two walks above.
+  *English:* `tour_read words` on `/tmp/pausely_final7_en`: 4,233 lines read, 76 with a word
+  not found, none of them a word the app draws and does not say (13 "Today" under the time
+  line, 12 the date wheel's other rows, 20 cut by a bar or the screen's edge, 7 behind a
+  dialog or a sheet, 24 misread: a logo's lettering, a price and its unit read as one word).
+  Next is unchanged: (a) to (e) above.
 
 **Phase 0. Scan (read-only).** Four independent audits (dead code, truth, design rules on every
 view, engineering) plus mechanical scans. Output: the ledger.
