@@ -174,13 +174,17 @@ case "contrast":
             guard frame[1] >= 54, frame[1] + frame[3] <= height, frame[0] >= 0, frame[0] + frame[2] <= width, frame[2] > 4, frame[3] > 4,
                   let reading = read(picture, frame, pointsWide: width) else { continue }
             if !reading.drawn { blank += 1; continue }
-            if reading.ratio >= 4.5 { fine += 1; continue }
+            // A field with nothing in it and no hint is read by its edge, which has to be seen
+            // (3 to 1); words have to be read (4.5 to 1).
+            let isAField = element.kind == "TextField" || element.kind == "SecureTextField"
+            let onlyAnEdge = isAField && !element.says.contains("placeholderValue:") && !element.says.contains("value:")
+            if reading.ratio >= (onlyAnEdge ? 3 : 4.5) { fine += 1; continue }
             low += 1
             let place = "\(Int(element.frame[0])),\(Int(element.frame[1])) \(Int(element.frame[2]))x\(Int(element.frame[3]))"
             print("\(screen) | \(element.kind) |\(element.says.prefix(70)) | \(place) | \(reading.line)")
         }
     }
-    print("texts measured: \(fine) at 4.5 to 1 or more, \(low) below, \(blank) with nothing drawn at their place")
+    print("texts measured: \(fine) at 4.5 to 1 or more (an empty field's edge at 3), \(low) below, \(blank) with nothing drawn at their place")
 
 case "words":
     func plain(_ text: String) -> String { String(text.lowercased().unicodeScalars.filter { CharacterSet.alphanumerics.contains($0) }) }

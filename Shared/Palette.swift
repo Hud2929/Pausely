@@ -15,6 +15,8 @@ enum Palette {
     static let text = "#F5F4F0"
     static let textMuted = "#B4B6BC"
     static let textFaint = "#9C9EA5"
+    /// The edge of a field waiting to be typed in: 3 to 1 or more on every ink surface.
+    static let fieldEdge = "#6B6E75"
     static let kept = "#34D399"
     static let decide = "#F2B24B"
     static let due = "#F26B5E"

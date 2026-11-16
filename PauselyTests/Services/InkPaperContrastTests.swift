@@ -34,6 +34,21 @@ final class InkPaperContrastTests: XCTestCase {
         XCTAssertGreaterThanOrEqual(Contrast.ratio(Palette.text, Palette.inkRaised) / Contrast.ratio(Palette.textFaint, Palette.inkRaised), 2)
     }
 
+    /// An empty field is shown by its edge and nothing else, so the edge has to be seen (WCAG
+    /// 1.4.11: 3 to 1 against what is beside it), and the field being typed in has to be told
+    /// from the others. It was a hairline: white at 8% on a raised tile, about 1.3 to 1.
+    func testAnEmptyFieldCanBeFoundAndTheOneBeingTypedInToldApart() {
+        for surface in [Palette.ink, Palette.inkRaised, Palette.inkLifted] {
+            XCTAssertGreaterThanOrEqual(Contrast.ratio(Palette.fieldEdge, surface), 3, "a field's edge on \(surface)")
+        }
+        // The hairline it replaces, as it was drawn on a raised tile over ink.
+        XCTAssertLessThan(Contrast.ratio("#282A2D", Palette.ink), 1.5)
+        // Typed in: the text colour, three times brighter again.
+        XCTAssertGreaterThanOrEqual(Contrast.ratio(Palette.text, Palette.fieldEdge), 3)
+        // And an edge stays quieter than any words on the screen.
+        XCTAssertLessThan(Contrast.ratio(Palette.fieldEdge, Palette.ink), Contrast.ratio(Palette.textFaint, Palette.ink))
+    }
+
     func testTextOnPaperMeetsAA() {
         for background in [Palette.paper, Palette.paperShade] {
             for text in [Palette.paperInk, Palette.paperMuted, Palette.paperKept, Palette.paperDue] {

@@ -21,8 +21,11 @@ extension Color {
     static let track = Color.white.opacity(0.12)
     /// The edge of a control that has no fill of its own: a quiet button, a chip, a round "+".
     static let outline = Color.white.opacity(0.22)
-    /// The edge of the field being typed in.
-    static let outlineFocused = Color.white.opacity(0.45)
+    /// The edge of a field waiting to be typed in. With nothing in it the edge is all that shows
+    /// where a field is, so it is solid and 3 to 1 or more against the page and against the
+    /// field's own tile (it was a hairline at about 1.3 to 1). The field being typed in takes
+    /// the text colour.
+    static let fieldEdge = Color(hex: Palette.fieldEdge)
 
     /// Slip, receipt and share card. Warm, not white, so it doesn't glare on a dark screen.
     static let paper = Color(hex: Palette.paper)

@@ -12,7 +12,7 @@ enum Hint {
     }
 }
 
-/// A text field on ink: a raised tile, a hairline that brightens with focus.
+/// A text field on ink: a raised tile with an edge that can be seen, brightest while typed in.
 struct InkTextField: View {
     let placeholder: String
     @Binding var text: String
@@ -41,7 +41,7 @@ struct InkTextField: View {
         .background(Color.inkRaised, in: RoundedRectangle(cornerRadius: Layout.tileRadius, style: .continuous))
         .overlay(
             RoundedRectangle(cornerRadius: Layout.tileRadius, style: .continuous)
-                .stroke(isFocused ? Color.outlineFocused : Color.line, lineWidth: 1)
+                .stroke(isFocused ? Color.inkText : Color.fieldEdge, lineWidth: isFocused ? 1.5 : 1)
         )
         .focused($isFocused)
         .keyboardType(keyboardType)

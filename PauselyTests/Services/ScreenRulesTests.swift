@@ -999,4 +999,24 @@ final class ScreenRulesTests: XCTestCase {
         XCTAssertEqual(unhinted, [])
         XCTAssertGreaterThanOrEqual(fields, 10, "the design system's two, search, the three amounts, the two names, the first run's price and the code")
     }
+
+    /// A field's edge is the field edge colour, and the text colour while it is typed in: the
+    /// design system's field and the six boxes of a code. Neither is drawn with a hairline.
+    func testAFieldsEdgeCanBeSeen() throws {
+        let sources = root.appendingPathComponent("Pausely")
+        try XCTSkipUnless(FileManager.default.fileExists(atPath: sources.path), "Sources aren't readable from this test run")
+        let controls = try String(contentsOf: sources.appendingPathComponent("DesignSystem/InkControls.swift"), encoding: .utf8)
+        let field = try XCTUnwrap(controls.range(of: "struct InkTextField: View {"))
+        let fieldEnd = try XCTUnwrap(controls.range(of: "\n}\n", range: field.upperBound..<controls.endIndex))
+        let fieldBody = String(controls[field.upperBound..<fieldEnd.lowerBound])
+        XCTAssertTrue(fieldBody.contains(".stroke(isFocused ? Color.inkText : Color.fieldEdge, lineWidth: isFocused ? 1.5 : 1)"))
+        XCTAssertFalse(fieldBody.contains("Color.line"))
+
+        let code = try String(contentsOf: sources.appendingPathComponent("Views/Auth/EmailCodeViews.swift"), encoding: .utf8)
+        XCTAssertTrue(code.contains(".stroke(isNext ? Color.inkText : Color.fieldEdge, lineWidth: isNext ? 1.5 : 1)"))
+        XCTAssertFalse(code.contains("Color.line"))
+
+        let palette = try String(contentsOf: sources.appendingPathComponent("DesignSystem/InkPaper.swift"), encoding: .utf8)
+        XCTAssertTrue(palette.contains("static let fieldEdge = Color(hex: Palette.fieldEdge)"))
+    }
 }

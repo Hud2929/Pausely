@@ -24,7 +24,7 @@ struct CodeField: View {
                     .background(Color.inkRaised, in: RoundedRectangle(cornerRadius: Layout.tileRadius, style: .continuous))
                     .overlay(
                         RoundedRectangle(cornerRadius: Layout.tileRadius, style: .continuous)
-                            .stroke(isNext ? Color.outlineFocused : Color.line, lineWidth: 1)
+                            .stroke(isNext ? Color.inkText : Color.fieldEdge, lineWidth: isNext ? 1.5 : 1)
                     )
             }
         }
