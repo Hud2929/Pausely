@@ -138,7 +138,7 @@ struct AnalysisView: View {
         }
         return L10n.sentences([
             L10n.string("Your subscriptions cost about \(yearly) a year."),
-            L10n.string("\(top.subscription.name) is the biggest, at \(currencyManager.format(top.monthly)) a month."),
+            L10n.string("\(top.subscription.name) is the biggest, at \(MoneyFormat.total(top.monthly, currencyManager.selectedCurrency, converted: [top.subscription].isConverted(), locale: L10n.locale)) a month."),
         ])
     }
 

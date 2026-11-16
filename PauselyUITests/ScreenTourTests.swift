@@ -164,7 +164,10 @@ final class ScreenTourTests: XCTestCase {
         let screens: [(flags: [String], name: String)] = [
             (["--demo-verdict"], "verdict"), (["--demo-kept"], "kept"), (["--demo-cancelled"], "cancelled"),
             (["--demo-cancel"], "cancel"), (["--demo-receipt"], "receipt"),
-            (["--demo-pause-plan"], "pauseplan"), (["--demo-pause-plan", "--demo-plan-active"], "pauseplan-active"),
+            // On the varied list, which has several streaming services. On the first list there is one,
+            // so both of these were captures of "Add two or more streaming services" (seen 2026-11-16).
+            (["--varied-demo-data", "--demo-pause-plan"], "pauseplan"),
+            (["--varied-demo-data", "--demo-pause-plan", "--demo-plan-active"], "pauseplan-active"),
             (["--demo-paywall"], "paywall"), (["--demo-browser"], "browser"), (["--demo-tier"], "plan"),
             (["--demo-custom-add"], "custom"), (["--demo-subscription"], "manage"), (["--demo-subscription-edit"], "edit"),
             (["--demo-price-history"], "pricehistory"),

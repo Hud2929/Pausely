@@ -344,7 +344,7 @@ private struct YearSlip: View {
                     ProofLine(label: L10n.string("Cancelled this year"), value: L10n.number(stats.cancelledCount))
                     if !kept.isEmpty {
                         // Every cancellation's charges so far, not only this calendar year's: said as that.
-                        ProofLine(label: L10n.string("Kept so far"), value: kept.formatted(kept.savedSoFar), emphasised: true)
+                        ProofLine(label: L10n.string("Kept so far"), value: kept.total(kept.savedSoFar), emphasised: true)
                             .foregroundStyle(Color.paperKept)
                     }
                 }

@@ -116,10 +116,10 @@ struct ReceiptRoll: View {
                 }
 
                 Perforation()
-                ProofLine(label: L10n.string("Kept since you cancelled"), value: amount(summary.formatted(summary.savedSoFar)),
+                ProofLine(label: L10n.string("Kept since you cancelled"), value: amount(summary.total(summary.savedSoFar)),
                           emphasised: true)
                     .foregroundStyle(Color.paperKept)
-                ProofLine(label: L10n.string("On track over 12 months"), value: amount(summary.formatted(summary.onTrack)))
+                ProofLine(label: L10n.string("On track over 12 months"), value: amount(summary.total(summary.onTrack)))
 
                 if !hideAmounts, summary.pauselyYearlyCost != nil || !summary.isEmpty {
                     Perforation()

@@ -201,4 +201,29 @@ final class MoneyMathTests: XCTestCase {
         XCTAssertEqual(summary.formatted(10, from: "CAD", rates: rates), MoneyFormat.string(Decimal(10), "CAD"))
         XCTAssertEqual(summary.formatted(10, from: "ZZZ", rates: rates), MoneyFormat.string(Decimal(10), "ZZZ"))
     }
+
+    /// A total that was worked out at an exchange rate says so. The receipt's two totals (on the
+    /// receipt, on Home, on the year's slip and in the Pausely Promise) and what Pausely itself
+    /// costs were drawn as exact figures whatever went into them; each converted line beside
+    /// them was marked, the sums were not (found on the Japanese tour of 2026-11-16).
+    func testSavingsTotalsSayWhenALineWasConverted() throws {
+        func line(_ currency: String) -> SavingsLedger.Line {
+            SavingsLedger.Line(id: UUID(), subscriptionId: UUID(), name: "Hulu", currency: currency, amountPerCharge: 10, frequency: .monthly,
+                               cancelledOn: Date(timeIntervalSince1970: 0), endedOn: nil, avoidedCharges: [], avoidedSoFar: [])
+        }
+        let price = try XCTUnwrap(Decimal(string: "39.99"))
+        let own = SavingsSummary(lines: [line("CAD")], currency: "CAD", savedSoFar: 10, onTrack: 120, pauselyYearlyCost: price, pauselyCurrency: "CAD")
+        XCTAssertFalse(own.totalsAreConverted)
+        XCTAssertEqual(own.total(120), MoneyFormat.string(Decimal(120), "CAD"))
+        XCTAssertEqual(own.pauselyCostText, MoneyFormat.string(price, "CAD"))
+
+        let mixed = SavingsSummary(lines: [line("CAD"), line("usd")], currency: "CAD", savedSoFar: 24, onTrack: 288, pauselyYearlyCost: 41, pauselyCurrency: "USD")
+        XCTAssertTrue(mixed.totalsAreConverted)
+        XCTAssertEqual(mixed.total(288), "≈" + MoneyFormat.string(Decimal(288), "CAD"))
+        XCTAssertEqual(mixed.pauselyCostText, "≈" + MoneyFormat.string(Decimal(41), "CAD"))
+
+        // Nothing is paid for Pausely: there is no cost to print, marked or not.
+        XCTAssertNil(SavingsSummary(lines: [], currency: "CAD", savedSoFar: 0, onTrack: 0, pauselyYearlyCost: nil).pauselyCostText)
+        XCTAssertFalse(SavingsSummary(lines: [], currency: "CAD", savedSoFar: 0, onTrack: 0, pauselyYearlyCost: nil).totalsAreConverted)
+    }
 }

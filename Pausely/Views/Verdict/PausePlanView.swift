@@ -270,12 +270,15 @@ struct PausePlanView: View {
         let now = costs.reduce(0, +)
         let rotating = PausePlanSchedule.monthlyCostWhileRotating(monthlyCosts: costs)
         let yearly = PausePlanSchedule.yearlySavings(monthlyCosts: costs)
+        // A service billed in another currency is added at an exchange rate, and the figures say so.
+        let display = currencyManager.selectedCurrency
+        let converted = chosen.isConverted(to: display)
         return PaperSlip(tornTop: true, tornBottom: true) {
             VStack(alignment: .leading, spacing: 10) {
-                ProofLine(label: L10n.string("All at once"), value: BillingFrequency.monthly.priced(currencyManager.format(now)))
+                ProofLine(label: L10n.string("All at once"), value: BillingFrequency.monthly.priced(MoneyFormat.total(now, display, converted: converted)))
                 // "on average" is part of the name, so the figure stands alone in the amounts' column
                 // (as the value it made that line the one long value on the slip).
-                ProofLine(label: L10n.string("One at a time, on average"), value: BillingFrequency.monthly.priced(currencyManager.format(rotating)))
+                ProofLine(label: L10n.string("One at a time, on average"), value: BillingFrequency.monthly.priced(MoneyFormat.total(rotating, display, converted: converted)))
                 Perforation()
                 ProofLine(label: L10n.string("Back in your pocket"), value: L10n.string("About \(currencyManager.format(yearly)) a year"),
                           emphasised: true)
@@ -471,13 +474,16 @@ struct PausePlanView: View {
         let members = Set(plan.subscriptionIds)
         let lines = SavingsSummary.current().lines.filter { members.contains($0.subscriptionId) && $0.cancelledOn >= Calendar.billing.startOfDay(for: plan.startedOn) }
         let saved = lines.compactMap { currencyManager.convertToSelected($0.savedSoFar, from: $0.currency) }.reduce(0, +)
+        // A service billed in another currency is added at an exchange rate, and the figure says so.
+        let display = MoneyFormat.normalizedCode(currencyManager.selectedCurrency)
+        let converted = lines.contains { MoneyFormat.normalizedCode($0.currency) != display }
         return SideBySide {
             Text("Saved by rotating so far")
                 .font(.subheadline)
                 .foregroundStyle(Color.inkTextMuted)
         } trailing: {
             // Money kept is mint once there is some; nothing yet is not.
-            Text(verbatim: currencyManager.format(saved))
+            Text(verbatim: MoneyFormat.total(saved, currencyManager.selectedCurrency, converted: converted))
                 .font(.headline.weight(.bold))
                 .foregroundStyle(saved > 0 ? Color.kept : Color.inkText)
         }

@@ -18,8 +18,34 @@ struct SavingsSummary {
     let onTrack: Decimal
     /// What Pausely costs a year, when the customer pays for it.
     let pauselyYearlyCost: Decimal?
+    /// The currency Pausely is paid for in, when that is known.
+    var pauselyCurrency: String? = nil
 
     var isEmpty: Bool { lines.isEmpty }
+
+    /// True when a cancellation in another currency was converted into the two totals. That makes
+    /// them estimates, and they are marked "≈" wherever they are shown, like every other total in
+    /// the app (`MoneyFormat.total`). Each such line is already marked on the receipt.
+    var totalsAreConverted: Bool {
+        let display = MoneyFormat.normalizedCode(currency)
+        return lines.contains { MoneyFormat.normalizedCode($0.currency) != display }
+    }
+
+    /// True when Pausely is paid for in another currency than the one the receipt is shown in.
+    var pauselyCostIsConverted: Bool {
+        guard let paidIn = pauselyCurrency else { return false }
+        return MoneyFormat.normalizedCode(paidIn) != MoneyFormat.normalizedCode(currency)
+    }
+
+    /// One of the two totals as text ("$527.64", or "≈$527.64" when a line was converted).
+    func total(_ amount: Decimal) -> String {
+        MoneyFormat.total(amount, currency, converted: totalsAreConverted)
+    }
+
+    /// What Pausely costs a year as text, marked when it was converted.
+    var pauselyCostText: String? {
+        pauselyYearlyCost.map { MoneyFormat.total($0, currency, converted: pauselyCostIsConverted) }
+    }
 
     /// How many times over Pausely pays for itself in a year, when it costs anything.
     var returnMultiple: Decimal? {
@@ -64,7 +90,8 @@ struct SavingsSummary {
             currency: currencies.selectedCurrency,
             savedSoFar: converted(totals.savedSoFar),
             onTrack: converted(totals.onTrack),
-            pauselyYearlyCost: pausely.flatMap { currencies.convertToSelected($0.annualCost, from: $0.currency) }
+            pauselyYearlyCost: pausely.flatMap { currencies.convertToSelected($0.annualCost, from: $0.currency) },
+            pauselyCurrency: pausely?.currency
         )
     }
 }

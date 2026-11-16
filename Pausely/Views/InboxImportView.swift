@@ -440,6 +440,8 @@ struct InboxImportView: View {
     private func summary(count: Int) -> some View {
         let currency = CurrencyManager.shared.selectedCurrency
         let monthly = scanner.report?.monthlyTotal(in: currency) ?? 0
+        // Receipts in another currency are added at an exchange rate, and the total says so.
+        let converted = scanner.report?.monthlyTotalIsConverted(to: currency) ?? false
         let ignored = scanner.stats.purchasesIgnored
         let stats = scanner.stats
 
@@ -455,8 +457,8 @@ struct InboxImportView: View {
 
             PaperSlip(tornTop: true, tornBottom: true) {
                 VStack(alignment: .leading, spacing: 10) {
-                    ProofLine(label: L10n.string("Each month"), value: InboxImportView.money(monthly, currency), emphasised: true)
-                    ProofLine(label: L10n.string("Each year"), value: InboxImportView.money(monthly * 12, currency))
+                    ProofLine(label: L10n.string("Each month"), value: MoneyFormat.total(monthly, currency, converted: converted), emphasised: true)
+                    ProofLine(label: L10n.string("Each year"), value: MoneyFormat.total(monthly * 12, currency, converted: converted))
                     if ignored > 0 || stats.emailsChecked > 0 { Perforation() }
                     if stats.emailsChecked > 0 {
                         Facts(L10n.string("Emails checked: \(stats.emailsChecked) · read in full: \(stats.bodiesRead) · all on your phone"))

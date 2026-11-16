@@ -267,10 +267,10 @@ struct DashboardView: View {
             } else {
                 PaperSlip(tornTop: true, tornBottom: false) {
                     VStack(alignment: .leading, spacing: 8) {
-                        ProofLine(label: L10n.string("Kept since you cancelled"), value: summary.formatted(summary.savedSoFar),
+                        ProofLine(label: L10n.string("Kept since you cancelled"), value: summary.total(summary.savedSoFar),
                                   emphasised: true)
                             .foregroundStyle(Color.paperKept)
-                        ProofLine(label: L10n.string("On track over 12 months"), value: summary.formatted(summary.onTrack))
+                        ProofLine(label: L10n.string("On track over 12 months"), value: summary.total(summary.onTrack))
                         if let multiple = summary.returnMultiple, summary.paysForItself {
                             Text(L10n.string("On track for \(multiple.formatted(.number.precision(.fractionLength(1)).locale(L10n.locale)))× what Pausely costs a year."))
                                 .font(.footnote)

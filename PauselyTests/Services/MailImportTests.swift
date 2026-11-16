@@ -156,11 +156,46 @@ final class MailImportTests: XCTestCase {
 
     private func proven(_ name: String, status: ProvenSubscription.Status = .active, amount: String = "15.49",
                         frequency: BillingFrequency = .monthly, lastCharge: Date? = nil, next: Date? = nil, category: String? = "Entertainment",
-                        trialEnds: Date? = nil) -> ProvenSubscription {
-        ProvenSubscription(id: "\(name.lowercased())|\(frequency.rawValue)|USD", name: name, merchantKey: name.lowercased(), category: category,
-                           cancelURL: nil, amount: Decimal(string: amount)!, currency: "USD", frequency: frequency,
+                        trialEnds: Date? = nil, currency: String = "USD") -> ProvenSubscription {
+        ProvenSubscription(id: "\(name.lowercased())|\(frequency.rawValue)|\(currency)", name: name, merchantKey: name.lowercased(), category: category,
+                           cancelURL: nil, amount: Decimal(string: amount)!, currency: currency, frequency: frequency,
                            lastChargeDate: lastCharge, nextBillingDate: next, status: status, score: 90, tier: .confirmed,
                            evidence: [], reasons: [], previousAmount: nil, trialEndsOn: trialEnds)
+    }
+
+    /// The total on the results slip. Receipts in another currency than the one the person sees
+    /// are added at an exchange rate, so the total is an estimate and says so ("≈"), as every
+    /// other total in the app does. It did not: a mailbox of Canadian receipts read "¥16,027" to
+    /// someone who sees yen (the Japanese tour of 2026-11-16).
+    func testTheSlipsTotalIsMarkedWhenAReceiptWasConverted() throws {
+        let canadian = IntelligenceReport(subscriptions: [proven("Netflix", currency: "CAD"), proven("Spotify", amount: "12.99", currency: "CAD")],
+                                          ignoredPurchaseGroups: 0, insights: [])
+        XCTAssertFalse(canadian.monthlyTotalIsConverted(to: "CAD"))
+        XCTAssertFalse(canadian.monthlyTotalIsConverted(to: "cad"))
+        XCTAssertTrue(canadian.monthlyTotalIsConverted(to: "JPY"))
+
+        // One receipt in another currency is enough.
+        let mixed = IntelligenceReport(subscriptions: [proven("Netflix", currency: "CAD"), proven("Notion", amount: "10", currency: "USD")],
+                                       ignoredPurchaseGroups: 0, insights: [])
+        XCTAssertTrue(mixed.monthlyTotalIsConverted(to: "CAD"))
+
+        // What the total leaves out does not mark it: one that has ended, one that is only worth a look.
+        var unsure = proven("Gym", currency: "USD")
+        unsure.tier = .review
+        let quiet = IntelligenceReport(subscriptions: [proven("Netflix", currency: "CAD"), proven("Hulu", status: .cancelled, currency: "USD"), unsure],
+                                       ignoredPurchaseGroups: 0, insights: [])
+        XCTAssertFalse(quiet.monthlyTotalIsConverted(to: "CAD"))
+        XCTAssertEqual(quiet.monthlyTotal(in: "CAD", rates: .fallback), Decimal(string: "15.49"))
+
+        // The mark is the one every total uses, and it is what the slip draws.
+        XCTAssertEqual(MoneyFormat.total(16027, "JPY", converted: true, locale: Locale(identifier: "ja_JP")).first, "≈")
+        XCTAssertNotEqual(MoneyFormat.total(16027, "JPY", converted: false, locale: Locale(identifier: "ja_JP")).first, "≈")
+        let screen = URL(fileURLWithPath: #filePath).deletingLastPathComponent().deletingLastPathComponent().deletingLastPathComponent()
+            .appendingPathComponent("Pausely/Views/InboxImportView.swift")
+        try XCTSkipUnless(FileManager.default.fileExists(atPath: screen.path), "Sources aren't readable from this test run")
+        let source = try String(contentsOf: screen, encoding: .utf8)
+        XCTAssertTrue(source.contains(#"ProofLine(label: L10n.string("Each month"), value: MoneyFormat.total(monthly, currency, converted: converted), emphasised: true)"#))
+        XCTAssertTrue(source.contains(#"ProofLine(label: L10n.string("Each year"), value: MoneyFormat.total(monthly * 12, currency, converted: converted))"#))
     }
 
     func testTheAnchorIsTheLastRealChargeNotAWorkedOutDate() throws {

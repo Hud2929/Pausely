@@ -42,6 +42,7 @@ final class CurrencyGuardTests: XCTestCase {
     private static let rawFormat = regex(#"\.format\(\s*[\w.]*\.(amount|monthlyCost|annualCost|lifetimeSpend)\s*\)"#)
     private static let silentFallback = regex(#"try\?[^\n]*\.convert\([^\n]*\?\?"#)
     private static let usdDefault = regex(#":\s*String\s*=\s*"USD""#)
+    private static let unmarkedSavingsTotal = regex(#"\.formatted\(\s*\w+\.(savedSoFar|onTrack)\s*\)"#)
     private static let amountWithCurrency = regex(
         #"(?:MoneyFormat\.string|\.format)\(\s*(\w+)\.(amount|monthlyCost|annualCost|lifetimeSpend|savedSoFar|amountPerCharge)\s*,\s*(?:currencyCode:\s*)?([\w.]+)"#)
 
@@ -85,6 +86,9 @@ final class CurrencyGuardTests: XCTestCase {
         Rule(name: "amount labelled with another currency",
              fix: "Format x.amount with x.currency; convert first to show it in another currency.",
              matches: { CurrencyGuardTests.formatsWithAnotherCurrency($0) }),
+        Rule(name: "savings total shown without saying whether it was converted",
+             fix: "Use summary.total(amount): it marks the total \"≈\" when a line in another currency went into it.",
+             matches: { CurrencyGuardTests.has(CurrencyGuardTests.unmarkedSavingsTotal, $0) }),
         Rule(name: "conversion that silently falls back",
              fix: "Use CurrencyManager.shared.rates.convert(...) and handle nil explicitly.",
              matches: { CurrencyGuardTests.has(CurrencyGuardTests.silentFallback, $0) }),
@@ -194,6 +198,10 @@ final class CurrencyGuardTests: XCTestCase {
         XCTAssertFalse(caught(#"Text("12,99 €")"#).isEmpty)
         XCTAssertFalse(caught(#"let total = subs.reduce(0) { $0 + $1.monthlyCost }"#).isEmpty)
         XCTAssertFalse(caught(#"Text(manager.format(sub.amount))"#).isEmpty)
+        XCTAssertFalse(caught(#"ProofLine(label: kept, value: summary.formatted(summary.onTrack))"#).isEmpty)
+        XCTAssertFalse(caught(#"Text(kept.formatted(kept.savedSoFar))"#).isEmpty)
+        XCTAssertTrue(caught(#"Text(summary.total(summary.onTrack))"#).isEmpty)
+        XCTAssertTrue(caught(#"Text(summary.formatted(line.savedSoFar, from: line.currency))"#).isEmpty)
         XCTAssertFalse(caught(#"let x = (try? m.convert(a, from: c, to: d)) ?? a"#).isEmpty)
         XCTAssertFalse(caught(#"init(currency: String = "USD")"#).isEmpty)
         XCTAssertFalse(caught(#"let a = MoneyFormat.string(sub.monthlyCost, currencyCode)"#).isEmpty)
