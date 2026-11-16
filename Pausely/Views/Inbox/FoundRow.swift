@@ -28,7 +28,9 @@ struct FoundRow: View {
     }
 
     private var evidenceLine: String {
-        let day: (Date) -> String = { $0.formatted(.dateTime.month(.abbreviated).day().locale(L10n.locale)) }
+        // A day and its month stay on one line: beside the price, one text size up, the line
+        // read "Last", "charged Nov", "10".
+        let day: (Date) -> String = { L10n.whole($0.formatted(.dateTime.month(.abbreviated).day().locale(L10n.locale))) }
         if proven.status == .trial, let ends = proven.trialEndsOn { return L10n.string("Trial ends \(day(ends))") }
         if let last = proven.lastChargeDate.map(day) { return L10n.string("Last charged \(last)") }
         return L10n.string("Detected from your emails")
@@ -75,8 +77,10 @@ struct FoundRow: View {
                                 ServiceLogoView(name: found.name, category: nil, size: 36)
                                 // As on the Subscriptions list: the price keeps its width, 8 points
                                 // from the words (a spacer between them took 32, and "Last charged
-                                // Nov 9" broke in two for want of 4).
-                                LineOrStack(spacing: 8, lineSpacing: 4, spread: true, besideShare: 0.5) {
+                                // Nov 9" broke in two for want of 4). This row also holds a box and
+                                // a chevron, so the price goes under the words sooner: beside them
+                                // only while it takes no more than a third of what is left.
+                                LineOrStack(spacing: 8, lineSpacing: 4, spread: true, besideShare: Self.priceShare) {
                                     nameAndEvidence
                                     price
                                 }
@@ -92,6 +96,9 @@ struct FoundRow: View {
             if isExpanded { evidenceDetail }
         }
     }
+
+    /// The most of the row's width the price may take while the words wrap beside it.
+    nonisolated static let priceShare: CGFloat = 0.35
 
     /// Whether the name, what was found and the price run the width of the row, with the box and
     /// the way to "why" on a line above them. At the accessibility text sizes, yes: between the
@@ -148,9 +155,13 @@ struct FoundRow: View {
         }
     }
 
+    /// The amount over how often: a narrow column, so that at the default size the name, what
+    /// was found and the price share a line (on one line, "$34.99/mo" was 12 points too wide and
+    /// every row grew by one). The two start at the same edge, so the column reads the same at
+    /// the end of the row and under the words.
     @ViewBuilder private var price: some View {
         if let priceText {
-            VStack(alignment: typeSize.isAccessibilitySize ? .leading : .trailing, spacing: 2) {
+            VStack(alignment: .leading, spacing: 2) {
                 Text(verbatim: priceText)
                     .font(.body.weight(.semibold))
                     .foregroundStyle(Color.inkText)

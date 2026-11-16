@@ -598,6 +598,24 @@ final class ScreenRulesTests: XCTestCase {
         XCTAssertTrue(stacked.contains(".frame(maxWidth: .infinity, alignment: .leading)"))
         XCTAssertFalse(stacked.contains("ServiceLogoView"))
 
+        // Where the words do sit beside the price (the ordinary sizes), a date in them is not
+        // split: "Last charged Nov 10" broke as "Last", "charged Nov", "10" one text size up.
+        XCTAssertTrue(found.contains("let day: (Date) -> String = { L10n.whole($0.formatted(.dateTime.month(.abbreviated).day().locale(L10n.locale))) }"))
+        XCTAssertEqual(L10n.whole("Nov 10"), "Nov\u{00A0}10")
+        // And the price goes under the words before it squeezes them: at the largest ordinary
+        // size it took 78 points of the 204 left between the logo and the chevron, and the words
+        // (185 points on a line) were set in what remained, a word to a line.
+        XCTAssertEqual(FoundRow.priceShare, 0.35)
+        XCTAssertEqual(LineOrStack.arrangement(widths: [185, 78], spacing: 8, in: 204, besideShare: FoundRow.priceShare), .stack)
+        XCTAssertEqual(LineOrStack.arrangement(widths: [185, 78], spacing: 8, in: 204, besideShare: 0.5), .labelWraps,
+                       "which is how it was laid out before")
+        XCTAssertEqual(LineOrStack.arrangement(widths: [150, 70], spacing: 8, in: 228, besideShare: FoundRow.priceShare), .line,
+                       "at the default size they share a line as before")
+        XCTAssertTrue(found.contains("LineOrStack(spacing: 8, lineSpacing: 4, spread: true, besideShare: Self.priceShare) {"))
+        // The amount and its period start at one edge, wherever the column ends up.
+        let price = try XCTUnwrap(found.range(of: "@ViewBuilder private var price: some View {"))
+        XCTAssertTrue(found[price.upperBound...].prefix(160).contains("VStack(alignment: .leading, spacing: 2) {"))
+
         let insights = try String(contentsOf: sources.appendingPathComponent("Views/AnalysisView.swift"), encoding: .utf8)
         let usage = try XCTUnwrap(insights.range(of: "private func usageRow("))
         XCTAssertTrue(insights[usage.upperBound...].prefix(900).contains("AdaptiveRow {"))
