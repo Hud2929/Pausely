@@ -921,6 +921,46 @@ Updated at every commit, so the work can be picked up from this file alone.
   largest text, iPad), each read on sheets and put through `tour_read contrast` and
   `words`; then the scores, screen by screen, from those; (6) H; (7) I and section 7,
   still stale.
+- **11-16 evening, (5) under way; where the run stopped. Committed tree: `e5a34f2`. One file is
+  changed and NOT committed: `PauselyUITests/ScreenTourTests.swift` (it builds; it has not been
+  run).** Done so far on the build of `e5a34f2`:
+  1. *English with the audit*, whole: `/tmp/pausely_final7_en`, six tests green, 222 captures,
+     no step missed; all fifteen sheets opened and read (`e7-01` to `e7-15` in the job's
+     scratch folder); every screen whole. `tour_read contrast`: 3,863 texts at 4.5 to 1 or
+     more, 42 below (22 the system's own controls, 18 rows under a bar or a pinned heading,
+     the paste button with nothing to paste, the swipe action's bin), nothing of the app's.
+     `tour_read words` not yet run on this folder.
+  2. *Arabic*, whole tour started: `/tmp/pausely_final7_ar`, 191 captures, none read yet.
+     `testStates` ended early after `custom-limit` ("Timed out while synthesizing event"),
+     so 21 states are missing: `edit-noname`, `edit-discard`, `manage-remove`,
+     `manage-tools`, `manage-usage`, `manage-hours`, `cancel-done`, `verdict-kept`,
+     `verdict-adddate`, `receipt-share`, `pauseplan-end`, `inbox-connected`,
+     `inbox-nothing`, `inbox-failed`, `inbox-add`, `inbox-connect-paste`, `signup-rules`,
+     `newpassword-rules`, `firstrun-tally-empty`, `reveal-price`, `inbox-why`.
+  **Three faults of the tour itself, found here, fixed in the uncommitted file:**
+  - `plan-trial` was a capture of the trial switch still off (the tree says value 0): a tap on
+    a switch's element lands on its words. The catalog's plan sheet with the trial on has
+    never been captured in any language. `tap` now taps the switch inside the row, and the
+    state records a miss unless the switch reads 1.
+  - `testAddFlow` and `testSubscriptionScreens` looked their buttons up by English name, so in
+    every other language they passed without a capture. They now go by identifier
+    (`homeAddButton`, `cancelSubscriptionButton`) and record a miss when a step is not taken.
+  - In Arabic the bar's "Save" came back as the thing that holds it, a few points higher, and
+    `bringIntoView` pulled the edit sheet down again and again for a button already in
+    reach, until an event timed out and the pass ended. A hittable element in the top 120
+    points is now left where it is. (Not established: whether the app itself stopped
+    answering after those drags. Run `edit-noname` in Arabic and watch.)
+  **Stopped by the machine, not by a fault:** the run that was to capture those 21 Arabic
+  states and the two walks was ended by the session for low memory, during its build, with
+  no capture taken. It has not been started again.
+  Next, in order: (a) run, in Arabic, `testStates` with `PAUSELY_TOUR_ONLY` set to
+  `plan-trial` and the 21 names above, with `testAddFlow` and `testSubscriptionScreens`,
+  into the same folder; (b) the same three in English for `plan-trial` and the two walks;
+  open `plan-trial` and check the switch is on; then the tour file can be committed with a
+  ledger row; (c) read the Arabic sheets, `tour_read contrast` and `words` on both
+  folders; (d) the whole tour at the largest text size, then on iPad, each read; (e) the
+  scores; (6) H; (7) I and section 7, still stale. Keep the simulator shut down between
+  runs; this Mac has 8 GB.
 
 **Phase 0. Scan (read-only).** Four independent audits (dead code, truth, design rules on every
 view, engineering) plus mechanical scans. Output: the ledger.
