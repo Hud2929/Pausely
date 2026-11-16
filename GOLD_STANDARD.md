@@ -862,6 +862,17 @@ Updated at every commit, so the work can be picked up from this file alone.
      question and its Cancel button (`reveal-price`).
   4. *Description, 6*: the two addresses on the connected-inbox page in its three states (the
      label set for VoiceOver differs from the text drawn with break marks: to look at).
+  *Worked out so far on the contrast lines (11-16):* every text colour of the palette on every
+  ink surface is held at 4.5 to 1 or more by `InkPaperContrastTests`, so none of the 126 can be
+  a colour pair that fails; each is about where the element was or what was over it. 104 are
+  on scrolled captures and 22 on first captures. By position on the 874-point screen: 31 at
+  the top (y up to 215: the navigation bar, pinned section headers), 18 at the bottom edge
+  (ending at 748 or lower: the tab bar), 77 in the middle. The middle ones on first captures:
+  three first-run tiles on two captures whose logos are dark (Disney+, HBO Max, Paramount+:
+  the audit measures the logo, the name under it is white), five rows behind the calendar
+  pop-up on `dates-calendar`, and "/mo" in the row being swiped. The middle ones on scrolled
+  captures (about 65) are not yet explained: look at each capture beside its lines; the audit
+  changes the text size while it works, so a scrolled page may have moved under it.
   Then: fix what is real, file what is not with its reason, re-run, read all 221 captures,
   close the audit row, commit. After that, unchanged: (4) Japanese serif; (5) the scores;
   (6) H; (7) I and section 7, still stale.
