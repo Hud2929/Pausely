@@ -143,21 +143,31 @@ final class ScreenTourTests: XCTestCase {
             sleep(2)
             capture(app, "subscription-detail")
             scrollCapture(app, "subscription-detail", times: 3)
-            if tapFirst(app, ["Cancel subscription", "Cancel Subscription"]) {
-                sleep(2)
-                capture(app, "subscription-cancel")
-                scrollCapture(app, "subscription-cancel", times: 2)
-            }
+            // By identifier. By its English name the button was found in English only, and in every
+            // other language this walk ended here without a capture or a word (seen 2026-11-16).
+            tap(app, "cancelSubscriptionButton")
+            sleep(2)
+            capture(app, "subscription-cancel")
+            scrollCapture(app, "subscription-cancel", times: 2)
+        } else {
+            missed("subscription-detail: no row to open on the list")
         }
     }
 
     func testAddFlow() throws {
         let app = launchDemo()
-        if tapFirst(app, ["Add subscription", "Add", "addSubscriptionButton", "plus"]) {
-            sleep(2)
-            capture(app, "add")
-            scrollCapture(app, "add", times: 2)
-        }
+        // By identifier, for the same reason as the walk above.
+        tap(app, "homeAddButton")
+        let search = app.descendants(matching: .any)["catalogSearchField"].firstMatch
+        // This is the first test of a run, begun while the machine is still busy with the build,
+        // and a tap then is sometimes lost: once more, if the button is still there to tap.
+        if !search.waitForExistence(timeout: 8), app.buttons["homeAddButton"].firstMatch.isHittable { tap(app, "homeAddButton") }
+        // Captured either way, so what did open can be seen; the line in the misses file says
+        // when it was not the catalog.
+        if !search.waitForExistence(timeout: 8) { missed("add: the catalog did not open from Home") }
+        sleep(1)
+        capture(app, "add")
+        scrollCapture(app, "add", times: 2)
     }
 
     func testSingleScreens() throws {
@@ -318,7 +328,11 @@ final class ScreenTourTests: XCTestCase {
             let pill = app.buttons.matching(identifier: "categoryPill").element(boundBy: 1)
             if pill.waitForExistence(timeout: 4), pill.isHittable { pill.tap() }
         }
-        state("plan-trial", ["--demo-tier"]) { app in self.tap(app, "tierTrialToggle") }
+        state("plan-trial", ["--demo-tier"]) { app in
+            self.tap(app, "tierTrialToggle")
+            // The capture is of a trial only if the switch went on (it did not: see `tap`).
+            if app.switches["tierTrialToggle"].firstMatch.value as? String != "1" { self.missed("tierTrialToggle: the switch did not turn on") }
+        }
         state("paywall-monthly", ["--demo-paywall"]) { app in self.tap(app, "planMonthly") }
         state("custom-limit", varied + ["--demo-custom-add"]) { app in
             self.type(app, "serviceNameTextField", "Gym")
@@ -410,6 +424,11 @@ final class ScreenTourTests: XCTestCase {
     /// on nothing and the keyboard never comes.
     private func bringIntoView(_ app: XCUIApplication, _ element: XCUIElement) {
         let screen = app.windows.firstMatch.frame
+        // What sits in a bar stays where it is: dragging the page cannot move it, and on a sheet a
+        // drag downwards is the gesture that closes it. (In Arabic the tour pulled the edit sheet
+        // down again and again for a "Save" that was already in reach, until an event timed out
+        // and the pass ended, 2026-11-16.)
+        if element.isHittable, element.frame.maxY < screen.minY + 120 { return }
         // Far off in long drags, near in short ones so it is not carried past. Eight short drags
         // were two screens: at the largest text size "Sign out", "Delete account" and "Remove"
         // are further down than that, and their dialogs were captured as the page above them.
@@ -460,8 +479,15 @@ final class ScreenTourTests: XCTestCase {
             }
         }
         guard element.exists else { return missed("\(identifier): not on the page") }
-        bringIntoView(app, element)
-        if element.isHittable { element.tap() } else { missed("\(identifier): could not be brought into reach") }
+        // The button itself where there is one: in Arabic a bar's "Save" came back as what holds it.
+        let button = app.buttons[identifier].firstMatch
+        var target = button.exists ? button : element
+        bringIntoView(app, target)
+        // A switch's element is its whole row, and a tap in the middle of the row lands on its
+        // words, which do nothing: the control is the switch inside it ("plan-trial" was a
+        // capture of the switch still off).
+        if target.elementType == .switch, target.switches.firstMatch.exists { target = target.switches.firstMatch }
+        if target.isHittable { target.tap() } else { missed("\(identifier): could not be brought into reach") }
     }
 
     /// Swipes the list's row for this subscription, scrolling to it first: at the largest text size
@@ -513,17 +539,6 @@ final class ScreenTourTests: XCTestCase {
     }
 
     @discardableResult
-    private func tapFirst(_ app: XCUIApplication, _ labels: [String]) -> Bool {
-        for label in labels {
-            let button = app.buttons[label].firstMatch
-            if button.exists && button.isHittable {
-                button.tap()
-                return true
-            }
-        }
-        return false
-    }
-
     private func scrollCapture(_ app: XCUIApplication, _ name: String, times: Int) {
         for index in 1...times {
             app.swipeUp()
