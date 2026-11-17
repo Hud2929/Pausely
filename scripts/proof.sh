@@ -14,8 +14,10 @@ sim="${PAUSELY_SIM:-$(xcrun simctl list devices available | grep -m1 -oE 'iPhone
 build="${PAUSELY_BUILD_DIR:-/tmp/PauselyBuild}"
 mkdir -p "$build"
 
-said() {  # the line of a log that says how it went
-  grep -aoE 'Executed [0-9]+ tests?, with ([0-9]+ tests? skipped and )?[0-9]+ failures|^TOTAL +[0-9]+|[0-9]+ passed, [0-9]+ failed|all checks passed|BUILD SUCCEEDED' "$1" | tail -1
+said() {  # the line of a log that says how it went; a function rig's checks are counted
+  local checks; checks=$(grep -acE '^ +pass  ' "$1")
+  if [ "$checks" -gt 0 ]; then echo "$checks checks passed"; return; fi
+  grep -aoE 'Executed [0-9]+ tests?, with ([0-9]+ tests? skipped and )?[0-9]+ failures|^TOTAL +[0-9]+|[0-9]+ passed, [0-9]+ failed|BUILD SUCCEEDED' "$1" | tail -1
 }
 step() {  # name, log, command
   local name="$1" log="$2"; shift 2

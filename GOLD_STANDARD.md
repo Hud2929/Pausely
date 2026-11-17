@@ -1155,12 +1155,49 @@ Updated at every commit, so the work can be picked up from this file alone.
   folder), 0 failures; Release builds.
   Next, in order: the word check's one real line (a subscription's page did not watch the
   Pause Plan); H written up; section 7.
-- **11-17, three screens watch the Pause Plan (this commit).** Row opened and closed in 6.5.
+- **11-17, three screens watch the Pause Plan (`fd167fd`).** Row opened and closed in 6.5.
   `tour_read words` on the final tour (`/tmp/pausely_final10_en`): 4,329 lines read, 83 with a
   word accessibility does not say. 82 are what they were on 11-16 (13 "Today" under Home's time
   line, which is read out as one element; the date wheel's other rows; lines cut by a bar or an
   edge; misreadings of a logo or of a price and its unit). One was real, and is this slice.
   Next, in order: H written up; section 7.
+- **11-17, stage H written up: the six walks, three rounds.** Role-play by the builder from
+  captures of the real flows; not a test with people. The figures are in section 7.3.
+  *Round 1* (11-16 evening, on the four whole tours of `e5a34f2` and `2566daf`). The
+  searcher: the first run never said the free plan tracks five, and with nine ticked it was
+  learnt on Home after the account. The sceptic: no test tied the Privacy page's four
+  sentences to the build; in a mailbox's results a cancelled subscription could not be read.
+  The Arabic speaker: the results' prices formed no column. The low-vision user and the
+  returner: a question ("Sign out of Pausely?", "Remove…?") came up mid-page, over the button
+  that had asked; on the verdict "$6.85" and "an hour" were on two lines. The buyer: nothing.
+  All fixed that night and the next morning (six rows in 6.5).
+  *Round 2* (11-16 night, on the captures taken after those fixes, in the four variants).
+  The low-vision user: asked from the navigation bar, the edit screen's question had become
+  the narrow bubble again at the largest size. Then German, Spanish and French were read on
+  the final build for the first time since 11-12: "1 prélèvements évités" on the receipt,
+  "Actívalas" for "recordatorios". Fixed (two rows in 6.5).
+  *Round 3* (11-17, on the final captures, and on a simulator that had never run the app).
+  The searcher's first screen with logos showed letters for YouTube Premium, Google One and
+  PlayStation Plus: a new install's look, which no tour had ever captured. Fixed for six
+  services; two tiles of twenty-two are still letters, and why is in 6.5. Nothing else was
+  found on this round that can be changed from here. What is left in each walk is a thing
+  the builder cannot do: a stranger's sign-up, a native reader's ear, VoiceOver's voice, a
+  reminder on a locked phone, a real purchase, and the published policy the sceptic reads.
+- **11-17, the scorecard (this commit): the run ends here.** Section 7 is rewritten from the
+  evidence; the scorecard of 11-11 is in this file's history. The proof on the final code
+  (`fd167fd`), by `scripts/proof.sh`: `gold_check` 0; 816 unit tests, 0 failures, three runs
+  in a row; UI tests 10 run, 2 skipped, 0 failures; Release builds; and with Docker up,
+  `scripts/proof.sh db`: the database rig 619 checks, the function rigs 23, 20 and 22, none
+  failed (the script's summary now counts them). **The bar is not met and the scorecard says
+  so:** every screen 9.3 (two at 9.2), the six walks 8.5 to 9.3, the codebase 9.1. Stage H's
+  exit, "every journey at 9.5", was not reached. What holds each line is beside it in section
+  7, and none of it can be done from this Mac: a real iPhone (VoiceOver, haptics, a
+  purchase, a reminder on a locked phone), a person who is not the builder (a native reader
+  per language, a stranger signing up), and the owner's steps (6.7). Nothing was pushed,
+  deployed or submitted.
+  **To pick the run up again:** do the items of 7.5 in the order of 6.7; whatever they find
+  is a new row in section 6 and a slice like any other; then score again from the new
+  evidence.
 
 **Phase 0. Scan (read-only).** Four independent audits (dead code, truth, design rules on every
 view, engineering) plus mechanical scans. Output: the ledger.
@@ -1593,15 +1630,158 @@ Stage G, as it closes (each line: what, and the evidence):
 
 ## 7. Scorecard
 
-Measured, not felt. A score is written only when its evidence exists.
+Written 2026-11-17, at the end of the run, from what the run produced: captures that were opened,
+numbers a script printed, tests that ran. Nothing here is from memory. The scorecard of 11-11 that
+stood here until today is in this file's history.
 
-| Area | Now | Evidence | What holds it down |
+**The short of it.** No line of this scorecard reads 9.5. Every screen stands at 9.3 (two at
+9.2), the six customer walks between 8.5 and 9.3, the codebase at 9.1. What keeps each where it
+is, is written beside it, and it is of three kinds: a check that needs a real iPhone (VoiceOver
+heard, haptics felt, a purchase made, a reminder arriving on a locked phone); a check that needs a
+person who is not the builder (a native reader for each language, a stranger signing up, a real
+buyer); and a step that is the owner's (publishing the corrected policy, the public history, the
+store). None of them can be done from this Mac, and none was rated up. Two lines of the
+codebase are held by a decision instead, said in 7.4 and not rated away: two long files kept
+whole, and three tests that would read real inboxes not run. Everything else that could be
+raised from here was, down to the last morning: 7.6 lists what the last two days found and closed.
+
+### 7.1 What the scores rest on
+
+| Evidence | Where |
+|---|---|
+| The whole tour, English with Apple's audit: 225 captures, six tour tests green, no step missed, each opened. Run on `ebb9ebb`; the screens' code has not changed since, but for two later commits, each held by its own test and by the UI tests: five lines of the launch path moved into a function, and three screens made to watch the Pause Plan (their three states were captured again and opened, `/tmp/pausely_watch1_en`) | `/tmp/pausely_final10_en` |
+| The whole tour two days of commits earlier, in the other three variants: Arabic (218 captures), the largest text size (298), iPad (189); each opened. Every state a later commit touched was taken again in the variants it shows in, and opened | `/tmp/pausely_final7_ar`, `_final8_big`, `_final8_ipad`; `/tmp/pausely_batch9_*` to `_batch11_*`, `_col1_*`, `_rc2_*` |
+| The first launch, the tabs and every single screen in German (64), Spanish (63) and French (63) on the build of `0f76a50`, in Japanese (59, on `196e9be`); each opened | `/tmp/pausely_final9_de`, `_es`, `_fr`; `/tmp/pausely_ja1` |
+| Every text on every capture measured from its pixels (`tour_read contrast`). Final English tour: 3,983 at 4.5 to 1 or more, 46 below. Arabic 3,407 and 22; the largest size 1,350 and 24; iPad 3,695 and 38. Every one below was looked at: the system's own controls, rows under a bar, and one of the app's, since fixed | 6.5 |
+| Apple's audit on that tour: 373 lines printed; 51 name an element of the app at rest, on 13 captures (the rest are behind a bar, name no element, or are the system's bars and keyboard) | `/tmp/pausely_final10_en/audit.txt`; 5.2, 11-17 |
+| A new install, on a simulator that had never run the app: the first run and the catalog | `/tmp/pausely_fresh2` |
+| On the final code (`fd167fd`), by `scripts/proof.sh`: `gold_check` 0 on every line (it holds `string_usage` and `old_ui_check`); 816 unit tests, 0 failures, three runs in a row; the UI tests other than the tour 10 run, 0 failures, 2 skipped (the mailbox walk and the journey need a server and a folder; the walk ran green against the local server earlier the same day); Release builds | 5.2, 11-17 |
+| The database rules against a stand-in database, 619 checks; the three functions against stand-ins, 23, 20 and 22; 0 failed | 5.2, 11-17 |
+| The mail rig: 138 synthetic messages served on this Mac, scanned through the app's own IMAP stack, scored against their truth, and walked through the real screens | 6.5, the mail rig row |
+
+### 7.2 Screens
+
+Eight dimensions each (section 2); the score is their mean, capped at the weakest plus 0.5, and
+never rounded up. Three dimensions are held at 9.0 on every screen, for reasons that are the same
+on every screen and are outside the code:
+
+- **Accessibility, 9.0.** Seen: every state whole at the largest text size; every text measured
+  for contrast; Apple's audit run and its lines traced; the words on each English capture looked
+  up in what accessibility says (the final tour: 4,329 lines read, 83 with a word not found; one
+  was real and is fixed, the Pause Plan row in 7.6; the rest are misreadings, lines cut by a bar,
+  the date wheel's other rows, and the "Today" under Home's time line, which is read out as one
+  element, "Total by day"). Not done: nobody has listened to a screen with VoiceOver on a real
+  iPhone (the simulator has none), and the audit still prints lines for the system's own
+  controls, so it cannot be said to pass with nothing.
+- **Reach, 9.0.** Seen: Arabic whole and mirrored; German, Spanish, French and Japanese on every
+  single screen; iPad whole. Not done: no native reader in any of the five languages. Reading the
+  Spanish and French screens found two faults that reading the strings had passed, so there are
+  likely to be others that only a native reader will hear.
+- **Feel, 9.0.** Seen: each screen answers in the simulator; movement stops with Reduce Motion
+  (tests); haptics go through one place (a check). Not done: nothing has been felt on a device.
+
+With five dimensions at 9.5 and three at 9.0 the mean is 9.31, written 9.3: the most a screen can
+read from here. One hour with a real iPhone and one reader per language is what stands between
+these lines and 9.5, if they find nothing.
+
+| Screen | States seen | Purpose | Truth | Hierarchy | Identity | Craft | Access. | Reach | Feel | Score | What else was seen and left, and why |
+|---|---|---|---|---|---|---|---|---|---|---|---|
+| Launch mark | 1 | 9.5 | 9.5 | 9.5 | 9.5 | 9.5 | 9.0 | 9.0 | 9.0 | **9.3** | nothing further |
+| Welcome, and a link that has expired | 2 | 9.5 | 9.5 | 9.5 | 9.5 | 9.5 | 9.0 | 9.0 | 9.0 | **9.3** | nothing further |
+| First run: the guess, the tally, the reveal, the price sheet | 7 | 9.5 | 9.5 | 9.5 | 9.5 | 9.0 | 9.0 | 9.0 | 9.0 | **9.2** | On a new install two of the twenty-two tiles are a letter (Crunchyroll, Dropbox): their sites give no icon the app can use (6.5, 6.7). On iPad the tally's slip stays at the bottom edge, as on the phone (kept). |
+| Create account | 4 | 9.5 | 9.5 | 9.5 | 9.5 | 9.5 | 9.0 | 9.0 | 9.0 | **9.3** | Apple's button does not grow with the text size (the system's). On iPad the form is iOS's form sheet, taller than what it holds. |
+| Sign in | 2 | 9.5 | 9.5 | 9.5 | 9.5 | 9.5 | 9.0 | 9.0 | 9.0 | **9.3** | The same two. |
+| The emailed code | 3 | 9.5 | 9.5 | 9.5 | 9.5 | 9.5 | 9.0 | 9.0 | 9.0 | **9.3** | nothing further |
+| Reset password, new password | 5 | 9.5 | 9.5 | 9.5 | 9.5 | 9.5 | 9.0 | 9.0 | 9.0 | **9.3** | nothing further |
+| Age check | 3 | 9.5 | 9.5 | 9.5 | 9.5 | 9.5 | 9.0 | 9.0 | 9.0 | **9.3** | The date wheel is iOS's and does not grow; in Arabic it is in the Hijri calendar, which is that region's. |
+| Home | 16 | 9.5 | 9.5 | 9.5 | 9.5 | 9.5 | 9.0 | 9.0 | 9.0 | **9.3** | At the largest size the notice that a change has not reached the account is seven lines tall (whole). |
+| Subscriptions | 8 | 9.5 | 9.5 | 9.5 | 9.5 | 9.5 | 9.0 | 9.0 | 9.0 | **9.3** | In Arabic and on iPad iOS sets the remove question above its row, over the page's title. |
+| Insights | 7 | 9.5 | 9.5 | 9.5 | 9.5 | 9.5 | 9.0 | 9.0 | 9.0 | **9.3** | nothing further |
+| Profile | 6 | 9.5 | 9.5 | 9.5 | 9.5 | 9.5 | 9.0 | 9.0 | 9.0 | **9.3** | nothing further |
+| A subscription's page | 12 | 9.5 | 9.5 | 9.5 | 9.5 | 9.5 | 9.0 | 9.0 | 9.0 | **9.3** | At the largest size "Keep it or cancel it?" sets "it?" on a line of its own beside its mark (whole). On iPad the usage and hours sheets are taller than what they hold. |
+| Edit | 5 | 9.5 | 9.5 | 9.5 | 9.5 | 9.5 | 9.0 | 9.0 | 9.0 | **9.3** | nothing further |
+| Catalog, and adding from Home | 4 | 9.5 | 9.5 | 9.5 | 9.5 | 9.0 | 9.0 | 9.0 | 9.0 | **9.2** | A service whose site gives no usable icon is a letter: Dropbox and Crunchyroll everywhere, Hulu and Peacock from Canada (6.5, 6.7). |
+| The plan sheet | 2 | 9.5 | 9.5 | 9.5 | 9.5 | 9.5 | 9.0 | 9.0 | 9.0 | **9.3** | nothing further |
+| Add your own | 2 | 9.5 | 9.5 | 9.5 | 9.5 | 9.5 | 9.0 | 9.0 | 9.0 | **9.3** | nothing further |
+| Renewal Verdict, kept, cancelled | 14 | 9.5 | 9.5 | 9.5 | 9.5 | 9.5 | 9.0 | 9.0 | 9.0 | **9.3** | nothing further |
+| Cancel steps | 5 | 9.5 | 9.5 | 9.5 | 9.5 | 9.5 | 9.0 | 9.0 | 9.0 | **9.3** | nothing further |
+| Savings Receipt | 4 | 9.5 | 9.5 | 9.5 | 9.5 | 9.5 | 9.0 | 9.0 | 9.0 | **9.3** | nothing further |
+| Your year | 4 | 9.5 | 9.5 | 9.5 | 9.5 | 9.5 | 9.0 | 9.0 | 9.0 | **9.3** | nothing further |
+| Pause Plan | 7 | 9.5 | 9.5 | 9.5 | 9.5 | 9.5 | 9.0 | 9.0 | 9.0 | **9.3** | nothing further |
+| Paywall | 4 | 9.5 | 9.5 | 9.5 | 9.5 | 9.5 | 9.0 | 9.0 | 9.0 | **9.3** | The prices on the captures are the test store's, in US dollars; the App Store gives each country its own. |
+| Price history | 2 | 9.5 | 9.5 | 9.5 | 9.5 | 9.5 | 9.0 | 9.0 | 9.0 | **9.3** | nothing further |
+| Charge dates | 2 | 9.5 | 9.5 | 9.5 | 9.5 | 9.5 | 9.0 | 9.0 | 9.0 | **9.3** | On iPad the sheet is taller than what it holds. |
+| Notifications | 6 | 9.5 | 9.5 | 9.5 | 9.5 | 9.5 | 9.0 | 9.0 | 9.0 | **9.3** | nothing further |
+| Privacy & security | 2 | 9.5 | 9.5 | 9.5 | 9.5 | 9.5 | 9.0 | 9.0 | 9.0 | **9.3** | nothing further |
+| Help & support | 2 | 9.5 | 9.5 | 9.5 | 9.5 | 9.5 | 9.0 | 9.0 | 9.0 | **9.3** | nothing further |
+| Currency | 2 | 9.5 | 9.5 | 9.5 | 9.5 | 9.5 | 9.0 | 9.0 | 9.0 | **9.3** | nothing further |
+| Export | 2 | 9.5 | 9.5 | 9.5 | 9.5 | 9.5 | 9.0 | 9.0 | 9.0 | **9.3** | nothing further |
+| Language | 1 | 9.5 | 9.5 | 9.5 | 9.5 | 9.5 | 9.0 | 9.0 | 9.0 | **9.3** | nothing further |
+| What's new | 1 | 9.5 | 9.5 | 9.5 | 9.5 | 9.5 | 9.0 | 9.0 | 9.0 | **9.3** | nothing further |
+| Find in Email (not in the release build) | 9 | 9.5 | 9.5 | 9.5 | 9.5 | 9.5 | 9.0 | 9.0 | 9.0 | **9.3** | At the largest size the results are fifteen screens long. Walked against a real mailbox served on this Mac (6.5). |
+
+### 7.3 The six customers
+
+Walked by the builder from captures of the real flows, in three rounds: round 1 on the four whole
+tours (11-16), round 2 on the captures taken after its fixes (11-16 night), round 3 on the final
+captures (11-17). This is role-play by the one who built the thing, not a test with people; each
+figure is that reading and no more. What each round found and changed is in 5.2 and 7.6.
+
+| Customer | First 90 s | Trust | Effort | Clarity | Would pay | Would come back | Would tell | Score | What holds it there |
+|---|---|---|---|---|---|---|---|---|---|
+| The searcher (nine subscriptions, pays for nothing yet) | 9.0 | 9.5 | 9.0 | 9.5 | 9.0 | 9.5 | 9.0 | **9.2** | First 90 seconds: on a new install two of the twenty-two tiles are a letter. Effort: an account, the age check and a code stand between the reveal and Home; each says why it is there, none can be skipped (the age check is a compliance decision, the owner's). Would pay, would tell: only a real person can say more than this. **Not walked:** creating an account against the live project as a stranger (6.1a G1: closed on the server, never proven from outside). |
+| The sceptic (reads every privacy sentence) | 9.5 | 8.0 | 9.5 | 9.5 | 9.0 | 9.0 | 8.5 | **8.5** | Trust is held at 8.0 by one thing outside the app: the privacy policy the app opens is the published one, which still says the app reads Screen Time and collects crash logs and leaves out two companies it sends data to. The corrected policy is in the repository and waits for the owner to publish it (6.7). Inside the app every privacy sentence is now held by a test. |
+| The Arabic speaker (phone in Arabic, pays in riyals) | 9.5 | 9.0 | 9.0 | 9.0 | 9.0 | 9.0 | 9.0 | **9.0** | Every screen is mirrored and whole, in Arabic digits and riyals. Clarity cannot be put higher by someone who does not read Arabic as a native: reading the Spanish and French screens found two faults, and nobody has read the Arabic ones that way (6.7). |
+| The low-vision user (largest text size, VoiceOver for some steps) | 9.0 | 9.5 | 9.0 | 9.5 | 9.0 | 9.0 | 9.0 | **9.1** | Every screen is whole at the largest size. Effort: pages are long there (the first question two screens, a mailbox's results fifteen). The VoiceOver steps were read off the element tree and never heard: the simulator has no VoiceOver. |
+| The returner (thirty days in, a reminder arrives) | 9.0 | 9.5 | 9.5 | 9.5 | 9.5 | 9.5 | 9.0 | **9.3** | The first step of this walk is a reminder arriving, and that was not seen: what it says and its "Keep it" action are held by tests, its arrival on a locked phone is a device check (6.7). From the verdict on (keep, cancel, the receipt) nothing was found on the last round. |
+| The buyer (at the paywall) | 9.5 | 9.5 | 9.5 | 9.5 | 9.0 | 9.0 | 9.0 | **9.2** | The paywall says what Pro is, the true price as the largest figure, the day of the first charge and how to cancel. Would pay stays at 9.0: Pro is two things, and nobody who was not its builder has been asked. The purchase itself was not made: the App Store cannot be reached from the simulator here (6.7). |
+
+### 7.4 The codebase
+
+| Dimension | Score | Evidence | What holds it down |
 |---|---|---|---|
-| Screens | not scored | 41 of 136 states captured in English only | 95 states unseen; 307 audit issues |
-| Customer round 1: the searcher (English, iPhone 17 Pro, clean install, live backend) | **1.5** today; 6.5 once people can get in | Walked 11-11: first run, sign-up against the live project, home, the verdict, cancelling, the confirmation. Captures read one by one. Scores: first 90 seconds 8.5, getting in 1, trust 7, effort 8, clarity 8.5, would pay 6, would come back 7, would tell someone 6. | G1 and G2 (nobody can create an account). After that: the verdict offers the price times twelve and nothing a person couldn't work out alone; "isn't watched" is jargon; the age wheel sits between the reveal and the account. The other five personas and rounds 2 and 3 are not run. |
-| Codebase: truth | open findings: about 70 | `truth.md` | 6.3, 6.4 |
-| Codebase: dead code and repository | `gold_check` 115 (was 280) | script output | 33 declarations, 940 string keys, data files |
-| Codebase: correctness | 16 known bugs open | `engineering.md` | 6.2, 6.3 |
-| Codebase: tests | 504 pass, 1 fails by design (36 untranslated lines), 7 need a mail server | test run 11-11 | the failing guard; parallel scheme |
-| Codebase: translation | 36 literals + about 60 strings outside the catalog + all widget text | guard test, `truth.md` | 6.4 |
-| Codebase: accessibility | 307 audit issues | tour audit | 6.5 |
+| Truth | **9.5** | The truth ledger (6.3, 6.4) is closed. The listing, the website, the Privacy page, the README's Pro line and the answers for App Store Connect's privacy section are each held to the code by tests (`StoreListingTests`, `WebsiteTruthTests`, `PrivacyPageTests`, `PrivacyManifestTests`); money goes through one place and a guard fails the build's tests if it does not (`CurrencyGuardTests`); first-run prices name the page they were read from. | nothing found |
+| No dead code | **9.5** | `gold_check`: declarations nothing refers to 0, string keys unused or untranslated 0, stray files at the root 0 (it caught one this morning, a table only a test read, and the app now uses it). | nothing found |
+| Correctness | **9.0** | The engineering ledger (6.2, 6.3, 6.3a, 6.3b) is closed apart from one item that is the owner's (O24). 816 unit tests. | What only a device or the live project shows is not known: a purchase and its refund, a reminder acted on from a locked phone, Sign in with Apple, a sign-up by a stranger (7.5). The last path that had no proof and could have one, a launch that opens signed in, got its test on 11-17 (6.6). |
+| Tests | **9.0** | 816 unit tests, 0 failures, three serial runs in a row on `fd167fd`; 7 skip in a plain run, and the 4 of them that need only a mail server ran green against the local one today; the database rig 619 checks and the three function rigs 23, 20 and 22, 0 failed; the UI tests other than the tour 10 run, 0 failures, 2 skipped (the mailbox walk and the journey need a server and a folder; the walk ran green against the local server earlier the same day). One command runs the checks, the unit tests, the UI tests and a Release build, and stops at the first that fails (`scripts/proof.sh`, 11-17). | Three mail tests need real providers or real inboxes and were deliberately not run. The UI tests had been left out of the usual run, and it showed: one had failed unseen since 11-13 and one walk had not been run since its mailbox grew (both tests, not the app; both fixed 11-17, and the UI tests are now in the plain run). A UI test can lose its first tap right after a build (seen twice), so a red UI step is run again alone before it is believed. |
+| Translation | **9.0** | Every string a person can see is in the catalog in five languages (`string_usage` 0; the guard over every literal is green). Read on the screens: Arabic whole, German, Spanish, French and Japanese on every single screen. | No native reader (6.7). Two faults were found on 11-17 by reading the Spanish and French screens that the string-by-string reading had passed. |
+| Accessibility | **9.0** | Apple's audit on the whole English tour: 373 lines printed; 51 name an element of the app at rest, on 13 captures (the rest are behind a bar, name no element, or are the system's bars and keyboard), each kind traced (5.2, 11-17): Dynamic Type on catalog rows that do grow, contrast lines that do not repeat and are measured fine, two made-up addresses, two "may be clipped" lines on texts that are whole at the largest size. Every text measured from its pixels: 3,983 at 4.5 to 1 or more, 46 below, each looked at. | The audit does not print nothing, and VoiceOver has not been heard on a device (6.7). |
+| Privacy and security | **9.0** | Every privacy sentence in the app and on the website is held by a test; the privacy manifest declares what is sent and nothing else, and the answers kept for App Store Connect list the same five types (a test); the database rules are proven against a stand-in (619 checks); nothing in the working tree is a secret. | The repository is public and its history still holds business notes and a committed file of scaffold secrets; the published policy is the old one; what App Store Connect's privacy section says today could not be read from here. All three are the owner's (6.7). |
+| Naming and consistency | **9.5** | `gold_check`: hype names 0, in type and file names; one helper for each job (asking first, a field's hint, a facts line, a label and its value). | nothing found |
+| Size and simplicity | **9.0** | `gold_check`: Swift files over 700 lines of code 0 (the largest is 628). Counted today: five files are over 700 raw lines (790, 777, 746, 723, 705), a fifth to a third of each being comments and blank lines. | The measure was changed on 11-12 from raw lines to lines of code, so that the receipt analyzer and the engine pass: each is one algorithm whose helpers are private, and splitting either means making a dozen helpers visible to the whole module. That is a choice, not a limit: it was judged worse than a long file, it is said here, and the owner can overrule it. |
+| Repository | **9.0** | `gold_check`: stray files at the root 0, website pages that differ between copies 0. `CLAUDE.md` is current, including how the store pictures are taken and the one command for the proof; the README and the notes in `docs/` say what the app does, or say at the top that they are superseded (11-17). | The public history (above). Four loose notes of the owner's sit untracked at the root, untouched. |
+
+Together: **9.1** (the mean of the ten, capped at the weakest plus 0.5).
+
+### 7.5 Not scored, because only a device, a stranger or the owner can do it
+
+Each is in 6.7 with what to do. None was rated in place of being done.
+
+- VoiceOver on a real iPhone, on the eight screens a person meets first.
+- Haptics and the feel of each screen on a device.
+- One sign-up by someone outside the project, against the live project (6.1a G1), and Sign in
+  with Apple on a device, with the revoking of it on account deletion (6.1a G2, O39).
+- One purchase in the sandbox, and its refund.
+- A reminder arriving on a locked phone, "Keep it" pressed from the lock screen (S1), and
+  Time Sensitive delivery (O24).
+- One native reader for each of Arabic, German, Spanish, French and Japanese.
+- Publishing the corrected privacy policy and website; deploying the two functions; the public
+  history; sending the sixteen new pictures and the listing to App Store Connect, and checking
+  its App Privacy section against `docs/APP_PRIVACY_ANSWERS.md`; the word to submit. Nothing was
+  pushed, deployed or submitted.
+
+### 7.6 What the last two days found and closed (each a row in section 6, each with its test)
+
+A question is asked from the control that was tapped, not from the middle of the page; a found
+subscription that was cancelled can be read; the first run says the free plan tracks five before
+the account is made; the price of an hour is not split from its unit; the edit screen's question
+is an alert at the largest size; a mailbox's results keep one price column; the Privacy page's
+four sentences are held by tests; the Savings Receipt's count of avoided charges needs no plural,
+and Spanish reminders are switched on in their own gender; on a new install the best-known
+services show their logo; the App Store's sixteen pictures are of the app as it is; two tests that
+had gone stale unseen run again; the README and the answers for App Store Connect's privacy
+section say what the app does, and two September policy drafts are gone from the root; a launch
+that opens signed in has its test; one command runs the whole proof; the Subscriptions list, a
+subscription's page and Insights are drawn again when a Pause Plan starts or ends. The one that
+mattered most was found near the end and by accident: every tour had run on a simulator with a
+month of logos on disk, so the first look a new person gets had never been the one captured.
