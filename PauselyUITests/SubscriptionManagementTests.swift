@@ -60,7 +60,8 @@ final class SubscriptionManagementTests: XCTestCase {
         // outside it keeps the subscription. Earlier versions show an action sheet with Keep.
         let question = app.staticTexts["Remove \"Spotify\"?"]
         spotify.swipeLeft()
-        let swipeRemove = app.buttons["Remove"].firstMatch
+        // By its identifier: a button that has one is no longer found by its label.
+        let swipeRemove = app.buttons["swipeRemove"].firstMatch
         XCTAssertTrue(swipeRemove.waitForExistence(timeout: 3), "swiping left offers Remove")
         swipeRemove.tap()
         XCTAssertTrue(question.waitForExistence(timeout: 3), "removing asks first")
@@ -71,8 +72,8 @@ final class SubscriptionManagementTests: XCTestCase {
 
         // Remove: it leaves the list.
         spotify.swipeLeft()
-        XCTAssertTrue(app.buttons["Remove"].firstMatch.waitForExistence(timeout: 3))
-        app.buttons["Remove"].firstMatch.tap()
+        XCTAssertTrue(app.buttons["swipeRemove"].firstMatch.waitForExistence(timeout: 3))
+        app.buttons["swipeRemove"].firstMatch.tap()
         XCTAssertTrue(question.waitForExistence(timeout: 3))
         let confirm = app.buttons.matching(NSPredicate(format: "label == 'Remove'")).allElementsBoundByIndex.last
         XCTAssertNotNil(confirm)
