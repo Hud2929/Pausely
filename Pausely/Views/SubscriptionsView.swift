@@ -157,6 +157,12 @@ struct SubscriptionsView: View {
 
             ForEach(sections) { section in
                 Section {
+                    // The group's title is its first row and scrolls with it. As a section header
+                    // it was pinned, and iOS 18 does not push a pinned header away: the next
+                    // title slides under it, and where the list came to rest in between, two
+                    // titles lay over each other ("Needs a decision" on half of "This week",
+                    // seen 2026-11-17 on the first run of the app on iOS 18.0).
+                    sectionTitle(section, first: section.id == sections.first?.id)
                     ForEach(section.subscriptions) { subscription in
                         SubscriptionRow(subscription: subscription, group: section.group) {
                             activeSheet = .detail(subscription)
@@ -185,8 +191,6 @@ struct SubscriptionsView: View {
                             .tint(Color.inkLifted)
                         }
                     }
-                } header: {
-                    sectionHeader(section)
                 }
             }
         }
@@ -200,7 +204,7 @@ struct SubscriptionsView: View {
         Binding(get: { pendingRemoval == subscription.id }, set: { if !$0 { pendingRemoval = nil } })
     }
 
-    private func sectionHeader(_ section: SubscriptionGroups.Section) -> some View {
+    private func sectionTitle(_ section: SubscriptionGroups.Section, first: Bool) -> some View {
         HStack(spacing: 8) {
             if let state = Self.state(for: section.group) { StateMark(state: state) }
             Text(verbatim: Self.title(for: section.group))
@@ -211,16 +215,22 @@ struct SubscriptionsView: View {
                 .font(.subheadline.monospacedDigit())
                 .foregroundStyle(Color.inkTextFaint)
         }
-        .padding(.top, 12)
+        // The gap between two groups is larger than the gap inside one.
+        .padding(.top, Self.titleTopPadding(first: first))
         .padding(.bottom, 4)
         .padding(.horizontal, Layout.margin)
         .frame(maxWidth: .infinity)
-        .background(Color.ink)
         .listRowInsets(EdgeInsets())
-        .textCase(nil)
+        .listRowBackground(Color.clear)
+        // The line under the title is the first row's; none above it.
+        .listRowSeparator(.hidden, edges: .top)
+        .listRowSeparatorTint(Color.line)
         .accessibilityElement(children: .combine)
         .accessibilityAddTraits(.isHeader)
     }
+
+    /// Above a group's title: what the list gave a section header, so the page reads as it did.
+    nonisolated static func titleTopPadding(first: Bool) -> CGFloat { first ? 12 : 34 }
 
     static func title(for group: SubscriptionGroups.Group) -> String {
         switch group {

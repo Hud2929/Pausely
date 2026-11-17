@@ -521,6 +521,30 @@ final class ScreenRulesTests: XCTestCase {
         XCTAssertFalse(history.contains(".multilineTextAlignment(.trailing)"), "The row decides, by where the value sits")
     }
 
+    /// A group's title on the Subscriptions list scrolls with its rows. As a pinned section header
+    /// it was right on iOS 26, which pushes a pinned header away as the next one arrives. iOS 18
+    /// does not: the next title slides under the pinned one, and where the list came to rest in
+    /// between, "Needs a decision" lay over half of "This week" (seen 2026-11-17, the first time
+    /// the app was run on the oldest iOS it allows; measured by dragging the list 14 points at a
+    /// time on both). No list in the app pins a header now.
+    func testNoListPinsAHeader() throws {
+        // The gap above a group's title is larger than the gap inside the group.
+        XCTAssertEqual(SubscriptionsView.titleTopPadding(first: true), 12)
+        XCTAssertGreaterThan(SubscriptionsView.titleTopPadding(first: false), 24)
+
+        let sources = root.appendingPathComponent("Pausely")
+        try XCTSkipUnless(FileManager.default.fileExists(atPath: sources.path), "Sources aren't readable from this test run")
+        var pinned: [String] = []
+        for file in try FileManager.default.subpathsOfDirectory(atPath: sources.path) where file.hasSuffix(".swift") {
+            let text = try String(contentsOf: sources.appendingPathComponent(file), encoding: .utf8)
+            if text.contains("} header: {") || text.contains("Section(header:") || text.contains("pinnedViews:") { pinned.append(file) }
+        }
+        XCTAssertEqual(pinned, [], "a section header in a plain list is pinned, and so is a pinned view in a lazy stack")
+        let list = try String(contentsOf: sources.appendingPathComponent("Views/SubscriptionsView.swift"), encoding: .utf8)
+        XCTAssertTrue(list.contains("sectionTitle(section, first: section.id == sections.first?.id)"))
+        XCTAssertTrue(list.contains(".accessibilityAddTraits(.isHeader)"), "it is still a heading to VoiceOver")
+    }
+
     /// Profile is titled by the name the person gave, and by nothing made up. An account made with
     /// an address has no name: the page made one out of the address ("Jane.Doe"; for an address
     /// Apple hides, a run of letters) and set it above the address itself. No capture had shown it:
