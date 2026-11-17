@@ -244,11 +244,14 @@ struct FoundRow: View {
                 }
             }
             if !proven.evidence.isEmpty {
-                VStack(spacing: 6) {
+                VStack(alignment: .leading, spacing: typeSize.isAccessibilitySize ? 12 : 6) {
                     ForEach(proven.evidence.suffix(5).reversed()) { charge in
-                        HStack {
+                        // A day and what was charged on it: on a line while both fit, the amount
+                        // under its day when they do not. Side by side at the largest text size
+                        // the day took three lines and the amount lost its last digit to a
+                        // fourth ("$34.9" above "9", seen 2026-11-17).
+                        LineOrStack(spacing: 8, lineSpacing: 0, spread: true, alignment: .firstTextBaseline) {
                             Text(charge.date, format: .dateTime.month(.abbreviated).day().year())
-                            Spacer(minLength: 8)
                             Text(verbatim: InboxImportView.money(charge.amount, charge.currency))
                         }
                         .font(.proof(.footnote))
@@ -271,7 +274,11 @@ struct FoundRow: View {
             }
         }
         .frame(maxWidth: .infinity, alignment: .leading)
-        .padding(.leading, 46)
+        .padding(.leading, Self.reasonsInset(largeText: typeSize.isAccessibilitySize))
         .padding(.bottom, 12)
     }
+
+    /// How far in the reasons start: under the name, which is past the box. At the accessibility
+    /// text sizes the name starts at the row's edge (`wordsHaveTheWholeRow`), and so do they.
+    nonisolated static func reasonsInset(largeText: Bool) -> CGFloat { largeText ? 0 : 46 }
 }

@@ -517,6 +517,30 @@ final class ScreenRulesTests: XCTestCase {
         XCTAssertFalse(history.contains(".multilineTextAlignment(.trailing)"), "The row decides, by where the value sits")
     }
 
+    /// In the reasons a found subscription gives, a charge is never broken to fit beside its
+    /// day. Side by side at the largest text size the day took three lines ("Nov", "14,", "2026")
+    /// and the amount a line and a digit ("$34.9", "9"): the page nobody had reached at that size
+    /// until the tour followed what a tap opens (2026-11-17).
+    func testAChargeInTheReasonsIsNeverBrokenToFitBesideItsDay() throws {
+        // The reasons start where the name does: past the box, or at the row's edge.
+        XCTAssertEqual(FoundRow.reasonsInset(largeText: false), 46)
+        XCTAssertEqual(FoundRow.reasonsInset(largeText: true), 0)
+        XCTAssertTrue(FoundRow.wordsHaveTheWholeRow(largeText: true))
+        // "Nov 14, 2026" and "$34.99" at the largest size, in the row's width: one under the other.
+        XCTAssertEqual(LineOrStack.arrangement(widths: [318, 160], spacing: 8, in: 362, besideShare: 0), .stack)
+        // At the default size: on a line, the amount at the far end.
+        XCTAssertEqual(LineOrStack.arrangement(widths: [92, 46], spacing: 8, in: 316, besideShare: 0), .line)
+
+        let sources = root.appendingPathComponent("Pausely")
+        try XCTSkipUnless(FileManager.default.fileExists(atPath: sources.path), "Sources aren't readable from this test run")
+        let found = try String(contentsOf: sources.appendingPathComponent("Views/Inbox/FoundRow.swift"), encoding: .utf8)
+        let charges = try XCTUnwrap(found.range(of: "ForEach(proven.evidence.suffix(5).reversed()) { charge in"))
+        let row = String(found[charges.upperBound...].prefix(900))
+        XCTAssertTrue(row.contains("LineOrStack(spacing: 8, lineSpacing: 0, spread: true, alignment: .firstTextBaseline) {"))
+        XCTAssertFalse(row.contains("HStack {"), "an HStack shares the width out and breaks both")
+        XCTAssertTrue(found.contains(".padding(.leading, Self.reasonsInset(largeText: typeSize.isAccessibilitySize))"))
+    }
+
     /// A price is never drawn smaller than the "/mo" beside it. The two were two texts on a line
     /// and only the amount gave way: at the largest text size "IDR 8,500,000" stood at six tenths
     /// of its size beside a full-size "/mo", on the subscription's page and on the verdict (seen
