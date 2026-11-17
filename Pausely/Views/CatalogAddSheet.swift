@@ -40,7 +40,18 @@ struct CatalogAddSheet: View {
     private var typed: Decimal? { AmountText.parse(amountText, currency: currency) }
     private var amount: Decimal? { amountText.isEmpty ? typical : typed }
     /// A trial is tracked for the day it ends, so saying "I'm on a free trial" needs that day.
-    private var canAdd: Bool { (amount ?? 0) > 0 && (!hasFreeTrial || trialEndsAt != nil) }
+    private var canAdd: Bool { Self.canAdd(amount: amount, onTrial: hasFreeTrial, trialEnds: trialEndsAt) }
+
+    nonisolated static func canAdd(amount: Decimal?, onTrial: Bool, trialEnds: Date?) -> Bool {
+        (amount ?? 0) > 0 && !needsTrialDay(onTrial: onTrial, trialEnds: trialEnds)
+    }
+
+    /// True while a trial has no end day. The button is off then, and the sheet says why: with
+    /// the switch on and nothing else said, the button simply went dim (first seen 2026-11-16,
+    /// when the tour first captured this state in English).
+    nonisolated static func needsTrialDay(onTrial: Bool, trialEnds: Date?) -> Bool {
+        onTrial && trialEnds == nil
+    }
     private var currency: String { currencyManager.selectedCurrency }
 
     // MARK: - Body
@@ -96,6 +107,15 @@ struct CatalogAddSheet: View {
                         row(L10n.string("Trial ends")) {
                             OptionalDatePicker(title: L10n.string("Trial ends"), date: $trialEndsAt,
                                                earliest: Calendar.billing.startOfDay(for: Date()))
+                        }
+                        if Self.needsTrialDay(onTrial: hasFreeTrial, trialEnds: trialEndsAt) {
+                            Text("Add the day the trial ends, so Pausely can ask you before it charges.")
+                                .font(.footnote)
+                                .foregroundStyle(Color.decide)
+                                .fixedSize(horizontal: false, vertical: true)
+                                .frame(maxWidth: .infinity, alignment: .leading)
+                                .padding(.top, 4)
+                                .accessibilityIdentifier("tierTrialDayNeeded")
                         }
                     }
                 }

@@ -824,7 +824,7 @@ final class ScreenRulesTests: XCTestCase {
                 if placeholder != "\"\"" { inside.append(placeholder) }
             }
         }
-        XCTAssertEqual(inside.sorted(), ["\"0\"", "\"993\"", "suggestedHost ?? \"imap.example.com\""])
+        XCTAssertEqual(inside.sorted(), ["\"993\"", "L10n.number(0)", "suggestedHost ?? \"imap.example.com\""])
     }
 
     /// The short sheet that asks for a price is as tall as its form, whatever the language and
@@ -1018,5 +1018,41 @@ final class ScreenRulesTests: XCTestCase {
 
         let palette = try String(contentsOf: sources.appendingPathComponent("DesignSystem/InkPaper.swift"), encoding: .utf8)
         XCTAssertTrue(palette.contains("static let fieldEdge = Color(hex: Palette.fieldEdge)"))
+    }
+
+    /// The catalog's plan sheet with "I'm on a free trial" on. The button is off until the trial's
+    /// last day is set, and the sheet says so: before, the button went dim and nothing said why.
+    /// (Nobody had seen it: the tour's capture of this state was of the switch still off.)
+    func testThePlanSheetSaysWhyItsButtonIsOffWhileATrialHasNoEndDay() throws {
+        let day = Date(timeIntervalSince1970: 1_800_000_000)
+        XCTAssertTrue(CatalogAddSheet.needsTrialDay(onTrial: true, trialEnds: nil))
+        XCTAssertFalse(CatalogAddSheet.needsTrialDay(onTrial: true, trialEnds: day))
+        XCTAssertFalse(CatalogAddSheet.needsTrialDay(onTrial: false, trialEnds: nil))
+        // The button follows the same rule, and still needs a price.
+        XCTAssertFalse(CatalogAddSheet.canAdd(amount: 18, onTrial: true, trialEnds: nil))
+        XCTAssertTrue(CatalogAddSheet.canAdd(amount: 18, onTrial: true, trialEnds: day))
+        XCTAssertTrue(CatalogAddSheet.canAdd(amount: 18, onTrial: false, trialEnds: nil))
+        XCTAssertFalse(CatalogAddSheet.canAdd(amount: nil, onTrial: false, trialEnds: nil))
+        XCTAssertFalse(CatalogAddSheet.canAdd(amount: 0, onTrial: true, trialEnds: day))
+
+        let sources = root.appendingPathComponent("Pausely")
+        try XCTSkipUnless(FileManager.default.fileExists(atPath: sources.path), "Sources aren't readable from this test run")
+        let sheet = try String(contentsOf: sources.appendingPathComponent("Views/CatalogAddSheet.swift"), encoding: .utf8)
+        let shown = try XCTUnwrap(sheet.range(of: "if Self.needsTrialDay(onTrial: hasFreeTrial, trialEnds: trialEndsAt) {"))
+        let line = try XCTUnwrap(sheet.range(of: #"Text("Add the day the trial ends, so Pausely can ask you before it charges.")"#, range: shown.upperBound..<sheet.endIndex))
+        XCTAssertLessThan(sheet.distance(from: shown.upperBound, to: line.lowerBound), 80, "the sentence is what that condition shows")
+        XCTAssertTrue(sheet.contains(".disabled(!canAdd)"))
+    }
+
+    /// A hint that is a figure is in the reader's own digits, like the figures around it: the
+    /// hours sheet showed a Latin "0" in Arabic (seen 2026-11-16).
+    func testAFigureUsedAsAHintIsInTheReadersDigits() throws {
+        XCTAssertEqual(L10n.number(0, locale: Locale(identifier: "ar_SA")), "٠")
+        XCTAssertEqual(L10n.number(0, locale: Locale(identifier: "en_CA")), "0")
+        let sources = root.appendingPathComponent("Pausely")
+        try XCTSkipUnless(FileManager.default.fileExists(atPath: sources.path), "Sources aren't readable from this test run")
+        let hours = try String(contentsOf: sources.appendingPathComponent("Views/SubscriptionManagement/UsageInputSheet.swift"), encoding: .utf8)
+        XCTAssertTrue(hours.contains("InkTextField(placeholder: L10n.number(0), text: text, keyboardType: .numberPad)"))
+        XCTAssertFalse(hours.contains(#"placeholder: "0""#))
     }
 }

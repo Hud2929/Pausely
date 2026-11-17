@@ -78,7 +78,8 @@ struct UsageInputSheet: View {
                 .font(.subheadline.weight(.medium))
                 .foregroundStyle(Color.inkTextMuted)
                 .accessibilityHidden(true)
-            InkTextField(placeholder: "0", text: text, keyboardType: .numberPad)
+            // In the reader's own digits, like every other figure on the sheet.
+            InkTextField(placeholder: L10n.number(0), text: text, keyboardType: .numberPad)
                 .focused($focus, equals: field)
                 .accessibilityLabel(Text(verbatim: label))
                 .accessibilityIdentifier(id)

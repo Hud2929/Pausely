@@ -14883,6 +14883,40 @@
         }
       }
     },
+    "Add the day the trial ends, so Pausely can ask you before it charges.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "أضف يوم انتهاء التجربة ليسألك Pausely قبل أن يبدأ الخصم."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tragen Sie ein, wann die Testphase endet, damit Pausely Sie fragt, bevor abgebucht wird."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Añade el día en que termina la prueba para que Pausely te pregunte antes del cobro."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ajoutez le jour où l'essai se termine pour que Pausely vous demande avant le prélèvement."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "トライアルの終了日を追加すると、請求が始まる前にPauselyが確認します。"
+          }
+        }
+      }
+    },
     "Remove \"%@\"?": {
       "localizations": {
         "ar": {
