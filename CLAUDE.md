@@ -123,7 +123,9 @@ One engine, one adapter per kind of inbox, all read-only and on-device:
 - `MIMEParser` turns raw RFC 822 into a `RawEmail`; `Intelligence/EmailSignalExtractor.extractAll` +
   `ReceiptTextAnalyzer` (each figure judged by its own label) + `AppleReceipt` (several subscriptions on
   one receipt) reduce it to `ReceiptSignal`s; `ReceiptLedger` keeps the facts (never the mail) tagged
-  by inbox; `SubscriptionIntelligenceEngine` proves subscriptions from charge patterns.
+  by inbox; `SubscriptionIntelligenceEngine` proves subscriptions from charge patterns: `ChargeSchedule`
+  finds the schedule in one merchant's charges (which billing period leaves the least unexplained),
+  the engine scores it, and `SubscriptionInsights` says what follows (a price rise, a trial ending).
 - `InboxScanner` runs it all for every connected inbox and publishes `FoundSubscription`s;
   `Views/InboxImportView` and `Views/Inbox/` are the screens. Findings join the list through
   `TallyImporter.add` (Core/FirstRun), the one importer: free limit in the open, the last real charge
@@ -154,7 +156,7 @@ One engine, one adapter per kind of inbox, all read-only and on-device:
 iPhone and iPad (`TARGETED_DEVICE_FAMILY = "1,2"`; 1.0.1 shipped on iPad, so Apple rejects any
 update that drops it). On iPad, `.readableWidth()` keeps the app at phone width, centred; apply it
 to any new `fullScreenCover`. Dark only. The design system is "Ink and Paper"
-(`DesignSystem/InkPaper.swift`, rules in the `pausely-design` skill): `Color.ink` background, `PaperSlip`
+(`DesignSystem/InkPaper.swift`, with the parts that share a line in `InkLayout.swift`; rules in the `pausely-design` skill): `Color.ink` background, `PaperSlip`
 only where money is decided or proven, `Color.kept` (mint) only for money kept, `Font.question` (serif)
 for questions and totals, `Font.proof` (mono) for receipt lines, `.buttonStyle(.ink…)`, `Motion`, `Feel`.
 `scripts/old_ui_check.sh` must print "0 files". `ServiceLogoView` loads logos (touch icon, then favicon,

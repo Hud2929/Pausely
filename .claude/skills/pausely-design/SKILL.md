@@ -5,7 +5,7 @@ description: The rules, checks and rating bar for every Pausely screen (Ink and 
 
 # Pausely design: Ink and Paper
 
-The system lives in `Pausely/DesignSystem/InkPaper.swift`; the reasoning in `REDESIGN_PLAN.md`
+The system lives in `Pausely/DesignSystem/InkPaper.swift` (layout parts in `InkLayout.swift`); the reasoning in `REDESIGN_PLAN.md`
 section 3. See every part on one screen with the DEBUG launch argument `--demo-design`.
 
 ## The identity, in five rules

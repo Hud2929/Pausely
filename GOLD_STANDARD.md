@@ -1247,7 +1247,7 @@ Updated at every commit, so the work can be picked up from this file alone.
   walk lost its "Keep my list" tap on the first try (the fault of the 6.6 bullet, in the one
   place still tapping plainly); its three forward taps go through `tap(until:)` now, and the
   walk passed. The proof script no longer prints a line when it stops its mail server.
-- **11-17, the scorecard again (this commit): the run ends here, a second time.** Section 7
+- **11-17, the scorecard again (`9490b27`): the run ends here, a second time.** Section 7
   is rewritten from the evidence above. Against the first version (`d0e0206`): "Size and
   simplicity" 9.0 to 9.5 (nothing found); the codebase 9.1 to 9.2; "Tests" and "Correctness"
   stay at 9.0 with their evidence and reasons brought up to date; every screen and every walk
@@ -1258,6 +1258,10 @@ Updated at every commit, so the work can be picked up from this file alone.
   now been held to that, and no line gives a choice as its reason.
   **To pick the run up again:** the items of 7.5, in the order of 6.7. There is no slice left
   that can be done from this Mac without one of them.
+- **11-17, the documents name the new files (this commit).** `CLAUDE.md` and the design
+  skill said where the engine and the design system live by their old single files; they name
+  `ChargeSchedule`, `SubscriptionInsights` and `InkLayout.swift` now. `gold_check` 0. No code
+  changed.
 
 **Phase 0. Scan (read-only).** Four independent audits (dead code, truth, design rules on every
 view, engineering) plus mechanical scans. Output: the ledger.
