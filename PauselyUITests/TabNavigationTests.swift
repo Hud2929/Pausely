@@ -24,10 +24,7 @@ final class TabNavigationTests: XCTestCase {
     func testNavigateBetweenTabs() throws {
         XCTAssertTrue(tab("tabHome").waitForExistence(timeout: 10))
         for id in ["tabSubscriptions", "tabAnalysis", "tabProfile", "tabHome"] {
-            tab(id).tap()
-            let deadline = Date().addingTimeInterval(5)
-            while !tab(id).isSelected && Date() < deadline { usleep(200_000) }
-            XCTAssertTrue(tab(id).isSelected, "\(id) should be selected after tapping it")
+            XCTAssertTrue(tab(id).tap(until: tab(id).isSelected), "\(id) should be selected after tapping it")
             let selectedCount = app.tabBars.buttons.allElementsBoundByIndex.filter(\.isSelected).count
             XCTAssertEqual(selectedCount, 1, "exactly one tab is selected")
         }

@@ -14,7 +14,7 @@ final class SubscriptionManagementTests: XCTestCase {
         app.launch()
         let tab = app.tab("tabSubscriptions")
         XCTAssertTrue(tab.waitForExistence(timeout: 10))
-        tab.tap()
+        XCTAssertTrue(tab.tap(until: tab.isSelected), "the list's tab opens")
     }
 
     private func card(_ name: String) -> XCUIElement {
@@ -29,21 +29,17 @@ final class SubscriptionManagementTests: XCTestCase {
     func testAddOpensTheCatalog() {
         let add = app.buttons["addSubscriptionButton"]
         XCTAssertTrue(add.waitForExistence(timeout: 5))
-        add.tap()
-        XCTAssertTrue(app.textFields["catalogSearchField"].waitForExistence(timeout: 5), "the catalog opens, ready to search")
+        XCTAssertTrue(add.tap(until: app.textFields["catalogSearchField"].exists), "the catalog opens, ready to search")
     }
 
     func testRemovingASubscriptionTakesItOffTheList() {
         let netflix = card("Netflix")
         XCTAssertTrue(netflix.waitForExistence(timeout: 10), "the demo list starts with Netflix")
-        netflix.tap()
-
         let remove = app.buttons["removeSubscriptionButton"]
-        XCTAssertTrue(remove.waitForExistence(timeout: 5))
+        XCTAssertTrue(netflix.tap(until: remove.exists), "a row opens the subscription's screen")
         for _ in 0..<6 where !remove.isHittable { app.swipeUp() }
-        remove.tap()
         let confirm = app.buttons["Remove"]
-        XCTAssertTrue(confirm.waitForExistence(timeout: 5), "removing asks first")
+        XCTAssertTrue(remove.tap(until: confirm.exists), "removing asks first")
         confirm.tap()
 
         // Offline-first: it's removed on this iPhone and queued for sync, with no error.
@@ -63,8 +59,7 @@ final class SubscriptionManagementTests: XCTestCase {
         // By its identifier: a button that has one is no longer found by its label.
         let swipeRemove = app.buttons["swipeRemove"].firstMatch
         XCTAssertTrue(swipeRemove.waitForExistence(timeout: 3), "swiping left offers Remove")
-        swipeRemove.tap()
-        XCTAssertTrue(question.waitForExistence(timeout: 3), "removing asks first")
+        XCTAssertTrue(swipeRemove.tap(until: question.exists, within: 3), "removing asks first")
         let keep = app.buttons["Keep"]
         if keep.exists { keep.tap() } else { app.otherElements["PopoverDismissRegion"].firstMatch.tap() }
         XCTAssertTrue(waitUntilGone(question, timeout: 3))
@@ -73,8 +68,7 @@ final class SubscriptionManagementTests: XCTestCase {
         // Remove: it leaves the list.
         spotify.swipeLeft()
         XCTAssertTrue(app.buttons["swipeRemove"].firstMatch.waitForExistence(timeout: 3))
-        app.buttons["swipeRemove"].firstMatch.tap()
-        XCTAssertTrue(question.waitForExistence(timeout: 3))
+        XCTAssertTrue(app.buttons["swipeRemove"].firstMatch.tap(until: question.exists, within: 3))
         let confirm = app.buttons.matching(NSPredicate(format: "label == 'Remove'")).allElementsBoundByIndex.last
         XCTAssertNotNil(confirm)
         confirm?.tap()

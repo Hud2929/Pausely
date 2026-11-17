@@ -35,8 +35,10 @@ DEBUG-only code must not be referenced from release code paths.
 checks (`scripts/gold_check.sh`, which must print a total of 0), the unit tests, the UI tests other
 than the screen tour, and a Release build, stopping at the first that fails. `scripts/proof.sh unit ui`
 runs only the steps named; `db` adds the database and function rigs (Docker). Run it before a commit
-that changes a screen: a UI test can go stale without any unit test noticing. A UI test sometimes
-loses its first tap right after a build, so run a red UI step once more before believing it.
+that changes a screen: a UI test can go stale without any unit test noticing. In a UI test, a tap
+that has a result to wait for goes through `tap(until:)` (`PauselyUITests/TabHelper.swift`): on the
+simulator a test's touch is sometimes taken back before it counts, so it taps once more, and a button
+that does nothing still fails.
 
 Tests must be able to fail: assert exact outcomes (not "not nil" or "didn't crash"), never test code the
 app doesn't call (delete the dead code instead), and never skip on every run. Tests that use the shared

@@ -1211,11 +1211,14 @@ Updated at every commit, so the work can be picked up from this file alone.
 - **11-17, the receipt analyzer (`9adec71`).** Second file of "Long files again" (6.6).
   Next, in order: the design system file and the first run; the mailbox screen; the check
   back to raw lines; the "Tests" line; section 7 again.
-- **11-17, the design system file and the first run (this commit).** Third and fourth files
+- **11-17, the design system file and the first run (`6294a21`).** Third and fourth files
   of "Long files again" (6.6).
   Next, in order: the tap that brings nothing in the UI tests (found while proving this
   slice); the mailbox screen; the check back to raw lines; the rest of the "Tests" line;
   section 7 again.
+- **11-17, a tap that brings nothing (this commit).** Bullet opened and closed in 6.6.
+  Next, in order: the mailbox screen; the check back to raw lines; the rest of the "Tests"
+  line (three mail tests not run); section 7 again.
 
 **Phase 0. Scan (read-only).** Four independent audits (dead code, truth, design rules on every
 view, engineering) plus mechanical scans. Output: the ledger.
@@ -1628,6 +1631,19 @@ Stage G, as it closes (each line: what, and the evidence):
     failures; `gold_check` 0; the UI tests, which walk the first run, 10 run, 2 skipped, 0
     failures, three runs in a row (after the tap fix in the next entry: the first run of them
     failed on a tap that brought nothing, on a build that then passed two runs in three).
+- A tap that brings nothing, 11-17. The scorecard said "a UI test can lose its first tap right
+  after a build (seen twice), so a red UI step is run again alone before it is believed". Seen a
+  third and fourth time while proving the split above, and this time looked at instead of run
+  again: the test's screen recording, frame by frame (`frames.swift` in the job's scratch). On the
+  account form the Cancel button is drawn pressed at the moment of the tap and released a frame
+  later, and the form stays: the touch arrived and was taken back before it counted. The other
+  time it was the first run's main button, at the bottom edge. The same build then passed two
+  runs in three, so it is the simulator and not the app (what takes the touch back was not
+  established; both buttons sit at a screen edge, and the Mac was busy both times). Closed in the
+  tests: `tap(until:)` taps, waits for what the tap should bring, and taps once more if it did
+  not come; every tap with a result to wait for goes through it (the first run, the tabs, the
+  list). A button that does nothing still fails, on the second tap. The UI tests, three runs in a
+  row: 10 run, 2 skipped, 0 failures each.
 
 ### 6.7 For the owner (cannot or should not be done from here)
 
