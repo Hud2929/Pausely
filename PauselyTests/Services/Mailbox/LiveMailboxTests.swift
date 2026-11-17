@@ -61,7 +61,11 @@ final class LiveMailboxTests: XCTestCase {
         XCTAssertNotNil(report.subscriptions.first { $0.name.contains("iCloud") }, "App Store receipts in HTML only")
         XCTAssertEqual(found["Disney+"]?.currency, "JPY", "Japanese ISO-2022-JP receipt")
         XCTAssertNil(found["Uber"])
-        XCTAssertFalse(report.subscriptions.contains { $0.name.lowercased().contains("amazon") }, "one-time order")
+        // The mailbox holds Amazon's one-time orders and, since the rig grew, an Amazon Prime
+        // membership beside them: the orders are nobody's subscription, the membership is one.
+        XCTAssertNil(found["Amazon"], "one-time orders")
+        XCTAssertFalse(report.subscriptions.contains { $0.name.lowercased().contains("amazon") && $0.name != "Amazon Prime" }, "one-time orders")
+        XCTAssertEqual(found["Amazon Prime"]?.amount, Decimal(string: "14.99"))
         XCTAssertFalse(report.subscriptions.contains { $0.name.lowercased().contains("promo") || $0.name.contains("Best Deals") })
 
         // A second scan only looks at mail that arrived since: here, nothing.

@@ -88,7 +88,14 @@ final class InboxWorkflowUITests: XCTestCase {
         focus(secret)
         secret.typeText(password)
         app.buttons["imapConnect"].tap()
-        XCTAssertTrue(app.staticTexts["scanStatus"].waitForExistence(timeout: 30), "connecting starts the search")
+        // A server on this Mac answers so fast that the whole search can be over within the
+        // second, and the line that says it is searching is gone before it can be looked for
+        // (seen 2026-11-17: 138 messages read and "We found 19 subscriptions" two seconds after
+        // the tap). The line or the results: either shows that connecting started the search.
+        let searching = app.staticTexts["scanStatus"]
+        let results = app.buttons["importSelectedButton"]
+        let started = expectation(for: NSPredicate { _, _ in searching.exists || results.exists }, evaluatedWith: nil)
+        XCTAssertEqual(XCTWaiter.wait(for: [started], timeout: 30), .completed, "connecting starts the search")
         Thread.sleep(forTimeInterval: 3)
         snap("3-searching")
 
