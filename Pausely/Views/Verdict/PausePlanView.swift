@@ -57,11 +57,6 @@ struct PausePlanView: View {
         .sheet(item: $cancelTarget) { sub in
             CancelSubscriptionFlow(subscription: sub)
         }
-        .asksFirst(Text("End your Pause Plan?"), isPresented: $confirmEnd,
-                   message: Text("Your subscriptions stay as they are. Pausely goes back to its usual renewal reminders.")) {
-            Button("End Pause Plan", role: .destructive) { Task { await planStore.end() } }
-            Button("Keep it", role: .cancel) {}
-        }
         .onAppear(perform: setDefaults)
     }
 
@@ -320,6 +315,11 @@ struct PausePlanView: View {
             }
             .buttonStyle(.plain)
             .accessibilityIdentifier("endPausePlanButton")
+            .asksFirst(Text("End your Pause Plan?"), isPresented: $confirmEnd,
+                       message: Text("Your subscriptions stay as they are. Pausely goes back to its usual renewal reminders.")) {
+                Button("End Pause Plan", role: .destructive) { Task { await planStore.end() } }
+                Button("Keep it", role: .cancel) {}
+            }
         }
     }
 

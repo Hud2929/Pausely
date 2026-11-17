@@ -657,6 +657,44 @@ final class ScreenRulesTests: XCTestCase {
         XCTAssertFalse(body.contains("if Asking.isAnAlert"))
     }
 
+    /// iOS brings a question's choices up from whatever the question is attached to. Hung on a
+    /// whole screen, that was the middle of the page: over "Sign out" itself on the iPhone and
+    /// beside the column on iPad (seen on the tours of 11-16). Each question is attached to the
+    /// button that asks it, or to the row it is about, on the line after that control's name.
+    func testAQuestionComesUpFromTheControlThatAsked() throws {
+        let sources = root.appendingPathComponent("Pausely")
+        try XCTSkipUnless(FileManager.default.fileExists(atPath: sources.path), "Sources aren't readable from this test run")
+        let hungOn = [
+            "Views/ProfileView.swift": ".accessibilityIdentifier(\"signOutButton\")",
+            "Views/SubscriptionManagementView.swift": ".accessibilityIdentifier(\"removeSubscriptionButton\")",
+            "Views/Verdict/PausePlanView.swift": ".accessibilityIdentifier(\"endPausePlanButton\")",
+            "Views/Subscriptions/SubscriptionEditView.swift": ".accessibilityIdentifier(\"editCancelButton\")",
+            // The list's question is about a row, and the swipe action that asks it is gone by
+            // the time the answer is given: the row is the place.
+            "Views/SubscriptionsView.swift": ".listRowSeparatorTint(Color.line)",
+        ]
+        var seen: [String] = []
+        for file in try FileManager.default.subpathsOfDirectory(atPath: sources.path).sorted() where file.hasSuffix(".swift") {
+            guard !file.hasPrefix("DesignSystem/") else { continue }
+            let lines = try String(contentsOf: sources.appendingPathComponent(file), encoding: .utf8)
+                .components(separatedBy: "\n").map { $0.trimmingCharacters(in: .whitespaces) }
+            for (index, line) in lines.enumerated() where line.hasPrefix(".asksFirst(") {
+                seen.append(file)
+                let control = try XCTUnwrap(hungOn[file], "\(file) asks a question this test does not know: say here what it hangs on")
+                XCTAssertEqual(lines[index - 1], control, "\(file): the question is not on the control that asks it")
+            }
+        }
+        XCTAssertEqual(seen, hungOn.keys.sorted())
+
+        // The button that asks is as wide as its words where they start a row, so the choices
+        // point at the words and not at the middle of an empty row.
+        let profile = try String(contentsOf: sources.appendingPathComponent("Views/ProfileView.swift"), encoding: .utf8)
+        let signOut = try XCTUnwrap(profile.range(of: "Button { confirmSignOut = true } label: {"))
+        let button = String(profile[signOut.upperBound...].prefix(260))
+        XCTAssertTrue(button.contains(".tapArea(.leading)"))
+        XCTAssertFalse(button.contains("maxWidth: .infinity"))
+    }
+
     /// The page with inboxes connected and nothing found has a way in for the tour. No search
     /// of a made-up mailbox ends there, and for eleven tours the state named "inbox-add" was a
     /// capture of the results list: "Add another inbox" is not on that page.

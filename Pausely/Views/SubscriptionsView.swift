@@ -7,7 +7,7 @@ struct SubscriptionsView: View {
     @ObservedObject private var eventLog = LifecycleEventLog.shared
     @State private var searchText = ""
     @State private var activeSheet: ActiveSheet?
-    @State private var pendingRemoval: Subscription?
+    @State private var pendingRemoval: UUID?
     @Environment(\.dynamicTypeSize) private var typeSize
     @Binding var deepLinkedSubscription: Subscription?
 
@@ -163,8 +163,15 @@ struct SubscriptionsView: View {
                         .listRowInsets(EdgeInsets(top: 0, leading: Layout.margin, bottom: 0, trailing: Layout.margin))
                         .listRowBackground(Color.clear)
                         .listRowSeparatorTint(Color.line)
+                        .asksFirst(Text("Remove \"\(subscription.name)\"?"), isPresented: removing(subscription),
+                                   message: Text("This only removes it from Pausely. It won't cancel the subscription itself.")) {
+                            Button("Remove", role: .destructive) {
+                                Task { await store.deleteSubscription(id: subscription.id) }
+                            }
+                            Button("Keep", role: .cancel) {}
+                        }
                         .swipeActions(edge: .trailing, allowsFullSwipe: false) {
-                            Button { pendingRemoval = subscription } label: {
+                            Button { pendingRemoval = subscription.id } label: {
                                 Label("Remove", systemImage: "trash")
                             }
                             .tint(Color.due)
@@ -185,13 +192,11 @@ struct SubscriptionsView: View {
         .listStyle(.plain)
         .scrollContentBackground(.hidden)
         .contentMargins(.bottom, 24, for: .scrollContent)
-        .asksFirst(Text("Remove \"\(pendingRemoval?.name ?? "")\"?"), about: $pendingRemoval,
-                   message: Text("This only removes it from Pausely. It won't cancel the subscription itself.")) { subscription in
-            Button("Remove", role: .destructive) {
-                Task { await store.deleteSubscription(id: subscription.id) }
-            }
-            Button("Keep", role: .cancel) {}
-        }
+    }
+
+    /// True while this row is the one being asked about: the question comes up from its row.
+    private func removing(_ subscription: Subscription) -> Binding<Bool> {
+        Binding(get: { pendingRemoval == subscription.id }, set: { if !$0 { pendingRemoval = nil } })
     }
 
     private func sectionHeader(_ section: SubscriptionGroups.Section) -> some View {

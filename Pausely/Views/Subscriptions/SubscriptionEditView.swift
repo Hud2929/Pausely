@@ -63,6 +63,10 @@ struct SubscriptionEditView: View {
                     }
                     .foregroundStyle(Color.inkTextMuted)
                     .accessibilityIdentifier("editCancelButton")
+                    .asksFirst(Text("Discard your changes?"), isPresented: $showDiscardConfirm) {
+                        Button("Discard changes", role: .destructive) { dismiss() }
+                        Button("Keep editing", role: .cancel) {}
+                    }
                 }
                 ToolbarItem(placement: .topBarTrailing) {
                     Button {
@@ -87,10 +91,6 @@ struct SubscriptionEditView: View {
         }
         .preferredColorScheme(.dark)
         .interactiveDismissDisabled(isDirty)
-        .asksFirst(Text("Discard your changes?"), isPresented: $showDiscardConfirm) {
-            Button("Discard changes", role: .destructive) { dismiss() }
-            Button("Keep editing", role: .cancel) {}
-        }
     }
 
     // MARK: - Header

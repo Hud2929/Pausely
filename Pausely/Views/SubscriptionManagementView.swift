@@ -58,11 +58,6 @@ struct SubscriptionManagementView: View {
         .sheet(item: $route) { route in
             sheetContent(for: route)
         }
-        .asksFirst(Text("Remove \"\(current.name)\"?"), isPresented: $showRemoveConfirm,
-                   message: Text("This only removes it from Pausely. It won't cancel the subscription itself.")) {
-            Button("Remove", role: .destructive) { Task { await remove() } }
-            Button("Keep", role: .cancel) {}
-        }
     }
 
     private var topBar: some View {
@@ -372,6 +367,11 @@ struct SubscriptionManagementView: View {
             .buttonStyle(.plain)
             .disabled(isRemoving)
             .accessibilityIdentifier("removeSubscriptionButton")
+            .asksFirst(Text("Remove \"\(current.name)\"?"), isPresented: $showRemoveConfirm,
+                       message: Text("This only removes it from Pausely. It won't cancel the subscription itself.")) {
+                Button("Remove", role: .destructive) { Task { await remove() } }
+                Button("Keep", role: .cancel) {}
+            }
         }
     }
 

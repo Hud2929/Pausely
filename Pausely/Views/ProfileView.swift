@@ -68,16 +68,23 @@ struct ProfileView: View {
                     row("hand.raised", L10n.string("Privacy Policy"), id: "privacyPolicyButton", last: true) { open(AppConfig.privacyPolicyURL) }
                 }
 
+                // As wide as its words, so the question comes up from them and not from the
+                // middle of an empty row.
                 Button { confirmSignOut = true } label: {
                     Text("Sign out")
                         .font(.body.weight(.semibold))
                         .foregroundStyle(Color.due)
-                        .frame(maxWidth: .infinity, minHeight: Layout.tapTarget, alignment: .leading)
-                        .contentShape(Rectangle())
+                        .tapArea(.leading)
                 }
                 .buttonStyle(.plain)
-                .padding(.top, 28)
                 .accessibilityIdentifier("signOutButton")
+                .asksFirst(Text("Sign out of Pausely?"), isPresented: $confirmSignOut,
+                           message: Text("Your data is saved and will be here when you return.")) {
+                    Button("Sign out", role: .destructive) { Task { await authManager.signOut() } }
+                    Button("Cancel", role: .cancel) {}
+                }
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .padding(.top, 28)
             }
             .padding(.horizontal, Layout.margin)
             .padding(.top, 16)
@@ -98,11 +105,6 @@ struct ProfileView: View {
         // Apple's own sheets: changing or cancelling the plan, and asking for money back.
         .manageSubscriptionsSheet(isPresented: $managingPlan)
         .refundRequestSheet(for: plan?.transactionId ?? 0, isPresented: $requestingRefund)
-        .asksFirst(Text("Sign out of Pausely?"), isPresented: $confirmSignOut,
-                   message: Text("Your data is saved and will be here when you return.")) {
-            Button("Sign out", role: .destructive) { Task { await authManager.signOut() } }
-            Button("Cancel", role: .cancel) {}
-        }
         .sheet(item: $sheet) { sheet in
             switch sheet {
             case .paywall: StoreKitUpgradeView()

@@ -230,50 +230,45 @@ enum Asking {
     static func isAnAlert(largeText: Bool) -> Bool { largeText }
 }
 
-private struct AsksFirst<Item, Actions: View>: ViewModifier {
+private struct AsksFirst<Actions: View>: ViewModifier {
     let title: Text
-    @Binding var item: Item?
+    @Binding var isPresented: Bool
     let message: Text?
-    @ViewBuilder let actions: (Item) -> Actions
+    @ViewBuilder let actions: () -> Actions
     @Environment(\.dynamicTypeSize) private var typeSize
 
-    /// True while there is something to ask about and this is the shape to ask in.
+    /// True while there is something to ask and this is the shape to ask in.
     private func asking(asAlert: Bool) -> Binding<Bool> {
         let shape = Asking.isAnAlert(largeText: typeSize.isAccessibilitySize)
-        return Binding(get: { item != nil && shape == asAlert }, set: { if !$0 { item = nil } })
+        return Binding(get: { isPresented && shape == asAlert }, set: { if !$0 { isPresented = false } })
     }
 
     func body(content: Content) -> some View {
         // Both are attached and one is ever shown: choosing between them with `if` would rebuild
-        // the screen underneath whenever the text size crossed the line.
+        // what is underneath whenever the text size crossed the line.
         content
-            .confirmationDialog(title, isPresented: asking(asAlert: false), titleVisibility: .visible, presenting: item) { item in
-                actions(item)
-            } message: { _ in
+            .confirmationDialog(title, isPresented: asking(asAlert: false), titleVisibility: .visible) {
+                actions()
+            } message: {
                 if let message { message }
             }
-            .alert(title, isPresented: asking(asAlert: true), presenting: item) { item in
-                actions(item)
-            } message: { _ in
+            .alert(title, isPresented: asking(asAlert: true)) {
+                actions()
+            } message: {
                 if let message { message }
             }
     }
 }
 
 extension View {
-    /// Asks before doing something to `item` that is not undone (`Asking`). The buttons are the
-    /// ones the system draws: give the one that goes ahead the destructive role and the other
-    /// the cancel role.
-    func asksFirst<Item, Actions: View>(_ title: Text, about item: Binding<Item?>, message: Text? = nil,
-                                        @ViewBuilder actions: @escaping (Item) -> Actions) -> some View {
-        modifier(AsksFirst(title: title, item: item, message: message, actions: actions))
-    }
-
-    /// The same, for a question that is about nothing in particular.
+    /// Asks before doing something that is not undone (`Asking`). Hang it on the button or the
+    /// row that asks, never on the screen: iOS brings the choices up from whatever this is
+    /// attached to, and from a whole screen that is the middle of the page, over the button
+    /// that was tapped. The buttons are the ones the system draws: give the one that goes
+    /// ahead the destructive role and the other the cancel role.
     func asksFirst<Actions: View>(_ title: Text, isPresented: Binding<Bool>, message: Text? = nil,
                                   @ViewBuilder actions: @escaping () -> Actions) -> some View {
-        let item = Binding<Bool?>(get: { isPresented.wrappedValue ? true : nil }, set: { if $0 == nil { isPresented.wrappedValue = false } })
-        return modifier(AsksFirst(title: title, item: item, message: message, actions: { _ in actions() }))
+        modifier(AsksFirst(title: title, isPresented: isPresented, message: message, actions: actions))
     }
 }
 
