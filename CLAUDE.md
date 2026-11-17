@@ -159,8 +159,7 @@ to any new `fullScreenCover`. Dark only. The design system is "Ink and Paper"
 (`DesignSystem/InkPaper.swift`, with the parts that share a line in `InkLayout.swift`; rules in the `pausely-design` skill): `Color.ink` background, `PaperSlip`
 only where money is decided or proven, `Color.kept` (mint) only for money kept, `Font.question` (serif)
 for questions and totals, `Font.proof` (mono) for receipt lines, `.buttonStyle(.ink…)`, `Motion`, `Feel`.
-`scripts/old_ui_check.sh` must print "0 files". `ServiceLogoView` loads logos (touch icon, then favicon,
-cached). `--demo-design` shows every part; screen ratings are in `REDESIGN_PLAN.md` section 11.
+`scripts/old_ui_check.sh` must print "0 files". `ServiceLogoView` loads logos from the service's own site and nobody else (touch icon, favicon, then the icon its front page names; cached). `--demo-design` shows every part; screen ratings are in `REDESIGN_PLAN.md` section 11.
 
 ### Localization
 `Pausely/Localizable.xcstrings`: English plus Arabic, German, Spanish, French and Japanese. New

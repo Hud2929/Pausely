@@ -65,6 +65,15 @@ final class CatalogTests: XCTestCase {
         XCTAssertEqual(PageIcons.named(in: "<html><body>No head here</body></html>", at: page), [])
     }
 
+    /// Every service on the first run's grid has a site its logo can be asked of. "Uber One" had none
+    /// listed, so its tile was a letter on every phone, though uber.com gives an icon.
+    @MainActor
+    func testEveryFirstRunServiceHasASiteToAskForItsLogo() {
+        let withoutASite = TallyCatalog.services.map(\.name).filter { ServiceDomains.domain(for: $0) == nil }
+        XCTAssertEqual(withoutASite, [])
+        XCTAssertEqual(ServiceDomains.domain(for: "Uber One"), "uber.com")
+    }
+
     /// A front page can be megabytes; what is wanted is in its head. Reading stops where the head
     /// ends, or at the limit for a page that never ends it.
     func testAPageIsReadOnlyAsFarAsTheEndOfItsHead() {

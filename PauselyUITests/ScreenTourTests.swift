@@ -419,6 +419,14 @@ final class ScreenTourTests: XCTestCase {
         state("signup-rules", ["--demo-auth=signup"]) { app in self.type(app, "passwordTextField", "abc") }
         state("newpassword-rules", ["--demo-auth=newpassword"]) { app in self.type(app, "newPasswordField", "abc") }
         state("firstrun-tally-empty", ["--demo-first-run"]) { app in self.tap(app, "getStartedButton") }
+        // The end of the grid: the last seven tiles are below the first screen, and no capture had
+        // shown them (one had no site to ask for its logo and was a letter on every phone).
+        state("firstrun-tally-end", ["--demo-first-run"]) { app in
+            self.tap(app, "getStartedButton")
+            sleep(1)
+            app.swipeUp()
+            sleep(2)
+        }
         state("reveal-price", ["--demo-first-run=reveal"]) { app in self.tap(app, "revealLine") }
         state("inbox-why", ["--demo-gmail-results"]) { app in self.tap(app, "foundRowWhy") }
     }

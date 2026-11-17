@@ -475,7 +475,7 @@ enum ServiceDomains {
         "instacart": "instacart.com",
         "doordash": "doordash.com",
         "grubhub": "grubhub.com",
-        "uber eats": "ubereats.com",
+        "uber eats": "ubereats.com", "uber one": "uber.com",
         "hellofresh": "hellofresh.com",
         "blue apron": "blueapron.com",
         // ── Social ───────────────────────────────────────────────────────
