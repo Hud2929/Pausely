@@ -299,6 +299,31 @@ final class LocalizationGuardTests: XCTestCase {
         XCTAssertTrue(failures.isEmpty, failures.sorted().joined(separator: "\n"))
     }
 
+    /// Two counts beside a noun need a plural pair in every language, and this line had none: the
+    /// Savings Receipt read "1 prélèvements évités sur 12" in French (seen on the French tour of
+    /// 2026-11-16), and for a yearly plan it read "1 of 1 charges" in English. The line names
+    /// what is counted and then gives the count, which no language has to bend.
+    func testTheReceiptsCountIsALabelThenANumber() throws {
+        let catalog = try catalog()
+        XCTAssertNil(catalog["Cancelled %@ · %lld of %lld charges avoided so far"])
+        let key = "Charges avoided so far: %lld of %lld"
+        let entry = try XCTUnwrap(catalog[key], "the receipt's line is not in the catalog")
+        let localizations = try XCTUnwrap(entry["localizations"] as? [String: [String: Any]])
+        var sentences = ["en": key]
+        for language in ["ar", "de", "es", "fr", "ja"] {
+            sentences[language] = try XCTUnwrap((localizations[language]?["stringUnit"] as? [String: Any])?["value"] as? String, language)
+        }
+        for (language, sentence) in sentences {
+            let parts = sentence.components(separatedBy: CharacterSet(charactersIn: ":："))
+            let count = try XCTUnwrap(parts.last)
+            let label = parts.dropLast().joined()
+            XCTAssertEqual(count.components(separatedBy: "lld").count - 1, 2, "\(language): both figures come after the colon")
+            XCTAssertFalse(label.contains("lld"), "\(language): a figure stands before the noun it counts")
+        }
+        let receipt = try String(contentsOf: root.appendingPathComponent("Pausely/Views/Verdict/SavingsReceiptView.swift"), encoding: .utf8)
+        XCTAssertTrue(receipt.contains("L10n.string(\"Charges avoided so far: \\(line.avoidedSoFar.count) of \\(line.avoidedCharges.count)\")"))
+    }
+
     /// The app runs on iPad, and there it says "iPad". Eighteen sentences said "iPhone" or "phone" on
     /// both ("Same as iPhone" for the language, "Saved on this iPhone", "Your email never leaves your
     /// iPhone"). Each now has its own wording for the iPad, in every language.

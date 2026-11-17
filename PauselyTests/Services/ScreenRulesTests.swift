@@ -282,7 +282,6 @@ final class ScreenRulesTests: XCTestCase {
             ("Views/Verdict/RenewalVerdictView.swift", "Facts(whenText(charge))"),
             ("Views/Verdict/RenewalVerdictView.swift", "Facts(text)"),
             ("Views/SubscriptionManagementView.swift", "Facts(line.text)"),
-            ("Views/Verdict/SavingsReceiptView.swift", "Facts(L10n.string(\"Cancelled "),
             ("Views/Verdict/PausePlanView.swift", "Facts(price)"),
             ("Views/InboxImportView.swift", "Facts(accountDetail(account))"),
             ("Views/InboxImportView.swift", "Facts(L10n.string(\"Emails checked: ")
@@ -291,6 +290,12 @@ final class ScreenRulesTests: XCTestCase {
             let source = try String(contentsOf: sources.appendingPathComponent(place.file), encoding: .utf8)
             XCTAssertTrue(source.contains(place.with), "\(place.file) no longer draws \(place.with)")
         }
+        // The Savings Receipt had such a line ("Cancelled Nov 2 · 1 of 12 charges avoided so far").
+        // Its two facts are two lines of the roll now, at every size: joined, they were too long
+        // for the roll and broke wherever the line ran out.
+        let receipt = try String(contentsOf: sources.appendingPathComponent("Views/Verdict/SavingsReceiptView.swift"), encoding: .utf8)
+        XCTAssertFalse(receipt.contains("Facts("))
+        XCTAssertTrue(receipt.contains("Text(L10n.string(\"Cancelled on \\(line.cancelledOn."))
         let design = try String(contentsOf: sources.appendingPathComponent("DesignSystem/InkPaper.swift"), encoding: .utf8)
         XCTAssertTrue(design.contains("Text(verbatim: L10n.facts(line, oneToALine: typeSize.isAccessibilitySize))"))
     }

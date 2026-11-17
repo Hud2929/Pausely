@@ -976,6 +976,40 @@
         }
       }
     },
+    "Charges avoided so far: %lld of %lld": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "الدفعات التي تم تجنبها حتى الآن: %1$lld من %2$lld"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bisher vermiedene Abbuchungen: %1$lld von %2$lld"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cobros evitados hasta ahora: %1$lld de %2$lld"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Prélèvements évités à ce jour : %1$lld sur %2$lld"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "これまでに回避した請求：%2$lld回中%1$lld回"
+          }
+        }
+      }
+    },
     "Charged %lld times, about every 2 weeks": {
       "localizations": {
         "ar": {
@@ -11670,7 +11704,7 @@
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Actívalas para que las renovaciones nunca te sorprendan."
+            "value": "Actívalos para que las renovaciones nunca te sorprendan."
           }
         },
         "fr": {
@@ -14233,40 +14267,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "節約レシート"
-          }
-        }
-      }
-    },
-    "Cancelled %@ · %lld of %lld charges avoided so far": {
-      "localizations": {
-        "ar": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "أُلغي في %1$@ · تم تجنب %2$lld من %3$lld دفعات حتى الآن"
-          }
-        },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Gekündigt am %1$@ · bisher %2$lld von %3$lld Abbuchungen vermieden"
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Cancelada el %1$@ · %2$lld de %3$lld cobros evitados hasta ahora"
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Résilié le %1$@ · %2$lld prélèvements évités sur %3$lld"
-          }
-        },
-        "ja": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "%1$@に解約 · これまでに%3$lld回中%2$lld回の請求を回避"
           }
         }
       }

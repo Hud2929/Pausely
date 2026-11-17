@@ -135,7 +135,15 @@ struct ReceiptRoll: View {
         VStack(alignment: .leading, spacing: 4) {
             ProofLine(label: line.name, value: amount(summary.formatted(line.savedSoFar, from: line.currency)),
                       emphasised: true)
-            Facts(L10n.string("Cancelled \(line.cancelledOn.formatted(.dateTime.month(.abbreviated).day().year().locale(L10n.locale))) · \(line.avoidedSoFar.count) of \(line.avoidedCharges.count) charges avoided so far"))
+            // Two lines of the roll, not one sentence: joined, the pair was too long for the roll
+            // in every language and broke wherever the line ran out.
+            Text(L10n.string("Cancelled on \(line.cancelledOn.formatted(.dateTime.month(.abbreviated).day().year().locale(L10n.locale)))"))
+                .font(.proof(.caption))
+                .foregroundStyle(Color.paperMuted)
+                .fixedSize(horizontal: false, vertical: true)
+            // What is counted, then the count: beside a noun, two figures need a plural pair in
+            // every language ("1 prélèvements évités sur 12"; "1 of 1 charges" for a yearly plan).
+            Text(L10n.string("Charges avoided so far: \(line.avoidedSoFar.count) of \(line.avoidedCharges.count)"))
                 .font(.proof(.caption))
                 .foregroundStyle(Color.paperMuted)
                 .fixedSize(horizontal: false, vertical: true)
