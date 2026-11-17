@@ -38,9 +38,10 @@ final class CatalogTests: XCTestCase {
 
     // MARK: - The icon a service's own front page names
 
-    /// On a new install 402 of the catalog's 848 services showed a letter: their sites keep no icon
-    /// at the three usual addresses (measured 2026-11-17 by asking each of the 660 sites the way the
-    /// app does). A site's own front page says where its icon is; this is how that is read.
+    /// On a new install 382 of the catalog's 848 services showed a letter: most of their sites keep no
+    /// icon at the three usual addresses (measured 2026-11-17 in the app, by scrolling the whole
+    /// catalog from an empty cache). A site's own front page says where its icon is; this is how
+    /// that is read.
     func testAPagesIconsAreReadLargestFirstWhateverTheQuoting() throws {
         let page = try XCTUnwrap(URL(string: "https://www.example.com/en/"))
         let html = """
