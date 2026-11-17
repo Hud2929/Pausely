@@ -32,9 +32,11 @@ Run tests serially; parallel simulator clones sometimes fail to boot. Check Rele
 DEBUG-only code must not be referenced from release code paths.
 
 `scripts/proof.sh` is the whole proof in one command (`PAUSELY_SIM=<simulator id>`): the mechanical
-checks (`scripts/gold_check.sh`, which must print a total of 0), the unit tests, the UI tests other
-than the screen tour, and a Release build, stopping at the first that fails. `scripts/proof.sh unit ui`
-runs only the steps named; `db` adds the database and function rigs (Docker). Run it before a commit
+checks (`scripts/gold_check.sh`, which must print a total of 0), the unit tests, the mail rig (the
+synthetic mailbox served on this Mac, and every test a plain run skips for want of a mail server),
+the UI tests other than the screen tour, and a Release build, stopping at the first that fails.
+`scripts/proof.sh unit ui` runs only the steps named (`checks`, `unit`, `mail`, `ui`, `release`); `db`
+adds the database and function rigs (Docker). Run it before a commit
 that changes a screen: a UI test can go stale without any unit test noticing. In a UI test, a tap
 that has a result to wait for goes through `tap(until:)` (`PauselyUITests/TabHelper.swift`): on the
 simulator a test's touch is sometimes taken back before it counts, so it taps once more, and a button
