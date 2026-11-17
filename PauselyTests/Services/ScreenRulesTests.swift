@@ -611,9 +611,9 @@ final class ScreenRulesTests: XCTestCase {
                        "which is how it was laid out before")
         XCTAssertEqual(LineOrStack.arrangement(widths: [150, 70], spacing: 8, in: 228, besideShare: FoundRow.priceShare), .line,
                        "at the default size they share a line as before")
-        XCTAssertTrue(found.contains("LineOrStack(spacing: 8, lineSpacing: 4, spread: true, besideShare: Self.priceShare) {"))
+        XCTAssertTrue(found.contains("LineOrStack(spacing: 8, lineSpacing: 4, spread: true, besideShare: Self.priceShare, stacksWideValue: true) {"))
         // The amount and its period start at one edge, wherever the column ends up.
-        let price = try XCTUnwrap(found.range(of: "@ViewBuilder private var price: some View {"))
+        let price = try XCTUnwrap(found.range(of: "private func priceColumn(_ price: Price) -> some View {"))
         XCTAssertTrue(found[price.upperBound...].prefix(160).contains("VStack(alignment: .leading, spacing: 2) {"))
 
         let insights = try String(contentsOf: sources.appendingPathComponent("Views/AnalysisView.swift"), encoding: .utf8)
@@ -627,6 +627,43 @@ final class ScreenRulesTests: XCTestCase {
         // both fit.
         XCTAssertEqual(LineOrStack.arrangement(widths: [270, 75], spacing: 8, in: 330, besideShare: 0), .stack)
         XCTAssertEqual(LineOrStack.arrangement(widths: [90, 40], spacing: 8, in: 330, besideShare: 0), .line)
+    }
+
+    /// In a mailbox's results each row chose by the width of its own price whether the price
+    /// sat beside the words or under them, so in German and Arabic "34,99 CA$" went under and
+    /// "9,99 CA$" stayed beside, row by row, and the prices formed no column (tours of
+    /// 2026-11-16). Every row now has the page's widest price as its column and makes the
+    /// same choice.
+    func testEveryFoundRowKeepsTheSamePriceColumn() throws {
+        let prices = [FoundRow.Price(amount: "34,99 CA$", period: "pro Monat"),
+                      FoundRow.Price(amount: "9,99 CA$", period: "pro Monat"),
+                      FoundRow.Price(amount: "779,88 CA$", period: "pro Jahr")]
+        XCTAssertEqual(FoundRow.widestPrice(among: prices), FoundRow.Price(amount: "779,88 CA$", period: "pro Monat"))
+        XCTAssertNil(FoundRow.widestPrice(among: []))
+
+        // What the row has for its words and its price, and the three widths German prices took.
+        let room: CGFloat = 228
+        let own: [CGFloat] = [84, 70, 96]
+        let before = own.map { LineOrStack.arrangement(widths: [190, $0], spacing: 8, in: room, besideShare: FoundRow.priceShare) }
+        XCTAssertEqual(before, [.stack, .labelWraps, .stack], "by its own width, each row chose for itself")
+        let after = [190, 120, 60].map { (words: CGFloat) in
+            LineOrStack.arrangement(widths: [words, 96], spacing: 8, in: room, besideShare: FoundRow.priceShare, stacksWideValue: true)
+        }
+        XCTAssertEqual(after, [.stack, .stack, .stack], "with one column, every row chooses alike, a short name included")
+        // A column that keeps to its share stays beside the words in every row.
+        let narrow = [190, 120, 60].map { (words: CGFloat) in
+            LineOrStack.arrangement(widths: [words, 68], spacing: 8, in: room, besideShare: FoundRow.priceShare, stacksWideValue: true)
+        }
+        XCTAssertEqual(narrow, [.labelWraps, .line, .line])
+
+        let sources = root.appendingPathComponent("Pausely")
+        try XCTSkipUnless(FileManager.default.fileExists(atPath: sources.path), "Sources aren't readable from this test run")
+        let row = try String(contentsOf: sources.appendingPathComponent("Views/Inbox/FoundRow.swift"), encoding: .utf8)
+        XCTAssertTrue(row.contains("priceColumn(widestPrice).hidden().accessibilityHidden(true)"))
+        XCTAssertTrue(row.contains("besideShare: Self.priceShare, stacksWideValue: true) {"))
+        let page = try String(contentsOf: sources.appendingPathComponent("Views/InboxImportView.swift"), encoding: .utf8)
+        XCTAssertTrue(page.contains("widestPrice: widestPrice,"))
+        XCTAssertTrue(page.contains("FoundRow.widestPrice(among: scanner.foundSubscriptions.filter { !$0.priceUnknown }.map {"))
     }
 
     /// A found subscription that was cancelled is shown, not offered: it has no box, and its

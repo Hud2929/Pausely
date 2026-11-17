@@ -521,6 +521,13 @@ struct InboxImportView: View {
         }
     }
 
+    /// The widest price among everything found, in every section: one price column for the page.
+    private var widestPrice: FoundRow.Price? {
+        FoundRow.widestPrice(among: scanner.foundSubscriptions.filter { !$0.priceUnknown }.map {
+            FoundRow.Price(amount: Self.money($0.amount, $0.currency), period: $0.billingFrequency.billingPeriodLabel)
+        })
+    }
+
     private func listSection(title: LocalizedStringKey, subtitle: LocalizedStringKey, items: [FoundSubscription]) -> some View {
         let selectable = items.filter { !$0.isCancelled }
         return VStack(alignment: .leading, spacing: 6) {
@@ -554,6 +561,7 @@ struct InboxImportView: View {
                     if index > 0 { Hairline() }
                     FoundRow(
                         found: found,
+                        widestPrice: widestPrice,
                         isSelected: selected.contains(found.id),
                         isExpanded: expanded.contains(found.id),
                         onToggle: { if selected.contains(found.id) { selected.remove(found.id) } else { selected.insert(found.id) } },

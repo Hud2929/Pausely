@@ -4,6 +4,11 @@ import SwiftUI
 /// price, and a box to choose it.
 struct FoundRow: View {
     let found: FoundSubscription
+    /// The widest price on the page. Each row sets its own price over a copy of it that is not
+    /// drawn, so the price has the same column in every row and every row makes the same choice
+    /// between beside the words and under them. By its own width, "34,99 CA$" went under and
+    /// "9,99 CA$" stayed beside, row by row (German and Arabic tours, 2026-11-16).
+    var widestPrice: Price? = nil
     let isSelected: Bool
     let isExpanded: Bool
     let onToggle: () -> Void
@@ -73,14 +78,16 @@ struct FoundRow: View {
                     HStack(spacing: 8) {
                         choose {
                             HStack(spacing: 12) {
-                                if Self.isAChoice(cancelled: found.isCancelled) { checkbox }
+                                // A cancelled row keeps the box's place empty: its logo and words line
+                                // up with the rows above, and it has the same width for its price.
+                                if Self.isAChoice(cancelled: found.isCancelled) { checkbox } else { Color.clear.frame(width: boxSide, height: boxSide).accessibilityHidden(true) }
                                 ServiceLogoView(name: found.name, category: nil, size: 36)
                                 // As on the Subscriptions list: the price keeps its width, 8 points
                                 // from the words (a spacer between them took 32, and "Last charged
                                 // Nov 9" broke in two for want of 4). This row also holds a box and
                                 // a chevron, so the price goes under the words sooner: beside them
                                 // only while it takes no more than a third of what is left.
-                                LineOrStack(spacing: 8, lineSpacing: 4, spread: true, besideShare: Self.priceShare) {
+                                LineOrStack(spacing: 8, lineSpacing: 4, spread: true, besideShare: Self.priceShare, stacksWideValue: true) {
                                     nameAndEvidence
                                     price
                                 }
@@ -99,6 +106,20 @@ struct FoundRow: View {
 
     /// The most of the row's width the price may take while the words wrap beside it.
     nonisolated static let priceShare: CGFloat = 0.35
+
+    /// A price as the row draws it: the amount, and how often under it.
+    struct Price: Equatable {
+        var amount: String
+        var period: String
+    }
+
+    /// The widest of these prices: the longest amount over the longest period. Counted in
+    /// characters, which is near enough for one column (the digits of a price are of a width).
+    nonisolated static func widestPrice(among prices: [Price]) -> Price? {
+        guard let amount = prices.map(\.amount).max(by: { $0.count < $1.count }),
+              let period = prices.map(\.period).max(by: { $0.count < $1.count }) else { return nil }
+        return Price(amount: amount, period: period)
+    }
 
     /// Whether the name, what was found and the price run the width of the row, with the box and
     /// the way to "why" on a line above them. At the accessibility text sizes, yes: between the
@@ -172,14 +193,23 @@ struct FoundRow: View {
     /// the end of the row and under the words.
     @ViewBuilder private var price: some View {
         if let priceText {
-            VStack(alignment: .leading, spacing: 2) {
-                Text(verbatim: priceText)
-                    .font(.body.weight(.semibold))
-                    .foregroundStyle(Color.inkText)
-                Text(verbatim: found.billingFrequency.billingPeriodLabel)
-                    .font(.footnote)
-                    .foregroundStyle(Color.inkTextFaint)
+            ZStack(alignment: .leading) {
+                if let widestPrice {
+                    priceColumn(widestPrice).hidden().accessibilityHidden(true)
+                }
+                priceColumn(Price(amount: priceText, period: found.billingFrequency.billingPeriodLabel))
             }
+        }
+    }
+
+    private func priceColumn(_ price: Price) -> some View {
+        VStack(alignment: .leading, spacing: 2) {
+            Text(verbatim: price.amount)
+                .font(.body.weight(.semibold))
+                .foregroundStyle(Color.inkText)
+            Text(verbatim: price.period)
+                .font(.footnote)
+                .foregroundStyle(Color.inkTextFaint)
         }
     }
 

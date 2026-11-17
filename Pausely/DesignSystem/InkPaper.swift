@@ -588,6 +588,10 @@ struct LineOrStack: SwiftUI.Layout {
     /// For a label and its value: the share of the width the value may take and still keep its
     /// place at the far end while the label wraps beside it. Zero means the two stack instead.
     var besideShare: CGFloat = 0
+    /// A value wider than its share goes under its label even where the two would fit on a line.
+    /// For rows of a list that are given one value column (the widest value's): each row then
+    /// makes the same choice, and the values form one column or none.
+    var stacksWideValue = false
 
     enum Arrangement: Equatable { case line, labelWraps, stack }
 
@@ -600,9 +604,12 @@ struct LineOrStack: SwiftUI.Layout {
     }
 
     /// How parts of these widths are arranged in this width.
-    static func arrangement(widths: [CGFloat], spacing: CGFloat, in available: CGFloat?, besideShare: CGFloat) -> Arrangement {
+    static func arrangement(widths: [CGFloat], spacing: CGFloat, in available: CGFloat?, besideShare: CGFloat,
+                            stacksWideValue: Bool = false) -> Arrangement {
+        let valueIsWide = { (available: CGFloat) in widths.count == 2 && besideShare > 0 && widths[1] > available * besideShare }
+        if stacksWideValue, let available, available.isFinite, valueIsWide(available) { return .stack }
         if sharesALine(widths: widths, spacing: spacing, in: available) { return .line }
-        guard let available, widths.count == 2, besideShare > 0, widths[1] <= available * besideShare else { return .stack }
+        guard let available, widths.count == 2, besideShare > 0, !valueIsWide(available) else { return .stack }
         return .labelWraps
     }
 
@@ -618,7 +625,8 @@ struct LineOrStack: SwiftUI.Layout {
     private func plan(_ proposal: ProposedViewSize, _ subviews: Subviews) -> Plan {
         let natural = subviews.map { $0.sizeThatFits(.unspecified) }
         let available = proposal.width
-        let arrangement = Self.arrangement(widths: natural.map(\.width), spacing: spacing, in: available, besideShare: besideShare)
+        let arrangement = Self.arrangement(widths: natural.map(\.width), spacing: spacing, in: available, besideShare: besideShare,
+                                           stacksWideValue: stacksWideValue)
         switch arrangement {
         case .line, .labelWraps:
             var proposals = natural.map { ProposedViewSize($0) }
