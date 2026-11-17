@@ -139,7 +139,7 @@ final class ScreenRulesTests: XCTestCase {
                 // `VStack(spacing: 0) {` directly holding `ScrollView {` with something after it.
                 if line.trimmingCharacters(in: .whitespaces) == "VStack(spacing: 0) {", index + 1 < lines.count,
                    lines[index + 1].trimmingCharacters(in: .whitespaces) == "ScrollView {",
-                   name != "FirstRunView.swift", name != "InboxImportView.swift" {
+                   name != "TallyStep.swift", name != "InboxImportView.swift" {
                     offenders.append("\(name):\(index + 1)")
                 }
             }
@@ -186,7 +186,7 @@ final class ScreenRulesTests: XCTestCase {
         XCTAssertFalse(GuessStep.endsSitUnderTheTrack(largeText: false))
         XCTAssertTrue(GuessStep.endsSitUnderTheTrack(largeText: true))
 
-        let url = root.appendingPathComponent("Pausely/Views/FirstRun/FirstRunView.swift")
+        let url = root.appendingPathComponent("Pausely/Views/FirstRun/GuessStep.swift")
         try XCTSkipUnless(FileManager.default.fileExists(atPath: url.path), "Sources aren't readable from this test run")
         let source = try String(contentsOf: url, encoding: .utf8)
         let step = try XCTUnwrap(source.range(of: "struct GuessStep: View"))
@@ -240,7 +240,7 @@ final class ScreenRulesTests: XCTestCase {
         XCTAssertFalse(TallyStep.slipHoldsOnlyTheWayOn(largeText: false))
         XCTAssertTrue(TallyStep.slipHoldsOnlyTheWayOn(largeText: true))
 
-        let url = root.appendingPathComponent("Pausely/Views/FirstRun/FirstRunView.swift")
+        let url = root.appendingPathComponent("Pausely/Views/FirstRun/TallyStep.swift")
         try XCTSkipUnless(FileManager.default.fileExists(atPath: url.path), "Sources aren't readable from this test run")
         let source = try String(contentsOf: url, encoding: .utf8)
         // The sentence is still said once at every size: above the list, or after it.
@@ -296,7 +296,7 @@ final class ScreenRulesTests: XCTestCase {
         let receipt = try String(contentsOf: sources.appendingPathComponent("Views/Verdict/SavingsReceiptView.swift"), encoding: .utf8)
         XCTAssertFalse(receipt.contains("Facts("))
         XCTAssertTrue(receipt.contains("Text(L10n.string(\"Cancelled on \\(line.cancelledOn."))
-        let design = try String(contentsOf: sources.appendingPathComponent("DesignSystem/InkPaper.swift"), encoding: .utf8)
+        let design = try String(contentsOf: sources.appendingPathComponent("DesignSystem/InkLayout.swift"), encoding: .utf8)
         XCTAssertTrue(design.contains("Text(verbatim: L10n.facts(line, oneToALine: typeSize.isAccessibilitySize))"))
     }
 
@@ -422,7 +422,7 @@ final class ScreenRulesTests: XCTestCase {
 
         let sources = root.appendingPathComponent("Pausely")
         try XCTSkipUnless(FileManager.default.fileExists(atPath: sources.path), "Sources aren't readable from this test run")
-        let design = try String(contentsOf: sources.appendingPathComponent("DesignSystem/InkPaper.swift"), encoding: .utf8)
+        let design = try String(contentsOf: sources.appendingPathComponent("DesignSystem/InkLayout.swift"), encoding: .utf8)
         XCTAssertTrue(design.contains("if MarkPlacement.sitsAbove(largeText: typeSize.isAccessibilitySize) {"))
         let places: [(file: String, after: String)] = [
             ("Views/Verdict/RenewalVerdictView.swift", "private func header("),

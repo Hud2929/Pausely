@@ -1208,9 +1208,14 @@ Updated at every commit, so the work can be picked up from this file alone.
   file; the mailbox screen; the check back to raw lines; then the "Tests" line of 7.4, which
   names three tests not run and a tap that is sometimes lost (what of that can be done from
   here); then section 7 again.
-- **11-17, the receipt analyzer (this commit).** Second file of "Long files again" (6.6).
+- **11-17, the receipt analyzer (`9adec71`).** Second file of "Long files again" (6.6).
   Next, in order: the design system file and the first run; the mailbox screen; the check
   back to raw lines; the "Tests" line; section 7 again.
+- **11-17, the design system file and the first run (this commit).** Third and fourth files
+  of "Long files again" (6.6).
+  Next, in order: the tap that brings nothing in the UI tests (found while proving this
+  slice); the mailbox screen; the check back to raw lines; the rest of the "Tests" line;
+  section 7 again.
 
 **Phase 0. Scan (read-only).** Four independent audits (dead code, truth, design rules on every
 view, engineering) plus mechanical scans. Output: the ledger.
@@ -1612,6 +1617,17 @@ Stage G, as it closes (each line: what, and the evidence):
     more visible: the ten private tables are used only by the part they moved with. The money
     guard's one exception for reading symbols out of receipts moved with it, and the analyzer
     itself now passes that rule with no exception. 824 tests, 0 failures; `gold_check` 0.
+  - **The design system file and the first run, done 11-17.** `InkPaper.swift` held the tokens and
+    paper and also the parts that decide how words and values share a line; those are now
+    `InkLayout.swift` (275 lines: `WordFit`, `MarkedWords`, `AdaptiveRow`, `Facts`, `SideBySide`,
+    `LineOrStack`), and `InkPaper.swift` is 479. Nothing made more visible. The first run was one
+    file of 705 lines for three steps; each step has its file now (`GuessStep` 161, `TallyStep`
+    212, `RevealStep` 173, `PriceSheet` 78, `FirstRunView` 82). Made visible to the module: the
+    reveal step and the steps' back button (`FirstRunBackButton`), because the screen that hosts
+    them is in another file. Six source-reading tests point at the new files. 824 unit tests, 0
+    failures; `gold_check` 0; the UI tests, which walk the first run, 10 run, 2 skipped, 0
+    failures, three runs in a row (after the tap fix in the next entry: the first run of them
+    failed on a tap that brought nothing, on a build that then passed two runs in three).
 
 ### 6.7 For the owner (cannot or should not be done from here)
 

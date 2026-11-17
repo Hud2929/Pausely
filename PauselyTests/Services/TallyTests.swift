@@ -152,7 +152,7 @@ final class TallyTests: XCTestCase {
         XCTAssertTrue(plan.wait.allSatisfy { $0.yearlyCost <= cheapestAdded })
 
         let root = URL(fileURLWithPath: #filePath).deletingLastPathComponent().deletingLastPathComponent().deletingLastPathComponent()
-        let screen = root.appendingPathComponent("Pausely/Views/FirstRun/FirstRunView.swift")
+        let screen = root.appendingPathComponent("Pausely/Views/FirstRun/RevealStep.swift")
         try XCTSkipUnless(FileManager.default.fileExists(atPath: screen.path), "Sources aren't readable from this test run")
         let source = try String(contentsOf: screen, encoding: .utf8)
         let button = try XCTUnwrap(source.range(of: ".accessibilityIdentifier(\"keepListButton\")"))
