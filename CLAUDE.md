@@ -65,8 +65,9 @@ user; nothing reaches the server). `--reset-state` (UI tests) starts signed out 
 `--demo-dates`, `--demo-waiting`, `--demo-guess=N`. `PauselyUITests/ScreenTourTests` captures every screen
 and state when `TEST_RUNNER_PAUSELY_TOUR_DIR` is set (`TEST_RUNNER_PAUSELY_TOUR_VARIANT=ar|de|es|fr|ja|big|xxxl`,
 `TEST_RUNNER_PAUSELY_TOUR_AUDIT=1` for Apple's accessibility audit, `TEST_RUNNER_PAUSELY_TOUR_ONLY=a,b` for a few).
-A step the tour could not take (a button it never reached) is listed in `tour_misses.txt` in the tour folder: the capture
-under that state's name is then of the screen before it.
+A step the tour could not take (a button it never reached, a tap that brought nothing) is listed in `tour_misses.txt` in the
+tour folder: the capture under that state's name is then of the screen before it. Every page is followed to its end, and
+`python3 scripts/tour_page_ends.py <tour folder> [<later folder> …]` lists any that was not (it exits 1).
 `scripts/tour_read.swift` reads a tour folder (build it with `swiftc -O`): `contrast` measures every text from the pixels it was
 drawn with, `words` looks up every word readable on a capture in what accessibility says, and `audit` shows what is drawn where
 the system audit called low contrast (its contrast lines change from run to run on an unchanged screen, so they are checked this way).

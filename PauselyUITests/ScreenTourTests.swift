@@ -117,19 +117,13 @@ final class ScreenTourTests: XCTestCase {
     func testMainTabs() throws {
         let app = launchDemo()
         capture(app, "dashboard")
-        scrollCapture(app, "dashboard", times: tabScrolls)
+        scrollCapture(app, "dashboard")
 
         for (index, name) in ["subscriptions", "insights", "profile"].enumerated() {
             let app = launchDemo(tab: index + 1)
             capture(app, name)
-            scrollCapture(app, name, times: tabScrolls)
+            scrollCapture(app, name)
         }
-    }
-
-    /// How far down a tab is followed. At the largest text size a page is two to three times as
-    /// long: four screens stopped above the last section of Insights ("What went up").
-    private var tabScrolls: Int {
-        ProcessInfo.processInfo.environment["PAUSELY_TOUR_VARIANT"] == "big" ? 10 : 4
     }
 
     func testSubscriptionScreens() throws {
@@ -139,13 +133,13 @@ final class ScreenTourTests: XCTestCase {
             firstRow.tap()
             sleep(2)
             capture(app, "subscription-detail")
-            scrollCapture(app, "subscription-detail", times: 3)
+            scrollCapture(app, "subscription-detail")
             // By identifier. By its English name the button was found in English only, and in every
             // other language this walk ended here without a capture or a word (seen 2026-11-16).
             tap(app, "cancelSubscriptionButton")
             sleep(2)
             capture(app, "subscription-cancel")
-            scrollCapture(app, "subscription-cancel", times: 2)
+            scrollCapture(app, "subscription-cancel")
         } else {
             missed("subscription-detail: no row to open on the list")
         }
@@ -164,7 +158,7 @@ final class ScreenTourTests: XCTestCase {
         if !search.waitForExistence(timeout: 8) { missed("add: the catalog did not open from Home") }
         sleep(1)
         capture(app, "add")
-        scrollCapture(app, "add", times: 2)
+        scrollCapture(app, "add")
     }
 
     func testSingleScreens() throws {
@@ -197,17 +191,24 @@ final class ScreenTourTests: XCTestCase {
             app.launch()
             sleep(3)
             capture(app, screen.name)
-            scrollCapture(app, screen.name, times: Self.followedToTheEnd.contains(screen.name) ? 16 : 1,
-                          knownToBeLong: Self.followedToTheEnd.contains(screen.name))
+            scrollCapture(app, screen.name)
         }
     }
 
-    /// Screens the tour follows to their last line, however many screens down that is at the
-    /// reader's text size (a scroll that changes nothing ends it). The results of a mailbox:
-    /// "Cancelled" is the last section, and on the iPhone one scroll stopped two sections short
-    /// of it, so a row drawn too dim to read was seen only on iPad. The reveal: what is under
-    /// "Keep my list" is the end of the page at the largest text size.
-    private static let followedToTheEnd: Set<String> = ["inbox-results", "reveal-good"]
+    /// Every page is followed to its last line, however many screens down that is at the reader's
+    /// text size: a scroll that changes nothing ends it, and this many is the most. Until 2026-11-17
+    /// a page was followed one scroll down unless it was named, and at the largest text size that
+    /// left the lower half of most pages on no capture at all (97 of 160 states).
+    private static let mostScrolls = 16
+
+    /// Lists of one kind of row, thousands of points long: two scrolls show what a row is.
+    private static let sampledLists: [String: Int] = ["currency": 2, "browser": 2, "browser-category": 2, "add": 2]
+
+    /// Pages longer than a screen at every size: a first scroll that moves nothing there is a
+    /// lost swipe, tried once more and written down if it is lost again. The results of a mailbox
+    /// ("Cancelled" is the last section; a row drawn too dim to read there was once seen only on
+    /// iPad) and the reveal (what is under "Keep my list" ends the page at the largest text size).
+    private static let knownToBeLong: Set<String> = ["inbox-results", "reveal-good"]
 
     /// The eight App Store captures, as files named the way `AppStoreScreenshots/` holds them.
     /// Run on the 6.9-inch iPhone and the 13-inch iPad with `PAUSELY_TOUR_DIR` set, then copy the
@@ -249,7 +250,7 @@ final class ScreenTourTests: XCTestCase {
         for (tab, name) in [(0, "home-varied"), (1, "list-varied"), (2, "insights-varied")] where wanted(name) {
             let app = launch(varied + ["--demo-tab=\(tab)"])
             capture(app, name)
-            scrollCapture(app, name, times: tabScrolls)
+            scrollCapture(app, name)
         }
 
         // One subscription of each kind on its own screens, and the screens that read the list.
@@ -332,32 +333,31 @@ final class ScreenTourTests: XCTestCase {
         for screen in screens where wanted(screen.name) {
             let app = launch(screen.flags)
             capture(app, screen.name)
-            scrollCapture(app, screen.name, times: Self.followedToTheEnd.contains(screen.name) ? 16 : 1,
-                          knownToBeLong: Self.followedToTheEnd.contains(screen.name))
+            scrollCapture(app, screen.name)
         }
 
         // States behind a tap.
-        state("home-year", varied + ["--demo-tab=0"]) { app in self.tap(app, "spendPeriodToggle") }
-        state("home-large-year", large + ["--demo-tab=0"]) { app in self.tap(app, "spendPeriodToggle") }
+        state("home-year", varied + ["--demo-tab=0"], still: true) { app in self.tap(app, "spendPeriodToggle") }
+        state("home-large-year", large + ["--demo-tab=0"], still: true) { app in self.tap(app, "spendPeriodToggle") }
         state("home-dates", varied + ["--demo-tab=0"]) { app in self.tap(app, "undatedRow") }
         // The calendar the system opens for a date: is the chosen day readable in the app's tint?
-        state("dates-calendar", ["--demo-dates"]) { app in
+        state("dates-calendar", ["--demo-dates"], still: true) { app in
             self.tap(app, "addDate-Netflix")
             self.tap(app, "datePicker-Netflix")
         }
         state("home-decide", varied + ["--demo-tab=0"]) { app in self.tap(app, "decideRow") }
-        state("list-nomatch", varied + ["--demo-tab=1"]) { app in self.type(app, "subscriptionSearchField", "zzzz") }
+        state("list-nomatch", varied + ["--demo-tab=1"], still: true) { app in self.type(app, "subscriptionSearchField", "zzzz") }
         // The list's first row: a list builds its rows as they come near, so one further down does
         // not exist yet at the largest text size.
-        state("list-swipe", varied + ["--demo-tab=1"]) { app in self.swipeRow(app, named: "iCloud+") }
-        state("list-remove", varied + ["--demo-tab=1"]) { app in
+        state("list-swipe", varied + ["--demo-tab=1"], still: true) { app in self.swipeRow(app, named: "iCloud+") }
+        state("list-remove", varied + ["--demo-tab=1"], still: true) { app in
             if self.swipeRow(app, named: "iCloud+") { self.tap(app, "swipeRemove") }
         }
-        state("profile-signout", ["--fresh-demo-data", "--demo-tab=3"]) { app in self.tap(app, "signOutButton") }
+        state("profile-signout", ["--fresh-demo-data", "--demo-tab=3"], still: true) { app in self.tap(app, "signOutButton") }
         state("help-open", ["--demo-settings=help"]) { app in self.tap(app, "faq-0") }
-        state("currency-nomatch", ["--demo-settings=currency"]) { app in self.type(app, "currencySearch", "zzzz") }
-        state("privacy-delete", ["--demo-settings=privacy"]) { app in self.tap(app, "deleteAccountButton") }
-        state("browser-nomatch", ["--demo-browser"]) { app in self.type(app, "catalogSearchField", "zzzzzz") }
+        state("currency-nomatch", ["--demo-settings=currency"], still: true) { app in self.type(app, "currencySearch", "zzzz") }
+        state("privacy-delete", ["--demo-settings=privacy"], still: true) { app in self.tap(app, "deleteAccountButton") }
+        state("browser-nomatch", ["--demo-browser"], still: true) { app in self.type(app, "catalogSearchField", "zzzzzz") }
         state("browser-category", ["--demo-browser"]) { app in
             // The second pill: the first is "All", and at the largest size the third is off the screen.
             let pill = app.buttons.matching(identifier: "categoryPill").element(boundBy: 1)
@@ -386,11 +386,11 @@ final class ScreenTourTests: XCTestCase {
             }
             self.tap(app, "editSaveButton")   // the form says what is missing when asked to save
         }
-        state("edit-discard", ["--demo-subscription-edit"]) { app in
+        state("edit-discard", ["--demo-subscription-edit"], still: true) { app in
             self.type(app, "editAmountField", "9")
             self.tap(app, "editCancelButton")
         }
-        state("manage-remove", ["--demo-subscription"]) { app in self.tap(app, "removeSubscriptionButton") }
+        state("manage-remove", ["--demo-subscription"], still: true) { app in self.tap(app, "removeSubscriptionButton") }
         // The rows under the facts, which the screen's own capture stops above at large text.
         state("manage-tools", ["--demo-subscription"]) { app in self.show(app, "pausePlanRow") }
         state("manage-usage", ["--demo-subscription"]) { app in self.tap(app, "usageRow") }
@@ -401,8 +401,8 @@ final class ScreenTourTests: XCTestCase {
         state("verdict-kept", varied + ["--demo-verdict=Apple One"]) { app in self.tap(app, "verdictKeepButton") }
         state("verdict-adddate", varied + ["--demo-verdict=Adobe Creative Cloud"]) { app in self.tap(app, "verdictAddDateButton") }
         state("cancel-done", ["--demo-cancel"]) { app in self.tap(app, "iCancelledItButton") }
-        state("receipt-share", ["--demo-receipt"]) { app in self.tap(app, "receiptShare") }
-        state("pauseplan-end", varied + ["--demo-pause-plan", "--demo-plan-active"]) { app in self.tap(app, "endPausePlanButton") }
+        state("receipt-share", ["--demo-receipt"], still: true) { app in self.tap(app, "receiptShare") }
+        state("pauseplan-end", varied + ["--demo-pause-plan", "--demo-plan-active"], still: true) { app in self.tap(app, "endPausePlanButton") }
         // The page with inboxes connected and nothing found (no made-up search ends there).
         state("inbox-connected", ["--demo-inbox=connected"]) { _ in }
         state("inbox-nothing", ["--demo-inbox=nothing"]) { _ in }
@@ -427,17 +427,22 @@ final class ScreenTourTests: XCTestCase {
             app.swipeUp()
             sleep(2)
         }
-        state("reveal-price", ["--demo-first-run=reveal"]) { app in self.tap(app, "revealLine") }
+        state("reveal-price", ["--demo-first-run=reveal"], still: true) { app in self.tap(app, "revealLine") }
         state("inbox-why", ["--demo-gmail-results"]) { app in self.tap(app, "foundRowWhy") }
     }
 
-    /// Launches with `flags`, does `open`, and captures what is then on screen.
-    private func state(_ name: String, _ flags: [String], open: (XCUIApplication) -> Void) {
+    /// Launches with `flags`, does `open`, captures what is then on screen and follows the page to
+    /// its end. `still` is for what a swipe would put away: a dialog, a menu, the keyboard over a
+    /// search. Until 2026-11-17 no state behind a tap was followed, and at the largest text size
+    /// most of them are longer than the screen: the reason a found subscription gives, the hours
+    /// page, an open answer on Help and the list of kinds of inbox were each seen one screen deep.
+    private func state(_ name: String, _ flags: [String], still: Bool = false, open: (XCUIApplication) -> Void) {
         guard wanted(name) else { return }
         let app = launch(flags)
         open(app)
         sleep(2)
         capture(app, name)
+        if !still { scrollCapture(app, name) }
     }
 
     /// `PAUSELY_TOUR_ONLY=name1,name2` keeps a run to those screens or states.
@@ -530,7 +535,17 @@ final class ScreenTourTests: XCTestCase {
         // words, which do nothing: the control is the switch inside it ("plan-trial" was a
         // capture of the switch still off).
         if target.elementType == .switch, target.switches.firstMatch.exists { target = target.switches.firstMatch }
-        if target.isHittable { target.tap() } else { missed("\(identifier): could not be brought into reach") }
+        guard target.isHittable else { return missed("\(identifier): could not be brought into reach") }
+        // A tap that changes nothing on screen is made once more, as the app's other UI tests do
+        // (`tap(until:)`): the simulator sometimes takes a touch back before it counts. One that
+        // still changes nothing is written down. Until 2026-11-17 it was neither: the reasons a
+        // found subscription gives were captured closed, under the name of the state that opens them.
+        let before = Self.withoutAddresses(app.debugDescription)
+        target.tap()
+        sleep(1)
+        guard Self.withoutAddresses(app.debugDescription) == before else { return }
+        if target.exists, target.isHittable { target.tap(); sleep(1) }
+        if Self.withoutAddresses(app.debugDescription) == before { missed("\(identifier): the tap brought nothing") }
     }
 
     /// Swipes the list's row for this subscription, scrolling to it first: at the largest text size
@@ -582,23 +597,27 @@ final class ScreenTourTests: XCTestCase {
     }
 
     @discardableResult
-    private func scrollCapture(_ app: XCUIApplication, _ name: String, times: Int, knownToBeLong: Bool = false) {
-        for index in 1...times {
+    private func scrollCapture(_ app: XCUIApplication, _ name: String) {
+        let knownToBeLong = Self.knownToBeLong.contains(name)
+        for index in 1...(Self.sampledLists[name] ?? Self.mostScrolls) {
             app.swipeUp()
             // Until the scroll has come to rest: the audit measured rows where they had been a
             // moment earlier and called their contrast failed.
             sleep(2)
             // A screen that fits has nothing further down: a second capture of it would be the same
             // picture and the same audit again (on iPad that was most of them, and most of the time).
-            var moved = Self.withoutAddresses(app.debugDescription) != lastTree
-            // A page that is followed to its end is known to be longer than the screen. Its first
-            // swipe is the first thing a run does after its build, and twice it was lost (the
-            // mailbox results at the largest size and on iPad, 2026-11-16): once more, then.
-            if !moved, index == 1, knownToBeLong {
+            var moved = Self.atRest(app.debugDescription) != lastTree
+            // A swipe that brings nothing is made once more, as a tap is (`tap(until:)`): the
+            // simulator sometimes takes a touch back before it counts, and the page was then
+            // taken to have ended. The mailbox results lost their first swipe twice (the largest
+            // size and iPad, 2026-11-16); the mailbox page and a verdict were captured one screen
+            // deep in one run of thirty-seven pages (2026-11-17). Two swipes that bring nothing
+            // are the end of the page.
+            if !moved {
                 app.swipeUp()
                 sleep(2)
-                moved = Self.withoutAddresses(app.debugDescription) != lastTree
-                if !moved { missed("\(name): the page did not scroll") }
+                moved = Self.atRest(app.debugDescription) != lastTree
+                if !moved, index == 1, knownToBeLong { missed("\(name): the page did not scroll") }
             }
             guard moved else { return }
             capture(app, "\(name)-scroll\(index)")
@@ -613,13 +632,28 @@ final class ScreenTourTests: XCTestCase {
         tree.replacingOccurrences(of: "0x[0-9a-f]+", with: "", options: .regularExpression)
     }
 
+    /// The tree as one capture of a page is compared with the next: without addresses, and
+    /// without the figures in what its elements say. Where each element sits is kept, and that is
+    /// what a scroll changes. A countdown ("Send a new code in 52 s") made a page that had come
+    /// to rest look moved at every swipe: the code pages were captured sixteen times each at the
+    /// largest text size.
+    private static func atRest(_ tree: String) -> String {
+        withoutAddresses(tree)
+            .components(separatedBy: "\n")
+            .map { line -> String in
+                guard let said = line.range(of: "label: '") else { return line }
+                return String(line[..<said.upperBound]) + line[said.upperBound...].filter { !$0.isNumber }
+            }
+            .joined(separator: "\n")
+    }
+
     private func capture(_ app: XCUIApplication, _ name: String) {
         step += 1
         let base = String(format: "%@-%02d-%@", name.components(separatedBy: "-").first ?? name, step, name)
         let png = XCUIScreen.main.screenshot().pngRepresentation
         try? png.write(to: outputDir.appendingPathComponent(base + ".png"))
         let tree = app.debugDescription
-        lastTree = Self.withoutAddresses(tree)
+        lastTree = Self.atRest(tree)
         try? tree.write(to: outputDir.appendingPathComponent(base + ".txt"), atomically: true, encoding: .utf8)
         if auditing { audit(app, base) }
     }
