@@ -3,9 +3,9 @@ import UIKit
 
 // MARK: - Service Logo View
 //
-// Shows the service's own icon: its apple-touch-icon first, then Google's favicon service, cached
-// on disk for 30 days. Only the service's domain is sent, never anything about the customer.
-// Falls back to a category-coloured initial when there's no domain or no usable icon.
+// Shows the service's own icon, asked of the service's own site and nobody else: its touch icon, its
+// favicon, then the icon its front page names. Cached on disk for 30 days. Nothing about the
+// customer is sent. Falls back to the name's first letter when there's no site or no usable icon.
 
 struct ServiceLogoView: View {
     let name: String
@@ -77,8 +77,9 @@ struct ServiceLogoView: View {
 
 // MARK: - Logo Store
 
-/// Loads and caches service icons. One request per domain at a time; failures are remembered for
-/// the session so a missing icon isn't fetched again on every scroll.
+/// Loads and caches service icons. One request per domain at a time. A site that has no usable icon
+/// is remembered for a week, and one that could not be reached for the session, so a missing icon
+/// isn't fetched again on every scroll.
 @MainActor
 final class LogoStore {
     static let shared = LogoStore()
@@ -98,7 +99,7 @@ final class LogoStore {
 
     func image(for domain: String) async -> UIImage? {
         if let image = cachedImage(for: domain) { return image }
-        if missing.contains(domain) { return nil }
+        if missing.contains(domain) || Self.isKnownMiss(domain) { return nil }
         if let task = inFlight[domain] { return await task.value }
         let task = Task.detached(priority: .utility) { await Self.download(domain) }
         inFlight[domain] = task
@@ -130,6 +131,22 @@ final class LogoStore {
         ].compactMap(URL.init(string:))
     }
 
+    /// The front page of a service's site, asked when it keeps no icon at the usual addresses.
+    nonisolated static func frontPages(of domain: String) -> [URL] {
+        let host = domain.hasPrefix("www.") ? String(domain.dropFirst(4)) : domain
+        return ["https://www.\(host)/", "https://\(host)/"].compactMap(URL.init(string:))
+    }
+
+    /// The icons a front page names that may be asked for: the three largest on the service's own
+    /// site. None when the page that answered is somewhere else (a service not offered in a country
+    /// sends its visitors to another company's page, and that page's icon is not the service's), and
+    /// none on another host: an icon is asked of the service's own site and nobody else.
+    nonisolated static func icons(namedIn html: String, at page: URL, for domain: String) -> [URL] {
+        let host = domain.hasPrefix("www.") ? String(domain.dropFirst(4)) : domain
+        guard ServiceDomains.isOwnSite(page, of: host) else { return [] }
+        return Array(PageIcons.named(in: html, at: page).filter { ServiceDomains.isOwnSite($0, of: host) }.prefix(3))
+    }
+
     nonisolated private static func download(_ domain: String) async -> UIImage? {
         let config = URLSessionConfiguration.ephemeral
         config.timeoutIntervalForRequest = 8
@@ -137,14 +154,41 @@ final class LogoStore {
         let session = URLSession(configuration: config)
         defer { session.finishTasksAndInvalidate() }
 
-        for url in sources(for: domain) {
+        func icon(at url: URL) async -> UIImage? {
             guard let (data, response) = try? await session.data(from: url),
                   (response as? HTTPURLResponse)?.statusCode == 200,
                   let image = UIImage(data: data),
-                  min(image.size.width * image.scale, image.size.height * image.scale) >= 48 else { continue }
+                  min(image.size.width * image.scale, image.size.height * image.scale) >= 48 else { return nil }
             writeDisk(data, domain)
             return image
         }
+
+        for url in sources(for: domain) {
+            if let image = await icon(at: url) { return image }
+        }
+        // None at the usual addresses: the site's own front page says where it keeps one.
+        var settled = false
+        for page in frontPages(of: domain) {
+            guard let (bytes, response) = try? await session.bytes(from: page),
+                  let answer = response as? HTTPURLResponse, let landed = answer.url else { continue }
+            settled = settled || settles(status: answer.statusCode)
+            guard answer.statusCode == 200 else { continue }
+            var head = Data()
+            do {
+                // The page is read as far as the end of its head and no further: a front page can be
+                // megabytes, and all that is wanted from it is one address.
+                for try await byte in bytes {
+                    head.append(byte)
+                    if head.count % 4_096 == 0, PageIcons.hasReadEnough(head) { break }
+                }
+            } catch { continue }
+            for url in icons(namedIn: String(decoding: head, as: UTF8.self), at: landed, for: domain) {
+                if let image = await icon(at: url) { return image }
+            }
+            break
+        }
+        // The site was reached and has no icon that can be used: it is not asked again for a week.
+        if settled { markMiss(domain) }
         return nil
     }
 
@@ -171,6 +215,42 @@ final class LogoStore {
         guard let url = fileURL(domain) else { return }
         try? FileManager.default.createDirectory(at: url.deletingLastPathComponent(), withIntermediateDirectories: true)
         try? data.write(to: url, options: .atomic)
+    }
+
+    // MARK: Sites with no icon
+
+    /// How long a site that answered with no usable icon is left alone. Finding that out costs its
+    /// front page, and a catalog scrolled on every launch would fetch a few hundred of them. Only a
+    /// site that answered is marked: with no connection nothing is, and the next launch asks again.
+    nonisolated static let missLife: TimeInterval = 7 * 24 * 3600
+
+    /// Whether a front page's answer settles that the site has no icon to give: a page that was
+    /// read, or a refusal that will not change by tomorrow. A server in trouble, or one asking for
+    /// patience, settles nothing.
+    nonisolated static func settles(status: Int) -> Bool {
+        status == 200 || ((400..<500).contains(status) && status != 408 && status != 429)
+    }
+
+    nonisolated static func missIsFresh(markedAt: Date, now: Date = Date()) -> Bool {
+        let age = now.timeIntervalSince(markedAt)
+        return age >= 0 && age < missLife
+    }
+
+    nonisolated private static func missURL(_ domain: String) -> URL? {
+        fileURL(domain)?.deletingPathExtension().appendingPathExtension("none")
+    }
+
+    nonisolated private static func isKnownMiss(_ domain: String) -> Bool {
+        guard let url = missURL(domain),
+              let attributes = try? FileManager.default.attributesOfItem(atPath: url.path),
+              let marked = attributes[.modificationDate] as? Date else { return false }
+        return missIsFresh(markedAt: marked)
+    }
+
+    nonisolated private static func markMiss(_ domain: String) {
+        guard let url = missURL(domain) else { return }
+        try? FileManager.default.createDirectory(at: url.deletingLastPathComponent(), withIntermediateDirectories: true)
+        try? Data().write(to: url, options: .atomic)
     }
 
     /// The logos kept on the iPhone say which services its last owner paid for: they go with the rest.

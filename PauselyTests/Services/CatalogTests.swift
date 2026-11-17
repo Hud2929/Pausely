@@ -36,6 +36,92 @@ final class CatalogTests: XCTestCase {
 
     // MARK: Logos
 
+    // MARK: - The icon a service's own front page names
+
+    /// On a new install 402 of the catalog's 848 services showed a letter: their sites keep no icon
+    /// at the three usual addresses (measured 2026-11-17 by asking each of the 660 sites the way the
+    /// app does). A site's own front page says where its icon is; this is how that is read.
+    func testAPagesIconsAreReadLargestFirstWhateverTheQuoting() throws {
+        let page = try XCTUnwrap(URL(string: "https://www.example.com/en/"))
+        let html = """
+        <html><head>
+        <link rel="stylesheet" href="/style.css">
+        <link rel=icon href=/favicon-32.png sizes=32x32>
+        <link rel='apple-touch-icon' href='/static/touch.png'>
+        <link rel="icon" type="image/png" sizes="192x192" href="https://www.example.com/static/icon-192.png?v=2&amp;x=1">
+        <link rel="mask-icon" href="/mask.svg" color="#000">
+        <link rel="icon" href="/logo.svg" type="image/svg+xml">
+        <link rel="shortcut icon" data-href="/wrong.png" href="favicon.ico">
+        <link rel="icon" sizes="192x192" href="https://www.example.com/static/icon-192.png?v=2&amp;x=1">
+        </head>
+        """
+
+        XCTAssertEqual(PageIcons.named(in: html, at: page).map(\.absoluteString), [
+            "https://www.example.com/static/icon-192.png?v=2&x=1",
+            "https://www.example.com/static/touch.png",
+            "https://www.example.com/favicon-32.png",
+            "https://www.example.com/en/favicon.ico"
+        ])
+        XCTAssertEqual(PageIcons.named(in: "<html><body>No head here</body></html>", at: page), [])
+    }
+
+    /// A front page can be megabytes; what is wanted is in its head. Reading stops where the head
+    /// ends, or at the limit for a page that never ends it.
+    func testAPageIsReadOnlyAsFarAsTheEndOfItsHead() {
+        let opening = Data("<html><head><title>Example</title><link rel=\"icon\" href=\"/i.png\">".utf8)
+        XCTAssertFalse(PageIcons.hasReadEnough(opening))
+        XCTAssertTrue(PageIcons.hasReadEnough(opening + Data("</head><body>".utf8)))
+        XCTAssertTrue(PageIcons.hasReadEnough(opening + Data("</HEAD>".utf8)))
+        // The end of the head is found at the end of what has arrived, however much came before.
+        let long = Data(repeating: 0x20, count: 120_000)
+        XCTAssertFalse(PageIcons.hasReadEnough(long))
+        XCTAssertTrue(PageIcons.hasReadEnough(long + Data("</head>".utf8) + Data(repeating: 0x20, count: 3_000)))
+        XCTAssertTrue(PageIcons.hasReadEnough(Data(repeating: 0x20, count: PageIcons.bytesRead)), "a page with no end to its head stops at the limit")
+        XCTAssertFalse(PageIcons.hasReadEnough(Data(repeating: 0x20, count: PageIcons.bytesRead - 1)))
+    }
+
+    /// An icon is asked of the service's own site and nobody else: one its page keeps on another
+    /// company's servers is not asked for, and a page that answered from somewhere else (a service
+    /// not offered in a country sends its visitors to another company) names nothing of the service's.
+    func testOnlyIconsOnTheServicesOwnSiteAreAskedFor() throws {
+        let page = try XCTUnwrap(URL(string: "https://www.example.com/"))
+        let html = """
+        <link rel="apple-touch-icon" sizes="180x180" href="https://cdn.example-assets.net/touch.png">
+        <link rel="icon" sizes="96x96" href="/icon-96.png">
+        <link rel="icon" sizes="64x64" href="https://static.example.com/icon-64.png">
+        <link rel="icon" sizes="48x48" href="/icon-48.png">
+        <link rel="icon" sizes="32x32" href="/icon-32.png">
+        """
+
+        let asked = ["https://www.example.com/icon-96.png", "https://static.example.com/icon-64.png", "https://www.example.com/icon-48.png"]
+        XCTAssertEqual(LogoStore.icons(namedIn: html, at: page, for: "example.com").map(\.absoluteString), asked, "the three largest, on its own site")
+        XCTAssertEqual(LogoStore.icons(namedIn: html, at: page, for: "www.example.com").map(\.absoluteString), asked)
+
+        let elsewhere = try XCTUnwrap(URL(string: "https://www.another-company.com/not-available"))
+        XCTAssertEqual(LogoStore.icons(namedIn: html, at: elsewhere, for: "example.com"), [])
+        let plain = "<link rel=\"icon\" sizes=\"96x96\" href=\"http://www.example.com/icon.png\">"
+        XCTAssertEqual(LogoStore.icons(namedIn: plain, at: page, for: "example.com"), [], "never over plain http")
+    }
+
+    /// The front page is asked after the three usual addresses, at the same site.
+    func testTheFrontPageAskedIsTheServicesOwn() {
+        XCTAssertEqual(LogoStore.frontPages(of: "www.netflix.com").map(\.absoluteString), ["https://www.netflix.com/", "https://netflix.com/"])
+        XCTAssertEqual(LogoStore.frontPages(of: "netflix.com"), LogoStore.frontPages(of: "www.netflix.com"))
+    }
+
+    /// A site that answered and has no icon is left alone for a week, so its front page is not
+    /// fetched on every launch. A site that could not be reached, or was in trouble, is asked again.
+    func testASiteWithNoIconIsNotAskedAgainForAWeek() {
+        let marked = Date(timeIntervalSince1970: 1_790_000_000)
+        XCTAssertTrue(LogoStore.missIsFresh(markedAt: marked, now: marked))
+        XCTAssertTrue(LogoStore.missIsFresh(markedAt: marked, now: marked.addingTimeInterval(7 * 86_400 - 1)))
+        XCTAssertFalse(LogoStore.missIsFresh(markedAt: marked, now: marked.addingTimeInterval(7 * 86_400)))
+        XCTAssertFalse(LogoStore.missIsFresh(markedAt: marked, now: marked.addingTimeInterval(-60)), "a mark from the future is not believed")
+
+        XCTAssertEqual([200, 403, 404, 410].map(LogoStore.settles(status:)), [true, true, true, true])
+        XCTAssertEqual([408, 429, 500, 502, 503, 301].map(LogoStore.settles(status:)), [false, false, false, false, false, false])
+    }
+
     /// A service's icon is asked of the three usual addresses on its own site. A few of the
     /// best-known keep theirs elsewhere on that site: on a simulator that had never run the app,
     /// YouTube Premium, Google One and PlayStation Plus were letters on the first-run screen
