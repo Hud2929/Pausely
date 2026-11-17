@@ -447,6 +447,16 @@ final class ScreenRulesTests: XCTestCase {
         XCTAssertTrue(stacked.contains("mark\n                        Spacer(minLength: 8)\n                        options"))
         XCTAssertTrue(stacked.contains("words"))
         XCTAssertFalse(stacked.contains(".frame(width: 28)"), "the mark is as wide as its glyph there")
+
+        // The kinds of inbox to connect: the same rule, and a symbol's box grows with its glyph.
+        // In a box held to 36 points the envelope at the largest text size was wider than its
+        // box, out of the row on one side and into "WEB.DE," on the other.
+        let kinds = try String(contentsOf: sources.appendingPathComponent("Views/Inbox/InboxProviderList.swift"), encoding: .utf8)
+        let kind = try XCTUnwrap(kinds.range(of: "private func row("))
+        let kindRow = String(kinds[kind.upperBound...])
+        XCTAssertTrue(kindRow.contains("MarkedWords(alignment: .center, spacing: 12) {"))
+        XCTAssertTrue(kindRow.contains(".frame(minWidth: 36, minHeight: 36)"))
+        XCTAssertFalse(kindRow.contains(".frame(width: 36, height: 36)"))
     }
 
     /// Home's total is never cut off. At the accessibility text sizes it has the whole width

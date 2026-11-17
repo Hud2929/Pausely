@@ -58,24 +58,31 @@ struct InboxProviderList: View {
         VStack(spacing: 0) {
             Button(action: action) {
                 HStack(spacing: 12) {
-                    if icon.isEmpty {
-                        Image(systemName: "envelope")
-                            .font(.body)
-                            .foregroundStyle(Color.inkTextMuted)
-                            .frame(width: 36, height: 36)
-                            .accessibilityHidden(true)
-                    } else {
-                        ServiceLogoView(name: icon, category: nil, size: 36)
-                    }
-                    VStack(alignment: .leading, spacing: 2) {
-                        title
-                            .font(.body.weight(.medium))
-                            .foregroundStyle(Color.inkText)
-                            .multilineTextAlignment(.leading)
-                        detail
-                            .font(.subheadline)
-                            .foregroundStyle(Color.inkTextMuted)
-                            .multilineTextAlignment(.leading)
+                    // The mark is above its words at the accessibility text sizes, like every
+                    // other mark: beside them it left "Other email" a column one word wide, and
+                    // the envelope, drawn at the text's size in a box 36 points wide, ran out of
+                    // the row and into the words (seen 2026-11-17).
+                    MarkedWords(alignment: .center, spacing: 12) {
+                        if icon.isEmpty {
+                            Image(systemName: "envelope")
+                                .font(.body)
+                                .foregroundStyle(Color.inkTextMuted)
+                                .frame(minWidth: 36, minHeight: 36)
+                                .accessibilityHidden(true)
+                        } else {
+                            ServiceLogoView(name: icon, category: nil, size: 36)
+                        }
+                    } words: {
+                        VStack(alignment: .leading, spacing: 2) {
+                            title
+                                .font(.body.weight(.medium))
+                                .foregroundStyle(Color.inkText)
+                                .multilineTextAlignment(.leading)
+                            detail
+                                .font(.subheadline)
+                                .foregroundStyle(Color.inkTextMuted)
+                                .multilineTextAlignment(.leading)
+                        }
                     }
                     Spacer(minLength: 8)
                     if connectingID == id {
