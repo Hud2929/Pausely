@@ -119,11 +119,15 @@ final class LogoStore {
     /// them the address on their own site is known (`ServiceDomains.iconAddresses`) and asked first.
     nonisolated static func sources(for domain: String) -> [URL] {
         let host = domain.hasPrefix("www.") ? String(domain.dropFirst(4)) : domain
-        return ([ServiceDomains.iconAddresses[host]].compactMap { $0 } + [
+        // A known address is asked only if it is on the service's own site: a slip in the table
+        // must never send one service's name to another's server.
+        let known = [ServiceDomains.iconAddresses[host]].compactMap { $0 }.compactMap(URL.init(string:))
+            .filter { ServiceDomains.isOwnSite($0, of: host) }
+        return known + [
             "https://\(host)/apple-touch-icon.png",
             "https://www.\(host)/apple-touch-icon.png",
             "https://\(host)/favicon.ico"
-        ]).compactMap(URL.init(string:))
+        ].compactMap(URL.init(string:))
     }
 
     nonisolated private static func download(_ domain: String) async -> UIImage? {
@@ -201,6 +205,13 @@ enum ServiceDomains {
     nonisolated static let assetHosts: [String: String] = [
         "duolingo.com": "d35aaqx5ub95lt.cloudfront.net",
     ]
+
+    /// Whether an address is on a service's own site: its domain, a name under it, or the one
+    /// host listed for it above. Over https only.
+    nonisolated static func isOwnSite(_ url: URL, of domain: String) -> Bool {
+        guard url.scheme == "https", let host = url.host?.lowercased() else { return false }
+        return host == domain || host.hasSuffix("." + domain) || assetHosts[domain] == host
+    }
 
     // Keyed by lowercase service name → canonical domain
     private static let domains: [String: String] = [

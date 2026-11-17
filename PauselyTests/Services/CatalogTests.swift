@@ -46,10 +46,8 @@ final class CatalogTests: XCTestCase {
         XCTAssertEqual(ServiceDomains.iconAddresses.count, 6)
         for (domain, address) in ServiceDomains.iconAddresses {
             let url = try XCTUnwrap(URL(string: address), address)
-            XCTAssertEqual(url.scheme, "https")
-            let host = try XCTUnwrap(url.host)
             // On the service's own domain, or the one host its own front page names for its icon.
-            XCTAssertTrue(host == domain || host.hasSuffix("." + domain) || ServiceDomains.assetHosts[domain] == host,
+            XCTAssertTrue(ServiceDomains.isOwnSite(url, of: domain),
                           "\(address) is not on \(domain): an icon is asked of the service's own site and nobody else")
             XCTAssertEqual(LogoStore.sources(for: domain).first, url)
             XCTAssertEqual(LogoStore.sources(for: "www." + domain).first, url)
@@ -57,6 +55,12 @@ final class CatalogTests: XCTestCase {
         }
         // The services that showed a letter on a new install, on the first screens with logos.
         XCTAssertEqual(ServiceDomains.assetHosts, ["duolingo.com": "d35aaqx5ub95lt.cloudfront.net"])
+        // What "its own site" means, and that an address anywhere else is never asked.
+        XCTAssertTrue(ServiceDomains.isOwnSite(try XCTUnwrap(URL(string: "https://gmedia.playstation.com/x.png")), of: "playstation.com"))
+        XCTAssertFalse(ServiceDomains.isOwnSite(try XCTUnwrap(URL(string: "https://notplaystation.com/x.png")), of: "playstation.com"))
+        XCTAssertFalse(ServiceDomains.isOwnSite(try XCTUnwrap(URL(string: "http://www.youtube.com/img/favicon_144.png")), of: "youtube.com"), "not over plain http")
+        XCTAssertFalse(ServiceDomains.isOwnSite(try XCTUnwrap(URL(string: "https://d35aaqx5ub95lt.cloudfront.net/x.png")), of: "dropbox.com"),
+                       "the one listed host is Duolingo's, and nobody else's")
         for name in ["YouTube Premium", "Google One", "PlayStation Plus", "Discord Nitro", "Notion", "Duolingo"] {
             let domain = try XCTUnwrap(ServiceDomains.domain(for: name), name)
             XCTAssertNotNil(ServiceDomains.iconAddresses[domain], "\(name) is asked for its icon where its site keeps none")
