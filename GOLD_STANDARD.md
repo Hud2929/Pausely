@@ -1140,11 +1140,21 @@ Updated at every commit, so the work can be picked up from this file alone.
 - **11-17, the repository's own words (`13c7855`).** Row opened and closed in 6.4;
   one owner item added to 6.7. Found while reading the README for the final report.
   Next, in order: H written up; section 7; the last proof runs on the final commit.
-- **11-17, the launch that opens signed in (this commit).** The one line of the codebase
+- **11-17, the launch that opens signed in (`2704ac5`).** The one line of the codebase
   score that said "no proof from here" had a proof within reach: closed in 6.6 (the long
   files entry), with its test.
   Next, in order: one command for the whole proof; H written up; section 7; the last
   proof runs on the final commit.
+- **11-17, one command for the whole proof (this commit).** `scripts/proof.sh`: the
+  mechanical checks, the unit tests, the UI tests other than the tour and a Release build, in
+  that order, one line each, stopping at the first that fails; `db` adds the four rigs. The UI
+  tests are in the plain run because left out of it one failed unseen for four days (6.5, the
+  swipe row). `CLAUDE.md` says when to run it. Run on the code of `2704ac5`: checks 0; 815
+  unit tests, 0 failures, three runs in a row (7 skipped: a mail server or real accounts);
+  UI tests 10 run, 2 skipped (the mailbox walk and the journey, which need a server and a
+  folder), 0 failures; Release builds.
+  Next, in order: the word check's one real line (a subscription's page did not watch the
+  Pause Plan); H written up; section 7.
 
 **Phase 0. Scan (read-only).** Four independent audits (dead code, truth, design rules on every
 view, engineering) plus mechanical scans. Output: the ledger.
