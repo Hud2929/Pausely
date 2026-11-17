@@ -28365,6 +28365,40 @@
         }
       }
     },
+    "Free tracks %lld, the most expensive first. The rest wait until you make room or go Pro.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "النسخة المجانية تتابع %lld اشتراكات، الأغلى أولًا. والباقي ينتظر حتى تفسح مكانًا أو تشترك في Pro."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kostenlos werden %lld erfasst, die teuersten zuerst. Der Rest wartet, bis Sie Platz schaffen oder Pro nutzen."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "La versión gratuita sigue %lld, las más caras primero. El resto espera hasta que hagas sitio o pases a Pro."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "La version gratuite en suit %lld, les plus chers d’abord. Les autres attendent que vous fassiez de la place ou passiez à Pro."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "無料版で管理できるのは%lld件まで（高い順）です。残りは、空きを作るかProにするまで待機します。"
+          }
+        }
+      }
+    },
     "Free tracks %lld. Added now, most expensive first: %lld. Waiting until you make room or go Pro: %lld.": {
       "localizations": {
         "ar": {

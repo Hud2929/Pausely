@@ -132,6 +132,35 @@ final class TallyTests: XCTestCase {
         XCTAssertNil(PendingTally.load(defaults: defaults))
     }
 
+    /// Someone who ticks nine learnt on Home, after making the account, that the free plan
+    /// tracks five. The reveal says it under "Keep my list" when the slip holds more, in the
+    /// words of what the importer then does.
+    func testTheRevealSaysTheFreeLimitBeforeTheAccountWhenTheSlipHoldsMore() throws {
+        var tally = Tally(currency: "USD")
+        let priced = TallyCatalog.services.filter { Tally.typicalAmount($0, payingIn: "USD") != nil }
+        for service in priced.prefix(FreeTier.subscriptionLimit) { tally.toggle(service) }
+        XCTAssertEqual(tally.lines.count, FreeTier.subscriptionLimit)
+        XCTAssertFalse(FreeTier.isExceeded(by: tally.subscriptions()), "five fit: nothing to say")
+        tally.toggle(priced[FreeTier.subscriptionLimit])
+        XCTAssertTrue(FreeTier.isExceeded(by: tally.subscriptions()))
+
+        // The sentence is true of the importer: the most expensive are added, the rest wait.
+        let plan = PendingTally.plan(lines: tally.lines, existingNames: [], freeSlots: FreeTier.subscriptionLimit)
+        XCTAssertEqual(plan.add.count, FreeTier.subscriptionLimit)
+        XCTAssertEqual(plan.wait.count, 1)
+        let cheapestAdded = try XCTUnwrap(plan.add.map(\.yearlyCost).min())
+        XCTAssertTrue(plan.wait.allSatisfy { $0.yearlyCost <= cheapestAdded })
+
+        let root = URL(fileURLWithPath: #filePath).deletingLastPathComponent().deletingLastPathComponent().deletingLastPathComponent()
+        let screen = root.appendingPathComponent("Pausely/Views/FirstRun/FirstRunView.swift")
+        try XCTSkipUnless(FileManager.default.fileExists(atPath: screen.path), "Sources aren't readable from this test run")
+        let source = try String(contentsOf: screen, encoding: .utf8)
+        let button = try XCTUnwrap(source.range(of: ".accessibilityIdentifier(\"keepListButton\")"))
+        let under = String(source[button.upperBound...].prefix(1100))
+        XCTAssertTrue(under.contains("if FreeTier.isExceeded(by: tally.subscriptions()) {"))
+        XCTAssertTrue(under.contains("L10n.string(\"Free tracks \\(FreeTier.subscriptionLimit), the most expensive first. The rest wait until you make room or go Pro.\")"))
+    }
+
     func testImportPlanFillsFreeSlotsWithTheMostExpensiveAndSkipsWhatIsAlreadyListed() {
         func line(_ name: String, _ amount: String) -> TallyLine {
             TallyLine(name: name, category: "entertainment", amount: Decimal(string: amount)!, currency: "USD")

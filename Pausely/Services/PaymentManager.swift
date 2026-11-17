@@ -23,6 +23,12 @@ enum FreeTier {
     static func room(in subscriptions: [Subscription]) -> Int {
         max(0, subscriptionLimit - used(by: subscriptions))
     }
+
+    /// Whether a list holds more than the free plan tracks. The first run's reveal asks, so it
+    /// can say so before the account is made (it used to be learnt on Home, afterwards).
+    static func isExceeded(by subscriptions: [Subscription]) -> Bool {
+        used(by: subscriptions) > subscriptionLimit
+    }
 }
 
 /// Launch prices in USD, for internal sums only. Never shown and never saved as what someone pays:

@@ -510,6 +510,16 @@ private struct RevealStep: View {
                     .font(.footnote)
                     .foregroundStyle(Color.inkTextFaint)
                     .multilineTextAlignment(.center)
+                // Said here, before the account: what the importer will do with a slip this long
+                // (`PendingTally.plan`).
+                if FreeTier.isExceeded(by: tally.subscriptions()) {
+                    Text(L10n.string("Free tracks \(FreeTier.subscriptionLimit), the most expensive first. The rest wait until you make room or go Pro."))
+                        .font(.footnote)
+                        .foregroundStyle(Color.inkTextFaint)
+                        .multilineTextAlignment(.center)
+                        .fixedSize(horizontal: false, vertical: true)
+                        .accessibilityIdentifier("revealFreeLimit")
+                }
             }
             .padding(.horizontal, Layout.margin)
             .padding(.top, 12)
