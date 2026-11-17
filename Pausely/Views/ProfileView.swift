@@ -17,6 +17,7 @@ struct ProfileView: View {
     @State private var plan: StoreKitManager.OwnSubscription?
     /// The column the row icons sit in; it widens with the reader's text size, as the icons do.
     @ScaledMetric(relativeTo: .body) private var iconWidth: CGFloat = 24
+    @Environment(\.dynamicTypeSize) private var typeSize
     @State private var managingPlan = false
     @State private var requestingRefund = false
 
@@ -220,17 +221,23 @@ struct ProfileView: View {
                 action()
             } label: {
                 HStack(spacing: 14) {
-                    Image(systemName: icon)
-                        .font(.body)
-                        .foregroundStyle(Color.inkTextMuted)
-                        .frame(width: iconWidth)
-                        .accessibilityHidden(true)
-                    // The value sits beside the title when both fit on one line, and under it when
-                    // they do not: at accessibility text sizes ("Same as iP…" was cut short), and for a
-                    // long value at any size ("Manage subscription" broke in two beside its date).
-                    LineOrStack(spacing: 12, lineSpacing: 2, spread: true) {
-                        rowTitle(title)
-                        if let value { rowValue(value) }
+                    // The symbol is above its words at the accessibility text sizes, like every
+                    // other mark: beside them, in a column as wide as the text is tall, it left
+                    // "Your year in subscriptions" four lines and "What's new" a word to a line.
+                    MarkedWords(alignment: .center, spacing: 14) {
+                        Image(systemName: icon)
+                            .font(.body)
+                            .foregroundStyle(Color.inkTextMuted)
+                            .frame(width: MarkPlacement.sitsAbove(largeText: typeSize.isAccessibilitySize) ? nil : iconWidth)
+                            .accessibilityHidden(true)
+                    } words: {
+                        // The value sits beside the title when both fit on one line, and under it when
+                        // they do not: at accessibility text sizes ("Same as iP…" was cut short), and for a
+                        // long value at any size ("Manage subscription" broke in two beside its date).
+                        LineOrStack(spacing: 12, lineSpacing: 2, spread: true) {
+                            rowTitle(title)
+                            if let value { rowValue(value) }
+                        }
                     }
                     RowChevron()
                 }

@@ -291,30 +291,36 @@ struct SubscriptionManagementView: View {
             action()
         } label: {
             HStack(spacing: 14) {
-                if let state {
-                    StateMark(state: state).frame(width: markColumn)
-                } else {
-                    Image(systemName: icon)
-                        .font(.body)
-                        .foregroundStyle(Color.inkTextMuted)
-                        .frame(width: markColumn)
-                        .accessibilityHidden(true)
-                }
-                VStack(alignment: .leading, spacing: 2) {
-                    Text(title)
-                        .font(.body)
-                        .foregroundStyle(Color.inkText)
-                        .multilineTextAlignment(.leading)
-                    if let subtitle {
-                        Text(subtitle)
-                            .font(.subheadline)
-                            .foregroundStyle(state?.color ?? Color.inkTextMuted)
-                            .multilineTextAlignment(.leading)
+                // The mark is above its words at the accessibility text sizes, like every other
+                // mark: beside them it left "Usage and value" a word to a line.
+                let markWidth: CGFloat? = MarkPlacement.sitsAbove(largeText: typeSize.isAccessibilitySize) ? nil : markColumn
+                MarkedWords(alignment: .center, spacing: 14) {
+                    if let state {
+                        StateMark(state: state).frame(width: markWidth)
+                    } else {
+                        Image(systemName: icon)
+                            .font(.body)
+                            .foregroundStyle(Color.inkTextMuted)
+                            .frame(width: markWidth)
+                            .accessibilityHidden(true)
                     }
-                    // Under the words at the accessibility text sizes. Beside them it left the
-                    // words a fifth of the row: "Paus", "e", "Plan", and "strea" above "ming".
-                    if isPro, Self.proSitsUnderTheWords(largeText: typeSize.isAccessibilitySize) {
-                        ProPill().padding(.top, 4)
+                } words: {
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text(title)
+                            .font(.body)
+                            .foregroundStyle(Color.inkText)
+                            .multilineTextAlignment(.leading)
+                        if let subtitle {
+                            Text(subtitle)
+                                .font(.subheadline)
+                                .foregroundStyle(state?.color ?? Color.inkTextMuted)
+                                .multilineTextAlignment(.leading)
+                        }
+                        // Under the words at the accessibility text sizes. Beside them it left the
+                        // words a fifth of the row: "Paus", "e", "Plan", and "strea" above "ming".
+                        if isPro, Self.proSitsUnderTheWords(largeText: typeSize.isAccessibilitySize) {
+                            ProPill().padding(.top, 4)
+                        }
                     }
                 }
                 Spacer(minLength: 8)

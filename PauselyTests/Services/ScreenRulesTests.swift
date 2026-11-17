@@ -429,7 +429,11 @@ final class ScreenRulesTests: XCTestCase {
             ("Views/Components/CancelSubscriptionFlow.swift", "PaperSlip(tornTop: true, tornBottom: true) {"),
             ("Views/AnalysisView.swift", "L10n.string(\"What went up\")"),
             ("Views/Settings/NotificationsSettingsView.swift", "let status = notifications.status"),
-            ("Views/Components/PriceHistoryView.swift", "private func summary(")
+            ("Views/Components/PriceHistoryView.swift", "private func summary("),
+            // Profile's rows and a subscription's tools (2026-11-17): beside their symbols,
+            // "Usage and value" and "What's new" were a word to a line.
+            ("Views/ProfileView.swift", "private func row("),
+            ("Views/SubscriptionManagementView.swift", "private func toolRow(")
         ]
         for place in places {
             let source = try String(contentsOf: sources.appendingPathComponent(place.file), encoding: .utf8)
