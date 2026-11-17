@@ -507,6 +507,40 @@ final class ScreenRulesTests: XCTestCase {
         XCTAssertFalse(history.contains(".multilineTextAlignment(.trailing)"), "The row decides, by where the value sits")
     }
 
+    /// A price is never drawn smaller than the "/mo" beside it. The two were two texts on a line
+    /// and only the amount gave way: at the largest text size "IDR 8,500,000" stood at six tenths
+    /// of its size beside a full-size "/mo", on the subscription's page and on the verdict (seen
+    /// 2026-11-17). They are one text now, so whatever the line does it does to both.
+    func testAPriceIsNeverDrawnSmallerThanItsPeriod() throws {
+        // No line can break between an amount and its period, or inside the period.
+        XCTAssertEqual(PricePerPeriod.joined("/mo"), "\u{202F}/\u{2060}mo")
+        XCTAssertEqual(PricePerPeriod.joined("/2wk"), "\u{202F}/\u{2060}2wk")
+        let line = PricePerPeriod.line(amount: "IDR 8,500,000", period: "/mo", amountFont: .largeTitle, periodFont: .title3, periodColor: .inkTextMuted)
+        XCTAssertEqual(String(line.characters), "IDR 8,500,000\u{202F}/\u{2060}mo")
+        XCTAssertEqual(line.runs.count, 2, "the amount in its face, the period in its own")
+        // One line, and at the accessibility sizes two: the figure goes under its currency before
+        // the line is drawn smaller, as Home's total does.
+        XCTAssertEqual(PricePerPeriod.lines(largeText: false), 1)
+        XCTAssertEqual(PricePerPeriod.lines(largeText: true), DashboardView.totalLines(largeText: true))
+        XCTAssertGreaterThanOrEqual(PricePerPeriod.smallest, 0.5)
+
+        // No screen sets a period as a text of its own beside an amount that can shrink.
+        let sources = root.appendingPathComponent("Pausely")
+        try XCTSkipUnless(FileManager.default.fileExists(atPath: sources.path), "Sources aren't readable from this test run")
+        let views = sources.appendingPathComponent("Views")
+        var periods: [String] = []
+        for file in try FileManager.default.subpathsOfDirectory(atPath: views.path) where file.hasSuffix(".swift") {
+            let text = try String(contentsOf: views.appendingPathComponent(file), encoding: .utf8)
+            if text.contains(".shortDisplay") { periods.append(file) }
+        }
+        // The list's row puts "/mo" under an amount that does not fit beside it and shrinks neither.
+        XCTAssertEqual(periods, ["SubscriptionsView.swift"])
+        for file in ["SubscriptionManagementView.swift", "Verdict/RenewalVerdictView.swift"] {
+            let text = try String(contentsOf: views.appendingPathComponent(file), encoding: .utf8)
+            XCTAssertTrue(text.contains("PricePerPeriod(amount: MoneyFormat.string("), file)
+        }
+    }
+
     /// What a search finds can be seen while typing. At the accessibility text sizes the field
     /// moves to the top of its page when it is typed in: under a heading and its explanation it
     /// sat just above the keyboard, with the results behind the keys.

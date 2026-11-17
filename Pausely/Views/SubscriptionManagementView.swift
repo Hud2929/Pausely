@@ -92,19 +92,10 @@ struct SubscriptionManagementView: View {
                     .accessibilityAddTraits(.isHeader)
             }
 
-            HStack(alignment: .firstTextBaseline, spacing: 4) {
-                Text(MoneyFormat.string(current.amount, current.currency))
-                    .font(.question(.largeTitle, weight: .bold))
-                    .foregroundStyle(Color.inkText)
-                    .minimumScaleFactor(0.6)
-                    .lineLimit(1)
-                Text(current.billingFrequency.shortDisplay)
-                    .font(.title3)
-                    .foregroundStyle(Color.inkTextMuted)
-            }
-            .padding(.top, 8)
-            .accessibilityElement(children: .ignore)
-            .accessibilityLabel(Text(verbatim: current.billingFrequency.priced(MoneyFormat.string(current.amount, current.currency))))
+            PricePerPeriod(amount: MoneyFormat.string(current.amount, current.currency), frequency: current.billingFrequency,
+                           amountFont: .question(.largeTitle, weight: .bold), periodFont: .title3, periodColor: .inkTextMuted)
+                .foregroundStyle(Color.inkText)
+                .padding(.top, 8)
 
             if current.currency != currencyManager.selectedCurrency,
                let converted = currencyManager.convertToSelected(current.amount, from: current.currency) {

@@ -159,16 +159,8 @@ struct RenewalVerdictView: View {
                 .font(.question(.largeTitle, weight: .bold))
                 .fixedSize(horizontal: false, vertical: true)
                 .accessibilityAddTraits(.isHeader)
-            HStack(alignment: .firstTextBaseline, spacing: 4) {
-                Text(MoneyFormat.string(sub.amount, sub.currency))
-                    .font(.question(.title, weight: .semibold))
-                    .minimumScaleFactor(0.6)
-                    .lineLimit(1)
-                Text(sub.billingFrequency.shortDisplay)
-                    .font(.subheadline)
-                    .foregroundStyle(Color.paperMuted)
-            }
-            .accessibilityElement(children: .combine)
+            PricePerPeriod(amount: MoneyFormat.string(sub.amount, sub.currency), frequency: sub.billingFrequency,
+                           amountFont: .question(.title, weight: .semibold), periodFont: .subheadline, periodColor: .paperMuted)
         }
     }
 

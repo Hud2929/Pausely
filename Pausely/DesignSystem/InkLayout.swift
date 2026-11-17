@@ -273,3 +273,47 @@ struct LineOrStack: SwiftUI.Layout {
         }
     }
 }
+
+/// A price and how often it is charged, as one text: "$15.99/mo", the amount in its own face and
+/// the period smaller beside it. Where the line is too narrow for both (millions of rupiah at the
+/// largest text size) the two are drawn smaller together, and at the accessibility sizes the
+/// figure may go under its currency first, as Home's total does. As two texts on a line only the
+/// amount gave way: on a subscription's page and on the verdict "IDR 8,500,000" stood smaller
+/// than its own "/mo" (seen 2026-11-17).
+struct PricePerPeriod: View {
+    let amount: String
+    let frequency: BillingFrequency
+    let amountFont: Font
+    let periodFont: Font
+    let periodColor: Color
+
+    @Environment(\.dynamicTypeSize) private var typeSize
+
+    var body: some View {
+        Text(Self.line(amount: amount, period: frequency.shortDisplay, amountFont: amountFont,
+                       periodFont: periodFont, periodColor: periodColor))
+            .lineLimit(Self.lines(largeText: typeSize.isAccessibilitySize))
+            .minimumScaleFactor(Self.smallest)
+            .accessibilityLabel(Text(verbatim: frequency.priced(amount)))
+    }
+
+    /// The line is drawn down to half its size before any of it would be cut.
+    static let smallest: CGFloat = 0.5
+
+    nonisolated static func lines(largeText: Bool) -> Int { largeText ? 2 : 1 }
+
+    /// The period as it follows its amount: after a narrow space no line breaks at, and with
+    /// nothing a line can break at after its slash ("8,500,000/" above "mo").
+    nonisolated static func joined(_ period: String) -> String {
+        "\u{202F}" + period.replacingOccurrences(of: "/", with: "/\u{2060}")
+    }
+
+    static func line(amount: String, period: String, amountFont: Font, periodFont: Font, periodColor: Color) -> AttributedString {
+        var price = AttributedString(amount)
+        price.font = amountFont
+        var per = AttributedString(joined(period))
+        per.font = periodFont
+        per.foregroundColor = periodColor
+        return price + per
+    }
+}
