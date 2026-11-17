@@ -61,7 +61,7 @@ user; nothing reaches the server). `--reset-state` (UI tests) starts signed out 
 (other lists: `--varied-demo-data`, `--empty-demo-data`, `--quiet-demo-data`, `--large-demo-data` with
 `--demo-currency=IDR` for nine-digit totals). States with no screen of their own: `--demo-splash`,
 `--demo-loading`, `--demo-load-failed`, `--demo-reminders=ask|denied|on|hidden|late`, `--demo-form-problem`,
-`--demo-reset-code`, `--demo-store-offline`, `--demo-no-trial`, `--demo-pro[=trial|ending|problem]`,
+`--demo-reset-code`, `--demo-store-offline`, `--demo-no-trial`, `--demo-pro[=trial|ending|problem]`, `--demo-account[=named]`,
 `--demo-dates`, `--demo-waiting`, `--demo-guess=N`. `PauselyUITests/ScreenTourTests` captures every screen
 and state when `TEST_RUNNER_PAUSELY_TOUR_DIR` is set (`TEST_RUNNER_PAUSELY_TOUR_VARIANT=ar|de|es|fr|ja|big|xxxl`,
 `TEST_RUNNER_PAUSELY_TOUR_AUDIT=1` for Apple's accessibility audit, `TEST_RUNNER_PAUSELY_TOUR_ONLY=a,b` for a few).

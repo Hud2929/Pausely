@@ -521,6 +521,30 @@ final class ScreenRulesTests: XCTestCase {
         XCTAssertFalse(history.contains(".multilineTextAlignment(.trailing)"), "The row decides, by where the value sits")
     }
 
+    /// Profile is titled by the name the person gave, and by nothing made up. An account made with
+    /// an address has no name: the page made one out of the address ("Jane.Doe"; for an address
+    /// Apple hides, a run of letters) and set it above the address itself. No capture had shown it:
+    /// a demo launch has nobody signed in (seen 2026-11-17, on a simulator that had someone).
+    func testProfileIsTitledByTheNameThePersonGave() throws {
+        XCTAssertEqual(ProfileView.title(for: nil), L10n.string("Profile"))
+        XCTAssertEqual(ProfileView.title(for: User(id: "1", email: "jane.doe@example.com")), L10n.string("Profile"))
+        XCTAssertEqual(ProfileView.title(for: User(id: "1", email: "x7k2p9qw4m@privaterelay.appleid.com")), L10n.string("Profile"))
+        XCTAssertEqual(ProfileView.title(for: User(id: "1", email: "jane.doe@example.com", firstName: "Jane", lastName: "Doe")), "Jane Doe")
+        XCTAssertEqual(ProfileView.title(for: User(id: "1", email: nil, firstName: " ", lastName: "")), L10n.string("Profile"), "blanks are not a name")
+        // What the tour shows: an address only, and a name with one.
+        XCTAssertNil(ProfileView.demoAccount("").fullName)
+        XCTAssertEqual(ProfileView.demoAccount("named").fullName, "Jane Doe")
+
+        let sources = root.appendingPathComponent("Pausely")
+        try XCTSkipUnless(FileManager.default.fileExists(atPath: sources.path), "Sources aren't readable from this test run")
+        let profile = try String(contentsOf: sources.appendingPathComponent("Views/ProfileView.swift"), encoding: .utf8)
+        // The address under the title is whole and takes no hyphen, like every other address.
+        XCTAssertTrue(profile.contains("Text(verbatim: AddressText.breakable(email))"))
+        XCTAssertTrue(profile.contains(".accessibilityLabel(Text(verbatim: email))"))
+        let user = try String(contentsOf: sources.appendingPathComponent("Models/User.swift"), encoding: .utf8)
+        XCTAssertFalse(user.contains(".capitalized"), "no name is made out of an address")
+    }
+
     /// A service's name is not hyphenated in its first-run tile. At the largest text size the
     /// name has the tile less the tick's place, and "Crunchyroll" and "PlayStation" are wider
     /// than that: iOS drew "Crunchy-roll" and "PlaySta-tion Plus" (seen 2026-11-17). The name is

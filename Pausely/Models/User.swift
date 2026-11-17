@@ -24,10 +24,6 @@ extension User {
         let parts = [firstName, lastName].compactMap { $0?.trimmed }
         return parts.isEmpty ? nil : parts.joined(separator: " ")
     }
-
-    var displayName: String {
-        fullName ?? email?.components(separatedBy: "@").first?.capitalized ?? "User"
-    }
 }
 
 private extension String {

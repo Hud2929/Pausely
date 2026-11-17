@@ -286,6 +286,10 @@ final class ScreenTourTests: XCTestCase {
             (varied + ["--demo-tab=0", "--demo-plan-active"], "home-plan"),
             (varied + ["--demo-tab=2", "--demo-plan-active"], "insights-plan"),
             (varied + ["--demo-subscription=Netflix", "--demo-plan-active"], "manage-plan"),
+            // Someone signed in: an address only, as most accounts are, and one with a name. A demo
+            // launch has no account, so until 2026-11-17 no capture showed the header people see.
+            (varied + ["--demo-tab=3", "--demo-account"], "profile-account"),
+            (varied + ["--demo-tab=3", "--demo-account=named", "--demo-pro"], "profile-named"),
             (varied + ["--demo-tab=3", "--demo-pro"], "profile-pro"),
             (varied + ["--demo-tab=3", "--demo-pro=trial"], "profile-pro-trial"),
             (varied + ["--demo-tab=3", "--demo-pro=ending"], "profile-pro-ending"),

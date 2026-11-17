@@ -125,19 +125,47 @@ struct ProfileView: View {
 
     // MARK: - Who and which plan
 
+    /// The page's title: the name the person gave, when the account has one (Apple hands one over
+    /// at the first sign-in), and "Profile" for an account made with an address. It used to make a
+    /// name out of the address: "Jane.Doe", and for an address Apple hides, a run of letters.
+    nonisolated static func title(for user: User?) -> String {
+        user?.fullName ?? L10n.string("Profile")
+    }
+
+    /// Who the header names. A demo launch has nobody signed in, so no capture had ever shown the
+    /// header a person with an account sees: `--demo-account` (DEBUG) puts one there, with an
+    /// address only, as most accounts are, or with `=named` a name as well.
+    private var shownUser: User? {
+        #if DEBUG
+        if let kind = LaunchFlag.value(of: "--demo-account") { return Self.demoAccount(kind) }
+        #endif
+        return authManager.currentUser
+    }
+
+    #if DEBUG
+    nonisolated static func demoAccount(_ kind: String) -> User {
+        kind == "named" ? User(id: "demo", email: "jane.doe@example.com", firstName: "Jane", lastName: "Doe")
+                        : User(id: "demo", email: "jane.doe@longer-company-name.example.co.uk")
+    }
+    #endif
+
     private var header: some View {
-        let user = authManager.currentUser
+        let user = shownUser
         let isPro = paymentManager.isPremium
         return VStack(alignment: .leading, spacing: 6) {
-            Text(verbatim: user?.displayName ?? L10n.string("Profile"))
+            Text(verbatim: Self.title(for: user))
                 .font(.question(.largeTitle, weight: .bold))
                 .foregroundStyle(Color.inkText)
                 .fixedSize(horizontal: false, vertical: true)
                 .accessibilityAddTraits(.isHeader)
             if let email = user?.email, !email.isEmpty {
-                Text(verbatim: email)
+                // The address the account is under: whole, on as many lines as it needs, and
+                // never hyphenated (`AddressText`).
+                Text(verbatim: AddressText.breakable(email))
                     .font(.subheadline)
                     .foregroundStyle(Color.inkTextMuted)
+                    .fixedSize(horizontal: false, vertical: true)
+                    .accessibilityLabel(Text(verbatim: email))
             }
             Text(isPro ? L10n.string("Pausely Pro")
                        : L10n.string("Free plan: Pausely tracks up to \(FreeTier.subscriptionLimit) subscriptions."))
