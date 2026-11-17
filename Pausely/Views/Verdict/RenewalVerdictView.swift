@@ -7,6 +7,7 @@ struct RenewalVerdictView: View {
 
     @Environment(\.dismiss) private var dismiss
     @Environment(\.openURL) private var openURL
+    @Environment(\.dynamicTypeSize) private var typeSize
     @ObservedObject private var store = SubscriptionStore.shared
     @ObservedObject private var eventLog = LifecycleEventLog.shared
     @ObservedObject private var paymentManager = PaymentManager.shared
@@ -252,10 +253,17 @@ struct RenewalVerdictView: View {
         let minutes = usage.minutesUsed
         guard minutes > 0 else { return L10n.string("Not used this month") }
         let duration = Duration.seconds(minutes * 60).formatted(.units(allowed: [.hours, .minutes], width: .abbreviated).locale(L10n.locale))
-        if let perHour = screenTime.calculateCostPerHour(monthlyCost: sub.monthlyCost, subscriptionName: sub.name) {
-            return L10n.string("Used \(duration) this month · \(MoneyFormat.string(perHour, sub.currency)) an hour")
-        }
-        return L10n.string("Used \(duration) this month")
+        let used = L10n.string("Used \(duration) this month")
+        guard let perHour = screenTime.calculateCostPerHour(monthlyCost: sub.monthlyCost, subscriptionName: sub.name) else { return used }
+        return Self.usageLine(used: used, hourly: L10n.string("\(MoneyFormat.string(perHour, sub.currency)) an hour"),
+                              largeText: typeSize.isAccessibilitySize)
+    }
+
+    /// The hours and what an hour of them cost, as one line of the slip. Beside the hours, the
+    /// price of an hour is one piece: the line ended "· $6.85" with "an hour" under it. At the
+    /// accessibility sizes each fact has a line of its own and wraps where it must.
+    nonisolated static func usageLine(used: String, hourly: String, largeText: Bool) -> String {
+        used + " · " + (largeText ? hourly : L10n.whole(hourly))
     }
 
     // MARK: - The two answers

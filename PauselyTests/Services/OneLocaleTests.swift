@@ -114,6 +114,22 @@ final class OneLocaleTests: XCTestCase {
         XCTAssertEqual(L10n.breakingAfterDots("No dot here"), "No dot here")
     }
 
+    /// On the verdict's slip the hours and what an hour of them cost share a line. It ended
+    /// "· $6.85" with "an hour" under it (seen 2026-11-16): the price of an hour is one piece
+    /// there, so the line breaks after the dot. At the accessibility sizes each fact has its own
+    /// line, about thirteen characters wide, and a piece that cannot break would be cut.
+    func testThePriceOfAnHourIsNotSplitFromItsUnit() {
+        let nbsp = "\u{00A0}"
+        let beside = RenewalVerdictView.usageLine(used: "Used 2 hrs, 20 mins this month", hourly: "$6.85 an hour", largeText: false)
+        XCTAssertEqual(beside, "Used 2 hrs, 20 mins this month · $6.85\(nbsp)an\(nbsp)hour")
+        let drawn = L10n.facts(beside, oneToALine: false)
+        XCTAssertEqual(drawn.components(separatedBy: " ").last, "$6.85\(nbsp)an\(nbsp)hour", "the last place the line can end is after the dot")
+        XCTAssertTrue(drawn.contains("month\(nbsp)· "))
+
+        let large = RenewalVerdictView.usageLine(used: "Used 2 hrs, 20 mins this month", hourly: "$6.85 an hour", largeText: true)
+        XCTAssertEqual(L10n.facts(large, oneToALine: true), "Used 2 hrs, 20 mins this month\n$6.85 an hour")
+    }
+
     /// Two sentences shown as one line are joined the way the language writes them: with a space,
     /// except in Japanese.
     func testSentencesAreJoinedAsTheLanguageWritesThem() {

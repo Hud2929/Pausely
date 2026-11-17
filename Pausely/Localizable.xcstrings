@@ -13727,40 +13727,6 @@
         }
       }
     },
-    "Used %@ this month · %@ an hour": {
-      "localizations": {
-        "ar": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "استُخدم %1$@ هذا الشهر · %2$@ للساعة"
-          }
-        },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Diesen Monat %1$@ genutzt · %2$@ pro Stunde"
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Usado %1$@ este mes · %2$@ por hora"
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Utilisé %1$@ ce mois-ci · %2$@ de l'heure"
-          }
-        },
-        "ja": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "今月の利用：%1$@ · 1時間あたり%2$@"
-          }
-        }
-      }
-    },
     "Used %@ this month": {
       "localizations": {
         "ar": {
