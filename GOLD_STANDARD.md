@@ -1216,9 +1216,13 @@ Updated at every commit, so the work can be picked up from this file alone.
   Next, in order: the tap that brings nothing in the UI tests (found while proving this
   slice); the mailbox screen; the check back to raw lines; the rest of the "Tests" line;
   section 7 again.
-- **11-17, a tap that brings nothing (this commit).** Bullet opened and closed in 6.6.
+- **11-17, a tap that brings nothing (`86314a3`).** Bullet opened and closed in 6.6.
   Next, in order: the mailbox screen; the check back to raw lines; the rest of the "Tests"
   line (three mail tests not run); section 7 again.
+- **11-17, the mailbox screen and the size check (this commit).** "Long files again" is
+  closed in 6.6: no Swift file is over 700 lines, counted the way the standard first said.
+  Next, in order: the rest of the "Tests" line (three mail tests not run: what each needs,
+  and whether any can run from here); section 7 again.
 
 **Phase 0. Scan (read-only).** Four independent audits (dead code, truth, design rules on every
 view, engineering) plus mechanical scans. Output: the ledger.
@@ -1631,6 +1635,21 @@ Stage G, as it closes (each line: what, and the evidence):
     failures; `gold_check` 0; the UI tests, which walk the first run, 10 run, 2 skipped, 0
     failures, three runs in a row (after the tap fix in the next entry: the first run of them
     failed on a tap that brought nothing, on a build that then passed two runs in three).
+  - **The mailbox screen, and the check put back, done 11-17.** Two parts of the screen were
+    whole things of their own and are now views with nothing but what they are given: the list
+    of inbox kinds to connect (`InboxProviderList`, 97 lines, shown on the first page and in
+    "Add an inbox"; it keeps which sign-in is on its way, and hands an app-password inbox back
+    to the screen) and the page that says what was added (`InboxOutcome`, 76 lines, given the
+    outcome and two actions). The screen is 574 lines. `gold_check` counts every line again
+    ("Swift files over 700 lines", comments and blank lines included): 0, and the longest file
+    is 651 (Home). Proof on this code: `gold_check` 0 on every line; 824 unit tests, 0 failures;
+    the mailbox walked through its screens against the synthetic mailbox served on this Mac
+    (`InboxWorkflowUITests`, passed: connect with an app password, the search, the results,
+    add, the outcome page); the other UI tests 10 run, 2 skipped, 0 failures; Release builds.
+  **Closed 11-17.** Five files, nine new ones, and what was made visible to the module in all:
+  three entry points and two shared helpers in the engine's parts, the reveal step and the back
+  button of the first run, and the two new mailbox views. No private helper was un-hidden to
+  make a split possible.
 - A tap that brings nothing, 11-17. The scorecard said "a UI test can lose its first tap right
   after a build (seen twice), so a red UI step is run again alone before it is believed". Seen a
   third and fourth time while proving the split above, and this time looked at instead of run

@@ -22,9 +22,6 @@ struct InboxImportView: View {
     @State private var imapPreset: IMAPPreset?
     @State private var showingIMAP = false
     @State private var showingProviders = false
-    /// The provider whose sign-in is being opened: its row shows that it was heard until the web
-    /// sheet arrives (nothing changed for a second or two, and a second tap started a second sign-in).
-    @State private var connectingID: String?
     @State private var showingPaywall = false
 
     var body: some View {
@@ -32,7 +29,7 @@ struct InboxImportView: View {
             ScrollView(showsIndicators: false) {
                 VStack(spacing: 24) {
                     if let outcome {
-                        outcomeSection(outcome)
+                        InboxOutcome(outcome: outcome, onDone: { dismiss() }, onSeePro: { showingPaywall = true })
                     } else if !scanner.hasAccounts {
                         connectSection
                     } else if scanner.isScanning {
@@ -141,91 +138,15 @@ struct InboxImportView: View {
         .accessibilityElement(children: .combine)
     }
 
+    /// Which inbox: the same list here and in "Add an inbox".
     private var providerButtons: some View {
-        VStack(spacing: 0) {
-            if FeatureFlags.gmailImportEnabled && GmailMailboxProvider.isConfigured {
-                providerButton(Text(verbatim: "Gmail"), detail: Text("Sign in with Google"), icon: "Gmail", id: "connectGmail") {
-                    showingProviders = false
-                    connect("connectGmail") { await scanner.connectGmail() }
-                }
-            }
-            if FeatureFlags.microsoftImportEnabled && MicrosoftGraphProvider.isConfigured {
-                providerButton(Text(verbatim: "Outlook, Hotmail, Live, MSN"), detail: Text("Sign in with Microsoft"), icon: "Outlook", id: "connectMicrosoft") {
-                    showingProviders = false
-                    connect("connectMicrosoft") { await scanner.connectMicrosoft() }
-                }
-            }
-            if FeatureFlags.imapImportEnabled {
-                ForEach(["icloud", "yahoo", "aol", "gmail-imap"], id: \.self) { id in
-                    if let preset = IMAPPreset.find(id) {
-                        providerButton(Text(verbatim: preset.name), detail: Text("With an app password"), icon: preset.name, id: "connect-\(id)") {
-                            openIMAP(preset)
-                        }
-                    }
-                }
-                providerButton(Text("Other email"), detail: Text("GMX, WEB.DE, Zoho, Fastmail and more"), icon: "", id: "connect-other") {
-                    openIMAP(nil)
-                }
-            }
-        }
-    }
-
-    /// Opens a provider's sign-in once: while it is on its way, its row shows a spinner and no
-    /// row takes another tap.
-    private func connect(_ id: String, _ signIn: @escaping () async -> Void) {
-        guard connectingID == nil else { return }
-        connectingID = id
-        Task {
-            await signIn()
-            connectingID = nil
-        }
+        InboxProviderList(onChoose: { showingProviders = false }, onAppPassword: openIMAP)
     }
 
     private func openIMAP(_ preset: IMAPPreset?) {
         imapPreset = preset
         showingProviders = false
         showingIMAP = true
-    }
-
-    private func providerButton(_ title: Text, detail: Text, icon: String, id: String, action: @escaping () -> Void) -> some View {
-        VStack(spacing: 0) {
-            Button(action: action) {
-                HStack(spacing: 12) {
-                    if icon.isEmpty {
-                        Image(systemName: "envelope")
-                            .font(.body)
-                            .foregroundStyle(Color.inkTextMuted)
-                            .frame(width: 36, height: 36)
-                            .accessibilityHidden(true)
-                    } else {
-                        ServiceLogoView(name: icon, category: nil, size: 36)
-                    }
-                    VStack(alignment: .leading, spacing: 2) {
-                        title
-                            .font(.body.weight(.medium))
-                            .foregroundStyle(Color.inkText)
-                            .multilineTextAlignment(.leading)
-                        detail
-                            .font(.subheadline)
-                            .foregroundStyle(Color.inkTextMuted)
-                            .multilineTextAlignment(.leading)
-                    }
-                    Spacer(minLength: 8)
-                    if connectingID == id {
-                        ProgressView().tint(Color.inkTextMuted)
-                    } else {
-                        RowChevron()
-                    }
-                }
-                .padding(.vertical, 12)
-                .contentShape(Rectangle())
-            }
-            .buttonStyle(.plain)
-            .disabled(connectingID != nil)
-            .accessibilityElement(children: .combine)
-            .accessibilityIdentifier(id)
-            Hairline()
-        }
     }
 
     // MARK: - While searching
@@ -645,76 +566,6 @@ struct InboxImportView: View {
         // The landing is felt when something landed: nothing is, when every one was already listed
         // or is waiting for room.
         if !result.added.isEmpty || !result.datesFilled.isEmpty { Feel.landed() }
-    }
-
-    // MARK: - What was added
-
-    /// Exactly what happened to each one: added, waiting, or already there. Nothing is dropped unsaid.
-    private func outcomeSection(_ outcome: TallyImporter.Outcome) -> some View {
-        VStack(alignment: .leading, spacing: 20) {
-            Text(outcomeTitle(outcome))
-                .font(.question(.title))
-                .foregroundStyle(Color.inkText)
-                .fixedSize(horizontal: false, vertical: true)
-                .accessibilityAddTraits(.isHeader)
-                .accessibilityIdentifier("importOutcomeTitle")
-
-            VStack(alignment: .leading, spacing: 0) {
-                if !outcome.added.isEmpty {
-                    outcomeLine(L10n.string("Each one now shows its next charge on Home."), names: outcome.added)
-                }
-                if !outcome.waiting.isEmpty {
-                    if !outcome.added.isEmpty { Hairline() }
-                    outcomeLine(L10n.string("Waiting: \(outcome.waiting.count). Free tracks \(FreeTier.subscriptionLimit); Pausely Pro tracks all of them."),
-                                names: outcome.waiting)
-                        .accessibilityIdentifier("importWaitingLine")
-                }
-                if !outcome.alreadyListed.isEmpty {
-                    if !outcome.added.isEmpty || !outcome.waiting.isEmpty { Hairline() }
-                    outcomeLine(outcome.datesFilled.isEmpty
-                                ? L10n.string("Already on your list: \(outcome.alreadyListed.count).")
-                                : L10n.string("Already on your list: \(outcome.alreadyListed.count). Missing renewal dates were filled in from your receipts."),
-                                names: outcome.alreadyListed)
-                }
-            }
-
-            VStack(spacing: 10) {
-                Button(action: { dismiss() }) { Text("Done") }
-                    .buttonStyle(.ink)
-                    .accessibilityIdentifier("importDoneButton")
-                if !outcome.waiting.isEmpty {
-                    Button(action: { showingPaywall = true }) { Text("See Pausely Pro") }
-                        .buttonStyle(.ink(.quiet))
-                        .accessibilityIdentifier("importSeeProButton")
-                }
-            }
-        }
-        .frame(maxWidth: .infinity, alignment: .leading)
-    }
-
-    /// One subscription is named; several are counted.
-    private func outcomeTitle(_ outcome: TallyImporter.Outcome) -> String {
-        switch outcome.added.count {
-        case 0: return L10n.string("Nothing new was added")
-        case 1: return L10n.string("\(outcome.added[0]) is on your list")
-        default: return L10n.string("\(outcome.added.count) added to your list")
-        }
-    }
-
-    private func outcomeLine(_ sentence: String, names: [String]) -> some View {
-        VStack(alignment: .leading, spacing: 4) {
-            Text(verbatim: sentence)
-                .font(.body)
-                .foregroundStyle(Color.inkText)
-                .fixedSize(horizontal: false, vertical: true)
-            Text(verbatim: names.formatted(.list(type: .and).locale(L10n.locale)))
-                .font(.subheadline)
-                .foregroundStyle(Color.inkTextMuted)
-                .fixedSize(horizontal: false, vertical: true)
-        }
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .padding(.vertical, 12)
-        .accessibilityElement(children: .combine)
     }
 
     static func money(_ amount: Decimal, _ currency: String) -> String {
