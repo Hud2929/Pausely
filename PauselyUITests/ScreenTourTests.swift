@@ -21,6 +21,14 @@ final class ScreenTourTests: XCTestCase {
         outputDir = URL(fileURLWithPath: path)
         try FileManager.default.createDirectory(at: outputDir, withIntermediateDirectories: true)
         continueAfterFailure = true
+        // `PAUSELY_TOUR_ORIENTATION=landscape`: the device on its side. iPad allows it; iPhone is
+        // portrait only and stays as it is. Until 2026-11-17 no tour had turned an iPad.
+        XCUIDevice.shared.orientation = ProcessInfo.processInfo.environment["PAUSELY_TOUR_ORIENTATION"] == "landscape" ? .landscapeLeft : .portrait
+    }
+
+    override func tearDown() {
+        XCUIDevice.shared.orientation = .portrait
+        super.tearDown()
     }
 
     // MARK: - Tours
@@ -28,6 +36,8 @@ final class ScreenTourTests: XCTestCase {
     /// Extra launch arguments for a variant of the tour: `PAUSELY_TOUR_VARIANT=ar` (Arabic, right
     /// to left), `de`, `es`, `fr`, `ja` (the other languages, each in its own country's formats) or
     /// `big` (the largest text size) or `xxxl` (the largest size at which rows are still side by side).
+    /// Bold Text is not a variant: it is the simulator's own setting (see CLAUDE.md), switched on
+    /// before a run and off after it.
     private var variantArguments: [String] {
         switch ProcessInfo.processInfo.environment["PAUSELY_TOUR_VARIANT"] ?? "" {
         case "ar": return ["-AppleLanguages", "(ar)", "-AppleLocale", "ar_SA"]

@@ -1326,6 +1326,12 @@ Updated at every commit, so the work can be picked up from this file alone.
   newest iOS was nobody's claim; it was nobody's question either.
   Next: an iPad on its side, and Bold Text, which no tour has shown; the tour gets a way to
   ask for each.
+- **11-17, the tour can turn an iPad, and how Bold Text is switched on (this commit).** Tooling
+  only: `PAUSELY_TOUR_ORIENTATION=landscape` sets the device on its side for a run, and
+  `CLAUDE.md` says how a simulator's Bold Text is switched on (its own setting, written with
+  `simctl`; a launch argument that set SwiftUI's `legibilityWeight` was tried first and drew
+  nothing differently, so it is not in the code). The rows for what the two runs show come
+  with the runs.
 
 **Phase 0. Scan (read-only).** Four independent audits (dead code, truth, design rules on every
 view, engineering) plus mechanical scans. Output: the ledger.

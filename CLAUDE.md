@@ -64,7 +64,10 @@ user; nothing reaches the server). `--reset-state` (UI tests) starts signed out 
 `--demo-reset-code`, `--demo-store-offline`, `--demo-no-trial`, `--demo-pro[=trial|ending|problem]`, `--demo-account[=named]`,
 `--demo-dates`, `--demo-waiting`, `--demo-guess=N`. `PauselyUITests/ScreenTourTests` captures every screen
 and state when `TEST_RUNNER_PAUSELY_TOUR_DIR` is set (`TEST_RUNNER_PAUSELY_TOUR_VARIANT=ar|de|es|fr|ja|big|xxxl`,
-`TEST_RUNNER_PAUSELY_TOUR_AUDIT=1` for Apple's accessibility audit, `TEST_RUNNER_PAUSELY_TOUR_ONLY=a,b` for a few).
+`TEST_RUNNER_PAUSELY_TOUR_AUDIT=1` for Apple's accessibility audit, `TEST_RUNNER_PAUSELY_TOUR_ONLY=a,b` for a few,
+`TEST_RUNNER_PAUSELY_TOUR_ORIENTATION=landscape` for an iPad on its side). For Bold Text, switch the simulator's own
+setting on before the run and off after it: `xcrun simctl spawn <device> defaults write com.apple.Accessibility
+EnhancedTextLegibilityEnabled -bool true` (SwiftUI's `legibilityWeight` can be read but setting it changes nothing).
 A step the tour could not take (a button it never reached, a tap that brought nothing) is listed in `tour_misses.txt` in the
 tour folder: the capture under that state's name is then of the screen before it. Every page is followed to its end, and
 `python3 scripts/tour_page_ends.py <tour folder> [<later folder> …]` lists any that was not (it exits 1).
