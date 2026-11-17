@@ -121,6 +121,9 @@ final class StoreListingTests: XCTestCase {
     func testProIsWhatTheAppUnlocks() throws {
         XCTAssertEqual(ProFeature.allCases, [.unlimitedSubscriptions, .pausePlan])
         XCTAssertTrue(try english().description.contains("Pausely Pro tracks all of them and adds Pause Plan."))
+        // The repository's front page says the same. It used to add "the full savings analysis".
+        let readme = try String(contentsOf: root.appendingPathComponent("README.md"), encoding: .utf8)
+        XCTAssertTrue(readme.contains("Pausely Pro: unlimited subscriptions and Pause Plan."))
     }
 
     func testNothingTheAppCannotKeepIsOffered() throws {

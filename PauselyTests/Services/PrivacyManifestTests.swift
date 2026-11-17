@@ -80,4 +80,22 @@ final class PrivacyManifestTests: XCTestCase {
             XCTAssertEqual(entry["NSPrivacyCollectedDataTypePurposes"] as? [String], ["NSPrivacyCollectedDataTypePurposeAppFunctionality"])
         }
     }
+
+    /// The answers typed into App Store Connect are kept in `docs/APP_PRIVACY_ANSWERS.md`. Its table
+    /// has a row for each type the manifest declares and no other. It used to list a name and
+    /// "minutes of use, if the user grants Screen Time access": neither leaves the iPhone, and
+    /// Pausely does not read Screen Time.
+    func testTheAnswersForAppStoreConnectListWhatTheManifestDeclares() throws {
+        let app = try manifest("Pausely/PrivacyInfo.xcprivacy")
+        let declared = (app["NSPrivacyCollectedDataTypes"] as? [[String: Any]] ?? [])
+            .compactMap { ($0["NSPrivacyCollectedDataType"] as? String)?.replacingOccurrences(of: "NSPrivacyCollectedDataType", with: "") }
+        let answers = try String(contentsOf: root.appendingPathComponent("docs/APP_PRIVACY_ANSWERS.md"), encoding: .utf8)
+        // A row reads "| Contact Info → **Email Address** | …": Apple's name for the type, in bold.
+        let listed = answers.components(separatedBy: "\n").filter { $0.hasPrefix("| ") }.compactMap { row -> String? in
+            guard let start = row.range(of: "→ **"),
+                  let end = row.range(of: "**", range: start.upperBound..<row.endIndex) else { return nil }
+            return row[start.upperBound..<end.lowerBound].replacingOccurrences(of: " ", with: "")
+        }
+        XCTAssertEqual(listed.sorted(), declared.sorted())
+    }
 }

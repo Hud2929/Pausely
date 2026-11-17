@@ -1114,10 +1114,32 @@ Updated at every commit, so the work can be picked up from this file alone.
   on a second try); two skip without a local mail server or an account.
   Next, in order: the mail rig; the database rigs; one more English tour with the audit;
   H written up; section 7.
-- **11-17 early morning, the mail rig (this commit).** Row opened and closed in 6.5: the
+- **11-17 early morning, the mail rig (`ebb9ebb`).** Row opened and closed in 6.5: the
   rig run whole, two of its tests brought up to date, the app unchanged.
   Next, in order: the database rigs; one more English tour with the audit; H written up;
   section 7.
+- **11-17, the database rigs and the last tour (logged with the next commit).** With
+  Colima up: `scripts/dbtest/run.sh` 619 passed, 0 failed (five starting states, the newest
+  APPLY file twice on each); `waitlist_function.sh` 23, `auth_email_function.sh` 20,
+  `apple_revoke_function.sh` 22, none failed; Colima stopped. Then the whole English tour
+  with Apple's audit on `ebb9ebb` (`/tmp/pausely_final10_en`): six tour tests green, 225
+  captures, no step missed, every capture opened and read on contact sheets; nothing new
+  was found on a screen. The audit's lines: 51 counted on 13 captures, 60 behind a bar, 180
+  with no element given, 81 the system's bars and keyboard, 1 decided. Of the 51: 34 are
+  Dynamic Type on the catalog's rows (the same texts are larger in the largest-size tour);
+  7 are contrast, of which `tour_read audit` finds 3 drawn at 9.7 to 1 or more, 3 with
+  nothing drawn at the place given and 1 a row under the tab bar; 6 are the two made-up
+  addresses on the connected-inbox page ("not human-readable": an address is what it is);
+  4 are "may be clipped" on the app-password page's link button and the first-run price
+  sheet, both read whole at the largest size in `/tmp/pausely_final8_big`. Contrast from
+  the pixels: 3,983 texts at 4.5 to 1 or more, 65 with nothing drawn at their place, 46
+  below. The 46: 17 the system calendar's days that cannot be chosen and its disabled
+  arrow, 6 the system's red on its own confirmation, 1 the paste button with nothing to
+  paste, 1 the swipe action's bin, 21 rows passing under a bar or a pinned heading. None
+  is the app's own text at rest.
+- **11-17, the repository's own words (this commit).** Row opened and closed in 6.4;
+  one owner item added to 6.7. Found while reading the README for the final report.
+  Next, in order: H written up; section 7; the last proof runs on the final commit.
 
 **Phase 0. Scan (read-only).** Four independent audits (dead code, truth, design rules on every
 view, engineering) plus mechanical scans. Output: the ledger.
@@ -1396,6 +1418,7 @@ and limits) is O37 and nothing else was found.
 | T102–108 | Seven names for Find in Email; "Renewal Verdict" exists only in the listing; five names for Insights; "watch" and "track" | applied in the app on 11-12 (the listing and the website follow with T109–111): "watches" is "tracks" in the eleven sentences about the free plan, the email feature is "Find in Email" on Home, the catalog and Profile. Decided 11-12 (each changed sentence needs its five translations). The names: **Find in Email** (the feature that reads receipts, everywhere); **Home**, **Subscriptions**, **Insights**, **Profile** (the tabs; never "dashboard" or "analysis"); **Your year in subscriptions** (never "Wrapped"); **Free** and **Pausely Pro** ("Pro" after the first mention on a screen); the free plan **tracks** five subscriptions ("watches" read as jargon in the first customer round); the keep-or-cancel question has no name in the app, so the listing describes it in the app's words; "subscription", never "sub"; sentence case except for these names. Applied 11-12 (second pass): the day a subscription renews is the **renewal date** on every screen (it was the "payment date" on three and "Next payment" on four), **Add your own** replaces "Custom" and "Add Custom", the cards are **When to cancel** and **Cost over time** ("Lifetime Cost" promised a lifetime), "Export Data" is **Export your list**, and 45 labels left Title Case and all-capitals. The button that opens iOS Settings says "Open Settings", so French can say "Réglages" there and "Paramètres" for the app's own. Stored category names are untouched. `OneLocaleTests.testEnglishLabelsAreInSentenceCaseAndTheRenewalDateHasOneName` |
 | T109–111, generator | Listing: "with their plans and prices", "900+ cancel links", "weekly spend"; `scripts/store_copy.py` would put "cheaper alternatives" back if run | closed 11-12 for the listing (the website is the next row down in 5.2). The eleven locale files were rewritten: 800+ services (848 counted) and no prices, the cancellation page of 500+ services (522 counted; a link to a front page is not one), no weekly total, Pro is "tracks all of them and adds Pause Plan" (it claimed "savings analysis"), "in one tap" gone (Pausely cannot cancel), "Your Subscription Wrapped" is "Your year in subscriptions", "Renewal Verdicts" described in the app's words, what's new mirrors the in-app sheet, the search words "find", "hidden" and their translations gone, the German subtitle no longer says Pausely cancels. The generator and its two pointer documents are deleted; `metadata/` is the only copy. `StoreListingTests` (7 tests): limits, keywords, every number counted from the code and equal in all languages, Pro equal to `ProFeature`, banned claims, the app's own names per language, the same bullets everywhere. `asc metadata validate`: 22 files, 0 errors. Nothing was pushed to App Store Connect |
 | Website (found 11-12) | The policy pages the app links to said things the app does not do: reading Screen Time, collecting crash logs and "session duration", data kept in "your region", an export as JSON, deletion requests to pausely.app, two minimum ages (16 and 17), Pro with "deep savings analysis and cheaper alternatives", a referral programme. The waitlist page and its welcome email promised early access, "advanced analytics" and perks, and "unsubscribe" with nothing to unsubscribe with. The three copies of the site had drifted | closed 11-12 in the repository; **not live until the owner publishes (6.7)**. The eight pages in `pausely.pro/` corrected against the code (hosting region read from the project: United States; hours of use and history on the device; no analytics software; CSV export; one minimum age; Pro as `ProFeature`; one answer time, 48 hours). The welcome email says what the next version does, that it is the only email, and how to leave the list; a reply now reaches the support inbox (`reply_to`). `WebsiteTruthTests` (6 tests) reads the pages and the email. `scripts/site_check.sh` shows where the folder, `gh-pages` and `site-next` differ (a line in `gold_check`, 0) and `--sync` commits the folder onto both local branches; both are in line, unpushed. `site-next`'s landing page lost "one tap", "cheaper alternatives", "deep spending analysis", "step-by-step" and "most people". The waitlist rig passes. Legal wording beyond these facts was not rewritten: that review is the owner's |
+| The repository's own words (found 11-17, reading what a stranger to the public repository reads) | Four documents described an app that no longer exists. `README.md` gave Pro "the full savings analysis" (deleted on 11-12) and the verdict "how long you have paid for it". `docs/APP_PRIVACY_ANSWERS.md`, the answers for App Store Connect's App Privacy section, listed a name and "minutes of use, if the user grants Screen Time access": neither leaves the iPhone, and the app does not read Screen Time. `PRIVACY_POLICY.md` and `TERMS_OF_SERVICE.md` at the root were September drafts (Screen Time, crash logs sent to Sentry, "deep savings analysis", "cheaper alternatives"), a third copy of policies that have one copy each on the website. The October listing plan and keyword plan in `docs/` still said "paste these" over claims and search terms the listing dropped | closed 11-17. The README says what `ProFeature` unlocks and what the verdict slip shows. The answers file is rewritten from the code: the manifest's five types, where each is sent, what stays on the iPhone, the three companies. The two root drafts are removed (they remain in history and on `main`) and are no longer allowed at the root by `gold_check`. The two October plans say at the top that they are superseded and by what. Held by `testTheAnswersForAppStoreConnectListWhatTheManifestDeclares` and one more line in `testProIsWhatTheAppUnlocks`; each was seen to fail with the old wording put back. Not checked from here: what App Store Connect's App Privacy section says today (6.7) |
 
 ### 6.5 Open: screens
 
@@ -1529,6 +1552,11 @@ Stage G, as it closes (each line: what, and the evidence):
 - Logos for the services whose own sites give none (Crunchyroll, Dropbox, and from some
   countries Hulu and Peacock): the app shows a letter, by design. To show their logos to
   everyone, the app would have to carry them, which is a licensing decision, not a coding one.
+- App Privacy in App Store Connect: open the app → App Privacy and compare it with
+  `docs/APP_PRIVACY_ANSWERS.md` (rewritten on 11-17 from the code). The file that was there
+  since October told you to declare a name and usage data from Screen Time; if those were
+  entered, remove them: neither leaves the iPhone. Five types remain, all for App Functionality.
+  The API key cannot read that section, so it was not looked at from here.
 - One native reader for each of Arabic, German, Spanish, French and Japanese (15 minutes each, the
   app in that language, eight screens). Every string has been read against its English and the
   terms made consistent (11-12), but whether a sentence sounds like a person wrote it is a native

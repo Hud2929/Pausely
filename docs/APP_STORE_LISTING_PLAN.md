@@ -1,5 +1,12 @@
 # Pausely: App Store Listing, UI and ASO Plan
 
+> **Superseded on 2026-11-12. Kept for its keyword and screenshot reasoning only.** The listing is the
+> files in `metadata/`, held to the app by `StoreListingTests`. Claims this plan repeats were removed
+> from the listing and from the app because the app could not keep them: "1,000+ services" with plans
+> and prices, "900+ cancel links" with difficulty ratings, 140+ currencies, cheaper alternatives, and
+> anything about Screen Time. The listing's figures today (800+ services, the cancellation page of
+> 500+, 130+ currencies) are counted from the code by that test. Do not paste text from here.
+
 Scope: everything a visitor sees on the App Store product page, plus search (ASO) for every language, each tuned to its own country.
 
 ## Status 2026-10-20 (read this first)

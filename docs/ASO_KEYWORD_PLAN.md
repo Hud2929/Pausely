@@ -1,5 +1,10 @@
 # Pausely: App Store Keyword Plan (ASO)
 
+> **Superseded on 2026-11-12. Kept for the search research only.** The keywords are the ones in
+> `metadata/`, held by `StoreListingTests`. The tables below still carry search terms the app cannot
+> answer while Find in Email is switched off ("find", "hidden", "trouver", "cache" and their
+> translations); they were taken out of the listing. Do not paste from here.
+
 Researched 2026-10-19 from Apple's live search results (US and Canada storefronts) and competitor App Store pages.
 Raw data: `scripts/aso_scan_2026-10-19.json`. Re-run or track your own rank after launch with `scripts/aso_scan.py`.
 

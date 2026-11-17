@@ -7,15 +7,16 @@ renewal and asks one question each time: keep it or cancel it.
 
 - **Reminders before every charge**, and before a free trial turns into a paid plan.
 - **Renewal Verdict**: each reminder opens a keep-or-cancel decision with the facts for that
-  subscription (what it costs a year, how long you have paid for it, the last day to cancel).
+  subscription (what it costs a year, what its renewals have come to, a price rise, the last day to
+  cancel).
 - **Savings Receipt**: every cancellation is recorded with the charges it avoids over twelve months.
 - **Pause Plan**: rotate streaming services one month at a time instead of paying for all of them.
 - Totals in your own currency, widgets, and six languages (English, Arabic, German, Spanish, French,
   Japanese).
 
 Free: up to five subscriptions, with reminders, verdicts, cancel help and the Savings Receipt.
-Pausely Pro: unlimited subscriptions, Pause Plan and the full savings analysis. The single list of what
-Pro unlocks is `Pausely/Services/ProFeature.swift`.
+Pausely Pro: unlimited subscriptions and Pause Plan. The single list of what Pro unlocks is
+`Pausely/Services/ProFeature.swift`.
 
 Pausely has no ads, does not sell data and does not connect to bank accounts.
 
@@ -44,7 +45,7 @@ target's build settings (they reach the app through `Configuration/Info.plist`).
 | `REVOLUTION_PLAN.md`, `REDESIGN_PLAN.md`, `INBOX_PLAN.md` | Where the product is going, the design system, finding subscriptions in email. |
 | `docs/` | Reference notes: pricing research, store listing plan, App Privacy answers, Google verification. |
 | `scripts/gold_check.sh` | The mechanical checks. It must print a total of 0. |
-| `supabase/` | Database migrations and the waitlist function. |
+| `supabase/` | Database migrations and the three edge functions. |
 | `pausely.pro/` | The website and the published policies. |
 
 ## Licence

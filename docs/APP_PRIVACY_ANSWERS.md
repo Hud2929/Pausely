@@ -1,48 +1,53 @@
 # App Store Connect: "App Privacy" answers for Pausely
 
-Prepared 2026-10-19 from the code (what the app actually sends to the server), not from marketing text.
-Enter these in App Store Connect → your app → App Privacy. They must match `Pausely/PrivacyInfo.xcprivacy`
-(already updated to the same list) and the Privacy Policy at https://pausely.pro/privacy.html.
+Written 2026-11-17 from the code (what the app sends to the server), not from marketing text. These
+are the answers for App Store Connect → the app → App Privacy. They say what
+`Pausely/PrivacyInfo.xcprivacy` declares and what the policy at https://pausely.pro/privacy.html
+says; `PrivacyManifestTests` fails when this table and the manifest list different types.
 
-**Tracking:** No. Pausely does not track users across other companies' apps or websites, has no advertising
-SDK, and does not use the advertising identifier. No tracking domains.
+**Tracking:** No. Pausely does not track anyone across other companies' apps or websites, has no
+advertising or analytics software in it, and does not use the advertising identifier. No tracking
+domains.
 
-## Data collected (all "linked to the user's identity", none used for tracking)
+## Data collected (each linked to the account, each for App Functionality only, none for tracking)
 
 | Apple category → type | What it is in Pausely | Purpose |
 |---|---|---|
-| Contact Info → **Email Address** | Used to create the account and sign in | App Functionality |
-| Contact Info → **Name** | Optional first and last name given at sign-up | App Functionality |
-| Identifiers → **User ID** | The account identifier | App Functionality |
-| Financial Info → **Other Financial Info** | The subscription prices and billing dates the user enters | App Functionality |
-| User Content → **Other User Content** | Subscription names, categories, and cancellation-difficulty ratings the user adds | App Functionality |
-| Usage Data → **Other Usage Data** | Minutes of use per subscription, only if the user grants Screen Time access | App Functionality |
-| Other Data → **Other Data Types** | A record that the user confirmed they are 16 or older (yes/no and a timestamp). The date of birth itself is not stored | App Functionality |
+| Contact Info → **Email Address** | The address the account is made with and signed in by | App Functionality |
+| Identifiers → **User ID** | The account's identifier | App Functionality |
+| Financial Info → **Other Financial Info** | What each subscription costs, its currency, how often it charges and its next renewal or trial end | App Functionality |
+| User Content → **Other User Content** | Each subscription's name, category, status and how many days before a renewal to remind | App Functionality |
+| Other Data → **Other Data Types** | That the person confirmed they are old enough, and when (the date of birth is not stored), with the policy and app version in use | App Functionality |
 
-**Checked in the code:** the per-subscription usage minutes (`monthly_usage_minutes`) are part of the record
-synced to the database (`SupabaseManager.swift`), so "Other Usage Data" is correct. The value stays 0 unless the
-user grants Screen Time access.
+**Where each is sent, in the code:** the account is made by Supabase sign-in (`AuthManager`); the
+list is the `subscriptions` table (`Subscription.CodingKeys`, sent by `Sync/SyncQueue`); the age
+confirmation is five fields on the `profiles` row (`AgeConsentManager`).
 
-**Website wording (corrected 2026-10-20):** `privacy.html` now says Screen Time shows how much you use each
-subscription, that detailed usage stays on the device, and that only the total minutes per subscription are saved
-to the account. Keep it in sync with this table.
+## Not collected
 
-## Data NOT collected
-Location, contacts, photos, audio, health, browsing or search history, advertising or device identifiers,
-purchases history held by Pausely (payments are handled by Apple), diagnostics, crash data and performance data
-(there is no analytics or crash-reporting SDK in the app).
+- **A name.** Sign in with Apple can hand over a name; it is kept on the iPhone only
+  (`AccountMemory`) and never sent.
+- **How long a subscription was used.** The hours are typed in by the person and stay on the iPhone
+  (`UsageLog`). Pausely does not read Screen Time.
+- **History, the Savings Receipt and the Pause Plan.** On the iPhone only.
+- Location, contacts, photos, audio, health, browsing or search history, device or advertising
+  identifiers, purchase history (payments are Apple's), diagnostics, crash data, performance data.
 
 ## Things that look like collection but are not
-- **Gmail receipt scanning** (hidden in release builds until Google approves it): messages are read and processed
-  on the device only, and only the extracted subscription facts are saved. Nothing is sent to Pausely's servers,
-  so email content is not "collected" in Apple's sense. If that ever changes, the answers must change first.
-- **Screen Time (Family Controls)** data is processed on the device by Apple's frameworks.
 
-## Third parties
-- Supabase: database and sign-in provider (processor; stores the data listed above).
-- Apple: payments, Sign in with Apple, Screen Time APIs.
-- Google: sign-in and Gmail access, only once the Gmail feature ships.
+- **Find in Email** (switched off in release builds): mail is read on the iPhone, and only the name,
+  amount and date of each charge are kept, on the iPhone. Nothing from a mailbox reaches Pausely's
+  servers. If that ever changes, these answers change first.
+- **Logos** are fetched from each service's own website, and **exchange rates** from a public rates
+  service. Neither request carries the account or the list.
+
+## Other companies
+
+- Supabase: the database and sign-in (stores the data in the table above).
+- Resend: sends the sign-in and reset codes (receives the email address).
+- Apple: payments and Sign in with Apple.
 
 ## Age rating
-Answer Apple's current questionnaire honestly (no mature content, no gambling, no user-generated public content).
-The in-app 16+ gate is a data-consent rule, not the store rating; the questionnaire decides the rating.
+
+Answer Apple's questionnaire as it stands (no mature content, no gambling, no public user content).
+The in-app age check is a data-consent rule, not the store rating; the questionnaire decides the rating.
