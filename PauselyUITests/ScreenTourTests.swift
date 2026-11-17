@@ -200,7 +200,10 @@ final class ScreenTourTests: XCTestCase {
             app.launch()
             sleep(3)
             capture(app, screen.name)
-            scrollCapture(app, screen.name, times: 1)
+            // The results of a mailbox are followed to their end: "Cancelled" is the last section,
+            // and on the iPhone one scroll stopped two sections short of it (so a row drawn too
+            // dim to read was seen only on iPad).
+            scrollCapture(app, screen.name, times: screen.name == "inbox-results" ? 4 : 1)
         }
     }
 

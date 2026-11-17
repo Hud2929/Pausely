@@ -629,6 +629,26 @@ final class ScreenRulesTests: XCTestCase {
         XCTAssertEqual(LineOrStack.arrangement(widths: [90, 40], spacing: 8, in: 330, besideShare: 0), .line)
     }
 
+    /// A found subscription that was cancelled is shown, not offered: it has no box, and its
+    /// words are words. As a button switched off, iOS dimmed its last charge, "Cancelled" and
+    /// "per month" to between 2.6 and 3.2 to 1 (measured on the iPad tour of 2026-11-16).
+    func testAFoundSubscriptionThatWasCancelledIsWordsNotADimmedButton() throws {
+        XCTAssertTrue(FoundRow.isAChoice(cancelled: false))
+        XCTAssertFalse(FoundRow.isAChoice(cancelled: true))
+
+        let sources = root.appendingPathComponent("Pausely")
+        try XCTSkipUnless(FileManager.default.fileExists(atPath: sources.path), "Sources aren't readable from this test run")
+        let found = try String(contentsOf: sources.appendingPathComponent("Views/Inbox/FoundRow.swift"), encoding: .utf8)
+        XCTAssertFalse(found.contains(".disabled("), "iOS dims a switched-off control to below what can be read")
+        // One rule decides the box (in both layouts), the button, and whether VoiceOver says
+        // "selected" or "not selected".
+        XCTAssertEqual(found.components(separatedBy: "Self.isAChoice(cancelled: found.isCancelled)").count - 1, 4)
+        let choose = try XCTUnwrap(found.range(of: "private func choose("))
+        let body = String(found[choose.upperBound...].prefix(700))
+        XCTAssertTrue(body.contains("} else {\n            label()\n                .accessibilityElement(children: .ignore)\n                .accessibilityLabel(accessibilitySummary)"),
+                      "the cancelled row is its words, read as one sentence, with no button trait")
+    }
+
     /// The app asks first in one way: choices from the place that was tapped, or an alert at
     /// the accessibility text sizes, where iOS drew those choices in a narrow bubble and broke
     /// the words to fit ("Re-move", "Sign out of Pause-ly?").

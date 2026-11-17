@@ -45,7 +45,7 @@ struct FoundRow: View {
         if let priceText { parts.append(found.billingFrequency.priced(priceText)) }
         parts.append(evidenceLine)
         if let badge { parts.append(badge.text) }
-        if !found.isCancelled { parts.append(isSelected ? L10n.string("selected") : L10n.string("not selected")) }
+        if Self.isAChoice(cancelled: found.isCancelled) { parts.append(isSelected ? L10n.string("selected") : L10n.string("not selected")) }
         return parts.joined(separator: ", ")
     }
 
@@ -56,7 +56,7 @@ struct FoundRow: View {
                     VStack(alignment: .leading, spacing: 6) {
                         HStack(spacing: 8) {
                             // The box is a second place to tap; the words under it say what it is.
-                            if !found.isCancelled {
+                            if Self.isAChoice(cancelled: found.isCancelled) {
                                 Button(action: onToggle) { checkbox }
                                     .buttonStyle(.plain)
                                     .accessibilityHidden(true)
@@ -73,7 +73,7 @@ struct FoundRow: View {
                     HStack(spacing: 8) {
                         choose {
                             HStack(spacing: 12) {
-                                if !found.isCancelled { checkbox }
+                                if Self.isAChoice(cancelled: found.isCancelled) { checkbox }
                                 ServiceLogoView(name: found.name, category: nil, size: 36)
                                 // As on the Subscriptions list: the price keeps its width, 8 points
                                 // from the words (a spacer between them took 32, and "Last charged
@@ -106,16 +106,27 @@ struct FoundRow: View {
     /// themselves ("Spoti-fy", "Last charge" above "d Nov 8").
     nonisolated static func wordsHaveTheWholeRow(largeText: Bool) -> Bool { largeText }
 
-    /// The part of the row that chooses this subscription, read out as one sentence.
-    private func choose(@ViewBuilder _ label: () -> some View) -> some View {
-        Button(action: onToggle) {
-            label().contentShape(Rectangle())
+    /// Whether the row is something to choose. One that was cancelled is not: it is shown so the
+    /// person knows it was seen, and there is nothing to add.
+    nonisolated static func isAChoice(cancelled: Bool) -> Bool { !cancelled }
+
+    /// The part of the row that chooses this subscription, read out as one sentence. A cancelled
+    /// one is words, not a button switched off: iOS dims those, and its last charge, "Cancelled"
+    /// and "per month" read 2.6 to 3.2 to 1 (measured on the iPad tour of 2026-11-16).
+    @ViewBuilder private func choose(@ViewBuilder _ label: () -> some View) -> some View {
+        if Self.isAChoice(cancelled: found.isCancelled) {
+            Button(action: onToggle) {
+                label().contentShape(Rectangle())
+            }
+            .buttonStyle(.plain)
+            .accessibilityElement(children: .ignore)
+            .accessibilityLabel(accessibilitySummary)
+            .accessibilityAddTraits(isSelected ? [.isButton, .isSelected] : .isButton)
+        } else {
+            label()
+                .accessibilityElement(children: .ignore)
+                .accessibilityLabel(accessibilitySummary)
         }
-        .buttonStyle(.plain)
-        .disabled(found.isCancelled)
-        .accessibilityElement(children: .ignore)
-        .accessibilityLabel(accessibilitySummary)
-        .accessibilityAddTraits(isSelected ? [.isButton, .isSelected] : .isButton)
     }
 
     private var whyButton: some View {
