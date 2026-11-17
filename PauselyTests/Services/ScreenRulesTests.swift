@@ -713,6 +713,16 @@ final class ScreenRulesTests: XCTestCase {
         let button = String(profile[signOut.upperBound...].prefix(260))
         XCTAssertTrue(button.contains(".tapArea(.leading)"))
         XCTAssertFalse(button.contains("maxWidth: .infinity"))
+
+        // A navigation bar tells its buttons a text size no larger than it draws them at. The
+        // edit screen's question is asked from the bar, so it is told the reader's size by the
+        // screen: without that it was the narrow bubble again at the largest text (seen
+        // 2026-11-16, the evening the question moved onto its button).
+        let edit = try String(contentsOf: sources.appendingPathComponent("Views/Subscriptions/SubscriptionEditView.swift"), encoding: .utf8)
+        XCTAssertTrue(edit.contains("@Environment(\\.dynamicTypeSize) private var typeSize"))
+        XCTAssertTrue(edit.contains(".asksFirst(Text(\"Discard your changes?\"), isPresented: $showDiscardConfirm,\n                               largeText: typeSize.isAccessibilitySize) {"))
+        let controls = try String(contentsOf: sources.appendingPathComponent("DesignSystem/InkControls.swift"), encoding: .utf8)
+        XCTAssertTrue(controls.contains("Asking.isAnAlert(largeText: largeText ?? typeSize.isAccessibilitySize)"))
     }
 
     /// The page with inboxes connected and nothing found has a way in for the tour. No search

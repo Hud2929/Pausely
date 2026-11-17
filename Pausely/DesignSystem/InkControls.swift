@@ -234,12 +234,14 @@ private struct AsksFirst<Actions: View>: ViewModifier {
     let title: Text
     @Binding var isPresented: Bool
     let message: Text?
+    /// The reader's text size as the screen knows it, where this is hung on a button in a bar.
+    let largeText: Bool?
     @ViewBuilder let actions: () -> Actions
     @Environment(\.dynamicTypeSize) private var typeSize
 
     /// True while there is something to ask and this is the shape to ask in.
     private func asking(asAlert: Bool) -> Binding<Bool> {
-        let shape = Asking.isAnAlert(largeText: typeSize.isAccessibilitySize)
+        let shape = Asking.isAnAlert(largeText: largeText ?? typeSize.isAccessibilitySize)
         return Binding(get: { isPresented && shape == asAlert }, set: { if !$0 { isPresented = false } })
     }
 
@@ -266,9 +268,13 @@ extension View {
     /// attached to, and from a whole screen that is the middle of the page, over the button
     /// that was tapped. The buttons are the ones the system draws: give the one that goes
     /// ahead the destructive role and the other the cancel role.
-    func asksFirst<Actions: View>(_ title: Text, isPresented: Binding<Bool>, message: Text? = nil,
+    ///
+    /// `largeText`: say it when the control is in a navigation bar. A bar tells its buttons a
+    /// text size no larger than it draws them at, so asked there the reader's own size is never
+    /// an accessibility size, and the question came up as the narrow bubble at the largest text.
+    func asksFirst<Actions: View>(_ title: Text, isPresented: Binding<Bool>, message: Text? = nil, largeText: Bool? = nil,
                                   @ViewBuilder actions: @escaping () -> Actions) -> some View {
-        modifier(AsksFirst(title: title, isPresented: isPresented, message: message, actions: actions))
+        modifier(AsksFirst(title: title, isPresented: isPresented, message: message, largeText: largeText, actions: actions))
     }
 }
 

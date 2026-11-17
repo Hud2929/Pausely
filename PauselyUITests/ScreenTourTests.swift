@@ -200,12 +200,17 @@ final class ScreenTourTests: XCTestCase {
             app.launch()
             sleep(3)
             capture(app, screen.name)
-            // The results of a mailbox are followed to their end: "Cancelled" is the last section,
-            // and on the iPhone one scroll stopped two sections short of it (so a row drawn too
-            // dim to read was seen only on iPad).
-            scrollCapture(app, screen.name, times: screen.name == "inbox-results" ? 4 : 1)
+            scrollCapture(app, screen.name, times: Self.followedToTheEnd.contains(screen.name) ? 16 : 1,
+                          knownToBeLong: Self.followedToTheEnd.contains(screen.name))
         }
     }
+
+    /// Screens the tour follows to their last line, however many screens down that is at the
+    /// reader's text size (a scroll that changes nothing ends it). The results of a mailbox:
+    /// "Cancelled" is the last section, and on the iPhone one scroll stopped two sections short
+    /// of it, so a row drawn too dim to read was seen only on iPad. The reveal: what is under
+    /// "Keep my list" is the end of the page at the largest text size.
+    private static let followedToTheEnd: Set<String> = ["inbox-results", "reveal-good"]
 
     /// States no launch argument opens by itself: rows that depend on what is in the list, dialogs, a
     /// search with no match, the sheets behind a row. Each is opened here and captured like a screen.
@@ -301,7 +306,8 @@ final class ScreenTourTests: XCTestCase {
         for screen in screens where wanted(screen.name) {
             let app = launch(screen.flags)
             capture(app, screen.name)
-            scrollCapture(app, screen.name, times: 1)
+            scrollCapture(app, screen.name, times: Self.followedToTheEnd.contains(screen.name) ? 16 : 1,
+                          knownToBeLong: Self.followedToTheEnd.contains(screen.name))
         }
 
         // States behind a tap.
@@ -542,7 +548,7 @@ final class ScreenTourTests: XCTestCase {
     }
 
     @discardableResult
-    private func scrollCapture(_ app: XCUIApplication, _ name: String, times: Int) {
+    private func scrollCapture(_ app: XCUIApplication, _ name: String, times: Int, knownToBeLong: Bool = false) {
         for index in 1...times {
             app.swipeUp()
             // Until the scroll has come to rest: the audit measured rows where they had been a
@@ -550,7 +556,17 @@ final class ScreenTourTests: XCTestCase {
             sleep(2)
             // A screen that fits has nothing further down: a second capture of it would be the same
             // picture and the same audit again (on iPad that was most of them, and most of the time).
-            guard Self.withoutAddresses(app.debugDescription) != lastTree else { return }
+            var moved = Self.withoutAddresses(app.debugDescription) != lastTree
+            // A page that is followed to its end is known to be longer than the screen. Its first
+            // swipe is the first thing a run does after its build, and twice it was lost (the
+            // mailbox results at the largest size and on iPad, 2026-11-16): once more, then.
+            if !moved, index == 1, knownToBeLong {
+                app.swipeUp()
+                sleep(2)
+                moved = Self.withoutAddresses(app.debugDescription) != lastTree
+                if !moved { missed("\(name): the page did not scroll") }
+            }
+            guard moved else { return }
             capture(app, "\(name)-scroll\(index)")
         }
     }

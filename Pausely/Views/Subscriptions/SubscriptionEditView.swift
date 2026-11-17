@@ -12,6 +12,8 @@ struct SubscriptionEditView: View {
     @ScaledMetric(relativeTo: .largeTitle) private var amountSize: CGFloat = 52
     @State private var isSaving = false
     @State private var showDiscardConfirm = false
+    /// The reader's text size, read on the screen: inside the navigation bar it is capped.
+    @Environment(\.dynamicTypeSize) private var typeSize
     @State private var showValidation = false
     @FocusState private var focus: Field?
 
@@ -63,7 +65,8 @@ struct SubscriptionEditView: View {
                     }
                     .foregroundStyle(Color.inkTextMuted)
                     .accessibilityIdentifier("editCancelButton")
-                    .asksFirst(Text("Discard your changes?"), isPresented: $showDiscardConfirm) {
+                    .asksFirst(Text("Discard your changes?"), isPresented: $showDiscardConfirm,
+                               largeText: typeSize.isAccessibilitySize) {
                         Button("Discard changes", role: .destructive) { dismiss() }
                         Button("Keep editing", role: .cancel) {}
                     }
