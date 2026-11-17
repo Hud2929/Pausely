@@ -502,10 +502,10 @@ struct PausePlanCard: View {
     @ObservedObject private var currencyManager = CurrencyManager.shared
     @State private var showPlan = false
 
-    /// Worth showing: a plan is running, or there are at least two services to rotate.
-    static func isRelevant() -> Bool {
-        PausePlanStore.shared.activePlan != nil
-            || SubscriptionStore.shared.subscriptions.filter(PausePlanSchedule.isEligible).count >= 2
+    /// Worth showing: a plan is running, or there are at least two services to rotate. The screen
+    /// hands in the plan and the list it watches, so it asks again when either changes.
+    static func isRelevant(plan: PausePlan?, subscriptions: [Subscription]) -> Bool {
+        plan != nil || subscriptions.filter(PausePlanSchedule.isEligible).count >= 2
     }
 
     var body: some View {

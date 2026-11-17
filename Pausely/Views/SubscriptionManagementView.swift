@@ -10,6 +10,7 @@ struct SubscriptionManagementView: View {
     @ObservedObject private var store = SubscriptionStore.shared
     @ObservedObject private var paymentManager = PaymentManager.shared
     @ObservedObject private var eventLog = LifecycleEventLog.shared
+    @ObservedObject private var pausePlanStore = PausePlanStore.shared
     @ObservedObject private var screenTimeManager = UsageLog.shared
     @ObservedObject private var currencyManager = CurrencyManager.shared
 
@@ -270,7 +271,7 @@ struct SubscriptionManagementView: View {
 
             if PausePlanSchedule.isEligible(current) {
                 divider
-                if PausePlanStore.shared.contains(current.id) {
+                if pausePlanStore.contains(current.id) {
                     toolRow(icon: "arrow.triangle.2.circlepath", title: L10n.string("In your Pause Plan"), subtitle: nil) { route = .pausePlan }
                 } else {
                     // The feature's name is the row; what it does is under it (they were the other way round).

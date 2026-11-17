@@ -5,6 +5,7 @@ struct SubscriptionsView: View {
     @ObservedObject private var store = SubscriptionStore.shared
     @ObservedObject private var currencyManager = CurrencyManager.shared
     @ObservedObject private var eventLog = LifecycleEventLog.shared
+    @ObservedObject private var pausePlanStore = PausePlanStore.shared
     @State private var searchText = ""
     @State private var activeSheet: ActiveSheet?
     @State private var pendingRemoval: UUID?
@@ -31,7 +32,7 @@ struct SubscriptionsView: View {
         let shown = searchText.isEmpty
             ? store.subscriptions
             : store.subscriptions.filter { $0.name.localizedCaseInsensitiveContains(searchText) }
-        let pending = Set(VerdictCenter.shared.pendingDecisions().map(\.subscriptionId))
+        let pending = Set(VerdictCenter.shared.pendingDecisions(rotating: pausePlanStore.activePlan).map(\.subscriptionId))
         return SubscriptionGroups.sections(shown, pending: pending, now: Date())
     }
 

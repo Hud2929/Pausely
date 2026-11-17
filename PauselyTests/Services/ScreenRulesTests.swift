@@ -888,6 +888,39 @@ final class ScreenRulesTests: XCTestCase {
         XCTAssertEqual(offenders, [])
     }
 
+    /// A screen is drawn again when something it watches changes, so it has to watch everything its
+    /// rows are worked out from. What is waiting for a decision comes from the list, the history and
+    /// the Pause Plan (a service the plan rotates asks nothing), and a subscription's page says
+    /// whether it is in the plan. The list and that page did not watch the plan: after a plan was
+    /// started from Insights the list's "Needs a decision" stayed as it was, and on the tour the page
+    /// still offered "Pause Plan" with the plan already running.
+    func testAScreenWatchesEveryStoreItsRowsAreWorkedOutFrom() throws {
+        let views = root.appendingPathComponent("Pausely/Views")
+        try XCTSkipUnless(FileManager.default.fileExists(atPath: views.path), "Sources aren't readable from this test run")
+        func watches(_ store: String, in source: String) -> Bool {
+            source.contains("@ObservedObject private var ") && source.range(of: "@ObservedObject private var \\w+ = \(store)\\.shared", options: .regularExpression) != nil
+        }
+        var workOutWhatIsWaiting: [String] = []
+        let files = FileManager.default.enumerator(at: views, includingPropertiesForKeys: nil)?.compactMap { $0 as? URL } ?? []
+        for file in files where file.pathExtension == "swift" {
+            let source = try String(contentsOf: file, encoding: .utf8)
+            let name = file.lastPathComponent
+            if source.contains("pendingDecisions(") {
+                workOutWhatIsWaiting.append(name)
+                for store in ["SubscriptionStore", "LifecycleEventLog", "PausePlanStore"] {
+                    XCTAssertTrue(watches(store, in: source), "\(name) works out what is waiting without watching \(store)")
+                }
+                XCTAssertEqual(source.components(separatedBy: "pendingDecisions(").count,
+                               source.components(separatedBy: "pendingDecisions(rotating: pausePlanStore.activePlan").count,
+                               "\(name) hands in a plan that is not the one it watches")
+            }
+            // The plan is asked through the store the screen watches, never straight from the shared one.
+            XCTAssertNil(source.range(of: "PausePlanStore\\.shared\\.(contains|activePlan|plan)\\b", options: .regularExpression),
+                         "\(name) asks the Pause Plan without watching it")
+        }
+        XCTAssertEqual(workOutWhatIsWaiting.sorted(), ["DashboardView.swift", "SubscriptionsView.swift"])
+    }
+
     /// An amount sits beside its currency in every language. In Arabic the row starts at the right
     /// and the amount was at the far left of its field, a row's width from "US$".
     func testAnAmountSitsAtTheEdgeItsRowStartsFrom() throws {

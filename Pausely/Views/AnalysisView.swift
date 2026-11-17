@@ -12,6 +12,7 @@ struct AnalysisView: View {
     @ObservedObject private var store = SubscriptionStore.shared
     @ObservedObject private var currencyManager = CurrencyManager.shared
     @ObservedObject private var eventLog = LifecycleEventLog.shared
+    @ObservedObject private var pausePlanStore = PausePlanStore.shared
     @ObservedObject private var usageLog = UsageLog.shared
     @Environment(\.dynamicTypeSize) private var typeSize
 
@@ -112,7 +113,7 @@ struct AnalysisView: View {
                         }
                     }
 
-                    if PausePlanCard.isRelevant() {
+                    if PausePlanCard.isRelevant(plan: pausePlanStore.activePlan, subscriptions: store.subscriptions) {
                         Hairline().padding(.top, 28)
                         PausePlanCard()
                         Hairline()

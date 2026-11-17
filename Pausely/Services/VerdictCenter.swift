@@ -67,8 +67,10 @@ final class VerdictCenter: ObservableObject {
     }
 
     /// Decisions waiting right now, soonest first. Subscriptions in a Pause Plan follow the plan instead.
-    func pendingDecisions(now: Date = Date()) -> [RenewalDecisions.Pending] {
-        let rotating = Set(PausePlanStore.shared.activePlan?.subscriptionIds ?? [])
+    /// The screen hands in the plan, from the plan store it watches: a screen that worked this out
+    /// without watching the plan kept its old answer after a plan started or ended.
+    func pendingDecisions(rotating plan: PausePlan?, now: Date = Date()) -> [RenewalDecisions.Pending] {
+        let rotating = Set(plan?.subscriptionIds ?? [])
         return RenewalDecisions.pending(in: SubscriptionStore.shared.subscriptions.filter { !rotating.contains($0.id) },
                                         events: LifecycleEventLog.shared.events, now: now)
     }

@@ -47,7 +47,7 @@ struct DashboardView: View {
                     if hasKept { keptSection.padding(.top, 24) }
                     HorizonSection(charges: charges, currency: currencyManager.selectedCurrency,
                                    rates: currencyManager.rates,
-                                   pendingIds: Set(VerdictCenter.shared.pendingDecisions().map(\.subscriptionId)))
+                                   pendingIds: Set(VerdictCenter.shared.pendingDecisions(rotating: pausePlanStore.activePlan).map(\.subscriptionId)))
                         .padding(.top, 32)
                     if !hasKept { keptSection.padding(.top, 28) }
                     quietRows.padding(.top, 20)
@@ -182,7 +182,7 @@ struct DashboardView: View {
     // MARK: - What needs attention
 
     @ViewBuilder private var attention: some View {
-        let pending = VerdictCenter.shared.pendingDecisions()
+        let pending = VerdictCenter.shared.pendingDecisions(rotating: pausePlanStore.activePlan)
         let waiting = TallyImporter.waitingLines()
         let undated = Horizon.undated(store.subscriptions)
         let showReminderAsk = !NotificationManager.shared.isAuthorized && !DemoSavings.isScreenshotRun

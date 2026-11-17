@@ -1145,7 +1145,7 @@ Updated at every commit, so the work can be picked up from this file alone.
   files entry), with its test.
   Next, in order: one command for the whole proof; H written up; section 7; the last
   proof runs on the final commit.
-- **11-17, one command for the whole proof (this commit).** `scripts/proof.sh`: the
+- **11-17, one command for the whole proof (`9d2109f`).** `scripts/proof.sh`: the
   mechanical checks, the unit tests, the UI tests other than the tour and a Release build, in
   that order, one line each, stopping at the first that fails; `db` adds the four rigs. The UI
   tests are in the plain run because left out of it one failed unseen for four days (6.5, the
@@ -1155,6 +1155,12 @@ Updated at every commit, so the work can be picked up from this file alone.
   folder), 0 failures; Release builds.
   Next, in order: the word check's one real line (a subscription's page did not watch the
   Pause Plan); H written up; section 7.
+- **11-17, three screens watch the Pause Plan (this commit).** Row opened and closed in 6.5.
+  `tour_read words` on the final tour (`/tmp/pausely_final10_en`): 4,329 lines read, 83 with a
+  word accessibility does not say. 82 are what they were on 11-16 (13 "Today" under Home's time
+  line, which is read out as one element; the date wheel's other rows; lines cut by a bar or an
+  edge; misreadings of a logo or of a price and its unit). One was real, and is this slice.
+  Next, in order: H written up; section 7.
 
 **Phase 0. Scan (read-only).** Four independent audits (dead code, truth, design rules on every
 view, engineering) plus mechanical scans. Output: the ledger.
@@ -1470,6 +1476,7 @@ and limits) is O37 and nothing else was found.
 | Empty Insights tab: a black band down each side in Arabic, at the largest text size and on iPad (found 11-12 on the iPad tour) | closed 11-12: the scroll content is full width and `inkScreen()` paints the whole width; `scripts/tour_black_bands.swift` and the tour's own "scroll view narrower than its screen" finding catch it again |
 | "iPhone" said on iPad in 16 strings ("Same as iPhone", "Saved on this iPhone", "Your email never leaves your iPhone" …) and "phone" in two more | closed 11-12: per-device wording in the catalog for all 18, six languages; `testOnAnIPadTheAppSaysIPad`; read on the iPad tour's captures |
 | Export: the app makes CSV, PDF and JSON; the policy names CSV only and the JSON file has no test | closed 11-12: the policy names the two machine-readable copies and the PDF (`WebsiteTruthTests` ties the sentence to `ExportFormat.allCases`); the JSON file is a pure function that reads back as the same list and history, with the price as entered (`testTheFullFileReadsBackAsTheSameListAndHistory`), and each choice on the screen writes the file it names (`testEachFormatWritesItsOwnFile`) |
+| Three screens worked their rows out from the Pause Plan without watching it (found 11-17 by the word check on the final tour: on `manage-plan` the picture read "Pause Plan · Rotate with your other streaming · Pro" and accessibility read "In your Pause Plan", a moment later). A subscription's page asked the plan store directly whether it was in the plan; the Subscriptions list worked out "Needs a decision" from the plan (a service the plan rotates asks nothing); Insights asked whether its Pause Plan card was worth showing. None of the three was drawn again when a plan started or ended: after a plan was started from Insights, the list kept the rotating services under "Needs a decision" until something else changed | closed 11-17. Each of the three watches the plan store, and what is worked out from the plan is handed the plan the screen watches (`pendingDecisions(rotating:)`, `PausePlanCard.isRelevant(plan:subscriptions:)`), so the plan cannot be asked without being watched. Held by `testAScreenWatchesEveryStoreItsRowsAreWorkedOutFrom`, over every file in `Views/` (seen to fail with the old read put back). Seen: the three plan states captured again (`/tmp/pausely_watch1_en`, six captures opened); the page's first capture reads "In your Pause Plan" in the picture and in the tree, Insights has its plan card, Home is as it was. The whole proof on this code: `gold_check` 0; 816 unit tests, 0 failures, three runs in a row; UI tests 10 run, 2 skipped, 0 failures; Release builds |
 
 ### 6.6 Open: engineering hygiene
 
