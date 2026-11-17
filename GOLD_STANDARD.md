@@ -1198,8 +1198,8 @@ Updated at every commit, so the work can be picked up from this file alone.
   **To pick the run up again:** do the items of 7.5 in the order of 6.7; whatever they find
   is a new row in section 6 and a slice like any other; then score again from the new
   evidence.
-- **11-17, later: the run is picked up, because one line was held by a choice (this
-  commit).** Asked to resume, section 7 was held to the stop rule line by line: every line
+- **11-17, later: the run is picked up, because one line was held by a choice
+  (`1a6b97e`).** Asked to resume, section 7 was held to the stop rule line by line: every line
   at 9.5, or the reason it cannot be raised from here. "Size and simplicity" gave a choice
   as its reason, which is not one. Reopened in 6.6 ("Long files again"), one slice per
   file. This commit: the engine is three files along its three jobs, with direct tests for
@@ -1208,6 +1208,9 @@ Updated at every commit, so the work can be picked up from this file alone.
   file; the mailbox screen; the check back to raw lines; then the "Tests" line of 7.4, which
   names three tests not run and a tap that is sometimes lost (what of that can be done from
   here); then section 7 again.
+- **11-17, the receipt analyzer (this commit).** Second file of "Long files again" (6.6).
+  Next, in order: the design system file and the first run; the mailbox screen; the check
+  back to raw lines; the "Tests" line; section 7 again.
 
 **Phase 0. Scan (read-only).** Four independent audits (dead code, truth, design rules on every
 view, engineering) plus mechanical scans. Output: the ledger.
@@ -1603,6 +1606,12 @@ Stage G, as it closes (each line: what, and the evidence):
     monthly charges, no schedule in one charge or in two that fit no period, a plan that changed
     its period, a rise in price said with its yearly cost, nothing said below "likely", a failed
     payment said until a charge goes through). 824 tests, 0 failures; `gold_check` 0.
+  - **The receipt analyzer, done 11-17.** Its money-reading part (the currency tables, the two
+    patterns, the labels that mark a total or a part of a sum, `moneyFigures`, `chargeCandidate`)
+    is an extension in `ReceiptAmounts.swift` (343 lines); the analyzer is 453. Nothing was made
+    more visible: the ten private tables are used only by the part they moved with. The money
+    guard's one exception for reading symbols out of receipts moved with it, and the analyzer
+    itself now passes that rule with no exception. 824 tests, 0 failures; `gold_check` 0.
 
 ### 6.7 For the owner (cannot or should not be done from here)
 

@@ -74,7 +74,7 @@ final class CurrencyGuardTests: XCTestCase {
              allowedPaths: [
                 "Pausely/Services/ServiceDatabaseMore.swift", // US offers quoted as published ("$300 credit")
                 "Pausely/Services/CatalogData.swift",         // US plan names and descriptions ("ChatGPT Pro ($200)")
-                "Pausely/Services/Intelligence/ReceiptTextAnalyzer.swift",   // reads symbols out of receipts
+                "Pausely/Services/Intelligence/ReceiptAmounts.swift",        // reads symbols out of receipts
                 "Pausely/Services/Intelligence/EmailSignalExtractor.swift"   // decodes &euro; and friends in emails
              ]),
         Rule(name: "sum over subscription money without converting",
