@@ -155,8 +155,11 @@ private struct ServiceTile: View {
             Group {
                 if typeSize.isAccessibilitySize {
                     VStack(alignment: .leading, spacing: 2) {
+                        // A name is not hyphenated: where its longest word is wider than the
+                        // tile it is drawn smaller ("Crunchy-roll" and "PlaySta-tion Plus" were
+                        // what the largest text size showed, 2026-11-17).
                         Text(verbatim: service.name)
-                            .font(.body.weight(.medium))
+                            .wholeWords(service.name, font: .body.weight(.medium), measuredIn: .body, weight: .medium)
                             .foregroundStyle(Color.inkText)
                             .multilineTextAlignment(.leading)
                         // What the tap put on the slip. The slip at the foot of the screen shows

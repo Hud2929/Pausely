@@ -517,6 +517,30 @@ final class ScreenRulesTests: XCTestCase {
         XCTAssertFalse(history.contains(".multilineTextAlignment(.trailing)"), "The row decides, by where the value sits")
     }
 
+    /// A service's name is not hyphenated in its first-run tile. At the largest text size the
+    /// name has the tile less the tick's place, and "Crunchyroll" and "PlayStation" are wider
+    /// than that: iOS drew "Crunchy-roll" and "PlaySta-tion Plus" (seen 2026-11-17). The name is
+    /// drawn smaller until its longest word fits.
+    func testAServiceNameIsNotHyphenatedInItsTile() throws {
+        let font = WordFit.font(.body, weight: .medium, monospaced: false, at: .accessibility5)
+        // The screen's width, less its margins, the tile's padding and the tick's place.
+        let room: CGFloat = 250
+        for name in ["Crunchyroll", "PlayStation Plus"] {
+            let widest = WordFit.widestWord(of: name, in: font)
+            XCTAssertGreaterThan(widest, room, "\(name): the case this is for")
+            let scale = WordFit.scale(for: name, in: font, width: room)
+            XCTAssertLessThan(scale, 1)
+            XCTAssertGreaterThan(scale, WordFit.smallest, "\(name) is still read at a size near the one asked for")
+            XCTAssertLessThanOrEqual(widest * scale, room + 0.5, "\(name) fits whole")
+        }
+        XCTAssertEqual(WordFit.scale(for: "Netflix", in: font, width: room), 1, "a name that fits is left alone")
+
+        let sources = root.appendingPathComponent("Pausely")
+        try XCTSkipUnless(FileManager.default.fileExists(atPath: sources.path), "Sources aren't readable from this test run")
+        let tally = try String(contentsOf: sources.appendingPathComponent("Views/FirstRun/TallyStep.swift"), encoding: .utf8)
+        XCTAssertTrue(tally.contains(".wholeWords(service.name, font: .body.weight(.medium), measuredIn: .body, weight: .medium)"))
+    }
+
     /// In the reasons a found subscription gives, a charge is never broken to fit beside its
     /// day. Side by side at the largest text size the day took three lines ("Nov", "14,", "2026")
     /// and the amount a line and a digit ("$34.9", "9"): the page nobody had reached at that size
