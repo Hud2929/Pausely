@@ -1183,7 +1183,7 @@ Updated at every commit, so the work can be picked up from this file alone.
   found on this round that can be changed from here. What is left in each walk is a thing
   the builder cannot do: a stranger's sign-up, a native reader's ear, VoiceOver's voice, a
   reminder on a locked phone, a real purchase, and the published policy the sceptic reads.
-- **11-17, the scorecard (this commit): the run ends here.** Section 7 is rewritten from the
+- **11-17, the scorecard (`d0e0206`): the run ends here.** Section 7 is rewritten from the
   evidence; the scorecard of 11-11 is in this file's history. The proof on the final code
   (`fd167fd`), by `scripts/proof.sh`: `gold_check` 0; 816 unit tests, 0 failures, three runs
   in a row; UI tests 10 run, 2 skipped, 0 failures; Release builds; and with Docker up,
@@ -1198,6 +1198,16 @@ Updated at every commit, so the work can be picked up from this file alone.
   **To pick the run up again:** do the items of 7.5 in the order of 6.7; whatever they find
   is a new row in section 6 and a slice like any other; then score again from the new
   evidence.
+- **11-17, later: the run is picked up, because one line was held by a choice (this
+  commit).** Asked to resume, section 7 was held to the stop rule line by line: every line
+  at 9.5, or the reason it cannot be raised from here. "Size and simplicity" gave a choice
+  as its reason, which is not one. Reopened in 6.6 ("Long files again"), one slice per
+  file. This commit: the engine is three files along its three jobs, with direct tests for
+  the two new parts.
+  Next, in order: the receipt analyzer; the design system file; the first run, a step to a
+  file; the mailbox screen; the check back to raw lines; then the "Tests" line of 7.4, which
+  names three tests not run and a tap that is sometimes lost (what of that can be done from
+  here); then section 7 again.
 
 **Phase 0. Scan (read-only).** Four independent audits (dead code, truth, design rules on every
 view, engineering) plus mechanical scans. Output: the ledger.
@@ -1575,6 +1585,24 @@ Stage G, as it closes (each line: what, and the evidence):
   it is, on purpose: "Apple Development" as the signing identity on Release. Signing is automatic
   and ten builds have been archived this way; changing it cannot be checked without an archive and
   an upload, which are the owner's.
+- Long files again, 11-17 (reopened by the scorecard itself). Section 7 held "Size and simplicity"
+  at 9.0 with the words "a choice, not a limit": on 11-12 the check's measure was changed from raw
+  lines to lines of code so that the receipt analyzer (790 lines) and the engine (777) passed, and
+  three more files had since grown past 700 (the design system 746, the mailbox screen 723, the
+  first run 705). The run's rule is that a line stays below 9.5 only for a reason it cannot be
+  raised from here, and a choice is not one. Read again, each of the five has a real seam, and the
+  claim of 11-12 that a split "meant un-hiding a dozen helpers" was wrong. One slice per file:
+  - **The engine, done 11-17.** It did three jobs: find the schedule in a merchant's charges, prove
+    a subscription from it, and say what follows. The first is now `ChargeSchedule` (182 lines: the
+    cadences, the chains, the amount clusters, all still private, behind `collapsing` and
+    `best(in:)`), the third `SubscriptionInsights` (136 lines, behind `all(for:groups:now:calendar:)`),
+    and the engine is 495. Made visible to the module: those three entry points, `sameAmount` (one
+    helper both parts use) and `ReceiptWording.shortDate` (one line both word their dates with).
+    Nothing else changed: 816 tests as they were, green. The two parts can now be tested on their
+    own, and are: `ChargeScheduleTests` (8 tests: a receipt and its notice are one charge, six
+    monthly charges, no schedule in one charge or in two that fit no period, a plan that changed
+    its period, a rise in price said with its yearly cost, nothing said below "likely", a failed
+    payment said until a charge goes through). 824 tests, 0 failures; `gold_check` 0.
 
 ### 6.7 For the owner (cannot or should not be done from here)
 

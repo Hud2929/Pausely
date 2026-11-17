@@ -1,0 +1,136 @@
+import Foundation
+
+/// What is worth telling someone about the subscriptions their receipts prove: a price that rose, a
+/// trial about to end, a yearly renewal coming up, a plan that looks ended, a charge after cancelling,
+/// an announced price change, an introductory price about to end, a payment that failed.
+/// The engine proves the subscriptions (`SubscriptionIntelligenceEngine`); this says what follows.
+enum SubscriptionInsights {
+
+    /// One merchant's receipts, under the merchant's key.
+    typealias Groups = [String: (merchant: ResolvedMerchant, signals: [ReceiptSignal])]
+
+    /// Every insight for what was detected, in no order: the caller ranks them.
+    static func all(for detected: [ProvenSubscription], groups: Groups, now: Date, calendar: Calendar) -> [IntelligenceInsight] {
+        var insights: [IntelligenceInsight] = []
+        for sub in detected { insights.append(contentsOf: about(sub, now: now, calendar: calendar)) }
+        insights.append(contentsOf: priceChangeNotices(groups: groups, detected: detected))
+        insights.append(contentsOf: introductoryPriceEnds(groups: groups, detected: detected))
+        insights.append(contentsOf: failedPayments(groups: groups, detected: detected, now: now))
+        return insights
+    }
+
+    private static func about(_ sub: ProvenSubscription, now: Date, calendar: Calendar) -> [IntelligenceInsight] {
+        guard sub.tier >= .likely else { return [] }
+        var out: [IntelligenceInsight] = []
+
+        if sub.status == .priceIncreased, let old = sub.previousAmount {
+            let impact = (sub.amount - old) * ProvenSubscription.periodsPerYear(sub.frequency)
+            out.append(IntelligenceInsight(
+                id: "price|\(sub.id)", kind: .priceIncrease,
+                title: L10n.string("\(sub.name) raised its price"),
+                detail: L10n.string("From \(format(old, sub.currency)) to \(format(sub.amount, sub.currency)). That's \(format(impact, sub.currency)) more per year."),
+                subscriptionId: sub.id, annualImpact: impact))
+        }
+        if sub.status == .trial, let ends = sub.trialEndsOn {
+            let days = max(0, calendar.dateComponents([.day], from: now, to: ends).day ?? 0)
+            out.append(IntelligenceInsight(
+                id: "trial|\(sub.id)", kind: .trialEnding, title: L10n.string("\(sub.name) trial ends \(whenPhrase(days))"),
+                detail: L10n.string("Cancel before \(shortDate(ends)) to avoid being charged."), subscriptionId: sub.id,
+                annualImpact: sub.amount > 0 ? sub.annualCost : nil))
+        }
+        if sub.status == .active || sub.status == .priceIncreased, let next = sub.nextBillingDate {
+            let days = calendar.dateComponents([.day], from: now, to: next).day ?? 999
+            let window = sub.frequency == .yearly || sub.frequency == .semiannual ? 45 : 0
+            if window > 0, days >= 0, days <= window {
+                out.append(IntelligenceInsight(
+                    id: "renew|\(sub.id)", kind: .renewalSoon, title: L10n.string("\(sub.name) renews \(whenPhrase(days))"),
+                    detail: L10n.string("Expect a charge of \(format(sub.amount, sub.currency)) around \(shortDate(next)). Yearly renewals are the easiest to forget."),
+                    subscriptionId: sub.id, annualImpact: sub.annualCost))
+            }
+        }
+        if sub.status == .likelyEnded {
+            out.append(IntelligenceInsight(
+                id: "ended|\(sub.id)", kind: .likelyEnded, title: L10n.string("\(sub.name) looks like it ended"),
+                detail: sub.lastChargeDate.map { L10n.string("No charge since \(shortDate($0)). Confirm it's really cancelled.") }
+                    ?? L10n.string("No recent charge. Confirm it's really cancelled."),
+                subscriptionId: sub.id, annualImpact: nil))
+        }
+        if sub.chargedAfterCancel {
+            out.append(IntelligenceInsight(
+                id: "afterCancel|\(sub.id)", kind: .chargedAfterCancel, title: L10n.string("Charged by \(sub.name) after cancelling"),
+                detail: L10n.string("You received a cancellation email, then a later charge of \(format(sub.amount, sub.currency)). Worth disputing."),
+                subscriptionId: sub.id, annualImpact: sub.annualCost))
+        }
+        return out
+    }
+
+    private static func priceChangeNotices(groups: Groups,
+                                    detected: [ProvenSubscription]) -> [IntelligenceInsight] {
+        var out: [IntelligenceInsight] = []
+        for sub in detected where sub.tier >= .likely {
+            guard let group = groups[sub.merchantKey], group.signals.contains(where: { $0.kind == .priceChange }) else { continue }
+            if sub.status == .priceIncreased { continue } // already covered by an exact price insight
+            out.append(IntelligenceInsight(
+                id: "notice|\(sub.id)", kind: .priceChangeNotice, title: L10n.string("\(sub.name) announced a price change"),
+                detail: L10n.string("They emailed about new pricing. Check what you'll pay next billing."), subscriptionId: sub.id, annualImpact: nil))
+        }
+        return out
+    }
+
+    /// "$134.99 for the first year, then $269.99/year": the jump at the next renewal.
+    private static func introductoryPriceEnds(groups: Groups,
+                                       detected: [ProvenSubscription]) -> [IntelligenceInsight] {
+        var out: [IntelligenceInsight] = []
+        for sub in detected where sub.tier >= .likely && (sub.status == .active || sub.status == .priceIncreased) {
+            guard let group = groups[sub.merchantKey], let lastCharge = sub.lastChargeDate,
+                  let signal = group.signals.last(where: {
+                      ($0.kind == .charge || $0.kind == .renewalNotice) && $0.nextAmount != nil
+                          && abs($0.date.timeIntervalSince(lastCharge)) < 3 * 86_400
+                  }),
+                  let next = signal.nextAmount else { continue }
+            // The email's own two prices when it states both; the amount charged (tax included) otherwise.
+            let intro = signal.introAmount ?? sub.amount
+            guard next > intro else { continue }
+            let impact = (next - intro) * ProvenSubscription.periodsPerYear(sub.frequency)
+            let newPrice = format(next, sub.currency)
+            let title = sub.nextBillingDate.map { L10n.string("\(sub.name) goes up to \(newPrice) on \(shortDate($0))") }
+                ?? L10n.string("\(sub.name) goes up to \(newPrice) at the next renewal")
+            out.append(IntelligenceInsight(
+                id: "intro|\(sub.id)", kind: .priceChangeNotice,
+                title: title,
+                detail: L10n.string("You're on an introductory price of \(format(intro, sub.currency)). It renews at \(newPrice) unless you cancel or switch plans first."),
+                subscriptionId: sub.id, annualImpact: impact))
+        }
+        return out
+    }
+
+    /// A declined card with no successful charge since: the plan may be paused or cancelled by the merchant.
+    private static func failedPayments(groups: Groups,
+                                detected: [ProvenSubscription], now: Date) -> [IntelligenceInsight] {
+        var out: [IntelligenceInsight] = []
+        for sub in detected where sub.tier >= .likely && sub.status != .cancelled {
+            guard let group = groups[sub.merchantKey],
+                  let failure = group.signals.last(where: { $0.kind == .paymentFailed }),
+                  now.timeIntervalSince(failure.date) < 45 * 86_400 else { continue }
+            if let lastCharge = sub.lastChargeDate, lastCharge >= failure.date { continue }
+            out.append(IntelligenceInsight(
+                id: "failed|\(sub.id)", kind: .paymentFailed, title: L10n.string("Payment to \(sub.name) failed"),
+                detail: L10n.string("Your card was declined on \(shortDate(failure.date)). Update it if you want to keep \(sub.name), or let it lapse if you don't."),
+                subscriptionId: sub.id, annualImpact: nil))
+        }
+        return out
+    }
+
+    /// "today", "tomorrow", "in 3 days": the time phrase in insight titles.
+    private static func whenPhrase(_ days: Int) -> String {
+        L10n.relativeDay(max(days, 0))
+    }
+
+    private static func format(_ amount: Decimal, _ currency: String) -> String {
+        MoneyFormat.string(amount, currency)
+    }
+
+    private static func shortDate(_ date: Date) -> String {
+        ReceiptWording.shortDate(date)
+    }
+}
