@@ -1137,9 +1137,14 @@ Updated at every commit, so the work can be picked up from this file alone.
   arrow, 6 the system's red on its own confirmation, 1 the paste button with nothing to
   paste, 1 the swipe action's bin, 21 rows passing under a bar or a pinned heading. None
   is the app's own text at rest.
-- **11-17, the repository's own words (this commit).** Row opened and closed in 6.4;
+- **11-17, the repository's own words (`13c7855`).** Row opened and closed in 6.4;
   one owner item added to 6.7. Found while reading the README for the final report.
   Next, in order: H written up; section 7; the last proof runs on the final commit.
+- **11-17, the launch that opens signed in (this commit).** The one line of the codebase
+  score that said "no proof from here" had a proof within reach: closed in 6.6 (the long
+  files entry), with its test.
+  Next, in order: one command for the whole proof; H written up; section 7; the last
+  proof runs on the final commit.
 
 **Phase 0. Scan (read-only).** Four independent audits (dead code, truth, design rules on every
 view, engineering) plus mechanical scans. Output: the ledger.
@@ -1498,6 +1503,13 @@ Stage G, as it closes (each line: what, and the evidence):
   `gold_check` **0**. 727 tests, 0 failures. Not proven by a test: that a session is still restored
   at launch after the move (the code is the same lines in a new place; a test would write to the
   simulator's real Keychain). It is checked in Stage H's first walk from a signed-in start.
+  **Closed 11-17.** No walk ever started signed in (that needs an account on the live project), so
+  it stayed unproven until the scorecard was being written. Now it is a test: what a launch starts
+  from is one function (`AccountMemory.rememberedUser`, the lines `AuthManager` had inline), and
+  `testTheNextLaunchOpensOnWhoeverWasSignedIn` signs someone in, reads the next launch's person
+  back (id, address, the day they joined, the name kept for the account), signs out and reads
+  nobody, with the name still kept. It has a Keychain service of its own, so the app's is never
+  touched. Seen to fail with the name dropped.
 - The project file, 11-12: the unit and UI test bundles have their own bundle ids; the shared
   scheme runs tests one at a time (a run without the command-line flag made no simulator clones);
   the widget no longer links ActivityKit; the build entry with no file is gone; the three

@@ -75,10 +75,7 @@ class AuthManager: ObservableObject {
 
         // Restore session synchronously so the UI is correct on the very first frame,
         // with no flash of the login screen for returning users.
-        if let remembered = AccountMemory.session {
-            let name = AccountMemory.name(userId: remembered.userId)
-            let user = User(id: remembered.userId, email: remembered.email, createdAt: remembered.createdAt,
-                            firstName: name.firstName, lastName: name.lastName)
+        if let user = AccountMemory.rememberedUser {
             currentUser = user
             isAuthenticated = true
             state = .authenticated(user)

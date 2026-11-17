@@ -96,6 +96,33 @@ final class InstallStateTests: XCTestCase {
         second.deleteAll()
     }
 
+    /// Signing in remembers who it was, and the next launch opens on them, with the name kept for the
+    /// account, before the account service has answered anything. Signing out forgets who it was and
+    /// keeps the name. The test has a Keychain of its own: the app's is not touched.
+    func testTheNextLaunchOpensOnWhoeverWasSignedIn() {
+        let own = KeychainManager(service: "com.pausely.app.tests.\(UUID().uuidString)")
+        AccountMemory.keychain = own
+        defer { own.deleteAll(); AccountMemory.keychain = .shared }
+
+        XCTAssertNil(AccountMemory.rememberedUser)
+
+        let joined = Date(timeIntervalSince1970: 1_790_000_000)
+        AccountMemory.saveName(userId: "account-1", firstName: "Jane", lastName: nil)
+        AccountMemory.rememberSession(userId: "account-1", email: "jane@example.com", createdAt: joined)
+
+        let user = AccountMemory.rememberedUser
+        XCTAssertEqual(user?.id, "account-1")
+        XCTAssertEqual(user?.email, "jane@example.com")
+        XCTAssertEqual(user?.createdAt, joined)
+        XCTAssertEqual(user?.firstName, "Jane")
+        XCTAssertNil(user?.lastName)
+
+        AccountMemory.forgetSession()
+
+        XCTAssertNil(AccountMemory.rememberedUser)
+        XCTAssertEqual(AccountMemory.name(userId: "account-1").firstName, "Jane")
+    }
+
     /// The name is kept in the Keychain under the account's id, so that Apple, which gives a name only
     /// the first time, doesn't leave a returning person nameless. Deleting the account removes it.
     func testForgettingAProfileRemovesTheNameKeptForThatAccount() {

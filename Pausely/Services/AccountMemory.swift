@@ -16,7 +16,8 @@ enum AccountMemory {
     /// The address the held name was typed for.
     private static let heldNameEmailKey = "pending_nameEmail"
 
-    private static var keychain: KeychainManager { .shared }
+    /// Where it is kept. A test puts a Keychain of its own here, so it never touches the app's.
+    static var keychain: KeychainManager = .shared
 
     // MARK: - Who was signed in
 
@@ -31,6 +32,15 @@ enum AccountMemory {
         guard let userId = keychain.get(userIdKey) else { return nil }
         let createdAt = keychain.get(createdAtKey).flatMap { ISO8601DateFormatter().date(from: $0) }
         return (userId, keychain.get(emailKey), createdAt)
+    }
+
+    /// The person who was signed in when the app last ran, with the name kept for them, or nil.
+    /// A launch starts from this, before the account service has been asked anything.
+    static var rememberedUser: User? {
+        guard let remembered = session else { return nil }
+        let kept = name(userId: remembered.userId)
+        return User(id: remembered.userId, email: remembered.email, createdAt: remembered.createdAt,
+                    firstName: kept.firstName, lastName: kept.lastName)
     }
 
     static func forgetSession() {
