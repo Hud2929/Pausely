@@ -1236,7 +1236,7 @@ Updated at every commit, so the work can be picked up from this file alone.
   evidence), from a whole proof on the final code.
 - **11-17, the sweep of Eng-1's case (`fd3647f`).** Row Eng-2 opened and closed in 6.3.
   Next: section 7 again, from a whole proof on the final code.
-- **11-17, the whole proof and a last look (this commit).** On the code of `fd3647f`, by
+- **11-17, the whole proof and a last look (`610829b`).** On the code of `fd3647f`, by
   `scripts/proof.sh checks unit unit unit mail ui release`: `gold_check` 0 on every line; 830
   unit tests, 0 failures, three runs in a row (7 skipped in the unit step); the mail rig found
   22 of 22 with no wrong detail and no false positive, 5 tests passed, 3 skipped (the three in
@@ -1247,7 +1247,17 @@ Updated at every commit, so the work can be picked up from this file alone.
   walk lost its "Keep my list" tap on the first try (the fault of the 6.6 bullet, in the one
   place still tapping plainly); its three forward taps go through `tap(until:)` now, and the
   walk passed. The proof script no longer prints a line when it stops its mail server.
-  Next: section 7.
+- **11-17, the scorecard again (this commit): the run ends here, a second time.** Section 7
+  is rewritten from the evidence above. Against the first version (`d0e0206`): "Size and
+  simplicity" 9.0 to 9.5 (nothing found); the codebase 9.1 to 9.2; "Tests" and "Correctness"
+  stay at 9.0 with their evidence and reasons brought up to date; every screen and every walk
+  as it was. **The bar is still not met**, and what holds each line is a real iPhone, a person
+  who is not the builder, or the owner (7.5, 6.7).
+  What the resumption was for, said plainly: the first version called a choice a reason. The
+  stop rule is "9.5, or the reason it cannot be raised from here"; each line of section 7 has
+  now been held to that, and no line gives a choice as its reason.
+  **To pick the run up again:** the items of 7.5, in the order of 6.7. There is no slice left
+  that can be done from this Mac without one of them.
 
 **Phase 0. Scan (read-only).** Four independent audits (dead code, truth, design rules on every
 view, engineering) plus mechanical scans. Output: the ledger.
@@ -1747,8 +1757,10 @@ Stage G, as it closes (each line: what, and the evidence):
   since October told you to declare a name and usage data from Screen Time; if those were
   entered, remove them: neither leaves the iPhone. Five types remain, all for App Functionality.
   The API key cannot read that section, so it was not looked at from here.
-- Three mail tests that have never been run in this run, and what each needs. (1) and (2) reach
-  other companies' servers, which this run was not given leave to do; (3) needs your own inboxes.
+- Three mail tests that have never been run in this run, and what each needs. (3) needs your own
+  inboxes, and is what keeps the "Tests" line where it is. (1) and (2) could be run from here:
+  they are harmless, but they are something done to other companies' servers that nobody asked
+  for, and they would not move a score while (3) stays unrun, so they were left for your word.
   (1) `testRealProviderServers`: opens one connection to each provider's IMAP server (iCloud,
   Yahoo, AOL, Gmail, GMX, WEB.DE, Zoho, Fastmail, Xfinity), reads what it offers, and tries one
   sign-in that cannot succeed (`pausely-connectivity-check@example.invalid`, a name in a domain
@@ -1766,33 +1778,35 @@ Stage G, as it closes (each line: what, and the evidence):
 ## 7. Scorecard
 
 Written 2026-11-17, at the end of the run, from what the run produced: captures that were opened,
-numbers a script printed, tests that ran. Nothing here is from memory. The scorecard of 11-11 that
-stood here until today is in this file's history.
+numbers a script printed, tests that ran. Nothing here is from memory. It is the second version
+written that day: the first (`d0e0206`) and the scorecard of 11-11 are in this file's history.
 
-**The short of it.** No line of this scorecard reads 9.5. Every screen stands at 9.3 (two at
-9.2), the six customer walks between 8.5 and 9.3, the codebase at 9.1. What keeps each where it
-is, is written beside it, and it is of three kinds: a check that needs a real iPhone (VoiceOver
+**The short of it.** The bar is not met. No screen and no customer walk reads 9.5, and the
+codebase as a whole does not (four of its ten lines do). Every screen stands at 9.3 (two at 9.2),
+the six customer walks between 8.5 and 9.3, the codebase at 9.2. What keeps each where it is, is
+written beside it, and it is of three kinds: a check that needs a real iPhone (VoiceOver
 heard, haptics felt, a purchase made, a reminder arriving on a locked phone); a check that needs a
 person who is not the builder (a native reader for each language, a stranger signing up, a real
 buyer); and a step that is the owner's (publishing the corrected policy, the public history, the
-store). None of them can be done from this Mac, and none was rated up. Two lines of the
-codebase are held by a decision instead, said in 7.4 and not rated away: two long files kept
-whole, and three tests that would read real inboxes not run. Everything else that could be
-raised from here was, down to the last morning: 7.6 lists what the last two days found and closed.
+store). None of them can be done from this Mac, and none was rated up. Everything that could be
+raised from here was: 7.6 lists what the last two days found and closed. The first version of this
+scorecard, written earlier the same day, held one line by a choice (two long files kept whole).
+Asked to resume, that line was reopened; splitting the engine made its schedule finder testable on
+its own, and the first cases written for it found three misreadings of a plan's period.
 
 ### 7.1 What the scores rest on
 
 | Evidence | Where |
 |---|---|
-| The whole tour, English with Apple's audit: 225 captures, six tour tests green, no step missed, each opened. Run on `ebb9ebb`; the screens' code has not changed since, but for two later commits, each held by its own test and by the UI tests: five lines of the launch path moved into a function, and three screens made to watch the Pause Plan (their three states were captured again and opened, `/tmp/pausely_watch1_en`) | `/tmp/pausely_final10_en` |
+| The whole tour, English with Apple's audit: 225 captures, six tour tests green, no step missed, each opened. Run on `ebb9ebb`. What changed in the app after it, and what holds each: five lines of the launch path moved into a function (its test; the UI tests launch the app); three screens made to watch the Pause Plan (their states captured again and opened, `/tmp/pausely_watch1_en`); five long files split along their seams, moved and not rewritten (the UI tests walk the first run, the mail rig walks the mailbox screens; their states were captured again and opened, 22 captures, `/tmp/pausely_split1_en`); the engine's schedule finder corrected (no screen) | `/tmp/pausely_final10_en` |
 | The whole tour two days of commits earlier, in the other three variants: Arabic (218 captures), the largest text size (298), iPad (189); each opened. Every state a later commit touched was taken again in the variants it shows in, and opened | `/tmp/pausely_final7_ar`, `_final8_big`, `_final8_ipad`; `/tmp/pausely_batch9_*` to `_batch11_*`, `_col1_*`, `_rc2_*` |
 | The first launch, the tabs and every single screen in German (64), Spanish (63) and French (63) on the build of `0f76a50`, in Japanese (59, on `196e9be`); each opened | `/tmp/pausely_final9_de`, `_es`, `_fr`; `/tmp/pausely_ja1` |
 | Every text on every capture measured from its pixels (`tour_read contrast`). Final English tour: 3,983 at 4.5 to 1 or more, 46 below. Arabic 3,407 and 22; the largest size 1,350 and 24; iPad 3,695 and 38. Every one below was looked at: the system's own controls, rows under a bar, and one of the app's, since fixed | 6.5 |
 | Apple's audit on that tour: 373 lines printed; 51 name an element of the app at rest, on 13 captures (the rest are behind a bar, name no element, or are the system's bars and keyboard) | `/tmp/pausely_final10_en/audit.txt`; 5.2, 11-17 |
 | A new install, on a simulator that had never run the app: the first run and the catalog | `/tmp/pausely_fresh2` |
-| On the final code (`fd167fd`), by `scripts/proof.sh`: `gold_check` 0 on every line (it holds `string_usage` and `old_ui_check`); 816 unit tests, 0 failures, three runs in a row; the UI tests other than the tour 10 run, 0 failures, 2 skipped (the mailbox walk and the journey need a server and a folder; the walk ran green against the local server earlier the same day); Release builds | 5.2, 11-17 |
-| The database rules against a stand-in database, 619 checks; the three functions against stand-ins, 23, 20 and 22; 0 failed | 5.2, 11-17 |
-| The mail rig: 138 synthetic messages served on this Mac, scanned through the app's own IMAP stack, scored against their truth, and walked through the real screens | 6.5, the mail rig row |
+| On the final code (`fd3647f`), by `scripts/proof.sh`: `gold_check` 0 on every line (it holds `string_usage` and `old_ui_check`); 830 unit tests, 0 failures, three runs in a row; the mail rig: the scan scored against the synthetic mailbox's truth (found 22 of 22, wrong details 0, false positives 0), the app's IMAP stack end to end, the app's own scan, the folder of messages and the walk through the mailbox screens, 5 tests passed; the UI tests other than the tour 10 run, 0 failures, 2 skipped (the mailbox walk, which the mail step runs, and the journey, which takes pictures as the tour does); Release builds | 5.2, 11-17 |
+| The database rules against a stand-in database, 619 checks; the three functions against stand-ins, 23, 20 and 22; 0 failed (run on `fd167fd`; nothing under `supabase/` or `scripts/dbtest/` has changed since) | 5.2, 11-17 |
+| The mail rig: 138 synthetic messages in six languages served on this Mac, scanned through the app's own IMAP stack, scored against their truth, and walked through the real screens; a step of the proof since 11-17 | 6.5, the mail rig row; 6.6 |
 
 ### 7.2 Screens
 
@@ -1877,16 +1891,16 @@ figure is that reading and no more. What each round found and changed is in 5.2 
 |---|---|---|---|
 | Truth | **9.5** | The truth ledger (6.3, 6.4) is closed. The listing, the website, the Privacy page, the README's Pro line and the answers for App Store Connect's privacy section are each held to the code by tests (`StoreListingTests`, `WebsiteTruthTests`, `PrivacyPageTests`, `PrivacyManifestTests`); money goes through one place and a guard fails the build's tests if it does not (`CurrencyGuardTests`); first-run prices name the page they were read from. | nothing found |
 | No dead code | **9.5** | `gold_check`: declarations nothing refers to 0, string keys unused or untranslated 0, stray files at the root 0 (it caught one this morning, a table only a test read, and the app now uses it). | nothing found |
-| Correctness | **9.0** | The engineering ledger (6.2, 6.3, 6.3a, 6.3b) is closed apart from one item that is the owner's (O24). 816 unit tests. | What only a device or the live project shows is not known: a purchase and its refund, a reminder acted on from a locked phone, Sign in with Apple, a sign-up by a stranger (7.5). The last path that had no proof and could have one, a launch that opens signed in, got its test on 11-17 (6.6). |
-| Tests | **9.0** | 816 unit tests, 0 failures, three serial runs in a row on `fd167fd`; 7 skip in a plain run, and the 4 of them that need only a mail server ran green against the local one today; the database rig 619 checks and the three function rigs 23, 20 and 22, 0 failed; the UI tests other than the tour 10 run, 0 failures, 2 skipped (the mailbox walk and the journey need a server and a folder; the walk ran green against the local server earlier the same day). One command runs the checks, the unit tests, the UI tests and a Release build, and stops at the first that fails (`scripts/proof.sh`, 11-17). | Three mail tests need real providers or real inboxes and were deliberately not run. The UI tests had been left out of the usual run, and it showed: one had failed unseen since 11-13 and one walk had not been run since its mailbox grew (both tests, not the app; both fixed 11-17, and the UI tests are now in the plain run). A UI test can lose its first tap right after a build (seen twice), so a red UI step is run again alone before it is believed. |
+| Correctness | **9.0** | The engineering ledger (6.2, 6.3, 6.3a, 6.3b) is closed apart from one item that is the owner's (O24). 830 unit tests; a launch that opens signed in has its test (6.6); the mailbox scan scores 22 of 22 against the synthetic mailbox's truth, with no wrong detail and nothing listed that should not be. | What only a device or the live project shows is not known: a purchase and its refund, a reminder acted on from a locked phone, Sign in with Apple, a sign-up by a stranger (7.5). Said too, because it bears on this line: on 11-17 three misreadings of a plan's period were found in the engine, by giving its schedule finder cases of its own and then sweeping them (Eng-1, Eng-2 in 6.3). They are fixed and the sweep holds them; no bug is known now. |
+| Tests | **9.0** | 830 unit tests, 0 failures, three serial runs in a row on `fd3647f`. One command runs the proof and stops at the first step that fails (`scripts/proof.sh`): the checks, the unit tests, the mail rig, the UI tests, a Release build. The mail rig is in it since 11-17, so four tests that a plain run skips for want of a mail server are run every time: the scan scored against the synthetic mailbox's truth (found 22 of 22, wrong details 0, false positives 0), the app's IMAP stack end to end, the app's own scan, the folder of messages and the walk through the mailbox screens, 5 tests passed. The UI tests other than the tour: 10 run, 0 failures, 2 skipped (the mailbox walk, which the mail step runs, and the journey, which takes pictures as the tour does). The database rig 619 checks and the three function rigs 23, 20 and 22, 0 failed. | The standard says nothing is skipped on every run, and three mail tests are (6.7). One scans the inboxes connected in the app and so needs the owner's own inbox: that is what cannot be done from here. The other two try one sign-in that cannot succeed, or one made-up token, against other companies' servers; they would not move this line while the first stays unrun, and nobody asked for them, so they were left and are listed with what they send. A UI test's tap that brings nothing is tried once more (11-17): the touch was seen arriving and being taken back on the simulator; what takes it back was not established. |
 | Translation | **9.0** | Every string a person can see is in the catalog in five languages (`string_usage` 0; the guard over every literal is green). Read on the screens: Arabic whole, German, Spanish, French and Japanese on every single screen. | No native reader (6.7). Two faults were found on 11-17 by reading the Spanish and French screens that the string-by-string reading had passed. |
 | Accessibility | **9.0** | Apple's audit on the whole English tour: 373 lines printed; 51 name an element of the app at rest, on 13 captures (the rest are behind a bar, name no element, or are the system's bars and keyboard), each kind traced (5.2, 11-17): Dynamic Type on catalog rows that do grow, contrast lines that do not repeat and are measured fine, two made-up addresses, two "may be clipped" lines on texts that are whole at the largest size. Every text measured from its pixels: 3,983 at 4.5 to 1 or more, 46 below, each looked at. | The audit does not print nothing, and VoiceOver has not been heard on a device (6.7). |
 | Privacy and security | **9.0** | Every privacy sentence in the app and on the website is held by a test; the privacy manifest declares what is sent and nothing else, and the answers kept for App Store Connect list the same five types (a test); the database rules are proven against a stand-in (619 checks); nothing in the working tree is a secret. | The repository is public and its history still holds business notes and a committed file of scaffold secrets; the published policy is the old one; what App Store Connect's privacy section says today could not be read from here. All three are the owner's (6.7). |
 | Naming and consistency | **9.5** | `gold_check`: hype names 0, in type and file names; one helper for each job (asking first, a field's hint, a facts line, a label and its value). | nothing found |
-| Size and simplicity | **9.0** | `gold_check`: Swift files over 700 lines of code 0 (the largest is 628). Counted today: five files are over 700 raw lines (790, 777, 746, 723, 705), a fifth to a third of each being comments and blank lines. | The measure was changed on 11-12 from raw lines to lines of code, so that the receipt analyzer and the engine pass: each is one algorithm whose helpers are private, and splitting either means making a dozen helpers visible to the whole module. That is a choice, not a limit: it was judged worse than a long file, it is said here, and the owner can overrule it. |
+| Size and simplicity | **9.5** | `gold_check`: Swift files over 700 lines 0, counting every line as the standard first did; the longest is 651 (Home). The five that were over (the engine 777, the receipt analyzer 790, the design system 746, the mailbox screen 723, the first run 705) were each split along a seam they already had, on 11-17, with no private helper made visible to do it (6.6, "Long files again"). `CatalogData.swift` is left out by name: a table with one row per service. | nothing found. This line stood at 9.0 in the first version of this scorecard, held by a choice (two long files kept whole, the check counting lines of code); a choice is not a reason a line cannot be raised, so it was reopened. |
 | Repository | **9.0** | `gold_check`: stray files at the root 0, website pages that differ between copies 0. `CLAUDE.md` is current, including how the store pictures are taken and the one command for the proof; the README and the notes in `docs/` say what the app does, or say at the top that they are superseded (11-17). | The public history (above). Four loose notes of the owner's sit untracked at the root, untouched. |
 
-Together: **9.1** (the mean of the ten, capped at the weakest plus 0.5).
+Together: **9.2** (the mean of the ten, capped at the weakest plus 0.5).
 
 ### 7.5 Not scored, because only a device, a stranger or the owner can do it
 
@@ -1900,6 +1914,8 @@ Each is in 6.7 with what to do. None was rated in place of being done.
 - A reminder arriving on a locked phone, "Keep it" pressed from the lock screen (S1), and
   Time Sensitive delivery (O24).
 - One native reader for each of Arabic, German, Spanish, French and Japanese.
+- Three mail tests: one scans the inboxes connected in the app and needs the owner's own; two
+  try a sign-in that cannot succeed, or a made-up token, against other companies' servers.
 - Publishing the corrected privacy policy and website; deploying the two functions; the public
   history; sending the sixteen new pictures and the listing to App Store Connect, and checking
   its App Privacy section against `docs/APP_PRIVACY_ANSWERS.md`; the word to submit. Nothing was
@@ -1916,7 +1932,11 @@ and Spanish reminders are switched on in their own gender; on a new install the 
 services show their logo; the App Store's sixteen pictures are of the app as it is; two tests that
 had gone stale unseen run again; the README and the answers for App Store Connect's privacy
 section say what the app does, and two September policy drafts are gone from the root; a launch
-that opens signed in has its test; one command runs the whole proof; the Subscriptions list, a
-subscription's page and Insights are drawn again when a Pause Plan starts or ends. The one that
+that opens signed in has its test; one command runs the whole proof, the mail rig included; the
+Subscriptions list, a subscription's page and Insights are drawn again when a Pause Plan starts or
+ends; the five files over 700 lines are split along seams they already had, and the check counts
+every line again; a UI test's tap that brings nothing is tried once more; and a plan's period is
+no longer misread when one other charge from the same sender falls between two receipts (a $15.99
+monthly plan had been listed as fortnightly, $415.74 a year for $191.88). The one that
 mattered most was found near the end and by accident: every tour had run on a simulator with a
 month of logos on disk, so the first look a new person gets had never been the one captured.
