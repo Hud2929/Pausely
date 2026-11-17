@@ -1234,8 +1234,20 @@ Updated at every commit, so the work can be picked up from this file alone.
   one commit later, rather than folded back in.
   Next: section 7 again, the lines that moved (Size and simplicity, Tests, Correctness's
   evidence), from a whole proof on the final code.
-- **11-17, the sweep of Eng-1's case (this commit).** Row Eng-2 opened and closed in 6.3.
+- **11-17, the sweep of Eng-1's case (`fd3647f`).** Row Eng-2 opened and closed in 6.3.
   Next: section 7 again, from a whole proof on the final code.
+- **11-17, the whole proof and a last look (this commit).** On the code of `fd3647f`, by
+  `scripts/proof.sh checks unit unit unit mail ui release`: `gold_check` 0 on every line; 830
+  unit tests, 0 failures, three runs in a row (7 skipped in the unit step); the mail rig found
+  22 of 22 with no wrong detail and no false positive, 5 tests passed, 3 skipped (the three in
+  6.7); the UI tests 10 run, 2 skipped, 0 failures; Release builds. Then the states of the two
+  screens whose files were split were captured again and opened (`/tmp/pausely_split1_en`, 22
+  captures: the first run's four steps and its empty tally, the reveals and the price sheet,
+  the mailbox's nine states): each is as it was on the last whole tour. The tour's first-launch
+  walk lost its "Keep my list" tap on the first try (the fault of the 6.6 bullet, in the one
+  place still tapping plainly); its three forward taps go through `tap(until:)` now, and the
+  walk passed. The proof script no longer prints a line when it stops its mail server.
+  Next: section 7.
 
 **Phase 0. Scan (read-only).** Four independent audits (dead code, truth, design rules on every
 view, engineering) plus mechanical scans. Output: the ledger.

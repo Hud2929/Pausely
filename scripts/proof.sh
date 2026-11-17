@@ -56,7 +56,7 @@ mail_rig() {  # the synthetic mailbox, served here, and every test that needs a 
   && TEST_RUNNER_PAUSELY_LOCAL_IMAP_UI="$spec" TEST_RUNNER_PAUSELY_LOCAL_IMAP_UI_EXPECT="Netflix,Spotify,Ironside Fitness" \
     tests PauselyUITests/InboxWorkflowUITests
   code=$?
-  kill "$server" 2>/dev/null
+  kill "$server" 2>/dev/null; wait "$server" 2>/dev/null
   return $code
 }
 

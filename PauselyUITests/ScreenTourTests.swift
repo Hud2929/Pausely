@@ -68,8 +68,7 @@ final class ScreenTourTests: XCTestCase {
             capture(app, "firstrun-guess-scroll1")
         }
         XCTAssertTrue(myGuess.isHittable, "\"That's my guess\" cannot be reached")
-        myGuess.tap()
-        XCTAssertTrue(app.buttons["noneOfTheseButton"].waitForExistence(timeout: 20), "\"That's my guess\" did not lead to the tally")
+        XCTAssertTrue(myGuess.tap(until: app.buttons["noneOfTheseButton"].exists, within: 20), "\"That's my guess\" did not lead to the tally")
         sleep(1)
 
         var sawPriceSheet = false
@@ -94,9 +93,8 @@ final class ScreenTourTests: XCTestCase {
         let services = app.scrollViews.firstMatch.buttons.allElementsBoundByIndex.filter { $0.identifier != "firstRunBack" }
         XCTAssertTrue(services.contains { $0.isHittable }, "The slip leaves no service on screen")
 
-        showTotal.tap()
         let keep = app.buttons["keepListButton"]
-        XCTAssertTrue(keep.waitForExistence(timeout: 20), "\"Show me the total\" did not lead to the total")
+        XCTAssertTrue(showTotal.tap(until: keep.exists, within: 20), "\"Show me the total\" did not lead to the total")
         sleep(3)
         capture(app, "firstrun-reveal")
         if !keep.isHittable {
@@ -106,12 +104,11 @@ final class ScreenTourTests: XCTestCase {
             capture(app, "firstrun-reveal-scroll1")
         }
         XCTAssertTrue(keep.isHittable, "\"Keep my list\" cannot be reached")
-        keep.tap()
         // The age check on a device that has not answered it, the account form on one that has.
         // On iPad the two used to open at once and neither stayed: the walk was back on the total.
         let ageCheck = app.buttons["ageGateContinueButton"]
         let form = app.buttons["createAccountButton"]
-        XCTAssertTrue(ageCheck.waitForExistence(timeout: 20) || form.waitForExistence(timeout: 5),
+        XCTAssertTrue(keep.tap(until: ageCheck.exists || form.exists, within: 20),
                       "\"Keep my list\" led to neither the age check nor the account form")
         sleep(2)
         capture(app, "firstrun-account")
