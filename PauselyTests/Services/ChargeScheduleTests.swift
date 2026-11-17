@@ -111,6 +111,38 @@ final class ChargeScheduleTests: XCTestCase {
         XCTAssertEqual(schedule.missed, 3)
     }
 
+    /// Every billing period, three to six charges on schedule, and one other charge at another price
+    /// on each day between two of them: the plan is always read with its own period and without the
+    /// other charge. Before, with three charges on record, a charge in the middle halved the period
+    /// (monthly read as fortnightly, yearly as six-monthly), and a charge a few days before a renewal
+    /// took that renewal's place in the plan, which made a steady plan look like varying orders.
+    func testOneOtherChargeNeverChangesAPlansPeriod() {
+        let periods: [(BillingFrequency, Calendar.Component, Int)] = [
+            (.weekly, .day, 7), (.biweekly, .day, 14), (.monthly, .month, 1),
+            (.quarterly, .month, 3), (.semiannual, .month, 6), (.yearly, .year, 1)
+        ]
+        var misread: [String] = []
+        for (frequency, unit, step) in periods {
+            for count in 3...6 {
+                let plan = (0..<count).map { index in
+                    charge("p\(index)", on: calendar.date(byAdding: unit, value: step * index, to: day(2024, 1, 5))!, 9.99)
+                }
+                for before in 1..<count {
+                    let gap = calendar.dateComponents([.day], from: plan[before - 1].date, to: plan[before].date).day!
+                    for offset in 1..<gap {
+                        let stray = charge("stray", on: calendar.date(byAdding: .day, value: offset, to: plan[before - 1].date)!, 24)
+                        let schedule = ChargeSchedule.best(in: plan + [stray])
+                        if schedule?.cadence.frequency != frequency || schedule?.charges.map(\.id) != plan.map(\.id) {
+                            misread.append("\(frequency.rawValue) x\(count), other charge \(offset) days after p\(before - 1): read as "
+                                           + "\(schedule?.cadence.frequency.rawValue ?? "nothing") \(schedule?.charges.map(\.id) ?? [])")
+                        }
+                    }
+                }
+            }
+        }
+        XCTAssertEqual(misread, [])
+    }
+
     func testTwoAmountsAreTheSameWithinTheShareGiven() {
         XCTAssertTrue(ChargeSchedule.sameAmount(10, 10.2, tolerance: 0.02))
         XCTAssertFalse(ChargeSchedule.sameAmount(10, 10.3, tolerance: 0.02))
