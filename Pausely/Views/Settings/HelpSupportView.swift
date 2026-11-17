@@ -47,7 +47,9 @@ struct HelpSupportView: View {
 
             SettingsSection(title: "Contact") {
                 Button(action: openMail) {
-                    SettingsRow(title: L10n.string("Email us"), detail: AppConfig.supportEmail) { RowChevron() }
+                    // Whole on its line or broken after its "@": at the largest text size iOS
+                    // hyphenated it, and "pausely@pro-ton.me" is another address (seen 2026-11-17).
+                    SettingsRow(title: L10n.string("Email us"), detail: AddressText.breakable(AppConfig.supportEmail)) { RowChevron() }
                 }
                 .buttonStyle(.plain)
                 .accessibilityIdentifier("emailSupportRow")

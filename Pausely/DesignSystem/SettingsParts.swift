@@ -141,6 +141,8 @@ struct SettingsRow<Trailing: View>: View {
                     .foregroundStyle(Color.inkTextMuted)
                     .multilineTextAlignment(.leading)
                     .fixedSize(horizontal: false, vertical: true)
+                    // An address is drawn with marks that say where it may break; it is said without.
+                    .accessibilityLabel(Text(verbatim: AddressText.plain(detail)))
             }
         }
     }

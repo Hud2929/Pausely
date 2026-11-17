@@ -250,4 +250,34 @@ final class AuthLinkTests: XCTestCase {
         }
         XCTAssertGreaterThanOrEqual(protected, 2, "iCloud's and Gmail's steps name the page to open")
     }
+
+    /// The address people write to is drawn like every other address, wherever a screen shows it.
+    /// On Help it was "pausely@pro-" above "ton.me" at the largest text size (seen 2026-11-17):
+    /// a hyphen the address does not have.
+    func testTheSupportAddressIsNeverHyphenated() throws {
+        let shown = AddressText.breakable(AppConfig.supportEmail)
+        XCTAssertEqual(shown.replacingOccurrences(of: AddressText.joiner, with: "").components(separatedBy: AddressText.gap),
+                       ["pausely@", "proton.", "me"], "it may go on to the next line after its @ and after its dot, and nowhere else")
+        // What is said aloud and what is compared has no marks in it, and other words are untouched.
+        XCTAssertEqual(AddressText.plain(shown), AppConfig.supportEmail)
+        XCTAssertEqual(AddressText.plain("Same as iPhone"), "Same as iPhone")
+        let sentence = AddressText.inSentence("If it keeps failing, email \(AppConfig.supportEmail) and we'll delete it within 30 days.")
+        XCTAssertTrue(sentence.contains(shown))
+        XCTAssertEqual(AddressText.plain(sentence), "If it keeps failing, email \(AppConfig.supportEmail) and we'll delete it within 30 days.")
+
+        let root = URL(fileURLWithPath: #filePath).deletingLastPathComponent().deletingLastPathComponent().deletingLastPathComponent()
+        let views = root.appendingPathComponent("Pausely/Views")
+        try XCTSkipUnless(FileManager.default.fileExists(atPath: views.path), "Sources aren't readable from this test run")
+        var shownIn = 0
+        for file in try FileManager.default.subpathsOfDirectory(atPath: views.path) where file.hasSuffix(".swift") {
+            let text = try String(contentsOf: views.appendingPathComponent(file), encoding: .utf8)
+            for line in text.components(separatedBy: "\n") where line.contains("AppConfig.supportEmail") && !line.contains("mailto:") {
+                XCTAssertTrue(line.contains("AddressText."), "\(file): \(line.trimmingCharacters(in: .whitespaces))")
+                shownIn += 1
+            }
+        }
+        XCTAssertEqual(shownIn, 2, "Help's row and the sentence when an account could not be deleted")
+        let rows = try String(contentsOf: root.appendingPathComponent("Pausely/DesignSystem/SettingsParts.swift"), encoding: .utf8)
+        XCTAssertTrue(rows.contains(".accessibilityLabel(Text(verbatim: AddressText.plain(detail)))"))
+    }
 }

@@ -142,6 +142,11 @@ enum AddressText {
         return shown
     }
 
+    /// What was typed, without the marks: what VoiceOver is given to say, and what is compared.
+    static func plain(_ shown: String) -> String {
+        shown.replacingOccurrences(of: gap, with: "").replacingOccurrences(of: joiner, with: "")
+    }
+
     /// A sentence with every address in it made `breakable` ("Open account.apple.com and sign
     /// in."). The words around the addresses are left as they are.
     static func inSentence(_ sentence: String) -> String {

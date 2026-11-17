@@ -84,7 +84,9 @@ struct PrivacySecurityView: View {
         } catch is CancellationError {
             // The person closed Apple's sheet: nothing was deleted and there is nothing to report.
         } catch {
-            deleteError = L10n.string("Check your connection and try again. If it keeps failing, email \(AppConfig.supportEmail) and we'll delete it within 30 days.")
+            // The address is one the person may have to type: in the system's narrow alert it is
+            // not hyphenated either.
+            deleteError = AddressText.inSentence(L10n.string("Check your connection and try again. If it keeps failing, email \(AppConfig.supportEmail) and we'll delete it within 30 days."))
         }
     }
 
