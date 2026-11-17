@@ -36,6 +36,33 @@ final class CatalogTests: XCTestCase {
 
     // MARK: Logos
 
+    /// A service's icon is asked of the three usual addresses on its own site. A few of the
+    /// best-known keep theirs elsewhere on that site: on a simulator that had never run the app,
+    /// YouTube Premium, Google One and PlayStation Plus were letters on the first-run screen
+    /// (2026-11-17). Their address is known, asked first, and never on anyone else's site.
+    func testAnIconKeptElsewhereIsAskedForFirstAndOnlyOnTheServicesOwnSite() throws {
+        XCTAssertEqual(LogoStore.sources(for: "netflix.com").map(\.absoluteString),
+                       ["https://netflix.com/apple-touch-icon.png", "https://www.netflix.com/apple-touch-icon.png", "https://netflix.com/favicon.ico"])
+        XCTAssertEqual(ServiceDomains.iconAddresses.count, 6)
+        for (domain, address) in ServiceDomains.iconAddresses {
+            let url = try XCTUnwrap(URL(string: address), address)
+            XCTAssertEqual(url.scheme, "https")
+            let host = try XCTUnwrap(url.host)
+            // On the service's own domain, or the one host its own front page names for its icon.
+            XCTAssertTrue(host == domain || host.hasSuffix("." + domain) || ServiceDomains.assetHosts[domain] == host,
+                          "\(address) is not on \(domain): an icon is asked of the service's own site and nobody else")
+            XCTAssertEqual(LogoStore.sources(for: domain).first, url)
+            XCTAssertEqual(LogoStore.sources(for: "www." + domain).first, url)
+            XCTAssertEqual(LogoStore.sources(for: domain).count, 4, "the usual three are still tried after it")
+        }
+        // The services that showed a letter on a new install, on the first screens with logos.
+        XCTAssertEqual(ServiceDomains.assetHosts, ["duolingo.com": "d35aaqx5ub95lt.cloudfront.net"])
+        for name in ["YouTube Premium", "Google One", "PlayStation Plus", "Discord Nitro", "Notion", "Duolingo"] {
+            let domain = try XCTUnwrap(ServiceDomains.domain(for: name), name)
+            XCTAssertNotNil(ServiceDomains.iconAddresses[domain], "\(name) is asked for its icon where its site keeps none")
+        }
+    }
+
     /// A logo comes from the service's own site: the one in Pausely's own list, else the site of the
     /// catalog's checked link. The catalog used to invent a website from the name with ".com" on the
     /// end, and whoever owned that address supplied the logo.

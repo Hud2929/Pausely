@@ -114,13 +114,16 @@ final class LogoStore {
     /// (180px, made for home screens), then its favicon. A lookup service was used as a last resort
     /// before; it was told the address of every service whose own icon was missing, which is a list
     /// of what someone subscribes to. Where a site has no usable icon the initial is shown instead.
+    ///
+    /// A few of the best-known services keep their icon at none of those three addresses. For
+    /// them the address on their own site is known (`ServiceDomains.iconAddresses`) and asked first.
     nonisolated static func sources(for domain: String) -> [URL] {
         let host = domain.hasPrefix("www.") ? String(domain.dropFirst(4)) : domain
-        return [
+        return ([ServiceDomains.iconAddresses[host]].compactMap { $0 } + [
             "https://\(host)/apple-touch-icon.png",
             "https://www.\(host)/apple-touch-icon.png",
             "https://\(host)/favicon.ico"
-        ].compactMap(URL.init(string:))
+        ]).compactMap(URL.init(string:))
     }
 
     nonisolated private static func download(_ domain: String) async -> UIImage? {
@@ -178,6 +181,27 @@ final class LogoStore {
 // MARK: - Service Domain Lookup
 
 enum ServiceDomains {
+    /// Where a service keeps its icon when it is at none of the three usual addresses. Each is on
+    /// the service's own site, and each was asked for and answered with an image of 128 pixels or
+    /// more on 2026-11-17. Without them a new install showed a letter for YouTube Premium, Google
+    /// One and PlayStation Plus on the first screen that shows logos (seen on a simulator that had
+    /// never run the app; the ones the tours use had their icons from weeks before).
+    nonisolated static let iconAddresses: [String: String] = [
+        "youtube.com": "https://www.youtube.com/img/favicon_144.png",
+        "google.com": "https://www.google.com/images/branding/googleg/1x/googleg_standard_color_128dp.png",
+        "playstation.com": "https://gmedia.playstation.com/is/image/SIEPDC/ps-logo-favicon?$icon-196-196--t$",
+        "discord.com": "https://discord.com/assets/favicon.ico",
+        "notion.com": "https://www.notion.com/front-static/logo-ios.png",
+        "duolingo.com": "https://d35aaqx5ub95lt.cloudfront.net/images/duolingo-touch-icon2.png",
+    ]
+
+    /// Hosts that are not on a service's domain and still its own: the address the service's own
+    /// front page names as its touch icon (read on 2026-11-17). Anything else in the table above
+    /// must be on the service's domain; the test holds both.
+    nonisolated static let assetHosts: [String: String] = [
+        "duolingo.com": "d35aaqx5ub95lt.cloudfront.net",
+    ]
+
     // Keyed by lowercase service name → canonical domain
     private static let domains: [String: String] = [
         // ── Streaming: Video ──────────────────────────────────────────────
@@ -243,7 +267,7 @@ enum ServiceDomains {
         "microsoft 365": "microsoft.com",
         "office 365": "microsoft.com",
         "microsoft office": "microsoft.com",
-        "notion": "notion.so",
+        "notion": "notion.com",
         "slack": "slack.com",
         "zoom": "zoom.us",
         "google workspace": "workspace.google.com",
