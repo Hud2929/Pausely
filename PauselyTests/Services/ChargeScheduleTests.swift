@@ -62,6 +62,55 @@ final class ChargeScheduleTests: XCTestCase {
         XCTAssertEqual(schedule.charges.map(\.id), ["y1", "y2"])
     }
 
+    /// A plan billed on the 5th of each month, and one other charge from the same company on the
+    /// 20th of February. Read as a fortnightly plan, every charge fits if two receipts are taken to
+    /// be missing; read as a monthly plan, four fit exactly and one is left over. The plan is monthly.
+    func testAChargeInTheMiddleOfAMonthDoesNotMakeAMonthlyPlanFortnightly() throws {
+        var charges = (1...4).map { charge("m\($0)", on: day(2026, $0, 5), 9.99) }
+        charges.append(charge("stray", on: day(2026, 2, 20), 24))
+
+        let schedule = try XCTUnwrap(ChargeSchedule.best(in: charges))
+
+        XCTAssertEqual(schedule.cadence.frequency, .monthly)
+        XCTAssertEqual(schedule.charges.map(\.id), ["m1", "m2", "m3", "m4"])
+    }
+
+    /// The same for a plan billed every three months, with a smaller purchase a month after the first.
+    func testAStrayChargeDoesNotMakeAQuarterlyPlanMonthly() throws {
+        var charges = [charge("q1", on: day(2026, 1, 5), 30), charge("q2", on: day(2026, 4, 5), 30),
+                       charge("q3", on: day(2026, 7, 5), 30)]
+        charges.append(charge("stray", on: day(2026, 2, 5), 12))
+
+        let schedule = try XCTUnwrap(ChargeSchedule.best(in: charges))
+
+        XCTAssertEqual(schedule.cadence.frequency, .quarterly)
+        XCTAssertEqual(schedule.charges.map(\.id), ["q1", "q2", "q3"])
+    }
+
+    /// A monthly plan with one receipt missing is still monthly, with nothing left over.
+    func testAMissingReceiptDoesNotBreakAMonthlyPlan() throws {
+        let charges = [1, 2, 4, 5, 6].map { charge("m\($0)", on: day(2026, $0, 5), 9.99) }
+
+        let schedule = try XCTUnwrap(ChargeSchedule.best(in: charges))
+
+        XCTAssertEqual(schedule.cadence.frequency, .monthly)
+        XCTAssertEqual(schedule.charges.map(\.id), ["m1", "m2", "m4", "m5", "m6"])
+    }
+
+    /// Receipts at one price in October, then March, June, August, September and October: a monthly
+    /// plan with mail deleted. Read as quarterly, March, June and September fit with nothing missing,
+    /// but August and October, at the plan's own price, would have to be something else.
+    func testChargesAtThePlansPriceAreNotLeftOutToMakeARarerPeriodFit() throws {
+        let months = [(2025, 10), (2026, 3), (2026, 6), (2026, 8), (2026, 9), (2026, 10)]
+        let charges = months.map { charge("\($0.0)-\($0.1)", on: day($0.0, $0.1, 20), 22.60) }
+
+        let schedule = try XCTUnwrap(ChargeSchedule.best(in: charges))
+
+        XCTAssertEqual(schedule.cadence.frequency, .monthly)
+        XCTAssertEqual(schedule.charges.map(\.id), ["2026-3", "2026-6", "2026-8", "2026-9", "2026-10"])
+        XCTAssertEqual(schedule.missed, 3)
+    }
+
     func testTwoAmountsAreTheSameWithinTheShareGiven() {
         XCTAssertTrue(ChargeSchedule.sameAmount(10, 10.2, tolerance: 0.02))
         XCTAssertFalse(ChargeSchedule.sameAmount(10, 10.3, tolerance: 0.02))

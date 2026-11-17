@@ -14,6 +14,8 @@ struct ChargeSchedule {
     var charges: [ReceiptSignal]
     var cadence: Cadence
     var regularity: Double
+    /// The receipts its period expects between its charges that the mailbox does not hold.
+    var missed: Int
 
     private static let cadences: [Cadence] = [
         Cadence(frequency: .weekly, days: 7, tolerance: 2),
@@ -66,17 +68,38 @@ struct ChargeSchedule {
         return longest
     }
 
-    /// The charges that bill on a schedule: the longest chain in which each charge follows the one before by
-    /// one, two or three periods. A stray email between two receipts (a promotion read as a charge, a one-off
+    /// The charges that bill on a schedule: a chain in which each charge follows the one before by one, two
+    /// or three periods. A stray email between two receipts (a promotion read as a charge, a one-off
     /// purchase from the same company) is left out of the chain instead of breaking it, and an old gap of
     /// many months (deleted mail, a paused plan) starts the chain afresh.
+    ///
+    /// Every billing period gives its own reading of the same charges. The one kept is, first, the one
+    /// that leaves out the fewest charges at the plan's own price (a plan does not charge off its own
+    /// schedule, so each of those speaks against the reading); then the one that leaves the least
+    /// unexplained, counting the receipts it has to suppose were lost and the other charges it has to
+    /// leave out. The longest chain used to win outright: a monthly plan with one other purchase in the
+    /// middle of a month was read as fortnightly with two receipts missing (five charges in the chain
+    /// beat four), and a quarterly plan with a purchase a month after its first charge as monthly.
     private static func regularChain(_ charges: [ReceiptSignal]) -> ChargeSchedule? {
         let sorted = charges.sorted { $0.date < $1.date }
         guard sorted.count >= 2, let newest = sorted.last else { return nil }
 
+        /// What a reading leaves out: charges at the price the plan stands at, and all the others.
+        func leftOut(_ reading: ChargeSchedule) -> (atThePlansPrice: Int, others: Int) {
+            let inTheChain = Set(reading.charges.map(\.id))
+            let rest = sorted.filter { !inTheChain.contains($0.id) }
+            guard let price = reading.charges.last?.amount else { return (0, rest.count) }
+            let same = rest.filter { $0.amount.map { sameAmount($0, price, tolerance: 0.02) } ?? false }.count
+            return (same, rest.count - same)
+        }
+
         func better(_ a: ChargeSchedule?, _ b: ChargeSchedule?) -> ChargeSchedule? {
             guard let a else { return b }
             guard let b else { return a }
+            let aLeft = leftOut(a), bLeft = leftOut(b)
+            if aLeft.atThePlansPrice != bLeft.atThePlansPrice { return aLeft.atThePlansPrice < bLeft.atThePlansPrice ? a : b }
+            let aLoose = a.missed + aLeft.others, bLoose = b.missed + bLeft.others
+            if aLoose != bLoose { return aLoose < bLoose ? a : b }
             if a.charges.count != b.charges.count { return a.charges.count > b.charges.count ? a : b }
             if abs(a.regularity - b.regularity) > 0.001 { return a.regularity > b.regularity ? a : b }
             // Equal on both: the period the receipts themselves state, then the one that reaches further forward.
@@ -114,6 +137,7 @@ struct ChargeSchedule {
         var length = [Int](repeating: 1, count: count)
         var weight = [Double](repeating: 0, count: count)
         var previous = [Int?](repeating: nil, count: count)
+        var missed = [Int](repeating: 0, count: count)
         for i in 1..<count {
             for j in 0..<i {
                 let interval = sorted[i].date.timeIntervalSince(sorted[j].date) / 86_400
@@ -133,6 +157,7 @@ struct ChargeSchedule {
                     length[i] = candidateLength
                     weight[i] = candidateWeight
                     previous[i] = j
+                    missed[i] = missed[j] + Int(periods) - 1
                 }
             }
         }
@@ -144,7 +169,8 @@ struct ChargeSchedule {
             while let index = cursor { indexes.append(index); cursor = previous[index] }
             let regularity = weight[end] / Double(length[end] - 1)
             guard regularity >= 0.7 else { return nil }
-            return ChargeSchedule(charges: indexes.reversed().map { sorted[$0] }, cadence: cadence, regularity: regularity)
+            return ChargeSchedule(charges: indexes.reversed().map { sorted[$0] }, cadence: cadence, regularity: regularity,
+                                  missed: missed[end])
         }
 
         var best: Int?

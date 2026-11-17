@@ -61,6 +61,22 @@ final class SubscriptionIntelligenceEngineTests: XCTestCase {
         XCTAssertFalse(sub?.reasons.isEmpty ?? true)
     }
 
+    /// Four monthly receipts and one other charge from the same sender in the middle of a month (a
+    /// gift card, an add-on). It used to be read as a fortnightly plan with two receipts missing,
+    /// which made a year of it $415.74 instead of $191.88.
+    func testAMonthlyPlanWithOneOtherChargeMidMonth_isStillMonthly() throws {
+        var signals = monthly("netflix.com", name: "Netflix", amount: 15.99, months: [(6, 5), (7, 5), (8, 5), (9, 5)])
+        signals.append(signal("netflix.com", name: "Netflix", on: date(2026, 7, 20), amount: 24))
+
+        let sub = try XCTUnwrap(analyze(signals).subscriptions.first { $0.name == "Netflix" })
+
+        XCTAssertEqual(sub.frequency, .monthly)
+        XCTAssertEqual(sub.amount, Decimal(string: "15.99"))
+        XCTAssertEqual(sub.annualCost, Decimal(string: "191.88"))
+        XCTAssertEqual(sub.evidence.count, 4, "the other charge is not one of the plan's")
+        XCTAssertEqual(sub.tier, .confirmed)
+    }
+
     func testUnknownMerchantWithThreeSteadyCharges_isDetected() {
         let report = analyze(monthly("brightgym.ca", name: "Bright Gym", amount: 29.99, months: [(7, 3), (8, 3), (9, 3)]))
         let sub = report.subscriptions.first { $0.name == "Bright Gym" }
