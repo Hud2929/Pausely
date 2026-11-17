@@ -181,7 +181,7 @@ function against stand-ins. All need Docker (Colima works). A new migration goes
 ## App Store
 
 Listing text in `metadata/` (push with `asc metadata push`), screenshots in
-`AppStoreScreenshots/iphone-6.9` and `AppStoreScreenshots/ipad-13` (captured in the `en_CA` locale), products and review notes in `appstore_products.json`,
+`AppStoreScreenshots/iphone-6.9` and `AppStoreScreenshots/ipad-13` (taken by `ScreenTourTests/testStoreScreenshots` on the 6.9-inch iPhone and the 13-inch iPad simulators, in the `en_CA` locale, with `PAUSELY_TOUR_DIR` set; the clock is set with `xcrun simctl status_bar <device> override --time 9:41`), products and review notes in `appstore_products.json`,
 `scripts/asc_apply.sh` for pricing and subscription text. Never submit for review without the
 owner's explicit go-ahead.
 

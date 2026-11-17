@@ -173,4 +173,34 @@ final class StoreListingTests: XCTestCase {
             }
         }
     }
+
+    /// The eight pictures on the listing are captures of a debug build, which has what the
+    /// release build has not: finding subscriptions in email. A capture run (`--screenshots`)
+    /// switches that off, so no picture shows a way in that a customer will not find; the tour's
+    /// capture test takes every picture in such a run, of one list. (The pictures in the
+    /// repository until 2026-11-17 were of the design before this one.)
+    func testAPictureForTheStoreShowsOnlyWhatTheReleaseBuildShows() throws {
+        // Unit tests are not a capture run: in a debug build the features are there to be tested.
+        #if DEBUG
+        XCTAssertFalse(LaunchFlag.screenshots.isSet)
+        XCTAssertTrue(FeatureFlags.inboxImportEnabled)
+        #endif
+        let flags = try String(contentsOf: root.appendingPathComponent("Pausely/Core/FeatureFlags.swift"), encoding: .utf8)
+        XCTAssertTrue(flags.contains("#if DEBUG\n        return !LaunchFlag.screenshots.isSet\n        #else\n        return false\n        #endif"))
+        for flag in ["gmailImportEnabled", "microsoftImportEnabled", "imapImportEnabled"] {
+            XCTAssertTrue(flags.contains("static let \(flag) = onInDebugBuilds"), flag)
+        }
+        let tour = try String(contentsOf: root.appendingPathComponent("PauselyUITests/ScreenTourTests.swift"), encoding: .utf8)
+        let capture = try XCTUnwrap(tour.range(of: "func testStoreScreenshots() throws {"))
+        let body = String(tour[capture.upperBound...].prefix(1400))
+        XCTAssertTrue(body.contains("[\"--uitesting\", \"--demo-mode\", \"--screenshots\", \"--varied-demo-data\"] + screen.flags"))
+        // And the pictures are the eight the listing has places for, on both devices.
+        let names = ["01_verdict", "02_dashboard", "03_receipt", "04_pauseplan", "05_subscription", "06_analysis", "07_catalog", "08_wrapped"]
+        for name in names { XCTAssertTrue(body.contains("\"\(name)\""), name) }
+        for device in ["iphone-6.9", "ipad-13"] {
+            let folder = root.appendingPathComponent("AppStoreScreenshots/\(device)")
+            let files = try FileManager.default.contentsOfDirectory(atPath: folder.path).filter { $0.hasSuffix(".png") }.sorted()
+            XCTAssertEqual(files, names.map { $0 + ".png" }, device)
+        }
+    }
 }

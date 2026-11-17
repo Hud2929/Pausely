@@ -212,6 +212,35 @@ final class ScreenTourTests: XCTestCase {
     /// "Keep my list" is the end of the page at the largest text size.
     private static let followedToTheEnd: Set<String> = ["inbox-results", "reveal-good"]
 
+    /// The eight App Store captures, as files named the way `AppStoreScreenshots/` holds them.
+    /// Run on the 6.9-inch iPhone and the 13-inch iPad with `PAUSELY_TOUR_DIR` set, then copy the
+    /// eight files over. Every screen is of one list (the varied one), so the figures on one
+    /// capture are the figures on the next, and each is launched with `--screenshots`: no
+    /// one-time permission card, and no feature the release build does not have. The formats are
+    /// Canada's, as the listing's first captures were; the clock is set from outside
+    /// (`xcrun simctl status_bar <device> override --time 9:41 …`) once the simulator is up.
+    func testStoreScreenshots() throws {
+        let screens: [(flags: [String], file: String)] = [
+            (["--demo-verdict=Netflix"], "01_verdict"),
+            (["--demo-tab=0"], "02_dashboard"),
+            (["--demo-receipt=plain"], "03_receipt"),
+            (["--demo-pause-plan"], "04_pauseplan"),
+            (["--demo-subscription=Netflix"], "05_subscription"),
+            (["--demo-tab=2"], "06_analysis"),
+            (["--demo-browser"], "07_catalog"),
+            (["--demo-wrapped=list"], "08_wrapped"),
+        ]
+        for screen in screens where wanted(screen.file) {
+            let app = XCUIApplication()
+            app.launchArguments = ["--uitesting", "--demo-mode", "--screenshots", "--varied-demo-data"] + screen.flags
+                + ["-AppleLanguages", "(en)", "-AppleLocale", "en_CA"]
+            app.launch()
+            sleep(4)
+            let png = XCUIScreen.main.screenshot().pngRepresentation
+            try png.write(to: outputDir.appendingPathComponent(screen.file + ".png"))
+        }
+    }
+
     /// States no launch argument opens by itself: rows that depend on what is in the list, dialogs, a
     /// search with no match, the sheets behind a row. Each is opened here and captured like a screen.
     /// Nothing here reaches the network: sign-in, codes and purchases are left to their own tests.
