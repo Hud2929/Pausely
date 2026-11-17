@@ -1223,10 +1223,17 @@ Updated at every commit, so the work can be picked up from this file alone.
   closed in 6.6: no Swift file is over 700 lines, counted the way the standard first said.
   Next, in order: the rest of the "Tests" line (three mail tests not run: what each needs,
   and whether any can run from here); section 7 again.
-- **11-17, a plan's period misread (this commit).** Row Eng-1 opened and closed in 6.3. Found
+- **11-17, a plan's period misread (`33d556c`).** Row Eng-1 opened and closed in 6.3. Found
   because the schedule finder, once it stood on its own, could be given cases directly: the
   first two written for it failed.
   Next, in order: the rest of the "Tests" line; section 7 again.
+- **11-17, the mail rig is a step of the proof (`188f6a1`, and this commit for its entries).**
+  Bullet opened and closed in 6.6; the three tests that stay skipped are an item in 6.7. The
+  script and `CLAUDE.md` went in as `188f6a1` without these entries: the edit that writes them
+  stopped on an anchor that occurs twice in this file, and the commit ran on. They are here,
+  one commit later, rather than folded back in.
+  Next: section 7 again, the lines that moved (Size and simplicity, Tests, Correctness's
+  evidence), from a whole proof on the final code.
 
 **Phase 0. Scan (read-only).** Four independent audits (dead code, truth, design rules on every
 view, engineering) plus mechanical scans. Output: the ledger.
@@ -1655,6 +1662,15 @@ Stage G, as it closes (each line: what, and the evidence):
   three entry points and two shared helpers in the engine's parts, the reveal step and the back
   button of the first run, and the two new mailbox views. No private helper was un-hidden to
   make a split possible.
+- Tests skipped on every run, 11-17. The standard for tests says "nothing skipped on every run",
+  and seven were, in a plain run: four for want of a mail server, three for want of real providers
+  or real inboxes. The four were run by hand when the mail rig was (twice in this run) and by
+  nothing else. Now `scripts/proof.sh` has a `mail` step, in the plain run: it writes the synthetic
+  mailbox, serves it on this Mac, runs the scan scored against the mailbox's truth, the app's IMAP
+  stack end to end, the app's own scan, the folder of messages, and the walk through the mailbox
+  screens, and stops the server. Run: found 22 of 22, wrong details 0, false positives 0; 5 tests
+  passed. The three that are left are in 6.7 with what each would send and to whom; none can be
+  run from here.
 - A tap that brings nothing, 11-17. The scorecard said "a UI test can lose its first tap right
   after a build (seen twice), so a red UI step is run again alone before it is believed". Seen a
   third and fourth time while proving the split above, and this time looked at instead of run
@@ -1716,6 +1732,17 @@ Stage G, as it closes (each line: what, and the evidence):
   since October told you to declare a name and usage data from Screen Time; if those were
   entered, remove them: neither leaves the iPhone. Five types remain, all for App Functionality.
   The API key cannot read that section, so it was not looked at from here.
+- Three mail tests that have never been run in this run, and what each needs. (1) and (2) reach
+  other companies' servers, which this run was not given leave to do; (3) needs your own inboxes.
+  (1) `testRealProviderServers`: opens one connection to each provider's IMAP server (iCloud,
+  Yahoo, AOL, Gmail, GMX, WEB.DE, Zoho, Fastmail, Xfinity), reads what it offers, and tries one
+  sign-in that cannot succeed (`pausely-connectivity-check@example.invalid`, a name in a domain
+  reserved for never existing). (2) `testRealCloudAPIsRejectBadTokensCleanly`: one request each
+  to Microsoft Graph and Gmail with a made-up token, to see "reconnect this inbox" and not a
+  loop. Both with: `TEST_RUNNER_PAUSELY_LIVE_SERVERS=1 xcodebuild test -scheme Pausely
+  -destination "id=<simulator id>" -only-testing:PauselyTests/LiveMailboxTests`. Say so and they
+  are run. (3) `testRealConnectedInboxes`: scans the inboxes connected in the app on that
+  simulator, so it needs you to connect one first (`TEST_RUNNER_PAUSELY_REAL_ACCOUNTS=1`).
 - One native reader for each of Arabic, German, Spanish, French and Japanese (15 minutes each, the
   app in that language, eight screens). Every string has been read against its English and the
   terms made consistent (11-12), but whether a sentence sounds like a person wrote it is a native
