@@ -29,7 +29,19 @@ typealias Picture = (data: [UInt8], width: Int, height: Int)
 
 func load(_ path: String) -> Picture? {
     guard let source = CGImageSourceCreateWithURL(URL(fileURLWithPath: path) as CFURL, nil),
-          let image = CGImageSourceCreateImageAtIndex(source, 0, nil) else { return nil }
+          let saved = CGImageSourceCreateImageAtIndex(source, 0, nil) else { return nil }
+    // A capture taken with the device on its side is saved the way the screen is built, with a
+    // note of how it was turned. Read without the note, every text of an iPad on its side was
+    // looked for across the screen's other edge (2026-11-17: 3,345 of its texts "not drawn").
+    var image = saved
+    let properties = CGImageSourceCopyPropertiesAtIndex(source, 0, nil) as? [CFString: Any]
+    if let turned = properties?[kCGImagePropertyOrientation] as? Int, turned != 1 {
+        let options: [CFString: Any] = [kCGImageSourceCreateThumbnailFromImageAlways: true,
+                                        kCGImageSourceCreateThumbnailWithTransform: true,
+                                        kCGImageSourceThumbnailMaxPixelSize: max(saved.width, saved.height)]
+        guard let upright = CGImageSourceCreateThumbnailAtIndex(source, 0, options as CFDictionary) else { return nil }
+        image = upright
+    }
     let width = image.width, height = image.height
     var data = [UInt8](repeating: 0, count: width * height * 4)
     guard let space = CGColorSpace(name: CGColorSpace.sRGB),
