@@ -120,15 +120,34 @@ final class GmailMailboxProvider: MailboxProvider {
         return formatter.string(from: date)
     }
 
+    /// How many header requests are in flight at once. Gmail allows about 250 quota units a second per
+    /// person and a header read costs 5; twenty at a time had two thirds of a real inbox turned away.
+    static let parallelReads = 5
+
     func summaries(_ refs: [MessageRef]) async throws -> [MessageSummary] {
         var results: [MessageSummary] = []
-        for batch in InboxSearchPlan.batches(refs, size: 20) {
+        var missed: [MessageRef] = []
+        for batch in InboxSearchPlan.batches(refs, size: Self.parallelReads) {
             try Task.checkCancellation()
-            await withTaskGroup(of: MessageSummary?.self) { group in
+            await withTaskGroup(of: (MessageRef, MessageSummary?).self) { group in
                 for ref in batch {
-                    group.addTask { try? await self.metadata(ref) }
+                    group.addTask { (ref, try? await self.metadata(ref)) }
                 }
-                for await summary in group { if let summary { results.append(summary) } }
+                for await (ref, summary) in group {
+                    if let summary { results.append(summary) } else { missed.append(ref) }
+                }
+            }
+        }
+        // What Gmail turned away while busy is asked for again, one at a time, instead of being dropped
+        // unsaid. Access that really was withdrawn now says so rather than ending as "nothing found".
+        for ref in missed {
+            try Task.checkCancellation()
+            do {
+                results.append(try await metadata(ref))
+            } catch MailboxError.authExpired {
+                throw MailboxError.authExpired
+            } catch {
+                continue
             }
         }
         return results
