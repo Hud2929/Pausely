@@ -463,6 +463,32 @@ final class ScreenRulesTests: XCTestCase {
         XCTAssertFalse(kindRow.contains(".frame(width: 36, height: 36)"))
     }
 
+    /// Home never says "nothing is due in the next month" about a month it can't see: with no
+    /// charge known and a subscription that has no renewal date, "Coming up" isn't shown at all.
+    func testHomeSaysNothingIsDueOnlyWhenItKnows() throws {
+        XCTAssertFalse(DashboardView.showsComingUp(hasCharges: false, hasUndated: true),
+                       "a monthly Netflix with no date was shown as £0.00, nothing due")
+        XCTAssertTrue(DashboardView.showsComingUp(hasCharges: false, hasUndated: false),
+                      "every date known and none in the month: nothing is due, and Home says so")
+        XCTAssertTrue(DashboardView.showsComingUp(hasCharges: true, hasUndated: true))
+        XCTAssertTrue(DashboardView.showsComingUp(hasCharges: true, hasUndated: false))
+
+        // The list from the screenshot: one monthly subscription, no renewal date.
+        var netflix = Subscription(name: "Netflix", price: 13.99, category: "Entertainment", billingFrequency: .monthly)
+        netflix.nextBillingDate = nil
+        let list = [netflix]
+        XCTAssertFalse(DashboardView.showsComingUp(hasCharges: !Horizon.charges(for: list, now: Date()).isEmpty,
+                                                   hasUndated: !Horizon.undated(list).isEmpty))
+
+        let url = root.appendingPathComponent("Pausely/Views/DashboardView.swift")
+        try XCTSkipUnless(FileManager.default.fileExists(atPath: url.path), "Sources aren't readable from this test run")
+        let source = try String(contentsOf: url, encoding: .utf8)
+        let gate = try XCTUnwrap(source.range(of: "if Self.showsComingUp(hasCharges: !charges.isEmpty,"))
+        XCTAssertTrue(source[gate.upperBound...].prefix(200).contains("HorizonSection("),
+                      "the coming month is drawn only behind the check")
+        XCTAssertEqual(source.components(separatedBy: "HorizonSection(charges:").count, 2, "drawn in one place")
+    }
+
     /// Home's total is never cut off. At the accessibility text sizes it has the whole width
     /// (it sat beside "+") and may take two lines, the currency above the figure: on one line
     /// beside "+", already at half its size, a total in the millions ended "IDR 9,573,4…".

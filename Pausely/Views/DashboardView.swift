@@ -45,10 +45,13 @@ struct DashboardView: View {
                     attention.padding(.top, 28)
                     // Proof of money kept comes before the list of what is about to leave.
                     if hasKept { keptSection.padding(.top, 24) }
-                    HorizonSection(charges: charges, currency: currencyManager.selectedCurrency,
-                                   rates: currencyManager.rates,
-                                   pendingIds: Set(VerdictCenter.shared.pendingDecisions(rotating: pausePlanStore.activePlan).map(\.subscriptionId)))
-                        .padding(.top, 32)
+                    if Self.showsComingUp(hasCharges: !charges.isEmpty,
+                                          hasUndated: !Horizon.undated(store.subscriptions).isEmpty) {
+                        HorizonSection(charges: charges, currency: currencyManager.selectedCurrency,
+                                       rates: currencyManager.rates,
+                                       pendingIds: Set(VerdictCenter.shared.pendingDecisions(rotating: pausePlanStore.activePlan).map(\.subscriptionId)))
+                            .padding(.top, 32)
+                    }
                     if !hasKept { keptSection.padding(.top, 28) }
                     quietRows.padding(.top, 20)
                 }
@@ -110,6 +113,13 @@ struct DashboardView: View {
     /// the accessibility text sizes, yes: beside "+" a total in the millions had four fifths of
     /// the width and was cut off ("IDR 9,573,4…").
     nonisolated static func totalHasTheWholeWidth(largeText: Bool) -> Bool { largeText }
+
+    /// Whether Home shows the coming month. Not when no charge is known and a subscription has no
+    /// renewal date: "£0.00, nothing is due in the next month" was said of a monthly Netflix with no
+    /// date, which charges within the month. The row asking for the date says what to do instead.
+    nonisolated static func showsComingUp(hasCharges: Bool, hasUndated: Bool) -> Bool {
+        hasCharges || !hasUndated
+    }
 
     private var periodToggle: some View {
         Button {
