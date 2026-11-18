@@ -1346,6 +1346,30 @@ Updated at every commit, so the work can be picked up from this file alone.
   awake), which cost the long test its last four states: `firstrun-tally-empty`,
   `firstrun-tally-end`, `reveal-price` and `inbox-why` have not been seen bold. The setting is
   off again.
+- **11-17, evening: paused at the owner's word (this commit).** The owner asked in another
+  window for all agents to pause, to save tokens; that session passed the words on. Nothing new
+  was started after it: no tour, no proof. The tree is clean and nothing is pushed. What is
+  not done, in the order it was to be done:
+  1. Home at the largest text size was taken once in `/tmp/pausely_list_big` (two swipes
+     straight after launch did not count), so `tour_page_ends.py` over the seven largest-size
+     folders lists 1 (`dashboard`) where 0 is wanted. Home is whole in `_final11_big` and
+     `_final15_big` (6 captures each). Take `testMainTabs` again with the `big` variant and
+     name its folder last.
+  2. The four states not seen with Bold Text (6.5).
+  3. Not seen at all: Increase Contrast (`xcrun simctl ui <device> increase_contrast enabled`;
+     the app reads no contrast setting, so only the system's parts would change), a width of
+     320 points, the alert of a deletion that fails.
+  4. The whole proof on this code (`scripts/proof.sh checks unit unit unit mail ui release`).
+     It was last run before the commits of 11-17; after each of those only the test classes
+     it touched were run (green), and `gold_check` last printed 0 after `d93923c`.
+  5. Section 7's fourth version. What stands below is the third, with a note at its head. Its
+     builder and inputs are kept in `private/section7/` (not in the history); it waits for the
+     proof's numbers. Contrast at the largest size, measured and waiting to go in: 3,123 texts
+     at 4.5 to 1 or more and 25 below over the seven folders (2,556 and 23; 362 and 0; 57 and
+     0; 148 and 2), none the app's. No score is expected to move: screens 9.3 (first run 9.2,
+     catalog 9.0), the walks 8.5 to 9.3, the codebase 9.2, each held by what only a device, a
+     person or the owner can do (7.5, 6.7).
+  The hourly reminder that restarted this run was removed with the pause.
 
 **Phase 0. Scan (read-only).** Four independent audits (dead code, truth, design rules on every
 view, engineering) plus mechanical scans. Output: the ledger.
@@ -1882,6 +1906,14 @@ Stage G, as it closes (each line: what, and the evidence):
   reader's call; until then translation is scored on what was checked, not on how it reads.
 
 ## 7. Scorecard
+
+> **Read this first (11-17, evening).** What follows is the third version, written on `21b8440`.
+> One sentence in it was wrong when written: that every state had been seen whole at the largest
+> text size (78 of the 160 states of the tour it cites ended before their page did). The rows
+> dated 11-17 in 6.5 have since made it true, and added what had not been looked at: iOS 18.0 on
+> the smallest iPhone, an iPad on its side, Bold Text. No score below has been changed, and none
+> is expected to change: each is held where it is by what only a device, a person or the owner
+> can do. The fourth version is not written; the last entry of 5.2 says what it waits for.
 
 Written 2026-11-17, at the end of the run, from what the run produced: captures that were opened,
 numbers a script printed, tests that ran. Nothing here is from memory. It is the third version
