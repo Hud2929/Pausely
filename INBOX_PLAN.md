@@ -90,6 +90,19 @@ has receipts in another inbox (iCloud, Outlook), column 3 runs there too.
 ### Slices, in order (one at a time; each ends with its tests and a commit)
 
 **A. Real subscriptions on the owner's Gmail** (needs only the owner's yes to reading their mail)
+
+Changed 2026-11-18, before it started: the app reads the mail, not Claude. The owner connects their
+real Gmail in the app on the test simulator (Google sign-in, columns 1 and 3 at once);
+`testRealConnectedInboxes` scans it and prints only what was found (name, amount, period, state,
+receipt count); the owner marks each line right or wrong and names what is missing; only the emails
+behind a miss are then fetched through the connector (steps 1–4 below, for those alone). The email
+never passes through a model, and the proof is the real path a customer takes.
+
+Outlook, 2026-11-18: column 1 passed on a personal account (hudwkim0909@gmail.com consented, token
+saved, address read, mailbox searched without error). That mailbox is empty (a Microsoft account named
+with a Gmail address receives no Outlook mail), so "Emails checked: 0" was true; columns 2–3 wait for
+an Outlook.com address.
+
 1. Fetch a fresh sample through the Gmail connector (read-only): every receipt, renewal, trial,
    price-change and cancellation mail from the owner's subscriptions over two years, plus look-alikes
    (orders, rides, refunds, promotions). Saved as .eml in the session scratchpad, never the repository.
