@@ -147,6 +147,27 @@ final class InboxPrivacyTests: XCTestCase {
         }
     }
 
+    /// Outlook is offered only when the build carries Microsoft's client ID (Entra app "Pausely",
+    /// registered 2026-11-18 for any Entra directory and personal Microsoft accounts). The sign-in
+    /// asks for reading mail and nothing more, and comes back to the address Entra gives an iOS app
+    /// with this bundle id.
+    func testOutlookSignInMatchesTheMicrosoftRegistration() throws {
+        let id = MicrosoftGraphProvider.clientID
+        XCTAssertNotNil(UUID(uuidString: id), "MS_CLIENT_ID in Configuration/Info.plist is a GUID, not \"\(id)\"")
+        XCTAssertTrue(MicrosoftGraphProvider.isConfigured, "Outlook is hidden from Find in Email without it")
+
+        let oauth = MicrosoftGraphProvider.oauth
+        XCTAssertEqual(oauth.clientID, id)
+        let bundleID = try XCTUnwrap(Bundle.main.bundleIdentifier)
+        XCTAssertEqual(bundleID, "com.pausely.app.Pausely")
+        XCTAssertEqual(oauth.redirectURI, "msauth.\(bundleID)://auth", "the redirect registered in Entra")
+        XCTAssertEqual(oauth.callbackScheme, "msauth.\(bundleID)")
+        XCTAssertEqual(Set(oauth.scopes), ["offline_access", "User.Read", "Mail.Read"],
+                       "read-only: never Mail.ReadWrite, Mail.Send or a shared mailbox")
+        XCTAssertEqual(oauth.authorizeURL.host, "login.microsoftonline.com")
+        XCTAssertTrue(oauth.authorizeURL.path.hasPrefix("/common/"), "work, school and personal accounts")
+    }
+
     // MARK: Disconnecting
 
     func testDisconnectingForgetsTheInbox() {

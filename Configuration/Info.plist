@@ -42,7 +42,7 @@
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
 	<key>MS_CLIENT_ID</key>
-	<string></string>
+	<string>856a7218-9a16-4f20-91d9-2529e3b6f9d2</string>
 	<key>NSAppTransportSecurity</key>
 	<dict>
 		<key>NSExceptionDomains</key>

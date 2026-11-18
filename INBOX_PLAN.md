@@ -111,6 +111,18 @@ has receipts in another inbox (iCloud, Outlook), column 3 runs there too.
 3. A runbook in `scripts/mailtest/README` (or this file): seed, connect on the simulator, run, read the score.
 
 **C. Outlook** (the owner's part is step 1; the rest is mine)
+
+Status 2026-11-18: **C1 and C3 done.** Entra app "Pausely", client ID
+`856a7218-9a16-4f20-91d9-2529e3b6f9d2`, registered in the Default Directory of the owner's personal
+Microsoft account (hudwkim0909@gmail.com; never the school account), for any Entra directory and
+personal accounts; redirect `msauth.com.pausely.app.Pausely://auth` (public client); delegated
+`User.Read`, `Mail.Read`, `offline_access`, none needing admin consent. Public client flows stay off
+until the seeding tool needs them. The ID is in `MS_CLIENT_ID`; `InboxPrivacyTests` holds it to the
+registration. Outlook now shows in Find in Email (debug builds) and Microsoft's sign-in page opens for
+it. Entra notes that people can't consent to a new multitenant app from an unverified publisher: that
+binds work and school directories (C5), not personal accounts. The account that owns the
+registration has no Outlook mailbox, so C2 and C4 need an Outlook.com address.
+
 1. Owner, about 15 minutes, with Claude driving Chrome if wanted: create an Entra tenant if there
    is none (Azure portal → Microsoft Entra ID → Manage tenants → Create; a free Azure account works),
    then App registrations → New registration: name "Pausely"; accounts "any Entra directory and personal
