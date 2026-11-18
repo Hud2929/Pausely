@@ -485,6 +485,7 @@ struct StoreKitUpgradeView: View {
     @ViewBuilder private func footerLinks(alignment: Alignment) -> some View {
         Group {
             Button("Restore purchases") { Task { await restorePurchases() } }
+                .disabled(storeManager.isLoading)
             Button("Terms of Service") { open(AppConfig.termsOfServiceURL) }
             Button("Privacy Policy") { open(AppConfig.privacyPolicyURL) }
         }

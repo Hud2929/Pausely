@@ -14,7 +14,7 @@ final class AgeConsentManager: ObservableObject {
     /// Minimum age to use Pausely. Change here (and in the policies) if the requirement changes.
     nonisolated static let minimumAge = 16
     /// Bump when the age/consent wording in the Terms or Privacy Policy changes materially.
-    nonisolated static let policyVersion = "2026-10-05"
+    nonisolated static let policyVersion = "2026-11-17"
     /// How long an under-age attempt locks the age gate on this device.
     nonisolated static let lockoutDuration: TimeInterval = 24 * 60 * 60
 

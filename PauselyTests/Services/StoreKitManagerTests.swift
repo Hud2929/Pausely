@@ -158,6 +158,54 @@ final class ProTierTests: XCTestCase {
         XCTAssertEqual(AppSettings.shared.currentTier, .free, "and the saved tier follows, so the next launch starts free too")
     }
 
+    /// After a refund, Pausely's own line used to stay in the list as charging: it took one of the
+    /// free plan's places and waited for a charge that would never come.
+    func testPauselysOwnLineStopsChargingWhenProEnds() async {
+        let sandbox = StoreSandbox()
+        defer { UserDefaults.standard.removeObject(forKey: "pausely_pro_line_ended") }
+        let cancelledBefore = LifecycleEventLog.shared.events.filter { $0.kind == .cancelled }.count
+        let monthly = StoreKitManager.ProductID.monthly.rawValue
+        let own = StoreKitManager.OwnSubscription(tier: .pro, price: 4.99, currency: "USD",
+                                                  renews: Date().addingTimeInterval(6 * 86_400), isTrial: true)
+        SubscriptionStore.shared.subscriptions = [PaymentManager.pauselyLine(own)]
+        await appStoreSays([.init(productID: monthly)])
+        XCTAssertEqual(FreeTier.used(by: SubscriptionStore.shared.subscriptions), 1)
+
+        await appStoreSays([.init(productID: monthly, isRevoked: true)])
+
+        let line = SubscriptionStore.shared.subscriptions.first(where: \.isPausely)
+        XCTAssertEqual(line?.status, .cancelled, "refunded: no charge is coming")
+        XCTAssertEqual(FreeTier.used(by: SubscriptionStore.shared.subscriptions), 0, "and it takes no free place")
+        XCTAssertEqual(LifecycleEventLog.shared.events.filter { $0.kind == .cancelled }.count, cancelledBefore,
+                       "not recorded as the person's own decision")
+        XCTAssertEqual(UserDefaults.standard.string(forKey: "pausely_pro_line_ended"), line?.id.uuidString,
+                       "and remembered as ended by the app, so it can start again")
+        await sandbox.restore()
+    }
+
+    func testOnlyALineTheAppEndedStartsAgainWhenProIsBack() {
+        let renews = Date().addingTimeInterval(30 * 86_400)
+        let yearly = StoreKitManager.OwnSubscription(tier: .proAnnual, price: 29.99, currency: "USD", renews: renews, isTrial: false)
+        var line = PaymentManager.pauselyLine(yearly)
+        line.status = .cancelled
+
+        let now = Date()
+        let back = PaymentManager.restarted(line, to: yearly, endedByTheApp: true, now: now)
+        XCTAssertEqual(back?.status, .active)
+        XCTAssertEqual(back?.nextBillingDate, renews, "on the App Store's day")
+        XCTAssertNil(back?.trialEndsAt)
+
+        let trial = StoreKitManager.OwnSubscription(tier: .pro, price: 4.99, currency: "USD", renews: renews, isTrial: true)
+        XCTAssertEqual(PaymentManager.restarted(line, to: trial, endedByTheApp: true, now: now)?.trialEndsAt, renews)
+        XCTAssertNil(PaymentManager.restarted(line, to: yearly, endedByTheApp: false, now: now),
+                     "a line the person marked cancelled stays as they left it")
+        let over = StoreKitManager.OwnSubscription(tier: .pro, price: 4.99, currency: "USD",
+                                                   renews: now.addingTimeInterval(-86_400), isTrial: false)
+        XCTAssertNil(PaymentManager.restarted(line, to: over, endedByTheApp: true, now: now),
+                     "a purchase whose period is over charges nothing")
+        XCTAssertNil(PaymentManager.ended(line), "already not charging")
+    }
+
     func testAGrantOnTheAccountKeepsProWhenThereIsNoPurchase() async {
         await appStoreSays([])
         await payments.setProGrant(true)

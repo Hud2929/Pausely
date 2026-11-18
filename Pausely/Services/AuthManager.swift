@@ -414,6 +414,9 @@ class AuthManager: ObservableObject {
         AccountMemory.forgetSession()
         UserDefaults.standard.removeObject(forKey: "last_auth_email")
         LocalUserData.hideWhileSignedOut()
+        // Pro given on the account follows the account; a purchase follows the Apple Account and stays.
+        // Not waited for: the tier is read from StoreKit, and signing out must not wait on the App Store.
+        Task { await PaymentManager.shared.setProGrant(false) }
         do {
             try await client.auth.signOut()
         } catch {

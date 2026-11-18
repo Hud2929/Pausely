@@ -180,7 +180,9 @@ enum ShortcutProblem: Error, Equatable, CustomLocalizedStringResourceConvertible
         }
     }
 
-    @MainActor static var isSignedIn: () -> Bool = { AuthManager.shared.isAuthenticated }
+    /// A launch before the phone's first unlock can read nothing it saved, and must save nothing over
+    /// it (`SavedData`): a Shortcut run then is told to sign in, and touches no list.
+    @MainActor static var isSignedIn: () -> Bool = { !LockedLaunchDelegate.isActive && AuthManager.shared.isAuthenticated }
 
     @MainActor
     static func requireSignedIn() throws {

@@ -32,7 +32,8 @@ enum LocalUserData {
     static let personalKeys = [
         ownerKey, "last_auth_email", "lifecycle_last_run",
         SubscriptionStore.syncedUserKey, "cached_subscriptions", "subscriptions_cache_date", "sync_queue_operations",
-        "pausely_user_corrections_v1", "pausely_pro_auto_added", "pausely_pro_grant", "first_run_tally_waiting",
+        "pausely_user_corrections_v1", "pausely_pro_auto_added", "pausely_pro_grant", "pausely_pro_line_ended",
+        "first_run_tally_waiting",
         "gmail_connected_email", "gmail_last_history_id", "mailbox_accounts_v1",
         "auth_reset_requested_at", "auth_link_requested_email", "auth_link_requested_at",
         "subscription_price_history",
@@ -61,6 +62,8 @@ enum LocalUserData {
         await InboxScanner.shared.disconnectAll()
         await PaymentManager.shared.setProGrant(false)
         VerdictCenter.shared.forget()
+        // "Keep it" presses made before a first unlock and not yet recorded.
+        _ = LockedKeeps.take()
         LogoStore.removeSavedLogos()
         removeSavedValues()
         UsageLog.shared.objectWillChange.send()

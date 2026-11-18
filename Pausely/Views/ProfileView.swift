@@ -203,9 +203,10 @@ struct ProfileView: View {
                 .accessibilityIdentifier("planBillingProblem")
                 Hairline()
             }
+            // A free trial has been charged nothing, so there is nothing to refund: Manage ends it.
             row("creditcard", L10n.string("Manage subscription"), value: plan.statusLine(), id: "managePlanButton",
-                last: plan.transactionId == nil) { managingPlan = true }
-            if plan.transactionId != nil {
+                last: plan.transactionId == nil || plan.isTrial) { managingPlan = true }
+            if plan.transactionId != nil, !plan.isTrial {
                 row("arrow.uturn.backward", L10n.string("Request a refund"), id: "refundPlanButton", last: true) { requestingRefund = true }
             }
         }

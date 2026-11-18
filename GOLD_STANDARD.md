@@ -1370,6 +1370,30 @@ Updated at every commit, so the work can be picked up from this file alone.
      catalog 9.0), the walks 8.5 to 9.3, the codebase 9.2, each held by what only a device, a
      person or the owner can do (7.5, 6.7).
   The hourly reminder that restarted this run was removed with the pause.
+- **11-17, night: the owner's five release tests, read against the code (this commit).** The
+  owner set what "done" means: a stranger installs, gets their code and reaches Home in about two
+  minutes; a purchase and a refund work on a real phone; a reminder arrives on a locked phone and
+  "Keep it" works from the Lock Screen; the policy online matches the app; someone other than the
+  builder checks it all and finds nothing. Three read-only audits, one per test, by agents that had
+  not built the code, then one review of the fixes by another; every finding they reported was
+  looked up in the code before it was acted on.
+  - Live project, read only: 5 accounts, 1 profile row, no subscription rows, 23 waitlist
+    entries. The app uses `subscriptions`, `profiles` (`is_pro` read, the age record written) and
+    `delete_my_account`; every other table is closed to the app since 11-11, and the 1.0.1 app
+    on the store may still use the referral tables and `user_settings`. Sign-in settings all
+    "ok": 6-digit codes, mail through Resend's SMTP at 100 an hour, Sign in with Apple on; the
+    domain's DKIM, SPF and DMARC are in place, and it has no MX (6.7). Only `waitlist-signup` is
+    deployed. The database rig: 619 checks, none failed.
+  - Getting in: nothing found in the code; the proof owed is still a stranger's sign-up (6.1a G1).
+  - Locked phone: S20 (high) and S21, closed. Purchase: B17 and B18 closed; Request a refund is
+    no longer offered during a free trial, and Restore can't be pressed twice while it runs.
+  - Policy: the local copy (and the `gh-pages` and `site-next` branches) now says what goes to the
+    account with each subscription (the reminder lead time, status and trial end), the age record,
+    the waitlist and that it outlives account deletion, Proton, GitHub, the CloudFront address of
+    one logo and the Google search behind cancel help; it no longer offers an unsubscribe link no
+    email has. `WebsiteTruthTests` hold it to the code. The live site still has the October text.
+  - Proof on this code: checks 0; 854 unit tests, none failed (7 skipped, as always); Release
+    builds. The independent review's eleven points were each fixed or are named above as left.
 
 **Phase 0. Scan (read-only).** Four independent audits (dead code, truth, design rules on every
 view, engineering) plus mechanical scans. Output: the ledger.
@@ -1536,6 +1560,8 @@ matters to a stranger: the customer round below scores "getting in" at 1.
 | B10 | Fields are dropped the moment an add reaches the server; an edit made meanwhile is overwritten | closed 11-11: the server's answer is no longer written over the phone's copy (`testAnAddThatReachesTheAccountKeepsWhatOnlyThisIPhoneKnows`); a list fetched while a change was being made treats that change as newer than itself |
 | B15 | Signing out offline leaves the cached session: the next launch shows the signed-out person's list | closed 11-11: the cache is cleared before the server is asked, whatever it answers. No test: it is the order of two calls that need the account service |
 | B16 | Name and email are left on the device after sign-out and account deletion | closed 11-11: the unused saved email is no longer written and is removed; the kept name is removed on account deletion and when another account takes over the phone (sign-out keeps it, because Apple gives a name only once); `InstallStateTests` |
+| B17 | After a refund, a revocation or the end of the plan, Pausely's own "Pausely Pro" line stayed in the list as charging: it took one of the five free places and waited for a charge that would not come (found 11-17 by a read-only audit of the purchase path) | closed 11-17: when the App Store stops reporting Pro the line stops charging, with no event logged as the person's decision and no rating asked for; it starts again, on the App Store's dates, only if the app ended it and a purchase is reported again with its period still running. `testPauselysOwnLineStopsChargingWhenProEnds`, `testOnlyALineTheAppEndedStartsAgainWhenProIsBack`. Not covered by a test: the wiring in `autoAddPauselyProIfNeeded` (it needs StoreKit's products). Left open: a refund while Pro is also given on the account keeps the line |
+| B18 | Signing out kept Pro given on the account (`profiles.is_pro`) on the device, although the code said it was cleared | closed 11-17: cleared on sign-out without waiting for the App Store; a purchase stays, because it follows the Apple Account |
 | T62 | Cancel help matches by "name contains": Loom shows Bloomberg's steps, link and phone number (34 wrong companies measured) | closed 11-11: `ServiceMatcher` matches a name only when it is that service (its name or another of its names, written any way, plus plan words). Measured over the 992 catalog names before and after: 39 names that got another company's help now get none of it (Allstate had Paramount+'s, a pet insurer AWS's, BarkBox and seven others Box's); 291 names find a service and every one was read and is the right company. `CancelHelpTests`, 12 tests. Apple One and Apple News+ had no steps at all and now have Apple's |
 
 ### 6.3 Open: wrong money, dates or claims
@@ -1624,6 +1650,8 @@ matters to a stranger: the customer round below scores "getting in" at 1.
 | S18 | low | A unit test sometimes failed because the test app's own return to the foreground started a real download of exchange rates under it | closed 11-12: the app's automatic refresh stands down under tests (`refreshRatesWhenDue`); the suite no longer touches the network for rates |
 | S17 | medium | Two subscriptions count as equal whenever their ids match, whatever else differs. Nothing in the app is wrong because of it today, but every test that compares lists of subscriptions checks ids only, so those tests cannot fail on a wrong price or date; and the Analysis tab reruns only when the count changes, not when a price does | closed 11-12: two subscriptions are equal when every field is. Run against the whole suite, every list comparison still held, so those tests were right and can now fail; the one test that pinned the old rule is replaced by its opposite |
 | S19 | medium | A cancelled subscription cannot be brought back: there is no "I'm paying for this again". The only ways are Pause Plan (Pro) or adding it a second time, which leaves two rows | closed 11-12: a cancelled subscription's page has "I'm paying for this again". It charges from today, on this day of the month, which closes its line on the Savings Receipt; on a full free plan the upgrade page opens and nothing changes. `StartAgainAndVerdictFactsTests` ×3 |
+| S20 | high | "Keep it" pressed before the phone's first unlock after a restart was lost: S1's guard ended the launch in `PauselyApp.init`, before the notification's delegate was set, so the button never reached the app. The charge was asked about again and its remaining reminders still went off (found 11-17 by a read-only audit of the reminder path) | closed 11-17 in code, not yet on a device: in that launch nothing of the app starts; `LockedLaunchDelegate` writes the press to a file of its own (`LockedKeeps`: only the subscription's id, the charge's day and the time; the one file in the app written without data protection, because no other kind can be written before the first unlock, and `PrivacyPageTests` holds it to those three fields), takes away that charge's other reminders by their names, and the launch ends; held awake by a background task so it cannot be suspended and come back blank. The next unlocked launch records each press as a Keep at the time it was pressed. `LockedKeepTests` ×9. Shortcuts count as signed out in that launch. The device check in 6.7 now includes "the charge is recorded as kept" |
+| S21 | low | A Keep that arrived while the reminders were being rescheduled returned at once, before the kept charge's reminders were removed, and iOS could suspend the app in between | closed 11-17: a caller waits for the pass that covers its change. No test |
 | S16 | low | Shortcuts, read line by line: results are English with hand-made plurals (T86), Delete asks for no confirmation, Add takes zero, negative and empty values (O31 confirmed) | closed 11-12 with O31 and O32: the Shortcuts are rewritten. Four remain (what renews next, what it all costs a month, one subscription's details, add one); counting and deleting by voice are gone, the first because it told nobody anything, the second because it has no undo. Every answer and every refusal is in the reader's language, days are worded by the system, and one answer no longer formats two amounts two ways. Adding takes what a form takes: a name, and a price above zero and under the ceiling. Two questions can be asked of Siri ("What renews next in Pausely", "What do my subscriptions cost in Pausely"), with their phrases in five languages built into the app. `PauselyAppIntentsTests` ×13. Not seen: the Shortcuts app and Siri themselves |
 
 Scan status (16 areas). Done before the run resumed: engineering 1, 5, 8, 9; overlooked 1 to 4. Done
@@ -1860,8 +1888,11 @@ Stage G, as it closes (each line: what, and the evidence):
   "charges tomorrow" gets through a Focus.
 - One check on a real iPhone for S1 (the simulator has no data protection): with a renewal reminder
   due, restart the phone and leave it locked; when the reminder arrives, press and hold it and tap
-  "Keep it"; then unlock and open Pausely. It must open signed in, with the list as it was.
-- One real purchase on a device with a sandbox Apple Account: start the free trial, see Pausely Pro
+  "Keep it"; then unlock and open Pausely. It must open signed in, with the list as it was, and that
+  charge must show as kept (no verdict waiting for it, and no "charges today" reminder for it
+  afterwards; S20).
+- One real purchase on a device with a sandbox Apple Account, from the TestFlight build (a build run
+  from Xcode uses the scheme's local StoreKit file, not the sandbox, and has the DEBUG Pro switches): start the free trial, see Pausely Pro
   join the list at the App Store's price, then refund it in the sandbox and see Pro go without a
   restart. The code paths are tested against stand-in answers; the App Store itself can't be reached
   from the simulator here (no Apple Account, and the local test store refuses purchases in tests).
@@ -1869,6 +1900,14 @@ Stage G, as it closes (each line: what, and the evidence):
   collects crash logs, and omits two companies it sends data to. Read `git diff origin/gh-pages
   gh-pages` (legal text: your call), then `git push origin gh-pages`. Until then the app links to
   a policy that is wrong in the ways the "Website" row lists.
+- Found 11-17, the owner's to decide: (1) pausely.pro has no MX record, so a reply to a sign-in
+  code (sent from hello@pausely.pro) bounces; email routing for the domain (for example to
+  pausely@proton.me) is a DNS change. (2) The project's function secrets include one named
+  "Pausely" that no function reads; its value was not looked at. Delete it if it is not needed.
+  (3) A waitlist entry outlives account deletion (they are kept apart, by email); the policy now
+  says so. Making `delete_my_account` remove it too is a change to the live database.
+  (4) Sign-up has no CAPTCHA: someone could spend the 100 account emails an hour and stop
+  strangers from getting their code for that hour.
 - Deploy the waitlist function so the welcome email stops promising early access and perks:
   `supabase functions deploy waitlist-signup --project-ref ddaotwyaowspwspyddzs` (the rig passes
   on the new text; no secret changes).

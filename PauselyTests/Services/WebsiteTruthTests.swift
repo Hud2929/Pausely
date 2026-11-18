@@ -68,9 +68,26 @@ final class WebsiteTruthTests: XCTestCase {
         let privacy = try text(of: "privacy.html")
         let rates = try XCTUnwrap(URL(string: AppConfig.exchangeRatesURL)?.host)
         XCTAssertEqual(rates, "api.exchangerate-api.com")
-        for processor in ["Supabase", "Apple", "Google", "ExchangeRate-API", "Resend", "Each service's own website"] {
+        for processor in ["Supabase", "Apple", "Google", "ExchangeRate-API", "Resend", "Each service's own website",
+                          // Found 11-17: the support mailbox, the website's host and the one logo served
+                          // from a content host were not named.
+                          "Proton AG", "GitHub", "Amazon CloudFront"] {
             XCTAssertTrue(privacy.contains(processor), "\(processor) is missing from the policy")
         }
+        XCTAssertTrue(AppConfig.supportEmail.hasSuffix("@proton.me"), "the mailbox the policy names Proton for")
+    }
+
+    /// Found 11-17: the policy said reminders were kept only on the device, while each subscription's
+    /// reminder lead time goes to the account with it; and it offered an unsubscribe link no email has.
+    func testThePolicySaysWhatGoesToTheAccountWithEachSubscription() throws {
+        let privacy = try text(of: "privacy.html")
+        let sent = Set(Mirror(reflecting: SubscriptionRecord(from: TestFactories.makeSubscription())).children.compactMap(\.label))
+        XCTAssertTrue(sent.contains("notify_before_days"))
+        XCTAssertTrue(privacy.contains("how many days ahead you want to be reminded about it"))
+        XCTAssertTrue(sent.contains("trial_ends_at") && sent.contains("status") && sent.contains("currency"))
+        XCTAssertTrue(privacy.contains("its status (for example active, in a free trial, or cancelled), when its free trial ends"))
+        XCTAssertFalse(privacy.contains("unsubscribe link"))
+        XCTAssertFalse(privacy.contains("your reminders are stored only on your device"))
     }
 
     /// What the policy says about the app's data is what the code does.

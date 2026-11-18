@@ -24,10 +24,12 @@ struct PauselyApp: App {
 
     init() {
         // Started in the background before the phone's first unlock, nothing saved can be read, and
-        // anything saved now could replace it (see `SavedData`). The launch ends here; a person can't
-        // be looking at the app, because opening it takes an unlocked phone.
+        // anything saved now could replace it (see `SavedData`). The app does not start: a person can't
+        // be looking at it, because opening it takes an unlocked phone. Only a "Keep it" press is
+        // written down, on its own, and the launch ends (`LockedLaunchDelegate`).
         if SavedData.lockedAtLaunch, UIApplication.shared.applicationState == .background {
-            exit(0)
+            LockedLaunchDelegate.isActive = true
+            return
         }
         // Has to be read before anything is saved in this launch (see `InstallState`).
         _ = InstallState.firstLaunch
@@ -53,10 +55,15 @@ struct PauselyApp: App {
 
     var body: some Scene {
         WindowGroup {
-            RootView()
-                .environment(\.locale, resolvedLocale)
-                .modifier(ChosenDirection(direction: chosenDirection))
-                .readableWidth()
+            if LockedLaunchDelegate.isActive {
+                // Never on screen: this launch ends while the phone is still locked.
+                Color.clear
+            } else {
+                RootView()
+                    .environment(\.locale, resolvedLocale)
+                    .modifier(ChosenDirection(direction: chosenDirection))
+                    .readableWidth()
+            }
         }
     }
 }
@@ -76,6 +83,11 @@ private struct ChosenDirection: ViewModifier {
 
 class AppDelegate: NSObject, UIApplicationDelegate {
     func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]? = nil) -> Bool {
+        // Before the phone's first unlock: nothing else is set up (see `PauselyApp.init`).
+        if LockedLaunchDelegate.isActive {
+            LockedLaunchDelegate.shared.start()
+            return true
+        }
         // Configure navigation bar appearance
         let appearance = UINavigationBarAppearance()
         appearance.configureWithTransparentBackground()
@@ -449,6 +461,8 @@ struct RootView: View {
                 // The phone is unlocked now: anything a locked-screen action couldn't read can be.
                 LifecycleEventLog.shared.loadIfNeeded()
                 PausePlanStore.shared.loadIfNeeded()
+                // "Keep it" pressed before the first unlock after a restart, written down then.
+                Task { await VerdictCenter.shared.keepPressedWhileLocked() }
                 // Landed somewhere else: every renewal is still on its day.
                 SubscriptionStore.shared.noticeTimeZone()
                 Task {

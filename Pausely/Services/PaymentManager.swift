@@ -137,7 +137,9 @@ final class PaymentManager: ObservableObject {
     /// bought, down when it ended, was refunded or was revoked. Runs at launch, after a purchase or
     /// restore, on every transaction update and whenever the app comes to the front.
     func updateCurrentEntitlements() async {
+        let before = currentTier
         currentTier = Self.resolveTier(storeKit: await StoreKitManager.shared.entitledTier(), hasGrant: hasProGrant)
+        if before > .free, currentTier == .free { await endPauselyLine() }
     }
 
     /// Pro comes from an active App Store subscription (a billing grace period counts: StoreKit keeps
@@ -211,7 +213,16 @@ final class PaymentManager: ObservableObject {
         guard let own = await StoreKitManager.shared.ownSubscription(for: currentTier) else { return }
 
         if let existing = store.subscriptions.first(where: \.isPausely) {
-            if let fixed = Self.corrected(existing, to: own) { await store.updateSubscription(fixed) }
+            var line = Self.corrected(existing, to: own) ?? existing
+            let endedHere = UserDefaults.standard.string(forKey: pauselyLineEndedKey) == existing.id.uuidString
+            // Started again only for a purchase the App Store reports now: Pro given on the account
+            // charges nothing, and the last purchase it remembers may be long over.
+            if endedHere, await StoreKitManager.shared.entitledTier() != nil,
+               let restarted = Self.restarted(line, to: own, endedByTheApp: true, now: Date()) {
+                line = restarted
+                UserDefaults.standard.removeObject(forKey: pauselyLineEndedKey)
+            }
+            if line != existing { await store.updateSubscription(line) }
             UserDefaults.standard.set(true, forKey: pauselyProAutoAddedKey)
             return
         }
@@ -226,5 +237,40 @@ final class PaymentManager: ObservableObject {
             // The free limit can't refuse it (Pro is unlimited); logged in case a new refusal appears.
             PauselyLogger.error("Could not add Pausely Pro to the list: \(error)", category: "Payment")
         }
+    }
+
+    /// The id of the Pausely line the app itself ended, so only that one is started again.
+    private let pauselyLineEndedKey = "pausely_pro_line_ended"
+
+    /// Pro ended (a refund, a revocation, or the plan ran out): Pausely's own line stops charging, so
+    /// it no longer takes a free place, counts in what the person pays or waits for a charge that will
+    /// not come. It is not logged as the person's decision and no rating is asked for. If Pro comes
+    /// back, `autoAddPauselyProIfNeeded` starts this line again.
+    func endPauselyLine() async {
+        let store = SubscriptionStore.shared
+        guard let line = store.subscriptions.first(where: \.isPausely), let ended = Self.ended(line) else { return }
+        UserDefaults.standard.set(line.id.uuidString, forKey: pauselyLineEndedKey)
+        await store.updateSubscription(ended)
+    }
+
+    /// The line once Pro has ended, or nil when it is not charging anyway.
+    static func ended(_ line: Subscription) -> Subscription? {
+        guard line.status == .active || line.status == .trial else { return nil }
+        var ended = line
+        ended.status = .cancelled
+        return ended
+    }
+
+    /// The line started again when Pro is back, with the App Store's dates. Only a line the app ended
+    /// itself, and only while the App Store's period runs: one the person marked cancelled stays as
+    /// they left it.
+    static func restarted(_ line: Subscription, to own: StoreKitManager.OwnSubscription,
+                          endedByTheApp: Bool, now: Date) -> Subscription? {
+        guard endedByTheApp, line.status == .cancelled, let renews = own.renews, renews > now else { return nil }
+        var restarted = line
+        restarted.status = own.isTrial ? .trial : .active
+        restarted.nextBillingDate = renews
+        restarted.trialEndsAt = own.isTrial ? renews : nil
+        return restarted
     }
 }

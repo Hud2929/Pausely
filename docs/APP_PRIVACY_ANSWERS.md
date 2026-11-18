@@ -38,14 +38,20 @@ confirmation is five fields on the `profiles` row (`AgeConsentManager`).
 - **Find in Email** (switched off in release builds): mail is read on the iPhone, and only the name,
   amount and date of each charge are kept, on the iPhone. Nothing from a mailbox reaches Pausely's
   servers. If that ever changes, these answers change first.
-- **Logos** are fetched from each service's own website, and **exchange rates** from a public rates
-  service. Neither request carries the account or the list.
+- **Logos** are fetched from each service's own website (Duolingo's from the Amazon CloudFront address
+  its site uses), and **exchange rates** from a public rates service. Neither request carries the
+  account or the list.
+- **Cancel help** for a service with no guide opens a Google search for its name, only when tapped.
 
 ## Other companies
 
-- Supabase: the database and sign-in (stores the data in the table above).
-- Resend: sends the sign-in and reset codes (receives the email address).
+- Supabase: the database and sign-in (stores the data in the table above, and the website's waitlist).
+- Resend: sends the sign-in and reset codes and the waitlist's welcome email (receives the email address).
 - Apple: payments and Sign in with Apple.
+- Proton: the support inbox, pausely@proton.me (receives what people write to it).
+- GitHub Pages: hosts pausely.pro (receives visitors' IP addresses).
+- ExchangeRate-API, each service's website and Google Search: contacted as above, sent nothing about
+  the person.
 
 ## Age rating
 

@@ -15,19 +15,30 @@ final class ReminderScheduler {
     private let center = UNUserNotificationCenter.current()
     private var isRunning = false
     private var needsAnotherPass = false
+    /// Callers that arrived during a pass. Each returns once a pass that started after it has finished,
+    /// so "Keep it" from a notification does not report done (and let iOS suspend the app) while the
+    /// kept charge's reminders are still waiting to go off.
+    private var waiting: [CheckedContinuation<Void, Never>] = []
 
     func reschedule(_ subscriptions: [Subscription], now: Date = Date()) async {
         // Coalesce overlapping calls: the last state always wins.
-        if isRunning { needsAnotherPass = true; return }
+        if isRunning {
+            needsAnotherPass = true
+            await withCheckedContinuation { waiting.append($0) }
+            return
+        }
         isRunning = true
-        defer { isRunning = false }
 
         var current = subscriptions
         repeat {
             needsAnotherPass = false
+            let covered = waiting
+            waiting = []
             await apply(current, now: now)
+            covered.forEach { $0.resume() }
             current = SubscriptionStore.shared.subscriptions
         } while needsAnotherPass
+        isRunning = false
     }
 
     private func apply(_ subscriptions: [Subscription], now: Date) async {

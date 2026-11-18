@@ -98,10 +98,15 @@ final class PrivacyPageTests: XCTestCase {
         XCTAssertFalse(receipt.contains("SupabaseManager"))
         let deviceFile = try XCTUnwrap(sources["Core/Utilities/DeviceFile.swift"])
         XCTAssertTrue(deviceFile.contains("options: [.atomic, .completeFileProtectionUntilFirstUserAuthentication]"))
-        // Nothing in the app lowers a file's protection to none.
-        for (file, source) in sources {
+        // Nothing in the app lowers a file's protection to none, but for one file: "Keep it" pressed
+        // before the phone's first unlock, when no other kind of file can be written. It may hold
+        // only which subscription, the charge's day and when the button was pressed: no name, no
+        // amount, nothing that says who the person is.
+        for (file, source) in sources where file != "Core/Utilities/LockedKeeps.swift" {
             XCTAssertFalse(source.contains("noFileProtection") || source.contains("FileProtectionType.none"), file)
         }
+        let press = LockedKeeps.Press(subscriptionId: UUID(), renewalDay: "2026-12-01", pressedAt: Date())
+        XCTAssertEqual(Mirror(reflecting: press).children.compactMap(\.label), ["subscriptionId", "renewalDay", "pressedAt"])
     }
 
     /// "Find in Email: Receipts are read on this iPhone. Only the name, amount and date of each
