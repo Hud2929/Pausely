@@ -4,9 +4,10 @@ Written 2026-10-27. This is signature feature #1 in `REVOLUTION_PLAN.md`, and th
 Pausely stand out: it finds every subscription you pay for from the receipts in your email, without
 a bank password, and nothing leaves your iPhone.
 
-**Where it stands:** a strong on-device engine reads Gmail, but only Gmail, and it's switched off in
-release builds while Google reviews the restricted `gmail.readonly` scope. Customers get nothing from
-it today.
+**Where it stands (2026-11-18):** one on-device engine reads Gmail, IMAP inboxes and (once Microsoft's
+client ID is set) Outlook. It is proven on made-up mail and on stand-ins for the providers, never on a
+real sign-in, and every provider is switched off in release builds. Customers get nothing from it
+today. The plan to change that is the next section.
 
 **The plan in one line:** turn the Gmail scanner into one engine with an adapter per provider, ship
 Outlook/Hotmail first (no Google dependency), then iCloud, Yahoo and AOL through secure IMAP, run a
@@ -15,6 +16,152 @@ strict multi-pass "find everything" protocol behind release gates, and keep watc
 **Score journey (out of 10, against the ideal):** today 6.0 on paper (0 for customers) → v1 6.5 →
 v2 7.2 → v3 8.2 → v4 8.8 → **v5 9.3**. About 12 weeks of work and under $1,000 a year in fees.
 **Verdict: worth it.** It's the highest-return item on the roadmap.
+
+## Real accounts, real subscriptions, and Outlook (plan of 2026-11-18)
+
+The owner asked: fix the import from email, make sure every way in works and pulls real
+subscriptions, and add Outlook. Everything below is measured or checked, not assumed; each line says
+which.
+
+### Where it stands, measured on 2026-11-18
+
+| What | Result | How it was measured |
+|---|---|---|
+| Engine on the synthetic mailbox (22 subscriptions, six languages, decoys) | 22 of 22 found, 0 wrong details, 0 false positives | `scripts/proof.sh mail` |
+| IMAP through the screens (connect, scan, import, relaunch, disconnect) | passes | `InboxWorkflowUITests`, local IMAP server |
+| The ten real IMAP servers (iCloud, Yahoo, AOL, Gmail, GMX ×2, WEB.DE, Zoho, Fastmail, Xfinity) | all reachable, TLS ok, a wrong password refused cleanly | `LiveMailboxTests.testRealProviderServers` (made-up login) |
+| Gmail and Microsoft Graph APIs | reject a bad token cleanly: one refresh, then "sign in again" | `testRealCloudAPIsRejectBadTokensCleanly` |
+| Google sign-in | the page loads for "Pausely" (no client error); cancelling returns quietly | on the simulator, stopped at the password |
+| Outlook | **not offered**: `InboxProviderList.swift:25` hides it because `MS_CLIENT_ID` in `Configuration/Info.plist` is empty | read |
+| Any provider scanned through a real sign-in | **never** | `testRealConnectedInboxes` has never run |
+| Real mail | last sample 2026-11-10 (81 messages); deleted since | memory, section above |
+| Release builds | every provider off (`FeatureFlags`) | read |
+
+So nothing is broken on the bench. What is missing is the real world: no real sign-in has
+ever been scanned, Outlook can't be chosen, and no customer can reach any of it.
+
+Facts that shape the plan (checked 2026-11-18):
+- Outlook.com no longer accepts app passwords over IMAP (basic authentication was switched off for
+  personal accounts in September 2024). Microsoft sign-in through Graph, which is built, is the only way.
+- Since June 2024 a new Microsoft app registration must live in an Entra directory (tenant). A personal
+  Microsoft account can create one; existing registrations are not affected.
+- Mail.Read is a permission a person can grant for their own personal account. Work and school
+  accounts may need their admin's consent, more so for an app whose publisher is not verified.
+- The sign-in already uses PKCE (`OAuthSession`), and its redirect `msauth.com.pausely.app.Pausely://auth`
+  is the one Entra generates for an iOS app with this bundle id.
+
+### What "works" means, for every way in
+
+A way in works only when all six hold on a real account:
+1. **Sign-in**: a real account connects through the app's own screens.
+2. **Transport**: a real inbox at that provider, seeded with the synthetic mailbox, scores what the
+   local rig scores: 22 of 22, 0 wrong, 0 false positives. This proves the provider's own search,
+   folders, paging and encodings, which no stand-in can.
+3. **Real subscriptions**: a real inbox with real receipts yields every live subscription with the
+   right name, amount, currency and period, and no false positive in Confirmed or Likely, scored against
+   a truth written by hand (kept out of the repository, deleted after).
+4. **Failures named on the real server**: wrong password, access revoked at the provider, expired
+   token, offline mid-scan, admin consent required (work accounts).
+5. **Repeat**: the second scan reads only new mail (IMAP cursor, Gmail history, Graph delta), and ten
+   runs in a row give the same result.
+6. **Forget**: disconnect leaves no token or password in the Keychain and no fact in the ledger, and
+   revokes at the provider where it can (Google).
+
+### The matrix
+
+| Way in | Account needed | 1 | 2 | 3 | 4–6 | Release switch |
+|---|---|---|---|---|---|---|
+| Gmail (Sign in with Google) | owner's Gmail (real receipts) + a test Gmail (seeded) | owner signs in | test Gmail | owner's Gmail | both | `gmailImportEnabled`, after Google's approval |
+| Outlook, Hotmail, Live (Graph) | Entra registration + an Outlook.com test account | after registration | test account | owner's, if any | test account | `microsoftImportEnabled`, after this column passes |
+| Microsoft 365 work/school | a tenant the owner controls (the Entra one) | after registration | optional | - | admin-consent message | same switch |
+| iCloud Mail | owner's Apple ID with iCloud Mail on, app-specific password | owner | owner's iCloud (seeded folder) | owner's, if it gets receipts | yes | `imapImportEnabled` |
+| Yahoo Mail | new Yahoo account + app password | owner | test account | - | yes | same |
+| AOL Mail | new AOL account + app password | owner | test account | - | yes | same |
+| Gmail (app password) | the test Gmail + 2-Step Verification + app password | owner | test Gmail | - | yes | same |
+| GMX, WEB.DE, Zoho | new free accounts (IMAP switched on in each one's settings) | owner | test accounts | - | yes | same |
+| Fastmail | 30-day trial | owner | trial | - | yes | same |
+| Xfinity | a Comcast customer's account | **nobody has one** | - | - | - | **remove the preset** unless someone can test it; "Other email" still reaches the server |
+
+"Real subscriptions" (column 3) is proven where real receipts live, which is the owner's Gmail. The
+engine after the raw message is the same for every provider (`MIMEParser` → extractor → ledger), so
+column 2 on each provider plus column 3 on one real inbox proves each way in end to end. If the owner
+has receipts in another inbox (iCloud, Outlook), column 3 runs there too.
+
+### Slices, in order (one at a time; each ends with its tests and a commit)
+
+**A. Real subscriptions on the owner's Gmail** (needs only the owner's yes to reading their mail)
+1. Fetch a fresh sample through the Gmail connector (read-only): every receipt, renewal, trial,
+   price-change and cancellation mail from the owner's subscriptions over two years, plus look-alikes
+   (orders, rides, refunds, promotions). Saved as .eml in the session scratchpad, never the repository.
+2. Write the truth by hand: each live subscription with amount, currency, period; each cancelled one;
+   each look-alike that must not appear.
+3. Run `LiveMailboxTests.testRealMailDirectory` and `ProviderWorkflowTests` with
+   `PAUSELY_REAL_MAIL_DIR` and `PAUSELY_REAL_MAIL_EXPECT/_REJECT`, score it.
+4. Fix each miss in the engine; pin each one in `RealWorldReceiptShapesTests` with made-up details.
+   Exit: at least 95% of live subscriptions found, none wrong, no false positive. Delete the sample.
+
+**B. Truth over the wire, a tool that needs no owner** (built before the accounts exist)
+1. `scripts/mailtest/seed_real_mailbox.py`: puts the synthetic mailbox (made-up details only) into a
+   real inbox with IMAP APPEND, each message with its own date, decoys into Junk and Trash, marked so a
+   second run replaces rather than duplicates. Signs in with an app password, or with an OAuth token
+   (XOAUTH2) for Outlook. Passwords are read from the macOS Keychain ("Pausely test mailbox <name>"),
+   never from a file or the command line.
+2. A truth check for a connected inbox: `testRealConnectedInboxes` scores what it found against
+   `truth.json` (the same scorer as `MailTruthTests`), so each provider is one command.
+3. A runbook in `scripts/mailtest/README` (or this file): seed, connect on the simulator, run, read the score.
+
+**C. Outlook** (the owner's part is step 1; the rest is mine)
+1. Owner, about 15 minutes, with Claude driving Chrome if wanted: create an Entra tenant if there
+   is none (Azure portal → Microsoft Entra ID → Manage tenants → Create; a free Azure account works),
+   then App registrations → New registration: name "Pausely"; accounts "any Entra directory and personal
+   Microsoft accounts"; platform iOS/macOS, bundle id `com.pausely.app.Pausely` (gives the redirect
+   above); Authentication → allow public client flows = Yes (for the seeding tool's device sign-in);
+   API permissions: Microsoft Graph, delegated, `offline_access`, `User.Read`, `Mail.Read`. Copy the
+   Application (client) ID. The ID is not a secret.
+2. Before relying on it, check the adapter's assumptions against the real Graph (Graph Explorer, or
+   the app once the ID is in): `$search` with `received>=` and `from:<domain>` on a personal mailbox;
+   `/me/mailFolders/inbox/messages/delta` with a `receivedDateTime ge` filter; `/$value` returning MIME;
+   the `junkemail` and `deleteditems` folders. Fix whatever differs; update the stand-in to match the
+   real answers so `ProviderWorkflowTests` keeps telling the truth.
+3. Put the ID in `MS_CLIENT_ID`; a test that it is a GUID and that the redirect matches the bundle id.
+   Outlook then appears in the list (debug builds).
+4. Columns 1, 2, 4–6 on an Outlook.com test account; a work account in the Entra tenant to see the
+   admin-consent path and give it its own message.
+5. Later, owner: publisher verification (Microsoft partner ID + the pausely.pro domain) so work
+   accounts are not blocked and the consent screen shows a verified publisher. Needs the business
+   details already on the compliance list. Personal accounts work without it.
+
+**D. Each IMAP provider, one slice each**: iCloud, Yahoo, AOL, Gmail app password, GMX, WEB.DE,
+Zoho, Fastmail. Owner: create the account and its app password, store it in the Keychain (one
+`security add-generic-password` line, given at the time). Me: seed (B), connect through the screens,
+score, the failure paths, ten runs. Xfinity: removed from the presets unless someone can test it.
+
+**E. Gmail through Google sign-in**: owner signs in once with their Gmail (column 3) and once with the
+test Gmail (column 2). Owner checks Google's verification status in the Cloud console; the consent page
+still shows the old purple "P" logo, which should match the app's icon before Google reviews it.
+
+**F. Release, provider by provider**: a switch is turned on in release only after its six columns
+pass, IMAP first (no outside approval), then Outlook for personal accounts, Gmail when Google approves.
+With each switch: the privacy explainer, `metadata/` and What's New mention only what is on; App Review
+notes get a demo inbox seeded by B (an Outlook.com one, as section 8 says); the privacy label stays
+"Data Not Collected" for email. Tour, proof and a device check on TestFlight (once Apple's agreement is
+signed) before the build goes up.
+
+### What only the owner can do (each handed over as one step when its slice comes)
+1. Say yes to slice A (reading their Gmail through the connector, read-only, deleted after).
+2. The Entra tenant and app registration (C1).
+3. The test accounts and app passwords (D), and turning on iCloud Mail on their Apple ID if it is off.
+4. Google: verification status and the consent-screen logo (E).
+5. Later: Microsoft publisher verification (C5).
+Cost: nothing, apart from a card that Azure's free account may ask for to verify identity (no charge)
+and Fastmail after its trial.
+
+### Risks
+- Work and school tenants can block an unverified app; personal accounts are the first target.
+- Providers change: Yahoo and AOL have limited app passwords before. The live server check runs in
+  each proof so a change shows up.
+- Real mail is private: it stays in the session scratchpad, only made-up shapes reach the repository,
+  and the sample is deleted when the slice ends.
 
 ## Build status (2026-11-10): measured against the standard below
 
