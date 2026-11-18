@@ -47,7 +47,8 @@ struct DashboardView: View {
                     if hasKept { keptSection.padding(.top, 24) }
                     if Self.showsComingUp(hasCharges: !charges.isEmpty,
                                           hasUndated: !Horizon.undated(store.subscriptions).isEmpty) {
-                        HorizonSection(charges: charges, currency: currencyManager.selectedCurrency,
+                        HorizonSection(charges: charges, notInTotal: Self.notInTotal(Horizon.undated(store.subscriptions)),
+                                       currency: currencyManager.selectedCurrency,
                                        rates: currencyManager.rates,
                                        pendingIds: Set(VerdictCenter.shared.pendingDecisions(rotating: pausePlanStore.activePlan).map(\.subscriptionId)))
                             .padding(.top, 32)
@@ -119,6 +120,17 @@ struct DashboardView: View {
     /// date, which charges within the month. The row asking for the date says what to do instead.
     nonisolated static func showsComingUp(hasCharges: Bool, hasUndated: Bool) -> Bool {
         hasCharges || !hasUndated
+    }
+
+    /// What the coming month's total leaves out, said under it: a subscription with no renewal date
+    /// has no charge on the line, and the total read as if it were all of the month. Nil when every
+    /// active subscription has a date.
+    nonisolated static func notInTotal(_ undated: [Subscription]) -> String? {
+        switch undated.count {
+        case 0: return nil
+        case 1: return L10n.string("\(undated[0].name) isn't in this total: it has no renewal date.")
+        default: return L10n.string("\(undated.count) subscriptions aren't in this total: they have no renewal date.")
+        }
     }
 
     private var periodToggle: some View {
@@ -425,6 +437,8 @@ private struct ReminderAskRow: View {
 /// it shows what leaves by that day. The rows below say the same thing in words.
 private struct HorizonSection: View {
     let charges: [Horizon.Charge]
+    /// What the total leaves out (subscriptions with no renewal date), or nil.
+    let notInTotal: String?
     let currency: String
     let rates: CurrencyRates
     let pendingIds: Set<UUID>
@@ -460,6 +474,15 @@ private struct HorizonSection: View {
             }
             .accessibilityElement(children: .combine)
             .accessibilityAddTraits(.isHeader)
+
+            if let notInTotal {
+                Text(verbatim: notInTotal)
+                    .font(.footnote)
+                    .foregroundStyle(Color.inkTextMuted)
+                    .fixedSize(horizontal: false, vertical: true)
+                    .padding(.top, 4)
+                    .accessibilityIdentifier("notInTotal")
+            }
 
             if charges.isEmpty {
                 Text("Nothing is due in the next month.")

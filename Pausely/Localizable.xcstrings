@@ -29304,6 +29304,170 @@
           }
         }
       }
+    },
+    "%@ isn't in this total: it has no renewal date.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "هذا المجموع لا يشمل %@ لأنه بلا تاريخ تجديد."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ ist nicht in dieser Summe: kein Verlängerungsdatum."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ no está en este total: no tiene fecha de renovación."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ n'est pas dans ce total : pas de date de renouvellement."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@は更新日がないため、この合計に含まれていません。"
+          }
+        }
+      }
+    },
+    "%lld subscriptions aren't in this total: they have no renewal date.": {
+      "localizations": {
+        "en": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld subscription isn't in this total: it has no renewal date."
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld subscriptions aren't in this total: they have no renewal date."
+                }
+              }
+            }
+          }
+        },
+        "ar": {
+          "variations": {
+            "plural": {
+              "zero": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "هذا المجموع لا يشمل أي اشتراك بلا تاريخ تجديد."
+                }
+              },
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "هذا المجموع لا يشمل اشتراكًا واحدًا بلا تاريخ تجديد."
+                }
+              },
+              "two": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "هذا المجموع لا يشمل اشتراكين بلا تاريخ تجديد."
+                }
+              },
+              "few": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "هذا المجموع لا يشمل %lld اشتراكات بلا تاريخ تجديد."
+                }
+              },
+              "many": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "هذا المجموع لا يشمل %lld اشتراكًا بلا تاريخ تجديد."
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "هذا المجموع لا يشمل %lld اشتراك بلا تاريخ تجديد."
+                }
+              }
+            }
+          }
+        },
+        "de": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld Abo ist nicht in dieser Summe: kein Verlängerungsdatum."
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld Abos sind nicht in dieser Summe: kein Verlängerungsdatum."
+                }
+              }
+            }
+          }
+        },
+        "es": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld suscripción no está en este total: no tiene fecha de renovación."
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld suscripciones no están en este total: no tienen fecha de renovación."
+                }
+              }
+            }
+          }
+        },
+        "fr": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld abonnement n'est pas dans ce total : pas de date de renouvellement."
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld abonnements ne sont pas dans ce total : pas de date de renouvellement."
+                }
+              }
+            }
+          }
+        },
+        "ja": {
+          "variations": {
+            "plural": {
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "更新日のない%lld件のサブスクは、この合計に含まれていません。"
+                }
+              }
+            }
+          }
+        }
+      }
     }
   },
   "version": "1.1"

@@ -489,6 +489,40 @@ final class ScreenRulesTests: XCTestCase {
         XCTAssertEqual(source.components(separatedBy: "HorizonSection(charges:").count, 2, "drawn in one place")
     }
 
+    /// The coming month's total says what it leaves out. Spotify dated and Netflix not: the total
+    /// was Spotify alone, and read as the whole month.
+    func testComingUpSaysWhatItsTotalLeavesOut() throws {
+        func undated(_ name: String) -> Subscription {
+            var sub = Subscription(name: name, price: 9.99, category: "Entertainment", billingFrequency: .monthly)
+            sub.nextBillingDate = nil
+            return sub
+        }
+        var spotify = Subscription(name: "Spotify", price: 11.99, category: "Music", billingFrequency: .monthly)
+        spotify.nextBillingDate = Calendar.billing.date(byAdding: .day, value: 5, to: Date())
+        let netflix = undated("Netflix")
+
+        let list = [spotify, netflix]
+        XCTAssertEqual(Horizon.charges(for: list, now: Date()).map(\.name), ["Spotify"], "only Spotify is on the line")
+        XCTAssertTrue(DashboardView.showsComingUp(hasCharges: true, hasUndated: true))
+
+        XCTAssertNil(DashboardView.notInTotal(Horizon.undated([spotify])), "every date known: nothing to say")
+        XCTAssertEqual(DashboardView.notInTotal(Horizon.undated(list)),
+                       "Netflix isn't in this total: it has no renewal date.")
+        XCTAssertEqual(DashboardView.notInTotal([netflix, undated("Hulu")]),
+                       "2 subscriptions aren't in this total: they have no renewal date.")
+
+        let url = root.appendingPathComponent("Pausely/Views/DashboardView.swift")
+        try XCTSkipUnless(FileManager.default.fileExists(atPath: url.path), "Sources aren't readable from this test run")
+        let source = try String(contentsOf: url, encoding: .utf8)
+        XCTAssertTrue(source.contains("notInTotal: Self.notInTotal(Horizon.undated(store.subscriptions))"))
+        // Said right under the total it qualifies, before the line and the rows.
+        let header = try XCTUnwrap(source.range(of: ".accessibilityAddTraits(.isHeader)"))
+        let after = source[header.upperBound...]
+        let said = try XCTUnwrap(after.range(of: "if let notInTotal {"))
+        let line = try XCTUnwrap(after.range(of: "line.padding(.top, 10)"))
+        XCTAssertTrue(said.lowerBound < line.lowerBound)
+    }
+
     /// Home's total is never cut off. At the accessibility text sizes it has the whole width
     /// (it sat beside "+") and may take two lines, the currency above the figure: on one line
     /// beside "+", already at half its size, a total in the millions ended "IDR 9,573,4…".
