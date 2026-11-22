@@ -97,7 +97,9 @@ struct InboxSearchPlan {
     /// Receipt, renewal, trial, price-change, cancellation and failed-payment wording (pass 5).
     var subjectTerms: [String]
     /// Upper bound on messages considered per inbox, newest first.
-    var maxCandidates = 1_500
+    var maxCandidates = InboxSearchPlan.standardLimit
+    /// How many possible receipts one search looks at in each inbox, newest first.
+    static let standardLimit = 1_500
 
     static let platforms = [
         "apple.com", "email.apple.com", "google.com", "googleplay.com", "paypal.com", "stripe.com", "paddle.com",

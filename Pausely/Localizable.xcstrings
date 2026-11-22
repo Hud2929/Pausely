@@ -5724,74 +5724,6 @@
         }
       }
     },
-    "Use your GMX password, or an app password if you use two-factor sign-in.": {
-      "localizations": {
-        "ar": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "استخدم كلمة مرور GMX، أو كلمة مرور للتطبيق إذا كنت تستخدم تسجيل الدخول بعاملين."
-          }
-        },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Verwenden Sie Ihr GMX-Passwort oder ein App-Passwort, wenn Sie die Zwei-Faktor-Anmeldung nutzen."
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Usa tu contraseña de GMX, o una contraseña de aplicación si usas el inicio de sesión en dos pasos."
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Utilisez votre mot de passe GMX, ou un mot de passe d'application si vous utilisez la connexion à deux facteurs."
-          }
-        },
-        "ja": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "GMXのパスワードを使用します。2要素認証を使っている場合はアプリパスワードを使います。"
-          }
-        }
-      }
-    },
-    "Use your WEB.DE password, or an app password if you use two-factor sign-in.": {
-      "localizations": {
-        "ar": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "استخدم كلمة مرور WEB.DE، أو كلمة مرور للتطبيق إذا كنت تستخدم تسجيل الدخول بعاملين."
-          }
-        },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Verwenden Sie Ihr WEB.DE-Passwort oder ein App-Passwort, wenn Sie die Zwei-Faktor-Anmeldung nutzen."
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Usa tu contraseña de WEB.DE, o una contraseña de aplicación si usas el inicio de sesión en dos pasos."
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Utilisez votre mot de passe WEB.DE, ou un mot de passe d'application si vous utilisez la connexion à deux facteurs."
-          }
-        },
-        "ja": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "WEB.DEのパスワードを使用します。2要素認証を使っている場合はアプリパスワードを使います。"
-          }
-        }
-      }
-    },
     "Use your Xfinity password.": {
       "localizations": {
         "ar": {
@@ -21441,40 +21373,6 @@
         }
       }
     },
-    "Emails checked: %lld. Receipts may go to another address: add that inbox too.": {
-      "localizations": {
-        "ar": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "الرسائل التي تم فحصها: %lld. قد تصل الإيصالات إلى عنوان آخر: أضف ذلك البريد أيضًا."
-          }
-        },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Geprüfte E-Mails: %lld. Belege gehen vielleicht an eine andere Adresse: Fügen Sie auch dieses Postfach hinzu."
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Correos revisados: %lld. Puede que los recibos lleguen a otra dirección: añade también ese buzón."
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "E-mails vérifiés : %lld. Les reçus arrivent peut-être à une autre adresse : ajoutez aussi cette boîte."
-          }
-        },
-        "ja": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "確認したメール: %lld件。領収書が別のアドレスに届いている可能性があります。そのメールボックスも追加してください。"
-          }
-        }
-      }
-    },
     "Search again": {
       "localizations": {
         "ar": {
@@ -29873,6 +29771,1102 @@
           "stringUnit": {
             "state": "translated",
             "value": "%@が見つかった理由を隠す"
+          }
+        }
+      }
+    },
+    "Sign in with your %@ password, or an app password if you use two-factor sign-in.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "سجّل الدخول بكلمة مرور %@، أو بكلمة مرور تطبيق إن كنت تستخدم التحقق بخطوتين."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Melden Sie sich mit Ihrem %@-Passwort an oder mit einem App-Passwort, wenn Sie die Zwei-Faktor-Anmeldung nutzen."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Inicia sesión con tu contraseña de %@, o con una contraseña de app si usas el inicio de sesión en dos pasos."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Connectez-vous avec votre mot de passe %@, ou avec un mot de passe d’app si vous utilisez la connexion en deux étapes."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@のパスワードでサインインしてください。2段階認証を使っている場合はアプリパスワードを使います。"
+          }
+        }
+      }
+    },
+    "Pausely only reads. It opens your mailbox read-only and never marks anything as read. The password stays in this iPhone's Keychain.": {
+      "localizations": {
+        "en": {
+          "variations": {
+            "device": {
+              "ipad": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Pausely only reads. It opens your mailbox read-only and never marks anything as read. The password stays in this iPad's Keychain."
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Pausely only reads. It opens your mailbox read-only and never marks anything as read. The password stays in this iPhone's Keychain."
+                }
+              }
+            }
+          }
+        },
+        "ar": {
+          "variations": {
+            "device": {
+              "ipad": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "يكتفي Pausely بالقراءة. يفتح بريدك للقراءة فقط ولا يضع علامة «مقروء» على أي رسالة. تبقى كلمة المرور في سلسلة مفاتيح هذا iPad."
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "يكتفي Pausely بالقراءة. يفتح بريدك للقراءة فقط ولا يضع علامة «مقروء» على أي رسالة. تبقى كلمة المرور في سلسلة مفاتيح هذا iPhone."
+                }
+              }
+            }
+          }
+        },
+        "de": {
+          "variations": {
+            "device": {
+              "ipad": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Pausely liest nur. Es öffnet Ihr Postfach schreibgeschützt und markiert nichts als gelesen. Das Passwort bleibt im Schlüsselbund dieses iPad."
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Pausely liest nur. Es öffnet Ihr Postfach schreibgeschützt und markiert nichts als gelesen. Das Passwort bleibt im Schlüsselbund dieses iPhone."
+                }
+              }
+            }
+          }
+        },
+        "es": {
+          "variations": {
+            "device": {
+              "ipad": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Pausely solo lee. Abre tu buzón en modo de solo lectura y nunca marca nada como leído. La contraseña se queda en el llavero de este iPad."
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Pausely solo lee. Abre tu buzón en modo de solo lectura y nunca marca nada como leído. La contraseña se queda en el llavero de este iPhone."
+                }
+              }
+            }
+          }
+        },
+        "fr": {
+          "variations": {
+            "device": {
+              "ipad": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Pausely se contente de lire. Il ouvre votre boîte en lecture seule et ne marque jamais rien comme lu. Le mot de passe reste dans le trousseau de cet iPad."
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Pausely se contente de lire. Il ouvre votre boîte en lecture seule et ne marque jamais rien comme lu. Le mot de passe reste dans le trousseau de cet iPhone."
+                }
+              }
+            }
+          }
+        },
+        "ja": {
+          "variations": {
+            "device": {
+              "ipad": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Pauselyは読むだけです。メールボックスを読み取り専用で開き、既読にすることもありません。パスワードはこのiPadのキーチェーンに保存されます。"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Pauselyは読むだけです。メールボックスを読み取り専用で開き、既読にすることもありません。パスワードはこのiPhoneのキーチェーンに保存されます。"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "Enter your email address to connect.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "أدخل عنوان بريدك الإلكتروني للاتصال."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Geben Sie Ihre E-Mail-Adresse ein, um zu verbinden."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Escribe tu dirección de correo para conectar."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Saisissez votre adresse e-mail pour vous connecter."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "接続するにはメールアドレスを入力してください。"
+          }
+        }
+      }
+    },
+    "Enter your password to connect.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "أدخل كلمة المرور للاتصال."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Geben Sie Ihr Passwort ein, um zu verbinden."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Escribe tu contraseña para conectar."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Saisissez votre mot de passe pour vous connecter."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "接続するにはパスワードを入力してください。"
+          }
+        }
+      }
+    },
+    "Paste the app password to connect.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "الصق كلمة مرور التطبيق للاتصال."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fügen Sie das App-Passwort ein, um zu verbinden."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pega la contraseña de app para conectar."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Collez le mot de passe d’app pour vous connecter."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "接続するにはアプリパスワードを貼り付けてください。"
+          }
+        }
+      }
+    },
+    "Enter your provider's IMAP server to connect.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "أدخل خادم IMAP لدى مزوّدك للاتصال."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Geben Sie den IMAP-Server Ihres Anbieters ein, um zu verbinden."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Escribe el servidor IMAP de tu proveedor para conectar."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Saisissez le serveur IMAP de votre fournisseur pour vous connecter."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "接続するにはプロバイダのIMAPサーバーを入力してください。"
+          }
+        }
+      }
+    },
+    "Pausely signs out of this inbox and forgets what it found there. Subscriptions you added stay on your list.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "يسجّل Pausely الخروج من هذا البريد وينسى ما وجده فيه. تبقى الاشتراكات التي أضفتها في قائمتك."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pausely meldet sich von diesem Postfach ab und vergisst, was es dort gefunden hat. Abos, die Sie hinzugefügt haben, bleiben in Ihrer Liste."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pausely cierra la sesión de este buzón y olvida lo que encontró en él. Las suscripciones que añadiste siguen en tu lista."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pausely se déconnecte de cette boîte et oublie ce qu’il y a trouvé. Les abonnements que vous avez ajoutés restent dans votre liste."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pauselyはこの受信箱からサインアウトし、そこで見つけた内容を消去します。追加したサブスクはリストに残ります。"
+          }
+        }
+      }
+    },
+    "The search was stopped before it found anything.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "أُوقف البحث قبل أن يجد شيئًا."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Die Suche wurde beendet, bevor sie etwas gefunden hat."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "La búsqueda se detuvo antes de encontrar nada."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "La recherche a été arrêtée avant de trouver quoi que ce soit."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "何も見つかる前に検索を止めました。"
+          }
+        }
+      }
+    },
+    "Emails checked before you stopped: %lld. Search again to read the rest.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "الرسائل التي فُحصت قبل الإيقاف: %lld. ابحث مجددًا لقراءة البقية."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Geprüfte E-Mails, bevor Sie beendet haben: %lld. Suchen Sie erneut, um den Rest zu lesen."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Correos revisados antes de detener: %lld. Busca de nuevo para leer el resto."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "E-mails vérifiés avant l’arrêt : %lld. Relancez la recherche pour lire le reste."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "止めるまでに確認したメール：%lld件。残りを読むにはもう一度検索してください。"
+          }
+        }
+      }
+    },
+    "New emails checked since the last search: %lld. Receipts may go to another address: add that inbox too, or add your subscriptions by hand.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "الرسائل الجديدة التي فُحصت منذ آخر بحث: %lld. قد تصل الإيصالات إلى عنوان آخر: أضف ذلك البريد أيضًا، أو أضف اشتراكاتك يدويًا."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Neue E-Mails seit der letzten Suche geprüft: %lld. Belege gehen vielleicht an eine andere Adresse: Fügen Sie auch dieses Postfach hinzu oder tragen Sie Ihre Abos selbst ein."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Correos nuevos revisados desde la última búsqueda: %lld. Puede que los recibos lleguen a otra dirección: añade también ese buzón, o añade tus suscripciones a mano."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nouveaux e-mails vérifiés depuis la dernière recherche : %lld. Les reçus arrivent peut-être à une autre adresse : ajoutez aussi cette boîte, ou ajoutez vos abonnements à la main."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "前回の検索以降に確認した新しいメール：%lld件。領収書が別のアドレスに届いているかもしれません。その受信箱も追加するか、サブスクを手動で追加してください。"
+          }
+        }
+      }
+    },
+    "Emails checked from the last two years: %lld. Receipts may go to another address: add that inbox too, or add your subscriptions by hand.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "الرسائل التي فُحصت من آخر سنتين: %lld. قد تصل الإيصالات إلى عنوان آخر: أضف ذلك البريد أيضًا، أو أضف اشتراكاتك يدويًا."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Geprüfte E-Mails der letzten zwei Jahre: %lld. Belege gehen vielleicht an eine andere Adresse: Fügen Sie auch dieses Postfach hinzu oder tragen Sie Ihre Abos selbst ein."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Correos revisados de los últimos dos años: %lld. Puede que los recibos lleguen a otra dirección: añade también ese buzón, o añade tus suscripciones a mano."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "E-mails vérifiés sur les deux dernières années : %lld. Les reçus arrivent peut-être à une autre adresse : ajoutez aussi cette boîte, ou ajoutez vos abonnements à la main."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "過去2年間で確認したメール：%lld件。領収書が別のアドレスに届いているかもしれません。その受信箱も追加するか、サブスクを手動で追加してください。"
+          }
+        }
+      }
+    },
+    "Stopped early, so some emails weren't read. Search again to read them all.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "أُوقف مبكرًا، فلم تُقرأ بعض الرسائل. ابحث مجددًا لقراءتها كلها."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Früh beendet, daher wurden einige E-Mails nicht gelesen. Suchen Sie erneut, um alle zu lesen."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Se detuvo antes de tiempo, así que algunos correos no se leyeron. Busca de nuevo para leerlos todos."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Arrêtée tôt : certains e-mails n’ont pas été lus. Relancez la recherche pour tout lire."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "途中で止めたため、読んでいないメールがあります。すべて読むにはもう一度検索してください。"
+          }
+        }
+      }
+    },
+    "One search reads at most %lld possible receipts, newest first; older ones weren't read.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "يقرأ البحث الواحد إيصالات محتملة حتى %lld، الأحدث أولًا؛ ولم تُقرأ الأقدم."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Eine Suche liest höchstens %lld mögliche Belege, die neuesten zuerst; ältere wurden nicht gelesen."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Una búsqueda lee como máximo %lld posibles recibos, los más recientes primero; los más antiguos no se leyeron."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Une recherche lit au plus %lld reçus possibles, les plus récents d’abord ; les plus anciens n’ont pas été lus."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "1回の検索で読むのは、新しい順に最大%lld件の領収書候補です。それより古いものは読んでいません。"
+          }
+        }
+      }
+    },
+    "%@ won't be shown again.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "لن يظهر %@ مجددًا."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ wird nicht mehr angezeigt."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ no se volverá a mostrar."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ ne sera plus affiché."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@は今後表示されません。"
+          }
+        }
+      }
+    },
+    "%@ hidden": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "أُخفي %@"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ ausgeblendet"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ oculto"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ masqué"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@を非表示にしました"
+          }
+        }
+      }
+    },
+    "Undo: show %@ again": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "تراجع: أظهر %@ مجددًا"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Rückgängig: %@ wieder anzeigen"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Deshacer: volver a mostrar %@"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Annuler : afficher à nouveau %@"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "取り消す：%@を再表示"
+          }
+        }
+      }
+    },
+    "Undo": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "تراجع"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Widerrufen"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Deshacer"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Annuler"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "取り消す"
+          }
+        }
+      }
+    },
+    "The charges aren't evenly spaced": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "الرسوم ليست على فترات منتظمة"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Die Abbuchungen kommen nicht in gleichen Abständen"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Los cargos no llegan a intervalos regulares"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Les prélèvements ne sont pas réguliers"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "請求の間隔が一定ではありません"
+          }
+        }
+      }
+    },
+    "Two charges so far; a third would confirm it": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "رسمان حتى الآن؛ رسم ثالث يؤكده"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bisher zwei Abbuchungen; eine dritte würde es bestätigen"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dos cargos hasta ahora; un tercero lo confirmaría"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Deux prélèvements pour l’instant ; un troisième le confirmerait"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "これまでの請求は2回。3回目があれば確定します"
+          }
+        }
+      }
+    },
+    "One charge so far; a second would confirm it": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "رسم واحد حتى الآن؛ رسم ثانٍ يؤكده"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bisher eine Abbuchung; eine zweite würde es bestätigen"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Un cargo hasta ahora; un segundo lo confirmaría"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Un prélèvement pour l’instant ; un deuxième le confirmerait"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "これまでの請求は1回。2回目があれば確定します"
+          }
+        }
+      }
+    },
+    "A sender Pausely doesn't know yet": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "مُرسِل لا يعرفه Pausely بعد"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ein Absender, den Pausely noch nicht kennt"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Un remitente que Pausely aún no conoce"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Un expéditeur que Pausely ne connaît pas encore"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pauselyがまだ知らない送信元です"
+          }
+        }
+      }
+    },
+    "%@ also sells one-off purchases": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "يبيع %@ مشتريات لمرة واحدة أيضًا"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ verkauft auch Einzelkäufe"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ también vende compras únicas"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ vend aussi des achats ponctuels"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@は単発の買い物も扱っています"
+          }
+        }
+      }
+    },
+    "This store doesn't email a receipt for each renewal": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "لا يرسل هذا المتجر إيصالًا لكل تجديد"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dieser Shop schickt nicht für jede Verlängerung einen Beleg"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Esta tienda no envía un recibo por cada renovación"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cette boutique n’envoie pas de reçu à chaque renouvellement"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "このストアは更新ごとに領収書を送りません"
+          }
+        }
+      }
+    },
+    "New emails since the last search: %lld · read in full: %lld · all on your phone": {
+      "localizations": {
+        "en": {
+          "variations": {
+            "device": {
+              "ipad": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "New emails since the last search: %1$lld · read in full: %2$lld · all on your iPad"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "New emails since the last search: %1$lld · read in full: %2$lld · all on your phone"
+                }
+              }
+            }
+          }
+        },
+        "ar": {
+          "variations": {
+            "device": {
+              "ipad": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "رسائل جديدة منذ آخر بحث: %1$lld · قُرئت كاملة: %2$lld · كل ذلك على الـ iPad"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "رسائل جديدة منذ آخر بحث: %1$lld · قُرئت كاملة: %2$lld · كل ذلك على هاتفك"
+                }
+              }
+            }
+          }
+        },
+        "de": {
+          "variations": {
+            "device": {
+              "ipad": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Neue E-Mails seit der letzten Suche: %1$lld · vollständig gelesen: %2$lld · alles auf Ihrem iPad"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Neue E-Mails seit der letzten Suche: %1$lld · vollständig gelesen: %2$lld · alles auf Ihrem iPhone"
+                }
+              }
+            }
+          }
+        },
+        "es": {
+          "variations": {
+            "device": {
+              "ipad": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Correos nuevos desde la última búsqueda: %1$lld · leídos completos: %2$lld · todo en tu iPad"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Correos nuevos desde la última búsqueda: %1$lld · leídos completos: %2$lld · todo en tu teléfono"
+                }
+              }
+            }
+          }
+        },
+        "fr": {
+          "variations": {
+            "device": {
+              "ipad": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Nouveaux e-mails depuis la dernière recherche : %1$lld · lus en entier : %2$lld · tout sur votre iPad"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Nouveaux e-mails depuis la dernière recherche : %1$lld · lus en entier : %2$lld · tout sur votre téléphone"
+                }
+              }
+            }
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "前回の検索以降の新しいメール：%1$lld件 · 全文を読んだメール：%2$lld件 · すべて端末内で処理"
+          }
+        }
+      }
+    },
+    "On your list at %@": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "في قائمتك بسعر %@"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "In Ihrer Liste mit %@"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "En tu lista a %@"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dans votre liste à %@"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "リストでは%@"
+          }
+        }
+      }
+    },
+    "Usually %@ after the trial": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "عادةً %@ بعد الفترة التجريبية"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Üblicherweise %@ nach der Testphase"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Normalmente %@ después de la prueba"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Habituellement %@ après l’essai"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "トライアル後は通常%@"
+          }
+        }
+      }
+    },
+    "The email doesn't say what it costs after the trial": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "لا يذكر البريد الإلكتروني السعر بعد الفترة التجريبية"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Die E-Mail nennt keinen Preis nach der Testphase"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "El correo no dice cuánto cuesta después de la prueba"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "L’e-mail n’indique pas le prix après l’essai"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "トライアル後の料金はメールに書かれていません"
+          }
+        }
+      }
+    },
+    "Disconnect %@?": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "هل تريد قطع الاتصال بـ %@؟"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ trennen?"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "¿Desconectar %@?"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Déconnecter %@ ?"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@の接続を解除しますか？"
           }
         }
       }

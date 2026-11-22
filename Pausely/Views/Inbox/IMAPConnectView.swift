@@ -43,7 +43,22 @@ struct IMAPConnectView: View {
     }
 
     private var canConnect: Bool {
-        address.contains("@") && !password.isEmpty && (!needsServer || !serverHost.isEmpty) && !connecting
+        missing == nil && !connecting
+    }
+
+    private var passwordLabel: LocalizedStringKey {
+        effectivePreset?.takesMainPassword == true ? "Password" : "App password"
+    }
+
+    /// The first thing the form still needs, said under the switched-off button.
+    private var missing: String? {
+        if !address.contains("@") { return L10n.string("Enter your email address to connect.") }
+        if password.isEmpty {
+            return effectivePreset?.takesMainPassword == true
+                ? L10n.string("Enter your password to connect.") : L10n.string("Paste the app password to connect.")
+        }
+        if needsServer && serverHost.isEmpty { return L10n.string("Enter your provider's IMAP server to connect.") }
+        return nil
     }
 
     var body: some View {
@@ -63,7 +78,22 @@ struct IMAPConnectView: View {
                         .buttonStyle(.ink)
                         .disabled(!canConnect)
                         .accessibilityIdentifier("imapConnect")
-                        Text("Pausely only reads. It opens your mailbox read-only and never marks anything as read. The app password stays in this iPhone's Keychain; you can remove it at your provider whenever you like.")
+                        .accessibilityHint(Text(verbatim: missing ?? ""))
+                        // A switched-off button says what it waits for (the rating of 2026-11-22).
+                        if let missing, !connecting {
+                            Text(verbatim: missing)
+                                .font(.footnote)
+                                .foregroundStyle(Color.inkTextMuted)
+                                .fixedSize(horizontal: false, vertical: true)
+                                .accessibilityHidden(true)
+                        }
+                        Group {
+                            if effectivePreset?.takesMainPassword == true {
+                                Text("Pausely only reads. It opens your mailbox read-only and never marks anything as read. The password stays in this iPhone's Keychain.")
+                            } else {
+                                Text("Pausely only reads. It opens your mailbox read-only and never marks anything as read. The app password stays in this iPhone's Keychain; you can remove it at your provider whenever you like.")
+                            }
+                        }
                             .font(.footnote)
                             .foregroundStyle(Color.inkTextFaint)
                             .fixedSize(horizontal: false, vertical: true)
@@ -95,9 +125,15 @@ struct IMAPConnectView: View {
                 .foregroundStyle(Color.inkText)
                 .fixedSize(horizontal: false, vertical: true)
                 .accessibilityAddTraits(.isHeader)
-            (effectivePreset == nil
-                 ? Text("Enter your email address, an app password and your provider's IMAP server.")
-                 : Text("You'll need an app password: a separate password just for Pausely, so your main password stays private."))
+            Group {
+                if let preset = effectivePreset, preset.takesMainPassword {
+                    Text("Sign in with your \(preset.name) password, or an app password if you use two-factor sign-in.")
+                } else if effectivePreset == nil {
+                    Text("Enter your email address, an app password and your provider's IMAP server.")
+                } else {
+                    Text("You'll need an app password: a separate password just for Pausely, so your main password stays private.")
+                }
+            }
                 .font(.body)
                 .foregroundStyle(Color.inkTextMuted)
                 .fixedSize(horizontal: false, vertical: true)
@@ -151,14 +187,14 @@ struct IMAPConnectView: View {
                     .accessibilityLabel(Text("Email address"))
                     .accessibilityIdentifier("imapAddress")
             }
-            LabelledField(label: "App password") {
+            LabelledField(label: passwordLabel) {
                 HStack(spacing: 10) {
                     InkTextField(placeholder: "", text: $password, isSecure: true, autocapitalization: .never)
                         .autocorrectionDisabled()
                         .focused($focused, equals: .password)
                         .submitLabel(.go)
                         .onSubmit { if canConnect { connect() } }
-                        .accessibilityLabel(Text("App password"))
+                        .accessibilityLabel(Text(passwordLabel))
                         .accessibilityIdentifier("imapPassword")
                     // The system's own paste control: one tap after copying the password, and no permission prompt.
                     PasteButton(payloadType: String.self) { strings in

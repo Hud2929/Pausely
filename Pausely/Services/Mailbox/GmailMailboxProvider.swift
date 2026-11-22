@@ -124,31 +124,29 @@ final class GmailMailboxProvider: MailboxProvider {
     /// person and a header read costs 5; twenty at a time had two thirds of a real inbox turned away.
     static let parallelHeaderReads = 10
 
-    /// Gmail allows each person about 250 quota units a second, and a header or message read costs 5.
-    /// Requests start at most 40 a second (25 ms apart), so the limit is never met: backing off it after
-    /// the fact took a real scan of 1,500 emails over eight minutes (2026-11-18).
-    static let minimumGap: TimeInterval = 0.025
+    /// Pausely's Gmail quota is 6,000 units a minute per person (Cloud console, 2026-11-22; it was 15,000)
+    /// and a header or message read costs 5: at most 20 reads a second. Requests start at most 18 a second
+    /// (55 ms apart), just inside it. At 40 a second a real scan met 937 refusals in 2,934 requests.
+    static let minimumGap: TimeInterval = 0.055
     private var nextStart = Date.distantPast
-    /// What Google allows one person varies, and the scan finds it: every refusal halves how many
-    /// requests are in flight and doubles the gap between them; twenty answers in a row win one back.
-    /// At a fixed 40 a second, ten at a time, a real inbox met 937 refusals in 2,934 requests and spent
-    /// seven and a half minutes (2026-11-22).
-    private var gap = GmailMailboxProvider.minimumGap
-    private var inFlightLimit = GmailMailboxProvider.parallelHeaderReads
+    /// What Google allows one person varies, and the scan finds it: each refusal halves the rate, and every
+    /// ten answers add one request a second back, up to the quota's pace. Ten stay in flight; the rate alone
+    /// sets the pace. Halving the reads in flight as well, and winning back a fifth of the gap per twenty
+    /// answers, left a real scan at one read every two seconds for minutes: 1,026 s for 61 refusals.
+    private var rate = 1 / GmailMailboxProvider.minimumGap
     private var answeredInARow = 0
+    private let inFlightLimit = GmailMailboxProvider.parallelHeaderReads
 
     private func slowDown() {
-        gap = min(gap * 2, 2)
-        inFlightLimit = max(1, inFlightLimit / 2)
+        rate = max(0.5, rate / 2)
         answeredInARow = 0
     }
 
     private func answered() {
         answeredInARow += 1
-        guard answeredInARow >= 20 else { return }
+        guard answeredInARow >= 10 else { return }
         answeredInARow = 0
-        gap = max(Self.minimumGap, gap * 0.8)
-        inFlightLimit = min(Self.parallelHeaderReads, inFlightLimit + 1)
+        rate = min(1 / Self.minimumGap, rate + 1)
     }
 
     /// Runs `work` for every ref with as many in flight as Google currently allows, a new one starting as
@@ -186,7 +184,7 @@ final class GmailMailboxProvider: MailboxProvider {
     private func pace() async throws {
         let now = Date()
         let start = max(now, nextStart)
-        nextStart = start.addingTimeInterval(gap)
+        nextStart = start.addingTimeInterval(1 / rate)
         let wait = start.timeIntervalSince(now)
         if wait > 0 { try await Task.sleep(nanoseconds: UInt64(wait * 1_000_000_000)) }
     }

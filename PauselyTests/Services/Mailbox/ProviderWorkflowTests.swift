@@ -492,7 +492,7 @@ final class ProviderWorkflowTests: XCTestCase {
         XCTAssertEqual(FakeMailAPI.with { $0.gmailRateLimitBurst }, 0, "the refusals were really met")
         assertFindsTheRightSubscriptions("Gmail through rate limits")
         XCTAssertEqual(GmailMailboxProvider.parallelHeaderReads, 10)
-        XCTAssertEqual(GmailMailboxProvider.minimumGap, 0.025, "40 requests a second at most")
+        XCTAssertEqual(GmailMailboxProvider.minimumGap, 0.055, "18 a second: inside 6,000 quota units a minute at 5 a read")
     }
 
     /// An inbox whose access ended is reconnected in its own place: the new sign-in's tokens go to the same

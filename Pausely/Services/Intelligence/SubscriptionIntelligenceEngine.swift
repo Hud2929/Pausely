@@ -59,6 +59,11 @@ struct SubscriptionIntelligenceEngine {
         let insights = SubscriptionInsights.all(for: detected, groups: groups, now: now, calendar: calendar)
             // Ties keep one order: equal amounts swapped places from one launch to the next.
             .sorted { ($0.annualImpact ?? 0, $1.id) > ($1.annualImpact ?? 0, $0.id) }
+        for insight in insights {
+            guard let coming = insight.newAmount, let id = insight.subscriptionId,
+                  let index = detected.firstIndex(where: { $0.id == id }) else { continue }
+            detected[index].comingAmount = coming
+        }
 
         detected = detected
             .filter { $0.tier >= .review }
@@ -306,13 +311,24 @@ struct SubscriptionIntelligenceEngine {
             return ChargeEvidence(id: signal.id, date: signal.date, amount: amount, currency: signal.currency ?? currency)
         }
 
+        // What keeps it from certain, most telling first.
+        let doubt: String? = {
+            if oneTimeShare > 0.5 { return L10n.string("Receipts look like one-time orders") }
+            if coefficient > 0.25 && !stepped { return L10n.string("Amount varies a lot, which looks more like orders than a plan") }
+            if sequence.regularity < 0.8 { return L10n.string("The charges aren't evenly spaced") }
+            if n == 2 { return L10n.string("Two charges so far; a third would confirm it") }
+            if !merchant.isKnown { return L10n.string("A sender Pausely doesn't know yet") }
+            if merchant.kind == .mixedCommerce { return L10n.string("\(merchant.displayName) also sells one-off purchases") }
+            return nil
+        }()
+
         return ProvenSubscription(
             id: "\(merchant.key)|\(frequency.rawValue)|\(currency)",
             name: merchant.displayName, merchantKey: merchant.key, category: merchant.category, cancelURL: merchant.cancelURL,
             amount: latestAmount, currency: latest.currency ?? currency, frequency: frequency,
             lastChargeDate: lastDate, nextBillingDate: nextBillingDate, status: status, score: score, tier: tier,
             evidence: evidence, reasons: reasons, previousAmount: previousAmount, trialEndsOn: nil,
-            chargedAfterCancel: chargedAfterCancel, unusualCharge: unusualCharge)
+            chargedAfterCancel: chargedAfterCancel, unusualCharge: unusualCharge, doubt: doubt)
     }
 
     /// One strong email can still prove a subscription when a known service says it renews.
@@ -377,7 +393,9 @@ struct SubscriptionIntelligenceEngine {
             lastChargeDate: lastCharge, nextBillingDate: nextDate, status: status, score: score,
             tier: tier(for: score, status: status),
             evidence: [ChargeEvidence(id: signal.id, date: signal.date, amount: amount, currency: signal.currency ?? currency)],
-            reasons: reasons, previousAmount: nil, trialEndsOn: nil, subscribedOn: startedOn)
+            reasons: reasons, previousAmount: nil, trialEndsOn: nil, subscribedOn: startedOn,
+            doubt: startedOn != nil ? L10n.string("This store doesn't email a receipt for each renewal")
+                                    : L10n.string("One charge so far; a second would confirm it"))
     }
 
     private func trialCandidate(trialSignals: [ReceiptSignal],

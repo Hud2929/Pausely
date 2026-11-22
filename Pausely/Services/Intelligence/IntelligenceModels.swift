@@ -86,6 +86,13 @@ struct ProvenSubscription: Identifiable, Equatable {
     var unusualCharge: ChargeEvidence? = nil
     /// `subscribedOn` was the day a free trial started (a trial that turned paid), said as such.
     var startedWithTrial: Bool = false
+    /// The main reason it isn't certain, said on a "Worth a look" row: the heading's "Check these before
+    /// adding them" didn't say what to check (the rating of 2026-11-22).
+    var doubt: String? = nil
+    /// What the next renewal charges when an email states it differs from the last charge (Google One's
+    /// introductory year ending). The line added to the list carries it, so the reminder before that renewal
+    /// says what will be charged; added at the old price, it said $134.99 before a $305 charge (T12).
+    var comingAmount: Decimal? = nil
 
     /// A rise this steep (more than half again) is a new plan or an unexpected charge, not a price rise:
     /// after twelve months at $31.64, a $148.41 charge is "now costs more", never "raised its price".
@@ -117,6 +124,8 @@ struct IntelligenceInsight: Identifiable, Equatable {
     var subscriptionId: String?
     /// Positive = money the user could lose (or save) per year.
     var annualImpact: Decimal?
+    /// The price the next renewal charges, when an email states it (an introductory price ending).
+    var newAmount: Decimal? = nil
 }
 
 struct IntelligenceReport: Equatable {

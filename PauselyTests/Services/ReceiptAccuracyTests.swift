@@ -157,6 +157,7 @@ final class ReceiptAccuracyTests: XCTestCase {
         XCTAssertEqual(channel?.amount, Decimal(string: "10.99"))
         XCTAssertEqual(channel?.status, .active, "the store sends no renewal receipts, so silence is not an ending")
         XCTAssertEqual(channel?.tier, .review, "one sign-up notice is worth a look, not a claim")
+        XCTAssertEqual(channel?.doubt, "This store doesn't email a receipt for each renewal", "the row says why it is only worth a look")
 
         // With the store's cancellation notice, it is not offered as running.
         let ended = email(day(2026, 6, 2), from: "Prime Video <no-reply@primevideo.com>", subject: "Your Crunchyroll Fan Subscription Has Ended",
@@ -428,6 +429,12 @@ final class ReceiptAccuracyTests: XCTestCase {
         XCTAssertEqual(about.first?.kind, .priceChangeNotice)
         XCTAssertTrue(about.first?.detail.contains("305.09") == true, about.first?.detail ?? "")
         XCTAssertTrue(about.first?.detail.contains("with tax") == true)
+
+        // Added to the list at what the next renewal charges, so its reminder is about that charge (T12).
+        let google = try? XCTUnwrap(report.subscriptions.first)
+        XCTAssertEqual(google?.amount, Decimal(string: "152.54"), "the row still shows what was charged")
+        XCTAssertEqual(google?.comingAmount, Decimal(string: "305.09"))
+        XCTAssertEqual(google.map { FoundSubscription(proven: $0).line.amount }, Decimal(string: "305.09"))
     }
 
     /// "Most likely renewed after the trial" is said only of a store that emails no receipt per renewal:
@@ -506,6 +513,15 @@ final class ReceiptAccuracyTests: XCTestCase {
         let crunchyroll = analyze(signals, now: day(2025, 12, 1)).first { $0.name == "Crunchyroll" }
         XCTAssertEqual(crunchyroll?.status, .active)
         XCTAssertNil(crunchyroll?.previousAmount)
+    }
+
+    /// A row under "Worth a look" says what keeps it from certain: the heading's "Check these before adding
+    /// them" didn't say what to check (the rating of 2026-11-22).
+    func testAWorthALookRowSaysWhatKeepsItFromCertain() {
+        let two = analyze([charge("fathomnotes.example", day(2026, 6, 15), "12.00"),
+                           charge("fathomnotes.example", day(2026, 7, 15), "12.00")], now: day(2026, 7, 20)).first
+        XCTAssertEqual(two?.tier, .review, "an unknown sender's two charges are worth a look")
+        XCTAssertEqual(two?.doubt, "Two charges so far; a third would confirm it")
     }
 
     func testAnUnknownMerchantWhosePriceSteppedOnceIsStillOnePlan() {

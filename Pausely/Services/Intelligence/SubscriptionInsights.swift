@@ -131,7 +131,7 @@ enum SubscriptionInsights {
                 title: title,
                 detail: withTax.map { L10n.string("You're on an introductory price of \(format(intro, sub.currency)). It renews at \(newPrice) (about \(format($0, sub.currency)) with tax) unless you cancel or switch plans first.") }
                     ?? L10n.string("You're on an introductory price of \(format(intro, sub.currency)). It renews at \(newPrice) unless you cancel or switch plans first."),
-                subscriptionId: sub.id, annualImpact: impact))
+                subscriptionId: sub.id, annualImpact: impact, newAmount: withTax ?? next))
         }
         return out
     }

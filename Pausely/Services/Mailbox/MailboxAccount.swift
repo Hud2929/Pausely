@@ -41,6 +41,10 @@ struct IMAPPreset: Identifiable, Hashable {
     /// Short, ordered steps shown while connecting.
     let steps: [String]
 
+    /// GMX and WEB.DE take the account's own password (an app password only with two-factor sign-in),
+    /// so the form must not tell their users they need an app password (the rating of 2026-11-22).
+    var takesMainPassword: Bool { ["gmx", "gmx-de", "webde"].contains(id) }
+
     /// Computed each time so the steps follow the app's language.
     static var all: [IMAPPreset] { [
         IMAPPreset(id: "icloud", name: "iCloud Mail", host: "imap.mail.me.com",
@@ -69,18 +73,15 @@ struct IMAPPreset: Identifiable, Hashable {
         IMAPPreset(id: "gmx", name: "GMX", host: "imap.gmx.com",
                    domains: ["gmx.com", "gmx.us", "gmx.co.uk"],
                    passwordPage: URL(string: "https://www.gmx.com"),
-                   steps: [L10n.string("In GMX settings, allow access through POP3 and IMAP."),
-                           L10n.string("Use your GMX password, or an app password if you use two-factor sign-in.")]),
+                   steps: [L10n.string("In GMX settings, allow access through POP3 and IMAP.")]),
         IMAPPreset(id: "gmx-de", name: "GMX (gmx.net)", host: "imap.gmx.net",
                    domains: ["gmx.net", "gmx.de", "gmx.at", "gmx.ch"],
                    passwordPage: URL(string: "https://www.gmx.net"),
-                   steps: [L10n.string("In GMX settings, allow access through POP3 and IMAP."),
-                           L10n.string("Use your GMX password, or an app password if you use two-factor sign-in.")]),
+                   steps: [L10n.string("In GMX settings, allow access through POP3 and IMAP.")]),
         IMAPPreset(id: "webde", name: "WEB.DE", host: "imap.web.de",
                    domains: ["web.de"],
                    passwordPage: URL(string: "https://web.de"),
-                   steps: [L10n.string("In WEB.DE settings, allow access through POP3 and IMAP."),
-                           L10n.string("Use your WEB.DE password, or an app password if you use two-factor sign-in.")]),
+                   steps: [L10n.string("In WEB.DE settings, allow access through POP3 and IMAP.")]),
         IMAPPreset(id: "zoho", name: "Zoho Mail", host: "imap.zoho.com",
                    domains: ["zoho.com", "zohomail.com"],
                    passwordPage: URL(string: "https://accounts.zoho.com/home#security/app_password"),

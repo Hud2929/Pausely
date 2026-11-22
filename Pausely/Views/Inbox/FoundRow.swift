@@ -13,6 +13,8 @@ struct FoundRow: View {
     /// offered again. A second search ticked them and counted them in "Add 3 to my list", and the
     /// import then quietly left them out.
     var isOnList: Bool = false
+    /// The price on the list, when it differs from the receipts'.
+    var listedPrice: String? = nil
     let isSelected: Bool
     let isExpanded: Bool
     let onToggle: () -> Void
@@ -27,7 +29,9 @@ struct FoundRow: View {
     private var proven: ProvenSubscription { found.proven }
 
     private var badge: (text: String, state: MoneyState?)? {
-        if isOnList, !found.isCancelled { return (L10n.string("On your list"), nil) }
+        if isOnList, !found.isCancelled {
+            return (listedPrice.map { L10n.string("On your list at \($0)") } ?? L10n.string("On your list"), nil)
+        }
         switch proven.status {
         case .priceIncreased: return (L10n.string("Price went up"), .decide)
         case .trial: return (L10n.string("Free trial"), .decide)
@@ -38,6 +42,33 @@ struct FoundRow: View {
     }
 
     private var evidenceLine: String { Self.evidence(for: proven) }
+
+    /// What a trial costs afterwards when its email didn't say: the usual price where the catalog has it in
+    /// the reader's currency, or that the email doesn't say. A trial row with no price at all left the person
+    /// to guess (A10, 2026-11-22).
+    static func afterTrial(for found: FoundSubscription, currency: String = CurrencyManager.shared.selectedCurrency) -> String? {
+        guard found.priceUnknown else { return nil }
+        if let usual = TallyCatalog.price(forServiceNamed: found.name, payingIn: currency) {
+            return L10n.string("Usually \(found.billingFrequency.priced(MoneyFormat.string(usual, currency))) after the trial")
+        }
+        return L10n.string("The email doesn't say what it costs after the trial")
+    }
+
+    /// The listed price, when it isn't what the receipts show: adding never changes what the person
+    /// entered, so the difference is said on the row (T9).
+    static func listedPrice(_ listed: Subscription?, for found: FoundSubscription) -> String? {
+        guard let listed else { return nil }
+        let same = MoneyFormat.normalizedCode(listed.currency) == MoneyFormat.normalizedCode(found.currency)
+            && listed.amount == (found.proven.comingAmount ?? found.amount)
+            && listed.billingFrequency == found.billingFrequency
+        return same ? nil : listed.billingFrequency.priced(listed.chargeText)
+    }
+
+    /// Why a row is only worth a look; nothing for a confirmed one, a trial, or one that ended.
+    static func doubt(for proven: ProvenSubscription) -> String? {
+        guard proven.tier < .confirmed, proven.status == .active || proven.status == .priceIncreased else { return nil }
+        return proven.doubt
+    }
 
     /// The line under a found subscription's name: when its trial ends, when it was last charged
     /// (with the year when that isn't this year), or when it started if it is known from a sign-up.
@@ -64,6 +95,8 @@ struct FoundRow: View {
         var parts = [found.name]
         if let priceText { parts.append(found.billingFrequency.priced(priceText)) }
         parts.append(evidenceLine)
+        if let doubt = Self.doubt(for: proven) { parts.append(doubt) }
+        if let afterTrial = Self.afterTrial(for: found) { parts.append(afterTrial) }
         if let badge { parts.append(badge.text) }
         // Chosen or not is the button's Selected trait, which VoiceOver says; the word said it twice.
         return parts.joined(separator: ", ")
@@ -193,6 +226,21 @@ struct FoundRow: View {
                 // It wraps: held to one line beside the price, "Last charged Nov 9" became
                 // "Last charge…" one text size up.
                 .fixedSize(horizontal: false, vertical: true)
+            if let doubt = Self.doubt(for: proven) {
+                Text(verbatim: doubt)
+                    .font(.footnote)
+                    .foregroundStyle(Color.inkTextMuted)
+                    .multilineTextAlignment(.leading)
+                    .fixedSize(horizontal: false, vertical: true)
+                    .accessibilityIdentifier("foundDoubt")
+            }
+            if let afterTrial = Self.afterTrial(for: found) {
+                Text(verbatim: afterTrial)
+                    .font(.footnote)
+                    .foregroundStyle(Color.inkTextMuted)
+                    .multilineTextAlignment(.leading)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
             if let badge {
                 HStack(spacing: 6) {
                     if let state = badge.state { StateMark(state: state) }

@@ -23,7 +23,8 @@ struct FoundSubscription: Identifiable, Equatable {
     /// show (a real date the renewal schedule rolls forward), never a date worked out from it.
     var line: TallyLine {
         TallyLine(name: name, category: SubscriptionCategory.matching(proven.category).displayName,
-                  amount: amount, currency: currency, isConfirmed: true, frequency: billingFrequency,
+                  // What the next renewal charges, when an email said so: the reminder is about that charge.
+                  amount: proven.comingAmount ?? amount, currency: currency, isConfirmed: true, frequency: billingFrequency,
                   // No date for one that may have ended: its old charge would make Home promise a next one.
                   anchor: proven.status == .trial || proven.status == .likelyEnded ? nil : (proven.lastChargeDate ?? proven.nextBillingDate),
                   trialEndsAt: proven.status == .trial ? proven.trialEndsOn : nil)
@@ -65,6 +66,8 @@ final class InboxScanner: ObservableObject {
         var read = 0
         var receipts = 0
         var incremental = false
+        /// The search found as many possible receipts as one search reads; older ones were left.
+        var capped = false
     }
 
     struct ScanStats: Equatable {
@@ -75,6 +78,11 @@ final class InboxScanner: ObservableObject {
         var purchasesIgnored = 0
         var confirmed = 0
         var perAccount: [String: AccountStats] = [:]
+        /// The person stopped the search: what is shown is from what was read before that.
+        var stopped = false
+        var capped: Bool { perAccount.values.contains(where: \.capped) }
+        /// Every inbox searched only mail newer than its last search.
+        var onlyNewMail: Bool { !perAccount.isEmpty && perAccount.values.allSatisfy(\.incremental) }
     }
 
     /// Full messages read per inbox per scan, the most likely receipts first.
@@ -284,8 +292,10 @@ final class InboxScanner: ObservableObject {
                 updated.lastScan = Date()
                 MailboxAccountStore.update(updated)
             } catch MailboxError.cancelled {
+                stats.stopped = true
                 break
             } catch is CancellationError {
+                stats.stopped = true
                 break
             } catch {
                 accountErrors[account.id] = error.localizedDescription
@@ -301,7 +311,10 @@ final class InboxScanner: ObservableObject {
         progress = 1
         analyze(ledger, catalog: catalog)
         stats.receipts = newSignals.count
-        if foundSubscriptions.isEmpty && accountErrors.count < accounts.count {
+        if Task.isCancelled { stats.stopped = true }
+        if foundSubscriptions.isEmpty && stats.stopped {
+            error = L10n.string("The search was stopped before it found anything.")
+        } else if foundSubscriptions.isEmpty && accountErrors.count < accounts.count {
             error = L10n.string("No subscriptions found")
         } else if foundSubscriptions.isEmpty, !accounts.isEmpty {
             error = L10n.string("The search couldn't be finished.")
@@ -321,6 +334,7 @@ final class InboxScanner: ObservableObject {
             accountStats.incremental = cursor != nil
             let (refs, nextCursor) = try await provider.candidates(plan: plan, cursor: cursor)
             accountStats.candidates = refs.count
+            accountStats.capped = refs.count >= plan.maxCandidates
             report(0.2, L10n.string("Checking \(L10n.string("\(refs.count) emails")) in \(account.providerName)…"))
 
             // Headers in steps of a hundred, so the page counts up instead of standing still: a real
@@ -369,6 +383,7 @@ final class InboxScanner: ObservableObject {
                 }
             }
             accountStats.receipts = signals.count
+            if stopped { stats.stopped = true }
             // A search that was stopped hasn't read everything, so the next one starts over instead of
             // looking only at newer mail.
             if !stopped, MailboxAccountStore.all().contains(where: { $0.id == account.id }) {
@@ -386,7 +401,10 @@ final class InboxScanner: ObservableObject {
     /// and anything without an amount or a usable name are left out. These are receipts, not yet
     /// subscriptions: the list of subscriptions comes when the search has weighed them all.
     private func noteReceipt(_ signal: ReceiptSignal, catalog: MerchantCatalog) {
-        guard signal.kind == .charge, !signal.promotional, signal.spoofSuspected != true, let amount = signal.amount,
+        // Only receipts that read as recurring: "DoorDash $22.90" and "Skip The Dishes $26.39" on the slip
+        // made a person think the app took their dinner for a subscription (the rating of 2026-11-22).
+        let recurring = (signal.renewalLanguage || signal.cadenceHint != nil) && !signal.oneTimeLanguage
+        guard signal.kind == .charge, recurring, !signal.promotional, signal.spoofSuspected != true, let amount = signal.amount,
               let merchant = catalog.resolve(hint: signal.merchantHint, senderName: signal.senderName, senderDomain: signal.senderDomain)
         else { return }
         let seen = ReceiptSeen(name: merchant.displayName, amount: amount,
@@ -455,8 +473,19 @@ final class InboxScanner: ObservableObject {
         analyze(ReceiptLedger.load(), catalog: Self.buildCatalog())
     }
 
-    func markNotSubscription(_ subscription: FoundSubscription) {
-        UserCorrections.set(subscription.proven.merchantKey, .notSubscription)
+    /// Hides a finding for good. Returns what the person had said about it before, so Undo can put it back.
+    @discardableResult
+    func markNotSubscription(_ subscription: FoundSubscription, defaults: UserDefaults = .standard) -> UserVerdict? {
+        let previous = UserCorrections.load(defaults: defaults)[subscription.proven.merchantKey]
+        UserCorrections.set(subscription.proven.merchantKey, .notSubscription, defaults: defaults)
+        reanalyze()
+        return previous
+    }
+
+    /// Undo for "This isn't a subscription": a tap meant for the row's box could hide a real one, with
+    /// no way back (the rating of 2026-11-22).
+    func undoNotSubscription(_ subscription: FoundSubscription, previous: UserVerdict?, defaults: UserDefaults = .standard) {
+        UserCorrections.set(subscription.proven.merchantKey, previous, defaults: defaults)
         reanalyze()
     }
 

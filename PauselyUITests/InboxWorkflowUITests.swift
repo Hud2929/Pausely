@@ -136,16 +136,25 @@ final class InboxWorkflowUITests: XCTestCase {
         app.terminate()
         app = launch(reset: false)
         XCTAssertTrue(app.buttons["scanInboxesButton"].waitForExistence(timeout: 15), "the inbox survives a relaunch")
-        XCTAssertTrue(app.staticTexts[user].exists, "the connected inbox is listed by its address")
+        // The row is one VoiceOver element (address and state, with Reconnect and Disconnect as actions),
+        // so the menu is reached where a sighted person taps it: the row's trailing end.
+        let row = app.descendants(matching: .any)["inboxRow"]
+        XCTAssertTrue(row.waitForExistence(timeout: 5), "the connected inbox is listed")
+        XCTAssertTrue(row.label.hasPrefix(user), "the row is read by its address: \(row.label)")
         snap("7-connected")
-        let options = app.buttons["Options for \(user)"]
         let disconnect = app.buttons["disconnectInbox"]
         for _ in 0..<3 where !disconnect.exists {
-            options.tap()   // a tap while the screen is still settling can be dropped
+            row.coordinate(withNormalizedOffset: CGVector(dx: 0.97, dy: 0.5)).tap()   // a tap while settling can be dropped
             _ = disconnect.waitForExistence(timeout: 3)
         }
         XCTAssertTrue(disconnect.exists, "the options menu offers Disconnect")
         disconnect.tap()
+        // Disconnect asks first: it signs out and forgets what was found.
+        let confirm = app.buttons["Disconnect"].firstMatch   // the menu has closed; this is the question's button
+        XCTAssertTrue(confirm.waitForExistence(timeout: 5), "Disconnect asks before it erases anything")
+        XCTAssertTrue(app.staticTexts.matching(NSPredicate(format: "label CONTAINS %@", "forgets what it found there")).firstMatch.exists,
+                      "the question says what is erased")
+        confirm.tap()
         XCTAssertTrue(app.buttons["connect-other"].waitForExistence(timeout: 15), "after disconnecting, the providers show again")
     }
 }

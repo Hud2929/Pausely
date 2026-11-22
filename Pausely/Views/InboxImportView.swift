@@ -24,6 +24,16 @@ struct InboxImportView: View {
     @State private var showingIMAP = false
     @State private var showingProviders = false
     @State private var showingPaywall = false
+    /// The inbox whose Disconnect waits for a yes: it signs out and forgets what was found there.
+    @State private var disconnecting: MailboxAccount?
+    /// The finding last hidden with "This isn't a subscription", until it is undone or another is hidden.
+    @State private var hidden: Hidden?
+
+    private struct Hidden {
+        let found: FoundSubscription
+        let previous: UserVerdict?
+        let wasSelected: Bool
+    }
 
     var body: some View {
         NavigationStack {
@@ -57,6 +67,8 @@ struct InboxImportView: View {
             }
             .sheet(isPresented: $showingIMAP) {
                 IMAPConnectView(preset: imapPreset, startAddress: imapAddress)
+                    // On iPad a form sheet squeezed the steps and fields into a small box (B1).
+                    .presentationSizing(.page)
             }
             .sheet(isPresented: $showingProviders) {
                 NavigationStack {
@@ -224,21 +236,17 @@ struct InboxImportView: View {
 
     private var connectedSection: some View {
         VStack(alignment: .leading, spacing: 20) {
-            if let message = scanner.error {
-                VStack(alignment: .leading, spacing: 8) {
-                    Text(verbatim: message)
-                        .font(.question(.title2))
-                        .foregroundStyle(Color.inkText)
-                        .fixedSize(horizontal: false, vertical: true)
-                        .accessibilityAddTraits(.isHeader)
-                        .accessibilityIdentifier("searchOutcome")
-                    if scanner.accountErrors.isEmpty {
-                        Text("Emails checked: \(scanner.stats.emailsChecked). Receipts may go to another address: add that inbox too.")
-                            .font(.body)
-                            .foregroundStyle(Color.inkTextMuted)
-                            .fixedSize(horizontal: false, vertical: true)
+            if let hidden {
+                HiddenNote(name: hidden.found.name) {
+                    withAnimation(Motion.unlessReduced(Motion.arrive)) {
+                        scanner.undoNotSubscription(hidden.found, previous: hidden.previous)
+                        if hidden.wasSelected { selected.insert(hidden.found.id) }
+                        self.hidden = nil
                     }
                 }
+            }
+            if let message = scanner.error {
+                SearchOutcome(message: message, stats: scanner.stats, explains: scanner.accountErrors.isEmpty)
             }
 
             VStack(spacing: 0) {
@@ -312,7 +320,7 @@ struct InboxImportView: View {
                     .accessibilityIdentifier("reconnectInbox")
             }
             Button(role: .destructive) {
-                Task { await scanner.disconnect(account) }
+                disconnecting = account
             } label: {
                 Label("Disconnect", systemImage: "xmark.circle")
             }
@@ -357,7 +365,14 @@ struct InboxImportView: View {
         .accessibilityLabel(Text(verbatim: "\(account.address), \(accountDetail(account))"))
         .accessibilityActions {
             if failed { Button("Reconnect") { reconnect(account) } }
-            Button("Disconnect") { Task { await scanner.disconnect(account) } }
+            Button("Disconnect") { disconnecting = account }
+        }
+        .accessibilityIdentifier("inboxRow")
+        .asksFirst(Text("Disconnect \(account.address)?"),
+                   isPresented: Binding(get: { disconnecting?.id == account.id }, set: { if !$0 { disconnecting = nil } }),
+                   message: Text("Pausely signs out of this inbox and forgets what it found there. Subscriptions you added stay on your list.")) {
+            Button("Disconnect", role: .destructive) { Task { await scanner.disconnect(account) } }
+            Button("Cancel", role: .cancel) {}
         }
     }
 
@@ -384,6 +399,15 @@ struct InboxImportView: View {
 
         return VStack(spacing: 28) {
             summary(count: live.count)
+            if let hidden {
+                HiddenNote(name: hidden.found.name) {
+                    withAnimation(Motion.unlessReduced(Motion.arrive)) {
+                        scanner.undoNotSubscription(hidden.found, previous: hidden.previous)
+                        if hidden.wasSelected { selected.insert(hidden.found.id) }
+                        self.hidden = nil
+                    }
+                }
+            }
             insights
             if !confirmed.isEmpty {
                 listSection(title: "Confirmed", subtitle: "Your receipts show these renew", items: confirmed)
@@ -418,7 +442,7 @@ struct InboxImportView: View {
 
     /// Already in the person's list, by the importer's own rule (the same name, any case).
     private func isOnList(_ found: FoundSubscription) -> Bool {
-        store.subscriptions.contains { $0.name.caseInsensitiveCompare(found.name) == .orderedSame }
+        store.subscriptions.contains { ServiceName.same($0.name, found.name) }
     }
 
     /// What the search found: the total first, then how it was worked out.
@@ -451,13 +475,29 @@ struct InboxImportView: View {
                     ProofLine(label: L10n.string("Each year"), value: MoneyFormat.total(monthly * 12, currency, converted: converted))
                     if ignored > 0 || stats.emailsChecked > 0 { Perforation() }
                     if stats.emailsChecked > 0 {
-                        Facts(L10n.string("Emails checked: \(stats.emailsChecked) · read in full: \(stats.bodiesRead) · all on your phone"))
+                        // A later search reads only new mail while the findings come from every search (T31).
+                        Facts(stats.onlyNewMail
+                              ? L10n.string("New emails since the last search: \(stats.emailsChecked) · read in full: \(stats.bodiesRead) · all on your phone")
+                              : L10n.string("Emails checked: \(stats.emailsChecked) · read in full: \(stats.bodiesRead) · all on your phone"))
                             .font(.proof(.caption))
                             .foregroundStyle(Color.paperMuted)
                             .fixedSize(horizontal: false, vertical: true)
                     }
                     if ignored > 0 {
                         Text("Other senders with charges that didn't look like subscriptions: \(ignored)")
+                            .font(.proof(.caption))
+                            .foregroundStyle(Color.paperMuted)
+                            .fixedSize(horizontal: false, vertical: true)
+                    }
+                    // What was left unread is said, not left to be assumed (T4, T16).
+                    if stats.stopped {
+                        Text("Stopped early, so some emails weren't read. Search again to read them all.")
+                            .font(.proof(.caption))
+                            .foregroundStyle(Color.paperInk)
+                            .fixedSize(horizontal: false, vertical: true)
+                            .accessibilityIdentifier("searchStoppedNote")
+                    } else if stats.capped {
+                        Text("One search reads at most \(InboxSearchPlan.standardLimit) possible receipts, newest first; older ones weren't read.")
                             .font(.proof(.caption))
                             .foregroundStyle(Color.paperMuted)
                             .fixedSize(horizontal: false, vertical: true)
@@ -554,6 +594,7 @@ struct InboxImportView: View {
                         found: found,
                         widestPrice: widestPrice,
                         isOnList: isOnList(found),
+                        listedPrice: FoundRow.listedPrice(store.subscriptions.first { ServiceName.same($0.name, found.name) }, for: found),
                         isSelected: selected.contains(found.id),
                         isExpanded: expanded.contains(found.id),
                         onToggle: { if selected.contains(found.id) { selected.remove(found.id) } else { selected.insert(found.id) } },
@@ -563,8 +604,11 @@ struct InboxImportView: View {
                             }
                         },
                         onReject: {
-                            selected.remove(found.id)
-                            withAnimation(Motion.unlessReduced(Motion.leave)) { scanner.markNotSubscription(found) }
+                            let wasSelected = selected.remove(found.id) != nil
+                            withAnimation(Motion.unlessReduced(Motion.leave)) {
+                                hidden = Hidden(found: found, previous: scanner.markNotSubscription(found), wasSelected: wasSelected)
+                            }
+                            AccessibilityNotification.Announcement(L10n.string("\(found.name) hidden")).post()
                         }
                     )
                 }

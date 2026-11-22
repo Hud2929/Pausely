@@ -70,7 +70,7 @@ note per coming charge with tax, ten header reads in flight, DEBUG request count
 the owner's Gmail, not sent (needs the video link and a TestFlight link). Real ledger copy (132 facts)
 in the session scratchpad `realmail/ledger-2026-11-22.json`; `testRealLedgerReport` reads it with
 `PAUSELY_LEDGER_FILE`. Xcode reinstalls the app when the project changes, which erases a connected inbox:
-reconnect (account chooser, no password) before a real scan. Speed still to measure on a quiet Mac.
+reconnect (account chooser, no password) before a real scan. The connection kept vanishing for another reason too: ProviderWorkflowTests.tearDown disconnected (and revoked at Google) even after setUp skipped; fixed in 2db1bea. Speed on the real inbox, quiet Mac: fixed pace 40/s gave 452 s with 937 refusals in 2,934 requests; adaptive pacing (2db1bea) measured next.
 
 Independent truth audit (Fable, 2026-11-22): about 7. Each item, fixed or not:
 - [x] T1 blocker: trust (+30 after an import) lifts no-receipt rows into "Confirmed: your receipts show
@@ -80,19 +80,19 @@ Independent truth audit (Fable, 2026-11-22): about 7. Each item, fixed or not:
   dated note; "Last charged" stays the newest.
 - [x] T3 blocker: a trial end worked out from the email date (+3 or +14 days) is stated as fact ("Trial
   ends Nov 28", "Cancel before Nov 28") and imported. Say "around" and give no cancel-by date unless read.
-- [ ] T4 "Emails checked: 1,500" is the cap; say when the search was capped and how far back it reached.
+- [x] T4 "Emails checked: 1,500" is the cap; say when the search was capped and how far back it reached.
 - [x] T5 "Charged 9 times" counts the chain, not the 12 charges held; the proof list skips months.
 - [x] T6 "Same amount each time" under a row with a later different charge.
 - [x] T7 totals ignore the ticks, mix tax bases, and count rows never seen charged.
 - [ ] T8 an amount with no currency is taken as the person's currency without saying so.
-- [ ] T9 already-listed rows keep a different amount/date unsaid.
+- [x] T9 already-listed rows keep a different amount/date unsaid.
 - [x] T10 "May have ended" rows can be ticked and import as active with a next charge.
 - [ ] T11 a store-billed subscription (Prime Video channel, App Store) imports with the service's own cancel link.
-- [ ] T12 Google One imports at the old price although the new price was read.
+- [x] T12 Google One imports at the old price although the new price was read.
 - [x] T13 "Charged after cancelling... worth disputing" when the person may have re-subscribed.
 - [x] T14 "raised its price" blames the seller for any rise; one wording everywhere.
 - [x] T15 "most likely renewed" after a trial for any merchant, not only stores that send no receipts.
-- [ ] T16 a stopped or refused search looks complete; the results page never shows a refused inbox.
+- [x] T16 a stopped or refused search looks complete; the results page never shows a refused inbox.
 - [x] T17 "Senders with only one-time purchases, left out" counts more than one-time purchases.
 - [x] T18 "renews in 37 days" counts 24-hour spans; count calendar days.
 - [x] T19 "goes up to $269.99 on Dec 26": before tax and "on" for a worked-out date.
@@ -104,17 +104,17 @@ Independent truth audit (Fable, 2026-11-22): about 7. Each item, fixed or not:
 - [x] T28 an assumed monthly period shown as fact.
 - [x] T29 "You told Pausely this is a subscription" (a tap on a pre-ticked row); "structured subscription data" is internal wording.
 - [x] T30 the privacy line "keeps only the name, amount and date" is narrower than what is kept (sender, period, flags).
-- [ ] T31 a later scan's "Emails checked" counts only new mail while findings come from all.
-- [ ] T32 already-listed is matched by exact name ("Claude" vs "Claude Pro").
+- [x] T31 a later scan's "Emails checked" counts only new mail while findings come from all.
+- [x] T32 already-listed is matched by exact name ("Claude" vs "Claude Pro").
 (T20 and T24 are covered by commits above.)
 
 Independent reach rating (Fable: iPad, Arabic, largest text, VoiceOver, 2026-11-22): 7.0. Contrast passes;
 Arabic mirrors and is fully translated; rows read as one sentence. Open:
-- [ ] B1 iPad: the connect form is a form sheet that cuts its text under the keyboard; at the largest size
+- [ ] B1 (page-sized sheet on iPad, 2026-11-22; to see on an iPad) iPad: the connect form is a form sheet that cuts its text under the keyboard; at the largest size
   the title and steps 1-2 are gone (also full screen at the largest size: opens past its title).
 - [x] B3 Arabic: "CA$" is drawn "$CA" (the trailing symbol flips inside an isolate); "US$" the same.
 - [x] B4 a failed inbox ("Your sign-in expired. Reconnect this inbox.") has no reconnect action anywhere.
-- [ ] B5 iPad: the side margins don't scroll (only the centre column does).
+- [ ] B5 (column made with safe-area insets, 2026-11-22; to see on an iPad) iPad: the side margins don't scroll (only the centre column does).
 - [ ] B6 Arabic dates follow the device calendar (Hijri on ar_SA); for a native reader to decide. Also
   "منذ ٢٧ ذو القعدة" should be "ذي القعدة".
 - [ ] B8 a date broken across lines at the largest size ("around Dec" / "12."); proof lines may overflow.
@@ -134,16 +134,16 @@ Independent consumer rating (Fable, iPhone, 2026-11-22): 7.0 (trust 7.0, effort 
 - [ ] A3 the free limit: "Add 5" then "Nothing new was added" when the list is full (only a footnote warns);
   the person can't choose which five; a trial with a deadline is the one parked "Waiting" (unexplained).
 - [x] A5 one headline count that matches the rows ("We found 7", nine rows, "Add 5").
-- [ ] A6 every "Worth a look" row says why it isn't confirmed and what to check.
+- [x] A6 every "Worth a look" row says why it isn't confirmed and what to check.
 - [x] A8 privacy block: what Google asks for ("View your email messages"), what is kept, what is synced once
   added, a policy link, what Disconnect erases.
-- [ ] A9 "This isn't a subscription": one tap, permanent, no undo, no confirmation; nothing clears it.
-- [ ] A10 a trial row shows no price after the trial.
-- [ ] A11 GMX page: "your main password stays private" then "Use your GMX password"; "gmx.net" title for gmx.de.
-- [ ] A12 the slip while searching shows food orders as receipts; the bar jumps between phases.
-- [ ] A13 nothing found: "Search again" as the main button; no period for "Emails checked"; no route to add by hand.
-- [ ] A14 the second Gmail row (app password) beside "Sign in with Google"; disconnect says nothing of what it erased.
-- [ ] A15 disabled "Connect and search" gives no reason; the form jumps when the provider is recognised.
+- [x] A9 "This isn't a subscription": one tap, permanent, no undo, no confirmation; nothing clears it.
+- [x] A10 a trial row shows no price after the trial.
+- [ ] A11 (copy fixed 2026-11-22: GMX and WEB.DE say "Sign in with your … password", field "Password"; the gmx.net title for gmx.de stays) GMX page: "your main password stays private" then "Use your GMX password"; "gmx.net" title for gmx.de.
+- [ ] A12 (food orders fixed 2026-11-22: the slip shows only recurring receipts; the bar's jumps remain) the slip while searching shows food orders as receipts; the bar jumps between phases.
+- [x] A13 nothing found: "Search again" as the main button; no period for "Emails checked"; no route to add by hand.
+- [ ] A14 (Disconnect now asks and says what it erases, 2026-11-22; the second Gmail row remains) the second Gmail row (app password) beside "Sign in with Google"; disconnect says nothing of what it erased.
+- [ ] A15 (the switched-off button says what it waits for, 2026-11-22; the jump remains) disabled "Connect and search" gives no reason; the form jumps when the provider is recognised.
 - [ ] A16 Google's consent page shows the app icon (purple "P") that the redesigned app doesn't use inside: owner.
 
 ## Real accounts, real subscriptions, and Outlook (plan of 2026-11-18)

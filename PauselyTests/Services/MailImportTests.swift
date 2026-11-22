@@ -236,6 +236,74 @@ final class MailImportTests: XCTestCase {
         XCTAssertTrue(store.subscriptions.isEmpty)
     }
 
+    /// "This isn't a subscription" can be undone, back to exactly what the person had said before: a tap
+    /// meant for the row's box hid a real subscription for good (the rating of 2026-11-22).
+    func testHidingAFindingCanBeUndoneToWhatWasSaidBefore() throws {
+        let suite = "undo-hide-\(UUID().uuidString)"
+        let defaults = try XCTUnwrap(UserDefaults(suiteName: suite))
+        defer { defaults.removePersistentDomain(forName: suite) }
+        let scanner = InboxScanner.shared
+        let netflix = FoundSubscription(proven: proven("Netflix"))
+
+        XCTAssertNil(scanner.markNotSubscription(netflix, defaults: defaults), "nothing was said before")
+        XCTAssertEqual(UserCorrections.load(defaults: defaults)["netflix"], .notSubscription)
+        scanner.undoNotSubscription(netflix, previous: nil, defaults: defaults)
+        XCTAssertNil(UserCorrections.load(defaults: defaults)["netflix"], "undone, it is as if nothing was said")
+
+        UserCorrections.set("netflix", .trusted, defaults: defaults)
+        XCTAssertEqual(scanner.markNotSubscription(netflix, defaults: defaults), .trusted)
+        XCTAssertEqual(UserCorrections.load(defaults: defaults)["netflix"], .notSubscription)
+        scanner.undoNotSubscription(netflix, previous: .trusted, defaults: defaults)
+        XCTAssertEqual(UserCorrections.load(defaults: defaults)["netflix"], .trusted, "what was said before comes back")
+    }
+
+    /// The reason is said only where there is a doubt to act on: a confirmed row, a trial (its date is the
+    /// thing to check) and an ended one carry none.
+    func testOnlyARowWorthALookSaysWhyItIsUnsure() {
+        var unsure = proven("Fathom")
+        unsure.tier = .likely
+        unsure.doubt = "Two charges so far; a third would confirm it"
+        XCTAssertEqual(FoundRow.doubt(for: unsure), "Two charges so far; a third would confirm it")
+        var confirmed = unsure
+        confirmed.tier = .confirmed
+        XCTAssertNil(FoundRow.doubt(for: confirmed))
+        var trial = unsure
+        trial.status = .trial
+        XCTAssertNil(FoundRow.doubt(for: trial))
+        var ended = unsure
+        ended.status = .likelyEnded
+        XCTAssertNil(FoundRow.doubt(for: ended))
+    }
+
+    /// A receipt names the plan where a person types the service: "Claude Pro" is the "Claude" on the list.
+    /// Only plan words may differ, so a different service by the same company is not taken for it.
+    func testAPlanNameIsTheServiceOnTheList() {
+        XCTAssertTrue(ServiceName.same("Claude", "Claude Pro"))
+        XCTAssertTrue(ServiceName.same("chatgpt plus", "ChatGPT"))
+        XCTAssertTrue(ServiceName.same("Spotify", "Spotify Premium Family"))
+        XCTAssertTrue(ServiceName.same("Crème", "creme"))
+        XCTAssertFalse(ServiceName.same("Apple", "Apple Music"))
+        XCTAssertFalse(ServiceName.same("YouTube", "YouTube TV"))
+        XCTAssertFalse(ServiceName.same("Google One", "Google Play"))
+        XCTAssertFalse(ServiceName.same("Max", "Disney+"))
+        let plan = PendingTally.plan(lines: [line("Claude Pro", "20"), line("Notion", "10")], existingNames: ["Claude"], freeSlots: nil)
+        XCTAssertEqual(plan.add.map(\.name), ["Notion"], "the listed Claude is not added again as Claude Pro")
+    }
+
+    /// A trial whose email gave no later price says the usual one where the catalog has it in the reader's
+    /// currency, or that the email doesn't say; a trial with a stated price needs neither.
+    func testATrialWithNoStatedPriceSaysWhatItUsuallyCosts() {
+        let netflix = FoundSubscription(proven: proven("Netflix", status: .trial, amount: "0", trialEnds: day(2026, 12, 1), currency: "CAD"))
+        let usual = TallyCatalog.price(forServiceNamed: "Netflix", payingIn: "CAD")
+        XCTAssertNotNil(usual, "the catalog prices Netflix in Canadian dollars")
+        XCTAssertEqual(FoundRow.afterTrial(for: netflix, currency: "CAD"),
+                       "Usually \(MoneyFormat.string(usual ?? 0, "CAD")) a month after the trial")
+        let unknown = FoundSubscription(proven: proven("Fathom Notes", status: .trial, amount: "0", trialEnds: day(2026, 12, 1)))
+        XCTAssertEqual(FoundRow.afterTrial(for: unknown, currency: "USD"), "The email doesn't say what it costs after the trial")
+        let priced = FoundSubscription(proven: proven("Netflix", status: .trial, amount: "16.49", trialEnds: day(2026, 12, 1)))
+        XCTAssertNil(FoundRow.afterTrial(for: priced, currency: "USD"))
+    }
+
     func testAFindingKeepsItsIdentityAcrossAReanalysis() {
         let first = FoundSubscription(proven: proven("Netflix", lastCharge: day(2026, 10, 12)))
         let again = FoundSubscription(proven: proven("Netflix", lastCharge: day(2026, 11, 12)))

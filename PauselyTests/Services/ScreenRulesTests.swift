@@ -17,6 +17,19 @@ final class ScreenRulesTests: XCTestCase {
     }
 
     /// A service with no icon is shown by its first letter, whatever comes before that letter.
+    /// On iPad the reading column is made with side insets, so a scroll view still spans the window and a
+    /// drag in the margins scrolls (framed to 680 points, the margins were dead: B5, 2026-11-22).
+    func testTheIPadColumnIsInsetSoTheMarginsScroll() throws {
+        XCTAssertEqual(ReadableWidth.sideInset(width: 1032, wide: true), 176)
+        XCTAssertEqual(ReadableWidth.sideInset(width: 600, wide: true), 0, "never a negative inset")
+        XCTAssertEqual(ReadableWidth.sideInset(width: 1032, wide: false), 0, "an iPhone, or an iPad in a narrow split")
+        let file = root.appendingPathComponent("Pausely/DesignSystem/ReadableWidth.swift")
+        try XCTSkipUnless(FileManager.default.fileExists(atPath: file.path), "Sources aren't readable from this test run")
+        let source = try String(contentsOf: file, encoding: .utf8)
+        XCTAssertTrue(source.contains(".safeAreaPadding(.horizontal"))
+        XCTAssertFalse(source.contains(".frame(maxWidth: isWide"), "a narrowed frame leaves the margins dead")
+    }
+
     func testALogoTileShowsTheNamesFirstLetter() {
         XCTAssertEqual(ServiceLogoView.initial(of: "Netflix"), "N")
         XCTAssertEqual(ServiceLogoView.initial(of: "\u{200F}Gmail (كلمة مرور التطبيق)"), "G", "a right-to-left mark is not a letter")
@@ -284,7 +297,7 @@ final class ScreenRulesTests: XCTestCase {
             ("Views/SubscriptionManagementView.swift", "Facts(line.text)"),
             ("Views/Verdict/PausePlanView.swift", "Facts(price)"),
             ("Views/InboxImportView.swift", "Facts(accountDetail(account))"),
-            ("Views/InboxImportView.swift", "Facts(L10n.string(\"Emails checked: ")
+            ("Views/InboxImportView.swift", "Facts(stats.onlyNewMail")
         ]
         for place in drawn {
             let source = try String(contentsOf: sources.appendingPathComponent(place.file), encoding: .utf8)
@@ -913,7 +926,7 @@ final class ScreenRulesTests: XCTestCase {
                 XCTAssertFalse(text.contains(".confirmationDialog("), "\(file) asks in its own way")
             }
         }
-        XCTAssertEqual(asked, 5, "sign out, remove (twice), discard changes, end Pause Plan")
+        XCTAssertEqual(asked, 6, "sign out, remove (twice), discard changes, end Pause Plan, disconnect an inbox")
         // Both shapes are attached and one is shown, so the screen underneath is not rebuilt
         // when the text size changes.
         let controls = try String(contentsOf: sources.appendingPathComponent("DesignSystem/InkControls.swift"), encoding: .utf8)
@@ -939,6 +952,8 @@ final class ScreenRulesTests: XCTestCase {
             // The list's question is about a row, and the swipe action that asks it is gone by
             // the time the answer is given: the row is the place.
             "Views/SubscriptionsView.swift": ".listRowSeparatorTint(Color.line)",
+            // Disconnect is asked about the inbox's row, whose menu or VoiceOver action asked it.
+            "Views/InboxImportView.swift": ".accessibilityIdentifier(\"inboxRow\")",
         ]
         var seen: [String] = []
         for file in try FileManager.default.subpathsOfDirectory(atPath: sources.path).sorted() where file.hasSuffix(".swift") {

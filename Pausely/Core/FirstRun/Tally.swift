@@ -215,14 +215,18 @@ enum PendingTally {
 
     static func clear(defaults: UserDefaults = .standard) { defaults.removeObject(forKey: key) }
 
-    /// Which lines to add now and which must wait. Lines already in the list (same name, any case)
+    /// Which lines to add now and which must wait. Lines already in the list (`ServiceName.same`)
     /// are dropped. Without Pro, only `freeSlots` fit; the most expensive go first, because those
     /// are the ones worth a reminder.
     static func plan(lines: [TallyLine], existingNames: [String], freeSlots: Int?,
                      cost: (TallyLine) -> Decimal = { $0.yearlyCost }) -> (add: [TallyLine], wait: [TallyLine]) {
-        let existing = Set(existingNames.map { $0.lowercased() })
-        var seen = Set<String>()
-        let fresh = lines.filter { !existing.contains($0.name.lowercased()) && seen.insert($0.name.lowercased()).inserted }
+        var seen: [String] = []
+        let fresh = lines.filter { line in
+            guard !existingNames.contains(where: { ServiceName.same($0, line.name) }),
+                  !seen.contains(where: { ServiceName.same($0, line.name) }) else { return false }
+            seen.append(line.name)
+            return true
+        }
         guard let freeSlots else { return (fresh, []) }
         let ranked = fresh.sorted { cost($0) > cost($1) }
         let slots = max(freeSlots, 0)
@@ -294,7 +298,7 @@ enum TallyImporter {
         // Already listed: never added twice. A date read from receipts fills an empty one, when the
         // billing period agrees; an amount or a date the person entered is never changed.
         for line in lines {
-            guard let existing = store.subscriptions.first(where: { $0.name.caseInsensitiveCompare(line.name) == .orderedSame }) else { continue }
+            guard let existing = store.subscriptions.first(where: { ServiceName.same($0.name, line.name) }) else { continue }
             outcome.alreadyListed.append(existing.name)
             if existing.nextBillingDate == nil, let anchor = line.anchor, existing.billingFrequency == (line.frequency ?? .monthly) {
                 var updated = existing
@@ -362,3 +366,30 @@ enum DemoTally {
     }
 }
 #endif
+
+/// Whether two names are one service. Receipts name the plan ("Claude Pro", "ChatGPT Plus") where a person
+/// types the service ("Claude"): matched by exact name, a listed subscription came back as a new finding
+/// and could be added twice (T32, 2026-11-22). Only plan words may differ: "Apple" is not "Apple Music".
+enum ServiceName {
+    private static let planWords: Set<String> = [
+        "pro", "plus", "premium", "basic", "standard", "family", "individual", "student", "duo", "ultra", "max",
+        "membership", "subscription", "monthly", "annual", "yearly", "plan", "with", "ads", "ad", "tier",
+        "personal", "team", "starter",
+    ]
+
+    static func words(_ name: String) -> [String] {
+        name.folding(options: [.caseInsensitive, .diacriticInsensitive], locale: nil)
+            .lowercased()
+            .split(whereSeparator: { !$0.isLetter && !$0.isNumber && $0 != "+" })
+            .map(String.init)
+    }
+
+    static func same(_ a: String, _ b: String) -> Bool {
+        let x = words(a), y = words(b)
+        guard !x.isEmpty, !y.isEmpty else { return a.caseInsensitiveCompare(b) == .orderedSame }
+        if x == y { return true }
+        let (short, long) = x.count <= y.count ? (x, y) : (y, x)
+        guard Array(long.prefix(short.count)) == short else { return false }
+        return long.dropFirst(short.count).allSatisfy(planWords.contains)
+    }
+}
