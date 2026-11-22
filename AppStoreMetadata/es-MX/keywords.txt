@@ -1,1 +1,0 @@
-cancelar,renovación,prueba,pagos,recurrentes,rastreador,administrar,gastos,mensual,precio,alerta
