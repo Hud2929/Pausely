@@ -129,23 +129,64 @@ final class GmailMailboxProvider: MailboxProvider {
     /// the fact took a real scan of 1,500 emails over eight minutes (2026-11-18).
     static let minimumGap: TimeInterval = 0.025
     private var nextStart = Date.distantPast
+    /// What Google allows one person varies, and the scan finds it: every refusal halves how many
+    /// requests are in flight and doubles the gap between them; twenty answers in a row win one back.
+    /// At a fixed 40 a second, ten at a time, a real inbox met 937 refusals in 2,934 requests and spent
+    /// seven and a half minutes (2026-11-22).
+    private var gap = GmailMailboxProvider.minimumGap
+    private var inFlightLimit = GmailMailboxProvider.parallelHeaderReads
+    private var answeredInARow = 0
 
-    var parallelReads: Int { 8 }
+    private func slowDown() {
+        gap = min(gap * 2, 2)
+        inFlightLimit = max(1, inFlightLimit / 2)
+        answeredInARow = 0
+    }
+
+    private func answered() {
+        answeredInARow += 1
+        guard answeredInARow >= 20 else { return }
+        answeredInARow = 0
+        gap = max(Self.minimumGap, gap * 0.8)
+        inFlightLimit = min(Self.parallelHeaderReads, inFlightLimit + 1)
+    }
+
+    /// Runs `work` for every ref with as many in flight as Google currently allows, a new one starting as
+    /// each answers.
+    private func paced<T: Sendable>(_ refs: [MessageRef], _ work: @escaping @Sendable (MessageRef) async -> T?) async -> [(MessageRef, T?)] {
+        var out: [(MessageRef, T?)] = []
+        var queue = refs[...]
+        var inFlight = 0
+        await withTaskGroup(of: (MessageRef, T?).self) { group in
+            while inFlight < inFlightLimit, let ref = queue.popFirst() {
+                inFlight += 1
+                group.addTask { (ref, await work(ref)) }
+            }
+            for await result in group {
+                inFlight -= 1
+                out.append(result)
+                while !Task.isCancelled, inFlight < inFlightLimit, let next = queue.popFirst() {
+                    inFlight += 1
+                    group.addTask { (next, await work(next)) }
+                }
+            }
+        }
+        return out
+    }
+
+    var parallelReads: Int { Self.parallelHeaderReads }
 
     /// Several whole messages at once (the requests are paced, so Google's limit is never met).
     func rawMessages(_ refs: [MessageRef]) async -> [MessageRef: Data] {
         var out: [MessageRef: Data] = [:]
-        await withTaskGroup(of: (MessageRef, Data?).self) { group in
-            for ref in refs { group.addTask { (ref, try? await self.rawMessage(ref)) } }
-            for await (ref, raw) in group { if let raw { out[ref] = raw } }
-        }
+        for (ref, raw) in await paced(refs, { try? await self.rawMessage($0) }) { if let raw { out[ref] = raw } }
         return out
     }
 
     private func pace() async throws {
         let now = Date()
         let start = max(now, nextStart)
-        nextStart = start.addingTimeInterval(Self.minimumGap)
+        nextStart = start.addingTimeInterval(gap)
         let wait = start.timeIntervalSince(now)
         if wait > 0 { try await Task.sleep(nanoseconds: UInt64(wait * 1_000_000_000)) }
     }
@@ -153,21 +194,10 @@ final class GmailMailboxProvider: MailboxProvider {
     func summaries(_ refs: [MessageRef]) async throws -> [MessageSummary] {
         var results: [MessageSummary] = []
         var missed: [MessageRef] = []
-        // Ten in flight at all times (a new one starts as each answers), within the pace above; batches
-        // of ten each waited for their slowest answer.
-        var queue = refs[...]
+        // As many in flight as Google allows (a new one starting as each answers), within the pace above.
         try Task.checkCancellation()
-        await withTaskGroup(of: (MessageRef, MessageSummary?).self) { group in
-            for _ in 0..<Self.parallelHeaderReads {
-                guard let ref = queue.popFirst() else { break }
-                group.addTask { (ref, try? await self.metadata(ref)) }
-            }
-            for await (ref, summary) in group {
-                if let summary { results.append(summary) } else { missed.append(ref) }
-                if !Task.isCancelled, let next = queue.popFirst() {
-                    group.addTask { (next, try? await self.metadata(next)) }
-                }
-            }
+        for (ref, summary) in await paced(refs, { try? await self.metadata($0) }) {
+            if let summary { results.append(summary) } else { missed.append(ref) }
         }
         try Task.checkCancellation()
         // What Gmail turned away while busy is asked for again, one at a time, instead of being dropped
@@ -258,9 +288,12 @@ final class GmailMailboxProvider: MailboxProvider {
         var request = URLRequest(url: url)
         request.timeoutInterval = 40
         let accountID = account.id
-        return try await MailboxHTTP.data(request,
-                                          token: { try await self.token() },
-                                          refresh: { try await OAuthSession.forceRefresh(Self.oauth, accountID: accountID) })
+        let data = try await MailboxHTTP.data(request,
+                                              token: { try await self.token() },
+                                              refresh: { try await OAuthSession.forceRefresh(Self.oauth, accountID: accountID) },
+                                              onRateLimit: { self.slowDown() })
+        answered()
+        return data
     }
 
     // MARK: - Response models

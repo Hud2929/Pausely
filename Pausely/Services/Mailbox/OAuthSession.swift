@@ -252,7 +252,8 @@ enum MailboxHTTP {
     /// and rate-limit 403s (Retry-After, at most 30 seconds, up to three times).
     /// Called by the providers, on the main actor like them; the waiting is on the network.
     @MainActor
-    static func data(_ request: URLRequest, token: () async throws -> String, refresh: () async throws -> String) async throws -> Data {
+    static func data(_ request: URLRequest, token: () async throws -> String, refresh: () async throws -> String,
+                     onRateLimit: (() -> Void)? = nil) async throws -> Data {
         var current = try await token()
         var refreshed = false
         var throttles = 0
@@ -274,6 +275,7 @@ enum MailboxHTTP {
             // Gmail says "too many requests" with a 403 (userRateLimitExceeded). Read as "sign in again", it
             // cost a real inbox two thirds of its emails: 966 of 1,500 dropped on 2026-11-18.
             case 403 where isRateLimit(data) && throttles < 3:
+                onRateLimit?()
                 throttles += 1
                 let wait = rateLimitDelay(retryAfter: http?.value(forHTTPHeaderField: "Retry-After"), attempt: throttles)
                 #if DEBUG
@@ -287,6 +289,7 @@ enum MailboxHTTP {
             case 404, 410:
                 throw MailboxError.notFound
             case 429 where throttles < 3, 503 where throttles < 3:  // `where` binds per pattern in Swift
+                onRateLimit?()
                 throttles += 1
                 let wait = retryDelay(retryAfter: http?.value(forHTTPHeaderField: "Retry-After"), attempt: throttles)
                 #if DEBUG

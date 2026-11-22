@@ -344,12 +344,20 @@ final class ProviderWorkflowTests: XCTestCase {
         fixture = FixtureMailbox.load()
         FakeMailAPI.with { $0 = FakeMailAPI.State(); $0.messages = fixture.messages }
         URLProtocol.registerClass(FakeMailAPI.self)
+        tookOver = true
         await InboxScanner.shared.disconnectAll()
     }
 
+    /// Whether this test's setUp took the inboxes over. XCTest calls tearDown even when setUp skipped,
+    /// and an unconditional disconnect there erased real inboxes and revoked a real Gmail sign-in at
+    /// Google, with no stand-in registered (found 2026-11-22, after three lost connections).
+    private var tookOver = false
+
     override func tearDown() async throws {
+        guard tookOver else { return }
         await InboxScanner.shared.disconnectAll()
         URLProtocol.unregisterClass(FakeMailAPI.self)
+        tookOver = false
     }
 
     /// `--demo-gmail-results` puts a made-up inbox and its findings on screen. Connecting an inbox
@@ -474,7 +482,8 @@ final class ProviderWorkflowTests: XCTestCase {
         await scanner.connect { try await GmailMailboxProvider.finishConnect(signedInTokens()) }
         let account = try XCTUnwrap(scanner.accounts.first { $0.kind == .gmail })
         let searchable = fixture.messages.filter { !$0.labels.contains("SPAM") }.count
-        FakeMailAPI.with { $0.gmailRateLimitBurst = searchable * 2 }
+        // Enough refusals to be met on the first reads; each halves the pace, so more only add waiting.
+        FakeMailAPI.with { $0.gmailRateLimitBurst = 6 }
         await scanner.scanAll()
         XCTAssertTrue(scanner.accountErrors.isEmpty, "\(scanner.accountErrors)")
         let stats = try XCTUnwrap(scanner.stats.perAccount[account.id])
@@ -551,7 +560,8 @@ final class ProviderWorkflowTests: XCTestCase {
     }
 
     func testDisconnectDuringScan_forgetsTheInboxForGood() async throws {
-        FakeMailAPI.with { $0.responseDelay = 0.03 }
+        // Slow enough to be caught mid-read: bodies are read several at a time now.
+        FakeMailAPI.with { $0.responseDelay = 0.15 }
         await scanner.connect { try await GmailMailboxProvider.finishConnect(signedInTokens()) }
         let account = try XCTUnwrap(scanner.accounts.first)
         let scan = Task { await scanner.scanAll() }
