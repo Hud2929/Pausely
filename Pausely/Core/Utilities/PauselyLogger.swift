@@ -12,12 +12,6 @@ enum PauselyLogger {
         Logger(subsystem: subsystem, category: category)
     }
 
-    static func debug(_ message: String, category: String = "default") {
-        #if DEBUG
-        logger(for: category).debug("\(message)")
-        #endif
-    }
-
     static func info(_ message: String, category: String = "default") {
         logger(for: category).info("\(message)")
     }

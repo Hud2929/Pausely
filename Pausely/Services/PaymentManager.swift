@@ -49,16 +49,6 @@ enum SubscriptionTier: String, CaseIterable, Comparable, Codable {
               let rhsIndex = order.firstIndex(of: rhs) else { return false }
         return lhsIndex < rhsIndex
     }
-    
-    var displayName: String {
-        switch self {
-        case .free:        return "Free"
-        case .pro:         return "Pro"
-        case .proAnnual:   return "Pro Annual"
-        }
-    }
-    
-    // MARK: - Limits
 }
 
 // MARK: - Payment Manager

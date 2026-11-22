@@ -246,12 +246,6 @@ final class SyncQueue: ObservableObject {
         persist()
     }
 
-    /// Puts a saved queue back (tests restore what they changed).
-    func restore(_ intents: [SyncIntent]) {
-        pending = intents
-        persist()
-    }
-
     // MARK: - When the network comes back
 
     private func watchNetwork() {

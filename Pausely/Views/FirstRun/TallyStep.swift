@@ -3,7 +3,6 @@ import SwiftUI
 /// The first run, step 2: the tally. Tap what you pay for; the slip at the bottom adds it up.
 struct TallyStep: View {
     @Binding var tally: Tally
-    let rates: CurrencyRates
     let onBack: () -> Void
     let onReveal: () -> Void
     let onSkip: () -> Void
