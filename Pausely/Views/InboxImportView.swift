@@ -324,7 +324,9 @@ struct InboxImportView: View {
     // MARK: - Results
 
     private var live: [FoundSubscription] { scanner.foundSubscriptions.filter(\.isLive) }
-    private var chosen: [FoundSubscription] { scanner.foundSubscriptions.filter { selected.contains($0.id) && !$0.isCancelled } }
+    private var chosen: [FoundSubscription] {
+        scanner.foundSubscriptions.filter { selected.contains($0.id) && !$0.isCancelled && !isOnList($0) }
+    }
 
     private var resultsSection: some View {
         let confirmed = live.filter { $0.proven.tier == .confirmed }
@@ -354,7 +356,12 @@ struct InboxImportView: View {
     private func preselectConfirmed() {
         guard !didPreselect else { return }
         didPreselect = true
-        selected = Set(live.filter { $0.proven.tier == .confirmed }.map(\.id))
+        selected = Set(live.filter { $0.proven.tier == .confirmed && !isOnList($0) }.map(\.id))
+    }
+
+    /// Already in the person's list, by the importer's own rule (the same name, any case).
+    private func isOnList(_ found: FoundSubscription) -> Bool {
+        store.subscriptions.contains { $0.name.caseInsensitiveCompare(found.name) == .orderedSame }
     }
 
     /// What the search found: the total first, then how it was worked out.
@@ -483,6 +490,7 @@ struct InboxImportView: View {
                     FoundRow(
                         found: found,
                         widestPrice: widestPrice,
+                        isOnList: isOnList(found),
                         isSelected: selected.contains(found.id),
                         isExpanded: expanded.contains(found.id),
                         onToggle: { if selected.contains(found.id) { selected.remove(found.id) } else { selected.insert(found.id) } },

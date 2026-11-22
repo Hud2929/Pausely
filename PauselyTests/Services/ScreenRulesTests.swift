@@ -882,6 +882,7 @@ final class ScreenRulesTests: XCTestCase {
     func testAFoundSubscriptionThatWasCancelledIsWordsNotADimmedButton() throws {
         XCTAssertTrue(FoundRow.isAChoice(cancelled: false))
         XCTAssertFalse(FoundRow.isAChoice(cancelled: true))
+        XCTAssertFalse(FoundRow.isAChoice(cancelled: false, onList: true), "what is already on the list is not offered again")
 
         let sources = root.appendingPathComponent("Pausely")
         try XCTSkipUnless(FileManager.default.fileExists(atPath: sources.path), "Sources aren't readable from this test run")
@@ -889,7 +890,7 @@ final class ScreenRulesTests: XCTestCase {
         XCTAssertFalse(found.contains(".disabled("), "iOS dims a switched-off control to below what can be read")
         // One rule decides the box (in both layouts), the button, and whether VoiceOver says
         // "selected" or "not selected".
-        XCTAssertEqual(found.components(separatedBy: "Self.isAChoice(cancelled: found.isCancelled)").count - 1, 4)
+        XCTAssertEqual(found.components(separatedBy: "Self.isAChoice(cancelled: found.isCancelled, onList: isOnList)").count - 1, 4)
         let choose = try XCTUnwrap(found.range(of: "private func choose("))
         let body = String(found[choose.upperBound...].prefix(700))
         XCTAssertTrue(body.contains("} else {\n            label()\n                .accessibilityElement(children: .ignore)\n                .accessibilityLabel(accessibilitySummary)"),

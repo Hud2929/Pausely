@@ -9,6 +9,10 @@ struct FoundRow: View {
     /// between beside the words and under them. By its own width, "34,99 CA$" went under and
     /// "9,99 CA$" stayed beside, row by row (German and Arabic tours, 2026-11-16).
     var widestPrice: Price? = nil
+    /// Already a subscription in the person's list (same name): shown so they see it was found, never
+    /// offered again. A second search ticked them and counted them in "Add 3 to my list", and the
+    /// import then quietly left them out.
+    var isOnList: Bool = false
     let isSelected: Bool
     let isExpanded: Bool
     let onToggle: () -> Void
@@ -23,6 +27,7 @@ struct FoundRow: View {
     private var proven: ProvenSubscription { found.proven }
 
     private var badge: (text: String, state: MoneyState?)? {
+        if isOnList, !found.isCancelled { return (L10n.string("On your list"), nil) }
         switch proven.status {
         case .priceIncreased: return (L10n.string("Price went up"), .decide)
         case .trial: return (L10n.string("Free trial"), .decide)
@@ -57,7 +62,7 @@ struct FoundRow: View {
         if let priceText { parts.append(found.billingFrequency.priced(priceText)) }
         parts.append(evidenceLine)
         if let badge { parts.append(badge.text) }
-        if Self.isAChoice(cancelled: found.isCancelled) { parts.append(isSelected ? L10n.string("selected") : L10n.string("not selected")) }
+        if Self.isAChoice(cancelled: found.isCancelled, onList: isOnList) { parts.append(isSelected ? L10n.string("selected") : L10n.string("not selected")) }
         return parts.joined(separator: ", ")
     }
 
@@ -68,7 +73,7 @@ struct FoundRow: View {
                     VStack(alignment: .leading, spacing: 6) {
                         HStack(spacing: 8) {
                             // The box is a second place to tap; the words under it say what it is.
-                            if Self.isAChoice(cancelled: found.isCancelled) {
+                            if Self.isAChoice(cancelled: found.isCancelled, onList: isOnList) {
                                 Button(action: onToggle) { checkbox }
                                     .buttonStyle(.plain)
                                     .accessibilityHidden(true)
@@ -87,7 +92,7 @@ struct FoundRow: View {
                             HStack(spacing: 12) {
                                 // A cancelled row keeps the box's place empty: its logo and words line
                                 // up with the rows above, and it has the same width for its price.
-                                if Self.isAChoice(cancelled: found.isCancelled) { checkbox } else { Color.clear.frame(width: boxSide, height: boxSide).accessibilityHidden(true) }
+                                if Self.isAChoice(cancelled: found.isCancelled, onList: isOnList) { checkbox } else { Color.clear.frame(width: boxSide, height: boxSide).accessibilityHidden(true) }
                                 ServiceLogoView(name: found.name, category: nil, size: 36)
                                 // As on the Subscriptions list: the price keeps its width, 8 points
                                 // from the words (a spacer between them took 32, and "Last charged
@@ -136,13 +141,13 @@ struct FoundRow: View {
 
     /// Whether the row is something to choose. One that was cancelled is not: it is shown so the
     /// person knows it was seen, and there is nothing to add.
-    nonisolated static func isAChoice(cancelled: Bool) -> Bool { !cancelled }
+    nonisolated static func isAChoice(cancelled: Bool, onList: Bool = false) -> Bool { !cancelled && !onList }
 
     /// The part of the row that chooses this subscription, read out as one sentence. A cancelled
     /// one is words, not a button switched off: iOS dims those, and its last charge, "Cancelled"
     /// and "per month" read 2.6 to 3.2 to 1 (measured on the iPad tour of 2026-11-16).
     @ViewBuilder private func choose(@ViewBuilder _ label: () -> some View) -> some View {
-        if Self.isAChoice(cancelled: found.isCancelled) {
+        if Self.isAChoice(cancelled: found.isCancelled, onList: isOnList) {
             Button(action: onToggle) {
                 label().contentShape(Rectangle())
             }
