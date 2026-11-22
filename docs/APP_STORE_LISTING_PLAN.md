@@ -130,7 +130,7 @@ Exact keyword strings are in `metadata/version/1.0.3/<locale>.json`.
 | App icon | 1024 x 1024, no transparency, no text. Check it reads at small size next to competitors | Exists; re-check |
 | Screenshots, iPhone 6.9" | 1320 x 2868, up to 10 per locale; the first three show in search, so they carry the pitch. Order and captions: see below | To produce |
 | Screenshots, iPad 13" | Not needed: 1.0 is **iPhone-only** (decided 2026-10-19; `TARGETED_DEVICE_FAMILY = 1`). iPad owners can still install it in compatibility mode | Done |
-| App Preview video | 15 to 30 s, in-app footage only (guideline 2.3.4). Script already corrected in `AppStoreScreenshots/PreviewVideoScript.md` | To record |
+| App Preview video | 15 to 30 s, in-app footage only (guideline 2.3.4). The old script (built on mock-up screens of the pre-redesign app) was removed on 2026-11-22; a new one starts from the screen tour | To record |
 | Promotional text | 170 chars, per locale, seasonal | Done |
 | Description | Per locale, no unsupported claims, Terms and Privacy links, auto-renew disclosure | Done |
 | Subscription display names and descriptions | Must exist in **every** metadata locale (today only en-US, es-MX, fr-CA, de-DE exist in `appstore_products.json`; add en-CA, en-GB, en-AU, fr-FR, es-ES, ja, ar-SA) | To do |
@@ -160,7 +160,7 @@ Rules: real in-app screens with demo data (use the DEBUG demo launch flags, neve
 2. **At launch:** ship all 11 localizations together. A locale left empty adds no extra indexing for its storefront pair, so the English-only store would lose the paired vocabulary.
 3. **Week 1 to 4:** read App Store Connect Analytics (Sources: App Store Search impressions, product page views, conversion rate). Check rank for the winnable terms with `python3 scripts/aso_scan.py --track`. Do not change keywords more than once per version.
 4. **Version 1.0.4 and later:** replace keywords that earn no impressions with the next candidates in `ASO_KEYWORD_PLAN.md`. Use a free Apple Ads (Search Ads Advanced) account for keyword **Search Popularity** scores to replace the rating-count proxy with real demand.
-5. **Reviews:** follow `AppStoreScreenshots/ReviewPromptStrategy.md` (fixed to not promise anything the app does not do).
+5. **Reviews:** the app asks for a rating only after a cancellation reaches the Savings Receipt (`ReviewPromptManager` in `Pausely/Services/StoreKitConfig.swift`, at the 1st, 3rd and 10th).
 
 ---
 
