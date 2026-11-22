@@ -33,7 +33,7 @@ struct FoundRow: View {
         case .trial: return (L10n.string("Free trial"), .decide)
         case .likelyEnded: return (L10n.string("May have ended"), nil)
         case .cancelled: return (L10n.string("Cancelled"), nil)
-        case .active: return proven.chargedAfterCancel ? (L10n.string("Charged after cancelling"), .due) : nil
+        case .active: return proven.chargedAfterCancel ? (L10n.string("Charged after a cancellation email"), .due) : nil
         }
     }
 
@@ -50,7 +50,9 @@ struct FoundRow: View {
         if let last = proven.lastChargeDate.map(day) { return L10n.string("Last charged \(last)") }
         // Known from its sign-up (a channel that emails no receipts, a trial that turned paid): when it
         // started, never "Last charged", which said a sign-up was the latest charge.
-        if let started = proven.subscribedOn.map(day) { return L10n.string("Subscribed on \(started)") }
+        if let started = proven.subscribedOn.map(day) {
+            return proven.startedWithTrial ? L10n.string("Trial started on \(started)") : L10n.string("Subscribed on \(started)")
+        }
         return L10n.string("Detected from your emails")
     }
 

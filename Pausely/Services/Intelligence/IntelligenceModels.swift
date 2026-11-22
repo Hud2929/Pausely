@@ -84,6 +84,8 @@ struct ProvenSubscription: Identifiable, Equatable {
     /// A later charge at a higher amount that hasn't happened twice: a new plan or a one-off, said as a
     /// dated note and never made the price on its own.
     var unusualCharge: ChargeEvidence? = nil
+    /// `subscribedOn` was the day a free trial started (a trial that turned paid), said as such.
+    var startedWithTrial: Bool = false
 
     /// A rise this steep (more than half again) is a new plan or an unexpected charge, not a price rise:
     /// after twelve months at $31.64, a $148.41 charge is "now costs more", never "raised its price".

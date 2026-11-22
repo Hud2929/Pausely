@@ -81,32 +81,52 @@ Independent truth audit (Fable, 2026-11-22): about 7. Each item, fixed or not:
 - [x] T3 blocker: a trial end worked out from the email date (+3 or +14 days) is stated as fact ("Trial
   ends Nov 28", "Cancel before Nov 28") and imported. Say "around" and give no cancel-by date unless read.
 - [ ] T4 "Emails checked: 1,500" is the cap; say when the search was capped and how far back it reached.
-- [ ] T5 "Charged 9 times" counts the chain, not the 12 charges held; the proof list skips months.
-- [ ] T6 "Same amount each time" under a row with a later different charge.
+- [x] T5 "Charged 9 times" counts the chain, not the 12 charges held; the proof list skips months.
+- [x] T6 "Same amount each time" under a row with a later different charge.
 - [ ] T7 totals ignore the ticks, mix tax bases, and count rows never seen charged.
 - [ ] T8 an amount with no currency is taken as the person's currency without saying so.
 - [ ] T9 already-listed rows keep a different amount/date unsaid.
-- [ ] T10 "May have ended" rows can be ticked and import as active with a next charge.
+- [x] T10 "May have ended" rows can be ticked and import as active with a next charge.
 - [ ] T11 a store-billed subscription (Prime Video channel, App Store) imports with the service's own cancel link.
 - [ ] T12 Google One imports at the old price although the new price was read.
-- [ ] T13 "Charged after cancelling... worth disputing" when the person may have re-subscribed.
-- [ ] T14 "raised its price" blames the seller for any rise; one wording everywhere.
-- [ ] T15 "most likely renewed" after a trial for any merchant, not only stores that send no receipts.
+- [x] T13 "Charged after cancelling... worth disputing" when the person may have re-subscribed.
+- [x] T14 "raised its price" blames the seller for any rise; one wording everywhere.
+- [x] T15 "most likely renewed" after a trial for any merchant, not only stores that send no receipts.
 - [ ] T16 a stopped or refused search looks complete; the results page never shows a refused inbox.
-- [ ] T17 "Senders with only one-time purchases, left out" counts more than one-time purchases.
+- [x] T17 "Senders with only one-time purchases, left out" counts more than one-time purchases.
 - [x] T18 "renews in 37 days" counts 24-hour spans; count calendar days.
-- [ ] T19 "goes up to $269.99 on Dec 26": before tax and "on" for a worked-out date.
+- [x] T19 "goes up to $269.99 on Dec 26": before tax and "on" for a worked-out date.
 - [x] T21 "Yearly renewals are the easiest to forget" has no source.
-- [ ] T22 "Your card was declined" when the email only said a payment failed.
-- [ ] T23 "Reading 380 receipts" are emails that might be receipts.
-- [ ] T25 "Missing renewal dates were filled in from your receipts" can come from a trial or sign-up.
-- [ ] T27 Prime "Subscribed on" is the day a free trial started.
-- [ ] T28 an assumed monthly period shown as fact.
+- [x] T22 "Your card was declined" when the email only said a payment failed.
+- [x] T23 "Reading 380 receipts" are emails that might be receipts.
+- [x] T25 "Missing renewal dates were filled in from your receipts" can come from a trial or sign-up.
+- [x] T27 Prime "Subscribed on" is the day a free trial started.
+- [x] T28 an assumed monthly period shown as fact.
 - [x] T29 "You told Pausely this is a subscription" (a tap on a pre-ticked row); "structured subscription data" is internal wording.
 - [ ] T30 the privacy line "keeps only the name, amount and date" is narrower than what is kept (sender, period, flags).
 - [ ] T31 a later scan's "Emails checked" counts only new mail while findings come from all.
 - [ ] T32 already-listed is matched by exact name ("Claude" vs "Claude Pro").
 (T20 and T24 are covered by commits above.)
+
+Independent reach rating (Fable: iPad, Arabic, largest text, VoiceOver, 2026-11-22): 7.0. Contrast passes;
+Arabic mirrors and is fully translated; rows read as one sentence. Open:
+- [ ] B1 iPad: the connect form is a form sheet that cuts its text under the keyboard; at the largest size
+  the title and steps 1-2 are gone (also full screen at the largest size: opens past its title).
+- [ ] B3 Arabic: "CA$" is drawn "$CA" (the trailing symbol flips inside an isolate); "US$" the same.
+- [ ] B4 a failed inbox ("Your sign-in expired. Reconnect this inbox.") has no reconnect action anywhere.
+- [ ] B5 iPad: the side margins don't scroll (only the centre column does).
+- [ ] B6 Arabic dates follow the device calendar (Hijri on ar_SA); for a native reader to decide. Also
+  "منذ ٢٧ ذو القعدة" should be "ذي القعدة".
+- [ ] B8 a date broken across lines at the largest size ("around Dec" / "12."); proof lines may overflow.
+- [ ] B9-B11 VoiceOver: the "why" button doesn't name its service or state; a connected inbox is three
+  stops; the results header is one 40-word heading; "selected" is a word, not the trait.
+- [ ] B12 "Charged N times" above fewer proof lines (the list shows the latest eight).
+- [ ] B14 "Worth knowing" changes order between launches on the same data.
+- [ ] B15 tags repeat their section ("May have ended" under "May have ended"); "Select all" over one row.
+- [ ] B16 letter tiles (G, O, H) beside real logos; logos don't scale at the largest size.
+- [ ] B17 targets under 44 pt: paste button, Close, Cancel.
+- [ ] B18 iPad column stays 640 pt at the largest size; addresses break mid-word.
+- [ ] B20 copy: one-item "..." menu, heading punctuation, a lower-case line start, Arabic button voice.
 
 ## Real accounts, real subscriptions, and Outlook (plan of 2026-11-18)
 

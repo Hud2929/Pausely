@@ -373,10 +373,10 @@ final class LocalizationGuardTests: XCTestCase {
         XCTAssertEqual(L10n.string("\(1) emails"), "1 E-Mail", "German singular")
 
         defaults.set("ar", forKey: L10n.languageKey)
-        XCTAssertEqual(L10n.string("\(2) receipts"), "إيصالين", "Arabic dual")
+        XCTAssertEqual(L10n.string("\(2) emails"), "رسالتين", "Arabic dual")
 
         defaults.set("en", forKey: L10n.languageKey)
-        XCTAssertEqual(L10n.string("\(1) receipts"), "1 receipt", "English singular")
+        XCTAssertEqual(L10n.string("\(1) emails"), "1 email", "English singular")
         XCTAssertEqual(L10n.string("Charged \(4) times, about every month"), "Charged 4 times, about every month")
     }
 }

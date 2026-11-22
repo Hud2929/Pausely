@@ -395,7 +395,7 @@ struct InboxImportView: View {
                             .fixedSize(horizontal: false, vertical: true)
                     }
                     if ignored > 0 {
-                        Text("Senders with only one-time purchases, left out: \(ignored)")
+                        Text("Other senders with charges that didn't look like subscriptions: \(ignored)")
                             .font(.proof(.caption))
                             .foregroundStyle(Color.paperMuted)
                             .fixedSize(horizontal: false, vertical: true)

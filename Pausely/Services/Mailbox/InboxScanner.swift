@@ -24,7 +24,8 @@ struct FoundSubscription: Identifiable, Equatable {
     var line: TallyLine {
         TallyLine(name: name, category: SubscriptionCategory.matching(proven.category).displayName,
                   amount: amount, currency: currency, isConfirmed: true, frequency: billingFrequency,
-                  anchor: proven.status == .trial ? nil : (proven.lastChargeDate ?? proven.nextBillingDate),
+                  // No date for one that may have ended: its old charge would make Home promise a next one.
+                  anchor: proven.status == .trial || proven.status == .likelyEnded ? nil : (proven.lastChargeDate ?? proven.nextBillingDate),
                   trialEndsAt: proven.status == .trial ? proven.trialEndsOn : nil)
     }
 }
@@ -287,7 +288,7 @@ final class InboxScanner: ObservableObject {
             }
             accountStats.checked = summaries.count
             let wanted = Self.triage(summaries, catalog: catalog).prefix(Self.bodyBudget)
-            report(0.35, L10n.string("Reading \(L10n.string("\(wanted.count) receipts")) from \(account.providerName)…"))
+            report(0.35, L10n.string("Reading \(L10n.string("\(wanted.count) emails")) from \(account.providerName)…"))
 
             var signals: [ReceiptSignal] = []
             var stopped = false

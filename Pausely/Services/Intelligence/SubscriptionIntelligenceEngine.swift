@@ -164,7 +164,22 @@ struct SubscriptionIntelligenceEngine {
         case (3..., _): score += 38
         default: score += 22
         }
-        reasons.append(chargedTimes(n, sequence.cadence.frequency))
+        // Every charge of the plan at its price, not only the regular chain's: "Charged 9 times" stood over
+        // twelve charges the app held, and the list beneath skipped August and September.
+        // The chain's charges, plus the plan's others at its price that sit at least half a period from every
+        // one counted: billing days that drift (Jul 12, Aug 20, Sep 20) are each a charge; a receipt's payment
+        // notice or a stray one-off a week before a renewal is not.
+        let halfPeriod = sequence.cadence.days / 2 * 86_400
+        let chainIDs = Set(charges.map(\.id))
+        var atPrice = charges
+        for signal in allSignals.sorted(by: { $0.date < $1.date })
+        where !chainIDs.contains(signal.id) && signal.kind == .charge && !signal.oneTimeLanguage
+            && (signal.cadenceHint != nil || signal.renewalLanguage)
+            && signal.amount.map({ ChargeSchedule.sameAmount($0, chainAmount, tolerance: 0.02) }) == true {
+            if atPrice.contains(where: { abs($0.date.timeIntervalSince(signal.date)) < halfPeriod }) { continue }
+            atPrice.append(signal)
+        }
+        reasons.append(chargedTimes(atPrice.count, sequence.cadence.frequency))
 
         let allSame = amounts.allSatisfy { ChargeSchedule.sameAmount($0, chainAmount, tolerance: 0.005) }
         let coefficient = variation(amounts)
@@ -270,7 +285,7 @@ struct SubscriptionIntelligenceEngine {
             if ProvenSubscription.isPlanChange(from: change.previous, to: latestAmount) {
                 reasons.append(L10n.string("Up from \(format(change.previous, currency)) to \(format(latestAmount, currency)) on \(shortDate(change.date)): a new plan or a higher price"))
             } else {
-                reasons.append(L10n.string("Price rose from \(format(change.previous, currency)) to \(format(latestAmount, currency))"))
+                reasons.append(L10n.string("Up from \(format(change.previous, currency)) to \(format(latestAmount, currency))"))
             }
         }
 
@@ -280,7 +295,11 @@ struct SubscriptionIntelligenceEngine {
         if let next = nextBillingDate { reasons.append(L10n.string("Next charge expected around \(shortDate(next))")) }
 
         let tier = tier(for: score, status: status)
-        let evidence = (charges + sequence.laterCharges).suffix(8).compactMap { signal -> ChargeEvidence? in
+        var seenCharge = Set<String>()
+        let proof = (atPrice + sequence.laterCharges)
+            .filter { seenCharge.insert($0.id).inserted }
+            .sorted { $0.date < $1.date }
+        let evidence = proof.suffix(8).compactMap { signal -> ChargeEvidence? in
             guard let amount = signal.amount else { return nil }
             return ChargeEvidence(id: signal.id, date: signal.date, amount: amount, currency: signal.currency ?? currency)
         }
@@ -339,6 +358,7 @@ struct SubscriptionIntelligenceEngine {
                 startedOn = signal.date
                 reasons = [L10n.string("Subscribed on \(shortDate(signal.date))"),
                            L10n.string("No cancellation email found. This store doesn't email a receipt for each renewal, so it is probably still running.")]
+                if signal.cadenceHint == nil { reasons.append(L10n.string("Billing period assumed monthly until a second charge confirms it")) }
                 if let next { reasons.append(L10n.string("Next charge expected around \(shortDate(next))")) }
             } else {
                 status = .likelyEnded; nextDate = nil
@@ -391,8 +411,11 @@ struct SubscriptionIntelligenceEngine {
                                          now: Date,
                                          calendar: Calendar,
                                          currency: String) -> ProvenSubscription? {
+        // Only for a store that emails no receipt per renewal (Amazon, Prime Video channels): from a seller
+        // that does, months with no receipt after a trial say it did not go on.
         guard merchant.isKnown || merchant.nameQuality >= 55,
               let first = trialSignals.first, let latest = trialSignals.last,
+              MerchantCatalog.silentRenewalDomains.contains(MerchantCatalog.registrableDomain(latest.senderDomain)),
               let amount = trialSignals.compactMap(\.amount).last, amount > 0 else { return nil }
         // Only when the trial's end is known; a guessed end date would invent a charge.
         let endsOn: Date?
@@ -413,7 +436,7 @@ struct SubscriptionIntelligenceEngine {
             category: merchant.category, cancelURL: merchant.cancelURL, amount: amount, currency: latest.currency ?? currency,
             frequency: frequency, lastChargeDate: nil, nextBillingDate: next, status: .active, score: 50,
             tier: tier(for: 50, status: .active), evidence: [], reasons: reasons, previousAmount: nil, trialEndsOn: nil,
-            subscribedOn: first.date)
+            subscribedOn: first.date, startedWithTrial: true)
     }
 
     // MARK: Tiering

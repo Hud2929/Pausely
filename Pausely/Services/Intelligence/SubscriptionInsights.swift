@@ -39,7 +39,7 @@ enum SubscriptionInsights {
             } else {
                 out.append(IntelligenceInsight(
                     id: "price|\(sub.id)", kind: .priceIncrease,
-                    title: L10n.string("\(sub.name) raised its price"),
+                    title: L10n.string("\(sub.name) costs more than before"),
                     detail: L10n.string("From \(format(old, sub.currency)) to \(format(sub.amount, sub.currency)). That's \(format(impact, sub.currency)) more per year."),
                     subscriptionId: sub.id, annualImpact: impact))
             }
@@ -78,8 +78,9 @@ enum SubscriptionInsights {
         }
         if sub.chargedAfterCancel {
             out.append(IntelligenceInsight(
-                id: "afterCancel|\(sub.id)", kind: .chargedAfterCancel, title: L10n.string("Charged by \(sub.name) after cancelling"),
-                detail: L10n.string("You received a cancellation email, then a later charge of \(format(sub.amount, sub.currency)). Worth disputing."),
+                // A charge after a cancellation email may be a new sign-up; the app can't tell.
+                id: "afterCancel|\(sub.id)", kind: .chargedAfterCancel, title: L10n.string("\(sub.name) charged again after a cancellation email"),
+                detail: L10n.string("A cancellation email came, then a later charge of \(format(sub.amount, sub.currency)). If you didn't sign up again, ask for it back."),
                 subscriptionId: sub.id, annualImpact: sub.annualCost))
         }
         return out
@@ -123,7 +124,7 @@ enum SubscriptionInsights {
                 NSDecimalRound(&rounded, &estimate, 2, .plain)
                 withTax = rounded
             }
-            let title = sub.nextBillingDate.map { L10n.string("\(sub.name) goes up to \(newPrice) on \(shortDate($0))") }
+            let title = sub.nextBillingDate.map { L10n.string("\(sub.name) goes up to \(newPrice) around \(shortDate($0))") }
                 ?? L10n.string("\(sub.name) goes up to \(newPrice) at the next renewal")
             out.append(IntelligenceInsight(
                 id: "intro|\(sub.id)", kind: .priceChangeNotice,
@@ -146,7 +147,7 @@ enum SubscriptionInsights {
             if let lastCharge = sub.lastChargeDate, lastCharge >= failure.date { continue }
             out.append(IntelligenceInsight(
                 id: "failed|\(sub.id)", kind: .paymentFailed, title: L10n.string("Payment to \(sub.name) failed"),
-                detail: L10n.string("Your card was declined on \(shortDate(failure.date)). Update it if you want to keep \(sub.name), or let it lapse if you don't."),
+                detail: L10n.string("A payment failed on \(shortDate(failure.date)). Update your payment details if you want to keep \(sub.name), or let it lapse if you don't."),
                 subscriptionId: sub.id, annualImpact: nil))
         }
         return out

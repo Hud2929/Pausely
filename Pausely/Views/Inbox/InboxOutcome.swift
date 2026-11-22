@@ -30,7 +30,7 @@ struct InboxOutcome: View {
                     if !outcome.added.isEmpty || !outcome.waiting.isEmpty { Hairline() }
                     line(outcome.datesFilled.isEmpty
                                 ? L10n.string("Already on your list: \(outcome.alreadyListed.count).")
-                                : L10n.string("Already on your list: \(outcome.alreadyListed.count). Missing renewal dates were filled in from your receipts."),
+                                : L10n.string("Already on your list: \(outcome.alreadyListed.count). Missing renewal dates were filled in from your emails."),
                                 names: outcome.alreadyListed)
                 }
             }

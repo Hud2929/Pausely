@@ -70,40 +70,6 @@
         }
       }
     },
-    "%@ goes up to %@ on %@": {
-      "localizations": {
-        "ar": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "سيرتفع سعر %1$@ إلى %2$@ في %3$@"
-          }
-        },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "%1$@ steigt am %3$@ auf %2$@"
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "%1$@ sube a %2$@ el %3$@"
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "%1$@ passe à %2$@ le %3$@"
-          }
-        },
-        "ja": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "%1$@は%3$@に%2$@に値上がりします"
-          }
-        }
-      }
-    },
     "%@ is a known subscription service": {
       "localizations": {
         "ar": {
@@ -202,40 +168,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "%@は終了したようです"
-          }
-        }
-      }
-    },
-    "%@ raised its price": {
-      "localizations": {
-        "ar": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "رفعت %@ سعرها"
-          }
-        },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "%@ hat den Preis erhöht"
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "%@ subió su precio"
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "%@ a augmenté son prix"
-          }
-        },
-        "ja": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "%@が値上げしました"
           }
         }
       }
@@ -431,136 +363,6 @@
                 "stringUnit": {
                   "state": "translated",
                   "value": "%lld件のメール"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "%lld receipts": {
-      "localizations": {
-        "en": {
-          "variations": {
-            "plural": {
-              "one": {
-                "stringUnit": {
-                  "state": "translated",
-                  "value": "%lld receipt"
-                }
-              },
-              "other": {
-                "stringUnit": {
-                  "state": "translated",
-                  "value": "%lld receipts"
-                }
-              }
-            }
-          }
-        },
-        "ar": {
-          "variations": {
-            "plural": {
-              "zero": {
-                "stringUnit": {
-                  "state": "translated",
-                  "value": "%lld إيصال"
-                }
-              },
-              "one": {
-                "stringUnit": {
-                  "state": "translated",
-                  "value": "إيصال واحد"
-                }
-              },
-              "two": {
-                "stringUnit": {
-                  "state": "translated",
-                  "value": "إيصالين"
-                }
-              },
-              "few": {
-                "stringUnit": {
-                  "state": "translated",
-                  "value": "%lld إيصالات"
-                }
-              },
-              "many": {
-                "stringUnit": {
-                  "state": "translated",
-                  "value": "%lld إيصالًا"
-                }
-              },
-              "other": {
-                "stringUnit": {
-                  "state": "translated",
-                  "value": "%lld إيصال"
-                }
-              }
-            }
-          }
-        },
-        "de": {
-          "variations": {
-            "plural": {
-              "one": {
-                "stringUnit": {
-                  "state": "translated",
-                  "value": "%lld Beleg"
-                }
-              },
-              "other": {
-                "stringUnit": {
-                  "state": "translated",
-                  "value": "%lld Belege"
-                }
-              }
-            }
-          }
-        },
-        "es": {
-          "variations": {
-            "plural": {
-              "one": {
-                "stringUnit": {
-                  "state": "translated",
-                  "value": "%lld recibo"
-                }
-              },
-              "other": {
-                "stringUnit": {
-                  "state": "translated",
-                  "value": "%lld recibos"
-                }
-              }
-            }
-          }
-        },
-        "fr": {
-          "variations": {
-            "plural": {
-              "one": {
-                "stringUnit": {
-                  "state": "translated",
-                  "value": "%lld reçu"
-                }
-              },
-              "other": {
-                "stringUnit": {
-                  "state": "translated",
-                  "value": "%lld reçus"
-                }
-              }
-            }
-          }
-        },
-        "ja": {
-          "variations": {
-            "plural": {
-              "other": {
-                "stringUnit": {
-                  "state": "translated",
-                  "value": "%lld件の領収書"
                 }
               }
             }
@@ -1614,40 +1416,6 @@
         }
       }
     },
-    "Charged after cancelling": {
-      "localizations": {
-        "ar": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "خصم بعد الإلغاء"
-          }
-        },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Abbuchung nach Kündigung"
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Cobrado tras cancelar"
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Prélevé après résiliation"
-          }
-        },
-        "ja": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "解約後に請求"
-          }
-        }
-      }
-    },
     "Charged again on %@ after a cancellation email on %@": {
       "localizations": {
         "ar": {
@@ -1678,40 +1446,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "%2$@の解約メールの後、%1$@に再度請求"
-          }
-        }
-      }
-    },
-    "Charged by %@ after cancelling": {
-      "localizations": {
-        "ar": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "خصم من %@ بعد الإلغاء"
-          }
-        },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Abbuchung von %@ nach der Kündigung"
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "%@ te cobró después de cancelar"
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Prélèvement de %@ après résiliation"
-          }
-        },
-        "ja": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "解約後に%@から請求"
           }
         }
       }
@@ -4386,40 +4120,6 @@
         }
       }
     },
-    "Price rose from %@ to %@": {
-      "localizations": {
-        "ar": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "ارتفع السعر من %1$@ إلى %2$@"
-          }
-        },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Preis stieg von %1$@ auf %2$@"
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "El precio subió de %1$@ a %2$@"
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Le prix est passé de %1$@ à %2$@"
-          }
-        },
-        "ja": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "価格が%1$@から%2$@に上がりました"
-          }
-        }
-      }
-    },
     "Price went up": {
       "localizations": {
         "ar": {
@@ -6194,40 +5894,6 @@
         }
       }
     },
-    "You received a cancellation email, then a later charge of %@. Worth disputing.": {
-      "localizations": {
-        "ar": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "تلقيت رسالة إلغاء، ثم خصمًا لاحقًا بقيمة %@. يستحق الاعتراض."
-          }
-        },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Sie haben eine Kündigungs-E-Mail erhalten und danach eine Abbuchung von %@. Ein Widerspruch lohnt sich."
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Recibiste un correo de cancelación y luego un cargo de %@. Vale la pena reclamarlo."
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Vous avez reçu un e-mail de résiliation, puis un prélèvement de %@. Cela vaut la peine de le contester."
-          }
-        },
-        "ja": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "解約メールの後に%@の請求がありました。異議申し立てを検討してください。"
-          }
-        }
-      }
-    },
     "You're on an introductory price of %@. It renews at %@ unless you cancel or switch plans first.": {
       "localizations": {
         "ar": {
@@ -6258,40 +5924,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "現在は%1$@の初回価格です。事前に解約またはプラン変更しない限り、%2$@で更新されます。"
-          }
-        }
-      }
-    },
-    "Your card was declined on %@. Update it if you want to keep %@, or let it lapse if you don't.": {
-      "localizations": {
-        "ar": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "رُفضت بطاقتك في %1$@. حدّثها إذا أردت الاحتفاظ بـ %2$@، أو اتركه ينتهي إن لم ترغب في ذلك."
-          }
-        },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Ihre Karte wurde am %1$@ abgelehnt. Aktualisieren Sie sie, wenn Sie %2$@ behalten möchten, oder lassen Sie es auslaufen."
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Rechazaron tu tarjeta el %1$@. Actualízala si quieres mantener %2$@, o deja que venza si no."
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Votre carte a été refusée le %1$@. Mettez-la à jour si vous voulez garder %2$@, sinon laissez-le expirer."
-          }
-        },
-        "ja": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "%1$@にカードが拒否されました。%2$@を続けるならカード情報を更新し、不要ならそのまま失効させてください。"
           }
         }
       }
@@ -22261,40 +21893,6 @@
         }
       }
     },
-    "Senders with only one-time purchases, left out: %lld": {
-      "localizations": {
-        "ar": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "مرسلون لديهم مشتريات لمرة واحدة فقط، تم استبعادهم: %lld"
-          }
-        },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Absender mit nur einmaligen Käufen, weggelassen: %lld"
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Remitentes con solo compras únicas, descartados: %lld"
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Expéditeurs avec uniquement des achats ponctuels, écartés : %lld"
-          }
-        },
-        "ja": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "単発の購入のみの送信元（除外）: %lld件"
-          }
-        }
-      }
-    },
     "Add %lld to my list": {
       "localizations": {
         "ar": {
@@ -22461,40 +22059,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "すでにリストにあるもの: %lld件。"
-          }
-        }
-      }
-    },
-    "Already on your list: %lld. Missing renewal dates were filled in from your receipts.": {
-      "localizations": {
-        "ar": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "موجودة مسبقًا في قائمتك: %lld. تمت إضافة تواريخ التجديد الناقصة من إيصالاتك."
-          }
-        },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Bereits auf Ihrer Liste: %lld. Fehlende Verlängerungsdaten wurden aus Ihren Belegen ergänzt."
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Ya estaban en tu lista: %lld. Las fechas de renovación que faltaban se completaron con tus recibos."
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Déjà sur votre liste : %lld. Les dates de renouvellement manquantes ont été complétées à partir de vos reçus."
-          }
-        },
-        "ja": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "すでにリストにあるもの: %lld件。不足していた更新日を領収書から補いました。"
           }
         }
       }
@@ -29771,6 +29335,346 @@
           "stringUnit": {
             "state": "translated",
             "value": "以前リストに追加しました"
+          }
+        }
+      }
+    },
+    "%@ charged again after a cancellation email": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "خصم %@ مرة أخرى بعد رسالة إلغاء"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ hat nach einer Kündigungs-E-Mail erneut abgebucht"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ volvió a cobrar tras un correo de cancelación"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ a de nouveau prélevé après un e-mail de résiliation"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "解約メールの後に%@から再び請求がありました"
+          }
+        }
+      }
+    },
+    "%@ costs more than before": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "أصبح %@ أغلى من قبل"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ kostet mehr als vorher"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ cuesta más que antes"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ coûte plus cher qu'avant"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@が以前より高くなりました"
+          }
+        }
+      }
+    },
+    "%@ goes up to %@ around %@": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "سيرتفع سعر %1$@ إلى %2$@ في حدود %3$@"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ steigt um den %3$@ auf %2$@"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ sube a %2$@ hacia el %3$@"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ passe à %2$@ vers le %3$@"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@は%3$@ごろに%2$@に値上がりします"
+          }
+        }
+      }
+    },
+    "A cancellation email came, then a later charge of %@. If you didn't sign up again, ask for it back.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "وصلت رسالة إلغاء، ثم خصم لاحق قدره %@. إن لم تشترك من جديد، فاطلب استرداده."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Erst kam eine Kündigungs-E-Mail, dann eine spätere Abbuchung von %@. Wenn Sie sich nicht neu angemeldet haben, fordern Sie das Geld zurück."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Llegó un correo de cancelación y después un cargo de %@. Si no te volviste a suscribir, pide que te lo devuelvan."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Un e-mail de résiliation est arrivé, puis un prélèvement de %@. Si vous ne vous êtes pas réabonné, demandez un remboursement."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "解約メールの後に%@の請求がありました。再登録していなければ、返金を求めてください。"
+          }
+        }
+      }
+    },
+    "A payment failed on %@. Update your payment details if you want to keep %@, or let it lapse if you don't.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "فشل دفع في %1$@. حدّث بيانات الدفع إذا أردت الاحتفاظ بـ %2$@، أو اتركه ينتهي إن لم ترغب في ذلك."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Am %1$@ ist eine Zahlung fehlgeschlagen. Aktualisieren Sie Ihre Zahlungsdaten, wenn Sie %2$@ behalten möchten, oder lassen Sie es auslaufen."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Un pago falló el %1$@. Actualiza tus datos de pago si quieres mantener %2$@, o deja que venza si no."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Un paiement a échoué le %1$@. Mettez à jour vos informations de paiement si vous voulez garder %2$@, sinon laissez-le expirer."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@に支払いが失敗しました。%2$@を続けるなら支払い情報を更新し、不要ならそのまま失効させてください。"
+          }
+        }
+      }
+    },
+    "Already on your list: %lld. Missing renewal dates were filled in from your emails.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "موجودة مسبقًا في قائمتك: %lld. تمت إضافة تواريخ التجديد الناقصة من رسائلك."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bereits auf Ihrer Liste: %lld. Fehlende Verlängerungsdaten wurden aus Ihren E-Mails ergänzt."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ya estaban en tu lista: %lld. Las fechas de renovación que faltaban se completaron con tus correos."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Déjà sur votre liste : %lld. Les dates de renouvellement manquantes ont été complétées à partir de vos e-mails."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "すでにリストにあるもの: %lld件。不足していた更新日をメールから補いました。"
+          }
+        }
+      }
+    },
+    "Charged after a cancellation email": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "خصم بعد رسالة إلغاء"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Abbuchung nach Kündigungs-E-Mail"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cobro tras un correo de cancelación"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Prélevé après un e-mail de résiliation"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "解約メール後に請求"
+          }
+        }
+      }
+    },
+    "Other senders with charges that didn't look like subscriptions: %lld": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "مرسلون آخرون بخصومات لا تبدو اشتراكات: %lld"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Weitere Absender mit Abbuchungen, die nicht nach Abos aussahen: %lld"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Otros remitentes con cargos que no parecían suscripciones: %lld"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Autres expéditeurs avec des prélèvements qui ne ressemblaient pas à des abonnements : %lld"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "サブスクに見えない請求の送信元(その他): %lld件"
+          }
+        }
+      }
+    },
+    "Trial started on %@": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "بدأت التجربة في %@"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Testphase begann am %@"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "La prueba empezó el %@"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Essai commencé le %@"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@にトライアル開始"
+          }
+        }
+      }
+    },
+    "Up from %@ to %@": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ارتفع من %1$@ إلى %2$@"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Von %1$@ auf %2$@ gestiegen"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Subió de %1$@ a %2$@"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Passé de %1$@ à %2$@"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@から%2$@に上昇"
           }
         }
       }

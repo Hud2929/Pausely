@@ -379,7 +379,7 @@ final class ReceiptAccuracyTests: XCTestCase {
         let plan = analyze(signals, now: day(2026, 7, 20)).first { $0.name == "Spotify" }
         XCTAssertEqual(plan?.status, .priceIncreased)
         XCTAssertEqual(plan?.lastChargeDate, day(2026, 7, 5))
-        XCTAssertTrue(plan?.reasons.contains { $0.hasPrefix("Price rose from") } == true, "\(plan?.reasons ?? [])")
+        XCTAssertTrue(plan?.reasons.contains { $0.hasPrefix("Up from") } == true, "\(plan?.reasons ?? [])")
     }
 
     /// A later one-off from the same seller (its receipt says nothing about renewing) never moves the plan.
@@ -428,6 +428,35 @@ final class ReceiptAccuracyTests: XCTestCase {
         XCTAssertEqual(about.first?.kind, .priceChangeNotice)
         XCTAssertTrue(about.first?.detail.contains("305.09") == true, about.first?.detail ?? "")
         XCTAssertTrue(about.first?.detail.contains("with tax") == true)
+    }
+
+    /// "Most likely renewed after the trial" is said only of a store that emails no receipt per renewal:
+    /// from a seller that does, months without a receipt say the trial did not go on.
+    func testATrialAtASellerThatEmailsReceiptsIsNotAssumedToHaveRenewed() {
+        func trialStart(_ domain: String, _ name: String) -> ReceiptSignal {
+            counter += 1
+            return ReceiptSignal(id: "ts\(counter)", date: day(2026, 5, 12), senderDomain: domain, senderName: name, merchantHint: name,
+                                 platform: "direct", kind: .trialStarted, amount: Decimal(string: "9.99"), currency: "CAD",
+                                 cadenceHint: .monthly, trialDays: 30, renewalLanguage: true, oneTimeLanguage: false, promotional: false)
+        }
+        let prime = analyze([trialStart("amazon.ca", "Amazon Prime")], now: day(2026, 11, 22)).first
+        XCTAssertNotNil(prime, "Amazon emails no receipt per renewal: probably still running")
+        XCTAssertTrue(prime?.startedWithTrial == true)
+        if let prime {
+            XCTAssertEqual(FoundRow.evidence(for: prime, now: day(2026, 11, 22)), "Trial started on May\u{00A0}12")
+        }
+        XCTAssertNil(analyze([trialStart("spotify.com", "Spotify")], now: day(2026, 11, 22)).first { $0.status == .active },
+                     "Spotify emails a receipt each month; none since the trial means it didn't go on")
+    }
+
+    /// A row that may have ended, if added anyway, lands with no date: its old charge would have made Home
+    /// promise a next one.
+    func testAnEndedRowIsAddedWithoutADate() {
+        let ended = ProvenSubscription(id: "x", name: "ChatGPT Plus", merchantKey: "chatgpt plus", category: nil, cancelURL: nil,
+                                       amount: Decimal(string: "22.60")!, currency: "CAD", frequency: .monthly,
+                                       lastChargeDate: day(2025, 9, 3), nextBillingDate: nil, status: .likelyEnded, score: 56,
+                                       tier: .likely, evidence: [], reasons: [], previousAmount: nil, trialEndsOn: nil)
+        XCTAssertNil(FoundSubscription(proven: ended).line.anchor)
     }
 
     private func charge(_ domain: String, _ date: Date, _ amount: String, cadence: BillingFrequency? = nil, renewal: Bool = true) -> ReceiptSignal {
