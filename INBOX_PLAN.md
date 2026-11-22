@@ -17,6 +17,51 @@ strict multi-pass "find everything" protocol behind release gates, and keep watc
 v2 7.2 → v3 8.2 → v4 8.8 → **v5 9.3**. About 12 weeks of work and under $1,000 a year in fees.
 **Verdict: worth it.** It's the highest-return item on the roadmap.
 
+## The 9.5 push (plan of 2026-11-22)
+
+The owner, after the first real Gmail scan: the "Last charged" dates are wrong; fix them so it can't
+happen again, hunt every bug in email import, rate it as a consumer with independent agents, work until
+it is honestly 9.5, remove dead code, and carry out the four distribution items.
+
+### What the real scan proved wrong (owner's Gmail, checked against the receipts in the ledger)
+
+| Row | Shown | True | Cause |
+|---|---|---|---|
+| Google One | "Last charged Dec 26" | Dec 26, **2025** | dates printed without a year, so last year reads as next month |
+| ChatGPT Plus | "Last charged Sep 3" | Sep 3, **2025** | same |
+| Claude | "$31.64, last charged Oct 20" | charged **$148.41 on Nov 10, 2026** after 12 months at $31.64 | the engine keeps only the regular chain; a newer charge outside it vanished with its date |
+| Crunchyroll | "Confirmed, last charged May 20" | subscribed May 20 as a Prime Video channel; channels bill monthly and email no receipts | a sign-up shown as the latest charge, and as proven |
+| (scan) | 8½ minutes, header step ~5 min with a frozen bar | | Gmail headers paced by back-off; no progress reported in that step |
+| Google One insight | "$152.54" next to "$269.99" | one includes tax, the other doesn't | mixed tax in one note |
+
+### Rules that make these impossible (each one is a test)
+1. **A date that isn't in this year carries its year**, everywhere a past or future charge day is written
+   (rows, insights, reasons, Home, receipts). One formatter; a test fails if a view formats a charge day itself.
+2. **"Last charged" is the newest real charge** from that subscription, never older. A newer charge at another
+   amount is kept and named ("$148.41 on Nov 10, more than the usual $31.64"); it is not silently made the price.
+3. **No charge, no "Last charged"**: a sign-up, trial start or channel subscription says "Subscribed May 20"
+   (or "Trial started"), and a store that emails no receipts is never "Confirmed" on a sign-up alone.
+4. **One status rule**: a plan with no charge for longer than its period plus grace "may have ended",
+   whichever section it was in.
+5. **Money in one sentence is all with tax or all without**, and says which when it can't be both.
+
+### Slices (one at a time, each with tests and a commit)
+- **D1 dates and charges**: rules 1–3 in the engine, the rows, the insights; real-shape tests with made-up
+  details (a year-old yearly charge, a newer off-chain charge, a Prime Video channel sign-up).
+- **D2 status and tax**: rules 4–5.
+- **D3 speed**: Gmail header reads paced to stay inside Google's per-person quota instead of backing off;
+  the header step reports progress; target under 2 minutes for 1,500 candidates, measured on the real inbox.
+- **D4 independent consumer rating**: agents that did not build it (Fable, per the owner's rule) read every
+  inbox capture (the tour's inbox states, English, Arabic, largest text, iPad) and the real-scan captures,
+  rate the eight dimensions of `GOLD_STANDARD.md` harshly, and list defects. Every defect becomes a slice.
+  Repeat until every dimension is 9.0+ and the score 9.5, or say plainly which dimension can't get there
+  without a device or a native reader.
+- **D5 dead code**: an agent in its own worktree removes code nothing calls and files nothing uses, with the
+  gold check, unit tests and Release build green; reviewed and merged here.
+- **D6 the four items**: Apple's agreement (the Account Holder's; checked again), iCloud (needs the owner's
+  app-specific password), Google's "[Action Needed]" email (a reply drafted for the owner to send; never
+  sent without their word), ratings (asked for at proven-value moments; a TestFlight beta once Apple allows).
+
 ## Real accounts, real subscriptions, and Outlook (plan of 2026-11-18)
 
 The owner asked: fix the import from email, make sure every way in works and pulls real
