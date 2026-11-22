@@ -112,7 +112,8 @@ final class PauselyAppIntentsTests: XCTestCase {
         XCTAssertEqual(ShortcutAnswers.detail(for: sub("Netflix", "15.49", anchor: day(2026, 11, 15)), now: now, locale: english),
                        "Netflix · \(money("15.49", locale: english)) a month · Active · Renews in 3 days")
         XCTAssertEqual(ShortcutAnswers.detail(for: sub("Notion", "120.00", anchor: day(2027, 3, 1), frequency: .yearly), now: now, locale: english),
-                       "Notion · \(money("10.00", locale: english)) a month · Active · Renews Mar 1")
+                       "Notion · \(money("10.00", locale: english)) a month · Active · Renews Mar 1, 2027",
+                       "a day in another year says its year")
     }
 
     /// Something that will not charge has no renewal to report; something that will, and has no date, says so.

@@ -91,9 +91,9 @@ enum ReceiptLedger {
 
     /// Forgets one inbox: its receipts go unless another connected inbox also has them. Receipts saved
     /// before inboxes were tracked go with the last inbox.
-    static func removeSource(_ accountID: String, remainingAccounts: Int) -> [ReceiptSignal] {
+    static func removeSource(_ accountID: String, remainingAccounts: Int, at url: URL? = fileURL) -> [ReceiptSignal] {
         // Facts that can't be read right now are left alone rather than replaced by an empty file.
-        guard case .facts(let saved) = read() else { return [] }
+        guard case .facts(let saved) = read(from: url) else { return [] }
         let kept = saved.compactMap { signal -> ReceiptSignal? in
             guard let sources = signal.sources else { return remainingAccounts > 0 ? signal : nil }
             let others = sources.filter { $0 != accountID }
@@ -102,12 +102,12 @@ enum ReceiptLedger {
             updated.sources = others
             return updated
         }
-        save(kept)
+        save(kept, to: url)
         return kept
     }
 
-    static func clear() {
-        guard let url = fileURL else { return }
+    static func clear(at url: URL? = fileURL) {
+        guard let url else { return }
         try? FileManager.default.removeItem(at: url)
     }
 }

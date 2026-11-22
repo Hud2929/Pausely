@@ -13,7 +13,7 @@ struct CancelTimingCard: View {
                     .font(.headline)
                     .foregroundStyle(Color.inkText)
                     .accessibilityAddTraits(.isHeader)
-                Text(L10n.string("Cancel before \(next.formatted(.dateTime.month(.abbreviated).day().locale(L10n.locale))) and you won't be charged."))
+                Text(L10n.string("Cancel before \(DayText.date(next, locale: L10n.locale)) and you won't be charged."))
                     .font(.body)
                     .foregroundStyle(Color.inkTextMuted)
                     .fixedSize(horizontal: false, vertical: true)

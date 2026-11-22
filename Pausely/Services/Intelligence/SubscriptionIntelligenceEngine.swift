@@ -94,7 +94,18 @@ struct SubscriptionIntelligenceEngine {
 
         var results: [ProvenSubscription] = []
 
-        if let sequence = ChargeSchedule.best(in: ChargeSchedule.collapsing(eligible)) {
+        if var sequence = ChargeSchedule.best(in: ChargeSchedule.collapsing(eligible)) {
+            // A later charge for this plan that the regular chain left out (a plan change, a new price) is
+            // still its newest charge. Dropped, "Last charged Oct 20, $31.64" stood after a $148.41 charge
+            // on Nov 10 (a real inbox, 2026-11-22). Only charges whose own receipt says they recur count;
+            // a one-off order from the same seller never moves the plan.
+            if let chainEnd = sequence.charges.last {
+                let inChain = Set(sequence.charges.map(\.id))
+                sequence.laterCharges = eligible
+                    .filter { $0.date > chainEnd.date && !inChain.contains($0.id) && $0.kind == .charge
+                              && ($0.cadenceHint != nil || $0.renewalLanguage) && !$0.oneTimeLanguage }
+                    .sorted { $0.date < $1.date }
+            }
             if let sub = buildFromSequence(sequence, merchant: merchant, allSignals: signals, cancellation: cancellation,
                                            now: now, calendar: calendar, currency: currency) {
                 results.append(sub)
@@ -132,7 +143,7 @@ struct SubscriptionIntelligenceEngine {
                                    currency: String) -> ProvenSubscription? {
 
         let charges = sequence.charges
-        guard let latest = charges.last, let latestAmount = latest.amount else { return nil }
+        guard let chainLatest = charges.last, let chainAmount = chainLatest.amount else { return nil }
         let amounts = charges.compactMap(\.amount)
         let n = charges.count
 
@@ -149,11 +160,11 @@ struct SubscriptionIntelligenceEngine {
         }
         reasons.append(chargedTimes(n, sequence.cadence.frequency))
 
-        let allSame = amounts.allSatisfy { ChargeSchedule.sameAmount($0, latestAmount, tolerance: 0.005) }
+        let allSame = amounts.allSatisfy { ChargeSchedule.sameAmount($0, chainAmount, tolerance: 0.005) }
         let coefficient = variation(amounts)
         // A plan whose price changed once or twice is still one plan; orders change every time.
         let stepped = !allSame && isStepped(amounts)
-        if allSame { score += 10; reasons.append(L10n.string("Same amount each time (\(format(latestAmount, currency)))")) }
+        if allSame { score += 10; reasons.append(L10n.string("Same amount each time (\(format(chainAmount, currency)))")) }
         else if coefficient <= 0.06 || stepped { score += 6 }
         else if coefficient > 0.25 { score -= 30; reasons.append(L10n.string("Amount varies a lot, which looks more like orders than a plan")) }
 
@@ -175,8 +186,8 @@ struct SubscriptionIntelligenceEngine {
             score += 15; reasons.append(L10n.string("Billed through an app-store subscription"))
         }
 
-        if latestAmount < 1 { score -= 18 }
-        if latestAmount > 600 { score -= 20 }
+        if chainAmount < 1 { score -= 18 }
+        if chainAmount > 600 { score -= 20 }
         if !merchant.isKnown && merchant.nameQuality < 50 { score -= 12 }
 
         // Gating: unknown or mixed-commerce brands must PROVE recurrence
@@ -195,6 +206,9 @@ struct SubscriptionIntelligenceEngine {
         score = max(0, min(100, score))
 
         // --- Dates & status ---
+        // The newest charge of this plan says what is current, even one the chain left out.
+        let latest = sequence.laterCharges.last ?? chainLatest
+        let latestAmount = latest.amount ?? chainAmount
         let frequency = sequence.cadence.frequency
         let (next, missed) = nextBilling(after: latest.date, frequency: frequency, now: now, calendar: calendar)
         let lastDate = latest.date
@@ -223,17 +237,25 @@ struct SubscriptionIntelligenceEngine {
 
         // Price change within the last 12 months
         var previousAmount: Decimal?
-        if status != .cancelled, let change = lastPriceChange(charges), latestAmount > change.previous * Decimal(1.02),
+        var priceChange = lastPriceChange(charges)
+        if latest.id != chainLatest.id, !ChargeSchedule.sameAmount(latestAmount, chainAmount, tolerance: 0.02) {
+            priceChange = (previous: chainAmount, date: latest.date)
+        }
+        if status != .cancelled, let change = priceChange, latestAmount > change.previous * Decimal(1.02),
            now.timeIntervalSince(change.date) < 400 * 86_400 {
             previousAmount = change.previous
             if status == .active { status = .priceIncreased }
-            reasons.append(L10n.string("Price rose from \(format(change.previous, currency)) to \(format(latestAmount, currency))"))
+            if ProvenSubscription.isPlanChange(from: change.previous, to: latestAmount) {
+                reasons.append(L10n.string("Up from \(format(change.previous, currency)) to \(format(latestAmount, currency)) on \(shortDate(change.date)): a new plan or a higher price"))
+            } else {
+                reasons.append(L10n.string("Price rose from \(format(change.previous, currency)) to \(format(latestAmount, currency))"))
+            }
         }
 
         if let next = nextBillingDate { reasons.append(L10n.string("Next charge expected around \(shortDate(next))")) }
 
         let tier = tier(for: score, status: status)
-        let evidence = charges.suffix(8).compactMap { signal -> ChargeEvidence? in
+        let evidence = (charges + sequence.laterCharges).suffix(8).compactMap { signal -> ChargeEvidence? in
             guard let amount = signal.amount else { return nil }
             return ChargeEvidence(id: signal.id, date: signal.date, amount: amount, currency: signal.currency ?? currency)
         }
@@ -278,6 +300,8 @@ struct SubscriptionIntelligenceEngine {
         var status: ProvenSubscription.Status = .active
         let (next, missed) = nextBilling(after: signal.date, frequency: frequency, now: now, calendar: calendar)
         var nextDate: Date? = next
+        var lastCharge: Date? = signal.date
+        var startedOn: Date?
         if missed >= 1, let expected = nextExpected(after: signal.date, frequency: frequency, calendar: calendar),
            now.timeIntervalSince(expected) / 86_400 > graceDays(frequency) {
             let silent = MerchantCatalog.silentRenewalDomains.contains(MerchantCatalog.registrableDomain(signal.senderDomain))
@@ -285,6 +309,9 @@ struct SubscriptionIntelligenceEngine {
                 // The store told them it started and has not told them it stopped; it never sends renewal
                 // receipts. Probably still running, and worth a look rather than a claim.
                 score = min(score, 52)
+                // Its one email is the sign-up, not the latest of the charges that followed.
+                lastCharge = nil
+                startedOn = signal.date
                 reasons = [L10n.string("Subscribed on \(shortDate(signal.date))"),
                            L10n.string("No cancellation email found. This store doesn't email a receipt for each renewal, so it is probably still running.")]
                 if let next { reasons.append(L10n.string("Next charge expected around \(shortDate(next))")) }
@@ -300,10 +327,10 @@ struct SubscriptionIntelligenceEngine {
             id: "\(merchant.key)|\(frequency.rawValue)|\(currency)",
             name: merchant.displayName, merchantKey: merchant.key, category: merchant.category, cancelURL: merchant.cancelURL,
             amount: amount, currency: signal.currency ?? currency, frequency: frequency,
-            lastChargeDate: signal.date, nextBillingDate: nextDate, status: status, score: score,
+            lastChargeDate: lastCharge, nextBillingDate: nextDate, status: status, score: score,
             tier: tier(for: score, status: status),
             evidence: [ChargeEvidence(id: signal.id, date: signal.date, amount: amount, currency: signal.currency ?? currency)],
-            reasons: reasons, previousAmount: nil, trialEndsOn: nil)
+            reasons: reasons, previousAmount: nil, trialEndsOn: nil, subscribedOn: startedOn)
     }
 
     private func trialCandidate(trialSignals: [ReceiptSignal],
@@ -358,7 +385,8 @@ struct SubscriptionIntelligenceEngine {
             id: "\(merchant.key)|\(frequency.rawValue)|\(currency)", name: merchant.displayName, merchantKey: merchant.key,
             category: merchant.category, cancelURL: merchant.cancelURL, amount: amount, currency: latest.currency ?? currency,
             frequency: frequency, lastChargeDate: nil, nextBillingDate: next, status: .active, score: 50,
-            tier: tier(for: 50, status: .active), evidence: [], reasons: reasons, previousAmount: nil, trialEndsOn: nil)
+            tier: tier(for: 50, status: .active), evidence: [], reasons: reasons, previousAmount: nil, trialEndsOn: nil,
+            subscribedOn: first.date)
     }
 
     // MARK: Tiering
@@ -489,6 +517,6 @@ struct SubscriptionIntelligenceEngine {
 enum ReceiptWording {
     /// "Nov 3": a day as the reasons and insights give it, in the app's language.
     static func shortDate(_ date: Date) -> String {
-        date.formatted(.dateTime.month(.abbreviated).day().locale(L10n.locale))
+        DayText.date(date, locale: L10n.locale)
     }
 }

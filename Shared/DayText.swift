@@ -15,9 +15,16 @@ enum DayText {
         return formatter.localizedString(from: DateComponents(day: daysAway))
     }
 
-    /// "Nov 28", in `locale`.
-    static func date(_ day: Date, locale: Locale) -> String {
-        day.formatted(.dateTime.month(.abbreviated).day().locale(locale))
+    /// "Nov 28", in `locale`; "Dec 26, 2025" when the day is not in this year. The one way a day is
+    /// written, in the app and the widgets. Without the year, a charge from last December read as one
+    /// coming next month ("Last charged Dec 26", written in November 2026 about December 2025).
+    /// `weekday` puts the day of the week in front ("Thu, Nov 28").
+    static func date(_ day: Date, locale: Locale, now: Date = Date(), calendar: Calendar = .billing,
+                     weekday: Bool = false) -> String {
+        var style = Date.FormatStyle.dateTime.month(.abbreviated).day()
+        if weekday { style = style.weekday(.abbreviated) }
+        if calendar.component(.year, from: day) != calendar.component(.year, from: now) { style = style.year() }
+        return day.formatted(style.locale(locale))
     }
 
     /// Words for the week ahead, the date beyond it.

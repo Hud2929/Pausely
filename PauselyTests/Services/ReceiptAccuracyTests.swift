@@ -291,6 +291,71 @@ final class ReceiptAccuracyTests: XCTestCase {
 
     // MARK: Schedules and price changes
 
+    // MARK: The newest charge, and charges that are not charges (a real inbox, 2026-11-22)
+
+    /// Twelve months of a plan at one price, then a charge at a much higher one for the same plan. The
+    /// regular chain left that charge out, and the row said "$31.64, last charged Oct 20" a fortnight
+    /// after a $148.41 charge on Nov 10. The newest charge is the last charge, and the jump is said as
+    /// what it may be (a new plan or a higher price), never "raised its price".
+    func testANewerChargeAtAnotherAmountIsTheLastCharge() {
+        var signals = (1...10).map { charge("anthropic.com", day(2026, $0, 20), "31.64", cadence: .monthly) }
+        signals.append(charge("anthropic.com", day(2026, 11, 10), "148.41", cadence: .monthly))
+        let found = analyze(signals, now: day(2026, 11, 22))
+        XCTAssertEqual(found.count, 1, "one plan, not two")
+        let plan = try? XCTUnwrap(found.first)
+        XCTAssertEqual(plan?.lastChargeDate, day(2026, 11, 10))
+        XCTAssertEqual(plan?.amount, Decimal(string: "148.41"))
+        XCTAssertEqual(plan?.previousAmount, Decimal(string: "31.64"))
+        XCTAssertEqual(plan?.status, .priceIncreased)
+        XCTAssertEqual(plan?.nextBillingDate, day(2026, 12, 10), "the next charge follows the newest one")
+        XCTAssertTrue(plan?.reasons.contains { $0.contains("a new plan or a higher price") } == true, "\(plan?.reasons ?? [])")
+        XCTAssertFalse(plan?.reasons.contains { $0.contains("varies a lot") } == true, "a plan that changed once is not a run of orders")
+        XCTAssertGreaterThanOrEqual(plan?.tier ?? .hidden, .likely)
+        let insight = SubscriptionInsights.all(for: found, groups: [:], now: day(2026, 11, 22), calendar: utc)
+            .first { $0.kind == .priceIncrease }
+        XCTAssertNotNil(insight)
+        XCTAssertFalse(insight?.title.contains("raised its price") == true, "the app can't know the seller raised it")
+        XCTAssertTrue(insight?.detail.contains("If you didn't change plans") == true)
+    }
+
+    /// A small rise is still a price rise, said as one.
+    func testASmallRiseIsStillAPriceRise() {
+        var signals = (1...6).map { charge("spotify.com", day(2026, $0, 5), "10.99", cadence: .monthly) }
+        signals.append(charge("spotify.com", day(2026, 7, 5), "11.99", cadence: .monthly))
+        let plan = analyze(signals, now: day(2026, 7, 20)).first { $0.name == "Spotify" }
+        XCTAssertEqual(plan?.status, .priceIncreased)
+        XCTAssertEqual(plan?.lastChargeDate, day(2026, 7, 5))
+        XCTAssertTrue(plan?.reasons.contains { $0.hasPrefix("Price rose from") } == true, "\(plan?.reasons ?? [])")
+    }
+
+    /// A later one-off from the same seller (its receipt says nothing about renewing) never moves the plan.
+    func testALaterOneOffDoesNotMoveThePlan() {
+        var signals = (1...6).map { charge("anthropic.com", day(2026, $0, 20), "31.64", cadence: .monthly) }
+        signals.append(charge("anthropic.com", day(2026, 6, 28), "84.75", renewal: false))
+        let plan = analyze(signals, now: day(2026, 7, 1)).first
+        XCTAssertEqual(plan?.lastChargeDate, day(2026, 6, 20))
+        XCTAssertEqual(plan?.amount, Decimal(string: "31.64"))
+        XCTAssertNotEqual(plan?.status, .priceIncreased)
+    }
+
+    /// A Prime Video channel emails when someone subscribes and never again. That email is the sign-up,
+    /// not "the last charge": the row said "Last charged May 20" six months of charges later.
+    func testAChannelSignUpIsNotALastCharge() {
+        counter += 1
+        let signUp = ReceiptSignal(id: "s\(counter)", date: day(2026, 5, 20), senderDomain: "primevideo.com", senderName: "Prime Video",
+                                   merchantHint: "Crunchyroll", platform: "direct", kind: .charge, amount: Decimal(string: "10.99"),
+                                   currency: "USD", cadenceHint: .monthly, trialDays: nil, renewalLanguage: true,
+                                   oneTimeLanguage: false, promotional: false)
+        let plan = analyze([signUp], now: day(2026, 11, 22)).first
+        XCTAssertNotNil(plan, "still listed: it probably runs on")
+        XCTAssertNil(plan?.lastChargeDate, "a sign-up is not a charge")
+        XCTAssertEqual(plan?.subscribedOn, day(2026, 5, 20))
+        XCTAssertEqual(plan?.tier, .review, "worth a look, never confirmed on a sign-up alone")
+        if let plan {
+            XCTAssertEqual(FoundRow.evidence(for: plan, now: day(2026, 11, 22)), "Subscribed on May\u{00A0}20")
+        }
+    }
+
     private func charge(_ domain: String, _ date: Date, _ amount: String, cadence: BillingFrequency? = nil, renewal: Bool = true) -> ReceiptSignal {
         counter += 1
         return ReceiptSignal(id: "c\(counter)", date: date, senderDomain: domain, senderName: "", merchantHint: nil, platform: "direct",

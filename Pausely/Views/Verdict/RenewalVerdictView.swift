@@ -165,7 +165,7 @@ struct RenewalVerdictView: View {
     }
 
     private func whenText(_ charge: (date: Date, isTrialEnd: Bool)) -> String {
-        let day = L10n.whole(charge.date.formatted(.dateTime.weekday(.abbreviated).month(.abbreviated).day().locale(L10n.locale)))
+        let day = L10n.day(charge.date, weekday: true)
         let days = daysUntil(charge.date)
         let relative = L10n.whole(L10n.relativeDay(days))
         return L10n.breakingAfterDots(charge.isTrialEnd
@@ -187,8 +187,8 @@ struct RenewalVerdictView: View {
 
             if let change = PriceHistory.latestChange(for: sub, events: eventLog.events) {
                 let up = change.isIncrease
-                factLine(up ? L10n.string("Up from \(MoneyFormat.string(change.from, sub.currency)) since \(change.since.formatted(.dateTime.month(.abbreviated).day().locale(L10n.locale)))")
-                            : L10n.string("Down from \(MoneyFormat.string(change.from, sub.currency)) since \(change.since.formatted(.dateTime.month(.abbreviated).day().locale(L10n.locale)))"),
+                factLine(up ? L10n.string("Up from \(MoneyFormat.string(change.from, sub.currency)) since \(DayText.date(change.since, locale: L10n.locale))")
+                            : L10n.string("Down from \(MoneyFormat.string(change.from, sub.currency)) since \(DayText.date(change.since, locale: L10n.locale))"),
                          // Mint is for money kept by cancelling. A price that went down is said in ink.
                          color: up ? .paperDue : .paperInk)
             }
@@ -203,13 +203,13 @@ struct RenewalVerdictView: View {
             if let charge {
                 // The same promise for a renewal as for a trial's end, and one Pausely can make of any
                 // service: cancelled before the day, the charge doesn't happen.
-                factLine(L10n.string("Cancel before \(charge.date.formatted(.dateTime.month(.abbreviated).day().locale(L10n.locale))) and you won't be charged."))
+                factLine(L10n.string("Cancel before \(DayText.date(charge.date, locale: L10n.locale)) and you won't be charged."))
             } else {
                 factLine(L10n.string("Add the date and Pausely will ask you before it charges."))
             }
 
             if let kept = VerdictFacts.lastKept(for: sub.id, events: eventLog.events) {
-                factLine(L10n.string("You kept it on \(kept.formatted(.dateTime.month(.abbreviated).day().locale(L10n.locale)))."))
+                factLine(L10n.string("You kept it on \(DayText.date(kept, locale: L10n.locale))."))
             }
 
             if sub.isPausely {
@@ -322,7 +322,7 @@ struct RenewalVerdictView: View {
             switch outcome {
             case .kept(let askAgain):
                 OutcomeSlip(name: sub.name, category: sub.category, stamp: L10n.string("Kept"), torn: false) {
-                    Text(askAgain.map { L10n.string("No more reminders about this charge. We'll ask again before \($0.formatted(.dateTime.month(.abbreviated).day().locale(L10n.locale))).") }
+                    Text(askAgain.map { L10n.string("No more reminders about this charge. We'll ask again before \(DayText.date($0, locale: L10n.locale)).") }
                          ?? L10n.string("No more reminders about this charge."))
                         .font(.proof(.footnote))
                         .fixedSize(horizontal: false, vertical: true)

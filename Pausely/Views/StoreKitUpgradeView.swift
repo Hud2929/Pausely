@@ -173,7 +173,7 @@ struct StoreKitUpgradeView: View {
 
     private func shortDate(daysFromToday days: Int) -> String {
         let date = Calendar.billing.date(byAdding: .day, value: days, to: Date()) ?? Date()
-        return date.formatted(.dateTime.month(.abbreviated).day().locale(L10n.locale))
+        return DayText.date(date, locale: L10n.locale)
     }
 
     private var chargeText: String {

@@ -426,7 +426,7 @@ private struct ReminderAskRow: View {
             return L10n.string("Pausely reminds you before each renewal so you can keep it or cancel it.")
         }
         let price = MoneyFormat.string(charge.amount, charge.currency, locale: L10n.locale)
-        let day = charge.date.formatted(.dateTime.month(.abbreviated).day().locale(L10n.locale))
+        let day = DayText.date(charge.date, locale: L10n.locale)
         return L10n.string("First up: \(charge.name), \(price) on \(day).")
     }
 }
@@ -525,7 +525,7 @@ private struct HorizonSection: View {
 
     private func dayText(_ offset: Int) -> String {
         let date = Calendar.billing.date(byAdding: .day, value: offset, to: Date()) ?? Date()
-        return date.formatted(.dateTime.month(.abbreviated).day().locale(L10n.locale))
+        return DayText.date(date, locale: L10n.locale)
     }
 
     private var line: some View {
@@ -644,7 +644,7 @@ private struct ChargeRow: View {
     }
 
     private var when: String {
-        let day = L10n.whole(charge.date.formatted(.dateTime.month(.abbreviated).day().locale(L10n.locale)))
+        let day = L10n.day(charge.date)
         let relative = L10n.whole(L10n.relativeDay(charge.dayOffset, capitalized: true))
         return L10n.breakingAfterDots(charge.isTrialEnd ? L10n.string("Trial ends \(day) · \(relative)") : "\(day) · \(relative)")
     }

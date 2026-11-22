@@ -809,8 +809,9 @@ final class ScreenRulesTests: XCTestCase {
 
         // Where the words do sit beside the price (the ordinary sizes), a date in them is not
         // split: "Last charged Nov 10" broke as "Last", "charged Nov", "10" one text size up.
-        XCTAssertTrue(found.contains("let day: (Date) -> String = { L10n.whole($0.formatted(.dateTime.month(.abbreviated).day().locale(L10n.locale))) }"))
+        XCTAssertTrue(found.contains("let day: (Date) -> String = { L10n.day($0, now: now) }"))
         XCTAssertEqual(L10n.whole("Nov 10"), "Nov\u{00A0}10")
+        XCTAssertFalse(L10n.day(Date()).contains(" "), "L10n.day keeps a date on one line")
         // And the price goes under the words before it squeezes them: at the largest ordinary
         // size it took 78 points of the 204 left between the logo and the chevron, and the words
         // (185 points on a line) were set in what remained, a word to a line.

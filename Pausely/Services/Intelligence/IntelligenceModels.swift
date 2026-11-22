@@ -77,6 +77,16 @@ struct ProvenSubscription: Identifiable, Equatable {
     var previousAmount: Decimal?
     var trialEndsOn: Date?
     var chargedAfterCancel: Bool = false
+    /// When it started, for a subscription known from its sign-up rather than a charge: a store that
+    /// emails no receipt per renewal (a Prime Video channel), a trial that turned paid. `lastChargeDate`
+    /// is then nil: a sign-up is not a charge, and "Last charged May 20" was the day someone subscribed.
+    var subscribedOn: Date? = nil
+
+    /// A rise this steep (more than half again) is a new plan or an unexpected charge, not a price rise:
+    /// after twelve months at $31.64, a $148.41 charge is "now costs more", never "raised its price".
+    static func isPlanChange(from old: Decimal, to new: Decimal) -> Bool {
+        old > 0 && new > old * Decimal(string: "1.5")!
+    }
 
     var annualCost: Decimal { amount * ProvenSubscription.periodsPerYear(frequency) }
     var monthlyCost: Decimal { annualCost / 12 }

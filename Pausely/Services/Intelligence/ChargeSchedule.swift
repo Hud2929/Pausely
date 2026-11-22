@@ -19,6 +19,10 @@ struct ChargeSchedule {
     /// How many times the price differs from one charge of the chain to the next. A plan whose price
     /// rose once has one; a chain with another purchase in the middle of it has two.
     var priceBreaks: Int
+    /// Charges for the same plan after the chain's last one that the chain left out because their amount
+    /// moved too far to be the same price (a plan change): newest last. They set what is current (the
+    /// price, the last charge, the next one) and nothing about how regular the plan is.
+    var laterCharges: [ReceiptSignal] = []
 
     private static let cadences: [Cadence] = [
         Cadence(frequency: .weekly, days: 7, tolerance: 2),

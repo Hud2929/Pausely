@@ -32,12 +32,19 @@ struct FoundRow: View {
         }
     }
 
-    private var evidenceLine: String {
+    private var evidenceLine: String { Self.evidence(for: proven) }
+
+    /// The line under a found subscription's name: when its trial ends, when it was last charged
+    /// (with the year when that isn't this year), or when it started if it is known from a sign-up.
+    static func evidence(for proven: ProvenSubscription, now: Date = Date()) -> String {
         // A day and its month stay on one line: beside the price, one text size up, the line
         // read "Last", "charged Nov", "10".
-        let day: (Date) -> String = { L10n.whole($0.formatted(.dateTime.month(.abbreviated).day().locale(L10n.locale))) }
+        let day: (Date) -> String = { L10n.day($0, now: now) }
         if proven.status == .trial, let ends = proven.trialEndsOn { return L10n.string("Trial ends \(day(ends))") }
         if let last = proven.lastChargeDate.map(day) { return L10n.string("Last charged \(last)") }
+        // Known from its sign-up (a channel that emails no receipts, a trial that turned paid): when it
+        // started, never "Last charged", which said a sign-up was the latest charge.
+        if let started = proven.subscribedOn.map(day) { return L10n.string("Subscribed on \(started)") }
         return L10n.string("Detected from your emails")
     }
 

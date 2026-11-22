@@ -189,13 +189,16 @@ final class MailboxProvidersTests: XCTestCase {
     }
 
     func testDisconnectingKeepsReceiptsAnotherInboxStillHas() {
+        // A file of its own: on the app's ledger this test erased the receipts of a real inbox
+        // connected on the simulator (2026-11-22).
+        let file = FileManager.default.temporaryDirectory.appendingPathComponent("ledger-\(UUID().uuidString).json")
         ReceiptLedger.save([signal("shared@x.com", sources: ["A", "B"]), signal("onlyA@x.com", sources: ["A"]),
-                            signal("legacy@x.com", sources: nil)])
-        defer { ReceiptLedger.clear() }
-        let kept = ReceiptLedger.removeSource("A", remainingAccounts: 1)
+                            signal("legacy@x.com", sources: nil)], to: file)
+        defer { ReceiptLedger.clear(at: file) }
+        let kept = ReceiptLedger.removeSource("A", remainingAccounts: 1, at: file)
         XCTAssertEqual(Set(kept.map(\.id)), ["shared@x.com", "legacy@x.com"])
         XCTAssertEqual(kept.first { $0.id == "shared@x.com" }?.sources, ["B"])
-        XCTAssertTrue(ReceiptLedger.removeSource("B", remainingAccounts: 0).isEmpty, "the last inbox takes everything")
+        XCTAssertTrue(ReceiptLedger.removeSource("B", remainingAccounts: 0, at: file).isEmpty, "the last inbox takes everything")
     }
 
     func testTriageReadsKnownBillersFirstAndEachReceiptOnce() {

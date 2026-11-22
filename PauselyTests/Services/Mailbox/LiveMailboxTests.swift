@@ -233,6 +233,33 @@ final class LiveMailboxTests: XCTestCase {
         }
     }
 
+    // MARK: 2b. The facts a real scan saved, weighed again
+
+    /// PAUSELY_REAL_LEDGER=1. Runs the engine again on the receipt facts a real scan saved on this
+    /// simulator (no mail is read, nothing leaves the Mac) and prints each finding with its tier,
+    /// dates and reasons. Seconds instead of an eight-minute scan, so a fix is checked on real mail.
+    @MainActor
+    func testRealLedgerReport() throws {
+        try XCTSkipUnless(environment("PAUSELY_REAL_LEDGER") == "1", "set PAUSELY_REAL_LEDGER=1")
+        // PAUSELY_LEDGER_FILE reads a copy saved outside the app, which no test run can erase.
+        let ledger = environment("PAUSELY_LEDGER_FILE").map { ReceiptLedger.load(from: URL(fileURLWithPath: $0)) }
+            ?? ReceiptLedger.load()
+        try XCTSkipIf(ledger.isEmpty, "no saved receipt facts on this simulator")
+        let report = SubscriptionIntelligenceEngine(catalog: InboxScanner.buildCatalog())
+            .analyze(signals: ledger, now: Date(), defaultCurrency: CurrencyManager.shared.selectedCurrency)
+        let day: (Date?) -> String = { $0.map { $0.formatted(.iso8601.year().month().day()) } ?? "-" }
+        var lines = ["REAL LEDGER: \(ledger.count) facts, \(report.subscriptions.count) found"]
+        for sub in report.subscriptions {
+            lines.append("\(sub.name) | \(sub.amount) \(sub.currency) \(sub.frequency.rawValue) | \(sub.tier) \(sub.status) \(sub.score)"
+                         + " | last \(day(sub.lastChargeDate)) next \(day(sub.nextBillingDate))")
+            lines += sub.reasons.map { "    · \($0)" }
+        }
+        for insight in report.insights { lines.append("INSIGHT \(insight.title) — \(insight.detail ?? "")") }
+        let text = lines.joined(separator: "\n")
+        print(text)
+        if let path = environment("PAUSELY_REPORT_PATH") { try text.write(toFile: path, atomically: true, encoding: .utf8) }
+    }
+
     // MARK: 3. Real inboxes connected in the app on this simulator
 
     /// PAUSELY_REAL_ACCOUNTS=1. Scans every inbox connected in the app (Find in Email) and writes a report.

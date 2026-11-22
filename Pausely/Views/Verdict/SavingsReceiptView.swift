@@ -148,13 +148,13 @@ struct ReceiptRoll: View {
                 .foregroundStyle(Color.paperMuted)
                 .fixedSize(horizontal: false, vertical: true)
             if !hideAmounts, let next = line.avoidedCharges.first(where: { !line.avoidedSoFar.contains($0) }) {
-                Text(L10n.string("Next avoided charge: \(MoneyFormat.string(line.amountPerCharge, line.currency)) on \(next.formatted(.dateTime.month(.abbreviated).day().locale(L10n.locale)))"))
+                Text(L10n.string("Next avoided charge: \(MoneyFormat.string(line.amountPerCharge, line.currency)) on \(DayText.date(next, locale: L10n.locale))"))
                     .font(.proof(.caption))
                     .foregroundStyle(Color.paperMuted)
                     .fixedSize(horizontal: false, vertical: true)
             }
             if let ended = line.endedOn {
-                Text(L10n.string("Started again \(ended.formatted(.dateTime.month(.abbreviated).day().locale(L10n.locale))). Savings stop there."))
+                Text(L10n.string("Started again \(DayText.date(ended, locale: L10n.locale)). Savings stop there."))
                     .font(.proof(.caption))
                     .foregroundStyle(Color.paperDue)
                     .fixedSize(horizontal: false, vertical: true)

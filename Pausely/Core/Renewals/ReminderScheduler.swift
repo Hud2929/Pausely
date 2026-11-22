@@ -120,7 +120,7 @@ final class ReminderScheduler {
     static func content(for reminder: ReminderPlanner.Reminder, subscription sub: Subscription) -> UNMutableNotificationContent {
         let content = UNMutableNotificationContent()
         let amount = sub.displayAmount
-        let day = reminder.eventDate.formatted(.dateTime.month(.abbreviated).day().locale(L10n.locale))
+        let day = DayText.date(reminder.eventDate, locale: L10n.locale)
         switch reminder.kind {
         case .renewalHeadsUp:
             content.title = L10n.string("\(sub.name) renews \(L10n.relativeDay(reminder.daysBefore))")

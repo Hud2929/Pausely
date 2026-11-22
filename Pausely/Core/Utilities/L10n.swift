@@ -37,6 +37,13 @@ enum L10n {
         DayText.relative(daysAway: daysAway, locale: locale, capitalized: capitalized)
     }
 
+    /// A day as every screen writes it, in the app's language and on one line: "Nov 24", or
+    /// "Dec 26, 2025" when it is not in this year (`DayText.date`). Screens never format a day
+    /// themselves; `DayFormatGuardTests` fails if one does.
+    static func day(_ date: Date, now: Date = Date(), weekday: Bool = false) -> String {
+        whole(DayText.date(date, locale: locale, now: now, weekday: weekday))
+    }
+
     /// A few words that stay on one line together: a date ("Nov 24"), how far off it is
     /// ("In 12 days"). For short phrases only; a long one that cannot break is cut instead.
     static func whole(_ words: String) -> String {

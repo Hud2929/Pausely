@@ -29468,6 +29468,108 @@
           }
         }
       }
+    },
+    "%@ now costs more": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ارتفعت تكلفة %@"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ kostet jetzt mehr"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ ahora cuesta más"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ coûte désormais plus cher"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@の料金が上がりました"
+          }
+        }
+      }
+    },
+    "%@ on %@, up from %@. If you didn't change plans, check this charge.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ في %2$@، بعد أن كان %3$@. إن لم تغيّر خطتك، فراجع هذا الخصم."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ am %2$@, vorher %3$@. Wenn Sie den Tarif nicht gewechselt haben, prüfen Sie diese Abbuchung."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ el %2$@, antes %3$@. Si no cambiaste de plan, revisa este cargo."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ le %2$@, contre %3$@ avant. Si vous n'avez pas changé d'offre, vérifiez ce prélèvement."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%2$@に%1$@(以前は%3$@)。プランを変更していない場合は、この請求を確認してください。"
+          }
+        }
+      }
+    },
+    "Up from %@ to %@ on %@: a new plan or a higher price": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ارتفع من %1$@ إلى %2$@ في %3$@: خطة جديدة أو سعر أعلى"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Von %1$@ auf %2$@ am %3$@: ein neuer Tarif oder ein höherer Preis"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "De %1$@ a %2$@ el %3$@: un plan nuevo o un precio más alto"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "De %1$@ à %2$@ le %3$@ : une nouvelle offre ou un prix plus élevé"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%3$@に%1$@から%2$@へ:新しいプランか値上げです"
+          }
+        }
+      }
     }
   },
   "version": "1.1"

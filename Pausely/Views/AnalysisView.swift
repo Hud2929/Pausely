@@ -96,7 +96,7 @@ struct AnalysisView: View {
                                                 .font(.body)
                                                 .foregroundStyle(Color.inkText)
                                                 .fixedSize(horizontal: false, vertical: true)
-                                            Text(L10n.string("Up from \(MoneyFormat.string(item.from, item.subscription.currency)) since \(item.since.formatted(.dateTime.month(.abbreviated).day().locale(L10n.locale)))"))
+                                            Text(L10n.string("Up from \(MoneyFormat.string(item.from, item.subscription.currency)) since \(DayText.date(item.since, locale: L10n.locale))"))
                                                 .font(.subheadline)
                                                 .foregroundStyle(Color.inkTextMuted)
                                                 .fixedSize(horizontal: false, vertical: true)

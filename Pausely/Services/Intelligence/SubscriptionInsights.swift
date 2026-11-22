@@ -25,11 +25,20 @@ enum SubscriptionInsights {
 
         if sub.status == .priceIncreased, let old = sub.previousAmount {
             let impact = (sub.amount - old) * ProvenSubscription.periodsPerYear(sub.frequency)
-            out.append(IntelligenceInsight(
-                id: "price|\(sub.id)", kind: .priceIncrease,
-                title: L10n.string("\(sub.name) raised its price"),
-                detail: L10n.string("From \(format(old, sub.currency)) to \(format(sub.amount, sub.currency)). That's \(format(impact, sub.currency)) more per year."),
-                subscriptionId: sub.id, annualImpact: impact))
+            if ProvenSubscription.isPlanChange(from: old, to: sub.amount), let on = sub.lastChargeDate {
+                // A jump this size is a new plan or a charge nobody asked for; the app can't tell which.
+                out.append(IntelligenceInsight(
+                    id: "price|\(sub.id)", kind: .priceIncrease,
+                    title: L10n.string("\(sub.name) now costs more"),
+                    detail: L10n.string("\(format(sub.amount, sub.currency)) on \(shortDate(on)), up from \(format(old, sub.currency)). If you didn't change plans, check this charge."),
+                    subscriptionId: sub.id, annualImpact: impact))
+            } else {
+                out.append(IntelligenceInsight(
+                    id: "price|\(sub.id)", kind: .priceIncrease,
+                    title: L10n.string("\(sub.name) raised its price"),
+                    detail: L10n.string("From \(format(old, sub.currency)) to \(format(sub.amount, sub.currency)). That's \(format(impact, sub.currency)) more per year."),
+                    subscriptionId: sub.id, annualImpact: impact))
+            }
         }
         if sub.status == .trial, let ends = sub.trialEndsOn {
             let days = max(0, calendar.dateComponents([.day], from: now, to: ends).day ?? 0)

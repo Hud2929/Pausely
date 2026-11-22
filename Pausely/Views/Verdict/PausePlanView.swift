@@ -70,7 +70,7 @@ struct PausePlanView: View {
     }
 
     private func short(_ date: Date) -> String {
-        date.formatted(.dateTime.month(.abbreviated).day().locale(L10n.locale))
+        DayText.date(date, locale: L10n.locale)
     }
 
     // MARK: - Setup
@@ -549,7 +549,7 @@ struct PausePlanCard: View {
         if let plan = planStore.activePlan,
            let current = PausePlanSchedule.currentTurn(plan, subscriptions: byId, now: Date()),
            let sub = byId[current.subscriptionId] {
-            return L10n.string("\(sub.name) is on until \(current.end.formatted(.dateTime.month(.abbreviated).day().locale(L10n.locale))).")
+            return L10n.string("\(sub.name) is on until \(DayText.date(current.end, locale: L10n.locale)).")
         }
         let eligible = store.subscriptions.filter { PausePlanSchedule.isEligible($0) && $0.status != .cancelled }
         let costs = eligible.compactMap { currencyManager.convertToSelected($0.monthlyCost, from: $0.currency) }
