@@ -65,7 +65,7 @@ struct FoundRow: View {
         if let priceText { parts.append(found.billingFrequency.priced(priceText)) }
         parts.append(evidenceLine)
         if let badge { parts.append(badge.text) }
-        if Self.isAChoice(cancelled: found.isCancelled, onList: isOnList) { parts.append(isSelected ? L10n.string("selected") : L10n.string("not selected")) }
+        // Chosen or not is the button's Selected trait, which VoiceOver says; the word said it twice.
         return parts.joined(separator: ", ")
     }
 
@@ -175,7 +175,9 @@ struct FoundRow: View {
         }
         .buttonStyle(.plain)
         .accessibilityIdentifier("foundRowWhy")
-        .accessibilityLabel(isExpanded ? Text("Hide why") : Text("Show why we think this is a subscription"))
+        // Names its service: nine rows said the same "Show why we think this is a subscription".
+        .accessibilityLabel(isExpanded ? Text(verbatim: L10n.string("Hide why \(found.name) was found"))
+                                       : Text(verbatim: L10n.string("Why \(found.name) was found")))
     }
 
     private var nameAndEvidence: some View {

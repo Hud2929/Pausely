@@ -888,9 +888,8 @@ final class ScreenRulesTests: XCTestCase {
         try XCTSkipUnless(FileManager.default.fileExists(atPath: sources.path), "Sources aren't readable from this test run")
         let found = try String(contentsOf: sources.appendingPathComponent("Views/Inbox/FoundRow.swift"), encoding: .utf8)
         XCTAssertFalse(found.contains(".disabled("), "iOS dims a switched-off control to below what can be read")
-        // One rule decides the box (in both layouts), the button, and whether VoiceOver says
-        // "selected" or "not selected".
-        XCTAssertEqual(found.components(separatedBy: "Self.isAChoice(cancelled: found.isCancelled, onList: isOnList)").count - 1, 4)
+        // One rule decides the box (in both layouts) and the button; VoiceOver hears "selected" as the trait.
+        XCTAssertEqual(found.components(separatedBy: "Self.isAChoice(cancelled: found.isCancelled, onList: isOnList)").count - 1, 3)
         let choose = try XCTUnwrap(found.range(of: "private func choose("))
         let body = String(found[choose.upperBound...].prefix(700))
         XCTAssertTrue(body.contains("} else {\n            label()\n                .accessibilityElement(children: .ignore)\n                .accessibilityLabel(accessibilitySummary)"),

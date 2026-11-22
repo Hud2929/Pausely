@@ -19,7 +19,7 @@ struct PrivacySecurityView: View {
                             detail: L10n.string("Stay on this iPhone, protected by iOS data protection."))
                 if FeatureFlags.inboxImportEnabled {
                     SettingsRow(title: L10n.string("Find in Email"),
-                                detail: L10n.string("Receipts are read on this iPhone. Only the name, amount and date of each charge are kept."))
+                                detail: L10n.string("Receipts are read on this iPhone. A few facts of each charge are kept (who charged, how much, when, how often), never the email itself."))
                 }
                 SettingsRow(title: L10n.string("No ads, no selling data"),
                             detail: L10n.string("Pausely has no ad or tracking SDKs and never sells your data."))

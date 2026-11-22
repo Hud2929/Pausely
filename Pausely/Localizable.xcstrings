@@ -6074,74 +6074,6 @@
         }
       }
     },
-    "not selected": {
-      "localizations": {
-        "ar": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "غير محدد"
-          }
-        },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "nicht ausgewählt"
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "no seleccionada"
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "non sélectionné"
-          }
-        },
-        "ja": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "未選択"
-          }
-        }
-      }
-    },
-    "selected": {
-      "localizations": {
-        "ar": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "محدد"
-          }
-        },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "ausgewählt"
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "seleccionada"
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "sélectionné"
-          }
-        },
-        "ja": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "選択済み"
-          }
-        }
-      }
-    },
     "/mo": {
       "localizations": {
         "ar": {
@@ -10771,74 +10703,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "すべて選択"
-          }
-        }
-      }
-    },
-    "Hide why": {
-      "localizations": {
-        "ar": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "إخفاء السبب"
-          }
-        },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Begründung ausblenden"
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Ocultar el motivo"
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Masquer la raison"
-          }
-        },
-        "ja": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "理由を隠す"
-          }
-        }
-      }
-    },
-    "Show why we think this is a subscription": {
-      "localizations": {
-        "ar": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "اعرض سبب اعتقادنا أن هذا اشتراك"
-          }
-        },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Zeigen, warum wir das für ein Abo halten"
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Mostrar por qué creemos que es una suscripción"
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Montrer pourquoi nous pensons qu'il s'agit d'un abonnement"
-          }
-        },
-        "ja": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "サブスクと判断した理由を表示"
           }
         }
       }
@@ -21373,118 +21237,6 @@
         }
       }
     },
-    "Pausely connects straight to your email provider, reads receipts on this iPhone and keeps only the name, amount and date of each charge. It only reads: it never sends, changes or deletes email.": {
-      "localizations": {
-        "ar": {
-          "variations": {
-            "device": {
-              "ipad": {
-                "stringUnit": {
-                  "state": "translated",
-                  "value": "يتصل Pausely مباشرةً بمزوّد بريدك، ويقرأ الإيصالات على هذا الـ iPad، ويحتفظ فقط باسم كل عملية خصم ومبلغها وتاريخها. يقرأ فقط: لا يرسل أي بريد ولا يغيّره ولا يحذفه."
-                }
-              },
-              "other": {
-                "stringUnit": {
-                  "state": "translated",
-                  "value": "يتصل Pausely مباشرةً بمزوّد بريدك، ويقرأ الإيصالات على هذا الـ iPhone، ويحتفظ فقط باسم كل عملية خصم ومبلغها وتاريخها. يقرأ فقط: لا يرسل أي بريد ولا يغيّره ولا يحذفه."
-                }
-              }
-            }
-          }
-        },
-        "de": {
-          "variations": {
-            "device": {
-              "ipad": {
-                "stringUnit": {
-                  "state": "translated",
-                  "value": "Pausely verbindet sich direkt mit Ihrem E-Mail-Anbieter, liest Belege auf diesem iPad und behält nur Name, Betrag und Datum jeder Abbuchung. Es liest nur: Es sendet, ändert oder löscht nie E-Mails."
-                }
-              },
-              "other": {
-                "stringUnit": {
-                  "state": "translated",
-                  "value": "Pausely verbindet sich direkt mit Ihrem E-Mail-Anbieter, liest Belege auf diesem iPhone und behält nur Name, Betrag und Datum jeder Abbuchung. Es liest nur: Es sendet, ändert oder löscht nie E-Mails."
-                }
-              }
-            }
-          }
-        },
-        "en": {
-          "variations": {
-            "device": {
-              "ipad": {
-                "stringUnit": {
-                  "state": "translated",
-                  "value": "Pausely connects straight to your email provider, reads receipts on this iPad and keeps only the name, amount and date of each charge. It only reads: it never sends, changes or deletes email."
-                }
-              },
-              "other": {
-                "stringUnit": {
-                  "state": "translated",
-                  "value": "Pausely connects straight to your email provider, reads receipts on this iPhone and keeps only the name, amount and date of each charge. It only reads: it never sends, changes or deletes email."
-                }
-              }
-            }
-          }
-        },
-        "es": {
-          "variations": {
-            "device": {
-              "ipad": {
-                "stringUnit": {
-                  "state": "translated",
-                  "value": "Pausely se conecta directamente con tu proveedor de correo, lee los recibos en este iPad y guarda solo el nombre, el importe y la fecha de cada cargo. Solo lee: nunca envía, cambia ni borra correos."
-                }
-              },
-              "other": {
-                "stringUnit": {
-                  "state": "translated",
-                  "value": "Pausely se conecta directamente con tu proveedor de correo, lee los recibos en este iPhone y guarda solo el nombre, el importe y la fecha de cada cargo. Solo lee: nunca envía, cambia ni borra correos."
-                }
-              }
-            }
-          }
-        },
-        "fr": {
-          "variations": {
-            "device": {
-              "ipad": {
-                "stringUnit": {
-                  "state": "translated",
-                  "value": "Pausely se connecte directement à votre fournisseur de messagerie, lit les reçus sur cet iPad et ne garde que le nom, le montant et la date de chaque prélèvement. Il ne fait que lire : il n’envoie, ne modifie ni ne supprime jamais d’e-mail."
-                }
-              },
-              "other": {
-                "stringUnit": {
-                  "state": "translated",
-                  "value": "Pausely se connecte directement à votre fournisseur de messagerie, lit les reçus sur cet iPhone et ne garde que le nom, le montant et la date de chaque prélèvement. Il ne fait que lire : il n’envoie, ne modifie ni ne supprime jamais d’e-mail."
-                }
-              }
-            }
-          }
-        },
-        "ja": {
-          "variations": {
-            "device": {
-              "ipad": {
-                "stringUnit": {
-                  "state": "translated",
-                  "value": "Pauselyはメールプロバイダに直接接続し、このiPad上で領収書を読み取り、各請求の名前・金額・日付だけを保存します。読み取るだけで、メールの送信・変更・削除は一切行いません。"
-                }
-              },
-              "other": {
-                "stringUnit": {
-                  "state": "translated",
-                  "value": "Pauselyはメールプロバイダに直接接続し、このiPhone上で領収書を読み取り、各請求の名前・金額・日付だけを保存します。読み取るだけで、メールの送信・変更・削除は一切行いません。"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
     "Searching your email": {
       "localizations": {
         "ar": {
@@ -23783,118 +23535,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "Pauselyを評価"
-          }
-        }
-      }
-    },
-    "Receipts are read on this iPhone. Only the name, amount and date of each charge are kept.": {
-      "localizations": {
-        "ar": {
-          "variations": {
-            "device": {
-              "ipad": {
-                "stringUnit": {
-                  "state": "translated",
-                  "value": "تُقرأ الإيصالات على هذا الـ iPad. يُحتفظ فقط باسم كل عملية خصم ومبلغها وتاريخها."
-                }
-              },
-              "other": {
-                "stringUnit": {
-                  "state": "translated",
-                  "value": "تُقرأ الإيصالات على هذا الـ iPhone. يُحتفظ فقط باسم كل عملية خصم ومبلغها وتاريخها."
-                }
-              }
-            }
-          }
-        },
-        "de": {
-          "variations": {
-            "device": {
-              "ipad": {
-                "stringUnit": {
-                  "state": "translated",
-                  "value": "Belege werden auf diesem iPad gelesen. Gespeichert werden nur Name, Betrag und Datum jeder Abbuchung."
-                }
-              },
-              "other": {
-                "stringUnit": {
-                  "state": "translated",
-                  "value": "Belege werden auf diesem iPhone gelesen. Gespeichert werden nur Name, Betrag und Datum jeder Abbuchung."
-                }
-              }
-            }
-          }
-        },
-        "en": {
-          "variations": {
-            "device": {
-              "ipad": {
-                "stringUnit": {
-                  "state": "translated",
-                  "value": "Receipts are read on this iPad. Only the name, amount and date of each charge are kept."
-                }
-              },
-              "other": {
-                "stringUnit": {
-                  "state": "translated",
-                  "value": "Receipts are read on this iPhone. Only the name, amount and date of each charge are kept."
-                }
-              }
-            }
-          }
-        },
-        "es": {
-          "variations": {
-            "device": {
-              "ipad": {
-                "stringUnit": {
-                  "state": "translated",
-                  "value": "Los recibos se leen en este iPad. Solo se guardan el nombre, el importe y la fecha de cada cargo."
-                }
-              },
-              "other": {
-                "stringUnit": {
-                  "state": "translated",
-                  "value": "Los recibos se leen en este iPhone. Solo se guardan el nombre, el importe y la fecha de cada cargo."
-                }
-              }
-            }
-          }
-        },
-        "fr": {
-          "variations": {
-            "device": {
-              "ipad": {
-                "stringUnit": {
-                  "state": "translated",
-                  "value": "Les reçus sont lus sur cet iPad. Seuls le nom, le montant et la date de chaque prélèvement sont conservés."
-                }
-              },
-              "other": {
-                "stringUnit": {
-                  "state": "translated",
-                  "value": "Les reçus sont lus sur cet iPhone. Seuls le nom, le montant et la date de chaque prélèvement sont conservés."
-                }
-              }
-            }
-          }
-        },
-        "ja": {
-          "variations": {
-            "device": {
-              "ipad": {
-                "stringUnit": {
-                  "state": "translated",
-                  "value": "領収書はこのiPad上で読み取られます。保存されるのは各請求の名前・金額・日付だけです。"
-                }
-              },
-              "other": {
-                "stringUnit": {
-                  "state": "translated",
-                  "value": "領収書はこのiPhone上で読み取られます。保存されるのは各請求の名前・金額・日付だけです。"
-                }
-              }
-            }
           }
         }
       }
@@ -29907,6 +29547,332 @@
                 }
               }
             }
+          }
+        }
+      }
+    },
+    "Pausely connects straight to your email provider and reads receipts on this iPhone. It keeps a few facts from each (who charged, how much, when, how often), never the email itself. It only reads: it never sends, changes or deletes email.": {
+      "localizations": {
+        "en": {
+          "variations": {
+            "device": {
+              "ipad": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Pausely connects straight to your email provider and reads receipts on this iPad. It keeps a few facts from each (who charged, how much, when, how often), never the email itself. It only reads: it never sends, changes or deletes email."
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Pausely connects straight to your email provider and reads receipts on this iPhone. It keeps a few facts from each (who charged, how much, when, how often), never the email itself. It only reads: it never sends, changes or deletes email."
+                }
+              }
+            }
+          }
+        },
+        "ar": {
+          "variations": {
+            "device": {
+              "ipad": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "يتصل Pausely مباشرةً بمزوّد بريدك ويقرأ الإيصالات على هذا الـ iPad. يحتفظ ببضع معلومات من كل إيصال (من خصم، وكم، ومتى، وكل كم مرة)، ولا يحتفظ بالرسالة نفسها أبدًا. يقرأ فقط: لا يرسل أي بريد ولا يغيّره ولا يحذفه."
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "يتصل Pausely مباشرةً بمزوّد بريدك ويقرأ الإيصالات على هذا الـ iPhone. يحتفظ ببضع معلومات من كل إيصال (من خصم، وكم، ومتى، وكل كم مرة)، ولا يحتفظ بالرسالة نفسها أبدًا. يقرأ فقط: لا يرسل أي بريد ولا يغيّره ولا يحذفه."
+                }
+              }
+            }
+          }
+        },
+        "de": {
+          "variations": {
+            "device": {
+              "ipad": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Pausely verbindet sich direkt mit Ihrem E-Mail-Anbieter und liest Belege auf diesem iPad. Von jedem behält es nur wenige Angaben (wer abgebucht hat, wie viel, wann, wie oft), nie die E-Mail selbst. Es liest nur: Es sendet, ändert oder löscht nie E-Mails."
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Pausely verbindet sich direkt mit Ihrem E-Mail-Anbieter und liest Belege auf diesem iPhone. Von jedem behält es nur wenige Angaben (wer abgebucht hat, wie viel, wann, wie oft), nie die E-Mail selbst. Es liest nur: Es sendet, ändert oder löscht nie E-Mails."
+                }
+              }
+            }
+          }
+        },
+        "es": {
+          "variations": {
+            "device": {
+              "ipad": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Pausely se conecta directamente con tu proveedor de correo y lee los recibos en este iPad. De cada uno guarda unos pocos datos (quién cobró, cuánto, cuándo y cada cuánto), nunca el correo en sí. Solo lee: nunca envía, cambia ni elimina correos."
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Pausely se conecta directamente con tu proveedor de correo y lee los recibos en este iPhone. De cada uno guarda unos pocos datos (quién cobró, cuánto, cuándo y cada cuánto), nunca el correo en sí. Solo lee: nunca envía, cambia ni elimina correos."
+                }
+              }
+            }
+          }
+        },
+        "fr": {
+          "variations": {
+            "device": {
+              "ipad": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Pausely se connecte directement à votre fournisseur de messagerie et lit les reçus sur cet iPad. De chacun, il ne garde que quelques informations (qui a prélevé, combien, quand, à quelle fréquence), jamais l'e-mail lui-même. Il se contente de lire : il n'envoie, ne modifie ni ne supprime jamais d'e-mail."
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Pausely se connecte directement à votre fournisseur de messagerie et lit les reçus sur cet iPhone. De chacun, il ne garde que quelques informations (qui a prélevé, combien, quand, à quelle fréquence), jamais l'e-mail lui-même. Il se contente de lire : il n'envoie, ne modifie ni ne supprime jamais d'e-mail."
+                }
+              }
+            }
+          }
+        },
+        "ja": {
+          "variations": {
+            "device": {
+              "ipad": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Pauselyはメールプロバイダに直接接続し、このiPad上で領収書を読み取ります。各領収書から残すのはいくつかの事実(請求元、金額、日付、頻度)だけで、メール自体は保存しません。読み取りのみで、メールを送信・変更・削除することはありません。"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Pauselyはメールプロバイダに直接接続し、このiPhone上で領収書を読み取ります。各領収書から残すのはいくつかの事実(請求元、金額、日付、頻度)だけで、メール自体は保存しません。読み取りのみで、メールを送信・変更・削除することはありません。"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "Subscriptions you add go to your account, like any you type in.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "الاشتراكات التي تضيفها تُحفظ في حسابك، مثل أي اشتراك تكتبه بنفسك."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Abos, die Sie hinzufügen, werden in Ihrem Konto gespeichert, wie alle, die Sie selbst eingeben."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Las suscripciones que añades se guardan en tu cuenta, como las que escribes tú."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Les abonnements que vous ajoutez sont enregistrés dans votre compte, comme ceux que vous saisissez vous-même."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "追加したサブスクは、手入力したものと同じくアカウントに保存されます。"
+          }
+        }
+      }
+    },
+    "Receipts are read on this iPhone. A few facts of each charge are kept (who charged, how much, when, how often), never the email itself.": {
+      "localizations": {
+        "en": {
+          "variations": {
+            "device": {
+              "ipad": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Receipts are read on this iPad. A few facts of each charge are kept (who charged, how much, when, how often), never the email itself."
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Receipts are read on this iPhone. A few facts of each charge are kept (who charged, how much, when, how often), never the email itself."
+                }
+              }
+            }
+          }
+        },
+        "ar": {
+          "variations": {
+            "device": {
+              "ipad": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "تُقرأ الإيصالات على هذا الـ iPad. تُحفظ بضع معلومات عن كل خصم (من خصم، وكم، ومتى، وكل كم مرة)، ولا تُحفظ الرسالة نفسها أبدًا."
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "تُقرأ الإيصالات على هذا الـ iPhone. تُحفظ بضع معلومات عن كل خصم (من خصم، وكم، ومتى، وكل كم مرة)، ولا تُحفظ الرسالة نفسها أبدًا."
+                }
+              }
+            }
+          }
+        },
+        "de": {
+          "variations": {
+            "device": {
+              "ipad": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Belege werden auf diesem iPad gelesen. Von jeder Abbuchung bleiben nur wenige Angaben (wer, wie viel, wann, wie oft), nie die E-Mail selbst."
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Belege werden auf diesem iPhone gelesen. Von jeder Abbuchung bleiben nur wenige Angaben (wer, wie viel, wann, wie oft), nie die E-Mail selbst."
+                }
+              }
+            }
+          }
+        },
+        "es": {
+          "variations": {
+            "device": {
+              "ipad": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Los recibos se leen en este iPad. De cada cargo se guardan unos pocos datos (quién, cuánto, cuándo y cada cuánto), nunca el correo en sí."
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Los recibos se leen en este iPhone. De cada cargo se guardan unos pocos datos (quién, cuánto, cuándo y cada cuánto), nunca el correo en sí."
+                }
+              }
+            }
+          }
+        },
+        "fr": {
+          "variations": {
+            "device": {
+              "ipad": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Les reçus sont lus sur cet iPad. De chaque prélèvement, seules quelques informations sont gardées (qui, combien, quand, à quelle fréquence), jamais l'e-mail lui-même."
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Les reçus sont lus sur cet iPhone. De chaque prélèvement, seules quelques informations sont gardées (qui, combien, quand, à quelle fréquence), jamais l'e-mail lui-même."
+                }
+              }
+            }
+          }
+        },
+        "ja": {
+          "variations": {
+            "device": {
+              "ipad": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "領収書はこのiPad上で読み取られます。各請求について残るのはいくつかの事実(請求元、金額、日付、頻度)だけで、メール自体は保存されません。"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "領収書はこのiPhone上で読み取られます。各請求について残るのはいくつかの事実(請求元、金額、日付、頻度)だけで、メール自体は保存されません。"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "Why %@ was found": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "لماذا وُجد %@"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Warum %@ gefunden wurde"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Por qué se encontró %@"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pourquoi %@ a été trouvé"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@が見つかった理由"
+          }
+        }
+      }
+    },
+    "Hide why %@ was found": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "إخفاء سبب العثور على %@"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ausblenden, warum %@ gefunden wurde"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ocultar por qué se encontró %@"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Masquer pourquoi %@ a été trouvé"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@が見つかった理由を隠す"
           }
         }
       }

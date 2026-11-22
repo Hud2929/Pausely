@@ -128,10 +128,23 @@ struct InboxImportView: View {
                     .font(.headline)
                     .foregroundStyle(Color.inkText)
                     .fixedSize(horizontal: false, vertical: true)
-                Text("Pausely connects straight to your email provider, reads receipts on this iPhone and keeps only the name, amount and date of each charge. It only reads: it never sends, changes or deletes email.")
+                // What is kept, said as it is: "only the name, amount and date" was narrower than the
+                // facts kept (the ratings of 2026-11-22). And what reaches the account once added.
+                Text("Pausely connects straight to your email provider and reads receipts on this iPhone. It keeps a few facts from each (who charged, how much, when, how often), never the email itself. It only reads: it never sends, changes or deletes email.")
                     .font(.subheadline)
                     .foregroundStyle(Color.inkTextMuted)
                     .fixedSize(horizontal: false, vertical: true)
+                Text("Subscriptions you add go to your account, like any you type in.")
+                    .font(.subheadline)
+                    .foregroundStyle(Color.inkTextMuted)
+                    .fixedSize(horizontal: false, vertical: true)
+                if let policy = URL(string: AppConfig.privacyPolicyURL) {
+                    Link(destination: policy) { Text("Privacy Policy") }
+                        .font(.subheadline.weight(.semibold))
+                        .foregroundStyle(Color.inkText)
+                        .frame(minHeight: Layout.tapTarget, alignment: .leading)
+                        .accessibilityIdentifier("inboxPrivacyPolicy")
+                }
             }
             .padding(.vertical, 16)
             Hairline()
@@ -338,6 +351,14 @@ struct InboxImportView: View {
             }
         }
         .padding(.vertical, 8)
+        // One stop for VoiceOver, with what the menu does as its actions: the address, its state and
+        // "Options for …" were three stops (the reach rating of 2026-11-22).
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel(Text(verbatim: "\(account.address), \(accountDetail(account))"))
+        .accessibilityActions {
+            if failed { Button("Reconnect") { reconnect(account) } }
+            Button("Disconnect") { Task { await scanner.disconnect(account) } }
+        }
     }
 
     private func accountDetail(_ account: MailboxAccount) -> String {
@@ -443,9 +464,9 @@ struct InboxImportView: View {
                     }
                 }
             }
+            .accessibilityElement(children: .combine)
         }
         .frame(maxWidth: .infinity, alignment: .leading)
-        .accessibilityElement(children: .combine)
     }
 
     @ViewBuilder

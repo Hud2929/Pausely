@@ -4,7 +4,7 @@ import XCTest
 /// The promises printed on the "Find in Email" screen, each held by a test:
 ///
 ///   "Your email never leaves your iPhone."                      → the mail code talks only to mail providers
-///   "keeps only the name, amount and date of each charge"       → the ledger has no field that holds email text
+///   "keeps a few facts from each ..., never the email itself"   → the ledger has no field that holds email text
 ///   "It only reads: it never sends, changes or deletes email."  → read-only sign-in scopes, read-only IMAP commands
 ///   disconnecting removes an inbox's facts and its password      → `testDisconnectingForgetsTheInbox`
 ///
@@ -80,7 +80,7 @@ final class InboxPrivacyTests: XCTestCase {
         }
     }
 
-    // MARK: "keeps only the name, amount and date of each charge"
+    // MARK: "It keeps a few facts from each (who charged, how much, when, how often), never the email itself."
 
     func testTheLedgerHasNoFieldForEmailText() throws {
         let email = RawEmail(id: "privacy-1", date: Date(timeIntervalSince1970: 1_790_000_000),

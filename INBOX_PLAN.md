@@ -103,7 +103,7 @@ Independent truth audit (Fable, 2026-11-22): about 7. Each item, fixed or not:
 - [x] T27 Prime "Subscribed on" is the day a free trial started.
 - [x] T28 an assumed monthly period shown as fact.
 - [x] T29 "You told Pausely this is a subscription" (a tap on a pre-ticked row); "structured subscription data" is internal wording.
-- [ ] T30 the privacy line "keeps only the name, amount and date" is narrower than what is kept (sender, period, flags).
+- [x] T30 the privacy line "keeps only the name, amount and date" is narrower than what is kept (sender, period, flags).
 - [ ] T31 a later scan's "Emails checked" counts only new mail while findings come from all.
 - [ ] T32 already-listed is matched by exact name ("Claude" vs "Claude Pro").
 (T20 and T24 are covered by commits above.)
@@ -118,7 +118,7 @@ Arabic mirrors and is fully translated; rows read as one sentence. Open:
 - [ ] B6 Arabic dates follow the device calendar (Hijri on ar_SA); for a native reader to decide. Also
   "منذ ٢٧ ذو القعدة" should be "ذي القعدة".
 - [ ] B8 a date broken across lines at the largest size ("around Dec" / "12."); proof lines may overflow.
-- [ ] B9-B11 VoiceOver: the "why" button doesn't name its service or state; a connected inbox is three
+- [x] B9-B11 VoiceOver: the "why" button doesn't name its service or state; a connected inbox is three
   stops; the results header is one 40-word heading; "selected" is a word, not the trait.
 - [x] B12 "Charged N times" above fewer proof lines (the list shows the latest eight).
 - [x] B14 "Worth knowing" changes order between launches on the same data.
@@ -135,7 +135,7 @@ Independent consumer rating (Fable, iPhone, 2026-11-22): 7.0 (trust 7.0, effort 
   the person can't choose which five; a trial with a deadline is the one parked "Waiting" (unexplained).
 - [x] A5 one headline count that matches the rows ("We found 7", nine rows, "Add 5").
 - [ ] A6 every "Worth a look" row says why it isn't confirmed and what to check.
-- [ ] A8 privacy block: what Google asks for ("View your email messages"), what is kept, what is synced once
+- [x] A8 privacy block: what Google asks for ("View your email messages"), what is kept, what is synced once
   added, a policy link, what Disconnect erases.
 - [ ] A9 "This isn't a subscription": one tap, permanent, no undo, no confirmation; nothing clears it.
 - [ ] A10 a trial row shows no price after the trial.

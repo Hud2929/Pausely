@@ -109,12 +109,12 @@ final class PrivacyPageTests: XCTestCase {
         XCTAssertEqual(Mirror(reflecting: press).children.compactMap(\.label), ["subscriptionId", "renewalDay", "pressedAt"])
     }
 
-    /// "Find in Email: Receipts are read on this iPhone. Only the name, amount and date of each
-    /// charge are kept." Shown only where the feature is; its promises are held by
+    /// "Find in Email: Receipts are read on this iPhone. A few facts of each charge are kept (who charged,
+    /// how much, when, how often), never the email itself." Shown only where the feature is; its promises are held by
     /// `InboxPrivacyTests`.
     func testTheEmailSentenceIsShownOnlyWhereTheFeatureIs() throws {
         let page = try text("Pausely/Views/Settings/PrivacySecurityView.swift")
-        let sentence = try XCTUnwrap(page.range(of: "Receipts are read on this iPhone. Only the name, amount and date of each charge are kept."))
+        let sentence = try XCTUnwrap(page.range(of: "Receipts are read on this iPhone. A few facts of each charge are kept (who charged, how much, when, how often), never the email itself."))
         XCTAssertTrue(page[..<sentence.lowerBound].suffix(260).contains("if FeatureFlags.inboxImportEnabled {"))
     }
 
