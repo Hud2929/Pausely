@@ -26,7 +26,6 @@ Packages/
 .env
 .env.*
 *.env
-!.env.example
 backend/.dev.vars
 
 # Xcode Config — may contain secrets

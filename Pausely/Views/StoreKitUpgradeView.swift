@@ -32,7 +32,6 @@ struct StoreKitUpgradeView: View {
 
     enum FocusElement {
         case title
-        case success
     }
 
     enum PlanOption {

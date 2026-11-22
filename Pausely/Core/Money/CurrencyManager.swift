@@ -322,8 +322,7 @@ struct Currency: Identifiable, Hashable {
     }
 }
 
-struct ExchangeRateResponse: Codable {
+struct ExchangeRateResponse: Decodable {
     let rates: [String: Double]
     let base: String
-    let date: String
 }

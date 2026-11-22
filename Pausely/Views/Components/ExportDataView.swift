@@ -10,7 +10,6 @@ import UniformTypeIdentifiers
 
 struct ExportDataView: View {
     @ObservedObject private var store = SubscriptionStore.shared
-    @Environment(\.dismiss) private var dismiss
 
     @State private var selectedFormat: ExportFormat = .csv
     @State private var includeCancelled = false

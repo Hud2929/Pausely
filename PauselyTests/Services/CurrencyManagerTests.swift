@@ -44,7 +44,7 @@ final class CurrencyManagerTests: XCTestCase {
     }
 
     private func answer(_ rates: [String: Double], base: String = "USD") -> ExchangeRateResponse {
-        ExchangeRateResponse(rates: rates, base: base, date: "2026-11-11")
+        ExchangeRateResponse(rates: rates, base: base)
     }
 
     /// Later than any rates this simulator holds, so a refresh is due.

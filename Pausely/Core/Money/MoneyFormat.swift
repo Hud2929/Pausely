@@ -23,11 +23,6 @@ enum MoneyFormat {
         return formatter.string(from: amount as NSDecimalNumber) ?? "\(code) \(amount)"
     }
 
-    static func string(_ amount: Double, _ currency: String,
-                       locale: Locale = L10n.locale, wholeUnits: Bool = false) -> String {
-        string(decimal(amount), currency, locale: locale, wholeUnits: wholeUnits)
-    }
-
     /// A total across several things: exact when all of them are charged in `currency`, and "≈" in
     /// front when some had to be converted, because a converted total moves with the exchange rate.
     static func total(_ amount: Decimal, _ currency: String, converted: Bool,
