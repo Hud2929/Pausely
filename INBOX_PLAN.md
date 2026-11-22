@@ -62,6 +62,52 @@ it is honestly 9.5, remove dead code, and carry out the four distribution items.
   app-specific password), Google's "[Action Needed]" email (a reply drafted for the owner to send; never
   sent without their word), ratings (asked for at proven-value moments; a TestFlight beta once Apple allows).
 
+### Progress and the open list (kept current; read this first after a break)
+
+Done 2026-11-22: D1 dates and charges (38fe4cf), D3 pacing and parallel reads (ade2926, 321b185: one
+note per coming charge with tax, ten header reads in flight, DEBUG request counters), D5 dead code
+(merged from dead-code-cleanup, 3,565 lines), "On your list" (4a7f779). Gmail reply to Google drafted in
+the owner's Gmail, not sent (needs the video link and a TestFlight link). Real ledger copy (132 facts)
+in the session scratchpad `realmail/ledger-2026-11-22.json`; `testRealLedgerReport` reads it with
+`PAUSELY_LEDGER_FILE`. Xcode reinstalls the app when the project changes, which erases a connected inbox:
+reconnect (account chooser, no password) before a real scan. Speed still to measure on a quiet Mac.
+
+Independent truth audit (Fable, 2026-11-22): about 7. Each item, fixed or not:
+- [ ] T1 blocker: trust (+30 after an import) lifts no-receipt rows into "Confirmed: your receipts show
+  these renew". Trust may lift to "Worth a look", never Confirmed.
+- [ ] T2 blocker: one later charge at another amount is made the monthly price (Claude $148.41 is likely a
+  prorated upgrade). Keep the plan's price until two charges at the new amount; show the newer one as a
+  dated note; "Last charged" stays the newest.
+- [ ] T3 blocker: a trial end worked out from the email date (+3 or +14 days) is stated as fact ("Trial
+  ends Nov 28", "Cancel before Nov 28") and imported. Say "around" and give no cancel-by date unless read.
+- [ ] T4 "Emails checked: 1,500" is the cap; say when the search was capped and how far back it reached.
+- [ ] T5 "Charged 9 times" counts the chain, not the 12 charges held; the proof list skips months.
+- [ ] T6 "Same amount each time" under a row with a later different charge.
+- [ ] T7 totals ignore the ticks, mix tax bases, and count rows never seen charged.
+- [ ] T8 an amount with no currency is taken as the person's currency without saying so.
+- [ ] T9 already-listed rows keep a different amount/date unsaid.
+- [ ] T10 "May have ended" rows can be ticked and import as active with a next charge.
+- [ ] T11 a store-billed subscription (Prime Video channel, App Store) imports with the service's own cancel link.
+- [ ] T12 Google One imports at the old price although the new price was read.
+- [ ] T13 "Charged after cancelling... worth disputing" when the person may have re-subscribed.
+- [ ] T14 "raised its price" blames the seller for any rise; one wording everywhere.
+- [ ] T15 "most likely renewed" after a trial for any merchant, not only stores that send no receipts.
+- [ ] T16 a stopped or refused search looks complete; the results page never shows a refused inbox.
+- [ ] T17 "Senders with only one-time purchases, left out" counts more than one-time purchases.
+- [ ] T18 "renews in 37 days" counts 24-hour spans; count calendar days.
+- [ ] T19 "goes up to $269.99 on Dec 26": before tax and "on" for a worked-out date.
+- [ ] T21 "Yearly renewals are the easiest to forget" has no source.
+- [ ] T22 "Your card was declined" when the email only said a payment failed.
+- [ ] T23 "Reading 380 receipts" are emails that might be receipts.
+- [ ] T25 "Missing renewal dates were filled in from your receipts" can come from a trial or sign-up.
+- [ ] T27 Prime "Subscribed on" is the day a free trial started.
+- [ ] T28 an assumed monthly period shown as fact.
+- [ ] T29 "You told Pausely this is a subscription" (a tap on a pre-ticked row); "structured subscription data" is internal wording.
+- [ ] T30 the privacy line "keeps only the name, amount and date" is narrower than what is kept (sender, period, flags).
+- [ ] T31 a later scan's "Emails checked" counts only new mail while findings come from all.
+- [ ] T32 already-listed is matched by exact name ("Claude" vs "Claude Pro").
+(T20 and T24 are covered by commits above.)
+
 ## Real accounts, real subscriptions, and Outlook (plan of 2026-11-18)
 
 The owner asked: fix the import from email, make sure every way in works and pulls real
