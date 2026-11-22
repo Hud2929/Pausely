@@ -81,6 +81,9 @@ struct ProvenSubscription: Identifiable, Equatable {
     /// emails no receipt per renewal (a Prime Video channel), a trial that turned paid. `lastChargeDate`
     /// is then nil: a sign-up is not a charge, and "Last charged May 20" was the day someone subscribed.
     var subscribedOn: Date? = nil
+    /// A later charge at a higher amount that hasn't happened twice: a new plan or a one-off, said as a
+    /// dated note and never made the price on its own.
+    var unusualCharge: ChargeEvidence? = nil
 
     /// A rise this steep (more than half again) is a new plan or an unexpected charge, not a price rise:
     /// after twelve months at $31.64, a $148.41 charge is "now costs more", never "raised its price".

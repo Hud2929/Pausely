@@ -274,40 +274,6 @@
         }
       }
     },
-    "%@ trial ends %@": {
-      "localizations": {
-        "ar": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "تنتهي تجربة %1$@ %2$@"
-          }
-        },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Testphase von %1$@ endet %2$@"
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "La prueba de %1$@ termina %2$@"
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "L'essai de %1$@ se termine %2$@"
-          }
-        },
-        "ja": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "%1$@の無料トライアルの終了：%2$@"
-          }
-        }
-      }
-    },
     "%@ · searched %@": {
       "localizations": {
         "ar": {
@@ -904,40 +870,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "2回目の請求で確認できるまで月払いと仮定しています"
-          }
-        }
-      }
-    },
-    "Cancel before %@ to avoid being charged.": {
-      "localizations": {
-        "ar": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "ألغِ قبل %@ لتجنب الخصم."
-          }
-        },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Kündigen Sie vor dem %@, damit keine Kosten anfallen."
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Cancela antes del %@ para que no te cobren."
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Résiliez avant le %@ pour ne pas être prélevé."
-          }
-        },
-        "ja": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "請求を避けるには%@までに解約してください。"
           }
         }
       }
@@ -2818,40 +2750,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "メールアドレスをすべて入力してください。"
-          }
-        }
-      }
-    },
-    "Expect a charge of %@ around %@. Yearly renewals are the easiest to forget.": {
-      "localizations": {
-        "ar": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "توقّع خصم %1$@ في حدود %2$@. التجديدات السنوية هي الأسهل نسيانًا."
-          }
-        },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Rechnen Sie um den %2$@ mit einer Abbuchung von %1$@. Jährliche Verlängerungen vergisst man am leichtesten."
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Prevé un cargo de %1$@ hacia el %2$@. Las renovaciones anuales son las más fáciles de olvidar."
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Prévoyez un prélèvement de %1$@ vers le %2$@. Les renouvellements annuels sont les plus faciles à oublier."
-          }
-        },
-        "ja": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "%2$@ごろに%1$@の請求が予定されています。年払いの更新は最も忘れやすいものです。"
           }
         }
       }
@@ -5582,40 +5480,6 @@
         }
       }
     },
-    "The receipt includes structured subscription data": {
-      "localizations": {
-        "ar": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "يتضمن الإيصال بيانات اشتراك منظمة"
-          }
-        },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Der Beleg enthält strukturierte Abo-Daten"
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "El recibo incluye datos de suscripción estructurados"
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Le reçu contient des données d'abonnement structurées"
-          }
-        },
-        "ja": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "領収書に構造化されたサブスク情報があります"
-          }
-        }
-      }
-    },
     "The receipt says it renews on a schedule": {
       "localizations": {
         "ar": {
@@ -5646,40 +5510,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "領収書に定期的に更新されると記載されています"
-          }
-        }
-      }
-    },
-    "The receipts carry structured subscription data": {
-      "localizations": {
-        "ar": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "تحمل الإيصالات بيانات اشتراك منظمة"
-          }
-        },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Die Belege enthalten strukturierte Abo-Daten"
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Los recibos incluyen datos de suscripción estructurados"
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Les reçus contiennent des données d'abonnement structurées"
-          }
-        },
-        "ja": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "領収書に構造化されたサブスク情報があります"
           }
         }
       }
@@ -6394,40 +6224,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "解約メールの後に%@の請求がありました。異議申し立てを検討してください。"
-          }
-        }
-      }
-    },
-    "You told Pausely this is a subscription": {
-      "localizations": {
-        "ar": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "أخبرت Pausely أن هذا اشتراك"
-          }
-        },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Sie haben Pausely gesagt, dass dies ein Abo ist"
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Le dijiste a Pausely que esto es una suscripción"
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Vous avez indiqué à Pausely qu'il s'agit d'un abonnement"
-          }
-        },
-        "ja": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "これはサブスクだとPauselyに伝えました"
           }
         }
       }
@@ -29669,6 +29465,312 @@
           "stringUnit": {
             "state": "translated",
             "value": "リストに登録済み"
+          }
+        }
+      }
+    },
+    "%@ charged more than usual": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "خصم %@ أكثر من المعتاد"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ hat mehr als üblich abgebucht"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ cobró más de lo habitual"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ a prélevé plus que d'habitude"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@の請求がいつもより高額です"
+          }
+        }
+      }
+    },
+    "%@ on %@, more than the usual %@. A new plan or an extra charge: check it.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ في %2$@، أكثر من المعتاد %3$@. خطة جديدة أو رسوم إضافية: تحقّق منها."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ am %2$@, mehr als die üblichen %3$@. Ein neuer Tarif oder eine Zusatzbuchung: Bitte prüfen Sie das."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ el %2$@, más de lo habitual (%3$@). Un plan nuevo o un cargo extra: revísalo."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ le %2$@, plus que les %3$@ habituels. Une nouvelle offre ou un prélèvement en plus : vérifiez-le."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%2$@に%1$@(通常は%3$@)。新しいプランか追加の請求です。確認してください。"
+          }
+        }
+      }
+    },
+    "%@ trial ends around %@": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "تنتهي تجربة %1$@ في حدود %2$@"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Testphase von %1$@ endet um den %2$@"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "La prueba de %1$@ termina hacia el %2$@"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "L'essai de %1$@ se termine vers le %2$@"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@の無料トライアルは%2$@ごろに終了"
+          }
+        }
+      }
+    },
+    "Also charged %@ on %@, more than the usual %@": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "خُصم أيضًا %1$@ في %2$@، أكثر من المعتاد %3$@"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Außerdem %1$@ am %2$@ abgebucht, mehr als die üblichen %3$@"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "También se cobró %1$@ el %2$@, más de lo habitual (%3$@)"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aussi prélevé %1$@ le %2$@, plus que les %3$@ habituels"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%2$@にも%1$@の請求(通常は%3$@)"
+          }
+        }
+      }
+    },
+    "Check the exact day in the email, and cancel before it to avoid being charged.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "تحقّق من اليوم الدقيق في الرسالة، وألغِ قبله لتجنب الخصم."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Prüfen Sie den genauen Tag in der E-Mail und kündigen Sie davor, damit keine Kosten anfallen."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Comprueba el día exacto en el correo y cancela antes para que no te cobren."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Vérifiez le jour exact dans l'e-mail et résiliez avant pour ne pas être prélevé."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "正確な日付はメールで確認し、その前に解約すれば請求されません。"
+          }
+        }
+      }
+    },
+    "Expect a charge of %@ around %@.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "توقّع خصم %1$@ في حدود %2$@."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Rechnen Sie um den %2$@ mit einer Abbuchung von %1$@."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Prevé un cargo de %1$@ hacia el %2$@."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Prévoyez un prélèvement de %1$@ vers le %2$@."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%2$@ごろに%1$@の請求が予定されています。"
+          }
+        }
+      }
+    },
+    "The email says it is a subscription": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "تقول الرسالة إنه اشتراك"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Laut der E-Mail ist es ein Abo"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "El correo dice que es una suscripción"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "L'e-mail indique qu'il s'agit d'un abonnement"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "メールにサブスクと記載されています"
+          }
+        }
+      }
+    },
+    "The emails say it is a subscription": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "تقول الرسائل إنه اشتراك"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Laut den E-Mails ist es ein Abo"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Los correos dicen que es una suscripción"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Les e-mails indiquent qu'il s'agit d'un abonnement"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "メールにサブスクと記載されています"
+          }
+        }
+      }
+    },
+    "You added it to your list before": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "أضفته إلى قائمتك من قبل"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sie haben es schon einmal in Ihre Liste aufgenommen"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ya lo añadiste a tu lista antes"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Vous l'avez déjà ajouté à votre liste"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "以前リストに追加しました"
           }
         }
       }

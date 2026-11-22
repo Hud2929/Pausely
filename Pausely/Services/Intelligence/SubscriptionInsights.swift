@@ -44,20 +44,28 @@ enum SubscriptionInsights {
                     subscriptionId: sub.id, annualImpact: impact))
             }
         }
-        if sub.status == .trial, let ends = sub.trialEndsOn {
-            let days = max(0, calendar.dateComponents([.day], from: now, to: ends).day ?? 0)
+        if let odd = sub.unusualCharge, sub.status != .cancelled {
             out.append(IntelligenceInsight(
-                id: "trial|\(sub.id)", kind: .trialEnding, title: L10n.string("\(sub.name) trial ends \(whenPhrase(days))"),
-                detail: L10n.string("Cancel before \(shortDate(ends)) to avoid being charged."), subscriptionId: sub.id,
+                id: "unusual|\(sub.id)", kind: .priceIncrease,
+                title: L10n.string("\(sub.name) charged more than usual"),
+                detail: L10n.string("\(format(odd.amount, odd.currency)) on \(shortDate(odd.date)), more than the usual \(format(sub.amount, sub.currency)). A new plan or an extra charge: check it."),
+                subscriptionId: sub.id, annualImpact: nil))
+        }
+        if sub.status == .trial, let ends = sub.trialEndsOn {
+            out.append(IntelligenceInsight(
+                id: "trial|\(sub.id)", kind: .trialEnding, title: L10n.string("\(sub.name) trial ends around \(shortDate(ends))"),
+                // The day is worked out from the email's date, never read: the email has the exact one.
+                detail: L10n.string("Check the exact day in the email, and cancel before it to avoid being charged."), subscriptionId: sub.id,
                 annualImpact: sub.amount > 0 ? sub.annualCost : nil))
         }
         if sub.status == .active || sub.status == .priceIncreased, let next = sub.nextBillingDate {
-            let days = calendar.dateComponents([.day], from: now, to: next).day ?? 999
+            // Calendar days: from mid-morning, 24-hour spans called Dec 26 "in 37 days" on Nov 18.
+            let days = calendar.dateComponents([.day], from: calendar.startOfDay(for: now), to: calendar.startOfDay(for: next)).day ?? 999
             let window = sub.frequency == .yearly || sub.frequency == .semiannual ? 45 : 0
             if window > 0, days >= 0, days <= window {
                 out.append(IntelligenceInsight(
                     id: "renew|\(sub.id)", kind: .renewalSoon, title: L10n.string("\(sub.name) renews \(whenPhrase(days))"),
-                    detail: L10n.string("Expect a charge of \(format(sub.amount, sub.currency)) around \(shortDate(next)). Yearly renewals are the easiest to forget."),
+                    detail: L10n.string("Expect a charge of \(format(sub.amount, sub.currency)) around \(shortDate(next))."),
                     subscriptionId: sub.id, annualImpact: sub.annualCost))
             }
         }

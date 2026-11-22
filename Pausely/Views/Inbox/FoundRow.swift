@@ -45,7 +45,8 @@ struct FoundRow: View {
         // A day and its month stay on one line: beside the price, one text size up, the line
         // read "Last", "charged Nov", "10".
         let day: (Date) -> String = { L10n.day($0, now: now) }
-        if proven.status == .trial, let ends = proven.trialEndsOn { return L10n.string("Trial ends \(day(ends))") }
+        // Worked out from the email's date, so "around", never a day stated as fact.
+        if proven.status == .trial, let ends = proven.trialEndsOn { return L10n.string("Trial ends around \(day(ends))") }
         if let last = proven.lastChargeDate.map(day) { return L10n.string("Last charged \(last)") }
         // Known from its sign-up (a channel that emails no receipts, a trial that turned paid): when it
         // started, never "Last charged", which said a sign-up was the latest charge.

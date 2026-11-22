@@ -43,8 +43,11 @@ struct SubscriptionIntelligenceEngine {
                 results = results.map { sub in
                     var boosted = sub
                     boosted.score = min(100, sub.score + 30)
-                    boosted.reasons.insert(L10n.string("You told Pausely this is a subscription"), at: 0)
-                    boosted.tier = max(tier(for: boosted.score, status: boosted.status), .likely)
+                    boosted.reasons.insert(L10n.string("You added it to your list before"), at: 0)
+                    // Trust may lift a row to "Worth a look", never into "Confirmed": that section says the
+                    // receipts show it renews, and an earlier tap is not a receipt (a sign-up and a trial
+                    // start were shown there after the person had added them once).
+                    boosted.tier = sub.tier == .confirmed ? .confirmed : max(sub.tier, .likely)
                     return boosted
                 }
             }
@@ -101,10 +104,13 @@ struct SubscriptionIntelligenceEngine {
             // a one-off order from the same seller never moves the plan.
             if let chainEnd = sequence.charges.last {
                 let inChain = Set(sequence.charges.map(\.id))
-                sequence.laterCharges = eligible
-                    .filter { $0.date > chainEnd.date && !inChain.contains($0.id) && $0.kind == .charge
-                              && ($0.cadenceHint != nil || $0.renewalLanguage) && !$0.oneTimeLanguage }
-                    .sorted { $0.date < $1.date }
+                let samePlan: (ReceiptSignal) -> Bool = {
+                    !inChain.contains($0.id) && $0.kind == .charge && ($0.cadenceHint != nil || $0.renewalLanguage) && !$0.oneTimeLanguage
+                }
+                sequence.laterCharges = eligible.filter { $0.date > chainEnd.date && samePlan($0) }.sorted { $0.date < $1.date }
+                if let chainStart = sequence.charges.first {
+                    sequence.earlierCharges = eligible.filter { $0.date < chainStart.date && samePlan($0) }.sorted { $0.date < $1.date }
+                }
             }
             if let sub = buildFromSequence(sequence, merchant: merchant, allSignals: signals, cancellation: cancellation,
                                            now: now, calendar: calendar, currency: currency) {
@@ -180,7 +186,7 @@ struct SubscriptionIntelligenceEngine {
             else { score += 4 }
         }
         if charges.contains(where: { $0.markup == .subscription }) {
-            score += 12; reasons.append(L10n.string("The receipts carry structured subscription data"))
+            score += 12; reasons.append(L10n.string("The emails say it is a subscription"))
         }
         if charges.contains(where: { $0.platform == "apple" || $0.platform == "googleplay" }) {
             score += 15; reasons.append(L10n.string("Billed through an app-store subscription"))
@@ -206,9 +212,18 @@ struct SubscriptionIntelligenceEngine {
         score = max(0, min(100, score))
 
         // --- Dates & status ---
-        // The newest charge of this plan says what is current, even one the chain left out.
-        let latest = sequence.laterCharges.last ?? chainLatest
-        let latestAmount = latest.amount ?? chainAmount
+        // The newest charge of this plan is the last charge, even one the chain left out. A different
+        // amount becomes the price only once two charges carry it: one charge may be a prorated upgrade
+        // or a one-off (a real inbox: $148.41 on Nov 10 after twelve months at $31.64).
+        let later = sequence.laterCharges
+        let latest = later.last ?? chainLatest
+        let settled = later.count >= 2
+            && ChargeSchedule.sameAmount(later[later.count - 1].amount ?? 0, later[later.count - 2].amount ?? 0, tolerance: 0.02)
+        let latestAmount = settled ? (latest.amount ?? chainAmount) : chainAmount
+        var unusualCharge: ChargeEvidence?
+        if !settled, let odd = later.last, let oddAmount = odd.amount, oddAmount > chainAmount * Decimal(1.02) {
+            unusualCharge = ChargeEvidence(id: odd.id, date: odd.date, amount: oddAmount, currency: odd.currency ?? currency)
+        }
         let frequency = sequence.cadence.frequency
         let (next, missed) = nextBilling(after: latest.date, frequency: frequency, now: now, calendar: calendar)
         let lastDate = latest.date
@@ -238,8 +253,15 @@ struct SubscriptionIntelligenceEngine {
         // Price change within the last 12 months
         var previousAmount: Decimal?
         var priceChange = lastPriceChange(charges)
-        if latest.id != chainLatest.id, !ChargeSchedule.sameAmount(latestAmount, chainAmount, tolerance: 0.02) {
-            priceChange = (previous: chainAmount, date: latest.date)
+        // The chain may be the new price already (two charges at it); the plan's charge just before it
+        // says what it cost before.
+        if priceChange == nil, let before = sequence.earlierCharges.last?.amount, let start = charges.first,
+           !ChargeSchedule.sameAmount(before, chainAmount, tolerance: 0.02) {
+            priceChange = (previous: before, date: start.date)
+        }
+        if settled, let firstNew = later.first(where: { ChargeSchedule.sameAmount($0.amount ?? 0, latestAmount, tolerance: 0.02) }),
+           !ChargeSchedule.sameAmount(latestAmount, chainAmount, tolerance: 0.02) {
+            priceChange = (previous: chainAmount, date: firstNew.date)
         }
         if status != .cancelled, let change = priceChange, latestAmount > change.previous * Decimal(1.02),
            now.timeIntervalSince(change.date) < 400 * 86_400 {
@@ -252,6 +274,9 @@ struct SubscriptionIntelligenceEngine {
             }
         }
 
+        if let odd = unusualCharge {
+            reasons.append(L10n.string("Also charged \(format(odd.amount, odd.currency)) on \(shortDate(odd.date)), more than the usual \(format(chainAmount, currency))"))
+        }
         if let next = nextBillingDate { reasons.append(L10n.string("Next charge expected around \(shortDate(next))")) }
 
         let tier = tier(for: score, status: status)
@@ -266,7 +291,7 @@ struct SubscriptionIntelligenceEngine {
             amount: latestAmount, currency: latest.currency ?? currency, frequency: frequency,
             lastChargeDate: lastDate, nextBillingDate: nextBillingDate, status: status, score: score, tier: tier,
             evidence: evidence, reasons: reasons, previousAmount: previousAmount, trialEndsOn: nil,
-            chargedAfterCancel: chargedAfterCancel)
+            chargedAfterCancel: chargedAfterCancel, unusualCharge: unusualCharge)
     }
 
     /// One strong email can still prove a subscription when a known service says it renews.
@@ -290,7 +315,7 @@ struct SubscriptionIntelligenceEngine {
         let frequency = signal.cadenceHint ?? .monthly
         var score = 30 + 12 + (knownPure ? 20 : 0) + (structured ? 25 : 0)
         var reasons = [knownPure ? L10n.string("\(merchant.displayName) is a known subscription service")
-                       : structured ? L10n.string("The receipt includes structured subscription data")
+                       : structured ? L10n.string("The email says it is a subscription")
                        : L10n.string("Billed through an app-store subscription"),
                        L10n.string("The receipt says it renews on a schedule")]
         if signal.cadenceHint == nil { reasons.append(L10n.string("Billing period assumed monthly until a second charge confirms it")) ; score -= 6 }
@@ -341,9 +366,11 @@ struct SubscriptionIntelligenceEngine {
         guard merchant.isKnown || merchant.nameQuality >= 55, let latest = trialSignals.last else { return nil }
         let days = trialSignals.compactMap(\.trialDays).last
         let endsOn: Date?
-        if latest.kind == .trialEnding { endsOn = calendar.date(byAdding: .day, value: 3, to: latest.date) }
+        // Worked out, never read: so the earliest likely day, which puts a reminder early rather than
+        // after the charge ("ending" emails come a day to three before; 7 days is the commonest trial).
+        if latest.kind == .trialEnding { endsOn = calendar.date(byAdding: .day, value: 1, to: latest.date) }
         else if let days { endsOn = calendar.date(byAdding: .day, value: days, to: latest.date) }
-        else { endsOn = calendar.date(byAdding: .day, value: 14, to: latest.date) }
+        else { endsOn = calendar.date(byAdding: .day, value: 7, to: latest.date) }
         guard let endsOn, endsOn >= now.addingTimeInterval(-3 * 86_400) else { return nil }
 
         let amount = trialSignals.compactMap(\.amount).last ?? 0

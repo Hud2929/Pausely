@@ -293,29 +293,83 @@ final class ReceiptAccuracyTests: XCTestCase {
 
     // MARK: The newest charge, and charges that are not charges (a real inbox, 2026-11-22)
 
-    /// Twelve months of a plan at one price, then a charge at a much higher one for the same plan. The
-    /// regular chain left that charge out, and the row said "$31.64, last charged Oct 20" a fortnight
-    /// after a $148.41 charge on Nov 10. The newest charge is the last charge, and the jump is said as
-    /// what it may be (a new plan or a higher price), never "raised its price".
-    func testANewerChargeAtAnotherAmountIsTheLastCharge() {
+    /// Months of a plan at one price, then one charge at a much higher amount for the same plan. Dropped,
+    /// the row said "$31.64, last charged Oct 20" a fortnight after a $148.41 charge on Nov 10; made the
+    /// price, it would have called a likely prorated upgrade the monthly price. Now the newest charge is
+    /// the last charge, the plan keeps its price, and the charge is a dated note until it happens twice.
+    func testOneNewerChargeAtAnotherAmountIsALastChargeAndANoteNotAPrice() {
         var signals = (1...10).map { charge("anthropic.com", day(2026, $0, 20), "31.64", cadence: .monthly) }
         signals.append(charge("anthropic.com", day(2026, 11, 10), "148.41", cadence: .monthly))
         let found = analyze(signals, now: day(2026, 11, 22))
         XCTAssertEqual(found.count, 1, "one plan, not two")
-        let plan = try? XCTUnwrap(found.first)
+        let plan = found.first
         XCTAssertEqual(plan?.lastChargeDate, day(2026, 11, 10))
-        XCTAssertEqual(plan?.amount, Decimal(string: "148.41"))
+        XCTAssertEqual(plan?.amount, Decimal(string: "31.64"), "one charge doesn't set a new price")
+        XCTAssertEqual(plan?.unusualCharge?.amount, Decimal(string: "148.41"))
+        XCTAssertNotEqual(plan?.status, .priceIncreased)
+        XCTAssertEqual(plan?.nextBillingDate, day(2026, 12, 10), "the next charge follows the newest one")
+        XCTAssertTrue(plan?.reasons.contains { $0.contains("more than the usual") } == true, "\(plan?.reasons ?? [])")
+        XCTAssertFalse(plan?.reasons.contains { $0.contains("varies a lot") } == true, "a plan with one odd charge is not a run of orders")
+        let insight = SubscriptionInsights.all(for: found, groups: [:], now: day(2026, 11, 22), calendar: utc)
+            .first { $0.subscriptionId == plan?.id }
+        XCTAssertEqual(insight?.title.hasSuffix("charged more than usual"), true, insight?.title ?? "none")
+        XCTAssertTrue(insight?.detail.contains("A new plan or an extra charge") == true)
+    }
+
+    /// Two charges at the new amount settle it: that is the price now, said as a change the app can't
+    /// explain ("a new plan or a higher price"), never "raised its price".
+    func testTwoChargesAtANewAmountSettleTheNewPrice() {
+        var signals = (1...10).map { charge("anthropic.com", day(2026, $0, 20), "31.64", cadence: .monthly) }
+        signals.append(charge("anthropic.com", day(2026, 11, 10), "158.20", cadence: .monthly))
+        signals.append(charge("anthropic.com", day(2026, 12, 10), "158.20", cadence: .monthly))
+        let found = analyze(signals, now: day(2026, 12, 15))
+        let plan = found.first
+        XCTAssertEqual(plan?.amount, Decimal(string: "158.20"))
         XCTAssertEqual(plan?.previousAmount, Decimal(string: "31.64"))
         XCTAssertEqual(plan?.status, .priceIncreased)
-        XCTAssertEqual(plan?.nextBillingDate, day(2026, 12, 10), "the next charge follows the newest one")
+        XCTAssertNil(plan?.unusualCharge)
         XCTAssertTrue(plan?.reasons.contains { $0.contains("a new plan or a higher price") } == true, "\(plan?.reasons ?? [])")
-        XCTAssertFalse(plan?.reasons.contains { $0.contains("varies a lot") } == true, "a plan that changed once is not a run of orders")
-        XCTAssertGreaterThanOrEqual(plan?.tier ?? .hidden, .likely)
-        let insight = SubscriptionInsights.all(for: found, groups: [:], now: day(2026, 11, 22), calendar: utc)
+        let insight = SubscriptionInsights.all(for: found, groups: [:], now: day(2026, 12, 15), calendar: utc)
             .first { $0.kind == .priceIncrease }
-        XCTAssertNotNil(insight)
-        XCTAssertFalse(insight?.title.contains("raised its price") == true, "the app can't know the seller raised it")
-        XCTAssertTrue(insight?.detail.contains("If you didn't change plans") == true)
+        XCTAssertFalse(insight?.title.contains("raised its price") == true)
+    }
+
+    /// Adding a subscription once makes later scans trust it, but trust never puts it under "Confirmed:
+    /// your receipts show these renew": a Prime Video sign-up with no receipt was shown there.
+    func testTrustNeverLiftsARowIntoConfirmed() {
+        counter += 1
+        let signUp = ReceiptSignal(id: "t\(counter)", date: day(2026, 5, 20), senderDomain: "primevideo.com", senderName: "Prime Video",
+                                   merchantHint: "Crunchyroll", platform: "direct", kind: .charge, amount: Decimal(string: "10.99"),
+                                   currency: "USD", cadenceHint: .monthly, trialDays: nil, renewalLanguage: true,
+                                   oneTimeLanguage: false, promotional: false)
+        let engine = SubscriptionIntelligenceEngine()
+        let first = engine.analyze(signals: [signUp], now: day(2026, 11, 22), calendar: utc, defaultCurrency: "USD").subscriptions.first
+        let key = try? XCTUnwrap(first?.merchantKey)
+        let trusted = engine.analyze(signals: [signUp], now: day(2026, 11, 22), calendar: utc, defaultCurrency: "USD",
+                                     corrections: [key ?? "": .trusted]).subscriptions.first
+        XCTAssertEqual(trusted?.tier, .likely, "worth a look, never confirmed by a tap")
+        XCTAssertGreaterThan(trusted?.score ?? 0, first?.score ?? 0)
+        XCTAssertEqual(trusted?.reasons.first, "You added it to your list before")
+    }
+
+    /// A trial's end is worked out from the email's date, never read from it: it is said as "around", the
+    /// note sends the person to the email for the exact day, and the estimate errs early. "Trial ends
+    /// Nov 28" and "Cancel before Nov 28" were stated as fact from the email date plus three days.
+    func testATrialsWorkedOutEndIsSaidAsAroundAndErrsEarly() {
+        counter += 1
+        let ending = ReceiptSignal(id: "e\(counter)", date: day(2026, 11, 20), senderDomain: "spotify.com", senderName: "Spotify",
+                                   merchantHint: nil, platform: "direct", kind: .trialEnding, amount: Decimal(string: "10.99"),
+                                   currency: "USD", cadenceHint: .monthly, trialDays: nil, renewalLanguage: true,
+                                   oneTimeLanguage: false, promotional: false)
+        let found = analyze([ending], now: day(2026, 11, 20))
+        let trial = found.first { $0.status == .trial }
+        XCTAssertEqual(trial?.trialEndsOn, day(2026, 11, 21), "the earliest likely day, one after the email")
+        if let trial {
+            XCTAssertTrue(FoundRow.evidence(for: trial, now: day(2026, 11, 20)).hasPrefix("Trial ends around"))
+        }
+        let note = SubscriptionInsights.all(for: found, groups: [:], now: day(2026, 11, 20), calendar: utc).first { $0.kind == .trialEnding }
+        XCTAssertTrue(note?.title.contains("around") == true, note?.title ?? "none")
+        XCTAssertTrue(note?.detail.hasPrefix("Check the exact day in the email") == true, note?.detail ?? "none")
     }
 
     /// A small rise is still a price rise, said as one.

@@ -73,12 +73,12 @@ in the session scratchpad `realmail/ledger-2026-11-22.json`; `testRealLedgerRepo
 reconnect (account chooser, no password) before a real scan. Speed still to measure on a quiet Mac.
 
 Independent truth audit (Fable, 2026-11-22): about 7. Each item, fixed or not:
-- [ ] T1 blocker: trust (+30 after an import) lifts no-receipt rows into "Confirmed: your receipts show
+- [x] T1 blocker: trust (+30 after an import) lifts no-receipt rows into "Confirmed: your receipts show
   these renew". Trust may lift to "Worth a look", never Confirmed.
-- [ ] T2 blocker: one later charge at another amount is made the monthly price (Claude $148.41 is likely a
+- [x] T2 blocker: one later charge at another amount is made the monthly price (Claude $148.41 is likely a
   prorated upgrade). Keep the plan's price until two charges at the new amount; show the newer one as a
   dated note; "Last charged" stays the newest.
-- [ ] T3 blocker: a trial end worked out from the email date (+3 or +14 days) is stated as fact ("Trial
+- [x] T3 blocker: a trial end worked out from the email date (+3 or +14 days) is stated as fact ("Trial
   ends Nov 28", "Cancel before Nov 28") and imported. Say "around" and give no cancel-by date unless read.
 - [ ] T4 "Emails checked: 1,500" is the cap; say when the search was capped and how far back it reached.
 - [ ] T5 "Charged 9 times" counts the chain, not the 12 charges held; the proof list skips months.
@@ -94,15 +94,15 @@ Independent truth audit (Fable, 2026-11-22): about 7. Each item, fixed or not:
 - [ ] T15 "most likely renewed" after a trial for any merchant, not only stores that send no receipts.
 - [ ] T16 a stopped or refused search looks complete; the results page never shows a refused inbox.
 - [ ] T17 "Senders with only one-time purchases, left out" counts more than one-time purchases.
-- [ ] T18 "renews in 37 days" counts 24-hour spans; count calendar days.
+- [x] T18 "renews in 37 days" counts 24-hour spans; count calendar days.
 - [ ] T19 "goes up to $269.99 on Dec 26": before tax and "on" for a worked-out date.
-- [ ] T21 "Yearly renewals are the easiest to forget" has no source.
+- [x] T21 "Yearly renewals are the easiest to forget" has no source.
 - [ ] T22 "Your card was declined" when the email only said a payment failed.
 - [ ] T23 "Reading 380 receipts" are emails that might be receipts.
 - [ ] T25 "Missing renewal dates were filled in from your receipts" can come from a trial or sign-up.
 - [ ] T27 Prime "Subscribed on" is the day a free trial started.
 - [ ] T28 an assumed monthly period shown as fact.
-- [ ] T29 "You told Pausely this is a subscription" (a tap on a pre-ticked row); "structured subscription data" is internal wording.
+- [x] T29 "You told Pausely this is a subscription" (a tap on a pre-ticked row); "structured subscription data" is internal wording.
 - [ ] T30 the privacy line "keeps only the name, amount and date" is narrower than what is kept (sender, period, flags).
 - [ ] T31 a later scan's "Emails checked" counts only new mail while findings come from all.
 - [ ] T32 already-listed is matched by exact name ("Claude" vs "Claude Pro").

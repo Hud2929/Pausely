@@ -23,6 +23,9 @@ struct ChargeSchedule {
     /// moved too far to be the same price (a plan change): newest last. They set what is current (the
     /// price, the last charge, the next one) and nothing about how regular the plan is.
     var laterCharges: [ReceiptSignal] = []
+    /// Charges for the same plan before the chain's first one that it left out (an older price): oldest
+    /// first. The last of them is what the plan cost before.
+    var earlierCharges: [ReceiptSignal] = []
 
     private static let cadences: [Cadence] = [
         Cadence(frequency: .weekly, days: 7, tolerance: 2),
