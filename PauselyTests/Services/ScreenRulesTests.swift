@@ -444,7 +444,7 @@ final class ScreenRulesTests: XCTestCase {
         // has the row (the envelope lay over the address's first letters).
         let inbox = try String(contentsOf: sources.appendingPathComponent("Views/InboxImportView.swift"), encoding: .utf8)
         let row = try XCTUnwrap(inbox.range(of: "private func accountRow("))
-        let body = String(inbox[row.upperBound...].prefix(2600))
+        let body = String(inbox[row.upperBound...].prefix(3400))
         let above = try XCTUnwrap(body.range(of: "if MarkPlacement.sitsAbove(largeText: typeSize.isAccessibilitySize) {"))
         let beside = try XCTUnwrap(body.range(of: "} else {", range: above.upperBound..<body.endIndex))
         let stacked = body[above.upperBound..<beside.lowerBound]

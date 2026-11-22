@@ -102,6 +102,39 @@ final class InboxScanner: ObservableObject {
         await connect { try await MicrosoftGraphProvider.connect() }
     }
 
+    /// Signs in again to an inbox whose access ended, in its own place: the new sign-in's tokens go to the
+    /// same inbox, so its receipt facts stay with it, and a search follows. "Your sign-in expired.
+    /// Reconnect this inbox." had nothing to reconnect with (both ratings of 2026-11-22). A sign-in to
+    /// another address is simply another inbox.
+    func reconnect(_ old: MailboxAccount, signIn: (() async throws -> MailboxAccount)? = nil) async {
+        error = nil
+        do {
+            let fresh: MailboxAccount
+            if let signIn {
+                fresh = try await signIn()
+            } else {
+                switch old.kind {
+                case .gmail: fresh = try await GmailMailboxProvider.connect()
+                case .microsoft: fresh = try await MicrosoftGraphProvider.connect()
+                case .imap: return  // an app password is given on its own page (`connectIMAP` reconnects in place)
+                }
+            }
+            if fresh.id != old.id, fresh.kind == old.kind,
+               fresh.address.caseInsensitiveCompare(old.address) == .orderedSame,
+               let tokens = OAuthSession.load(for: fresh.id) {
+                OAuthSession.store(tokens, for: old.id)
+                MailboxAccountStore.remove(fresh.id)
+            }
+            accounts = MailboxAccountStore.all()
+            accountErrors[old.id] = nil
+            await scanAll()
+        } catch MailboxError.cancelled {
+            return
+        } catch {
+            self.error = error.localizedDescription
+        }
+    }
+
     /// Signs in to an IMAP server and keeps the account only if the sign-in and folder listing work.
     func connectIMAP(address: String, password: String, preset: IMAPPreset?, host customHost: String? = nil,
                      port customPort: Int? = nil) async throws -> MailboxAccount {
@@ -115,7 +148,19 @@ final class InboxScanner: ObservableObject {
             throw MailboxError.notConfigured(L10n.string("Choose your email provider or enter its IMAP server."))
         }
         if let existing = accounts.first(where: { $0.address == trimmed && $0.kind == .imap }) {
-            throw MailboxError.notConfigured(L10n.string("\(existing.address) is already connected."))
+            // An inbox whose sign-in stopped working takes the new password in its own place.
+            guard accountErrors[existing.id] != nil else {
+                throw MailboxError.notConfigured(L10n.string("\(existing.address) is already connected."))
+            }
+            let provider = makeProvider(existing, password: cleanPassword)
+            try await provider.open()
+            await provider.close()
+            guard MailboxAccountStore.setSecret(cleanPassword, .password, for: existing.id) else {
+                throw MailboxError.server(L10n.string("Couldn't save the password securely on this iPhone."))
+            }
+            accountErrors[existing.id] = nil
+            Task { await scanAll() }
+            return existing
         }
 
         let account = MailboxAccount(id: UUID().uuidString, kind: .imap, address: trimmed, presetID: preset?.id,

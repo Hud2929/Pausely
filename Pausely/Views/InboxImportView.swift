@@ -20,6 +20,7 @@ struct InboxImportView: View {
     @State private var importing = false
     @State private var outcome: TallyImporter.Outcome?
     @State private var imapPreset: IMAPPreset?
+    @State private var imapAddress = ""
     @State private var showingIMAP = false
     @State private var showingProviders = false
     @State private var showingPaywall = false
@@ -55,7 +56,7 @@ struct InboxImportView: View {
                 }
             }
             .sheet(isPresented: $showingIMAP) {
-                IMAPConnectView(preset: imapPreset)
+                IMAPConnectView(preset: imapPreset, startAddress: imapAddress)
             }
             .sheet(isPresented: $showingProviders) {
                 NavigationStack {
@@ -145,6 +146,7 @@ struct InboxImportView: View {
 
     private func openIMAP(_ preset: IMAPPreset?) {
         imapPreset = preset
+        imapAddress = ""
         showingProviders = false
         showingIMAP = true
     }
@@ -242,13 +244,34 @@ struct InboxImportView: View {
                 .accessibilityIdentifier("addInboxButton")
             }
 
-            Button(action: { Task { await scanner.scanAll() } }) {
-                scanner.accounts.contains { $0.lastScan != nil } ? Text("Search again") : Text("Find subscriptions")
+            // An inbox that lost its access is reconnected first: searching again repeats the failure.
+            if let failed = scanner.accounts.first(where: { scanner.accountErrors[$0.id] != nil }) {
+                Button { reconnect(failed) } label: { Text("Reconnect \(failed.address)") }
+                    .buttonStyle(.ink)
+                    .accessibilityIdentifier("reconnectButton")
+                Button(action: { Task { await scanner.scanAll() } }) { Text("Search again") }
+                    .buttonStyle(.ink(.quiet))
+                    .accessibilityIdentifier("scanInboxesButton")
+            } else {
+                Button(action: { Task { await scanner.scanAll() } }) {
+                    scanner.accounts.contains { $0.lastScan != nil } ? Text("Search again") : Text("Find subscriptions")
+                }
+                .buttonStyle(.ink)
+                .accessibilityIdentifier("scanInboxesButton")
             }
-            .buttonStyle(.ink)
-            .accessibilityIdentifier("scanInboxesButton")
         }
         .frame(maxWidth: .infinity, alignment: .leading)
+    }
+
+    /// Signs in again where it can; an app-password inbox gets its page with the address filled in.
+    private func reconnect(_ account: MailboxAccount) {
+        if account.kind == .imap {
+            imapPreset = account.presetID.flatMap(IMAPPreset.find)
+            imapAddress = account.address
+            showingIMAP = true
+        } else {
+            Task { await scanner.reconnect(account) }
+        }
     }
 
     private func accountRow(_ account: MailboxAccount) -> some View {
@@ -271,6 +294,10 @@ struct InboxImportView: View {
                 .fixedSize(horizontal: false, vertical: true)
         }
         let options = Menu {
+            if failed {
+                Button { reconnect(account) } label: { Label("Reconnect", systemImage: "arrow.clockwise") }
+                    .accessibilityIdentifier("reconnectInbox")
+            }
             Button(role: .destructive) {
                 Task { await scanner.disconnect(account) }
             } label: {

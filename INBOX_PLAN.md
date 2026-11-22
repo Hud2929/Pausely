@@ -113,7 +113,7 @@ Arabic mirrors and is fully translated; rows read as one sentence. Open:
 - [ ] B1 iPad: the connect form is a form sheet that cuts its text under the keyboard; at the largest size
   the title and steps 1-2 are gone (also full screen at the largest size: opens past its title).
 - [x] B3 Arabic: "CA$" is drawn "$CA" (the trailing symbol flips inside an isolate); "US$" the same.
-- [ ] B4 a failed inbox ("Your sign-in expired. Reconnect this inbox.") has no reconnect action anywhere.
+- [x] B4 a failed inbox ("Your sign-in expired. Reconnect this inbox.") has no reconnect action anywhere.
 - [ ] B5 iPad: the side margins don't scroll (only the centre column does).
 - [ ] B6 Arabic dates follow the device calendar (Hijri on ar_SA); for a native reader to decide. Also
   "منذ ٢٧ ذو القعدة" should be "ذي القعدة".

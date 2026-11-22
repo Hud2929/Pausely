@@ -486,6 +486,25 @@ final class ProviderWorkflowTests: XCTestCase {
         XCTAssertEqual(GmailMailboxProvider.minimumGap, 0.025, "40 requests a second at most")
     }
 
+    /// An inbox whose access ended is reconnected in its own place: the new sign-in's tokens go to the same
+    /// inbox, nothing is duplicated, the failure clears and a search follows. "Your sign-in expired.
+    /// Reconnect this inbox." had no way to do it (both ratings of 2026-11-22).
+    func testAnExpiredInboxIsReconnectedInItsOwnPlace() async throws {
+        await scanner.connect { try await GmailMailboxProvider.finishConnect(signedInTokens()) }
+        let old = try XCTUnwrap(scanner.accounts.first { $0.kind == .gmail })
+        // Access withdrawn: every token refused and the refresh token no longer accepted.
+        FakeMailAPI.with { s in s.validTokens = []; s.refreshToken = "withdrawn" }
+        await scanner.scanAll()
+        XCTAssertNotNil(scanner.accountErrors[old.id], "the expired sign-in is shown")
+
+        FakeMailAPI.with { $0.refreshToken = "refresh-2" }
+        let tokens = signedInTokens()
+        await scanner.reconnect(old) { try await GmailMailboxProvider.finishConnect(tokens) }
+        XCTAssertEqual(scanner.accounts.map(\.id), [old.id], "the same inbox, not a second one")
+        XCTAssertNil(scanner.accountErrors[old.id])
+        XCTAssertGreaterThan(scanner.stats.perAccount[old.id]?.candidates ?? 0, 0, "a search ran with the new sign-in")
+    }
+
     /// A 403 that is a real refusal (a permission taken away) says so instead of ending as "nothing found".
     func testGmailHeadersRefused_saysToReconnect() async throws {
         await scanner.connect { try await GmailMailboxProvider.finishConnect(signedInTokens()) }

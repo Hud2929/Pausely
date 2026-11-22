@@ -5,6 +5,8 @@ import SwiftUI
 /// in this iPhone's Keychain.
 struct IMAPConnectView: View {
     let preset: IMAPPreset?
+    /// The address of an inbox being reconnected, filled in for the person.
+    var startAddress: String = ""
 
     @ObservedObject private var scanner = InboxScanner.shared
     @Environment(\.dismiss) private var dismiss
@@ -79,7 +81,10 @@ struct IMAPConnectView: View {
                     Button("Cancel") { dismiss() }.foregroundStyle(Color.inkTextMuted)
                 }
             }
-            .onAppear { focused = .address }
+            .onAppear {
+                if address.isEmpty, !startAddress.isEmpty { address = startAddress }
+                focused = startAddress.isEmpty ? .address : .password
+            }
         }
     }
 
