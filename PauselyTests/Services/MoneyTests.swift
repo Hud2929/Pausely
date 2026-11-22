@@ -12,6 +12,21 @@ final class MoneyFormatTests: XCTestCase {
             .replacingOccurrences(of: "\u{202F}", with: " ")
     }
 
+    /// In Arabic "CA$" was drawn "$CA" on every price: the "$" took the paragraph's direction. A symbol
+    /// of Latin letters and a sign is held left to right as one piece; nothing else changes.
+    func testALatinCurrencySymbolStaysWholeInRightToLeftText() {
+        let arabic = Locale(identifier: "ar_SA")
+        let cad = MoneyFormat.string(Decimal(string: "16.49")!, "CAD", locale: arabic)
+        XCTAssertTrue(cad.contains("\u{2066}CA$\u{2069}"), cad)
+        let usd = MoneyFormat.string(Decimal(string: "20")!, "USD", locale: arabic)
+        XCTAssertTrue(usd.contains("\u{2066}US$\u{2069}"), usd)
+        let riyal = MoneyFormat.string(Decimal(string: "20")!, "SAR", locale: arabic)
+        XCTAssertFalse(riyal.contains("\u{2066}"), "the riyal sign has no Latin letter: left as it is")
+        XCTAssertEqual(MoneyFormat.string(Decimal(string: "16.49")!, "CAD", locale: Locale(identifier: "en_US")), "CA$16.49",
+                       "left-to-right text is untouched")
+        XCTAssertEqual(MoneyFormat.keepingSymbolWhole(cad, symbol: "CA$", locale: arabic), cad, "never wrapped twice")
+    }
+
     func testCanadianReaderSeesDollarForCADAndUSDollarForUSD() {
         XCTAssertEqual(text(12.99, "CAD", "en_CA"), "$12.99")
         XCTAssertEqual(text(12.99, "USD", "en_CA"), "US$12.99")

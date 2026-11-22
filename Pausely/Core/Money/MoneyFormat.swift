@@ -20,7 +20,21 @@ enum MoneyFormat {
             return "\(currency) \(NSDecimalNumber(decimal: amount).stringValue)"
         }
         let formatter = cachedFormatter(code: code, locale: locale, wholeUnits: wholeUnits)
-        return formatter.string(from: amount as NSDecimalNumber) ?? "\(code) \(amount)"
+        guard let text = formatter.string(from: amount as NSDecimalNumber) else { return "\(code) \(amount)" }
+        return keepingSymbolWhole(text, symbol: formatter.currencySymbol, locale: locale)
+    }
+
+    /// In right-to-left text a symbol made of Latin letters and a sign is held left to right, as one
+    /// piece. Arabic drew "CA$" as "$CA" on every price: the "$" took the paragraph's direction and
+    /// moved to the other side of the letters (the reach rating of 2026-11-22). A left-to-right
+    /// isolate around the symbol keeps it whole; symbols with no Latin letter are left as they are.
+    static func keepingSymbolWhole(_ text: String, symbol: String?, locale: Locale) -> String {
+        guard locale.language.characterDirection == .rightToLeft, let symbol,
+              symbol.unicodeScalars.contains(where: { $0.isASCII && CharacterSet.letters.contains($0) }),
+              symbol.unicodeScalars.contains(where: { !CharacterSet.letters.contains($0) }),
+              !text.contains("\u{2066}" + symbol),
+              let range = text.range(of: symbol) else { return text }
+        return text.replacingCharacters(in: range, with: "\u{2066}" + symbol + "\u{2069}")
     }
 
     /// A total across several things: exact when all of them are charged in `currency`, and "≈" in

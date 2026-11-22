@@ -112,7 +112,7 @@ Independent reach rating (Fable: iPad, Arabic, largest text, VoiceOver, 2026-11-
 Arabic mirrors and is fully translated; rows read as one sentence. Open:
 - [ ] B1 iPad: the connect form is a form sheet that cuts its text under the keyboard; at the largest size
   the title and steps 1-2 are gone (also full screen at the largest size: opens past its title).
-- [ ] B3 Arabic: "CA$" is drawn "$CA" (the trailing symbol flips inside an isolate); "US$" the same.
+- [x] B3 Arabic: "CA$" is drawn "$CA" (the trailing symbol flips inside an isolate); "US$" the same.
 - [ ] B4 a failed inbox ("Your sign-in expired. Reconnect this inbox.") has no reconnect action anywhere.
 - [ ] B5 iPad: the side margins don't scroll (only the centre column does).
 - [ ] B6 Arabic dates follow the device calendar (Hijri on ar_SA); for a native reader to decide. Also
@@ -127,6 +127,24 @@ Arabic mirrors and is fully translated; rows read as one sentence. Open:
 - [ ] B17 targets under 44 pt: paste button, Close, Cancel.
 - [ ] B18 iPad column stays 640 pt at the largest size; addresses break mid-word.
 - [ ] B20 copy: one-item "..." menu, heading punctuation, a lower-case line start, Arabic button voice.
+
+Independent consumer rating (Fable, iPhone, 2026-11-22): 7.0 (trust 7.0, effort 6.5). Open beyond the above:
+- [ ] A1 search speed: measure after pacing on a quiet Mac; under two minutes, a bar that follows one count,
+  a time estimate, and whether the app can be left.
+- [ ] A3 the free limit: "Add 5" then "Nothing new was added" when the list is full (only a footnote warns);
+  the person can't choose which five; a trial with a deadline is the one parked "Waiting" (unexplained).
+- [ ] A5 one headline count that matches the rows ("We found 7", nine rows, "Add 5").
+- [ ] A6 every "Worth a look" row says why it isn't confirmed and what to check.
+- [ ] A8 privacy block: what Google asks for ("View your email messages"), what is kept, what is synced once
+  added, a policy link, what Disconnect erases.
+- [ ] A9 "This isn't a subscription": one tap, permanent, no undo, no confirmation; nothing clears it.
+- [ ] A10 a trial row shows no price after the trial.
+- [ ] A11 GMX page: "your main password stays private" then "Use your GMX password"; "gmx.net" title for gmx.de.
+- [ ] A12 the slip while searching shows food orders as receipts; the bar jumps between phases.
+- [ ] A13 nothing found: "Search again" as the main button; no period for "Emails checked"; no route to add by hand.
+- [ ] A14 the second Gmail row (app password) beside "Sign in with Google"; disconnect says nothing of what it erased.
+- [ ] A15 disabled "Connect and search" gives no reason; the form jumps when the provider is recognised.
+- [ ] A16 Google's consent page shows the app icon (purple "P") that the redesigned app doesn't use inside: owner.
 
 ## Real accounts, real subscriptions, and Outlook (plan of 2026-11-18)
 
