@@ -53,27 +53,15 @@
 			name = "Embed Foundation Extensions";
 			runOnlyForDeploymentPostprocessing = 0;
 		};
-		7A32426C2F87F1220075C808 /* Embed Frameworks */ = {
-			isa = PBXCopyFilesBuildPhase;
-			buildActionMask = 2147483647;
-			dstPath = "";
-			dstSubfolderSpec = 10;
-			files = (
-			);
-			name = "Embed Frameworks";
-			runOnlyForDeploymentPostprocessing = 0;
-		};
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
-		79DD6961F99A86B9F2064FA1 /* SwiftUI.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = SwiftUI.framework; path = System/Library/Frameworks/SwiftUI.framework; sourceTree = SDKROOT; };
 		7A4E4A3D2F4A1A8100C89FBB /* Pausely.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Pausely.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		7A4E4A4D2F4A1A8400C89FBB /* PauselyTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = PauselyTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		7A4E4A572F4A1A8400C89FBB /* PauselyUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = PauselyUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		7AFA88462F589A8A0015E8E9 /* StoreKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = StoreKit.framework; path = System/Library/Frameworks/StoreKit.framework; sourceTree = SDKROOT; };
 		CCBB0004000000CCBB000004 /* PauselyWidget.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = PauselyWidget.appex; sourceTree = BUILT_PRODUCTS_DIR; };
 		CCBB0005000000CCBB000005 /* WidgetKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = WidgetKit.framework; path = System/Library/Frameworks/WidgetKit.framework; sourceTree = SDKROOT; };
-		D938F022D431CC17393100FA /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS18.0.sdk/System/Library/Frameworks/Foundation.framework; sourceTree = DEVELOPER_DIR; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
@@ -172,18 +160,8 @@
 			children = (
 				7AFA88462F589A8A0015E8E9 /* StoreKit.framework */,
 				CCBB0005000000CCBB000005 /* WidgetKit.framework */,
-				9412E3F7C30969109669808A /* iOS */,
-				79DD6961F99A86B9F2064FA1 /* SwiftUI.framework */,
 			);
 			name = Frameworks;
-			sourceTree = "<group>";
-		};
-		9412E3F7C30969109669808A /* iOS */ = {
-			isa = PBXGroup;
-			children = (
-				D938F022D431CC17393100FA /* Foundation.framework */,
-			);
-			name = iOS;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -197,7 +175,6 @@
 				7A4E4A3A2F4A1A8100C89FBB /* Frameworks */,
 				7A4E4A3B2F4A1A8100C89FBB /* Resources */,
 				6464EFADA166A51F778E93D4 /* Embed Foundation Extensions */,
-				7A32426C2F87F1220075C808 /* Embed Frameworks */,
 			);
 			buildRules = (
 			);
@@ -551,13 +528,10 @@
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 11;
-				DEVELOPMENT_ASSET_PATHS = "\"Pausely/Preview Content\"";
 				DEVELOPMENT_TEAM = 5LV4LWYXGD;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = NO;
 				INFOPLIST_FILE = Configuration/Info.plist;
-				INFOPLIST_KEY_CFBundleDisplayName = Pausely;
-				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.finance";
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
@@ -585,13 +559,10 @@
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 11;
-				DEVELOPMENT_ASSET_PATHS = "\"Pausely/Preview Content\"";
 				DEVELOPMENT_TEAM = 5LV4LWYXGD;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = NO;
 				INFOPLIST_FILE = Configuration/Info.plist;
-				INFOPLIST_KEY_CFBundleDisplayName = Pausely;
-				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.finance";
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
