@@ -200,6 +200,13 @@ enum OAuthSession {
 // MARK: - HTTP with retries
 
 enum MailboxHTTP {
+    #if DEBUG
+    /// DEBUG: what the servers answered during a scan, for the real-inbox test reports: how many
+    /// requests, how many were refused for going too fast, and the seconds spent waiting them out.
+    struct Diagnostics { var requests = 0, rateLimited = 0, throttled = 0, waited: TimeInterval = 0 }
+    @MainActor static var diagnostics = Diagnostics()
+    #endif
+
     /// How long to wait before retrying a throttled request: what the server asked for, kept between
     /// zero and 30 seconds. With no usable `Retry-After`, 4 then 8 then 16 seconds.
     /// A negative or non-numeric header must never reach the sleep, where it would crash.
@@ -255,6 +262,9 @@ enum MailboxHTTP {
             authorized.setValue("Bearer \(current)", forHTTPHeaderField: "Authorization")
             let (data, response) = try await URLSession.shared.data(for: authorized)
             let http = response as? HTTPURLResponse
+            #if DEBUG
+            diagnostics.requests += 1
+            #endif
             switch http?.statusCode ?? 0 {
             case 200...299:
                 return data
@@ -266,6 +276,9 @@ enum MailboxHTTP {
             case 403 where isRateLimit(data) && throttles < 3:
                 throttles += 1
                 let wait = rateLimitDelay(retryAfter: http?.value(forHTTPHeaderField: "Retry-After"), attempt: throttles)
+                #if DEBUG
+                diagnostics.rateLimited += 1; diagnostics.waited += wait
+                #endif
                 try await Task.sleep(nanoseconds: UInt64(wait * 1_000_000_000))
             case 403 where isRateLimit(data):
                 throw MailboxError.throttled(retryAfter: 60)
@@ -276,6 +289,9 @@ enum MailboxHTTP {
             case 429 where throttles < 3, 503 where throttles < 3:  // `where` binds per pattern in Swift
                 throttles += 1
                 let wait = retryDelay(retryAfter: http?.value(forHTTPHeaderField: "Retry-After"), attempt: throttles)
+                #if DEBUG
+                diagnostics.throttled += 1; diagnostics.waited += wait
+                #endif
                 try await Task.sleep(nanoseconds: UInt64(wait * 1_000_000_000))
             case 429, 503:
                 throw MailboxError.throttled(retryAfter: 60)

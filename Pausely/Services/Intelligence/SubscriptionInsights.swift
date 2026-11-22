@@ -14,9 +14,13 @@ enum SubscriptionInsights {
         var insights: [IntelligenceInsight] = []
         for sub in detected { insights.append(contentsOf: about(sub, now: now, calendar: calendar)) }
         insights.append(contentsOf: priceChangeNotices(groups: groups, detected: detected))
-        insights.append(contentsOf: introductoryPriceEnds(groups: groups, detected: detected))
+        let introEnds = introductoryPriceEnds(groups: groups, detected: detected)
+        insights.append(contentsOf: introEnds)
         insights.append(contentsOf: failedPayments(groups: groups, detected: detected, now: now))
-        return insights
+        // One note per charge. When an introductory price ends at the renewal, "renews in 34 days: expect
+        // $152.54" (the old price) stood beside "goes up to $269.99 on Dec 26" about the same charge.
+        let introducing = Set(introEnds.compactMap(\.subscriptionId))
+        return insights.filter { !($0.kind == .renewalSoon && introducing.contains($0.subscriptionId ?? "")) }
     }
 
     private static func about(_ sub: ProvenSubscription, now: Date, calendar: Calendar) -> [IntelligenceInsight] {
@@ -102,12 +106,22 @@ enum SubscriptionInsights {
             guard next > intro else { continue }
             let impact = (next - intro) * ProvenSubscription.periodsPerYear(sub.frequency)
             let newPrice = format(next, sub.currency)
+            // The amount charged is the price with tax; with both on the receipt, the coming charge is
+            // the new price with the same tax, said as an estimate. Money in one sentence is all one way.
+            var withTax: Decimal?
+            if let stated = signal.introAmount, stated > 0, sub.amount > stated {
+                var estimate = next * sub.amount / stated
+                var rounded = Decimal()
+                NSDecimalRound(&rounded, &estimate, 2, .plain)
+                withTax = rounded
+            }
             let title = sub.nextBillingDate.map { L10n.string("\(sub.name) goes up to \(newPrice) on \(shortDate($0))") }
                 ?? L10n.string("\(sub.name) goes up to \(newPrice) at the next renewal")
             out.append(IntelligenceInsight(
                 id: "intro|\(sub.id)", kind: .priceChangeNotice,
                 title: title,
-                detail: L10n.string("You're on an introductory price of \(format(intro, sub.currency)). It renews at \(newPrice) unless you cancel or switch plans first."),
+                detail: withTax.map { L10n.string("You're on an introductory price of \(format(intro, sub.currency)). It renews at \(newPrice) (about \(format($0, sub.currency)) with tax) unless you cancel or switch plans first.") }
+                    ?? L10n.string("You're on an introductory price of \(format(intro, sub.currency)). It renews at \(newPrice) unless you cancel or switch plans first."),
                 subscriptionId: sub.id, annualImpact: impact))
         }
         return out

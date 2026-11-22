@@ -270,9 +270,14 @@ final class LiveMailboxTests: XCTestCase {
         try XCTSkipIf(scanner.accounts.isEmpty, "Connect inboxes in the app first")
         // Full scans: forget sync positions so every pass runs.
         for account in scanner.accounts { MailboxAccountStore.setCursor(nil, for: account.id) }
+        MailboxHTTP.diagnostics = .init()
+        let started = Date()
         await scanner.scanAll()
+        let took = Date().timeIntervalSince(started)
+        let http = MailboxHTTP.diagnostics
 
-        var lines = ["REAL INBOX SCAN \(Date())"]
+        var lines = ["REAL INBOX SCAN \(Date()): \(Int(took)) s; web requests \(http.requests), refused for speed \(http.rateLimited),"
+                     + " throttled \(http.throttled), waited \(Int(http.waited)) s"]
         for account in scanner.accounts {
             let stats = scanner.stats.perAccount[account.id]
             lines.append("\(account.providerName) \(account.address): candidates \(stats?.candidates ?? 0), checked \(stats?.checked ?? 0), read \(stats?.read ?? 0), receipts \(stats?.receipts ?? 0)"

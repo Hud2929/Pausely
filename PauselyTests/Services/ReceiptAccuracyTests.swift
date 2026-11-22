@@ -356,6 +356,26 @@ final class ReceiptAccuracyTests: XCTestCase {
         }
     }
 
+    /// A yearly plan on an introductory price that ends at the coming renewal: one note, which says the
+    /// coming charge with tax. Two notes said "expect $152.54" (the old price with tax) and "goes up to
+    /// $269.99" (the new price without) about the same charge (a real inbox, 2026-11-22).
+    func testAnIntroductoryPriceEndingIsOneNoteWithTheChargeWithTax() {
+        counter += 1
+        var receipt = ReceiptSignal(id: "g\(counter)", date: day(2025, 12, 26), senderDomain: "google.com", senderName: "Google Play",
+                                    merchantHint: "Google One", platform: "googleplay", kind: .charge, amount: Decimal(string: "152.54"),
+                                    currency: "CAD", cadenceHint: .yearly, trialDays: nil, renewalLanguage: true,
+                                    oneTimeLanguage: false, promotional: false)
+        receipt.introAmount = Decimal(string: "134.99")
+        receipt.nextAmount = Decimal(string: "269.99")
+        let engine = SubscriptionIntelligenceEngine()
+        let report = engine.analyze(signals: [receipt], now: day(2026, 11, 22), calendar: utc, defaultCurrency: "CAD")
+        let about = report.insights.filter { $0.subscriptionId == report.subscriptions.first?.id }
+        XCTAssertEqual(about.count, 1, "\(about.map(\.title))")
+        XCTAssertEqual(about.first?.kind, .priceChangeNotice)
+        XCTAssertTrue(about.first?.detail.contains("305.09") == true, about.first?.detail ?? "")
+        XCTAssertTrue(about.first?.detail.contains("with tax") == true)
+    }
+
     private func charge(_ domain: String, _ date: Date, _ amount: String, cadence: BillingFrequency? = nil, renewal: Bool = true) -> ReceiptSignal {
         counter += 1
         return ReceiptSignal(id: "c\(counter)", date: date, senderDomain: domain, senderName: "", merchantHint: nil, platform: "direct",

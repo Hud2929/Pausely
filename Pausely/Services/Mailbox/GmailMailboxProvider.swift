@@ -153,17 +153,23 @@ final class GmailMailboxProvider: MailboxProvider {
     func summaries(_ refs: [MessageRef]) async throws -> [MessageSummary] {
         var results: [MessageSummary] = []
         var missed: [MessageRef] = []
-        for batch in InboxSearchPlan.batches(refs, size: Self.parallelHeaderReads) {
-            try Task.checkCancellation()
-            await withTaskGroup(of: (MessageRef, MessageSummary?).self) { group in
-                for ref in batch {
-                    group.addTask { (ref, try? await self.metadata(ref)) }
-                }
-                for await (ref, summary) in group {
-                    if let summary { results.append(summary) } else { missed.append(ref) }
+        // Ten in flight at all times (a new one starts as each answers), within the pace above; batches
+        // of ten each waited for their slowest answer.
+        var queue = refs[...]
+        try Task.checkCancellation()
+        await withTaskGroup(of: (MessageRef, MessageSummary?).self) { group in
+            for _ in 0..<Self.parallelHeaderReads {
+                guard let ref = queue.popFirst() else { break }
+                group.addTask { (ref, try? await self.metadata(ref)) }
+            }
+            for await (ref, summary) in group {
+                if let summary { results.append(summary) } else { missed.append(ref) }
+                if !Task.isCancelled, let next = queue.popFirst() {
+                    group.addTask { (next, try? await self.metadata(next)) }
                 }
             }
         }
+        try Task.checkCancellation()
         // What Gmail turned away while busy is asked for again, one at a time, instead of being dropped
         // unsaid. Access that really was withdrawn now says so rather than ending as "nothing found".
         for ref in missed {

@@ -29604,6 +29604,40 @@
           }
         }
       }
+    },
+    "You're on an introductory price of %@. It renews at %@ (about %@ with tax) unless you cancel or switch plans first.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "أنت على سعر تمهيدي قدره %1$@. سيتجدد بسعر %2$@ (نحو %3$@ مع الضريبة) ما لم تُلغِ أو تغيّر خطتك قبل ذلك."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sie zahlen einen Einführungspreis von %1$@. Die Verlängerung kostet %2$@ (mit Steuern etwa %3$@), sofern Sie nicht vorher kündigen oder den Tarif wechseln."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tienes un precio de introducción de %1$@. Se renueva a %2$@ (unos %3$@ con impuestos) salvo que canceles o cambies de plan antes."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Vous bénéficiez d'un prix de lancement de %1$@. Il se renouvellera à %2$@ (environ %3$@ taxes comprises) sauf si vous résiliez ou changez de forfait avant."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "現在は%1$@の初回価格です。事前に解約またはプラン変更しない限り、%2$@(税込で約%3$@)で更新されます。"
+          }
+        }
+      }
     }
   },
   "version": "1.1"
