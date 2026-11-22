@@ -91,7 +91,7 @@ Because Pausely uses a restricted Gmail scope, Google may require a **CASA (Clou
 
 **Key fact to document for the assessor:**
 - Raw email content is fetched via Gmail API directly to the user's iPhone
-- It is parsed on-device in `GmailSubscriptionScanner.swift`
+- It is parsed on-device in `Pausely/Services/Mailbox/` (`GmailMailboxProvider`, `MIMEParser`) and `Pausely/Services/Intelligence/` (`EmailSignalExtractor`)
 - Only structured subscription data (name, amount, date) is written to Supabase
 - The Supabase server never receives or processes raw email content
 
