@@ -277,36 +277,49 @@ final class InboxScanner: ObservableObject {
             accountStats.candidates = refs.count
             report(0.2, L10n.string("Checking \(L10n.string("\(refs.count) emails")) in \(account.providerName)…"))
 
-            let summaries = try await provider.summaries(refs)
+            // Headers in steps of a hundred, so the page counts up instead of standing still: a real
+            // inbox spent five minutes on "Checking 1,500 emails" with a bar that never moved.
+            var summaries: [MessageSummary] = []
+            for chunk in InboxSearchPlan.batches(refs, size: 100) {
+                summaries += try await provider.summaries(chunk)
+                report(0.2 + 0.15 * Double(summaries.count) / Double(max(refs.count, 1)),
+                       L10n.string("Checked \(summaries.count) of \(refs.count) in \(account.providerName)"))
+            }
             accountStats.checked = summaries.count
             let wanted = Self.triage(summaries, catalog: catalog).prefix(Self.bodyBudget)
             report(0.35, L10n.string("Reading \(L10n.string("\(wanted.count) receipts")) from \(account.providerName)…"))
 
             var signals: [ReceiptSignal] = []
             var stopped = false
-            for (offset, summary) in wanted.enumerated() {
+            var offset = -1
+            // Read in small batches (several at once where the provider allows), weighed in order.
+            for batch in InboxSearchPlan.batches(Array(wanted), size: max(1, provider.parallelReads)) {
                 // Stopping keeps what has been read so far: the person asked to see it, not to throw it away.
                 if Task.isCancelled { stopped = true; break }
-                guard let raw = try? await provider.rawMessage(summary.ref) else { continue }
-                accountStats.read += 1
-                let id = summary.messageID ?? "\(account.id):\(summary.ref.folder ?? ""):\(summary.ref.id)"
-                guard let email = MIMEParser.parse(raw, id: id, receivedDate: summary.receivedDate, labelIds: summary.labelIds) else { continue }
-                // One email is one fact, except a store receipt that lists several subscriptions.
-                for result in EmailSignalExtractor.extractAll(email, catalog: catalog) {
-                    var signal = result.signal
-                    if let excerpt = result.ambiguousExcerpt, let classifier, aiBudget > 0 {
-                        aiBudget -= 1
-                        let verdict = await classifier.classify(merchantGuess: result.merchantGuess, subject: result.subject, excerpt: excerpt)
-                        if verdict != .unsure { stats.aiAssisted += 1 }
-                        signal = signal.applying(verdict)
+                let raws = await provider.rawMessages(batch.map(\.ref))
+                for summary in batch {
+                    offset += 1
+                    guard let raw = raws[summary.ref] else { continue }
+                    accountStats.read += 1
+                    let id = summary.messageID ?? "\(account.id):\(summary.ref.folder ?? ""):\(summary.ref.id)"
+                    guard let email = MIMEParser.parse(raw, id: id, receivedDate: summary.receivedDate, labelIds: summary.labelIds) else { continue }
+                    // One email is one fact, except a store receipt that lists several subscriptions.
+                    for result in EmailSignalExtractor.extractAll(email, catalog: catalog) {
+                        var signal = result.signal
+                        if let excerpt = result.ambiguousExcerpt, let classifier, aiBudget > 0 {
+                            aiBudget -= 1
+                            let verdict = await classifier.classify(merchantGuess: result.merchantGuess, subject: result.subject, excerpt: excerpt)
+                            if verdict != .unsure { stats.aiAssisted += 1 }
+                            signal = signal.applying(verdict)
+                        }
+                        signal.sources = [account.id]
+                        signals.append(signal)
+                        noteReceipt(signal, catalog: catalog)
                     }
-                    signal.sources = [account.id]
-                    signals.append(signal)
-                    noteReceipt(signal, catalog: catalog)
-                }
-                if offset % 10 == 0 {
-                    report(0.35 + 0.6 * Double(offset + 1) / Double(max(wanted.count, 1)),
-                           L10n.string("Read \(offset + 1) of \(wanted.count) in \(account.providerName)"))
+                    if offset % 10 == 0 {
+                        report(0.35 + 0.6 * Double(offset + 1) / Double(max(wanted.count, 1)),
+                               L10n.string("Read \(offset + 1) of \(wanted.count) in \(account.providerName)"))
+                    }
                 }
             }
             accountStats.receipts = signals.count

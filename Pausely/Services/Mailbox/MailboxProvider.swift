@@ -35,6 +35,25 @@ protocol MailboxProvider: AnyObject {
     func close() async
     /// Signs out at the provider where possible (revokes tokens).
     func revoke() async
+    /// How many whole messages may be read at once. One for IMAP, whose single connection answers in
+    /// turn; more for the web APIs, which pace themselves.
+    var parallelReads: Int { get }
+    func rawMessages(_ refs: [MessageRef]) async -> [MessageRef: Data]
+}
+
+extension MailboxProvider {
+    var parallelReads: Int { 1 }
+
+    /// Several whole messages; any that couldn't be read are left out. One after another here; the
+    /// web APIs read theirs at once.
+    func rawMessages(_ refs: [MessageRef]) async -> [MessageRef: Data] {
+        var out: [MessageRef: Data] = [:]
+        for ref in refs {
+            if Task.isCancelled { break }
+            if let raw = try? await rawMessage(ref) { out[ref] = raw }
+        }
+        return out
+    }
 }
 
 enum MailboxError: LocalizedError, Equatable {

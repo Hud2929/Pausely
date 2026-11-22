@@ -29570,6 +29570,40 @@
           }
         }
       }
+    },
+    "Checked %lld of %lld in %@": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "تم فحص %1$lld من %2$lld في %3$@"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$lld von %2$lld in %3$@ geprüft"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Revisados %1$lld de %2$lld en %3$@"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$lld sur %2$lld vérifiés dans %3$@"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%3$@：%2$lld件中%1$lld件を確認済み"
+          }
+        }
+      }
     }
   },
   "version": "1.1"

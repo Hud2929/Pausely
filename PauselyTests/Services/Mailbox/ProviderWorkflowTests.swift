@@ -482,7 +482,8 @@ final class ProviderWorkflowTests: XCTestCase {
         XCTAssertEqual(stats.checked, searchable, "every email's headers were read in the end")
         XCTAssertEqual(FakeMailAPI.with { $0.gmailRateLimitBurst }, 0, "the refusals were really met")
         assertFindsTheRightSubscriptions("Gmail through rate limits")
-        XCTAssertEqual(GmailMailboxProvider.parallelReads, 5)
+        XCTAssertEqual(GmailMailboxProvider.parallelHeaderReads, 10)
+        XCTAssertEqual(GmailMailboxProvider.minimumGap, 0.025, "40 requests a second at most")
     }
 
     /// A 403 that is a real refusal (a permission taken away) says so instead of ending as "nothing found".

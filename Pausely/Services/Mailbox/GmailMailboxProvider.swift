@@ -122,12 +122,38 @@ final class GmailMailboxProvider: MailboxProvider {
 
     /// How many header requests are in flight at once. Gmail allows about 250 quota units a second per
     /// person and a header read costs 5; twenty at a time had two thirds of a real inbox turned away.
-    static let parallelReads = 5
+    static let parallelHeaderReads = 10
+
+    /// Gmail allows each person about 250 quota units a second, and a header or message read costs 5.
+    /// Requests start at most 40 a second (25 ms apart), so the limit is never met: backing off it after
+    /// the fact took a real scan of 1,500 emails over eight minutes (2026-11-18).
+    static let minimumGap: TimeInterval = 0.025
+    private var nextStart = Date.distantPast
+
+    var parallelReads: Int { 8 }
+
+    /// Several whole messages at once (the requests are paced, so Google's limit is never met).
+    func rawMessages(_ refs: [MessageRef]) async -> [MessageRef: Data] {
+        var out: [MessageRef: Data] = [:]
+        await withTaskGroup(of: (MessageRef, Data?).self) { group in
+            for ref in refs { group.addTask { (ref, try? await self.rawMessage(ref)) } }
+            for await (ref, raw) in group { if let raw { out[ref] = raw } }
+        }
+        return out
+    }
+
+    private func pace() async throws {
+        let now = Date()
+        let start = max(now, nextStart)
+        nextStart = start.addingTimeInterval(Self.minimumGap)
+        let wait = start.timeIntervalSince(now)
+        if wait > 0 { try await Task.sleep(nanoseconds: UInt64(wait * 1_000_000_000)) }
+    }
 
     func summaries(_ refs: [MessageRef]) async throws -> [MessageSummary] {
         var results: [MessageSummary] = []
         var missed: [MessageRef] = []
-        for batch in InboxSearchPlan.batches(refs, size: Self.parallelReads) {
+        for batch in InboxSearchPlan.batches(refs, size: Self.parallelHeaderReads) {
             try Task.checkCancellation()
             await withTaskGroup(of: (MessageRef, MessageSummary?).self) { group in
                 for ref in batch {
@@ -222,6 +248,7 @@ final class GmailMailboxProvider: MailboxProvider {
 
     private func get(_ url: URL) async throws -> Data {
         guard url.host == "gmail.googleapis.com" else { throw MailboxError.insecure(L10n.string("Pausely stopped because a reply came from an unexpected server.")) }
+        try await pace()
         var request = URLRequest(url: url)
         request.timeoutInterval = 40
         let accountID = account.id
