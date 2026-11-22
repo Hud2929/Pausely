@@ -127,21 +127,4 @@ struct IntelligenceReport: Equatable {
     var active: [ProvenSubscription] {
         subscriptions.filter { $0.status != .likelyEnded && $0.status != .cancelled }
     }
-    /// What the likely-or-better subscriptions cost a month in `currency`. A mailbox can hold
-    /// receipts in several currencies, so each one is converted before adding.
-    func monthlyTotal(in currency: String, rates: CurrencyRates = CurrencyManager.shared.rates) -> Decimal {
-        MoneyMath.total(counted, in: currency, rates: rates,
-                        amount: \.monthlyCost, currencyOf: \.currency)
-    }
-
-    /// True when that total holds a receipt in another currency than `currency`, so that part of
-    /// it was worked out at an exchange rate. Such a total is an estimate and is marked "≈"
-    /// wherever it is shown (`MoneyFormat.total`), like every other total in the app.
-    func monthlyTotalIsConverted(to currency: String) -> Bool {
-        let display = MoneyFormat.normalizedCode(currency)
-        return counted.contains { $0.monthlyCost != 0 && MoneyFormat.normalizedCode($0.currency) != display }
-    }
-
-    /// The subscriptions a total counts: still running, and likely or better.
-    private var counted: [ProvenSubscription] { active.filter { $0.tier >= .likely } }
 }

@@ -57,7 +57,8 @@ struct SubscriptionIntelligenceEngine {
 
         // What is worth saying is worked out from everything detected, before the weak ones are dropped.
         let insights = SubscriptionInsights.all(for: detected, groups: groups, now: now, calendar: calendar)
-            .sorted { ($0.annualImpact ?? 0) > ($1.annualImpact ?? 0) }
+            // Ties keep one order: equal amounts swapped places from one launch to the next.
+            .sorted { ($0.annualImpact ?? 0, $1.id) > ($1.annualImpact ?? 0, $0.id) }
 
         detected = detected
             .filter { $0.tier >= .review }
@@ -299,7 +300,8 @@ struct SubscriptionIntelligenceEngine {
         let proof = (atPrice + sequence.laterCharges)
             .filter { seenCharge.insert($0.id).inserted }
             .sorted { $0.date < $1.date }
-        let evidence = proof.suffix(8).compactMap { signal -> ChargeEvidence? in
+        // Every charge counted is listed: "Charged 12 times" stood over the latest eight.
+        let evidence = proof.compactMap { signal -> ChargeEvidence? in
             guard let amount = signal.amount else { return nil }
             return ChargeEvidence(id: signal.id, date: signal.date, amount: amount, currency: signal.currency ?? currency)
         }

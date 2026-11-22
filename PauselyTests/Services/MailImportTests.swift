@@ -163,39 +163,30 @@ final class MailImportTests: XCTestCase {
                            evidence: [], reasons: [], previousAmount: nil, trialEndsOn: trialEnds)
     }
 
-    /// The total on the results slip. Receipts in another currency than the one the person sees
-    /// are added at an exchange rate, so the total is an estimate and says so ("≈"), as every
-    /// other total in the app does. It did not: a mailbox of Canadian receipts read "¥16,027" to
-    /// someone who sees yen (the Japanese tour of 2026-11-16).
-    func testTheSlipsTotalIsMarkedWhenAReceiptWasConverted() throws {
-        let canadian = IntelligenceReport(subscriptions: [proven("Netflix", currency: "CAD"), proven("Spotify", amount: "12.99", currency: "CAD")],
-                                          ignoredPurchaseGroups: 0, insights: [])
-        XCTAssertFalse(canadian.monthlyTotalIsConverted(to: "CAD"))
-        XCTAssertFalse(canadian.monthlyTotalIsConverted(to: "cad"))
-        XCTAssertTrue(canadian.monthlyTotalIsConverted(to: "JPY"))
+    /// The total on the results slip: what is ticked (or everything found, with nothing ticked), each
+    /// converted first. Receipts in another currency mark it "≈": a mailbox of Canadian receipts read
+    /// "¥16,027" to someone who sees yen (2026-11-16). It counted rows nobody ticked (2026-11-22).
+    @MainActor
+    func testTheSlipAddsUpWhatIsTickedAndMarksAConvertedTotal() throws {
+        let netflix = FoundSubscription(proven: proven("Netflix", currency: "CAD"))
+        let spotify = FoundSubscription(proven: proven("Spotify", amount: "12.99", currency: "CAD"))
+        let notion = FoundSubscription(proven: proven("Notion", amount: "10", currency: "USD"))
+        let canadian = InboxImportView.slipTotal([netflix, spotify], in: "CAD", rates: .fallback)
+        XCTAssertEqual(canadian.monthly, Decimal(string: "28.48"))
+        XCTAssertFalse(canadian.converted)
+        XCTAssertFalse(InboxImportView.slipTotal([netflix], in: "cad", rates: .fallback).converted)
+        XCTAssertTrue(InboxImportView.slipTotal([netflix], in: "JPY", rates: .fallback).converted)
+        XCTAssertTrue(InboxImportView.slipTotal([netflix, notion], in: "CAD", rates: .fallback).converted, "one is enough")
+        XCTAssertEqual(InboxImportView.slipTotal([netflix], in: "CAD", rates: .fallback).monthly, Decimal(string: "15.49"),
+                       "only what is passed: the ticked rows")
 
-        // One receipt in another currency is enough.
-        let mixed = IntelligenceReport(subscriptions: [proven("Netflix", currency: "CAD"), proven("Notion", amount: "10", currency: "USD")],
-                                       ignoredPurchaseGroups: 0, insights: [])
-        XCTAssertTrue(mixed.monthlyTotalIsConverted(to: "CAD"))
-
-        // What the total leaves out does not mark it: one that has ended, one that is only worth a look.
-        var unsure = proven("Gym", currency: "USD")
-        unsure.tier = .review
-        let quiet = IntelligenceReport(subscriptions: [proven("Netflix", currency: "CAD"), proven("Hulu", status: .cancelled, currency: "USD"), unsure],
-                                       ignoredPurchaseGroups: 0, insights: [])
-        XCTAssertFalse(quiet.monthlyTotalIsConverted(to: "CAD"))
-        XCTAssertEqual(quiet.monthlyTotal(in: "CAD", rates: .fallback), Decimal(string: "15.49"))
-
-        // The mark is the one every total uses, and it is what the slip draws.
         XCTAssertEqual(MoneyFormat.total(16027, "JPY", converted: true, locale: Locale(identifier: "ja_JP")).first, "≈")
-        XCTAssertNotEqual(MoneyFormat.total(16027, "JPY", converted: false, locale: Locale(identifier: "ja_JP")).first, "≈")
         let screen = URL(fileURLWithPath: #filePath).deletingLastPathComponent().deletingLastPathComponent().deletingLastPathComponent()
             .appendingPathComponent("Pausely/Views/InboxImportView.swift")
         try XCTSkipUnless(FileManager.default.fileExists(atPath: screen.path), "Sources aren't readable from this test run")
         let source = try String(contentsOf: screen, encoding: .utf8)
+        XCTAssertTrue(source.contains("let base = picked.isEmpty ? live.filter { !isOnList($0) } : picked"))
         XCTAssertTrue(source.contains(#"ProofLine(label: L10n.string("Each month"), value: MoneyFormat.total(monthly, currency, converted: converted), emphasised: true)"#))
-        XCTAssertTrue(source.contains(#"ProofLine(label: L10n.string("Each year"), value: MoneyFormat.total(monthly * 12, currency, converted: converted))"#))
     }
 
     func testTheAnchorIsTheLastRealChargeNotAWorkedOutDate() throws {

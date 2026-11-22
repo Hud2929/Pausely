@@ -386,6 +386,15 @@ struct InboxImportView: View {
         selected = Set(live.filter { $0.proven.tier == .confirmed && !isOnList($0) }.map(\.id))
     }
 
+    /// What the slip adds up: the monthly cost of `found` in `currency`, each converted first, and whether
+    /// any had to be, which marks the total "≈" (a mailbox of Canadian receipts read "¥16,027" to someone
+    /// who sees yen, unmarked, on 2026-11-16).
+    static func slipTotal(_ found: [FoundSubscription], in currency: String, rates: CurrencyRates) -> (monthly: Decimal, converted: Bool) {
+        let display = MoneyFormat.normalizedCode(currency)
+        let monthly = MoneyMath.total(found, in: currency, rates: rates, amount: { $0.proven.monthlyCost }, currencyOf: { $0.currency })
+        return (monthly, found.contains { $0.proven.monthlyCost != 0 && MoneyFormat.normalizedCode($0.currency) != display })
+    }
+
     /// Already in the person's list, by the importer's own rule (the same name, any case).
     private func isOnList(_ found: FoundSubscription) -> Bool {
         store.subscriptions.contains { $0.name.caseInsensitiveCompare(found.name) == .orderedSame }
@@ -394,9 +403,11 @@ struct InboxImportView: View {
     /// What the search found: the total first, then how it was worked out.
     private func summary(count: Int) -> some View {
         let currency = CurrencyManager.shared.selectedCurrency
-        let monthly = scanner.report?.monthlyTotal(in: currency) ?? 0
-        // Receipts in another currency are added at an exchange rate, and the total says so.
-        let converted = scanner.report?.monthlyTotalIsConverted(to: currency) ?? false
+        // The total follows the ticks and says so: it counted rows nobody ticked and changed after adding
+        // (the ratings of 2026-11-22). With nothing ticked it is everything found that isn't listed yet.
+        let picked = chosen
+        let base = picked.isEmpty ? live.filter { !isOnList($0) } : picked
+        let (monthly, converted) = Self.slipTotal(base, in: currency, rates: CurrencyManager.shared.rates)
         let ignored = scanner.stats.purchasesIgnored
         let stats = scanner.stats
 
@@ -412,6 +423,9 @@ struct InboxImportView: View {
 
             PaperSlip(tornTop: true, tornBottom: true) {
                 VStack(alignment: .leading, spacing: 10) {
+                    Text(verbatim: picked.isEmpty ? L10n.string("For everything found") : L10n.string("For the \(picked.count) you've ticked"))
+                        .font(.proof(.caption))
+                        .foregroundStyle(Color.paperMuted)
                     ProofLine(label: L10n.string("Each month"), value: MoneyFormat.total(monthly, currency, converted: converted), emphasised: true)
                     ProofLine(label: L10n.string("Each year"), value: MoneyFormat.total(monthly * 12, currency, converted: converted))
                     if ignored > 0 || stats.emailsChecked > 0 { Perforation() }
@@ -484,7 +498,7 @@ struct InboxImportView: View {
     }
 
     private func listSection(title: LocalizedStringKey, subtitle: LocalizedStringKey, items: [FoundSubscription]) -> some View {
-        let selectable = items.filter { !$0.isCancelled }
+        let selectable = items.filter { !$0.isCancelled && !isOnList($0) }
         return VStack(alignment: .leading, spacing: 6) {
             AdaptiveRow {
                 VStack(alignment: .leading, spacing: 2) {
@@ -498,7 +512,8 @@ struct InboxImportView: View {
                         .fixedSize(horizontal: false, vertical: true)
                 }
             } value: {
-                if !selectable.isEmpty {
+                // Over a single row its own box says it all.
+                if selectable.count > 1 {
                     let allSelected = selectable.allSatisfy { selected.contains($0.id) }
                     Button {
                         if allSelected { selectable.forEach { selected.remove($0.id) } } else { selectable.forEach { selected.insert($0.id) } }

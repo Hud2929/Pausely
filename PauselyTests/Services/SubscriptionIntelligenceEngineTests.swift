@@ -199,10 +199,14 @@ final class SubscriptionIntelligenceEngineTests: XCTestCase {
         XCTAssertEqual(report.subscriptions.first { $0.name == "Netflix" }?.evidence.count, 1)
     }
 
-    func testTotalsOnlyCountLikelyOrBetter() {
+    /// A one-off charge never becomes something to add up: the slip totals findings, and a single
+    /// parking payment is not one.
+    func testAOneOffIsNotAFindingToAddUp() {
         var signals = monthly("netflix.com", name: "Netflix", amount: 14.99, months: [(6, 12), (7, 12), (8, 12), (9, 12)])
         signals.append(signal("honk.com", name: "Honkmobile", on: date(2026, 9, 14), amount: 500))
-        XCTAssertEqual(analyze(signals).monthlyTotal(in: "CAD", rates: .fallback), 14.99)  // signals are in CAD
+        let found = analyze(signals).subscriptions
+        XCTAssertEqual(found.map(\.name), ["Netflix"])
+        XCTAssertEqual(found.first?.tier, .confirmed, "ticked from the start")
     }
 
     // MARK: Text analyzer

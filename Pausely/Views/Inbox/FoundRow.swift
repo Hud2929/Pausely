@@ -31,8 +31,8 @@ struct FoundRow: View {
         switch proven.status {
         case .priceIncreased: return (L10n.string("Price went up"), .decide)
         case .trial: return (L10n.string("Free trial"), .decide)
-        case .likelyEnded: return (L10n.string("May have ended"), nil)
-        case .cancelled: return (L10n.string("Cancelled"), nil)
+        // These rows sit under a heading that says it ("May have ended", "Cancelled"); a tag repeated it.
+        case .likelyEnded, .cancelled: return nil
         case .active: return proven.chargedAfterCancel ? (L10n.string("Charged after a cancellation email"), .due) : nil
         }
     }

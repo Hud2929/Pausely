@@ -83,7 +83,7 @@ Independent truth audit (Fable, 2026-11-22): about 7. Each item, fixed or not:
 - [ ] T4 "Emails checked: 1,500" is the cap; say when the search was capped and how far back it reached.
 - [x] T5 "Charged 9 times" counts the chain, not the 12 charges held; the proof list skips months.
 - [x] T6 "Same amount each time" under a row with a later different charge.
-- [ ] T7 totals ignore the ticks, mix tax bases, and count rows never seen charged.
+- [x] T7 totals ignore the ticks, mix tax bases, and count rows never seen charged.
 - [ ] T8 an amount with no currency is taken as the person's currency without saying so.
 - [ ] T9 already-listed rows keep a different amount/date unsaid.
 - [x] T10 "May have ended" rows can be ticked and import as active with a next charge.
@@ -120,9 +120,9 @@ Arabic mirrors and is fully translated; rows read as one sentence. Open:
 - [ ] B8 a date broken across lines at the largest size ("around Dec" / "12."); proof lines may overflow.
 - [ ] B9-B11 VoiceOver: the "why" button doesn't name its service or state; a connected inbox is three
   stops; the results header is one 40-word heading; "selected" is a word, not the trait.
-- [ ] B12 "Charged N times" above fewer proof lines (the list shows the latest eight).
-- [ ] B14 "Worth knowing" changes order between launches on the same data.
-- [ ] B15 tags repeat their section ("May have ended" under "May have ended"); "Select all" over one row.
+- [x] B12 "Charged N times" above fewer proof lines (the list shows the latest eight).
+- [x] B14 "Worth knowing" changes order between launches on the same data.
+- [x] B15 tags repeat their section ("May have ended" under "May have ended"); "Select all" over one row.
 - [ ] B16 letter tiles (G, O, H) beside real logos; logos don't scale at the largest size.
 - [ ] B17 targets under 44 pt: paste button, Close, Cancel.
 - [ ] B18 iPad column stays 640 pt at the largest size; addresses break mid-word.
@@ -133,7 +133,7 @@ Independent consumer rating (Fable, iPhone, 2026-11-22): 7.0 (trust 7.0, effort 
   a time estimate, and whether the app can be left.
 - [ ] A3 the free limit: "Add 5" then "Nothing new was added" when the list is full (only a footnote warns);
   the person can't choose which five; a trial with a deadline is the one parked "Waiting" (unexplained).
-- [ ] A5 one headline count that matches the rows ("We found 7", nine rows, "Add 5").
+- [x] A5 one headline count that matches the rows ("We found 7", nine rows, "Add 5").
 - [ ] A6 every "Worth a look" row says why it isn't confirmed and what to check.
 - [ ] A8 privacy block: what Google asks for ("View your email messages"), what is kept, what is synced once
   added, a policy link, what Disconnect erases.
