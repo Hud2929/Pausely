@@ -1,0 +1,41 @@
+name: CI
+
+on:
+  push:
+    branches: [redesign, main]
+  pull_request:
+    branches: [redesign, main]
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  checks-and-db:
+    name: Gold Checks, Postgres & Edge Functions
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Run database rules across all 6 starting states
+        run: bash scripts/dbtest/run.sh
+
+      - name: Run Edge Function test rigs
+        run: |
+          bash scripts/dbtest/waitlist_function.sh
+          bash scripts/dbtest/auth_email_function.sh
+          bash scripts/dbtest/apple_revoke_function.sh
+          bash scripts/dbtest/appstore_notifications_function.sh
+
+  ios-proof:
+    name: iOS Unit, Mail Rig, UI & Release Build
+    runs-on: macos-15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Run full iOS proof (checks, unit, mail, ui, release)
+        run: bash scripts/proof.sh checks unit mail ui release

@@ -109,7 +109,7 @@ enum DemoSubscriptions {
     static func seedVariedHistory(for list: [Subscription], now: Date = Date()) {
         LifecycleEventLog.shared.restore(variedEvents(for: list, now: now))
         if let netflix = list.first(where: { $0.name == "Netflix" }) {
-            UsageLog.shared.setMonthlyUsage(minutes: 140, for: netflix.name)
+            UsageLog.shared.setMonthlyUsage(minutes: 140, for: netflix)
         }
     }
 }

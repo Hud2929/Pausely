@@ -49,15 +49,29 @@ final class PausePlanStore: ObservableObject {
 
     func start(order: [UUID], now: Date = Date()) async {
         guard order.count >= 2 else { return }
-        plan = PausePlan(subscriptionIds: order, startedOn: now)
+        let created = PausePlan(subscriptionIds: order, startedOn: now)
+        plan = created
         save()
         await ReminderScheduler.shared.reschedule(SubscriptionStore.shared.subscriptions)
+        if self === Self.shared {
+            await PausePlanSync.shared.push(created)
+        }
     }
 
     func end() async {
         plan = nil
         save()
         await ReminderScheduler.shared.reschedule(SubscriptionStore.shared.subscriptions)
+        if self === Self.shared {
+            await PausePlanSync.shared.push(nil)
+        }
+    }
+
+    /// Applies a Pause Plan pulled from the account without triggering a write back to the server.
+    func applySynced(_ synced: PausePlan) {
+        plan = synced
+        save()
+        Task { await ReminderScheduler.shared.reschedule(SubscriptionStore.shared.subscriptions) }
     }
 
     /// "I started it": the subscription is on again from `date` (`SubscriptionStore.startAgain`).

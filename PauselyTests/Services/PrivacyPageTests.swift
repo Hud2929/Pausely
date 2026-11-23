@@ -68,32 +68,33 @@ final class PrivacyPageTests: XCTestCase {
         }
     }
 
-    /// "History, receipt and Pause Plan: Stay on this iPhone, protected by iOS data protection."
-    func testHistoryTheReceiptAndThePlanStayOnTheDevice() throws {
+    /// "History, receipt and Pause Plan: Protected on this iPhone by iOS data protection, and synced
+    /// to your account when you sign in so reinstalling never loses them."
+    func testHistoryTheReceiptAndThePlanStayProtectedAndOwnerOnly() throws {
         let page = try text("Pausely/Views/Settings/PrivacySecurityView.swift")
-        XCTAssertTrue(page.contains("Stay on this iPhone, protected by iOS data protection."))
+        XCTAssertTrue(page.contains("Protected on this iPhone by iOS data protection, and synced to your account when you sign in so reinstalling never loses them."))
 
         let sources = try appSources()
-        // What goes to the server: the list, the account's own row (the age confirmation and
-        // whether Pro was granted), the request to delete the account, and the revoking of an
-        // Apple sign-in. No table or function holds history, savings or a plan.
+        // What goes to the server: the list, the account's own row (age confirmation & Pro grant),
+        // Savings Receipt lifecycle history, the Pause Plan, account deletion, and Apple token revocation.
         var tables = Set<String>(), calls = Set<String>(), functions = Set<String>()
         for source in sources.values {
             tables.formUnion(try captures("\\.from\\(\"([^\"]+)\"\\)", in: source))
             calls.formUnion(try captures("\\.rpc\\(\"([^\"]+)\"", in: source))
             functions.formUnion(try captures("functions\\.invoke\\(\"([^\"]+)\"", in: source))
         }
-        XCTAssertEqual(tables, ["subscriptions", "profiles"])
+        XCTAssertEqual(tables, ["subscriptions", "profiles", "lifecycle_events", "pause_plans"])
         XCTAssertEqual(calls, ["delete_my_account"])
         XCTAssertEqual(functions, ["apple-revoke"])
 
-        // History (which the receipt is worked out from) and the plan are files on the device,
-        // written through the one place that sets their protection; neither file knows the server.
+        // History, Pause Plan, and cached local blobs are written with iOS hardware data protection.
         for file in ["Core/Renewals/LifecycleEventLog.swift", "Services/PausePlanStore.swift"] {
             let source = try XCTUnwrap(sources[file], file)
             XCTAssertTrue(source.contains("DeviceFile.save("), file)
-            XCTAssertFalse(source.contains("SupabaseManager"), "\(file) talks to the server")
+            XCTAssertFalse(source.contains("SupabaseManager"), "\(file) keeps local persistence separate from sync")
         }
+        let settings = try XCTUnwrap(sources["Services/Settings/AppSettings.swift"])
+        XCTAssertTrue(settings.contains(".completeFileProtectionUntilFirstUserAuthentication"), "cached subscriptions and sync queue use hardware protection")
         let receipt = try XCTUnwrap(sources["Core/Renewals/SavingsLedger.swift"])
         XCTAssertFalse(receipt.contains("SupabaseManager"))
         let deviceFile = try XCTUnwrap(sources["Core/Utilities/DeviceFile.swift"])
@@ -141,10 +142,11 @@ final class PrivacyPageTests: XCTestCase {
                 imported.formUnion(try captures("(?m)^(?:@preconcurrency )?import (?:struct |class |enum |func )?([A-Za-z_]+)", in: source))
             }
         }
-        XCTAssertEqual(imported.sorted(), ["AppIntents", "Auth", "AuthenticationServices", "Combine", "CoreSpotlight", "CryptoKit",
-                                           "Dispatch", "Foundation", "FoundationModels", "LocalAuthentication", "MessageUI", "Network",
-                                           "PostgREST", "SafariServices", "Security", "StoreKit", "Supabase", "SwiftUI", "TipKit",
-                                           "UIKit", "UniformTypeIdentifiers", "UserNotifications", "WidgetKit", "os"],
+        XCTAssertEqual(imported.sorted(), ["AppIntents", "Auth", "AuthenticationServices", "Combine", "CoreGraphics",
+                                           "CoreSpotlight", "CryptoKit", "Dispatch", "Foundation", "FoundationModels",
+                                           "LocalAuthentication", "MessageUI", "Network", "PhotosUI", "PostgREST",
+                                           "SafariServices", "Security", "StoreKit", "Supabase", "SwiftUI", "TipKit",
+                                           "UIKit", "UniformTypeIdentifiers", "UserNotifications", "Vision", "WidgetKit", "os"],
                        "a new framework: say here what it is for")
         // And the app's privacy manifest says the same to Apple (`PrivacyManifestTests`).
     }

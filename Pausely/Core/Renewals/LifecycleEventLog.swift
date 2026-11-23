@@ -43,6 +43,22 @@ struct LifecycleEvent: Codable, Equatable, Identifiable {
         self.renewalDate = renewalDate
         self.anchorDate = subscription.nextBillingDate
     }
+
+    init(id: UUID, kind: Kind, subscriptionId: UUID, subscriptionName: String, date: Date,
+         amount: Decimal, currency: String, frequency: BillingFrequency,
+         previousAmount: Decimal? = nil, renewalDate: Date? = nil, anchorDate: Date? = nil) {
+        self.id = id
+        self.kind = kind
+        self.subscriptionId = subscriptionId
+        self.subscriptionName = subscriptionName
+        self.date = date
+        self.amount = amount
+        self.currency = currency
+        self.frequency = frequency
+        self.previousAmount = previousAmount
+        self.renewalDate = renewalDate
+        self.anchorDate = anchorDate
+    }
 }
 
 /// An append-only, on-device history of subscription events (Lago keeps the same kind of vocabulary:
@@ -51,7 +67,7 @@ struct LifecycleEvent: Codable, Equatable, Identifiable {
 @MainActor
 final class LifecycleEventLog: ObservableObject {
     static let shared = LifecycleEventLog()
-    static let maxEvents = 2_000
+    nonisolated static let maxEvents = 2_000
 
     @Published private(set) var events: [LifecycleEvent] = []
     private let fileURL: URL
@@ -83,6 +99,9 @@ final class LifecycleEventLog: ObservableObject {
         events.append(event)
         if !historyIsLoaded { recordedBeforeLoad.append(event) }
         save()
+        if self === Self.shared {
+            Task { await LifecycleSync.shared.upload(event) }
+        }
     }
 
     /// Reads the history if an earlier attempt couldn't, and saves anything recorded in between.

@@ -16,6 +16,8 @@ struct DashboardView: View {
     @State private var showingReceipt = false
     @State private var showingDates = false
     @State private var showingInbox = false
+    @State private var showingScreenshotImport = false
+    @State private var showingFreePicker = false
     /// Read only so Home is drawn again when what waits for room changes: after an add that only kept
     /// some for later, "isn't tracked" stayed until a relaunch (the rating of 2026-11-23).
     @AppStorage(TallyImporter.waitingKey) private var waitingSaved: Data?
@@ -42,6 +44,7 @@ struct DashboardView: View {
                     ListCouldNotLoad().padding(.top, 40)
                 } else if store.subscriptions.isEmpty {
                     HomeEmpty(onAdd: { showingAdd = true },
+                              onImportScreenshots: { showingScreenshotImport = true },
                               onFindInEmail: FeatureFlags.inboxImportEnabled ? { showingInbox = true } : nil)
                         .padding(.top, 40)
                 } else {
@@ -71,6 +74,10 @@ struct DashboardView: View {
         .sheet(isPresented: $showingReceipt) { SavingsReceiptView() }
         .sheet(isPresented: $showingDates) { RenewalDatesSheet(subscriptions: Horizon.undated(store.subscriptions)) }
         .sheet(isPresented: $showingInbox) { InboxImportView() }
+        .sheet(isPresented: $showingScreenshotImport) { ScreenshotImportView() }
+        .sheet(isPresented: $showingFreePicker) {
+            FreeLimitPickerSheet(store: store, currencyManager: currencyManager, onSeePro: { showingPaywall = true })
+        }
         .onAppear {
             ReviewPromptManager.shared.askAfterMoneyKept()
         }
@@ -245,19 +252,22 @@ struct DashboardView: View {
             }
 
             if !waiting.isEmpty, !paymentManager.isUnlocked(.unlimitedSubscriptions) {
-                // A place on the free list is offered to what waited for it: when one was freed, the row still
-                // said only "See Pro", and the next add took the place (the rating of 2026-11-23).
-                let room = FreeTier.room(in: store.subscriptions) > 0
+                // Free users can always choose WHICH 5 subscriptions occupy their free slots, or go Pro to track all.
+                let room = FreeTier.room(in: store.subscriptions)
                 let one = waiting.count == 1 ? waiting[0].name : nil
-                AttentionRow(state: nil, symbol: room ? "plus.circle" : "eye.slash",
-                             title: room ? one.map { L10n.string("There's room for \($0)") }
-                                            ?? L10n.string("There's room for some of the \(waiting.count) you kept for later")
-                                         : one.map { L10n.string("\($0) isn't tracked") }
-                                            ?? L10n.string("\(waiting.count) of your subscriptions aren't tracked"),
-                             detail: room ? L10n.string("The free plan tracks \(FreeTier.subscriptionLimit). Add what fits, most expensive first.")
-                                          : L10n.string("The free plan tracks \(FreeTier.subscriptionLimit). Pausely Pro tracks all of them."),
-                             action: room ? L10n.string("Add") : L10n.string("See Pro")) {
-                    if room { Task { await TallyImporter.importWaiting(into: store) } } else { showingPaywall = true }
+                AttentionRow(state: nil, symbol: room > 0 ? "plus.circle" : "checklist",
+                             title: room > 0 ? one.map { L10n.string("There's room for \($0)") }
+                                                ?? L10n.string("There's room for some of the \(waiting.count) you kept for later")
+                                             : one.map { L10n.string("\($0) isn't tracked") }
+                                                ?? L10n.string("\(waiting.count) of your subscriptions aren't tracked"),
+                             detail: room > 0 ? L10n.string("The free plan tracks \(FreeTier.subscriptionLimit). Choose which ones to track.")
+                                              : L10n.string("The free plan tracks \(FreeTier.subscriptionLimit). Choose which ones to watch, or go Pro for all."),
+                             action: room > 0 && waiting.count <= room ? L10n.string("Add") : L10n.string("Choose")) {
+                    if room > 0 && waiting.count <= room {
+                        Task { await TallyImporter.importWaiting(into: store) }
+                    } else {
+                        showingFreePicker = true
+                    }
                 }
                 .accessibilityIdentifier("waitingRow")
                 Hairline()
@@ -661,38 +671,6 @@ private struct ChargeRow: View {
         let day = L10n.day(charge.date)
         let relative = L10n.whole(L10n.relativeDay(charge.dayOffset, capitalized: true))
         return L10n.breakingAfterDots(charge.isTrialEnd ? L10n.string("Trial ends \(day) · \(relative)") : "\(day) · \(relative)")
-    }
-}
-
-// MARK: - Empty and loading
-
-private struct HomeEmpty: View {
-    let onAdd: () -> Void
-    /// Nil while finding subscriptions in email is switched off (`FeatureFlags`).
-    var onFindInEmail: (() -> Void)?
-
-    var body: some View {
-        VStack(alignment: .leading, spacing: 12) {
-            Text("Nothing on your list yet.")
-                .font(.question(.title2))
-                .foregroundStyle(Color.inkText)
-                .fixedSize(horizontal: false, vertical: true)
-            Text("Add what you pay for. Pausely asks before each renewal whether it's still worth it.")
-                .font(.body)
-                .foregroundStyle(Color.inkTextMuted)
-                .fixedSize(horizontal: false, vertical: true)
-            VStack(spacing: 10) {
-                Button(action: onAdd) { Text("Add subscription") }
-                    .buttonStyle(.ink)
-                    .accessibilityIdentifier("addSubscriptionButton")
-                if let onFindInEmail {
-                    Button(action: onFindInEmail) { Text("Find in Email") }
-                        .buttonStyle(.ink(.quiet))
-                        .accessibilityIdentifier("homeFindInEmailButton")
-                }
-            }
-            .padding(.top, 12)
-        }
     }
 }
 

@@ -22,7 +22,7 @@ struct ProfileView: View {
     @State private var requestingRefund = false
 
     private enum Sheet: String, Identifiable {
-        case paywall, notifications, receipt, currency, privacy, help, export, whatsNew, wrapped, inbox, language
+        case paywall, notifications, receipt, currency, privacy, help, export, whatsNew, wrapped, inbox, screenshots, language
         var id: String { rawValue }
     }
 
@@ -43,6 +43,7 @@ struct ProfileView: View {
                             value: inboxes.isEmpty ? nil : (inboxes.count == 1 ? inboxes[0].address : L10n.number(inboxes.count)),
                             id: "inboxImportButton") { sheet = .inbox }
                     }
+                    row("photo.on.rectangle.angled", L10n.string("Import from screenshots"), id: "screenshotImportButton") { sheet = .screenshots }
                     row("arrow.up.forward.app", L10n.string("Apple subscriptions"), id: "importFromAppStoreButton", last: true) {
                         if let url = URL(string: "https://apps.apple.com/account/subscriptions") { openURL(url) }
                     }
@@ -70,22 +71,24 @@ struct ProfileView: View {
                 }
 
                 // As wide as its words, so the question comes up from them and not from the
-                // middle of an empty row.
-                Button { confirmSignOut = true } label: {
-                    Text("Sign out")
-                        .font(.body.weight(.semibold))
-                        .foregroundStyle(Color.due)
-                        .tapArea(.leading)
+                // middle of an empty row. Hidden in local-only guest mode (no cloud session).
+                if !authManager.isGuest {
+                    Button { confirmSignOut = true } label: {
+                        Text("Sign out")
+                            .font(.body.weight(.semibold))
+                            .foregroundStyle(Color.due)
+                            .tapArea(.leading)
+                    }
+                    .buttonStyle(.plain)
+                    .accessibilityIdentifier("signOutButton")
+                    .asksFirst(Text("Sign out of Pausely?"), isPresented: $confirmSignOut,
+                               message: Text("Your data is saved and will be here when you return.")) {
+                        Button("Sign out", role: .destructive) { Task { await authManager.signOut() } }
+                        Button("Cancel", role: .cancel) {}
+                    }
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .padding(.top, 28)
                 }
-                .buttonStyle(.plain)
-                .accessibilityIdentifier("signOutButton")
-                .asksFirst(Text("Sign out of Pausely?"), isPresented: $confirmSignOut,
-                           message: Text("Your data is saved and will be here when you return.")) {
-                    Button("Sign out", role: .destructive) { Task { await authManager.signOut() } }
-                    Button("Cancel", role: .cancel) {}
-                }
-                .frame(maxWidth: .infinity, alignment: .leading)
-                .padding(.top, 28)
             }
             .padding(.horizontal, Layout.margin)
             .padding(.top, 16)
@@ -118,6 +121,7 @@ struct ProfileView: View {
             case .whatsNew: WhatsNewSheet()
             case .wrapped: SubscriptionWrappedView(subscriptions: store.subscriptions)
             case .inbox: InboxImportView()
+            case .screenshots: ScreenshotImportView()
             case .language: LanguageSettingsView()
             }
         }
@@ -152,13 +156,36 @@ struct ProfileView: View {
     private var header: some View {
         let user = shownUser
         let isPro = paymentManager.isPremium
+        let guestMode = user?.id == AuthManager.guestUserID
         return VStack(alignment: .leading, spacing: 6) {
-            Text(verbatim: Self.title(for: user))
+            Text(verbatim: guestMode ? L10n.string("On this iPhone") : Self.title(for: user))
                 .font(.question(.largeTitle, weight: .bold))
                 .foregroundStyle(Color.inkText)
                 .fixedSize(horizontal: false, vertical: true)
                 .accessibilityAddTraits(.isHeader)
-            if let email = user?.email, !email.isEmpty {
+            if guestMode {
+                Text("No account yet. Everything stays on this iPhone until you back it up.")
+                    .font(.subheadline)
+                    .foregroundStyle(Color.inkTextMuted)
+                    .fixedSize(horizontal: false, vertical: true)
+                VStack(spacing: 10) {
+                    Button {
+                        NotificationCenter.default.post(name: .openSignUpDoor, object: nil)
+                    } label: {
+                        Text("Back up with an account")
+                    }
+                    .buttonStyle(.ink)
+                    .accessibilityIdentifier("guestBackupButton")
+                    Button {
+                        NotificationCenter.default.post(name: .openSignInSheet, object: nil)
+                    } label: {
+                        Text("I already have an account")
+                    }
+                    .buttonStyle(.ink(.quiet))
+                    .accessibilityIdentifier("guestSignInButton")
+                }
+                .padding(.top, 10)
+            } else if let email = user?.email, !email.isEmpty {
                 // The address the account is under: whole, on as many lines as it needs, and
                 // never hyphenated (`AddressText`).
                 Text(verbatim: AddressText.breakable(email))

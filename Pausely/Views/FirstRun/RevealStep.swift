@@ -6,10 +6,12 @@ struct RevealStep: View {
     let rates: CurrencyRates
     let onBack: () -> Void
     let onKeep: () -> Void
+    var onContinueWithoutAccount: (() -> Void)? = nil
 
     @State private var printed = 0
     @State private var showTotals = false
     @State private var editing: TallyLine?
+    @State private var choosingTracked = false
 
     private var monthly: String { money(tally.monthlyTotal(rates: rates)) }
     private var yearly: String { money(tally.yearlyTotal(rates: rates)) }
@@ -51,6 +53,11 @@ struct RevealStep: View {
                 Button(action: onKeep) { Text("Keep my list") }
                     .buttonStyle(.ink)
                     .accessibilityIdentifier("keepListButton")
+                if let onContinueWithoutAccount {
+                    Button(action: onContinueWithoutAccount) { Text("Continue without an account") }
+                        .buttonStyle(.ink(.quiet))
+                        .accessibilityIdentifier("continueWithoutAccountButton")
+                }
                 Text("Next: a free account, so your list is saved.")
                     .font(.footnote)
                     .foregroundStyle(Color.inkTextFaint)
@@ -64,6 +71,15 @@ struct RevealStep: View {
                         .multilineTextAlignment(.center)
                         .fixedSize(horizontal: false, vertical: true)
                         .accessibilityIdentifier("revealFreeLimit")
+                    Button { choosingTracked = true } label: {
+                        Text(L10n.string("Choose which \(FreeTier.subscriptionLimit)"))
+                            .font(.footnote.weight(.semibold))
+                            .foregroundStyle(Color.inkText)
+                            .underline()
+                            .tapArea()
+                    }
+                    .buttonStyle(.plain)
+                    .accessibilityIdentifier("revealChooseFiveButton")
                 }
             }
             .padding(.horizontal, Layout.margin)
@@ -75,6 +91,23 @@ struct RevealStep: View {
             PriceSheet(name: line.name, placeholder: line.amount, currency: tally.currency) { amount in
                 tally.setAmount(amount, for: line.name)
             }
+        }
+        .sheet(isPresented: $choosingTracked) {
+            FreeLimitPickerSheet(
+                candidates: tally.lines.map { line in
+                    FreeLimitPickerSheet.Candidate(
+                        name: line.name,
+                        category: line.category,
+                        amount: line.amount,
+                        currency: line.currency,
+                        frequency: line.frequency ?? .monthly,
+                        yearlyInDisplay: rates.convert(line.yearlyCost, from: line.currency, to: tally.currency) ?? line.yearlyCost
+                    )
+                },
+                initialSelection: tally.preferredNames,
+                maxSelection: FreeTier.room(in: []),
+                onSave: { chosen in tally.preferredNames = chosen }
+            )
         }
     }
 

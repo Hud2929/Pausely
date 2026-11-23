@@ -25,7 +25,7 @@ enum DemoSavings {
         if let netflix = store.subscriptions.first(where: { $0.name == "Netflix" }) {
             log.record(.priceChanged, for: netflix, date: Calendar.billing.date(byAdding: .month, value: -7, to: now) ?? now,
                        previousAmount: netflix.amount - 2)
-            UsageLog.shared.setMonthlyUsage(minutes: 140, for: netflix.name)
+            UsageLog.shared.setMonthlyUsage(minutes: 140, for: netflix)
         }
         let calendar = Calendar.billing
         func daysAgo(_ n: Int) -> Date { calendar.date(byAdding: .day, value: -n, to: now) ?? now }

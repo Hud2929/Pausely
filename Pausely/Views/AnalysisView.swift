@@ -178,7 +178,7 @@ struct AnalysisView: View {
     /// (`UsageFacts`). Until they have typed any, one line says where to.
     @ViewBuilder private var usageSection: some View {
         let facts = UsageFacts.lines(for: store.subscriptions,
-                                     minutesThisMonth: { usageLog.getUsage(for: $0.name)?.minutesUsed },
+                                     minutesThisMonth: { usageLog.getUsage(for: $0)?.minutesUsed },
                                      currency: currencyManager.selectedCurrency, rates: currencyManager.rates)
         if facts.used.isEmpty && facts.unused.isEmpty {
             section(L10n.string("What an hour of use costs")) {

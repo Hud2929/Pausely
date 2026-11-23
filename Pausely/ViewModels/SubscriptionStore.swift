@@ -120,11 +120,11 @@ class SubscriptionStore: ObservableObject {
         var totalIsKnown: Bool { self == .shown || self == .empty }
     }
 
-    /// Whether a failed fetch is a failure to tell. The built-in test user (DEBUG, "Test without an account")
-    /// has no account to fetch from, so its empty list is empty: it said "Couldn't load your list" on every
-    /// launch that started with nothing listed (2026-11-22).
+    /// Whether a failed fetch is a failure to tell. The built-in test user (DEBUG) and local-only guest
+    /// mode have no cloud account to fetch from, so an empty list is empty, not a load failure.
     nonisolated static func fetchReallyFailed(_ error: Error, userID: String?) -> Bool {
-        if case SyncFailure.signedOut = error, userID == AuthManager.localTestUserID { return false }
+        if case SyncFailure.signedOut = error,
+           userID == AuthManager.localTestUserID || userID == AuthManager.guestUserID { return false }
         return true
     }
 
@@ -144,6 +144,11 @@ class SubscriptionStore: ObservableObject {
 
     func fetchSubscriptions(force: Bool = false) async {
         guard Self.cloudSyncEnabled else { return }
+        if AuthManager.shared.isGuest {
+            if subscriptions.isEmpty { loadFromCache() }
+            await SubscriptionLifecycle.shared.run()
+            return
+        }
 
         if !force, let lastFetch = lastFetchDate,
            Date().timeIntervalSince(lastFetch) < 60 {
@@ -231,10 +236,18 @@ class SubscriptionStore: ObservableObject {
     /// Sends what is waiting. If this change is still on this iPhone only, says so, and says why.
     @discardableResult
     private func send(_ id: UUID, removed: Bool = false) async -> Bool {
+        if AuthManager.shared.isGuest { return true }
         await sync.drain()
         guard let waiting = sync.intent(for: id) else { return true }
         lastErrorMessage = Self.waitingNotice(removed: removed, refused: waiting.refused)
         return false
+    }
+
+    /// Marks all local subscriptions for upload when a guest upgrades to a cloud account.
+    func queueLocalSubscriptionsForUpload() {
+        for subscription in subscriptions where sync.intent(for: subscription.id) == nil {
+            sync.noteAdded(subscription.id)
+        }
     }
 
     /// "When you're back online" is only said when being offline is the reason.

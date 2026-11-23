@@ -9,6 +9,7 @@ struct MainTabView: View {
         LaunchFlag.value(of: "--demo-tab").flatMap(Int.init) ?? 0
     }
     @State private var deepLinkedSubscription: Subscription?
+    @ObservedObject private var authManager = AuthManager.shared
     @ObservedObject private var subscriptionStore = SubscriptionStore.shared
     @ObservedObject private var verdictCenter = VerdictCenter.shared
 
@@ -65,12 +66,18 @@ struct MainTabView: View {
                 deepLinkedSubscription = subscription
             }
         }
-        .task {
+        .task(id: authManager.currentUser?.id) {
+            // Unit tests host the app process without driving its screens; never let the live tab
+            // hydrate the shared store while a unit test holds a StoreSandbox.
+            guard ProcessInfo.processInfo.environment["XCTestConfigurationFilePath"] == nil else { return }
             // Someone else's history must never show up after a different account signs in.
-            await LocalUserData.claim(for: AuthManager.shared.currentUser?.id)
+            // Upgrading from guest mode adopts local data and queues it for cloud sync.
+            await LocalUserData.claim(for: authManager.currentUser?.id)
             await NotificationManager.shared.refreshStatus()
             subscriptionStore.showList()
             await subscriptionStore.fetchSubscriptions()
+            await LifecycleSync.shared.sync()
+            await PausePlanSync.shared.sync()
             // The slip made before the account existed joins the list once it has loaded.
             await TallyImporter.importPending(into: subscriptionStore)
         }
@@ -88,6 +95,8 @@ struct MainTabView: View {
 extension Notification.Name {
     static let switchToProfileTab = Notification.Name("switchToProfileTab")
     static let switchToAnalysisTab = Notification.Name("switchToAnalysisTab")
+    static let openSignUpDoor = Notification.Name("openSignUpDoor")
+    static let openSignInSheet = Notification.Name("openSignInSheet")
 }
 
 #Preview {

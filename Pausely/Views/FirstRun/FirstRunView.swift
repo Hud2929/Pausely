@@ -5,6 +5,7 @@ import SwiftUI
 struct FirstRunView: View {
     let onKeepList: () -> Void
     let onSignIn: () -> Void
+    var onContinueWithoutAccount: (() -> Void)? = nil
 
     enum Phase: Int { case guess, tally, reveal }
 
@@ -14,13 +15,15 @@ struct FirstRunView: View {
     @State private var guess: Double
 
     init(startAt phase: Phase = .guess, tally: Tally? = nil,
-         onKeepList: @escaping () -> Void, onSignIn: @escaping () -> Void) {
+         onKeepList: @escaping () -> Void, onSignIn: @escaping () -> Void,
+         onContinueWithoutAccount: (() -> Void)? = nil) {
         let start = tally ?? Tally(currency: CurrencyManager.shared.selectedCurrency)
         _phase = State(initialValue: phase)
         _tally = State(initialValue: start)
         _guess = State(initialValue: NSDecimalNumber(decimal: start.guess).doubleValue)
         self.onKeepList = onKeepList
         self.onSignIn = onSignIn
+        self.onContinueWithoutAccount = onContinueWithoutAccount
     }
 
     var body: some View {
@@ -37,13 +40,19 @@ struct FirstRunView: View {
                     .transition(stepTransition)
             case .reveal:
                 RevealStep(tally: $tally, rates: currencyManager.rates,
-                           onBack: { go(.tally) }, onKeep: keep)
+                           onBack: { go(.tally) }, onKeep: keep,
+                           onContinueWithoutAccount: continueAction)
                     .transition(stepTransition)
             }
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .inkScreen()
         .readableWidth()
+    }
+
+    private var continueAction: (() -> Void)? {
+        guard onContinueWithoutAccount != nil else { return nil }
+        return { continueLocally() }
     }
 
     private var stepTransition: AnyTransition {
@@ -58,6 +67,11 @@ struct FirstRunView: View {
     private func keep() {
         if tally.lines.isEmpty { PendingTally.clear() } else { PendingTally.save(tally) }
         onKeepList()
+    }
+
+    private func continueLocally() {
+        if tally.lines.isEmpty { PendingTally.clear() } else { PendingTally.save(tally) }
+        onContinueWithoutAccount?()
     }
 }
 

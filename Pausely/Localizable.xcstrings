@@ -23413,118 +23413,6 @@
         }
       }
     },
-    "Stay on this iPhone, protected by iOS data protection.": {
-      "localizations": {
-        "ar": {
-          "variations": {
-            "device": {
-              "ipad": {
-                "stringUnit": {
-                  "state": "translated",
-                  "value": "تبقى على هذا الـ iPad، محمية بحماية البيانات في iOS."
-                }
-              },
-              "other": {
-                "stringUnit": {
-                  "state": "translated",
-                  "value": "تبقى على هذا الـ iPhone، محمية بحماية البيانات في iOS."
-                }
-              }
-            }
-          }
-        },
-        "de": {
-          "variations": {
-            "device": {
-              "ipad": {
-                "stringUnit": {
-                  "state": "translated",
-                  "value": "Bleiben auf diesem iPad, geschützt durch die iOS-Datensicherheit."
-                }
-              },
-              "other": {
-                "stringUnit": {
-                  "state": "translated",
-                  "value": "Bleiben auf diesem iPhone, geschützt durch die iOS-Datensicherheit."
-                }
-              }
-            }
-          }
-        },
-        "en": {
-          "variations": {
-            "device": {
-              "ipad": {
-                "stringUnit": {
-                  "state": "translated",
-                  "value": "Stay on this iPad, protected by iOS data protection."
-                }
-              },
-              "other": {
-                "stringUnit": {
-                  "state": "translated",
-                  "value": "Stay on this iPhone, protected by iOS data protection."
-                }
-              }
-            }
-          }
-        },
-        "es": {
-          "variations": {
-            "device": {
-              "ipad": {
-                "stringUnit": {
-                  "state": "translated",
-                  "value": "Se quedan en este iPad, protegidos por la protección de datos de iOS."
-                }
-              },
-              "other": {
-                "stringUnit": {
-                  "state": "translated",
-                  "value": "Se quedan en este iPhone, protegidos por la protección de datos de iOS."
-                }
-              }
-            }
-          }
-        },
-        "fr": {
-          "variations": {
-            "device": {
-              "ipad": {
-                "stringUnit": {
-                  "state": "translated",
-                  "value": "Restent sur cet iPad, protégés par la protection des données d’iOS."
-                }
-              },
-              "other": {
-                "stringUnit": {
-                  "state": "translated",
-                  "value": "Restent sur cet iPhone, protégés par la protection des données d’iOS."
-                }
-              }
-            }
-          }
-        },
-        "ja": {
-          "variations": {
-            "device": {
-              "ipad": {
-                "stringUnit": {
-                  "state": "translated",
-                  "value": "このiPadに保存され、iOSのデータ保護で守られます。"
-                }
-              },
-              "other": {
-                "stringUnit": {
-                  "state": "translated",
-                  "value": "このiPhoneに保存され、iOSのデータ保護で守られます。"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
     "Support website": {
       "localizations": {
         "ar": {
@@ -25400,7 +25288,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "「サブスクリプションをキャンセル」をタップします。下にスクロールしないと表示されない場合があります。"
+            "value": "「サブスクをキャンセル」をタップします。下にスクロールしないと表示されない場合があります。"
           }
         }
       }
@@ -32133,40 +32021,6 @@
         }
       }
     },
-    "The free plan tracks %lld. Add what fits, most expensive first.": {
-      "localizations": {
-        "ar": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "الخطة المجانية تتابع %lld. أضف ما يتسع له المكان، الأغلى أولًا."
-          }
-        },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Der kostenlose Plan erfasst %lld. Fügen Sie hinzu, was passt, das Teuerste zuerst."
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "El plan gratuito sigue %lld. Añade lo que quepa, primero lo más caro."
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Le forfait gratuit en suit %lld. Ajoutez ce qui tient, le plus cher d’abord."
-          }
-        },
-        "ja": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "無料プランは%lld件まで。入る分を、高い順に追加します。"
-          }
-        }
-      }
-    },
     "The free plan tracks %lld. Added now, most expensive first: %@.": {
       "localizations": {
         "ar": {
@@ -32197,40 +32051,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "無料プランで管理できるのは%1$lld件です。今回追加（高い順）：%2$@。"
-          }
-        }
-      }
-    },
-    "The free plan tracks %lld. Pausely Pro tracks all of them.": {
-      "localizations": {
-        "ar": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "الخطة المجانية تتابع %lld، أما Pausely Pro فيتابعها كلها."
-          }
-        },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Der kostenlose Plan erfasst %lld. Pausely Pro erfasst alle."
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "El plan gratuito sigue %lld. Pausely Pro las sigue todas."
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Le forfait gratuit en suit %lld. Pausely Pro les suit tous."
-          }
-        },
-        "ja": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "無料プランは%lld件まで。Pausely Proならすべて管理できます。"
           }
         }
       }
@@ -32401,6 +32221,2554 @@
           "stringUnit": {
             "state": "translated",
             "value": "≈ %@に換算"
+          }
+        }
+      }
+    },
+    "Continue without an account": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "المتابعة دون حساب"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ohne Konto fortfahren"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Continuar sin cuenta"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Continuer sans compte"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "アカウントなしで続ける"
+          }
+        }
+      }
+    },
+    "Choose which %lld": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "اختر الـ %lld التي تريدها"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Wählen Sie, welche %lld"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Elige cuáles %lld"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Choisir lesquels (%lld)"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "管理する%lld件を選ぶ"
+          }
+        }
+      }
+    },
+    "Choose which %lld to track": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "اختر %lld لمتابعتها"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Wählen Sie, welche %lld erfasst werden"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Elige cuáles %lld seguir"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Choisissez les %lld à suivre"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "管理する%lld件を選択"
+          }
+        }
+      }
+    },
+    "%lld of %lld selected. The rest wait safely until you swap or go Pro.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "تم اختيار %1$lld من %2$lld. البقية محفوظة بأمان حتى تبدّل أو ترقّي إلى Pro."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$lld von %2$lld ausgewählt. Die übrigen warten sicher, bis Sie wechseln oder auf Pro umsteigen."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$lld de %2$lld seleccionadas. El resto espera a salvo hasta que las cambies o pases a Pro."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$lld sur %2$lld sélectionnés. Les autres restent en attente jusqu’à un échange ou Pro."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%2$lld件中%1$lld件を選択中。残りは入れ替えるかProにするまで安全に保管されます。"
+          }
+        }
+      }
+    },
+    "Track these %lld": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "تابع هذه الـ %lld"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Diese %lld erfassen"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Seguir estas %lld"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Suivre ces %lld"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "この%lld件を管理"
+          }
+        }
+      }
+    },
+    "Track all with Pro": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "تابع الكل مع Pro"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Alle mit Pro erfassen"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Seguir todas con Pro"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tout suivre avec Pro"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Proですべて管理"
+          }
+        }
+      }
+    },
+    "Back up with an account": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "النسخ الاحتياطي عبر حساب"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mit einem Konto sichern"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Respaldar con una cuenta"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sauvegarder avec un compte"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "アカウントでバックアップ"
+          }
+        }
+      }
+    },
+    "Erase local data": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "مسح البيانات المحلية"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lokale Daten löschen"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Borrar datos locales"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Effacer les données locales"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ローカルデータを消去"
+          }
+        }
+      }
+    },
+    "Erase local data?": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "مسح البيانات المحلية؟"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lokale Daten löschen?"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "¿Borrar datos locales?"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Effacer les données locales ?"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ローカルデータを消去しますか？"
+          }
+        }
+      }
+    },
+    "Erase": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "مسح"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Löschen"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Borrar"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Effacer"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "消去"
+          }
+        }
+      }
+    },
+    "Choose": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "اختر"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Auswählen"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Elegir"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Choisir"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "選択"
+          }
+        }
+      }
+    },
+    "The free plan tracks %lld. Choose which ones to track.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "الخطة المجانية تتابع %lld. اختر ما تريد متابعته."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Der kostenlose Plan erfasst %lld. Wählen Sie, welche erfasst werden."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "El plan gratuito sigue %lld. Elige cuáles seguir."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Le forfait gratuit en suit %lld. Choisissez lesquels suivre."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "無料プランは%lld件まで。管理するものを選べます。"
+          }
+        }
+      }
+    },
+    "The free plan tracks %lld. Choose which ones to watch, or go Pro for all.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "الخطة المجانية تتابع %lld. اختر ما تريد متابعته، أو انتقل إلى Pro لمتابعة الكل."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Der kostenlose Plan erfasst %lld. Wählen Sie Ihre aus oder nutzen Sie Pro für alle."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "El plan gratuito sigue %lld. Elige cuáles seguir o pasa a Pro para todas."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Le forfait gratuit en suit %lld. Choisissez lesquels suivre ou passez à Pro pour tous."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "無料プランは%lld件まで。対象を選ぶか、Proですべて管理できます。"
+          }
+        }
+      }
+    },
+    "On this iPhone": {
+      "localizations": {
+        "ar": {
+          "variations": {
+            "device": {
+              "ipad": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "على هذا الـ iPad"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "على هذا الـ iPhone"
+                }
+              }
+            }
+          }
+        },
+        "de": {
+          "variations": {
+            "device": {
+              "ipad": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Auf diesem iPad"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Auf diesem iPhone"
+                }
+              }
+            }
+          }
+        },
+        "es": {
+          "variations": {
+            "device": {
+              "ipad": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "En este iPad"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "En este iPhone"
+                }
+              }
+            }
+          }
+        },
+        "fr": {
+          "variations": {
+            "device": {
+              "ipad": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Sur cet iPad"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Sur cet iPhone"
+                }
+              }
+            }
+          }
+        },
+        "ja": {
+          "variations": {
+            "device": {
+              "ipad": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "このiPad上"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "このiPhone上"
+                }
+              }
+            }
+          }
+        },
+        "en": {
+          "variations": {
+            "device": {
+              "ipad": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "On this iPad"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "On this iPhone"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "This iPhone": {
+      "localizations": {
+        "ar": {
+          "variations": {
+            "device": {
+              "ipad": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "هذا الـ iPad"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "هذا الـ iPhone"
+                }
+              }
+            }
+          }
+        },
+        "de": {
+          "variations": {
+            "device": {
+              "ipad": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Dieses iPad"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Dieses iPhone"
+                }
+              }
+            }
+          }
+        },
+        "es": {
+          "variations": {
+            "device": {
+              "ipad": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Este iPad"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Este iPhone"
+                }
+              }
+            }
+          }
+        },
+        "fr": {
+          "variations": {
+            "device": {
+              "ipad": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Cet iPad"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Cet iPhone"
+                }
+              }
+            }
+          }
+        },
+        "ja": {
+          "variations": {
+            "device": {
+              "ipad": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "このiPad"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "このiPhone"
+                }
+              }
+            }
+          }
+        },
+        "en": {
+          "variations": {
+            "device": {
+              "ipad": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "This iPad"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "This iPhone"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "No account yet. Everything stays on this iPhone until you back it up.": {
+      "localizations": {
+        "ar": {
+          "variations": {
+            "device": {
+              "ipad": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "لا يوجد حساب بعد. يبقى كل شيء على هذا الـ iPad حتى تنسخه احتياطيًا."
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "لا يوجد حساب بعد. يبقى كل شيء على هذا الـ iPhone حتى تنسخه احتياطيًا."
+                }
+              }
+            }
+          }
+        },
+        "de": {
+          "variations": {
+            "device": {
+              "ipad": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Noch kein Konto. Alles bleibt auf diesem iPad, bis Sie es sichern."
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Noch kein Konto. Alles bleibt auf diesem iPhone, bis Sie es sichern."
+                }
+              }
+            }
+          }
+        },
+        "es": {
+          "variations": {
+            "device": {
+              "ipad": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Sin cuenta aún. Todo permanece en este iPad hasta que lo respaldes."
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Sin cuenta aún. Todo permanece en este iPhone hasta que lo respaldes."
+                }
+              }
+            }
+          }
+        },
+        "fr": {
+          "variations": {
+            "device": {
+              "ipad": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Pas encore de compte. Tout reste sur cet iPad jusqu’à la sauvegarde."
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Pas encore de compte. Tout reste sur cet iPhone jusqu’à la sauvegarde."
+                }
+              }
+            }
+          }
+        },
+        "ja": {
+          "variations": {
+            "device": {
+              "ipad": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "アカウント未作成。バックアップするまですべてこのiPadに保存されます。"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "アカウント未作成。バックアップするまですべてこのiPhoneに保存されます。"
+                }
+              }
+            }
+          }
+        },
+        "en": {
+          "variations": {
+            "device": {
+              "ipad": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "No account yet. Everything stays on this iPad until you back it up."
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "No account yet. Everything stays on this iPhone until you back it up."
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "Remove your list, history, and Pause Plan from this iPhone": {
+      "localizations": {
+        "ar": {
+          "variations": {
+            "device": {
+              "ipad": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "أزل قائمتك وسجلّك وخطة الإيقاف من هذا الـ iPad"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "أزل قائمتك وسجلّك وخطة الإيقاف من هذا الـ iPhone"
+                }
+              }
+            }
+          }
+        },
+        "de": {
+          "variations": {
+            "device": {
+              "ipad": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Liste, Verlauf und Pausenplan von diesem iPad entfernen"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Liste, Verlauf und Pausenplan von diesem iPhone entfernen"
+                }
+              }
+            }
+          }
+        },
+        "es": {
+          "variations": {
+            "device": {
+              "ipad": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Elimina tu lista, historial y plan de pausa de este iPad"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Elimina tu lista, historial y plan de pausa de este iPhone"
+                }
+              }
+            }
+          }
+        },
+        "fr": {
+          "variations": {
+            "device": {
+              "ipad": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Supprimer votre liste, l’historique et le plan de pause de cet iPad"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Supprimer votre liste, l’historique et le plan de pause de cet iPhone"
+                }
+              }
+            }
+          }
+        },
+        "ja": {
+          "variations": {
+            "device": {
+              "ipad": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "リスト、履歴、休止プランをこのiPadから削除します"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "リスト、履歴、休止プランをこのiPhoneから削除します"
+                }
+              }
+            }
+          }
+        },
+        "en": {
+          "variations": {
+            "device": {
+              "ipad": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Remove your list, history, and Pause Plan from this iPad"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Remove your list, history, and Pause Plan from this iPhone"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "This removes your subscription list, Savings Receipt history, and Pause Plan from this iPhone. It does not cancel any subscriptions.": {
+      "localizations": {
+        "ar": {
+          "variations": {
+            "device": {
+              "ipad": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "يزيل هذا قائمة اشتراكاتك وسجل إيصال التوفير وخطة الإيقاف من هذا الـ iPad. لا يلغي أي اشتراكات."
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "يزيل هذا قائمة اشتراكاتك وسجل إيصال التوفير وخطة الإيقاف من هذا الـ iPhone. لا يلغي أي اشتراكات."
+                }
+              }
+            }
+          }
+        },
+        "de": {
+          "variations": {
+            "device": {
+              "ipad": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Dadurch werden Ihre Aboliste, der Sparbeleg-Verlauf und der Pausenplan von diesem iPad entfernt. Abos werden nicht gekündigt."
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Dadurch werden Ihre Aboliste, der Sparbeleg-Verlauf und der Pausenplan von diesem iPhone entfernt. Abos werden nicht gekündigt."
+                }
+              }
+            }
+          }
+        },
+        "es": {
+          "variations": {
+            "device": {
+              "ipad": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Esto elimina tu lista de suscripciones, el historial del recibo de ahorro y el plan de pausa de este iPad. No cancela ninguna suscripción."
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Esto elimina tu lista de suscripciones, el historial del recibo de ahorro y el plan de pausa de este iPhone. No cancela ninguna suscripción."
+                }
+              }
+            }
+          }
+        },
+        "fr": {
+          "variations": {
+            "device": {
+              "ipad": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Cela supprime votre liste d’abonnements, l’historique du reçu d’économies et le plan de pause de cet iPad. Aucun abonnement n’est annulé."
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Cela supprime votre liste d’abonnements, l’historique du reçu d’économies et le plan de pause de cet iPhone. Aucun abonnement n’est annulé."
+                }
+              }
+            }
+          }
+        },
+        "ja": {
+          "variations": {
+            "device": {
+              "ipad": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "このiPadからサブスク一覧、節約レシート履歴、休止プランを削除します。サブスク自体は解約されません。"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "このiPhoneからサブスク一覧、節約レシート履歴、休止プランを削除します。サブスク自体は解約されません。"
+                }
+              }
+            }
+          }
+        },
+        "en": {
+          "variations": {
+            "device": {
+              "ipad": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "This removes your subscription list, Savings Receipt history, and Pause Plan from this iPad. It does not cancel any subscriptions."
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "This removes your subscription list, Savings Receipt history, and Pause Plan from this iPhone. It does not cancel any subscriptions."
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "Import from screenshots": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "استيراد من لقطات الشاشة"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aus Screenshots importieren"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Importar desde capturas"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Importer depuis des captures"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "スクリーンショットから読み込む"
+          }
+        }
+      }
+    },
+    "Read Apple Subscriptions or bank lists on this iPhone": {
+      "localizations": {
+        "ar": {
+          "variations": {
+            "device": {
+              "ipad": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "اقرأ اشتراكات Apple أو قوائم البنك على هذا الـ iPad"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "اقرأ اشتراكات Apple أو قوائم البنك على هذا الـ iPhone"
+                }
+              }
+            }
+          }
+        },
+        "de": {
+          "variations": {
+            "device": {
+              "ipad": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Apple-Abos oder Banklisten direkt auf diesem iPad lesen"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Apple-Abos oder Banklisten direkt auf diesem iPhone lesen"
+                }
+              }
+            }
+          }
+        },
+        "es": {
+          "variations": {
+            "device": {
+              "ipad": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Lee Suscripciones de Apple o listas bancarias en este iPad"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Lee Suscripciones de Apple o listas bancarias en este iPhone"
+                }
+              }
+            }
+          }
+        },
+        "fr": {
+          "variations": {
+            "device": {
+              "ipad": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Lisez vos abonnements Apple ou relevés bancaires sur cet iPad"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Lisez vos abonnements Apple ou relevés bancaires sur cet iPhone"
+                }
+              }
+            }
+          }
+        },
+        "ja": {
+          "variations": {
+            "device": {
+              "ipad": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Appleのサブスクや銀行一覧をこのiPad上で読み取ります"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Appleのサブスクや銀行一覧をこのiPhone上で読み取ります"
+                }
+              }
+            }
+          }
+        },
+        "en": {
+          "variations": {
+            "device": {
+              "ipad": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Read Apple Subscriptions or bank lists on this iPad"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Read Apple Subscriptions or bank lists on this iPhone"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "Take a screenshot of Apple Subscriptions or your bank's recurring charges. Pausely reads it on this iPhone and never uploads the image.": {
+      "localizations": {
+        "ar": {
+          "variations": {
+            "device": {
+              "ipad": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "التقط لقطة شاشة لاشتراكات Apple أو المدفوعات المتكررة في بنكك. يقرأها Pausely على هذا الـ iPad ولا يرفع الصورة أبدًا."
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "التقط لقطة شاشة لاشتراكات Apple أو المدفوعات المتكررة في بنكك. يقرأها Pausely على هذا الـ iPhone ولا يرفع الصورة أبدًا."
+                }
+              }
+            }
+          }
+        },
+        "de": {
+          "variations": {
+            "device": {
+              "ipad": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Machen Sie einen Screenshot Ihrer Apple-Abos oder wiederkehrenden Bankabbuchungen. Pausely liest ihn auf diesem iPad und lädt das Bild niemals hoch."
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Machen Sie einen Screenshot Ihrer Apple-Abos oder wiederkehrenden Bankabbuchungen. Pausely liest ihn auf diesem iPhone und lädt das Bild niemals hoch."
+                }
+              }
+            }
+          }
+        },
+        "es": {
+          "variations": {
+            "device": {
+              "ipad": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Haz una captura de Suscripciones de Apple o de los cargos recurrentes de tu banco. Pausely la lee en este iPad y nunca sube la imagen."
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Haz una captura de Suscripciones de Apple o de los cargos recurrentes de tu banco. Pausely la lee en este iPhone y nunca sube la imagen."
+                }
+              }
+            }
+          }
+        },
+        "fr": {
+          "variations": {
+            "device": {
+              "ipad": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Faites une capture des abonnements Apple ou des paiements récurrents de votre banque. Pausely la lit sur cet iPad et n’envoie jamais l’image."
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Faites une capture des abonnements Apple ou des paiements récurrents de votre banque. Pausely la lit sur cet iPhone et n’envoie jamais l’image."
+                }
+              }
+            }
+          }
+        },
+        "ja": {
+          "variations": {
+            "device": {
+              "ipad": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Appleのサブスクや銀行の定期引き落とし一覧をスクリーンショットしてください。このiPad上で読み取り、画像は一切送信しません。"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Appleのサブスクや銀行の定期引き落とし一覧をスクリーンショットしてください。このiPhone上で読み取り、画像は一切送信しません。"
+                }
+              }
+            }
+          }
+        },
+        "en": {
+          "variations": {
+            "device": {
+              "ipad": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Take a screenshot of Apple Subscriptions or your bank's recurring charges. Pausely reads it on this iPad and never uploads the image."
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Take a screenshot of Apple Subscriptions or your bank's recurring charges. Pausely reads it on this iPhone and never uploads the image."
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "How it works": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "كيف يعمل"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "So funktioniert es"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cómo funciona"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Comment ça marche"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "使い方"
+          }
+        }
+      }
+    },
+    "Open Apple Subscriptions or your bank's recurring charges.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "افتح اشتراكات Apple أو المدفوعات المتكررة في بنكك."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Öffnen Sie Ihre Apple-Abos oder wiederkehrende Bankabbuchungen."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Abre Suscripciones de Apple o los cargos recurrentes de tu banco."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ouvrez vos abonnements Apple ou les paiements récurrents de votre banque."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Appleのサブスク、または銀行の定期引き落とし一覧を開きます。"
+          }
+        }
+      }
+    },
+    "Take one or more screenshots of your active list.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "التقط لقطة شاشة أو أكثر لقائمتك النشطة."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Machen Sie einen oder mehrere Screenshots Ihrer aktiven Liste."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Haz una o más capturas de tu lista activa."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Prenez une ou plusieurs captures de votre liste active."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "利用中の一覧を1枚以上スクリーンショットします。"
+          }
+        }
+      }
+    },
+    "Pick the screenshots here to review and add them in seconds.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "اختر لقطات الشاشة هنا لمراجعتها وإضافتها في ثوانٍ."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Wählen Sie die Screenshots hier aus, um sie in Sekunden zu prüfen und hinzuzufügen."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Elige las capturas aquí para revisarlas y añadirlas en segundos."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sélectionnez les captures ici pour les vérifier et les ajouter en quelques secondes."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ここで画像を選ぶと数秒で確認して追加できます。"
+          }
+        }
+      }
+    },
+    "100% on-device. Photos are read in memory and never saved or sent anywhere.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "بالكامل على الجهاز. تُقرأ الصور في الذاكرة ولا تُحفظ ولا تُرسل إلى أي مكان."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "100 % auf dem Gerät. Fotos werden im Arbeitsspeicher gelesen und niemals gespeichert oder gesendet."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "100 % en el dispositivo. Las fotos se leen en memoria y nunca se guardan ni se envían."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "100 % sur l’appareil. Les photos sont lues en mémoire et ne sont jamais enregistrées ni envoyées."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "完全に端末内で処理。写真はメモリ上で読み取り、保存も送信も行いません。"
+          }
+        }
+      }
+    },
+    "Free imports one screenshot at a time. Pausely Pro reads up to 10 screenshots in one batch.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "الخطة المجانية تستورد لقطة شاشة واحدة في كل مرة. Pausely Pro يقرأ حتى ١٠ لقطات دفعة واحدة."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Der kostenlose Plan importiert einen Screenshot auf einmal. Pausely Pro liest bis zu 10 Screenshots auf einmal."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "El plan gratuito importa una captura a la vez. Pausely Pro lee hasta 10 capturas a la vez."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Le forfait gratuit importe une capture à la fois. Pausely Pro lit jusqu’à 10 captures d’un coup."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "無料プランは1枚ずつ読み込みます。Pausely Proは最大10枚をまとめて読み取れます。"
+          }
+        }
+      }
+    },
+    "Reading your screenshot…": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "جارٍ قراءة لقطة الشاشة…"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Screenshot wird gelesen…"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Leyendo tu captura…"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lecture de votre capture…"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "スクリーンショットを読み取り中…"
+          }
+        }
+      }
+    },
+    "Reading %lld screenshots…": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "جارٍ قراءة %lld لقطات شاشة…"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld Screenshots werden gelesen…"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Leyendo %lld capturas…"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lecture de %lld captures…"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld枚のスクリーンショットを読み取り中…"
+          }
+        }
+      }
+    },
+    "Recognizing services, prices, and renewal dates on this iPhone.": {
+      "localizations": {
+        "ar": {
+          "variations": {
+            "device": {
+              "ipad": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "جارٍ التعرّف على الخدمات والأسعار وتواريخ التجديد على هذا الـ iPad."
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "جارٍ التعرّف على الخدمات والأسعار وتواريخ التجديد على هذا الـ iPhone."
+                }
+              }
+            }
+          }
+        },
+        "de": {
+          "variations": {
+            "device": {
+              "ipad": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Dienste, Preise und Verlängerungsdaten werden auf diesem iPad erkannt."
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Dienste, Preise und Verlängerungsdaten werden auf diesem iPhone erkannt."
+                }
+              }
+            }
+          }
+        },
+        "es": {
+          "variations": {
+            "device": {
+              "ipad": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Reconociendo servicios, precios y fechas de renovación en este iPad."
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Reconociendo servicios, precios y fechas de renovación en este iPhone."
+                }
+              }
+            }
+          }
+        },
+        "fr": {
+          "variations": {
+            "device": {
+              "ipad": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Reconnaissance des services, prix et dates de renouvellement sur cet iPad."
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Reconnaissance des services, prix et dates de renouvellement sur cet iPhone."
+                }
+              }
+            }
+          }
+        },
+        "ja": {
+          "variations": {
+            "device": {
+              "ipad": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "このiPad上でサービス名、料金、更新日を認識しています。"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "このiPhone上でサービス名、料金、更新日を認識しています。"
+                }
+              }
+            }
+          }
+        },
+        "en": {
+          "variations": {
+            "device": {
+              "ipad": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Recognizing services, prices, and renewal dates on this iPad."
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Recognizing services, prices, and renewal dates on this iPhone."
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "Found 1 subscription": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "تم العثور على اشتراك واحد"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "1 Abo gefunden"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Se encontró 1 suscripción"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "1 abonnement trouvé"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "1件のサブスクが見つかりました"
+          }
+        }
+      }
+    },
+    "Found %lld subscriptions": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "تم العثور على %lld اشتراكات"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld Abos gefunden"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Se encontraron %lld suscripciones"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld abonnements trouvés"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld件のサブスクが見つかりました"
+          }
+        }
+      }
+    },
+    "Tap a row to select or unselect. Tap a missing price to enter it.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "اضغط على صف لاختياره أو إلغائه. اضغط على سعر مفقود لإدخاله."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tippen Sie auf eine Zeile zur Auswahl. Tippen Sie auf einen fehlenden Preis, um ihn einzugeben."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Toca una fila para seleccionarla o desmarcarla. Toca un precio faltante para ingresarlo."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Touchez une ligne pour la sélectionner ou la désélectionner. Touchez un prix manquant pour le saisir."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "行をタップして選択を切り替えられます。料金が不明な項目はタップして入力してください。"
+          }
+        }
+      }
+    },
+    "Expired or cancelled": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "منتهية أو ملغاة"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Abgelaufen oder gekündigt"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Vencidas o canceladas"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Expirés ou annulés"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "期限切れ・解約済み"
+          }
+        }
+      }
+    },
+    "Left out of your active list automatically.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "تم استبعادها من قائمتك النشطة تلقائيًا."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Automatisch aus Ihrer aktiven Liste ausgeschlossen."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Excluidas automáticamente de tu lista activa."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Exclus automatiquement de votre liste active."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "利用中のリストから自動的に除外されました。"
+          }
+        }
+      }
+    },
+    "Add price": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "أضف السعر"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Preis hinzufügen"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Añadir precio"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ajouter un prix"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "料金を追加"
+          }
+        }
+      }
+    },
+    "No subscriptions found in that image.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "لم يتم العثور على اشتراكات في هذه الصورة."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Keine Abos in diesem Bild gefunden."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No se encontraron suscripciones en esa imagen."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aucun abonnement trouvé dans cette image."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "この画像からサブスクが見つかりませんでした。"
+          }
+        }
+      }
+    },
+    "Try a screenshot of Apple Settings › Subscriptions or a bank screen showing service names and prices.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "جرّب لقطة شاشة من إعدادات Apple › الاشتراكات أو شاشة البنك التي تعرض أسماء الخدمات والأسعار."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Versuchen Sie einen Screenshot aus Apple Einstellungen › Abonnements oder einer Bankansicht mit Namen und Preisen."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Prueba una captura de Ajustes de Apple › Suscripciones o una pantalla bancaria con nombres y precios."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Essayez une capture de Réglages Apple › Abonnements ou d’un écran bancaire affichant noms et prix."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Appleの「設定」›「サブスクリプション」や、サービス名と料金が表示された銀行画面のスクリーンショットをお試しください。"
+          }
+        }
+      }
+    },
+    "Renewal dates updated": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "تم تحديث تواريخ التجديد"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Verlängerungsdaten aktualisiert"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fechas de renovación actualizadas"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dates de renouvellement mises à jour"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "更新日を更新しました"
+          }
+        }
+      }
+    },
+    "Added to your list": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "تمت الإضافة إلى قائمتك"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Zur Liste hinzugefügt"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Añadido a tu lista"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ajouté à votre liste"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "リストに追加しました"
+          }
+        }
+      }
+    },
+    "Renewal dates added": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "تواريخ التجديد المضافة"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Verlängerungsdaten hinzugefügt"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fechas de renovación añadidas"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dates de renouvellement ajoutées"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "追加した更新日"
+          }
+        }
+      }
+    },
+    "Waiting for room": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "بانتظار مساحة"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Wartet auf freien Platz"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Esperando espacio"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "En attente de place"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "空き待ち"
+          }
+        }
+      }
+    },
+    "Home shows the rest so you can choose which %lld to track or go Pro.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "تعرض الصفحة الرئيسية البقية لتختار أي %lld تتابعها أو ترقّي إلى Pro."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Die Startseite zeigt die übrigen, damit Sie Ihre %lld wählen oder auf Pro umsteigen können."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Inicio muestra el resto para que elijas cuáles %lld seguir o pases a Pro."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "L’accueil affiche les autres pour choisir vos %lld abonnements ou passer à Pro."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "残りはホームに表示され、管理する%lld件を選ぶかProへアップグレードできます。"
+          }
+        }
+      }
+    },
+    "Choose screenshots": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "اختر لقطات شاشة"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Screenshots auswählen"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Elegir capturas"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Choisir des captures"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "スクリーンショットを選ぶ"
+          }
+        }
+      }
+    },
+    "Choose a screenshot": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "اختر لقطة شاشة"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Screenshot auswählen"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Elegir una captura"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Choisir une capture"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "スクリーンショットを選ぶ"
+          }
+        }
+      }
+    },
+    "Open Apple subscriptions": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "افتح اشتراكات Apple"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Apple-Abos öffnen"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Abrir suscripciones de Apple"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ouvrir les abonnements Apple"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Appleのサブスクを開く"
+          }
+        }
+      }
+    },
+    "Scan more screenshots": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "قراءة لقطات شاشة أخرى"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Weitere Screenshots lesen"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Leer más capturas"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lire d’autres captures"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "別のスクリーンショットを読み込む"
+          }
+        }
+      }
+    },
+    "Try another screenshot": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "جرّب لقطة شاشة أخرى"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Anderen Screenshot versuchen"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Probar otra captura"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Essayer une autre capture"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "別のスクリーンショットを試す"
+          }
+        }
+      }
+    },
+    "Adds renewal date": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "يضيف تاريخ التجديد"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fügt Verlängerungsdatum hinzu"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Añade fecha de renovación"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ajoute la date de renouvellement"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "更新日を追加"
+          }
+        }
+      }
+    },
+    "Already on your list": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "موجود بالفعل في قائمتك"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bereits in Ihrer Liste"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ya está en tu lista"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Déjà dans votre liste"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "すでにリストにあります"
+          }
+        }
+      }
+    },
+    "Screenshots are read on this iPhone using on-device text recognition and are never saved or sent anywhere.": {
+      "localizations": {
+        "ar": {
+          "variations": {
+            "device": {
+              "ipad": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "تُقرأ لقطات الشاشة على هذا الـ iPad باستخدام التعرّف على النص على الجهاز ولا تُحفظ ولا تُرسل إلى أي مكان."
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "تُقرأ لقطات الشاشة على هذا الـ iPhone باستخدام التعرّف على النص على الجهاز ولا تُحفظ ولا تُرسل إلى أي مكان."
+                }
+              }
+            }
+          }
+        },
+        "de": {
+          "variations": {
+            "device": {
+              "ipad": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Screenshots werden auf diesem iPad per lokaler Texterkennung gelesen und niemals gespeichert oder gesendet."
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Screenshots werden auf diesem iPhone per lokaler Texterkennung gelesen und niemals gespeichert oder gesendet."
+                }
+              }
+            }
+          }
+        },
+        "es": {
+          "variations": {
+            "device": {
+              "ipad": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Las capturas se leen en este iPad mediante reconocimiento de texto en el dispositivo y nunca se guardan ni se envían."
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Las capturas se leen en este iPhone mediante reconocimiento de texto en el dispositivo y nunca se guardan ni se envían."
+                }
+              }
+            }
+          }
+        },
+        "fr": {
+          "variations": {
+            "device": {
+              "ipad": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Les captures sont lues sur cet iPad par reconnaissance de texte locale et ne sont jamais enregistrées ni envoyées."
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Les captures sont lues sur cet iPhone par reconnaissance de texte locale et ne sont jamais enregistrées ni envoyées."
+                }
+              }
+            }
+          }
+        },
+        "ja": {
+          "variations": {
+            "device": {
+              "ipad": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "スクリーンショットはこのiPad上のテキスト認識で読み取られ、保存も外部送信もされません。"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "スクリーンショットはこのiPhone上のテキスト認識で読み取られ、保存も外部送信もされません。"
+                }
+              }
+            }
+          }
+        },
+        "en": {
+          "variations": {
+            "device": {
+              "ipad": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Screenshots are read on this iPad using on-device text recognition and are never saved or sent anywhere."
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Screenshots are read on this iPhone using on-device text recognition and are never saved or sent anywhere."
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "Protected on this iPhone by iOS data protection, and synced to your account when you sign in so reinstalling never loses them.": {
+      "localizations": {
+        "ar": {
+          "variations": {
+            "device": {
+              "ipad": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "محمية على هذا الـ iPad بحماية بيانات iOS، وتُزامَن مع حسابك عند تسجيل الدخول حتى لا تضيع عند إعادة التثبيت."
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "محمية على هذا الـ iPhone بحماية بيانات iOS، وتُزامَن مع حسابك عند تسجيل الدخول حتى لا تضيع عند إعادة التثبيت."
+                }
+              }
+            }
+          }
+        },
+        "de": {
+          "variations": {
+            "device": {
+              "ipad": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Auf diesem iPad durch iOS-Datenschutz geschützt und bei Anmeldung mit Ihrem Konto synchronisiert, damit bei Neuinstallation nichts verloren geht."
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Auf diesem iPhone durch iOS-Datenschutz geschützt und bei Anmeldung mit Ihrem Konto synchronisiert, damit bei Neuinstallation nichts verloren geht."
+                }
+              }
+            }
+          }
+        },
+        "es": {
+          "variations": {
+            "device": {
+              "ipad": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Protegidos en este iPad mediante la protección de datos de iOS y sincronizados con tu cuenta al iniciar sesión para no perderlos al reinstalar."
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Protegidos en este iPhone mediante la protección de datos de iOS y sincronizados con tu cuenta al iniciar sesión para no perderlos al reinstalar."
+                }
+              }
+            }
+          }
+        },
+        "fr": {
+          "variations": {
+            "device": {
+              "ipad": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Protégés sur cet iPad par la protection des données iOS et synchronisés avec votre compte à la connexion pour ne rien perdre lors d’une réinstallation."
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Protégés sur cet iPhone par la protection des données iOS et synchronisés avec votre compte à la connexion pour ne rien perdre lors d’une réinstallation."
+                }
+              }
+            }
+          }
+        },
+        "ja": {
+          "variations": {
+            "device": {
+              "ipad": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "このiPad上でiOSデータ保護により守られ、サインイン時はアカウントと同期されるため再インストールしても失われません。"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "このiPhone上でiOSデータ保護により守られ、サインイン時はアカウントと同期されるため再インストールしても失われません。"
+                }
+              }
+            }
+          }
+        },
+        "en": {
+          "variations": {
+            "device": {
+              "ipad": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Protected on this iPad by iOS data protection, and synced to your account when you sign in so reinstalling never loses them."
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Protected on this iPhone by iOS data protection, and synced to your account when you sign in so reinstalling never loses them."
+                }
+              }
+            }
           }
         }
       }

@@ -287,13 +287,30 @@ checks() {
 
   # Tables no build uses
   local table
-  for table in affiliates affiliate_conversions waitlist user_profiles usage_snapshots user_devices ai_insights_log; do
+  for table in affiliates affiliate_conversions waitlist user_profiles usage_snapshots user_devices ai_insights_log alternatives; do
     if has "$db" "$table"; then
       hidden "a signed-in person cannot read $table"            "$db" authenticated "$A" "select count(*) from public.$table"
       hidden "a signed-out visitor cannot read $table"          "$db" anon - "select count(*) from public.$table"
       owner_sees "$table is not broadcast in realtime" 0 "$db" "select count(*) from pg_publication_tables where pubname = 'supabase_realtime' and tablename = '$table'"
     fi
   done
+
+  # New multi-device sync tables (lifecycle_events, pause_plans) and server-only app_store_entitlements
+  local ev_id=6eed0000-0000-4000-8000-000000000001
+  works   "a person can save their own lifecycle event"         "$db" authenticated "$A" "insert into public.lifecycle_events (id, user_id, subscription_id, subscription_name, kind, occurred_at, amount, currency, frequency) values ('$ev_id', '$A', '$synced', 'Netflix', 'cancelled', now(), 15.99, 'USD', 'monthly')"
+  gives   "a person sees their own lifecycle events" 1          "$db" authenticated "$A" "select count(*) from public.lifecycle_events"
+  gives   "a person cannot read someone else's lifecycle events" 0 "$db" authenticated "$B" "select count(*) from public.lifecycle_events"
+  refused "a person cannot insert a lifecycle event for someone else" "$db" authenticated "$A" "insert into public.lifecycle_events (id, user_id, subscription_id, subscription_name, kind, occurred_at, amount, currency, frequency) values ('6eed0000-0000-4000-8000-000000000002', '$B', '$synced', 'Netflix', 'cancelled', now(), 15.99, 'USD', 'monthly')"
+  works   "a person can save their own pause plan"              "$db" authenticated "$A" "insert into public.pause_plans (user_id, subscription_ids, started_on) values ('$A', array['$synced'::uuid], now()) on conflict (user_id) do update set subscription_ids = excluded.subscription_ids"
+  gives   "a person cannot read someone else's pause plan" 0    "$db" authenticated "$B" "select count(*) from public.pause_plans"
+  refused "a person cannot write someone else's pause plan"     "$db" authenticated "$B" "insert into public.pause_plans (user_id, subscription_ids, started_on) values ('$A', array['$synced'::uuid], now())"
+  refused "a signed-in person cannot read app_store_entitlements" "$db" authenticated "$A" "select count(*) from public.app_store_entitlements"
+  refused "a visitor cannot read app_store_entitlements"        "$db" anon - "select count(*) from public.app_store_entitlements"
+  works   "the service role can record an App Store entitlement" "$db" service_role - "insert into public.app_store_entitlements (original_transaction_id, user_id, product_id, status) values ('tx-1', '$A', 'com.pausely.premium.annual', 'trial')"
+  works   "a person can save notes, payment method and split count on a subscription" "$db" authenticated "$A" "insert into public.subscriptions (user_id, name, amount, notes, payment_method, split_count) values ('$A', 'Shared Max', 16.99, 'Split with roommate', 'Apple Card', 2)"
+  works   "and delete it cleanly afterwards" "$db" authenticated "$A" "delete from public.subscriptions where user_id = '$A' and name = 'Shared Max'"
+  refused "split count must be between 1 and 20"                "$db" authenticated "$A" "insert into public.subscriptions (user_id, name, amount, split_count) values ('$A', 'Bad Split', 10, 0)"
+  owner_sees "unused realtime broadcasts are removed" 0 "$db" "select count(*) from pg_publication_tables where pubname = 'supabase_realtime' and tablename in ('subscriptions', 'referral_codes', 'referral_conversions')"
   if has "$db" waitlist; then
     refused "a signed-out visitor cannot write to the waitlist" "$db" anon - "insert into public.waitlist (email) values ('x@example.test')"
     works   "the waitlist function (service role) can"          "$db" service_role - "insert into public.waitlist (email) values ('via-function@example.test')"

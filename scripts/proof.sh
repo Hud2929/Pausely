@@ -71,7 +71,8 @@ for s in "${steps[@]}"; do
     db)      step database "$build/proof_db.log" bash scripts/dbtest/run.sh
              step waitlist "$build/proof_waitlist.log" bash scripts/dbtest/waitlist_function.sh
              step auth-email "$build/proof_auth_email.log" bash scripts/dbtest/auth_email_function.sh
-             step apple-revoke "$build/proof_apple_revoke.log" bash scripts/dbtest/apple_revoke_function.sh ;;
+             step apple-revoke "$build/proof_apple_revoke.log" bash scripts/dbtest/apple_revoke_function.sh
+             step appstore-v2 "$build/proof_appstore_v2.log" bash scripts/dbtest/appstore_notifications_function.sh ;;
     *)       echo "unknown step: $s (checks | unit | mail | ui | release | db)"; exit 2 ;;
   esac
 done

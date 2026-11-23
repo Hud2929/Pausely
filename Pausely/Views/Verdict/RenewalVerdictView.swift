@@ -66,8 +66,8 @@ struct RenewalVerdictView: View {
         }
         .sheet(isPresented: $enteringUsage) {
             if let sub = subscription {
-                UsageInputSheet(subscriptionName: sub.name, currentMinutes: screenTime.getCurrentMonthUsage(for: sub.name)) { minutes in
-                    screenTime.setMonthlyUsage(minutes: minutes, for: sub.name)
+                UsageInputSheet(subscriptionName: sub.name, currentMinutes: screenTime.getCurrentMonthUsage(for: sub)) { minutes in
+                    screenTime.setMonthlyUsage(minutes: minutes, for: sub)
                 }
             }
         }
@@ -115,7 +115,7 @@ struct RenewalVerdictView: View {
                 // The one figure Pausely can't know. Entered here, it turns the price into a cost
                 // per hour on the slip above.
                 Button { enteringUsage = true } label: {
-                    Text(screenTime.getUsage(for: sub.name) == nil
+                    Text(screenTime.getUsage(for: sub) == nil
                          ? L10n.string("How much did you use it this month?")
                          : L10n.string("Change this month's hours"))
                         .underline()
@@ -241,12 +241,12 @@ struct RenewalVerdictView: View {
     }
 
     private func usageText(_ sub: Subscription) -> String? {
-        guard let usage = screenTime.getUsage(for: sub.name) else { return nil }
+        guard let usage = screenTime.getUsage(for: sub) else { return nil }
         let minutes = usage.minutesUsed
         guard minutes > 0 else { return L10n.string("Not used this month") }
         let duration = Duration.seconds(minutes * 60).formatted(.units(allowed: [.hours, .minutes], width: .abbreviated).locale(L10n.locale))
         let used = L10n.string("Used \(duration) this month")
-        guard let perHour = screenTime.calculateCostPerHour(monthlyCost: sub.monthlyCost, subscriptionName: sub.name) else { return used }
+        guard let perHour = screenTime.calculateCostPerHour(for: sub) else { return used }
         return Self.usageLine(used: used, hourly: L10n.string("\(MoneyFormat.string(perHour, sub.currency)) an hour"),
                               largeText: typeSize.isAccessibilitySize)
     }

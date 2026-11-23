@@ -23,6 +23,7 @@ struct SubscriptionBrowserView: View {
     @State private var showingCustomAdd = false
     @State private var showingPaywall = false
     @State private var showingInbox = false
+    @State private var showingScreenshotImport = false
 
     // Popular service names shown in the featured row (shown before any filter)
     private let popularNames: [String] = [
@@ -56,6 +57,42 @@ struct SubscriptionBrowserView: View {
     // Show featured row only when browsing all (no search, no category filter)
     private var showFeatured: Bool {
         searchText.isEmpty && selectedCategory == nil
+    }
+
+    /// On-device screenshot import offered in every build (including App Store releases).
+    private var screenshotImportRow: some View {
+        VStack(spacing: 0) {
+            Button(action: { showingScreenshotImport = true }) {
+                HStack(spacing: 12) {
+                    if !typeSize.isAccessibilitySize {
+                        Image(systemName: "photo.on.rectangle.angled")
+                            .font(.body)
+                            .foregroundStyle(Color.inkText)
+                            .frame(width: 36, height: 36)
+                            .background(Color.inkRaised, in: RoundedRectangle(cornerRadius: Layout.tileRadius, style: .continuous))
+                            .accessibilityHidden(true)
+                    }
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text("Import from screenshots")
+                            .font(.body.weight(.medium))
+                            .foregroundStyle(Color.inkText)
+                            .multilineTextAlignment(.leading)
+                        Text("Read Apple Subscriptions or bank lists on this iPhone")
+                            .font(.subheadline)
+                            .foregroundStyle(Color.inkTextMuted)
+                            .multilineTextAlignment(.leading)
+                    }
+                    Spacer(minLength: 8)
+                    RowChevron()
+                }
+                .padding(.vertical, 12)
+                .contentShape(Rectangle())
+            }
+            .buttonStyle(.plain)
+            .accessibilityElement(children: .combine)
+            .accessibilityIdentifier("browserScreenshotImport")
+            Hairline()
+        }
     }
 
     /// The quicker way to fill the list, offered before the catalog.
@@ -156,6 +193,7 @@ struct SubscriptionBrowserView: View {
                         noResultsView
                     } else {
                         if showFeatured {
+                            screenshotImportRow
                             if FeatureFlags.inboxImportEnabled { findInEmailRow }
                             sectionTitle(L10n.string("Popular"))
                             ForEach(popularEntries, id: \.popularRowID) { entry in row(entry) }
@@ -190,6 +228,7 @@ struct SubscriptionBrowserView: View {
         // "Done" after adding closes the catalog too: its outcome says the new ones are on Home, and it
         // landed on the catalog (the rating of 2026-11-23).
         .sheet(isPresented: $showingInbox) { InboxImportView(onFinished: { dismiss() }) }
+        .sheet(isPresented: $showingScreenshotImport) { ScreenshotImportView(onFinished: { dismiss() }) }
         .sheet(isPresented: $showingPaywall) {
             StoreKitUpgradeView()
         }

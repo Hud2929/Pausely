@@ -10,10 +10,17 @@ enum LocalUserData {
 
     /// Called when the main app appears for a signed-in person. If this device's local history belongs
     /// to a different account, it's removed first so nobody sees someone else's receipt.
-    static func claim(for userId: String?) async {
+    ///
+    /// Upgrading from local-only guest mode to a real account keeps everything on this iPhone and
+    /// hands ownership to the new account, queuing local subscriptions for cloud sync.
+    static func claim(for userId: String?, defaults: UserDefaults = .standard) async {
         guard let userId, !userId.isEmpty else { return }
-        let defaults = UserDefaults.standard
         if let owner = defaults.string(forKey: ownerKey), owner != userId {
+            if owner == AuthManager.guestUserID {
+                defaults.set(userId, forKey: ownerKey)
+                SubscriptionStore.shared.queueLocalSubscriptionsForUpload()
+                return
+            }
             await wipe()
         }
         defaults.set(userId, forKey: ownerKey)
@@ -21,8 +28,9 @@ enum LocalUserData {
 
     /// False when what's on this iPhone was left by a different account. Until `claim` has removed
     /// it, nothing of it is sent anywhere and nothing is fetched into it.
-    static func belongs(to userId: String) -> Bool {
-        guard let owner = UserDefaults.standard.string(forKey: ownerKey) else { return true }
+    static func belongs(to userId: String, defaults: UserDefaults = .standard) -> Bool {
+        guard let owner = defaults.string(forKey: ownerKey) else { return true }
+        if owner == AuthManager.guestUserID { return true }
         return owner.caseInsensitiveCompare(userId) == .orderedSame
     }
 
@@ -30,7 +38,7 @@ enum LocalUserData {
     /// `LocalDataGuardTests` reads the sources: a value saved under a new name has to be listed here,
     /// or in the test as a setting of the device with the reason it may outlive an account.
     static let personalKeys = [
-        ownerKey, "last_auth_email", "lifecycle_last_run",
+        ownerKey, "local_guest_mode", "last_auth_email", "lifecycle_last_run",
         SubscriptionStore.syncedUserKey, "cached_subscriptions", "subscriptions_cache_date", "sync_queue_operations",
         "pausely_user_corrections_v1", "pausely_pro_auto_added", "pausely_pro_grant", "pausely_pro_line_ended",
         "first_run_tally_waiting",

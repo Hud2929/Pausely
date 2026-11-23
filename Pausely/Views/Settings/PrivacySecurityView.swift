@@ -4,7 +4,9 @@ import SwiftUI
 /// Every statement here describes what the build does; a row for a feature that is switched off is not shown.
 struct PrivacySecurityView: View {
     @Environment(\.dismiss) private var dismiss
+    @ObservedObject private var authManager = AuthManager.shared
     @State private var showingDeleteAccountConfirmation = false
+    @State private var showingEraseLocalConfirmation = false
     @State private var isDeleting = false
     @State private var deleteError: String?
     @State private var showingPrivacyPolicy = false
@@ -16,7 +18,9 @@ struct PrivacySecurityView: View {
                 SettingsRow(title: L10n.string("Your subscription list"),
                             detail: L10n.string("Synced to Pausely's servers over an encrypted connection and encrypted at rest. Other accounts can't read it."))
                 SettingsRow(title: L10n.string("History, receipt and Pause Plan"),
-                            detail: L10n.string("Stay on this iPhone, protected by iOS data protection."))
+                            detail: L10n.string("Protected on this iPhone by iOS data protection, and synced to your account when you sign in so reinstalling never loses them."))
+                SettingsRow(title: L10n.string("Import from screenshots"),
+                            detail: L10n.string("Screenshots are read on this iPhone using on-device text recognition and are never saved or sent anywhere."))
                 if FeatureFlags.inboxImportEnabled {
                     SettingsRow(title: L10n.string("Find in Email"),
                                 detail: L10n.string("Receipts are read on this iPhone. A few facts of each charge are kept (who charged, how much, when, how often), never the email itself."))
@@ -38,26 +42,47 @@ struct PrivacySecurityView: View {
                 .accessibilityIdentifier("termsRow")
             }
 
-            SettingsSection(title: "Your account") {
-                Button { showingDeleteAccountConfirmation = true } label: {
-                    SettingsRow(title: L10n.string("Delete account"),
-                                detail: L10n.string("Permanently remove your account and all its data"), titleColor: .due) {
-                        if isDeleting { ProgressView().tint(Color.inkText) }
+            SettingsSection(title: authManager.isGuest ? "This iPhone" : "Your account") {
+                if authManager.isGuest {
+                    Button { showingEraseLocalConfirmation = true } label: {
+                        SettingsRow(title: L10n.string("Erase local data"),
+                                    detail: L10n.string("Remove your list, history, and Pause Plan from this iPhone"), titleColor: .due)
                     }
-                }
-                .buttonStyle(.plain)
-                .disabled(isDeleting)
-                .accessibilityIdentifier("deleteAccountButton")
-                .alert("Delete account?", isPresented: $showingDeleteAccountConfirmation) {
-                    Button("Cancel", role: .cancel) {}
-                    Button("Delete", role: .destructive) { Task { await deleteAccount() } }
-                } message: {
-                    Text(deleteWarning)
-                }
-                .alert("Couldn't delete your account", isPresented: Binding(get: { deleteError != nil }, set: { if !$0 { deleteError = nil } })) {
-                    Button("OK", role: .cancel) {}
-                } message: {
-                    Text(deleteError ?? "")
+                    .buttonStyle(.plain)
+                    .accessibilityIdentifier("eraseLocalDataButton")
+                    .alert("Erase local data?", isPresented: $showingEraseLocalConfirmation) {
+                        Button("Cancel", role: .cancel) {}
+                        Button("Erase", role: .destructive) {
+                            Task {
+                                await authManager.eraseLocalGuestData()
+                                Feel.landed()
+                                dismiss()
+                            }
+                        }
+                    } message: {
+                        Text("This removes your subscription list, Savings Receipt history, and Pause Plan from this iPhone. It does not cancel any subscriptions.")
+                    }
+                } else {
+                    Button { showingDeleteAccountConfirmation = true } label: {
+                        SettingsRow(title: L10n.string("Delete account"),
+                                    detail: L10n.string("Permanently remove your account and all its data"), titleColor: .due) {
+                            if isDeleting { ProgressView().tint(Color.inkText) }
+                        }
+                    }
+                    .buttonStyle(.plain)
+                    .disabled(isDeleting)
+                    .accessibilityIdentifier("deleteAccountButton")
+                    .alert("Delete account?", isPresented: $showingDeleteAccountConfirmation) {
+                        Button("Cancel", role: .cancel) {}
+                        Button("Delete", role: .destructive) { Task { await deleteAccount() } }
+                    } message: {
+                        Text(deleteWarning)
+                    }
+                    .alert("Couldn't delete your account", isPresented: Binding(get: { deleteError != nil }, set: { if !$0 { deleteError = nil } })) {
+                        Button("OK", role: .cancel) {}
+                    } message: {
+                        Text(deleteError ?? "")
+                    }
                 }
             }
         }

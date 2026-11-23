@@ -14,6 +14,9 @@ struct UsageInputSheet: View {
 
     private enum Field { case hours, minutes }
 
+    /// Common monthly durations so logging takes one tap instead of typing.
+    private static let quickPresets = [1, 4, 10, 20]
+
     init(subscriptionName: String, currentMinutes: Int, onSave: @escaping (Int) -> Void) {
         self.subscriptionName = subscriptionName
         self.currentMinutes = currentMinutes
@@ -49,6 +52,8 @@ struct UsageInputSheet: View {
         SettingsPage(title: "How long did you use \(subscriptionName) this month?",
                      detail: "You enter this yourself. Pausely doesn't read your Screen Time.",
                      leaveTitle: "Cancel") {
+            presetRow
+
             HStack(alignment: .top, spacing: 12) {
                 field(L10n.string("Hours"), text: $hours, id: "hoursTextField", focus: .hours)
                 field(L10n.string("Minutes"), text: $minutes, id: "minutesTextField", focus: .minutes)
@@ -70,6 +75,34 @@ struct UsageInputSheet: View {
             }
         }
         .onAppear { focus = .hours }
+    }
+
+    private var presetRow: some View {
+        ScrollView(.horizontal, showsIndicators: false) {
+            HStack(spacing: 8) {
+                ForEach(Self.quickPresets, id: \.self) { presetHours in
+                    let isChosen = total == presetHours * 60
+                    let label = Duration.seconds(presetHours * 3600)
+                        .formatted(.units(allowed: [.hours], width: .abbreviated).locale(L10n.locale))
+                    Button {
+                        Feel.selection()
+                        hours = String(presetHours)
+                        minutes = ""
+                    } label: {
+                        Text(verbatim: label)
+                            .font(.subheadline.weight(.semibold))
+                            .foregroundStyle(isChosen ? Color.paperInk : Color.inkText)
+                            .padding(.horizontal, 14)
+                            .frame(minWidth: Layout.tapTarget, minHeight: Layout.tapTarget)
+                            .background(isChosen ? Color.paper : Color.inkRaised, in: Capsule())
+                            .overlay(Capsule().stroke(isChosen ? Color.paper : Color.outline, lineWidth: 1))
+                    }
+                    .buttonStyle(.plain)
+                    .accessibilityAddTraits(isChosen ? [.isSelected] : [])
+                    .accessibilityIdentifier("usagePreset_\(presetHours)")
+                }
+            }
+        }
     }
 
     private func field(_ label: String, text: Binding<String>, id: String, focus field: Field) -> some View {

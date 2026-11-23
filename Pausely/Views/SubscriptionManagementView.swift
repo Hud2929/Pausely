@@ -414,9 +414,9 @@ private struct UsageSheet: View {
     @ObservedObject private var screenTimeManager = UsageLog.shared
     @State private var showInput = false
 
-    private var minutes: Int { screenTimeManager.getCurrentMonthUsage(for: subscription.name) }
+    private var minutes: Int { screenTimeManager.getCurrentMonthUsage(for: subscription) }
     private var costPerHour: Decimal? {
-        screenTimeManager.calculateCostPerHour(monthlyCost: subscription.monthlyCost, subscriptionName: subscription.name)
+        screenTimeManager.calculateCostPerHour(for: subscription)
     }
 
     /// What the person says they used it, and what that makes an hour cost. No score, no verdict:
@@ -475,7 +475,7 @@ private struct UsageSheet: View {
         .preferredColorScheme(.dark)
         .sheet(isPresented: $showInput) {
             UsageInputSheet(subscriptionName: subscription.name, currentMinutes: minutes) { newMinutes in
-                screenTimeManager.setMonthlyUsage(minutes: newMinutes, for: subscription.name)
+                screenTimeManager.setMonthlyUsage(minutes: newMinutes, for: subscription)
             }
         }
     }

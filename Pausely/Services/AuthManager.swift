@@ -45,6 +45,14 @@ class AuthManager: ObservableObject {
     /// that asks about it needs no `#if`).
     nonisolated static let localTestUserID = "debug-user"
 
+    /// Local-only mode: the person uses Pausely on this iPhone without creating a cloud account.
+    /// Everything stays protected on-device and upgrades seamlessly if they later sign up.
+    nonisolated static let guestUserID = "local-guest"
+    private static let guestModeKey = "local_guest_mode"
+
+    /// True when the person is using Pausely locally without a cloud account.
+    var isGuest: Bool { currentUser?.id == Self.guestUserID }
+
     // MARK: - Initialization
     private init() {
 
@@ -53,6 +61,7 @@ class AuthManager: ObservableObject {
         if LaunchFlag.isSet("--reset-state") {
             AccountMemory.forgetSession()
             UserDefaults.standard.removeObject(forKey: "debug_auth_bypass")
+            UserDefaults.standard.removeObject(forKey: Self.guestModeKey)
             Task { [client] in try? await client.auth.signOut(scope: .local) }
             return
         }
@@ -83,6 +92,11 @@ class AuthManager: ObservableObject {
             currentUser = user
             isAuthenticated = true
             state = .authenticated(user)
+        } else if !leftByADeletedCopy, UserDefaults.standard.bool(forKey: Self.guestModeKey) {
+            let guest = User(id: Self.guestUserID, email: nil, createdAt: Date())
+            currentUser = guest
+            isAuthenticated = true
+            state = .authenticated(guest)
         }
 
         // Async: verify the Supabase token is still valid and refresh user data.
@@ -148,6 +162,7 @@ class AuthManager: ObservableObject {
     /// Signs out silently if the token has expired and cannot be refreshed.
     private func verifySession() async {
         if let session = client.auth.currentSession {
+            UserDefaults.standard.removeObject(forKey: Self.guestModeKey)
             let user = makeUser(from: session.user)
             AccountMemory.rememberSession(userId: session.user.id.uuidString,
                          email: session.user.email,
@@ -158,6 +173,9 @@ class AuthManager: ObservableObject {
             startSessionRefresh()
             postAuthSetup(user: user)
 
+        } else if isGuest {
+            // Local-only mode has no cloud session to verify; keep the person in.
+            return
         } else if isAuthenticated {
             // Cache said we're logged in but Supabase disagrees — token expired.
             PauselyLogger.info("Cached session invalid — signing out", category: "auth")
@@ -264,6 +282,7 @@ class AuthManager: ObservableObject {
         forgetCodeRequest()
         AccountMemory.forgetHeldName()
 
+        UserDefaults.standard.removeObject(forKey: Self.guestModeKey)
         currentUser = user
         isAuthenticated = true
         state = .authenticated(user)
@@ -304,6 +323,7 @@ class AuthManager: ObservableObject {
                          email: supabaseUser.email,
                          createdAt: supabaseUser.createdAt)
 
+            UserDefaults.standard.removeObject(forKey: Self.guestModeKey)
             currentUser = user
             isAuthenticated = true
             state = .authenticated(user)
@@ -344,6 +364,7 @@ class AuthManager: ObservableObject {
 
             let user = makeUser(from: supabaseUser, firstName: firstName, lastName: lastName)
 
+            UserDefaults.standard.removeObject(forKey: Self.guestModeKey)
             currentUser = user
             isAuthenticated = true
             state = .authenticated(user)
@@ -427,6 +448,7 @@ class AuthManager: ObservableObject {
             os_log("Sign out failed: %{public}@", log: .default, type: .error, error.localizedDescription)
         }
 
+        UserDefaults.standard.removeObject(forKey: Self.guestModeKey)
         #if DEBUG
         UserDefaults.standard.removeObject(forKey: "debug_auth_bypass")
         #endif
@@ -438,6 +460,22 @@ class AuthManager: ObservableObject {
         isAuthenticated = false
         currentUser = nil
         state = .unauthenticated
+    }
+
+    /// Starts local-only mode without requiring an account. Everything stays on this iPhone until
+    /// the person chooses to create an account or sign in.
+    func enterGuestMode() {
+        UserDefaults.standard.set(true, forKey: Self.guestModeKey)
+        let guest = User(id: Self.guestUserID, email: nil, createdAt: Date())
+        currentUser = guest
+        isAuthenticated = true
+        state = .authenticated(guest)
+    }
+
+    /// Removes all local data for a guest user and returns to the welcome screen.
+    func eraseLocalGuestData() async {
+        await LocalUserData.wipe()
+        await signOut()
     }
 
     #if DEBUG

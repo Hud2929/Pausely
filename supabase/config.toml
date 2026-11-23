@@ -395,3 +395,7 @@ verify_jwt = false
 # Called by the app for a signed-in person. The gateway checks the token, and the function then asks
 # the account service who the caller is before Apple is asked anything.
 verify_jwt = true
+
+[functions.appstore-notifications]
+# Called directly by Apple's App Store Server Notifications v2 with a signed JWS payload.
+verify_jwt = false

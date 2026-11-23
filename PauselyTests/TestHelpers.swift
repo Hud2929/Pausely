@@ -156,6 +156,7 @@ final class StoreSandbox {
     private let currency: String
     private let defaults: [String: Any]
     private let wasHidden: Bool
+    private let pendingTally: Tally?
 
     init() {
         let store = SubscriptionStore.shared
@@ -166,6 +167,7 @@ final class StoreSandbox {
         totals = (store.totalMonthlySpend, store.totalAnnualSpend)
         cache = AppSettings.shared.cachedSubscriptions
         cacheDate = AppSettings.shared.subscriptionsCacheDate
+        pendingTally = PendingTally.load()
         sync = store.sync
         events = LifecycleEventLog.shared.events
         currency = CurrencyManager.shared.selectedCurrency
@@ -173,6 +175,8 @@ final class StoreSandbox {
             UserDefaults.standard.object(forKey: key).map { (key, $0) }
         })
         SubscriptionStore.cloudSyncEnabled = false
+        AppSettings.shared.cachedSubscriptions = Data()
+        PendingTally.clear()
         store.sync = SyncQueue(transport: transport, load: { Data() }, store: { _ in })
         store.subscriptions = []
         (store.totalMonthlySpend, store.totalAnnualSpend) = (0, 0)
@@ -185,6 +189,7 @@ final class StoreSandbox {
         (store.totalMonthlySpend, store.totalAnnualSpend) = totals
         AppSettings.shared.cachedSubscriptions = cache
         AppSettings.shared.subscriptionsCacheDate = cacheDate
+        if let pendingTally { PendingTally.save(pendingTally) } else { PendingTally.clear() }
         store.sync = sync
         LifecycleEventLog.shared.restore(events)
         CurrencyManager.shared.selectedCurrency = currency

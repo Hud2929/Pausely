@@ -124,8 +124,22 @@ struct Tally: Codable, Equatable {
     var guess: Decimal = 0
     var currency: String
     private(set) var lines: [TallyLine] = []
+    /// Services the person specifically picked to occupy their free slots when the slip holds more.
+    var preferredNames: Set<String> = []
 
     init(currency: String) { self.currency = MoneyFormat.normalizedCode(currency) }
+
+    enum CodingKeys: String, CodingKey {
+        case guess, currency, lines, preferredNames
+    }
+
+    init(from decoder: Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        guess = try c.decodeIfPresent(Decimal.self, forKey: .guess) ?? 0
+        currency = try c.decode(String.self, forKey: .currency)
+        lines = try c.decodeIfPresent([TallyLine].self, forKey: .lines) ?? []
+        preferredNames = try c.decodeIfPresent(Set<String>.self, forKey: .preferredNames) ?? []
+    }
 
     func contains(_ service: TallyService) -> Bool { lines.contains { $0.name == service.name } }
 
@@ -216,9 +230,10 @@ enum PendingTally {
     static func clear(defaults: UserDefaults = .standard) { defaults.removeObject(forKey: key) }
 
     /// Which lines to add now and which must wait. Lines already in the list (`ServiceName.same`)
-    /// are dropped. Without Pro, only `freeSlots` fit; the most expensive go first, because those
-    /// are the ones worth a reminder.
+    /// are dropped. Without Pro, only `freeSlots` fit; lines the person chose (`preferredNames`) go
+    /// first, then the most expensive, because those are the ones worth a reminder.
     static func plan(lines: [TallyLine], existingNames: [String], freeSlots: Int?,
+                     preferredNames: Set<String> = [],
                      cost: (TallyLine) -> Decimal = { $0.yearlyCost }) -> (add: [TallyLine], wait: [TallyLine]) {
         var seen: [String] = []
         let fresh = lines.filter { line in
@@ -228,7 +243,13 @@ enum PendingTally {
             return true
         }
         guard let freeSlots else { return (fresh, []) }
-        let ranked = fresh.sorted { cost($0) > cost($1) }
+        let preferred = Set(preferredNames.map { $0.lowercased() })
+        let ranked = fresh.sorted { lhs, rhs in
+            let lPref = preferred.contains(lhs.name.lowercased())
+            let rPref = preferred.contains(rhs.name.lowercased())
+            if lPref != rPref { return lPref }
+            return cost(lhs) > cost(rhs)
+        }
         let slots = max(freeSlots, 0)
         return (Array(ranked.prefix(slots)), Array(ranked.dropFirst(slots)))
     }
@@ -285,14 +306,16 @@ enum TallyImporter {
         guard let tally = PendingTally.load(defaults: defaults) else { return }
         // Clear first: a second run (another tab appearing, a relaunch mid-import) must not add twice.
         PendingTally.clear(defaults: defaults)
-        await add(tally.lines, into: store, payments: payments, defaults: defaults)
+        await add(tally.lines, into: store, payments: payments, preferredNames: tally.preferredNames, defaults: defaults)
     }
 
     /// Adds what fits, keeps the rest waiting, and fills in a missing renewal date on a subscription that
     /// is already listed when the line has one from a receipt. Nothing is dropped without being reported.
     @discardableResult
     static func add(_ lines: [TallyLine], into store: SubscriptionStore, payments: PaymentManager = .shared,
-                    rates: CurrencyRates = CurrencyManager.shared.rates, defaults: UserDefaults = .standard) async -> Outcome {
+                    rates: CurrencyRates = CurrencyManager.shared.rates,
+                    preferredNames: Set<String> = [],
+                    defaults: UserDefaults = .standard) async -> Outcome {
         var outcome = Outcome()
 
         // Already listed: never added twice. A date read from receipts fills an empty one, when the
@@ -311,7 +334,8 @@ enum TallyImporter {
         let unlimited = payments.isUnlocked(.unlimitedSubscriptions)
         let slots = unlimited ? nil : FreeTier.room(in: store.subscriptions)
         let display = CurrencyManager.shared.selectedCurrency
-        let plan = PendingTally.plan(lines: lines, existingNames: store.subscriptions.map(\.name), freeSlots: slots) { line in
+        let plan = PendingTally.plan(lines: lines, existingNames: store.subscriptions.map(\.name),
+                                     freeSlots: slots, preferredNames: preferredNames) { line in
             // Ranked in one currency; a currency with no rate ranks last instead of by its raw number.
             rates.convert(line.yearlyCost, from: line.currency, to: display) ?? 0
         }
@@ -345,6 +369,56 @@ extension TallyImporter {
         guard !lines.isEmpty else { return }
         clearWaiting(defaults: defaults)
         await add(lines, into: store, defaults: defaults)
+    }
+
+    /// Lets a free user choose exactly which subscriptions fill their tracked slots across currently
+    /// active subscriptions and waiting lines. Deselected active items move to `waitingLines` so
+    /// nothing is lost if they later free a slot or upgrade to Pro.
+    static func applyChoice(selectedNames: Set<String>, into store: SubscriptionStore,
+                            payments: PaymentManager = .shared,
+                            defaults: UserDefaults = .standard) async {
+        let wanted = Set(selectedNames.map { $0.lowercased() })
+        let active = store.subscriptions.charging
+        let waiting = waitingLines(defaults: defaults)
+
+        var newWaiting: [TallyLine] = []
+        // Demote active subscriptions the user chose to swap out.
+        for sub in active where !wanted.contains(sub.name.lowercased()) {
+            newWaiting.append(TallyLine(
+                name: sub.name,
+                category: sub.category ?? SubscriptionCategory.other.rawValue,
+                amount: sub.amount,
+                currency: sub.currency,
+                isConfirmed: true,
+                frequency: sub.billingFrequency,
+                anchor: sub.nextBillingDate,
+                trialEndsAt: sub.trialEndsAt
+            ))
+            await store.deleteSubscription(id: sub.id)
+        }
+
+        // Split waiting items into chosen vs still waiting.
+        var toPromote: [TallyLine] = []
+        for line in waiting {
+            if wanted.contains(line.name.lowercased()) {
+                toPromote.append(line)
+            } else {
+                newWaiting.append(line)
+            }
+        }
+
+        clearWaiting(defaults: defaults)
+        if !toPromote.isEmpty {
+            await add(toPromote, into: store, payments: payments, preferredNames: selectedNames, defaults: defaults)
+        }
+        // Merge any items that couldn't fit with the newly deselected ones.
+        let combined = waitingLines(defaults: defaults) + newWaiting
+        var deduped: [TallyLine] = []
+        var seen = Set(store.subscriptions.charging.map { $0.name.lowercased() })
+        for line in combined where seen.insert(line.name.lowercased()).inserted {
+            deduped.append(line)
+        }
+        saveWaiting(deduped, defaults: defaults)
     }
 }
 

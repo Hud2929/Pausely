@@ -58,4 +58,32 @@ final class UsageLogTests: XCTestCase {
         log.setMonthlyUsage(minutes: 60, for: "Netflix", now: day(2026, 11, 3))
         XCTAssertNil(log.getUsage(for: "Hulu", now: day(2026, 11, 3)))
     }
+
+    func testUsageFollowsSubscriptionAcrossRename() {
+        var sub = Subscription(name: "HBO Max", amount: Decimal(string: "16.99")!, billingFrequency: .monthly)
+        log.setMonthlyUsage(minutes: 240, for: sub, now: day(2026, 11, 5))
+        sub.name = "Max"
+        XCTAssertEqual(log.getCurrentMonthUsage(for: sub, now: day(2026, 11, 10)), 240)
+        XCTAssertEqual(log.calculateCostPerHour(for: sub, now: day(2026, 11, 10)), Decimal(string: "16.99")! / 4)
+    }
+
+    func testTwoSubscriptionsWithSameNameHaveSeparateUsage() {
+        let personal = Subscription(name: "iCloud+", amount: 2.99, billingFrequency: .monthly)
+        let family = Subscription(name: "iCloud+", amount: 9.99, billingFrequency: .monthly)
+        log.setMonthlyUsage(minutes: 60, for: personal, now: day(2026, 11, 5))
+        log.setMonthlyUsage(minutes: 600, for: family, now: day(2026, 11, 5))
+        XCTAssertEqual(log.getCurrentMonthUsage(for: personal, now: day(2026, 11, 10)), 60)
+        XCTAssertEqual(log.getCurrentMonthUsage(for: family, now: day(2026, 11, 10)), 600)
+    }
+
+    func testLegacyNameKeyMigratesToSubscriptionUUID() {
+        let sub = Subscription(name: "Netflix", amount: 15.99, billingFrequency: .monthly)
+        log.setMonthlyUsage(minutes: 180, for: "Netflix", now: day(2026, 11, 5))
+        XCTAssertEqual(log.getCurrentMonthUsage(for: sub, now: day(2026, 11, 8)), 180)
+        // Updating via subscription clears the legacy key so another service with the same name won't inherit it.
+        log.setMonthlyUsage(minutes: 300, for: sub, now: day(2026, 11, 9))
+        let second = Subscription(name: "Netflix", amount: 15.99, billingFrequency: .monthly)
+        XCTAssertNil(log.getUsage(for: second, now: day(2026, 11, 9)))
+        XCTAssertEqual(log.getCurrentMonthUsage(for: sub, now: day(2026, 11, 9)), 300)
+    }
 }

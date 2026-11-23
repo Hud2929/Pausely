@@ -185,36 +185,22 @@ struct RootView: View {
     @State private var signingIn = false
     @Environment(\.scenePhase) private var scenePhase
 
-    // DEBUG only, all three: a release build never reads a launch argument (see `LaunchFlag`).
+    // DEBUG only: a release build never reads a launch argument (see `LaunchFlag`).
     private var isUITesting: Bool { LaunchFlag.uiTesting.isSet }
     private var isDemoMode: Bool { LaunchFlag.demoMode.isSet }
-    private func isDemoScreen(_ argument: String) -> Bool { LaunchFlag.isSet(argument) }
 
-    /// DEBUG only: the value of `--demo-name=value`, or "" for a bare `--demo-name`. Nil when it isn't there.
-    private func demoValue(_ name: String) -> String? { LaunchFlag.value(of: name) }
-
-    #if DEBUG
-    /// The subscription a `--demo-…=Name` argument names, from the list in use ("--demo-subscription=Hulu"
-    /// with `--varied-demo-data` opens the cancelled one). Netflix when it names none.
-    private func demoSubscription(_ name: String) -> Subscription {
-        let list = SubscriptionStore.shared.subscriptions
-        if !name.isEmpty, let named = list.first(where: { $0.name.caseInsensitiveCompare(name) == .orderedSame }) { return named }
-        return list.first { $0.name == "Netflix" } ?? DemoSubscriptions.netflix
+    private var hasDebugDestination: Bool {
+        #if DEBUG
+        return DebugLaunchRouter.hasDestination
+        #else
+        return false
+        #endif
     }
-    #endif
-
-    /// DEBUG only: `--demo-imap-connect` (iCloud) or `--demo-imap-connect=<preset id>`; `=other` for any server.
-    private var demoIMAPPreset: String? {
-        LaunchFlag.value(of: "--demo-imap-connect").map { $0.isEmpty ? "icloud" : $0 }
-    }
-
-    /// DEBUG only: open the Gmail results screen with a synthetic mailbox (no Google sign-in needed).
-    private var isDemoGmailResults: Bool { LaunchFlag.isSet("--demo-gmail-results") }
-
 
     /// Signed-in users (existing accounts, Apple sign-ins) who haven't confirmed their age yet.
+    /// Local-only guest mode skips this gate; creating a cloud account runs it via `SignUpDoor`.
     private var needsAgeGate: Bool {
-        guard !isDemoMode, !isUITesting, authManager.isAuthenticated,
+        guard !isDemoMode, !isUITesting, authManager.isAuthenticated, !authManager.isGuest,
               let uid = authManager.currentUser?.id else { return false }
         return ageConsent.needsConsent(userId: uid) && !ageConsent.hasPassedDeviceGate
     }
@@ -222,141 +208,9 @@ struct RootView: View {
     var body: some View {
         ZStack {
             Group {
-                if isDemoGmailResults {
+                if hasDebugDestination {
                     #if DEBUG
-                    InboxImportView()
-                        .onAppear { InboxScanner.shared.loadDemoResults() }
-                    #endif
-                } else if isDemoScreen("--demo-inbox") {
-                    #if DEBUG
-                    InboxImportView()
-                        .task { if isDemoScreen("--reset-inbox") { await InboxScanner.shared.disconnectAll() } }
-                    #endif
-                } else if let state = demoValue("--demo-inbox"), !state.isEmpty {
-                    #if DEBUG
-                    InboxImportView()
-                        .onAppear { InboxScanner.shared.loadDemoConnected(state) }
-                    #endif
-                } else if let presetID = demoIMAPPreset {
-                    #if DEBUG
-                    IMAPConnectView(preset: IMAPPreset.find(presetID))
-                    #endif
-                } else if let screen = demoValue("--demo-auth") {
-                    #if DEBUG
-                    switch screen {
-                    case "verify": EmailConfirmationView(email: "jane@example.com")
-                    case "reset": PasswordResetView(email: "")
-                    case "newpassword": NewPasswordView()
-                    case "signup": WelcomeFlow(start: .signUp)
-                    case "signin": WelcomeFlow(start: .signIn)
-                    default: WelcomeFlow(start: .welcome)
-                    }
-                    #endif
-                } else if demoValue("--demo-age-gate") != nil {
-                    #if DEBUG
-                    AgeGateView(onPassed: {}, onCancel: {}, cancelTitle: "Sign out")
-                    #endif
-                } else if let screen = demoValue("--demo-settings") {
-                    #if DEBUG
-                    switch screen {
-                    case "privacy": PrivacySecurityView()
-                    case "help": HelpSupportView()
-                    case "currency": CurrencySettingsView()
-                    case "export": ExportDataView()
-                    case "language": LanguageSettingsView()
-                    default: NotificationsSettingsView()
-                    }
-                    #endif
-                } else if isDemoScreen("--demo-whats-new") {
-                    #if DEBUG
-                    WhatsNewSheet()
-                    #endif
-                } else if let name = demoValue("--demo-subscription") {
-                    #if DEBUG
-                    SubscriptionManagementView(subscription: demoSubscription(name))
-                    #endif
-                } else if let name = demoValue("--demo-subscription-edit") {
-                    #if DEBUG
-                    SubscriptionEditView(subscription: name.isEmpty ? DemoSubscriptions.netflix : demoSubscription(name))
-                    #endif
-                } else if isDemoScreen("--demo-first-run") || isDemoScreen("--demo-first-run=tally") || isDemoScreen("--demo-first-run=reveal") {
-                    #if DEBUG
-                    FirstRunView(startAt: isDemoScreen("--demo-first-run=reveal") ? .reveal
-                                    : isDemoScreen("--demo-first-run=tally") ? .tally : .guess,
-                                 tally: isDemoScreen("--demo-first-run") ? nil : DemoTally.make(),
-                                 onKeepList: {}, onSignIn: {})
-                    #endif
-                } else if let name = demoValue("--demo-cancel") {
-                    #if DEBUG
-                    CancelSubscriptionFlow(subscription: name.isEmpty ? DemoSubscriptions.netflix : demoSubscription(name))
-                    #endif
-                } else if isDemoScreen("--demo-cancelled") || isDemoScreen("--demo-kept") {
-                    #if DEBUG
-                    ZStack {
-                        Color.ink.ignoresSafeArea()
-                        Group {
-                            if isDemoScreen("--demo-kept") {
-                                OutcomeSlip(name: "Netflix", category: "entertainment", stamp: L10n.string("Kept"), torn: false) {
-                                    Text(L10n.string("No more reminders about this charge.")).font(.proof(.footnote))
-                                }
-                            } else {
-                                CancelledSlip(subscription: DemoSubscriptions.netflix)
-                            }
-                        }
-                        .padding(Layout.margin)
-                    }
-                    #endif
-                } else if isDemoScreen("--demo-custom-add") {
-                    #if DEBUG
-                    AddSubscriptionView()
-                    #endif
-                } else if isDemoScreen("--demo-tier") {
-                    #if DEBUG
-                    DemoTierSheet()
-                    #endif
-                } else if let name = demoValue("--demo-price-history") {
-                    #if DEBUG
-                    PriceHistoryView(subscription: name.isEmpty ? DemoSubscriptions.netflix : demoSubscription(name))
-                    #endif
-                } else if isDemoScreen("--demo-design") {
-                    #if DEBUG
-                    DesignGalleryView()
-                    #endif
-                } else if isDemoScreen("--demo-paywall") {
-                    #if DEBUG
-                    StoreKitUpgradeView()
-                    #endif
-                } else if let list = demoValue("--demo-wrapped") {
-                    #if DEBUG
-                    // `--demo-wrapped=list` shows the year of the list in use (empty, or the varied one).
-                    SubscriptionWrappedView(subscriptions: list == "list" ? SubscriptionStore.shared.subscriptions
-                                                                          : SubscriptionStore.makeDemoSubscriptions())
-                    #endif
-                } else if let name = demoValue("--demo-verdict") {
-                    #if DEBUG
-                    RenewalVerdictView(subscriptionId: name.isEmpty ? SubscriptionStore.shared.subscriptions.first?.id ?? UUID()
-                                                                    : demoSubscription(name).id)
-                    #endif
-                } else if isDemoScreen("--demo-pause-plan") {
-                    #if DEBUG
-                    PausePlanView()
-                    #endif
-                } else if isDemoScreen("--demo-dates") {
-                    #if DEBUG
-                    // Several subscriptions with no renewal date, as a first-run list arrives.
-                    RenewalDatesSheet(subscriptions: SubscriptionStore.makeDemoSubscriptions().prefix(3).map { subscription in
-                        var undated = subscription
-                        undated.nextBillingDate = nil
-                        return undated
-                    })
-                    #endif
-                } else if demoValue("--demo-receipt") != nil {
-                    #if DEBUG
-                    SavingsReceiptView()
-                    #endif
-                } else if isDemoScreen("--demo-browser") {
-                    #if DEBUG
-                    SubscriptionBrowserView()
+                    DebugLaunchRouter.screen()
                     #endif
                 } else if needsAgeGate, let uid = authManager.currentUser?.id {
                     AgeGateView(
@@ -368,7 +222,7 @@ struct RootView: View {
                 } else if isDemoMode || authManager.isAuthenticated {
                     // Authenticated: show main app
                     VStack(spacing: 0) {
-                        if supabaseManager.isUsingDemoMode || isDemoScreen("--demo-banner") {
+                        if supabaseManager.isUsingDemoMode || LaunchFlag.isSet("--demo-banner") {
                             DemoModeBanner()
                         }
                         MainTabView()
@@ -395,6 +249,12 @@ struct RootView: View {
                                 hasCompletedOnboarding = true
                             }
                             signingIn = true
+                        },
+                        onContinueWithoutAccount: {
+                            withAnimation(Motion.unlessReduced(Motion.arrive)) {
+                                hasCompletedOnboarding = true
+                                authManager.enterGuestMode()
+                            }
                         }
                     )
                     .transition(.opacity)
@@ -410,6 +270,8 @@ struct RootView: View {
             // iPad "Keep my list" ended back on the total with no form.
             .signUpDoor(isOpen: $signingUp)
             .sheet(isPresented: $signingIn) { SignInView() }
+            .onReceive(NotificationCenter.default.publisher(for: .openSignUpDoor)) { _ in signingUp = true }
+            .onReceive(NotificationCenter.default.publisher(for: .openSignInSheet)) { _ in signingIn = true }
 
             if showSplash {
                 SplashScreen()
@@ -450,28 +312,7 @@ struct RootView: View {
         }
         .onAppear {
             #if DEBUG
-            if isDemoScreen("--demo-savings") || isDemoScreen("--demo-receipt") { DemoSavings.seed() }
-            // The two messages that appear without being asked for, so they can be looked at.
-            if isDemoScreen("--demo-link-problem") {
-                authManager.linkProblem = L10n.string("That link has expired or was already used. Ask for a new one.")
-            }
-            // A Pause Plan already running, on whichever screen is opened: Home's row, the Insights
-            // card and the subscription's own row all change when one is.
-            if isDemoScreen("--demo-plan-active") {
-                Task {
-                    guard PausePlanStore.shared.activePlan == nil else { return }
-                    let rotating = SubscriptionStore.shared.subscriptions.filter { PausePlanSchedule.isEligible($0) && $0.status != .cancelled }
-                    await PausePlanStore.shared.start(order: PausePlanSchedule.suggestedOrder(rotating, now: Date()))
-                }
-            }
-            // What the first-run slip could not fit under the free limit, waiting for a place.
-            if isDemoScreen("--demo-waiting") { TallyImporter.keepWaitingForDemo() }
-            if isDemoScreen("--demo-notice") {
-                Task {
-                    try? await Task.sleep(for: .seconds(2))
-                    SubscriptionStore.shared.lastErrorMessage = L10n.string("Saved on this iPhone. It hasn't reached your account yet. Pausely will keep trying.")
-                }
-            }
+            DebugLaunchRouter.applyDemoModifiers(authManager: authManager)
             #endif
         }
         .onChange(of: scenePhase) { _, phase in
@@ -490,6 +331,8 @@ struct RootView: View {
                     await SubscriptionLifecycle.shared.run()
                     // Changes that couldn't be sent earlier go now, without waiting for a pull to refresh.
                     await SubscriptionStore.shared.sync.drain(force: true)
+                    await LifecycleSync.shared.sync()
+                    await PausePlanSync.shared.sync()
                     // An app left open for days still converts at today's rates (asks at most hourly).
                     await CurrencyManager.shared.refreshRatesWhenDue()
                     // A subscription that ended or was refunded while the app was in the background stops
@@ -613,6 +456,13 @@ struct WelcomeFlow: View {
                 Button(action: { showSignIn = true }) { Text("I already have an account") }
                     .buttonStyle(.ink(.quiet))
                     .accessibilityIdentifier("signInButton")
+                Button(action: { AuthManager.shared.enterGuestMode() }) {
+                    Text("Continue without an account")
+                        .font(.footnote.weight(.medium))
+                        .foregroundStyle(Color.inkTextMuted)
+                        .frame(maxWidth: .infinity, minHeight: Layout.tapTarget)
+                }
+                .accessibilityIdentifier("welcomeGuestButton")
                 #if DEBUG
                 // Debug builds only (never in the App Store build): the app without an account.
                 if !LaunchFlag.uiTesting.isSet {
@@ -647,14 +497,3 @@ struct WelcomeFlow: View {
         .accessibilityElement(children: .combine)
     }
 }
-
-#if DEBUG
-/// `--demo-tier`: the plan sheet for Netflix.
-private struct DemoTierSheet: View {
-    var body: some View {
-        if let entry = SubscriptionCatalogService.shared.entry(named: "Netflix") {
-            CatalogAddSheet(entry: entry) { _, _, _, _ in }
-        }
-    }
-}
-#endif
