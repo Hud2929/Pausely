@@ -221,6 +221,45 @@ Open after it:
 - The tour's iPad demo presentation keeps dead margins (B5).
 - Everything a device or a native reader must judge.
 
+**Fifth rating (2026-11-23, two fresh Fable raters): consumer 8.0, reach ceilings 9.0 to 9.5 on most states**
+(lowest 7.0, the "Other email" form with Arabic as the phone's language). 22 of 22 found, no decoy shown.
+Fixed after it:
+- Kept for later, now everywhere:
+  - When the free list has room, Home offers what was kept for later ("There's room for …", Add: the most
+    expensive first), and Find in Email makes those rows choices again.
+  - The outcome counts everything waiting, from this add and earlier ones, and Home redraws as soon as the
+    waiting list changes.
+  - Disconnect says that what was added or kept for later stays.
+- On the results:
+  - A listed subscription's "use the receipts" is on its row, not inside "why".
+  - "why" says "The last 5 of 6 charges".
+  - Ticks are kept on the phone across a relaunch.
+  - An opened "why" scrolls only as far as it must.
+  - Undo notes clear when the inbox or the search changes.
+  - Disconnecting says so at the top of the page.
+  - "Search again" sits beside "Stopped early"; a search with no new mail says "No new email since the last
+    search".
+  - A search that couldn't read an inbox says so above what is shown, with Reconnect, and is announced.
+  - The outcome starts at its title.
+- Copy and layout:
+  - "Add another inbox" appears once on "nothing found", and the list's heading is read before "Select all".
+  - At the largest text "From your receipts" (was "Worth knowing") comes after the rows.
+  - "Receipts that say only “$”" is a label whose value is the dollar's name and the control.
+  - "The free plan tracks 5" replaces "Free tracks 5"; a single add says "It now shows…".
+  - A converted total says "≈ converted to CAD"; a search names a custom server's inbox by its address.
+- Arabic:
+  - "imap." is isolated left to right, in « ».
+  - "رسوم" replaces "خصومات", which reads as discounts.
+- The IMAP fields: with Arabic as the phone's language, a port or server of digits and dots was invisible
+  while edited. Set at the left edge, it shows (forcing the SwiftUI direction did nothing).
+
+Open after it:
+- The system paste button (41×34 pt) and toolbar Close hit areas are the system's.
+- The dollar menu is not mirrored when Arabic is chosen only in the app (a system menu takes the phone's
+  direction).
+- The Arabic yearly total may part from its "ر.س." at the largest size (by design, `partsThatMayPart`).
+- VoiceOver, the system audit and the Arabic wording need a device and a native reader.
+
 ## Real accounts, real subscriptions, and Outlook (plan of 2026-11-18)
 
 The owner asked: fix the import from email, make sure every way in works and pulls real

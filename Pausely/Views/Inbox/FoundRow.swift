@@ -15,6 +15,8 @@ struct FoundRow: View {
     var isOnList: Bool = false
     /// Waiting for room on the free list from an earlier add.
     var isWaiting: Bool = false
+    /// Kept for later from an earlier add, and there is room for it now.
+    var keptForLater: Bool = false
     /// The same subscription on the person's list, if it is there.
     var listed: Subscription? = nil
     /// Puts the receipts' price, and their renewal day where the list has none, on the listed one: offered
@@ -37,6 +39,7 @@ struct FoundRow: View {
     /// went up" read as a doubt about a fact (the rating of 2026-11-23).
     private var badge: (text: String, state: MoneyState?, symbol: String?)? {
         if isWaiting, !found.isCancelled { return (L10n.string("Waiting for room on your list"), nil, nil) }
+        if keptForLater, !found.isCancelled { return (L10n.string("Kept for later, and there's room now"), nil, nil) }
         if isOnList, !found.isCancelled {
             if let listedPrice = Self.listedPrice(listed, for: found) { return (L10n.string("On your list at \(listedPrice)"), nil, nil) }
             if Self.fillsDate(listed, for: found) { return (L10n.string("On your list without a renewal date"), nil, nil) }
@@ -198,10 +201,31 @@ struct FoundRow: View {
             }
             .padding(.vertical, 10)
 
+            // On the row, not inside its "why": a listed price or a missing day the receipts can fix was found
+            // only by opening "why" (the rating of 2026-11-23).
+            if let onUseReceipts, let label = Self.useReceiptsLabel(listed, for: found) {
+                Button(action: onUseReceipts) {
+                    Text(verbatim: label)
+                        .font(.subheadline.weight(.semibold))
+                        .foregroundStyle(Color.inkText)
+                        .multilineTextAlignment(.leading)
+                        .fixedSize(horizontal: false, vertical: true)
+                        .tapArea(.leading)
+                }
+                .buttonStyle(.plain)
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .padding(.leading, Self.reasonsInset(largeText: typeSize.isAccessibilitySize))
+                .padding(.bottom, 6)
+                .accessibilityIdentifier("updateListedPrice")
+            }
+
             if isExpanded { evidenceDetail.id("why-\(found.id)") }
         }
         .id("row-\(found.id)")
     }
+
+    /// How many of its charges a row's "why" lists, the latest first.
+    nonisolated static let chargesShown = 5
 
     /// The most of the row's width the price may take while the words wrap beside it.
     nonisolated static let priceShare: CGFloat = 0.35
@@ -353,19 +377,6 @@ struct FoundRow: View {
     /// Why Pausely thinks so, and the charges it read: the proof behind the line.
     private var evidenceDetail: some View {
         VStack(alignment: .leading, spacing: 10) {
-            // The list's price or renewal day differs from the receipts': said on the row, and here the way to
-            // fix it. The difference was shown with nothing to do about it (the rating of 2026-11-22).
-            if let onUseReceipts, let label = Self.useReceiptsLabel(listed, for: found) {
-                Button(action: onUseReceipts) {
-                    Text(verbatim: label)
-                        .font(.subheadline.weight(.semibold))
-                        .foregroundStyle(Color.inkText)
-                        .multilineTextAlignment(.leading)
-                }
-                .buttonStyle(.plain)
-                .tapArea(.leading)
-                .accessibilityIdentifier("updateListedPrice")
-            }
             ForEach(Array(proven.reasons.enumerated()), id: \.offset) { _, reason in
                 HStack(alignment: .firstTextBaseline, spacing: 8) {
                     Text(verbatim: "·").foregroundStyle(Color.inkTextFaint).accessibilityHidden(true)
@@ -377,7 +388,14 @@ struct FoundRow: View {
             }
             if !proven.evidence.isEmpty {
                 VStack(alignment: .leading, spacing: typeSize.isAccessibilitySize ? 12 : 6) {
-                    ForEach(proven.evidence.suffix(5).reversed()) { charge in
+                    // Which charges these are: "Charged 6 times" stood over five lines (the rating of 2026-11-23).
+                    if proven.evidence.count > Self.chargesShown {
+                        Text("The last \(Self.chargesShown) of \(proven.evidence.count) charges")
+                            .font(.footnote)
+                            .foregroundStyle(Color.inkTextMuted)
+                            .fixedSize(horizontal: false, vertical: true)
+                    }
+                    ForEach(proven.evidence.suffix(Self.chargesShown).reversed()) { charge in
                         // A day and what was charged on it: on a line while both fit, the amount
                         // under its day when they do not. Side by side at the largest text size
                         // the day took three lines and the amount lost its last digit to a

@@ -4,8 +4,12 @@ import SwiftUI
 /// search, after one that found nothing, and under the results.
 struct InboxRows: View {
     @ObservedObject var scanner: InboxScanner
+    /// Whether "Add another inbox" ends the list: not where the page's main button already says it.
+    var showsAdd = true
     let onReconnect: (MailboxAccount) -> Void
     let onAdd: () -> Void
+    /// Told the address once an inbox is disconnected, so the page can say it was.
+    var onDisconnected: (String) -> Void = { _ in }
 
     var body: some View {
         VStack(spacing: 0) {
@@ -14,19 +18,26 @@ struct InboxRows: View {
                 TimelineView(.periodic(from: .now, by: 15)) { context in
                     InboxAccountRow(account: account, error: scanner.accountErrors[account.id], now: context.date,
                                     onReconnect: { onReconnect(account) },
-                                    onDisconnect: { Task { await scanner.disconnect(account) } })
+                                    onDisconnect: {
+                                        Task {
+                                            await scanner.disconnect(account)
+                                            onDisconnected(account.address)
+                                        }
+                                    })
                 }
                 Hairline()
             }
-            Button(action: onAdd) {
-                Label("Add another inbox", systemImage: "plus")
-                    .font(.body.weight(.medium))
-                    .foregroundStyle(Color.inkText)
-                    .frame(maxWidth: .infinity, minHeight: Layout.tapTarget, alignment: .leading)
-                    .contentShape(Rectangle())
+            if showsAdd {
+                Button(action: onAdd) {
+                    Label("Add another inbox", systemImage: "plus")
+                        .font(.body.weight(.medium))
+                        .foregroundStyle(Color.inkText)
+                        .frame(maxWidth: .infinity, minHeight: Layout.tapTarget, alignment: .leading)
+                        .contentShape(Rectangle())
+                }
+                .buttonStyle(.plain)
+                .accessibilityIdentifier("addInboxButton")
             }
-            .buttonStyle(.plain)
-            .accessibilityIdentifier("addInboxButton")
         }
     }
 }
@@ -129,7 +140,8 @@ struct InboxAccountRow: View {
         }
         .accessibilityIdentifier("inboxRow")
         .asksFirst(Text("Disconnect \(account.address)?"), isPresented: $asking,
-                   message: Text("Pausely signs out of this inbox and forgets what it found there. Subscriptions you added stay on your list.")) {
+                   // What stays is said: ones kept for later stayed on Home after "forgets what it found" (2026-11-23).
+                   message: Text("Pausely signs out of this inbox and forgets what it found there. Subscriptions you added, or kept for when there's room, stay.")) {
             Button("Disconnect", role: .destructive, action: onDisconnect)
             Button("Cancel", role: .cancel) {}
         }

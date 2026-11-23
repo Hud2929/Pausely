@@ -16,6 +16,9 @@ struct DashboardView: View {
     @State private var showingReceipt = false
     @State private var showingDates = false
     @State private var showingInbox = false
+    /// Read only so Home is drawn again when what waits for room changes: after an add that only kept
+    /// some for later, "isn't tracked" stayed until a relaunch (the rating of 2026-11-23).
+    @AppStorage(TallyImporter.waitingKey) private var waitingSaved: Data?
     @State private var showsYear = false
     @ScaledMetric(relativeTo: .largeTitle) private var numberSize: CGFloat = 52
     @Environment(\.dynamicTypeSize) private var typeSize
@@ -242,13 +245,21 @@ struct DashboardView: View {
             }
 
             if !waiting.isEmpty, !paymentManager.isUnlocked(.unlimitedSubscriptions) {
-                AttentionRow(state: nil, symbol: "eye.slash",
-                             title: waiting.count == 1
-                                ? L10n.string("\(waiting[0].name) isn't tracked")
-                                : L10n.string("\(waiting.count) of your subscriptions aren't tracked"),
-                             detail: L10n.string("Free tracks \(FreeTier.subscriptionLimit). Pausely Pro tracks all of them."),
-                             action: L10n.string("See Pro")) { showingPaywall = true }
-                    .accessibilityIdentifier("waitingRow")
+                // A place on the free list is offered to what waited for it: when one was freed, the row still
+                // said only "See Pro", and the next add took the place (the rating of 2026-11-23).
+                let room = FreeTier.room(in: store.subscriptions) > 0
+                let one = waiting.count == 1 ? waiting[0].name : nil
+                AttentionRow(state: nil, symbol: room ? "plus.circle" : "eye.slash",
+                             title: room ? one.map { L10n.string("There's room for \($0)") }
+                                            ?? L10n.string("There's room for some of the \(waiting.count) you kept for later")
+                                         : one.map { L10n.string("\($0) isn't tracked") }
+                                            ?? L10n.string("\(waiting.count) of your subscriptions aren't tracked"),
+                             detail: room ? L10n.string("The free plan tracks \(FreeTier.subscriptionLimit). Add what fits, most expensive first.")
+                                          : L10n.string("The free plan tracks \(FreeTier.subscriptionLimit). Pausely Pro tracks all of them."),
+                             action: room ? L10n.string("Add") : L10n.string("See Pro")) {
+                    if room { Task { await TallyImporter.importWaiting(into: store) } } else { showingPaywall = true }
+                }
+                .accessibilityIdentifier("waitingRow")
                 Hairline()
             }
 

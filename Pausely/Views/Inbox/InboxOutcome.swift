@@ -7,6 +7,9 @@ struct InboxOutcome: View {
     /// The person's list after the add, for the slip: three lines on an empty page didn't say what the
     /// add came to (the rating of 2026-11-23).
     let list: [Subscription]
+    /// Everything kept for when there's room, from this add and earlier ones: counted from this add alone,
+    /// "Waiting for room: 1" stood while two waited, and Home said two (the rating of 2026-11-23).
+    var waiting: [TallyLine] = TallyImporter.waitingLines()
     let onDone: () -> Void
     let onSeePro: () -> Void
 
@@ -19,21 +22,22 @@ struct InboxOutcome: View {
                 .accessibilityAddTraits(.isHeader)
                 .accessibilityIdentifier("importOutcomeTitle")
 
-            if !outcome.added.isEmpty || !outcome.waiting.isEmpty { slip }
+            if !outcome.added.isEmpty || !waiting.isEmpty { slip }
 
             VStack(alignment: .leading, spacing: 0) {
                 if !outcome.added.isEmpty {
-                    line(L10n.string("Each one now shows its next charge on Home."), names: outcome.added)
+                    line(outcome.added.count == 1 ? L10n.string("It now shows its next charge on Home.")
+                                                  : L10n.string("Each one now shows its next charge on Home."), names: outcome.added)
                 }
-                if !outcome.waiting.isEmpty {
+                if !waiting.isEmpty {
                     if !outcome.added.isEmpty { Hairline() }
                     // Where they are said too: they could only be found again inside Find in Email (2026-11-23).
-                    line(L10n.string("Waiting for room: \(outcome.waiting.count). Free tracks \(FreeTier.subscriptionLimit); Pausely Pro tracks all of them. Home shows them until then."),
-                                names: outcome.waiting)
+                    line(L10n.string("Waiting for room: \(waiting.count). The free plan tracks \(FreeTier.subscriptionLimit); Pausely Pro tracks all of them. Home shows them until then."),
+                                names: waiting.map(\.name))
                         .accessibilityIdentifier("importWaitingLine")
                 }
                 if !outcome.alreadyListed.isEmpty {
-                    if !outcome.added.isEmpty || !outcome.waiting.isEmpty { Hairline() }
+                    if !outcome.added.isEmpty || !waiting.isEmpty { Hairline() }
                     line(outcome.datesFilled.isEmpty
                                 ? L10n.string("Already on your list: \(outcome.alreadyListed.count).")
                                 : L10n.string("Already on your list: \(outcome.alreadyListed.count). Missing renewal dates were filled in from your emails."),
@@ -45,7 +49,7 @@ struct InboxOutcome: View {
                 Button(action: onDone) { Text("Done") }
                     .buttonStyle(.ink)
                     .accessibilityIdentifier("importDoneButton")
-                if !outcome.waiting.isEmpty {
+                if !waiting.isEmpty {
                     Button(action: onSeePro) { Text("See Pausely Pro") }
                         .buttonStyle(.ink(.quiet))
                         .accessibilityIdentifier("importSeeProButton")
@@ -73,7 +77,6 @@ struct InboxOutcome: View {
         let rates = CurrencyManager.shared.rates
         let charging = list.charging
         let added = charging.filter { sub in outcome.added.contains { ServiceName.same($0, sub.name) } }
-        let waiting = TallyImporter.waitingLines().filter { line in outcome.waiting.contains { ServiceName.same($0, line.name) } }
         let waitingMonthly = MoneyMath.total(waiting, in: currency, rates: rates, amount: { $0.yearlyCost / 12 }, currencyOf: \.currency)
         let foreign: (Subscription) -> Bool = { MoneyFormat.normalizedCode($0.currency) != MoneyFormat.normalizedCode(currency) }
         let converted = charging.contains(where: foreign)

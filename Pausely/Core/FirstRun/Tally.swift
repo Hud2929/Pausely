@@ -238,7 +238,7 @@ enum PendingTally {
 /// found. One path, so the free limit is handled the same way everywhere, and in the open.
 @MainActor
 enum TallyImporter {
-    private static let waitingKey = "first_run_tally_waiting"
+    static let waitingKey = "first_run_tally_waiting"
 
     /// What happened to each line, by name, so the screen can say it.
     struct Outcome: Equatable {
@@ -338,7 +338,8 @@ enum TallyImporter {
 }
 
 extension TallyImporter {
-    /// After Pro starts: the lines that were waiting join the list.
+    /// After Pro starts, or when a place on the free list is free (Home offers it): the lines that were
+    /// waiting join the list, as many as fit and the most expensive first; the rest keep waiting.
     static func importWaiting(into store: SubscriptionStore, defaults: UserDefaults = .standard) async {
         let lines = waitingLines(defaults: defaults)
         guard !lines.isEmpty else { return }

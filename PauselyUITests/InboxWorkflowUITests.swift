@@ -120,7 +120,7 @@ final class InboxWorkflowUITests: XCTestCase {
         let overLimit = limitNote.exists
         app.swipeUp()
         snap("5-results-list")
-        if overLimit { XCTAssertTrue(limitNote.label.contains("Free tracks"), limitNote.label) }
+        if overLimit { XCTAssertTrue(limitNote.label.contains("The free plan tracks"), limitNote.label) }
 
         // 5. Add. The screen says what was added and what waits; nothing is dropped unsaid.
         importButton.tap()

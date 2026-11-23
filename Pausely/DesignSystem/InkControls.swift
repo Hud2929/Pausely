@@ -19,6 +19,11 @@ struct InkTextField: View {
     var isSecure: Bool = false
     var keyboardType: UIKeyboardType = .default
     var autocapitalization: TextInputAutocapitalization = .sentences
+    /// For text that is written left to right in every language: an address, a server, a port, a password.
+    /// In a right-to-left layout a field holding only digits and dots (no letter to give it a direction)
+    /// showed nothing while it was edited: "1148" typed into the port was invisible (the reach rating of
+    /// 2026-11-23, iPhone with Arabic as its language). Set at the left edge, it shows.
+    var leftToRight = false
 
     @FocusState private var isFocused: Bool
 
@@ -30,6 +35,7 @@ struct InkTextField: View {
                 TextField(text: $text, prompt: placeholder.isEmpty ? nil : Hint.text(placeholder)) { EmptyView() }
             }
         }
+        .modifier(WrittenLeftToRight(when: leftToRight))
         .font(.body)
         .foregroundStyle(Color.inkText)
         .tint(Color.inkText)
@@ -47,6 +53,18 @@ struct InkTextField: View {
         .keyboardType(keyboardType)
         .textInputAutocapitalization(autocapitalization)
         .animation(Motion.unlessReduced(Motion.touch), value: isFocused)
+    }
+}
+
+/// Sets a field's text at the left edge when its text is always written left to right. The system field
+/// takes its own direction from the app, not from SwiftUI's environment (forcing that changed nothing), so
+/// in a right-to-left layout the left edge is asked for as the trailing one.
+private struct WrittenLeftToRight: ViewModifier {
+    let when: Bool
+    @Environment(\.layoutDirection) private var direction
+
+    func body(content: Content) -> some View {
+        if when { content.multilineTextAlignment(direction == .rightToLeft ? .trailing : .leading) } else { content }
     }
 }
 

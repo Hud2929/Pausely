@@ -107,3 +107,28 @@ struct InboxProviderList: View {
         }
     }
 }
+
+/// "Add an inbox", over the page that already has one: the same list, in a sheet of its own.
+struct ProviderSheet: View {
+    let onChoose: () -> Void
+    let onAppPassword: (IMAPPreset?) -> Void
+    let onCancel: () -> Void
+
+    var body: some View {
+        NavigationStack {
+            ScrollView {
+                InboxProviderList(onChoose: onChoose, onAppPassword: onAppPassword).padding(Layout.margin)
+            }
+            .readableScroll()
+            .background(Color.ink.ignoresSafeArea())
+            .navigationTitle("Add an inbox")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .topBarLeading) {
+                    Button("Cancel", action: onCancel).foregroundStyle(Color.inkText)
+                }
+            }
+        }
+        .presentationDetents([.large])
+    }
+}

@@ -26,6 +26,12 @@ struct MailboxAccount: Codable, Identifiable, Hashable {
         case .imap: return IMAPPreset.find(presetID)?.name ?? host ?? L10n.string("Email")
         }
     }
+
+    /// What a running search calls this inbox: its provider, or its address where the provider would only be
+    /// a server's name ("Read 41 of 111 in 127.0.0.1", the rating of 2026-11-23).
+    var searchName: String {
+        kind == .imap && IMAPPreset.find(presetID) == nil ? address : providerName
+    }
 }
 
 // MARK: - IMAP presets

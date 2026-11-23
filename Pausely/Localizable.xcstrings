@@ -10435,40 +10435,6 @@
         }
       }
     },
-    "Worth knowing": {
-      "localizations": {
-        "ar": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "جدير بالمعرفة"
-          }
-        },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Gut zu wissen"
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Conviene saber"
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Bon à savoir"
-          }
-        },
-        "ja": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "知っておきたいこと"
-          }
-        }
-      }
-    },
     "Deselect all": {
       "localizations": {
         "ar": {
@@ -27059,40 +27025,6 @@
         }
       }
     },
-    "Free tracks %lld and your list is full. What you add now will wait until you make room or go Pro.": {
-      "localizations": {
-        "ar": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "النسخة المجانية تتابع %lld اشتراكات وقائمتك ممتلئة. ما تضيفه الآن سينتظر حتى تفسح مكانًا أو تشترك في Pro."
-          }
-        },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Kostenlos werden %lld erfasst, und Ihre Liste ist voll. Was Sie jetzt hinzufügen, wartet, bis Sie Platz schaffen oder Pro nutzen."
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "La versión gratuita sigue %lld y tu lista está llena. Lo que añadas ahora esperará hasta que hagas sitio o pases a Pro."
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "La version gratuite en suit %lld et votre liste est pleine. Ce que vous ajoutez maintenant attendra que vous fassiez de la place ou passiez à Pro."
-          }
-        },
-        "ja": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "無料版で管理できるのは%lld件までで、リストはいっぱいです。今追加したものは、空きを作るかProにするまで待機します。"
-          }
-        }
-      }
-    },
     "Free tracks %lld, the most expensive first. The rest wait until you make room or go Pro.": {
       "localizations": {
         "ar": {
@@ -28916,7 +28848,7 @@
         "ar": {
           "stringUnit": {
             "state": "translated",
-            "value": "مرسلون آخرون بخصومات لا تبدو اشتراكات: %lld"
+            "value": "مرسلون آخرون برسوم لا تبدو اشتراكات: %lld"
           }
         },
         "de": {
@@ -29849,40 +29781,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "接続するにはプロバイダのIMAPサーバーを入力してください。"
-          }
-        }
-      }
-    },
-    "Pausely signs out of this inbox and forgets what it found there. Subscriptions you added stay on your list.": {
-      "localizations": {
-        "ar": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "يسجّل Pausely الخروج من هذا البريد وينسى ما وجده فيه. تبقى الاشتراكات التي أضفتها في قائمتك."
-          }
-        },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Pausely meldet sich von diesem Postfach ab und vergisst, was es dort gefunden hat. Abos, die Sie hinzugefügt haben, bleiben in Ihrer Liste."
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Pausely cierra la sesión de este buzón y olvida lo que encontró en él. Las suscripciones que añadiste siguen en tu lista."
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Pausely se déconnecte de cette boîte et oublie ce qu’il y a trouvé. Les abonnements que vous avez ajoutés restent dans votre liste."
-          }
-        },
-        "ja": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Pauselyはこの受信箱からサインアウトし、そこで見つけた内容を消去します。追加したサブスクはリストに残ります。"
           }
         }
       }
@@ -31007,74 +30905,6 @@
         }
       }
     },
-    "Receipts that say only “$” are counted as %@.": {
-      "localizations": {
-        "ar": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "الإيصالات التي لا تذكر إلا «$» تُحتسب %@."
-          }
-        },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Belege, die nur „$“ nennen, werden als %@ gezählt."
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Los recibos que solo dicen «$» se cuentan como %@."
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Les reçus qui n’indiquent que « $ » sont comptés en %@."
-          }
-        },
-        "ja": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "「$」としか書かれていない領収書は%@として数えます。"
-          }
-        }
-      }
-    },
-    "Change which dollar": {
-      "localizations": {
-        "ar": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "تغيير نوع الدولار"
-          }
-        },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Dollar ändern"
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Cambiar de dólar"
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Changer de dollar"
-          }
-        },
-        "ja": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "ドルの種類を変更"
-          }
-        }
-      }
-    },
     "For the %lld not on your list yet": {
       "localizations": {
         "ar": {
@@ -31139,74 +30969,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "%1$lld件を追加、%2$lld件は待機"
-          }
-        }
-      }
-    },
-    "Free tracks %lld. Added now, most expensive first: %@.": {
-      "localizations": {
-        "ar": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "النسخة المجانية تتابع %1$lld. يُضاف الآن، الأغلى أولًا: %2$@."
-          }
-        },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Free verfolgt %1$lld. Jetzt hinzugefügt, die teuersten zuerst: %2$@."
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Free sigue %1$lld. Se añaden ahora, primero las más caras: %2$@."
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Free suit %1$lld. Ajoutés maintenant, les plus chers d’abord : %2$@."
-          }
-        },
-        "ja": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "無料版で管理できるのは%1$lld件です。今回追加（高い順）：%2$@。"
-          }
-        }
-      }
-    },
-    "Change": {
-      "localizations": {
-        "ar": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "تغيير"
-          }
-        },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Ändern"
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Cambiar"
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Modifier"
-          }
-        },
-        "ja": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "変更"
           }
         }
       }
@@ -31783,40 +31545,6 @@
         }
       }
     },
-    "Waiting for room: %lld. Free tracks %lld; Pausely Pro tracks all of them. Home shows them until then.": {
-      "localizations": {
-        "ar": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "بانتظار مكان: %1$lld. النسخة المجانية تتابع %2$lld؛ و Pausely Pro يتابعها كلها. تظهر في الرئيسية حتى ذلك الحين."
-          }
-        },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Warten auf Platz: %1$lld. Kostenlos werden %2$lld erfasst; Pausely Pro erfasst alle. Bis dahin zeigt „Start“ sie an."
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Esperando sitio: %1$lld. La versión gratuita sigue %2$lld; Pausely Pro las sigue todas. Hasta entonces, Inicio las muestra."
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "En attente de place : %1$lld. La version gratuite en suit %2$lld ; Pausely Pro les suit tous. D’ici là, l’Accueil les affiche."
-          }
-        },
-        "ja": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "空き待ち: %1$lld件。無料版は%2$lld件まで、Pausely Proならすべて管理できます。それまではホームに表示されます。"
-          }
-        }
-      }
-    },
     "Just added, each month": {
       "localizations": {
         "ar": {
@@ -31924,7 +31652,7 @@
         "ar": {
           "stringUnit": {
             "state": "translated",
-            "value": "تذكر صفحات المساعدة لدى مزوّدك خادم IMAP الخاص به، وعادةً يكون “imap.” متبوعًا بنطاقه. يتصل Pausely عبر اتصال مشفر فقط (IMAP مع SSL/TLS، عادةً المنفذ 993)."
+            "value": "تذكر صفحات المساعدة لدى مزوّدك خادم IMAP الخاص به، وعادةً يكون «⁦imap.⁩» متبوعًا بنطاقه. يتصل Pausely عبر اتصال مشفر فقط (IMAP مع SSL/TLS، عادةً المنفذ 993)."
           }
         },
         "de": {
@@ -31983,6 +31711,696 @@
           "stringUnit": {
             "state": "translated",
             "value": "空き待ち、毎月"
+          }
+        }
+      }
+    },
+    "%@ couldn't be searched: %@ What's below is from earlier searches.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "تعذّر البحث في %1$@: %2$@ ما يظهر أدناه من عمليات بحث سابقة."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ konnte nicht durchsucht werden: %2$@ Was unten steht, stammt aus früheren Suchen."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No se pudo buscar en %1$@: %2$@ Lo que ves abajo es de búsquedas anteriores."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Impossible de rechercher dans %1$@ : %2$@ Ce qui suit vient de recherches précédentes."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@を検索できませんでした：%2$@ 以下は以前の検索結果です。"
+          }
+        }
+      }
+    },
+    "%@ is disconnected.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "تم فصل %@."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ ist getrennt."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ está desconectado."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ est déconnecté."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@の接続を解除しました。"
+          }
+        }
+      }
+    },
+    "Add": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "إضافة"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hinzufügen"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Añadir"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ajouter"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "追加"
+          }
+        }
+      }
+    },
+    "From your receipts": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "من إيصالاتك"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aus Ihren Belegen"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Según tus recibos"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "D’après vos reçus"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "領収書から"
+          }
+        }
+      }
+    },
+    "It now shows its next charge on Home.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "يظهر الآن موعد الخصم التالي له في الصفحة الرئيسية."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Es zeigt jetzt seine nächste Abbuchung unter „Start“."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ahora muestra su próximo cargo en Inicio."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Il affiche désormais son prochain prélèvement dans l’Accueil."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "次回の請求日がホームに表示されます。"
+          }
+        }
+      }
+    },
+    "Kept for later, and there's room now": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "محفوظ لوقت لاحق، وهناك مكان الآن"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Für später aufgehoben, jetzt ist Platz"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Guardada para después, y ahora hay sitio"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Gardé pour plus tard, et il y a de la place"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "保留中・今なら追加できます"
+          }
+        }
+      }
+    },
+    "No new email since the last search · all on your phone": {
+      "localizations": {
+        "en": {
+          "variations": {
+            "device": {
+              "ipad": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "No new email since the last search · all on your iPad"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "No new email since the last search · all on your phone"
+                }
+              }
+            }
+          }
+        },
+        "ar": {
+          "variations": {
+            "device": {
+              "ipad": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "لا بريد جديد منذ آخر بحث · كل ذلك على الـ iPad"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "لا بريد جديد منذ آخر بحث · كل ذلك على هاتفك"
+                }
+              }
+            }
+          }
+        },
+        "de": {
+          "variations": {
+            "device": {
+              "ipad": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Keine neue E-Mail seit der letzten Suche · alles auf Ihrem iPad"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Keine neue E-Mail seit der letzten Suche · alles auf Ihrem Telefon"
+                }
+              }
+            }
+          }
+        },
+        "es": {
+          "variations": {
+            "device": {
+              "ipad": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Ningún correo nuevo desde la última búsqueda · todo en tu iPad"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Ningún correo nuevo desde la última búsqueda · todo en tu teléfono"
+                }
+              }
+            }
+          }
+        },
+        "fr": {
+          "variations": {
+            "device": {
+              "ipad": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Aucun nouvel e-mail depuis la dernière recherche · tout sur votre iPad"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Aucun nouvel e-mail depuis la dernière recherche · tout sur votre téléphone"
+                }
+              }
+            }
+          }
+        },
+        "ja": {
+          "variations": {
+            "device": {
+              "ipad": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "前回の検索以降、新しいメールはありません · すべて端末内で処理"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "前回の検索以降、新しいメールはありません · すべて端末内で処理"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "Pausely signs out of this inbox and forgets what it found there. Subscriptions you added, or kept for when there's room, stay.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "يسجّل Pausely الخروج من هذا البريد وينسى ما وجده فيه. تبقى الاشتراكات التي أضفتها أو احتفظت بها لحين توفر مكان."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pausely meldet sich von diesem Postfach ab und vergisst, was es dort gefunden hat. Abos, die Sie hinzugefügt oder für später aufgehoben haben, bleiben."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pausely cierra la sesión de este buzón y olvida lo que encontró en él. Las suscripciones que añadiste o guardaste para cuando haya sitio se quedan."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pausely se déconnecte de cette boîte et oublie ce qu’il y a trouvé. Les abonnements que vous avez ajoutés ou gardés pour plus tard restent."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pauselyはこの受信箱からサインアウトし、そこで見つけた内容を消去します。追加したサブスクと、空き待ちで保留したサブスクは残ります。"
+          }
+        }
+      }
+    },
+    "Receipts that say only “$”": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "الإيصالات التي تذكر «$» فقط"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Belege, die nur „$“ angeben"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Recibos que solo dicen «$»"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reçus qui indiquent seulement « $ »"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "「$」とだけ書かれた領収書"
+          }
+        }
+      }
+    },
+    "The free plan tracks %lld and your list is full. What you add now waits, and Home offers it when there's room.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "الخطة المجانية تتابع %lld وقائمتك ممتلئة. ما تضيفه الآن ينتظر، وتعرضه عليك الصفحة الرئيسية عند توفر مكان."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Der kostenlose Plan erfasst %lld, und Ihre Liste ist voll. Was Sie jetzt hinzufügen, wartet, und „Start“ bietet es an, sobald Platz ist."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "El plan gratuito sigue %lld y tu lista está llena. Lo que añadas ahora espera, e Inicio te lo ofrece cuando haya sitio."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Le forfait gratuit en suit %lld et votre liste est pleine. Ce que vous ajoutez maintenant attend, et l’Accueil vous le propose dès qu’il y a de la place."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "無料プランは%lld件までで、リストはいっぱいです。今追加するものは保留され、空きができるとホームに表示されます。"
+          }
+        }
+      }
+    },
+    "The free plan tracks %lld. Add what fits, most expensive first.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "الخطة المجانية تتابع %lld. أضف ما يتسع له المكان، الأغلى أولًا."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Der kostenlose Plan erfasst %lld. Fügen Sie hinzu, was passt, das Teuerste zuerst."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "El plan gratuito sigue %lld. Añade lo que quepa, primero lo más caro."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Le forfait gratuit en suit %lld. Ajoutez ce qui tient, le plus cher d’abord."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "無料プランは%lld件まで。入る分を、高い順に追加します。"
+          }
+        }
+      }
+    },
+    "The free plan tracks %lld. Added now, most expensive first: %@.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "الخطة المجانية تتابع %1$lld. يُضاف الآن، الأغلى أولًا: %2$@."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Der kostenlose Plan erfasst %1$lld. Jetzt hinzugefügt, die teuersten zuerst: %2$@."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "El plan gratuito sigue %1$lld. Se añaden ahora, primero las más caras: %2$@."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Le forfait gratuit en suit %1$lld. Ajoutés maintenant, les plus chers d’abord : %2$@."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "無料プランで管理できるのは%1$lld件です。今回追加（高い順）：%2$@。"
+          }
+        }
+      }
+    },
+    "The free plan tracks %lld. Pausely Pro tracks all of them.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "الخطة المجانية تتابع %lld، أما Pausely Pro فيتابعها كلها."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Der kostenlose Plan erfasst %lld. Pausely Pro erfasst alle."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "El plan gratuito sigue %lld. Pausely Pro las sigue todas."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Le forfait gratuit en suit %lld. Pausely Pro les suit tous."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "無料プランは%lld件まで。Pausely Proならすべて管理できます。"
+          }
+        }
+      }
+    },
+    "The last %lld of %lld charges": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "آخر %1$lld من أصل %2$lld عمليات خصم"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Die letzten %1$lld von %2$lld Abbuchungen"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Los últimos %1$lld de %2$lld cargos"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Les %1$lld derniers sur %2$lld prélèvements"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%2$lld件の請求のうち直近%1$lld件"
+          }
+        }
+      }
+    },
+    "There's room for %@": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "هناك مكان لـ %@"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Jetzt ist Platz für %@"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hay sitio para %@"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Il y a de la place pour %@"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@を追加できる空きがあります"
+          }
+        }
+      }
+    },
+    "There's room for some of the %lld you kept for later": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "هناك مكان لبعض ما احتفظت به لوقت لاحق (%lld)"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Jetzt ist Platz für einige der %lld, die Sie für später aufgehoben haben"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hay sitio para algunas de las %lld que guardaste para después"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Il y a de la place pour certains des %lld que vous avez gardés pour plus tard"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "保留中の%lld件の一部を追加できる空きがあります"
+          }
+        }
+      }
+    },
+    "Waiting for room: %lld. The free plan tracks %lld; Pausely Pro tracks all of them. Home shows them until then.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "بانتظار مكان: %1$lld. الخطة المجانية تتابع %2$lld، أما Pausely Pro فيتابعها كلها. تظهر في الرئيسية حتى ذلك الحين."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Warten auf Platz: %1$lld. Der kostenlose Plan erfasst %2$lld; Pausely Pro erfasst alle. Bis dahin zeigt „Start“ sie an."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Esperando sitio: %1$lld. El plan gratuito sigue %2$lld; Pausely Pro las sigue todas. Hasta entonces, Inicio las muestra."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "En attente de place : %1$lld. Le forfait gratuit en suit %2$lld ; Pausely Pro les suit tous. D’ici là, l’Accueil les affiche."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "空き待ち: %1$lld件。無料プランは%2$lld件まで、Pausely Proならすべて管理できます。それまではホームに表示されます。"
+          }
+        }
+      }
+    },
+    "≈ converted to %@": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "≈ محوّل إلى %@"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "≈ umgerechnet in %@"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "≈ convertido a %@"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "≈ converti en %@"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "≈ %@に換算"
           }
         }
       }

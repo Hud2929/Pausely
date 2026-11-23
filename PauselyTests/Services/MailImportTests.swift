@@ -97,6 +97,25 @@ final class MailImportTests: XCTestCase {
                        "a line that waited keeps the date from its receipts")
     }
 
+    /// A place freed on the free list goes to what was kept for later, the most expensive first, and the rest
+    /// keep waiting: the place went to the next add while two waited (the rating of 2026-11-23).
+    func testAFreedPlaceGoesToWhatWaitedForIt() async throws {
+        for index in 1...FreeTier.subscriptionLimit {
+            _ = try await store.addSubscription(TestFactories.makeSubscription(name: "Existing \(index)", amount: 5, billingFrequency: .monthly))
+        }
+        await TallyImporter.add([line("Amazon Prime", "14.99"), line("Adobe", "239.88", .yearly)], into: store, defaults: defaults)
+        XCTAssertEqual(Set(TallyImporter.waitingLines(defaults: defaults).map(\.name)), ["Amazon Prime", "Adobe"])
+
+        let freed = try XCTUnwrap(store.subscriptions.first { $0.name == "Existing 1" })
+        await store.deleteSubscription(id: freed.id)
+        XCTAssertEqual(FreeTier.room(in: store.subscriptions), 1)
+        await TallyImporter.importWaiting(into: store, defaults: defaults)
+
+        XCTAssertTrue(store.subscriptions.contains { $0.name == "Adobe" }, "the most expensive takes the place")
+        XCTAssertEqual(TallyImporter.waitingLines(defaults: defaults).map(\.name), ["Amazon Prime"], "the other keeps waiting")
+        XCTAssertEqual(store.subscriptions.count, FreeTier.subscriptionLimit)
+    }
+
     func testAnEarlierWaitingLineIsKeptWhenMoreAreAdded() async throws {
         for index in 1...FreeTier.subscriptionLimit {
             _ = try await store.addSubscription(TestFactories.makeSubscription(name: "Existing \(index)", amount: 5, billingFrequency: .monthly))
@@ -420,6 +439,33 @@ final class MailImportTests: XCTestCase {
         XCTAssertNotNil(FoundRow.listedPrice(yearly, for: spotify), "another period is another price")
         XCTAssertEqual(FoundRow.updatedFromReceipts(yearly, by: spotify).billingFrequency, .monthly)
         XCTAssertEqual(FoundRow.updatedFromReceipts(yearly, by: spotify).nextBillingDate, day(2026, 11, 5))
+    }
+
+    /// What was ticked is kept on this iPhone: a relaunch ticked eleven the person had unticked (the rating of
+    /// 2026-11-23). Forgotten with the rest on sign-out.
+    @MainActor
+    func testTicksSurviveARelaunch() {
+        let scanner = InboxScanner.shared
+        let before = scanner.savedSelection
+        defer { scanner.savedSelection = before }
+        scanner.savedSelection = ["netflix|monthly|$", "adobe|yearly|USD"]
+        XCTAssertEqual(UserDefaults.standard.array(forKey: InboxScanner.selectionKey) as? [String], ["adobe|yearly|USD", "netflix|monthly|$"])
+        XCTAssertEqual(scanner.savedSelection, ["netflix|monthly|$", "adobe|yearly|USD"])
+        scanner.savedSelection = []
+        XCTAssertEqual(scanner.savedSelection, [], "nothing ticked is a choice too")
+        scanner.savedSelection = nil
+        XCTAssertNil(UserDefaults.standard.object(forKey: InboxScanner.selectionKey))
+        XCTAssertTrue(LocalUserData.personalKeys.contains(InboxScanner.selectionKey))
+    }
+
+    /// A running search names an inbox by its provider, or by its address where the provider would only be a
+    /// server ("Read 41 of 111 in 127.0.0.1", the rating of 2026-11-23).
+    func testASearchNamesAnInboxAPersonKnows() {
+        let custom = MailboxAccount(id: "a", kind: .imap, address: "me@corner.example", presetID: nil, host: "127.0.0.1", port: 1147, addedAt: Date())
+        XCTAssertEqual(custom.searchName, "me@corner.example")
+        let icloud = MailboxAccount(id: "b", kind: .imap, address: "me@icloud.com", presetID: "icloud", host: "imap.mail.me.com", port: 993, addedAt: Date())
+        XCTAssertEqual(icloud.searchName, icloud.providerName)
+        XCTAssertEqual(MailboxAccount(id: "c", kind: .gmail, address: "me@gmail.com", addedAt: Date()).searchName, "Gmail")
     }
 
     /// Words a subject starts with are never a sender's name: "Your" was listed among the other senders.

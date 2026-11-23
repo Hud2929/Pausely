@@ -62,9 +62,17 @@ final class InboxScanner: ObservableObject {
     /// first Gmail search is about six minutes on Google's quota for one person, and nothing said so.
     @Published private(set) var minutesLeft: Int?
     @Published var foundSubscriptions: [FoundSubscription] = []
-    /// What was ticked on the results, kept while the app runs: closing the page lost every tick (the
-    /// rating of 2026-11-22). Nil until the person has chosen; a new search starts over.
-    var savedSelection: Set<String>?
+    /// What was ticked on the results, kept on this iPhone: closing the page lost every tick (the rating of
+    /// 2026-11-22), and a relaunch ticked eleven the person had unticked (11-23). Nil until the person has
+    /// chosen; a new search starts over.
+    static let selectionKey = "inbox_ticked"
+    var savedSelection: Set<String>? {
+        get { (UserDefaults.standard.array(forKey: Self.selectionKey) as? [String]).map(Set.init) }
+        set {
+            if let newValue { UserDefaults.standard.set(newValue.sorted(), forKey: Self.selectionKey) }
+            else { UserDefaults.standard.removeObject(forKey: Self.selectionKey) }
+        }
+    }
     /// The dollar a receipt that says only "$" is taken as, when the person chose one.
     static let assumedDollarKey = "inbox_assumed_dollar"
     var assumedDollar: String {
@@ -261,6 +269,7 @@ final class InboxScanner: ObservableObject {
             report = nil
             stats = ScanStats()
             Self.saveStats(nil)
+            savedSelection = nil
         } else {
             reanalyze()
         }
@@ -279,6 +288,7 @@ final class InboxScanner: ObservableObject {
         report = nil
         stats = ScanStats()
         Self.saveStats(nil)
+        savedSelection = nil
         accountErrors = [:]
         #if DEBUG
         isShowingDemo = false
@@ -345,7 +355,7 @@ final class InboxScanner: ObservableObject {
 
         for (index, account) in accounts.enumerated() {
             if Task.isCancelled { break }
-            statusLine = L10n.string("Searching \(account.providerName)…")
+            statusLine = L10n.string("Searching \(account.searchName)…")
             do {
                 let (signals, accountStats) = try await scan(account, catalog: catalog, aiBudget: &aiBudget) { [weak self] fraction, line in
                     self?.progress = (Double(index) + fraction) / Double(total)
@@ -403,7 +413,7 @@ final class InboxScanner: ObservableObject {
             let (refs, nextCursor) = try await provider.candidates(plan: plan, cursor: cursor)
             accountStats.candidates = refs.count
             accountStats.capped = refs.count >= plan.maxCandidates
-            report(0.05, L10n.string("Checking \(L10n.string("\(refs.count) emails")) in \(account.providerName)…"))
+            report(0.05, L10n.string("Checking \(L10n.string("\(refs.count) emails")) in \(account.searchName)…"))
             // The bar follows requests: headers and bodies cost one each, and headers are most of them. Given
             // 15% of the bar, a real search crawled for minutes and then leapt (A12, 2026-11-22). The bodies to
             // read are projected from the headers checked so far, and the bar never goes back. Guessed at a
@@ -428,12 +438,12 @@ final class InboxScanner: ObservableObject {
                 expectedBodies = Self.projectedReads(wanted: wantedSoFar, checked: summaries.count, of: refs.count)
                 headerEnd = max(headerEnd, 0.05 + 0.9 * Double(summaries.count) / Double(max(refs.count + expectedBodies, 1)))
                 estimate(done: summaries.count, of: refs.count + expectedBodies)
-                report(headerEnd, L10n.string("Checked \(summaries.count) of \(refs.count) in \(account.providerName)"))
+                report(headerEnd, L10n.string("Checked \(summaries.count) of \(refs.count) in \(account.searchName)"))
             }
             accountStats.checked = summaries.count
             let wanted = Self.triage(summaries, catalog: catalog).prefix(Self.bodyBudget)
             if !wanted.isEmpty {
-                report(headerEnd, L10n.string("Reading \(L10n.string("\(wanted.count) emails")) from \(account.providerName)…"))
+                report(headerEnd, L10n.string("Reading \(L10n.string("\(wanted.count) emails")) from \(account.searchName)…"))
             }
 
             var signals: [ReceiptSignal] = []
@@ -466,7 +476,7 @@ final class InboxScanner: ObservableObject {
                     if offset % 10 == 0 {
                         estimate(done: refs.count + offset + 1, of: refs.count + wanted.count)
                         report(headerEnd + (0.95 - headerEnd) * Double(offset + 1) / Double(max(wanted.count, 1)),
-                               L10n.string("Read \(offset + 1) of \(wanted.count) in \(account.providerName)"))
+                               L10n.string("Read \(offset + 1) of \(wanted.count) in \(account.searchName)"))
                     }
                 }
             }

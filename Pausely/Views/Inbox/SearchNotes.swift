@@ -78,6 +78,81 @@ struct UndoNote: View {
     }
 }
 
+/// The search, as it happens: how far it is, what it is reading, and each receipt read printed on the slip,
+/// so the wait shows its work.
+struct SearchingSection: View {
+    @ObservedObject var scanner: InboxScanner
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 20) {
+            VStack(alignment: .leading, spacing: 10) {
+                Text("Searching your email")
+                    .font(.question(.title))
+                    .foregroundStyle(Color.inkText)
+                    .fixedSize(horizontal: false, vertical: true)
+                    .accessibilityAddTraits(.isHeader)
+                ProgressView(value: scanner.progress)
+                    .tint(Color.inkText)
+                    .accessibilityLabel(Text("Search progress"))
+                (scanner.statusLine.isEmpty ? Text("Connecting…") : Text(verbatim: scanner.statusLine))
+                    .font(.subheadline)
+                    .foregroundStyle(Color.inkTextMuted)
+                    .fixedSize(horizontal: false, vertical: true)
+                    .accessibilityIdentifier("scanStatus")
+                if let minutes = scanner.minutesLeft {
+                    Text("About \(minutes) min left. Keep Pausely open until it finishes.")
+                        .font(.subheadline)
+                        .foregroundStyle(Color.inkTextMuted)
+                        .fixedSize(horizontal: false, vertical: true)
+                        .accessibilityIdentifier("scanTimeLeft")
+                }
+            }
+
+            if !scanner.receiptsSeen.isEmpty {
+                ReceiptsSeenSlip(receipts: scanner.receiptsSeen)
+            }
+
+            Button(action: { scanner.cancelScan() }) { Text("Stop and show what's found") }
+                .buttonStyle(.ink(.quiet))
+                .accessibilityIdentifier("stopScanButton")
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+    }
+}
+
+/// The foot of the results slip: what the search read, all on the phone, and what it left unread.
+struct SearchFacts: View {
+    let stats: InboxScanner.ScanStats
+
+    var body: some View {
+        if stats.emailsChecked > 0 || stats.onlyNewMail { Perforation() }
+        if stats.emailsChecked > 0 || stats.onlyNewMail {
+            // A later search reads only new mail while the findings come from every search (T31). With none, it
+            // says so: the line vanished and the search said nothing (the rating of 2026-11-23).
+            Facts(!stats.onlyNewMail
+                  ? L10n.string("Emails checked: \(stats.emailsChecked) · read in full: \(stats.bodiesRead) · all on your phone")
+                  : stats.emailsChecked == 0 ? L10n.string("No new email since the last search · all on your phone")
+                  : L10n.string("New emails since the last search: \(stats.emailsChecked) · read in full: \(stats.bodiesRead) · all on your phone"))
+                .font(.proof(.caption))
+                .foregroundStyle(Color.paperMuted)
+                .fixedSize(horizontal: false, vertical: true)
+        }
+        // What was left unread is said, not left to be assumed (T4, T16).
+        if stats.stopped {
+            Text("Stopped early, so some emails weren't read. Search again to read them all.")
+                .font(.proof(.caption))
+                .foregroundStyle(Color.paperInk)
+                .fixedSize(horizontal: false, vertical: true)
+                .accessibilityIdentifier("searchStoppedNote")
+        } else if stats.capped {
+            Text("One search reads at most \(InboxSearchPlan.standardLimit) possible receipts, newest first; older ones weren't read.")
+                .font(.proof(.caption))
+                .foregroundStyle(Color.paperMuted)
+                .fixedSize(horizontal: false, vertical: true)
+        }
+    }
+}
+
 /// The search, as it happens: each receipt read is printed on the slip, so the wait shows its work.
 struct ReceiptsSeenSlip: View {
     let receipts: [ReceiptSeen]
@@ -212,15 +287,17 @@ struct DollarNote: View {
 
     static let choices = ["USD", "CAD", "AUD", "NZD", "SGD", "HKD"]
 
-    static func sentence(code: String, locale: Locale = L10n.locale) -> String {
-        let name = locale.localizedString(forCurrencyCode: code) ?? code
-        return L10n.string("Receipts that say only “$” are counted as \(name).")
+    /// The dollar's name in the reader's language ("US Dollar", "دولار أمريكي").
+    static func name(code: String, locale: Locale = L10n.locale) -> String {
+        locale.localizedString(forCurrencyCode: code) ?? code
     }
 
     var body: some View {
-        // Under its sentence at the accessibility text sizes: beside it, "Receipts" broke as "Re-ceipts" (2026-11-23).
+        // A label and its value, the value being the control: "are counted as US Dollar" was a sentence a
+        // currency's name could not finish (the rating of 2026-11-23). The value goes under its label at the
+        // accessibility text sizes: beside it, "Receipts" broke as "Re-ceipts".
         AdaptiveRow {
-            Text(verbatim: Self.sentence(code: code))
+            Text("Receipts that say only “$”")
                 .font(.subheadline)
                 .foregroundStyle(Color.inkTextMuted)
                 .fixedSize(horizontal: false, vertical: true)
@@ -230,20 +307,27 @@ struct DollarNote: View {
                 ForEach(Self.choices, id: \.self) { choice in
                     Button { onChoose(choice) } label: {
                         if choice == code {
-                            Label(L10n.locale.localizedString(forCurrencyCode: choice) ?? choice, systemImage: "checkmark")
+                            Label(Self.name(code: choice), systemImage: "checkmark")
                         } else {
-                            Text(verbatim: L10n.locale.localizedString(forCurrencyCode: choice) ?? choice)
+                            Text(verbatim: Self.name(code: choice))
                         }
                     }
                 }
             } label: {
-                Text("Change")
-                    .font(.subheadline.weight(.semibold))
-                    .foregroundStyle(Color.inkText)
-                    .frame(minWidth: Layout.tapTarget, minHeight: Layout.tapTarget)
-                    .contentShape(Rectangle())
+                HStack(spacing: 4) {
+                    Text(verbatim: Self.name(code: code))
+                        .font(.subheadline.weight(.semibold))
+                        .foregroundStyle(Color.inkText)
+                        .fixedSize(horizontal: false, vertical: true)
+                    Image(systemName: "chevron.up.chevron.down")
+                        .font(.caption.weight(.semibold))
+                        .foregroundStyle(Color.inkTextMuted)
+                        .accessibilityHidden(true)
+                }
+                .tapArea(.trailing)
             }
-            .accessibilityLabel(Text("Change which dollar"))
+            .accessibilityLabel(Text("Receipts that say only “$”"))
+            .accessibilityValue(Text(verbatim: Self.name(code: code)))
             .accessibilityIdentifier("dollarChoice")
         }
     }
@@ -311,7 +395,7 @@ struct OtherSenders: View {
     }
 }
 
-/// "Worth knowing": what the receipts say beyond the list (a price rise, a trial ending, a charge after a
+/// "From your receipts": what the receipts say beyond the list (a price rise, a trial ending, a charge after a
 /// cancellation), at most four, each with its state's colour and symbol.
 struct FoundInsights: View {
     let insights: [IntelligenceInsight]
@@ -319,7 +403,8 @@ struct FoundInsights: View {
     var body: some View {
         if !insights.isEmpty {
             VStack(alignment: .leading, spacing: 0) {
-                Text("Worth knowing")
+                // Not "Worth knowing" beside the section "Worth a look" (the rating of 2026-11-23).
+                Text("From your receipts")
                     .font(.headline)
                     .foregroundStyle(Color.inkText)
                     .padding(.bottom, 4)

@@ -322,7 +322,7 @@ final class ScreenRulesTests: XCTestCase {
             ("Views/SubscriptionManagementView.swift", "Facts(line.text)"),
             ("Views/Verdict/PausePlanView.swift", "Facts(price)"),
             ("Views/Inbox/InboxAccounts.swift", "Facts(detail)"),
-            ("Views/InboxImportView.swift", "Facts(stats.onlyNewMail")
+            ("Views/Inbox/SearchNotes.swift", "Facts(!stats.onlyNewMail")
         ]
         for place in drawn {
             let source = try String(contentsOf: sources.appendingPathComponent(place.file), encoding: .utf8)
@@ -708,7 +708,7 @@ final class ScreenRulesTests: XCTestCase {
         let sources = root.appendingPathComponent("Pausely")
         try XCTSkipUnless(FileManager.default.fileExists(atPath: sources.path), "Sources aren't readable from this test run")
         let found = try String(contentsOf: sources.appendingPathComponent("Views/Inbox/FoundRow.swift"), encoding: .utf8)
-        let charges = try XCTUnwrap(found.range(of: "ForEach(proven.evidence.suffix(5).reversed()) { charge in"))
+        let charges = try XCTUnwrap(found.range(of: "ForEach(proven.evidence.suffix(Self.chargesShown).reversed()) { charge in"))
         let row = String(found[charges.upperBound...].prefix(900))
         XCTAssertTrue(row.contains("LineOrStack(spacing: 8, lineSpacing: 0, spread: true, alignment: .firstTextBaseline) {"))
         XCTAssertFalse(row.contains("HStack {"), "an HStack shares the width out and breaks both")
@@ -1041,7 +1041,8 @@ final class ScreenRulesTests: XCTestCase {
         for state in ["connected", "nothing", "failed"] {
             XCTAssertTrue(tour.contains("state(\"inbox-\(state)\", [\"--demo-inbox=\(state)\"])"), state)
         }
-        XCTAssertTrue(tour.contains("state(\"inbox-add\", [\"--demo-inbox=nothing\"]) { app in self.tap(app, \"addInboxButton\") }"))
+        // On "nothing found" the page's main button is "Add another inbox" (the list's own link is left out there).
+        XCTAssertTrue(tour.contains("state(\"inbox-add\", [\"--demo-inbox=nothing\"]) { app in self.tap(app, \"addInboxMainButton\") }"))
     }
 
     /// A service under "Popular" is listed again under "All services". The two rows have different

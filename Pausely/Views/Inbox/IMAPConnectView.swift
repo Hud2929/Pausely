@@ -207,7 +207,7 @@ struct IMAPConnectView: View {
     private var fields: some View {
         VStack(alignment: .leading, spacing: 16) {
             LabelledField(label: "Email") {
-                InkTextField(placeholder: "", text: $address, keyboardType: .emailAddress, autocapitalization: .never)
+                InkTextField(placeholder: "", text: $address, keyboardType: .emailAddress, autocapitalization: .never, leftToRight: true)
                     .textContentType(.emailAddress)
                     .autocorrectionDisabled()
                     .focused($focused, equals: .address)
@@ -218,7 +218,7 @@ struct IMAPConnectView: View {
             }
             LabelledField(label: passwordLabel) {
                 HStack(spacing: 10) {
-                    InkTextField(placeholder: "", text: $password, isSecure: true, autocapitalization: .never)
+                    InkTextField(placeholder: "", text: $password, isSecure: true, autocapitalization: .never, leftToRight: true)
                         .autocorrectionDisabled()
                         .focused($focused, equals: .password)
                         .submitLabel(.go)
@@ -245,14 +245,14 @@ struct IMAPConnectView: View {
                                   : AnyLayout(HStackLayout(alignment: .bottom, spacing: 10))
                 row {
                     LabelledField(label: "IMAP server") {
-                        InkTextField(placeholder: suggestedHost ?? "imap.example.com", text: $customHost, keyboardType: .URL, autocapitalization: .never)
+                        InkTextField(placeholder: suggestedHost ?? "imap.example.com", text: $customHost, keyboardType: .URL, autocapitalization: .never, leftToRight: true)
                             .autocorrectionDisabled()
                             .focused($focused, equals: .host)
                             .accessibilityLabel(Text("IMAP server"))
                             .accessibilityIdentifier("imapHost")
                     }
                     LabelledField(label: "Port") {
-                        InkTextField(placeholder: "993", text: $customPort, keyboardType: .numberPad)
+                        InkTextField(placeholder: "993", text: $customPort, keyboardType: .numberPad, leftToRight: true)
                             .focused($focused, equals: .port)
                             .accessibilityLabel(Text("Port"))
                             .accessibilityIdentifier("imapPort")
