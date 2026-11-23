@@ -120,6 +120,14 @@ class SubscriptionStore: ObservableObject {
         var totalIsKnown: Bool { self == .shown || self == .empty }
     }
 
+    /// Whether a failed fetch is a failure to tell. The built-in test user (DEBUG, "Test without an account")
+    /// has no account to fetch from, so its empty list is empty: it said "Couldn't load your list" on every
+    /// launch that started with nothing listed (2026-11-22).
+    nonisolated static func fetchReallyFailed(_ error: Error, userID: String?) -> Bool {
+        if case SyncFailure.signedOut = error, userID == AuthManager.localTestUserID { return false }
+        return true
+    }
+
     nonisolated static func listState(isEmpty: Bool, isLoading: Bool, lastFetchFailed: Bool) -> ListState {
         guard isEmpty else { return .shown }
         if isLoading { return .loading }
@@ -202,7 +210,7 @@ class SubscriptionStore: ObservableObject {
             os_log("Error fetching subscriptions: %{public}@", log: .default, type: .error, error.localizedDescription)
             if subscriptions.isEmpty {
                 loadFromCache()
-                if subscriptions.isEmpty {
+                if subscriptions.isEmpty, Self.fetchReallyFailed(error, userID: AuthManager.shared.currentUser?.id) {
                     lastFetchFailed = true
                     lastErrorMessage = L10n.string("Couldn't load subscriptions. Pull to refresh.")
                 }

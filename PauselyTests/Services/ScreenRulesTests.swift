@@ -1225,6 +1225,11 @@ final class ScreenRulesTests: XCTestCase {
         XCTAssertEqual(Store.listState(isEmpty: false, isLoading: true, lastFetchFailed: true), .shown,
                        "whatever is on the phone is shown while it refreshes")
 
+        // The built-in test user has no account to fetch from: its empty list is empty, not a failure.
+        XCTAssertFalse(Store.fetchReallyFailed(SyncFailure.signedOut, userID: AuthManager.localTestUserID))
+        XCTAssertTrue(Store.fetchReallyFailed(SyncFailure.signedOut, userID: "4c1f…"), "a real account signed out is a failure")
+        XCTAssertTrue(Store.fetchReallyFailed(URLError(.notConnectedToInternet), userID: AuthManager.localTestUserID))
+
         XCTAssertFalse(Store.ListState.loading.totalIsKnown)
         XCTAssertFalse(Store.ListState.couldNotLoad.totalIsKnown)
         XCTAssertTrue(Store.ListState.empty.totalIsKnown, "an empty list is $0, truly")

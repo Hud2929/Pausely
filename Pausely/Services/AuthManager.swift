@@ -41,6 +41,10 @@ class AuthManager: ObservableObject {
     static let confirmRedirect = URL(string: "pausely://auth/confirm")
     static let resetRedirect = URL(string: "pausely://auth/reset-password")
 
+    /// The built-in test user's id (DEBUG builds only sign in as it; the name is kept in release so code
+    /// that asks about it needs no `#if`).
+    nonisolated static let localTestUserID = "debug-user"
+
     // MARK: - Initialization
     private init() {
 
@@ -56,7 +60,7 @@ class AuthManager: ObservableObject {
         // Debug bypass for simulator testing — set via:
         // defaults write com.pausely.app.Pausely debug_auth_bypass -bool true
         if UserDefaults.standard.bool(forKey: "debug_auth_bypass") {
-            let user = User(id: "debug-user", email: "debug@pausely.app", createdAt: Date(),
+            let user = User(id: AuthManager.localTestUserID, email: "debug@pausely.app", createdAt: Date(),
                             firstName: "Debug", lastName: "User")
             currentUser = user
             isAuthenticated = true
@@ -441,7 +445,7 @@ class AuthManager: ObservableObject {
     /// the server; everything stays on this device. Signing out leaves it.
     func enterAsDebugUser() {
         UserDefaults.standard.set(true, forKey: "debug_auth_bypass")
-        let user = User(id: "debug-user", email: "debug@pausely.app", createdAt: Date(), firstName: "Debug", lastName: "User")
+        let user = User(id: AuthManager.localTestUserID, email: "debug@pausely.app", createdAt: Date(), firstName: "Debug", lastName: "User")
         currentUser = user
         isAuthenticated = true
         state = .authenticated(user)

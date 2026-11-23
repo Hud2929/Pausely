@@ -122,7 +122,7 @@ One engine, one adapter per kind of inbox, all read-only and on-device:
 - `MailboxProvider` (open → candidates → summaries → raw message → close/revoke) with three adapters:
   `GmailMailboxProvider` (Gmail API, `gmail.readonly`), `MicrosoftGraphProvider` (Outlook, Hotmail,
   Live, MSN, Microsoft 365; needs `MS_CLIENT_ID` in Info.plist) and `IMAP/IMAPMailboxProvider`
-  (iCloud, Yahoo, AOL, GMX, WEB.DE, Zoho, Fastmail, Xfinity, any server; app passwords; EXAMINE and
+  (iCloud, Yahoo, AOL, GMX, WEB.DE, Zoho, Fastmail, any server; app passwords; EXAMINE and
   BODY.PEEK only, TLS 1.2+). Presets live in `MailboxAccount.swift`.
 - `MIMEParser` turns raw RFC 822 into a `RawEmail`; `Intelligence/EmailSignalExtractor.extractAll` +
   `ReceiptTextAnalyzer` (each figure judged by its own label) + `AppleReceipt` (several subscriptions on

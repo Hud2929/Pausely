@@ -90,6 +90,7 @@ struct InboxImportView: View {
                 StoreKitUpgradeView()
             }
         }
+        .onAppear { scanner.showSaved() }
         // Connecting is the request to search: a new inbox is searched at once, without a second tap.
         .onChange(of: scanner.accounts.count) { before, after in
             guard after > before else { return }
@@ -195,10 +196,17 @@ struct InboxImportView: View {
                     .foregroundStyle(Color.inkTextMuted)
                     .fixedSize(horizontal: false, vertical: true)
                     .accessibilityIdentifier("scanStatus")
+                if let minutes = scanner.minutesLeft {
+                    Text("About \(minutes) min left. Keep Pausely open until it finishes.")
+                        .font(.subheadline)
+                        .foregroundStyle(Color.inkTextMuted)
+                        .fixedSize(horizontal: false, vertical: true)
+                        .accessibilityIdentifier("scanTimeLeft")
+                }
             }
 
             if !scanner.receiptsSeen.isEmpty {
-                receiptsSlip
+                ReceiptsSeenSlip(receipts: scanner.receiptsSeen)
             }
 
             Button(action: { scanner.cancelScan() }) { Text("Stop and show what's found") }
@@ -208,29 +216,6 @@ struct InboxImportView: View {
         .frame(maxWidth: .infinity, alignment: .leading)
     }
 
-    private var receiptsSlip: some View {
-        let shown = Array(scanner.receiptsSeen.prefix(8))
-        let more = scanner.receiptsSeen.count - shown.count
-        return PaperSlip(tornTop: true, tornBottom: true) {
-            VStack(alignment: .leading, spacing: 8) {
-                Text("Receipts read so far")
-                    .font(.proof(.caption))
-                    .foregroundStyle(Color.paperMuted)
-                ForEach(shown) { receipt in
-                    ProofLine(label: receipt.name, value: InboxImportView.money(receipt.amount, receipt.currency))
-                        .transition(.arriving(.move(edge: .top)))
-                }
-                if more > 0 {
-                    Text("and \(more) more")
-                        .font(.proof(.caption))
-                        .foregroundStyle(Color.paperMuted)
-                }
-            }
-            .animation(Motion.unlessReduced(Motion.arrive), value: scanner.receiptsSeen.count)
-        }
-        .accessibilityElement(children: .combine)
-        .accessibilityIdentifier("receiptsSlip")
-    }
 
     // MARK: - Connected, nothing to show
 
@@ -249,21 +234,7 @@ struct InboxImportView: View {
                 SearchOutcome(message: message, stats: scanner.stats, explains: scanner.accountErrors.isEmpty)
             }
 
-            VStack(spacing: 0) {
-                ForEach(scanner.accounts) { account in
-                    accountRow(account)
-                    Hairline()
-                }
-                Button(action: { showingProviders = true }) {
-                    Label("Add another inbox", systemImage: "plus")
-                        .font(.body.weight(.medium))
-                        .foregroundStyle(Color.inkText)
-                        .frame(maxWidth: .infinity, minHeight: Layout.tapTarget, alignment: .leading)
-                        .contentShape(Rectangle())
-                }
-                .buttonStyle(.plain)
-                .accessibilityIdentifier("addInboxButton")
-            }
+            inboxRows
 
             // An inbox that lost its access is reconnected first: searching again repeats the failure.
             if let failed = scanner.accounts.first(where: { scanner.accountErrors[$0.id] != nil }) {
@@ -384,6 +355,25 @@ struct InboxImportView: View {
         return account.providerName
     }
 
+    /// Each connected inbox with its menu, then the way to add another.
+    private var inboxRows: some View {
+        VStack(spacing: 0) {
+            ForEach(scanner.accounts) { account in
+                accountRow(account)
+                Hairline()
+            }
+            Button(action: { showingProviders = true }) {
+                Label("Add another inbox", systemImage: "plus")
+                    .font(.body.weight(.medium))
+                    .foregroundStyle(Color.inkText)
+                    .frame(maxWidth: .infinity, minHeight: Layout.tapTarget, alignment: .leading)
+                    .contentShape(Rectangle())
+            }
+            .buttonStyle(.plain)
+            .accessibilityIdentifier("addInboxButton")
+        }
+    }
+
     // MARK: - Results
 
     private var live: [FoundSubscription] { scanner.foundSubscriptions.filter(\.isLive) }
@@ -420,6 +410,19 @@ struct InboxImportView: View {
             }
             if !cancelled.isEmpty {
                 listSection(title: "Cancelled", subtitle: "A cancellation email followed the last charge", items: cancelled)
+            }
+            // The inboxes stay in reach under what they found: the results page had no way to disconnect,
+            // add another inbox or search again (2026-11-22).
+            VStack(alignment: .leading, spacing: 6) {
+                Text("Your inboxes")
+                    .font(.headline)
+                    .foregroundStyle(Color.inkText)
+                    .accessibilityAddTraits(.isHeader)
+                inboxRows
+                Button(action: { Task { await scanner.scanAll() } }) { Text("Search again") }
+                    .buttonStyle(.ink(.quiet))
+                    .accessibilityIdentifier("scanInboxesButton")
+                    .padding(.top, 8)
             }
         }
         .onAppear(perform: preselectConfirmed)

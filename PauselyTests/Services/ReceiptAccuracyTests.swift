@@ -449,6 +449,7 @@ final class ReceiptAccuracyTests: XCTestCase {
         let prime = analyze([trialStart("amazon.ca", "Amazon Prime")], now: day(2026, 11, 22)).first
         XCTAssertNotNil(prime, "Amazon emails no receipt per renewal: probably still running")
         XCTAssertTrue(prime?.startedWithTrial == true)
+        XCTAssertEqual(prime?.doubt, "This store doesn't email a receipt for each renewal", "its row says why it is only worth a look")
         if let prime {
             XCTAssertEqual(FoundRow.evidence(for: prime, now: day(2026, 11, 22)), "Trial started on May\u{00A0}12")
         }

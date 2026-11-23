@@ -286,6 +286,13 @@ final class LiveMailboxTests: XCTestCase {
         for sub in scanner.report?.subscriptions ?? [] {
             lines.append("  \(sub.name) · \(sub.amount) \(sub.currency) · \(sub.frequency.rawValue) · \(sub.tier) · \(sub.status) · \(sub.evidence.count) receipts")
         }
+        for (message, count) in http.refusals.sorted(by: { $0.value > $1.value }) { lines.append("  refused \(count)×: \(message)") }
+        let halves = (http.sentPerHalfMinute.keys.max() ?? -1)
+        if halves >= 0 {
+            lines.append("  per half minute (sent/refused): " + (0...halves).map {
+                "\(http.sentPerHalfMinute[$0] ?? 0)/\(http.refusedPerHalfMinute[$0] ?? 0)"
+            }.joined(separator: " "))
+        }
         let text = lines.joined(separator: "\n")
         print(text)
         if let path = environment("PAUSELY_REPORT_PATH") { try text.write(toFile: path, atomically: true, encoding: .utf8) }

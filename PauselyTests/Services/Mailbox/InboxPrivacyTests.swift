@@ -54,7 +54,7 @@ final class InboxPrivacyTests: XCTestCase {
         // Pages opened in the browser for the person to create an app password, and links to documentation.
         let pagesForThePerson: Set<String> = [
             "account.apple.com", "login.yahoo.com", "login.aol.com", "myaccount.google.com", "www.gmx.com", "www.gmx.net",
-            "web.de", "accounts.zoho.com", "app.fastmail.com", "www.xfinity.com", "schema.org"
+            "web.de", "accounts.zoho.com", "app.fastmail.com", "schema.org"
         ]
         var seen = Set<String>()
         for source in try mailSources() {

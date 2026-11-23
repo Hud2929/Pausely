@@ -203,7 +203,29 @@ enum MailboxHTTP {
     #if DEBUG
     /// DEBUG: what the servers answered during a scan, for the real-inbox test reports: how many
     /// requests, how many were refused for going too fast, and the seconds spent waiting them out.
-    struct Diagnostics { var requests = 0, rateLimited = 0, throttled = 0, waited: TimeInterval = 0 }
+    struct Diagnostics {
+        var requests = 0, rateLimited = 0, throttled = 0, waited: TimeInterval = 0
+        /// What the refusals said (Google names the limit it applies), and how many each.
+        var refusals: [String: Int] = [:]
+        /// Requests sent and refused in each half minute from the first, to see where a scan's time goes.
+        var started: Date?
+        var sentPerHalfMinute: [Int: Int] = [:]
+        var refusedPerHalfMinute: [Int: Int] = [:]
+
+        mutating func noteSent() {
+            requests += 1
+            let first = started ?? Date()
+            started = first
+            sentPerHalfMinute[Int(Date().timeIntervalSince(first) / 30), default: 0] += 1
+        }
+
+        mutating func noteRefused(_ body: Data) {
+            if let first = started { refusedPerHalfMinute[Int(Date().timeIntervalSince(first) / 30), default: 0] += 1 }
+            struct Envelope: Decodable { struct Failure: Decodable { let message: String? }; let error: Failure? }
+            let message = (try? JSONDecoder().decode(Envelope.self, from: body))?.error?.message ?? "no message"
+            refusals[String(message.prefix(160)), default: 0] += 1
+        }
+    }
     @MainActor static var diagnostics = Diagnostics()
     #endif
 
@@ -264,7 +286,7 @@ enum MailboxHTTP {
             let (data, response) = try await URLSession.shared.data(for: authorized)
             let http = response as? HTTPURLResponse
             #if DEBUG
-            diagnostics.requests += 1
+            diagnostics.noteSent()
             #endif
             switch http?.statusCode ?? 0 {
             case 200...299:
@@ -279,7 +301,7 @@ enum MailboxHTTP {
                 throttles += 1
                 let wait = rateLimitDelay(retryAfter: http?.value(forHTTPHeaderField: "Retry-After"), attempt: throttles)
                 #if DEBUG
-                diagnostics.rateLimited += 1; diagnostics.waited += wait
+                diagnostics.rateLimited += 1; diagnostics.waited += wait; diagnostics.noteRefused(data)
                 #endif
                 try await Task.sleep(nanoseconds: UInt64(wait * 1_000_000_000))
             case 403 where isRateLimit(data):
@@ -293,7 +315,7 @@ enum MailboxHTTP {
                 throttles += 1
                 let wait = retryDelay(retryAfter: http?.value(forHTTPHeaderField: "Retry-After"), attempt: throttles)
                 #if DEBUG
-                diagnostics.throttled += 1; diagnostics.waited += wait
+                diagnostics.throttled += 1; diagnostics.waited += wait; diagnostics.noteRefused(data)
                 #endif
                 try await Task.sleep(nanoseconds: UInt64(wait * 1_000_000_000))
             case 429, 503:

@@ -492,7 +492,7 @@ final class ProviderWorkflowTests: XCTestCase {
         XCTAssertEqual(FakeMailAPI.with { $0.gmailRateLimitBurst }, 0, "the refusals were really met")
         assertFindsTheRightSubscriptions("Gmail through rate limits")
         XCTAssertEqual(GmailMailboxProvider.parallelHeaderReads, 10)
-        XCTAssertEqual(GmailMailboxProvider.minimumGap, 0.055, "18 a second: inside 6,000 quota units a minute at 5 a read")
+        XCTAssertEqual(GmailMailboxProvider.minimumGap, 0.18, "about 330 a minute: inside the 370 a minute the quota admits")
     }
 
     /// An inbox whose access ended is reconnected in its own place: the new sign-in's tokens go to the same
@@ -512,6 +512,23 @@ final class ProviderWorkflowTests: XCTestCase {
         XCTAssertEqual(scanner.accounts.map(\.id), [old.id], "the same inbox, not a second one")
         XCTAssertNil(scanner.accountErrors[old.id])
         XCTAssertGreaterThan(scanner.stats.perAccount[old.id]?.candidates ?? 0, 0, "a search ran with the new sign-in")
+    }
+
+    /// What an earlier search found is shown again when the page opens, from the facts kept on the phone and
+    /// with no request to the inbox: after a relaunch the page offered only "Search again" (2026-11-22).
+    func testWhatWasFoundComesBackWithoutSearchingAgain() async throws {
+        await scanner.connect { try await GmailMailboxProvider.finishConnect(signedInTokens()) }
+        await scanner.scanAll()
+        let found = scanner.foundSubscriptions.map(\.id)
+        XCTAssertFalse(found.isEmpty)
+
+        // As after a relaunch: the inbox and its facts are saved, nothing has been worked out yet.
+        scanner.foundSubscriptions = []
+        scanner.report = nil
+        let asked = FakeMailAPI.with { $0.log.count }
+        scanner.showSaved()
+        XCTAssertEqual(scanner.foundSubscriptions.map(\.id), found)
+        XCTAssertEqual(FakeMailAPI.with { $0.log.count }, asked, "nothing is asked of the inbox")
     }
 
     /// A 403 that is a real refusal (a permission taken away) says so instead of ending as "nothing found".
@@ -554,7 +571,9 @@ final class ProviderWorkflowTests: XCTestCase {
 
     /// Waits until the scan is reading messages (or gives up after a few seconds).
     private func waitUntilReading() async throws {
-        for _ in 0..<300 where !(scanner.isScanning && scanner.progress > 0.35) {
+        // The status line, not a share of the bar: the bar follows requests and passes any fixed mark while
+        // headers are still being checked.
+        for _ in 0..<300 where !(scanner.isScanning && scanner.statusLine.hasPrefix("Read")) {
             try await Task.sleep(nanoseconds: 10_000_000)
         }
     }

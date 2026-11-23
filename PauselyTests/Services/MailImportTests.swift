@@ -304,6 +304,15 @@ final class MailImportTests: XCTestCase {
         XCTAssertNil(FoundRow.afterTrial(for: priced, currency: "USD"))
     }
 
+    /// The search says how long is left from its own pace, in whole minutes rounded up, and nothing under
+    /// a minute: a first Gmail search is about six minutes on Google's quota, and the page never said so.
+    func testTheSearchSaysTheMinutesLeftFromItsOwnPace() {
+        XCTAssertEqual(InboxScanner.minutesLeft(done: 330, total: 2_000, elapsed: 60), 6, "1,670 left at 330 a minute")
+        XCTAssertNil(InboxScanner.minutesLeft(done: 1_900, total: 2_000, elapsed: 345), "under a minute: nothing said")
+        XCTAssertNil(InboxScanner.minutesLeft(done: 0, total: 2_000, elapsed: 10))
+        XCTAssertNil(InboxScanner.minutesLeft(done: 2_000, total: 2_000, elapsed: 360))
+    }
+
     func testAFindingKeepsItsIdentityAcrossAReanalysis() {
         let first = FoundSubscription(proven: proven("Netflix", lastCharge: day(2026, 10, 12)))
         let again = FoundSubscription(proven: proven("Netflix", lastCharge: day(2026, 11, 12)))

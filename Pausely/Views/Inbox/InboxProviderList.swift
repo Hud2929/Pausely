@@ -14,9 +14,14 @@ struct InboxProviderList: View {
     /// sheet arrives (nothing changed for a second or two, and a second tap started a second sign-in).
     @State private var connectingID: String?
 
+    /// Gmail by app password is listed only where "Sign in with Google" isn't: two Gmail rows side by side
+    /// asked people to choose between ways in they couldn't tell apart (A14, 2026-11-22). A gmail.com
+    /// address typed under "Other email" still finds it (`IMAPPreset.forAddress`).
+    private var googleSignIn: Bool { FeatureFlags.gmailImportEnabled && GmailMailboxProvider.isConfigured }
+
     var body: some View {
         VStack(spacing: 0) {
-            if FeatureFlags.gmailImportEnabled && GmailMailboxProvider.isConfigured {
+            if googleSignIn {
                 row(Text(verbatim: "Gmail"), detail: Text("Sign in with Google"), icon: "Gmail", id: "connectGmail") {
                     onChoose()
                     connect("connectGmail") { await scanner.connectGmail() }
@@ -29,7 +34,7 @@ struct InboxProviderList: View {
                 }
             }
             if FeatureFlags.imapImportEnabled {
-                ForEach(["icloud", "yahoo", "aol", "gmail-imap"], id: \.self) { id in
+                ForEach(googleSignIn ? ["icloud", "yahoo", "aol"] : ["icloud", "yahoo", "aol", "gmail-imap"], id: \.self) { id in
                     if let preset = IMAPPreset.find(id) {
                         row(Text(verbatim: preset.name), detail: Text("With an app password"), icon: preset.name, id: "connect-\(id)") {
                             onAppPassword(preset)

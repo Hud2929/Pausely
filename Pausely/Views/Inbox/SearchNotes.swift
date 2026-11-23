@@ -62,3 +62,32 @@ struct HiddenNote: View {
         .frame(maxWidth: .infinity, alignment: .leading)
     }
 }
+
+/// The search, as it happens: each receipt read is printed on the slip, so the wait shows its work.
+struct ReceiptsSeenSlip: View {
+    let receipts: [ReceiptSeen]
+
+    var body: some View {
+        let shown = Array(receipts.prefix(8))
+        let more = receipts.count - shown.count
+        return PaperSlip(tornTop: true, tornBottom: true) {
+            VStack(alignment: .leading, spacing: 8) {
+                Text("Receipts read so far")
+                    .font(.proof(.caption))
+                    .foregroundStyle(Color.paperMuted)
+                ForEach(shown) { receipt in
+                    ProofLine(label: receipt.name, value: InboxImportView.money(receipt.amount, receipt.currency))
+                        .transition(.arriving(.move(edge: .top)))
+                }
+                if more > 0 {
+                    Text("and \(more) more")
+                        .font(.proof(.caption))
+                        .foregroundStyle(Color.paperMuted)
+                }
+            }
+            .animation(Motion.unlessReduced(Motion.arrive), value: receipts.count)
+        }
+        .accessibilityElement(children: .combine)
+        .accessibilityIdentifier("receiptsSlip")
+    }
+}

@@ -1,5 +1,6 @@
 import Foundation
 import os.log
+import UIKit
 
 /// A subscription a search of the person's email found, as the results screen lists it.
 struct FoundSubscription: Identifiable, Equatable {
@@ -52,6 +53,9 @@ final class InboxScanner: ObservableObject {
     @Published private(set) var isScanning = false
     @Published private(set) var progress: Double = 0
     @Published private(set) var statusLine = ""
+    /// Minutes the running search still needs, from its own pace so far; nil until that is known. A
+    /// first Gmail search is about six minutes on Google's quota for one person, and nothing said so.
+    @Published private(set) var minutesLeft: Int?
     @Published var foundSubscriptions: [FoundSubscription] = []
     /// The latest receipt read for each sender during the running search, newest first.
     @Published private(set) var receiptsSeen: [ReceiptSeen] = []
@@ -251,6 +255,13 @@ final class InboxScanner: ObservableObject {
         scanTask = nil
     }
 
+    /// Whole minutes still needed at the pace so far, rounded up; nil under a minute.
+    nonisolated static func minutesLeft(done: Int, total: Int, elapsed: TimeInterval) -> Int? {
+        guard done > 0, total > done, elapsed > 0 else { return nil }
+        let seconds = elapsed / Double(done) * Double(total - done)
+        return seconds < 60 ? nil : Int((seconds / 60).rounded(.up))
+    }
+
     func cancelScan() {
         scanTask?.cancel()
     }
@@ -269,7 +280,10 @@ final class InboxScanner: ObservableObject {
         accountErrors = [:]
         stats = ScanStats()
         receiptsSeen = []
-        defer { isScanning = false; statusLine = "" }
+        minutesLeft = nil
+        // The usual half minute more when the app is left: without it, the requests in flight were cut.
+        let background = BackgroundTime()
+        defer { isScanning = false; statusLine = ""; minutesLeft = nil; background.end() }
 
         let catalog = Self.buildCatalog()
         var newSignals: [ReceiptSignal] = []
@@ -335,19 +349,31 @@ final class InboxScanner: ObservableObject {
             let (refs, nextCursor) = try await provider.candidates(plan: plan, cursor: cursor)
             accountStats.candidates = refs.count
             accountStats.capped = refs.count >= plan.maxCandidates
-            report(0.2, L10n.string("Checking \(L10n.string("\(refs.count) emails")) in \(account.providerName)…"))
+            report(0.05, L10n.string("Checking \(L10n.string("\(refs.count) emails")) in \(account.providerName)…"))
+            // The bar follows requests: headers and bodies cost one each, and headers are most of them. Given
+            // 15% of the bar, a real search crawled for minutes and then leapt (A12, 2026-11-22). Bodies are
+            // guessed at a quarter of the headers until triage says, and the bar never goes back.
+            let expectedBodies = min(Self.bodyBudget, max(1, refs.count / 4))
+            var headerEnd = 0.05
+            let started = Date()
+            func estimate(done: Int, of total: Int) {
+                let elapsed = Date().timeIntervalSince(started)
+                guard done >= 30, elapsed >= 10 else { return }
+                minutesLeft = Self.minutesLeft(done: done, total: total, elapsed: elapsed)
+            }
 
             // Headers in steps of a hundred, so the page counts up instead of standing still: a real
             // inbox spent five minutes on "Checking 1,500 emails" with a bar that never moved.
             var summaries: [MessageSummary] = []
             for chunk in InboxSearchPlan.batches(refs, size: 100) {
                 summaries += try await provider.summaries(chunk)
-                report(0.2 + 0.15 * Double(summaries.count) / Double(max(refs.count, 1)),
-                       L10n.string("Checked \(summaries.count) of \(refs.count) in \(account.providerName)"))
+                headerEnd = 0.05 + 0.9 * Double(summaries.count) / Double(max(refs.count + expectedBodies, 1))
+                estimate(done: summaries.count, of: refs.count + expectedBodies)
+                report(headerEnd, L10n.string("Checked \(summaries.count) of \(refs.count) in \(account.providerName)"))
             }
             accountStats.checked = summaries.count
             let wanted = Self.triage(summaries, catalog: catalog).prefix(Self.bodyBudget)
-            report(0.35, L10n.string("Reading \(L10n.string("\(wanted.count) emails")) from \(account.providerName)…"))
+            report(headerEnd, L10n.string("Reading \(L10n.string("\(wanted.count) emails")) from \(account.providerName)…"))
 
             var signals: [ReceiptSignal] = []
             var stopped = false
@@ -377,7 +403,8 @@ final class InboxScanner: ObservableObject {
                         noteReceipt(signal, catalog: catalog)
                     }
                     if offset % 10 == 0 {
-                        report(0.35 + 0.6 * Double(offset + 1) / Double(max(wanted.count, 1)),
+                        estimate(done: refs.count + offset + 1, of: refs.count + wanted.count)
+                        report(headerEnd + (0.95 - headerEnd) * Double(offset + 1) / Double(max(wanted.count, 1)),
                                L10n.string("Read \(offset + 1) of \(wanted.count) in \(account.providerName)"))
                     }
                 }
@@ -468,6 +495,17 @@ final class InboxScanner: ObservableObject {
         stats.purchasesIgnored = analysis.ignoredPurchaseGroups
     }
 
+    /// Shows what earlier searches found, from the facts kept on this iPhone, when the page opens. After a
+    /// relaunch the page offered only "Search again" over 139 saved facts, and a first Gmail search is
+    /// about six minutes (2026-11-22). Nothing is read from the inbox.
+    func showSaved() {
+        guard hasAccounts, !isScanning, foundSubscriptions.isEmpty, report == nil else { return }
+        #if DEBUG
+        if isShowingDemo { return }
+        #endif
+        reanalyze()
+    }
+
     /// Re-runs detection on the on-device facts only. Instant, offline, no email access.
     func reanalyze() {
         analyze(ReceiptLedger.load(), catalog: Self.buildCatalog())
@@ -547,5 +585,23 @@ final class InboxScanner: ObservableObject {
                                                refreshToken: refresh, expiresAt: .distantPast), for: account.id)
         MailboxAccountStore.upsert(account)
         if let history = defaults.string(forKey: "gmail_last_history_id") { MailboxAccountStore.setCursor(history, for: account.id) }
+    }
+}
+
+/// Asks iOS for the usual extra time while a search runs and the app is left, and gives it back after.
+@MainActor
+private final class BackgroundTime {
+    private var id = UIBackgroundTaskIdentifier.invalid
+
+    init() {
+        id = UIApplication.shared.beginBackgroundTask(withName: "Inbox search") { [weak self] in
+            MainActor.assumeIsolated { self?.end() }
+        }
+    }
+
+    func end() {
+        guard id != .invalid else { return }
+        UIApplication.shared.endBackgroundTask(id)
+        id = .invalid
     }
 }

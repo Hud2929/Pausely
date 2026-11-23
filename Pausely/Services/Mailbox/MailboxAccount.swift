@@ -92,10 +92,8 @@ struct IMAPPreset: Identifiable, Hashable {
                    passwordPage: URL(string: "https://app.fastmail.com/settings/security/integrations"),
                    steps: [L10n.string("In Fastmail, open Settings, Privacy & Security, Integrations."),
                            L10n.string("Create a new app password with IMAP access and paste it here.")]),
-        IMAPPreset(id: "xfinity", name: "Xfinity (Comcast)", host: "imap.comcast.net",
-                   domains: ["comcast.net"],
-                   passwordPage: URL(string: "https://www.xfinity.com"),
-                   steps: [L10n.string("In Xfinity Connect settings, allow third-party access."), L10n.string("Use your Xfinity password.")])
+        // No Xfinity preset: nobody could test one (INBOX_PLAN, the matrix). "Other email" still reaches
+        // imap.comcast.net with the server typed in.
     ] }
 
     /// App passwords from these providers never contain spaces, but they're shown in groups of four

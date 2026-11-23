@@ -123,13 +123,13 @@ Arabic mirrors and is fully translated; rows read as one sentence. Open:
 - [x] B12 "Charged N times" above fewer proof lines (the list shows the latest eight).
 - [x] B14 "Worth knowing" changes order between launches on the same data.
 - [x] B15 tags repeat their section ("May have ended" under "May have ended"); "Select all" over one row.
-- [ ] B16 letter tiles (G, O, H) beside real logos; logos don't scale at the largest size.
+- [ ] B16 (2026-11-22: outlook.com and microsoft.com refuse icon requests, 417 and 403, and gmail.com has none; a logo would have to be bundled, a brand-use decision for the owner) letter tiles (G, O, H) beside real logos; logos don't scale at the largest size.
 - [ ] B17 targets under 44 pt: paste button, Close, Cancel.
 - [ ] B18 iPad column stays 640 pt at the largest size; addresses break mid-word.
 - [ ] B20 copy: one-item "..." menu, heading punctuation, a lower-case line start, Arabic button voice.
 
 Independent consumer rating (Fable, iPhone, 2026-11-22): 7.0 (trust 7.0, effort 6.5). Open beyond the above:
-- [ ] A1 search speed: measure after pacing on a quiet Mac; under two minutes, a bar that follows one count,
+- [ ] A1 (2026-11-22: Google refuses with "Units per minute per user" at about 370 reads a minute, so a first Gmail search of about 2,060 requests needs about 6 minutes at best; paced steadily at 330 a minute, the page says the minutes left and to keep Pausely open, and findings come back without searching after a relaunch. Raising the project's per-user quota, adjustable in the Cloud console, is the owner's call) search speed: measure after pacing on a quiet Mac; under two minutes, a bar that follows one count,
   a time estimate, and whether the app can be left.
 - [ ] A3 the free limit: "Add 5" then "Nothing new was added" when the list is full (only a footnote warns);
   the person can't choose which five; a trial with a deadline is the one parked "Waiting" (unexplained).
@@ -142,7 +142,7 @@ Independent consumer rating (Fable, iPhone, 2026-11-22): 7.0 (trust 7.0, effort 
 - [ ] A11 (copy fixed 2026-11-22: GMX and WEB.DE say "Sign in with your … password", field "Password"; the gmx.net title for gmx.de stays) GMX page: "your main password stays private" then "Use your GMX password"; "gmx.net" title for gmx.de.
 - [ ] A12 (food orders fixed 2026-11-22: the slip shows only recurring receipts; the bar's jumps remain) the slip while searching shows food orders as receipts; the bar jumps between phases.
 - [x] A13 nothing found: "Search again" as the main button; no period for "Emails checked"; no route to add by hand.
-- [ ] A14 (Disconnect now asks and says what it erases, 2026-11-22; the second Gmail row remains) the second Gmail row (app password) beside "Sign in with Google"; disconnect says nothing of what it erased.
+- [x] A14 (Disconnect asks on the inbox's row and says what it erases; the Gmail app-password row shows only where Sign in with Google doesn't, 2026-11-22) the second Gmail row (app password) beside "Sign in with Google"; disconnect says nothing of what it erased.
 - [ ] A15 (the switched-off button says what it waits for, 2026-11-22; the jump remains) disabled "Connect and search" gives no reason; the form jumps when the provider is recognised.
 - [ ] A16 Google's consent page shows the app icon (purple "P") that the redesigned app doesn't use inside: owner.
 
@@ -209,7 +209,7 @@ A way in works only when all six hold on a real account:
 | Gmail (app password) | the test Gmail + 2-Step Verification + app password | owner | test Gmail | - | yes | same |
 | GMX, WEB.DE, Zoho | new free accounts (IMAP switched on in each one's settings) | owner | test accounts | - | yes | same |
 | Fastmail | 30-day trial | owner | trial | - | yes | same |
-| Xfinity | a Comcast customer's account | **nobody has one** | - | - | - | **remove the preset** unless someone can test it; "Other email" still reaches the server |
+| Xfinity | a Comcast customer's account | **nobody has one** | - | - | - | preset removed 2026-11-22; "Other email" still reaches the server |
 
 "Real subscriptions" (column 3) is proven where real receipts live, which is the owner's Gmail. The
 engine after the raw message is the same for every provider (`MIMEParser` → extractor → ledger), so

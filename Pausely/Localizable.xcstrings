@@ -2998,40 +2998,6 @@
         }
       }
     },
-    "In Xfinity Connect settings, allow third-party access.": {
-      "localizations": {
-        "ar": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "في إعدادات Xfinity Connect، اسمح بوصول الجهات الخارجية."
-          }
-        },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Erlauben Sie in den Xfinity-Connect-Einstellungen den Zugriff durch Drittanbieter."
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "En los ajustes de Xfinity Connect, permite el acceso de terceros."
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Dans les paramètres Xfinity Connect, autorisez l'accès tiers."
-          }
-        },
-        "ja": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Xfinity Connectの設定で、サードパーティのアクセスを許可します。"
-          }
-        }
-      }
-    },
     "In Zoho, turn on IMAP access in Mail settings.": {
       "localizations": {
         "ar": {
@@ -5720,40 +5686,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "メールサーバーから予期しない応答がありました。"
-          }
-        }
-      }
-    },
-    "Use your Xfinity password.": {
-      "localizations": {
-        "ar": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "استخدم كلمة مرور Xfinity."
-          }
-        },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Verwenden Sie Ihr Xfinity-Passwort."
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Usa tu contraseña de Xfinity."
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Utilisez votre mot de passe Xfinity."
-          }
-        },
-        "ja": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Xfinityのパスワードを使用します。"
           }
         }
       }
@@ -30867,6 +30799,74 @@
           "stringUnit": {
             "state": "translated",
             "value": "%@の接続を解除しますか？"
+          }
+        }
+      }
+    },
+    "About %lld min left. Keep Pausely open until it finishes.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "الوقت المتبقي نحو %lld د. أبقِ Pausely مفتوحًا حتى ينتهي."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Noch etwa %lld Min. Lassen Sie Pausely geöffnet, bis die Suche fertig ist."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Faltan unos %lld min. Mantén Pausely abierta hasta que termine."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Encore environ %lld min. Gardez Pausely ouvert jusqu’à la fin."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "残り約%lld分。終わるまでPauselyを開いたままにしてください。"
+          }
+        }
+      }
+    },
+    "Your inboxes": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "بريدك الإلكتروني"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ihre Postfächer"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tus buzones"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Vos boîtes de réception"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "あなたの受信箱"
           }
         }
       }

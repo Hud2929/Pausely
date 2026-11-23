@@ -456,7 +456,8 @@ struct SubscriptionIntelligenceEngine {
             category: merchant.category, cancelURL: merchant.cancelURL, amount: amount, currency: latest.currency ?? currency,
             frequency: frequency, lastChargeDate: nil, nextBillingDate: next, status: .active, score: 50,
             tier: tier(for: 50, status: .active), evidence: [], reasons: reasons, previousAmount: nil, trialEndsOn: nil,
-            subscribedOn: first.date, startedWithTrial: true)
+            subscribedOn: first.date, startedWithTrial: true,
+            doubt: L10n.string("This store doesn't email a receipt for each renewal"))
     }
 
     // MARK: Tiering

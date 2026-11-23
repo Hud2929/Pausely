@@ -107,8 +107,9 @@ final class InboxWorkflowUITests: XCTestCase {
         for name in expected {
             let item = row(app, startingWith: name)
             XCTAssertTrue(item.exists, "\(name) should be listed")
-            if item.label.hasSuffix(", not selected") { item.tap() }
-            let selected = expectation(for: NSPredicate(format: "label ENDSWITH ', selected'"), evaluatedWith: item)
+            // Chosen or not is the row's Selected trait (VoiceOver says it), no longer a word in the label.
+            if !item.isSelected { item.tap() }
+            let selected = expectation(for: NSPredicate { _, _ in item.isSelected }, evaluatedWith: nil)
             XCTAssertEqual(XCTWaiter.wait(for: [selected], timeout: 5), .completed, "\(name) should be selected: \(item.label)")
         }
         let importButton = app.buttons["importSelectedButton"]
@@ -132,19 +133,23 @@ final class InboxWorkflowUITests: XCTestCase {
             XCTAssertTrue(app.buttons["importSeeProButton"].exists, "what waits is said, with the way to watch it")
         }
 
-        // 6. Relaunch: the inbox is remembered. Disconnect removes it.
+        // 6. Relaunch: the inbox is remembered, and what it found comes back without searching again.
+        // Disconnect removes it.
         app.terminate()
         app = launch(reset: false)
         XCTAssertTrue(app.buttons["scanInboxesButton"].waitForExistence(timeout: 15), "the inbox survives a relaunch")
-        // The row is one VoiceOver element (address and state, with Reconnect and Disconnect as actions),
-        // so the menu is reached where a sighted person taps it: the row's trailing end.
-        let row = app.descendants(matching: .any)["inboxRow"]
-        XCTAssertTrue(row.waitForExistence(timeout: 5), "the connected inbox is listed")
-        XCTAssertTrue(row.label.hasPrefix(user), "the row is read by its address: \(row.label)")
+        XCTAssertTrue(row(app, startingWith: expected.first ?? "").exists, "what was found is shown again, with no search")
+        // For VoiceOver the row is one element (address and state, with Reconnect and Disconnect as
+        // actions); its menu button is still there to tap. It sits under the findings: scrolled to first.
+        let inbox = app.descendants(matching: .any)["inboxRow"]
+        XCTAssertTrue(inbox.waitForExistence(timeout: 5), "the connected inbox is listed")
+        let options = app.buttons["inboxOptions"]
+        for _ in 0..<6 where !options.isHittable { app.swipeUp() }
+        XCTAssertTrue(inbox.label.hasPrefix(user), "the row is read by its address: \(inbox.label)")
         snap("7-connected")
         let disconnect = app.buttons["disconnectInbox"]
         for _ in 0..<3 where !disconnect.exists {
-            row.coordinate(withNormalizedOffset: CGVector(dx: 0.97, dy: 0.5)).tap()   // a tap while settling can be dropped
+            options.tap()   // a tap while the screen is still settling can be dropped
             _ = disconnect.waitForExistence(timeout: 3)
         }
         XCTAssertTrue(disconnect.exists, "the options menu offers Disconnect")
