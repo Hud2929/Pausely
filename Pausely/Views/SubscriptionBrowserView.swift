@@ -142,7 +142,12 @@ struct SubscriptionBrowserView: View {
         VStack(spacing: 0) {
             // Fixed above the list at ordinary text sizes. At the accessibility sizes it scrolls away
             // with the list: fixed, it filled the screen above the keyboard and no result could be seen.
-            if !typeSize.isAccessibilitySize { top }
+            if !typeSize.isAccessibilitySize {
+                top
+                    // In the page's column on iPad, as the list below is.
+                    .frame(maxWidth: ReadableWidth.maxWidth)
+                    .frame(maxWidth: .infinity)
+            }
 
             SearchableScroll {
                 if typeSize.isAccessibilitySize { top }
@@ -163,8 +168,13 @@ struct SubscriptionBrowserView: View {
                 .padding(.bottom, 40)
             }
             .scrollDismissesKeyboard(.interactively)
+            // The phone's reading width on iPad, its margins still scrolling the list.
+            .readableScroll()
         }
         .inkScreen()
+        // A page on iPad: the door to everything that can be added showed four and a half rows in a 578 by
+        // 636 box on a 13-inch screen (the rating of 2026-11-22).
+        .presentationSizing(.page)
         .navigationBarHidden(true)
         .sheet(isPresented: $showingTierSheet) {
             if let entry = selectedEntry {

@@ -13,6 +13,9 @@ struct ServiceLogoView: View {
     let size: CGFloat
 
     @State private var image: UIImage?
+    /// The icon is a dark glyph on a clear background: drawn on white, as iOS draws such icons. On the
+    /// app's ink it was all but invisible (1Password, the rating of 2026-11-22).
+    @State private var onWhite = false
 
     init(name: String, category: String? = nil, size: CGFloat = 48) {
         self.name = name
@@ -27,15 +30,25 @@ struct ServiceLogoView: View {
     var body: some View {
         let shape = RoundedRectangle(cornerRadius: size * 0.24, style: .continuous)
         ZStack {
-            shape.fill(Color.inkLifted)
+            shape.fill(onWhite ? Color.paper : Color.inkLifted)
 
             if let image {
-                Image(uiImage: image)
-                    .resizable()
-                    .interpolation(.high)
-                    .scaledToFill()
-                    .frame(width: size, height: size)
-                    .transition(.opacity)
+                if onWhite {
+                    Image(uiImage: image)
+                        .resizable()
+                        .interpolation(.high)
+                        .scaledToFit()
+                        .padding(size * 0.16)
+                        .frame(width: size, height: size)
+                        .transition(.opacity)
+                } else {
+                    Image(uiImage: image)
+                        .resizable()
+                        .interpolation(.high)
+                        .scaledToFill()
+                        .frame(width: size, height: size)
+                        .transition(.opacity)
+                }
             } else {
                 initialView
             }
@@ -47,12 +60,41 @@ struct ServiceLogoView: View {
         .task(id: domain) {
             guard let domain else { image = nil; return }
             if let cached = LogoStore.shared.cachedImage(for: domain) {
+                onWhite = Self.isDarkGlyphOnClear(cached)
                 image = cached
                 return
             }
             let loaded = await LogoStore.shared.image(for: domain)
+            onWhite = loaded.map(Self.isDarkGlyphOnClear) ?? false
             withAnimation(Motion.fade) { image = loaded }
         }
+    }
+
+    /// Whether an icon is a glyph on a clear background (most of its corners see-through) whose own colour
+    /// is dark: such a glyph needs a white tile. A light glyph on clear stays on ink, where it shows.
+    nonisolated static func isDarkGlyphOnClear(_ image: UIImage) -> Bool {
+        guard let cg = image.cgImage else { return false }
+        let side = 8
+        var pixels = [UInt8](repeating: 0, count: side * side * 4)
+        let drawn = pixels.withUnsafeMutableBytes { buffer -> Bool in
+            guard let context = CGContext(data: buffer.baseAddress, width: side, height: side, bitsPerComponent: 8,
+                                          bytesPerRow: side * 4, space: CGColorSpaceCreateDeviceRGB(),
+                                          bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue) else { return false }
+            context.draw(cg, in: CGRect(x: 0, y: 0, width: side, height: side))
+            return true
+        }
+        guard drawn else { return false }
+        let corners = [0, side - 1, (side - 1) * side, side * side - 1]
+        guard corners.filter({ pixels[$0 * 4 + 3] < 128 }).count >= 3 else { return false }
+        var light = 0.0, counted = 0.0
+        for index in 0..<(side * side) where pixels[index * 4 + 3] >= 128 {
+            let alpha = Double(pixels[index * 4 + 3]) / 255
+            let red = Double(pixels[index * 4]) / 255 / alpha, green = Double(pixels[index * 4 + 1]) / 255 / alpha
+            let blue = Double(pixels[index * 4 + 2]) / 255 / alpha
+            light += 0.2126 * red + 0.7152 * green + 0.0722 * blue
+            counted += 1
+        }
+        return counted > 0 && light / counted < 0.6
     }
 
     /// The letter on the tile: the first letter or digit of the name. A name can begin with something
@@ -284,6 +326,8 @@ enum ServiceDomains {
     /// must be on the service's domain; the test holds both.
     nonisolated static let assetHosts: [String: String] = [
         "duolingo.com": "d35aaqx5ub95lt.cloudfront.net",
+        // Deezer's front page names its 72-point icon there (read on 2026-11-22); its own favicon is 16.
+        "deezer.com": "cdn-files.dzcdn.net",
     ]
 
     /// Whether an address is on a service's own site: its domain, a name under it, or the one
@@ -297,7 +341,8 @@ enum ServiceDomains {
     private static let domains: [String: String] = [
         // ── Streaming: Video ──────────────────────────────────────────────
         "netflix": "netflix.com",
-        "gmail": "gmail.com", "gmail (app password)": "gmail.com", "icloud mail": "icloud.com",
+        // Gmail's own site is mail.google.com: gmail.com has no icon of its own (2026-11-22).
+        "gmail": "mail.google.com", "gmail (app password)": "mail.google.com", "icloud mail": "icloud.com",
         "yahoo mail": "yahoo.com", "aol mail": "aol.com", "outlook": "outlook.com",
         "hulu": "hulu.com",
         "disney+": "disneyplus.com",

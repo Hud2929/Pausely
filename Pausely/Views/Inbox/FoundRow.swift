@@ -17,6 +17,8 @@ struct FoundRow: View {
     var isWaiting: Bool = false
     /// The price on the list, when it differs from the receipts'.
     var listedPrice: String? = nil
+    /// Puts the receipts' price on the list in place of the one there: offered where the two differ.
+    var onUpdatePrice: (() -> Void)? = nil
     let isSelected: Bool
     let isExpanded: Bool
     let onToggle: () -> Void
@@ -306,6 +308,19 @@ struct FoundRow: View {
     /// Why Pausely thinks so, and the charges it read: the proof behind the line.
     private var evidenceDetail: some View {
         VStack(alignment: .leading, spacing: 10) {
+            // The list's price differs from the receipts': said on the row, and here the way to fix it. The
+            // difference was shown with nothing to do about it (the rating of 2026-11-22).
+            if listedPrice != nil, let onUpdatePrice, let priceText {
+                Button(action: onUpdatePrice) {
+                    Text(verbatim: L10n.string("Use \(found.billingFrequency.priced(priceText)) on your list"))
+                        .font(.subheadline.weight(.semibold))
+                        .foregroundStyle(Color.inkText)
+                        .multilineTextAlignment(.leading)
+                }
+                .buttonStyle(.plain)
+                .tapArea(.leading)
+                .accessibilityIdentifier("updateListedPrice")
+            }
             ForEach(Array(proven.reasons.enumerated()), id: \.offset) { _, reason in
                 HStack(alignment: .firstTextBaseline, spacing: 8) {
                     Text(verbatim: "·").foregroundStyle(Color.inkTextFaint).accessibilityHidden(true)

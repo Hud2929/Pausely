@@ -1,5 +1,6 @@
 import SwiftUI
 import XCTest
+import UIKit
 @testable import Pausely
 
 /// Rules every screen keeps, each found broken by the Arabic screen tour on 2026-11-12.
@@ -30,6 +31,24 @@ final class ScreenRulesTests: XCTestCase {
         let source = try String(contentsOf: file, encoding: .utf8)
         XCTAssertTrue(source.contains(".readableScroll()"))
         XCTAssertFalse(source.contains(".readableWidth()"), "a narrowed scroll view leaves the margins dead")
+    }
+
+    /// A dark glyph on a clear background goes on a white tile (on ink it vanished: 1Password); a light
+    /// glyph on clear stays on ink, and a full square icon is drawn as it is (2026-11-22).
+    func testADarkLogoOnClearIsDrawnOnWhite() {
+        func icon(glyph: UIColor, background: UIColor?) -> UIImage {
+            let format = UIGraphicsImageRendererFormat()
+            format.opaque = false
+            format.scale = 1
+            return UIGraphicsImageRenderer(size: CGSize(width: 64, height: 64), format: format).image { context in
+                if let background { background.setFill(); context.fill(CGRect(x: 0, y: 0, width: 64, height: 64)) }
+                glyph.setFill()
+                context.fill(CGRect(x: 16, y: 16, width: 32, height: 32))
+            }
+        }
+        XCTAssertTrue(ServiceLogoView.isDarkGlyphOnClear(icon(glyph: .black, background: nil)))
+        XCTAssertFalse(ServiceLogoView.isDarkGlyphOnClear(icon(glyph: .white, background: nil)), "a light glyph shows on ink")
+        XCTAssertFalse(ServiceLogoView.isDarkGlyphOnClear(icon(glyph: .black, background: .red)), "a full icon is drawn as it is")
     }
 
     func testALogoTileShowsTheNamesFirstLetter() {

@@ -551,6 +551,7 @@ struct InboxImportView: View {
                         isOnList: isOnList(found) || isWaiting(found),
                         isWaiting: isWaiting(found),
                         listedPrice: FoundRow.listedPrice(store.subscriptions.first { ServiceName.same($0.name, found.name) }, for: found),
+                        onUpdatePrice: { Task { await useFoundPrice(found) } },
                         isSelected: selected.contains(found.id),
                         isExpanded: expanded.contains(found.id),
                         onToggle: { if selected.contains(found.id) { selected.remove(found.id) } else { selected.insert(found.id) } },
@@ -647,6 +648,16 @@ struct InboxImportView: View {
             .background(Color.ink)
             .overlay(alignment: .top) { Hairline() }
         }
+    }
+
+    /// The receipts' price, period and currency on the listed subscription: only when the person asks.
+    private func useFoundPrice(_ found: FoundSubscription) async {
+        guard var listed = store.subscriptions.first(where: { ServiceName.same($0.name, found.name) }) else { return }
+        listed.amount = found.proven.comingAmount ?? found.amount
+        listed.currency = found.currency
+        listed.billingFrequency = found.billingFrequency
+        await store.updateSubscription(listed)
+        Feel.landed()
     }
 
     private func undoHide() {

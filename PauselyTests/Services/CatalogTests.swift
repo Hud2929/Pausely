@@ -150,7 +150,10 @@ final class CatalogTests: XCTestCase {
             XCTAssertEqual(LogoStore.sources(for: domain).count, 4, "the usual three are still tried after it")
         }
         // The services that showed a letter on a new install, on the first screens with logos.
-        XCTAssertEqual(ServiceDomains.assetHosts, ["duolingo.com": "d35aaqx5ub95lt.cloudfront.net"])
+        XCTAssertEqual(ServiceDomains.assetHosts, ["duolingo.com": "d35aaqx5ub95lt.cloudfront.net",
+                                                   "deezer.com": "cdn-files.dzcdn.net"])
+        // Gmail's icon is asked of Gmail's own site (gmail.com has none).
+        XCTAssertEqual(ServiceDomains.domain(for: "Gmail"), "mail.google.com")
         // What "its own site" means, and that an address anywhere else is never asked.
         XCTAssertTrue(ServiceDomains.isOwnSite(try XCTUnwrap(URL(string: "https://gmedia.playstation.com/x.png")), of: "playstation.com"))
         XCTAssertFalse(ServiceDomains.isOwnSite(try XCTUnwrap(URL(string: "https://notplaystation.com/x.png")), of: "playstation.com"))
