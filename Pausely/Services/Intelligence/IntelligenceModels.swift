@@ -134,6 +134,9 @@ struct IntelligenceReport: Equatable {
     var subscriptions: [ProvenSubscription]
     var ignoredPurchaseGroups: Int
     var insights: [IntelligenceInsight]
+    /// Who those charges came from, so the count can be opened and checked (it was a number nothing
+    /// explained, the rating of 2026-11-22).
+    var ignoredSenders: [String] = []
 
     var active: [ProvenSubscription] {
         subscriptions.filter { $0.status != .likelyEnded && $0.status != .cancelled }

@@ -57,6 +57,21 @@ final class InboxScanner: ObservableObject {
     /// first Gmail search is about six minutes on Google's quota for one person, and nothing said so.
     @Published private(set) var minutesLeft: Int?
     @Published var foundSubscriptions: [FoundSubscription] = []
+    /// What was ticked on the results, kept while the app runs: closing the page lost every tick (the
+    /// rating of 2026-11-22). Nil until the person has chosen; a new search starts over.
+    var savedSelection: Set<String>?
+    /// The dollar a receipt that says only "$" is taken as, when the person chose one.
+    static let assumedDollarKey = "inbox_assumed_dollar"
+    var assumedDollar: String {
+        UserDefaults.standard.string(forKey: Self.assumedDollarKey)
+            ?? DollarHint.assumed(readerCurrency: CurrencyManager.shared.selectedCurrency)
+    }
+
+    func setAssumedDollar(_ code: String) {
+        UserDefaults.standard.set(code, forKey: Self.assumedDollarKey)
+        reanalyze()
+    }
+
     /// What the person said isn't a subscription, from the same facts, so it can be shown again later.
     @Published private(set) var hiddenFindings: [FoundSubscription] = []
     /// The latest receipt read for each sender during the running search, newest first.
@@ -287,6 +302,7 @@ final class InboxScanner: ObservableObject {
         stats = ScanStats()
         receiptsSeen = []
         minutesLeft = nil
+        savedSelection = nil
         // The usual half minute more when the app is left: without it, the requests in flight were cut.
         let background = BackgroundTime()
         defer { isScanning = false; statusLine = ""; minutesLeft = nil; background.end() }
@@ -379,7 +395,9 @@ final class InboxScanner: ObservableObject {
             }
             accountStats.checked = summaries.count
             let wanted = Self.triage(summaries, catalog: catalog).prefix(Self.bodyBudget)
-            report(headerEnd, L10n.string("Reading \(L10n.string("\(wanted.count) emails")) from \(account.providerName)…"))
+            if !wanted.isEmpty {
+                report(headerEnd, L10n.string("Reading \(L10n.string("\(wanted.count) emails")) from \(account.providerName)…"))
+            }
 
             var signals: [ReceiptSignal] = []
             var stopped = false
@@ -441,7 +459,7 @@ final class InboxScanner: ObservableObject {
               let merchant = catalog.resolve(hint: signal.merchantHint, senderName: signal.senderName, senderDomain: signal.senderDomain)
         else { return }
         let seen = ReceiptSeen(name: merchant.displayName, amount: amount,
-                               currency: signal.currency ?? DollarHint.assumed(readerCurrency: CurrencyManager.shared.selectedCurrency), date: signal.date)
+                               currency: signal.currency ?? assumedDollar, date: signal.date)
         if let index = receiptsSeen.firstIndex(where: { $0.id == seen.id }) {
             guard receiptsSeen[index].date < seen.date else { return }
             receiptsSeen.remove(at: index)
@@ -493,7 +511,7 @@ final class InboxScanner: ObservableObject {
     func analyze(_ ledger: [ReceiptSignal], catalog: MerchantCatalog) {
         let engine = SubscriptionIntelligenceEngine(catalog: catalog)
         let corrections = UserCorrections.load()
-        let currency = DollarHint.assumed(readerCurrency: CurrencyManager.shared.selectedCurrency)
+        let currency = assumedDollar
         let analysis = engine.analyze(signals: ledger, now: Date(), defaultCurrency: currency,
                                       corrections: corrections, rates: CurrencyManager.shared.rates)
         report = analysis

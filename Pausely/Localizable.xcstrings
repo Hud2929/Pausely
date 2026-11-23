@@ -30803,40 +30803,6 @@
         }
       }
     },
-    "The receipts say only “$”: taken as %@": {
-      "localizations": {
-        "ar": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "لا تذكر الإيصالات إلا «$»: اعتُبرت %@"
-          }
-        },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Die Belege nennen nur „$“: als %@ angenommen"
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Los recibos solo dicen «$»: se toma como %@"
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Les reçus n’indiquent que « $ » : comptés en %@"
-          }
-        },
-        "ja": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "領収書には「$」としか書かれていないため、%@として扱っています"
-          }
-        }
-      }
-    },
     "Adding…": {
       "localizations": {
         "ar": {
@@ -31075,40 +31041,6 @@
         }
       }
     },
-    "Free tracks %lld. Added now: %@. Waiting until you make room or go Pro: %@.": {
-      "localizations": {
-        "ar": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "النسخة المجانية تتابع %1$lld. يُضاف الآن: %2$@. ينتظر حتى تُفسح مكانًا أو تشترك في Pro: %3$@."
-          }
-        },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Free verfolgt %1$lld. Jetzt hinzugefügt: %2$@. Wartet, bis Sie Platz schaffen oder Pro nutzen: %3$@."
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Free sigue %1$lld. Se añaden ahora: %2$@. Esperan hasta que hagas sitio o te pases a Pro: %3$@."
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Free suit %1$lld. Ajoutés maintenant : %2$@. En attente jusqu’à ce que vous fassiez de la place ou passiez à Pro : %3$@."
-          }
-        },
-        "ja": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "無料版で管理できるのは%1$lld件です。今回追加：%2$@。空きができるかProにするまで待機：%3$@。"
-          }
-        }
-      }
-    },
     "Waiting for room on your list": {
       "localizations": {
         "ar": {
@@ -31207,6 +31139,278 @@
           "stringUnit": {
             "state": "translated",
             "value": "空きができるまで%lld件を保留"
+          }
+        }
+      }
+    },
+    "Receipts that say only “$” are counted as %@.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "الإيصالات التي لا تذكر إلا «$» تُحتسب %@."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Belege, die nur „$“ nennen, werden als %@ gezählt."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Los recibos que solo dicen «$» se cuentan como %@."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Les reçus qui n’indiquent que « $ » sont comptés en %@."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "「$」としか書かれていない領収書は%@として数えます。"
+          }
+        }
+      }
+    },
+    "Change which dollar": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "تغيير نوع الدولار"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dollar ändern"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cambiar de dólar"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Changer de dollar"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ドルの種類を変更"
+          }
+        }
+      }
+    },
+    "Their charges vary or say they're one-time. If one is a subscription, add it from the list by hand.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "رسومها تتغير أو تقول إنها لمرة واحدة. إن كان أحدها اشتراكًا فأضفه يدويًا من القائمة."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ihre Abbuchungen schwanken oder sind als einmalig gekennzeichnet. Ist eines davon ein Abo, fügen Sie es selbst aus der Liste hinzu."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sus cargos varían o dicen que son únicos. Si alguno es una suscripción, añádelo a mano desde la lista."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Leurs prélèvements varient ou se disent ponctuels. Si l’un d’eux est un abonnement, ajoutez-le à la main depuis la liste."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "請求額が変わるか、1回限りと書かれています。サブスクのものがあれば、リストから手動で追加してください。"
+          }
+        }
+      }
+    },
+    "For the %lld not on your list yet": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "لما ليس في قائمتك بعد (%lld)"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Für die %lld, die noch nicht in Ihrer Liste sind"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Para las %lld que aún no están en tu lista"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pour les %lld pas encore dans votre liste"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "まだリストにない%lld件"
+          }
+        }
+      }
+    },
+    "Add %lld, keep %lld waiting": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "أضف %1$lld وأبقِ %2$lld بالانتظار"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$lld hinzufügen, %2$lld warten lassen"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Añadir %1$lld, dejar %2$lld en espera"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ajouter %1$lld, garder %2$lld en attente"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$lld件を追加、%2$lld件は待機"
+          }
+        }
+      }
+    },
+    "Free tracks %lld. Added now, most expensive first: %@.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "النسخة المجانية تتابع %1$lld. يُضاف الآن، الأغلى أولًا: %2$@."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Free verfolgt %1$lld. Jetzt hinzugefügt, die teuersten zuerst: %2$@."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Free sigue %1$lld. Se añaden ahora, primero las más caras: %2$@."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Free suit %1$lld. Ajoutés maintenant, les plus chers d’abord : %2$@."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "無料版で管理できるのは%1$lld件です。今回追加（高い順）：%2$@。"
+          }
+        }
+      }
+    },
+    "Change": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "تغيير"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ändern"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cambiar"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Modifier"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "変更"
+          }
+        }
+      }
+    },
+    "Shown": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ظاهرة"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Eingeblendet"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Visibles"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Affichés"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "表示中"
           }
         }
       }

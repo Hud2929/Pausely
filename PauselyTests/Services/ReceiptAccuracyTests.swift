@@ -544,8 +544,8 @@ final class ReceiptAccuracyTests: XCTestCase {
         }
         let plan = analyze(charges, now: day(2026, 8, 20)).first
         XCTAssertEqual(plan?.currencyAssumed, true)
-        XCTAssertEqual(plan.flatMap { FoundRow.assumedCurrency(for: $0, locale: Locale(identifier: "en_US")) },
-                       "The receipts say only “$”: taken as US Dollar")
+        XCTAssertEqual(DollarNote.sentence(code: "USD", locale: Locale(identifier: "en_US")),
+                       "Receipts that say only “$” are counted as US Dollar.", "said once, above the rows, with a way to change it")
     }
 
     func testAnUnknownMerchantWhosePriceSteppedOnceIsStillOnePlan() {

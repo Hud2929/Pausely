@@ -28,6 +28,8 @@ struct InboxImportView: View {
     @State private var disconnecting: MailboxAccount?
     /// The finding last hidden with "This isn't a subscription", until it is undone or another is hidden.
     @State private var hidden: Hidden?
+    /// Where the page should scroll next ("top", or a row's "why").
+    @State private var scrollTarget: String?
 
     private struct Hidden {
         let found: FoundSubscription
@@ -37,8 +39,10 @@ struct InboxImportView: View {
 
     var body: some View {
         NavigationStack {
+            ScrollViewReader { page in
             ScrollView(showsIndicators: false) {
                 VStack(spacing: 24) {
+                    Color.clear.frame(height: 0).id("top")
                     if let outcome {
                         InboxOutcome(outcome: outcome, onDone: { dismiss() }, onSeePro: { showingPaywall = true })
                     } else if !scanner.hasAccounts {
@@ -57,6 +61,14 @@ struct InboxImportView: View {
             }
             // The phone's reading width on iPad, its margins still scrolling the page (ReadableScroll).
             .readableScroll()
+            // An opened "why" is brought into view (its last line was under the bar), and the page is back at
+            // its top when the last inbox goes (it opened scrolled, its heading cut off) (2026-11-22).
+            .onChange(of: scrollTarget) { _, target in
+                guard let target else { return }
+                withAnimation(Motion.unlessReduced(Motion.arrive)) { page.scrollTo(target, anchor: target == "top" ? .top : .bottom) }
+                scrollTarget = nil
+            }
+            }
             .background(Color.ink.ignoresSafeArea())
             .safeAreaInset(edge: .bottom) { addBar }
             .navigationTitle("Find in Email")
@@ -93,11 +105,14 @@ struct InboxImportView: View {
             }
         }
         .onAppear { scanner.showSaved() }
+        // Only the person's own ticks are kept: the clearing a new search does is not a choice.
+        .onChange(of: selected) { _, now in if didPreselect, !scanner.isScanning { scanner.savedSelection = now } }
         // On iPad a page, with the reading column inside it: from Home, the catalog and Profile it was a
         // 580 by 640 box, and opened by itself it ran edge to edge (the reach rating of 2026-11-22).
         .presentationSizing(.page)
         // Connecting is the request to search: a new inbox is searched at once, without a second tap.
         .onChange(of: scanner.accounts.count) { before, after in
+            if after == 0, before > 0 { scrollTarget = "top" }
             guard after > before else { return }
             outcome = nil
             Task { await scanner.scanAll() }
@@ -361,7 +376,7 @@ struct InboxImportView: View {
 
     private var live: [FoundSubscription] { scanner.foundSubscriptions.filter(\.isLive) }
     private var chosen: [FoundSubscription] {
-        scanner.foundSubscriptions.filter { selected.contains($0.id) && !$0.isCancelled && !isOnList($0) }
+        scanner.foundSubscriptions.filter { selected.contains($0.id) && !$0.isCancelled && !isOnList($0) && !isWaiting($0) }
     }
 
     private var resultsSection: some View {
@@ -372,7 +387,7 @@ struct InboxImportView: View {
 
         return VStack(spacing: 28) {
             summary(count: live.count)
-            insights
+            FoundInsights(insights: Array((scanner.report?.insights ?? []).prefix(4)))
             if !confirmed.isEmpty {
                 listSection(title: "Confirmed", subtitle: "Your receipts show these renew", items: confirmed)
             }
@@ -413,6 +428,7 @@ struct InboxImportView: View {
     private func preselectConfirmed() {
         guard !didPreselect else { return }
         didPreselect = true
+        if let saved = scanner.savedSelection { selected = saved; return }
         selected = Set(live.filter { $0.proven.tier == .confirmed && !isOnList($0) && !isWaiting($0) }.map(\.id))
     }
 
@@ -444,23 +460,20 @@ struct InboxImportView: View {
 
             PaperSlip(tornTop: true, tornBottom: true) {
                 VStack(alignment: .leading, spacing: 10) {
-                    Text(verbatim: picked.isEmpty ? L10n.string("For everything found") : L10n.string("For the \(picked.count) you've ticked"))
+                    // Says what it sums: "For everything found" stood over only the rows not yet listed (2026-11-22).
+                    Text(verbatim: !picked.isEmpty ? L10n.string("For the \(picked.count) you've ticked")
+                                   : base.count < live.count ? L10n.string("For the \(base.count) not on your list yet")
+                                   : L10n.string("For everything found"))
                         .font(.proof(.caption))
                         .foregroundStyle(Color.paperMuted)
                     ProofLine(label: L10n.string("Each month"), value: MoneyFormat.total(monthly, currency, converted: converted), emphasised: true)
                     ProofLine(label: L10n.string("Each year"), value: MoneyFormat.total(monthly * 12, currency, converted: converted))
-                    if ignored > 0 || stats.emailsChecked > 0 { Perforation() }
+                    if stats.emailsChecked > 0 { Perforation() }
                     if stats.emailsChecked > 0 {
                         // A later search reads only new mail while the findings come from every search (T31).
                         Facts(stats.onlyNewMail
                               ? L10n.string("New emails since the last search: \(stats.emailsChecked) · read in full: \(stats.bodiesRead) · all on your phone")
                               : L10n.string("Emails checked: \(stats.emailsChecked) · read in full: \(stats.bodiesRead) · all on your phone"))
-                            .font(.proof(.caption))
-                            .foregroundStyle(Color.paperMuted)
-                            .fixedSize(horizontal: false, vertical: true)
-                    }
-                    if ignored > 0 {
-                        Text("Other senders with charges that didn't look like subscriptions: \(ignored)")
                             .font(.proof(.caption))
                             .foregroundStyle(Color.paperMuted)
                             .fixedSize(horizontal: false, vertical: true)
@@ -481,50 +494,15 @@ struct InboxImportView: View {
                 }
             }
             .accessibilityElement(children: .combine)
+
+            if live.contains(where: { $0.proven.currencyAssumed }) {
+                DollarNote(code: scanner.assumedDollar, onChoose: scanner.setAssumedDollar)
+            }
+            if ignored > 0 {
+                OtherSenders(count: ignored, names: scanner.report?.ignoredSenders ?? [])
+            }
         }
         .frame(maxWidth: .infinity, alignment: .leading)
-    }
-
-    @ViewBuilder
-    private var insights: some View {
-        let insights = Array((scanner.report?.insights ?? []).prefix(4))
-        if !insights.isEmpty {
-            VStack(alignment: .leading, spacing: 0) {
-                Text("Worth knowing")
-                    .font(.headline)
-                    .foregroundStyle(Color.inkText)
-                    .padding(.bottom, 4)
-                    .accessibilityAddTraits(.isHeader)
-                ForEach(Array(insights.enumerated()), id: \.element.id) { index, insight in
-                    if index > 0 { Hairline() }
-                    HStack(alignment: .firstTextBaseline, spacing: 12) {
-                        StateMark(state: state(for: insight.kind))
-                            .accessibilityHidden(true)
-                        VStack(alignment: .leading, spacing: 2) {
-                            Text(insight.title)
-                                .font(.body.weight(.semibold))
-                                .foregroundStyle(Color.inkText)
-                                .fixedSize(horizontal: false, vertical: true)
-                            Text(insight.detail)
-                                .font(.subheadline)
-                                .foregroundStyle(Color.inkTextMuted)
-                                .fixedSize(horizontal: false, vertical: true)
-                        }
-                    }
-                    .padding(.vertical, 12)
-                    .accessibilityElement(children: .combine)
-                }
-            }
-            .frame(maxWidth: .infinity, alignment: .leading)
-        }
-    }
-
-    private func state(for kind: IntelligenceInsight.Kind) -> MoneyState {
-        switch kind {
-        case .chargedAfterCancel, .paymentFailed: return .due
-        case .priceIncrease, .priceChangeNotice, .trialEnding, .renewalSoon: return .decide
-        case .likelyEnded: return .paused
-        }
     }
 
     /// The widest price among everything found, in every section: one price column for the page.
@@ -535,7 +513,7 @@ struct InboxImportView: View {
     }
 
     private func listSection(title: LocalizedStringKey, subtitle: LocalizedStringKey, items: [FoundSubscription]) -> some View {
-        let selectable = items.filter { !$0.isCancelled && !isOnList($0) }
+        let selectable = items.filter { !$0.isCancelled && !isOnList($0) && !isWaiting($0) }
         return VStack(alignment: .leading, spacing: 6) {
             AdaptiveRow {
                 VStack(alignment: .leading, spacing: 2) {
@@ -569,7 +547,8 @@ struct InboxImportView: View {
                     FoundRow(
                         found: found,
                         widestPrice: widestPrice,
-                        isOnList: isOnList(found),
+                        // A row waiting for room is not a choice: ticking it again did nothing (2026-11-22).
+                        isOnList: isOnList(found) || isWaiting(found),
                         isWaiting: isWaiting(found),
                         listedPrice: FoundRow.listedPrice(store.subscriptions.first { ServiceName.same($0.name, found.name) }, for: found),
                         isSelected: selected.contains(found.id),
@@ -578,6 +557,9 @@ struct InboxImportView: View {
                         onExpand: {
                             withAnimation(Motion.unlessReduced(Motion.touch)) {
                                 if expanded.contains(found.id) { expanded.remove(found.id) } else { expanded.insert(found.id) }
+                            }
+                            if expanded.contains(found.id) {
+                                Task { try? await Task.sleep(for: .milliseconds(250)); scrollTarget = "why-\(found.id)" }
                             }
                         },
                         onReject: {
@@ -624,7 +606,7 @@ struct InboxImportView: View {
                                             in: CurrencyManager.shared.selectedCurrency, rates: CurrencyManager.shared.rates)
             Text(slots == 0
                  ? L10n.string("Free tracks \(FreeTier.subscriptionLimit) and your list is full. What you add now will wait until you make room or go Pro.")
-                 : L10n.string("Free tracks \(FreeTier.subscriptionLimit). Added now: \(Self.names(split.add)). Waiting until you make room or go Pro: \(Self.names(split.wait))."))
+                 : L10n.string("Free tracks \(FreeTier.subscriptionLimit). Added now, most expensive first: \(Self.names(split.add))."))
                 .font(.footnote)
                 .foregroundStyle(Color.inkTextMuted)
                 .fixedSize(horizontal: false, vertical: true)
@@ -648,6 +630,7 @@ struct InboxImportView: View {
                     Button(action: { Task { await addChosen() } }) {
                         if importing { Busy(Text("Adding…")) }
                         else if freeSlots == 0 { Text("Keep \(chosen.count) for when there's room") }
+                        else if let slots = freeSlots, newlyChosen > slots { Text("Add \(slots), keep \(newlyChosen - slots) waiting") }
                         else { Text("Add \(chosen.count) to my list") }
                     }
                     .buttonStyle(.ink)

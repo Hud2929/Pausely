@@ -37,6 +37,7 @@ struct SubscriptionIntelligenceEngine {
 
         var detected: [ProvenSubscription] = []
         var ignored = 0
+        var ignoredNames: [String] = []
 
         for (key, group) in groups {
             let verdict = corrections[key]
@@ -57,7 +58,10 @@ struct SubscriptionIntelligenceEngine {
                     return boosted
                 }
             }
-            if results.isEmpty { if group.signals.contains(where: { $0.amount != nil }) { ignored += 1 } }
+            if results.isEmpty, group.signals.contains(where: { $0.amount != nil }) {
+                ignored += 1
+                ignoredNames.append(group.merchant.displayName)
+            }
             detected.append(contentsOf: results)
         }
 
@@ -83,7 +87,8 @@ struct SubscriptionIntelligenceEngine {
                 return inDefault($0.annualCost, $0.currency) > inDefault($1.annualCost, $1.currency)
             }
 
-        return IntelligenceReport(subscriptions: detected, ignoredPurchaseGroups: ignored, insights: insights)
+        return IntelligenceReport(subscriptions: detected, ignoredPurchaseGroups: ignored, insights: insights,
+                                  ignoredSenders: ignoredNames.sorted { $0.localizedCaseInsensitiveCompare($1) == .orderedAscending })
     }
 
     // MARK: Group analysis

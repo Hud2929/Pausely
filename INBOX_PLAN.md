@@ -170,6 +170,18 @@ each with a test where one can hold it:
 Still open from the round: Hijri dates on ar_SA (native reader), letter-tile logos (B16), the catalog's
 own iPad sheet, the largest-size slip wrapping "ر.س." and hyphenating, real-device VoiceOver.
 
+**Third rating (2026-11-22 night, one fresh Fable rater): 8.1 overall** (up from 7.8). 22 of 22 found,
+none invented; amount, period and state right on all 22. Fixed after it: the slip says what it sums ("For
+the 15 not on your list yet"); the "$" assumption is said once with a menu to choose the dollar (every
+row and the total follow); "Other senders…: 5" opens to their names with what to do; rows waiting for room
+are no longer a choice; the button says "Add 5, keep 13 waiting" and the note is one sentence; a receipt
+dated after today shows today; an opened "why" scrolls into view; ticks survive closing the page; the page
+returns to its top after the last disconnect; "Reading 0 emails" is no longer said.
+Open after it: Gmail/Outlook letter tiles and a few services' logos (B16), the catalog's small iPad sheet
+and the app-wide dead iPad margins (B5), the paste icon's contrast, the server field's hint read as its
+value, an "update price" offer for a listed price that differs, and everything only a device or a native
+reader can judge.
+
 ## Real accounts, real subscriptions, and Outlook (plan of 2026-11-18)
 
 The owner asked: fix the import from email, make sure every way in works and pulls real

@@ -31,7 +31,7 @@ struct FoundRow: View {
     private var proven: ProvenSubscription { found.proven }
 
     private var badge: (text: String, state: MoneyState?)? {
-        if isWaiting, !isOnList, !found.isCancelled { return (L10n.string("Waiting for room on your list"), nil) }
+        if isWaiting, !found.isCancelled { return (L10n.string("Waiting for room on your list"), nil) }
         if isOnList, !found.isCancelled {
             return (listedPrice.map { L10n.string("On your list at \($0)") } ?? L10n.string("On your list"), nil)
         }
@@ -67,13 +67,6 @@ struct FoundRow: View {
         return same ? nil : listed.billingFrequency.priced(listed.chargeText)
     }
 
-    /// When no receipt said which dollar: the row says what it was taken as, in words.
-    static func assumedCurrency(for proven: ProvenSubscription, locale: Locale = L10n.locale) -> String? {
-        guard proven.currencyAssumed, proven.amount > 0 else { return nil }
-        let name = locale.localizedString(forCurrencyCode: proven.currency) ?? proven.currency
-        return L10n.string("The receipts say only “$”: taken as \(name)")
-    }
-
     /// Why a row is only worth a look; nothing for a confirmed one, a trial, or one that ended.
     static func doubt(for proven: ProvenSubscription) -> String? {
         guard proven.tier < .confirmed, proven.status == .active || proven.status == .priceIncreased else { return nil }
@@ -88,7 +81,9 @@ struct FoundRow: View {
         let day: (Date) -> String = { L10n.day($0, now: now) }
         // Worked out from the email's date, so "around", never a day stated as fact.
         if proven.status == .trial, let ends = proven.trialEndsOn { return L10n.string("Trial ends around \(day(ends))") }
-        if let last = proven.lastChargeDate.map(day) { return L10n.string("Last charged \(last)") }
+        // Never a day after today: a receipt's clock can run ahead of the phone's ("last charged Nov 23" on
+        // Nov 22, the rating of 2026-11-22).
+        if let last = proven.lastChargeDate.map({ day(min($0, now)) }) { return L10n.string("Last charged \(last)") }
         // Known from its sign-up (a channel that emails no receipts, a trial that turned paid): when it
         // started, never "Last charged", which said a sign-up was the latest charge.
         if let started = proven.subscribedOn.map(day) {
@@ -107,7 +102,6 @@ struct FoundRow: View {
         parts.append(evidenceLine)
         if let doubt = Self.doubt(for: proven) { parts.append(doubt) }
         if let afterTrial = Self.afterTrial(for: found) { parts.append(afterTrial) }
-        if let assumed = Self.assumedCurrency(for: proven) { parts.append(assumed) }
         if let badge { parts.append(badge.text) }
         // Chosen or not is the button's Selected trait, which VoiceOver says; the word said it twice.
         return parts.joined(separator: ", ")
@@ -161,7 +155,7 @@ struct FoundRow: View {
             }
             .padding(.vertical, 10)
 
-            if isExpanded { evidenceDetail }
+            if isExpanded { evidenceDetail.id("why-\(found.id)") }
         }
     }
 
@@ -253,14 +247,6 @@ struct FoundRow: View {
                     .foregroundStyle(Color.inkTextMuted)
                     .multilineTextAlignment(.leading)
                     .fixedSize(horizontal: false, vertical: true)
-            }
-            if let assumed = Self.assumedCurrency(for: proven) {
-                Text(verbatim: assumed)
-                    .font(.footnote)
-                    .foregroundStyle(Color.inkTextMuted)
-                    .multilineTextAlignment(.leading)
-                    .fixedSize(horizontal: false, vertical: true)
-                    .accessibilityIdentifier("foundCurrencyAssumed")
             }
             if let badge {
                 HStack(spacing: 6) {
