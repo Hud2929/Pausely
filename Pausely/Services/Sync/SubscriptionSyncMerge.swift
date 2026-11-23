@@ -11,8 +11,10 @@ struct SubscriptionSyncMerge {
     var subscriptions: [Subscription] = []
     /// On this iPhone only: create them on the server.
     var upload: [Subscription] = []
-    /// On the server without the renewal date this iPhone knows: send the date up.
+    /// On the server without the renewal date or local details this iPhone knows: send them up.
     var backfill: [Subscription] = []
+    /// Local-only guest rows matched by `ServiceName.same` to an existing server subscription on first sync.
+    var supersededLocalIDs: [UUID] = []
 
     /// - Parameters:
     ///   - server: the signed-in person's rows, newest first.
@@ -31,30 +33,61 @@ struct SubscriptionSyncMerge {
         let added = Set(pending.filter { $0.value == .create }.keys)
         let changed = Set(pending.filter { $0.value != .delete }.keys)
         let serverIDs = Set(server.map(\.id))
+        let liveServer = server.filter { !deleted.contains($0.id) }
+        var matchedGuestByServerID: [UUID: Subscription] = [:]
 
         // On this iPhone only, newest work first.
         for item in local where !serverIDs.contains(item.id) && !deleted.contains(item.id) {
             if added.contains(item.id) || firstSyncForUser {
+                if firstSyncForUser,
+                   let match = liveServer.first(where: { ServiceName.same($0.name, item.name) && matchedGuestByServerID[$0.id] == nil }) {
+                    result.supersededLocalIDs.append(item.id)
+                    matchedGuestByServerID[match.id] = item
+                    continue
+                }
                 result.subscriptions.append(item)
                 result.upload.append(item)
             }
         }
 
-        for remote in server where !deleted.contains(remote.id) {
-            guard let mine = localByID[remote.id] else {
-                result.subscriptions.append(remote)
+        for remote in liveServer {
+            if let mine = localByID[remote.id] {
+                if changed.contains(remote.id) {
+                    result.subscriptions.append(mine)
+                    continue
+                }
+                var merged = remote
+                if remote.nextBillingDate == nil, let date = mine.nextBillingDate {
+                    merged.nextBillingDate = date
+                    result.backfill.append(merged)
+                }
+                result.subscriptions.append(merged)
                 continue
             }
-            if changed.contains(remote.id) {
-                result.subscriptions.append(mine)
+            if let guest = matchedGuestByServerID[remote.id] {
+                var merged = remote
+                var needsBackfill = false
+                if merged.nextBillingDate == nil, let date = guest.nextBillingDate {
+                    merged.nextBillingDate = date
+                    needsBackfill = true
+                }
+                if (merged.notes ?? "").isEmpty, let notes = guest.notes, !notes.isEmpty {
+                    merged.notes = notes
+                    needsBackfill = true
+                }
+                if (merged.paymentMethod ?? "").isEmpty, let method = guest.paymentMethod, !method.isEmpty {
+                    merged.paymentMethod = method
+                    needsBackfill = true
+                }
+                if merged.splitCount == 1, guest.splitCount > 1 {
+                    merged.splitCount = guest.splitCount
+                    needsBackfill = true
+                }
+                if needsBackfill { result.backfill.append(merged) }
+                result.subscriptions.append(merged)
                 continue
             }
-            var merged = remote
-            if remote.nextBillingDate == nil, let date = mine.nextBillingDate {
-                merged.nextBillingDate = date
-                result.backfill.append(merged)
-            }
-            result.subscriptions.append(merged)
+            result.subscriptions.append(remote)
         }
         return result
     }

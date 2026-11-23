@@ -2,50 +2,6 @@ import Foundation
 import os.log
 import UIKit
 
-/// A subscription a search of the person's email found, as the results screen lists it.
-struct FoundSubscription: Identifiable, Equatable {
-    let proven: ProvenSubscription
-
-    /// Stable across a re-analysis (merchant, period, currency), so what was ticked stays ticked. A currency
-    /// that was only assumed is left out: choosing another dollar for "$" unticked every row it relabelled
-    /// (the rating of 2026-11-23).
-    var id: String {
-        guard proven.currencyAssumed else { return proven.id }
-        return proven.id.split(separator: "|").dropLast().joined(separator: "|") + "|$"
-    }
-    var name: String { proven.name }
-    var amount: Decimal { proven.amount }
-    var currency: String { proven.currency }
-    var billingFrequency: BillingFrequency { proven.frequency }
-
-    /// A cancellation email came after the last charge: shown, never offered for import.
-    var isCancelled: Bool { proven.status == .cancelled }
-    /// Still charging as far as the receipts show.
-    var isLive: Bool { proven.status != .likelyEnded && proven.status != .cancelled }
-    /// A trial whose email didn't say what it costs afterwards.
-    var priceUnknown: Bool { proven.status == .trial && proven.amount == 0 }
-
-    /// The line this becomes on the person's list. The anchor is the day of the last charge the receipts
-    /// show (a real date the renewal schedule rolls forward), never a date worked out from it.
-    var line: TallyLine {
-        TallyLine(name: name, category: SubscriptionCategory.matching(proven.category).displayName,
-                  // What the next renewal charges, when an email said so: the reminder is about that charge.
-                  amount: proven.comingAmount ?? amount, currency: currency, isConfirmed: true, frequency: billingFrequency,
-                  // No date for one that may have ended: its old charge would make Home promise a next one.
-                  anchor: proven.status == .trial || proven.status == .likelyEnded ? nil : (proven.lastChargeDate ?? proven.nextBillingDate),
-                  trialEndsAt: proven.status == .trial ? proven.trialEndsOn : nil)
-    }
-}
-
-/// One receipt read during a search, shown while the search runs: who charged, how much, when.
-struct ReceiptSeen: Identifiable, Equatable {
-    var name: String
-    var amount: Decimal
-    var currency: String
-    var date: Date
-    var id: String { name.lowercased() }
-}
-
 /// Finds subscriptions in every connected inbox, on the iPhone. For each inbox: search (or only new mail),
 /// read headers, open only the messages that look financial, parse them with the same MIME parser, and
 /// keep a few facts per receipt. Email text never outlives a single message's processing, and nothing
@@ -402,7 +358,12 @@ final class InboxScanner: ObservableObject {
     /// One inbox. Returns the receipt facts found and what was read.
     private func scan(_ account: MailboxAccount, catalog: MerchantCatalog, aiBudget: inout Int,
                       progress report: (Double, String) -> Void) async throws -> ([ReceiptSignal], AccountStats) {
-        let provider = makeProvider(account)
+        try await scan(account, provider: makeProvider(account), catalog: catalog, aiBudget: &aiBudget, progress: report)
+    }
+
+    /// Runs a scan against `provider`. Exposed internally so unit tests can prove two-phase Gmail quick pass ordering.
+    func scan(_ account: MailboxAccount, provider: MailboxProvider, catalog: MerchantCatalog, aiBudget: inout Int,
+              progress report: (Double, String) -> Void) async throws -> ([ReceiptSignal], AccountStats) {
         try await provider.open()
         var accountStats = AccountStats()
         do {
@@ -410,80 +371,109 @@ final class InboxScanner: ObservableObject {
             let plan = InboxSearchPlan.standard(catalog: catalog, since: since)
             let cursor = MailboxAccountStore.cursor(for: account.id)
             accountStats.incremental = cursor != nil
-            let (refs, nextCursor) = try await provider.candidates(plan: plan, cursor: cursor)
-            accountStats.candidates = refs.count
-            accountStats.capped = refs.count >= plan.maxCandidates
-            report(0.05, L10n.string("Checking \(L10n.string("\(refs.count) emails")) in \(account.searchName)…"))
-            // The bar follows requests: headers and bodies cost one each, and headers are most of them. Given
-            // 15% of the bar, a real search crawled for minutes and then leapt (A12, 2026-11-22). The bodies to
-            // read are projected from the headers checked so far, and the bar never goes back. Guessed at a
-            // quarter of the headers, a mailbox of receipts stood at 77% on "Read 1 of 111" (2026-11-23).
-            var expectedBodies = min(Self.bodyBudget, max(1, refs.count / 4))
-            var wantedSoFar = 0
-            var headerEnd = 0.05
+
+            var signals: [ReceiptSignal] = []
+            var stopped = false
+            var seenRefs = Set<MessageRef>()
+            var nextCursor: String?
             let started = Date()
+
             func estimate(done: Int, of total: Int) {
                 let elapsed = Date().timeIntervalSince(started)
                 guard done >= 30, elapsed >= 10 else { return }
                 minutesLeft = Self.minutesLeft(done: done, total: total, elapsed: elapsed)
             }
 
-            // Headers in steps of a hundred, so the page counts up instead of standing still: a real
-            // inbox spent five minutes on "Checking 1,500 emails" with a bar that never moved.
-            var summaries: [MessageSummary] = []
-            for chunk in InboxSearchPlan.batches(refs, size: 100) {
-                let checked = try await provider.summaries(chunk)
-                summaries += checked
-                wantedSoFar += Self.triage(checked, catalog: catalog).count
-                expectedBodies = Self.projectedReads(wanted: wantedSoFar, checked: summaries.count, of: refs.count)
-                headerEnd = max(headerEnd, 0.05 + 0.9 * Double(summaries.count) / Double(max(refs.count + expectedBodies, 1)))
-                estimate(done: summaries.count, of: refs.count + expectedBodies)
-                report(headerEnd, L10n.string("Checked \(summaries.count) of \(refs.count) in \(account.searchName)"))
-            }
-            accountStats.checked = summaries.count
-            let wanted = Self.triage(summaries, catalog: catalog).prefix(Self.bodyBudget)
-            if !wanted.isEmpty {
-                report(headerEnd, L10n.string("Reading \(L10n.string("\(wanted.count) emails")) from \(account.searchName)…"))
-            }
-
-            var signals: [ReceiptSignal] = []
-            var stopped = false
-            var offset = -1
-            // Read in small batches (several at once where the provider allows), weighed in order.
-            for batch in InboxSearchPlan.batches(Array(wanted), size: max(1, provider.parallelReads)) {
-                // Stopping keeps what has been read so far: the person asked to see it, not to throw it away.
-                if Task.isCancelled { stopped = true; break }
-                let raws = await provider.rawMessages(batch.map(\.ref))
-                for summary in batch {
-                    offset += 1
-                    guard let raw = raws[summary.ref] else { continue }
-                    accountStats.read += 1
-                    let id = summary.messageID ?? "\(account.id):\(summary.ref.folder ?? ""):\(summary.ref.id)"
-                    guard let email = MIMEParser.parse(raw, id: id, receivedDate: summary.receivedDate, labelIds: summary.labelIds) else { continue }
-                    // One email is one fact, except a store receipt that lists several subscriptions.
-                    for result in EmailSignalExtractor.extractAll(email, catalog: catalog) {
-                        var signal = result.signal
-                        if let excerpt = result.ambiguousExcerpt, let classifier, aiBudget > 0 {
-                            aiBudget -= 1
-                            let verdict = await classifier.classify(merchantGuess: result.merchantGuess, subject: result.subject, excerpt: excerpt)
-                            if verdict != .unsure { stats.aiAssisted += 1 }
-                            signal = signal.applying(verdict)
+            func readWanted(_ wanted: [MessageSummary], startProgress: Double, endProgress: Double, doneBase: Int, totalEst: Int) async {
+                var offset = -1
+                for batch in InboxSearchPlan.batches(wanted, size: max(1, provider.parallelReads)) {
+                    if Task.isCancelled { stopped = true; break }
+                    let raws = await provider.rawMessages(batch.map(\.ref))
+                    for summary in batch {
+                        offset += 1
+                        guard let raw = raws[summary.ref] else { continue }
+                        accountStats.read += 1
+                        let id = summary.messageID ?? "\(account.id):\(summary.ref.folder ?? ""):\(summary.ref.id)"
+                        guard let email = MIMEParser.parse(raw, id: id, receivedDate: summary.receivedDate, labelIds: summary.labelIds) else { continue }
+                        for result in EmailSignalExtractor.extractAll(email, catalog: catalog) {
+                            var signal = result.signal
+                            if let excerpt = result.ambiguousExcerpt, let classifier, aiBudget > 0 {
+                                aiBudget -= 1
+                                let verdict = await classifier.classify(merchantGuess: result.merchantGuess, subject: result.subject, excerpt: excerpt)
+                                if verdict != .unsure { stats.aiAssisted += 1 }
+                                signal = signal.applying(verdict)
+                            }
+                            signal.sources = [account.id]
+                            signals.append(signal)
+                            noteReceipt(signal, catalog: catalog)
                         }
-                        signal.sources = [account.id]
-                        signals.append(signal)
-                        noteReceipt(signal, catalog: catalog)
-                    }
-                    if offset % 10 == 0 {
-                        estimate(done: refs.count + offset + 1, of: refs.count + wanted.count)
-                        report(headerEnd + (0.95 - headerEnd) * Double(offset + 1) / Double(max(wanted.count, 1)),
-                               L10n.string("Read \(offset + 1) of \(wanted.count) in \(account.searchName)"))
+                        if offset % 10 == 0 {
+                            estimate(done: doneBase + offset + 1, of: totalEst)
+                            report(startProgress + (endProgress - startProgress) * Double(offset + 1) / Double(max(wanted.count, 1)),
+                                   L10n.string("Read \(offset + 1) of \(wanted.count) in \(account.searchName)"))
+                        }
                     }
                 }
             }
+
+            // Phase 1 (Gmail first-time quick pass): fetch, triage, and read the last 90 days FIRST so the
+            // live receipt slip surfaces active subscriptions in seconds before scanning older 2-year history.
+            if account.kind == .gmail, cursor == nil {
+                let quickPlan = InboxSearchPlan.standard(catalog: catalog, since: Date().addingTimeInterval(-90 * 86_400))
+                report(0.02, L10n.string("Checking recent receipts in \(account.searchName)…"))
+                let (recentRefs, recentCursor) = try await provider.candidates(plan: quickPlan, cursor: nil)
+                nextCursor = recentCursor
+                let uniqueRecent = recentRefs.filter { seenRefs.insert($0).inserted }
+                var recentSummaries: [MessageSummary] = []
+                for chunk in InboxSearchPlan.batches(uniqueRecent, size: 100) {
+                    if Task.isCancelled { stopped = true; break }
+                    recentSummaries += try await provider.summaries(chunk)
+                }
+                accountStats.checked += recentSummaries.count
+                if !stopped {
+                    let recentWanted = Array(Self.triage(recentSummaries, catalog: catalog).prefix(Self.bodyBudget))
+                    await readWanted(recentWanted, startProgress: 0.05, endProgress: 0.25, doneBase: recentSummaries.count, totalEst: max(recentSummaries.count + recentWanted.count, 1))
+                }
+            }
+
+            // Phase 2 (or standard pass for incremental / Outlook / IMAP): remaining history up to plan cap.
+            if !stopped {
+                let found = try await provider.candidates(plan: plan, cursor: cursor)
+                nextCursor = found.cursor ?? nextCursor
+                let remainingBudget = max(0, plan.maxCandidates - seenRefs.count)
+                let refs = Array(found.refs.filter { seenRefs.insert($0).inserted }.prefix(remainingBudget))
+                accountStats.candidates = seenRefs.count
+                accountStats.capped = seenRefs.count >= plan.maxCandidates
+
+                let baseProgress = accountStats.read > 0 ? 0.25 : 0.05
+                if !refs.isEmpty {
+                    report(baseProgress, L10n.string("Checking \(L10n.string("\(refs.count) emails")) in \(account.searchName)…"))
+                }
+                var expectedBodies = min(Self.bodyBudget, max(1, refs.count / 4))
+                var wantedSoFar = 0
+                var headerEnd = baseProgress
+                var summaries: [MessageSummary] = []
+                for chunk in InboxSearchPlan.batches(refs, size: 100) {
+                    if Task.isCancelled { stopped = true; break }
+                    let checked = try await provider.summaries(chunk)
+                    summaries += checked
+                    wantedSoFar += Self.triage(checked, catalog: catalog).count
+                    expectedBodies = Self.projectedReads(wanted: wantedSoFar, checked: summaries.count, of: refs.count)
+                    headerEnd = max(headerEnd, baseProgress + (0.95 - baseProgress) * Double(summaries.count) / Double(max(refs.count + expectedBodies, 1)))
+                    estimate(done: summaries.count, of: refs.count + expectedBodies)
+                    report(headerEnd, L10n.string("Checked \(summaries.count) of \(refs.count) in \(account.searchName)"))
+                }
+                accountStats.checked += summaries.count
+                let bodyRoom = max(0, Self.bodyBudget - accountStats.read)
+                let wanted = Array(Self.triage(summaries, catalog: catalog).prefix(bodyRoom))
+                if !stopped, !wanted.isEmpty {
+                    report(headerEnd, L10n.string("Reading \(L10n.string("\(wanted.count) emails")) from \(account.searchName)…"))
+                    await readWanted(wanted, startProgress: headerEnd, endProgress: 0.95, doneBase: refs.count, totalEst: refs.count + wanted.count)
+                }
+            }
+
             accountStats.receipts = signals.count
             if stopped { stats.stopped = true }
-            // A search that was stopped hasn't read everything, so the next one starts over instead of
-            // looking only at newer mail.
             if !stopped, MailboxAccountStore.all().contains(where: { $0.id == account.id }) {
                 MailboxAccountStore.setCursor(nextCursor, for: account.id)
             }

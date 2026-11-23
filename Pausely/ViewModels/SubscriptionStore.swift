@@ -26,12 +26,25 @@ class SubscriptionStore: ObservableObject {
 
     /// The way to the account. Every change is noted here; tests put a stand-in for the server behind it.
     var sync: SyncQueue = .shared {
-        didSet { sync.currentCopy = copyForSync }
+        didSet {
+            sync.currentCopy = copyForSync
+            sync.onNetworkRestored = recoverFirstSyncOnNetwork
+        }
     }
 
     /// What the sync queue sends is always the subscription as it is here at that moment.
     private var copyForSync: (UUID) -> Subscription? {
         { [weak self] id in self?.subscriptions.first { $0.id == id } }
+    }
+
+    /// Retries first-sync reconciliation when connectivity returns if the initial post-sign-in fetch failed.
+    private var recoverFirstSyncOnNetwork: () async -> Void {
+        { [weak self] in
+            guard let self, Self.cloudSyncEnabled else { return }
+            let auth = AuthManager.shared
+            guard auth.isSignedIntoCloud, Self.isFirstSync(for: auth.currentUser?.id) else { return }
+            await self.fetchSubscriptions(force: true)
+        }
     }
 
     private var currencyCancellables: Set<AnyCancellable> = []
@@ -51,6 +64,7 @@ class SubscriptionStore: ObservableObject {
         #endif
         loadFromCache()
         sync.currentCopy = copyForSync
+        sync.onNetworkRestored = recoverFirstSyncOnNetwork
         #if DEBUG
         // UI tests: start from the demo list on every launch and never write to the cloud.
         // Every demo list starts with no history and no hours typed in, then puts in its own: one
@@ -102,7 +116,7 @@ class SubscriptionStore: ObservableObject {
     // MARK: - Data Fetching
     
     /// The account whose list was last fetched on this iPhone (see SubscriptionSyncMerge).
-    static let syncedUserKey = "subscriptions_synced_user"
+    nonisolated static let syncedUserKey = "subscriptions_synced_user"
 
     /// What a tab shows where the list would be.
     enum ListState: Equatable {
@@ -170,46 +184,17 @@ class SubscriptionStore: ObservableObject {
             // anything is fetched into it or sent from it.
             guard LocalUserData.belongs(to: userId.uuidString) else { return }
 
-            // This iPhone's waiting changes go up first, so the server's list below already has them.
-            await sync.drain(force: true)
-            let mark = sync.sequence
-
-            let response: [SubscriptionRecord] = try await client
-                .from("subscriptions")
-                .select()
-                .eq("user_id", value: userId)
-                .order("created_at", ascending: false)
-                .execute()
-                .value
-
-            // Nothing waits between reading this iPhone's list and replacing it, so no change can
-            // slip in between. A change made while the answer was on its way counts as still waiting:
-            // the answer may be older than it is.
-            let firstSync = UserDefaults.standard.string(forKey: Self.syncedUserKey) != userId.uuidString
-            let waiting = sync.changes(since: mark)
-                .merging(sync.pendingKinds) { _, queued in queued }
-            let merge = SubscriptionSyncMerge.merge(server: response.map { $0.toSubscription() },
-                                                    local: subscriptions,
-                                                    pending: waiting,
-                                                    firstSyncForUser: firstSync)
-            subscriptions = merge.subscriptions
-            listChanged()
-            lastFetchDate = Date()
-            lastErrorMessage = nil
-            lastFetchFailed = false
-            UserDefaults.standard.set(userId.uuidString, forKey: Self.syncedUserKey)
-
-            // Send up what only this iPhone had, and renewal dates the server was missing.
-            for sub in merge.upload { sync.noteAdded(sub.id) }
-            for sub in merge.backfill { sync.noteChanged(sub.id) }
-            // A row whose days an earlier version saved goes back once, with its days in the saved form.
-            let listed = Set(subscriptions.map(\.id))
-            let oldForm = response.filter(\.hasADayInTheOldForm).compactMap(\.id).filter(listed.contains)
-            for id in oldForm { sync.noteChanged(id) }
-            if !merge.upload.isEmpty || !merge.backfill.isEmpty || !oldForm.isEmpty {
-                await sync.drain()
+            try await reconcileWithServer(userId: userId.uuidString) {
+                let response: [SubscriptionRecord] = try await client
+                    .from("subscriptions")
+                    .select()
+                    .eq("user_id", value: userId)
+                    .order("created_at", ascending: false)
+                    .execute()
+                    .value
+                let oldForm = response.filter(\.hasADayInTheOldForm).compactMap(\.id)
+                return (response.map { $0.toSubscription() }, oldForm)
             }
-            await SubscriptionLifecycle.shared.run()
 
         } catch {
             os_log("Error fetching subscriptions: %{public}@", log: .default, type: .error, error.localizedDescription)
@@ -223,6 +208,52 @@ class SubscriptionStore: ObservableObject {
             // Offline: reminders still come from the cached subscriptions.
             await SubscriptionLifecycle.shared.run()
         }
+    }
+
+    /// True until this account has reconciled its first server fetch on this device. While true,
+    /// queued guest `.create`s wait for `SubscriptionSyncMerge` dedup before any upload can fire.
+    nonisolated static func isFirstSync(for userId: String?, defaults: UserDefaults = .standard) -> Bool {
+        guard let userId, !userId.isEmpty else { return true }
+        return defaults.string(forKey: Self.syncedUserKey)?.caseInsensitiveCompare(userId) != .orderedSame
+    }
+
+    /// Runs the fetch-and-merge step cleanly, skipping pre-fetch drain on `firstSync` so local guest
+    /// rows deduplicate against existing server rows before anything uploads.
+    func reconcileWithServer(userId: String,
+                             defaults: UserDefaults = .standard,
+                             fetchRemote: () async throws -> (subscriptions: [Subscription], oldFormIDs: [UUID])) async throws {
+        let firstSync = Self.isFirstSync(for: userId, defaults: defaults)
+        if !firstSync {
+            await sync.drain(force: true)
+        }
+        let mark = sync.sequence
+
+        let remote = try await fetchRemote()
+
+        let waiting = sync.changes(since: mark)
+            .merging(sync.pendingKinds) { _, queued in queued }
+        let merge = SubscriptionSyncMerge.merge(server: remote.subscriptions,
+                                                local: subscriptions,
+                                                pending: waiting,
+                                                firstSyncForUser: firstSync)
+        subscriptions = merge.subscriptions
+        listChanged()
+        lastFetchDate = Date()
+        lastErrorMessage = nil
+        lastFetchFailed = false
+        defaults.set(userId, forKey: Self.syncedUserKey)
+
+        // Drop superseded guest creates BEFORE queuing surviving uploads & backfills and draining.
+        for id in merge.supersededLocalIDs { sync.dropPendingCreate(id) }
+        for sub in merge.upload { sync.noteAdded(sub.id) }
+        for sub in merge.backfill { sync.noteChanged(sub.id) }
+        let listed = Set(subscriptions.map(\.id))
+        let oldForm = remote.oldFormIDs.filter(listed.contains)
+        for id in oldForm { sync.noteChanged(id) }
+        if !merge.upload.isEmpty || !merge.backfill.isEmpty || !oldForm.isEmpty {
+            await sync.drain(force: true)
+        }
+        await SubscriptionLifecycle.shared.run()
     }
 
     /// Everything that follows from the list changing: totals, the saved copy, the widget and Spotlight.
@@ -275,7 +306,7 @@ class SubscriptionStore: ObservableObject {
     /// it has reached the account yet is the result (false: still waiting). The only thing that can
     /// stop an add is a refusal, like the free tier's limit.
     @discardableResult
-    func addSubscription(_ subscription: Subscription) async throws -> Bool {
+    func addSubscription(_ subscription: Subscription, recordEvent: Bool = true) async throws -> Bool {
         // Signed out, the list is out of memory and its copy on the iPhone waits for its owner. An add
         // now (a Shortcut can try) would save a list of one over that copy.
         guard !isHidden else { throw SyncFailure.signedOut }
@@ -288,7 +319,9 @@ class SubscriptionStore: ObservableObject {
         subscriptions.insert(added, at: 0)
         listChanged()
         sync.noteAdded(added.id)
-        LifecycleEventLog.shared.record(.added, for: added)
+        if recordEvent {
+            LifecycleEventLog.shared.record(.added, for: added)
+        }
         // Rebuild every reminder from the current list (heads-up, day before, day of, trial ending).
         await ReminderScheduler.shared.reschedule(subscriptions)
         return await send(added.id)
@@ -314,18 +347,21 @@ class SubscriptionStore: ObservableObject {
         listChanged()
         sync.noteChanged(subscription.id)
         // What it costs is the amount, its currency and how often it is charged: a change to any of
-        // them goes in the history (`PriceHistory` reads it from there).
+        // them goes in the history (`PriceHistory` reads it from there). Record previousAmount on the
+        // same personal-share basis (`effectiveAmount`) as `LifecycleEvent.amount`.
         if subscription.amount != before.amount || subscription.currency != before.currency
             || subscription.billingFrequency != before.billingFrequency {
-            LifecycleEventLog.shared.record(.priceChanged, for: subscription, previousAmount: before.amount)
+            LifecycleEventLog.shared.record(.priceChanged, for: subscription, previousAmount: before.effectiveAmount)
         }
         await ReminderScheduler.shared.reschedule(subscriptions)
         await send(subscription.id)
     }
 
-    func deleteSubscription(id: UUID) async {
+    func deleteSubscription(id: UUID, recordEvent: Bool = true) async {
         guard let removed = subscriptions.first(where: { $0.id == id }) else { return }
-        LifecycleEventLog.shared.record(.deleted, for: removed)
+        if recordEvent {
+            LifecycleEventLog.shared.record(.deleted, for: removed)
+        }
         subscriptions.removeAll { $0.id == id }
         listChanged()
         sync.noteDeleted(id)
@@ -494,6 +530,11 @@ class SubscriptionStore: ObservableObject {
         subscriptions = list
         calculateTotals()
         saveToCache()
+    }
+
+    /// Recomputes totals after demo helpers mutate `subscriptions` directly.
+    func recalculateDemoTotals() {
+        calculateTotals()
     }
 
     static func makeDemoSubscriptions() -> [Subscription] {

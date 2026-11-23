@@ -83,7 +83,8 @@ final class PrivacyPageTests: XCTestCase {
             calls.formUnion(try captures("\\.rpc\\(\"([^\"]+)\"", in: source))
             functions.formUnion(try captures("functions\\.invoke\\(\"([^\"]+)\"", in: source))
         }
-        XCTAssertEqual(tables, ["subscriptions", "profiles", "lifecycle_events", "pause_plans"])
+        XCTAssertEqual(tables, ["subscriptions", "profiles", "lifecycle_events", "pause_plans",
+                                "cancel_difficulty_ratings", "service_difficulty_scores"])
         XCTAssertEqual(calls, ["delete_my_account"])
         XCTAssertEqual(functions, ["apple-revoke"])
 
@@ -144,7 +145,7 @@ final class PrivacyPageTests: XCTestCase {
         }
         XCTAssertEqual(imported.sorted(), ["AppIntents", "Auth", "AuthenticationServices", "Combine", "CoreGraphics",
                                            "CoreSpotlight", "CryptoKit", "Dispatch", "Foundation", "FoundationModels",
-                                           "LocalAuthentication", "MessageUI", "Network", "PhotosUI", "PostgREST",
+                                           "MessageUI", "Network", "PhotosUI", "PostgREST",
                                            "SafariServices", "Security", "StoreKit", "Supabase", "SwiftUI", "TipKit",
                                            "UIKit", "UniformTypeIdentifiers", "UserNotifications", "Vision", "WidgetKit", "os"],
                        "a new framework: say here what it is for")

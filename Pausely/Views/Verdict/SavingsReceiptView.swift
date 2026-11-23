@@ -39,6 +39,7 @@ struct SavingsReceiptView: View {
             .padding(.top, 8)
             .padding(.bottom, 40)
         }
+        .readableScroll()
         .inkScreen()
         .preferredColorScheme(.dark)
         .task(id: "\(eventLog.events.count)|\(currencyManager.selectedCurrency)") {

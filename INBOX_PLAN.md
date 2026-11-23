@@ -87,7 +87,7 @@ Independent truth audit (Fable, 2026-11-22): about 7. Each item, fixed or not:
 - [ ] T8 an amount with no currency is taken as the person's currency without saying so.
 - [x] T9 already-listed rows keep a different amount/date unsaid.
 - [x] T10 "May have ended" rows can be ticked and import as active with a next charge.
-- [ ] T11 a store-billed subscription (Prime Video channel, App Store) imports with the service's own cancel link.
+- [x] T11 a store-billed subscription (Prime Video channel, App Store) imports with the service's own cancel link.
 - [x] T12 Google One imports at the old price although the new price was read.
 - [x] T13 "Charged after cancelling... worth disputing" when the person may have re-subscribed.
 - [x] T14 "raised its price" blames the seller for any rise; one wording everywhere.
@@ -114,7 +114,7 @@ Arabic mirrors and is fully translated; rows read as one sentence. Open:
   the title and steps 1-2 are gone (also full screen at the largest size: opens past its title).
 - [x] B3 Arabic: "CA$" is drawn "$CA" (the trailing symbol flips inside an isolate); "US$" the same.
 - [x] B4 a failed inbox ("Your sign-in expired. Reconnect this inbox.") has no reconnect action anywhere.
-- [ ] B5 (column made with safe-area insets, 2026-11-22; to see on an iPad) iPad: the side margins don't scroll (only the centre column does).
+- [x] B5 (column made with safe-area insets, 2026-11-22; moved to app-wide `.readableScroll()` across tabs, sheets, and `ActionScreen`) iPad: the side margins don't scroll (only the centre column does).
 - [ ] B6 Arabic dates follow the device calendar (Hijri on ar_SA); for a native reader to decide. Also
   "منذ ٢٧ ذو القعدة" should be "ذي القعدة".
 - [ ] B8 a date broken across lines at the largest size ("around Dec" / "12."); proof lines may overflow.

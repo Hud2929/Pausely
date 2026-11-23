@@ -26,12 +26,14 @@ enum PausePlanSchedule {
 
     // MARK: - Eligibility and savings
 
-    /// Video streaming services, by name. Short names ("max", "stan") must be a whole word; longer
-    /// ones and phrases can be part of the name ("Paramount+ with Showtime").
+    /// Video streaming services, by name. Short names ("hbo", "stan") must be a whole word; longer
+    /// ones and phrases can be part of the name ("Paramount+ with Showtime"). Names that are also
+    /// common words ("max") match only when they are the entire service name.
+    private static let exactStreamingNames: Set<String> = ["max"]
     private static let streamingNames = [
-        "netflix", "hbo", "max", "disney", "hulu", "prime video", "apple tv", "paramount", "peacock",
+        "netflix", "hbo", "hbo max", "hbomax", "disney", "hulu", "prime video", "apple tv", "paramount", "peacock",
         "crunchyroll", "espn", "discovery+", "discovery plus", "starz", "showtime", "mubi", "fubo", "fubotv",
-        "sling", "youtube tv", "britbox", "acorn", "shudder", "curiositystream", "crave", "stan", "binge",
+        "sling", "youtube tv", "britbox", "acorn tv", "shudder", "curiositystream", "crave", "stan", "binge",
         "now tv", "dazn", "mgm", "amc+", "criterion", "philo", "hidive", "viki", "bet+", "hallmark",
         "directv", "frndly", "sundance now", "funimation", "dropout", "nebula", "fandor", "indieflix",
         "eros now", "vix", "zee5", "hotstar", "viaplay", "canal+", "videoland", "rtl+", "joyn", "u-next",
@@ -45,7 +47,8 @@ enum PausePlanSchedule {
     /// meant dropping something they use every day.
     static func isEligible(_ sub: Subscription) -> Bool {
         guard sub.billingFrequency == .monthly, !sub.isPausely else { return false }
-        let name = sub.name.lowercased()
+        let name = sub.name.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
+        if exactStreamingNames.contains(name) { return true }
         let words = name.split { !$0.isLetter && !$0.isNumber && $0 != "+" }.map(String.init)
         return streamingNames.contains { known in
             if known.contains(" ") || known.count >= 6 { return name.contains(known) }

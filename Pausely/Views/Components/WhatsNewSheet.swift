@@ -21,11 +21,13 @@ struct WhatsNewSheet: View {
 
                 // Only what this build really does.
                 VStack(alignment: .leading, spacing: 0) {
-                    item("A new look", "Pausely is ink and paper now: your decisions and your savings are printed on slips.")
+                    item("Import from screenshots", "Pick a screenshot of Apple Subscriptions or your recurring charges and read it on this iPhone.")
                     Hairline()
-                    item("The next 30 days on one line", "Home shows every charge that's coming and what leaves by any day.")
+                    item("Try without an account", "Start locally on your device and sign in later if you want backup across devices.")
                     Hairline()
-                    item("Keep or cancel, on a slip", "Keeping stamps it. Cancelling tears it and adds it to your Savings Receipt.")
+                    item("Shared plans, billing notes, and overlaps", "Split shared subscriptions, note which card or store bills them, and spot overlapping services in Insights.")
+                    Hairline()
+                    item("Cancel and refund email drafts", "Preview and send ready-to-go cancellation or refund emails, plus Savings Receipt and Pause Plan sync.")
                 }
                 .padding(.top, 20)
             }
@@ -74,7 +76,7 @@ struct WhatsNewSheetModifier: ViewModifier {
     @State private var showSheet = false
 
     /// Identifies the current What's New content. Bump it only when the sheet's content changes.
-    private let currentVersion = "1.10"
+    private let currentVersion = "1.11"
 
     func body(content: Content) -> some View {
         content

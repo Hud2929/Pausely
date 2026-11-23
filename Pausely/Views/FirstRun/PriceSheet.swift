@@ -6,6 +6,7 @@ struct PriceSheet: View {
     /// The price already on the slip, shown until the person types.
     let placeholder: Decimal?
     let currency: String
+    var frequency: BillingFrequency = .monthly
     let onSave: (Decimal) -> Void
 
     @Environment(\.dismiss) private var dismiss
@@ -15,6 +16,25 @@ struct PriceSheet: View {
     @FocusState private var focused: Bool
 
     private var amount: Decimal? { AmountText.parse(text, currency: currency) }
+
+    private var questionTitle: String {
+        switch frequency {
+        case .monthly: return L10n.string("What do you pay for \(name) each month?")
+        case .yearly: return L10n.string("What do you pay for \(name) each year?")
+        case .weekly: return L10n.string("What do you pay for \(name) each week?")
+        case .biweekly, .quarterly, .semiannual:
+            return L10n.string("What do you pay for \(name) each time?")
+        }
+    }
+
+    private var priceAccessibilityLabel: String {
+        switch frequency {
+        case .monthly: return L10n.string("Price each month")
+        case .yearly: return L10n.string("Price each year")
+        case .weekly: return L10n.string("Price each week")
+        case .biweekly, .quarterly, .semiannual: return L10n.string("Price")
+        }
+    }
 
     /// How tall the short sheet is: as tall as its form, once that has been measured. Until then
     /// (the first frame) it is about as tall as the form is in English at the ordinary text size.
@@ -31,6 +51,7 @@ struct PriceSheet: View {
             form
                 .onGeometryChange(for: CGFloat.self) { $0.size.height } action: { formHeight = $0 }
         }
+        .readableScroll()
         .scrollBounceBehavior(.basedOnSize)
         .presentationDetents(typeSize.isAccessibilitySize ? [.large] : [.height(Self.sheetHeight(forForm: formHeight))])
         .presentationBackground(Color.inkRaised)
@@ -41,7 +62,7 @@ struct PriceSheet: View {
             // A way out that is not a swipe: the sheet had "Save" and nothing else.
             LeaveButton("Cancel") { dismiss() }
                 .accessibilityIdentifier("priceCancelButton")
-            Text(L10n.string("What do you pay for \(name) each month?"))
+            Text(verbatim: questionTitle)
                 .font(.question(.title3))
                 .foregroundStyle(Color.inkText)
                 .fixedSize(horizontal: false, vertical: true)
@@ -52,7 +73,7 @@ struct PriceSheet: View {
                     .font(.proof(.title2, weight: .medium))
                     .foregroundStyle(Color.inkText)
                     .focused($focused)
-                    .accessibilityLabel(Text("Price each month"))
+                    .accessibilityLabel(Text(verbatim: priceAccessibilityLabel))
                     .accessibilityIdentifier("priceField")
                 Text(verbatim: currency)
                     .font(.proof(.subheadline))

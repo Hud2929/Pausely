@@ -15,12 +15,24 @@ struct Subscription: Identifiable, Codable, Equatable {
     @SavedDay var trialEndsAt: Date?
     var status: SubscriptionStatus
     var createdAt: Date
+    /// Optional user note (e.g. "Shared with Sarah", "Promo ends Oct").
+    var notes: String?
+    /// Card, bank, or store that bills this subscription (e.g. "Apple", "Visa ···4242").
+    var paymentMethod: String?
+    /// Number of people splitting this subscription (1 = just me, 2...20 = shared plan).
+    var splitCount: Int {
+        didSet {
+            let clamped = max(1, min(20, splitCount))
+            if splitCount != clamped { splitCount = clamped }
+        }
+    }
 
     // Every field here is read by a screen, the renewal engine or the export
     // (`SubscriptionFieldTests`). A copy saved by an earlier version holds more; the rest is ignored.
     enum CodingKeys: String, CodingKey {
         case id, name, category, amount, currency, billingFrequency, nextBillingDate
         case notifyBeforeDays, trialEndsAt, status, createdAt
+        case notes, paymentMethod, splitCount
     }
 
     // MARK: - Initializers
@@ -36,7 +48,10 @@ struct Subscription: Identifiable, Codable, Equatable {
         notifyBeforeDays: Int = 3,
         trialEndsAt: Date? = nil,
         status: SubscriptionStatus = .active,
-        createdAt: Date = Date()
+        createdAt: Date = Date(),
+        notes: String? = nil,
+        paymentMethod: String? = nil,
+        splitCount: Int = 1
     ) {
         self.id = id
         self.name = name
@@ -49,6 +64,27 @@ struct Subscription: Identifiable, Codable, Equatable {
         self.trialEndsAt = trialEndsAt
         self.status = status
         self.createdAt = createdAt
+        self.notes = notes
+        self.paymentMethod = paymentMethod
+        self.splitCount = max(1, min(20, splitCount))
+    }
+
+    init(from decoder: Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        id = try c.decode(UUID.self, forKey: .id)
+        name = try c.decode(String.self, forKey: .name)
+        category = try c.decodeIfPresent(String.self, forKey: .category)
+        amount = try c.decode(Decimal.self, forKey: .amount)
+        currency = try c.decode(String.self, forKey: .currency)
+        billingFrequency = try c.decode(BillingFrequency.self, forKey: .billingFrequency)
+        _nextBillingDate = try c.decodeIfPresent(SavedDay.self, forKey: .nextBillingDate) ?? SavedDay(wrappedValue: nil)
+        notifyBeforeDays = try c.decodeIfPresent(Int.self, forKey: .notifyBeforeDays) ?? 3
+        _trialEndsAt = try c.decodeIfPresent(SavedDay.self, forKey: .trialEndsAt) ?? SavedDay(wrappedValue: nil)
+        status = try c.decode(SubscriptionStatus.self, forKey: .status)
+        createdAt = try c.decode(Date.self, forKey: .createdAt)
+        notes = try c.decodeIfPresent(String.self, forKey: .notes)
+        paymentMethod = try c.decodeIfPresent(String.self, forKey: .paymentMethod)
+        splitCount = max(1, min(20, try c.decodeIfPresent(Int.self, forKey: .splitCount) ?? 1))
     }
 
     init(name: String, price: Double, category: String, billingFrequency: BillingFrequency = .monthly) {
@@ -61,31 +97,38 @@ struct Subscription: Identifiable, Codable, Equatable {
     }
     
     // MARK: - Display Properties
+
+    /// The person's own share of one charge (`amount` when not shared, or `amount / splitCount` rounded
+    /// to the currency's precision so displayed share and totals always agree).
+    var effectiveAmount: Decimal {
+        let people = max(1, splitCount)
+        return people > 1 ? AmountText.rounded(amount / Decimal(people), currency: currency) : amount
+    }
     
     var displayAmount: String {
-        return formatCurrency(amount)
+        return formatCurrency(effectiveAmount)
     }
 
-    /// What it costs over a year: the price times the number of charges in a year (a monthly plan
+    /// What it costs over a year: the person's share times the number of charges in a year (a monthly plan
     /// charges 12 times). One definition, so every screen shows the same yearly number.
     var annualCost: Decimal {
-        amount * ProvenSubscription.periodsPerYear(billingFrequency)
+        effectiveAmount * ProvenSubscription.periodsPerYear(billingFrequency)
     }
     
     var monthlyCost: Decimal {
         switch billingFrequency {
         case .weekly:
-            return amount * Decimal(52) / 12
+            return effectiveAmount * Decimal(52) / 12
         case .biweekly:
-            return amount * Decimal(26) / 12
+            return effectiveAmount * Decimal(26) / 12
         case .monthly:
-            return amount
+            return effectiveAmount
         case .quarterly:
-            return amount / 3
+            return effectiveAmount / 3
         case .semiannual:
-            return amount / 6
+            return effectiveAmount / 6
         case .yearly:
-            return amount / 12
+            return effectiveAmount / 12
         }
     }
     
@@ -221,18 +264,6 @@ enum SubscriptionStatus: String, Codable, CaseIterable {
         case .trial: return L10n.string("Free trial")
         }
     }
-}
-
-// MARK: - Subscription Extensions
-extension Subscription {
-    
-    
-    
-    
-
-    
-    // MARK: - Waste Level
-    
 }
 
 

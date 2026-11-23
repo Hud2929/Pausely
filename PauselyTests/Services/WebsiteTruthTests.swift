@@ -59,8 +59,8 @@ final class WebsiteTruthTests: XCTestCase {
         XCTAssertNil(terms.range(of: #"at least (?!16)\d+ years"#, options: .regularExpression), "one minimum age, not two")
 
         XCTAssertTrue(terms.contains("Track up to \(FreeTier.subscriptionLimit) subscriptions"))
-        XCTAssertEqual(ProFeature.allCases, [.unlimitedSubscriptions, .pausePlan])
-        XCTAssertTrue(terms.contains("Tracks all of your subscriptions and adds Pause Plan"))
+        XCTAssertEqual(ProFeature.allCases, [.unlimitedSubscriptions, .pausePlan, .batchScreenshotImport, .cancelConcierge])
+        XCTAssertTrue(terms.contains("Tracks all of your subscriptions, adds Pause Plan, batch screenshot import (up to 10 at once), and pre-drafted cancellation and refund emails"))
     }
 
     /// Everyone the app or the website sends anything to is named in the policy.

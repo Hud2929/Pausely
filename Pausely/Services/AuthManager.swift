@@ -48,10 +48,13 @@ class AuthManager: ObservableObject {
     /// Local-only mode: the person uses Pausely on this iPhone without creating a cloud account.
     /// Everything stays protected on-device and upgrades seamlessly if they later sign up.
     nonisolated static let guestUserID = "local-guest"
-    private static let guestModeKey = "local_guest_mode"
+    static let guestModeKey = "local_guest_mode"
 
     /// True when the person is using Pausely locally without a cloud account.
     var isGuest: Bool { currentUser?.id == Self.guestUserID }
+
+    /// True when signed into a real cloud account (excludes local-only guest mode).
+    var isSignedIntoCloud: Bool { isAuthenticated && !isGuest }
 
     // MARK: - Initialization
     private init() {
@@ -464,8 +467,8 @@ class AuthManager: ObservableObject {
 
     /// Starts local-only mode without requiring an account. Everything stays on this iPhone until
     /// the person chooses to create an account or sign in.
-    func enterGuestMode() {
-        UserDefaults.standard.set(true, forKey: Self.guestModeKey)
+    func enterGuestMode(persist: Bool = true) {
+        if persist { UserDefaults.standard.set(true, forKey: Self.guestModeKey) }
         let guest = User(id: Self.guestUserID, email: nil, createdAt: Date())
         currentUser = guest
         isAuthenticated = true
@@ -509,8 +512,8 @@ class AuthManager: ObservableObject {
         let gate = linkGate
         guard gate.allows(link, now: Date()) else {
             os_log("An account link this device did not ask for was ignored", log: .default, type: .info)
-            // Someone already signed in has nothing to fix; someone signing in is told to ask again.
-            if !isAuthenticated { linkProblem = expired }
+            // Someone already signed into a cloud account has nothing to fix; guests upgrading or signed-out users are told to ask again.
+            if !isSignedIntoCloud { linkProblem = expired }
             return false
         }
         let recovery = AuthLink.isRecovery(url) || resetWasRequestedRecently
@@ -573,7 +576,7 @@ class AuthManager: ObservableObject {
         let requestedAt = UserDefaults.standard.double(forKey: Self.linkRequestedAtKey)
         return AuthLinkGate(requestedEmail: UserDefaults.standard.string(forKey: Self.linkRequestedEmailKey),
                             requestedAt: requestedAt > 0 ? Date(timeIntervalSince1970: requestedAt) : nil,
-                            isSignedIn: isAuthenticated)
+                            isSignedIn: isSignedIntoCloud)
     }
 
     private static func emailOTPType(_ type: String, recovery: Bool) -> EmailOTPType {

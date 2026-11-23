@@ -95,6 +95,9 @@ struct ProvenSubscription: Identifiable, Equatable {
     var comingAmount: Decimal? = nil
     /// No receipt said which dollar: the currency is `DollarHint.assumed`, and the row says so.
     var currencyAssumed: Bool = false
+    /// When billed through a store ("Apple", "Amazon", "Google Play") rather than directly by the
+    /// merchant, so importing preserves the store's cancellation path (T11).
+    var billedThrough: String? = nil
 
     /// A rise this steep (more than half again) is a new plan or an unexpected charge, not a price rise:
     /// after twelve months at $31.64, a $148.41 charge is "now costs more", never "raised its price".

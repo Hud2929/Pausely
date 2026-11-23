@@ -238,7 +238,7 @@ struct SignUpView: View {
             }
             // Age is confirmed BEFORE any account can be created: `SignUpDoor` asks before this
             // form opens, and `createAccount` asks again if it has somehow not been answered.
-            .onChange(of: authManager.isAuthenticated) { _, signedIn in
+            .onChange(of: authManager.isSignedIntoCloud) { _, signedIn in
                 if signedIn { dismiss() }
             }
         }
@@ -256,7 +256,7 @@ struct SignUpView: View {
         Task {
             do {
                 try await authManager.signUpWithOTP(email: address, password: password)
-                if !authManager.isAuthenticated {
+                if !authManager.isSignedIntoCloud {
                     pendingEmail = address
                     showEmailConfirmation = true
                 }
@@ -372,7 +372,7 @@ struct SignInView: View {
             .sheet(isPresented: $showPasswordReset) {
                 PasswordResetView(email: trimmedEmail)
             }
-            .onChange(of: authManager.isAuthenticated) { _, signedIn in
+            .onChange(of: authManager.isSignedIntoCloud) { _, signedIn in
                 if signedIn { dismiss() }
             }
         }

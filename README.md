@@ -9,14 +9,20 @@ renewal and asks one question each time: keep it or cancel it.
 - **Renewal Verdict**: each reminder opens a keep-or-cancel decision with the facts for that
   subscription (what it costs a year, what its renewals have come to, a price rise, the last day to
   cancel).
-- **Savings Receipt**: every cancellation is recorded with the charges it avoids over twelve months.
+- **Savings Receipt**: every cancellation is recorded with the charges it avoids over twelve months,
+  backed up to your account when you sign in.
+- **On-device screenshot import**: pick screenshots of Apple Subscriptions or recurring charges to
+  import services, prices, and renewal dates without uploading images or connecting a bank.
 - **Pause Plan**: rotate streaming services one month at a time instead of paying for all of them.
+- **Everyday details**: split shared family plans, track billing methods and notes, spot overlapping
+  services, or use Pausely locally without an account.
 - Totals in your own currency, widgets, and six languages (English, Arabic, German, Spanish, French,
   Japanese).
 
-Free: up to five subscriptions, with reminders, verdicts, cancel help and the Savings Receipt.
-Pausely Pro: unlimited subscriptions and Pause Plan. The single list of what Pro unlocks is
-`Pausely/Services/ProFeature.swift`.
+Free: up to five subscriptions (you choose which five), with reminders, verdicts, cancel help,
+single-screenshot import and the Savings Receipt.
+Pausely Pro: unlimited subscriptions, Pause Plan, batch screenshot import, and cancellation & refund
+email drafts. The single list of what Pro unlocks is `Pausely/Services/ProFeature.swift`.
 
 Pausely has no ads, does not sell data and does not connect to bank accounts.
 
@@ -45,7 +51,7 @@ target's build settings (they reach the app through `Configuration/Info.plist`).
 | `REVOLUTION_PLAN.md`, `REDESIGN_PLAN.md`, `INBOX_PLAN.md` | Where the product is going, the design system, finding subscriptions in email. |
 | `docs/` | Reference notes: pricing research, store listing plan, App Privacy answers, Google verification. |
 | `scripts/gold_check.sh` | The mechanical checks. It must print a total of 0. |
-| `supabase/` | Database migrations and the three edge functions. |
+| `supabase/` | Database migrations and the four edge functions. |
 | `pausely.pro/` | The website and the published policies. |
 
 ## Licence

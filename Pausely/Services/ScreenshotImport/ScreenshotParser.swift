@@ -29,6 +29,7 @@ enum ScreenshotParser {
         var renewalDate: Date?
         var trialEndsAt: Date?
         var isCancelled: Bool
+        var paymentMethod: String? = nil
         /// True when the subscription is explicitly listed in a free trial.
         var isTrial: Bool { trialEndsAt != nil }
 
@@ -42,7 +43,8 @@ enum ScreenshotParser {
                 isConfirmed: true,
                 frequency: frequency,
                 anchor: renewalDate,
-                trialEndsAt: trialEndsAt
+                trialEndsAt: trialEndsAt,
+                paymentMethod: paymentMethod
             )
         }
     }
@@ -63,7 +65,8 @@ enum ScreenshotParser {
     static func parse(pages: [[TextObservation]],
                       defaultCurrency: String,
                       now: Date = Date(),
-                      calendar: Calendar = .billing) -> [DetectedItem] {
+                      calendar: Calendar = .billing,
+                      rates: CurrencyRates = .fallback) -> [DetectedItem] {
         let catalog = MerchantCatalog.builtin.extending(with: CatalogData.entries.map {
             ($0.name, $0.category.rawValue, $0.cancellationURL)
         })
@@ -74,11 +77,13 @@ enum ScreenshotParser {
                 merge(item, into: &merged)
             }
         }
-        // Active subscriptions first (highest yearly cost first), then inactive/expired below.
+        // Active subscriptions first (highest yearly cost in default currency first), then inactive/expired below.
         return merged.sorted { lhs, rhs in
             if lhs.isCancelled != rhs.isCancelled { return !lhs.isCancelled }
-            let lCost = (lhs.amount ?? 0) * ProvenSubscription.periodsPerYear(lhs.frequency)
-            let rCost = (rhs.amount ?? 0) * ProvenSubscription.periodsPerYear(rhs.frequency)
+            let lRaw = (lhs.amount ?? 0) * ProvenSubscription.periodsPerYear(lhs.frequency)
+            let rRaw = (rhs.amount ?? 0) * ProvenSubscription.periodsPerYear(rhs.frequency)
+            let lCost = rates.convert(lRaw, from: lhs.currency, to: defaultCurrency) ?? 0
+            let rCost = rates.convert(rRaw, from: rhs.currency, to: defaultCurrency) ?? 0
             if lCost != rCost { return lCost > rCost }
             return lhs.name.localizedCaseInsensitiveCompare(rhs.name) == .orderedAscending
         }
@@ -88,14 +93,15 @@ enum ScreenshotParser {
     static func parse(lines: [String],
                       defaultCurrency: String,
                       now: Date = Date(),
-                      calendar: Calendar = .billing) -> [DetectedItem] {
+                      calendar: Calendar = .billing,
+                      rates: CurrencyRates = .fallback) -> [DetectedItem] {
         let count = max(lines.count, 1)
         let step = min(0.042, 0.85 / CGFloat(count))
         let observations = lines.enumerated().map { idx, text in
             let y = 0.92 - CGFloat(idx) * step
             return TextObservation(text: text, boundingBox: CGRect(x: 0.08, y: max(0.02, y), width: 0.84, height: min(0.024, step * 0.65)))
         }
-        return parse(pages: [observations], defaultCurrency: defaultCurrency, now: now, calendar: calendar)
+        return parse(pages: [observations], defaultCurrency: defaultCurrency, now: now, calendar: calendar, rates: rates)
     }
 
     // MARK: - Spatial Line Clustering
@@ -143,6 +149,10 @@ enum ScreenshotParser {
 
     private enum SectionState { case unknown, active, inactive }
 
+    private static let appleScreenMarkers: Set<String> = [
+        "subscriptions", "share new subscriptions", "renewal receipts", "apple account"
+    ]
+
     private static func parseSinglePage(_ observations: [TextObservation],
                                         catalog: MerchantCatalog,
                                         defaultCurrency: String,
@@ -150,6 +160,11 @@ enum ScreenshotParser {
                                         calendar: Calendar) -> [DetectedItem] {
         let lines = clusterLines(observations)
         var section: SectionState = .unknown
+        let isAppleSubscriptionsScreen = lines.contains { line in
+            let l = line.text.lowercased()
+            return appleScreenMarkers.contains(l) || isActiveHeader(l) || isInactiveHeader(l)
+        }
+        let detectedPaymentMethod: String? = isAppleSubscriptionsScreen ? "Apple" : nil
         var items: [DetectedItem] = []
 
         // Accumulator for multi-line Apple Settings subscription cards.
@@ -182,7 +197,8 @@ enum ScreenshotParser {
                 frequency: card.frequency ?? .monthly,
                 renewalDate: card.renewalDate,
                 trialEndsAt: card.trialEndsAt,
-                isCancelled: card.isCancelled
+                isCancelled: card.isCancelled,
+                paymentMethod: detectedPaymentMethod
             )
             merge(item, into: &items)
         }
@@ -211,32 +227,21 @@ enum ScreenshotParser {
             let isTrialLine = containsTrialWord(lower)
 
             // 1. Single-line bank/card or compact row containing BOTH a name AND a price (e.g. "Netflix  $19.99/mo").
+            // Kept open in `current` and emitted by `flushCurrent()` so a tight following subline
+            // ("Renews Dec 15" or "Expired Oct 10, 2026") updates the card before merging.
             if let price, let leftName = extractLeadingName(from: line, priceRange: price.range, catalog: catalog) {
                 flushCurrent()
                 let resolved = resolveService(leftName, catalog: catalog)
                 let cancelled = section == .inactive || isExpiredLine
-                let item = DetectedItem(
-                    id: resolved.name.lowercased(),
+                current = PendingCard(
                     name: resolved.name,
                     category: resolved.category,
                     amount: price.amount,
                     currency: price.currency,
                     frequency: freq ?? .monthly,
-                    renewalDate: isTrialLine ? nil : dateInfo.date,
+                    renewalDate: dateInfo.date,
                     trialEndsAt: isTrialLine ? dateInfo.date : nil,
-                    isCancelled: cancelled
-                )
-                merge(item, into: &items)
-                // Keep a lightweight open card in case the very next tight subline carries "Renews Dec 15".
-                current = PendingCard(
-                    name: item.name,
-                    category: item.category,
-                    amount: item.amount,
-                    currency: item.currency,
-                    frequency: freq,
-                    renewalDate: item.renewalDate,
-                    trialEndsAt: item.trialEndsAt,
-                    isCancelled: item.isCancelled,
+                    isCancelled: cancelled,
                     lastMinY: line.minY
                 )
                 continue
@@ -287,7 +292,7 @@ enum ScreenshotParser {
                         amount: price?.amount,
                         currency: price?.currency ?? defaultCurrency,
                         frequency: freq,
-                        renewalDate: isTrialLine ? nil : dateInfo.date,
+                        renewalDate: dateInfo.date,
                         trialEndsAt: isTrialLine ? dateInfo.date : nil,
                         isCancelled: section == .inactive || isExpiredLine,
                         lastMinY: line.minY
@@ -305,6 +310,24 @@ enum ScreenshotParser {
     private static func merge(_ incoming: DetectedItem, into list: inout [DetectedItem]) {
         if let idx = list.firstIndex(where: { ServiceName.same($0.name, incoming.name) }) {
             var existing = list[idx]
+            // An older inactive/expired row for the same service (e.g. Apple Subscriptions INACTIVE
+            // section) must never mark a currently active row as cancelled.
+            if !existing.isCancelled && incoming.isCancelled {
+                return
+            }
+            if existing.isCancelled && !incoming.isCancelled {
+                existing.isCancelled = false
+                if let amount = incoming.amount {
+                    existing.amount = amount
+                    existing.currency = incoming.currency
+                }
+                if let renewal = incoming.renewalDate { existing.renewalDate = renewal }
+                if let trial = incoming.trialEndsAt { existing.trialEndsAt = trial }
+                if let method = incoming.paymentMethod { existing.paymentMethod = method }
+                existing.frequency = incoming.frequency
+                list[idx] = existing
+                return
+            }
             if existing.amount == nil, let amount = incoming.amount {
                 existing.amount = amount
                 existing.currency = incoming.currency
@@ -315,8 +338,8 @@ enum ScreenshotParser {
             if existing.trialEndsAt == nil, let trial = incoming.trialEndsAt {
                 existing.trialEndsAt = trial
             }
-            if incoming.isCancelled {
-                existing.isCancelled = true
+            if existing.paymentMethod == nil, let method = incoming.paymentMethod {
+                existing.paymentMethod = method
             }
             if existing.category == SubscriptionCategory.other.rawValue,
                incoming.category != SubscriptionCategory.other.rawValue {
@@ -412,8 +435,8 @@ enum ScreenshotParser {
             return DateMatch(date: calendar.noon(of: explicit), hasKeyword: hasKeyword)
         }
 
-        // 2. Fallback to NSDataDetector for localized dates (ISO, DD/MM/YYYY, Japanese, German, etc.)
-        if let detector = try? NSDataDetector(types: NSTextCheckingResult.CheckingType.date.rawValue) {
+        // 2. Fallback to per-thread cached NSDataDetector for localized dates (ISO, DD/MM/YYYY, Japanese, German, etc.)
+        if let detector = cachedDateDetector() {
             let range = NSRange(location: 0, length: (text as NSString).length)
             if let match = detector.firstMatch(in: text, options: [], range: range),
                let detected = match.date {
@@ -425,6 +448,16 @@ enum ScreenshotParser {
             }
         }
         return DateMatch(date: nil, hasKeyword: hasKeyword)
+    }
+
+    private static func cachedDateDetector() -> NSDataDetector? {
+        let slot = "pausely.screenshot.dateDetector"
+        if let cached = Thread.current.threadDictionary[slot] as? NSDataDetector {
+            return cached
+        }
+        guard let created = try? NSDataDetector(types: NSTextCheckingResult.CheckingType.date.rawValue) else { return nil }
+        Thread.current.threadDictionary[slot] = created
+        return created
     }
 
     private static let monthMap: [String: Int] = [

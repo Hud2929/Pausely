@@ -156,9 +156,11 @@ final class TallyTests: XCTestCase {
         try XCTSkipUnless(FileManager.default.fileExists(atPath: screen.path), "Sources aren't readable from this test run")
         let source = try String(contentsOf: screen, encoding: .utf8)
         let button = try XCTUnwrap(source.range(of: ".accessibilityIdentifier(\"keepListButton\")"))
-        let under = String(source[button.upperBound...].prefix(1100))
-        XCTAssertTrue(under.contains("if FreeTier.isExceeded(by: tally.subscriptions()) {"))
-        XCTAssertTrue(under.contains("L10n.string(\"Free tracks \\(FreeTier.subscriptionLimit), the most expensive first. The rest wait until you make room or go Pro.\")"))
+        // The free-limit notice sits right below the slip (above the bottom action bar) so the
+        // person sees it before keeping their list and can pick which 5 to track, without clipping slip lines.
+        let beforeAccount = String(source[..<button.lowerBound])
+        XCTAssertTrue(beforeAccount.contains("if FreeTier.isExceeded(by: tally.subscriptions()) {"))
+        XCTAssertTrue(beforeAccount.contains("L10n.string(\"Free tracks \\(FreeTier.subscriptionLimit), the most expensive first. The rest wait until you make room or go Pro.\")"))
     }
 
     func testImportPlanFillsFreeSlotsWithTheMostExpensiveAndSkipsWhatIsAlreadyListed() {

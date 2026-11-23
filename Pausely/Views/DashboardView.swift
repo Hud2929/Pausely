@@ -18,11 +18,11 @@ struct DashboardView: View {
     @State private var showingInbox = false
     @State private var showingScreenshotImport = false
     @State private var showingFreePicker = false
-    /// Read only so Home is drawn again when what waits for room changes: after an add that only kept
-    /// some for later, "isn't tracked" stayed until a relaunch (the rating of 2026-11-23).
-    @AppStorage(TallyImporter.waitingKey) private var waitingSaved: Data?
+    @State private var pendingPaywallFromPicker = false
+    @AppStorage(TallyImporter.waitingVersionKey) private var waitingVersion = 0
     @State private var showsYear = false
     @ScaledMetric(relativeTo: .largeTitle) private var numberSize: CGFloat = 52
+    @ScaledMetric(relativeTo: .title3) private var addButtonSize: CGFloat = Layout.tapTarget
     @Environment(\.dynamicTypeSize) private var typeSize
 
     /// How many lines the total may take. One; two at the accessibility text sizes, where a total
@@ -54,9 +54,8 @@ struct DashboardView: View {
                     if Self.showsComingUp(hasCharges: !charges.isEmpty,
                                           hasUndated: !Horizon.undated(store.subscriptions).isEmpty) {
                         HorizonSection(charges: charges, notInTotal: Self.notInTotal(Horizon.undated(store.subscriptions)),
-                                       currency: currencyManager.selectedCurrency,
-                                       rates: currencyManager.rates,
-                                       pendingIds: Set(VerdictCenter.shared.pendingDecisions(rotating: pausePlanStore.activePlan).map(\.subscriptionId)))
+                                       currency: currencyManager.selectedCurrency, rates: currencyManager.rates,
+                                       pendingKeys: Set(VerdictCenter.shared.pendingDecisions(rotating: pausePlanStore.activePlan).map { RenewalDecisions.key($0.subscriptionId, $0.date) }))
                             .padding(.top, 32)
                     }
                     if !hasKept { keptSection.padding(.top, 28) }
@@ -67,6 +66,7 @@ struct DashboardView: View {
             .padding(.top, 16)
             .padding(.bottom, 32)
         }
+        .readableScroll()
         .inkScreen()
         .refreshable { await store.fetchSubscriptions(force: true) }
         .sheet(isPresented: $showingAdd) { SubscriptionBrowserView() }
@@ -75,9 +75,11 @@ struct DashboardView: View {
         .sheet(isPresented: $showingDates) { RenewalDatesSheet(subscriptions: Horizon.undated(store.subscriptions)) }
         .sheet(isPresented: $showingInbox) { InboxImportView() }
         .sheet(isPresented: $showingScreenshotImport) { ScreenshotImportView() }
-        .sheet(isPresented: $showingFreePicker) {
-            FreeLimitPickerSheet(store: store, currencyManager: currencyManager, onSeePro: { showingPaywall = true })
-        }
+        .sheet(isPresented: $showingFreePicker, onDismiss: {
+            guard pendingPaywallFromPicker else { return }
+            pendingPaywallFromPicker = false
+            showingPaywall = true
+        }) { FreeLimitPickerSheet(store: store, currencyManager: currencyManager, onSeePro: { pendingPaywallFromPicker = true }) }
         .onAppear {
             ReviewPromptManager.shared.askAfterMoneyKept()
         }
@@ -199,11 +201,12 @@ struct DashboardView: View {
     }
 
     private var addButton: some View {
-        Button { showingAdd = true } label: {
+        let size = min(addButtonSize, 68)
+        return Button { showingAdd = true } label: {
             Image(systemName: "plus")
                 .font(.title3.weight(.semibold))
                 .foregroundStyle(Color.inkText)
-                .frame(width: Layout.tapTarget, height: Layout.tapTarget)
+                .frame(width: size, height: size)
                 .overlay(Circle().stroke(Color.outline, lineWidth: 1))
                 .contentShape(Circle())
         }
@@ -462,19 +465,18 @@ private struct HorizonSection: View {
     let notInTotal: String?
     let currency: String
     let rates: CurrencyRates
-    let pendingIds: Set<UUID>
+    let pendingKeys: Set<String>
 
-    /// The day under the finger while it is on the line. Gesture state, not view state: it goes back
-    /// to nothing when the touch ends and also when the scroll view takes the touch away. Kept as view
-    /// state it stayed set after a scroll that began on the line, and the rows below stayed faded.
     @GestureState private var selectedDay: Int?
-    /// The day chosen with VoiceOver (swipe up or down on the line). A finger's choice lasts while
-    /// it is down; this one stays until it is moved back to the end of the line.
     @State private var spokenDay: Int?
 
     private var pickedDay: Int? { selectedDay ?? spokenDay }
     private var throughDay: Int { pickedDay ?? Horizon.days - 1 }
     private var total: Decimal { Horizon.total(of: charges, through: throughDay, in: currency, rates: rates) }
+    /// Exact charges awaiting a decision above aren't repeated row-for-row below the timeline.
+    private var listedCharges: [Horizon.Charge] {
+        charges.filter { !pendingKeys.contains(RenewalDecisions.key($0.subscriptionId, $0.date)) }
+    }
 
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
@@ -521,17 +523,34 @@ private struct HorizonSection: View {
                 .padding(.bottom, 10)
                 .accessibilityHidden(true)
 
-                ForEach(Array(charges.prefix(6).enumerated()), id: \.element.id) { index, charge in
+                let awaiting = charges.count - listedCharges.count
+                if awaiting > 0 && !listedCharges.isEmpty {
+                    Text(awaiting == 1
+                         ? L10n.string("Includes 1 awaiting a decision above.")
+                         : L10n.string("Includes \(awaiting) awaiting a decision above."))
+                        .font(.footnote)
+                        .foregroundStyle(Color.inkTextMuted)
+                        .fixedSize(horizontal: false, vertical: true)
+                        .padding(.bottom, 6)
+                }
+
+                ForEach(Array(listedCharges.prefix(6).enumerated()), id: \.element.id) { index, charge in
                     if index > 0 { Hairline() }
                     ChargeRow(charge: charge, state: state(for: charge),
                               dimmed: charge.dayOffset > throughDay)
                 }
-                if charges.count > 6 {
+                if listedCharges.count > 6 {
                     Hairline()
-                    Text(L10n.string("And \(charges.count - 6) more in Subscriptions."))
+                    Text(L10n.string("And \(listedCharges.count - 6) more in Subscriptions."))
                         .font(.subheadline)
                         .foregroundStyle(Color.inkTextMuted)
                         .padding(.vertical, 12)
+                } else if listedCharges.isEmpty {
+                    Text("Everything due in the next month is waiting for a decision above.")
+                        .font(.subheadline)
+                        .foregroundStyle(Color.inkTextMuted)
+                        .fixedSize(horizontal: false, vertical: true)
+                        .padding(.vertical, 8)
                 }
             }
         }
@@ -539,7 +558,7 @@ private struct HorizonSection: View {
     }
 
     private func state(for charge: Horizon.Charge) -> MoneyState? {
-        if pendingIds.contains(charge.subscriptionId) && charge.dayOffset <= 7 { return .decide }
+        if pendingKeys.contains(RenewalDecisions.key(charge.subscriptionId, charge.date)) { return .decide }
         return charge.dayOffset <= 1 ? .due : nil
     }
 

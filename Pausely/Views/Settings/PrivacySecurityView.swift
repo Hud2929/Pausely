@@ -16,11 +16,17 @@ struct PrivacySecurityView: View {
         SettingsPage(title: "Privacy & security") {
             SettingsSection(title: "Your data") {
                 SettingsRow(title: L10n.string("Your subscription list"),
-                            detail: L10n.string("Synced to Pausely's servers over an encrypted connection and encrypted at rest. Other accounts can't read it."))
+                            detail: authManager.isGuest
+                                ? L10n.string("Kept only on this iPhone under iOS data protection until you choose to create an account.")
+                                : L10n.string("Synced to Pausely's servers over an encrypted connection and encrypted at rest. Other accounts can't read it."))
                 SettingsRow(title: L10n.string("History, receipt and Pause Plan"),
                             detail: L10n.string("Protected on this iPhone by iOS data protection, and synced to your account when you sign in so reinstalling never loses them."))
                 SettingsRow(title: L10n.string("Import from screenshots"),
                             detail: L10n.string("Screenshots are read on this iPhone using on-device text recognition and are never saved or sent anywhere."))
+                SettingsRow(title: L10n.string("Cancellation difficulty ratings"),
+                            detail: authManager.isGuest
+                                ? L10n.string("Available once you sign in. In local-only mode, nothing is sent to Pausely's servers.")
+                                : L10n.string("Optional 1–5 ratings you submit after cancelling are combined into anonymous averages per service."))
                 if FeatureFlags.inboxImportEnabled {
                     SettingsRow(title: L10n.string("Find in Email"),
                                 detail: L10n.string("Receipts are read on this iPhone. A few facts of each charge are kept (who charged, how much, when, how often), never the email itself."))

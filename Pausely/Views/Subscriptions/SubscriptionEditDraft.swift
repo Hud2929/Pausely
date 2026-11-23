@@ -8,11 +8,17 @@ struct SubscriptionEditDraft: Equatable {
     var currency: String
     var frequency: BillingFrequency
     var nextBillingDate: Date?
+    var isTrial: Bool
+    var trialEndsAt: Date?
     var category: String?
     /// Days before renewal to remind. 0 means no reminder.
     var reminderDays: Int
+    var paymentMethod: String
+    var notes: String
+    var splitCount: Int
 
     static let reminderOptions: [Int] = [0, 1, 3, 7]
+    static let splitOptions: [Int] = [1, 2, 3, 4, 5, 6, 8, 10]
 
     init(from subscription: Subscription) {
         name = subscription.name
@@ -21,8 +27,13 @@ struct SubscriptionEditDraft: Equatable {
         frequency = subscription.billingFrequency
         // Show the upcoming renewal, not an anchor that may be months in the past.
         nextBillingDate = subscription.calculatedNextBillingDate
+        isTrial = subscription.status == .trial
+        trialEndsAt = subscription.trialEndsAt
         category = subscription.category
         reminderDays = subscription.notifyBeforeDays
+        paymentMethod = subscription.paymentMethod ?? ""
+        notes = subscription.notes ?? ""
+        splitCount = subscription.splitCount
     }
 
     // MARK: Amount
@@ -61,12 +72,27 @@ struct SubscriptionEditDraft: Equatable {
         return amountChanged || differsOutsideAmount(original)
     }
 
+    var normalizedPaymentMethod: String? {
+        let trimmed = paymentMethod.trimmingCharacters(in: .whitespacesAndNewlines)
+        return trimmed.isEmpty ? nil : trimmed
+    }
+
+    var normalizedNotes: String? {
+        let trimmed = notes.trimmingCharacters(in: .whitespacesAndNewlines)
+        return trimmed.isEmpty ? nil : trimmed
+    }
+
     private func differsOutsideAmount(_ original: Subscription) -> Bool {
         trimmedName != original.name
             || currency != original.currency
             || frequency != original.billingFrequency
             || category != original.category
             || reminderDays != original.notifyBeforeDays
+            || splitCount != original.splitCount
+            || normalizedPaymentMethod != original.paymentMethod
+            || normalizedNotes != original.notes
+            || isTrial != (original.status == .trial)
+            || !sameDay(isTrial ? trialEndsAt : nil, original.status == .trial ? original.trialEndsAt : nil)
             || !sameDay(nextBillingDate, original.calculatedNextBillingDate)
     }
 
@@ -91,8 +117,19 @@ struct SubscriptionEditDraft: Equatable {
         if !sameDay(nextBillingDate, original.calculatedNextBillingDate) {
             updated.nextBillingDate = nextBillingDate.map { Calendar.billing.noon(of: $0) }
         }
+        if isTrial {
+            let end = trialEndsAt ?? updated.nextBillingDate
+            updated.trialEndsAt = end.map { Calendar.billing.noon(of: $0) }
+            if updated.status != .cancelled { updated.status = .trial }
+        } else {
+            updated.trialEndsAt = nil
+            if updated.status == .trial { updated.status = .active }
+        }
         updated.category = category
         updated.notifyBeforeDays = reminderDays
+        updated.splitCount = max(1, min(20, splitCount))
+        updated.paymentMethod = normalizedPaymentMethod
+        updated.notes = normalizedNotes
         return updated
     }
 
@@ -103,9 +140,22 @@ struct SubscriptionEditDraft: Equatable {
         days == 0 ? L10n.string("Off") : L10n.string("\(days) days before")
     }
 
-    /// Yearly cost for the live "that's X a year" hint.
-    var yearlyCost: Decimal? {
+    /// "Just me" or "N people", in the reader's language and digits.
+    static func splitLabel(_ count: Int) -> String {
+        count <= 1 ? L10n.string("Just me") : L10n.string("\(count) people")
+    }
+
+    /// The user's per-period share when splitting a subscription.
+    var perPeriodShare: Decimal? {
         guard let amount = parsedAmount else { return nil }
-        return amount * ProvenSubscription.periodsPerYear(frequency)
+        return splitCount > 1
+            ? AmountText.rounded(amount / Decimal(splitCount), currency: currency)
+            : amount
+    }
+
+    /// Yearly cost for the live "that's X a year" hint (reflecting the user's share if split).
+    var yearlyCost: Decimal? {
+        guard let share = perPeriodShare else { return nil }
+        return share * ProvenSubscription.periodsPerYear(frequency)
     }
 }

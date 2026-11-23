@@ -1,5 +1,4 @@
 import Foundation
-import LocalAuthentication
 import SwiftUI
 import Supabase
 import Auth
@@ -84,6 +83,9 @@ struct SubscriptionRecord: Codable {
     var trial_ends_at: String?
     var status: String
     var created_at: String?
+    var notes: String?
+    var payment_method: String?
+    var split_count: Int?
 
     init(from subscription: Subscription) {
         self.id = subscription.id
@@ -97,10 +99,13 @@ struct SubscriptionRecord: Codable {
         self.trial_ends_at = subscription.trialEndsAt.map { BillingDay.stored($0).iso8601String }
         self.next_billing_date = subscription.nextBillingDate.map { BillingDay.stored($0).iso8601String }
         self.status = subscription.status.rawValue
+        self.notes = subscription.notes
+        self.payment_method = subscription.paymentMethod
+        self.split_count = max(1, min(20, subscription.splitCount))
     }
 
-    /// Dates that can be cleared are always sent, as null when empty, so clearing one on this iPhone
-    /// clears it on the server. Ids and timestamps the server owns are left out when empty.
+    /// Dates and optional user fields that can be cleared are always sent, as null when empty, so
+    /// clearing one on this iPhone clears it on the server. Ids and timestamps the server owns are left out when empty.
     func encode(to encoder: Encoder) throws {
         var c = encoder.container(keyedBy: CodingKeys.self)
         try c.encodeIfPresent(id, forKey: .id)
@@ -115,6 +120,9 @@ struct SubscriptionRecord: Codable {
         try c.encode(trial_ends_at, forKey: .trial_ends_at)
         try c.encode(status, forKey: .status)
         try c.encodeIfPresent(created_at, forKey: .created_at)
+        try c.encode(notes, forKey: .notes)
+        try c.encode(payment_method, forKey: .payment_method)
+        try c.encode(split_count ?? 1, forKey: .split_count)
     }
 
     /// True when a day in this row was saved by an earlier version (as noon where it was typed). Read on
@@ -138,7 +146,10 @@ struct SubscriptionRecord: Codable {
             notifyBeforeDays: notify_before_days ?? 3,
             trialEndsAt: trial_ends_at?.iso8601Date.map { BillingDay.local(fromStored: $0) },
             status: SubscriptionStatus(saved: status),
-            createdAt: created_at?.iso8601Date ?? Date()
+            createdAt: created_at?.iso8601Date ?? Date(),
+            notes: notes,
+            paymentMethod: payment_method,
+            splitCount: split_count ?? 1
         )
     }
 }

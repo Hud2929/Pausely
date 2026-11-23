@@ -28,6 +28,7 @@ enum DebugLaunchRouter {
         case subscriptionEdit(String)
         case firstRun(FirstRunView.Phase, useDemoTally: Bool)
         case cancel(String)
+        case cancelEmail(String)
         case outcome(kept: Bool)
         case customAdd
         case tier
@@ -60,6 +61,7 @@ enum DebugLaunchRouter {
         if LaunchFlag.isSet("--demo-first-run=tally") { return .firstRun(.tally, useDemoTally: true) }
         if LaunchFlag.isSet("--demo-first-run") { return .firstRun(.guess, useDemoTally: false) }
         if let name = LaunchFlag.value(of: "--demo-cancel") { return .cancel(name) }
+        if let name = LaunchFlag.value(of: "--demo-cancel-email") { return .cancelEmail(name) }
         if LaunchFlag.isSet("--demo-kept") { return .outcome(kept: true) }
         if LaunchFlag.isSet("--demo-cancelled") { return .outcome(kept: false) }
         if LaunchFlag.isSet("--demo-custom-add") { return .customAdd }
@@ -121,9 +123,14 @@ enum DebugLaunchRouter {
             SubscriptionEditView(subscription: name.isEmpty ? DemoSubscriptions.netflix : demoSubscription(name))
         case .firstRun(let phase, let useDemoTally):
             FirstRunView(startAt: phase, tally: useDemoTally ? DemoTally.make() : nil,
-                         onKeepList: {}, onSignIn: {})
+                         onKeepList: {}, onSignIn: {}, onContinueWithoutAccount: {})
         case .cancel(let name):
             CancelSubscriptionFlow(subscription: name.isEmpty ? DemoSubscriptions.netflix : demoSubscription(name))
+        case .cancelEmail(let name):
+            EmailDraftSheet(draft: CancelConcierge.cancellationDraft(
+                for: name.isEmpty ? DemoSubscriptions.netflix : demoSubscription(name),
+                accountEmail: "alex@example.com"
+            ))
         case .outcome(let kept):
             ZStack {
                 Group {
@@ -182,7 +189,11 @@ enum DebugLaunchRouter {
 
     /// Seeds state flags that ride along on whichever demo screen is opened.
     static func applyDemoModifiers(authManager: AuthManager) {
+        if LaunchFlag.isSet("--demo-guest") { authManager.enterGuestMode(persist: false) }
         if LaunchFlag.isSet("--demo-savings") || LaunchFlag.isSet("--demo-receipt") { DemoSavings.seed() }
+        if LaunchFlag.value(of: "--demo-cancel") != nil || LaunchFlag.value(of: "--demo-verdict") != nil || LaunchFlag.isSet("--demo-difficulty") {
+            CancelDifficultyService.shared.seedDemoScores()
+        }
         if LaunchFlag.isSet("--demo-link-problem") {
             authManager.linkProblem = L10n.string("That link has expired or was already used. Ask for a new one.")
         }
@@ -207,7 +218,7 @@ enum DebugLaunchRouter {
 private struct DemoTierSheet: View {
     var body: some View {
         if let entry = SubscriptionCatalogService.shared.entry(named: "Netflix") {
-            CatalogAddSheet(entry: entry) { _, _, _, _ in }
+            CatalogAddSheet(entry: entry) { _, _, _, _, _ in }
         }
     }
 }

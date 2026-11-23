@@ -9,7 +9,7 @@ struct LifecycleEventRecord: Codable, Equatable {
     var subscription_id: UUID
     var subscription_name: String
     var kind: String
-    var event_date: String
+    var occurred_at: String
     var amount: Decimal
     var currency: String
     var frequency: String
@@ -23,7 +23,7 @@ struct LifecycleEventRecord: Codable, Equatable {
         self.subscription_id = event.subscriptionId
         self.subscription_name = event.subscriptionName
         self.kind = event.kind.rawValue
-        self.event_date = event.date.iso8601String
+        self.occurred_at = event.date.iso8601String
         self.amount = event.amount
         self.currency = event.currency
         self.frequency = event.frequency.rawValue
@@ -34,7 +34,7 @@ struct LifecycleEventRecord: Codable, Equatable {
 
     func toEvent() -> LifecycleEvent? {
         guard let eventKind = LifecycleEvent.Kind(rawValue: kind),
-              let parsedDate = event_date.iso8601Date else { return nil }
+              let parsedDate = occurred_at.iso8601Date else { return nil }
         let freq = BillingFrequency(rawValue: frequency) ?? .monthly
         return LifecycleEvent(
             id: id,
@@ -96,7 +96,7 @@ final class LifecycleSync {
                 .from("lifecycle_events")
                 .select()
                 .eq("user_id", value: userId)
-                .order("event_date", ascending: true)
+                .order("occurred_at", ascending: false)
                 .limit(LifecycleEventLog.maxEvents)
                 .execute()
                 .value

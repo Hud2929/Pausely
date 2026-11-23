@@ -66,6 +66,10 @@ final class SyncQueue: ObservableObject {
     /// loaded; until then nothing is sent, so an unloaded list can't be mistaken for an empty one.
     var currentCopy: ((UUID) -> Subscription?)?
 
+    /// Invoked when the device regains connectivity before draining the queue, allowing first-sync
+    /// reconciliation to recover automatically if the initial post-sign-in fetch failed offline.
+    var onNetworkRestored: (() async -> Void)?
+
     private let transport: SyncTransport
     private let store: (Data) -> Void
     private let now: () -> Date
@@ -246,6 +250,14 @@ final class SyncQueue: ObservableObject {
         persist()
     }
 
+    /// Drops a queued `.create` intent when a local guest item merged into an existing server row.
+    func dropPendingCreate(_ id: UUID) {
+        let before = pending.count
+        pending.removeAll { $0.subscriptionId == id && $0.kind == .create }
+        if noted[id]?.kind == .create { noted.removeValue(forKey: id) }
+        if pending.count != before { persist() }
+    }
+
     // MARK: - When the network comes back
 
     private func watchNetwork() {
@@ -258,11 +270,14 @@ final class SyncQueue: ObservableObject {
         self.monitor = monitor
     }
 
-    /// Coming back online sends what is waiting, including what failed a moment ago.
+    /// Coming back online reconciles pending first-sync if needed, then sends what is waiting.
     func networkChanged(isOnline: Bool) async {
         let cameBack = isOnline && !wasOnline
         wasOnline = isOnline
-        if cameBack { await drain(force: true) }
+        if cameBack {
+            await onNetworkRestored?()
+            await drain(force: true)
+        }
     }
 
     // MARK: - Keeping the queue between launches
@@ -316,7 +331,7 @@ struct SupabaseSyncTransport: SyncTransport {
     /// one person's unsent changes must never be sent into another person's account.
     var canSend: Bool {
         guard SubscriptionStore.cloudSyncEnabled, let user = client.auth.currentSession?.user.id else { return false }
-        return LocalUserData.belongs(to: user.uuidString)
+        return LocalUserData.belongs(to: user.uuidString) && !SubscriptionStore.isFirstSync(for: user.uuidString)
     }
 
     func create(_ subscription: Subscription) async throws {

@@ -36,7 +36,8 @@ struct FirstRunView: View {
                 }, onSignIn: onSignIn)
                 .transition(stepTransition)
             case .tally:
-                TallyStep(tally: $tally, onBack: { go(.guess) }, onReveal: { go(.reveal) }, onSkip: keep)
+                TallyStep(tally: $tally, onBack: { go(.guess) }, onReveal: { go(.reveal) },
+                          onSkip: continueAction ?? keep)
                     .transition(stepTransition)
             case .reveal:
                 RevealStep(tally: $tally, rates: currencyManager.rates,

@@ -41,6 +41,7 @@ struct PausePlanView: View {
                 .padding(.top, 8)
                 .padding(.bottom, 40)
             }
+            .readableScroll()
             .background(Color.ink.ignoresSafeArea())
             .navigationTitle("Pause Plan")
             .navigationBarTitleDisplayMode(.inline)
@@ -52,7 +53,7 @@ struct PausePlanView: View {
         }
         .preferredColorScheme(.dark)
         .sheet(isPresented: $showPaywall) {
-            StoreKitUpgradeView()
+            StoreKitUpgradeView(trigger: .pausePlan)
         }
         .sheet(item: $cancelTarget) { sub in
             CancelSubscriptionFlow(subscription: sub)
@@ -169,8 +170,8 @@ struct PausePlanView: View {
         let isSelected = selected.contains(sub.id)
         let isFirst = isSelected && firstId == sub.id
         let price = sub.status == .cancelled
-            ? L10n.string("Cancelled") + " · " + L10n.string("\(money(sub.amount, from: sub.currency)) a month")
-            : L10n.string("\(money(sub.amount, from: sub.currency)) a month")
+            ? L10n.string("Cancelled") + " · " + L10n.string("\(money(sub.effectiveAmount, from: sub.currency)) a month")
+            : L10n.string("\(money(sub.effectiveAmount, from: sub.currency)) a month")
         let toggle = {
             Feel.selection()
             if isSelected {

@@ -11,21 +11,34 @@ enum ScreenshotOCR {
     }
 
     nonisolated static func recognizeText(in image: UIImage) async throws -> [ScreenshotParser.TextObservation] {
-        guard let cgImage = normalizedCGImage(from: image) else {
+        let orientation = cgOrientation(from: image.imageOrientation)
+        if let cgImage = image.cgImage {
+            return try await Task.detached(priority: .userInitiated) {
+                try performRecognition(on: cgImage, orientation: orientation)
+            }.value
+        }
+        // Fallback only when UIImage is CIImage-backed with no direct CGImage.
+        guard let fallbackData = image.pngData() else {
             throw Failure.unreadableImage
         }
         return try await Task.detached(priority: .userInitiated) {
-            try performRecognition(on: cgImage)
+            guard let rendered = UIImage(data: fallbackData)?.cgImage else {
+                throw Failure.unreadableImage
+            }
+            return try performRecognition(on: rendered, orientation: .up)
         }.value
     }
 
-    private nonisolated static func performRecognition(on cgImage: CGImage) throws -> [ScreenshotParser.TextObservation] {
+    private nonisolated static func performRecognition(
+        on cgImage: CGImage,
+        orientation: CGImagePropertyOrientation
+    ) throws -> [ScreenshotParser.TextObservation] {
         let request = VNRecognizeTextRequest()
         request.recognitionLevel = .accurate
         request.usesLanguageCorrection = true
         request.automaticallyDetectsLanguage = true
 
-        let handler = VNImageRequestHandler(cgImage: cgImage, options: [:])
+        let handler = VNImageRequestHandler(cgImage: cgImage, orientation: orientation, options: [:])
         try handler.perform([request])
 
         return (request.results ?? []).compactMap { observation in
@@ -36,15 +49,17 @@ enum ScreenshotOCR {
         }
     }
 
-    /// Normalizes orientation before passing to Vision so rotated screenshots still cluster rows cleanly.
-    private nonisolated static func normalizedCGImage(from image: UIImage) -> CGImage? {
-        if image.imageOrientation == .up, let cgImage = image.cgImage {
-            return cgImage
+    private nonisolated static func cgOrientation(from uiOrientation: UIImage.Orientation) -> CGImagePropertyOrientation {
+        switch uiOrientation {
+        case .up: return .up
+        case .down: return .down
+        case .left: return .left
+        case .right: return .right
+        case .upMirrored: return .upMirrored
+        case .downMirrored: return .downMirrored
+        case .leftMirrored: return .leftMirrored
+        case .rightMirrored: return .rightMirrored
+        @unknown default: return .up
         }
-        let renderer = UIGraphicsImageRenderer(size: image.size)
-        let normalized = renderer.image { _ in
-            image.draw(in: CGRect(origin: .zero, size: image.size))
-        }
-        return normalized.cgImage
     }
 }

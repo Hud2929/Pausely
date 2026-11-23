@@ -48,12 +48,14 @@ struct SubscriptionEditView: View {
                         header
                         amountField
                         detailsCard
+                        extraFields
                         footnote
                     }
                     .padding(.horizontal, 20)
                     .padding(.top, 8)
                     .padding(.bottom, 40)
                 }
+                .readableScroll()
                 .scrollDismissesKeyboard(.interactively)
             }
             .navigationTitle("Edit")
@@ -107,6 +109,8 @@ struct SubscriptionEditView: View {
                     .lineLimit(1...3)
                     .font(.question(.title))
                     .foregroundStyle(Color.inkText)
+                    .multilineTextAlignment(.leading)
+                    .frame(maxWidth: .infinity, alignment: .leading)
                     .textInputAutocapitalization(.words)
                     .submitLabel(.next)
                     .focused($focus, equals: .name)
@@ -196,10 +200,31 @@ struct SubscriptionEditView: View {
                 .accessibilityLabel("Billing cycle, \(draft.frequency.displayName)")
             }
 
-            divider
+            if !draft.isTrial {
+                divider
 
-            row("Next renewal") {
-                OptionalDatePicker(title: L10n.string("Next renewal"), date: $draft.nextBillingDate)
+                row("Next renewal") {
+                    OptionalDatePicker(title: L10n.string("Next renewal"), date: $draft.nextBillingDate)
+                }
+            }
+
+            if original.status != .cancelled {
+                divider
+                Toggle(isOn: $draft.isTrial.animation(Motion.unlessReduced(Motion.touch))) {
+                    Text("Free trial")
+                        .font(.body)
+                        .foregroundStyle(Color.inkText)
+                }
+                .tint(Color.inkTextMuted)
+                .frame(minHeight: 54)
+                .accessibilityIdentifier("editTrialToggle")
+
+                if draft.isTrial {
+                    divider
+                    row("Trial ends") {
+                        OptionalDatePicker(title: L10n.string("Trial ends"), date: $draft.trialEndsAt)
+                    }
+                }
             }
 
             divider
@@ -243,18 +268,104 @@ struct SubscriptionEditView: View {
                 }
                 .accessibilityLabel("Remind me, \(SubscriptionEditDraft.reminderLabel(draft.reminderDays))")
             }
+
+            divider
+
+            row("Split between") {
+                Menu {
+                    ForEach(SubscriptionEditDraft.splitOptions, id: \.self) { count in
+                        Button {
+                            draft.splitCount = count
+                        } label: {
+                            if count == draft.splitCount {
+                                Label(SubscriptionEditDraft.splitLabel(count), systemImage: "checkmark")
+                            } else {
+                                Text(SubscriptionEditDraft.splitLabel(count))
+                            }
+                        }
+                    }
+                } label: {
+                    valueLabel(SubscriptionEditDraft.splitLabel(draft.splitCount))
+                }
+                .accessibilityLabel("Split between, \(SubscriptionEditDraft.splitLabel(draft.splitCount))")
+                .accessibilityIdentifier("editSplitPicker")
+            }
+
+            if draft.splitCount > 1, let share = draft.perPeriodShare {
+                Text(L10n.string("Your share: \(draft.frequency.priced(MoneyFormat.string(share, draft.currency)))"))
+                    .font(.footnote)
+                    .foregroundStyle(Color.inkTextMuted)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .padding(.bottom, 8)
+            }
         }
+    }
+
+    private var extraFields: some View {
+        VStack(alignment: .leading, spacing: 20) {
+            VStack(alignment: .leading, spacing: 8) {
+                Text("Billed to")
+                    .font(.subheadline.weight(.medium))
+                    .foregroundStyle(Color.inkTextMuted)
+                InkTextField(placeholder: "", text: $draft.paymentMethod, autocapitalization: .words)
+                    .accessibilityLabel("Billed to")
+                    .accessibilityIdentifier("editPaymentMethodField")
+                Text("For example: Apple, Visa ending in 4242, or PayPal.")
+                    .font(.footnote)
+                    .foregroundStyle(Color.inkTextFaint)
+                    .fixedSize(horizontal: false, vertical: true)
+                LineOrStack(spacing: 8, lineSpacing: 8) {
+                    billingPreset("Apple")
+                    billingPreset("Google Play")
+                    billingPreset("Amazon")
+                }
+            }
+
+            VStack(alignment: .leading, spacing: 8) {
+                Text("Notes")
+                    .font(.subheadline.weight(.medium))
+                    .foregroundStyle(Color.inkTextMuted)
+                InkTextField(placeholder: "", text: $draft.notes, autocapitalization: .sentences)
+                    .accessibilityLabel("Notes")
+                    .accessibilityIdentifier("editNotesField")
+                Text("For example: Shared with Sarah, or promo rate ends in October.")
+                    .font(.footnote)
+                    .foregroundStyle(Color.inkTextFaint)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+        }
+    }
+
+    private func billingPreset(_ label: String) -> some View {
+        let selected = draft.paymentMethod.trimmingCharacters(in: .whitespacesAndNewlines).caseInsensitiveCompare(label) == .orderedSame
+        return Button {
+            Feel.selection()
+            draft.paymentMethod = selected ? "" : label
+        } label: {
+            Text(verbatim: label)
+                .font(.footnote.weight(.semibold))
+                .foregroundStyle(selected ? Color.paperInk : Color.inkTextMuted)
+                .padding(.horizontal, 12)
+                .padding(.vertical, 8)
+                .background(selected ? Color.paper : Color.clear, in: Capsule())
+                .overlay(Capsule().stroke(selected ? Color.paper : Color.outline, lineWidth: 1))
+                .tapArea(.leading)
+        }
+        .buttonStyle(.plain)
+        .accessibilityAddTraits(selected ? [.isSelected] : [])
     }
 
     @ViewBuilder
     private var footnote: some View {
         VStack(alignment: .leading, spacing: 6) {
             if let yearly = draft.yearlyCost {
-                Text("That's \(MoneyFormat.string(yearly, draft.currency)) a year")
+                Text(draft.splitCount > 1
+                     ? L10n.string("Your share is \(MoneyFormat.string(yearly, draft.currency)) a year")
+                     : L10n.string("That's \(MoneyFormat.string(yearly, draft.currency)) a year"))
                     .font(.footnote)
                     .foregroundStyle(Color.inkTextFaint)
             }
-            if draft.reminderDays > 0 && draft.nextBillingDate == nil {
+            if draft.reminderDays > 0 && draft.nextBillingDate == nil && !(draft.isTrial && draft.trialEndsAt != nil) {
                 Text("Add its renewal date to get reminders.")
                     .font(.footnote)
                     .foregroundStyle(Color.decide)

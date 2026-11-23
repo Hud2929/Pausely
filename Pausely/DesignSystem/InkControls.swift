@@ -308,6 +308,7 @@ struct SearchableScroll<Content: View>: View {
     var body: some View {
         ScrollViewReader { page in
             ScrollView { content }
+                .readableScroll()
                 .environment(\.bringToTop, { id in
                     withAnimation(Motion.unlessReduced(Motion.touch)) { page.scrollTo(id, anchor: .top) }
                 })
@@ -412,6 +413,7 @@ struct ActionScreen<Content: View, Actions: View>: View {
                     actions
                 }
             }
+            .readableScroll()
             .scrollDismissesKeyboard(dismissesKeyboard ? .interactively : .automatic)
         }
     }

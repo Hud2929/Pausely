@@ -127,7 +127,9 @@ seed() {  # rows that exist before the fix is applied, wherever the table exists
   admin "$1" >/dev/null <<SQL
 insert into auth.users (id, email) values
   ('$A', 'a@example.test'), ('$B', 'b@example.test'), ('$C', 'c@example.test'), ('$D', 'd@example.test');
-insert into public.profiles (id, display_name, is_pro) values ('$A', 'A', false), ('$B', 'B', true), ('$D', 'D', false);
+insert into public.profiles (id, display_name, is_pro) values ('$A', 'A', false), ('$B', 'B', true), ('$D', 'D', false)
+  on conflict (id) do update set display_name = excluded.display_name, is_pro = excluded.is_pro;
+delete from public.profiles where id = '$C';
 do \$\$
 declare amount_column text := (select column_name from information_schema.columns
     where table_schema = 'public' and table_name = 'subscriptions' and column_name in ('amount', 'cost') limit 1);
@@ -302,6 +304,8 @@ checks() {
   gives   "a person cannot read someone else's lifecycle events" 0 "$db" authenticated "$B" "select count(*) from public.lifecycle_events"
   refused "a person cannot insert a lifecycle event for someone else" "$db" authenticated "$A" "insert into public.lifecycle_events (id, user_id, subscription_id, subscription_name, kind, occurred_at, amount, currency, frequency) values ('6eed0000-0000-4000-8000-000000000002', '$B', '$synced', 'Netflix', 'cancelled', now(), 15.99, 'USD', 'monthly')"
   works   "a person can save their own pause plan"              "$db" authenticated "$A" "insert into public.pause_plans (user_id, subscription_ids, started_on) values ('$A', array['$synced'::uuid], now()) on conflict (user_id) do update set subscription_ids = excluded.subscription_ids"
+  works   "a pause plan update can carry a client LWW timestamp" "$db" authenticated "$A" "update public.pause_plans set ended_at = '2026-01-02T03:04:05Z', updated_at = '2026-01-02T03:04:05Z' where user_id = '$A'"
+  gives   "pause_plans preserves the client updated_at timestamp on update" "2026-01-02T03:04:05Z" "$db" authenticated "$A" "select to_char(updated_at at time zone 'UTC', 'YYYY-MM-DD\"T\"HH24:MI:SS\"Z\"') from public.pause_plans where user_id = '$A'"
   gives   "a person cannot read someone else's pause plan" 0    "$db" authenticated "$B" "select count(*) from public.pause_plans"
   refused "a person cannot write someone else's pause plan"     "$db" authenticated "$B" "insert into public.pause_plans (user_id, subscription_ids, started_on) values ('$A', array['$synced'::uuid], now())"
   refused "a signed-in person cannot read app_store_entitlements" "$db" authenticated "$A" "select count(*) from public.app_store_entitlements"
@@ -347,10 +351,25 @@ checks() {
     refused "nor can a signed-in person"                        "$db" authenticated "$A" "select public.calculate_monthly_spend('$B')"
   fi
 
-  # Account deletion
+  # Automatic auth.users -> profiles trigger (GoTrue/owner inserts into auth.users)
+  local E=eeeeeeee-0000-4000-8000-000000000005 out_e
+  if out_e=$(printf "insert into auth.users (id, email) values ('%s', 'e@example.test');\n" "$E" | admin "$db"); then
+    pass "a new auth user triggers profile creation"
+  else
+    fail "a new auth user triggers profile creation" "$(printf '%s' "$out_e" | tail -1)"
+  fi
+  owner_sees "their profile exists and is not Pro" "1|f|e@example.test" "$db" "select count(*), bool_or(is_pro), max(email) from public.profiles where id = '$E'"
+  if out_e=$(printf "delete from auth.users where id = '%s';\n" "$E" | admin "$db"); then
+    pass "cleanup test user E"
+  else
+    fail "cleanup test user E" "$(printf '%s' "$out_e" | tail -1)"
+  fi
+
+  # Account deletion (including lifecycle_events and pause_plans cleanup)
+  works   "user D has lifecycle history and pause plan before deleting" "$db" authenticated "$D" "insert into public.lifecycle_events (id, user_id, subscription_id, subscription_name, kind, occurred_at, amount, currency, frequency) values ('6eed0000-0000-4000-8000-000000000009', '$D', '6eed0000-0000-4000-8000-000000000010', 'Hulu', 'cancelled', now(), 7.99, 'USD', 'monthly'); insert into public.pause_plans (user_id, subscription_ids, started_on, ended_at) values ('$D', array['6eed0000-0000-4000-8000-000000000010'::uuid], now(), null)"
   refused "a signed-out visitor cannot call account deletion"   "$db" anon - "select public.delete_my_account()"
   works   "a person can delete their own account"               "$db" authenticated "$D" "select public.delete_my_account()"
-  owner_sees "their account, profile and subscriptions are gone" "0|0|0" "$db" "select (select count(*) from auth.users where id = '$D'), (select count(*) from public.profiles where id = '$D'), (select count(*) from public.subscriptions where user_id = '$D')"
+  owner_sees "their account, profile, subscriptions, lifecycle events and pause plan are gone" "0|0|0|0|0" "$db" "select (select count(*) from auth.users where id = '$D'), (select count(*) from public.profiles where id = '$D'), (select count(*) from public.subscriptions where user_id = '$D'), (select count(*) from public.lifecycle_events where user_id = '$D'), (select count(*) from public.pause_plans where user_id = '$D')"
   owner_sees "the deletion was logged" 1 "$db" "select count(*) from public.deletion_requests where notes = 'Deleted from the app'"
   owner_sees "nobody else's rows were touched" "3|2" "$db" "select (select count(*) from auth.users), (select count(*) from public.subscriptions)"
 }

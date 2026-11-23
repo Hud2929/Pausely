@@ -8,6 +8,7 @@ struct TallyStep: View {
     let onSkip: () -> Void
 
     @State private var asking: TallyService?
+    @State private var showingScreenshotImport = false
     @Environment(\.dynamicTypeSize) private var typeSize
 
     private var services: [TallyService] { TallyCatalog.services(payingIn: tally.currency) }
@@ -21,7 +22,20 @@ struct TallyStep: View {
         VStack(spacing: 0) {
             ScrollView {
                 VStack(alignment: .leading, spacing: 0) {
-                    FirstRunBackButton(action: onBack)
+                    LineOrStack(spacing: 12, lineSpacing: 4, spread: true, alignment: .center) {
+                        FirstRunBackButton(action: onBack)
+                        Button {
+                            Feel.selection()
+                            showingScreenshotImport = true
+                        } label: {
+                            Label("Import screenshots", systemImage: "photo.on.rectangle.angled")
+                                .font(.subheadline.weight(.medium))
+                                .foregroundStyle(Color.inkTextMuted)
+                                .tapArea(.trailing)
+                        }
+                        .buttonStyle(.plain)
+                        .accessibilityIdentifier("firstRunScreenshotImportButton")
+                    }
 
                     Text("Now tap everything you pay for.")
                         .font(.question(.title2))
@@ -64,6 +78,7 @@ struct TallyStep: View {
                 .padding(.horizontal, Layout.margin)
                 .padding(.top, 8)
             }
+            .readableScroll()
 
             slipBar
         }
@@ -74,6 +89,12 @@ struct TallyStep: View {
                 }
                 Feel.tick()
             }
+        }
+        .sheet(isPresented: $showingScreenshotImport) {
+            ScreenshotImportView(onPickForTally: { lines in
+                tally.mergeDetected(lines)
+                if !tally.lines.isEmpty { onReveal() }
+            })
         }
     }
 

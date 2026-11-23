@@ -25,15 +25,17 @@ struct FreeLimitPickerSheet: View {
     init(candidates: [Candidate], initialSelection: Set<String>, maxSelection: Int,
          onSave: @escaping (Set<String>) -> Void, onSeePro: (() -> Void)? = nil) {
         self.candidates = candidates
-        self.maxSelection = max(1, maxSelection)
+        let limit = max(1, maxSelection)
+        self.maxSelection = limit
         self.onSave = onSave
         self.onSeePro = onSeePro
         let ranked = candidates.sorted { $0.yearlyInDisplay > $1.yearlyInDisplay }
         if initialSelection.isEmpty {
-            _selected = State(initialValue: Set(ranked.prefix(max(1, maxSelection)).map(\.name)))
+            _selected = State(initialValue: Set(ranked.prefix(limit).map(\.name)))
         } else {
-            let valid = Set(candidates.map(\.name)).intersection(initialSelection)
-            _selected = State(initialValue: valid.isEmpty ? Set(ranked.prefix(max(1, maxSelection)).map(\.name)) : valid)
+            let validOrdered = ranked.map(\.name).filter { initialSelection.contains($0) }
+            let clamped = Array(validOrdered.prefix(limit))
+            _selected = State(initialValue: clamped.isEmpty ? Set(ranked.prefix(limit).map(\.name)) : Set(clamped))
         }
     }
 
@@ -46,21 +48,23 @@ struct FreeLimitPickerSheet: View {
             Candidate(
                 name: sub.name,
                 category: sub.category ?? SubscriptionCategory.other.rawValue,
-                amount: sub.amount,
+                amount: sub.effectiveAmount,
                 currency: sub.currency,
                 frequency: sub.billingFrequency,
-                yearlyInDisplay: rates.convert(sub.annualCost, from: sub.currency, to: display) ?? sub.annualCost
+                yearlyInDisplay: rates.convert(sub.annualCost, from: sub.currency, to: display) ?? 0
             )
         }
         let activeNames = Set(activeCandidates.map { $0.name.lowercased() })
         let waitingCandidates = TallyImporter.waitingLines().filter { !activeNames.contains($0.name.lowercased()) }.map { line in
-            Candidate(
+            let people = max(1, line.splitCount)
+            let share = people > 1 ? AmountText.rounded(line.amount / Decimal(people), currency: line.currency) : line.amount
+            return Candidate(
                 name: line.name,
                 category: line.category,
-                amount: line.amount,
+                amount: share,
                 currency: line.currency,
                 frequency: line.frequency ?? .monthly,
-                yearlyInDisplay: rates.convert(line.yearlyCost, from: line.currency, to: display) ?? line.yearlyCost
+                yearlyInDisplay: rates.convert(line.yearlyCost, from: line.currency, to: display) ?? 0
             )
         }
         self.init(
@@ -86,7 +90,9 @@ struct FreeLimitPickerSheet: View {
                     Spacer()
                 }
 
-                Text(L10n.string("Choose which \(maxSelection) to track"))
+                Text(maxSelection == 1
+                     ? L10n.string("Choose 1 to track")
+                     : L10n.string("Choose which \(maxSelection) to track"))
                     .font(.question(.title))
                     .foregroundStyle(Color.inkText)
                     .fixedSize(horizontal: false, vertical: true)
@@ -117,7 +123,9 @@ struct FreeLimitPickerSheet: View {
                     onSave(selected)
                     dismiss()
                 } label: {
-                    Text(L10n.string("Track these \(selected.count)"))
+                    Text(selected.count == 1
+                         ? L10n.string("Track this 1")
+                         : L10n.string("Track these \(selected.count)"))
                 }
                 .buttonStyle(.ink)
                 .disabled(selected.isEmpty)

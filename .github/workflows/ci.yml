@@ -19,6 +19,12 @@ jobs:
         with:
           fetch-depth: 0
 
+      - name: Fetch website branches for site parity check
+        run: git fetch origin gh-pages:gh-pages site-next:site-next || true
+
+      - name: Run static website parity check
+        run: test -z "$(bash scripts/site_check.sh)"
+
       - name: Run database rules across all 6 starting states
         run: bash scripts/dbtest/run.sh
 
@@ -37,5 +43,20 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Run full iOS proof (checks, unit, mail, ui, release)
-        run: bash scripts/proof.sh checks unit mail ui release
+      - name: Select Xcode 26 (matching project objectVersion 77 & Swift 6)
+        run: |
+          if [ -d "/Applications/Xcode_26.app/Contents/Developer" ]; then
+            sudo xcode-select -s /Applications/Xcode_26.app/Contents/Developer
+          elif [ -d "/Applications/Xcode_26.0.app/Contents/Developer" ]; then
+            sudo xcode-select -s /Applications/Xcode_26.0.app/Contents/Developer
+          else
+            LATEST_XCODE=$(ls -d /Applications/Xcode_26*.app /Applications/Xcode.app 2>/dev/null | head -n 1)
+            [ -n "$LATEST_XCODE" ] && sudo xcode-select -s "$LATEST_XCODE/Contents/Developer"
+          fi
+          xcodebuild -version
+
+      - name: Fetch website branches for gold checks
+        run: git fetch origin gh-pages:gh-pages site-next:site-next || true
+
+      - name: Run full iOS proof (unit, checks, mail, ui, release)
+        run: bash scripts/proof.sh unit checks mail ui release

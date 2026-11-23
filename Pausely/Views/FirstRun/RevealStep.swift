@@ -40,16 +40,43 @@ struct RevealStep: View {
                     .foregroundStyle(Color.inkTextMuted)
                     .fixedSize(horizontal: false, vertical: true)
                     .padding(.top, 10)
-                    .padding(.bottom, 24)
+                    .padding(.bottom, FreeTier.isExceeded(by: tally.subscriptions()) ? 14 : 24)
                     .opacity(showTotals ? 1 : 0)
 
+                // Placed above the slip so even with 8+ items the free limit and "Choose which 5" sit
+                // cleanly above the fold before the person keeps their list.
+                if FreeTier.isExceeded(by: tally.subscriptions()) {
+                    VStack(alignment: .leading, spacing: 4) {
+                        Text(tally.preferredNames.isEmpty
+                             ? L10n.string("Free tracks \(FreeTier.subscriptionLimit), the most expensive first. The rest wait until you make room or go Pro.")
+                             : L10n.string("You chose \(tally.preferredNames.count) to track. The rest wait until you make room or go Pro."))
+                            .font(.footnote)
+                            .foregroundStyle(Color.inkTextMuted)
+                            .fixedSize(horizontal: false, vertical: true)
+                            .accessibilityIdentifier("revealFreeLimit")
+                        Button { choosingTracked = true } label: {
+                            Text(tally.preferredNames.isEmpty
+                                 ? L10n.string("Choose which \(FreeTier.subscriptionLimit)")
+                                 : L10n.string("Change which \(FreeTier.subscriptionLimit)"))
+                                .font(.footnote.weight(.semibold))
+                                .foregroundStyle(Color.inkText)
+                                .underline()
+                                .tapArea(.leading)
+                        }
+                        .buttonStyle(.plain)
+                        .accessibilityIdentifier("revealChooseFiveButton")
+                    }
+                    .padding(.bottom, 14)
+                    .opacity(showTotals ? 1 : 0)
+                }
+
                 slip
-                    .padding(.bottom, 24)
+                    .padding(.bottom, 20)
             }
             .padding(.horizontal, Layout.margin)
             .padding(.top, 8)
         } actions: {
-            VStack(spacing: 10) {
+            VStack(spacing: 8) {
                 Button(action: onKeep) { Text("Keep my list") }
                     .buttonStyle(.ink)
                     .accessibilityIdentifier("keepListButton")
@@ -57,38 +84,25 @@ struct RevealStep: View {
                     Button(action: onContinueWithoutAccount) { Text("Continue without an account") }
                         .buttonStyle(.ink(.quiet))
                         .accessibilityIdentifier("continueWithoutAccountButton")
-                }
-                Text("Next: a free account, so your list is saved.")
-                    .font(.footnote)
-                    .foregroundStyle(Color.inkTextFaint)
-                    .multilineTextAlignment(.center)
-                // Said here, before the account: what the importer will do with a slip this long
-                // (`PendingTally.plan`).
-                if FreeTier.isExceeded(by: tally.subscriptions()) {
-                    Text(L10n.string("Free tracks \(FreeTier.subscriptionLimit), the most expensive first. The rest wait until you make room or go Pro."))
+                    Text("Keep my list backs up to a free account. Without one, it stays on this iPhone.")
                         .font(.footnote)
                         .foregroundStyle(Color.inkTextFaint)
                         .multilineTextAlignment(.center)
                         .fixedSize(horizontal: false, vertical: true)
-                        .accessibilityIdentifier("revealFreeLimit")
-                    Button { choosingTracked = true } label: {
-                        Text(L10n.string("Choose which \(FreeTier.subscriptionLimit)"))
-                            .font(.footnote.weight(.semibold))
-                            .foregroundStyle(Color.inkText)
-                            .underline()
-                            .tapArea()
-                    }
-                    .buttonStyle(.plain)
-                    .accessibilityIdentifier("revealChooseFiveButton")
+                } else {
+                    Text("Next: a free account, so your list is saved.")
+                        .font(.footnote)
+                        .foregroundStyle(Color.inkTextFaint)
+                        .multilineTextAlignment(.center)
                 }
             }
             .padding(.horizontal, Layout.margin)
-            .padding(.top, 12)
-            .padding(.bottom, 12)
+            .padding(.top, 10)
+            .padding(.bottom, 10)
         }
         .task { await printSlip() }
         .sheet(item: $editing) { line in
-            PriceSheet(name: line.name, placeholder: line.amount, currency: tally.currency) { amount in
+            PriceSheet(name: line.name, placeholder: line.amount, currency: line.currency, frequency: line.frequency ?? .monthly) { amount in
                 tally.setAmount(amount, for: line.name)
             }
         }
@@ -101,7 +115,7 @@ struct RevealStep: View {
                         amount: line.amount,
                         currency: line.currency,
                         frequency: line.frequency ?? .monthly,
-                        yearlyInDisplay: rates.convert(line.yearlyCost, from: line.currency, to: tally.currency) ?? line.yearlyCost
+                        yearlyInDisplay: rates.convert(line.yearlyCost, from: line.currency, to: tally.currency) ?? 0
                     )
                 },
                 initialSelection: tally.preferredNames,
@@ -119,8 +133,12 @@ struct RevealStep: View {
                     ForEach(Array(tally.lines.enumerated()), id: \.element.id) { index, line in
                         if index < printed {
                             Button { editing = line } label: {
-                                ProofLine(label: line.name,
-                                          value: MoneyFormat.string(line.amount, line.currency, locale: L10n.locale))
+                                let formatted = MoneyFormat.string(line.amount, line.currency, locale: L10n.locale)
+                                let valueText: String = {
+                                    if let freq = line.frequency, freq != .monthly { return freq.pricedShort(formatted) }
+                                    return formatted
+                                }()
+                                ProofLine(label: line.name, value: valueText)
                                     // A line is a place to tap: a fingertip tall (it was 28 points).
                                     .frame(maxWidth: .infinity, minHeight: Layout.tapTarget, alignment: .leading)
                                     .contentShape(Rectangle())

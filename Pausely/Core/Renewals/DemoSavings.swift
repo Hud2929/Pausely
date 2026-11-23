@@ -18,6 +18,7 @@ enum DemoSavings {
                 name: PaymentManager.ownName, category: "Productivity",
                 amount: ProPricing.annualUSD, currency: "USD", billingFrequency: .yearly,
                 nextBillingDate: Calendar.billing.date(byAdding: .month, value: 9, to: now)))
+            store.recalculateDemoTotals()
         }
         let log = LifecycleEventLog.shared
         guard !log.events.contains(where: { $0.kind == .cancelled }) else { return }

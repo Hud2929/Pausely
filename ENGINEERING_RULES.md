@@ -53,8 +53,9 @@ Full rules, recipes and checks: the `pausely-currency` skill (`.claude/skills/pa
 - Changes that happen without a user action (a trial ends, a renewal passes) go in
   `SubscriptionLifecycle.changes(for:since:now:)`, which is pure and tested, and are applied
   in `run()`. It runs when subscriptions load and when the app comes to the foreground.
-- Record what happened in `LifecycleEventLog`. The log stays on the device and is the source
-  for price history and measured savings. Don't infer history from the current state.
+- Record what happened in `LifecycleEventLog`. The log is protected on-device (`DeviceFile`) and
+  synced to your account when signed in (`LifecycleSync`); it is the source for price history and
+  measured savings. Don't infer history from the current state.
 
 ## What Pro unlocks
 

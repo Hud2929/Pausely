@@ -50,7 +50,8 @@ final class SubscriptionExporter {
     static func csv(for subscriptions: [Subscription], now: Date = Date(), calendar: Calendar = .billing) -> String {
         let headings = [L10n.string("Name"), L10n.string("Category"), L10n.string("Amount"), L10n.string("Currency"),
                         L10n.string("Billing cycle"), L10n.string("Status"), L10n.string("Each month"), L10n.string("Each year"),
-                        L10n.string("Next renewal"), L10n.string("Tracking since")]
+                        L10n.string("Next renewal"), L10n.string("Tracking since"),
+                        L10n.string("Billed to"), L10n.string("Split between"), L10n.string("Notes")]
         var lines = [headings.map(csvCell).joined(separator: ",")]
         for sub in subscriptions {
             // The next renewal, not the day that was typed in, which may be months ago.
@@ -64,7 +65,10 @@ final class SubscriptionExporter {
                          MoneyFormat.plainNumber(sub.monthlyCost, sub.currency),
                          MoneyFormat.plainNumber(sub.annualCost, sub.currency),
                          next.map(calendar.dayStamp) ?? "",
-                         calendar.dayStamp(sub.createdAt)]
+                         calendar.dayStamp(sub.createdAt),
+                         sub.paymentMethod ?? "",
+                         "\(sub.splitCount)",
+                         sub.notes ?? ""]
             lines.append(cells.map(csvCell).joined(separator: ","))
         }
         return lines.joined(separator: "\n") + "\n"
@@ -146,7 +150,7 @@ final class SubscriptionExporter {
     }
 
     static func pageRow(for sub: Subscription) -> [String] {
-        [sub.name, SubscriptionCategory.localizedLabel(for: sub.category), MoneyFormat.string(sub.amount, sub.currency),
+        [sub.name, SubscriptionCategory.localizedLabel(for: sub.category), MoneyFormat.string(sub.effectiveAmount, sub.currency),
          sub.billingFrequency.displayName, sub.status.displayName]
     }
 
@@ -228,23 +232,24 @@ final class SubscriptionExporter {
 
     // MARK: - Helpers
 
-    private func writeToFile(content: String, extension ext: String) -> URL? {
-        let filename = "pausely_export_\(Int(Date().timeIntervalSince1970)).\(ext)"
-        let url = FileManager.default.temporaryDirectory.appendingPathComponent(filename)
-        do {
-            try content.write(to: url, atomically: true, encoding: .utf8)
-            return url
-        } catch {
-            os_log("Export write failed: %{public}@", log: .default, type: .error, error.localizedDescription)
-            return nil
+    private func cleanPreviousExports() {
+        let dir = FileManager.default.temporaryDirectory
+        guard let urls = try? FileManager.default.contentsOfDirectory(at: dir, includingPropertiesForKeys: nil) else { return }
+        for url in urls where url.lastPathComponent.hasPrefix("pausely_export_") {
+            try? FileManager.default.removeItem(at: url)
         }
     }
 
+    private func writeToFile(content: String, extension ext: String) -> URL? {
+        writeDataToFile(data: Data(content.utf8), extension: ext)
+    }
+
     private func writeDataToFile(data: Data, extension ext: String) -> URL? {
+        cleanPreviousExports()
         let filename = "pausely_export_\(Int(Date().timeIntervalSince1970)).\(ext)"
         let url = FileManager.default.temporaryDirectory.appendingPathComponent(filename)
         do {
-            try data.write(to: url)
+            try data.write(to: url, options: [.atomic, .completeFileProtectionUntilFirstUserAuthentication])
             return url
         } catch {
             os_log("Export write failed: %{public}@", log: .default, type: .error, error.localizedDescription)

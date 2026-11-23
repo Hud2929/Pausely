@@ -9,6 +9,7 @@ struct SubscriptionsView: View {
     @State private var searchText = ""
     @State private var activeSheet: ActiveSheet?
     @State private var pendingRemoval: UUID?
+    @ScaledMetric(relativeTo: .title3) private var addButtonSize: CGFloat = Layout.tapTarget
     @Environment(\.dynamicTypeSize) private var typeSize
     @Binding var deepLinkedSubscription: Subscription?
 
@@ -31,7 +32,12 @@ struct SubscriptionsView: View {
     private var sections: [SubscriptionGroups.Section] {
         let shown = searchText.isEmpty
             ? store.subscriptions
-            : store.subscriptions.filter { $0.name.localizedCaseInsensitiveContains(searchText) }
+            : store.subscriptions.filter { sub in
+                sub.name.localizedCaseInsensitiveContains(searchText)
+                    || (sub.paymentMethod?.localizedCaseInsensitiveContains(searchText) ?? false)
+                    || (sub.notes?.localizedCaseInsensitiveContains(searchText) ?? false)
+                    || SubscriptionCategory.localizedLabel(for: sub.category).localizedCaseInsensitiveContains(searchText)
+            }
         let pending = Set(VerdictCenter.shared.pendingDecisions(rotating: pausePlanStore.activePlan).map(\.subscriptionId))
         return SubscriptionGroups.sections(shown, pending: pending, now: Date())
     }
@@ -44,6 +50,8 @@ struct SubscriptionsView: View {
                 header
                     .padding(.horizontal, Layout.margin)
                     .padding(.top, 16)
+                    .frame(maxWidth: ReadableWidth.maxWidth, alignment: .leading)
+                    .frame(maxWidth: .infinity)
             }
 
             if store.subscriptions.isEmpty {
@@ -64,6 +72,7 @@ struct SubscriptionsView: View {
                     .padding(.top, 40)
                     .padding(.bottom, 24)
                 }
+                .readableScroll()
             } else {
                 list
             }
@@ -94,10 +103,11 @@ struct SubscriptionsView: View {
                 ScreenTitle(text: L10n.string("Subscriptions"))
                 Spacer(minLength: 8)
                 Button { activeSheet = .browser } label: {
+                    let size = min(addButtonSize, 68)
                     Image(systemName: "plus")
                         .font(.title3.weight(.semibold))
                         .foregroundStyle(Color.inkText)
-                        .frame(width: Layout.tapTarget, height: Layout.tapTarget)
+                        .frame(width: size, height: size)
                         .overlay(Circle().stroke(Color.outline, lineWidth: 1))
                         .contentShape(Circle())
                 }
@@ -196,6 +206,7 @@ struct SubscriptionsView: View {
         }
         .listStyle(.plain)
         .scrollContentBackground(.hidden)
+        .readableScroll()
         .contentMargins(.bottom, 24, for: .scrollContent)
     }
 

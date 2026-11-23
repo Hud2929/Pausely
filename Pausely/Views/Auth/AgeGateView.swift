@@ -36,6 +36,7 @@ struct AgeGateView: View {
                 .padding(.top, 48)
                 .padding(.bottom, 32)
             }
+            .readableScroll()
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .inkScreen()

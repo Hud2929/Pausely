@@ -5,6 +5,9 @@ import StoreKit
 /// Trial-first paywall optimized for conversion.
 /// Leads with the free trial, states the Pausely Promise, and makes annual savings prominent.
 struct StoreKitUpgradeView: View {
+    /// Optional feature that opened this paywall, used to tailor the headline cleanly.
+    var trigger: ProFeature? = nil
+
     @Environment(\.dismiss) private var dismiss
     @Environment(\.dynamicTypeSize) private var typeSize
     @ObservedObject private var storeManager = StoreKitManager.shared
@@ -139,6 +142,16 @@ struct StoreKitUpgradeView: View {
     }
 
     private var headline: String {
+        switch trigger {
+        case .pausePlan:
+            return L10n.string("Rotate streaming with Pause Plan.")
+        case .batchScreenshotImport:
+            return L10n.string("Import up to 10 screenshots at once.")
+        case .cancelConcierge:
+            return L10n.string("Draft cancellation and refund emails in seconds.")
+        case .unlimitedSubscriptions, .none:
+            break
+        }
         if waitingCount > 0 {
             return L10n.sentences([L10n.string("You pay for \(activeSubscriptions.count + waitingCount) subscriptions."),
                                    L10n.string("Free tracks \(FreeTier.subscriptionLimit).")])
@@ -198,17 +211,17 @@ struct StoreKitUpgradeView: View {
                         .font(.body)
                         .foregroundStyle(Color.inkTextMuted)
                         .fixedSize(horizontal: false, vertical: true)
-                        .padding(.top, 10)
+                        .padding(.top, 8)
 
-                    planPicker.padding(.top, 16)
+                    planPicker.padding(.top, 12)
 
-                    slip.padding(.top, 20)
+                    slip.padding(.top, 14)
                 } else {
                     // No price, so no sentence about one, no plans to pick between and no slip.
                     pricesMissing.padding(.top, 16)
                 }
 
-                promise.padding(.top, 24).padding(.bottom, linksEndThePage ? 12 : 24)
+                promise.padding(.top, 18).padding(.bottom, linksEndThePage ? 12 : 20)
 
                 if linksEndThePage {
                     LineOrStack(spacing: 16, lineSpacing: 0) { footerLinks(alignment: .leading) }
@@ -237,7 +250,7 @@ struct StoreKitUpgradeView: View {
         .alert(Text("You have Pausely Pro"), isPresented: $showSuccessAlert) {
             Button("Continue", role: .cancel) { dismiss() }
         } message: {
-            Text("Every subscription you add is tracked from now on.")
+            Text("Unlimited tracking, Pause Plan, batch screenshot import, and email drafts are now unlocked.")
         }
         .alert(Text(verbatim: notice?.title ?? ""), isPresented: Binding(get: { notice != nil }, set: { if !$0 { notice = nil } }),
                presenting: notice) { shown in

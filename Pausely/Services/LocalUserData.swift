@@ -15,7 +15,8 @@ enum LocalUserData {
     /// hands ownership to the new account, queuing local subscriptions for cloud sync.
     static func claim(for userId: String?, defaults: UserDefaults = .standard) async {
         guard let userId, !userId.isEmpty else { return }
-        if let owner = defaults.string(forKey: ownerKey), owner != userId {
+        if let owner = defaults.string(forKey: ownerKey),
+           owner.caseInsensitiveCompare(userId) != .orderedSame {
             if owner == AuthManager.guestUserID {
                 defaults.set(userId, forKey: ownerKey)
                 SubscriptionStore.shared.queueLocalSubscriptionsForUpload()
@@ -41,7 +42,7 @@ enum LocalUserData {
         ownerKey, "local_guest_mode", "last_auth_email", "lifecycle_last_run",
         SubscriptionStore.syncedUserKey, "cached_subscriptions", "subscriptions_cache_date", "sync_queue_operations",
         "pausely_user_corrections_v1", "pausely_pro_auto_added", "pausely_pro_grant", "pausely_pro_line_ended",
-        "first_run_tally_waiting",
+        "first_run_tally_waiting", "first_run_tally_waiting_version",
         "gmail_connected_email", "gmail_last_history_id", "mailbox_accounts_v1",
         "auth_reset_requested_at", "auth_link_requested_email", "auth_link_requested_at",
         "subscription_price_history", InboxScanner.assumedDollarKey, InboxScanner.lastSearchKey, InboxScanner.selectionKey,
@@ -67,6 +68,8 @@ enum LocalUserData {
         SubscriptionStore.shared.removeAllLocalData()
         LifecycleEventLog.shared.removeAll()
         PausePlanStore.shared.removeAll()
+        CancelDifficultyService.shared.reset()
+        TallyImporter.clearWaiting()
         await InboxScanner.shared.disconnectAll()
         await PaymentManager.shared.setProGrant(false)
         VerdictCenter.shared.forget()
@@ -78,11 +81,12 @@ enum LocalUserData {
         removeReminders()
     }
 
-    /// Signing out. What is the person's stays on the iPhone for when they sign back in (the history
-    /// behind the Savings Receipt exists nowhere else), but nothing shows it meanwhile: not a widget,
+    /// Signing out. What is the person's stays on the iPhone for when they sign back in (and syncs
+    /// back down from their account on other devices), but nothing shows it meanwhile: not a widget,
     /// not Spotlight, not a reminder on the Lock Screen, not a Shortcut.
     static func hideWhileSignedOut() {
         SubscriptionStore.shared.hideList()
+        CancelDifficultyService.shared.reset()
         VerdictCenter.shared.forget()
         removeReminders()
     }

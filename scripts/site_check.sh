@@ -15,10 +15,19 @@ POLICIES="privacy.html terms.html refunds.html cookies.html delete.html support.
 pages_for() { if [ "$1" = gh-pages ]; then echo "index.html $POLICIES"; else echo "$POLICIES"; fi; }
 
 differing() {
-  local branch=$1 page
-  git rev-parse --verify --quiet "$branch" >/dev/null || { echo "$branch: no such local branch"; return; }
+  local branch=$1 ref="" page
+  if git rev-parse --verify --quiet "$branch" >/dev/null; then
+    ref="$branch"
+  elif git rev-parse --verify --quiet "origin/$branch" >/dev/null; then
+    ref="origin/$branch"
+  elif [ "${GITHUB_ACTIONS:-}" = "true" ]; then
+    return
+  else
+    echo "$branch: no such local branch"
+    return
+  fi
   for page in $(pages_for "$branch"); do
-    git show "$branch:$page" 2>/dev/null | cmp -s - "pausely.pro/$page" || echo "$branch:$page differs from pausely.pro/$page"
+    git show "$ref:$page" 2>/dev/null | cmp -s - "pausely.pro/$page" || echo "$branch:$page differs from pausely.pro/$page"
   done
 }
 

@@ -112,7 +112,7 @@ enum ShortcutAnswers {
             let daysAway = calendar.calendarDays(from: now, to: charge.date)
             guard daysAway <= daysAhead else { return nil }
             let when = DayText.text(daysAway: daysAway, day: charge.date, locale: locale)
-            let amount = MoneyFormat.string(subscription.amount, subscription.currency, locale: locale)
+            let amount = MoneyFormat.string(subscription.effectiveAmount, subscription.currency, locale: locale)
             return (charge.date, "\(subscription.name) · \(amount) · \(when)")
         }
         .sorted { ($0.day, $0.line) < ($1.day, $1.line) }

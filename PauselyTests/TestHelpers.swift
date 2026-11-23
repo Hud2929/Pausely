@@ -145,7 +145,7 @@ final class FakeSyncTransport: SyncTransport {
 /// milestone are put back by `restore()`.
 @MainActor
 final class StoreSandbox {
-    private static let defaultsKeys = ["debug_premium_override", "debug_free_pro", "review_receipt_milestone_last"]
+    private static let defaultsKeys = ["debug_premium_override", "debug_free_pro", "review_receipt_milestone_last", AuthManager.guestModeKey]
     let transport = FakeSyncTransport()
     private let subscriptions: [Subscription]
     private let totals: (monthly: Decimal, annual: Decimal)
@@ -157,12 +157,25 @@ final class StoreSandbox {
     private let defaults: [String: Any]
     private let wasHidden: Bool
     private let pendingTally: Tally?
+    private let savedUser: User?
+    private let wasAuthenticated: Bool
+    private let savedAuthState: PauselyAuthState
 
     init() {
         let store = SubscriptionStore.shared
+        let auth = AuthManager.shared
         // The test app starts with nobody signed in, so its list is hidden. A test's list is its own.
         wasHidden = store.isHidden
         store.isHidden = false
+        savedUser = auth.currentUser
+        wasAuthenticated = auth.isAuthenticated
+        savedAuthState = auth.state
+        if auth.isGuest {
+            auth.currentUser = nil
+            auth.isAuthenticated = false
+            auth.state = .unauthenticated
+            UserDefaults.standard.removeObject(forKey: AuthManager.guestModeKey)
+        }
         subscriptions = store.subscriptions
         totals = (store.totalMonthlySpend, store.totalAnnualSpend)
         cache = AppSettings.shared.cachedSubscriptions
@@ -194,6 +207,10 @@ final class StoreSandbox {
         LifecycleEventLog.shared.restore(events)
         CurrencyManager.shared.selectedCurrency = currency
         for key in Self.defaultsKeys { UserDefaults.standard.set(defaults[key], forKey: key) }
+        let auth = AuthManager.shared
+        auth.currentUser = savedUser
+        auth.isAuthenticated = wasAuthenticated
+        auth.state = savedAuthState
         WidgetDataStore.shared.publish(subscriptions: subscriptions)
         await SpotlightManager.shared.index(subscriptions: subscriptions).value
         await ReminderScheduler.shared.reschedule(subscriptions)

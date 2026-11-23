@@ -338,14 +338,37 @@ struct SubscriptionIntelligenceEngine {
             return nil
         }()
 
+        let billing = Self.storeBilling(signals: allSignals, merchant: merchant)
         return ProvenSubscription(
             id: "\(merchant.key)|\(frequency.rawValue)|\(currency)",
-            name: merchant.displayName, merchantKey: merchant.key, category: merchant.category, cancelURL: merchant.cancelURL,
+            name: merchant.displayName, merchantKey: merchant.key, category: merchant.category,
+            cancelURL: billing?.cancelURL ?? merchant.cancelURL,
             amount: latestAmount, currency: latest.currency ?? currency, frequency: frequency,
             lastChargeDate: lastDate, nextBillingDate: nextBillingDate, status: status, score: score, tier: tier,
             evidence: evidence, reasons: reasons, previousAmount: previousAmount, trialEndsOn: nil,
             chargedAfterCancel: chargedAfterCancel, unusualCharge: unusualCharge, doubt: doubt,
-            currencyAssumed: latest.currency == nil)
+            currencyAssumed: latest.currency == nil,
+            billedThrough: billing?.store)
+    }
+
+    /// Detects store-billed subscriptions (Apple App Store, Google Play, Prime Video Channels) so
+    /// importing keeps the store's real cancellation path instead of sending the person to the
+    /// third-party service's direct website (T11).
+    private static func storeBilling(signals: [ReceiptSignal], merchant: ResolvedMerchant) -> (store: String, cancelURL: String)? {
+        if signals.contains(where: { $0.platform == "apple" }),
+           let url = CancelHelp.applesSubscriptions?.absoluteString {
+            return ("Apple", url)
+        }
+        if signals.contains(where: { $0.platform == "googleplay" }),
+           let url = CancelHelp.googlePlaySubscriptions?.absoluteString {
+            return ("Google Play", url)
+        }
+        let amazonDomains = signals.contains { MerchantCatalog.registrableDomain($0.senderDomain).hasPrefix("amazon.") }
+        if amazonDomains, !merchant.key.contains("amazon"), !merchant.key.contains("prime"),
+           let url = CancelHelp.amazonChannels?.absoluteString {
+            return ("Amazon", url)
+        }
+        return nil
     }
 
     /// One strong email can still prove a subscription when a known service says it renews.
@@ -403,9 +426,11 @@ struct SubscriptionIntelligenceEngine {
         if let cancellation, cancellation.date >= signal.date { status = .cancelled; nextDate = nil; reasons.append(L10n.string("Cancelled on \(shortDate(cancellation.date))")) }
 
         score = max(0, min(100, score))
+        let billing = Self.storeBilling(signals: signals, merchant: merchant)
         return ProvenSubscription(
             id: "\(merchant.key)|\(frequency.rawValue)|\(currency)",
-            name: merchant.displayName, merchantKey: merchant.key, category: merchant.category, cancelURL: merchant.cancelURL,
+            name: merchant.displayName, merchantKey: merchant.key, category: merchant.category,
+            cancelURL: billing?.cancelURL ?? merchant.cancelURL,
             amount: amount, currency: signal.currency ?? currency, frequency: frequency,
             lastChargeDate: lastCharge, nextBillingDate: nextDate, status: status, score: score,
             tier: tier(for: score, status: status),
@@ -413,7 +438,8 @@ struct SubscriptionIntelligenceEngine {
             reasons: reasons, previousAmount: nil, trialEndsOn: nil, subscribedOn: startedOn,
             doubt: startedOn != nil ? L10n.string("This store doesn't email a receipt for each renewal")
                                     : L10n.string("One charge so far; a second would confirm it"),
-            currencyAssumed: signal.currency == nil)
+            currencyAssumed: signal.currency == nil,
+            billedThrough: billing?.store)
     }
 
     private func trialCandidate(trialSignals: [ReceiptSignal],
@@ -436,11 +462,13 @@ struct SubscriptionIntelligenceEngine {
         if days == nil { reasons.append(L10n.string("Trial length estimated; check the date in the original email")) }
         reasons.append(L10n.string("Trial ends around \(shortDate(endsOn))"))
         let score = merchant.isKnown ? 62 : 52
+        let billing = Self.storeBilling(signals: trialSignals, merchant: merchant)
         return ProvenSubscription(
             id: "\(merchant.key)|trial|\(currency)", name: merchant.displayName, merchantKey: merchant.key,
-            category: merchant.category, cancelURL: merchant.cancelURL, amount: amount, currency: currency,
+            category: merchant.category, cancelURL: billing?.cancelURL ?? merchant.cancelURL, amount: amount, currency: currency,
             frequency: .monthly, lastChargeDate: nil, nextBillingDate: endsOn, status: .trial, score: score,
-            tier: .likely, evidence: [], reasons: reasons, previousAmount: nil, trialEndsOn: endsOn)
+            tier: .likely, evidence: [], reasons: reasons, previousAmount: nil, trialEndsOn: endsOn,
+            billedThrough: billing?.store)
     }
 
     private func convertedTrialCandidate(trialSignals: [ReceiptSignal],
@@ -469,13 +497,15 @@ struct SubscriptionIntelligenceEngine {
         var reasons = [L10n.string("Free trial ended around \(shortDate(endsOn))"),
                        L10n.string("No cancellation email found, so it most likely renewed at \(price) \(frequency.billingPeriodLabel)")]
         if let next { reasons.append(L10n.string("Next charge expected around \(shortDate(next))")) }
+        let billing = Self.storeBilling(signals: trialSignals, merchant: merchant)
         return ProvenSubscription(
             id: "\(merchant.key)|\(frequency.rawValue)|\(currency)", name: merchant.displayName, merchantKey: merchant.key,
-            category: merchant.category, cancelURL: merchant.cancelURL, amount: amount, currency: latest.currency ?? currency,
+            category: merchant.category, cancelURL: billing?.cancelURL ?? merchant.cancelURL, amount: amount, currency: latest.currency ?? currency,
             frequency: frequency, lastChargeDate: nil, nextBillingDate: next, status: .active, score: 50,
             tier: tier(for: 50, status: .active), evidence: [], reasons: reasons, previousAmount: nil, trialEndsOn: nil,
             subscribedOn: first.date, startedWithTrial: true,
-            doubt: L10n.string("This store doesn't email a receipt for each renewal"))
+            doubt: L10n.string("This store doesn't email a receipt for each renewal"),
+            billedThrough: billing?.store)
     }
 
     // MARK: Tiering

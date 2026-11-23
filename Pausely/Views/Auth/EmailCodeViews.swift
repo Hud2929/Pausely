@@ -195,13 +195,14 @@ struct EmailConfirmationView: View {
                 .padding(.top, 16)
                 .padding(.bottom, 24)
             }
+            .readableScroll()
             .scrollDismissesKeyboard(.interactively)
             .background(Color.ink.ignoresSafeArea())
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .topBarLeading) {
                     Button("Use a different email") {
-                        authManager.state = .unauthenticated
+                        if !authManager.isGuest { authManager.state = .unauthenticated }
                         dismiss()
                     }
                     .foregroundStyle(Color.inkTextMuted)
@@ -216,7 +217,7 @@ struct EmailConfirmationView: View {
             if typed.count == EmailCode.length { verify() }
         }
         // The link in the email does the same job as the code; when it signs the person in, this is done.
-        .onChange(of: authManager.isAuthenticated) { _, signedIn in
+        .onChange(of: authManager.isSignedIntoCloud) { _, signedIn in
             if signedIn { dismiss() }
         }
     }
@@ -290,6 +291,7 @@ struct PasswordResetView: View {
                 .padding(.top, 16)
                 .padding(.bottom, 24)
             }
+            .readableScroll()
             .scrollDismissesKeyboard(.interactively)
             .background(Color.ink.ignoresSafeArea())
             .navigationBarTitleDisplayMode(.inline)
@@ -430,6 +432,7 @@ struct NewPasswordView: View {
                 .padding(.top, 16)
                 .padding(.bottom, 24)
             }
+            .readableScroll()
             .scrollDismissesKeyboard(.interactively)
             .background(Color.ink.ignoresSafeArea())
             .navigationBarTitleDisplayMode(.inline)

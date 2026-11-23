@@ -1,6 +1,7 @@
 import Foundation
 
-/// One thing that happened to a subscription. Stored only on this device.
+/// One thing that happened to a subscription. Stored under iOS hardware data protection and synced
+/// to your account when signed in (`LifecycleSync`).
 struct LifecycleEvent: Codable, Equatable, Identifiable {
     enum Kind: String, Codable {
         case added          // the user started tracking it
@@ -36,7 +37,7 @@ struct LifecycleEvent: Codable, Equatable, Identifiable {
         self.subscriptionId = subscription.id
         self.subscriptionName = subscription.name
         self.date = date
-        self.amount = subscription.amount
+        self.amount = subscription.effectiveAmount
         self.currency = subscription.currency
         self.frequency = subscription.billingFrequency
         self.previousAmount = previousAmount
@@ -61,9 +62,9 @@ struct LifecycleEvent: Codable, Equatable, Identifiable {
     }
 }
 
-/// An append-only, on-device history of subscription events (Lago keeps the same kind of vocabulary:
+/// An append-only history of subscription events (Lago keeps the same kind of vocabulary:
 /// started, trial ended, updated, canceled). It powers price history, renewals that happened while
-/// the app was closed, and the savings ledger. Nothing here leaves the device.
+/// the app was closed, and the savings ledger. Synced to your account when signed in (`LifecycleSync`).
 @MainActor
 final class LifecycleEventLog: ObservableObject {
     static let shared = LifecycleEventLog()

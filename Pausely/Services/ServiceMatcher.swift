@@ -93,8 +93,29 @@ struct CancelHelp: Equatable {
         matcher.service(for: name)
     }
 
+    /// Amazon's Prime Video Channels management page and Google Play's subscriptions page.
+    static let amazonChannels = URL(string: "https://www.amazon.com/gp/video/settings/channels")
+    static let googlePlaySubscriptions = URL(string: "https://play.google.com/store/account/subscriptions")
+
+    private static let appleBillerNames: Set<String> = ["apple", "app store", "apple subscriptions"]
+    private static let amazonBillerNames: Set<String> = ["amazon", "prime video", "amazon prime video"]
+    private static let googlePlayBillerNames: Set<String> = ["google play", "googleplay"]
+
     @MainActor
     static func find(for subscription: Subscription) -> CancelHelp {
+        // Store-billed subscriptions must be cancelled through the store that bills them (T11),
+        // even when the app itself has its own cancellation page.
+        if let billedBy = subscription.paymentMethod?.trimmingCharacters(in: .whitespacesAndNewlines).lowercased(), !billedBy.isEmpty {
+            if appleBillerNames.contains(billedBy) {
+                return CancelHelp(kind: .appleSubscription, link: applesSubscriptions)
+            }
+            if amazonBillerNames.contains(billedBy) {
+                return CancelHelp(kind: .cancellationPage, link: amazonChannels)
+            }
+            if googlePlayBillerNames.contains(billedBy) {
+                return CancelHelp(kind: .cancellationPage, link: googlePlaySubscriptions)
+            }
+        }
         if let service = service(named: subscription.name), let page = URL(string: service.cancelURL) {
             if service.isBilledByApple { return CancelHelp(kind: .appleSubscription, link: page) }
             // A link to a site's front page is its website, not its cancellation page: said as that.

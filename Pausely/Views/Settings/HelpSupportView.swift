@@ -8,15 +8,15 @@ struct HelpSupportView: View {
     private var questions: [(question: String, answer: String)] {
         [
             (L10n.string("How do I add a subscription?"),
-             L10n.string("Tap + on Home, find the service or tap Add your own, then enter what you pay and when it renews.")),
+             L10n.string("Tap + on Home to pick from the catalog, import from screenshots on this iPhone, or tap Add your own.")),
             (L10n.string("How many subscriptions can I track for free?"),
-             L10n.string("Up to \(FreeTier.subscriptionLimit). Pausely Pro removes the limit.")),
+             L10n.string("Up to \(FreeTier.subscriptionLimit) — and you can choose which \(FreeTier.subscriptionLimit) anytime. Pausely Pro tracks all of them.")),
             (L10n.string("How do I stop a subscription I no longer want?"),
              L10n.string("Open it and tap Cancel subscription. Pausely shows the steps and opens the service's own cancellation page; you always cancel with the service itself. Then tap \"I cancelled it\" so it moves to your Savings Receipt.")),
             (L10n.string("How do I change currency?"),
              L10n.string("Open Profile, then Currency. Totals change; each subscription keeps the currency it's charged in.")),
             (L10n.string("Is my data secure?"),
-             L10n.string("Your subscriptions are stored in your account and sent over encrypted connections. We never sell your data. See the Privacy Policy for details.")),
+             L10n.string("Without an account, everything stays on this iPhone under iOS data protection. When you sign in, your list, history, and Pause Plan sync over encrypted connections and are encrypted at rest. We never sell your data. See the Privacy Policy for details.")),
             (L10n.string("How do I cancel Pausely Pro?"),
              L10n.string("Pausely Pro is billed by Apple. Open Settings on your iPhone, tap your name, then Subscriptions, and choose Pausely Pro."))
         ]

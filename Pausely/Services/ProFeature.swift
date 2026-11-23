@@ -10,6 +10,10 @@ enum ProFeature: String, CaseIterable, Identifiable {
     case unlimitedSubscriptions
     /// Rotating streaming services one month at a time (Pause Plan).
     case pausePlan
+    /// Reading up to 10 screenshots at once on-device (Free reads 1 at a time).
+    case batchScreenshotImport
+    /// Pre-drafted cancellation and refund request emails.
+    case cancelConcierge
 
     var id: String { rawValue }
 
@@ -17,6 +21,8 @@ enum ProFeature: String, CaseIterable, Identifiable {
         switch self {
         case .unlimitedSubscriptions: return L10n.string("Unlimited subscriptions")
         case .pausePlan: return L10n.string("Pause Plan: rotate your streaming")
+        case .batchScreenshotImport: return L10n.string("Batch screenshot import (up to 10 at once)")
+        case .cancelConcierge: return L10n.string("Cancel & refund email drafts")
         }
     }
 }
@@ -26,7 +32,7 @@ extension ProFeature {
     /// moving a single feature between free and Pro a one-line change.
     func isUnlocked(isPro: Bool) -> Bool {
         switch self {
-        case .unlimitedSubscriptions, .pausePlan:
+        case .unlimitedSubscriptions, .pausePlan, .batchScreenshotImport, .cancelConcierge:
             return isPro
         }
     }

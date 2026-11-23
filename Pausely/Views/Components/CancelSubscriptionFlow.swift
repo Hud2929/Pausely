@@ -1,22 +1,35 @@
 import SwiftUI
 import SafariServices
 
-/// Cancelling: the steps on a slip, the service's own cancellation page, and "I cancelled it".
-/// Pausely never cancels anything itself; it records the cancellation once the person confirms it.
+/// Cancelling: the steps on a slip, the service's own cancellation page, pre-drafted cancellation and
+/// refund emails, and "I cancelled it". Pausely never cancels anything itself; it records the
+/// cancellation once the person confirms it.
 struct CancelSubscriptionFlow: View {
     let subscription: Subscription
     /// False when the screen underneath shows the torn slip itself (the Renewal Verdict).
     var showsOutcome = true
 
     @Environment(\.dismiss) private var dismiss
+    @Environment(\.dynamicTypeSize) private var typeSize
+    @ObservedObject private var paymentManager = PaymentManager.shared
+    @ObservedObject private var difficulty = CancelDifficultyService.shared
+    @ObservedObject private var authManager = AuthManager.shared
     @State private var isShowingSafari = false
     @State private var didOpenPage = false
     @State private var isSaving = false
     @State private var cancelled = false
     @State private var showingReceipt = false
+    @State private var showingPaywall = false
+    @State private var previewDraft: PresentedDraft?
     @Environment(\.openURL) private var openURL
 
+    private struct PresentedDraft: Identifiable {
+        let id = UUID()
+        let draft: CancelConcierge.Draft
+    }
+
     private var help: CancelHelp { CancelHelp.find(for: subscription) }
+    private var conciergeUnlocked: Bool { paymentManager.isUnlocked(.cancelConcierge) }
 
     /// Apple's own steps for a subscription it bills, as published on 29 September 2026
     /// (support.apple.com/118428). The same for every Apple subscription, so they can be checked.
@@ -42,6 +55,11 @@ struct CancelSubscriptionFlow: View {
             if let url = help.link { SafariView(url: url).ignoresSafeArea() }
         }
         .sheet(isPresented: $showingReceipt) { SavingsReceiptView() }
+        .sheet(isPresented: $showingPaywall) { StoreKitUpgradeView(trigger: .cancelConcierge) }
+        .sheet(item: $previewDraft) { item in
+            EmailDraftSheet(draft: item.draft)
+        }
+        .task { await difficulty.loadIfNeeded() }
     }
 
     private var steps: some View {
@@ -93,9 +111,20 @@ struct CancelSubscriptionFlow: View {
                         case .search:
                             EmptyView()
                         }
+
+                        if let score = difficulty.score(for: subscription.name),
+                           let summary = CancelDifficultyService.summaryLine(for: score) {
+                            Perforation()
+                            Text(verbatim: summary)
+                                .font(.footnote)
+                                .foregroundStyle(score.avgDifficulty >= 3.5 ? Color.paperDue : Color.paperMuted)
+                                .fixedSize(horizontal: false, vertical: true)
+                        }
                     }
                 }
                 .padding(.top, 4)
+
+                conciergeSection.padding(.top, 20)
 
                 Text("Pausely keeps it in your list as cancelled and adds the charges you avoid to your Savings Receipt.")
                     .font(.footnote)
@@ -143,9 +172,107 @@ struct CancelSubscriptionFlow: View {
         }
     }
 
+    private var conciergeSection: some View {
+        VStack(alignment: .leading, spacing: 0) {
+            Text(help.kind == .appleSubscription ? L10n.string("Refund help") : L10n.string("Email and refund help"))
+                .font(.headline)
+                .foregroundStyle(Color.inkText)
+                .padding(.bottom, 6)
+                .accessibilityAddTraits(.isHeader)
+
+            if help.kind != .appleSubscription {
+                conciergeRow(
+                    icon: "envelope",
+                    title: L10n.string("Draft cancellation email"),
+                    detail: L10n.string("Ready-to-send cancellation notice with your plan details"),
+                    isPro: !conciergeUnlocked,
+                    id: "draftCancelEmailButton"
+                ) {
+                    openEmailDraft(CancelConcierge.cancellationDraft(for: subscription, accountEmail: authManager.currentUser?.email))
+                }
+
+                Hairline()
+            }
+
+            if help.kind == .appleSubscription {
+                conciergeRow(
+                    icon: "arrow.uturn.backward",
+                    title: L10n.string("Request an Apple refund"),
+                    detail: L10n.string("Opens Apple's official refund portal."),
+                    isPro: false,
+                    id: "requestRefundButton"
+                ) {
+                    if let url = CancelConcierge.appleRefundURL { openURL(url) }
+                }
+            } else {
+                conciergeRow(
+                    icon: "arrow.uturn.backward",
+                    title: L10n.string("Draft refund email"),
+                    detail: L10n.string("Polite request for a recent unwanted charge"),
+                    isPro: !conciergeUnlocked,
+                    id: "requestRefundButton"
+                ) {
+                    openEmailDraft(CancelConcierge.refundDraft(for: subscription, accountEmail: authManager.currentUser?.email))
+                }
+            }
+        }
+    }
+
+    private func conciergeRow(icon: String, title: String, detail: String, isPro: Bool, id: String,
+                              action: @escaping () -> Void) -> some View {
+        Button {
+            Feel.selection()
+            action()
+        } label: {
+            HStack(spacing: 12) {
+                MarkedWords(alignment: .center, spacing: 12) {
+                    Image(systemName: icon)
+                        .font(.body)
+                        .foregroundStyle(Color.inkTextMuted)
+                        .accessibilityHidden(true)
+                } words: {
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text(verbatim: title)
+                            .font(.body)
+                            .foregroundStyle(Color.inkText)
+                            .multilineTextAlignment(.leading)
+                        Text(verbatim: detail)
+                            .font(.subheadline)
+                            .foregroundStyle(Color.inkTextMuted)
+                            .multilineTextAlignment(.leading)
+                        if isPro, typeSize.isAccessibilitySize {
+                            ProPill().padding(.top, 4)
+                        }
+                    }
+                }
+                Spacer(minLength: 8)
+                if isPro, !typeSize.isAccessibilitySize { ProPill() }
+                RowChevron()
+            }
+            .padding(.vertical, 12)
+            .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+        .accessibilityElement(children: .combine)
+        .accessibilityIdentifier(id)
+    }
+
+    private func openEmailDraft(_ draft: CancelConcierge.Draft) {
+        guard conciergeUnlocked else {
+            showingPaywall = true
+            return
+        }
+        previewDraft = PresentedDraft(draft: draft)
+    }
+
     private var outcome: some View {
         OutcomeScreen {
-            CancelledSlip(subscription: subscription)
+            VStack(alignment: .leading, spacing: 20) {
+                CancelledSlip(subscription: subscription)
+                if !authManager.isGuest {
+                    CancelDifficultyPrompt(serviceName: subscription.name)
+                }
+            }
         } actions: {
             VStack(spacing: 10) {
                 Button { showingReceipt = true } label: { Text("See your Savings Receipt") }
@@ -166,5 +293,51 @@ struct CancelSubscriptionFlow: View {
         } else {
             dismiss()
         }
+    }
+}
+
+/// Optional 1–5 anonymous post-cancellation rating prompt, shown only for signed-in accounts.
+struct CancelDifficultyPrompt: View {
+    let serviceName: String
+    @State private var submittedRating: Int?
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            Text(L10n.string("How hard was cancelling \(serviceName)?"))
+                .font(.subheadline.weight(.semibold))
+                .foregroundStyle(Color.inkText)
+                .fixedSize(horizontal: false, vertical: true)
+
+            if let rating = submittedRating {
+                Text(L10n.string("Rated \(L10n.number(rating)) of \(L10n.number(5)) — thanks for helping others."))
+                    .font(.footnote)
+                    .foregroundStyle(Color.kept)
+                    .fixedSize(horizontal: false, vertical: true)
+            } else {
+                Facts(L10n.breakingAfterDots(L10n.string("Anonymous · \(L10n.number(1)) is quick · \(L10n.number(5)) is hard")))
+                    .font(.footnote)
+                    .foregroundStyle(Color.inkTextMuted)
+                    .fixedSize(horizontal: false, vertical: true)
+                LineOrStack(spacing: 8, lineSpacing: 8) {
+                    ForEach(1...5, id: \.self) { level in
+                        Button {
+                            Feel.selection()
+                            submittedRating = level
+                            Task { await CancelDifficultyService.shared.submit(serviceName: serviceName, difficulty: level) }
+                        } label: {
+                            Text(verbatim: L10n.number(level))
+                                .font(.proof(.body, weight: .semibold))
+                                .foregroundStyle(Color.inkText)
+                                .tapArea()
+                                .overlay(RoundedRectangle(cornerRadius: Layout.tileRadius, style: .continuous).stroke(Color.outline, lineWidth: 1))
+                        }
+                        .buttonStyle(.plain)
+                        .accessibilityLabel(L10n.string("Difficulty \(level) of 5"))
+                        .accessibilityIdentifier("difficultyRating_\(level)")
+                    }
+                }
+            }
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
     }
 }

@@ -11,6 +11,12 @@ struct AddSubscriptionView: View {
     @State private var category: SubscriptionCategory = .other
     /// Nil until the person picks a day. A date is never filled in for them.
     @State private var nextPayment: Date?
+    @State private var hasFreeTrial = false
+    @State private var trialEndsAt: Date?
+    @State private var reminderDays: Int = 3
+    @State private var splitCount: Int = 1
+    @State private var paymentMethod = ""
+    @State private var notes = ""
     @ObservedObject private var store = SubscriptionStore.shared
     @ObservedObject private var currencyManager = CurrencyManager.shared
     @FocusState private var focusedField: Field?
@@ -45,6 +51,7 @@ struct AddSubscriptionView: View {
                         .lineLimit(1...3)
                         .font(.question(.title))
                         .foregroundStyle(Color.inkText)
+                        .multilineTextAlignment(.leading)
                         .textInputAutocapitalization(.words)
                         .focused($focusedField, equals: .name)
                         .submitLabel(.next)
@@ -87,11 +94,37 @@ struct AddSubscriptionView: View {
                         .pickerStyle(.menu)
                         .tint(Color.inkText)
                     }
+                    if !hasFreeTrial {
+                        Hairline()
+                        row(L10n.string("Next renewal")) {
+                            OptionalDatePicker(title: L10n.string("Next renewal"), date: $nextPayment,
+                                               earliest: Calendar.billing.startOfDay(for: Date()))
+                                .accessibilityIdentifier("nextPaymentPicker")
+                        }
+                    }
                     Hairline()
-                    row(L10n.string("Next renewal")) {
-                        OptionalDatePicker(title: L10n.string("Next renewal"), date: $nextPayment,
-                                           earliest: Calendar.billing.startOfDay(for: Date()))
-                            .accessibilityIdentifier("nextPaymentPicker")
+                    Toggle(isOn: $hasFreeTrial.animation(Motion.unlessReduced(Motion.touch))) {
+                        Text("I'm on a free trial")
+                            .font(.body)
+                            .foregroundStyle(Color.inkText)
+                    }
+                    .tint(Color.inkTextMuted)
+                    .frame(minHeight: 54)
+                    .accessibilityIdentifier("addTrialToggle")
+                    if hasFreeTrial {
+                        Hairline()
+                        row(L10n.string("Trial ends")) {
+                            OptionalDatePicker(title: L10n.string("Trial ends"), date: $trialEndsAt,
+                                               earliest: Calendar.billing.startOfDay(for: Date()))
+                        }
+                        if trialEndsAt == nil {
+                            Text("Add the day the trial ends, so Pausely can ask you before it charges.")
+                                .font(.footnote)
+                                .foregroundStyle(Color.decide)
+                                .fixedSize(horizontal: false, vertical: true)
+                                .frame(maxWidth: .infinity, alignment: .leading)
+                                .padding(.top, 4)
+                        }
                     }
                     Hairline()
                     row(L10n.string("Category")) {
@@ -103,6 +136,66 @@ struct AddSubscriptionView: View {
                         .pickerStyle(.menu)
                         .tint(Color.inkText)
                     }
+                    Hairline()
+                    row(L10n.string("Remind me")) {
+                        Picker(L10n.string("Remind me"), selection: $reminderDays) {
+                            ForEach(SubscriptionEditDraft.reminderOptions, id: \.self) { days in
+                                Text(verbatim: SubscriptionEditDraft.reminderLabel(days)).tag(days)
+                            }
+                        }
+                        .pickerStyle(.menu)
+                        .tint(Color.inkText)
+                    }
+                    Hairline()
+                    row(L10n.string("Split between")) {
+                        Picker(L10n.string("Split between"), selection: $splitCount) {
+                            ForEach(SubscriptionEditDraft.splitOptions, id: \.self) { count in
+                                Text(verbatim: SubscriptionEditDraft.splitLabel(count)).tag(count)
+                            }
+                        }
+                        .pickerStyle(.menu)
+                        .tint(Color.inkText)
+                    }
+                    if splitCount > 1, let parsed = AmountText.parse(amount, currency: currencyManager.selectedCurrency) {
+                        let share = AmountText.rounded(parsed / Decimal(splitCount), currency: currencyManager.selectedCurrency)
+                        Text(L10n.string("Your share: \(frequency.priced(MoneyFormat.string(share, currencyManager.selectedCurrency)))"))
+                            .font(.footnote)
+                            .foregroundStyle(Color.inkTextMuted)
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                            .padding(.bottom, 8)
+                    }
+                }
+
+                VStack(alignment: .leading, spacing: 16) {
+                    VStack(alignment: .leading, spacing: 8) {
+                        Text("Billed to")
+                            .font(.subheadline.weight(.medium))
+                            .foregroundStyle(Color.inkTextMuted)
+                        InkTextField(placeholder: "", text: $paymentMethod, autocapitalization: .words)
+                            .accessibilityLabel("Billed to")
+                            .accessibilityIdentifier("addPaymentMethodField")
+                        Text("For example: Apple, Visa ending in 4242, or PayPal.")
+                            .font(.footnote)
+                            .foregroundStyle(Color.inkTextFaint)
+                            .fixedSize(horizontal: false, vertical: true)
+                        LineOrStack(spacing: 8, lineSpacing: 8) {
+                            billingPreset("Apple")
+                            billingPreset("Google Play")
+                            billingPreset("Amazon")
+                        }
+                    }
+                    VStack(alignment: .leading, spacing: 8) {
+                        Text("Notes")
+                            .font(.subheadline.weight(.medium))
+                            .foregroundStyle(Color.inkTextMuted)
+                        InkTextField(placeholder: "", text: $notes, autocapitalization: .sentences)
+                            .accessibilityLabel("Notes")
+                            .accessibilityIdentifier("addNotesField")
+                        Text("For example: Shared with Sarah, or promo rate ends in October.")
+                            .font(.footnote)
+                            .foregroundStyle(Color.inkTextFaint)
+                            .fixedSize(horizontal: false, vertical: true)
+                    }
                 }
             }
             .padding(.horizontal, Layout.margin)
@@ -111,9 +204,15 @@ struct AddSubscriptionView: View {
         } actions: {
             Button(action: saveSubscription) { Text("Add subscription") }
                 .buttonStyle(.ink)
-                .disabled(name.isEmpty || amount.isEmpty)
+                .disabled(name.isEmpty || amount.isEmpty || (hasFreeTrial && trialEndsAt == nil))
                 .accessibilityIdentifier("addSubscriptionButton")
-                .accessibilityHint(name.isEmpty || amount.isEmpty ? "Enter a name and an amount." : "")
+                .accessibilityHint(
+                    name.isEmpty || amount.isEmpty
+                        ? L10n.string("Enter a name and an amount.")
+                        : (hasFreeTrial && trialEndsAt == nil
+                            ? L10n.string("Add the day the trial ends, so Pausely can ask you before it charges.")
+                            : "")
+                )
                 .padding(.horizontal, Layout.margin)
                 .padding(.top, 12)
                 .padding(.bottom, 8)
@@ -139,6 +238,25 @@ struct AddSubscriptionView: View {
         .frame(minHeight: 54)
     }
 
+    private func billingPreset(_ label: String) -> some View {
+        let selected = paymentMethod.trimmingCharacters(in: .whitespacesAndNewlines).caseInsensitiveCompare(label) == .orderedSame
+        return Button {
+            Feel.selection()
+            paymentMethod = selected ? "" : label
+        } label: {
+            Text(verbatim: label)
+                .font(.footnote.weight(.semibold))
+                .foregroundStyle(selected ? Color.paperInk : Color.inkTextMuted)
+                .padding(.horizontal, 12)
+                .padding(.vertical, 8)
+                .background(selected ? Color.paper : Color.clear, in: Capsule())
+                .overlay(Capsule().stroke(selected ? Color.paper : Color.outline, lineWidth: 1))
+                .tapArea(.leading)
+        }
+        .buttonStyle(.plain)
+        .accessibilityAddTraits(selected ? [.isSelected] : [])
+    }
+
     func saveSubscription() {
         let trimmedName = name.trimmingCharacters(in: .whitespacesAndNewlines)
         // "9,99" and "9.99" both work, and the amount stays an exact decimal.
@@ -147,22 +265,32 @@ struct AddSubscriptionView: View {
             problem = L10n.string("Enter a name and an amount.")
             return
         }
+        let trimmedPayment = paymentMethod.trimmingCharacters(in: .whitespacesAndNewlines)
+        let trimmedNotes = notes.trimmingCharacters(in: .whitespacesAndNewlines)
         let newSub = Subscription(
             name: trimmedName,
             category: category.rawValue,
             amount: price,
             currency: currencyManager.selectedCurrency,
             billingFrequency: frequency,
-            nextBillingDate: nextPayment
+            nextBillingDate: hasFreeTrial ? nil : nextPayment,
+            notifyBeforeDays: reminderDays,
+            trialEndsAt: hasFreeTrial ? trialEndsAt : nil,
+            status: hasFreeTrial ? .trial : .active,
+            notes: trimmedNotes.isEmpty ? nil : trimmedNotes,
+            paymentMethod: trimmedPayment.isEmpty ? nil : trimmedPayment,
+            splitCount: splitCount
         )
         Task {
             do {
                 _ = try await store.addSubscription(newSub)
                 Feel.landed()
                 dismiss()
-            } catch {
-                // Only a refusal throws (the free plan's limit): what's typed stays, and the way past it opens.
+            } catch SubscriptionStore.SubscriptionLimitError.freeTierLimitReached {
+                // Free plan limit reached: keep what's typed and open Pro.
                 showingPaywall = true
+            } catch {
+                problem = error.localizedDescription
             }
         }
     }

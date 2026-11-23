@@ -65,6 +65,7 @@ struct UsageInputSheet: View {
                     .disabled(total == nil)
                     .accessibilityIdentifier("saveUsageButton")
                 Button {
+                    focus = nil
                     onSave(0)
                     dismiss()
                 } label: {
@@ -74,7 +75,13 @@ struct UsageInputSheet: View {
                 .accessibilityIdentifier("notUsedButton")
             }
         }
-        .onAppear { focus = .hours }
+        .toolbar {
+            ToolbarItemGroup(placement: .keyboard) {
+                Spacer()
+                Button("Done") { focus = nil }
+                    .foregroundStyle(Color.inkText)
+            }
+        }
     }
 
     private var presetRow: some View {
@@ -86,6 +93,7 @@ struct UsageInputSheet: View {
                         .formatted(.units(allowed: [.hours], width: .abbreviated).locale(L10n.locale))
                     Button {
                         Feel.selection()
+                        focus = nil
                         hours = String(presetHours)
                         minutes = ""
                     } label: {

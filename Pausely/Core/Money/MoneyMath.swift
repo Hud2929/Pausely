@@ -62,8 +62,11 @@ extension Subscription {
         rates.convert(monthlyCost, from: self.currency, to: currency)
     }
 
-    /// The price of one charge in this subscription's own currency: "$15.49", "US$20.00".
-    var chargeText: String { MoneyFormat.string(amount, currency) }
+    /// The person's share of one charge in this subscription's own currency: "$15.49", "US$20.00".
+    var chargeText: String { MoneyFormat.string(effectiveAmount, currency) }
+
+    /// The full plan price before splitting across multiple people.
+    var fullChargeText: String { MoneyFormat.string(amount, currency) }
 }
 
 extension Sequence where Element == Subscription {

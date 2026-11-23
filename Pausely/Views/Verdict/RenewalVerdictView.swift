@@ -13,6 +13,8 @@ struct RenewalVerdictView: View {
     @ObservedObject private var paymentManager = PaymentManager.shared
     @ObservedObject private var currencyManager = CurrencyManager.shared
     @ObservedObject private var screenTime = UsageLog.shared
+    @ObservedObject private var difficulty = CancelDifficultyService.shared
+    @ObservedObject private var authManager = AuthManager.shared
 
     @State private var showCancelFlow = false
     @State private var showPaywall = false
@@ -86,6 +88,7 @@ struct RenewalVerdictView: View {
                 outcome = .cancelled
             }
         }
+        .task { await difficulty.loadIfNeeded() }
     }
 
     private var closeRow: some View {
@@ -159,7 +162,7 @@ struct RenewalVerdictView: View {
                 .font(.question(.largeTitle, weight: .bold))
                 .fixedSize(horizontal: false, vertical: true)
                 .accessibilityAddTraits(.isHeader)
-            PricePerPeriod(amount: MoneyFormat.string(sub.amount, sub.currency), frequency: sub.billingFrequency,
+            PricePerPeriod(amount: MoneyFormat.string(sub.effectiveAmount, sub.currency), frequency: sub.billingFrequency,
                            amountFont: .question(.title, weight: .semibold), periodFont: .subheadline, periodColor: .paperMuted)
         }
     }
@@ -183,6 +186,15 @@ struct RenewalVerdictView: View {
     /// except where money went up or was kept.
     private func facts(_ sub: Subscription, charge: (date: Date, isTrialEnd: Bool)?) -> some View {
         VStack(alignment: .leading, spacing: 10) {
+            if sub.splitCount > 1 {
+                factLine(L10n.string("Your share (1 of \(sub.splitCount)) of \(sub.fullChargeText)"))
+            }
+            if let method = sub.paymentMethod, !method.isEmpty {
+                factLine(L10n.string("Billed to \(method)"))
+            }
+            if let notes = sub.notes?.trimmingCharacters(in: .whitespacesAndNewlines), !notes.isEmpty {
+                factLine(notes, color: .paperMuted)
+            }
             if let yearly = yearlyText(sub) { factLine(yearly) }
 
             if let change = PriceHistory.latestChange(for: sub, events: eventLog.events) {
@@ -210,6 +222,11 @@ struct RenewalVerdictView: View {
 
             if let kept = VerdictFacts.lastKept(for: sub.id, events: eventLog.events) {
                 factLine(L10n.string("You kept it on \(DayText.date(kept, locale: L10n.locale))."))
+            }
+
+            if let score = difficulty.score(for: sub.name),
+               let line = CancelDifficultyService.summaryLine(for: score) {
+                factLine(line, color: score.avgDifficulty >= 3.5 ? .paperDue : .paperMuted)
             }
 
             if sub.isPausely {
@@ -280,7 +297,7 @@ struct RenewalVerdictView: View {
             }
 
             Button {
-                if sub.isPausely, let url = URL(string: "https://apps.apple.com/account/subscriptions") {
+                if sub.isPausely, let url = CancelHelp.applesSubscriptions {
                     openURL(url)
                 } else {
                     showCancelFlow = true
@@ -328,7 +345,12 @@ struct RenewalVerdictView: View {
                         .fixedSize(horizontal: false, vertical: true)
                 }
             case .cancelled:
-                CancelledSlip(subscription: sub)
+                VStack(alignment: .leading, spacing: 20) {
+                    CancelledSlip(subscription: sub)
+                    if !authManager.isGuest {
+                        CancelDifficultyPrompt(serviceName: sub.name)
+                    }
+                }
             }
         } actions: {
             VStack(spacing: 10) {
@@ -374,6 +396,7 @@ struct OutcomeScreen<Slip: View, Actions: View>: View {
                 .padding(.bottom, 12)
                 .frame(minHeight: screen.size.height)
             }
+            .readableScroll()
             .scrollBounceBehavior(.basedOnSize)
         }
     }

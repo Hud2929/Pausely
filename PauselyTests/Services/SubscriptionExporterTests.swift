@@ -45,21 +45,22 @@ final class SubscriptionExporterTests: XCTestCase {
         UserDefaults.standard.set("en", forKey: L10n.languageKey)
 
         let netflix = Subscription(name: "Netflix", category: "entertainment", amount: Decimal(string: "15.49")!, currency: "USD",
-                                   billingFrequency: .monthly, nextBillingDate: day(2026, 1, 31), createdAt: day(2026, 1, 3))
+                                   billingFrequency: .monthly, nextBillingDate: day(2026, 1, 31), createdAt: day(2026, 1, 3),
+                                   notes: "Family", paymentMethod: "Apple", splitCount: 1)
         let gone = Subscription(name: "=HYPERLINK(\"x\")", category: "music", amount: 1500, currency: "JPY",
                                 billingFrequency: .yearly, nextBillingDate: day(2026, 6, 1), status: .cancelled, createdAt: day(2025, 6, 1))
         let csv = SubscriptionExporter.csv(for: [netflix, gone], now: day(2026, 11, 12))
         let lines = csv.split(separator: "\n").map(String.init)
 
         XCTAssertEqual(lines.count, 3)
-        XCTAssertEqual(lines[0], "Name,Category,Amount,Currency,Billing cycle,Status,Each month,Each year,Next renewal,Tracking since")
-        XCTAssertEqual(lines[1], "Netflix,Entertainment,15.49,USD,Monthly,Active,15.49,185.88,2026-11-30,2026-01-03")
-        XCTAssertEqual(lines[2], "\"'=HYPERLINK(\"\"x\"\")\",Music,1500,JPY,Yearly,Cancelled,125,1500,,2025-06-01")
+        XCTAssertEqual(lines[0], "Name,Category,Amount,Currency,Billing cycle,Status,Each month,Each year,Next renewal,Tracking since,Billed to,Split between,Notes")
+        XCTAssertEqual(lines[1], "Netflix,Entertainment,15.49,USD,Monthly,Active,15.49,185.88,2026-11-30,2026-01-03,Apple,1,Family")
+        XCTAssertEqual(lines[2], "\"'=HYPERLINK(\"\"x\"\")\",Music,1500,JPY,Yearly,Cancelled,125,1500,,2025-06-01,,1,")
 
         UserDefaults.standard.set("fr", forKey: L10n.languageKey)
         let french = SubscriptionExporter.csv(for: [netflix], now: day(2026, 11, 12)).split(separator: "\n").map(String.init)
         XCTAssertNotEqual(french[0], lines[0], "the headings are in the reader's language")
-        XCTAssertTrue(french[1].hasSuffix(",2026-11-30,2026-01-03"), "days and numbers are the same in every language")
+        XCTAssertTrue(french[1].contains(",2026-11-30,2026-01-03,Apple,1,Family"), "days and numbers are the same in every language")
         XCTAssertTrue(french[1].contains(",15.49,USD,"))
     }
 

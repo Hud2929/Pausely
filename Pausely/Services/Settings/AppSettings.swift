@@ -40,20 +40,27 @@ enum ProtectedBlobStore {
                      fileManager: FileManager = .default) -> Data {
         let url = (directory ?? Self.directory(fileManager: fileManager)).appendingPathComponent(filename)
         if fileManager.fileExists(atPath: url.path) {
-            if let data = try? Data(contentsOf: url) {
+            do {
+                let data = try Data(contentsOf: url)
                 DeviceFile.relaxProtection(of: url, fileManager: fileManager)
                 return data
+            } catch {
+                PauselyLogger.error("ProtectedBlobStore read failed for \(filename): \(error.localizedDescription)", category: "storage")
+                return Data()
             }
-            return Data()
         }
         // One-time migration from earlier versions that stored JSON Data in UserDefaults.
-        guard let legacyData = defaults.data(forKey: legacyKey),
-              let unwrapped = try? JSONDecoder().decode(Data.self, from: legacyData),
-              !unwrapped.isEmpty else {
+        guard let legacyData = defaults.data(forKey: legacyKey), !legacyData.isEmpty else {
             return Data()
         }
-        write(unwrapped, filename: filename, legacyKey: legacyKey, directory: directory, defaults: defaults, fileManager: fileManager)
-        return unwrapped
+        let payload: Data
+        if let unwrapped = try? JSONDecoder().decode(Data.self, from: legacyData), !unwrapped.isEmpty {
+            payload = unwrapped
+        } else {
+            payload = legacyData
+        }
+        write(payload, filename: filename, legacyKey: legacyKey, directory: directory, defaults: defaults, fileManager: fileManager)
+        return payload
     }
 
     static func write(_ data: Data, filename: String, legacyKey: String,
@@ -61,13 +68,24 @@ enum ProtectedBlobStore {
                       fileManager: FileManager = .default) {
         let dir = directory ?? Self.directory(fileManager: fileManager)
         let url = dir.appendingPathComponent(filename)
-        defaults.removeObject(forKey: legacyKey)
         if data.isEmpty {
-            try? fileManager.removeItem(at: url)
+            defaults.removeObject(forKey: legacyKey)
+            if fileManager.fileExists(atPath: url.path) {
+                do {
+                    try fileManager.removeItem(at: url)
+                } catch {
+                    PauselyLogger.error("ProtectedBlobStore remove failed for \(filename): \(error.localizedDescription)", category: "storage")
+                }
+            }
             return
         }
-        try? fileManager.createDirectory(at: dir, withIntermediateDirectories: true)
-        try? data.write(to: url, options: [.atomic, .completeFileProtectionUntilFirstUserAuthentication])
+        do {
+            try fileManager.createDirectory(at: dir, withIntermediateDirectories: true)
+            try data.write(to: url, options: [.atomic, .completeFileProtectionUntilFirstUserAuthentication])
+            defaults.removeObject(forKey: legacyKey)
+        } catch {
+            PauselyLogger.error("ProtectedBlobStore write failed for \(filename): \(error.localizedDescription)", category: "storage")
+        }
     }
 }
 

@@ -104,18 +104,73 @@ struct TallyLine: Codable, Equatable, Identifiable {
     var anchor: Date? = nil
     /// When a free trial ends, for a line found while it is still in its trial.
     var trialEndsAt: Date? = nil
+    /// Store or payment method that bills this line (e.g. "Apple", "Amazon", "Google Play").
+    var paymentMethod: String? = nil
+    /// Preserved subscription identity and details when swapping an active item into waiting and back.
+    var existingId: UUID? = nil
+    var notes: String? = nil
+    var splitCount: Int = 1
+    var notifyBeforeDays: Int = 3
 
     var id: String { name }
 
+    enum CodingKeys: String, CodingKey {
+        case name, category, amount, currency, isConfirmed, frequency, anchor, trialEndsAt
+        case paymentMethod, existingId, notes, splitCount, notifyBeforeDays
+    }
+
+    init(name: String, category: String, amount: Decimal, currency: String, isConfirmed: Bool = false,
+         frequency: BillingFrequency? = nil, anchor: Date? = nil, trialEndsAt: Date? = nil,
+         paymentMethod: String? = nil, existingId: UUID? = nil, notes: String? = nil,
+         splitCount: Int = 1, notifyBeforeDays: Int = 3) {
+        self.name = name
+        self.category = category
+        self.amount = amount
+        self.currency = currency
+        self.isConfirmed = isConfirmed
+        self.frequency = frequency
+        self.anchor = anchor
+        self.trialEndsAt = trialEndsAt
+        self.paymentMethod = paymentMethod
+        self.existingId = existingId
+        self.notes = notes
+        self.splitCount = max(1, min(20, splitCount))
+        self.notifyBeforeDays = notifyBeforeDays
+    }
+
+    init(from decoder: Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        name = try c.decode(String.self, forKey: .name)
+        category = try c.decode(String.self, forKey: .category)
+        amount = try c.decode(Decimal.self, forKey: .amount)
+        currency = try c.decode(String.self, forKey: .currency)
+        isConfirmed = try c.decodeIfPresent(Bool.self, forKey: .isConfirmed) ?? false
+        frequency = try c.decodeIfPresent(BillingFrequency.self, forKey: .frequency)
+        anchor = try c.decodeIfPresent(Date.self, forKey: .anchor)
+        trialEndsAt = try c.decodeIfPresent(Date.self, forKey: .trialEndsAt)
+        paymentMethod = try c.decodeIfPresent(String.self, forKey: .paymentMethod)
+        existingId = try c.decodeIfPresent(UUID.self, forKey: .existingId)
+        notes = try c.decodeIfPresent(String.self, forKey: .notes)
+        splitCount = max(1, min(20, try c.decodeIfPresent(Int.self, forKey: .splitCount) ?? 1))
+        notifyBeforeDays = try c.decodeIfPresent(Int.self, forKey: .notifyBeforeDays) ?? 3
+    }
+
     /// What a year of it costs, in its own currency: how lines are ranked when only some fit.
-    var yearlyCost: Decimal { amount * ProvenSubscription.periodsPerYear(frequency ?? .monthly) }
+    var yearlyCost: Decimal {
+        let people = max(1, splitCount)
+        let share = people > 1 ? AmountText.rounded(amount / Decimal(people), currency: currency) : amount
+        return share * ProvenSubscription.periodsPerYear(frequency ?? .monthly)
+    }
 
     /// The subscription this line becomes.
     func subscription(now: Date = Date()) -> Subscription {
         let inTrial = trialEndsAt.map { $0 > now } ?? false
-        return Subscription(name: name, category: category, amount: amount, currency: currency,
+        return Subscription(id: existingId ?? UUID(),
+                            name: name, category: category, amount: amount, currency: currency,
                             billingFrequency: frequency ?? .monthly, nextBillingDate: anchor ?? (inTrial ? trialEndsAt : nil),
-                            trialEndsAt: inTrial ? trialEndsAt : nil, status: inTrial ? .trial : .active)
+                            notifyBeforeDays: notifyBeforeDays,
+                            trialEndsAt: inTrial ? trialEndsAt : nil, status: inTrial ? .trial : .active,
+                            notes: notes, paymentMethod: paymentMethod, splitCount: splitCount)
     }
 }
 
@@ -163,20 +218,34 @@ struct Tally: Codable, Equatable {
                                amount: price, currency: currency, isConfirmed: confirmed))
     }
 
-    /// The person corrected a price. Negative amounts are ignored.
+    /// The person corrected a price. Preserves the line's own currency (e.g. a foreign-currency
+    /// service read from a screenshot). Negative amounts are ignored.
     mutating func setAmount(_ amount: Decimal, for name: String) {
         guard amount >= 0, let index = lines.firstIndex(where: { $0.name == name }) else { return }
         lines[index].amount = amount
-        lines[index].currency = currency
         lines[index].isConfirmed = true
     }
 
-    /// The slip as subscriptions: monthly, no renewal date yet (the person adds it later).
-    func subscriptions() -> [Subscription] {
-        lines.map {
-            Subscription(name: $0.name, category: $0.category, amount: $0.amount, currency: $0.currency,
-                         billingFrequency: .monthly, nextBillingDate: nil)
+    /// Merges subscriptions read from screenshots into the first-run slip without duplicating entries.
+    mutating func mergeDetected(_ detected: [TallyLine]) {
+        for line in detected where line.amount > 0 {
+            if let index = lines.firstIndex(where: { ServiceName.same($0.name, line.name) }) {
+                lines[index].amount = line.amount
+                lines[index].currency = line.currency
+                lines[index].isConfirmed = true
+                if let freq = line.frequency { lines[index].frequency = freq }
+                if let anchor = line.anchor { lines[index].anchor = anchor }
+                if let trial = line.trialEndsAt { lines[index].trialEndsAt = trial }
+                if let method = line.paymentMethod { lines[index].paymentMethod = method }
+            } else {
+                lines.append(line)
+            }
         }
+    }
+
+    /// The slip as subscriptions, preserving billing cycle, renewal dates, trials, and store billing.
+    func subscriptions() -> [Subscription] {
+        lines.map { $0.subscription() }
     }
 
     func monthlyTotal(rates: CurrencyRates) -> Decimal {
@@ -260,6 +329,8 @@ enum PendingTally {
 @MainActor
 enum TallyImporter {
     static let waitingKey = "first_run_tally_waiting"
+    static let waitingVersionKey = "first_run_tally_waiting_version"
+    private static let waitingFilename = "waiting_lines.json"
 
     /// What happened to each line, by name, so the screen can say it.
     struct Outcome: Equatable {
@@ -273,14 +344,27 @@ enum TallyImporter {
         var datesFilled: [String] = []
     }
 
-    /// Lines that didn't fit under the free limit. The paywall offers the choice: pick which ones
-    /// Pausely watches, or let Pro watch them all.
+    /// Lines that didn't fit under the free limit. Stored under iOS hardware data protection on device
+    /// (with isolated UserDefaults fallback when unit tests supply a dedicated suite).
     static func waitingLines(defaults: UserDefaults = .standard) -> [TallyLine] {
-        guard let data = defaults.data(forKey: waitingKey) else { return [] }
+        let data: Data
+        if defaults === UserDefaults.standard {
+            data = ProtectedBlobStore.read(filename: waitingFilename, legacyKey: waitingKey, defaults: defaults)
+        } else {
+            data = defaults.data(forKey: waitingKey) ?? Data()
+        }
+        guard !data.isEmpty else { return [] }
         return (try? JSONDecoder().decode([TallyLine].self, from: data)) ?? []
     }
 
-    static func clearWaiting(defaults: UserDefaults = .standard) { defaults.removeObject(forKey: waitingKey) }
+    static func clearWaiting(defaults: UserDefaults = .standard) {
+        if defaults === UserDefaults.standard {
+            ProtectedBlobStore.write(Data(), filename: waitingFilename, legacyKey: waitingKey, defaults: defaults)
+        } else {
+            defaults.removeObject(forKey: waitingKey)
+        }
+        bumpWaitingVersion(defaults: defaults)
+    }
 
     #if DEBUG
     /// `--demo-waiting`: three lines that did not fit, so Home's row about them can be looked at.
@@ -296,9 +380,19 @@ enum TallyImporter {
     private static func saveWaiting(_ lines: [TallyLine], defaults: UserDefaults) {
         if lines.isEmpty {
             clearWaiting(defaults: defaults)
-        } else if let data = try? JSONEncoder().encode(lines) {
+            return
+        }
+        guard let data = try? JSONEncoder().encode(lines) else { return }
+        if defaults === UserDefaults.standard {
+            ProtectedBlobStore.write(data, filename: waitingFilename, legacyKey: waitingKey, defaults: defaults)
+        } else {
             defaults.set(data, forKey: waitingKey)
         }
+        bumpWaitingVersion(defaults: defaults)
+    }
+
+    private static func bumpWaitingVersion(defaults: UserDefaults) {
+        defaults.set(defaults.integer(forKey: waitingVersionKey) &+ 1, forKey: waitingVersionKey)
     }
 
     static func importPending(into store: SubscriptionStore, payments: PaymentManager = .shared,
@@ -344,7 +438,7 @@ enum TallyImporter {
         // Added cheapest first, so the most expensive ends up at the top of the list.
         for line in plan.add.reversed() {
             do {
-                _ = try await store.addSubscription(line.subscription())
+                _ = try await store.addSubscription(line.subscription(), recordEvent: line.existingId == nil)
                 outcome.added.insert(line.name, at: 0)
             } catch {
                 waiting.append(line)
@@ -382,7 +476,7 @@ extension TallyImporter {
         let waiting = waitingLines(defaults: defaults)
 
         var newWaiting: [TallyLine] = []
-        // Demote active subscriptions the user chose to swap out.
+        // Demote active subscriptions the user chose to swap out, preserving their id and fields.
         for sub in active where !wanted.contains(sub.name.lowercased()) {
             newWaiting.append(TallyLine(
                 name: sub.name,
@@ -392,9 +486,14 @@ extension TallyImporter {
                 isConfirmed: true,
                 frequency: sub.billingFrequency,
                 anchor: sub.nextBillingDate,
-                trialEndsAt: sub.trialEndsAt
+                trialEndsAt: sub.trialEndsAt,
+                paymentMethod: sub.paymentMethod,
+                existingId: sub.id,
+                notes: sub.notes,
+                splitCount: sub.splitCount,
+                notifyBeforeDays: sub.notifyBeforeDays
             ))
-            await store.deleteSubscription(id: sub.id)
+            await store.deleteSubscription(id: sub.id, recordEvent: false)
         }
 
         // Split waiting items into chosen vs still waiting.

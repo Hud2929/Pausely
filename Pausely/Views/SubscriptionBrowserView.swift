@@ -216,9 +216,9 @@ struct SubscriptionBrowserView: View {
         .navigationBarHidden(true)
         .sheet(isPresented: $showingTierSheet) {
             if let entry = selectedEntry {
-                CatalogAddSheet(entry: entry) { frequency, amount, billingDate, trialDate in
+                CatalogAddSheet(entry: entry) { frequency, amount, billingDate, trialDate, extras in
                     addSubscription(entry: entry, billingFrequency: frequency, amount: amount,
-                                    nextBillingDate: billingDate, trialEndDate: trialDate)
+                                    nextBillingDate: billingDate, trialEndDate: trialDate, extras: extras)
                 }
             }
         }
@@ -368,7 +368,7 @@ struct SubscriptionBrowserView: View {
     }
 
     private func addSubscription(entry: CatalogEntry, billingFrequency: BillingFrequency, amount: Decimal,
-                                 nextBillingDate: Date?, trialEndDate: Date?) {
+                                 nextBillingDate: Date?, trialEndDate: Date?, extras: CatalogAddSheet.Extras) {
         let subscription = Subscription(
             name: entry.name,
             category: entry.category.rawValue,
@@ -376,8 +376,12 @@ struct SubscriptionBrowserView: View {
             currency: currencyManager.selectedCurrency,
             billingFrequency: billingFrequency,
             nextBillingDate: nextBillingDate,
+            notifyBeforeDays: extras.reminderDays,
             trialEndsAt: trialEndDate,
-            status: trialEndDate != nil ? .trial : .active
+            status: trialEndDate != nil ? .trial : .active,
+            notes: extras.notes,
+            paymentMethod: extras.paymentMethod,
+            splitCount: extras.splitCount
         )
 
         Task {

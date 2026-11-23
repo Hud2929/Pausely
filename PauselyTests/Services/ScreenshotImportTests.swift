@@ -146,4 +146,41 @@ final class ScreenshotImportTests: XCTestCase {
         let items = ScreenshotParser.parse(lines: lines, defaultCurrency: "USD", now: day(2026, 11, 23), calendar: calendar)
         XCTAssertTrue(items.isEmpty)
     }
+
+    func testInactiveDuplicateNeverOverwritesActiveSubscriptionAndCrossCurrencySortsByConvertedCost() {
+        let now = day(2026, 11, 23)
+        let lines = [
+            "Subscriptions",
+            "ACTIVE",
+            "Netflix",
+            "$19.99/month",
+            "Renews Dec 14, 2026",
+            "iCloud+",
+            "¥400/月",
+            "Renews Dec 10, 2026",
+            "INACTIVE",
+            "Netflix",
+            "Expired Jan 2, 2025",
+            "$15.49/month",
+        ]
+        let items = ScreenshotParser.parse(lines: lines, defaultCurrency: "USD", now: now, calendar: calendar, rates: .fallback)
+        XCTAssertEqual(items.count, 2)
+        XCTAssertEqual(items[0].name, "Netflix", "$19.99 USD must sort above ¥400 JPY (~$2.60)")
+        XCTAssertEqual(items[0].isCancelled, false, "inactive historical entry must never cancel an active row")
+        XCTAssertEqual(items[0].paymentMethod, "Apple")
+        XCTAssertEqual(items[1].name, "iCloud+")
+    }
+
+    func testSingleLinePriceFollowedByExpiredSublineMarksItemCancelled() {
+        let now = day(2026, 11, 23)
+        let observations: [ScreenshotParser.TextObservation] = [
+            .init(text: "Netflix", boundingBox: CGRect(x: 0.08, y: 0.78, width: 0.30, height: 0.025)),
+            .init(text: "$19.99/mo", boundingBox: CGRect(x: 0.72, y: 0.781, width: 0.20, height: 0.025)),
+            .init(text: "Expired Oct 10, 2026", boundingBox: CGRect(x: 0.08, y: 0.745, width: 0.45, height: 0.020)),
+        ]
+        let items = ScreenshotParser.parse(pages: [observations], defaultCurrency: "USD", now: now, calendar: calendar)
+        XCTAssertEqual(items.count, 1)
+        XCTAssertEqual(items[0].name, "Netflix")
+        XCTAssertEqual(items[0].isCancelled, true, "following Expired subline must mark the single-line card cancelled")
+    }
 }

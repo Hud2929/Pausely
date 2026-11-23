@@ -5,6 +5,9 @@ import SwiftUI
 /// or a bank's recurring charges, review what Vision read on-device, and add selected items.
 struct ScreenshotImportView: View {
     var onFinished: (() -> Void)? = nil
+    /// When provided (e.g. during first run), returns selected lines directly to the caller instead
+    /// of committing immediately into `SubscriptionStore`.
+    var onPickForTally: (([TallyLine]) -> Void)? = nil
     #if DEBUG
     var startWithDemoResults: Bool = false
     #endif
@@ -22,9 +25,11 @@ struct ScreenshotImportView: View {
     @State private var selectedIDs: Set<String> = []
     @State private var editingPrice: ScreenshotParser.DetectedItem?
     @State private var outcome: TallyImporter.Outcome?
+    @State private var scanNote: String?
     @State private var showingPaywall = false
     @State private var showingManualAdd = false
     @State private var showingFreePicker = false
+    @State private var pendingPaywallFromPicker = false
     @State private var isAdding = false
 
     private enum Phase {
@@ -34,7 +39,7 @@ struct ScreenshotImportView: View {
         case nothingFound
     }
 
-    private var canBatchImport: Bool { payments.isUnlocked(.unlimitedSubscriptions) }
+    private var canBatchImport: Bool { payments.isUnlocked(.batchScreenshotImport) }
     private var maxPhotos: Int { canBatchImport ? 10 : 1 }
 
     private var activeDetected: [ScreenshotParser.DetectedItem] {
@@ -59,11 +64,11 @@ struct ScreenshotImportView: View {
                 }
 
                 if let outcome {
-                    outcomeContent(outcome)
+                    ScreenshotImportOutcomeView(result: outcome)
                 } else {
                     switch phase {
                     case .ready:
-                        readyContent
+                        ScreenshotImportReadyView(canBatchImport: canBatchImport)
                     case .reading(let count):
                         readingContent(count: count)
                     case .review:
@@ -97,67 +102,20 @@ struct ScreenshotImportView: View {
             #endif
         }
         .sheet(item: $editingPrice) { item in
-            PriceSheet(name: item.name, placeholder: item.amount, currency: item.currency) { amount in
+            PriceSheet(name: item.name, placeholder: item.amount, currency: item.currency, frequency: item.frequency) { amount in
                 updateAmount(amount, for: item.id)
             }
         }
-        .sheet(isPresented: $showingPaywall) { StoreKitUpgradeView() }
+        .sheet(isPresented: $showingPaywall) {
+            StoreKitUpgradeView(trigger: outcome?.waiting.isEmpty == false ? .unlimitedSubscriptions : .batchScreenshotImport)
+        }
         .sheet(isPresented: $showingManualAdd) { AddSubscriptionView() }
-        .sheet(isPresented: $showingFreePicker) { freePickerSheet }
-    }
-
-    // MARK: - Ready
-
-    private var readyContent: some View {
-        VStack(alignment: .leading, spacing: 0) {
-            Text("Import from screenshots")
-                .font(.question(.title))
-                .foregroundStyle(Color.inkText)
-                .fixedSize(horizontal: false, vertical: true)
-                .padding(.top, 8)
-                .accessibilityAddTraits(.isHeader)
-
-            Text("Take a screenshot of Apple Subscriptions or your bank's recurring charges. Pausely reads it on this iPhone and never uploads the image.")
-                .font(.body)
-                .foregroundStyle(Color.inkTextMuted)
-                .fixedSize(horizontal: false, vertical: true)
-                .padding(.top, 10)
-
-            PaperSlip(tornTop: true, tornBottom: true) {
-                VStack(alignment: .leading, spacing: 12) {
-                    Text("How it works")
-                        .font(.subheadline.weight(.semibold))
-                    stepLine(1, L10n.string("Open Apple Subscriptions or your bank's recurring charges."))
-                    stepLine(2, L10n.string("Take one or more screenshots of your active list."))
-                    stepLine(3, L10n.string("Pick the screenshots here to review and add them in seconds."))
-                    Perforation().padding(.vertical, 2)
-                    Text("100% on-device. Photos are read in memory and never saved or sent anywhere.")
-                        .font(.footnote)
-                        .foregroundStyle(Color.paperMuted)
-                        .fixedSize(horizontal: false, vertical: true)
-                }
+        .sheet(isPresented: $showingFreePicker, onDismiss: {
+            if pendingPaywallFromPicker {
+                pendingPaywallFromPicker = false
+                showingPaywall = true
             }
-            .padding(.top, 24)
-
-            if !canBatchImport {
-                Text("Free imports one screenshot at a time. Pausely Pro reads up to 10 screenshots in one batch.")
-                    .font(.footnote)
-                    .foregroundStyle(Color.inkTextFaint)
-                    .fixedSize(horizontal: false, vertical: true)
-                    .padding(.top, 16)
-            }
-        }
-    }
-
-    private func stepLine(_ number: Int, _ text: String) -> some View {
-        HStack(alignment: .firstTextBaseline, spacing: 10) {
-            Text(verbatim: L10n.number(number))
-                .font(.proof(.footnote, weight: .bold))
-            Text(verbatim: text)
-                .font(.footnote)
-                .fixedSize(horizontal: false, vertical: true)
-        }
-        .accessibilityElement(children: .combine)
+        }) { freePickerSheet }
     }
 
     // MARK: - Reading
@@ -196,11 +154,19 @@ struct ScreenshotImportView: View {
                 .padding(.top, 8)
                 .accessibilityAddTraits(.isHeader)
 
-            Text("Tap a row to select or unselect. Tap a missing price to enter it.")
+            Text("Tap a row to select or unselect. Tap any price to edit it.")
                 .font(.subheadline)
                 .foregroundStyle(Color.inkTextMuted)
                 .fixedSize(horizontal: false, vertical: true)
                 .padding(.top, 6)
+
+            if let scanNote {
+                Text(verbatim: scanNote)
+                    .font(.footnote)
+                    .foregroundStyle(Color.decide)
+                    .fixedSize(horizontal: false, vertical: true)
+                    .padding(.top, 8)
+            }
 
             if !activeDetected.isEmpty {
                 PaperSlip(tornTop: true, tornBottom: true) {
@@ -235,33 +201,60 @@ struct ScreenshotImportView: View {
     }
 
     private func detectedRow(_ item: ScreenshotParser.DetectedItem) -> some View {
-        let onList = existingSubscription(for: item) != nil
-        let fillsDate = existingSubscription(for: item)?.nextBillingDate == nil && item.renewalDate != nil
+        let existing = onPickForTally == nil ? existingSubscription(for: item) : nil
+        let onList = existing != nil
+        let fillsDate = existing != nil && existing?.nextBillingDate == nil && item.renewalDate != nil
         let isOn = selectedIDs.contains(item.id)
 
-        return Button {
-            if item.amount == nil {
-                editingPrice = item
-            } else {
-                toggle(item.id)
-            }
-        } label: {
-            HStack(alignment: .top, spacing: 12) {
+        return MarkedWords(alignment: .top, spacing: 12) {
+            Button {
+                if item.amount == nil {
+                    editingPrice = item
+                } else {
+                    toggle(item.id)
+                }
+            } label: {
                 Image(systemName: isOn ? "checkmark.circle.fill" : "circle")
                     .font(.title3)
                     .foregroundStyle(isOn ? Color.paperInk : Color.paperMuted)
-                    .accessibilityHidden(true)
-
-                VStack(alignment: .leading, spacing: 4) {
-                    LineOrStack(spacing: 8, lineSpacing: 2, spread: true, besideShare: 0.45) {
+                    .tapArea(.topLeading)
+            }
+            .buttonStyle(.plain)
+            .accessibilityLabel(Text(verbatim: item.name))
+            .accessibilityAddTraits(isOn ? [.isSelected] : [])
+        } words: {
+            VStack(alignment: .leading, spacing: 4) {
+                LineOrStack(spacing: 8, lineSpacing: 4, spread: true, besideShare: 0.45) {
+                    Button {
+                        if item.amount == nil {
+                            editingPrice = item
+                        } else {
+                            toggle(item.id)
+                        }
+                    } label: {
                         Text(verbatim: item.name)
                             .font(.body.weight(.semibold))
                             .foregroundStyle(Color.paperInk)
                             .multilineTextAlignment(.leading)
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                            .contentShape(Rectangle())
+                    }
+                    .buttonStyle(.plain)
+
+                    Button {
+                        Feel.selection()
+                        editingPrice = item
+                    } label: {
                         if let amount = item.amount {
-                            Text(verbatim: item.frequency.pricedShort(MoneyFormat.string(amount, item.currency, locale: L10n.locale)))
-                                .font(.proof(.subheadline, weight: .bold))
-                                .foregroundStyle(Color.paperInk)
+                            PricePerPeriod(
+                                amount: MoneyFormat.string(amount, item.currency, locale: L10n.locale),
+                                frequency: item.frequency,
+                                amountFont: .subheadline.weight(.bold).monospacedDigit(),
+                                periodFont: .footnote.weight(.medium),
+                                periodColor: .paperMuted
+                            )
+                            .foregroundStyle(Color.paperInk)
+                            .underline(true, color: Color.paperInk.opacity(0.35))
                         } else {
                             Text("Add price")
                                 .font(.subheadline.weight(.semibold))
@@ -269,22 +262,22 @@ struct ScreenshotImportView: View {
                                 .underline()
                         }
                     }
-
-                    if let detail = detailLine(for: item, onList: onList, fillsDate: fillsDate) {
-                        Facts(detail)
-                            .font(.footnote)
-                            .foregroundStyle(Color.paperMuted)
-                            .fixedSize(horizontal: false, vertical: true)
-                    }
+                    .buttonStyle(.plain)
+                    .accessibilityLabel(item.amount != nil
+                                        ? L10n.string("Edit price for \(item.name)")
+                                        : L10n.string("Add price for \(item.name)"))
                 }
-                .frame(maxWidth: .infinity, alignment: .leading)
+
+                if let detail = detailLine(for: item, onList: onList, fillsDate: fillsDate) {
+                    Facts(detail)
+                        .font(.footnote)
+                        .foregroundStyle(Color.paperMuted)
+                        .fixedSize(horizontal: false, vertical: true)
+                }
             }
-            .padding(.vertical, 6)
-            .contentShape(Rectangle())
+            .frame(maxWidth: .infinity, alignment: .leading)
         }
-        .buttonStyle(.plain)
-        .accessibilityElement(children: .combine)
-        .accessibilityAddTraits(isOn ? [.isSelected] : [])
+        .padding(.vertical, 6)
         .accessibilityIdentifier("screenshotRow_\(item.name)")
     }
 
@@ -323,46 +316,6 @@ struct ScreenshotImportView: View {
         }
     }
 
-    // MARK: - Outcome
-
-    private func outcomeContent(_ result: TallyImporter.Outcome) -> some View {
-        VStack(alignment: .leading, spacing: 0) {
-            Text(result.added.isEmpty && !result.datesFilled.isEmpty
-                 ? L10n.string("Renewal dates updated")
-                 : L10n.string("Added to your list"))
-                .font(.question(.title))
-                .foregroundStyle(Color.inkText)
-                .fixedSize(horizontal: false, vertical: true)
-                .padding(.top, 8)
-                .accessibilityAddTraits(.isHeader)
-
-            PaperSlip(tornTop: true, tornBottom: true) {
-                VStack(alignment: .leading, spacing: 10) {
-                    if !result.added.isEmpty {
-                        ProofLine(label: L10n.string("Added"), value: L10n.number(result.added.count), emphasised: true)
-                        Text(verbatim: result.added.joined(separator: ", "))
-                            .font(.footnote)
-                            .foregroundStyle(Color.paperMuted)
-                            .fixedSize(horizontal: false, vertical: true)
-                    }
-                    if !result.datesFilled.isEmpty {
-                        if !result.added.isEmpty { Perforation() }
-                        ProofLine(label: L10n.string("Renewal dates added"), value: L10n.number(result.datesFilled.count))
-                    }
-                    if !result.waiting.isEmpty {
-                        Perforation()
-                        ProofLine(label: L10n.string("Waiting for room"), value: L10n.number(result.waiting.count))
-                        Text(L10n.string("Home shows the rest so you can choose which \(FreeTier.subscriptionLimit) to track or go Pro."))
-                            .font(.footnote)
-                            .foregroundStyle(Color.paperMuted)
-                            .fixedSize(horizontal: false, vertical: true)
-                    }
-                }
-            }
-            .padding(.top, 20)
-        }
-    }
-
     // MARK: - Actions
 
     @ViewBuilder
@@ -384,9 +337,10 @@ struct ScreenshotImportView: View {
         } else {
             switch phase {
             case .ready:
+                let batchTitle = canBatchImport ? L10n.string("Choose screenshots") : L10n.string("Choose a screenshot")
                 VStack(spacing: 10) {
                     PhotosPicker(selection: $pickerItems, maxSelectionCount: maxPhotos, matching: .images) {
-                        Text(canBatchImport ? L10n.string("Choose screenshots") : L10n.string("Choose a screenshot"))
+                        Text(verbatim: batchTitle)
                     }
                     .buttonStyle(.ink)
                     .accessibilityIdentifier("chooseScreenshotsButton")
@@ -406,15 +360,14 @@ struct ScreenshotImportView: View {
                     Button {
                         handleAddTapped()
                     } label: {
-                        Text(isAdding ? L10n.string("Adding…")
-                                      : L10n.string("Add \(chosenItems.count) to my list"))
+                        Text(verbatim: reviewPrimaryTitle)
                     }
                     .buttonStyle(.ink)
                     .disabled(chosenItems.isEmpty || isAdding)
                     .accessibilityIdentifier("confirmScreenshotImportButton")
 
                     PhotosPicker(selection: $pickerItems, maxSelectionCount: maxPhotos, matching: .images) {
-                        Text("Scan more screenshots")
+                        Text(canBatchImport ? L10n.string("Scan more screenshots") : L10n.string("Scan another screenshot"))
                     }
                     .buttonStyle(.ink(.quiet))
                 }
@@ -425,8 +378,13 @@ struct ScreenshotImportView: View {
                     }
                     .buttonStyle(.ink)
 
-                    Button { showingManualAdd = true } label: { Text("Add your own") }
-                        .buttonStyle(.ink(.quiet))
+                    if onPickForTally != nil {
+                        Button { dismiss() } label: { Text("Back to list") }
+                            .buttonStyle(.ink(.quiet))
+                    } else {
+                        Button { showingManualAdd = true } label: { Text("Add your own") }
+                            .buttonStyle(.ink(.quiet))
+                    }
                 }
             }
         }
@@ -469,8 +427,29 @@ struct ScreenshotImportView: View {
         selectedIDs.insert(id)
     }
 
+    private var reviewPrimaryTitle: String {
+        if isAdding { return L10n.string("Adding…") }
+        if onPickForTally != nil {
+            return chosenItems.count == 1
+                ? L10n.string("Add 1 to my slip")
+                : L10n.string("Add \(chosenItems.count) to my slip")
+        }
+        let newCount = chosenItems.filter { existingSubscription(for: $0) == nil }.count
+        let dateFills = chosenItems.filter { item in
+            guard let existing = existingSubscription(for: item) else { return false }
+            return existing.nextBillingDate == nil && item.renewalDate != nil
+        }.count
+        if newCount == 0 && dateFills > 0 {
+            return dateFills == 1
+                ? L10n.string("Update 1 renewal date")
+                : L10n.string("Update \(dateFills) renewal dates")
+        }
+        return L10n.string("Add \(chosenItems.count) to my list")
+    }
+
     private func process(_ items: [PhotosPickerItem]) async {
         phase = .reading(count: items.count)
+        scanNote = nil
         let currency = currencyManager.selectedCurrency
         var pages: [[ScreenshotParser.TextObservation]] = []
 
@@ -482,33 +461,53 @@ struct ScreenshotImportView: View {
             }
         }
 
-        let parsed = ScreenshotParser.parse(pages: pages, defaultCurrency: currency)
+        let parsed = ScreenshotParser.parse(pages: pages, defaultCurrency: currency, rates: currencyManager.rates)
         pickerItems = []
 
         if parsed.isEmpty {
-            phase = .nothingFound
+            if detected.isEmpty {
+                phase = .nothingFound
+            } else {
+                scanNote = L10n.string("No more subscriptions found in that screenshot.")
+                phase = .review
+            }
             return
         }
 
-        // Merge with any earlier batch scanned in this sheet session.
+        // Merge with any earlier batch scanned in this sheet session without losing user edits or ticks.
         var combined = detected
+        var addedIDs: Set<String> = []
         for item in parsed {
             if let idx = combined.firstIndex(where: { ServiceName.same($0.name, item.name) }) {
-                if combined[idx].amount == nil { combined[idx].amount = item.amount }
+                if !combined[idx].isCancelled && item.isCancelled { continue }
+                if combined[idx].isCancelled && !item.isCancelled {
+                    combined[idx] = item
+                    addedIDs.insert(item.id)
+                    continue
+                }
+                if combined[idx].amount == nil, let amount = item.amount {
+                    combined[idx].amount = amount
+                    combined[idx].currency = item.currency
+                }
                 if combined[idx].renewalDate == nil { combined[idx].renewalDate = item.renewalDate }
                 if combined[idx].trialEndsAt == nil { combined[idx].trialEndsAt = item.trialEndsAt }
+                if combined[idx].paymentMethod == nil { combined[idx].paymentMethod = item.paymentMethod }
             } else {
                 combined.append(item)
+                addedIDs.insert(item.id)
             }
         }
         detected = combined
-        selectedIDs = Set(combined.filter { item in
-            guard !item.isCancelled, item.amount != nil else { return false }
-            if let existing = existingSubscription(for: item) {
-                return existing.nextBillingDate == nil && item.renewalDate != nil
+        for item in combined where addedIDs.contains(item.id) {
+            guard !item.isCancelled, item.amount != nil else { continue }
+            if onPickForTally == nil, let existing = existingSubscription(for: item) {
+                if existing.nextBillingDate == nil && item.renewalDate != nil {
+                    selectedIDs.insert(item.id)
+                }
+            } else {
+                selectedIDs.insert(item.id)
             }
-            return true
-        }.map(\.id))
+        }
         phase = .review
         Feel.landed()
     }
@@ -516,11 +515,17 @@ struct ScreenshotImportView: View {
     private func handleAddTapped() {
         let lines = chosenItems.compactMap { $0.tallyLine() }
         guard !lines.isEmpty else { return }
+        if let onPickForTally {
+            Feel.landed()
+            onPickForTally(lines)
+            dismiss()
+            return
+        }
         let room = FreeTier.room(in: store.subscriptions)
         let newCount = lines.filter { line in
             !store.subscriptions.contains { ServiceName.same($0.name, line.name) }
         }.count
-        if !payments.isUnlocked(.unlimitedSubscriptions), room > 0, newCount > room {
+        if !payments.isUnlocked(.unlimitedSubscriptions), newCount > room {
             showingFreePicker = true
             return
         }
@@ -530,27 +535,76 @@ struct ScreenshotImportView: View {
     private var freePickerSheet: some View {
         let display = currencyManager.selectedCurrency
         let rates = currencyManager.rates
-        let lines = chosenItems.compactMap { $0.tallyLine() }.filter { line in
+        let room = FreeTier.room(in: store.subscriptions)
+        let newLines = chosenItems.compactMap { $0.tallyLine() }.filter { line in
             !store.subscriptions.contains { ServiceName.same($0.name, line.name) }
         }
-        return FreeLimitPickerSheet(
-            candidates: lines.map { line in
+        if room == 0 {
+            let activeCandidates = store.subscriptions.charging.map { sub in
+                FreeLimitPickerSheet.Candidate(
+                    name: sub.name,
+                    category: sub.category ?? SubscriptionCategory.other.rawValue,
+                    amount: sub.effectiveAmount,
+                    currency: sub.currency,
+                    frequency: sub.billingFrequency,
+                    yearlyInDisplay: rates.convert(sub.annualCost, from: sub.currency, to: display) ?? 0
+                )
+            }
+            let newCandidates = newLines.map { line in
                 FreeLimitPickerSheet.Candidate(
                     name: line.name,
                     category: line.category,
                     amount: line.amount,
                     currency: line.currency,
                     frequency: line.frequency ?? .monthly,
-                    yearlyInDisplay: rates.convert(line.yearlyCost, from: line.currency, to: display) ?? line.yearlyCost
+                    yearlyInDisplay: rates.convert(line.yearlyCost, from: line.currency, to: display) ?? 0
+                )
+            }
+            return FreeLimitPickerSheet(
+                candidates: activeCandidates + newCandidates,
+                initialSelection: Set(store.subscriptions.charging.map(\.name)),
+                maxSelection: FreeTier.room(in: []),
+                onSave: { chosen in
+                    Task { await commitSwapImport(lines: chosenItems.compactMap { $0.tallyLine() }, chosenActiveNames: chosen) }
+                },
+                onSeePro: { pendingPaywallFromPicker = true }
+            )
+        }
+        return FreeLimitPickerSheet(
+            candidates: newLines.map { line in
+                FreeLimitPickerSheet.Candidate(
+                    name: line.name,
+                    category: line.category,
+                    amount: line.amount,
+                    currency: line.currency,
+                    frequency: line.frequency ?? .monthly,
+                    yearlyInDisplay: rates.convert(line.yearlyCost, from: line.currency, to: display) ?? 0
                 )
             },
             initialSelection: [],
-            maxSelection: max(1, FreeTier.room(in: store.subscriptions)),
+            maxSelection: max(1, room),
             onSave: { chosen in
                 Task { await commitImport(lines: chosenItems.compactMap { $0.tallyLine() }, preferredNames: chosen) }
             },
-            onSeePro: { showingPaywall = true }
+            onSeePro: { pendingPaywallFromPicker = true }
         )
+    }
+
+    private func commitSwapImport(lines: [TallyLine], chosenActiveNames: Set<String>) async {
+        isAdding = true
+        defer { isAdding = false }
+        let beforeNames = Set(store.subscriptions.charging.map { $0.name.lowercased() })
+        let initial = await TallyImporter.add(lines, into: store, payments: payments)
+        await TallyImporter.applyChoice(selectedNames: chosenActiveNames, into: store, payments: payments)
+        let afterActive = store.subscriptions.charging
+        let added = afterActive.filter { !beforeNames.contains($0.name.lowercased()) }.map(\.name)
+        let waiting = TallyImporter.waitingLines().map(\.name)
+        Feel.landed()
+        withAnimation(Motion.unlessReduced(Motion.arrive)) {
+            outcome = TallyImporter.Outcome(added: added, waiting: waiting,
+                                            alreadyListed: initial.alreadyListed,
+                                            datesFilled: initial.datesFilled)
+        }
     }
 
     private func commitImport(lines: [TallyLine], preferredNames: Set<String>) async {
@@ -572,20 +626,20 @@ struct ScreenshotImportView: View {
         let dec1 = cal.date(byAdding: .day, value: 9, to: now)
         let currency = currencyManager.selectedCurrency
         detected = [
-            ScreenshotParser.DetectedItem(id: "netflix", name: "Netflix", category: "Entertainment",
-                                          amount: Decimal(string: "19.99"), currency: currency,
-                                          frequency: .monthly, renewalDate: dec14, trialEndsAt: nil, isCancelled: false),
-            ScreenshotParser.DetectedItem(id: "duolingo", name: "Duolingo", category: "Education",
-                                          amount: Decimal(string: "83.99"), currency: currency,
-                                          frequency: .yearly, renewalDate: dec3, trialEndsAt: dec3, isCancelled: false),
-            ScreenshotParser.DetectedItem(id: "icloud+", name: "iCloud+", category: "Cloud Storage",
-                                          amount: Decimal(string: "2.99"), currency: currency,
-                                          frequency: .monthly, renewalDate: dec1, trialEndsAt: nil, isCancelled: false),
+            ScreenshotParser.DetectedItem(id: "paramount+", name: "Paramount+", category: "Entertainment",
+                                          amount: Decimal(string: "12.99"), currency: currency,
+                                          frequency: .monthly, renewalDate: dec14, trialEndsAt: nil, isCancelled: false, paymentMethod: "Apple"),
+            ScreenshotParser.DetectedItem(id: "headspace", name: "Headspace", category: "Health & Fitness",
+                                          amount: Decimal(string: "69.99"), currency: currency,
+                                          frequency: .yearly, renewalDate: dec3, trialEndsAt: dec3, isCancelled: false, paymentMethod: "Apple"),
+            ScreenshotParser.DetectedItem(id: "dropbox", name: "Dropbox", category: "Cloud Storage",
+                                          amount: Decimal(string: "11.99"), currency: currency,
+                                          frequency: .monthly, renewalDate: dec1, trialEndsAt: nil, isCancelled: false, paymentMethod: "Apple"),
             ScreenshotParser.DetectedItem(id: "hulu", name: "Hulu", category: "Entertainment",
                                           amount: Decimal(string: "18.99"), currency: currency,
-                                          frequency: .monthly, renewalDate: nil, trialEndsAt: nil, isCancelled: true),
+                                          frequency: .monthly, renewalDate: nil, trialEndsAt: nil, isCancelled: true, paymentMethod: "Apple"),
         ]
-        selectedIDs = ["netflix", "duolingo", "icloud+"]
+        selectedIDs = ["paramount+", "headspace", "dropbox"]
         phase = .review
     }
     #endif

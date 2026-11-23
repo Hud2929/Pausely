@@ -22,6 +22,7 @@ struct GuessStep: View {
                 VStack(alignment: .leading, spacing: 0) {
                     header
                     ScrollView { question }
+                        .readableScroll()
                         .scrollBounceBehavior(.basedOnSize)
                     answer
                         .padding(.bottom, 28)
@@ -44,6 +45,7 @@ struct GuessStep: View {
                     }
                     .padding(.horizontal, Layout.margin)
                 }
+                .readableScroll()
                 .scrollBounceBehavior(.basedOnSize)
             }
         }

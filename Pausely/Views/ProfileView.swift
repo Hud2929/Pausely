@@ -45,7 +45,7 @@ struct ProfileView: View {
                     }
                     row("photo.on.rectangle.angled", L10n.string("Import from screenshots"), id: "screenshotImportButton") { sheet = .screenshots }
                     row("arrow.up.forward.app", L10n.string("Apple subscriptions"), id: "importFromAppStoreButton", last: true) {
-                        if let url = URL(string: "https://apps.apple.com/account/subscriptions") { openURL(url) }
+                        if let url = CancelHelp.applesSubscriptions { openURL(url) }
                     }
                 }
 
@@ -94,6 +94,7 @@ struct ProfileView: View {
             .padding(.top, 16)
             .padding(.bottom, 32)
         }
+        .readableScroll()
         .inkScreen()
         .task(id: paymentManager.currentTier) {
             #if DEBUG
@@ -375,6 +376,7 @@ struct SubscriptionWrappedView: View {
             .padding(.top, 8)
             .padding(.bottom, 32)
         }
+        .readableScroll()
         .inkScreen()
         .preferredColorScheme(.dark)
         .task(id: "\(subscriptions.count)|\(currencyManager.selectedCurrency)") {

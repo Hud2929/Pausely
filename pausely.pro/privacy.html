@@ -27,7 +27,7 @@
 <body>
 <div class="container">
     <h1>Privacy Policy</h1>
-    <p class="meta">Last updated: November 17, 2026</p>
+    <p class="meta">Last updated: November 23, 2026</p>
 
     <div class="highlight">
         <strong>Our promise:</strong> You are our customer, not our product. We never sell your personal data. We collect only what we need to provide the service.
@@ -44,15 +44,20 @@
     <h2>2. Information We Collect</h2>
     <h3>Information you provide</h3>
     <ul>
-        <li><strong>Account data:</strong> Your email address and password (stored hashed, never in plain text). With Sign in with Apple: the email address Apple shares with us (which can be Apple's private relay address) and Apple's identifier for your account. A name you give, or the one Apple shares, is kept only on your device.</li>
-        <li><strong>Your list:</strong> For each subscription you add: its name, category, amount and currency, how often it charges, the date of its next charge, its status (for example active, in a free trial, or cancelled), when its free trial ends, and how many days ahead you want to be reminded about it</li>
+        <li><strong>Optional guest mode:</strong> You can use Pausely without creating an account. In guest mode, your subscription list, decision history, Savings Receipt and Pause Plan stay only on your device until you choose to back them up with an account.</li>
+        <li><strong>Account data:</strong> If you create an account: your email address and password (stored hashed, never in plain text). With Sign in with Apple: the email address Apple shares with us (which can be Apple's private relay address) and Apple's identifier for your account. A name you give, or the one Apple shares, is kept only on your device.</li>
+        <li><strong>Your list:</strong> For each subscription you add: its name, category, amount and currency, how often it charges, the date of its next charge, its status (for example active, in a free trial, or cancelled), when its free trial ends, how many days ahead you want to be reminded about it, and any optional notes, billing method or cost-split count you enter.</li>
+        <li><strong>Decision history and Pause Plan:</strong> When you are signed in, the keep-or-cancel events behind your Savings Receipt and your Pause Plan schedule sync to your account so reinstalling or switching devices never loses them.</li>
+        <li><strong>Cancellation difficulty ratings (optional):</strong> After cancelling a subscription, you may optionally rate how hard cancelling was (1–5). Submitted ratings are combined into anonymous per-service averages shown to help other users plan ahead.</li>
         <li><strong>Age confirmation:</strong> That you confirmed you are 16 or older, when, and which version of the app and of this policy you had at the time (see section 10)</li>
         <li><strong>Support communications:</strong> Messages you send to our support team</li>
     </ul>
     <h3>Information collected automatically</h3>
     <p>Nothing for analytics. Pausely has no analytics, advertising or crash-reporting software in it and keeps no record of what you do in the app. As with any internet service, the servers that store your list receive your device's IP address when the app connects to them, and the sign-in service keeps the technical records every sign-in service keeps (for example when you last signed in), for security.</p>
     <h3>Kept only on your device</h3>
-    <p>To work, Pausely also keeps these on your iPhone or iPad and nowhere else: a copy of your list for the app's widgets and for iPhone search (Spotlight), the history of your decisions behind the Savings Receipt, your Pause Plan, the hours of use you enter, the reminders scheduled for you, and the service logos it has shown you.</p>
+    <p>Pausely keeps these on your iPhone or iPad and nowhere else: a local protected copy of your list for offline access, widgets and iPhone search (Spotlight), the hours of use you enter, the reminders scheduled for you, and the service logos it has shown you. Local data files are protected by iOS hardware data protection.</p>
+    <h3>Import from screenshots (optional)</h3>
+    <p>You can pick screenshots of Apple Subscriptions or recurring charges to add subscriptions faster. Screenshots are read in memory on your device using Apple's on-device text recognition (Vision) and are never saved or sent to our servers.</p>
     <h3>Hours of use (optional)</h3>
     <p>You can type in how long you used a subscription this month, so Pausely can show what an hour of it costs. Pausely does not read Screen Time. The hours you enter stay on your device.</p>
 
@@ -97,8 +102,8 @@
         <li>Primary storage: <strong>Supabase</strong> — SOC 2 Type II compliant cloud infrastructure</li>
         <li>Row-level security (RLS) ensures you can only access your own data</li>
         <li>We retain your data as long as your account is active</li>
-        <li>What is kept only on your device (section 2) is protected by iOS data protection</li>
-        <li>Deleting your account in the app deletes your account, your list and your age confirmation from our servers right away, and everything Pausely kept on your device</li>
+        <li>What stays on your device (section 2) is protected by iOS data protection</li>
+        <li>Deleting your account in the app deletes your account, your list, your synced decision history, your Pause Plan, and your age confirmation from our servers right away, and everything Pausely kept on your device</li>
     </ul>
 
     <h3>Our website and its waitlist</h3>
@@ -108,7 +113,7 @@
     <p>These service providers hold data for us:</p>
     <table>
         <tr><th>Provider</th><th>Purpose</th><th>Data shared</th><th>Location</th></tr>
-        <tr><td><a href="https://supabase.com/privacy" target="_blank">Supabase Inc.</a></td><td>Database &amp; authentication</td><td>Account data, your list, your age confirmation, the website's waitlist</td><td>US</td></tr>
+        <tr><td><a href="https://supabase.com/privacy" target="_blank">Supabase Inc.</a></td><td>Database &amp; authentication</td><td>Account data, your list, synced decision history (Savings Receipt) and Pause Plan, optional anonymous cancellation difficulty ratings, App Store subscription status, your age confirmation, the website's waitlist</td><td>US</td></tr>
         <tr><td><a href="https://resend.com/legal/privacy-policy" target="_blank">Resend</a></td><td>Sends account emails (sign-in codes, password resets) and the waitlist's welcome email</td><td>Your email address and the email itself</td><td>US</td></tr>
         <tr><td><a href="https://proton.me/legal/privacy" target="_blank">Proton AG</a></td><td>Our email inbox (pausely@proton.me)</td><td>The emails you send us, and your address</td><td>Switzerland</td></tr>
         <tr><td><a href="https://docs.github.com/en/site-policy/privacy-policies/github-general-privacy-statement" target="_blank">GitHub Inc.</a></td><td>Hosts the pausely.pro website</td><td>Your IP address when you visit it</td><td>US</td></tr>
@@ -146,7 +151,7 @@
         <li><strong>On the web:</strong> <a href="/delete">pausely.pro/delete</a> (it opens an email to us, already filled in)</li>
         <li><strong>Email:</strong> <a href="mailto:pausely@proton.me">pausely@proton.me</a> with subject "Delete My Account"</li>
     </ul>
-    <p>Requests by email are completed within 30 days. Anonymous cancellation-difficulty ratings sent from earlier versions of the app are kept without any link to you. We keep a record that a deletion took place; for a deletion made in the app, it holds nothing that identifies you.</p>
+    <p>Requests by email are completed within 30 days. Anonymous cancellation-difficulty ratings are detached from your account and kept only as aggregate service scores with no link to you. We keep a record that a deletion took place; for a deletion made in the app, it holds nothing that identifies you.</p>
 
     <h2>9. International Data Transfers</h2>
     <p>Your data may be processed outside your country of residence (including the United States). We ensure appropriate safeguards are in place via Standard Contractual Clauses (SCCs) and Data Processing Agreements with all sub-processors.</p>

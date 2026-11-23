@@ -54,6 +54,9 @@ final class SubscriptionSyncTests: XCTestCase {
         var sub = TestFactories.makeSubscription(name: "Crave", amount: 22.6, currency: "CAD", billingFrequency: .yearly,
                                                  status: .trial, nextBillingDate: fifteenth)
         sub.trialEndsAt = fifteenth
+        sub.notes = "Shared with family"
+        sub.paymentMethod = "Apple"
+        sub.splitCount = 3
         let back = try JSONDecoder().decode(SubscriptionRecord.self, from: JSONEncoder().encode(SubscriptionRecord(from: sub))).toSubscription()
         XCTAssertEqual(back.id, sub.id)
         XCTAssertEqual(back.amount, sub.amount)
@@ -62,6 +65,9 @@ final class SubscriptionSyncTests: XCTestCase {
         XCTAssertEqual(back.status, .trial)
         XCTAssertEqual(back.nextBillingDate, sub.nextBillingDate)
         XCTAssertEqual(back.trialEndsAt, sub.trialEndsAt)
+        XCTAssertEqual(back.notes, "Shared with family")
+        XCTAssertEqual(back.paymentMethod, "Apple")
+        XCTAssertEqual(back.splitCount, 3)
     }
 
     // MARK: Merging the server's list with this iPhone's
@@ -138,11 +144,12 @@ final class SubscriptionSyncTests: XCTestCase {
         XCTAssertFalse(TestFactories.makeSubscription(name: "Pausely Pro Max").isPausely)
     }
 
-    /// The app has eleven fields and sends those. Columns earlier versions filled are left as they are.
+    /// The app has fourteen fields and sends those. Columns earlier versions filled are left as they are.
     func testOnlyTheFieldsTheAppHasAreSent() throws {
         let sent = try json(SubscriptionRecord(from: TestFactories.makeSubscription(name: "Netflix")))
         XCTAssertEqual(sent.keys.sorted(), ["amount", "billing_frequency", "category", "currency", "id", "name",
-                                            "next_billing_date", "notify_before_days", "status", "trial_ends_at"])
+                                            "next_billing_date", "notes", "notify_before_days", "payment_method",
+                                            "split_count", "status", "trial_ends_at"])
     }
 
     // MARK: Pro

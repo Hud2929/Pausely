@@ -1,8 +1,5 @@
 import SwiftUI
-import AuthenticationServices
 import CoreSpotlight
-import TipKit
-import UserNotifications
 
 @main
 struct PauselyApp: App {
@@ -62,112 +59,8 @@ struct PauselyApp: App {
                 RootView()
                     .environment(\.locale, resolvedLocale)
                     .modifier(ChosenDirection(direction: chosenDirection))
-                    .readableWidth()
             }
         }
-    }
-}
-
-/// Sets the layout direction only when a language was chosen in the app.
-private struct ChosenDirection: ViewModifier {
-    let direction: LayoutDirection?
-
-    func body(content: Content) -> some View {
-        Group {
-            if let direction {
-                content.environment(\.layoutDirection, direction)
-            } else {
-                content
-            }
-        }
-        .onAppear { SceneDirection.apply(direction) }
-        .onChange(of: direction) { _, now in SceneDirection.apply(now) }
-    }
-}
-
-/// The chosen direction on every window scene's traits. Sheets, alerts and the system's bars take theirs from
-/// UIKit, not from SwiftUI's environment: with Arabic chosen in the app on an English iPhone, Find in Email,
-/// its forms and the Language sheet stayed left to right (the reach rating of 2026-11-23).
-@MainActor
-enum SceneDirection {
-    static func apply(_ direction: LayoutDirection?) {
-        for case let scene as UIWindowScene in UIApplication.shared.connectedScenes {
-            if let direction {
-                scene.traitOverrides.layoutDirection = direction == .rightToLeft ? .rightToLeft : .leftToRight
-            } else if scene.traitOverrides.contains(UITraitLayoutDirection.self) {
-                scene.traitOverrides.remove(UITraitLayoutDirection.self)
-            }
-        }
-    }
-}
-
-class AppDelegate: NSObject, UIApplicationDelegate {
-    func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]? = nil) -> Bool {
-        // Before the phone's first unlock: nothing else is set up (see `PauselyApp.init`).
-        if LockedLaunchDelegate.isActive {
-            LockedLaunchDelegate.shared.start()
-            return true
-        }
-        // Configure navigation bar appearance
-        let appearance = UINavigationBarAppearance()
-        appearance.configureWithTransparentBackground()
-        appearance.backgroundColor = .clear
-        appearance.titleTextAttributes = [
-            .font: UIFont.systemFont(ofSize: 17, weight: .semibold),
-            .foregroundColor: UIColor.label
-        ]
-
-        // Once content scrolls under the bar it gets a solid background, so text never runs
-        // under the buttons; at the top it stays transparent.
-        let scrolledAppearance = UINavigationBarAppearance()
-        scrolledAppearance.configureWithDefaultBackground()
-        scrolledAppearance.backgroundColor = UIColor(Color.ink).withAlphaComponent(0.92)
-        scrolledAppearance.shadowColor = .clear
-        scrolledAppearance.titleTextAttributes = appearance.titleTextAttributes
-
-        UINavigationBar.appearance().standardAppearance = scrolledAppearance
-        UINavigationBar.appearance().compactAppearance = scrolledAppearance
-        UINavigationBar.appearance().scrollEdgeAppearance = appearance
-
-        // Switches: green would read as "money kept", so an "on" switch is a quiet grey.
-        UISwitch.appearance().onTintColor = UIColor(Color.inkTextMuted)
-
-        // iOS 26 draws the tab bar as Liquid Glass by itself. Earlier versions get a solid ink bar.
-        if #unavailable(iOS 26) {
-            let tabBarAppearance = UITabBarAppearance()
-            tabBarAppearance.configureWithOpaqueBackground()
-            tabBarAppearance.backgroundColor = UIColor(Color.ink)
-            tabBarAppearance.shadowColor = UIColor(Color.line)
-            UITabBar.appearance().standardAppearance = tabBarAppearance
-            UITabBar.appearance().scrollEdgeAppearance = tabBarAppearance
-        }
-
-        // Configure TipKit for contextual tips
-        TipKitConfiguration.configure()
-
-        // The app switcher shows the app's name, not what someone pays for.
-        PrivacyCover.install()
-
-        // Reminder taps and their Keep / Review buttons. Set before launch finishes so a tap that
-        // launched the app is delivered.
-        UNUserNotificationCenter.current().delegate = NotificationDelegate.shared
-        ReminderActions.registerCategories()
-
-        // Handle URL if app was launched via deep link
-        if let url = launchOptions?[.url] as? URL {
-            handleDeepLink(url)
-        }
-
-        return true
-    }
-
-    func application(_ app: UIApplication, open url: URL, options: [UIApplication.OpenURLOptionsKey: Any] = [:]) -> Bool {
-        handleDeepLink(url)
-        return true
-    }
-
-    private func handleDeepLink(_ url: URL) {
-        DeepLinkManager.shared.process(url)
     }
 }
 
@@ -218,6 +111,7 @@ struct RootView: View {
                         onCancel: { Task { await authManager.signOut() } },
                         cancelTitle: "Sign out"
                     )
+                    .readableWidth()
                     .transition(.opacity)
                 } else if isDemoMode || authManager.isAuthenticated {
                     // Authenticated: show main app
@@ -298,8 +192,10 @@ struct RootView: View {
         }
         .task(id: authManager.currentUser?.id) {
             // Users who passed the age gate before sign-up get their consent recorded automatically;
-            // anyone with an unsynced record retries the upload.
-            guard let uid = authManager.currentUser?.id else { return }
+            // anyone with an unsynced record retries the upload. Local-only guest mode never writes to cloud.
+            guard !authManager.isGuest,
+                  let uid = authManager.currentUser?.id,
+                  uid != AuthManager.localTestUserID else { return }
             if ageConsent.needsConsent(userId: uid) && ageConsent.hasPassedDeviceGate {
                 await ageConsent.recordConsent(userId: uid)
             } else {
@@ -329,8 +225,15 @@ struct RootView: View {
                 Task {
                     await NotificationManager.shared.refreshStatus()
                     await SubscriptionLifecycle.shared.run()
-                    // Changes that couldn't be sent earlier go now, without waiting for a pull to refresh.
-                    await SubscriptionStore.shared.sync.drain(force: true)
+                    // Changes that couldn't be sent earlier go now. If first-sync dedup hasn't succeeded yet
+                    // (e.g. initial sign-in fetch failed offline), retry reconciliation instead of stalling.
+                    if authManager.isSignedIntoCloud {
+                        if SubscriptionStore.isFirstSync(for: authManager.currentUser?.id) {
+                            await SubscriptionStore.shared.fetchSubscriptions(force: true)
+                        } else {
+                            await SubscriptionStore.shared.sync.drain(force: true)
+                        }
+                    }
                     await LifecycleSync.shared.sync()
                     await PausePlanSync.shared.sync()
                     // An app left open for days still converts at today's rates (asks at most hourly).
@@ -360,26 +263,11 @@ struct RootView: View {
     }
 }
 
-// MARK: - Premium Splash Screen
-/// The launch screen: the pause mark on ink, for a little over half a second. No tagline, no spinner.
-struct SplashScreen: View {
-    var body: some View {
-        ZStack {
-            Color.ink.ignoresSafeArea()
-            PauseMark(height: 44)
-                .foregroundStyle(Color.paper)
-        }
-    }
-}
-
-
-// MARK: - Premium Welcome Flow
-/// The sign-up / sign-in screen. The carousel before it already explained the app, so this goes
+// MARK: - Welcome Flow
+/// The sign-up / sign-in screen. The first-run tally already explained the app, so this goes
 /// straight to the account step; `start` opens the form the customer asked for.
 struct WelcomeFlow: View {
     enum Start { case welcome, signUp, signIn }
-    /// Which form is open on arrival. Only the captures of the forms themselves ask for one
-    /// (`--demo-auth`); the first run opens its forms from the root (`RootView`).
     var start: Start = .welcome
 
     @State private var showSignUp = false
@@ -388,15 +276,14 @@ struct WelcomeFlow: View {
 
     var body: some View {
         NavigationStack {
-            ZStack {
-                Color.ink.ignoresSafeArea()
-                authWallContent
-            }
+            WelcomeWallBody(
+                onSignUp: { showSignUp = true },
+                onSignIn: { showSignIn = true },
+                onGuest: { AuthManager.shared.enterGuestMode() }
+            )
             .navigationBarHidden(true)
             .signUpDoor(isOpen: $showSignUp)
-            .sheet(isPresented: $showSignIn) {
-                SignInView()
-            }
+            .sheet(isPresented: $showSignIn) { SignInView() }
         }
         .onAppear {
             guard !didApplyStart else { return }
@@ -407,93 +294,5 @@ struct WelcomeFlow: View {
             case .welcome: break
             }
         }
-    }
-
-    // MARK: - The door: create an account or sign in
-
-    private var authWallContent: some View {
-        ActionScreen {
-            authWallText
-        } actions: {
-            authWallButtons
-        }
-        .scrollBounceBehavior(.basedOnSize)
-    }
-
-    private var authWallText: some View {
-        VStack(alignment: .leading, spacing: 0) {
-            PauseMark(height: 30)
-                .foregroundStyle(Color.paper)
-                .padding(.top, 48)
-
-            Text("Welcome to Pausely")
-                .font(.question(.largeTitle, weight: .bold))
-                .foregroundStyle(Color.inkText)
-                .fixedSize(horizontal: false, vertical: true)
-                .padding(.top, 28)
-                .accessibilityAddTraits(.isHeader)
-
-            VStack(alignment: .leading, spacing: 0) {
-                promise("Every renewal, before it hits", "What each subscription costs and the day it charges you")
-                Hairline()
-                promise("Keep it or cancel it", "A reminder before each charge, with the facts to decide")
-                Hairline()
-                promise("Your Savings Receipt", "Exactly what your cancellations saved you")
-            }
-            .padding(.top, 24)
-        }
-        .padding(.horizontal, Layout.margin)
-        .padding(.bottom, 16)
-        .frame(maxWidth: .infinity, alignment: .leading)
-    }
-
-    private var authWallButtons: some View {
-        VStack(spacing: 0) {
-            VStack(spacing: 10) {
-                Button(action: { showSignUp = true }) { Text("Get started") }
-                    .buttonStyle(.ink)
-                    .accessibilityIdentifier("getStartedButton")
-                Button(action: { showSignIn = true }) { Text("I already have an account") }
-                    .buttonStyle(.ink(.quiet))
-                    .accessibilityIdentifier("signInButton")
-                Button(action: { AuthManager.shared.enterGuestMode() }) {
-                    Text("Continue without an account")
-                        .font(.footnote.weight(.medium))
-                        .foregroundStyle(Color.inkTextMuted)
-                        .frame(maxWidth: .infinity, minHeight: Layout.tapTarget)
-                }
-                .accessibilityIdentifier("welcomeGuestButton")
-                #if DEBUG
-                // Debug builds only (never in the App Store build): the app without an account.
-                if !LaunchFlag.uiTesting.isSet {
-                    Button(action: { AuthManager.shared.enterAsDebugUser() }) {
-                        Text(verbatim: "Test without an account (debug build)")
-                            .font(.footnote.weight(.medium))
-                            .foregroundStyle(Color.inkTextMuted)
-                            .frame(maxWidth: .infinity, minHeight: Layout.tapTarget)
-                    }
-                    .accessibilityIdentifier("debugTestUserButton")
-                }
-                #endif
-            }
-            .padding(.bottom, 12)
-        }
-        .padding(.horizontal, Layout.margin)
-        .padding(.top, 8)
-        .background(Color.ink)
-    }
-
-    private func promise(_ title: LocalizedStringKey, _ detail: LocalizedStringKey) -> some View {
-        VStack(alignment: .leading, spacing: 4) {
-            Text(title)
-                .font(.body.weight(.semibold))
-                .foregroundStyle(Color.inkText)
-            Text(detail)
-                .font(.subheadline)
-                .foregroundStyle(Color.inkTextMuted)
-                .fixedSize(horizontal: false, vertical: true)
-        }
-        .padding(.vertical, 14)
-        .accessibilityElement(children: .combine)
     }
 }

@@ -134,7 +134,12 @@ final class StoreKitManager: ObservableObject {
         isLoading = true
         defer { isLoading = false }
         do {
-            switch try await product.purchase() {
+            var options: Set<Product.PurchaseOption> = []
+            if let uidString = AuthManager.shared.currentUser?.id,
+               let accountToken = UUID(uuidString: uidString) {
+                options.insert(.appAccountToken(accountToken))
+            }
+            switch try await product.purchase(options: options) {
             case .success(let verification):
                 guard case .verified(let transaction) = verification else { return .unverified }
                 await PaymentManager.shared.updateCurrentEntitlements()

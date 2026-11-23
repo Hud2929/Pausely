@@ -15,6 +15,10 @@ struct AnalysisView: View {
     @ObservedObject private var pausePlanStore = PausePlanStore.shared
     @ObservedObject private var usageLog = UsageLog.shared
     @Environment(\.dynamicTypeSize) private var typeSize
+    @State private var selectedOverlap: OverlapDetector.Group?
+    @State private var pendingOverlapSubscription: UUID?
+    @State private var pendingPausePlanFromOverlap = false
+    @State private var showingPausePlan = false
 
     private var live: [Subscription] { store.activeSubscriptions }
 
@@ -57,10 +61,17 @@ struct AnalysisView: View {
                         let top = ranked.first?.monthly ?? 1
                         ForEach(Array(ranked.prefix(6).enumerated()), id: \.element.subscription.id) { index, item in
                             if index > 0 { Hairline() }
-                            BarRow(title: item.subscription.name,
-                                   value: MoneyFormat.total(item.monthly, currencyManager.selectedCurrency,
-                                                            converted: [item.subscription].isConverted()),
-                                   share: fraction(item.monthly, of: top))
+                            Button {
+                                Feel.selection()
+                                VerdictCenter.shared.showSubscription(item.subscription.id)
+                            } label: {
+                                BarRow(title: item.subscription.name,
+                                       value: MoneyFormat.total(item.monthly, currencyManager.selectedCurrency,
+                                                                converted: [item.subscription].isConverted()),
+                                       share: fraction(item.monthly, of: top))
+                                    .contentShape(Rectangle())
+                            }
+                            .buttonStyle(.plain)
                         }
                     }
 
@@ -84,31 +95,87 @@ struct AnalysisView: View {
                         section(L10n.string("What went up")) {
                             ForEach(Array(increases.enumerated()), id: \.element.subscription.id) { index, item in
                                 if index > 0 { Hairline() }
-                                // Mark, name and price side by side; at the accessibility
-                                // text sizes one under the other. Side by side there the name
-                                // was hyphenated ("Spoti-fy") and the price broke at its point.
-                                MarkedWords(spacing: 12) {
-                                    StateMark(state: .due)
-                                } words: {
-                                    AdaptiveRow {
-                                        VStack(alignment: .leading, spacing: 2) {
-                                            Text(verbatim: item.subscription.name)
-                                                .font(.body)
+                                Button {
+                                    Feel.selection()
+                                    VerdictCenter.shared.showSubscription(item.subscription.id)
+                                } label: {
+                                    // Mark, name and price side by side; at the accessibility
+                                    // text sizes one under the other. Side by side there the name
+                                    // was hyphenated ("Spoti-fy") and the price broke at its point.
+                                    MarkedWords(spacing: 12) {
+                                        StateMark(state: .due)
+                                    } words: {
+                                        AdaptiveRow {
+                                            VStack(alignment: .leading, spacing: 2) {
+                                                Text(verbatim: item.subscription.name)
+                                                    .font(.body)
+                                                    .foregroundStyle(Color.inkText)
+                                                    .fixedSize(horizontal: false, vertical: true)
+                                                Text(L10n.string("Up from \(MoneyFormat.string(item.from, item.subscription.currency)) since \(DayText.date(item.since, locale: L10n.locale))"))
+                                                    .font(.subheadline)
+                                                    .foregroundStyle(Color.inkTextMuted)
+                                                    .fixedSize(horizontal: false, vertical: true)
+                                            }
+                                        } value: {
+                                            Text(verbatim: item.subscription.chargeText)
+                                                .font(.body.monospacedDigit())
                                                 .foregroundStyle(Color.inkText)
-                                                .fixedSize(horizontal: false, vertical: true)
-                                            Text(L10n.string("Up from \(MoneyFormat.string(item.from, item.subscription.currency)) since \(DayText.date(item.since, locale: L10n.locale))"))
-                                                .font(.subheadline)
-                                                .foregroundStyle(Color.inkTextMuted)
-                                                .fixedSize(horizontal: false, vertical: true)
                                         }
-                                    } value: {
-                                        Text(verbatim: item.subscription.chargeText)
-                                            .font(.body.monospacedDigit())
-                                            .foregroundStyle(Color.inkText)
                                     }
+                                    .padding(.vertical, 12)
+                                    .contentShape(Rectangle())
                                 }
-                                .padding(.vertical, 12)
+                                .buttonStyle(.plain)
                                 .accessibilityElement(children: .combine)
+                            }
+                        }
+                    }
+
+                    let overlaps = OverlapDetector.groups(in: store.subscriptions,
+                                                          currency: currencyManager.selectedCurrency,
+                                                          rates: currencyManager.rates)
+                    if !overlaps.isEmpty {
+                        section(L10n.string("Overlapping services")) {
+                            ForEach(Array(overlaps.enumerated()), id: \.element.id) { index, group in
+                                if index > 0 { Hairline() }
+                                Button {
+                                    Feel.selection()
+                                    selectedOverlap = group
+                                } label: {
+                                    HStack(spacing: 10) {
+                                        AdaptiveRow {
+                                            VStack(alignment: .leading, spacing: 2) {
+                                                Text(verbatim: group.cluster.title)
+                                                    .font(.body.weight(.medium))
+                                                    .foregroundStyle(Color.inkText)
+                                                    .multilineTextAlignment(.leading)
+                                                    .fixedSize(horizontal: false, vertical: true)
+                                                Text(verbatim: group.subscriptions.map(\.name).joined(separator: ", "))
+                                                    .font(.subheadline)
+                                                    .foregroundStyle(Color.inkTextMuted)
+                                                    .multilineTextAlignment(.leading)
+                                                    .fixedSize(horizontal: false, vertical: true)
+                                            }
+                                        } value: {
+                                            VStack(alignment: typeSize.isAccessibilitySize ? .leading : .trailing, spacing: 2) {
+                                                Text(verbatim: BillingFrequency.monthly.pricedShort(
+                                                    MoneyFormat.total(group.monthlyTotal, currencyManager.selectedCurrency,
+                                                                      converted: group.isConverted, locale: L10n.locale)))
+                                                    .font(.body.monospacedDigit())
+                                                    .foregroundStyle(Color.inkText)
+                                                Text(L10n.string("\(MoneyFormat.total(group.annualTotal, currencyManager.selectedCurrency, converted: group.isConverted, locale: L10n.locale)) a year"))
+                                                    .font(.footnote.monospacedDigit())
+                                                    .foregroundStyle(Color.inkTextFaint)
+                                            }
+                                        }
+                                        RowChevron()
+                                    }
+                                    .padding(.vertical, 12)
+                                    .contentShape(Rectangle())
+                                }
+                                .buttonStyle(.plain)
+                                .accessibilityElement(children: .combine)
+                                .accessibilityIdentifier("overlapRow_\(group.cluster.rawValue)")
                             }
                         }
                     }
@@ -129,7 +196,27 @@ struct AnalysisView: View {
             .padding(.top, 16)
             .padding(.bottom, 32)
         }
+        .readableScroll()
         .inkScreen()
+        .sheet(isPresented: $showingPausePlan) { PausePlanView() }
+        .sheet(item: $selectedOverlap, onDismiss: {
+            if pendingPausePlanFromOverlap {
+                pendingPausePlanFromOverlap = false
+                showingPausePlan = true
+            } else if let id = pendingOverlapSubscription {
+                pendingOverlapSubscription = nil
+                VerdictCenter.shared.showSubscription(id)
+            }
+        }) { group in
+            let canRotate = group.cluster == .videoStreaming
+                && PausePlanCard.isRelevant(plan: pausePlanStore.activePlan, subscriptions: store.subscriptions)
+            OverlapDetailSheet(
+                group: group,
+                currency: currencyManager.selectedCurrency,
+                onSelect: { id in pendingOverlapSubscription = id },
+                onRotateWithPausePlan: canRotate ? { pendingPausePlanFromOverlap = true } : nil
+            )
+        }
     }
 
     private var sentence: String {
@@ -282,5 +369,87 @@ private struct BarRow: View {
         }
         .padding(.vertical, 12)
         .accessibilityElement(children: .combine)
+    }
+}
+
+/// Lists the subscriptions inside one overlap cluster so the person can inspect or cancel any of them.
+private struct OverlapDetailSheet: View {
+    let group: OverlapDetector.Group
+    let currency: String
+    let onSelect: (UUID) -> Void
+    var onRotateWithPausePlan: (() -> Void)? = nil
+    @Environment(\.dismiss) private var dismiss
+
+    var body: some View {
+        NavigationStack {
+            ScrollView {
+                VStack(alignment: .leading, spacing: 0) {
+                    Text(verbatim: group.cluster.title)
+                        .font(.question(.title))
+                        .foregroundStyle(Color.inkText)
+                        .fixedSize(horizontal: false, vertical: true)
+                        .accessibilityAddTraits(.isHeader)
+
+                    Text(L10n.string("Together these cost \(MoneyFormat.total(group.annualTotal, currency, converted: group.isConverted, locale: L10n.locale)) a year. Tap any service to review or cancel it."))
+                        .font(.body)
+                        .foregroundStyle(Color.inkTextMuted)
+                        .fixedSize(horizontal: false, vertical: true)
+                        .padding(.top, 8)
+                        .padding(.bottom, 20)
+
+                    ForEach(Array(group.subscriptions.enumerated()), id: \.element.id) { index, sub in
+                        if index > 0 { Hairline() }
+                        Button {
+                            Feel.selection()
+                            onSelect(sub.id)
+                            dismiss()
+                        } label: {
+                            HStack(spacing: 12) {
+                                ServiceLogoView(name: sub.name, category: sub.category, size: 36)
+                                LineOrStack(spacing: 8, lineSpacing: 2, spread: true, besideShare: 0.45) {
+                                    Text(verbatim: sub.name)
+                                        .font(.body.weight(.medium))
+                                        .foregroundStyle(Color.inkText)
+                                        .multilineTextAlignment(.leading)
+                                    Text(verbatim: sub.chargeText)
+                                        .font(.body.monospacedDigit())
+                                        .foregroundStyle(Color.inkTextMuted)
+                                }
+                                RowChevron()
+                            }
+                            .padding(.vertical, 12)
+                            .contentShape(Rectangle())
+                        }
+                        .buttonStyle(.plain)
+                        .accessibilityElement(children: .combine)
+                    }
+
+                    if let onRotateWithPausePlan {
+                        Button {
+                            Feel.selection()
+                            onRotateWithPausePlan()
+                            dismiss()
+                        } label: {
+                            Text("Rotate with Pause Plan")
+                        }
+                        .buttonStyle(.ink(.quiet))
+                        .padding(.top, 24)
+                        .accessibilityIdentifier("overlapRotatePausePlanButton")
+                    }
+                }
+                .padding(.horizontal, Layout.margin)
+                .padding(.top, 8)
+                .padding(.bottom, 32)
+            }
+            .readableScroll()
+            .background(Color.ink.ignoresSafeArea())
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .topBarLeading) {
+                    Button("Done") { dismiss() }.foregroundStyle(Color.inkText)
+                }
+            }
+        }
+        .preferredColorScheme(.dark)
     }
 }

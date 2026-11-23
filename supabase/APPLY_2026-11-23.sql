@@ -338,8 +338,12 @@ CREATE TABLE IF NOT EXISTS public.pause_plans (
     user_id UUID PRIMARY KEY REFERENCES auth.users(id) ON DELETE CASCADE,
     subscription_ids UUID[] NOT NULL DEFAULT '{}',
     started_on TIMESTAMPTZ NOT NULL,
+    ended_at TIMESTAMPTZ,
     updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
+
+ALTER TABLE public.pause_plans
+    ADD COLUMN IF NOT EXISTS ended_at TIMESTAMPTZ;
 
 ALTER TABLE public.pause_plans ENABLE ROW LEVEL SECURITY;
 
@@ -349,10 +353,45 @@ CREATE POLICY "Users manage own pause plan"
     USING (user_id = auth.uid())
     WITH CHECK (user_id = auth.uid());
 
+CREATE OR REPLACE FUNCTION public.preserve_pause_plan_updated_at()
+RETURNS trigger
+LANGUAGE plpgsql
+SET search_path = public, pg_temp
+AS $$
+BEGIN
+    IF NEW.updated_at IS NULL THEN
+        NEW.updated_at = NOW();
+    END IF;
+    RETURN NEW;
+END;
+$$;
+
 DROP TRIGGER IF EXISTS update_pause_plans_updated_at ON public.pause_plans;
 CREATE TRIGGER update_pause_plans_updated_at
     BEFORE UPDATE ON public.pause_plans
-    FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();
+    FOR EACH ROW EXECUTE FUNCTION public.preserve_pause_plan_updated_at();
+
+-- ===== Automatic profile creation on new auth.users signup =====
+CREATE OR REPLACE FUNCTION public.handle_new_user()
+RETURNS trigger
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public, auth, pg_temp
+AS $$
+BEGIN
+    INSERT INTO public.profiles (id, email)
+    VALUES (NEW.id, NEW.email)
+    ON CONFLICT (id) DO NOTHING;
+    RETURN NEW;
+END;
+$$;
+
+REVOKE ALL ON FUNCTION public.handle_new_user() FROM public, anon, authenticated;
+
+DROP TRIGGER IF EXISTS on_auth_user_created ON auth.users;
+CREATE TRIGGER on_auth_user_created
+    AFTER INSERT ON auth.users
+    FOR EACH ROW EXECUTE FUNCTION public.handle_new_user();
 
 -- ===== Server-side App Store entitlements (ASSN v2 webhook truth) =====
 CREATE TABLE IF NOT EXISTS public.app_store_entitlements (
@@ -366,9 +405,13 @@ CREATE TABLE IF NOT EXISTS public.app_store_entitlements (
     will_auto_renew BOOLEAN,
     expires_at TIMESTAMPTZ,
     last_notification_type TEXT,
+    last_signed_date TIMESTAMPTZ,
     last_event_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
+
+ALTER TABLE public.app_store_entitlements
+    ADD COLUMN IF NOT EXISTS last_signed_date TIMESTAMPTZ;
 
 CREATE INDEX IF NOT EXISTS idx_app_store_entitlements_user_id
     ON public.app_store_entitlements (user_id);
@@ -539,7 +582,10 @@ FROM (VALUES
         AND NOT has_table_privilege('authenticated', 'public.app_store_entitlements'::regclass, 'SELECT')),
     (12, 'Unused alternatives table is closed to the app',
         coalesce(NOT has_table_privilege('anon', to_regclass('public.alternatives')::oid, 'SELECT'), true)
-        AND coalesce(NOT has_table_privilege('authenticated', to_regclass('public.alternatives')::oid, 'SELECT'), true))
+        AND coalesce(NOT has_table_privilege('authenticated', to_regclass('public.alternatives')::oid, 'SELECT'), true)),
+    (13, 'New auth users automatically receive a profile row',
+        EXISTS (SELECT 1 FROM pg_trigger
+                WHERE tgrelid = 'auth.users'::regclass AND tgname = 'on_auth_user_created' AND NOT tgisinternal))
 ) AS checks(position, item, passed)
 UNION ALL
 SELECT 'Accounts marked Pro in the database: ' || count(*) FILTER (WHERE is_pro),
