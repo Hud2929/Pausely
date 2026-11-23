@@ -105,6 +105,16 @@ final class LiveMailboxTests: XCTestCase {
         print(text)
         if let path = environment("PAUSELY_REPORT_PATH") { try text.write(toFile: path, atomically: true, encoding: .utf8) }
         XCTAssertTrue(scanner.accountErrors.isEmpty, "\(scanner.accountErrors)")
+        // The rig's mailbox, through the app's own search and triage: the truth test reads every message
+        // directly and could not see Shahid's Arabic receipts dropped unread (2026-11-22). Nothing may be
+        // missed or invented; amounts and currencies are held by MailTruthTests.
+        if let dir = environment("PAUSELY_MAIL_TRUTH_DIR"), let report = scanner.report {
+            let truth = try MailTruth.load(URL(fileURLWithPath: dir).appendingPathComponent("truth.json"))
+            let score = truth.score(report)
+            print("APP SCAN vs truth: " + score.summary)
+            XCTAssertEqual(score.found, score.expected, score.summary)
+            XCTAssertEqual(score.falsePositives, [], score.summary)
+        }
         // PAUSELY_REAL_MAIL_EXPECT / _REJECT="Name A,Name B": what this mailbox must and must not show.
         let names = Set(scanner.report?.subscriptions.map(\.name) ?? [])
         func list(_ key: String) -> [String] { (environment(key) ?? "").split(separator: ",").map(String.init) }

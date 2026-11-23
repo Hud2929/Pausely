@@ -21679,40 +21679,6 @@
         }
       }
     },
-    "The search couldn't be finished.": {
-      "localizations": {
-        "ar": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "تعذّر إكمال البحث."
-          }
-        },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Die Suche konnte nicht abgeschlossen werden."
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "No se pudo completar la búsqueda."
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "La recherche n’a pas pu se terminer."
-          }
-        },
-        "ja": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "検索を完了できませんでした。"
-          }
-        }
-      }
-    },
     "Connect and search": {
       "localizations": {
         "ar": {
@@ -27195,40 +27161,6 @@
         }
       }
     },
-    "Free tracks %lld. Added now, most expensive first: %lld. Waiting until you make room or go Pro: %lld.": {
-      "localizations": {
-        "ar": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "النسخة المجانية تتابع %lld اشتراكات. يُضاف الآن، الأغلى أولًا: %lld. ينتظر حتى تفسح مكانًا أو تشترك في Pro: %lld."
-          }
-        },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Kostenlos werden %lld erfasst. Jetzt hinzugefügt, die teuersten zuerst: %lld. Wartet, bis Sie Platz schaffen oder Pro nutzen: %lld."
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "La versión gratuita sigue %lld. Se añaden ahora, las más caras primero: %lld. En espera hasta que hagas sitio o pases a Pro: %lld."
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "La version gratuite en suit %lld. Ajoutés maintenant, les plus chers d’abord : %lld. En attente jusqu’à ce que vous fassiez de la place ou passiez à Pro : %lld."
-          }
-        },
-        "ja": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "無料版で管理できるのは%lld件までです。今追加（高い順）: %lld件。空きを作るかProにするまで待機: %lld件。"
-          }
-        }
-      }
-    },
     "Waiting: %lld. Free tracks %lld; Pausely Pro tracks all of them.": {
       "localizations": {
         "ar": {
@@ -29767,13 +29699,13 @@
               "ipad": {
                 "stringUnit": {
                   "state": "translated",
-                  "value": "يكتفي Pausely بالقراءة. يفتح بريدك للقراءة فقط ولا يضع علامة «مقروء» على أي رسالة. تبقى كلمة المرور في سلسلة مفاتيح هذا iPad."
+                  "value": "‏Pausely يقرأ فقط. يفتح صندوق بريدك للقراءة فقط ولا يضع علامة «مقروء» على أي رسالة. تبقى كلمة المرور في سلسلة المفاتيح على هذا الـ iPad."
                 }
               },
               "other": {
                 "stringUnit": {
                   "state": "translated",
-                  "value": "يكتفي Pausely بالقراءة. يفتح بريدك للقراءة فقط ولا يضع علامة «مقروء» على أي رسالة. تبقى كلمة المرور في سلسلة مفاتيح هذا iPhone."
+                  "value": "‏Pausely يقرأ فقط. يفتح صندوق بريدك للقراءة فقط ولا يضع علامة «مقروء» على أي رسالة. تبقى كلمة المرور في سلسلة المفاتيح على هذا الـ iPhone."
                 }
               }
             }
@@ -29785,13 +29717,13 @@
               "ipad": {
                 "stringUnit": {
                   "state": "translated",
-                  "value": "Pausely liest nur. Es öffnet Ihr Postfach schreibgeschützt und markiert nichts als gelesen. Das Passwort bleibt im Schlüsselbund dieses iPad."
+                  "value": "Pausely liest nur. Es öffnet Ihr Postfach schreibgeschützt und markiert nie etwas als gelesen. Das Passwort bleibt im Schlüsselbund dieses iPads."
                 }
               },
               "other": {
                 "stringUnit": {
                   "state": "translated",
-                  "value": "Pausely liest nur. Es öffnet Ihr Postfach schreibgeschützt und markiert nichts als gelesen. Das Passwort bleibt im Schlüsselbund dieses iPhone."
+                  "value": "Pausely liest nur. Es öffnet Ihr Postfach schreibgeschützt und markiert nie etwas als gelesen. Das Passwort bleibt im Schlüsselbund dieses iPhones."
                 }
               }
             }
@@ -29821,13 +29753,13 @@
               "ipad": {
                 "stringUnit": {
                   "state": "translated",
-                  "value": "Pausely se contente de lire. Il ouvre votre boîte en lecture seule et ne marque jamais rien comme lu. Le mot de passe reste dans le trousseau de cet iPad."
+                  "value": "Pausely ne fait que lire. Il ouvre votre boîte en lecture seule et ne marque jamais rien comme lu. Le mot de passe reste dans le trousseau de cet iPad."
                 }
               },
               "other": {
                 "stringUnit": {
                   "state": "translated",
-                  "value": "Pausely se contente de lire. Il ouvre votre boîte en lecture seule et ne marque jamais rien comme lu. Le mot de passe reste dans le trousseau de cet iPhone."
+                  "value": "Pausely ne fait que lire. Il ouvre votre boîte en lecture seule et ne marque jamais rien comme lu. Le mot de passe reste dans le trousseau de cet iPhone."
                 }
               }
             }
@@ -29839,13 +29771,13 @@
               "ipad": {
                 "stringUnit": {
                   "state": "translated",
-                  "value": "Pauselyは読むだけです。メールボックスを読み取り専用で開き、既読にすることもありません。パスワードはこのiPadのキーチェーンに保存されます。"
+                  "value": "Pauselyは読み取るだけです。メールボックスを読み取り専用で開き、既読にすることもありません。パスワードはこのiPadのキーチェーンに保存されます。"
                 }
               },
               "other": {
                 "stringUnit": {
                   "state": "translated",
-                  "value": "Pauselyは読むだけです。メールボックスを読み取り専用で開き、既読にすることもありません。パスワードはこのiPhoneのキーチェーンに保存されます。"
+                  "value": "Pauselyは読み取るだけです。メールボックスを読み取り専用で開き、既読にすることもありません。パスワードはこのiPhoneのキーチェーンに保存されます。"
                 }
               }
             }
@@ -30019,40 +29951,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "Pauselyはこの受信箱からサインアウトし、そこで見つけた内容を消去します。追加したサブスクはリストに残ります。"
-          }
-        }
-      }
-    },
-    "The search was stopped before it found anything.": {
-      "localizations": {
-        "ar": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "أُوقف البحث قبل أن يجد شيئًا."
-          }
-        },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Die Suche wurde beendet, bevor sie etwas gefunden hat."
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "La búsqueda se detuvo antes de encontrar nada."
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "La recherche a été arrêtée avant de trouver quoi que ce soit."
-          }
-        },
-        "ja": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "何も見つかる前に検索を止めました。"
           }
         }
       }
@@ -30867,6 +30765,448 @@
           "stringUnit": {
             "state": "translated",
             "value": "あなたの受信箱"
+          }
+        }
+      }
+    },
+    "Paste password": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "لصق كلمة المرور"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Passwort einfügen"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pegar contraseña"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Coller le mot de passe"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "パスワードをペースト"
+          }
+        }
+      }
+    },
+    "The receipts say only “$”: taken as %@": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "لا تذكر الإيصالات إلا «$»: اعتُبرت %@"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Die Belege nennen nur „$“: als %@ angenommen"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Los recibos solo dicen «$»: se toma como %@"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Les reçus n’indiquent que « $ » : comptés en %@"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "領収書には「$」としか書かれていないため、%@として扱っています"
+          }
+        }
+      }
+    },
+    "Adding…": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "جارٍ الإضافة…"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Wird hinzugefügt …"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Añadiendo…"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ajout…"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "追加中…"
+          }
+        }
+      }
+    },
+    "Hidden": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "مخفية"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ausgeblendet"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ocultas"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Masqués"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "非表示"
+          }
+        }
+      }
+    },
+    "You said these aren't subscriptions": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "قلت إن هذه ليست اشتراكات"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sie haben gesagt, dass das keine Abos sind"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dijiste que no son suscripciones"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Vous avez indiqué que ce ne sont pas des abonnements"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "サブスクではないと指定したもの"
+          }
+        }
+      }
+    },
+    "Show again": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "إظهار مجددًا"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Wieder anzeigen"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Volver a mostrar"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Afficher à nouveau"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "再表示"
+          }
+        }
+      }
+    },
+    "Show %@ again": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "أظهر %@ مجددًا"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ wieder anzeigen"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Volver a mostrar %@"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Afficher à nouveau %@"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@を再表示"
+          }
+        }
+      }
+    },
+    "The search couldn't be finished": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "تعذّر إكمال البحث"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Die Suche konnte nicht abgeschlossen werden"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No se pudo completar la búsqueda"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "La recherche n’a pas pu se terminer"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "検索を完了できませんでした"
+          }
+        }
+      }
+    },
+    "The search was stopped before it found anything": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "أُوقف البحث قبل أن يجد شيئًا"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Die Suche wurde beendet, bevor sie etwas gefunden hat"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "La búsqueda se detuvo antes de encontrar nada"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "La recherche a été arrêtée avant de trouver quoi que ce soit"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "何も見つかる前に検索を止めました"
+          }
+        }
+      }
+    },
+    "Free tracks %lld. Added now: %@. Waiting until you make room or go Pro: %@.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "النسخة المجانية تتابع %1$lld. يُضاف الآن: %2$@. ينتظر حتى تُفسح مكانًا أو تشترك في Pro: %3$@."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Free verfolgt %1$lld. Jetzt hinzugefügt: %2$@. Wartet, bis Sie Platz schaffen oder Pro nutzen: %3$@."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Free sigue %1$lld. Se añaden ahora: %2$@. Esperan hasta que hagas sitio o te pases a Pro: %3$@."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Free suit %1$lld. Ajoutés maintenant : %2$@. En attente jusqu’à ce que vous fassiez de la place ou passiez à Pro : %3$@."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "無料版で管理できるのは%1$lld件です。今回追加：%2$@。空きができるかProにするまで待機：%3$@。"
+          }
+        }
+      }
+    },
+    "Waiting for room on your list": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "بانتظار مكان في قائمتك"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Wartet auf Platz in Ihrer Liste"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Esperando sitio en tu lista"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "En attente de place dans votre liste"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "リストの空き待ち"
+          }
+        }
+      }
+    },
+    "Your list is full: %lld waiting": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "قائمتك ممتلئة: %lld بالانتظار"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ihre Liste ist voll: %lld warten"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tu lista está llena: %lld en espera"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Votre liste est pleine : %lld en attente"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "リストがいっぱいです：%lld件が待機中"
+          }
+        }
+      }
+    },
+    "Keep %lld for when there's room": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "احتفظ بـ %lld حتى يتوفر مكان"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld für später aufheben"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Guardar %lld para cuando haya sitio"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Garder %lld pour quand il y aura de la place"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "空きができるまで%lld件を保留"
           }
         }
       }

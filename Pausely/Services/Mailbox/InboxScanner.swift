@@ -57,6 +57,8 @@ final class InboxScanner: ObservableObject {
     /// first Gmail search is about six minutes on Google's quota for one person, and nothing said so.
     @Published private(set) var minutesLeft: Int?
     @Published var foundSubscriptions: [FoundSubscription] = []
+    /// What the person said isn't a subscription, from the same facts, so it can be shown again later.
+    @Published private(set) var hiddenFindings: [FoundSubscription] = []
     /// The latest receipt read for each sender during the running search, newest first.
     @Published private(set) var receiptsSeen: [ReceiptSeen] = []
     @Published var report: IntelligenceReport?
@@ -216,6 +218,8 @@ final class InboxScanner: ObservableObject {
         _ = ReceiptLedger.removeSource(account.id, remainingAccounts: accounts.count)
         if accounts.isEmpty {
             ReceiptLedger.clear()
+            UserCorrections.clear()
+            hiddenFindings = []
             foundSubscriptions = []
             report = nil
             stats = ScanStats()
@@ -231,6 +235,8 @@ final class InboxScanner: ObservableObject {
         MailboxAccountStore.removeAll()
         ReceiptLedger.clear()
         accounts = []
+        UserCorrections.clear()
+        hiddenFindings = []
         foundSubscriptions = []
         report = nil
         stats = ScanStats()
@@ -327,11 +333,11 @@ final class InboxScanner: ObservableObject {
         stats.receipts = newSignals.count
         if Task.isCancelled { stats.stopped = true }
         if foundSubscriptions.isEmpty && stats.stopped {
-            error = L10n.string("The search was stopped before it found anything.")
+            error = L10n.string("The search was stopped before it found anything")
         } else if foundSubscriptions.isEmpty && accountErrors.count < accounts.count {
             error = L10n.string("No subscriptions found")
         } else if foundSubscriptions.isEmpty, !accounts.isEmpty {
-            error = L10n.string("The search couldn't be finished.")
+            error = L10n.string("The search couldn't be finished")
         }
     }
 
@@ -435,7 +441,7 @@ final class InboxScanner: ObservableObject {
               let merchant = catalog.resolve(hint: signal.merchantHint, senderName: signal.senderName, senderDomain: signal.senderDomain)
         else { return }
         let seen = ReceiptSeen(name: merchant.displayName, amount: amount,
-                               currency: signal.currency ?? CurrencyManager.shared.selectedCurrency, date: signal.date)
+                               currency: signal.currency ?? DollarHint.assumed(readerCurrency: CurrencyManager.shared.selectedCurrency), date: signal.date)
         if let index = receiptsSeen.firstIndex(where: { $0.id == seen.id }) {
             guard receiptsSeen[index].date < seen.date else { return }
             receiptsSeen.remove(at: index)
@@ -486,11 +492,23 @@ final class InboxScanner: ObservableObject {
 
     func analyze(_ ledger: [ReceiptSignal], catalog: MerchantCatalog) {
         let engine = SubscriptionIntelligenceEngine(catalog: catalog)
-        let analysis = engine.analyze(signals: ledger, now: Date(),
-                                      defaultCurrency: CurrencyManager.shared.selectedCurrency,
-                                      corrections: UserCorrections.load())
+        let corrections = UserCorrections.load()
+        let currency = DollarHint.assumed(readerCurrency: CurrencyManager.shared.selectedCurrency)
+        let analysis = engine.analyze(signals: ledger, now: Date(), defaultCurrency: currency,
+                                      corrections: corrections, rates: CurrencyManager.shared.rates)
         report = analysis
         foundSubscriptions = analysis.subscriptions.map(Self.makeImport)
+        // Hidden ones are kept in view at the end of the page: once the page was closed, "This isn't a
+        // subscription" could not be taken back (the rating of 2026-11-22).
+        let hiddenKeys = Set(corrections.filter { $0.value == .notSubscription }.map(\.key))
+        if hiddenKeys.isEmpty {
+            hiddenFindings = []
+        } else {
+            let unhidden = engine.analyze(signals: ledger, now: Date(), defaultCurrency: currency,
+                                          corrections: corrections.filter { $0.value != .notSubscription },
+                                          rates: CurrencyManager.shared.rates)
+            hiddenFindings = unhidden.subscriptions.filter { hiddenKeys.contains($0.merchantKey) }.map(Self.makeImport)
+        }
         stats.confirmed = analysis.subscriptions.filter { $0.tier == .confirmed }.count
         stats.purchasesIgnored = analysis.ignoredPurchaseGroups
     }

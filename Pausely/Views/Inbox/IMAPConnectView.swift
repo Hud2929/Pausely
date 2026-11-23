@@ -42,6 +42,20 @@ struct IMAPConnectView: View {
         return typed.isEmpty ? (suggestedHost ?? "") : typed
     }
 
+    /// A port typed in any digits: an Arabic keyboard types ٩٩٣, which `Int` reads as nothing, and the
+    /// connection then went to 993 without a word.
+    nonisolated static func port(_ typed: String) -> Int? {
+        let ascii = String(typed.trimmingCharacters(in: .whitespaces).unicodeScalars.map { scalar -> Character in
+            switch scalar.value {
+            case 0x0660...0x0669: return Character(UnicodeScalar(scalar.value - 0x0660 + 48)!)
+            case 0x06F0...0x06F9: return Character(UnicodeScalar(scalar.value - 0x06F0 + 48)!)
+            default: return Character(scalar)
+            }
+        })
+        guard let port = Int(ascii), (1...65_535).contains(port) else { return nil }
+        return port
+    }
+
     private var canConnect: Bool {
         missing == nil && !connecting
     }
@@ -73,7 +87,7 @@ struct IMAPConnectView: View {
                             ProblemLine(message: error, identifier: "imapError")
                         }
                         Button(action: connect) {
-                            if connecting { ProgressView().tint(Color.paperInk) } else { Text("Connect and search") }
+                            if connecting { Busy(Text("Connecting…")) } else { Text("Connect and search") }
                         }
                         .buttonStyle(.ink)
                         .disabled(!canConnect)
@@ -111,9 +125,16 @@ struct IMAPConnectView: View {
                     Button("Cancel") { dismiss() }.foregroundStyle(Color.inkTextMuted)
                 }
             }
+            // A problem said about what was typed goes once it is changed: it stayed red over a corrected
+            // password (the rating of 2026-11-22).
+            .onChange(of: address) { error = nil }
+            .onChange(of: password) { error = nil }
+            .onChange(of: customHost) { error = nil }
             .onAppear {
                 if address.isEmpty, !startAddress.isEmpty { address = startAddress }
-                focused = startAddress.isEmpty ? .address : .password
+                // Not at the accessibility sizes: the keyboard scrolled the page past its own title and
+                // steps, so the form opened on "Email" with the explanation out of sight (2026-11-22).
+                if !typeSize.isAccessibilitySize { focused = startAddress.isEmpty ? .address : .password }
             }
         }
     }
@@ -146,10 +167,13 @@ struct IMAPConnectView: View {
         VStack(alignment: .leading, spacing: 12) {
             ForEach(Array(preset.steps.enumerated()), id: \.offset) { index, step in
                 HStack(alignment: .firstTextBaseline, spacing: 12) {
-                    Text(index + 1, format: .number)
-                        .font(.proof(.subheadline, weight: .semibold))
-                        .foregroundStyle(Color.inkText)
-                        .frame(minWidth: 16, alignment: .leading)
+                    // A single step is a sentence, not a list of one (the rating of 2026-11-22).
+                    if preset.steps.count > 1 {
+                        Text(index + 1, format: .number)
+                            .font(.proof(.subheadline, weight: .semibold))
+                            .foregroundStyle(Color.inkText)
+                            .frame(minWidth: 16, alignment: .leading)
+                    }
                     // An address in a step is never hyphenated: the person types it as written.
                     Text(verbatim: AddressText.inSentence(step))
                         .font(.subheadline)
@@ -202,8 +226,9 @@ struct IMAPConnectView: View {
                     }
                     .labelStyle(.iconOnly)
                     .buttonBorderShape(.roundedRectangle(radius: Layout.tileRadius))
+                    .controlSize(.large)
                     .tint(Color.inkLifted)
-                    .accessibilityLabel(Text("Paste app password"))
+                    .accessibilityLabel(effectivePreset?.takesMainPassword == true ? Text("Paste password") : Text("Paste app password"))
                     .accessibilityIdentifier("imapPastePassword")
                 }
             }
@@ -240,7 +265,7 @@ struct IMAPConnectView: View {
     private func connect() {
         error = nil
         connecting = true
-        let port = Int(customPort) ?? 993
+        let port = Self.port(customPort) ?? 993
         Task {
             do {
                 _ = try await scanner.connectIMAP(address: address, password: password, preset: effectivePreset,

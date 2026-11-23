@@ -313,6 +313,28 @@ final class MailImportTests: XCTestCase {
         XCTAssertNil(InboxScanner.minutesLeft(done: 2_000, total: 2_000, elapsed: 360))
     }
 
+    /// A port typed on an Arabic keyboard is read, not silently replaced by 993; nonsense is not a port.
+    func testAPortTypedInAnyDigitsIsRead() {
+        XCTAssertEqual(IMAPConnectView.port("1144"), 1144)
+        XCTAssertEqual(IMAPConnectView.port("١١٤٤"), 1144, "Arabic-Indic digits")
+        XCTAssertEqual(IMAPConnectView.port("۹۹۳"), 993, "Eastern Arabic-Indic digits")
+        XCTAssertNil(IMAPConnectView.port(""))
+        XCTAssertNil(IMAPConnectView.port("99999"))
+        XCTAssertNil(IMAPConnectView.port("abc"))
+    }
+
+    /// The free-limit note names what is added now and what waits, ranked as the importer ranks: by yearly
+    /// cost in one currency. By raw number, ¥990 a month ranked above $34.99 (the rating of 2026-11-22).
+    @MainActor
+    func testTheFreeLimitSaysWhichAreAddedRankedInOneCurrency() {
+        let yen = FoundSubscription(proven: proven("Disney+", amount: "990", currency: "JPY"))
+        let gym = FoundSubscription(proven: proven("Ironside Fitness", amount: "34.99", currency: "USD"))
+        let tv = FoundSubscription(proven: proven("Netflix", amount: "15.49", currency: "USD"))
+        let split = InboxImportView.freeLimitSplit([yen, gym, tv], existing: ["Claude"], slots: 2, in: "USD", rates: .fallback)
+        XCTAssertEqual(split.add, ["Ironside Fitness", "Netflix"], "¥990 is about $6.50: it waits")
+        XCTAssertEqual(split.wait, ["Disney+"])
+    }
+
     func testAFindingKeepsItsIdentityAcrossAReanalysis() {
         let first = FoundSubscription(proven: proven("Netflix", lastCharge: day(2026, 10, 12)))
         let again = FoundSubscription(proven: proven("Netflix", lastCharge: day(2026, 11, 12)))

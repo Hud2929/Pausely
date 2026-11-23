@@ -13,6 +13,8 @@ struct FoundRow: View {
     /// offered again. A second search ticked them and counted them in "Add 3 to my list", and the
     /// import then quietly left them out.
     var isOnList: Bool = false
+    /// Waiting for room on the free list from an earlier add.
+    var isWaiting: Bool = false
     /// The price on the list, when it differs from the receipts'.
     var listedPrice: String? = nil
     let isSelected: Bool
@@ -29,6 +31,7 @@ struct FoundRow: View {
     private var proven: ProvenSubscription { found.proven }
 
     private var badge: (text: String, state: MoneyState?)? {
+        if isWaiting, !isOnList, !found.isCancelled { return (L10n.string("Waiting for room on your list"), nil) }
         if isOnList, !found.isCancelled {
             return (listedPrice.map { L10n.string("On your list at \($0)") } ?? L10n.string("On your list"), nil)
         }
@@ -64,6 +67,13 @@ struct FoundRow: View {
         return same ? nil : listed.billingFrequency.priced(listed.chargeText)
     }
 
+    /// When no receipt said which dollar: the row says what it was taken as, in words.
+    static func assumedCurrency(for proven: ProvenSubscription, locale: Locale = L10n.locale) -> String? {
+        guard proven.currencyAssumed, proven.amount > 0 else { return nil }
+        let name = locale.localizedString(forCurrencyCode: proven.currency) ?? proven.currency
+        return L10n.string("The receipts say only “$”: taken as \(name)")
+    }
+
     /// Why a row is only worth a look; nothing for a confirmed one, a trial, or one that ended.
     static func doubt(for proven: ProvenSubscription) -> String? {
         guard proven.tier < .confirmed, proven.status == .active || proven.status == .priceIncreased else { return nil }
@@ -97,6 +107,7 @@ struct FoundRow: View {
         parts.append(evidenceLine)
         if let doubt = Self.doubt(for: proven) { parts.append(doubt) }
         if let afterTrial = Self.afterTrial(for: found) { parts.append(afterTrial) }
+        if let assumed = Self.assumedCurrency(for: proven) { parts.append(assumed) }
         if let badge { parts.append(badge.text) }
         // Chosen or not is the button's Selected trait, which VoiceOver says; the word said it twice.
         return parts.joined(separator: ", ")
@@ -121,6 +132,8 @@ struct FoundRow: View {
                             VStack(alignment: .leading, spacing: 4) { nameAndEvidence; price }
                                 .frame(maxWidth: .infinity, alignment: .leading)
                         }
+                        // The row is read before its "why", which sits above it here (2026-11-22).
+                        .accessibilitySortPriority(1)
                     }
                 } else {
                     HStack(spacing: 8) {
@@ -240,6 +253,14 @@ struct FoundRow: View {
                     .foregroundStyle(Color.inkTextMuted)
                     .multilineTextAlignment(.leading)
                     .fixedSize(horizontal: false, vertical: true)
+            }
+            if let assumed = Self.assumedCurrency(for: proven) {
+                Text(verbatim: assumed)
+                    .font(.footnote)
+                    .foregroundStyle(Color.inkTextMuted)
+                    .multilineTextAlignment(.leading)
+                    .fixedSize(horizontal: false, vertical: true)
+                    .accessibilityIdentifier("foundCurrencyAssumed")
             }
             if let badge {
                 HStack(spacing: 6) {

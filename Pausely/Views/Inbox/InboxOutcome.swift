@@ -52,6 +52,8 @@ struct InboxOutcome: View {
     /// One subscription is named; several are counted.
     private var title: String {
         switch outcome.added.count {
+        // Everything waits when the free list is full: said as that, not as nothing having happened.
+        case 0 where !outcome.waiting.isEmpty: return L10n.string("Your list is full: \(outcome.waiting.count) waiting")
         case 0: return L10n.string("Nothing new was added")
         case 1: return L10n.string("\(outcome.added[0]) is on your list")
         default: return L10n.string("\(outcome.added.count) added to your list")

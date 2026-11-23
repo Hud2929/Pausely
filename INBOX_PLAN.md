@@ -146,6 +146,30 @@ Independent consumer rating (Fable, iPhone, 2026-11-22): 7.0 (trust 7.0, effort 
 - [ ] A15 (the switched-off button says what it waits for, 2026-11-22; the jump remains) disabled "Connect and search" gives no reason; the form jumps when the provider is recognised.
 - [ ] A16 Google's consent page shows the app icon (purple "P") that the redesigned app doesn't use inside: owner.
 
+**Second rating round (2026-11-22 evening, two independent Fable raters, simulator only).**
+Consumer walk over the rig mailbox through the app: 7.8 overall (21 of 22, Shahid missed; currencies
+guessed silently). Reach (Arabic, largest text, iPad): 7.5, held by the iPad. Fixed the same evening,
+each with a test where one can hold it:
+- Triage now knows the search's words in all eight languages: Shahid's Arabic receipts were found by the
+  search and never opened. The rig now scores the app's own search path too (22 of 22, no false positives).
+- A bare "$" takes the dollar the email or sender names (DollarHint), otherwise the reader's dollar, or US
+  dollars, never riyals or euros; such a row says "The receipts say only “$”: taken as …".
+- Findings and insights rank in one currency (¥990 no longer outranks $34.99).
+- Undo sits in the bottom bar; hidden findings stay listed under "Hidden" with "Show again"; disconnecting
+  the last inbox forgets the marked names too.
+- The free-limit note names what is added now and what waits; a full list says "Keep N for when there's
+  room" and "Your list is full: N waiting"; the findings stay after adding, waiting rows say so.
+- Find in Email is a page-sized sheet on iPad with content margins (seen: margins scroll; the rest of the
+  app's margins are still dead, B5); the reconnect address breaks only at "@", "." and "-"; forms don't
+  take focus at accessibility sizes; the privacy words are one stop and the policy link its own; "why"
+  reads after its row; the paste button is larger and named for its field; Arabic-Indic port digits read;
+  the connected page has a heading; the outcome headings lost their stray full stops; the form's error
+  clears on edit; busy buttons say "Connecting…"/"Adding…"; a single step is a sentence; the live slip
+  fades instead of sliding rows over each other; "searched … ago" stays current.
+- Home's 30-day line in Arabic: the dots and the filled part were mirrored twice; seen right on 2026-11-22.
+Still open from the round: Hijri dates on ar_SA (native reader), letter-tile logos (B16), the catalog's
+own iPad sheet, the largest-size slip wrapping "ر.س." and hyphenating, real-device VoiceOver.
+
 ## Real accounts, real subscriptions, and Outlook (plan of 2026-11-18)
 
 The owner asked: fix the import from email, make sure every way in works and pulls real

@@ -86,7 +86,7 @@ extension InboxScanner {
         case "nothing":
             return DemoInboxes(accounts: inboxes, outcome: L10n.string("No subscriptions found"), refused: [:], checked: 312)
         case "failed":
-            return DemoInboxes(accounts: inboxes, outcome: L10n.string("The search couldn't be finished."),
+            return DemoInboxes(accounts: inboxes, outcome: L10n.string("The search couldn't be finished"),
                                refused: ["demo-work": MailboxError.authExpired.localizedDescription], checked: 140)
         default:
             return DemoInboxes(accounts: inboxes, outcome: nil, refused: [:], checked: 0)

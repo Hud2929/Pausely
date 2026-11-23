@@ -17,17 +17,19 @@ final class ScreenRulesTests: XCTestCase {
     }
 
     /// A service with no icon is shown by its first letter, whatever comes before that letter.
-    /// On iPad the reading column is made with side insets, so a scroll view still spans the window and a
-    /// drag in the margins scrolls (framed to 680 points, the margins were dead: B5, 2026-11-22).
-    func testTheIPadColumnIsInsetSoTheMarginsScroll() throws {
+    /// On iPad, Find in Email keeps the phone's reading width with content margins on its own scroll view,
+    /// which keeps the whole width, so a drag in the margins scrolls (checked by hand on an iPad Pro 13 on
+    /// 2026-11-22). Safe-area padding at the root was tried the same day and narrowed every scroll view
+    /// as a frame does: the rest of the app's margins are still dead (B5).
+    func testFindInEmailScrollsInItsMargins() throws {
         XCTAssertEqual(ReadableWidth.sideInset(width: 1032, wide: true), 176)
         XCTAssertEqual(ReadableWidth.sideInset(width: 600, wide: true), 0, "never a negative inset")
         XCTAssertEqual(ReadableWidth.sideInset(width: 1032, wide: false), 0, "an iPhone, or an iPad in a narrow split")
-        let file = root.appendingPathComponent("Pausely/DesignSystem/ReadableWidth.swift")
+        let file = root.appendingPathComponent("Pausely/Views/InboxImportView.swift")
         try XCTSkipUnless(FileManager.default.fileExists(atPath: file.path), "Sources aren't readable from this test run")
         let source = try String(contentsOf: file, encoding: .utf8)
-        XCTAssertTrue(source.contains(".safeAreaPadding(.horizontal"))
-        XCTAssertFalse(source.contains(".frame(maxWidth: isWide"), "a narrowed frame leaves the margins dead")
+        XCTAssertTrue(source.contains(".readableScroll()"))
+        XCTAssertFalse(source.contains(".readableWidth()"), "a narrowed scroll view leaves the margins dead")
     }
 
     func testALogoTileShowsTheNamesFirstLetter() {
@@ -65,7 +67,8 @@ final class ScreenRulesTests: XCTestCase {
             }
         }
         XCTAssertEqual(moving, [])
-        XCTAssertGreaterThanOrEqual(asking, 6)
+        // Five: the live receipts slip fades its rows in place now, which moves nothing (2026-11-22).
+        XCTAssertGreaterThanOrEqual(asking, 5)
     }
 
     /// The day picked on Home's line is held only while a finger is on it. Kept as ordinary view state
@@ -1005,7 +1008,7 @@ final class ScreenRulesTests: XCTestCase {
         XCTAssertEqual(nothing.accounts.map(\.lastScan), [now.addingTimeInterval(-7200), now.addingTimeInterval(-7200)])
 
         let failed = InboxScanner.demoInboxes("failed", now: now)
-        XCTAssertEqual(failed.outcome, L10n.string("The search couldn't be finished."))
+        XCTAssertEqual(failed.outcome, L10n.string("The search couldn't be finished"))
         XCTAssertEqual(failed.refused, ["demo-work": L10n.string("Your sign-in expired. Reconnect this inbox.")])
         XCTAssertTrue(failed.accounts.contains { $0.id == "demo-work" }, "the inbox that refused is one of those listed")
 

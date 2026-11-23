@@ -55,6 +55,8 @@ struct InboxImportView: View {
                 .padding(.top, 12)
                 .padding(.bottom, 24)
             }
+            // The phone's reading width on iPad, its margins still scrolling the page (ReadableScroll).
+            .readableScroll()
             .background(Color.ink.ignoresSafeArea())
             .safeAreaInset(edge: .bottom) { addBar }
             .navigationTitle("Find in Email")
@@ -91,6 +93,9 @@ struct InboxImportView: View {
             }
         }
         .onAppear { scanner.showSaved() }
+        // On iPad a page, with the reading column inside it: from Home, the catalog and Profile it was a
+        // 580 by 640 box, and opened by itself it ran edge to edge (the reach rating of 2026-11-22).
+        .presentationSizing(.page)
         // Connecting is the request to search: a new inbox is searched at once, without a second tap.
         .onChange(of: scanner.accounts.count) { before, after in
             guard after > before else { return }
@@ -118,7 +123,7 @@ struct InboxImportView: View {
                 .fixedSize(horizontal: false, vertical: true)
                 .padding(.top, 10)
 
-            privacyNotice.padding(.top, 24)
+            InboxPrivacyNote().padding(.top, 24)
 
             providerButtons.padding(.top, 16)
 
@@ -133,38 +138,6 @@ struct InboxImportView: View {
     /// The promise: it is the reason someone would let an app near their inbox. Each sentence is held
     /// by a test (`InboxPrivacyTests`). It is set on ink between two hairlines, not on paper: paper
     /// is for money decided or proven, and a promise is neither.
-    private var privacyNotice: some View {
-        VStack(alignment: .leading, spacing: 0) {
-            Hairline()
-            VStack(alignment: .leading, spacing: 8) {
-                Text("Your email never leaves your iPhone.")
-                    .font(.headline)
-                    .foregroundStyle(Color.inkText)
-                    .fixedSize(horizontal: false, vertical: true)
-                // What is kept, said as it is: "only the name, amount and date" was narrower than the
-                // facts kept (the ratings of 2026-11-22). And what reaches the account once added.
-                Text("Pausely connects straight to your email provider and reads receipts on this iPhone. It keeps a few facts from each (who charged, how much, when, how often), never the email itself. It only reads: it never sends, changes or deletes email.")
-                    .font(.subheadline)
-                    .foregroundStyle(Color.inkTextMuted)
-                    .fixedSize(horizontal: false, vertical: true)
-                Text("Subscriptions you add go to your account, like any you type in.")
-                    .font(.subheadline)
-                    .foregroundStyle(Color.inkTextMuted)
-                    .fixedSize(horizontal: false, vertical: true)
-                if let policy = URL(string: AppConfig.privacyPolicyURL) {
-                    Link(destination: policy) { Text("Privacy Policy") }
-                        .font(.subheadline.weight(.semibold))
-                        .foregroundStyle(Color.inkText)
-                        .frame(minHeight: Layout.tapTarget, alignment: .leading)
-                        .accessibilityIdentifier("inboxPrivacyPolicy")
-                }
-            }
-            .padding(.vertical, 16)
-            Hairline()
-        }
-        .accessibilityElement(children: .combine)
-    }
-
     /// Which inbox: the same list here and in "Add an inbox".
     private var providerButtons: some View {
         InboxProviderList(onChoose: { showingProviders = false }, onAppPassword: openIMAP)
@@ -221,14 +194,12 @@ struct InboxImportView: View {
 
     private var connectedSection: some View {
         VStack(alignment: .leading, spacing: 20) {
-            if let hidden {
-                HiddenNote(name: hidden.found.name) {
-                    withAnimation(Motion.unlessReduced(Motion.arrive)) {
-                        scanner.undoNotSubscription(hidden.found, previous: hidden.previous)
-                        if hidden.wasSelected { selected.insert(hidden.found.id) }
-                        self.hidden = nil
-                    }
-                }
+            // A heading of its own when no outcome is said: the page had none for VoiceOver to find.
+            if scanner.error == nil {
+                Text("Your inboxes")
+                    .font(.question(.title2))
+                    .foregroundStyle(Color.inkText)
+                    .accessibilityAddTraits(.isHeader)
             }
             if let message = scanner.error {
                 SearchOutcome(message: message, stats: scanner.stats, explains: scanner.accountErrors.isEmpty)
@@ -238,9 +209,20 @@ struct InboxImportView: View {
 
             // An inbox that lost its access is reconnected first: searching again repeats the failure.
             if let failed = scanner.accounts.first(where: { scanner.accountErrors[$0.id] != nil }) {
-                Button { reconnect(failed) } label: { Text("Reconnect \(failed.address)") }
+                // The address breaks only after "@", "." and "-": at the largest size it broke mid-word,
+                // with a hyphen that isn't in it (the reach rating of 2026-11-22).
+                Button { reconnect(failed) } label: { Text(verbatim: L10n.string("Reconnect \(AddressText.breakable(failed.address))")) }
                     .buttonStyle(.ink)
                     .accessibilityIdentifier("reconnectButton")
+                Button(action: { Task { await scanner.scanAll() } }) { Text("Search again") }
+                    .buttonStyle(.ink(.quiet))
+                    .accessibilityIdentifier("scanInboxesButton")
+            } else if scanner.report != nil, !scanner.stats.stopped {
+                // Nothing found in what was searched: the way forward is another inbox, which the words
+                // above say; searching the same mail again finds the same nothing (the rating of 2026-11-22).
+                Button(action: { showingProviders = true }) { Text("Add another inbox") }
+                    .buttonStyle(.ink)
+                    .accessibilityIdentifier("addInboxMainButton")
                 Button(action: { Task { await scanner.scanAll() } }) { Text("Search again") }
                     .buttonStyle(.ink(.quiet))
                     .accessibilityIdentifier("scanInboxesButton")
@@ -359,7 +341,8 @@ struct InboxImportView: View {
     private var inboxRows: some View {
         VStack(spacing: 0) {
             ForEach(scanner.accounts) { account in
-                accountRow(account)
+                // "searched 2 seconds ago" stood for minutes: the row is drawn again as time passes.
+                TimelineView(.periodic(from: .now, by: 15)) { _ in accountRow(account) }
                 Hairline()
             }
             Button(action: { showingProviders = true }) {
@@ -389,15 +372,6 @@ struct InboxImportView: View {
 
         return VStack(spacing: 28) {
             summary(count: live.count)
-            if let hidden {
-                HiddenNote(name: hidden.found.name) {
-                    withAnimation(Motion.unlessReduced(Motion.arrive)) {
-                        scanner.undoNotSubscription(hidden.found, previous: hidden.previous)
-                        if hidden.wasSelected { selected.insert(hidden.found.id) }
-                        self.hidden = nil
-                    }
-                }
-            }
             insights
             if !confirmed.isEmpty {
                 listSection(title: "Confirmed", subtitle: "Your receipts show these renew", items: confirmed)
@@ -410,6 +384,14 @@ struct InboxImportView: View {
             }
             if !cancelled.isEmpty {
                 listSection(title: "Cancelled", subtitle: "A cancellation email followed the last charge", items: cancelled)
+            }
+            if !scanner.hiddenFindings.isEmpty {
+                HiddenList(findings: scanner.hiddenFindings) { found in
+                    withAnimation(Motion.unlessReduced(Motion.arrive)) {
+                        scanner.undoNotSubscription(found, previous: nil)
+                        if hidden?.found.id == found.id { hidden = nil }
+                    }
+                }
             }
             // The inboxes stay in reach under what they found: the results page had no way to disconnect,
             // add another inbox or search again (2026-11-22).
@@ -431,16 +413,7 @@ struct InboxImportView: View {
     private func preselectConfirmed() {
         guard !didPreselect else { return }
         didPreselect = true
-        selected = Set(live.filter { $0.proven.tier == .confirmed && !isOnList($0) }.map(\.id))
-    }
-
-    /// What the slip adds up: the monthly cost of `found` in `currency`, each converted first, and whether
-    /// any had to be, which marks the total "≈" (a mailbox of Canadian receipts read "¥16,027" to someone
-    /// who sees yen, unmarked, on 2026-11-16).
-    static func slipTotal(_ found: [FoundSubscription], in currency: String, rates: CurrencyRates) -> (monthly: Decimal, converted: Bool) {
-        let display = MoneyFormat.normalizedCode(currency)
-        let monthly = MoneyMath.total(found, in: currency, rates: rates, amount: { $0.proven.monthlyCost }, currencyOf: { $0.currency })
-        return (monthly, found.contains { $0.proven.monthlyCost != 0 && MoneyFormat.normalizedCode($0.currency) != display })
+        selected = Set(live.filter { $0.proven.tier == .confirmed && !isOnList($0) && !isWaiting($0) }.map(\.id))
     }
 
     /// Already in the person's list, by the importer's own rule (the same name, any case).
@@ -597,6 +570,7 @@ struct InboxImportView: View {
                         found: found,
                         widestPrice: widestPrice,
                         isOnList: isOnList(found),
+                        isWaiting: isWaiting(found),
                         listedPrice: FoundRow.listedPrice(store.subscriptions.first { ServiceName.same($0.name, found.name) }, for: found),
                         isSelected: selected.contains(found.id),
                         isExpanded: expanded.contains(found.id),
@@ -628,8 +602,7 @@ struct InboxImportView: View {
 
     /// The chosen ones that aren't on the list already: the ones the free limit applies to.
     private var newlyChosen: Int {
-        let listed = Set(store.subscriptions.map { $0.name.lowercased() })
-        return chosen.filter { !listed.contains($0.name.lowercased()) }.count
+        chosen.filter { found in !store.subscriptions.contains { ServiceName.same($0.name, found.name) } }.count
     }
 
     /// Whether the bar at the bottom edge holds only "Add to my list", with the free-limit note
@@ -637,13 +610,21 @@ struct InboxImportView: View {
     /// a button of two lines took most of the screen and left one line of what was found.
     nonisolated static func barHoldsOnlyTheButton(largeText: Bool) -> Bool { largeText }
 
+    /// Waiting for room on the free list, from an earlier add.
+    private func isWaiting(_ found: FoundSubscription) -> Bool {
+        TallyImporter.waitingLines().contains { ServiceName.same($0.name, found.name) }
+    }
+
     /// What the free limit will do with this choice. Said before the tap, not discovered after it.
     @ViewBuilder
     private var freeLimitNote: some View {
         if !chosen.isEmpty, let slots = freeSlots, newlyChosen > slots {
+            // By name, in the importer's own order: a count left the person to guess which (2026-11-22).
+            let split = Self.freeLimitSplit(chosen, existing: store.subscriptions.map(\.name), slots: slots,
+                                            in: CurrencyManager.shared.selectedCurrency, rates: CurrencyManager.shared.rates)
             Text(slots == 0
                  ? L10n.string("Free tracks \(FreeTier.subscriptionLimit) and your list is full. What you add now will wait until you make room or go Pro.")
-                 : L10n.string("Free tracks \(FreeTier.subscriptionLimit). Added now, most expensive first: \(slots). Waiting until you make room or go Pro: \(newlyChosen - slots)."))
+                 : L10n.string("Free tracks \(FreeTier.subscriptionLimit). Added now: \(Self.names(split.add)). Waiting until you make room or go Pro: \(Self.names(split.wait))."))
                 .font(.footnote)
                 .foregroundStyle(Color.inkTextMuted)
                 .fixedSize(horizontal: false, vertical: true)
@@ -654,28 +635,51 @@ struct InboxImportView: View {
 
     @ViewBuilder
     private var addBar: some View {
-        if outcome == nil, !scanner.isScanning, !scanner.foundSubscriptions.isEmpty, scanner.hasAccounts, !chosen.isEmpty {
+        let canAdd = outcome == nil && !scanner.isScanning && !scanner.foundSubscriptions.isEmpty && scanner.hasAccounts && !chosen.isEmpty
+        if canAdd || (outcome == nil && hidden != nil) {
             VStack(spacing: 8) {
-                if !Self.barHoldsOnlyTheButton(largeText: typeSize.isAccessibilitySize) { freeLimitNote }
-                Button(action: { Task { await addChosen() } }) {
-                    if importing { ProgressView().tint(Color.paperInk) } else { Text("Add \(chosen.count) to my list") }
+                // Undo where the eye is: at the top of the page it was 2,200 points from the row that was
+                // hidden (the rating of 2026-11-22).
+                if let hidden {
+                    HiddenNote(name: hidden.found.name, onUndo: undoHide)
                 }
-                .buttonStyle(.ink)
-                .disabled(importing)
-                .accessibilityIdentifier("importSelectedButton")
+                if canAdd {
+                    if !Self.barHoldsOnlyTheButton(largeText: typeSize.isAccessibilitySize) { freeLimitNote }
+                    Button(action: { Task { await addChosen() } }) {
+                        if importing { Busy(Text("Adding…")) }
+                        else if freeSlots == 0 { Text("Keep \(chosen.count) for when there's room") }
+                        else { Text("Add \(chosen.count) to my list") }
+                    }
+                    .buttonStyle(.ink)
+                    .disabled(importing)
+                    .accessibilityIdentifier("importSelectedButton")
+                }
             }
             .padding(.horizontal, Layout.margin)
             .padding(.top, 10)
             .padding(.bottom, 8)
+            // In the page's column on iPad, as the page is (ReadableScroll).
+            .frame(maxWidth: ReadableWidth.maxWidth)
+            .frame(maxWidth: .infinity)
             .background(Color.ink)
             .overlay(alignment: .top) { Hairline() }
+        }
+    }
+
+    private func undoHide() {
+        guard let hidden else { return }
+        withAnimation(Motion.unlessReduced(Motion.arrive)) {
+            scanner.undoNotSubscription(hidden.found, previous: hidden.previous)
+            if hidden.wasSelected { selected.insert(hidden.found.id) }
+            self.hidden = nil
         }
     }
 
     private func addChosen() async {
         importing = true
         let result = await scanner.importSubscriptions(chosen)
-        scanner.foundSubscriptions = []
+        // The findings stay: reopened after Done, the page showed only the inbox, with no sign of what was
+        // added or of the ones waiting for room (the rating of 2026-11-22).
         selected = []
         expanded = []
         didPreselect = false
@@ -686,7 +690,4 @@ struct InboxImportView: View {
         if !result.added.isEmpty || !result.datesFilled.isEmpty { Feel.landed() }
     }
 
-    static func money(_ amount: Decimal, _ currency: String) -> String {
-        MoneyFormat.string(amount, currency)
-    }
 }

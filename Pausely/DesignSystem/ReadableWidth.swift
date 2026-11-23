@@ -4,14 +4,12 @@ import SwiftUI
 /// Pausely's screens are designed for iPhone; stretched across an iPad they read as sparse rows.
 /// The structure is the same in every size class, so resizing in Split View keeps all state.
 ///
-/// The column is made with safe-area padding, not a narrower frame: a scroll view then still spans the
-/// whole window and the margins scroll with it. Framed to 680 points, a drag in an iPad's margins did
-/// nothing (the reach rating of 2026-11-22).
+/// A scroll view inside it is as narrow as the column, so a drag in the margins does nothing (B5). A
+/// screen whose own scroll view should take the whole width uses `readableScroll()` instead.
 struct ReadableWidth: ViewModifier {
-    static let maxWidth: CGFloat = 680
+    nonisolated static let maxWidth: CGFloat = 680
 
     @Environment(\.horizontalSizeClass) private var sizeClass
-    @State private var width: CGFloat = 0
 
     /// Each side's margin for a window this wide.
     nonisolated static func sideInset(width: CGFloat, wide: Bool) -> CGFloat {
@@ -19,15 +17,34 @@ struct ReadableWidth: ViewModifier {
     }
 
     func body(content: Content) -> some View {
+        let isWide = sizeClass == .regular
         content
-            .safeAreaPadding(.horizontal, Self.sideInset(width: width, wide: sizeClass == .regular))
-            .onGeometryChange(for: CGFloat.self, of: { $0.size.width }, action: { width = $0 })
+            .frame(maxWidth: isWide ? Self.maxWidth : .infinity)
+            .frame(maxWidth: .infinity)
             .background(Color.ink.ignoresSafeArea())
+    }
+}
+
+/// The reading column for one scroll view, made with content margins: the scroll view keeps the whole
+/// width, so the margins scroll the page. Safe-area padding was tried on 2026-11-22 and narrowed the
+/// scroll view exactly as a frame does (a drag in an iPad's margin still did nothing).
+struct ReadableScroll: ViewModifier {
+    @Environment(\.horizontalSizeClass) private var sizeClass
+    @State private var width: CGFloat = 0
+
+    func body(content: Content) -> some View {
+        content
+            .contentMargins(.horizontal, ReadableWidth.sideInset(width: width, wide: sizeClass == .regular), for: .scrollContent)
+            .onGeometryChange(for: CGFloat.self, of: { $0.size.width }, action: { width = $0 })
     }
 }
 
 extension View {
     func readableWidth() -> some View {
         modifier(ReadableWidth())
+    }
+
+    func readableScroll() -> some View {
+        modifier(ReadableScroll())
     }
 }

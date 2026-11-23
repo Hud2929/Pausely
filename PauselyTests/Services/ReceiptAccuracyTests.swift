@@ -525,6 +525,29 @@ final class ReceiptAccuracyTests: XCTestCase {
         XCTAssertEqual(two?.doubt, "Two charges so far; a third would confirm it")
     }
 
+    /// A receipt that says only "$" takes the dollar the email or its sender names, and otherwise a dollar:
+    /// US receipts showed as Canadian dollars in Canada and as riyals in Saudi Arabia (2026-11-22).
+    func testABareDollarIsNeverAnotherCurrencyAndIsSaidWhenAssumed() {
+        XCTAssertEqual(DollarHint.currency(text: "Total: $15.49 USD", senderDomain: "netflix.com"), "USD")
+        XCTAssertEqual(DollarHint.currency(text: "Amount: US$9.99", senderDomain: "example.com"), "USD")
+        XCTAssertEqual(DollarHint.currency(text: "Total $16.49", senderDomain: "mail.cineplex.ca"), "CAD")
+        XCTAssertNil(DollarHint.currency(text: "Total $16.49", senderDomain: "netflix.com"), "nothing says which")
+        XCTAssertNil(DollarHint.currency(text: "$5 USD or $7 CAD", senderDomain: "shop.com"), "two named: no guess")
+        XCTAssertEqual(DollarHint.assumed(readerCurrency: "CAD"), "CAD")
+        XCTAssertEqual(DollarHint.assumed(readerCurrency: "SAR"), "USD", "a dollar never becomes riyals")
+        XCTAssertEqual(DollarHint.assumed(readerCurrency: "EUR"), "USD")
+
+        let charges = [6, 7, 8].map { month -> ReceiptSignal in
+            var bare = charge("fathomnotes.example", day(2026, month, 15), "12.00", cadence: .monthly)
+            bare.currency = nil   // "$12.00" and nothing to say which dollar
+            return bare
+        }
+        let plan = analyze(charges, now: day(2026, 8, 20)).first
+        XCTAssertEqual(plan?.currencyAssumed, true)
+        XCTAssertEqual(plan.flatMap { FoundRow.assumedCurrency(for: $0, locale: Locale(identifier: "en_US")) },
+                       "The receipts say only “$”: taken as US Dollar")
+    }
+
     func testAnUnknownMerchantWhosePriceSteppedOnceIsStillOnePlan() {
         let amounts = ["12.00", "12.00", "12.00", "15.00", "15.00"]
         let signals = zip([6, 7, 8, 9, 10], amounts).map { charge("fathomnotes.example", day(2026, $0.0, 15), $0.1) }

@@ -450,7 +450,6 @@ private struct HorizonSection: View {
     /// The day chosen with VoiceOver (swipe up or down on the line). A finger's choice lasts while
     /// it is down; this one stays until it is moved back to the end of the line.
     @State private var spokenDay: Int?
-    @Environment(\.layoutDirection) private var direction
 
     private var pickedDay: Int? { selectedDay ?? spokenDay }
     private var throughDay: Int { pickedDay ?? Horizon.days - 1 }
@@ -555,7 +554,7 @@ private struct HorizonSection: View {
                 DragGesture(minimumDistance: 0)
                     .updating($selectedDay) { value, day, _ in
                         let fraction = min(max(value.location.x / max(width, 1), 0), 1)
-                        day = Int(((direction == .rightToLeft ? 1 - fraction : fraction) * Double(Horizon.days - 1)).rounded())
+                        day = Int((fraction * Double(Horizon.days - 1)).rounded())
                     }
             )
             .onChange(of: selectedDay) { _, day in
@@ -576,12 +575,16 @@ private struct HorizonSection: View {
         }
     }
 
-    private func x(_ day: Int, _ width: CGFloat) -> CGFloat {
+    /// Where a day sits, from the leading edge. SwiftUI mirrors positions, leading-aligned widths and
+    /// gesture locations in a right-to-left layout itself; flipped here as well, Arabic drew the dots
+    /// and the filled part from the wrong end (found 2026-11-18).
+    nonisolated static func x(_ day: Int, _ width: CGFloat) -> CGFloat {
         let inset: CGFloat = 11
         let fraction = CGFloat(day) / CGFloat(Horizon.days - 1)
-        let position = inset + fraction * (width - inset * 2)
-        return direction == .rightToLeft ? width - position : position
+        return inset + fraction * (width - inset * 2)
     }
+
+    private func x(_ day: Int, _ width: CGFloat) -> CGFloat { Self.x(day, width) }
 }
 
 private struct ChargeRow: View {

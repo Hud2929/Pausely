@@ -17,6 +17,12 @@ enum UserCorrections {
         return decoded
     }
 
+    /// Forgets every decision: when the last inbox is disconnected, "forgets what it found there" includes
+    /// the names the person marked (they stayed, 2026-11-22).
+    static func clear(defaults: UserDefaults = .standard) {
+        defaults.removeObject(forKey: storageKey)
+    }
+
     /// Pass nil to forget a previous decision.
     static func set(_ merchantKey: String, _ verdict: UserVerdict?, defaults: UserDefaults = .standard) {
         var all = load(defaults: defaults)

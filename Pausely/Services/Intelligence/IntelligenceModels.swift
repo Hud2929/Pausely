@@ -93,6 +93,8 @@ struct ProvenSubscription: Identifiable, Equatable {
     /// introductory year ending). The line added to the list carries it, so the reminder before that renewal
     /// says what will be charged; added at the old price, it said $134.99 before a $305 charge (T12).
     var comingAmount: Decimal? = nil
+    /// No receipt said which dollar: the currency is `DollarHint.assumed`, and the row says so.
+    var currencyAssumed: Bool = false
 
     /// A rise this steep (more than half again) is a new plan or an unexpected charge, not a price rise:
     /// after twelve months at $31.64, a $148.41 charge is "now costs more", never "raised its price".

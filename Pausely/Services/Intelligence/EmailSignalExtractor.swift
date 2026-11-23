@@ -225,7 +225,10 @@ enum EmailTriage {
     static func shouldReadBody(from: String, subject: String, snippet: String, labelIds: [String],
                                catalog: MerchantCatalog = .builtin) -> Bool {
         let text = (subject + " " + snippet).lowercased()
+        // The words the search asks for, in every language it asks in: with English words only, an Arabic
+        // receipt from a sender not in the catalog was found and then never opened (Shahid, 2026-11-22).
         let hasBillingWords = billingWords.contains { text.contains($0) }
+            || InboxSearchPlan.subjectWords.contains { text.contains($0.lowercased()) }
         if hasBillingWords { return true }
         if labelIds.contains("CATEGORY_PURCHASES") { return true }
         let sender = EmailSignalExtractor.parseSender(from)
@@ -325,7 +328,9 @@ enum EmailSignalExtractor {
         // Merge evidence. Product names (Amazon *Prime*, *DashPass*) beat generic seller names.
         let hint = analysis.productHint ?? markup?.merchant ?? platform?.merchant
         let amount = markup?.amount ?? analysis.money?.amount
+        // A bare "$" takes the dollar the email names elsewhere, or its sender's country (DollarHint).
         let currency = markup?.currency ?? analysis.money?.currency
+            ?? (amount != nil ? DollarHint.currency(text: email.subject + "\n" + text, senderDomain: sender.domain) : nil)
         let cadence = markup?.cadence ?? analysis.frequency
 
         var flags = analysis.flags
@@ -389,5 +394,37 @@ enum EmailSignalExtractor {
         }
         let domain = address.split(separator: "@").last.map { String($0).lowercased().trimmingCharacters(in: .whitespaces) } ?? ""
         return (name, domain)
+    }
+}
+
+/// Which dollar a receipt means when its amount says only "$". Taken as the reader's own currency, US
+/// receipts showed as Canadian dollars in Canada and as riyals in Saudi Arabia (the rating of 2026-11-22).
+enum DollarHint {
+    private static let codes = ["USD", "CAD", "AUD", "NZD", "SGD", "HKD"]
+    private static let marks: [(String, String)] = [("US$", "USD"), ("CA$", "CAD"), ("C$", "CAD"), ("A$", "AUD"),
+                                                    ("AU$", "AUD"), ("NZ$", "NZD"), ("S$", "SGD"), ("HK$", "HKD")]
+    private static let countries: [(String, String)] = [(".ca", "CAD"), (".au", "AUD"), (".nz", "NZD"),
+                                                         (".sg", "SGD"), (".hk", "HKD")]
+
+    /// The one dollar currency the email names anywhere ("USD", "US$", "CAD"), else the one its sender's
+    /// country domain implies; nil when neither says.
+    static func currency(text: String, senderDomain: String) -> String? {
+        var named = Set<String>()
+        for code in codes where text.range(of: "\\b\(code)\\b", options: .regularExpression) != nil { named.insert(code) }
+        // "US$" holds "S$" (Singapore): a mark counts only where no other capital comes before it.
+        for (mark, code) in marks
+        where text.range(of: "(?<![A-Z])" + NSRegularExpression.escapedPattern(for: mark), options: .regularExpression) != nil {
+            named.insert(code)
+        }
+        if named.count == 1 { return named.first }
+        let domain = senderDomain.lowercased()
+        return countries.first { domain.hasSuffix($0.0) }?.1
+    }
+
+    /// The dollar a receipt that never says which is taken as: the reader's, when it is a dollar; US
+    /// dollars otherwise, so "$" never becomes riyals or euros.
+    static func assumed(readerCurrency: String) -> String {
+        let code = MoneyFormat.normalizedCode(readerCurrency)
+        return codes.contains(code) ? code : "USD"
     }
 }

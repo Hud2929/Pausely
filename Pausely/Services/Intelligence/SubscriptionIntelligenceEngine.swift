@@ -14,7 +14,13 @@ struct SubscriptionIntelligenceEngine {
                  now: Date = Date(),
                  calendar: Calendar = .billing,
                  defaultCurrency: String = "USD",
-                 corrections: [String: UserVerdict] = [:]) -> IntelligenceReport {
+                 corrections: [String: UserVerdict] = [:],
+                 rates: CurrencyRates = .fallback) -> IntelligenceReport {
+        // Rankings compare one currency: by raw numbers, ¥990 a month ranked above $34.99 (2026-11-22).
+        // An amount with no rate ranks last rather than by its number.
+        func inDefault(_ amount: Decimal, _ currency: String) -> Decimal {
+            rates.convert(amount, from: currency, to: defaultCurrency) ?? 0
+        }
 
         // 1. Dedupe by message id, and never trust a receipt whose sender failed authentication
         var seen = Set<String>()
@@ -56,9 +62,14 @@ struct SubscriptionIntelligenceEngine {
         }
 
         // What is worth saying is worked out from everything detected, before the weak ones are dropped.
+        let currencyOf = Dictionary(detected.map { ($0.id, $0.currency) }, uniquingKeysWith: { first, _ in first })
+        func impact(_ insight: IntelligenceInsight) -> Decimal {
+            guard let amount = insight.annualImpact else { return 0 }
+            return inDefault(amount, insight.subscriptionId.flatMap { currencyOf[$0] } ?? defaultCurrency)
+        }
         let insights = SubscriptionInsights.all(for: detected, groups: groups, now: now, calendar: calendar)
             // Ties keep one order: equal amounts swapped places from one launch to the next.
-            .sorted { ($0.annualImpact ?? 0, $1.id) > ($1.annualImpact ?? 0, $0.id) }
+            .sorted { (impact($0), $1.id) > (impact($1), $0.id) }
         for insight in insights {
             guard let coming = insight.newAmount, let id = insight.subscriptionId,
                   let index = detected.firstIndex(where: { $0.id == id }) else { continue }
@@ -69,7 +80,7 @@ struct SubscriptionIntelligenceEngine {
             .filter { $0.tier >= .review }
             .sorted {
                 if $0.tier != $1.tier { return $0.tier > $1.tier }
-                return $0.annualCost > $1.annualCost
+                return inDefault($0.annualCost, $0.currency) > inDefault($1.annualCost, $1.currency)
             }
 
         return IntelligenceReport(subscriptions: detected, ignoredPurchaseGroups: ignored, insights: insights)
@@ -328,7 +339,8 @@ struct SubscriptionIntelligenceEngine {
             amount: latestAmount, currency: latest.currency ?? currency, frequency: frequency,
             lastChargeDate: lastDate, nextBillingDate: nextBillingDate, status: status, score: score, tier: tier,
             evidence: evidence, reasons: reasons, previousAmount: previousAmount, trialEndsOn: nil,
-            chargedAfterCancel: chargedAfterCancel, unusualCharge: unusualCharge, doubt: doubt)
+            chargedAfterCancel: chargedAfterCancel, unusualCharge: unusualCharge, doubt: doubt,
+            currencyAssumed: latest.currency == nil)
     }
 
     /// One strong email can still prove a subscription when a known service says it renews.
@@ -395,7 +407,8 @@ struct SubscriptionIntelligenceEngine {
             evidence: [ChargeEvidence(id: signal.id, date: signal.date, amount: amount, currency: signal.currency ?? currency)],
             reasons: reasons, previousAmount: nil, trialEndsOn: nil, subscribedOn: startedOn,
             doubt: startedOn != nil ? L10n.string("This store doesn't email a receipt for each renewal")
-                                    : L10n.string("One charge so far; a second would confirm it"))
+                                    : L10n.string("One charge so far; a second would confirm it"),
+            currencyAssumed: signal.currency == nil)
     }
 
     private func trialCandidate(trialSignals: [ReceiptSignal],
