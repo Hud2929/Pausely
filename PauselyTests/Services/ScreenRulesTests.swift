@@ -57,6 +57,9 @@ final class ScreenRulesTests: XCTestCase {
         XCTAssertEqual(ServiceLogoView.initial(of: " 1Password"), "1")
         XCTAssertEqual(ServiceLogoView.initial(of: "étoile"), "É")
         XCTAssertEqual(ServiceLogoView.initial(of: ""), "")
+        XCTAssertEqual(ServiceLogoView.initial(of: "The Economist"), "E", "a leading article is not the name")
+        XCTAssertEqual(ServiceLogoView.initial(of: "Theta Pay"), "T")
+        XCTAssertEqual(ServiceLogoView.initial(of: "The"), "T")
     }
 
     /// A notice stays for as long as it takes to read. It used to be gone in four seconds whether it
@@ -318,7 +321,7 @@ final class ScreenRulesTests: XCTestCase {
             ("Views/Verdict/RenewalVerdictView.swift", "Facts(text)"),
             ("Views/SubscriptionManagementView.swift", "Facts(line.text)"),
             ("Views/Verdict/PausePlanView.swift", "Facts(price)"),
-            ("Views/InboxImportView.swift", "Facts(accountDetail(account))"),
+            ("Views/Inbox/InboxAccounts.swift", "Facts(detail)"),
             ("Views/InboxImportView.swift", "Facts(stats.onlyNewMail")
         ]
         for place in drawn {
@@ -477,9 +480,9 @@ final class ScreenRulesTests: XCTestCase {
         }
         // A connected inbox: its mark shares a line with its options there, and the address
         // has the row (the envelope lay over the address's first letters).
-        let inbox = try String(contentsOf: sources.appendingPathComponent("Views/InboxImportView.swift"), encoding: .utf8)
-        let row = try XCTUnwrap(inbox.range(of: "private func accountRow("))
-        let body = String(inbox[row.upperBound...].prefix(3400))
+        let inbox = try String(contentsOf: sources.appendingPathComponent("Views/Inbox/InboxAccounts.swift"), encoding: .utf8)
+        let row = try XCTUnwrap(inbox.range(of: "struct InboxAccountRow: View {"))
+        let body = String(inbox[row.upperBound...].prefix(6000))
         let above = try XCTUnwrap(body.range(of: "if MarkPlacement.sitsAbove(largeText: typeSize.isAccessibilitySize) {"))
         let beside = try XCTUnwrap(body.range(of: "} else {", range: above.upperBound..<body.endIndex))
         let stacked = body[above.upperBound..<beside.lowerBound]
@@ -926,7 +929,7 @@ final class ScreenRulesTests: XCTestCase {
         // One rule decides the box (in both layouts) and the button; VoiceOver hears "selected" as the trait.
         XCTAssertEqual(found.components(separatedBy: "Self.isAChoice(cancelled: found.isCancelled, onList: isOnList)").count - 1, 3)
         let choose = try XCTUnwrap(found.range(of: "private func choose("))
-        let body = String(found[choose.upperBound...].prefix(700))
+        let body = String(found[choose.upperBound...].prefix(1000))
         XCTAssertTrue(body.contains("} else {\n            label()\n                .accessibilityElement(children: .ignore)\n                .accessibilityLabel(accessibilitySummary)"),
                       "the cancelled row is its words, read as one sentence, with no button trait")
     }
@@ -975,7 +978,7 @@ final class ScreenRulesTests: XCTestCase {
             // the time the answer is given: the row is the place.
             "Views/SubscriptionsView.swift": ".listRowSeparatorTint(Color.line)",
             // Disconnect is asked about the inbox's row, whose menu or VoiceOver action asked it.
-            "Views/InboxImportView.swift": ".accessibilityIdentifier(\"inboxRow\")",
+            "Views/Inbox/InboxAccounts.swift": ".accessibilityIdentifier(\"inboxRow\")",
         ]
         var seen: [String] = []
         for file in try FileManager.default.subpathsOfDirectory(atPath: sources.path).sorted() where file.hasSuffix(".swift") {

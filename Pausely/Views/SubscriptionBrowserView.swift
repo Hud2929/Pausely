@@ -187,7 +187,9 @@ struct SubscriptionBrowserView: View {
         .sheet(isPresented: $showingCustomAdd) {
             AddSubscriptionView()
         }
-        .sheet(isPresented: $showingInbox) { InboxImportView() }
+        // "Done" after adding closes the catalog too: its outcome says the new ones are on Home, and it
+        // landed on the catalog (the rating of 2026-11-23).
+        .sheet(isPresented: $showingInbox) { InboxImportView(onFinished: { dismiss() }) }
         .sheet(isPresented: $showingPaywall) {
             StoreKitUpgradeView()
         }

@@ -366,11 +366,14 @@ struct Hairline: View {
 /// A small coloured mark with a symbol, so state is never shown by colour alone.
 struct StateMark: View {
     let state: MoneyState
+    /// What the mark shows when the state's own symbol would say something untrue: a price rise is amber, to
+    /// decide on, but it is a fact, and a question mark on it read as a doubt (the rating of 2026-11-23).
+    var symbol: String? = nil
     /// The disc grows with the reader's text size, like the symbol inside it.
     @ScaledMetric(relativeTo: .caption2) private var side: CGFloat = 18
 
     var body: some View {
-        Image(systemName: state.symbol)
+        Image(systemName: symbol ?? state.symbol)
             .font(.caption2.weight(.bold))
             .foregroundStyle(Color.ink)
             .frame(width: side, height: side)

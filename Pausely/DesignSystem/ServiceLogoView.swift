@@ -100,6 +100,9 @@ struct ServiceLogoView: View {
     /// The letter on the tile: the first letter or digit of the name. A name can begin with something
     /// that is neither (a direction mark in front of "Gmail" in Arabic left the tile blank).
     static func initial(of name: String) -> String {
+        // A leading "The" is not the name: "The Economist" was a "T" (the rating of 2026-11-23).
+        let trimmed = name.trimmingCharacters(in: .whitespaces)
+        let name = trimmed.lowercased().hasPrefix("the ") && trimmed.count > 4 ? String(trimmed.dropFirst(4)) : name
         let first = name.first { $0.isLetter || $0.isNumber } ?? name.first
         return first.map { String($0).uppercased() } ?? ""
     }

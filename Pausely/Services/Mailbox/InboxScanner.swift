@@ -6,8 +6,13 @@ import UIKit
 struct FoundSubscription: Identifiable, Equatable {
     let proven: ProvenSubscription
 
-    /// Stable across a re-analysis (merchant, period, currency), so what was ticked stays ticked.
-    var id: String { proven.id }
+    /// Stable across a re-analysis (merchant, period, currency), so what was ticked stays ticked. A currency
+    /// that was only assumed is left out: choosing another dollar for "$" unticked every row it relabelled
+    /// (the rating of 2026-11-23).
+    var id: String {
+        guard proven.currencyAssumed else { return proven.id }
+        return proven.id.split(separator: "|").dropLast().joined(separator: "|") + "|$"
+    }
     var name: String { proven.name }
     var amount: Decimal { proven.amount }
     var currency: String { proven.currency }
@@ -74,14 +79,15 @@ final class InboxScanner: ObservableObject {
 
     /// What the person said isn't a subscription, from the same facts, so it can be shown again later.
     @Published private(set) var hiddenFindings: [FoundSubscription] = []
-    /// The latest receipt read for each sender during the running search, newest first.
+    /// The latest receipt read for each sender during the running search, in the order the senders were first
+    /// read: a line never moves once it is on the slip.
     @Published private(set) var receiptsSeen: [ReceiptSeen] = []
     @Published var report: IntelligenceReport?
     @Published var error: String?
     @Published private(set) var accountErrors: [String: String] = [:]
     @Published private(set) var stats = ScanStats()
 
-    struct AccountStats: Equatable {
+    struct AccountStats: Equatable, Codable {
         var candidates = 0
         var checked = 0
         var read = 0
@@ -91,7 +97,7 @@ final class InboxScanner: ObservableObject {
         var capped = false
     }
 
-    struct ScanStats: Equatable {
+    struct ScanStats: Equatable, Codable {
         var emailsChecked = 0
         var bodiesRead = 0
         var receipts = 0
@@ -106,8 +112,24 @@ final class InboxScanner: ObservableObject {
         var onlyNewMail: Bool { !perAccount.isEmpty && perAccount.values.allSatisfy(\.incremental) }
     }
 
+    /// What the last search read, kept with the facts it found: after a relaunch the slip lost its "Emails
+    /// checked: 112 · read in full: 111" while the findings came back (the rating of 2026-11-23).
+    static let lastSearchKey = "inbox_last_search"
+
+    static func savedStats(defaults: UserDefaults = .standard) -> ScanStats? {
+        defaults.data(forKey: lastSearchKey).flatMap { try? JSONDecoder().decode(ScanStats.self, from: $0) }
+    }
+
+    static func saveStats(_ stats: ScanStats?, defaults: UserDefaults = .standard) {
+        if let stats, let data = try? JSONEncoder().encode(stats) {
+            defaults.set(data, forKey: lastSearchKey)
+        } else {
+            defaults.removeObject(forKey: lastSearchKey)
+        }
+    }
+
     /// Full messages read per inbox per scan, the most likely receipts first.
-    static let bodyBudget = 400
+    nonisolated static let bodyBudget = 400
     /// How far back a first scan looks.
     static let lookback: TimeInterval = 2 * 365 * 86_400
 
@@ -238,6 +260,7 @@ final class InboxScanner: ObservableObject {
             foundSubscriptions = []
             report = nil
             stats = ScanStats()
+            Self.saveStats(nil)
         } else {
             reanalyze()
         }
@@ -255,6 +278,7 @@ final class InboxScanner: ObservableObject {
         foundSubscriptions = []
         report = nil
         stats = ScanStats()
+        Self.saveStats(nil)
         accountErrors = [:]
         #if DEBUG
         isShowingDemo = false
@@ -274,6 +298,13 @@ final class InboxScanner: ObservableObject {
         scanTask = task
         await task.value
         scanTask = nil
+    }
+
+    /// How many messages a search will open, projected from the share of the headers checked so far that
+    /// looked like receipts, within the most one search reads.
+    nonisolated static func projectedReads(wanted: Int, checked: Int, of total: Int) -> Int {
+        guard checked > 0 else { return min(bodyBudget, max(1, total / 4)) }
+        return min(bodyBudget, max(1, Int((Double(wanted) / Double(checked) * Double(total)).rounded())))
     }
 
     /// Whole minutes still needed at the pace so far, rounded up; nil under a minute.
@@ -348,6 +379,7 @@ final class InboxScanner: ObservableObject {
         analyze(ledger, catalog: catalog)
         stats.receipts = newSignals.count
         if Task.isCancelled { stats.stopped = true }
+        Self.saveStats(stats)
         if foundSubscriptions.isEmpty && stats.stopped {
             error = L10n.string("The search was stopped before it found anything")
         } else if foundSubscriptions.isEmpty && accountErrors.count < accounts.count {
@@ -373,9 +405,11 @@ final class InboxScanner: ObservableObject {
             accountStats.capped = refs.count >= plan.maxCandidates
             report(0.05, L10n.string("Checking \(L10n.string("\(refs.count) emails")) in \(account.providerName)…"))
             // The bar follows requests: headers and bodies cost one each, and headers are most of them. Given
-            // 15% of the bar, a real search crawled for minutes and then leapt (A12, 2026-11-22). Bodies are
-            // guessed at a quarter of the headers until triage says, and the bar never goes back.
-            let expectedBodies = min(Self.bodyBudget, max(1, refs.count / 4))
+            // 15% of the bar, a real search crawled for minutes and then leapt (A12, 2026-11-22). The bodies to
+            // read are projected from the headers checked so far, and the bar never goes back. Guessed at a
+            // quarter of the headers, a mailbox of receipts stood at 77% on "Read 1 of 111" (2026-11-23).
+            var expectedBodies = min(Self.bodyBudget, max(1, refs.count / 4))
+            var wantedSoFar = 0
             var headerEnd = 0.05
             let started = Date()
             func estimate(done: Int, of total: Int) {
@@ -388,8 +422,11 @@ final class InboxScanner: ObservableObject {
             // inbox spent five minutes on "Checking 1,500 emails" with a bar that never moved.
             var summaries: [MessageSummary] = []
             for chunk in InboxSearchPlan.batches(refs, size: 100) {
-                summaries += try await provider.summaries(chunk)
-                headerEnd = 0.05 + 0.9 * Double(summaries.count) / Double(max(refs.count + expectedBodies, 1))
+                let checked = try await provider.summaries(chunk)
+                summaries += checked
+                wantedSoFar += Self.triage(checked, catalog: catalog).count
+                expectedBodies = Self.projectedReads(wanted: wantedSoFar, checked: summaries.count, of: refs.count)
+                headerEnd = max(headerEnd, 0.05 + 0.9 * Double(summaries.count) / Double(max(refs.count + expectedBodies, 1)))
                 estimate(done: summaries.count, of: refs.count + expectedBodies)
                 report(headerEnd, L10n.string("Checked \(summaries.count) of \(refs.count) in \(account.providerName)"))
             }
@@ -460,11 +497,14 @@ final class InboxScanner: ObservableObject {
         else { return }
         let seen = ReceiptSeen(name: merchant.displayName, amount: amount,
                                currency: signal.currency ?? assumedDollar, date: signal.date)
+        // A sender's newer receipt changes its line where it is, and a new sender goes at the end. Put at the
+        // top, every line moved down with each receipt, and while receipts came faster than the move the lines
+        // were drawn over each other (both ratings of 2026-11-22 and the one of 11-23).
         if let index = receiptsSeen.firstIndex(where: { $0.id == seen.id }) {
-            guard receiptsSeen[index].date < seen.date else { return }
-            receiptsSeen.remove(at: index)
+            if receiptsSeen[index].date < seen.date { receiptsSeen[index] = seen }
+            return
         }
-        receiptsSeen.insert(seen, at: 0)
+        receiptsSeen.append(seen)
     }
 
     /// Which messages are worth reading in full, most promising first: known billers and platforms, then
@@ -539,6 +579,7 @@ final class InboxScanner: ObservableObject {
         #if DEBUG
         if isShowingDemo { return }
         #endif
+        if stats == ScanStats(), let saved = Self.savedStats() { stats = saved }
         reanalyze()
     }
 

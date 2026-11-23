@@ -42,12 +42,27 @@ struct HiddenNote: View {
     let onUndo: () -> Void
 
     var body: some View {
-        HStack(alignment: .firstTextBaseline, spacing: 12) {
-            Text("\(name) won't be shown again.")
+        UndoNote(message: Text("\(name) won't be shown again."), undoLabel: Text("Undo: show \(name) again"),
+                 identifier: "undoHide", onUndo: onUndo)
+    }
+}
+
+/// What a tap just changed, with "Undo" beside it, or under it at the accessibility text sizes (beside, the
+/// words had a column a third wide and broke inside themselves).
+struct UndoNote: View {
+    let message: Text
+    let undoLabel: Text
+    let identifier: String
+    let onUndo: () -> Void
+
+    var body: some View {
+        AdaptiveRow {
+            message
                 .font(.subheadline)
                 .foregroundStyle(Color.inkTextMuted)
                 .fixedSize(horizontal: false, vertical: true)
                 .frame(maxWidth: .infinity, alignment: .leading)
+        } value: {
             Button(action: onUndo) {
                 Text("Undo")
                     .font(.subheadline.weight(.semibold))
@@ -56,8 +71,8 @@ struct HiddenNote: View {
                     .contentShape(Rectangle())
             }
             .buttonStyle(.plain)
-            .accessibilityLabel(Text("Undo: show \(name) again"))
-            .accessibilityIdentifier("undoHide")
+            .accessibilityLabel(undoLabel)
+            .accessibilityIdentifier(identifier)
         }
         .frame(maxWidth: .infinity, alignment: .leading)
     }
@@ -75,10 +90,11 @@ struct ReceiptsSeenSlip: View {
                 Text("Receipts read so far")
                     .font(.proof(.caption))
                     .foregroundStyle(Color.paperMuted)
+                // The first eight senders, in the order they were read: a new line fades in at the end and no
+                // line ever moves. Put in at the top, the others moved down with each receipt and were drawn over
+                // each other in eight of nine frames caught (the ratings of 2026-11-22 and 11-23).
                 ForEach(shown) { receipt in
                     ProofLine(label: receipt.name, value: InboxImportView.money(receipt.amount, receipt.currency))
-                        // Fades in place: sliding in at the top while the others moved down, the rows were
-                        // drawn over each other in every frame caught (the rating of 2026-11-22).
                         .transition(.opacity)
                 }
                 if more > 0 {
@@ -121,10 +137,10 @@ struct InboxPrivacyNote: View {
                 // whole block was one 60-word button and "Privacy Policy" only an action (2026-11-22).
                 .accessibilityElement(children: .combine)
                 if let policy = URL(string: AppConfig.privacyPolicyURL) {
-                    Link(destination: policy) { Text("Privacy Policy") }
+                    // The tap area inside the link: outside it, the link was its words, 100 by 18 points (2026-11-23).
+                    Link(destination: policy) { Text("Privacy Policy").tapArea(.leading) }
                         .font(.subheadline.weight(.semibold))
                         .foregroundStyle(Color.inkText)
-                        .frame(minHeight: Layout.tapTarget, alignment: .leading)
                         .accessibilityIdentifier("inboxPrivacyPolicy")
                 }
             }
@@ -202,12 +218,14 @@ struct DollarNote: View {
     }
 
     var body: some View {
-        HStack(alignment: .firstTextBaseline, spacing: 12) {
+        // Under its sentence at the accessibility text sizes: beside it, "Receipts" broke as "Re-ceipts" (2026-11-23).
+        AdaptiveRow {
             Text(verbatim: Self.sentence(code: code))
                 .font(.subheadline)
                 .foregroundStyle(Color.inkTextMuted)
                 .fixedSize(horizontal: false, vertical: true)
                 .frame(maxWidth: .infinity, alignment: .leading)
+        } value: {
             Menu {
                 ForEach(Self.choices, id: \.self) { choice in
                     Button { onChoose(choice) } label: {
@@ -236,6 +254,9 @@ struct DollarNote: View {
 struct OtherSenders: View {
     let count: Int
     let names: [String]
+    /// Opens the form to add one by hand, with its name filled in: the names opened nothing, and "add it from
+    /// the list by hand" pointed at no list (the rating of 2026-11-23).
+    let onAdd: (String) -> Void
     @State private var open = false
 
     var body: some View {
@@ -260,14 +281,31 @@ struct OtherSenders: View {
             .accessibilityValue(open ? Text("Shown") : Text("Hidden"))
             .accessibilityIdentifier("otherSenders")
             if open {
-                Text(verbatim: names.formatted(.list(type: .and).locale(L10n.locale)))
-                    .font(.subheadline)
-                    .foregroundStyle(Color.inkText)
-                    .fixedSize(horizontal: false, vertical: true)
-                Text("Their charges vary or say they're one-time. If one is a subscription, add it from the list by hand.")
+                Text("Their charges vary or say they're one-time. If one is a subscription, add it here.")
                     .font(.footnote)
                     .foregroundStyle(Color.inkTextMuted)
                     .fixedSize(horizontal: false, vertical: true)
+                VStack(alignment: .leading, spacing: 0) {
+                    ForEach(names, id: \.self) { name in
+                        Button { onAdd(name) } label: {
+                            HStack(spacing: 8) {
+                                Text(verbatim: name)
+                                    .font(.body)
+                                    .foregroundStyle(Color.inkText)
+                                    .fixedSize(horizontal: false, vertical: true)
+                                    .frame(maxWidth: .infinity, alignment: .leading)
+                                Image(systemName: "plus")
+                                    .font(.footnote.weight(.semibold))
+                                    .foregroundStyle(Color.inkTextMuted)
+                                    .accessibilityHidden(true)
+                            }
+                            .tapArea(.leading)
+                        }
+                        .buttonStyle(.plain)
+                        .accessibilityLabel(Text("Add \(name) by hand"))
+                        .accessibilityIdentifier("otherSender")
+                    }
+                }
             }
         }
     }
@@ -289,7 +327,7 @@ struct FoundInsights: View {
                 ForEach(Array(insights.enumerated()), id: \.element.id) { index, insight in
                     if index > 0 { Hairline() }
                     HStack(alignment: .firstTextBaseline, spacing: 12) {
-                        StateMark(state: Self.state(for: insight.kind))
+                        StateMark(state: Self.state(for: insight.kind), symbol: Self.symbol(for: insight.kind))
                             .accessibilityHidden(true)
                         VStack(alignment: .leading, spacing: 2) {
                             Text(insight.title)
@@ -307,6 +345,18 @@ struct FoundInsights: View {
                 }
             }
             .frame(maxWidth: .infinity, alignment: .leading)
+        }
+    }
+
+    /// What each kind is, drawn: a renewal is a date, a rise goes up, a trial runs out. Each was a question mark,
+    /// which read as doubt over facts the receipts state (the rating of 2026-11-23).
+    static func symbol(for kind: IntelligenceInsight.Kind) -> String {
+        switch kind {
+        case .chargedAfterCancel, .paymentFailed: return "exclamationmark"
+        case .priceIncrease, .priceChangeNotice: return "arrow.up"
+        case .trialEnding: return "hourglass"
+        case .renewalSoon: return "calendar"
+        case .likelyEnded: return "pause.fill"
         }
     }
 

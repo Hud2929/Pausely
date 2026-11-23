@@ -182,6 +182,45 @@ and the app-wide dead iPad margins (B5), the paste icon's contrast, the server f
 value, an "update price" offer for a listed price that differs, and everything only a device or a native
 reader can judge.
 
+**Fourth rating (2026-11-23, two fresh Fable raters): consumer 8.0, reach at most 7.5.** 22 of 22 found,
+none invented, Trash and Junk left out. Fixed after it:
+- Choosing another dollar keeps every tick: an assumed currency is no longer part of a row's identity.
+- The searching slip's lines never move. Senders go in the order they were read, and a newer receipt
+  changes its own line; inserted at the top, the lines were drawn over each other in 8 of 9 frames.
+- The bar projects how many emails will be opened from the headers checked so far: it stood at 77% on
+  "Read 1 of 111".
+- A listed subscription can take its receipts' renewal day as well as their price
+  ("On your list without a renewal date"), with Undo in the bottom bar.
+- "Other senders" are rows that open the add form with the name filled in, and "Your" is no longer a
+  sender name. "Nothing found" offers "Add a subscription by hand".
+- The heading says how many rows ended or were cancelled. The last search's counts survive a relaunch.
+- "Worth knowing" and the row tags draw a calendar, an arrow or an hourglass in place of a question mark.
+- After adding, the outcome has a slip: just added, waiting for room, and the list each month and year.
+  "Your list is full" no longer repeats its count, and says Home shows what waits. Done from the catalog
+  closes both sheets.
+- Arabic chosen in the app mirrors every sheet: the direction is a trait on the window scene.
+- At the largest text:
+  - each row's reading order is scoped to the row;
+  - an opened "why" brings its row to the top;
+  - the first page offers the inboxes before the promise;
+  - the connected page's actions come before the inbox rows;
+  - "Keep N for later" is two lines;
+  - the dollar note and Undo stack.
+- iPad: the connect form keeps the reading column, and a tap beside it no longer throws away what was typed.
+- The Privacy Policy link and the rows are at least 44 points; the Reconnect button is read with the plain
+  address.
+- "The Economist" is an "E" tile. The IMAP form says where to find the server, and closes without
+  emptying first. "searched just now" replaces a seconds count that re-wrapped the row.
+
+Open after it:
+- The system paste button is 41 by 34 points; its size is the system's.
+- Hulu's site now gives the Disney+ icon, Crunchyroll refuses icon requests, and The Economist has none:
+  letter tiles.
+- idb cannot describe Home: the "Total by day" strip is adjustable, and the simulator's accessibility
+  bridge reads its sentence value as a number (NaN). VoiceOver on iOS reads the sentence.
+- The tour's iPad demo presentation keeps dead margins (B5).
+- Everything a device or a native reader must judge.
+
 ## Real accounts, real subscriptions, and Outlook (plan of 2026-11-18)
 
 The owner asked: fix the import from email, make sure every way in works and pulls real

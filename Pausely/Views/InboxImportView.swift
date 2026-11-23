@@ -24,12 +24,26 @@ struct InboxImportView: View {
     @State private var showingIMAP = false
     @State private var showingProviders = false
     @State private var showingPaywall = false
-    /// The inbox whose Disconnect waits for a yes: it signs out and forgets what was found there.
-    @State private var disconnecting: MailboxAccount?
     /// The finding last hidden with "This isn't a subscription", until it is undone or another is hidden.
     @State private var hidden: Hidden?
     /// Where the page should scroll next ("top", or a row's "why").
     @State private var scrollTarget: String?
+    /// A listed subscription as it was before the receipts' price or date was put on it, until undone.
+    @State private var listingBefore: Subscription?
+    /// A sender to add by hand, from the other senders or from a search that found nothing.
+    @State private var addingByHand: ByHand?
+    /// What "Done" after adding does when the page was opened from another sheet: the outcome names Home,
+    /// and "Done" from the catalog landed on the catalog (the rating of 2026-11-23).
+    private let onFinished: (() -> Void)?
+
+    init(onFinished: (() -> Void)? = nil) {
+        self.onFinished = onFinished
+    }
+
+    private struct ByHand: Identifiable {
+        let name: String
+        var id: String { name }
+    }
 
     private struct Hidden {
         let found: FoundSubscription
@@ -44,7 +58,9 @@ struct InboxImportView: View {
                 VStack(spacing: 24) {
                     Color.clear.frame(height: 0).id("top")
                     if let outcome {
-                        InboxOutcome(outcome: outcome, onDone: { dismiss() }, onSeePro: { showingPaywall = true })
+                        InboxOutcome(outcome: outcome, list: store.subscriptions,
+                                     onDone: { if let onFinished { onFinished() } else { dismiss() } },
+                                     onSeePro: { showingPaywall = true })
                     } else if !scanner.hasAccounts {
                         connectSection
                     } else if scanner.isScanning {
@@ -62,10 +78,13 @@ struct InboxImportView: View {
             // The phone's reading width on iPad, its margins still scrolling the page (ReadableScroll).
             .readableScroll()
             // An opened "why" is brought into view (its last line was under the bar), and the page is back at
-            // its top when the last inbox goes (it opened scrolled, its heading cut off) (2026-11-22).
+            // its top when the last inbox goes (it opened scrolled, its heading cut off) (2026-11-22). At the
+            // largest text a "why" is taller than the screen: its row goes to the top instead, or the reader
+            // landed on its last charges (the reach rating of 2026-11-23).
             .onChange(of: scrollTarget) { _, target in
                 guard let target else { return }
-                withAnimation(Motion.unlessReduced(Motion.arrive)) { page.scrollTo(target, anchor: target == "top" ? .top : .bottom) }
+                let top = target == "top" || target.hasPrefix("row-")
+                withAnimation(Motion.unlessReduced(Motion.arrive)) { page.scrollTo(target, anchor: top ? .top : .bottom) }
                 scrollTarget = nil
             }
             }
@@ -89,6 +108,7 @@ struct InboxImportView: View {
                     ScrollView {
                         providerButtons.padding(Layout.margin)
                     }
+                    .readableScroll()
                     .background(Color.ink.ignoresSafeArea())
                     .navigationTitle("Add an inbox")
                     .navigationBarTitleDisplayMode(.inline)
@@ -103,6 +123,7 @@ struct InboxImportView: View {
             .sheet(isPresented: $showingPaywall) {
                 StoreKitUpgradeView()
             }
+            .sheet(item: $addingByHand) { AddSubscriptionView(startName: $0.name) }
         }
         .onAppear { scanner.showSaved() }
         // Only the person's own ticks are kept: the clearing a new search does is not a choice.
@@ -138,9 +159,15 @@ struct InboxImportView: View {
                 .fixedSize(horizontal: false, vertical: true)
                 .padding(.top, 10)
 
-            InboxPrivacyNote().padding(.top, 24)
-
-            providerButtons.padding(.top, 16)
+            // At the accessibility text sizes the inboxes come first: after the promise, the first one was
+            // five screens down (the reach rating of 2026-11-23). The promise follows them, before any sign-in.
+            if Self.inboxesFirst(largeText: typeSize.isAccessibilitySize) {
+                providerButtons.padding(.top, 16)
+                InboxPrivacyNote().padding(.top, 24)
+            } else {
+                InboxPrivacyNote().padding(.top, 24)
+                providerButtons.padding(.top, 16)
+            }
 
             if let error = scanner.error {
                 ProblemLine(message: error, identifier: "inboxProblem")
@@ -220,37 +247,60 @@ struct InboxImportView: View {
                 SearchOutcome(message: message, stats: scanner.stats, explains: scanner.accountErrors.isEmpty)
             }
 
-            inboxRows
-
-            // An inbox that lost its access is reconnected first: searching again repeats the failure.
-            if let failed = scanner.accounts.first(where: { scanner.accountErrors[$0.id] != nil }) {
-                // The address breaks only after "@", "." and "-": at the largest size it broke mid-word,
-                // with a hyphen that isn't in it (the reach rating of 2026-11-22).
-                Button { reconnect(failed) } label: { Text(verbatim: L10n.string("Reconnect \(AddressText.breakable(failed.address))")) }
-                    .buttonStyle(.ink)
-                    .accessibilityIdentifier("reconnectButton")
-                Button(action: { Task { await scanner.scanAll() } }) { Text("Search again") }
-                    .buttonStyle(.ink(.quiet))
-                    .accessibilityIdentifier("scanInboxesButton")
-            } else if scanner.report != nil, !scanner.stats.stopped {
-                // Nothing found in what was searched: the way forward is another inbox, which the words
-                // above say; searching the same mail again finds the same nothing (the rating of 2026-11-22).
-                Button(action: { showingProviders = true }) { Text("Add another inbox") }
-                    .buttonStyle(.ink)
-                    .accessibilityIdentifier("addInboxMainButton")
-                Button(action: { Task { await scanner.scanAll() } }) { Text("Search again") }
-                    .buttonStyle(.ink(.quiet))
-                    .accessibilityIdentifier("scanInboxesButton")
-            } else {
-                Button(action: { Task { await scanner.scanAll() } }) {
-                    scanner.accounts.contains { $0.lastScan != nil } ? Text("Search again") : Text("Find subscriptions")
-                }
-                .buttonStyle(.ink)
-                .accessibilityIdentifier("scanInboxesButton")
-            }
+            // At the accessibility text sizes what to do comes before the inboxes: after them it was a screen
+            // and a half down (the reach rating of 2026-11-23).
+            if !typeSize.isAccessibilitySize { inboxRows }
+            connectedActions
+            if typeSize.isAccessibilitySize { inboxRows }
         }
         .frame(maxWidth: .infinity, alignment: .leading)
     }
+
+    /// What to do next with the inboxes connected and nothing on screen to add.
+    @ViewBuilder
+    private var connectedActions: some View {
+        // An inbox that lost its access is reconnected first: searching again repeats the failure.
+        if let failed = scanner.accounts.first(where: { scanner.accountErrors[$0.id] != nil }) {
+            // The address breaks only after "@", "." and "-": at the largest size it broke mid-word,
+            // with a hyphen that isn't in it (the reach rating of 2026-11-22).
+            Button { reconnect(failed) } label: { Text(verbatim: L10n.string("Reconnect \(AddressText.breakable(failed.address))")) }
+                .buttonStyle(.ink)
+                // Read with the plain address: the break marks between its letters went to VoiceOver too.
+                .accessibilityLabel(Text(verbatim: L10n.string("Reconnect \(failed.address)")))
+                .accessibilityIdentifier("reconnectButton")
+            Button(action: { Task { await scanner.scanAll() } }) { Text("Search again") }
+                .buttonStyle(.ink(.quiet))
+                .accessibilityIdentifier("scanInboxesButton")
+        } else if scanner.accounts.contains(where: { $0.lastScan != nil }), !scanner.stats.stopped {
+            // Nothing found in what was searched: the way forward is another inbox, or the list by hand,
+            // which the words above say; searching the same mail again finds the same nothing (the
+            // ratings of 2026-11-22 and 11-23).
+            Button(action: { showingProviders = true }) { Text("Add another inbox") }
+                .buttonStyle(.ink)
+                .accessibilityIdentifier("addInboxMainButton")
+            Button(action: { Task { await scanner.scanAll() } }) { Text("Search again") }
+                .buttonStyle(.ink(.quiet))
+                .accessibilityIdentifier("scanInboxesButton")
+            Button(action: { addingByHand = ByHand(name: "") }) {
+                Text("Add a subscription by hand")
+                    .font(.subheadline.weight(.semibold))
+                    .foregroundStyle(Color.inkText)
+                    .tapArea(.leading)
+            }
+            .buttonStyle(.plain)
+            .accessibilityIdentifier("addByHandButton")
+        } else {
+            Button(action: { Task { await scanner.scanAll() } }) {
+                scanner.accounts.contains { $0.lastScan != nil } ? Text("Search again") : Text("Find subscriptions")
+            }
+            .buttonStyle(.ink)
+            .accessibilityIdentifier("scanInboxesButton")
+        }
+    }
+
+    /// Whether the kinds of inbox come before the privacy promise on the first page: at the accessibility
+    /// text sizes, where the promise alone is several screens.
+    nonisolated static func inboxesFirst(largeText: Bool) -> Bool { largeText }
 
     /// Signs in again where it can; an app-password inbox gets its page with the address filled in.
     private func reconnect(_ account: MailboxAccount) {
@@ -263,113 +313,9 @@ struct InboxImportView: View {
         }
     }
 
-    private func accountRow(_ account: MailboxAccount) -> some View {
-        let failed = scanner.accountErrors[account.id] != nil
-        let mark = Image(systemName: failed ? "exclamationmark.circle" : "envelope")
-            .font(.body)
-            .foregroundStyle(failed ? Color.due : Color.inkTextMuted)
-            .accessibilityHidden(true)
-        let words = VStack(alignment: .leading, spacing: 2) {
-            // Whole, on as many lines as it needs: cut in the middle, two addresses at one
-            // provider could not be told apart.
-            Text(verbatim: AddressText.breakable(account.address))
-                .font(.body.weight(.medium))
-                .foregroundStyle(Color.inkText)
-                .fixedSize(horizontal: false, vertical: true)
-                .accessibilityLabel(Text(verbatim: account.address))
-            Facts(accountDetail(account))
-                .font(.subheadline)
-                .foregroundStyle(failed ? Color.due : Color.inkTextMuted)
-                .fixedSize(horizontal: false, vertical: true)
-        }
-        let options = Menu {
-            if failed {
-                Button { reconnect(account) } label: { Label("Reconnect", systemImage: "arrow.clockwise") }
-                    .accessibilityIdentifier("reconnectInbox")
-            }
-            Button(role: .destructive) {
-                disconnecting = account
-            } label: {
-                Label("Disconnect", systemImage: "xmark.circle")
-            }
-            .accessibilityIdentifier("disconnectInbox")
-        } label: {
-            Image(systemName: "ellipsis")
-                .font(.body.weight(.semibold))
-                .foregroundStyle(Color.inkTextMuted)
-                .frame(minWidth: Layout.tapTarget, minHeight: Layout.tapTarget)
-                .contentShape(Rectangle())
-        }
-        .accessibilityLabel("Options for \(account.address)")
-        .accessibilityIdentifier("inboxOptions")
-
-        return Group {
-            if MarkPlacement.sitsAbove(largeText: typeSize.isAccessibilitySize) {
-                // The mark and the options share a line and the address has the row: between
-                // them at the largest text size it had half, the envelope lay over its first
-                // letters, and "longer-company-name" was cut wherever the line ran out.
-                VStack(alignment: .leading, spacing: 6) {
-                    HStack(spacing: 8) {
-                        mark
-                        Spacer(minLength: 8)
-                        options
-                    }
-                    words
-                }
-                .frame(maxWidth: .infinity, alignment: .leading)
-            } else {
-                HStack(spacing: 12) {
-                    mark.frame(width: 28)
-                    words
-                    Spacer(minLength: 8)
-                    options
-                }
-            }
-        }
-        .padding(.vertical, 8)
-        // One stop for VoiceOver, with what the menu does as its actions: the address, its state and
-        // "Options for …" were three stops (the reach rating of 2026-11-22).
-        .accessibilityElement(children: .ignore)
-        .accessibilityLabel(Text(verbatim: "\(account.address), \(accountDetail(account))"))
-        .accessibilityActions {
-            if failed { Button("Reconnect") { reconnect(account) } }
-            Button("Disconnect") { disconnecting = account }
-        }
-        .accessibilityIdentifier("inboxRow")
-        .asksFirst(Text("Disconnect \(account.address)?"),
-                   isPresented: Binding(get: { disconnecting?.id == account.id }, set: { if !$0 { disconnecting = nil } }),
-                   message: Text("Pausely signs out of this inbox and forgets what it found there. Subscriptions you added stay on your list.")) {
-            Button("Disconnect", role: .destructive) { Task { await scanner.disconnect(account) } }
-            Button("Cancel", role: .cancel) {}
-        }
-    }
-
-    private func accountDetail(_ account: MailboxAccount) -> String {
-        if let error = scanner.accountErrors[account.id] { return error }
-        if let last = account.lastScan {
-            return L10n.string("\(account.providerName) · searched \(last.formatted(.relative(presentation: .named).locale(L10n.locale)))")
-        }
-        return account.providerName
-    }
-
     /// Each connected inbox with its menu, then the way to add another.
     private var inboxRows: some View {
-        VStack(spacing: 0) {
-            ForEach(scanner.accounts) { account in
-                // "searched 2 seconds ago" stood for minutes: the row is drawn again as time passes.
-                TimelineView(.periodic(from: .now, by: 15)) { _ in accountRow(account) }
-                Hairline()
-            }
-            Button(action: { showingProviders = true }) {
-                Label("Add another inbox", systemImage: "plus")
-                    .font(.body.weight(.medium))
-                    .foregroundStyle(Color.inkText)
-                    .frame(maxWidth: .infinity, minHeight: Layout.tapTarget, alignment: .leading)
-                    .contentShape(Rectangle())
-            }
-            .buttonStyle(.plain)
-            .accessibilityIdentifier("addInboxButton")
-        }
+        InboxRows(scanner: scanner, onReconnect: reconnect, onAdd: { showingProviders = true })
     }
 
     // MARK: - Results
@@ -405,6 +351,8 @@ struct InboxImportView: View {
                     withAnimation(Motion.unlessReduced(Motion.arrive)) {
                         scanner.undoNotSubscription(found, previous: nil)
                         if hidden?.found.id == found.id { hidden = nil }
+                        // Shown again, it is a subscription after all: it came back unticked (2026-11-23).
+                        if found.isLive, !isOnList(found), !isWaiting(found) { selected.insert(found.id) }
                     }
                 }
             }
@@ -449,11 +397,22 @@ struct InboxImportView: View {
         let stats = scanner.stats
 
         return VStack(alignment: .leading, spacing: 16) {
-            Text("We found \(count) subscriptions")
-                .font(.question(.title))
-                .foregroundStyle(Color.inkText)
-                .fixedSize(horizontal: false, vertical: true)
-                .accessibilityAddTraits(.isHeader)
+            VStack(alignment: .leading, spacing: 6) {
+                Text("We found \(count) subscriptions")
+                    .font(.question(.title))
+                    .foregroundStyle(Color.inkText)
+                    .fixedSize(horizontal: false, vertical: true)
+                    .accessibilityAddTraits(.isHeader)
+                // The count is what still charges; the rest are said, not left to be counted against it ("We
+                // found 20" stood over 22 rows, the rating of 2026-11-23).
+                let over = scanner.foundSubscriptions.count - count
+                if over > 0 {
+                    Text("And \(over) that ended or were cancelled, at the end of the list.")
+                        .font(.subheadline)
+                        .foregroundStyle(Color.inkTextMuted)
+                        .fixedSize(horizontal: false, vertical: true)
+                }
+            }
 
             // Still said before the tap: under the heading, where it is read on arrival.
             if Self.barHoldsOnlyTheButton(largeText: typeSize.isAccessibilitySize) { freeLimitNote }
@@ -499,7 +458,7 @@ struct InboxImportView: View {
                 DollarNote(code: scanner.assumedDollar, onChoose: scanner.setAssumedDollar)
             }
             if ignored > 0 {
-                OtherSenders(count: ignored, names: scanner.report?.ignoredSenders ?? [])
+                OtherSenders(count: ignored, names: scanner.report?.ignoredSenders ?? []) { addingByHand = ByHand(name: $0) }
             }
         }
         .frame(maxWidth: .infinity, alignment: .leading)
@@ -550,8 +509,8 @@ struct InboxImportView: View {
                         // A row waiting for room is not a choice: ticking it again did nothing (2026-11-22).
                         isOnList: isOnList(found) || isWaiting(found),
                         isWaiting: isWaiting(found),
-                        listedPrice: FoundRow.listedPrice(store.subscriptions.first { ServiceName.same($0.name, found.name) }, for: found),
-                        onUpdatePrice: { Task { await useFoundPrice(found) } },
+                        listed: store.subscriptions.first { ServiceName.same($0.name, found.name) },
+                        onUseReceipts: { Task { await useReceipts(found) } },
                         isSelected: selected.contains(found.id),
                         isExpanded: expanded.contains(found.id),
                         onToggle: { if selected.contains(found.id) { selected.remove(found.id) } else { selected.insert(found.id) } },
@@ -560,12 +519,14 @@ struct InboxImportView: View {
                                 if expanded.contains(found.id) { expanded.remove(found.id) } else { expanded.insert(found.id) }
                             }
                             if expanded.contains(found.id) {
-                                Task { try? await Task.sleep(for: .milliseconds(250)); scrollTarget = "why-\(found.id)" }
+                                let target = typeSize.isAccessibilitySize ? "row-\(found.id)" : "why-\(found.id)"
+                                Task { try? await Task.sleep(for: .milliseconds(250)); scrollTarget = target }
                             }
                         },
                         onReject: {
                             let wasSelected = selected.remove(found.id) != nil
                             withAnimation(Motion.unlessReduced(Motion.leave)) {
+                                listingBefore = nil
                                 hidden = Hidden(found: found, previous: scanner.markNotSubscription(found), wasSelected: wasSelected)
                             }
                             AccessibilityNotification.Announcement(L10n.string("\(found.name) hidden")).post()
@@ -619,18 +580,25 @@ struct InboxImportView: View {
     @ViewBuilder
     private var addBar: some View {
         let canAdd = outcome == nil && !scanner.isScanning && !scanner.foundSubscriptions.isEmpty && scanner.hasAccounts && !chosen.isEmpty
-        if canAdd || (outcome == nil && hidden != nil) {
+        if canAdd || (outcome == nil && (hidden != nil || listingBefore != nil)) {
             VStack(spacing: 8) {
                 // Undo where the eye is: at the top of the page it was 2,200 points from the row that was
-                // hidden (the rating of 2026-11-22).
+                // hidden (the rating of 2026-11-22). A listing changed from the receipts can be put back too:
+                // the price changed with no way back (the rating of 2026-11-23).
                 if let hidden {
                     HiddenNote(name: hidden.found.name, onUndo: undoHide)
+                } else if let listingBefore {
+                    UndoNote(message: Text("\(listingBefore.name) on your list was updated from your receipts."),
+                             undoLabel: Text("Undo the change to \(listingBefore.name)"), identifier: "undoListingUpdate") {
+                        Task { await undoListingUpdate() }
+                    }
                 }
                 if canAdd {
                     if !Self.barHoldsOnlyTheButton(largeText: typeSize.isAccessibilitySize) { freeLimitNote }
                     Button(action: { Task { await addChosen() } }) {
                         if importing { Busy(Text("Adding…")) }
-                        else if freeSlots == 0 { Text("Keep \(chosen.count) for when there's room") }
+                        // Short, so at the largest text it is two lines, not three: the note says what "later" is.
+                        else if freeSlots == 0 { Text("Keep \(chosen.count) for later") }
                         else if let slots = freeSlots, newlyChosen > slots { Text("Add \(slots), keep \(newlyChosen - slots) waiting") }
                         else { Text("Add \(chosen.count) to my list") }
                     }
@@ -650,14 +618,21 @@ struct InboxImportView: View {
         }
     }
 
-    /// The receipts' price, period and currency on the listed subscription: only when the person asks.
-    private func useFoundPrice(_ found: FoundSubscription) async {
-        guard var listed = store.subscriptions.first(where: { ServiceName.same($0.name, found.name) }) else { return }
-        listed.amount = found.proven.comingAmount ?? found.amount
-        listed.currency = found.currency
-        listed.billingFrequency = found.billingFrequency
-        await store.updateSubscription(listed)
+    /// The receipts' price, and their renewal day where the list has none, on the listed subscription: only
+    /// when the person asks, and with the way back.
+    private func useReceipts(_ found: FoundSubscription) async {
+        guard let listed = store.subscriptions.first(where: { ServiceName.same($0.name, found.name) }) else { return }
+        let updated = FoundRow.updatedFromReceipts(listed, by: found)
+        guard updated != listed else { return }
+        await store.updateSubscription(updated)
+        withAnimation(Motion.unlessReduced(Motion.arrive)) { hidden = nil; listingBefore = listed }
         Feel.landed()
+    }
+
+    private func undoListingUpdate() async {
+        guard let before = listingBefore else { return }
+        await store.updateSubscription(before)
+        withAnimation(Motion.unlessReduced(Motion.leave)) { listingBefore = nil }
     }
 
     private func undoHide() {

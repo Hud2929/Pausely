@@ -341,6 +341,114 @@ final class MailImportTests: XCTestCase {
         XCTAssertEqual(first.id, again.id, "what was ticked stays ticked when the list is worked out again")
     }
 
+    /// A row whose "$" was only taken as a dollar keeps its tick when another dollar is chosen: the currency was
+    /// in its identity, and "Change" to US Dollar unticked nine rows (the rating of 2026-11-23). A currency a
+    /// receipt stated stays part of it.
+    func testChoosingAnotherDollarKeepsWhatWasTicked() {
+        var canadian = proven("Netflix", currency: "CAD")
+        canadian.currencyAssumed = true
+        var american = proven("Netflix", currency: "USD")
+        american.currencyAssumed = true
+        XCTAssertEqual(FoundSubscription(proven: canadian).id, FoundSubscription(proven: american).id)
+        XCTAssertEqual(FoundSubscription(proven: canadian).id, "netflix|monthly|$")
+        XCTAssertNotEqual(FoundSubscription(proven: proven("Netflix", currency: "CAD")).id,
+                          FoundSubscription(proven: proven("Netflix", currency: "USD")).id, "a stated currency is part of it")
+    }
+
+    /// The bar's share for headers comes from how many of those checked so far looked like receipts: guessed
+    /// at a quarter, a mailbox of receipts stood at 77% on "Read 1 of 111" (the rating of 2026-11-23).
+    func testTheBodiesToReadAreProjectedFromTheHeadersChecked() {
+        XCTAssertEqual(InboxScanner.projectedReads(wanted: 99, checked: 100, of: 112), 111)
+        XCTAssertEqual(InboxScanner.projectedReads(wanted: 30, checked: 100, of: 1_500), 400, "never more than one search reads")
+        XCTAssertEqual(InboxScanner.projectedReads(wanted: 10, checked: 100, of: 1_500), 150)
+        XCTAssertEqual(InboxScanner.projectedReads(wanted: 0, checked: 100, of: 1_500), 1)
+        XCTAssertEqual(InboxScanner.projectedReads(wanted: 0, checked: 0, of: 1_500), 375, "a quarter until a header is read")
+    }
+
+    /// What was read stays with what it found: after a relaunch the slip lost "Emails checked: 112" while the
+    /// findings came back (the rating of 2026-11-23).
+    @MainActor
+    func testTheLastSearchIsKeptAndForgotten() throws {
+        let defaults = try XCTUnwrap(UserDefaults(suiteName: "lastSearch-\(UUID().uuidString)"))
+        var stats = InboxScanner.ScanStats(emailsChecked: 112, bodiesRead: 111, receipts: 120, aiAssisted: 0, purchasesIgnored: 5, confirmed: 16)
+        stats.perAccount["a"] = InboxScanner.AccountStats(candidates: 112, checked: 112, read: 111, receipts: 120, incremental: true, capped: false)
+        InboxScanner.saveStats(stats, defaults: defaults)
+        XCTAssertEqual(InboxScanner.savedStats(defaults: defaults), stats)
+        XCTAssertTrue(InboxScanner.savedStats(defaults: defaults)?.onlyNewMail == true)
+        InboxScanner.saveStats(nil, defaults: defaults)
+        XCTAssertNil(InboxScanner.savedStats(defaults: defaults))
+        XCTAssertTrue(LocalUserData.personalKeys.contains(InboxScanner.lastSearchKey), "signing out forgets it")
+    }
+
+    /// Under a minute an inbox was searched "just now": counted in seconds, its row grew a line and shrank
+    /// again (the rating of 2026-11-23).
+    @MainActor
+    func testAnInboxSearchedUnderAMinuteAgoWasSearchedJustNow() {
+        let now = day(2026, 11, 23)
+        var account = MailboxAccount(id: "a", kind: .imap, address: "a@b.test", presetID: "icloud", host: "imap.mail.me.com",
+                                     port: 993, addedAt: now)
+        XCTAssertEqual(InboxAccountRow.detail(for: account, error: nil, now: now), account.providerName)
+        account.lastScan = now.addingTimeInterval(-45)
+        XCTAssertEqual(InboxAccountRow.detail(for: account, error: nil, now: now), "\(account.providerName) · searched just now")
+        account.lastScan = now.addingTimeInterval(-600)
+        XCTAssertNotEqual(InboxAccountRow.detail(for: account, error: nil, now: now), "\(account.providerName) · searched just now")
+        XCTAssertEqual(InboxAccountRow.detail(for: account, error: "Your sign-in expired.", now: now), "Your sign-in expired.")
+    }
+
+    /// A subscription already listed takes what its receipts show only when asked: their price where it differs,
+    /// and their last charge as its renewal day where it has none. Spotify kept "Add its renewal date" while its
+    /// receipts showed every charge (the rating of 2026-11-23).
+    @MainActor
+    func testAListedSubscriptionCanTakeItsReceiptsPriceAndDay() {
+        let spotify = FoundSubscription(proven: proven("Spotify", amount: "10.99", lastCharge: day(2026, 11, 5), currency: "EUR"))
+        let undated = TestFactories.makeSubscription(name: "Spotify", amount: Decimal(string: "11.99")!, currency: "EUR", nextBillingDate: nil)
+        XCTAssertTrue(FoundRow.fillsDate(undated, for: spotify))
+        let both = FoundRow.updatedFromReceipts(undated, by: spotify)
+        XCTAssertEqual(both.amount, Decimal(string: "10.99"))
+        XCTAssertEqual(both.nextBillingDate, day(2026, 11, 5), "the last real charge is the anchor")
+        XCTAssertEqual(both.id, undated.id)
+        XCTAssertNotNil(FoundRow.useReceiptsLabel(undated, for: spotify))
+
+        let dated = TestFactories.makeSubscription(name: "Spotify", amount: Decimal(string: "10.99")!, currency: "EUR",
+                                                   nextBillingDate: day(2026, 12, 20))
+        XCTAssertFalse(FoundRow.fillsDate(dated, for: spotify), "a day the person entered is kept")
+        XCTAssertEqual(FoundRow.updatedFromReceipts(dated, by: spotify), dated, "nothing to change")
+        XCTAssertNil(FoundRow.useReceiptsLabel(dated, for: spotify))
+
+        let yearly = TestFactories.makeSubscription(name: "Spotify", amount: Decimal(string: "10.99")!, currency: "EUR",
+                                                    billingFrequency: .yearly, nextBillingDate: nil)
+        XCTAssertNotNil(FoundRow.listedPrice(yearly, for: spotify), "another period is another price")
+        XCTAssertEqual(FoundRow.updatedFromReceipts(yearly, by: spotify).billingFrequency, .monthly)
+        XCTAssertEqual(FoundRow.updatedFromReceipts(yearly, by: spotify).nextBillingDate, day(2026, 11, 5))
+    }
+
+    /// Words a subject starts with are never a sender's name: "Your" was listed among the other senders.
+    func testASubjectsFirstWordIsNotAMerchant() {
+        XCTAssertFalse(MerchantCatalog.isPlausibleMerchantName("Your"))
+        XCTAssertFalse(MerchantCatalog.isPlausibleMerchantName("The"))
+        XCTAssertFalse(MerchantCatalog.isPlausibleMerchantName("Thank you"))
+        XCTAssertTrue(MerchantCatalog.isPlausibleMerchantName("City Hydro"))
+        XCTAssertTrue(MerchantCatalog.isPlausibleMerchantName("The Daily Brief"))
+    }
+
+    /// "Worth knowing" draws what each fact is: a question mark on "renews in 31 days" read as a doubt.
+    @MainActor
+    func testWorthKnowingDrawsWhatEachFactIs() {
+        XCTAssertEqual(FoundInsights.symbol(for: .renewalSoon), "calendar")
+        XCTAssertEqual(FoundInsights.symbol(for: .priceIncrease), "arrow.up")
+        XCTAssertEqual(FoundInsights.symbol(for: .trialEnding), "hourglass")
+        XCTAssertEqual(FoundInsights.state(for: .renewalSoon), .decide, "still amber: something to decide")
+        XCTAssertFalse([IntelligenceInsight.Kind.renewalSoon, .priceIncrease, .priceChangeNotice, .trialEnding]
+            .map(FoundInsights.symbol(for:)).contains("questionmark"))
+    }
+
+    /// At the accessibility text sizes the first page offers the inboxes before the promise, which alone was
+    /// five screens (the reach rating of 2026-11-23).
+    func testAtTheLargestTextTheInboxesComeFirst() {
+        XCTAssertTrue(InboxImportView.inboxesFirst(largeText: true))
+        XCTAssertFalse(InboxImportView.inboxesFirst(largeText: false))
+    }
+
     // MARK: Categories
 
     func testMerchantCategoriesBecomeTheAppsCategories() {

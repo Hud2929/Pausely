@@ -73,10 +73,30 @@ private struct ChosenDirection: ViewModifier {
     let direction: LayoutDirection?
 
     func body(content: Content) -> some View {
-        if let direction {
-            content.environment(\.layoutDirection, direction)
-        } else {
-            content
+        Group {
+            if let direction {
+                content.environment(\.layoutDirection, direction)
+            } else {
+                content
+            }
+        }
+        .onAppear { SceneDirection.apply(direction) }
+        .onChange(of: direction) { _, now in SceneDirection.apply(now) }
+    }
+}
+
+/// The chosen direction on every window scene's traits. Sheets, alerts and the system's bars take theirs from
+/// UIKit, not from SwiftUI's environment: with Arabic chosen in the app on an English iPhone, Find in Email,
+/// its forms and the Language sheet stayed left to right (the reach rating of 2026-11-23).
+@MainActor
+enum SceneDirection {
+    static func apply(_ direction: LayoutDirection?) {
+        for case let scene as UIWindowScene in UIApplication.shared.connectedScenes {
+            if let direction {
+                scene.traitOverrides.layoutDirection = direction == .rightToLeft ? .rightToLeft : .leftToRight
+            } else if scene.traitOverrides.contains(UITraitLayoutDirection.self) {
+                scene.traitOverrides.remove(UITraitLayoutDirection.self)
+            }
         }
     }
 }

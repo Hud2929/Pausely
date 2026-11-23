@@ -3916,40 +3916,6 @@
         }
       }
     },
-    "Pausely only connects over an encrypted connection (IMAP with SSL/TLS, usually port 993).": {
-      "localizations": {
-        "ar": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "يتصل Pausely عبر اتصال مشفر فقط (IMAP مع SSL/TLS، عادةً المنفذ 993)."
-          }
-        },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Pausely verbindet sich nur verschlüsselt (IMAP mit SSL/TLS, meist Port 993)."
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Pausely solo se conecta mediante una conexión cifrada (IMAP con SSL/TLS, normalmente el puerto 993)."
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Pausely se connecte uniquement via une connexion chiffrée (IMAP avec SSL/TLS, généralement le port 993)."
-          }
-        },
-        "ja": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Pauselyは暗号化された接続（SSL/TLS付きIMAP、通常はポート993）でのみ接続します。"
-          }
-        }
-      }
-    },
     "Pausely reads the receipts in your inbox and finds what you pay for, including trials and price changes.": {
       "localizations": {
         "ar": {
@@ -27161,40 +27127,6 @@
         }
       }
     },
-    "Waiting: %lld. Free tracks %lld; Pausely Pro tracks all of them.": {
-      "localizations": {
-        "ar": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "في الانتظار: %lld. النسخة المجانية تتابع %lld؛ و Pausely Pro يتابعها كلها."
-          }
-        },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Wartet: %lld. Kostenlos werden %lld erfasst; Pausely Pro erfasst alle."
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "En espera: %lld. La versión gratuita sigue %lld; Pausely Pro las sigue todas."
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "En attente : %lld. La version gratuite en suit %lld ; Pausely Pro les suit tous."
-          }
-        },
-        "ja": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "待機中: %lld件。無料版は%lld件まで、Pausely Proならすべて管理できます。"
-          }
-        }
-      }
-    },
     "Pause Plan keeps one streaming service on, pauses the rest, and rotates every month, so you still see everything.": {
       "localizations": {
         "ar": {
@@ -31075,74 +31007,6 @@
         }
       }
     },
-    "Your list is full: %lld waiting": {
-      "localizations": {
-        "ar": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "قائمتك ممتلئة: %lld بالانتظار"
-          }
-        },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Ihre Liste ist voll: %lld warten"
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Tu lista está llena: %lld en espera"
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Votre liste est pleine : %lld en attente"
-          }
-        },
-        "ja": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "リストがいっぱいです：%lld件が待機中"
-          }
-        }
-      }
-    },
-    "Keep %lld for when there's room": {
-      "localizations": {
-        "ar": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "احتفظ بـ %lld حتى يتوفر مكان"
-          }
-        },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "%lld für später aufheben"
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Guardar %lld para cuando haya sitio"
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Garder %lld pour quand il y aura de la place"
-          }
-        },
-        "ja": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "空きができるまで%lld件を保留"
-          }
-        }
-      }
-    },
     "Receipts that say only “$” are counted as %@.": {
       "localizations": {
         "ar": {
@@ -31207,40 +31071,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "ドルの種類を変更"
-          }
-        }
-      }
-    },
-    "Their charges vary or say they're one-time. If one is a subscription, add it from the list by hand.": {
-      "localizations": {
-        "ar": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "رسومها تتغير أو تقول إنها لمرة واحدة. إن كان أحدها اشتراكًا فأضفه يدويًا من القائمة."
-          }
-        },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Ihre Abbuchungen schwanken oder sind als einmalig gekennzeichnet. Ist eines davon ein Abo, fügen Sie es selbst aus der Liste hinzu."
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Sus cargos varían o dicen que son únicos. Si alguno es una suscripción, añádelo a mano desde la lista."
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Leurs prélèvements varient ou se disent ponctuels. Si l’un d’eux est un abonnement, ajoutez-le à la main depuis la liste."
-          }
-        },
-        "ja": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "請求額が変わるか、1回限りと書かれています。サブスクのものがあれば、リストから手動で追加してください。"
           }
         }
       }
@@ -31445,6 +31275,714 @@
           "stringUnit": {
             "state": "translated",
             "value": "リストを%@に更新"
+          }
+        }
+      }
+    },
+    "%@ · searched just now": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ · آخر بحث قبل لحظات"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ · gerade durchsucht"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ · buscado ahora mismo"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ · dernière recherche à l’instant"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ · たった今検索"
+          }
+        }
+      }
+    },
+    "And %lld that ended or were cancelled, at the end of the list.": {
+      "localizations": {
+        "en": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "And %lld that ended or was cancelled, at the end of the list."
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "And %lld that ended or were cancelled, at the end of the list."
+                }
+              }
+            }
+          }
+        },
+        "de": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Dazu %lld, das beendet oder gekündigt wurde, am Ende der Liste."
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Dazu %lld, die beendet oder gekündigt wurden, am Ende der Liste."
+                }
+              }
+            }
+          }
+        },
+        "es": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Y %lld que terminó o se canceló, al final de la lista."
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Y %lld que terminaron o se cancelaron, al final de la lista."
+                }
+              }
+            }
+          }
+        },
+        "fr": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Et %lld terminé ou résilié, en bas de la liste."
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Et %lld terminés ou résiliés, en bas de la liste."
+                }
+              }
+            }
+          }
+        },
+        "ja": {
+          "variations": {
+            "plural": {
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "ほかに終了・解約済みが%lld件あります（リストの最後）。"
+                }
+              }
+            }
+          }
+        },
+        "ar": {
+          "variations": {
+            "plural": {
+              "zero": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "ولا اشتراكات انتهت أو أُلغيت."
+                }
+              },
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "واشتراك واحد انتهى أو أُلغي، في آخر القائمة."
+                }
+              },
+              "two": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "واشتراكان انتهيا أو أُلغيا، في آخر القائمة."
+                }
+              },
+              "few": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "و%lld اشتراكات انتهت أو أُلغيت، في آخر القائمة."
+                }
+              },
+              "many": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "و%lld اشتراكًا انتهت أو أُلغيت، في آخر القائمة."
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "و%lld اشتراك انتهت أو أُلغيت، في آخر القائمة."
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "Add a subscription by hand": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "أضف اشتراكًا يدويًا"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Abo selbst hinzufügen"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Añadir una suscripción a mano"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ajouter un abonnement à la main"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "サブスクを手動で追加"
+          }
+        }
+      }
+    },
+    "%@ on your list was updated from your receipts.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "حُدّث %@ في قائمتك من إيصالاتك."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ in Ihrer Liste wurde nach Ihren Belegen aktualisiert."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ se actualizó en tu lista con tus recibos."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ a été mis à jour dans votre liste d’après vos reçus."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "リストの%@を領収書の内容に更新しました。"
+          }
+        }
+      }
+    },
+    "Undo the change to %@": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "تراجع عن تغيير %@"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Änderung an %@ rückgängig machen"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Deshacer el cambio en %@"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Annuler la modification de %@"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@の変更を取り消す"
+          }
+        }
+      }
+    },
+    "Keep %lld for later": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "احتفظ بـ %lld لوقت لاحق"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld für später aufheben"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Guardar %lld para después"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Garder %lld pour plus tard"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld件を保留する"
+          }
+        }
+      }
+    },
+    "On your list without a renewal date": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "في قائمتك دون تاريخ تجديد"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "In Ihrer Liste, ohne Verlängerungsdatum"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "En tu lista, sin fecha de renovación"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dans votre liste, sans date de renouvellement"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "リストに登録済み（更新日なし）"
+          }
+        }
+      }
+    },
+    "Use %@ and the renewal day from your receipts": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "استخدم %@ ويوم التجديد من إيصالاتك"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ und den Verlängerungstag aus Ihren Belegen übernehmen"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Usar %@ y el día de renovación de tus recibos"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Utiliser %@ et le jour de renouvellement de vos reçus"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "領収書の%@と更新日を使う"
+          }
+        }
+      }
+    },
+    "Add the renewal day from your receipts": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "أضف يوم التجديد من إيصالاتك"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Verlängerungstag aus Ihren Belegen übernehmen"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Añadir el día de renovación de tus recibos"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ajouter le jour de renouvellement de vos reçus"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "領収書から更新日を追加"
+          }
+        }
+      }
+    },
+    "Their charges vary or say they're one-time. If one is a subscription, add it here.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "رسومها تتغير أو تقول إنها لمرة واحدة. إن كان أحدها اشتراكًا فأضفه من هنا."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ihre Abbuchungen schwanken oder sind als einmalig gekennzeichnet. Ist eines davon ein Abo, fügen Sie es hier hinzu."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sus cargos varían o dicen que son únicos. Si alguno es una suscripción, añádelo aquí."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Leurs prélèvements varient ou se disent ponctuels. Si l’un d’eux est un abonnement, ajoutez-le ici."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "請求額が変わるか、1回限りと書かれています。サブスクのものがあれば、ここから追加してください。"
+          }
+        }
+      }
+    },
+    "Add %@ by hand": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "أضف %@ يدويًا"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ selbst hinzufügen"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Añadir %@ a mano"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ajouter %@ à la main"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@を手動で追加"
+          }
+        }
+      }
+    },
+    "Your list is full": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "قائمتك ممتلئة"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ihre Liste ist voll"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tu lista está llena"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Votre liste est pleine"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "リストがいっぱいです"
+          }
+        }
+      }
+    },
+    "Waiting for room: %lld. Free tracks %lld; Pausely Pro tracks all of them. Home shows them until then.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "بانتظار مكان: %1$lld. النسخة المجانية تتابع %2$lld؛ و Pausely Pro يتابعها كلها. تظهر في الرئيسية حتى ذلك الحين."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Warten auf Platz: %1$lld. Kostenlos werden %2$lld erfasst; Pausely Pro erfasst alle. Bis dahin zeigt „Start“ sie an."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Esperando sitio: %1$lld. La versión gratuita sigue %2$lld; Pausely Pro las sigue todas. Hasta entonces, Inicio las muestra."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "En attente de place : %1$lld. La version gratuite en suit %2$lld ; Pausely Pro les suit tous. D’ici là, l’Accueil les affiche."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "空き待ち: %1$lld件。無料版は%2$lld件まで、Pausely Proならすべて管理できます。それまではホームに表示されます。"
+          }
+        }
+      }
+    },
+    "Just added, each month": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "المضاف الآن، كل شهر"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Neu hinzugefügt, pro Monat"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Recién añadidas, cada mes"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ajoutés à l’instant, chaque mois"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "今回追加分、毎月"
+          }
+        }
+      }
+    },
+    "Your list, each month": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "قائمتك، كل شهر"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ihre Liste, pro Monat"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tu lista, cada mes"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Votre liste, chaque mois"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "リスト全体、毎月"
+          }
+        }
+      }
+    },
+    "Your list, each year": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "قائمتك، كل سنة"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ihre Liste, pro Jahr"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tu lista, cada año"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Votre liste, chaque année"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "リスト全体、毎年"
+          }
+        }
+      }
+    },
+    "Your provider's help pages give its IMAP server, usually “imap.” and its domain. Pausely only connects over an encrypted connection (IMAP with SSL/TLS, usually port 993).": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "تذكر صفحات المساعدة لدى مزوّدك خادم IMAP الخاص به، وعادةً يكون “imap.” متبوعًا بنطاقه. يتصل Pausely عبر اتصال مشفر فقط (IMAP مع SSL/TLS، عادةً المنفذ 993)."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Den IMAP-Server nennt die Hilfe Ihres Anbieters, meist „imap.“ und seine Domain. Pausely verbindet sich nur verschlüsselt (IMAP mit SSL/TLS, meist Port 993)."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Las páginas de ayuda de tu proveedor indican su servidor IMAP, normalmente «imap.» y su dominio. Pausely solo se conecta mediante una conexión cifrada (IMAP con SSL/TLS, normalmente el puerto 993)."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Les pages d’aide de votre fournisseur indiquent son serveur IMAP, généralement « imap. » suivi de son domaine. Pausely se connecte uniquement via une connexion chiffrée (IMAP avec SSL/TLS, généralement le port 993)."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "IMAPサーバーはプロバイダのヘルプページに記載されています（通常は「imap.」＋ドメイン）。Pauselyは暗号化された接続（SSL/TLS付きIMAP、通常はポート993）でのみ接続します。"
+          }
+        }
+      }
+    },
+    "Waiting for room, each month": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "بانتظار مكان، كل شهر"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Wartet auf Platz, pro Monat"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Esperando sitio, cada mes"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "En attente de place, chaque mois"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "空き待ち、毎月"
           }
         }
       }

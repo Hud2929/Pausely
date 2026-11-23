@@ -22,6 +22,11 @@ struct AddSubscriptionView: View {
         case name, amount
     }
 
+    /// `startName`: a name to begin with, from a sender Find in Email read but couldn't call a subscription.
+    init(startName: String = "") {
+        _name = State(initialValue: startName)
+    }
+
     /// What the empty name field says: two examples, or "Name" at the accessibility text sizes.
     /// An empty field shows its hint on one line, and there the examples were cut off
     /// ("Netflix, Spo…").
@@ -115,7 +120,7 @@ struct AddSubscriptionView: View {
         }
         .inkScreen()
         .preferredColorScheme(.dark)
-        .onAppear { focusedField = .name }
+        .onAppear { focusedField = name.isEmpty ? .name : .amount }
         .sheet(isPresented: $showingPaywall) {
             StoreKitUpgradeView()
         }

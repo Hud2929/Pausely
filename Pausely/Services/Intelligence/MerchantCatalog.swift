@@ -236,7 +236,9 @@ struct MerchantCatalog {
         "system", "store", "shop", "member", "members", "membership", "messages", "message", "update", "updates",
         "security", "confirm", "confirmation", "verify", "reply", "donotreply", "no reply", "do not reply", "sales",
         "accounting", "finance", "subscription", "subscriptions", "renewal", "renewals", "contact", "service team",
-        "customer service", "customer support", "account services", "online"
+        "customer service", "customer support", "account services", "online",
+        // Words a subject starts with, never a business: "Your" was listed among the other senders (2026-11-23).
+        "your", "you", "my", "our", "the", "thank", "thanks", "dear", "welcome", "new"
     ]
 
     private static let monthPattern = try? NSRegularExpression(

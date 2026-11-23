@@ -36,7 +36,7 @@ enum LocalUserData {
         "first_run_tally_waiting",
         "gmail_connected_email", "gmail_last_history_id", "mailbox_accounts_v1",
         "auth_reset_requested_at", "auth_link_requested_email", "auth_link_requested_at",
-        "subscription_price_history", InboxScanner.assumedDollarKey,
+        "subscription_price_history", InboxScanner.assumedDollarKey, InboxScanner.lastSearchKey,
     ]
 
     /// Saved once per subscription, under its name (the hours a person typed in), and once per account,

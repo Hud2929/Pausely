@@ -117,6 +117,9 @@ struct IMAPConnectView: View {
                 .padding(.top, 16)
                 .padding(.bottom, 24)
             }
+            // The page's reading column on iPad: at the largest text the fields ran 993 points wide, after a
+            // page of 640 (the reach rating of 2026-11-23).
+            .readableScroll()
             .scrollDismissesKeyboard(.interactively)
             .background(Color.ink.ignoresSafeArea())
             .navigationBarTitleDisplayMode(.inline)
@@ -127,6 +130,8 @@ struct IMAPConnectView: View {
             }
             // A problem said about what was typed goes once it is changed: it stayed red over a corrected
             // password (the rating of 2026-11-22).
+            // A tap beside the sheet on iPad closed it with an address typed, without a word (2026-11-23).
+            .interactiveDismissDisabled(address != startAddress || !password.isEmpty || !customHost.isEmpty)
             .onChange(of: address) { error = nil }
             .onChange(of: password) { error = nil }
             .onChange(of: customHost) { error = nil }
@@ -254,7 +259,8 @@ struct IMAPConnectView: View {
                     }
                     .frame(width: stacked ? nil : portWidth)
                 }
-                Text("Pausely only connects over an encrypted connection (IMAP with SSL/TLS, usually port 993).")
+                // Where to find it: "your provider's IMAP server" was asked for with no help (2026-11-23).
+                Text("Your provider's help pages give its IMAP server, usually “imap.” and its domain. Pausely only connects over an encrypted connection (IMAP with SSL/TLS, usually port 993).")
                     .font(.footnote)
                     .foregroundStyle(Color.inkTextFaint)
                     .fixedSize(horizontal: false, vertical: true)
@@ -271,8 +277,8 @@ struct IMAPConnectView: View {
                 _ = try await scanner.connectIMAP(address: address, password: password, preset: effectivePreset,
                                                   host: needsServer ? serverHost : nil,
                                                   port: needsServer ? port : nil)
-                password = ""
-                connecting = false
+                // The page closes as it stands, still saying "Connecting…": emptied first, its password box
+                // and its hint changed under the closing sheet (the rating of 2026-11-23).
                 dismiss()
             } catch {
                 connecting = false

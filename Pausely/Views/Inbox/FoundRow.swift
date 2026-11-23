@@ -15,10 +15,11 @@ struct FoundRow: View {
     var isOnList: Bool = false
     /// Waiting for room on the free list from an earlier add.
     var isWaiting: Bool = false
-    /// The price on the list, when it differs from the receipts'.
-    var listedPrice: String? = nil
-    /// Puts the receipts' price on the list in place of the one there: offered where the two differ.
-    var onUpdatePrice: (() -> Void)? = nil
+    /// The same subscription on the person's list, if it is there.
+    var listed: Subscription? = nil
+    /// Puts the receipts' price, and their renewal day where the list has none, on the listed one: offered
+    /// where they differ.
+    var onUseReceipts: (() -> Void)? = nil
     let isSelected: Bool
     let isExpanded: Bool
     let onToggle: () -> Void
@@ -32,17 +33,21 @@ struct FoundRow: View {
 
     private var proven: ProvenSubscription { found.proven }
 
-    private var badge: (text: String, state: MoneyState?)? {
-        if isWaiting, !found.isCancelled { return (L10n.string("Waiting for room on your list"), nil) }
+    /// The row's tag, with its state's colour and a symbol that says what it is: a question mark on "Price
+    /// went up" read as a doubt about a fact (the rating of 2026-11-23).
+    private var badge: (text: String, state: MoneyState?, symbol: String?)? {
+        if isWaiting, !found.isCancelled { return (L10n.string("Waiting for room on your list"), nil, nil) }
         if isOnList, !found.isCancelled {
-            return (listedPrice.map { L10n.string("On your list at \($0)") } ?? L10n.string("On your list"), nil)
+            if let listedPrice = Self.listedPrice(listed, for: found) { return (L10n.string("On your list at \(listedPrice)"), nil, nil) }
+            if Self.fillsDate(listed, for: found) { return (L10n.string("On your list without a renewal date"), nil, nil) }
+            return (L10n.string("On your list"), nil, nil)
         }
         switch proven.status {
-        case .priceIncreased: return (L10n.string("Price went up"), .decide)
-        case .trial: return (L10n.string("Free trial"), .decide)
+        case .priceIncreased: return (L10n.string("Price went up"), .decide, "arrow.up")
+        case .trial: return (L10n.string("Free trial"), .decide, "hourglass")
         // These rows sit under a heading that says it ("May have ended", "Cancelled"); a tag repeated it.
         case .likelyEnded, .cancelled: return nil
-        case .active: return proven.chargedAfterCancel ? (L10n.string("Charged after a cancellation email"), .due) : nil
+        case .active: return proven.chargedAfterCancel ? (L10n.string("Charged after a cancellation email"), .due, nil) : nil
         }
     }
 
@@ -67,6 +72,39 @@ struct FoundRow: View {
             && listed.amount == (found.proven.comingAmount ?? found.amount)
             && listed.billingFrequency == found.billingFrequency
         return same ? nil : listed.billingFrequency.priced(listed.chargeText)
+    }
+
+    /// Whether the receipts can give a listed subscription the renewal day it lacks: its last charge, on the
+    /// same billing period (or the receipts' period, when their price is being put on it too). Spotify kept
+    /// "Add its renewal date" on the list while its receipts showed every charge (the rating of 2026-11-23).
+    static func fillsDate(_ listed: Subscription?, for found: FoundSubscription) -> Bool {
+        guard let listed, listed.nextBillingDate == nil, found.line.anchor != nil else { return false }
+        return listed.billingFrequency == found.billingFrequency || listedPrice(listed, for: found) != nil
+    }
+
+    /// The listed subscription with what the receipts show: their price, currency and period where those
+    /// differ, and their last charge as the renewal day where it has none. Anything else is kept.
+    static func updatedFromReceipts(_ listed: Subscription, by found: FoundSubscription) -> Subscription {
+        var updated = listed
+        if listedPrice(listed, for: found) != nil {
+            updated.amount = found.proven.comingAmount ?? found.amount
+            updated.currency = found.currency
+            updated.billingFrequency = found.billingFrequency
+        }
+        if fillsDate(listed, for: found), let anchor = found.line.anchor { updated.nextBillingDate = anchor }
+        return updated
+    }
+
+    /// What the button that puts the receipts on the list says, or nil when there is nothing to change.
+    static func useReceiptsLabel(_ listed: Subscription?, for found: FoundSubscription) -> String? {
+        guard !found.priceUnknown else { return nil }
+        let price = found.billingFrequency.priced(InboxImportView.money(found.proven.comingAmount ?? found.amount, found.currency))
+        switch (listedPrice(listed, for: found) != nil, fillsDate(listed, for: found)) {
+        case (true, true): return L10n.string("Use \(price) and the renewal day from your receipts")
+        case (true, false): return L10n.string("Use \(price) on your list")
+        case (false, true): return L10n.string("Add the renewal day from your receipts")
+        case (false, false): return nil
+        }
     }
 
     /// Why a row is only worth a look; nothing for a confirmed one, a trial, or one that ended.
@@ -131,6 +169,9 @@ struct FoundRow: View {
                         // The row is read before its "why", which sits above it here (2026-11-22).
                         .accessibilitySortPriority(1)
                     }
+                    // The order is the row's own: unscoped, every row of the page was read before the heading,
+                    // the slip and the sections they belong to (the reach rating of 2026-11-23).
+                    .accessibilityElement(children: .contain)
                 } else {
                     HStack(spacing: 8) {
                         choose {
@@ -159,6 +200,7 @@ struct FoundRow: View {
 
             if isExpanded { evidenceDetail.id("why-\(found.id)") }
         }
+        .id("row-\(found.id)")
     }
 
     /// The most of the row's width the price may take while the words wrap beside it.
@@ -194,7 +236,10 @@ struct FoundRow: View {
     @ViewBuilder private func choose(@ViewBuilder _ label: () -> some View) -> some View {
         if Self.isAChoice(cancelled: found.isCancelled, onList: isOnList) {
             Button(action: onToggle) {
-                label().contentShape(Rectangle())
+                // At least a fingertip tall: a row of one line was 42 points (the reach rating of 2026-11-23).
+                label()
+                    .frame(maxWidth: .infinity, minHeight: Layout.tapTarget, alignment: .leading)
+                    .contentShape(Rectangle())
             }
             .buttonStyle(.plain)
             .accessibilityElement(children: .ignore)
@@ -252,7 +297,7 @@ struct FoundRow: View {
             }
             if let badge {
                 HStack(spacing: 6) {
-                    if let state = badge.state { StateMark(state: state) }
+                    if let state = badge.state { StateMark(state: state, symbol: badge.symbol) }
                     Text(verbatim: badge.text)
                         .font(.footnote.weight(.semibold))
                         .foregroundStyle(badge.state.map { $0 == .due ? Color.due : Color.decide } ?? Color.inkTextMuted)
@@ -308,11 +353,11 @@ struct FoundRow: View {
     /// Why Pausely thinks so, and the charges it read: the proof behind the line.
     private var evidenceDetail: some View {
         VStack(alignment: .leading, spacing: 10) {
-            // The list's price differs from the receipts': said on the row, and here the way to fix it. The
-            // difference was shown with nothing to do about it (the rating of 2026-11-22).
-            if listedPrice != nil, let onUpdatePrice, let priceText {
-                Button(action: onUpdatePrice) {
-                    Text(verbatim: L10n.string("Use \(found.billingFrequency.priced(priceText)) on your list"))
+            // The list's price or renewal day differs from the receipts': said on the row, and here the way to
+            // fix it. The difference was shown with nothing to do about it (the rating of 2026-11-22).
+            if let onUseReceipts, let label = Self.useReceiptsLabel(listed, for: found) {
+                Button(action: onUseReceipts) {
+                    Text(verbatim: label)
                         .font(.subheadline.weight(.semibold))
                         .foregroundStyle(Color.inkText)
                         .multilineTextAlignment(.leading)
