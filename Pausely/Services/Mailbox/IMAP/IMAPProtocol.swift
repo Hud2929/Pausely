@@ -257,8 +257,14 @@ enum IMAPParser {
             return String(decoding: bytes[start..<index], as: UTF8.self)
         }
 
+        /// Maximum nested parenthesized list depth accepted from a remote IMAP server (prevents stack overflow).
+        private static let maxNestingDepth = 32
+
         /// Reads tokens until `terminator` (a closing parenthesis) or the end of the line.
-        mutating func readTokens(until terminator: UInt8?) throws -> [IMAPToken] {
+        mutating func readTokens(until terminator: UInt8?, depth: Int = 0) throws -> [IMAPToken] {
+            guard depth <= Self.maxNestingDepth else {
+                throw IMAPProtocolError.malformed("nesting too deep")
+            }
             var tokens: [IMAPToken] = []
             while true {
                 skipSpaces()
@@ -271,16 +277,16 @@ enum IMAPParser {
                     return tokens
                 }
                 if let terminator, byte == terminator { advance(); return tokens }
-                tokens.append(try readToken())
+                tokens.append(try readToken(depth: depth))
             }
         }
 
-        mutating func readToken() throws -> IMAPToken {
+        mutating func readToken(depth: Int = 0) throws -> IMAPToken {
             guard let byte = peek() else { throw IMAPProtocolError.malformed("missing token") }
             switch byte {
             case UInt8(ascii: "("):
                 advance()
-                return .list(try readTokens(until: UInt8(ascii: ")")))
+                return .list(try readTokens(until: UInt8(ascii: ")"), depth: depth + 1))
             case UInt8(ascii: "\""):
                 advance()
                 var data = Data()

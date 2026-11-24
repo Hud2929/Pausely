@@ -8,7 +8,7 @@ BEGIN;
 
 -- ======================== Part 1: pending since 2026-10-22 ========================
 
--- ===== Cancel-difficulty ratings (20260916) =====
+-- ===== Cancel-difficulty ratings (20260916 + 20261124 hardening) =====
 CREATE TABLE IF NOT EXISTS public.cancel_difficulty_ratings (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   service_name text NOT NULL CHECK (char_length(service_name) BETWEEN 1 AND 120),
@@ -16,6 +16,26 @@ CREATE TABLE IF NOT EXISTS public.cancel_difficulty_ratings (
   user_id uuid REFERENCES auth.users(id) ON DELETE SET NULL,
   created_at timestamptz DEFAULT now()
 );
+
+-- Normalize legacy mixed-case/unformatted names to canonical slugs before adding slug constraint & dedup.
+UPDATE public.cancel_difficulty_ratings
+SET service_name = left(
+  coalesce(nullif(trim(BOTH '-' FROM regexp_replace(lower(trim(service_name)), '[^a-z0-9]+', '-', 'g')), ''), 'service'),
+  120
+)
+WHERE service_name !~ '^[a-z0-9][a-z0-9-]{0,119}$';
+
+DO $$
+BEGIN
+  ALTER TABLE public.cancel_difficulty_ratings
+    ADD CONSTRAINT cancel_difficulty_service_slug
+    CHECK (service_name ~ '^[a-z0-9][a-z0-9-]{0,119}$');
+EXCEPTION WHEN duplicate_object THEN
+  NULL;
+END $$;
+
+CREATE INDEX IF NOT EXISTS idx_cancel_difficulty_service_name
+  ON public.cancel_difficulty_ratings (service_name);
 
 ALTER TABLE public.cancel_difficulty_ratings ENABLE ROW LEVEL SECURITY;
 
@@ -27,13 +47,15 @@ CREATE POLICY "Users add their own ratings"
   ON public.cancel_difficulty_ratings FOR INSERT TO authenticated
   WITH CHECK (user_id = auth.uid());
 
+-- Require at least 3 distinct ratings before exposing a service average publicly so individual/custom names stay private.
 CREATE OR REPLACE VIEW public.service_difficulty_scores AS
 SELECT
   service_name,
   ROUND(AVG(difficulty_rating)::numeric, 1) AS avg_difficulty,
   COUNT(*) AS rating_count
 FROM public.cancel_difficulty_ratings
-GROUP BY service_name;
+GROUP BY service_name
+HAVING COUNT(*) >= 3;
 
 GRANT SELECT ON public.service_difficulty_scores TO anon, authenticated;
 
@@ -50,6 +72,7 @@ CREATE TABLE IF NOT EXISTS public.deletion_requests (
 );
 
 ALTER TABLE public.deletion_requests ENABLE ROW LEVEL SECURITY;
+REVOKE ALL ON TABLE public.deletion_requests FROM anon, authenticated;
 
 DROP POLICY IF EXISTS "No public access to deletion_requests" ON public.deletion_requests;
 CREATE POLICY "No public access to deletion_requests"
@@ -197,6 +220,9 @@ BEGIN
         NEW.is_pro := false;
         NEW.pro_tier := NULL;
         NEW.pro_activated_at := NULL;
+        NEW.subscription_count_limit := 5;
+        NEW.affiliate_code := NULL;
+        NEW.attributed_at := NULL;
     ELSE
         IF NEW.is_pro IS DISTINCT FROM OLD.is_pro
            OR NEW.pro_tier IS DISTINCT FROM OLD.pro_tier
@@ -267,11 +293,25 @@ AS $$
 DECLARE
     owner_column text := TG_ARGV[0];
     max_rows integer := TG_ARGV[1]::integer;
-    owner_id uuid := (to_jsonb(NEW) ->> owner_column)::uuid;
+    row_json jsonb := to_jsonb(NEW);
+    owner_id uuid := (row_json ->> owner_column)::uuid;
+    row_id text := row_json ->> 'id';
     existing integer;
+    same_row boolean := false;
 BEGIN
     IF owner_id IS NULL OR coalesce(auth.role(), '') = 'service_role' THEN
         RETURN NEW;
+    END IF;
+    -- Serialize per-user inserts on this table so concurrent requests cannot race past max_rows.
+    PERFORM pg_advisory_xact_lock(hashtext(TG_TABLE_NAME || ':' || owner_id::text));
+    -- Allow idempotent UPSERT retries on an already-existing row owned by this user even at cap.
+    IF row_id IS NOT NULL AND row_id ~* '^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$' THEN
+        EXECUTE format('SELECT EXISTS (SELECT 1 FROM %I.%I WHERE id = $1::uuid AND %I = $2)',
+                       TG_TABLE_SCHEMA, TG_TABLE_NAME, owner_column)
+            INTO same_row USING row_id, owner_id;
+        IF same_row THEN
+            RETURN NEW;
+        END IF;
     END IF;
     EXECUTE format('SELECT count(*) FROM %I.%I WHERE %I = $1', TG_TABLE_SCHEMA, TG_TABLE_NAME, owner_column)
         INTO existing USING owner_id;
@@ -283,21 +323,97 @@ END;
 $$;
 REVOKE ALL ON FUNCTION public.enforce_row_cap() FROM public, anon, authenticated;
 
+-- Ensure helper trigger functions are self-contained and lock search_path.
+CREATE OR REPLACE FUNCTION public.update_updated_at_column()
+RETURNS trigger
+LANGUAGE plpgsql
+SET search_path = public, pg_temp
+AS $$
+BEGIN
+    NEW.updated_at = NOW();
+    RETURN NEW;
+END;
+$$;
+
+DO $$
+BEGIN
+    IF EXISTS (SELECT 1 FROM pg_proc p JOIN pg_namespace n ON n.oid = p.pronamespace
+               WHERE n.nspname = 'public' AND p.proname = 'update_subscription_count') THEN
+        ALTER FUNCTION public.update_subscription_count() SET search_path = public, pg_temp;
+    END IF;
+    IF EXISTS (SELECT 1 FROM pg_proc p JOIN pg_namespace n ON n.oid = p.pronamespace
+               WHERE n.nspname = 'public' AND p.proname = 'sync_subscription_to_profile') THEN
+        ALTER FUNCTION public.sync_subscription_to_profile() SET search_path = public, pg_temp;
+    END IF;
+END $$;
+
 -- ======================== Part 4: 2026-11-23 ========================
 
--- ===== Everyday subscription metadata =====
+-- ===== Everyday subscription metadata + precision & size bounds =====
 ALTER TABLE public.subscriptions
     ADD COLUMN IF NOT EXISTS notes TEXT,
     ADD COLUMN IF NOT EXISTS payment_method TEXT,
     ADD COLUMN IF NOT EXISTS split_count INTEGER NOT NULL DEFAULT 1;
+
+-- Widen amount to NUMERIC(20, 4) so high-denomination (IDR/VND/KRW/IRR) and 3-decimal (KWD/BHD/OMR) currencies never overflow or round.
+ALTER TABLE public.subscriptions
+    ALTER COLUMN amount TYPE NUMERIC(20, 4);
+
+CREATE INDEX IF NOT EXISTS idx_subscriptions_user_created
+    ON public.subscriptions (user_id, created_at DESC);
 
 DO $$
 BEGIN
     ALTER TABLE public.subscriptions
         ADD CONSTRAINT subscriptions_split_count_valid
         CHECK (split_count BETWEEN 1 AND 20);
-EXCEPTION WHEN duplicate_object THEN
-    NULL;
+EXCEPTION WHEN duplicate_object THEN NULL;
+END $$;
+
+DO $$
+BEGIN
+    ALTER TABLE public.subscriptions
+        ADD CONSTRAINT subscriptions_amount_non_negative
+        CHECK (amount >= 0);
+EXCEPTION WHEN duplicate_object THEN NULL;
+END $$;
+
+DO $$
+BEGIN
+    ALTER TABLE public.subscriptions
+        ADD CONSTRAINT subscriptions_field_bounds
+        CHECK (
+            char_length(name) BETWEEN 1 AND 200
+            AND (notes IS NULL OR char_length(notes) <= 2000)
+            AND (payment_method IS NULL OR char_length(payment_method) <= 120)
+            AND (category IS NULL OR char_length(category) <= 80)
+            AND (currency IS NULL OR char_length(currency) <= 10)
+            AND (billing_frequency IS NULL OR char_length(billing_frequency) <= 32)
+            AND (status IS NULL OR char_length(status) <= 32)
+        );
+EXCEPTION WHEN duplicate_object THEN NULL;
+END $$;
+
+DO $$
+BEGIN
+    IF EXISTS (SELECT 1 FROM information_schema.columns
+               WHERE table_schema = 'public' AND table_name = 'subscriptions' AND column_name = 'tags') THEN
+        BEGIN
+            ALTER TABLE public.subscriptions
+                ADD CONSTRAINT subscriptions_tags_bound
+                CHECK (tags IS NULL OR cardinality(tags) <= 20);
+        EXCEPTION WHEN duplicate_object THEN NULL;
+        END;
+    END IF;
+    IF EXISTS (SELECT 1 FROM information_schema.columns
+               WHERE table_schema = 'public' AND table_name = 'subscriptions' AND column_name = 'ai_alternatives') THEN
+        BEGIN
+            ALTER TABLE public.subscriptions
+                ADD CONSTRAINT subscriptions_ai_alternatives_bound
+                CHECK (ai_alternatives IS NULL OR octet_length(ai_alternatives::text) <= 4096);
+        EXCEPTION WHEN duplicate_object THEN NULL;
+        END;
+    END IF;
 END $$;
 
 -- ===== Lifecycle events (multi-device Savings Receipt, price history, kept decisions) =====
@@ -311,14 +427,30 @@ CREATE TABLE IF NOT EXISTS public.lifecycle_events (
         'cancelled', 'reactivated', 'deleted', 'kept'
     )),
     occurred_at TIMESTAMPTZ NOT NULL,
-    amount DECIMAL(12, 2) NOT NULL CHECK (amount >= 0),
-    currency TEXT NOT NULL DEFAULT 'USD',
-    frequency TEXT NOT NULL DEFAULT 'monthly',
-    previous_amount DECIMAL(12, 2),
+    amount NUMERIC(20, 6) NOT NULL CHECK (amount >= 0),
+    currency TEXT NOT NULL DEFAULT 'USD' CHECK (char_length(currency) BETWEEN 1 AND 10),
+    frequency TEXT NOT NULL DEFAULT 'monthly' CHECK (char_length(frequency) BETWEEN 1 AND 32),
+    previous_amount NUMERIC(20, 6) CHECK (previous_amount IS NULL OR previous_amount >= 0),
     renewal_date TIMESTAMPTZ,
     anchor_date TIMESTAMPTZ,
     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
+
+ALTER TABLE public.lifecycle_events
+    ALTER COLUMN amount TYPE NUMERIC(20, 6),
+    ALTER COLUMN previous_amount TYPE NUMERIC(20, 6);
+
+DO $$
+BEGIN
+    ALTER TABLE public.lifecycle_events
+        ADD CONSTRAINT lifecycle_events_field_bounds
+        CHECK (
+            char_length(currency) BETWEEN 1 AND 10
+            AND char_length(frequency) BETWEEN 1 AND 32
+            AND (previous_amount IS NULL OR previous_amount >= 0)
+        );
+EXCEPTION WHEN duplicate_object THEN NULL;
+END $$;
 
 CREATE INDEX IF NOT EXISTS idx_lifecycle_events_user_occurred
     ON public.lifecycle_events (user_id, occurred_at DESC);
@@ -336,7 +468,7 @@ CREATE POLICY "Users manage own lifecycle events"
 -- ===== Pause Plans (multi-device rotation schedule) =====
 CREATE TABLE IF NOT EXISTS public.pause_plans (
     user_id UUID PRIMARY KEY REFERENCES auth.users(id) ON DELETE CASCADE,
-    subscription_ids UUID[] NOT NULL DEFAULT '{}',
+    subscription_ids UUID[] NOT NULL DEFAULT '{}' CHECK (cardinality(subscription_ids) <= 50),
     started_on TIMESTAMPTZ NOT NULL,
     ended_at TIMESTAMPTZ,
     updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
@@ -344,6 +476,14 @@ CREATE TABLE IF NOT EXISTS public.pause_plans (
 
 ALTER TABLE public.pause_plans
     ADD COLUMN IF NOT EXISTS ended_at TIMESTAMPTZ;
+
+DO $$
+BEGIN
+    ALTER TABLE public.pause_plans
+        ADD CONSTRAINT pause_plans_ids_bound
+        CHECK (cardinality(subscription_ids) <= 50);
+EXCEPTION WHEN duplicate_object THEN NULL;
+END $$;
 
 ALTER TABLE public.pause_plans ENABLE ROW LEVEL SECURITY;
 
@@ -392,6 +532,14 @@ DROP TRIGGER IF EXISTS on_auth_user_created ON auth.users;
 CREATE TRIGGER on_auth_user_created
     AFTER INSERT ON auth.users
     FOR EACH ROW EXECUTE FUNCTION public.handle_new_user();
+
+-- Backfill any pre-existing auth.users rows missing a public.profiles row.
+INSERT INTO public.profiles (id, email)
+SELECT u.id, u.email
+FROM auth.users u
+LEFT JOIN public.profiles p ON p.id = u.id
+WHERE p.id IS NULL
+ON CONFLICT (id) DO NOTHING;
 
 -- ===== Server-side App Store entitlements (ASSN v2 webhook truth) =====
 CREATE TABLE IF NOT EXISTS public.app_store_entitlements (
@@ -460,6 +608,10 @@ BEGIN
     EXECUTE 'DELETE FROM public.user_settings WHERE user_id = $1' USING uid;
   END IF;
 
+  IF to_regclass('public.waitlist') IS NOT NULL THEN
+    EXECUTE 'DELETE FROM public.waitlist WHERE converted_user_id = $1 OR lower(email) = lower((SELECT email FROM auth.users WHERE id = $1))' USING uid;
+  END IF;
+
   DELETE FROM auth.users WHERE id = uid;
 END;
 $$;
@@ -499,7 +651,7 @@ DECLARE
 BEGIN
     FOREACH unused IN ARRAY ARRAY['user_profiles', 'usage_snapshots', 'user_devices', 'ai_insights_log',
                                   'affiliates', 'affiliate_conversions', 'waitlist', 'alternatives',
-                                  'orders', 'user_subscriptions',
+                                  'tracked_trials', 'orders', 'user_subscriptions',
                                   'active_subscriptions', 'expiring_subscriptions', 'payment_failures']
     LOOP
         SELECT c.relkind INTO kind FROM pg_class c WHERE c.oid = to_regclass('public.' || unused);

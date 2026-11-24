@@ -93,20 +93,13 @@ struct SubscriptionManagementView: View {
                     .accessibilityAddTraits(.isHeader)
             }
 
-            PricePerPeriod(amount: MoneyFormat.string(current.effectiveAmount, current.currency), frequency: current.billingFrequency,
+            PricePerPeriod(amount: MoneyFormat.string(current.amount, current.currency), frequency: current.billingFrequency,
                            amountFont: .question(.largeTitle, weight: .bold), periodFont: .title3, periodColor: .inkTextMuted)
                 .foregroundStyle(Color.inkText)
                 .padding(.top, 8)
 
-            if current.splitCount > 1 {
-                Facts(L10n.breakingAfterDots(L10n.string("Your share (1 of \(current.splitCount)) · full plan \(current.fullChargeText)")))
-                    .font(.subheadline)
-                    .foregroundStyle(Color.inkTextMuted)
-                    .fixedSize(horizontal: false, vertical: true)
-            }
-
             if current.currency != currencyManager.selectedCurrency,
-               let converted = currencyManager.convertToSelected(current.effectiveAmount, from: current.currency) {
+               let converted = currencyManager.convertToSelected(current.amount, from: current.currency) {
                 Text("About \(MoneyFormat.string(converted, currencyManager.selectedCurrency)) in your currency")
                     .font(.footnote)
                     .foregroundStyle(Color.inkTextFaint)
@@ -205,10 +198,6 @@ struct SubscriptionManagementView: View {
             }
             fact(L10n.string("Category"), SubscriptionCategory.localizedLabel(for: current.category))
             divider
-            if current.splitCount > 1 {
-                fact(L10n.string("Split between"), SubscriptionEditDraft.splitLabel(current.splitCount))
-                divider
-            }
             if let method = current.paymentMethod, !method.isEmpty {
                 fact(L10n.string("Billed to"), method)
                 divider

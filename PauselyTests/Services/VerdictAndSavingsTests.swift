@@ -273,26 +273,20 @@ final class VerdictAndSavingsTests: XCTestCase {
         XCTAssertFalse(SubscriptionStore.isUndo(of: undated, on: day(2026, 11, 24), calendar: cal))
     }
 
-    /// A shared plan's totals come from the exact share: $17.99 between two is $107.94 a year, not 12 × $9.00.
-    func testASharedPlansTotalsUseTheExactShare() {
-        var netflix = TestFactories.makeSubscription(name: "Netflix", amount: Decimal(string: "17.99")!, billingFrequency: .monthly)
-        netflix.splitCount = 2
-        XCTAssertEqual(netflix.annualCost, Decimal(string: "107.94"))
-        XCTAssertEqual(netflix.effectiveAmount, Decimal(string: "9.00"), "one charge's share is shown rounded")
-        XCTAssertEqual(MoneyFormat.string(netflix.monthlyCost, "USD", locale: Locale(identifier: "en_US")), "$9.00")
-    }
-
     /// A cancellation with no renewal day is named, so the receipt doesn't say it starts with a first cancellation
-    /// after one (the rating of 2026-11-23); one taken back, or one with a day, is not.
+    /// after one (the rating of 2026-11-23); one taken back, one with a day, or Pausely's own line is not.
     func testUncountedCancellationsAreNamed() {
         let adobe = sub("Adobe", anchor: nil)
         let netflix = sub(anchor: day(2026, 12, 5))
         let hulu = sub("Hulu", anchor: nil)
+        let pausely = sub("Pausely Pro", anchor: nil)
         let events = [event(.cancelled, adobe, on: day(2026, 11, 20)),
                       event(.cancelled, netflix, on: day(2026, 11, 20)),
                       event(.cancelled, hulu, on: day(2026, 11, 20)),
-                      event(.reactivated, hulu, on: day(2026, 11, 21))]
+                      event(.reactivated, hulu, on: day(2026, 11, 21)),
+                      event(.cancelled, pausely, on: day(2026, 11, 20))]
         XCTAssertEqual(SavingsLedger.uncounted(from: events), ["Adobe"])
+        XCTAssertEqual(SavingsLedger.uncounted(from: events, excluding: [adobe.id]), [])
     }
 
     /// The rating prompt waits three days from its first chance: it asked 18 minutes into a first session.

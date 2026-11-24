@@ -10,6 +10,7 @@ import Foundation
 struct GetMonthlySpendIntent: AppIntent {
     static let title: LocalizedStringResource = "Get Monthly Spend"
     static let description = IntentDescription("What your subscriptions cost each month.")
+    static var authenticationPolicy: IntentAuthenticationPolicy { .requiresAuthentication }
 
     @MainActor
     func perform() async throws -> some IntentResult & ReturnsValue<String> & ProvidesDialog {
@@ -26,6 +27,7 @@ struct GetMonthlySpendIntent: AppIntent {
 struct GetUpcomingRenewalsIntent: AppIntent {
     static let title: LocalizedStringResource = "Get Upcoming Renewals"
     static let description = IntentDescription("See which subscriptions are renewing soon.")
+    static var authenticationPolicy: IntentAuthenticationPolicy { .requiresAuthentication }
 
     @Parameter(title: "Days Ahead", default: 7, inclusiveRange: (1, 365))
     var daysAhead: Int
@@ -43,6 +45,7 @@ struct GetUpcomingRenewalsIntent: AppIntent {
 struct AddSubscriptionIntent: AppIntent {
     static let title: LocalizedStringResource = "Add Subscription"
     static let description = IntentDescription("Quickly add a new subscription to track.")
+    static var authenticationPolicy: IntentAuthenticationPolicy { .requiresAuthentication }
 
     @Parameter(title: "Name", requestValueDialog: "What's the name of the subscription?")
     var name: String
@@ -67,6 +70,7 @@ struct AddSubscriptionIntent: AppIntent {
 struct GetSubscriptionDetailIntent: AppIntent {
     static let title: LocalizedStringResource = "Get Subscription Detail"
     static let description = IntentDescription("Get details about a specific subscription.")
+    static var authenticationPolicy: IntentAuthenticationPolicy { .requiresAuthentication }
 
     @Parameter(title: "Subscription Name", requestValueDialog: "Which subscription?")
     var name: String
@@ -112,7 +116,7 @@ enum ShortcutAnswers {
             let daysAway = calendar.calendarDays(from: now, to: charge.date)
             guard daysAway <= daysAhead else { return nil }
             let when = DayText.text(daysAway: daysAway, day: charge.date, locale: locale)
-            let amount = MoneyFormat.string(subscription.effectiveAmount, subscription.currency, locale: locale)
+            let amount = MoneyFormat.string(subscription.amount, subscription.currency, locale: locale)
             return (charge.date, "\(subscription.name) · \(amount) · \(when)")
         }
         .sorted { ($0.day, $0.line) < ($1.day, $1.line) }

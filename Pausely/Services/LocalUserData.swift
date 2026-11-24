@@ -48,9 +48,9 @@ enum LocalUserData {
         "subscription_price_history", InboxScanner.assumedDollarKey, InboxScanner.lastSearchKey, InboxScanner.selectionKey,
     ]
 
-    /// Saved once per subscription, under its name (the hours a person typed in), and once per account,
-    /// under its id (when that person confirmed their age).
-    static let personalKeyPrefixes = ["usage_", "age_consent_"]
+    /// Saved once per subscription, under its name (the hours a person typed in), once per account,
+    /// under its id (when that person confirmed their age), and once per inbox (delta cursors).
+    static let personalKeyPrefixes = ["usage_", "age_consent_", "mailbox_cursor_"]
 
     static func removeSavedValues(from defaults: UserDefaults = .standard) {
         for key in personalKeys { defaults.removeObject(forKey: key) }
@@ -76,6 +76,8 @@ enum LocalUserData {
         // "Keep it" presses made before a first unlock and not yet recorded.
         _ = LockedKeeps.take()
         LogoStore.removeSavedLogos()
+        SubscriptionExporter.shared.cleanPreviousExports()
+        ProtectedBlobStore.removeAllFiles()
         removeSavedValues()
         UsageLog.shared.objectWillChange.send()
         removeReminders()

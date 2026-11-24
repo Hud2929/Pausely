@@ -141,7 +141,8 @@ final class PausePlanStore: ObservableObject {
     }
 
     /// "I started it": the subscription is on again from `date` (`SubscriptionStore.startAgain`).
-    func markStarted(_ subscription: Subscription, on date: Date = Date(), calendar: Calendar = .billing) async {
+    @discardableResult
+    func markStarted(_ subscription: Subscription, on date: Date = Date(), calendar: Calendar = .billing) async -> Bool {
         await SubscriptionStore.shared.startAgain(id: subscription.id, on: date, calendar: calendar)
     }
 
@@ -164,7 +165,7 @@ final class PausePlanStore: ObservableObject {
                 try FileManager.default.removeItem(at: fileURL)
             }
         } catch {
-            PauselyLogger.error("Pause Plan save failed: \(error.localizedDescription)", category: "lifecycle")
+            PauselyLogger.error("Pause Plan save failed: \(String(describing: type(of: error)))", category: "lifecycle")
         }
     }
 

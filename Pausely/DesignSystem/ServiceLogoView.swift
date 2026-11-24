@@ -192,16 +192,37 @@ final class LogoStore {
         return Array(PageIcons.named(in: html, at: page).filter { ServiceDomains.isOwnSite($0, of: host) }.prefix(3))
     }
 
+    /// Blocks HTTP redirects off the service's own domain so fetching a favicon can never leak IP/UA to third-party trackers.
+    private final class OwnSiteRedirectDelegate: NSObject, URLSessionTaskDelegate, Sendable {
+        let host: String
+        init(host: String) { self.host = host }
+        func urlSession(_ session: URLSession, task: URLSessionTask,
+                        willPerformHTTPRedirection response: HTTPURLResponse,
+                        newRequest request: URLRequest,
+                        completionHandler: @escaping (URLRequest?) -> Void) {
+            if let nextURL = request.url, ServiceDomains.isOwnSite(nextURL, of: host) {
+                completionHandler(request)
+            } else {
+                completionHandler(nil)
+            }
+        }
+    }
+
     nonisolated private static func download(_ domain: String) async -> UIImage? {
+        let host = domain.hasPrefix("www.") ? String(domain.dropFirst(4)) : domain
         let config = URLSessionConfiguration.ephemeral
         config.timeoutIntervalForRequest = 8
         config.httpCookieStorage = nil
-        let session = URLSession(configuration: config)
+        let delegate = OwnSiteRedirectDelegate(host: host)
+        let session = URLSession(configuration: config, delegate: delegate, delegateQueue: nil)
         defer { session.finishTasksAndInvalidate() }
 
         func icon(at url: URL) async -> UIImage? {
             guard let (data, response) = try? await session.data(from: url),
-                  (response as? HTTPURLResponse)?.statusCode == 200,
+                  let http = response as? HTTPURLResponse,
+                  http.statusCode == 200,
+                  let finalURL = http.url,
+                  ServiceDomains.isOwnSite(finalURL, of: host),
                   let image = UIImage(data: data),
                   min(image.size.width * image.scale, image.size.height * image.scale) >= 48 else { return nil }
             writeDisk(data, domain)

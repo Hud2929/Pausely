@@ -12,13 +12,24 @@ enum CancelConcierge {
     /// Apple's official refund portal for App Store billed subscriptions.
     static let appleRefundURL = URL(string: "https://reportaproblem.apple.com")
 
+    /// Strips CR/LF and Unicode control characters so multiline names can never inject mail headers.
+    private static func sanitizedSubject(_ value: String) -> String {
+        let scalars = value.unicodeScalars.map { scalar -> UnicodeScalar in
+            (scalar.value < 0x20 || scalar.value == 0x7F || CharacterSet.newlines.contains(scalar)) ? UnicodeScalar(0x20) : scalar
+        }
+        return String(String.UnicodeScalarView(scalars))
+            .components(separatedBy: .whitespaces)
+            .filter { !$0.isEmpty }
+            .joined(separator: " ")
+    }
+
     /// Builds a `mailto:` URL so people using Gmail, Outlook, or Spark as their default iOS Mail
     /// app can launch a pre-filled draft directly without needing Apple Mail configured.
     static func mailtoURL(for draft: Draft) -> URL? {
         var components = URLComponents()
         components.scheme = "mailto"
         components.queryItems = [
-            URLQueryItem(name: "subject", value: draft.subject),
+            URLQueryItem(name: "subject", value: sanitizedSubject(draft.subject)),
             URLQueryItem(name: "body", value: draft.body)
         ]
         return components.url
@@ -31,7 +42,7 @@ enum CancelConcierge {
                                   calendar: Calendar = .billing,
                                   locale: Locale = L10n.locale) -> Draft {
         let price = subscription.billingFrequency.priced(MoneyFormat.string(subscription.amount, subscription.currency, locale: locale))
-        let subject = L10n.string("Cancellation request: \(subscription.name)")
+        let subject = sanitizedSubject(L10n.string("Cancellation request: \(subscription.name)"))
         var paragraphs: [String] = [
             L10n.string("Hello \(subscription.name) Support,"),
             L10n.string("Please cancel my \(subscription.name) subscription (\(price)) effective immediately, and turn off auto-renewal so no further charges are billed."),
@@ -57,7 +68,7 @@ enum CancelConcierge {
                             accountEmail: String? = nil,
                             locale: Locale = L10n.locale) -> Draft {
         let charge = MoneyFormat.string(subscription.amount, subscription.currency, locale: locale)
-        let subject = L10n.string("Refund request: \(subscription.name)")
+        let subject = sanitizedSubject(L10n.string("Refund request: \(subscription.name)"))
         let opening = subscription.status == .trial
             ? L10n.string("I recently noticed a charge of \(charge) after a \(subscription.name) free trial that I did not intend to continue. I would like to cancel the plan and request a refund for this charge.")
             : L10n.string("I recently noticed a charge of \(charge) for my \(subscription.name) subscription that I no longer intend to use. I would like to cancel the plan and request a refund for this charge.")

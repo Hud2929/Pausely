@@ -82,6 +82,7 @@ struct RenewalDatesSheet: View {
                            selection: Binding(get: { date }, set: { dates[subscription.id] = $0 }),
                            in: Calendar.billing.startOfDay(for: Date())..., displayedComponents: .date)
                     .labelsHidden()
+                    .environment(\.locale, L10n.locale)
                     .tint(Color.inkText)
                     .accessibilityIdentifier("datePicker-\(subscription.name)")
             } else {

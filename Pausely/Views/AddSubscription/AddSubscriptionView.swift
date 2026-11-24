@@ -14,7 +14,6 @@ struct AddSubscriptionView: View {
     @State private var hasFreeTrial = false
     @State private var trialEndsAt: Date?
     @State private var reminderDays: Int = 3
-    @State private var splitCount: Int = 1
     @State private var paymentMethod = ""
     @State private var notes = ""
     @ObservedObject private var store = SubscriptionStore.shared
@@ -93,6 +92,7 @@ struct AddSubscriptionView: View {
                         }
                         .pickerStyle(.menu)
                         .tint(Color.inkText)
+                        .tapArea(.trailing)
                     }
                     if !hasFreeTrial {
                         Hairline()
@@ -135,6 +135,7 @@ struct AddSubscriptionView: View {
                         }
                         .pickerStyle(.menu)
                         .tint(Color.inkText)
+                        .tapArea(.trailing)
                     }
                     Hairline()
                     row(L10n.string("Remind me")) {
@@ -145,24 +146,7 @@ struct AddSubscriptionView: View {
                         }
                         .pickerStyle(.menu)
                         .tint(Color.inkText)
-                    }
-                    Hairline()
-                    row(L10n.string("Split between")) {
-                        Picker(L10n.string("Split between"), selection: $splitCount) {
-                            ForEach(SubscriptionEditDraft.splitOptions, id: \.self) { count in
-                                Text(verbatim: SubscriptionEditDraft.splitLabel(count)).tag(count)
-                            }
-                        }
-                        .pickerStyle(.menu)
-                        .tint(Color.inkText)
-                    }
-                    if splitCount > 1, let parsed = AmountText.parse(amount, currency: currencyManager.selectedCurrency) {
-                        let share = AmountText.rounded(parsed / Decimal(splitCount), currency: currencyManager.selectedCurrency)
-                        Text(L10n.string("Your share: \(frequency.priced(MoneyFormat.string(share, currencyManager.selectedCurrency)))"))
-                            .font(.footnote)
-                            .foregroundStyle(Color.inkTextMuted)
-                            .frame(maxWidth: .infinity, alignment: .leading)
-                            .padding(.bottom, 8)
+                        .tapArea(.trailing)
                     }
                 }
 
@@ -171,6 +155,7 @@ struct AddSubscriptionView: View {
                         Text("Billed to")
                             .font(.subheadline.weight(.medium))
                             .foregroundStyle(Color.inkTextMuted)
+                            .accessibilityHidden(true)
                         InkTextField(placeholder: "", text: $paymentMethod, autocapitalization: .words)
                             .accessibilityLabel("Billed to")
                             .accessibilityIdentifier("addPaymentMethodField")
@@ -188,7 +173,8 @@ struct AddSubscriptionView: View {
                         Text("Notes")
                             .font(.subheadline.weight(.medium))
                             .foregroundStyle(Color.inkTextMuted)
-                        InkTextField(placeholder: "", text: $notes, autocapitalization: .sentences)
+                            .accessibilityHidden(true)
+                        InkTextField(placeholder: "", text: $notes, autocapitalization: .sentences, multiline: true)
                             .accessibilityLabel("Notes")
                             .accessibilityIdentifier("addNotesField")
                         Text("For example: Shared with Sarah, or promo rate ends in October.")
@@ -278,8 +264,7 @@ struct AddSubscriptionView: View {
             trialEndsAt: hasFreeTrial ? trialEndsAt : nil,
             status: hasFreeTrial ? .trial : .active,
             notes: trimmedNotes.isEmpty ? nil : trimmedNotes,
-            paymentMethod: trimmedPayment.isEmpty ? nil : trimmedPayment,
-            splitCount: splitCount
+            paymentMethod: trimmedPayment.isEmpty ? nil : trimmedPayment
         )
         Task {
             do {

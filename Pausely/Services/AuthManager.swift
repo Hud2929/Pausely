@@ -29,8 +29,6 @@ class AuthManager: ObservableObject {
     private var pendingPassword: String?
     /// The address `pendingPassword` was typed for. The password is saved only on that account.
     private var pendingPasswordEmail: String?
-    /// The account a reset was accepted for, held until the new password is saved.
-    private var recoveryUser: Auth.User?
     private static let resetRequestedKey = "auth_reset_requested_at"
     /// The address this device last asked a code or a reset for, and when (see `AuthLinkGate`).
     private static let linkRequestedEmailKey = "auth_link_requested_email"
@@ -442,13 +440,14 @@ class AuthManager: ObservableObject {
         AccountMemory.forgetSession()
         UserDefaults.standard.removeObject(forKey: "last_auth_email")
         LocalUserData.hideWhileSignedOut()
+        await InboxScanner.shared.disconnectAll()
         // Pro given on the account follows the account; a purchase follows the Apple Account and stays.
         // Not waited for: the tier is read from StoreKit, and signing out must not wait on the App Store.
         Task { await PaymentManager.shared.setProGrant(false) }
         do {
             try await client.auth.signOut()
         } catch {
-            os_log("Sign out failed: %{public}@", log: .default, type: .error, error.localizedDescription)
+            os_log("Sign out failed: %{public}@", log: .default, type: .error, String(describing: type(of: error)))
         }
 
         UserDefaults.standard.removeObject(forKey: Self.guestModeKey)
@@ -456,7 +455,6 @@ class AuthManager: ObservableObject {
         UserDefaults.standard.removeObject(forKey: "debug_auth_bypass")
         #endif
         needsNewPassword = false
-        recoveryUser = nil
         pendingPassword = nil
         pendingPasswordEmail = nil
         forgetCodeRequest()
@@ -611,10 +609,9 @@ class AuthManager: ObservableObject {
         }
     }
 
-    private func beginNewPassword(for user: Auth.User) {
+    private func beginNewPassword(for _: Auth.User) {
         UserDefaults.standard.removeObject(forKey: Self.resetRequestedKey)
         forgetCodeRequest()
-        recoveryUser = user
         needsNewPassword = true
     }
 
@@ -623,7 +620,6 @@ class AuthManager: ObservableObject {
         do {
             let updated = try await client.auth.update(user: UserAttributes(password: password))
             needsNewPassword = false
-            recoveryUser = nil
             await finishEmailSignIn(updated)
         } catch {
             throw PauselyAuthError.unknown(error)
@@ -633,7 +629,6 @@ class AuthManager: ObservableObject {
     /// The person backed out of choosing a password: the reset is dropped and nobody is signed in.
     func cancelNewPassword() async {
         needsNewPassword = false
-        recoveryUser = nil
         try? await client.auth.signOut(scope: .local)
     }
 }

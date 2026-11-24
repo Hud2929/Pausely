@@ -357,6 +357,20 @@ check('crafted 4-byte negative-length DER cert rejects immediately with 401', an
 ans = await post({ signedPayload: await signJWS({ notificationType: 'TEST', data: {} }, leafKey, negLenTbsLoopChain) })
 check('crafted negative-length TLV inside TBSCertificate loop rejects immediately with 401', ans.status === 401 && ans.json?.error === 'invalid_x5c', ans.text)
 
+// Security: oversized request body (>256KB) MUST reject with 413 before JSON.parse
+ans = await post('{"signedPayload":"' + 'A'.repeat(270 * 1024) + '"}')
+check('oversized body (>256KB) is rejected with 413', ans.status === 413, `got ${ans.status}`)
+
+// Security: invalid environment is rejected with 400 (never silently coerced to Production)
+ans = await post({
+  signedPayload: await signJWS({
+    notificationType: 'SUBSCRIBED',
+    signedDate: 1_760_000_000_000,
+    data: { bundleId: 'com.pausely.app.Pausely', environment: 'Xcode', signedTransactionInfo: await signJWS({ originalTransactionId: '10000077', bundleId: 'com.pausely.app.Pausely', productId: 'com.pausely.premium.annual' }) },
+  }),
+})
+check('invalid environment value is rejected with 400', ans.status === 400 && ans.json?.error === 'invalid_environment', ans.text)
+
 // Honest signed TEST notification
 ans = await post({ signedPayload: validTestJws })
 check('signed Apple TEST notification succeeds without touching database', ans.status === 200 && ans.json?.test === true && Object.keys(await rows()).length === 0, ans.text)

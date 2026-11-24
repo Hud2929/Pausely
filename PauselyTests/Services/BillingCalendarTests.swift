@@ -108,9 +108,10 @@ final class BillingCalendarTests: XCTestCase {
         defaults.removePersistentDomain(forName: suite)
         defer { defaults.removePersistentDomain(forName: suite) }
         let log = UsageLog(defaults: defaults)
-        log.setMonthlyUsage(minutes: 120, for: "Netflix", now: day(2026, 11, 2))
-        XCTAssertEqual(log.getUsage(for: "Netflix", now: day(2026, 11, 30))?.minutesUsed, 120)
-        XCTAssertNil(log.getUsage(for: "Netflix", now: day(2026, 12, 1)))
+        let netflix = Subscription(name: "Netflix", amount: 15.49, billingFrequency: .monthly)
+        log.setMonthlyUsage(minutes: 120, for: netflix, now: day(2026, 11, 2))
+        XCTAssertEqual(log.getUsage(for: netflix, now: day(2026, 11, 30))?.minutesUsed, 120)
+        XCTAssertNil(log.getUsage(for: netflix, now: day(2026, 12, 1)))
     }
 
     func testTheYearSlipCountsAGregorianYear() {

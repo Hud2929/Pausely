@@ -161,7 +161,11 @@ struct CancelSubscriptionFlow: View {
 
                 // Once the person is back from the service's page, this becomes the main action.
                 Button {
-                    if subscription.nextBillingDate == nil { askingNextCharge = true } else { Task { await markCancelled() } }
+                    if RenewalDecisions.upcomingCharge(for: subscription, now: Date()) == nil {
+                        askingNextCharge = true
+                    } else {
+                        Task { await markCancelled() }
+                    }
                 } label: {
                     Text(isSaving ? "Saving…" : "I cancelled it")
                 }
@@ -382,6 +386,7 @@ private struct NextChargeQuestion: View {
                            in: Calendar.billing.date(byAdding: .month, value: -1, to: Date())!...Calendar.billing.date(byAdding: .year, value: 1, to: Date())!,
                            displayedComponents: .date)
                     .datePickerStyle(.graphical)
+                    .environment(\.locale, L10n.locale)
                     .tint(Color.inkText)
                     .accessibilityIdentifier("nextChargePicker")
                 Button(action: onSave) { Text("Save and mark cancelled") }

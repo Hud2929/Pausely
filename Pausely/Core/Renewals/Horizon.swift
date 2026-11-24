@@ -44,7 +44,7 @@ enum Horizon {
                 guard offset >= 0 else { continue }
                 guard offset < days else { break }
                 result.append(Charge(subscriptionId: sub.id, name: sub.name, category: sub.category, date: date,
-                                     dayOffset: offset, amount: sub.effectiveAmount, currency: sub.currency, isTrialEnd: isTrialEnd))
+                                     dayOffset: offset, amount: sub.amount, currency: sub.currency, isTrialEnd: isTrialEnd))
             }
         }
         return result.sorted { ($0.dayOffset, $0.name) < ($1.dayOffset, $1.name) }

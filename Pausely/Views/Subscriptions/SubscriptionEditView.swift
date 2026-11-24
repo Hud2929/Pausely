@@ -268,36 +268,6 @@ struct SubscriptionEditView: View {
                 }
                 .accessibilityLabel("Remind me, \(SubscriptionEditDraft.reminderLabel(draft.reminderDays))")
             }
-
-            divider
-
-            row("Split between") {
-                Menu {
-                    ForEach(SubscriptionEditDraft.splitOptions, id: \.self) { count in
-                        Button {
-                            draft.splitCount = count
-                        } label: {
-                            if count == draft.splitCount {
-                                Label(SubscriptionEditDraft.splitLabel(count), systemImage: "checkmark")
-                            } else {
-                                Text(SubscriptionEditDraft.splitLabel(count))
-                            }
-                        }
-                    }
-                } label: {
-                    valueLabel(SubscriptionEditDraft.splitLabel(draft.splitCount))
-                }
-                .accessibilityLabel("Split between, \(SubscriptionEditDraft.splitLabel(draft.splitCount))")
-                .accessibilityIdentifier("editSplitPicker")
-            }
-
-            if draft.splitCount > 1, let share = draft.perPeriodShare {
-                Text(L10n.string("Your share: \(draft.frequency.priced(MoneyFormat.string(share, draft.currency)))"))
-                    .font(.footnote)
-                    .foregroundStyle(Color.inkTextMuted)
-                    .frame(maxWidth: .infinity, alignment: .leading)
-                    .padding(.bottom, 8)
-            }
         }
     }
 
@@ -362,9 +332,7 @@ struct SubscriptionEditView: View {
     private var footnote: some View {
         VStack(alignment: .leading, spacing: 6) {
             if let yearly = draft.yearlyCost {
-                Text(draft.splitCount > 1
-                     ? L10n.string("Your share is \(MoneyFormat.string(yearly, draft.currency)) a year")
-                     : L10n.string("That's \(MoneyFormat.string(yearly, draft.currency)) a year"))
+                Text(L10n.string("That's \(MoneyFormat.string(yearly, draft.currency)) a year"))
                     .font(.footnote)
                     .foregroundStyle(Color.inkTextFaint)
             }

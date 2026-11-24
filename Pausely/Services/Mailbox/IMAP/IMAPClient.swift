@@ -196,12 +196,20 @@ actor IMAPClient {
         try await send(line)
 
         var untagged: [IMAPResponse] = []
+        let maxUntagged = 5_000
+        let deadline = Date().addingTimeInterval(max(configuration.commandTimeout * 4, 120))
         while true {
+            if Date() > deadline {
+                throw MailboxError.network(L10n.string("The server took too long to answer."))
+            }
             let response = try await readResponse()
             switch response.kind {
             case .untagged:
                 if response.status == "BYE", !(arguments.first == .raw("LOGOUT")) {
                     throw MailboxError.server(response.text.isEmpty ? L10n.string("The server closed the connection.") : response.text)
+                }
+                guard untagged.count < maxUntagged else {
+                    throw MailboxError.server(L10n.string("The server sent more data than expected."))
                 }
                 untagged.append(response)
             case .continuation:

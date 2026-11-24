@@ -118,20 +118,24 @@ final class ProTierTests: XCTestCase {
     private let store = StoreKitManager.shared
     private let payments = PaymentManager.shared
     private var realEntitlements: (() async -> [StoreKitManager.Entitlement])!
-    private var savedGrant: Any?
+    private var savedGrant: String?
 
     override func setUp() async throws {
         realEntitlements = store.currentEntitlements
-        savedGrant = UserDefaults.standard.object(forKey: "pausely_pro_grant")
-        UserDefaults.standard.removeObject(forKey: "pausely_pro_grant")
+        savedGrant = KeychainManager.shared.get("pausely_pro_grant")
+        KeychainManager.shared.delete(key: "pausely_pro_grant")
     }
 
     /// Ends on the free tier with the real source back in place. The real StoreKit is not asked here
     /// (it never answers inside a unit-test host); the app asks it at its next launch.
     override func tearDown() async throws {
         store.currentEntitlements = { [] }
+        if let savedGrant {
+            KeychainManager.shared.save(savedGrant, forKey: "pausely_pro_grant")
+        } else {
+            KeychainManager.shared.delete(key: "pausely_pro_grant")
+        }
         await payments.updateCurrentEntitlements()
-        UserDefaults.standard.set(savedGrant, forKey: "pausely_pro_grant")
         store.currentEntitlements = realEntitlements
     }
 
@@ -207,10 +211,20 @@ final class ProTierTests: XCTestCase {
     }
 
     func testAGrantOnTheAccountKeepsProWhenThereIsNoPurchase() async {
+        let sandbox = StoreSandbox()
         await appStoreSays([])
         await payments.setProGrant(true)
         XCTAssertEqual(payments.currentTier, .pro)
+        XCTAssertNil(UserDefaults.standard.object(forKey: "pausely_pro_grant"), "grant must live in Keychain, not UserDefaults")
+
+        // Local-only guest mode cannot inherit an admin grant.
+        AuthManager.shared.enterGuestMode(persist: false)
+        await payments.updateCurrentEntitlements()
+        XCTAssertEqual(payments.currentTier, .free)
+
         await payments.setProGrant(false)
+        await sandbox.restore()
+        await payments.updateCurrentEntitlements()
         XCTAssertEqual(payments.currentTier, .free)
     }
 }

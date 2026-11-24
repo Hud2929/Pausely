@@ -240,14 +240,22 @@ final class MicrosoftGraphProvider: MailboxProvider {
         return try await getURL(url)
     }
 
-    private func getURL(_ url: URL) async throws -> Data {
-        guard url.host == "graph.microsoft.com" else { throw MailboxError.insecure(L10n.string("Pausely stopped because a reply came from an unexpected server.")) }
+    private func getURL(_ url: URL, maxBytes: Int = 8 * 1024 * 1024) async throws -> Data {
+        guard url.scheme?.lowercased() == "https",
+              url.host == "graph.microsoft.com",
+              url.port == nil else {
+            throw MailboxError.insecure(L10n.string("Pausely stopped because a reply came from an unexpected server."))
+        }
         var request = URLRequest(url: url)
         request.timeoutInterval = 40
         let accountID = account.id
-        return try await MailboxHTTP.data(request,
-                                          token: { try await self.token() },
-                                          refresh: { try await OAuthSession.forceRefresh(Self.oauth, accountID: accountID) })
+        let data = try await MailboxHTTP.data(request,
+                                              token: { try await self.token() },
+                                              refresh: { try await OAuthSession.forceRefresh(Self.oauth, accountID: accountID) })
+        guard data.count <= maxBytes else {
+            throw MailboxError.server(L10n.string("The server sent more data than expected."))
+        }
+        return data
     }
 
     // MARK: - Response models

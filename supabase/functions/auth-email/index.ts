@@ -119,10 +119,39 @@ async function signedBySupabaseAuth(body: string, headers: Headers): Promise<boo
   })
 }
 
+const MAX_BODY_BYTES = 32 * 1024
+
+async function readBoundedText(req: Request, maxBytes: number): Promise<string | null> {
+  const lenHeader = req.headers.get('content-length')
+  if (lenHeader !== null) {
+    const declared = Number(lenHeader)
+    if (Number.isFinite(declared) && declared > maxBytes) return null
+  }
+  if (!req.body) return ''
+  const reader = req.body.getReader()
+  const chunks: Uint8Array[] = []
+  let total = 0
+  while (true) {
+    const { done, value } = await reader.read()
+    if (done) break
+    total += value.byteLength
+    if (total > maxBytes) {
+      await reader.cancel().catch(() => {})
+      return null
+    }
+    chunks.push(value)
+  }
+  const combined = new Uint8Array(total)
+  let offset = 0
+  for (const c of chunks) { combined.set(c, offset); offset += c.byteLength }
+  return new TextDecoder().decode(combined)
+}
+
 Deno.serve(async (req) => {
   if (req.method !== 'POST') return refuse(405, 'Method not allowed')
 
-  const body = await req.text()
+  const body = await readBoundedText(req, MAX_BODY_BYTES)
+  if (body === null) return refuse(413, 'Payload too large')
   if (!(await signedBySupabaseAuth(body, req.headers))) return refuse(401, 'Invalid signature')
 
   let payload: { user?: { email?: unknown }; email_data?: { token?: unknown; email_action_type?: unknown } }
@@ -137,13 +166,19 @@ Deno.serve(async (req) => {
   if (typeof address !== 'string' || !address.includes('@') || typeof code !== 'string' || !/^[0-9]{6,10}$/.test(code)) {
     return refuse(400, 'Invalid payload')
   }
-  const sentence = (typeof purpose === 'string' && SENTENCES[purpose]) || ANY_OTHER_SENTENCE
+  if (!RESEND_API_KEY) {
+    return refuse(503, 'Mail provider not configured')
+  }
+  const sentence = (typeof purpose === 'string' && Object.hasOwn(SENTENCES, purpose))
+    ? SENTENCES[purpose]
+    : ANY_OTHER_SENTENCE
 
   let response: Response
   try {
     response = await fetch(`${RESEND_API_URL}/emails`, {
       method: 'POST',
       headers: { Authorization: `Bearer ${RESEND_API_KEY}`, 'Content-Type': 'application/json' },
+      signal: AbortSignal.timeout(10_000),
       body: JSON.stringify({
         from: FROM,
         to: [address],

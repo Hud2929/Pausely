@@ -29,34 +29,40 @@ final class UsageLogTests: XCTestCase {
     }
 
     func testWhatIsEnteredThisMonthIsThisMonths() {
-        log.setMonthlyUsage(minutes: 150, for: "Netflix", now: day(2026, 11, 3))
-        XCTAssertEqual(log.getCurrentMonthUsage(for: "Netflix", now: day(2026, 11, 28)), 150)
-        XCTAssertEqual(log.calculateCostPerHour(monthlyCost: 15, subscriptionName: "Netflix", now: day(2026, 11, 28)), 6)
+        let netflix = Subscription(name: "Netflix", amount: 15, billingFrequency: .monthly)
+        log.setMonthlyUsage(minutes: 150, for: netflix, now: day(2026, 11, 3))
+        XCTAssertEqual(log.getCurrentMonthUsage(for: netflix, now: day(2026, 11, 28)), 150)
+        XCTAssertEqual(log.calculateCostPerHour(for: netflix, now: day(2026, 11, 28)), 6)
     }
 
     func testLastMonthsHoursAreNotThisMonths() {
-        log.setMonthlyUsage(minutes: 150, for: "Netflix", now: day(2026, 10, 30))
-        XCTAssertNil(log.getUsage(for: "Netflix", now: day(2026, 11, 1)), "a new month starts with nothing entered")
-        XCTAssertEqual(log.getCurrentMonthUsage(for: "Netflix", now: day(2026, 11, 1)), 0)
-        XCTAssertNil(log.calculateCostPerHour(monthlyCost: 15, subscriptionName: "Netflix", now: day(2026, 11, 1)))
+        let netflix = Subscription(name: "Netflix", amount: 15, billingFrequency: .monthly)
+        log.setMonthlyUsage(minutes: 150, for: netflix, now: day(2026, 10, 30))
+        XCTAssertNil(log.getUsage(for: netflix, now: day(2026, 11, 1)), "a new month starts with nothing entered")
+        XCTAssertEqual(log.getCurrentMonthUsage(for: netflix, now: day(2026, 11, 1)), 0)
+        XCTAssertNil(log.calculateCostPerHour(for: netflix, now: day(2026, 11, 1)))
     }
 
     func testNotAtAllIsAnAnswer_notTheSameAsNothingEntered() {
-        XCTAssertNil(log.getUsage(for: "Calm", now: day(2026, 11, 3)))
-        log.setMonthlyUsage(minutes: 0, for: "Calm", now: day(2026, 11, 3))
-        XCTAssertEqual(log.getUsage(for: "Calm", now: day(2026, 11, 3)), UsageLog.Usage(minutesUsed: 0))
-        XCTAssertNil(log.calculateCostPerHour(monthlyCost: 12, subscriptionName: "Calm", now: day(2026, 11, 3)), "no hours, no cost per hour")
+        let calm = Subscription(name: "Calm", amount: 12, billingFrequency: .monthly)
+        XCTAssertNil(log.getUsage(for: calm, now: day(2026, 11, 3)))
+        log.setMonthlyUsage(minutes: 0, for: calm, now: day(2026, 11, 3))
+        XCTAssertEqual(log.getUsage(for: calm, now: day(2026, 11, 3)), UsageLog.Usage(minutesUsed: 0))
+        XCTAssertNil(log.calculateCostPerHour(for: calm, now: day(2026, 11, 3)), "no hours, no cost per hour")
     }
 
     func testAnEntryFromBeforeMonthsWereRecordedCountsOnceThenExpires() {
+        let spotify = Subscription(name: "Spotify", amount: 11, billingFrequency: .monthly)
         defaults.set(90, forKey: "usage_Spotify")   // how earlier versions stored it
-        XCTAssertEqual(log.getCurrentMonthUsage(for: "Spotify", now: day(2026, 11, 10)), 90)
-        XCTAssertEqual(log.getCurrentMonthUsage(for: "Spotify", now: day(2026, 12, 2)), 0)
+        XCTAssertEqual(log.getCurrentMonthUsage(for: spotify, now: day(2026, 11, 10)), 90)
+        XCTAssertEqual(log.getCurrentMonthUsage(for: spotify, now: day(2026, 12, 2)), 0)
     }
 
     func testSubscriptionsAreKeptApart() {
-        log.setMonthlyUsage(minutes: 60, for: "Netflix", now: day(2026, 11, 3))
-        XCTAssertNil(log.getUsage(for: "Hulu", now: day(2026, 11, 3)))
+        let netflix = Subscription(name: "Netflix", amount: 15, billingFrequency: .monthly)
+        let hulu = Subscription(name: "Hulu", amount: 15, billingFrequency: .monthly)
+        log.setMonthlyUsage(minutes: 60, for: netflix, now: day(2026, 11, 3))
+        XCTAssertNil(log.getUsage(for: hulu, now: day(2026, 11, 3)))
     }
 
     func testUsageFollowsSubscriptionAcrossRename() {
@@ -78,7 +84,8 @@ final class UsageLogTests: XCTestCase {
 
     func testLegacyNameKeyMigratesToSubscriptionUUID() {
         let sub = Subscription(name: "Netflix", amount: 15.99, billingFrequency: .monthly)
-        log.setMonthlyUsage(minutes: 180, for: "Netflix", now: day(2026, 11, 5))
+        defaults.set(180, forKey: "usage_Netflix")
+        defaults.set("2026-11", forKey: "usage_month_Netflix")
         XCTAssertEqual(log.getCurrentMonthUsage(for: sub, now: day(2026, 11, 8)), 180)
         // Updating via subscription clears the legacy key so another service with the same name won't inherit it.
         log.setMonthlyUsage(minutes: 300, for: sub, now: day(2026, 11, 9))

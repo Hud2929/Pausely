@@ -303,4 +303,36 @@ final class ScreenshotImportTests: XCTestCase {
         XCTAssertEqual(youtube?.amount, Decimal(string: "13.99"))
         XCTAssertEqual(youtube?.trialEndsAt, day(2026, 12, 9))
     }
+
+    func testExpiryWordsUseWordBoundariesAndCompoundBillsAndHeadersAreRecognized() {
+        // "Recommended" and "Extended" contain "ended" as a substring and must NOT mark a subscription cancelled.
+        XCTAssertFalse(ScreenshotParser.containsExpiryWord("recommended plan"))
+        XCTAssertFalse(ScreenshotParser.containsExpiryWord("extended coverage"))
+        XCTAssertTrue(ScreenshotParser.containsExpiryWord("ended nov 12"))
+        XCTAssertTrue(ScreenshotParser.containsExpiryWord("cancelled"))
+
+        // German and Japanese compound bill nouns are recognized as bills.
+        XCTAssertTrue(ScreenshotParser.isBill("Hausratversicherung"))
+        XCTAssertTrue(ScreenshotParser.isBill("Kaltmiete"))
+        XCTAssertTrue(ScreenshotParser.isBill("生命保険"))
+        XCTAssertFalse(ScreenshotParser.isBill("Netflix"))
+
+        // Localized recurring headers are filtered as chrome, never treated as service names.
+        XCTAssertTrue(ScreenshotParser.isChromeNoise("Daueraufträge", lower: "daueraufträge"))
+        XCTAssertTrue(ScreenshotParser.isChromeNoise("Abonnements", lower: "abonnements"))
+        XCTAssertTrue(ScreenshotParser.isChromeNoise("定期支払い", lower: "定期支払い"))
+
+        // Second sighting across screenshot batches clears .mayNotRepeat and marks eligible for selection.
+        var list = [ScreenshotParser.DetectedItem(id: "candle", name: "Cosmic Candle", category: "Other",
+                                                  amount: Decimal(string: "11.99"), currency: "EUR",
+                                                  frequency: .monthly, renewalDate: nil, trialEndsAt: nil,
+                                                  isCancelled: false, doubt: .mayNotRepeat)]
+        let batch2 = [ScreenshotParser.DetectedItem(id: "candle", name: "Cosmic Candle", category: "Other",
+                                                    amount: Decimal(string: "11.99"), currency: "EUR",
+                                                    frequency: .monthly, renewalDate: nil, trialEndsAt: nil,
+                                                    isCancelled: false, doubt: .mayNotRepeat)]
+        let newlyEligible = ScreenshotParser.mergeBatch(batch2, into: &list)
+        XCTAssertNil(list[0].doubt)
+        XCTAssertTrue(newlyEligible.contains("candle"))
+    }
 }

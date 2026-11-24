@@ -271,6 +271,7 @@ struct CircularCharge: View {
                         .widgetAccentable()
                 }
                 .minimumScaleFactor(0.6)
+                .privacySensitive()
                 .accessibilityElement(children: .ignore)
                 .accessibilityLabel(Text(verbatim: "\(next.charge.name), \(DayText.text(daysAway: next.daysAway, day: next.day, locale: entry.locale))"))
             } else {

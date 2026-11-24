@@ -235,7 +235,7 @@ enum ScreenshotParser {
                 name: card.name,
                 category: card.category,
                 // Every 2 months, counted as half each month, so a year comes to what it costs.
-                amount: card.everyTwoMonths ? card.amount.map { MoneyFormat.decimal(NSDecimalNumber(decimal: $0 / 2).doubleValue) } : card.amount,
+                amount: card.everyTwoMonths ? card.amount.map { AmountText.rounded($0 / 2, currency: card.currency) } : card.amount,
                 currency: card.currency,
                 frequency: card.frequency ?? .monthly,
                 renewalDate: card.renewalDate,
@@ -258,11 +258,13 @@ enum ScreenshotParser {
             // Section headers ("ACTIVE", "INACTIVE", "EXPIRED")
             if isActiveHeader(lower) {
                 flushCurrent()
+                heading = nil
                 section = .active
                 continue
             }
             if isInactiveHeader(lower) {
                 flushCurrent()
+                heading = nil
                 section = .inactive
                 continue
             }
@@ -282,6 +284,7 @@ enum ScreenshotParser {
             // ticked (the rating of 2026-11-23).
             if price != nil, isIncomeOrTransfer(lower) {
                 flushCurrent()
+                heading = nil
                 continue
             }
 
@@ -399,6 +402,26 @@ enum ScreenshotParser {
     }
 
     // MARK: - Merging & Deduplication
+
+    /// Merges one newly scanned batch into existing results without losing user edits or ticks; returns IDs
+    /// that were newly added or became eligible for automatic selection (e.g. a second sighting cleared `.mayNotRepeat`).
+    static func mergeBatch(_ incoming: [DetectedItem], into list: inout [DetectedItem]) -> Set<String> {
+        var addedIDs: Set<String> = []
+        for item in incoming {
+            let beforeIdx = list.firstIndex { ServiceName.same($0.name, item.name) }
+            let wasCancelled = beforeIdx.map { list[$0].isCancelled } ?? false
+            let wasMayNotRepeat = beforeIdx.map { list[$0].doubt == .mayNotRepeat } ?? false
+            merge(item, into: &list)
+            if beforeIdx == nil {
+                addedIDs.insert(item.id)
+            } else if let idx = beforeIdx {
+                if (wasCancelled && !list[idx].isCancelled) || (wasMayNotRepeat && list[idx].doubt != .mayNotRepeat) {
+                    addedIDs.insert(list[idx].id)
+                }
+            }
+        }
+        return addedIDs
+    }
 
     private static func merge(_ incoming: DetectedItem, into list: inout [DetectedItem]) {
         if let idx = list.firstIndex(where: { ServiceName.same($0.name, incoming.name) }) {
@@ -654,12 +677,6 @@ enum ScreenshotParser {
         if ServiceName.same(text, serviceName) { return true }
         return false
     }
-
-
-
-
-
-
 
     private static func isPlausibleTitle(_ name: String) -> Bool {
         let lower = name.lowercased()

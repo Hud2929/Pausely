@@ -303,7 +303,7 @@ struct DashboardView: View {
                         Text("Savings Receipt")
                             .font(.headline)
                             .foregroundStyle(Color.inkText)
-                        let uncounted = SavingsLedger.uncounted(from: eventLog.events)
+                        let uncounted = SavingsLedger.uncounted(from: eventLog.events, excluding: Set(store.subscriptions.filter(\.isPausely).map(\.id)))
                         (uncounted.isEmpty ? Text("Your Savings Receipt starts with your first cancellation")
                                            : Text("Cancelled without a renewal day, so no charges could be counted: \(uncounted.formatted(.list(type: .and).locale(L10n.locale))).")).font(.subheadline)
                             .foregroundStyle(Color.inkTextMuted)

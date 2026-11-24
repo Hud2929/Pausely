@@ -10,7 +10,6 @@ class SupabaseManager: ObservableObject {
     static let shared = SupabaseManager()
 
     let client: SupabaseClient
-    @Published var isConfigured: Bool = false
     private(set) var isDemoMode = false
 
     /// Returns true if the app is running in demo mode (no real Supabase credentials configured)
@@ -31,12 +30,10 @@ class SupabaseManager: ObservableObject {
                 components.host = "demo.supabase.co"
                 let fallbackURL = components.url ?? URL(fileURLWithPath: "/dev/null")
                 client = SupabaseClient(supabaseURL: fallbackURL, supabaseKey: "INVALID_DEMO_KEY_NOT_REAL")
-                isConfigured = false
                 isDemoMode = true
                 return
             }
             client = SupabaseClient(supabaseURL: demoURL, supabaseKey: "INVALID_DEMO_KEY_NOT_REAL")
-            isConfigured = false
             isDemoMode = true
             return
         }
@@ -47,7 +44,6 @@ class SupabaseManager: ObservableObject {
         if supabaseKey.isEmpty || supabaseKey == "YOUR_SUPABASE_ANON_KEY" {
             os_log("⚠️ Supabase Anon Key not configured. Running in offline mode.", log: .default, type: .error)
             client = SupabaseClient(supabaseURL: supabaseURL, supabaseKey: "INVALID_DEMO_KEY_NOT_REAL")
-            isConfigured = false
             isDemoMode = true
             return
         }
@@ -56,7 +52,6 @@ class SupabaseManager: ObservableObject {
             supabaseURL: supabaseURL,
             supabaseKey: supabaseKey
         )
-        isConfigured = true
         isDemoMode = false
 
         // Log configuration status (debug only)
@@ -89,19 +84,19 @@ struct SubscriptionRecord: Codable {
 
     init(from subscription: Subscription) {
         self.id = subscription.id
-        self.name = subscription.name
-        self.category = subscription.category
-        self.amount = subscription.amount
-        self.currency = subscription.currency
+        self.name = String(subscription.name.prefix(200))
+        self.category = subscription.category.map { String($0.prefix(80)) }
+        self.amount = max(0, subscription.amount)
+        self.currency = String(subscription.currency.prefix(10))
         self.billing_frequency = subscription.billingFrequency.rawValue
         self.notify_before_days = subscription.notifyBeforeDays
         // Days go up in their saved form: noon UTC on the day, the same day wherever it is read.
         self.trial_ends_at = subscription.trialEndsAt.map { BillingDay.stored($0).iso8601String }
         self.next_billing_date = subscription.nextBillingDate.map { BillingDay.stored($0).iso8601String }
         self.status = subscription.status.rawValue
-        self.notes = subscription.notes
-        self.payment_method = subscription.paymentMethod
-        self.split_count = max(1, min(20, subscription.splitCount))
+        self.notes = subscription.notes.map { String($0.prefix(2_000)) }
+        self.payment_method = subscription.paymentMethod.map { String($0.prefix(120)) }
+        self.split_count = 1
     }
 
     /// Dates and optional user fields that can be cleared are always sent, as null when empty, so
@@ -148,8 +143,7 @@ struct SubscriptionRecord: Codable {
             status: SubscriptionStatus(saved: status),
             createdAt: created_at?.iso8601Date ?? Date(),
             notes: notes,
-            paymentMethod: payment_method,
-            splitCount: split_count ?? 1
+            paymentMethod: payment_method
         )
     }
 }
@@ -197,11 +191,5 @@ enum PauselyAuthState {
     case unauthenticated
     case error(PauselyAuthError)
 }
-
-
-// MARK: - Additional Database Models
-
-
-// MARK: - Waitlist Model
 
 

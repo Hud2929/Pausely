@@ -61,16 +61,26 @@ Deno.serve({ port: 54321, onListen() {} }, async (req) => {
   if (url.pathname === '/__reset') { seen = []; revoked = []; failRevoke = url.searchParams.get('failRevoke') === '1'; return new Response('ok') }
 
   if (url.pathname === '/auth/v1/user') {
-    return req.headers.get('Authorization') === 'Bearer a-signed-in-session'
-      ? Response.json({ id: '5f0c3a0e-0000-4000-8000-000000000001' })
-      : Response.json({ msg: 'invalid JWT' }, { status: 401 })
+    if (req.headers.get('Authorization') === 'Bearer a-signed-in-session') {
+      return Response.json({ id: '5f0c3a0e-0000-4000-8000-000000000001', identities: [{ provider: 'apple', id: 'apple-sub-1' }] })
+    }
+    if (req.headers.get('Authorization') === 'Bearer an-email-only-session') {
+      return Response.json({ id: '5f0c3a0e-0000-4000-8000-000000000002', identities: [{ provider: 'email', id: 'email-1' }] })
+    }
+    return Response.json({ msg: 'invalid JWT' }, { status: 401 })
   }
   if (url.pathname === '/auth/token' && req.method === 'POST') {
     const entry = await read(req)
-    if (!entry.secret?.signed || entry.fields.code !== 'a-code-apple-issued') {
+    if (!entry.secret?.signed) return Response.json({ error: 'invalid_grant' }, { status: 400 })
+    if (entry.fields.code === 'a-code-for-someone-else') {
+      const otherSub = btoa(JSON.stringify({ sub: 'apple-sub-other' })).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '')
+      return Response.json({ access_token: 'access-2', token_type: 'Bearer', expires_in: 3600, refresh_token: 'refresh-other', id_token: `eyJhbGciOiJSUzI1NiJ9.${otherSub}.sig` })
+    }
+    if (entry.fields.code !== 'a-code-apple-issued') {
       return Response.json({ error: 'invalid_grant' }, { status: 400 })
     }
-    return Response.json({ access_token: 'access-1', token_type: 'Bearer', expires_in: 3600, refresh_token: 'refresh-for-this-person', id_token: 'x.y.z' })
+    const ownSub = btoa(JSON.stringify({ sub: 'apple-sub-1' })).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '')
+    return Response.json({ access_token: 'access-1', token_type: 'Bearer', expires_in: 3600, refresh_token: 'refresh-for-this-person', id_token: `eyJhbGciOiJSUzI1NiJ9.${ownSub}.sig` })
   }
   if (url.pathname === '/auth/revoke' && req.method === 'POST') {
     const entry = await read(req)
@@ -115,6 +125,10 @@ if (phase === 'configured') {
   check('a caller with no session is refused', answer.status === 401, `got ${answer.status}`)
   answer = await post({ code: 'a-code-apple-issued' }, 'Bearer the-projects-public-key')
   check("a caller holding only the project's public key is refused", answer.status === 401, `got ${answer.status}`)
+  answer = await post({ code: 'a-code-apple-issued' }, 'Bearer an-email-only-session')
+  check('an email-only account cannot call apple-revoke', answer.status === 403 && answer.json?.error === 'not_apple_account', answer.text)
+  answer = await post({ code: 'x'.repeat(5000) })
+  check('an oversized body (>4KB) is rejected with 413', answer.status === 413, `got ${answer.status}`)
   check('and Apple was asked nothing', (await seen()).seen.length === 0)
 
   answer = await post('this is not json')
@@ -138,6 +152,11 @@ if (phase === 'configured') {
   const claims = secret?.claims ?? {}
   check('it names the team as issuer, the app as subject and Apple as audience', claims.iss === 'TEAMID1234' && claims.sub === 'com.example.app' && claims.aud === 'https://appleid.apple.com', JSON.stringify(claims))
   check('and lasts five minutes (Apple allows at most six months)', claims.exp - claims.iat === 300 && Math.abs(claims.iat - Date.now() / 1000) < 60, JSON.stringify(claims))
+
+  await reset()
+  answer = await post({ code: 'a-code-for-someone-else' })
+  record = await seen()
+  check('a code whose Apple sub does not match the caller is refused without revoking', answer.status === 403 && answer.json?.error === 'identity_mismatch' && record.revoked.length === 0, answer.text)
 
   await reset()
   answer = await post({ code: 'a-code-someone-made-up' })

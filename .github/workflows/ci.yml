@@ -37,23 +37,24 @@ jobs:
 
   ios-proof:
     name: iOS Unit, Mail Rig, UI & Release Build
-    runs-on: macos-15
+    runs-on: macos-26
     steps:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
 
-      - name: Select Xcode 26 (matching project objectVersion 77 & Swift 6)
+      - name: Select Xcode 27+ (iOS 27 SDK for April 2027 App Store compliance)
         run: |
-          if [ -d "/Applications/Xcode_26.app/Contents/Developer" ]; then
-            sudo xcode-select -s /Applications/Xcode_26.app/Contents/Developer
-          elif [ -d "/Applications/Xcode_26.0.app/Contents/Developer" ]; then
-            sudo xcode-select -s /Applications/Xcode_26.0.app/Contents/Developer
-          else
-            LATEST_XCODE=$(ls -d /Applications/Xcode_26*.app /Applications/Xcode.app 2>/dev/null | head -n 1)
-            [ -n "$LATEST_XCODE" ] && sudo xcode-select -s "$LATEST_XCODE/Contents/Developer"
+          XCODE_APP=$(ls -d /Applications/Xcode_27*.app 2>/dev/null | sort -V | tail -n 1 || true)
+          if [ -z "$XCODE_APP" ] && [ -d "/Applications/Xcode.app/Contents/Developer" ]; then
+            XCODE_APP="/Applications/Xcode.app"
           fi
+          if [ -z "$XCODE_APP" ]; then
+            XCODE_APP=$(ls -d /Applications/Xcode_26*.app 2>/dev/null | sort -V | tail -n 1 || true)
+          fi
+          [ -n "$XCODE_APP" ] && sudo xcode-select -s "$XCODE_APP/Contents/Developer"
           xcodebuild -version
+          echo "iOS SDK: $(xcodebuild -sdk iphoneos -version SDKVersion)"
 
       - name: Fetch website branches for gold checks
         run: git fetch origin gh-pages:gh-pages site-next:site-next || true

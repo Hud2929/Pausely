@@ -51,7 +51,7 @@ struct FreeLimitPickerSheet: View {
             Candidate(
                 name: sub.name,
                 category: sub.category ?? SubscriptionCategory.other.rawValue,
-                amount: sub.effectiveAmount,
+                amount: sub.amount,
                 currency: sub.currency,
                 frequency: sub.billingFrequency,
                 yearlyInDisplay: rates.convert(sub.annualCost, from: sub.currency, to: display) ?? 0
@@ -59,12 +59,10 @@ struct FreeLimitPickerSheet: View {
         }
         let activeNames = Set(activeCandidates.map { $0.name.lowercased() })
         let waitingCandidates = TallyImporter.waitingLines().filter { !activeNames.contains($0.name.lowercased()) }.map { line in
-            let people = max(1, line.splitCount)
-            let share = people > 1 ? AmountText.rounded(line.amount / Decimal(people), currency: line.currency) : line.amount
-            return Candidate(
+            Candidate(
                 name: line.name,
                 category: line.category,
-                amount: share,
+                amount: line.amount,
                 currency: line.currency,
                 frequency: line.frequency ?? .monthly,
                 yearlyInDisplay: rates.convert(line.yearlyCost, from: line.currency, to: display) ?? 0

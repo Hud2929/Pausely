@@ -45,7 +45,7 @@ enum ProtectedBlobStore {
                 DeviceFile.relaxProtection(of: url, fileManager: fileManager)
                 return data
             } catch {
-                PauselyLogger.error("ProtectedBlobStore read failed for \(filename): \(error.localizedDescription)", category: "storage")
+                PauselyLogger.error("ProtectedBlobStore read failed for \(filename): \(String(describing: type(of: error)))", category: "storage")
                 return Data()
             }
         }
@@ -74,7 +74,7 @@ enum ProtectedBlobStore {
                 do {
                     try fileManager.removeItem(at: url)
                 } catch {
-                    PauselyLogger.error("ProtectedBlobStore remove failed for \(filename): \(error.localizedDescription)", category: "storage")
+                    PauselyLogger.error("ProtectedBlobStore remove failed for \(filename): \(String(describing: type(of: error)))", category: "storage")
                 }
             }
             return
@@ -82,10 +82,21 @@ enum ProtectedBlobStore {
         do {
             try fileManager.createDirectory(at: dir, withIntermediateDirectories: true)
             try data.write(to: url, options: [.atomic, .completeFileProtectionUntilFirstUserAuthentication])
+            var resourceValues = URLResourceValues()
+            resourceValues.isExcludedFromBackup = true
+            var mutableURL = url
+            try? mutableURL.setResourceValues(resourceValues)
             defaults.removeObject(forKey: legacyKey)
         } catch {
-            PauselyLogger.error("ProtectedBlobStore write failed for \(filename): \(error.localizedDescription)", category: "storage")
+            PauselyLogger.error("ProtectedBlobStore write failed for \(filename): \(String(describing: type(of: error)))", category: "storage")
         }
+    }
+
+    /// Deletes every file inside `Application Support/Pausely/` (including set-aside corrupt copies) on account erasure.
+    static func removeAllFiles(directory: URL? = nil, fileManager: FileManager = .default) {
+        let dir = directory ?? Self.directory(fileManager: fileManager)
+        guard let urls = try? fileManager.contentsOfDirectory(at: dir, includingPropertiesForKeys: nil) else { return }
+        for url in urls { try? fileManager.removeItem(at: url) }
     }
 }
 
@@ -101,9 +112,6 @@ final class AppSettings {
         get { ProtectedBlobStore.read(filename: "subscriptions_cache.json", legacyKey: "cached_subscriptions") }
         set { ProtectedBlobStore.write(newValue, filename: "subscriptions_cache.json", legacyKey: "cached_subscriptions") }
     }
-
-    @AppSetting("subscriptions_cache_date", defaultValue: Date.distantPast)
-    var subscriptionsCacheDate: Date
 
     /// Changes made on this device that the server has not confirmed yet (`SyncQueue`), stored under
     /// iOS hardware data protection.

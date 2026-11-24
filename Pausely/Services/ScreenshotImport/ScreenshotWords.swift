@@ -49,11 +49,15 @@ extension ScreenshotParser {
 
     /// Rent, insurance, energy and the like: recurring, but a bill rather than a subscription.
     static func isBill(_ name: String) -> Bool {
-        let words = Set(name.lowercased().split { !$0.isLetter }.map(String.init))
+        let lower = name.lowercased()
+        let words = Set(lower.split { !$0.isLetter }.map(String.init))
         let bills: Set<String> = ["rent", "insurance", "electric", "electricity", "energy", "gas", "water", "mortgage", "loan",
                                   "utility", "utilities", "hydro", "council", "miete", "versicherung", "strom", "loyer",
                                   "assurance", "électricité", "alquiler", "seguro", "luz", "家賃", "保険"]
-        return !words.isDisjoint(with: bills)
+        if !words.isDisjoint(with: bills) { return true }
+        // German and Japanese compound nouns ("Hausratversicherung", "Kaltmiete", "生命保険", "家賃振込").
+        let compoundRoots = ["versicherung", "miete", "strom", "家賃", "保険"]
+        return compoundRoots.contains { lower.contains($0) }
     }
 
     /// "Every 4 weeks" and its translations.
@@ -102,7 +106,9 @@ extension ScreenshotParser {
     }
 
     static func containsExpiryWord(_ lower: String) -> Bool {
-        ["expired", "expires", "cancelled", "canceled", "ended", "abgelaufen", "expiré", "venció", "期限切れ", "منتهي"].contains { lower.contains($0) }
+        let nonAscii = ["abgelaufen", "expiré", "venció", "期限切れ", "منتهي"]
+        if nonAscii.contains(where: { lower.contains($0) }) { return true }
+        return lower.range(of: #"\b(?:expired|expires|cancelled|canceled|ended)\b"#, options: .regularExpression) != nil
     }
 
     static func containsTrialWord(_ lower: String) -> Bool {
@@ -124,6 +130,7 @@ extension ScreenshotParser {
         // Battery % or carrier indicator
         if raw.range(of: #"^\d{1,3}%$"#, options: .regularExpression) != nil { return true }
         if ["5g", "4g", "lte", "wi-fi", "wifi", "sos", "carrier"].contains(lower) { return true }
+        if recurringListHeaders.contains(lower.trimmingCharacters(in: .whitespaces)) { return true }
         let chrome = [
             "subscriptions", "settings", "apple account", "apple id", "back", "done", "edit", "search", "cancel",
             "share with family", "share new subscriptions", "renewal receipts", "a receipt will be sent",

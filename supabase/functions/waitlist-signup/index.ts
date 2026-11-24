@@ -13,7 +13,6 @@
 // The reply is the same whether or not the address was already on the list, and no address is logged.
 // Tested by scripts/dbtest/waitlist_function.sh.
 
-import { serve } from 'https://deno.land/std@0.168.0/http/server.ts'
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.117.3'
 import { AwsClient } from 'https://esm.sh/aws4fetch@1.0.17'
 
@@ -28,12 +27,15 @@ const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')
 const TURNSTILE_SECRET_KEY = Deno.env.get('TURNSTILE_SECRET_KEY')
 const MAX_SIGNUPS_PER_HOUR = positiveInt(Deno.env.get('WAITLIST_MAX_PER_HOUR'), 200)
 const MAX_EMAIL_LENGTH = 254
-const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+const MAX_BODY_BYTES = 4096
+const EMAIL_PATTERN = /^[^\s@<>,;"\\]+@[^\s@<>,;"\\]+\.[^\s@<>,;"\\]{2,}$/
 
+const ALLOWED_ORIGIN = Deno.env.get('WAITLIST_ALLOWED_ORIGIN') || 'https://pausely.pro'
 const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Origin': ALLOWED_ORIGIN,
   'Access-Control-Allow-Methods': 'POST, OPTIONS',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+  'Vary': 'Origin',
 }
 
 const VALID_SOURCES = new Set([
@@ -71,12 +73,16 @@ const RATE_LIMIT_MAX_KEYS = 5_000
 
 function checkRateLimit(key: string): boolean {
   const now = Date.now()
-  if (rateLimitMap.size > RATE_LIMIT_MAX_KEYS) {
-    // A flood of made-up callers must not grow this map without end.
+  if (rateLimitMap.size >= RATE_LIMIT_MAX_KEYS) {
+    // Evict expired entries first, then oldest entries (never wipe active throttles globally).
     for (const [existingKey, entry] of rateLimitMap) {
       if (now > entry.resetTime) rateLimitMap.delete(existingKey)
     }
-    if (rateLimitMap.size > RATE_LIMIT_MAX_KEYS) rateLimitMap.clear()
+    while (rateLimitMap.size >= RATE_LIMIT_MAX_KEYS) {
+      const oldestKey = rateLimitMap.keys().next().value
+      if (oldestKey === undefined) break
+      rateLimitMap.delete(oldestKey)
+    }
   }
   const entry = rateLimitMap.get(key)
   if (!entry || now > entry.resetTime) {
@@ -94,8 +100,35 @@ function checkRateLimit(key: string): boolean {
 /// forwarded-for list can, which is why this limit is only a courtesy.
 function callerKey(req: Request): string {
   return req.headers.get('cf-connecting-ip')
+    || req.headers.get('x-real-ip')
     || (req.headers.get('x-forwarded-for') || '').split(',')[0].trim()
     || 'unknown'
+}
+
+async function readBoundedText(req: Request, maxBytes: number): Promise<string | null> {
+  const lenHeader = req.headers.get('content-length')
+  if (lenHeader !== null) {
+    const declared = Number(lenHeader)
+    if (Number.isFinite(declared) && declared > maxBytes) return null
+  }
+  if (!req.body) return ''
+  const reader = req.body.getReader()
+  const chunks: Uint8Array[] = []
+  let total = 0
+  while (true) {
+    const { done, value } = await reader.read()
+    if (done) break
+    total += value.byteLength
+    if (total > maxBytes) {
+      await reader.cancel().catch(() => {})
+      return null
+    }
+    chunks.push(value)
+  }
+  const out = new Uint8Array(total)
+  let offset = 0
+  for (const c of chunks) { out.set(c, offset); offset += c.byteLength }
+  return new TextDecoder().decode(out)
 }
 
 // MARK: CAPTCHA (Cloudflare Turnstile), only when TURNSTILE_SECRET_KEY is set
@@ -120,7 +153,7 @@ async function passesCaptcha(token: unknown, req: Request): Promise<boolean> {
 // MARK: Welcome email
 
 async function sendWelcomeEmail(address: string): Promise<void> {
-  const htmlBody = getWelcomeEmailHTML(address)
+  const htmlBody = getWelcomeEmailHTML()
 
   if (USE_AWS_SES) {
     try {
@@ -133,6 +166,7 @@ async function sendWelcomeEmail(address: string): Promise<void> {
       const response = await aws.fetch(`https://email.${AWS_REGION}.amazonaws.com/v2/email/outbound-emails`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
+        signal: AbortSignal.timeout(10_000),
         body: JSON.stringify({
           Content: {
             Simple: {
@@ -162,6 +196,7 @@ async function sendWelcomeEmail(address: string): Promise<void> {
           'Authorization': `Bearer ${RESEND_API_KEY}`,
           'Content-Type': 'application/json'
         },
+        signal: AbortSignal.timeout(10_000),
         body: JSON.stringify({
           from: 'Pausely <hello@pausely.pro>',
           // The email says "reply to leave the list": a reply has to reach a mailbox someone reads.
@@ -187,7 +222,7 @@ async function sendWelcomeEmail(address: string): Promise<void> {
 
 // MARK: The endpoint
 
-serve(async (req) => {
+Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response('ok', { headers: corsHeaders })
   }
@@ -199,9 +234,13 @@ serve(async (req) => {
   }
 
   try {
+    const rawBody = await readBoundedText(req, MAX_BODY_BYTES)
+    if (rawBody === null) {
+      return reply(413, { error: 'Payload too large' })
+    }
     let body: unknown
     try {
-      body = await req.json()
+      body = JSON.parse(rawBody)
     } catch {
       return reply(400, { error: 'Invalid request' })
     }
@@ -270,7 +309,15 @@ serve(async (req) => {
       return reply(500, { error: 'Failed to join waitlist' })
     }
 
-    await sendWelcomeEmail(normalizedEmail)
+    // Dispatch email asynchronously when EdgeRuntime.waitUntil is available so new vs existing
+    // addresses return with indistinguishable latency (closing the timing enumeration oracle).
+    const emailTask = sendWelcomeEmail(normalizedEmail)
+    const runtime = (globalThis as { EdgeRuntime?: { waitUntil?: (p: Promise<unknown>) => void } }).EdgeRuntime
+    if (runtime?.waitUntil) {
+      runtime.waitUntil(emailTask)
+    } else {
+      await emailTask
+    }
     return joined()
 
   } catch (error) {
@@ -279,7 +326,7 @@ serve(async (req) => {
   }
 })
 
-function getWelcomeEmailHTML(email: string): string {
+function getWelcomeEmailHTML(): string {
   const iconUrl = 'https://pausely.pro/icon-email.png'
   /* old base64 icon removed — using hosted URL above for email client compatibility */
   return `<!DOCTYPE html>

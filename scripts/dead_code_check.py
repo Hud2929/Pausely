@@ -14,7 +14,7 @@ protocol) go in scripts/dead_code_allow.txt, one per line, with a reason after '
 import os, re, sys
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-SOURCES = ["Pausely", "PauselyWidget"]
+SOURCES = ["Pausely", "PauselyWidget", "Shared"]
 ALLOW_FILE = os.path.join(ROOT, "scripts", "dead_code_allow.txt")
 
 # Names the language, SwiftUI or the system call for us.

@@ -23,7 +23,7 @@ final class SubscriptionFieldTests: XCTestCase {
             .map { $0.trimmingCharacters(in: .whitespaces) }
             .filter { !$0.isEmpty }
         XCTAssertEqual(fields.sorted(), ["amount", "billingFrequency", "category", "createdAt", "currency", "id", "name",
-                                         "nextBillingDate", "notes", "notifyBeforeDays", "paymentMethod", "splitCount",
+                                         "nextBillingDate", "notes", "notifyBeforeDays", "paymentMethod",
                                          "status", "trialEndsAt"])
 
         // Read somewhere other than the model itself and the record that carries it to the server.

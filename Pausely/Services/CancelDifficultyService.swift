@@ -31,10 +31,14 @@ final class CancelDifficultyService: ObservableObject {
 
     private init() {}
 
-    /// Canonical service key matching `ServiceDatabase.services` or normalized lowercased slug.
+    /// Canonical service key matching `ServiceDatabase.services` or normalized lowercased ASCII slug (1–120 chars).
     nonisolated static func serviceKey(for name: String) -> String {
-        if let known = CancelHelp.service(named: name) { return known.id }
-        return ServiceMatcher.words(name).joined(separator: "-")
+        if let known = CancelHelp.service(named: name) { return String(known.id.lowercased().prefix(120)) }
+        let asciiWords = ServiceMatcher.words(name).map { word in
+            String(word.unicodeScalars.filter { ($0.value >= 97 && $0.value <= 122) || ($0.value >= 48 && $0.value <= 57) })
+        }.filter { !$0.isEmpty }
+        let joined = asciiWords.joined(separator: "-")
+        return String(joined.prefix(120))
     }
 
     /// Plain factual heads-up only when at least 3 people have rated cancelling this service.
@@ -69,8 +73,17 @@ final class CancelDifficultyService: ObservableObject {
                 .execute()
                 .value
             scores = Dictionary(
-                rows.map { (Self.serviceKey(for: $0.serviceName), $0) },
-                uniquingKeysWith: { a, b in a.ratingCount >= b.ratingCount ? a : b }
+                rows.compactMap { row -> (String, Score)? in
+                    let key = Self.serviceKey(for: row.serviceName)
+                    return key.isEmpty ? nil : (key, row)
+                },
+                uniquingKeysWith: { a, b in
+                    let total = a.ratingCount + b.ratingCount
+                    let weighted = total > 0
+                        ? ((a.avgDifficulty * Double(a.ratingCount)) + (b.avgDifficulty * Double(b.ratingCount))) / Double(total)
+                        : a.avgDifficulty
+                    return Score(serviceName: a.serviceName, ratingCount: total, avgDifficulty: (weighted * 10).rounded() / 10)
+                }
             )
         } catch {
             loaded = false
@@ -92,9 +105,11 @@ final class CancelDifficultyService: ObservableObject {
         let client = SupabaseManager.shared.client
         guard let userId = client.auth.currentSession?.user.id else { return }
 
+        let key = Self.serviceKey(for: serviceName)
+        guard !key.isEmpty else { return }
         let payload = RatingInsert(
             user_id: userId,
-            service_name: Self.serviceKey(for: serviceName),
+            service_name: key,
             difficulty_rating: clamped
         )
         do {

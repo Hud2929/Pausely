@@ -24,6 +24,9 @@ final class SubscriptionExporterTests: XCTestCase {
         XCTAssertEqual(SubscriptionExporter.csvCell("-1+1"), "'-1+1")
         XCTAssertEqual(SubscriptionExporter.csvCell("@SUM(A1:A9)"), "'@SUM(A1:A9)")
         XCTAssertEqual(SubscriptionExporter.csvCell("\t=1+1"), "'\t=1+1")
+        XCTAssertEqual(SubscriptionExporter.csvCell("\r\n=1+1"), "\"'\r\n=1+1\"", "CRLF grapheme cluster must not bypass formula neutralization")
+        XCTAssertEqual(SubscriptionExporter.csvCell("\n=1+1"), "\"'\n=1+1\"")
+        XCTAssertEqual(SubscriptionExporter.csvCell("  =HYPERLINK(\"https://x\",\"y\")"), "\"'  =HYPERLINK(\"\"https://x\"\",\"\"y\"\")\"")
         XCTAssertEqual(SubscriptionExporter.csvCell("=HYPERLINK(\"https://example.net\",\"Renew now\")"),
                        "\"'=HYPERLINK(\"\"https://example.net\"\",\"\"Renew now\"\")\"",
                        "made plain text first, then quoted like any cell with commas and quotes")
@@ -46,21 +49,21 @@ final class SubscriptionExporterTests: XCTestCase {
 
         let netflix = Subscription(name: "Netflix", category: "entertainment", amount: Decimal(string: "15.49")!, currency: "USD",
                                    billingFrequency: .monthly, nextBillingDate: day(2026, 1, 31), createdAt: day(2026, 1, 3),
-                                   notes: "Family", paymentMethod: "Apple", splitCount: 1)
+                                   notes: "Family", paymentMethod: "Apple")
         let gone = Subscription(name: "=HYPERLINK(\"x\")", category: "music", amount: 1500, currency: "JPY",
                                 billingFrequency: .yearly, nextBillingDate: day(2026, 6, 1), status: .cancelled, createdAt: day(2025, 6, 1))
         let csv = SubscriptionExporter.csv(for: [netflix, gone], now: day(2026, 11, 12))
         let lines = csv.split(separator: "\n").map(String.init)
 
         XCTAssertEqual(lines.count, 3)
-        XCTAssertEqual(lines[0], "Name,Category,Amount,Currency,Billing cycle,Status,Each month,Each year,Next renewal,Tracking since,Billed to,Split between,Notes")
-        XCTAssertEqual(lines[1], "Netflix,Entertainment,15.49,USD,Monthly,Active,15.49,185.88,2026-11-30,2026-01-03,Apple,1,Family")
-        XCTAssertEqual(lines[2], "\"'=HYPERLINK(\"\"x\"\")\",Music,1500,JPY,Yearly,Cancelled,125,1500,,2025-06-01,,1,")
+        XCTAssertEqual(lines[0], "Name,Category,Amount,Currency,Billing cycle,Status,Each month,Each year,Next renewal,Tracking since,Billed to,Notes")
+        XCTAssertEqual(lines[1], "Netflix,Entertainment,15.49,USD,Monthly,Active,15.49,185.88,2026-11-30,2026-01-03,Apple,Family")
+        XCTAssertEqual(lines[2], "\"'=HYPERLINK(\"\"x\"\")\",Music,1500,JPY,Yearly,Cancelled,125,1500,,2025-06-01,,")
 
         UserDefaults.standard.set("fr", forKey: L10n.languageKey)
         let french = SubscriptionExporter.csv(for: [netflix], now: day(2026, 11, 12)).split(separator: "\n").map(String.init)
         XCTAssertNotEqual(french[0], lines[0], "the headings are in the reader's language")
-        XCTAssertTrue(french[1].contains(",2026-11-30,2026-01-03,Apple,1,Family"), "days and numbers are the same in every language")
+        XCTAssertTrue(french[1].contains(",2026-11-30,2026-01-03,Apple,Family"), "days and numbers are the same in every language")
         XCTAssertTrue(french[1].contains(",15.49,USD,"))
     }
 

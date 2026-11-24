@@ -140,15 +140,24 @@ final class PaymentManager: ObservableObject {
         return hasGrant ? .pro : .free
     }
 
-    // MARK: - Admin grant (profiles.is_pro), kept apart from StoreKit
+    // MARK: - Admin grant (profiles.is_pro), kept apart from StoreKit in Keychain
 
     private let proGrantKey = "pausely_pro_grant"
 
-    private var hasProGrant: Bool { UserDefaults.standard.bool(forKey: proGrantKey) }
+    private var hasProGrant: Bool {
+        guard !AuthManager.shared.isGuest else { return false }
+        return KeychainManager.shared.get(proGrantKey) == "true"
+    }
 
     /// Called with the account's `is_pro` on sign-in, and with false on sign-out or account deletion.
+    /// Stored in Keychain (AfterFirstUnlockThisDeviceOnly) instead of plaintext UserDefaults.
     func setProGrant(_ active: Bool) async {
-        UserDefaults.standard.set(active, forKey: proGrantKey)
+        UserDefaults.standard.removeObject(forKey: proGrantKey)
+        if active {
+            KeychainManager.shared.save("true", forKey: proGrantKey)
+        } else {
+            KeychainManager.shared.delete(key: proGrantKey)
+        }
         await updateCurrentEntitlements()
     }
     

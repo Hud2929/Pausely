@@ -114,6 +114,15 @@ final class IMAPProtocolTests: XCTestCase {
         }
     }
 
+    /// Deeply nested parenthesized lists from a hostile IMAP server must throw instead of overflowing the stack.
+    func testDeeplyNestedListsThrowMalformed() {
+        let deep = "* 1 FETCH " + String(repeating: "(", count: 64) + "A" + String(repeating: ")", count: 64) + "\r\n"
+        XCTAssertThrowsError(try parse(deep)) { error in
+            guard case IMAPProtocolError.malformed(let reason) = error else { return XCTFail("\(error)") }
+            XCTAssertEqual(reason, "nesting too deep")
+        }
+    }
+
     /// A message size beyond what an Int holds is dropped; the rest of the item is still read.
     func testImpossibleMessageSizeIsDropped() throws {
         let item = try XCTUnwrap(IMAPParser.fetchItem(try parse("* 7 FETCH (UID 42 RFC822.SIZE 18446744073709551615)\r\n")))

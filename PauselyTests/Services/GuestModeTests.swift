@@ -94,7 +94,7 @@ final class GuestModeTests: XCTestCase {
         XCTAssertEqual(Set(nowWaiting.map(\.name)), ["Service 6", "Service 7"])
     }
 
-    func testApplyChoicePreservesIdNotesPaymentMethodSplitAndAvoidsFakeLifecycleEvents() async throws {
+    func testApplyChoicePreservesIdNotesPaymentMethodAndAvoidsFakeLifecycleEvents() async throws {
         try XCTSkipIf(PaymentManager.shared.isPremium, "Free-tier slot swapping applies to the free plan")
         let store = SubscriptionStore.shared
         let originalID = UUID()
@@ -107,8 +107,7 @@ final class GuestModeTests: XCTestCase {
             billingFrequency: .monthly,
             notifyBeforeDays: 7,
             notes: "Shared with roommate",
-            paymentMethod: "Apple",
-            splitCount: 2
+            paymentMethod: "Apple"
         )
         _ = try await store.addSubscription(rich)
         let others = (1...5).map { i in
@@ -136,7 +135,6 @@ final class GuestModeTests: XCTestCase {
         XCTAssertEqual(restored?.id, originalID, "UUID must survive slot swap so UsageLog and PriceHistory stay linked")
         XCTAssertEqual(restored?.notes, "Shared with roommate")
         XCTAssertEqual(restored?.paymentMethod, "Apple")
-        XCTAssertEqual(restored?.splitCount, 2)
         XCTAssertEqual(restored?.notifyBeforeDays, 7)
         let netflixEvents = LifecycleEventLog.shared.events.filter { $0.subscriptionId == originalID }
         XCTAssertEqual(netflixEvents.map(\.kind), [.added], "swapping Netflix out and back must not emit fake deleted/added events")
@@ -146,7 +144,7 @@ final class GuestModeTests: XCTestCase {
     func testGuestMergeDeduplicatesExistingServerSubscriptionAndBackfillsDetails() {
         let serverSub = Subscription(name: "Netflix", category: "Entertainment", amount: 15.99, currency: "USD")
         let guestSub = Subscription(name: "Netflix Standard", category: "Entertainment", amount: 15.99, currency: "USD",
-                                    notes: "Roommate split", paymentMethod: "Apple", splitCount: 2)
+                                    notes: "Roommate note", paymentMethod: "Apple")
         let guestOnly = Subscription(name: "Spotify", category: "Music", amount: 11.99, currency: "USD")
 
         let merged = SubscriptionSyncMerge.merge(
@@ -160,9 +158,8 @@ final class GuestModeTests: XCTestCase {
         XCTAssertEqual(merged.supersededLocalIDs, [guestSub.id])
         XCTAssertEqual(merged.upload.map(\.id), [guestOnly.id])
         let mergedNetflix = merged.subscriptions.first { $0.id == serverSub.id }
-        XCTAssertEqual(mergedNetflix?.notes, "Roommate split")
+        XCTAssertEqual(mergedNetflix?.notes, "Roommate note")
         XCTAssertEqual(mergedNetflix?.paymentMethod, "Apple")
-        XCTAssertEqual(mergedNetflix?.splitCount, 2)
         XCTAssertEqual(merged.backfill.map(\.id), [serverSub.id])
     }
 
@@ -178,7 +175,7 @@ final class GuestModeTests: XCTestCase {
         let store = SubscriptionStore.shared
         let serverNetflix = Subscription(name: "Netflix", category: "Entertainment", amount: 15.99, currency: "USD")
         let guestNetflix = Subscription(name: "Netflix Standard", category: "Entertainment", amount: 15.99, currency: "USD",
-                                        notes: "Shared with Sarah", paymentMethod: "Apple", splitCount: 2)
+                                        notes: "Shared with Sarah", paymentMethod: "Apple")
         let guestSpotify = Subscription(name: "Spotify", category: "Music", amount: 11.99, currency: "USD")
 
         // Guest adds both offline while local; both sit in sync.pending as .create.
@@ -203,7 +200,6 @@ final class GuestModeTests: XCTestCase {
         XCTAssertEqual(sandbox.transport.rows[guestSpotify.id]?.name, "Spotify", "guest-only Spotify uploads after merge")
         XCTAssertEqual(sandbox.transport.rows[serverNetflix.id]?.notes, "Shared with Sarah", "guest details backfill onto server Netflix")
         XCTAssertEqual(sandbox.transport.rows[serverNetflix.id]?.paymentMethod, "Apple")
-        XCTAssertEqual(sandbox.transport.rows[serverNetflix.id]?.splitCount, 2)
         XCTAssertTrue(store.sync.pending.isEmpty)
         XCTAssertFalse(SubscriptionStore.isFirstSync(for: "EXISTING-USER-123", defaults: defaults), "UUID casing matches")
     }
@@ -230,7 +226,7 @@ final class GuestModeTests: XCTestCase {
         let store = SubscriptionStore.shared
         let serverNetflix = Subscription(name: "Netflix", category: "Entertainment", amount: 15.99, currency: "USD")
         let guestNetflix = Subscription(name: "Netflix Standard", category: "Entertainment", amount: 15.99, currency: "USD",
-                                        notes: "Roommate split", splitCount: 2)
+                                        notes: "Roommate note")
         let guestSpotify = Subscription(name: "Spotify", category: "Music", amount: 11.99, currency: "USD")
 
         sandbox.transport.canSend = false
@@ -268,8 +264,7 @@ final class GuestModeTests: XCTestCase {
         XCTAssertEqual(store.subscriptions.count, 2)
         XCTAssertNil(sandbox.transport.rows[guestNetflix.id], "superseded guest Netflix must not upload after recovery")
         XCTAssertEqual(sandbox.transport.rows[guestSpotify.id]?.name, "Spotify")
-        XCTAssertEqual(sandbox.transport.rows[serverNetflix.id]?.notes, "Roommate split")
-        XCTAssertEqual(sandbox.transport.rows[serverNetflix.id]?.splitCount, 2)
+        XCTAssertEqual(sandbox.transport.rows[serverNetflix.id]?.notes, "Roommate note")
         XCTAssertTrue(store.sync.pending.isEmpty)
     }
 }

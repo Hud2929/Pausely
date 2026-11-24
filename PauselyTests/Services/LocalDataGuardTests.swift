@@ -116,12 +116,13 @@ final class LocalDataGuardTests: XCTestCase {
         defaults.removePersistentDomain(forName: suite)
         defer { defaults.removePersistentDomain(forName: suite) }
         let log = UsageLog(defaults: defaults)
-        log.setMonthlyUsage(minutes: 600, for: "Netflix")
-        XCTAssertEqual(log.getUsage(for: "Netflix")?.minutesUsed, 600)
+        let netflix = Subscription(name: "Netflix", amount: 15.49, billingFrequency: .monthly)
+        log.setMonthlyUsage(minutes: 600, for: netflix)
+        XCTAssertEqual(log.getUsage(for: netflix)?.minutesUsed, 600)
 
         LocalUserData.removeSavedValues(from: defaults)
 
-        XCTAssertNil(log.getUsage(for: "Netflix"))
+        XCTAssertNil(log.getUsage(for: netflix))
     }
 
     // MARK: - Signed out

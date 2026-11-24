@@ -240,11 +240,18 @@ enum EmailTriage {
 // MARK: - HTML → text
 
 enum HTMLText {
+    /// Caps raw HTML before regex stripping so a multi-megabyte spam email cannot stall extraction.
+    private static let maxInputCharacters = 512_000
+
     /// Converts HTML to readable plain text, keeping line structure so line-oriented patterns still work.
     static func plain(_ html: String) -> String {
-        var text = html
+        var text = html.count > maxInputCharacters ? String(html.prefix(maxInputCharacters)) : html
         for tag in ["script", "style", "head"] {
-            text = text.replacingOccurrences(of: "<\(tag)[^>]*>.*?</\(tag)>", with: " ", options: [.regularExpression, .caseInsensitive])
+            if let regex = try? NSRegularExpression(pattern: "<\(tag)[^>]*>.*?</\(tag)>",
+                                                    options: [.caseInsensitive, .dotMatchesLineSeparators]) {
+                let range = NSRange(location: 0, length: (text as NSString).length)
+                text = regex.stringByReplacingMatches(in: text, range: range, withTemplate: " ")
+            }
         }
         text = text.replacingOccurrences(of: "<br\\s*/?>", with: "\n", options: [.regularExpression, .caseInsensitive])
         text = text.replacingOccurrences(of: "</(p|div|tr|li|h[1-6]|table|section)>", with: "\n", options: [.regularExpression, .caseInsensitive])

@@ -51,7 +51,7 @@ final class SubscriptionExporter {
         let headings = [L10n.string("Name"), L10n.string("Category"), L10n.string("Amount"), L10n.string("Currency"),
                         L10n.string("Billing cycle"), L10n.string("Status"), L10n.string("Each month"), L10n.string("Each year"),
                         L10n.string("Next renewal"), L10n.string("Tracking since"),
-                        L10n.string("Billed to"), L10n.string("Split between"), L10n.string("Notes")]
+                        L10n.string("Billed to"), L10n.string("Notes")]
         var lines = [headings.map(csvCell).joined(separator: ",")]
         for sub in subscriptions {
             // The next renewal, not the day that was typed in, which may be months ago.
@@ -67,7 +67,6 @@ final class SubscriptionExporter {
                          next.map(calendar.dayStamp) ?? "",
                          calendar.dayStamp(sub.createdAt),
                          sub.paymentMethod ?? "",
-                         "\(sub.splitCount)",
                          sub.notes ?? ""]
             lines.append(cells.map(csvCell).joined(separator: ","))
         }
@@ -80,16 +79,21 @@ final class SubscriptionExporter {
 
     /// One text cell of the spreadsheet file.
     ///
-    /// A name can come from a scanned email, so it is treated as untrusted: a cell that starts like a
-    /// formula (`=`, `+`, `-`, `@`, a tab or a return) would run when the file is opened in a
-    /// spreadsheet. A leading apostrophe makes the spreadsheet show it as plain text.
+    /// A name can come from a scanned email, so it is treated as untrusted: inspect leading Unicode
+    /// scalars (avoiding Swift's `\r\n` grapheme-cluster bypass) and trimmed leading whitespace so
+    /// formulas (`=`, `+`, `-`, `@`, `\t`, `\r`, `\n`) always render as plain text.
     nonisolated static func csvCell(_ value: String) -> String {
         var cell = value
-        if let first = cell.first, "=+-@\t\r".contains(first) {
+        let leadingUnsafe: Set<UnicodeScalar> = ["=", "+", "-", "@", "\t", "\r", "\n"]
+        let formulaStarters: Set<UnicodeScalar> = ["=", "+", "-", "@"]
+        let firstScalar = cell.unicodeScalars.first
+        let trimmedFirst = cell.trimmingCharacters(in: .whitespacesAndNewlines).unicodeScalars.first
+        if (firstScalar.map { leadingUnsafe.contains($0) } ?? false)
+            || (trimmedFirst.map { formulaStarters.contains($0) } ?? false) {
             cell = "'" + cell
         }
         let escaped = cell.replacingOccurrences(of: "\"", with: "\"\"")
-        if escaped.contains(",") || escaped.contains("\n") || escaped.contains("\r") || escaped.contains("\"") {
+        if escaped.unicodeScalars.contains(where: { $0 == "," || $0 == "\n" || $0 == "\r" || $0 == "\"" }) {
             return "\"\(escaped)\""
         }
         return escaped
@@ -119,7 +123,7 @@ final class SubscriptionExporter {
                                      pausePlan: PausePlanStore.shared.plan)
             return writeDataToFile(data: data, extension: "json")
         } catch {
-            os_log("JSON export failed: %{public}@", log: .default, type: .error, error.localizedDescription)
+            os_log("JSON export failed: %{public}@", log: .default, type: .error, String(describing: type(of: error)))
             return nil
         }
     }
@@ -150,7 +154,7 @@ final class SubscriptionExporter {
     }
 
     static func pageRow(for sub: Subscription) -> [String] {
-        [sub.name, SubscriptionCategory.localizedLabel(for: sub.category), MoneyFormat.string(sub.effectiveAmount, sub.currency),
+        [sub.name, SubscriptionCategory.localizedLabel(for: sub.category), MoneyFormat.string(sub.amount, sub.currency),
          sub.billingFrequency.displayName, sub.status.displayName]
     }
 
@@ -232,7 +236,7 @@ final class SubscriptionExporter {
 
     // MARK: - Helpers
 
-    private func cleanPreviousExports() {
+    func cleanPreviousExports() {
         let dir = FileManager.default.temporaryDirectory
         guard let urls = try? FileManager.default.contentsOfDirectory(at: dir, includingPropertiesForKeys: nil) else { return }
         for url in urls where url.lastPathComponent.hasPrefix("pausely_export_") {
@@ -252,7 +256,7 @@ final class SubscriptionExporter {
             try data.write(to: url, options: [.atomic, .completeFileProtectionUntilFirstUserAuthentication])
             return url
         } catch {
-            os_log("Export write failed: %{public}@", log: .default, type: .error, error.localizedDescription)
+            os_log("Export write failed: %{public}@", log: .default, type: .error, String(describing: type(of: error)))
             return nil
         }
     }

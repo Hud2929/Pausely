@@ -70,10 +70,10 @@ final class UsageLog: ObservableObject {
         defaults.removeObject(forKey: monthKey(subscription.name))
     }
 
-    // MARK: - Legacy name-keyed API (kept for migration and backwards-compatible tests)
+    // MARK: - Legacy name-keyed read (kept solely for transparent UUID migration)
 
-    /// What was entered for this month, or nil when nothing was. Zero is an answer ("I haven't used it").
-    func getUsage(for subscriptionName: String, now: Date = Date()) -> Usage? {
+    /// What was entered for this month under a legacy name key, or nil when nothing was.
+    private func getUsage(for subscriptionName: String, now: Date = Date()) -> Usage? {
         let minutes = defaults.integer(forKey: minutesKey(subscriptionName))
         guard let entered = defaults.string(forKey: monthKey(subscriptionName)) else {
             // Entered before months were recorded: it can only have been typed for the month it's read in.
@@ -82,23 +82,6 @@ final class UsageLog: ObservableObject {
             return Usage(minutesUsed: minutes)
         }
         return entered == month(of: now) ? Usage(minutesUsed: minutes) : nil
-    }
-
-    func getCurrentMonthUsage(for subscriptionName: String, now: Date = Date()) -> Int {
-        getUsage(for: subscriptionName, now: now)?.minutesUsed ?? 0
-    }
-
-    /// What an hour of use costs this month. Nil until some time has been entered.
-    func calculateCostPerHour(monthlyCost: Decimal, subscriptionName: String, now: Date = Date()) -> Decimal? {
-        let minutes = getCurrentMonthUsage(for: subscriptionName, now: now)
-        guard minutes > 0 else { return nil }
-        return monthlyCost / (Decimal(minutes) / 60)
-    }
-
-    func setMonthlyUsage(minutes: Int, for subscriptionName: String, now: Date = Date()) {
-        objectWillChange.send()
-        defaults.set(max(0, minutes), forKey: minutesKey(subscriptionName))
-        defaults.set(month(of: now), forKey: monthKey(subscriptionName))
     }
 
     #if DEBUG

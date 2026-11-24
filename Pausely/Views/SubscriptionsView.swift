@@ -62,17 +62,21 @@ struct SubscriptionsView: View {
             }
 
             if store.subscriptions.isEmpty {
+                let waiting = waitingVersion >= 0 ? TallyImporter.waitingLines() : []
                 ScrollView {
                     if typeSize.isAccessibilitySize {
                         header
                             .padding(.horizontal, Layout.margin)
                             .padding(.top, 16)
                     }
-                    Group {
+                    VStack(alignment: .leading, spacing: 28) {
                         switch store.listState {
                         case .loading: ListLoading()
                         case .couldNotLoad: ListCouldNotLoad()
                         default: empty
+                        }
+                        if !waiting.isEmpty, !payments.isUnlocked(.unlimitedSubscriptions) {
+                            WaitingSection(lines: waiting) { activeSheet = .choose }
                         }
                     }
                     .padding(.horizontal, Layout.margin)

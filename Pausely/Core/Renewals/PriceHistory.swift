@@ -56,7 +56,7 @@ enum PriceHistory {
         guard all.count >= 2, let now = all.last, let changedOn = now.date else { return nil }
         let before = all[all.count - 2]
         let currency = MoneyFormat.normalizedCode(now.currency)
-        guard now.amount == subscription.exactShare, currency == MoneyFormat.normalizedCode(subscription.currency),
+        guard now.amount == subscription.amount, currency == MoneyFormat.normalizedCode(subscription.currency),
               currency == MoneyFormat.normalizedCode(before.currency), before.frequency == now.frequency,
               before.amount != now.amount else { return nil }
         if let setOn = before.date {

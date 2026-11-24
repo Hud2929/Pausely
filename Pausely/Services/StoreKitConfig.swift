@@ -77,7 +77,6 @@ final class ReviewPromptManager: ObservableObject {
         if storedYear != currentYear {
             UserDefaults.standard.set(currentYear, forKey: currentYearKey)
             UserDefaults.standard.set(0, forKey: requestsThisYearKey)
-            return true
         }
 
         let requestsThisYear = UserDefaults.standard.integer(forKey: requestsThisYearKey)

@@ -53,10 +53,13 @@ enum StructuredReceiptParser {
         pattern: "<script[^>]*type\\s*=\\s*[\"']application/ld\\+json[\"'][^>]*>(.*?)</script>",
         options: [.caseInsensitive, .dotMatchesLineSeparators])
 
+    private static let maxHTMLCharacters = 512_000
+
     static func jsonLDBlocks(in html: String) -> [String] {
         guard let scriptRegex else { return [] }
-        let ns = html as NSString
-        return scriptRegex.matches(in: html, range: NSRange(location: 0, length: ns.length)).compactMap {
+        let bounded = html.count > maxHTMLCharacters ? String(html.prefix(maxHTMLCharacters)) : html
+        let ns = bounded as NSString
+        return scriptRegex.matches(in: bounded, range: NSRange(location: 0, length: ns.length)).compactMap {
             guard $0.numberOfRanges > 1 else { return nil }
             return ns.substring(with: $0.range(at: 1)).trimmingCharacters(in: .whitespacesAndNewlines)
         }

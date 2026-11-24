@@ -14,7 +14,6 @@ struct ScreenshotImportView: View {
 
     @Environment(\.dismiss) private var dismiss
     @Environment(\.openURL) private var openURL
-    @Environment(\.dynamicTypeSize) private var typeSize
     @ObservedObject private var store = SubscriptionStore.shared
     @ObservedObject private var currencyManager = CurrencyManager.shared
     @ObservedObject private var payments = PaymentManager.shared
@@ -522,27 +521,7 @@ struct ScreenshotImportView: View {
 
         // Merge with any earlier batch scanned in this sheet session without losing user edits or ticks.
         var combined = detected
-        var addedIDs: Set<String> = []
-        for item in parsed {
-            if let idx = combined.firstIndex(where: { ServiceName.same($0.name, item.name) }) {
-                if !combined[idx].isCancelled && item.isCancelled { continue }
-                if combined[idx].isCancelled && !item.isCancelled {
-                    combined[idx] = item
-                    addedIDs.insert(item.id)
-                    continue
-                }
-                if combined[idx].amount == nil, let amount = item.amount {
-                    combined[idx].amount = amount
-                    combined[idx].currency = item.currency
-                }
-                if combined[idx].renewalDate == nil { combined[idx].renewalDate = item.renewalDate }
-                if combined[idx].trialEndsAt == nil { combined[idx].trialEndsAt = item.trialEndsAt }
-                if combined[idx].paymentMethod == nil { combined[idx].paymentMethod = item.paymentMethod }
-            } else {
-                combined.append(item)
-                addedIDs.insert(item.id)
-            }
-        }
+        let addedIDs = ScreenshotParser.mergeBatch(parsed, into: &combined)
         detected = combined
         for item in combined where addedIDs.contains(item.id) {
             // A row that may not repeat is shown, not chosen for the person (the rating of 2026-11-23).
@@ -592,7 +571,7 @@ struct ScreenshotImportView: View {
                 FreeLimitPickerSheet.Candidate(
                     name: sub.name,
                     category: sub.category ?? SubscriptionCategory.other.rawValue,
-                    amount: sub.effectiveAmount,
+                    amount: sub.amount,
                     currency: sub.currency,
                     frequency: sub.billingFrequency,
                     yearlyInDisplay: rates.convert(sub.annualCost, from: sub.currency, to: display) ?? 0

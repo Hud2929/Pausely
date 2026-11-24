@@ -43,11 +43,19 @@ enum DeviceFile {
         let data = try encoder.encode(value)
         try fileManager.createDirectory(at: url.deletingLastPathComponent(), withIntermediateDirectories: true)
         try data.write(to: url, options: [.atomic, .completeFileProtectionUntilFirstUserAuthentication])
+        var resourceValues = URLResourceValues()
+        resourceValues.isExcludedFromBackup = true
+        var mutableURL = url
+        try? mutableURL.setResourceValues(resourceValues)
     }
 
     /// Files written by earlier versions were readable only while the phone was unlocked.
     static func relaxProtection(of url: URL, fileManager: FileManager = .default) {
         guard fileManager.fileExists(atPath: url.path) else { return }
         try? fileManager.setAttributes([.protectionKey: FileProtectionType.completeUntilFirstUserAuthentication], ofItemAtPath: url.path)
+        var resourceValues = URLResourceValues()
+        resourceValues.isExcludedFromBackup = true
+        var mutableURL = url
+        try? mutableURL.setResourceValues(resourceValues)
     }
 }

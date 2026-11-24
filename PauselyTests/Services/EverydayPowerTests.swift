@@ -11,76 +11,36 @@ final class EverydayPowerTests: XCTestCase {
         Calendar.billing.date(from: DateComponents(year: year, month: month, day: day, hour: 12))!
     }
 
-    // MARK: - Split Cost, Notes & Billed-To
+    // MARK: - Notes, Billed-To & Security Regressions
 
-    func testSplitCostComputesPersonalShareAcrossMathAndHorizon() {
-        let family = Subscription(
-            name: "Spotify Family",
-            category: "Music",
-            amount: Decimal(string: "19.99")!,
-            currency: "USD",
-            billingFrequency: .monthly,
-            nextBillingDate: day(2026, 12, 10),
-            notes: "Shared with Alex and Sam",
-            paymentMethod: "Apple",
-            splitCount: 4
-        )
-
-        // 19.99 / 4 = 4.9975: one charge's share is shown as 5.00, and totals use the exact share, so a year is
-        // 59.97 (a quarter of 239.88), not 12 × 5.00 (the rating of 2026-11-23).
-        XCTAssertEqual(family.effectiveAmount, Decimal(string: "5.00"))
-        XCTAssertEqual(family.monthlyCost, Decimal(string: "4.9975"))
-        XCTAssertEqual(family.annualCost, Decimal(string: "59.97"))
-        XCTAssertEqual(family.splitCount, 4)
-
-        let charges = Horizon.charges(for: [family], now: day(2026, 12, 1))
-        XCTAssertEqual(charges.count, 1)
-        XCTAssertEqual(charges.first?.amount, Decimal(string: "5.00"))
-
-        let event = LifecycleEvent(kind: .cancelled, subscription: family, date: day(2026, 12, 1))
-        XCTAssertEqual(event.amount, Decimal(string: "4.9975"), "the exact share, so the receipt's year is the page's")
-    }
-
-    func testSplitCountClampsToValidRangeAndBackwardsDecodesLegacyJSON() throws {
-        let clampedLow = Subscription(name: "Solo", category: "Other", amount: 10, currency: "USD",
-                                      billingFrequency: .monthly, splitCount: 0)
-        XCTAssertEqual(clampedLow.splitCount, 1)
-        XCTAssertEqual(clampedLow.effectiveAmount, 10)
-
-        let clampedHigh = Subscription(name: "Team", category: "Other", amount: 100, currency: "USD",
-                                       billingFrequency: .monthly, splitCount: 99)
-        XCTAssertEqual(clampedHigh.splitCount, 20)
-        XCTAssertEqual(clampedHigh.effectiveAmount, 5)
-
-        // Legacy cached JSON without notes / paymentMethod / splitCount must decode cleanly as splitCount = 1.
+    func testLegacyJSONWithOrWithoutNotesPaymentMethodAndSplitCountDecodesCleanly() throws {
+        // Legacy cached JSON without notes/paymentMethod (and older JSON that still carried splitCount) must decode cleanly.
         let legacyJSON = """
         {"id":"11111111-1111-1111-1111-111111111111","name":"Netflix","category":"Entertainment",
          "amount":15.49,"currency":"USD","billingFrequency":"monthly","status":"active",
-         "createdAt":0,"notifyBeforeDays":3}
+         "createdAt":0,"notifyBeforeDays":3,"splitCount":4}
         """
         let decoded = try JSONDecoder().decode(Subscription.self, from: Data(legacyJSON.utf8))
-        XCTAssertEqual(decoded.splitCount, 1)
         XCTAssertNil(decoded.notes)
         XCTAssertNil(decoded.paymentMethod)
-        XCTAssertEqual(decoded.effectiveAmount, Decimal(string: "15.49"))
+        XCTAssertEqual(decoded.amount, Decimal(string: "15.49"))
+        XCTAssertEqual(decoded.monthlyCost, Decimal(string: "15.49"))
+        XCTAssertEqual(decoded.annualCost, Decimal(string: "185.88"))
     }
 
-    func testEditDraftTracksAndAppliesSplitNotesAndPaymentMethod() {
+    func testEditDraftTracksNotesPaymentMethodAndClearsRenewalDateOnTrialToggle() {
         let original = Subscription(name: "YouTube Premium", category: "Entertainment",
                                     amount: Decimal(string: "22.99")!, currency: "USD",
-                                    billingFrequency: .monthly)
+                                    billingFrequency: .monthly, nextBillingDate: day(2026, 12, 15))
         var draft = SubscriptionEditDraft(from: original)
         XCTAssertFalse(draft.isDirty(comparedTo: original))
 
-        draft.splitCount = 2
         draft.paymentMethod = "  Apple  "
         draft.notes = "  Family plan with Sam  "
         XCTAssertTrue(draft.isDirty(comparedTo: original))
-        // Half of 22.99 a month for a year: 137.94, the exact share as on the subscription's page (2026-11-23).
-        XCTAssertEqual(draft.yearlyCost, Decimal(string: "137.94"))
+        XCTAssertEqual(draft.yearlyCost, Decimal(string: "275.88"))
 
         let updated = draft.applied(to: original)
-        XCTAssertEqual(updated?.splitCount, 2)
         XCTAssertEqual(updated?.paymentMethod, "Apple")
         XCTAssertEqual(updated?.notes, "Family plan with Sam")
 
@@ -91,6 +51,67 @@ final class EverydayPowerTests: XCTestCase {
         XCTAssertTrue(clearing.isDirty(comparedTo: updated!))
         XCTAssertNil(clearing.applied(to: updated!)?.paymentMethod)
         XCTAssertNil(clearing.applied(to: updated!)?.notes)
+
+        // Switching an active subscription into a free trial clears nextBillingDate so Horizon/reminders
+        // never show both a trial end and a stale billing date.
+        var trialDraft = SubscriptionEditDraft(from: original)
+        trialDraft.isTrial = true
+        trialDraft.trialEndsAt = day(2026, 12, 10)
+        let trialSub = trialDraft.applied(to: original)
+        XCTAssertEqual(trialSub?.status, .trial)
+        XCTAssertEqual(trialSub?.trialEndsAt, day(2026, 12, 10))
+        XCTAssertNil(trialSub?.nextBillingDate)
+    }
+
+    func testAppIntentsRequireDeviceAuthentication() {
+        XCTAssertEqual(GetMonthlySpendIntent.authenticationPolicy, .requiresAuthentication)
+        XCTAssertEqual(GetUpcomingRenewalsIntent.authenticationPolicy, .requiresAuthentication)
+        XCTAssertEqual(AddSubscriptionIntent.authenticationPolicy, .requiresAuthentication)
+        XCTAssertEqual(GetSubscriptionDetailIntent.authenticationPolicy, .requiresAuthentication)
+    }
+
+    func testCancelConciergeStripsControlCharactersFromMailtoSubject() {
+        let draft = CancelConcierge.Draft(subject: "Cancel Netflix\r\nBcc: evil@example.com", body: "Please cancel.")
+        let url = CancelConcierge.mailtoURL(for: draft)
+        XCTAssertNotNil(url)
+        let query = url?.absoluteString ?? ""
+        XCTAssertFalse(query.contains("%0D"), "CR must be stripped from mailto subject")
+        XCTAssertFalse(query.contains("%0A"), "LF must be stripped from mailto subject")
+    }
+
+    func testCancelDifficultyServiceKeyProducesCanonicalBoundedSlugs() {
+        XCTAssertEqual(CancelDifficultyService.serviceKey(for: "Netflix"), "netflix")
+        XCTAssertEqual(CancelDifficultyService.serviceKey(for: "  Adobe Creative Cloud! "), "adobecc")
+        XCTAssertEqual(CancelDifficultyService.serviceKey(for: "  Local Gym Club! "), "local-gym-club")
+        XCTAssertEqual(CancelDifficultyService.serviceKey(for: "🎵🎬"), "")
+        let longName = String(repeating: "a", count: 200)
+        XCTAssertEqual(CancelDifficultyService.serviceKey(for: longName).count, 120)
+    }
+
+    func testFreeTierCapEnforcedWhenReactivatingCancelledSubscriptionViaUpdateMethods() async throws {
+        let sandbox = StoreSandbox()
+        defer { Task { await sandbox.restore() } }
+        UserDefaults.standard.set(false, forKey: "debug_premium_override")
+        UserDefaults.standard.set(false, forKey: "debug_free_pro")
+        try XCTSkipIf(PaymentManager.shared.isPremium, "Free-tier cap applies to the free plan")
+
+        let store = SubscriptionStore.shared
+        for i in 1...FreeTier.subscriptionLimit {
+            _ = try await store.addSubscription(Subscription(name: "Active \(i)", amount: 10, currency: "USD"))
+        }
+        let cancelled = Subscription(name: "Old Sub", amount: 15, currency: "USD", status: .cancelled)
+        _ = try await store.addSubscription(cancelled)
+        XCTAssertEqual(store.subscriptions.charging.count, FreeTier.subscriptionLimit)
+
+        await store.updateSubscriptionStatus(id: cancelled.id, status: .active)
+        XCTAssertEqual(store.subscriptions.first(where: { $0.id == cancelled.id })?.status, .cancelled,
+                       "updateSubscriptionStatus must refuse reactivation past the free limit")
+
+        var edited = cancelled
+        edited.status = .active
+        await store.updateSubscription(edited)
+        XCTAssertEqual(store.subscriptions.first(where: { $0.id == cancelled.id })?.status, .cancelled,
+                       "updateSubscription must refuse reactivation past the free limit")
     }
 
     // MARK: - Cancel Concierge (Email & Refund Drafter)
@@ -172,17 +193,17 @@ final class EverydayPowerTests: XCTestCase {
         XCTAssertEqual(moderateLine?.contains("Moderate"), true)
     }
 
-    func testPriceHistoryTracksSharedSubscriptionsOnEffectiveAmountBasis() {
+    func testPriceHistoryTracksPriceIncreasesAndDecreases() {
         var sub = Subscription(name: "Netflix", category: "Entertainment",
-                               amount: Decimal(string: "20.00")!, currency: "USD",
-                               billingFrequency: .monthly, splitCount: 2)
+                               amount: Decimal(string: "15.49")!, currency: "USD",
+                               billingFrequency: .monthly)
         let added = LifecycleEvent(kind: .added, subscription: sub, date: day(2026, 8, 1))
-        sub.amount = Decimal(string: "24.00")!
+        sub.amount = Decimal(string: "19.99")!
         let hiked = LifecycleEvent(kind: .priceChanged, subscription: sub, date: day(2026, 11, 1),
-                                   previousAmount: Decimal(string: "10.00")!)
+                                   previousAmount: Decimal(string: "15.49")!)
         let change = PriceHistory.latestChange(for: sub, events: [added, hiked])
-        XCTAssertEqual(change?.from, Decimal(string: "10.00"))
-        XCTAssertEqual(change?.to, Decimal(string: "12.00"))
+        XCTAssertEqual(change?.from, Decimal(string: "15.49"))
+        XCTAssertEqual(change?.to, Decimal(string: "19.99"))
         XCTAssertEqual(change?.isIncrease, true)
     }
 

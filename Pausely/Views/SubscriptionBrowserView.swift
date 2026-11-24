@@ -15,8 +15,6 @@ struct SubscriptionBrowserView: View {
 
     @State private var searchText = ""
     @State private var selectedCategory: SubscriptionCategory?
-    @State private var addedIds: Set<String> = []
-    @State private var justAdded: String?
     @State private var selectedEntry: CatalogEntry?
     @State private var showingTierSheet = false
     @Environment(\.dynamicTypeSize) private var typeSize
@@ -380,31 +378,23 @@ struct SubscriptionBrowserView: View {
             trialEndsAt: trialEndDate,
             status: trialEndDate != nil ? .trial : .active,
             notes: extras.notes,
-            paymentMethod: extras.paymentMethod,
-            splitCount: extras.splitCount
+            paymentMethod: extras.paymentMethod
         )
 
         Task {
             do {
                 _ = try await store.addSubscription(subscription)
-            } catch {
-                // Only a refusal throws (the free plan's limit): never show it as added. It is kept for when there's
-                // room, as an import keeps what doesn't fit, instead of being dropped (the rating of 2026-11-23).
+            } catch SubscriptionStore.SubscriptionLimitError.freeTierLimitReached {
+                // Free plan limit reached: keep it for when there's room, as an import does, instead of dropping it.
                 let line = TallyLine(name: entry.name, category: entry.category.rawValue, amount: amount,
                                      currency: currencyManager.selectedCurrency, isConfirmed: true, frequency: billingFrequency,
                                      anchor: nextBillingDate, trialEndsAt: trialEndDate, paymentMethod: extras.paymentMethod,
-                                     notes: extras.notes, splitCount: extras.splitCount, notifyBeforeDays: extras.reminderDays)
+                                     notes: extras.notes, notifyBeforeDays: extras.reminderDays)
                 await TallyImporter.add([line], into: store)
                 try? await Task.sleep(nanoseconds: 400_000_000)   // let the plan sheet close first
                 showingPaywall = true
-                return
-            }
-            await MainActor.run {
-                addedIds.insert(entry.name)
-                justAdded = entry.name
-                DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) {
-                    if justAdded == entry.name { justAdded = nil }
-                }
+            } catch {
+                PauselyLogger.error("Catalog add failed: \(String(describing: type(of: error)))", category: "subscriptions")
             }
         }
     }

@@ -109,20 +109,19 @@ struct TallyLine: Codable, Equatable, Identifiable {
     /// Preserved subscription identity and details when swapping an active item into waiting and back.
     var existingId: UUID? = nil
     var notes: String? = nil
-    var splitCount: Int = 1
     var notifyBeforeDays: Int = 3
 
     var id: String { name }
 
     enum CodingKeys: String, CodingKey {
         case name, category, amount, currency, isConfirmed, frequency, anchor, trialEndsAt
-        case paymentMethod, existingId, notes, splitCount, notifyBeforeDays
+        case paymentMethod, existingId, notes, notifyBeforeDays
     }
 
     init(name: String, category: String, amount: Decimal, currency: String, isConfirmed: Bool = false,
          frequency: BillingFrequency? = nil, anchor: Date? = nil, trialEndsAt: Date? = nil,
          paymentMethod: String? = nil, existingId: UUID? = nil, notes: String? = nil,
-         splitCount: Int = 1, notifyBeforeDays: Int = 3) {
+         notifyBeforeDays: Int = 3) {
         self.name = name
         self.category = category
         self.amount = amount
@@ -134,7 +133,6 @@ struct TallyLine: Codable, Equatable, Identifiable {
         self.paymentMethod = paymentMethod
         self.existingId = existingId
         self.notes = notes
-        self.splitCount = max(1, min(20, splitCount))
         self.notifyBeforeDays = notifyBeforeDays
     }
 
@@ -151,15 +149,12 @@ struct TallyLine: Codable, Equatable, Identifiable {
         paymentMethod = try c.decodeIfPresent(String.self, forKey: .paymentMethod)
         existingId = try c.decodeIfPresent(UUID.self, forKey: .existingId)
         notes = try c.decodeIfPresent(String.self, forKey: .notes)
-        splitCount = max(1, min(20, try c.decodeIfPresent(Int.self, forKey: .splitCount) ?? 1))
         notifyBeforeDays = try c.decodeIfPresent(Int.self, forKey: .notifyBeforeDays) ?? 3
     }
 
     /// What a year of it costs, in its own currency: how lines are ranked when only some fit.
     var yearlyCost: Decimal {
-        let people = max(1, splitCount)
-        let share = people > 1 ? AmountText.rounded(amount / Decimal(people), currency: currency) : amount
-        return share * ProvenSubscription.periodsPerYear(frequency ?? .monthly)
+        amount * ProvenSubscription.periodsPerYear(frequency ?? .monthly)
     }
 
     /// The subscription this line becomes.
@@ -170,7 +165,7 @@ struct TallyLine: Codable, Equatable, Identifiable {
                             billingFrequency: frequency ?? .monthly, nextBillingDate: anchor ?? (inTrial ? trialEndsAt : nil),
                             notifyBeforeDays: notifyBeforeDays,
                             trialEndsAt: inTrial ? trialEndsAt : nil, status: inTrial ? .trial : .active,
-                            notes: notes, paymentMethod: paymentMethod, splitCount: splitCount)
+                            notes: notes, paymentMethod: paymentMethod)
     }
 }
 
@@ -490,7 +485,6 @@ extension TallyImporter {
                 paymentMethod: sub.paymentMethod,
                 existingId: sub.id,
                 notes: sub.notes,
-                splitCount: sub.splitCount,
                 notifyBeforeDays: sub.notifyBeforeDays
             ))
             await store.deleteSubscription(id: sub.id, recordEvent: false)

@@ -224,9 +224,10 @@ DECLARE
     found integer;
     closed text;
     closed_objects text[] := ARRAY['affiliates', 'affiliate_conversions', 'waitlist', 'user_profiles',
-                                   'usage_snapshots', 'user_devices', 'ai_insights_log', 'orders',
-                                   'user_subscriptions', 'active_subscriptions', 'expiring_subscriptions',
-                                   'payment_failures'];
+                                   'usage_snapshots', 'user_devices', 'ai_insights_log', 'alternatives',
+                                   'tracked_trials', 'app_store_entitlements', 'deletion_requests',
+                                   'orders', 'user_subscriptions', 'active_subscriptions',
+                                   'expiring_subscriptions', 'payment_failures'];
     report text := '';
 BEGIN
     SELECT id INTO someone FROM public.profiles ORDER BY created_at LIMIT 1;

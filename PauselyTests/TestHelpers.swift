@@ -150,7 +150,6 @@ final class StoreSandbox {
     private let subscriptions: [Subscription]
     private let totals: (monthly: Decimal, annual: Decimal)
     private let cache: Data
-    private let cacheDate: Date
     private let sync: SyncQueue
     private let events: [LifecycleEvent]
     private let currency: String
@@ -179,7 +178,6 @@ final class StoreSandbox {
         subscriptions = store.subscriptions
         totals = (store.totalMonthlySpend, store.totalAnnualSpend)
         cache = AppSettings.shared.cachedSubscriptions
-        cacheDate = AppSettings.shared.subscriptionsCacheDate
         pendingTally = PendingTally.load()
         sync = store.sync
         events = LifecycleEventLog.shared.events
@@ -201,7 +199,6 @@ final class StoreSandbox {
         store.subscriptions = subscriptions
         (store.totalMonthlySpend, store.totalAnnualSpend) = totals
         AppSettings.shared.cachedSubscriptions = cache
-        AppSettings.shared.subscriptionsCacheDate = cacheDate
         if let pendingTally { PendingTally.save(pendingTally) } else { PendingTally.clear() }
         store.sync = sync
         LifecycleEventLog.shared.restore(events)

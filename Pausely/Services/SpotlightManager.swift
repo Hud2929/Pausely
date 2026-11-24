@@ -67,7 +67,7 @@ final class SpotlightManager {
                 if !entries.isEmpty { try await index.add(entries, toDomain: Self.domainIdentifier) }
                 os_log("Indexed %d subscriptions in Spotlight", log: .default, type: .info, entries.count)
             } catch {
-                os_log("Spotlight update failed: %{public}@", log: .default, type: .error, error.localizedDescription)
+                os_log("Spotlight update failed: %{public}@", log: .default, type: .error, String(describing: type(of: error)))
             }
         }
         lastUpdate = task

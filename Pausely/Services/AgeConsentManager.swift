@@ -107,7 +107,10 @@ final class AgeConsentManager: ObservableObject {
     }
 
     func syncPendingConsent(userId: String) async {
-        guard defaults.bool(forKey: Key.pendingSync(userId)),
+        guard SubscriptionStore.cloudSyncEnabled,
+              !AuthManager.shared.isGuest,
+              UUID(uuidString: userId) != nil,
+              defaults.bool(forKey: Key.pendingSync(userId)),
               let confirmedAt = defaults.object(forKey: Key.user(userId)) as? Date else { return }
 
         struct ConsentRow: Encodable {
@@ -134,7 +137,7 @@ final class AgeConsentManager: ObservableObject {
             defaults.set(false, forKey: Key.pendingSync(userId))
         } catch {
             // Keep the pending flag; retried on next launch / sign-in.
-            PauselyLogger.info("Age consent sync deferred: \(error.localizedDescription)", category: "auth")
+            PauselyLogger.info("Age consent sync deferred: \(String(describing: type(of: error)))", category: "auth")
         }
     }
 

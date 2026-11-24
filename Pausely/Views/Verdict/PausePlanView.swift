@@ -182,8 +182,8 @@ struct PausePlanView: View {
         let isSelected = selected.contains(sub.id)
         let isFirst = isSelected && firstId == sub.id
         let price = sub.status == .cancelled
-            ? L10n.string("Cancelled") + " · " + L10n.string("\(money(sub.effectiveAmount, from: sub.currency)) a month")
-            : L10n.string("\(money(sub.effectiveAmount, from: sub.currency)) a month")
+            ? L10n.string("Cancelled") + " · " + L10n.string("\(money(sub.amount, from: sub.currency)) a month")
+            : L10n.string("\(money(sub.amount, from: sub.currency)) a month")
         let toggle = {
             Feel.selection()
             if isSelected {
@@ -432,7 +432,9 @@ struct PausePlanView: View {
                         Button {
                             switch item.action {
                             case .cancel: cancelTarget = item.sub
-                            case .start: Task { await planStore.markStarted(item.sub) }
+                            case .start: Task {
+                                if !(await planStore.markStarted(item.sub)) { showPaywall = true }
+                            }
                             }
                         } label: {
                             Text(item.action == .cancel ? L10n.string("How") : L10n.string("I started it"))

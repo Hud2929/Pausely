@@ -48,31 +48,102 @@ const form = (fields: Record<string, string>) => ({
   method: 'POST',
   headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
   body: new URLSearchParams(fields).toString(),
+  signal: AbortSignal.timeout(10_000),
 })
 
-/// True when the caller holds a session of this project (not merely its public key).
-async function isSignedIn(request: Request): Promise<boolean> {
+const MAX_BODY_BYTES = 4096
+
+async function readBoundedText(request: Request, maxBytes: number): Promise<string | null> {
+  const lenHeader = request.headers.get('content-length')
+  if (lenHeader !== null) {
+    const declared = Number(lenHeader)
+    if (Number.isFinite(declared) && declared > maxBytes) return null
+  }
+  if (!request.body) return ''
+  const reader = request.body.getReader()
+  const chunks: Uint8Array[] = []
+  let total = 0
+  while (true) {
+    const { done, value } = await reader.read()
+    if (done) break
+    total += value.byteLength
+    if (total > maxBytes) {
+      await reader.cancel().catch(() => {})
+      return null
+    }
+    chunks.push(value)
+  }
+  const combined = new Uint8Array(total)
+  let offset = 0
+  for (const c of chunks) { combined.set(c, offset); offset += c.byteLength }
+  return new TextDecoder().decode(combined)
+}
+
+interface VerifiedCaller {
+  userId: string
+  appleSub: string | null
+  hasExplicitIdentities: boolean
+  hasAppleIdentity: boolean
+}
+
+/// Returns the caller's verified Supabase account and Sign in with Apple subject, or null if not signed in.
+async function verifiedCaller(request: Request): Promise<VerifiedCaller | null> {
   const authorization = request.headers.get('Authorization') ?? ''
-  if (!authorization.toLowerCase().startsWith('bearer ') || !SUPABASE_URL) return false
+  if (!authorization.toLowerCase().startsWith('bearer ') || !SUPABASE_URL) return null
   try {
     const response = await fetch(`${SUPABASE_URL}/auth/v1/user`, {
       headers: { Authorization: authorization, apikey: SUPABASE_ANON_KEY },
+      signal: AbortSignal.timeout(10_000),
     })
-    if (!response.ok) return false
+    if (!response.ok) return null
     const user = await response.json()
-    return typeof user?.id === 'string' && user.id.length > 0
+    if (typeof user?.id !== 'string' || user.id.length === 0) return null
+    const identities = Array.isArray(user.identities) ? user.identities : null
+    const apple = identities?.find((i: Record<string, unknown>) => i?.provider === 'apple') as Record<string, unknown> | undefined
+    const appleSub = typeof apple?.id === 'string' && apple.id.length > 0
+      ? apple.id
+      : (typeof (apple?.identity_data as Record<string, unknown> | undefined)?.sub === 'string'
+        ? String((apple?.identity_data as Record<string, unknown>).sub)
+        : null)
+    return {
+      userId: user.id,
+      appleSub,
+      hasExplicitIdentities: identities !== null,
+      hasAppleIdentity: apple !== undefined,
+    }
   } catch {
-    return false
+    return null
+  }
+}
+
+function decodeJwtSub(token: unknown): string | null {
+  if (typeof token !== 'string') return null
+  const parts = token.split('.')
+  if (parts.length !== 3) return null
+  try {
+    const norm = parts[1].replace(/-/g, '+').replace(/_/g, '/')
+    const pad = norm.length % 4 === 0 ? '' : '='.repeat(4 - (norm.length % 4))
+    const payload = JSON.parse(atob(norm + pad))
+    return typeof payload?.sub === 'string' && payload.sub.length > 0 ? payload.sub : null
+  } catch {
+    return null
   }
 }
 
 Deno.serve(async (request) => {
   if (request.method !== 'POST') return answer(405, { error: 'method_not_allowed' })
-  if (!(await isSignedIn(request))) return answer(401, { error: 'not_signed_in' })
+  const caller = await verifiedCaller(request)
+  if (!caller) return answer(401, { error: 'not_signed_in' })
+  if (caller.hasExplicitIdentities && !caller.hasAppleIdentity) {
+    return answer(403, { error: 'not_apple_account' })
+  }
+
+  const rawBody = await readBoundedText(request, MAX_BODY_BYTES)
+  if (rawBody === null) return answer(413, { error: 'payload_too_large' })
 
   let code: unknown
   try {
-    code = (await request.json())?.code
+    code = JSON.parse(rawBody)?.code
   } catch {
     return answer(400, { error: 'bad_request' })
   }
@@ -88,8 +159,17 @@ Deno.serve(async (request) => {
       console.error(`apple-revoke: the code was not accepted (${exchange.status})`)
       return answer(502, { error: 'code_not_accepted' })
     }
-    const refreshToken = (await exchange.json())?.refresh_token
+    const tokenPayload = await exchange.json()
+    const refreshToken = tokenPayload?.refresh_token
     if (typeof refreshToken !== 'string' || refreshToken.length === 0) return answer(502, { error: 'no_token' })
+
+    // Bind the exchanged Apple id_token subject to the caller's own Apple identity when known.
+    if (caller.appleSub) {
+      const exchangedSub = decodeJwtSub(tokenPayload?.id_token)
+      if (!exchangedSub || exchangedSub !== caller.appleSub) {
+        return answer(403, { error: 'identity_mismatch' })
+      }
+    }
 
     const revoke = await fetch(`${APPLE_URL}/auth/revoke`, form({
       client_id: CLIENT_ID, client_secret: secret, token: refreshToken, token_type_hint: 'refresh_token',

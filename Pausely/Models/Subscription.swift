@@ -19,20 +19,13 @@ struct Subscription: Identifiable, Codable, Equatable {
     var notes: String?
     /// Card, bank, or store that bills this subscription (e.g. "Apple", "Visa ···4242").
     var paymentMethod: String?
-    /// Number of people splitting this subscription (1 = just me, 2...20 = shared plan).
-    var splitCount: Int {
-        didSet {
-            let clamped = max(1, min(20, splitCount))
-            if splitCount != clamped { splitCount = clamped }
-        }
-    }
 
     // Every field here is read by a screen, the renewal engine or the export
     // (`SubscriptionFieldTests`). A copy saved by an earlier version holds more; the rest is ignored.
     enum CodingKeys: String, CodingKey {
         case id, name, category, amount, currency, billingFrequency, nextBillingDate
         case notifyBeforeDays, trialEndsAt, status, createdAt
-        case notes, paymentMethod, splitCount
+        case notes, paymentMethod
     }
 
     // MARK: - Initializers
@@ -50,8 +43,7 @@ struct Subscription: Identifiable, Codable, Equatable {
         status: SubscriptionStatus = .active,
         createdAt: Date = Date(),
         notes: String? = nil,
-        paymentMethod: String? = nil,
-        splitCount: Int = 1
+        paymentMethod: String? = nil
     ) {
         self.id = id
         self.name = name
@@ -66,7 +58,6 @@ struct Subscription: Identifiable, Codable, Equatable {
         self.createdAt = createdAt
         self.notes = notes
         self.paymentMethod = paymentMethod
-        self.splitCount = max(1, min(20, splitCount))
     }
 
     init(from decoder: Decoder) throws {
@@ -84,7 +75,6 @@ struct Subscription: Identifiable, Codable, Equatable {
         createdAt = try c.decode(Date.self, forKey: .createdAt)
         notes = try c.decodeIfPresent(String.self, forKey: .notes)
         paymentMethod = try c.decodeIfPresent(String.self, forKey: .paymentMethod)
-        splitCount = max(1, min(20, try c.decodeIfPresent(Int.self, forKey: .splitCount) ?? 1))
     }
 
     init(name: String, price: Double, category: String, billingFrequency: BillingFrequency = .monthly) {
@@ -98,43 +88,30 @@ struct Subscription: Identifiable, Codable, Equatable {
     
     // MARK: - Display Properties
 
-    /// The person's own share of one charge (`amount` when not shared, or `amount / splitCount` rounded
-    /// to the currency's precision so displayed share and totals always agree).
-    var effectiveAmount: Decimal {
-        let people = max(1, splitCount)
-        return people > 1 ? AmountText.rounded(amount / Decimal(people), currency: currency) : amount
-    }
-    
     var displayAmount: String {
-        return formatCurrency(effectiveAmount)
+        return formatCurrency(amount)
     }
 
-    /// The person's exact share of one charge, unrounded: what totals are worked out from. Rounded first, a
-    /// $17.99 plan split two ways came to $108.00 a year instead of $107.94 (the rating of 2026-11-23).
-    var exactShare: Decimal {
-        amount / Decimal(max(1, splitCount))
-    }
-
-    /// What it costs over a year: the person's share times the number of charges in a year (a monthly plan
+    /// What it costs over a year: the charge times the number of charges in a year (a monthly plan
     /// charges 12 times). One definition, so every screen shows the same yearly number.
     var annualCost: Decimal {
-        exactShare * ProvenSubscription.periodsPerYear(billingFrequency)
+        amount * ProvenSubscription.periodsPerYear(billingFrequency)
     }
 
     var monthlyCost: Decimal {
         switch billingFrequency {
         case .weekly:
-            return exactShare * Decimal(52) / 12
+            return amount * Decimal(52) / 12
         case .biweekly:
-            return exactShare * Decimal(26) / 12
+            return amount * Decimal(26) / 12
         case .monthly:
-            return exactShare
+            return amount
         case .quarterly:
-            return exactShare / 3
+            return amount / 3
         case .semiannual:
-            return exactShare / 6
+            return amount / 6
         case .yearly:
-            return exactShare / 12
+            return amount / 12
         }
     }
 

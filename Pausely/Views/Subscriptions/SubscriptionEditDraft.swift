@@ -15,10 +15,8 @@ struct SubscriptionEditDraft: Equatable {
     var reminderDays: Int
     var paymentMethod: String
     var notes: String
-    var splitCount: Int
 
     static let reminderOptions: [Int] = [0, 1, 3, 7]
-    static let splitOptions: [Int] = [1, 2, 3, 4, 5, 6, 8, 10]
 
     init(from subscription: Subscription) {
         name = subscription.name
@@ -33,7 +31,6 @@ struct SubscriptionEditDraft: Equatable {
         reminderDays = subscription.notifyBeforeDays
         paymentMethod = subscription.paymentMethod ?? ""
         notes = subscription.notes ?? ""
-        splitCount = subscription.splitCount
     }
 
     // MARK: Amount
@@ -88,12 +85,11 @@ struct SubscriptionEditDraft: Equatable {
             || frequency != original.billingFrequency
             || category != original.category
             || reminderDays != original.notifyBeforeDays
-            || splitCount != original.splitCount
             || normalizedPaymentMethod != original.paymentMethod
             || normalizedNotes != original.notes
             || isTrial != (original.status == .trial)
             || !sameDay(isTrial ? trialEndsAt : nil, original.status == .trial ? original.trialEndsAt : nil)
-            || !sameDay(nextBillingDate, original.calculatedNextBillingDate)
+            || (!isTrial && !sameDay(nextBillingDate, original.calculatedNextBillingDate))
     }
 
     private func sameDay(_ a: Date?, _ b: Date?) -> Bool {
@@ -120,6 +116,7 @@ struct SubscriptionEditDraft: Equatable {
         if isTrial {
             let end = trialEndsAt ?? updated.nextBillingDate
             updated.trialEndsAt = end.map { Calendar.billing.noon(of: $0) }
+            updated.nextBillingDate = nil
             if updated.status != .cancelled { updated.status = .trial }
         } else {
             updated.trialEndsAt = nil
@@ -127,7 +124,6 @@ struct SubscriptionEditDraft: Equatable {
         }
         updated.category = category
         updated.notifyBeforeDays = reminderDays
-        updated.splitCount = max(1, min(20, splitCount))
         updated.paymentMethod = normalizedPaymentMethod
         updated.notes = normalizedNotes
         return updated
@@ -140,23 +136,9 @@ struct SubscriptionEditDraft: Equatable {
         days == 0 ? L10n.string("Off") : L10n.string("\(days) days before")
     }
 
-    /// "Just me" or "N people", in the reader's language and digits.
-    static func splitLabel(_ count: Int) -> String {
-        count <= 1 ? L10n.string("Just me") : L10n.string("\(count) people")
-    }
-
-    /// The user's per-period share when splitting a subscription.
-    var perPeriodShare: Decimal? {
-        guard let amount = parsedAmount else { return nil }
-        return splitCount > 1
-            ? AmountText.rounded(amount / Decimal(splitCount), currency: currency)
-            : amount
-    }
-
-    /// Yearly cost for the live "that's X a year" hint: the exact share times the charges in a year, as on the
-    /// subscription's page (rounded first, a split year was $72.00 here and $71.96 there, 2026-11-23).
+    /// Yearly cost for the live "that's X a year" hint, matching the subscription's page.
     var yearlyCost: Decimal? {
         guard let amount = parsedAmount else { return nil }
-        return amount / Decimal(max(1, splitCount)) * ProvenSubscription.periodsPerYear(frequency)
+        return amount * ProvenSubscription.periodsPerYear(frequency)
     }
 }

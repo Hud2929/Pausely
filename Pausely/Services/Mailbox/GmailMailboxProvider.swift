@@ -213,11 +213,28 @@ final class GmailMailboxProvider: MailboxProvider {
         return results
     }
 
+    private static let messageIDAllowed: CharacterSet = {
+        var allowed = CharacterSet.alphanumerics
+        allowed.insert(charactersIn: "-._~")
+        return allowed
+    }()
+
+    private func messageURL(for ref: MessageRef, queryItems: [URLQueryItem]) throws -> URL {
+        guard let encoded = ref.id.addingPercentEncoding(withAllowedCharacters: Self.messageIDAllowed),
+              var components = URLComponents(string: Self.api + "/messages/\(encoded)") else {
+            throw MailboxError.server(L10n.string("Pausely built a request it couldn't send."))
+        }
+        components.queryItems = queryItems
+        guard let url = components.url else {
+            throw MailboxError.server(L10n.string("Pausely built a request it couldn't send."))
+        }
+        return url
+    }
+
     private func metadata(_ ref: MessageRef) async throws -> MessageSummary {
-        var components = URLComponents(string: Self.api + "/messages/\(ref.id)")!
-        components.queryItems = [URLQueryItem(name: "format", value: "metadata")]
+        let items = [URLQueryItem(name: "format", value: "metadata")]
             + ["From", "Subject", "Date", "Message-ID"].map { URLQueryItem(name: "metadataHeaders", value: $0) }
-        let detail = try JSONDecoder().decode(MessageDetail.self, from: try await get(components.url!))
+        let detail = try JSONDecoder().decode(MessageDetail.self, from: try await get(try messageURL(for: ref, queryItems: items)))
         let headers = detail.headerMap
         return MessageSummary(ref: ref, from: headers["from"] ?? "", subject: headers["subject"] ?? "",
                               snippet: detail.snippet ?? "", labelIds: detail.labelIds ?? [],
@@ -226,10 +243,12 @@ final class GmailMailboxProvider: MailboxProvider {
     }
 
     func rawMessage(_ ref: MessageRef) async throws -> Data? {
-        var components = URLComponents(string: Self.api + "/messages/\(ref.id)")!
-        components.queryItems = [URLQueryItem(name: "format", value: "raw")]
-        struct Raw: Decodable { let raw: String? }
-        let raw = try JSONDecoder().decode(Raw.self, from: try await get(components.url!))
+        let url = try messageURL(for: ref, queryItems: [URLQueryItem(name: "format", value: "raw")])
+        struct Raw: Decodable { let raw: String?; let sizeEstimate: Int? }
+        // Guard memory against giant attachment-laden emails (> 8 MiB encoded JSON)
+        let data = try await get(url, maxBytes: 12 * 1024 * 1024)
+        let raw = try JSONDecoder().decode(Raw.self, from: data)
+        if let est = raw.sizeEstimate, est > MIMEParser.maxMessageBytes { return nil }
         return raw.raw.flatMap(OAuthSession.decodeBase64URL)
     }
 
@@ -280,8 +299,12 @@ final class GmailMailboxProvider: MailboxProvider {
         try await OAuthSession.validAccessToken(Self.oauth, accountID: account.id)
     }
 
-    private func get(_ url: URL) async throws -> Data {
-        guard url.host == "gmail.googleapis.com" else { throw MailboxError.insecure(L10n.string("Pausely stopped because a reply came from an unexpected server.")) }
+    private func get(_ url: URL, maxBytes: Int = 4 * 1024 * 1024) async throws -> Data {
+        guard url.scheme?.lowercased() == "https",
+              url.host == "gmail.googleapis.com",
+              url.port == nil else {
+            throw MailboxError.insecure(L10n.string("Pausely stopped because a reply came from an unexpected server."))
+        }
         try await pace()
         var request = URLRequest(url: url)
         request.timeoutInterval = 40
@@ -290,6 +313,9 @@ final class GmailMailboxProvider: MailboxProvider {
                                               token: { try await self.token() },
                                               refresh: { try await OAuthSession.forceRefresh(Self.oauth, accountID: accountID) },
                                               onRateLimit: { self.slowDown() })
+        guard data.count <= maxBytes else {
+            throw MailboxError.server(L10n.string("The server sent more data than expected."))
+        }
         answered()
         return data
     }

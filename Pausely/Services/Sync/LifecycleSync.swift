@@ -77,7 +77,8 @@ final class LifecycleSync {
         if sorted.count > maxEvents {
             sorted = Array(sorted.suffix(maxEvents))
         }
-        let toUpload = local.filter { !remoteIDs.contains($0.id) }
+        let keptIDs = Set(sorted.map(\.id))
+        let toUpload = local.filter { keptIDs.contains($0.id) && !remoteIDs.contains($0.id) }
         return (sorted, toUpload)
     }
 

@@ -420,18 +420,53 @@ function deriveStatus(
   if (notificationType === 'DID_FAIL_TO_RENEW') {
     return subtype === 'GRACE_PERIOD' ? 'grace_period' : 'billing_retry'
   }
+  const expiresMs = typeof transaction.expiresDate === 'number' ? transaction.expiresDate : null
+  if (expiresMs !== null && Number.isFinite(expiresMs) && expiresMs > 0 && expiresMs < Date.now()
+      && notificationType !== 'SUBSCRIBED' && notificationType !== 'DID_RENEW') {
+    return 'expired'
+  }
   if (transaction.offerType === 1) return 'trial'
   return 'active'
 }
 
 const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
+const MAX_BODY_BYTES = 256 * 1024
+
+async function readBoundedText(request: Request, maxBytes: number): Promise<string | null> {
+  const lenHeader = request.headers.get('content-length')
+  if (lenHeader !== null) {
+    const declared = Number(lenHeader)
+    if (Number.isFinite(declared) && declared > maxBytes) return null
+  }
+  if (!request.body) return ''
+  const reader = request.body.getReader()
+  const chunks: Uint8Array[] = []
+  let total = 0
+  while (true) {
+    const { done, value } = await reader.read()
+    if (done) break
+    total += value.byteLength
+    if (total > maxBytes) {
+      await reader.cancel().catch(() => {})
+      return null
+    }
+    chunks.push(value)
+  }
+  const combined = new Uint8Array(total)
+  let offset = 0
+  for (const chunk of chunks) { combined.set(chunk, offset); offset += chunk.byteLength }
+  return new TextDecoder().decode(combined)
+}
 
 Deno.serve(async (request) => {
   if (request.method !== 'POST') return json(405, { error: 'method_not_allowed' })
 
+  const rawText = await readBoundedText(request, MAX_BODY_BYTES)
+  if (rawText === null) return json(413, { error: 'payload_too_large' })
+
   let body: Record<string, unknown>
   try {
-    const parsed = await request.json()
+    const parsed = JSON.parse(rawText)
     if (!parsed || typeof parsed !== 'object') return json(400, { error: 'bad_request' })
     body = parsed as Record<string, unknown>
   } catch {
@@ -484,8 +519,14 @@ Deno.serve(async (request) => {
     willAutoRenew = typeof autoRenewStatus === 'number' ? autoRenewStatus === 1 : null
   }
 
-  const rawEnv = typeof data.environment === 'string' ? data.environment : 'Production'
-  const environment = rawEnv === 'Sandbox' ? 'Sandbox' : 'Production'
+  const rawEnv = data.environment
+  if (rawEnv !== 'Production' && rawEnv !== 'Sandbox') {
+    return json(400, { error: 'invalid_environment' })
+  }
+  if (typeof tx.environment === 'string' && tx.environment !== rawEnv) {
+    return json(400, { error: 'environment_mismatch' })
+  }
+  const environment: 'Production' | 'Sandbox' = rawEnv
 
   const MAX_DATE_MS = 8.64e15
   const expiresMs = typeof tx.expiresDate === 'number' ? tx.expiresDate : null
@@ -516,11 +557,11 @@ Deno.serve(async (request) => {
     auth: { autoRefreshToken: false, persistSession: false },
   })
 
-  // Out-of-order replay protection + preserve existing user_id when follow-up events omit appAccountToken.
+  // Out-of-order replay protection + preserve existing user_id and will_auto_renew when omitted.
   // Never ignore a read error: failing closed with 500 asks Apple to retry instead of bypassing replay protection.
   const { data: existing, error: selectError } = await supabase
     .from('app_store_entitlements')
-    .select('last_signed_date, user_id')
+    .select('last_signed_date, user_id, will_auto_renew')
     .eq('original_transaction_id', originalTransactionId)
     .maybeSingle()
 
@@ -531,12 +572,14 @@ Deno.serve(async (request) => {
 
   if (existing?.last_signed_date) {
     const prevMs = Date.parse(String(existing.last_signed_date))
-    if (!Number.isNaN(prevMs) && signedMs < prevMs) {
+    if (!Number.isNaN(prevMs) && signedMs <= prevMs) {
       return json(200, { ok: true, ignored: 'stale', originalTransactionId })
     }
   }
 
   const resolvedUserId = appAccountToken ?? (typeof existing?.user_id === 'string' ? existing.user_id : null)
+  const terminalAutoRenew = (status === 'refunded' || status === 'revoked' || status === 'expired') ? false : null
+  const resolvedAutoRenew = willAutoRenew ?? terminalAutoRenew ?? (typeof existing?.will_auto_renew === 'boolean' ? existing.will_auto_renew : null)
 
   const buildRow = (userId: string | null) => ({
     original_transaction_id: originalTransactionId,
@@ -544,7 +587,7 @@ Deno.serve(async (request) => {
     product_id: productId,
     status,
     environment,
-    will_auto_renew: willAutoRenew,
+    will_auto_renew: resolvedAutoRenew,
     expires_at: expiresAt,
     last_notification_type: subtype ? `${notificationType}:${subtype}` : notificationType,
     last_signed_date: signedIso,

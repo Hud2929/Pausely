@@ -197,7 +197,7 @@ class SubscriptionStore: ObservableObject {
             }
 
         } catch {
-            os_log("Error fetching subscriptions: %{public}@", log: .default, type: .error, error.localizedDescription)
+            os_log("Error fetching subscriptions: %{public}@", log: .default, type: .error, String(describing: type(of: error)))
             if subscriptions.isEmpty {
                 loadFromCache()
                 if subscriptions.isEmpty, Self.fetchReallyFailed(error, userID: AuthManager.shared.currentUser?.id) {
@@ -343,15 +343,18 @@ class SubscriptionStore: ObservableObject {
         let subscription = Self.withDaysAtNoon(changed)
         guard let index = subscriptions.firstIndex(where: { $0.id == subscription.id }) else { return }
         let before = subscriptions[index]
+        if !before.renewsAutomatically, subscription.renewsAutomatically,
+           !PaymentManager.shared.hasRoom(in: subscriptions) {
+            return
+        }
         subscriptions[index] = subscription
         listChanged()
         sync.noteChanged(subscription.id)
         // What it costs is the amount, its currency and how often it is charged: a change to any of
-        // them goes in the history (`PriceHistory` reads it from there). Record previousAmount on the
-        // same personal-share basis (`exactShare`) as `LifecycleEvent.amount`.
+        // them goes in the history (`PriceHistory` reads it from there).
         if subscription.amount != before.amount || subscription.currency != before.currency
             || subscription.billingFrequency != before.billingFrequency {
-            LifecycleEventLog.shared.record(.priceChanged, for: subscription, previousAmount: before.exactShare)
+            LifecycleEventLog.shared.record(.priceChanged, for: subscription, previousAmount: before.amount)
         }
         await ReminderScheduler.shared.reschedule(subscriptions)
         await send(subscription.id)
@@ -372,6 +375,10 @@ class SubscriptionStore: ObservableObject {
     func updateSubscriptionStatus(id: UUID, status: SubscriptionStatus) async {
         guard let index = subscriptions.firstIndex(where: { $0.id == id }) else { return }
         let before = subscriptions[index]
+        if !before.renewsAutomatically, (status == .active || status == .trial),
+           !PaymentManager.shared.hasRoom(in: subscriptions) {
+            return
+        }
         // The charge this cancellation avoids, worked out while it still renews.
         let avoided = RenewalDecisions.upcomingCharge(for: before, now: Date())?.date
         subscriptions[index].status = status
@@ -497,9 +504,8 @@ class SubscriptionStore: ObservableObject {
         do {
             let data = try JSONEncoder().encode(subscriptions)
             AppSettings.shared.cachedSubscriptions = data
-            AppSettings.shared.subscriptionsCacheDate = Date()
         } catch {
-            os_log("Cache save failed: %{public}@", log: .default, type: .error, error.localizedDescription)
+            os_log("Cache save failed: %{public}@", log: .default, type: .error, String(describing: type(of: error)))
         }
     }
 
@@ -520,7 +526,7 @@ class SubscriptionStore: ObservableObject {
             self.subscriptions = cached
             self.calculateTotals()
         } catch {
-            os_log("Cache load failed: %{public}@", log: .default, type: .error, error.localizedDescription)
+            os_log("Cache load failed: %{public}@", log: .default, type: .error, String(describing: type(of: error)))
         }
     }
 

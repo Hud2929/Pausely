@@ -19,7 +19,7 @@ enum TipKitConfiguration {
                 .datastoreLocation(.applicationDefault)
             ])
         } catch {
-            os_log("TipKit configuration failed: %{public}@", log: .default, type: .error, error.localizedDescription)
+            os_log("TipKit configuration failed: %{public}@", log: .default, type: .error, String(describing: type(of: error)))
         }
     }
 }

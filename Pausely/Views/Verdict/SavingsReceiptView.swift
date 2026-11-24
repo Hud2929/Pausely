@@ -77,7 +77,8 @@ struct SavingsReceiptView: View {
     private var emptyState: some View {
         PaperSlip(tornTop: true, tornBottom: true) {
             VStack(alignment: .leading, spacing: 10) {
-                let uncounted = SavingsLedger.uncounted(from: LifecycleEventLog.shared.events)
+                let uncounted = SavingsLedger.uncounted(from: eventLog.events,
+                                                        excluding: Set(store.subscriptions.filter(\.isPausely).map(\.id)))
                 if uncounted.isEmpty {
                     Text("Your Savings Receipt starts with your first cancellation")
                         .font(.question(.title3))

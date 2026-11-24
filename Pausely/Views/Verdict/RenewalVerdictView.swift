@@ -10,14 +10,12 @@ struct RenewalVerdictView: View {
     @Environment(\.dynamicTypeSize) private var typeSize
     @ObservedObject private var store = SubscriptionStore.shared
     @ObservedObject private var eventLog = LifecycleEventLog.shared
-    @ObservedObject private var paymentManager = PaymentManager.shared
     @ObservedObject private var currencyManager = CurrencyManager.shared
     @ObservedObject private var screenTime = UsageLog.shared
     @ObservedObject private var difficulty = CancelDifficultyService.shared
     @ObservedObject private var authManager = AuthManager.shared
 
     @State private var showCancelFlow = false
-    @State private var showPaywall = false
     @State private var showReceipt = false
     @State private var isKeeping = false
     @State private var enteringUsage = false
@@ -59,9 +57,6 @@ struct RenewalVerdictView: View {
         .preferredColorScheme(.dark)
         .sheet(isPresented: $showCancelFlow) {
             if let sub = subscription { CancelSubscriptionFlow(subscription: sub, showsOutcome: false) }
-        }
-        .sheet(isPresented: $showPaywall) {
-            StoreKitUpgradeView()
         }
         .sheet(isPresented: $showReceipt) {
             SavingsReceiptView()
@@ -165,7 +160,7 @@ struct RenewalVerdictView: View {
                             measuredIn: .largeTitle, weight: .bold, serif: true)
                 .fixedSize(horizontal: false, vertical: true)
                 .accessibilityAddTraits(.isHeader)
-            PricePerPeriod(amount: MoneyFormat.string(sub.effectiveAmount, sub.currency), frequency: sub.billingFrequency,
+            PricePerPeriod(amount: MoneyFormat.string(sub.amount, sub.currency), frequency: sub.billingFrequency,
                            amountFont: .question(.title, weight: .semibold), periodFont: .subheadline, periodColor: .paperMuted)
         }
     }
@@ -189,9 +184,6 @@ struct RenewalVerdictView: View {
     /// except where money went up or was kept.
     private func facts(_ sub: Subscription, charge: (date: Date, isTrialEnd: Bool)?) -> some View {
         VStack(alignment: .leading, spacing: 10) {
-            if sub.splitCount > 1 {
-                factLine(L10n.string("Your share (1 of \(sub.splitCount)) of \(sub.fullChargeText)"))
-            }
             if let method = sub.paymentMethod, !method.isEmpty {
                 factLine(L10n.string("Billed to \(method)"))
             }

@@ -155,12 +155,17 @@ begin
       values ('$B', 'pro', 'active', true, now() - interval '2 days');
   end if;
   if to_regclass('public.cancel_difficulty_ratings') is not null then
-    -- The same person rated one service twice before the one-per-person rule existed.
-    if not exists (select 1 from pg_indexes where indexname = 'cancel_difficulty_one_per_user') then
-      insert into public.cancel_difficulty_ratings (service_name, difficulty_rating, user_id, created_at)
-        values ('Netflix', 2, '$B', now() - interval '2 days');
+    -- Legacy states seed mixed-case duplicate 'Netflix' rows to prove migration normalization + dedup;
+    -- fresh (where the slug CHECK already exists) seeds canonical 'netflix'.
+    if exists (select 1 from pg_constraint where conname = 'cancel_difficulty_service_slug') then
+      insert into public.cancel_difficulty_ratings (service_name, difficulty_rating, user_id) values ('netflix', 4, '$B');
+    else
+      if not exists (select 1 from pg_indexes where indexname = 'cancel_difficulty_one_per_user') then
+        insert into public.cancel_difficulty_ratings (service_name, difficulty_rating, user_id, created_at)
+          values ('Netflix', 2, '$B', now() - interval '2 days');
+      end if;
+      insert into public.cancel_difficulty_ratings (service_name, difficulty_rating, user_id) values ('Netflix', 4, '$B');
     end if;
-    insert into public.cancel_difficulty_ratings (service_name, difficulty_rating, user_id) values ('Netflix', 4, '$B');
   end if;
 end \$\$;
 SQL
@@ -169,8 +174,8 @@ SQL
 seed_after() {  # states that had no ratings table before the fix get the same single rating now
   admin "$1" >/dev/null <<SQL
 insert into public.cancel_difficulty_ratings (service_name, difficulty_rating, user_id)
-select 'Netflix', 4, '$B'
-where not exists (select 1 from public.cancel_difficulty_ratings where user_id = '$B' and service_name = 'Netflix');
+select 'netflix', 4, '$B'
+where not exists (select 1 from public.cancel_difficulty_ratings where user_id = '$B' and service_name = 'netflix');
 SQL
 }
 
@@ -209,8 +214,10 @@ checks() {
   works   "a granted-Pro person can edit their profile"         "$db" authenticated "$B" "update public.profiles set display_name = 'B again' where id = '$B'"
   owner_sees "and keeps Pro afterwards" t "$db" "select is_pro from public.profiles where id = '$B'"
   works   "the app's age-consent upsert works"                  "$db" authenticated "$A" "insert into public.profiles (id, age_confirmed_at, age_minimum_met, age_minimum_required, consent_policy_version, consent_app_version) values ('$A', now(), true, 16, '2026-10', '1.0.3') on conflict (id) do update set age_confirmed_at = excluded.age_confirmed_at, age_minimum_met = excluded.age_minimum_met, age_minimum_required = excluded.age_minimum_required, consent_policy_version = excluded.consent_policy_version, consent_app_version = excluded.consent_app_version"
-  works   "a new person can create their profile, asking for Pro" "$db" authenticated "$C" "insert into public.profiles (id, display_name, is_pro, pro_tier) values ('$C', 'C', true, 'lifetime')"
-  owner_sees "and the row is saved without Pro" "f|" "$db" "select is_pro, pro_tier from public.profiles where id = '$C'"
+  # Delete any backfilled profile for $C so we explicitly test client INSERT through protect_pro_fields().
+  admin "$db" >/dev/null <<< "delete from public.profiles where id = '$C';"
+  works   "a new person can create their profile, asking for Pro and hijacked fields" "$db" authenticated "$C" "insert into public.profiles (id, display_name, is_pro, pro_tier, subscription_count_limit, affiliate_code, attributed_at) values ('$C', 'C', true, 'lifetime', 999, 'HIJACK', now())"
+  owner_sees "and the row is saved without Pro or hijacked server fields" "f||5||" "$db" "select is_pro, pro_tier, subscription_count_limit, affiliate_code, attributed_at from public.profiles where id = '$C'"
   gives   "a person cannot edit someone else's profile" 0       "$db" authenticated "$A" "with changed as (update public.profiles set display_name = 'hacked' where id = '$B' returning 1) select count(*) from changed"
   gives   "a person cannot read someone else's profile" 0       "$db" authenticated "$A" "select count(*) from public.profiles where id = '$B'"
   gives   "a signed-out visitor sees no profiles" 0             "$db" anon - "select count(*) from public.profiles"
@@ -249,14 +256,17 @@ checks() {
   works   "the same delete sent again is not an error"          "$db" authenticated "$A" "delete from public.subscriptions where id = '$synced'"
   owner_sees "and it is gone" 0 "$db" "select count(*) from public.subscriptions where id = '$synced'"
 
-  # Cancel-difficulty ratings
-  owner_sees "an earlier double rating was reduced to the latest one" "1|4" "$db" "select count(*), max(difficulty_rating) from public.cancel_difficulty_ratings where user_id = '$B' and service_name = 'Netflix'"
-  works   "a person can rate a service"                         "$db" authenticated "$A" "insert into public.cancel_difficulty_ratings (service_name, difficulty_rating, user_id) values ('Netflix', 5, '$A')"
-  refused "but not twice"                                       "$db" authenticated "$A" "insert into public.cancel_difficulty_ratings (service_name, difficulty_rating, user_id) values ('Netflix', 1, '$A')"
-  refused "a person cannot rate under someone else's id"        "$db" authenticated "$A" "insert into public.cancel_difficulty_ratings (service_name, difficulty_rating, user_id) values ('Hulu', 1, '$B')"
-  refused "a signed-out visitor cannot rate"                    "$db" anon - "insert into public.cancel_difficulty_ratings (service_name, difficulty_rating) values ('Hulu', 1)"
+  # Cancel-difficulty ratings (canonical slug + >= 3 ratings privacy threshold)
+  owner_sees "an earlier double rating was normalized and reduced to the latest one" "1|4" "$db" "select count(*), max(difficulty_rating) from public.cancel_difficulty_ratings where user_id = '$B' and service_name = 'netflix'"
+  refused "an unnormalized or injected service name is rejected" "$db" authenticated "$A" "insert into public.cancel_difficulty_ratings (service_name, difficulty_rating, user_id) values ('Netflix! <script>', 5, '$A')"
+  works   "a person can rate a service"                         "$db" authenticated "$A" "insert into public.cancel_difficulty_ratings (service_name, difficulty_rating, user_id) values ('netflix', 5, '$A')"
+  refused "but not twice"                                       "$db" authenticated "$A" "insert into public.cancel_difficulty_ratings (service_name, difficulty_rating, user_id) values ('netflix', 1, '$A')"
+  refused "a person cannot rate under someone else's id"        "$db" authenticated "$A" "insert into public.cancel_difficulty_ratings (service_name, difficulty_rating, user_id) values ('hulu', 1, '$B')"
+  refused "a signed-out visitor cannot rate"                    "$db" anon - "insert into public.cancel_difficulty_ratings (service_name, difficulty_rating) values ('hulu', 1)"
   hidden  "nobody can read individual ratings"                  "$db" authenticated "$A" "select count(*) from public.cancel_difficulty_ratings"
-  gives   "anyone can read the per-service average" "Netflix|4.5|2" "$db" anon - "select service_name, avg_difficulty, rating_count from public.service_difficulty_scores"
+  gives   "fewer than 3 ratings are not exposed publicly" 0     "$db" anon - "select count(*) from public.service_difficulty_scores where service_name = 'netflix'"
+  works   "a third person can rate the service"                 "$db" authenticated "$C" "insert into public.cancel_difficulty_ratings (service_name, difficulty_rating, user_id) values ('netflix', 3, '$C')"
+  gives   "once 3+ ratings exist anyone can read the average" "netflix|4.0|3" "$db" anon - "select service_name, avg_difficulty, rating_count from public.service_difficulty_scores where service_name = 'netflix'"
 
   # Settings (build 11 reads and writes them)
   works   "a person can save their settings row"                "$db" authenticated "$A" "insert into public.user_settings (user_id, referral_discount_used) values ('$A', true) on conflict (user_id) do update set referral_discount_used = excluded.referral_discount_used"
@@ -289,7 +299,7 @@ checks() {
 
   # Tables no build uses
   local table
-  for table in affiliates affiliate_conversions waitlist user_profiles usage_snapshots user_devices ai_insights_log alternatives; do
+  for table in affiliates affiliate_conversions waitlist user_profiles usage_snapshots user_devices ai_insights_log alternatives tracked_trials; do
     if has "$db" "$table"; then
       hidden "a signed-in person cannot read $table"            "$db" authenticated "$A" "select count(*) from public.$table"
       hidden "a signed-out visitor cannot read $table"          "$db" anon - "select count(*) from public.$table"
@@ -299,20 +309,25 @@ checks() {
 
   # New multi-device sync tables (lifecycle_events, pause_plans) and server-only app_store_entitlements
   local ev_id=6eed0000-0000-4000-8000-000000000001
-  works   "a person can save their own lifecycle event"         "$db" authenticated "$A" "insert into public.lifecycle_events (id, user_id, subscription_id, subscription_name, kind, occurred_at, amount, currency, frequency) values ('$ev_id', '$A', '$synced', 'Netflix', 'cancelled', now(), 15.99, 'USD', 'monthly')"
+  works   "a person can save their own lifecycle event"         "$db" authenticated "$A" "insert into public.lifecycle_events (id, user_id, subscription_id, subscription_name, kind, occurred_at, amount, currency, frequency) values ('$ev_id', '$A', '$synced', 'Netflix', 'cancelled', now(), 8.995, 'USD', 'monthly')"
+  gives   "lifecycle_events preserves sub-cent precision on sync" "8.995000" "$db" authenticated "$A" "select amount::text from public.lifecycle_events where id = '$ev_id'"
   gives   "a person sees their own lifecycle events" 1          "$db" authenticated "$A" "select count(*) from public.lifecycle_events"
   gives   "a person cannot read someone else's lifecycle events" 0 "$db" authenticated "$B" "select count(*) from public.lifecycle_events"
   refused "a person cannot insert a lifecycle event for someone else" "$db" authenticated "$A" "insert into public.lifecycle_events (id, user_id, subscription_id, subscription_name, kind, occurred_at, amount, currency, frequency) values ('6eed0000-0000-4000-8000-000000000002', '$B', '$synced', 'Netflix', 'cancelled', now(), 15.99, 'USD', 'monthly')"
   works   "a person can save their own pause plan"              "$db" authenticated "$A" "insert into public.pause_plans (user_id, subscription_ids, started_on) values ('$A', array['$synced'::uuid], now()) on conflict (user_id) do update set subscription_ids = excluded.subscription_ids"
   works   "a pause plan update can carry a client LWW timestamp" "$db" authenticated "$A" "update public.pause_plans set ended_at = '2026-01-02T03:04:05Z', updated_at = '2026-01-02T03:04:05Z' where user_id = '$A'"
   gives   "pause_plans preserves the client updated_at timestamp on update" "2026-01-02T03:04:05Z" "$db" authenticated "$A" "select to_char(updated_at at time zone 'UTC', 'YYYY-MM-DD\"T\"HH24:MI:SS\"Z\"') from public.pause_plans where user_id = '$A'"
+  refused "pause_plans rejects arrays larger than 50 ids"       "$db" authenticated "$A" "update public.pause_plans set subscription_ids = array(select gen_random_uuid() from generate_series(1, 51)) where user_id = '$A'"
   gives   "a person cannot read someone else's pause plan" 0    "$db" authenticated "$B" "select count(*) from public.pause_plans"
   refused "a person cannot write someone else's pause plan"     "$db" authenticated "$B" "insert into public.pause_plans (user_id, subscription_ids, started_on) values ('$A', array['$synced'::uuid], now())"
   refused "a signed-in person cannot read app_store_entitlements" "$db" authenticated "$A" "select count(*) from public.app_store_entitlements"
   refused "a visitor cannot read app_store_entitlements"        "$db" anon - "select count(*) from public.app_store_entitlements"
   works   "the service role can record an App Store entitlement" "$db" service_role - "insert into public.app_store_entitlements (original_transaction_id, user_id, product_id, status) values ('tx-1', '$A', 'com.pausely.premium.annual', 'trial')"
-  works   "a person can save notes, payment method and split count on a subscription" "$db" authenticated "$A" "insert into public.subscriptions (user_id, name, amount, notes, payment_method, split_count) values ('$A', 'Shared Max', 16.99, 'Split with roommate', 'Apple Card', 2)"
-  works   "and delete it cleanly afterwards" "$db" authenticated "$A" "delete from public.subscriptions where user_id = '$A' and name = 'Shared Max'"
+  works   "a person can save high-denomination and 3-decimal amounts" "$db" authenticated "$A" "insert into public.subscriptions (user_id, name, amount, currency, notes, payment_method, split_count) values ('$A', 'IDR Plan', 1500000000, 'IDR', 'Split with roommate', 'Apple Card', 1), ('$A', 'KWD Plan', 1.255, 'KWD', null, null, 1)"
+  gives   "high-denomination and 3-decimal amounts round-trip cleanly" "1500000000.0000|1.2550" "$db" authenticated "$A" "select max(amount) filter (where name = 'IDR Plan') || '|' || max(amount) filter (where name = 'KWD Plan') from public.subscriptions where user_id = '$A'"
+  works   "and delete them cleanly afterwards" "$db" authenticated "$A" "delete from public.subscriptions where user_id = '$A' and name in ('IDR Plan', 'KWD Plan')"
+  refused "negative subscription amounts are rejected"          "$db" authenticated "$A" "insert into public.subscriptions (user_id, name, amount) values ('$A', 'Bad Neg', -1)"
+  refused "oversized subscription notes (>2000 chars) are rejected" "$db" authenticated "$A" "insert into public.subscriptions (user_id, name, amount, notes) values ('$A', 'Huge Notes', 10, repeat('x', 2001))"
   refused "split count must be between 1 and 20"                "$db" authenticated "$A" "insert into public.subscriptions (user_id, name, amount, split_count) values ('$A', 'Bad Split', 10, 0)"
   owner_sees "unused realtime broadcasts are removed" 0 "$db" "select count(*) from pg_publication_tables where pubname = 'supabase_realtime' and tablename in ('subscriptions', 'referral_codes', 'referral_conversions')"
   if has "$db" waitlist; then

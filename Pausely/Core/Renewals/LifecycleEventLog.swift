@@ -37,8 +37,7 @@ struct LifecycleEvent: Codable, Equatable, Identifiable {
         self.subscriptionId = subscription.id
         self.subscriptionName = subscription.name
         self.date = date
-        // The exact share, so the receipt's year is the page's year (the rating of 2026-11-23).
-        self.amount = subscription.exactShare
+        self.amount = subscription.amount
         self.currency = subscription.currency
         self.frequency = subscription.billingFrequency
         self.previousAmount = previousAmount
@@ -156,7 +155,7 @@ final class LifecycleEventLog: ObservableObject {
         do {
             try DeviceFile.save(events, to: fileURL)
         } catch {
-            PauselyLogger.error("Lifecycle log save failed: \(error.localizedDescription)", category: "lifecycle")
+            PauselyLogger.error("Lifecycle log save failed: \(String(describing: type(of: error)))", category: "lifecycle")
         }
     }
 

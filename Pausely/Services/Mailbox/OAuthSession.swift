@@ -144,7 +144,10 @@ enum OAuthSession {
 
     static func randomURLSafe(bytes count: Int) -> String {
         var bytes = [UInt8](repeating: 0, count: count)
-        _ = SecRandomCopyBytes(kSecRandomDefault, count, &bytes)
+        if SecRandomCopyBytes(kSecRandomDefault, count, &bytes) != errSecSuccess {
+            var rng = SystemRandomNumberGenerator()
+            for index in bytes.indices { bytes[index] = UInt8.random(in: 0...255, using: &rng) }
+        }
         return base64URL(Data(bytes))
     }
 

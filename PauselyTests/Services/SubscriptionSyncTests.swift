@@ -56,7 +56,6 @@ final class SubscriptionSyncTests: XCTestCase {
         sub.trialEndsAt = fifteenth
         sub.notes = "Shared with family"
         sub.paymentMethod = "Apple"
-        sub.splitCount = 3
         let back = try JSONDecoder().decode(SubscriptionRecord.self, from: JSONEncoder().encode(SubscriptionRecord(from: sub))).toSubscription()
         XCTAssertEqual(back.id, sub.id)
         XCTAssertEqual(back.amount, sub.amount)
@@ -67,7 +66,17 @@ final class SubscriptionSyncTests: XCTestCase {
         XCTAssertEqual(back.trialEndsAt, sub.trialEndsAt)
         XCTAssertEqual(back.notes, "Shared with family")
         XCTAssertEqual(back.paymentMethod, "Apple")
-        XCTAssertEqual(back.splitCount, 3)
+
+        // Oversized text fields are clamped before upload to satisfy Postgres CHECK constraints.
+        var oversized = TestFactories.makeSubscription(name: String(repeating: "x", count: 300), amount: -5)
+        oversized.notes = String(repeating: "n", count: 3_000)
+        oversized.paymentMethod = String(repeating: "p", count: 200)
+        let clamped = SubscriptionRecord(from: oversized)
+        XCTAssertEqual(clamped.name.count, 200)
+        XCTAssertEqual(clamped.notes?.count, 2_000)
+        XCTAssertEqual(clamped.payment_method?.count, 120)
+        XCTAssertEqual(clamped.amount, 0)
+        XCTAssertEqual(clamped.split_count, 1)
     }
 
     // MARK: Merging the server's list with this iPhone's

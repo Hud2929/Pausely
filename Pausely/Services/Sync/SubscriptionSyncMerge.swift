@@ -79,10 +79,6 @@ struct SubscriptionSyncMerge {
                     merged.paymentMethod = method
                     needsBackfill = true
                 }
-                if merged.splitCount == 1, guest.splitCount > 1 {
-                    merged.splitCount = guest.splitCount
-                    needsBackfill = true
-                }
                 if needsBackfill { result.backfill.append(merged) }
                 result.subscriptions.append(merged)
                 continue
