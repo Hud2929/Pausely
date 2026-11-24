@@ -25,7 +25,7 @@ set -euo pipefail
 cd "$(dirname "$0")/.."
 
 BUNDLE_ID="com.pausely.app.Pausely"
-VERSION="1.0.3"
+VERSION="1.0.4"
 MONTHLY_ID="com.pausely.premium.monthly"; MONTHLY_PRICE="4.99"
 ANNUAL_ID="com.pausely.premium.annual";   ANNUAL_PRICE="29.99"
 PRICE_START="${PRICE_START:-$(date -v+1d +%Y-%m-%d)}"      # dated price changes take effect on this date
@@ -84,7 +84,7 @@ if wants listing; then
 import glob, json, os, sys
 remote = sys.argv[1]
 bad = checked = 0
-for scope in ("app-info", "version/1.0.3"):
+for scope in ("app-info", "version/1.0.4"):
     for lf in sorted(glob.glob(f"metadata/{scope}/*.json")):
         rf = f"{remote}/{scope}/{os.path.basename(lf)}"
         if not os.path.exists(rf): print("   MISSING:", rf); bad += 1; continue
