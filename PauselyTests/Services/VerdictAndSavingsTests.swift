@@ -281,4 +281,24 @@ final class VerdictAndSavingsTests: XCTestCase {
         XCTAssertEqual(netflix.effectiveAmount, Decimal(string: "9.00"), "one charge's share is shown rounded")
         XCTAssertEqual(MoneyFormat.string(netflix.monthlyCost, "USD", locale: Locale(identifier: "en_US")), "$9.00")
     }
+
+    /// A cancellation with no renewal day is named, so the receipt doesn't say it starts with a first cancellation
+    /// after one (the rating of 2026-11-23); one taken back, or one with a day, is not.
+    func testUncountedCancellationsAreNamed() {
+        let adobe = sub("Adobe", anchor: nil)
+        let netflix = sub(anchor: day(2026, 12, 5))
+        let hulu = sub("Hulu", anchor: nil)
+        let events = [event(.cancelled, adobe, on: day(2026, 11, 20)),
+                      event(.cancelled, netflix, on: day(2026, 11, 20)),
+                      event(.cancelled, hulu, on: day(2026, 11, 20)),
+                      event(.reactivated, hulu, on: day(2026, 11, 21))]
+        XCTAssertEqual(SavingsLedger.uncounted(from: events), ["Adobe"])
+    }
+
+    /// The rating prompt waits three days from its first chance: it asked 18 minutes into a first session.
+    func testTheRatingPromptWaitsAFewDays() {
+        XCTAssertFalse(ReviewPromptManager.waitedLongEnough(firstChance: day(2026, 11, 23), now: day(2026, 11, 23, hour: 18), calendar: cal))
+        XCTAssertFalse(ReviewPromptManager.waitedLongEnough(firstChance: day(2026, 11, 23), now: day(2026, 11, 25), calendar: cal))
+        XCTAssertTrue(ReviewPromptManager.waitedLongEnough(firstChance: day(2026, 11, 23), now: day(2026, 11, 26), calendar: cal))
+    }
 }

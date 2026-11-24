@@ -77,9 +77,20 @@ struct SavingsReceiptView: View {
     private var emptyState: some View {
         PaperSlip(tornTop: true, tornBottom: true) {
             VStack(alignment: .leading, spacing: 10) {
-                Text("Your Savings Receipt starts with your first cancellation")
-                    .font(.question(.title3))
-                    .fixedSize(horizontal: false, vertical: true)
+                let uncounted = SavingsLedger.uncounted(from: LifecycleEventLog.shared.events)
+                if uncounted.isEmpty {
+                    Text("Your Savings Receipt starts with your first cancellation")
+                        .font(.question(.title3))
+                        .fixedSize(horizontal: false, vertical: true)
+                } else {
+                    Text("Nothing counted yet")
+                        .font(.question(.title3))
+                        .fixedSize(horizontal: false, vertical: true)
+                    Text("Cancelled without a renewal day, so no charges could be counted: \(uncounted.formatted(.list(type: .and).locale(L10n.locale))).")
+                        .font(.subheadline)
+                        .foregroundStyle(Color.paperMuted)
+                        .fixedSize(horizontal: false, vertical: true)
+                }
                 Text("Before each renewal Pausely asks: keep it or cancel it? Every subscription you cancel shows up here with the charges it avoided.")
                     .font(.subheadline)
                     .foregroundStyle(Color.paperMuted)

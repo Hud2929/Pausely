@@ -348,10 +348,10 @@ class SubscriptionStore: ObservableObject {
         sync.noteChanged(subscription.id)
         // What it costs is the amount, its currency and how often it is charged: a change to any of
         // them goes in the history (`PriceHistory` reads it from there). Record previousAmount on the
-        // same personal-share basis (`effectiveAmount`) as `LifecycleEvent.amount`.
+        // same personal-share basis (`exactShare`) as `LifecycleEvent.amount`.
         if subscription.amount != before.amount || subscription.currency != before.currency
             || subscription.billingFrequency != before.billingFrequency {
-            LifecycleEventLog.shared.record(.priceChanged, for: subscription, previousAmount: before.effectiveAmount)
+            LifecycleEventLog.shared.record(.priceChanged, for: subscription, previousAmount: before.exactShare)
         }
         await ReminderScheduler.shared.reschedule(subscriptions)
         await send(subscription.id)

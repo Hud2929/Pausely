@@ -37,7 +37,8 @@ struct LifecycleEvent: Codable, Equatable, Identifiable {
         self.subscriptionId = subscription.id
         self.subscriptionName = subscription.name
         self.date = date
-        self.amount = subscription.effectiveAmount
+        // The exact share, so the receipt's year is the page's year (the rating of 2026-11-23).
+        self.amount = subscription.exactShare
         self.currency = subscription.currency
         self.frequency = subscription.billingFrequency
         self.previousAmount = previousAmount

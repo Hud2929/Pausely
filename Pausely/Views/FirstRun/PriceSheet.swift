@@ -11,6 +11,7 @@ struct PriceSheet: View {
 
     @Environment(\.dismiss) private var dismiss
     @Environment(\.dynamicTypeSize) private var typeSize
+    @Environment(\.layoutDirection) private var direction
     @State private var text = ""
     @State private var formHeight: CGFloat = 0
     @FocusState private var focused: Bool
@@ -70,12 +71,17 @@ struct PriceSheet: View {
             HStack(spacing: 10) {
                 TextField(text: $text, prompt: placeholder.map { Hint.text(MoneyFormat.string($0, currency, locale: L10n.locale)) }) { EmptyView() }
                     .keyboardType(.decimalPad)
+                    // In a right-to-left layout the figure sits at the left edge, beside its currency (a figure
+                    // reads before its currency in Arabic). At the right edge, with Arabic as the phone's
+                    // language, a typed price was drawn nowhere (the reach rating of 2026-11-23).
+                    .multilineTextAlignment(direction == .rightToLeft ? .trailing : .leading)
                     .font(.proof(.title2, weight: .medium))
                     .foregroundStyle(Color.inkText)
                     .focused($focused)
                     .accessibilityLabel(Text(verbatim: priceAccessibilityLabel))
                     .accessibilityIdentifier("priceField")
-                Text(verbatim: currency)
+                // The currency as every other screen writes it ("ر.س.", not "SAR").
+                Text(verbatim: MoneyFormat.symbol(for: currency))
                     .font(.proof(.subheadline))
                     .foregroundStyle(Color.inkTextMuted)
             }

@@ -52,9 +52,25 @@ final class ReviewPromptManager: ObservableObject {
     }
 
 
+    /// Days the app is used before it asks for a rating at all, from the first time it could have asked.
+    nonisolated static let daysBeforeAsking = 3
+    private let firstChanceKey = "review_first_chance"
+
+    /// Whether enough days have passed since the first chance to ask.
+    nonisolated static func waitedLongEnough(firstChance: Date, now: Date, calendar: Calendar = .billing) -> Bool {
+        (calendar.dateComponents([.day], from: firstChance, to: now).day ?? 0) >= daysBeforeAsking
+    }
+
     private func canRequestReview() -> Bool {
         let calendar = Calendar.billing
         let now = Date()
+        // Not in the first days with the app: it asked 18 minutes into a first session, after one cancellation
+        // (the rating of 2026-11-23).
+        let firstChance = UserDefaults.standard.object(forKey: firstChanceKey) as? Date ?? {
+            UserDefaults.standard.set(now, forKey: firstChanceKey)
+            return now
+        }()
+        guard Self.waitedLongEnough(firstChance: firstChance, now: now, calendar: calendar) else { return false }
         let currentYear = calendar.component(.year, from: now)
         let storedYear = UserDefaults.standard.integer(forKey: currentYearKey)
 

@@ -58,6 +58,11 @@ enum ScreenshotParser {
         case mayNotRepeat
         /// "Every 4 weeks" is thirteen charges a year, which no billing period here holds: kept as monthly.
         case everyFourWeeks
+        /// "Every 2 months": no billing period holds it, so half the charge is counted each month.
+        case everyTwoMonths
+        /// Rent, insurance, energy: a recurring bill, not a subscription, so not ticked for the person
+        /// (a recurring-payments list had rent ticked, the rating of 2026-11-23).
+        case aBill
     }
 
     /// One horizontal visual line formed by clustering spatially aligned OCR boxes.
@@ -194,6 +199,27 @@ enum ScreenshotParser {
             /// Known to repeat: a subscription service, a list of them, or a line saying how often.
             var repeats: Bool
             var everyFourWeeks = false
+            var everyTwoMonths = false
+        }
+
+        /// A line of how often and when ("Monthly · next 19 Dec 2026") that heads the row under it, as a bank's
+        /// recurring payments are laid out: attached to the row above, every period and date was a row off.
+        struct HeadingDetail {
+            var frequency: BillingFrequency?
+            var date: Date?
+            var repeats: Bool
+            var everyFourWeeks: Bool
+            var everyTwoMonths: Bool
+        }
+        var heading: HeadingDetail?
+        func applyHeading(to card: inout PendingCard) {
+            guard let detail = heading else { return }
+            heading = nil
+            if let frequency = detail.frequency { card.frequency = frequency }
+            if card.renewalDate == nil { card.renewalDate = detail.date }
+            if detail.repeats { card.repeats = true }
+            if detail.everyFourWeeks { card.everyFourWeeks = true }
+            if detail.everyTwoMonths { card.everyTwoMonths = true }
         }
 
         var current: PendingCard?
@@ -208,21 +234,26 @@ enum ScreenshotParser {
                 id: card.name.lowercased(),
                 name: card.name,
                 category: card.category,
-                amount: card.amount,
+                // Every 2 months, counted as half each month, so a year comes to what it costs.
+                amount: card.everyTwoMonths ? card.amount.map { MoneyFormat.decimal(NSDecimalNumber(decimal: $0 / 2).doubleValue) } : card.amount,
                 currency: card.currency,
                 frequency: card.frequency ?? .monthly,
                 renewalDate: card.renewalDate,
                 trialEndsAt: card.trialEndsAt,
                 isCancelled: card.isCancelled,
                 paymentMethod: detectedPaymentMethod,
-                doubt: card.everyFourWeeks ? .everyFourWeeks : (card.repeats || card.trialEndsAt != nil ? nil : .mayNotRepeat)
+                doubt: isBill(card.name) ? .aBill
+                    : !(card.repeats || card.trialEndsAt != nil) ? .mayNotRepeat
+                    : card.everyTwoMonths ? .everyTwoMonths
+                    : card.everyFourWeeks ? .everyFourWeeks : nil
             )
             merge(item, into: &items)
         }
 
-        for line in lines {
+        for (index, line) in lines.enumerated() {
             let text = line.text
             let lower = text.lowercased()
+            let next = index + 1 < lines.count ? lines[index + 1] : nil
 
             // Section headers ("ACTIVE", "INACTIVE", "EXPIRED")
             if isActiveHeader(lower) {
@@ -236,6 +267,8 @@ enum ScreenshotParser {
                 continue
             }
             if isChromeNoise(text, lower: lower) { continue }
+            // A row's own label ("Card payment", "Direct debit") is never a name (the rating of 2026-11-23).
+            if isRowLabel(lower) { continue }
 
             let price = extractPrice(in: text, defaultCurrency: defaultCurrency)
             let freq = extractFrequency(in: lower)
@@ -243,6 +276,7 @@ enum ScreenshotParser {
             let isExpiredLine = containsExpiryWord(lower)
             let isTrialLine = containsTrialWord(lower)
             let fourWeeks = isEveryFourWeeks(lower)
+            let twoMonths = isEveryTwoMonths(lower)
 
             // Money coming in is never a subscription: a bank list showed "Salary +€3,200.00" as one,
             // ticked (the rating of 2026-11-23).
@@ -258,7 +292,7 @@ enum ScreenshotParser {
                 flushCurrent()
                 let resolved = resolveService(leftName, catalog: catalog)
                 let cancelled = section == .inactive || isExpiredLine
-                current = PendingCard(
+                var card = PendingCard(
                     name: resolved.name,
                     category: resolved.category,
                     amount: price.amount,
@@ -268,14 +302,32 @@ enum ScreenshotParser {
                     trialEndsAt: isTrialLine ? dateInfo.date : nil,
                     isCancelled: cancelled,
                     lastMinY: line.minY,
-                    repeats: listRepeats || resolved.isSubscription || freq != nil || fourWeeks || dateInfo.hasKeyword,
-                    everyFourWeeks: fourWeeks
+                    repeats: listRepeats || resolved.isSubscription || freq != nil || fourWeeks || twoMonths || dateInfo.hasKeyword,
+                    everyFourWeeks: fourWeeks,
+                    everyTwoMonths: twoMonths
                 )
+                applyHeading(to: &card)
+                current = card
                 continue
             }
 
+            // 2a. A line of how often and when that sits closer to the row under it than to the row above heads
+            // the row under it.
+            let isPeriodOrDate = price == nil && (freq != nil || fourWeeks || twoMonths || dateInfo.date != nil)
+            if isPeriodOrDate, let next {
+                let below = line.minY - next.maxY
+                let above = current.map { $0.lastMinY - line.maxY } ?? .greatestFiniteMagnitude
+                // Clearly closer: on an evenly spaced list a detail stays with the row it follows.
+                if below + 0.006 < above {
+                    heading = HeadingDetail(frequency: freq, date: isExpiredLine ? nil : dateInfo.date,
+                                            repeats: freq != nil || fourWeeks || twoMonths || dateInfo.hasKeyword,
+                                            everyFourWeeks: fourWeeks, everyTwoMonths: twoMonths)
+                    continue
+                }
+            }
+
             // 2. Detail line (price-only, renewal-date-only, trial-only, or expiry-only) attaches to open card.
-            let isDetailOnly = price != nil || dateInfo.hasKeyword || isExpiredLine || isTrialLine || freq != nil || fourWeeks
+            let isDetailOnly = price != nil || dateInfo.hasKeyword || isExpiredLine || isTrialLine || freq != nil || fourWeeks || twoMonths
             if isDetailOnly, var card = current, (card.lastMinY - line.maxY) <= 0.085 {
                 if let price, card.amount == nil {
                     card.amount = price.amount
@@ -283,6 +335,7 @@ enum ScreenshotParser {
                 }
                 if let freq { card.frequency = freq; card.repeats = true }
                 if fourWeeks { card.everyFourWeeks = true; card.repeats = true }
+                if twoMonths { card.everyTwoMonths = true; card.repeats = true }
                 if dateInfo.hasKeyword { card.repeats = true }
                 if let date = dateInfo.date {
                     if isTrialLine {
@@ -304,6 +357,12 @@ enum ScreenshotParser {
                card.amount == nil, card.renewalDate == nil,
                isPlanSubtitle(text, forService: card.name, catalog: catalog) {
                 if let freq { card.frequency = freq }
+                // "ChatGPT" over "Plus" is ChatGPT Plus where the catalog has it by that name.
+                let plan = text.trimmingCharacters(in: .whitespaces)
+                if !plan.contains(" "), let entry = CatalogData.entries.first(where: {
+                    $0.name.caseInsensitiveCompare("\(card.name) \(plan)") == .orderedSame }) {
+                    card.name = entry.name
+                }
                 card.lastMinY = line.minY
                 current = card
                 continue
@@ -315,7 +374,7 @@ enum ScreenshotParser {
                 // Accept known services anywhere, or plausible names inside a subscription list or before details.
                 if resolved.isKnown || isPlausibleTitle(cleanedName) {
                     flushCurrent()
-                    current = PendingCard(
+                    var card = PendingCard(
                         name: resolved.name,
                         category: resolved.category,
                         amount: price?.amount,
@@ -325,9 +384,12 @@ enum ScreenshotParser {
                         trialEndsAt: isTrialLine ? dateInfo.date : nil,
                         isCancelled: section == .inactive || isExpiredLine,
                         lastMinY: line.minY,
-                        repeats: listRepeats || resolved.isSubscription || freq != nil || fourWeeks || dateInfo.hasKeyword,
-                        everyFourWeeks: fourWeeks
+                        repeats: listRepeats || resolved.isSubscription || freq != nil || fourWeeks || twoMonths || dateInfo.hasKeyword,
+                        everyFourWeeks: fourWeeks,
+                        everyTwoMonths: twoMonths
                     )
+                    applyHeading(to: &card)
+                    current = card
                 }
             }
         }
@@ -372,8 +434,11 @@ enum ScreenshotParser {
             if existing.paymentMethod == nil, let method = incoming.paymentMethod {
                 existing.paymentMethod = method
             }
-            // Seen once where it plainly repeats, it repeats.
+            // Seen once where it plainly repeats, it repeats; and the same charge twice at the same price repeats
+            // (Spotify twice in a month of transactions was "nothing says it repeats", 2026-11-23).
             if existing.doubt == .mayNotRepeat, incoming.doubt != .mayNotRepeat { existing.doubt = incoming.doubt }
+            else if existing.doubt == .mayNotRepeat, incoming.doubt == .mayNotRepeat, existing.amount != nil,
+                    existing.amount == incoming.amount { existing.doubt = nil }
             if existing.category == SubscriptionCategory.other.rawValue,
                incoming.category != SubscriptionCategory.other.rawValue {
                 existing.category = incoming.category
@@ -420,32 +485,6 @@ enum ScreenshotParser {
         return (resolved.isKnown || isPlausibleTitle(cleaned)) ? cleaned : nil
     }
 
-    static func extractFrequency(in lower: String) -> BillingFrequency? {
-        if lower.contains("/wk") || lower.contains("/week") || lower.contains("per week") || lower.contains("weekly")
-            || lower.contains("pro woche") || lower.contains("par semaine") || lower.contains("semanal") || lower.contains("週額") || lower.contains("أسبوعي") {
-            return .weekly
-        }
-        if lower.contains("/2wk") || lower.contains("every 2 weeks") || lower.contains("biweekly") || lower.contains("bi-weekly") {
-            return .biweekly
-        }
-        if lower.contains("/3mo") || lower.contains("every 3 months") || lower.contains("quarterly") || lower.contains("3 months") {
-            return .quarterly
-        }
-        if lower.contains("/6mo") || lower.contains("every 6 months") || lower.contains("semiannual") || lower.contains("6 months") {
-            return .semiannual
-        }
-        if lower.contains("/yr") || lower.contains("/year") || lower.contains("per year") || lower.contains("yearly")
-            || lower.contains("annual") || lower.contains("pro jahr") || lower.contains("par an") || lower.contains("anual")
-            || lower.contains("年額") || lower.contains("سنوي") {
-            return .yearly
-        }
-        if lower.contains("/mo") || lower.contains("/month") || lower.contains("per month") || lower.contains("monthly")
-            || lower.contains("1 month") || lower.contains("pro monat") || lower.contains("par mois") || lower.contains("mensual")
-            || lower.contains("月額") || lower.contains("شهري") {
-            return .monthly
-        }
-        return nil
-    }
 
     private struct DateMatch {
         let date: Date?
@@ -559,7 +598,9 @@ enum ScreenshotParser {
     private static func resolveService(_ raw: String, catalog: MerchantCatalog)
         -> (name: String, category: String, isKnown: Bool, isSubscription: Bool) {
         if let match = catalog.resolve(hint: raw, senderName: raw, senderDomain: ""), match.isKnown {
-            return (match.displayName, match.category ?? SubscriptionCategory.other.rawValue, true, match.kind != .mixedCommerce)
+            // "ChatGPT" is not "ChatGPT Team": a name the catalog only adds a plan to keeps its own (2026-11-23).
+            let name = addsOnlyAPlan(raw, to: match.displayName) ? raw : match.displayName
+            return (name, match.category ?? SubscriptionCategory.other.rawValue, true, match.kind != .mixedCommerce)
         }
         if let service = CancelHelp.service(named: raw) {
             let cat = CatalogData.entries.first { $0.name.caseInsensitiveCompare(service.name) == .orderedSame }?.category.rawValue
@@ -567,34 +608,11 @@ enum ScreenshotParser {
             return (service.name, cat, true, true)
         }
         if let entry = CatalogData.entries.first(where: { ServiceName.same($0.name, raw) }) {
-            return (entry.name, entry.category.rawValue, true, true)
+            return (addsOnlyAPlan(raw, to: entry.name) ? raw : entry.name, entry.category.rawValue, true, true)
         }
         return (raw, SubscriptionCategory.other.rawValue, false, false)
     }
 
-    /// Headers of a list whose every row repeats: a bank's or card's recurring payments, standing orders.
-    private static let recurringListHeaders: Set<String> = [
-        "recurring", "recurring payments", "recurring charges", "upcoming bills", "bills & subscriptions",
-        "subscriptions & bills", "standing orders", "direct debits", "scheduled payments",
-        "daueraufträge", "lastschriften", "abonnements", "prélèvements", "pagos recurrentes", "suscripciones",
-        "定期支払い", "サブスクリプション", "المدفوعات المتكررة", "الاشتراكات"
-    ]
-
-    /// Money coming in, never a subscription: a "+" before the amount, or a word that says so.
-    static func isIncomeOrTransfer(_ lower: String) -> Bool {
-        // The "+" stands on its own: in "Disney+ $159.99" it is part of a name.
-        if lower.range(of: #"(?<![\p{L}\p{N}])\+\s*(?:[€$£¥]|[a-z]{3}\s)?\s*\d"#, options: .regularExpression) != nil { return true }
-        let words = ["salary", "payroll", "paycheck", "deposit", "refund", "transfer", "interest", "cashback", "reimbursement",
-                     "gehalt", "lohn", "überweisung", "erstattung", "salaire", "virement", "remboursement",
-                     "nómina", "salario", "transferencia", "reembolso", "給与", "振込", "返金", "راتب", "تحويل", "استرداد"]
-        return words.contains { lower.contains($0) }
-    }
-
-    /// "Every 4 weeks" and its translations.
-    static func isEveryFourWeeks(_ lower: String) -> Bool {
-        ["every 4 weeks", "every four weeks", "4-weekly", "four-weekly", "/4wk", "alle 4 wochen", "toutes les 4 semaines",
-         "cada 4 semanas", "4週間ごと", "كل 4 أسابيع"].contains { lower.contains($0) }
-    }
 
     private static func cleanCandidateServiceName(_ raw: String) -> String? {
         var name = raw.trimmingCharacters(in: .whitespacesAndNewlines)
@@ -603,6 +621,12 @@ enum ScreenshotParser {
         name = name.replacingOccurrences(of: #"\s+(?:USA|US|INC\.?|LLC|LTD\.?|CORP\.?|BILLING|RECURRING|AUTOPAY)$"#,
                                          with: "", options: [.regularExpression, .caseInsensitive])
         name = name.replacingOccurrences(of: #"\.(?:com|io|tv|app|co|org)$"#, with: "", options: [.regularExpression, .caseInsensitive])
+        // A store's number or a payment reference after the name ("TESCO STORES 3321", "SPOTIFY P2A91C"), never the
+        // name itself; three digits stay ("Microsoft 365") (the rating of 2026-11-23).
+        for _ in 0..<2 {
+            name = name.replacingOccurrences(of: #"(?<=\S)\s+(?:#?\d{4,}|(?=[A-Za-z]*\d)(?=\d*[A-Za-z])[A-Za-z0-9]{5,})$"#,
+                                             with: "", options: .regularExpression)
+        }
         name = name.trimmingCharacters(in: CharacterSet.whitespacesAndNewlines.union(CharacterSet(charactersIn: ">›•·")))
         guard name.count >= 2, name.count <= 48 else { return nil }
         guard name.contains(where: \.isLetter) else { return nil }
@@ -631,45 +655,11 @@ enum ScreenshotParser {
         return false
     }
 
-    private static func isActiveHeader(_ lower: String) -> Bool {
-        ["active", "active subscriptions", "actifs", "aktiv", "activas", "有効", "نشطة"].contains(lower.trimmingCharacters(in: .whitespaces))
-    }
 
-    private static func isInactiveHeader(_ lower: String) -> Bool {
-        ["inactive", "expired", "inactive subscriptions", "cancelled", "canceled",
-         "inactifs", "abgelaufen", "inactivas", "期限切れ", "منتهية"].contains(lower.trimmingCharacters(in: .whitespaces))
-    }
 
-    private static func containsExpiryWord(_ lower: String) -> Bool {
-        ["expired", "expires", "cancelled", "canceled", "ended", "abgelaufen", "expiré", "venció", "期限切れ", "منتهي"].contains { lower.contains($0) }
-    }
 
-    private static func containsTrialWord(_ lower: String) -> Bool {
-        ["free trial", "trial ends", "essai gratuit", "kostenlose testphase", "prueba gratis", "無料トライアル", "تجربة مجانية"].contains { lower.contains($0) }
-    }
 
-    private static func startsWithDateOrBillingKeyword(_ lower: String) -> Bool {
-        let prefixes = ["renews", "renew", "expires", "expired", "trial", "free trial", "total", "subtotal", "tax",
-                        "next ", "billed ", "charged ", "due ", "upcoming", "monthly total", "yearly total"]
-        return prefixes.contains { lower.hasPrefix($0) }
-    }
 
-    private static func isChromeNoise(_ raw: String, lower: String) -> Bool {
-        // Time in iOS status bar ("9:41", "10:25 AM")
-        if raw.range(of: #"^\d{1,2}:\d{2}(?:\s?[AP]M)?$"#, options: [.regularExpression, .caseInsensitive]) != nil { return true }
-        // Battery % or carrier indicator
-        if raw.range(of: #"^\d{1,3}%$"#, options: .regularExpression) != nil { return true }
-        if ["5g", "4g", "lte", "wi-fi", "wifi", "sos", "carrier"].contains(lower) { return true }
-        let chrome = [
-            "subscriptions", "settings", "apple account", "apple id", "back", "done", "edit", "search", "cancel",
-            "share with family", "share new subscriptions", "renewal receipts", "a receipt will be sent",
-            "recurring", "recurring payments", "recurring charges", "upcoming bills", "bills & subscriptions",
-            "manage", "see all", "view all", "filter", "sort", "today", "yesterday", "this month", "next month"
-        ]
-        if chrome.contains(lower) { return true }
-        if lower.hasPrefix("a receipt will be sent") || lower.hasPrefix("subscriptions you share") || lower.hasPrefix("automatically share") { return true }
-        return false
-    }
 
     private static func isPlausibleTitle(_ name: String) -> Bool {
         let lower = name.lowercased()

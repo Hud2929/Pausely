@@ -94,36 +94,41 @@ struct ScreenshotImportOutcomeView: View {
                 .padding(.top, 8)
                 .accessibilityAddTraits(.isHeader)
 
-            PaperSlip(tornTop: true, tornBottom: true) {
+            // On ink: these are counts, not money, and paper is for money decided or proven (2026-11-23).
+            VStack(alignment: .leading, spacing: 0) {
+                Hairline()
                 VStack(alignment: .leading, spacing: 10) {
                     if !result.added.isEmpty {
                         ProofLine(label: L10n.string("Added"), value: L10n.number(result.added.count), emphasised: true)
                         Text(verbatim: result.added.formatted(.list(type: .and).locale(L10n.locale)))
                             .font(.footnote)
-                            .foregroundStyle(Color.paperMuted)
+                            .foregroundStyle(Color.inkTextMuted)
                             .fixedSize(horizontal: false, vertical: true)
                     }
                     if !result.datesFilled.isEmpty {
-                        if !result.added.isEmpty { Perforation() }
+                        if !result.added.isEmpty { Hairline() }
                         ProofLine(label: L10n.string("Renewal dates added"), value: L10n.number(result.datesFilled.count))
                     }
                     if !result.waiting.isEmpty {
-                        if !result.added.isEmpty || !result.datesFilled.isEmpty { Perforation() }
+                        if !result.added.isEmpty || !result.datesFilled.isEmpty { Hairline() }
                         ProofLine(label: L10n.string("Waiting for room"), value: L10n.number(result.waiting.count))
                         Text(L10n.string("Home shows the rest so you can choose which \(FreeTier.subscriptionLimit) to track or go Pro."))
                             .font(.footnote)
-                            .foregroundStyle(Color.paperMuted)
+                            .foregroundStyle(Color.inkTextMuted)
                             .fixedSize(horizontal: false, vertical: true)
                     }
                     if !skippedAlreadyListed.isEmpty {
-                        if !result.added.isEmpty || !result.datesFilled.isEmpty || !result.waiting.isEmpty { Perforation() }
+                        if !result.added.isEmpty || !result.datesFilled.isEmpty || !result.waiting.isEmpty { Hairline() }
                         ProofLine(label: L10n.string("Already on your list"), value: L10n.number(skippedAlreadyListed.count))
                         Text(verbatim: skippedAlreadyListed.formatted(.list(type: .and).locale(L10n.locale)))
                             .font(.footnote)
-                            .foregroundStyle(Color.paperMuted)
+                            .foregroundStyle(Color.inkTextMuted)
                             .fixedSize(horizontal: false, vertical: true)
                     }
                 }
+                .padding(.vertical, 14)
+                .foregroundStyle(Color.inkText)
+                Hairline()
             }
             .padding(.top, 20)
         }

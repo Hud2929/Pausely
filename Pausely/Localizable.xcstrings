@@ -17241,7 +17241,7 @@
         "ar": {
           "stringUnit": {
             "state": "translated",
-            "value": "صعوبة إلغاء متوسطة (%1$@ من خمسة بناءً على %2$@ تقييمات)."
+            "value": "صعوبة إلغاء متوسطة (%1$@ من خمسة، عدد التقييمات: %2$@)."
           }
         },
         "de": {
@@ -19956,7 +19956,7 @@
         "ar": {
           "stringUnit": {
             "state": "translated",
-            "value": "غالبًا ما يكون الإلغاء صعبًا (%1$@ من خمسة بناءً على %2$@ تقييمات) — اترك وقتًا إضافيًا."
+            "value": "غالبًا ما يكون الإلغاء صعبًا (%1$@ من خمسة، عدد التقييمات: %2$@) — اترك وقتًا إضافيًا."
           }
         },
         "de": {
@@ -21625,40 +21625,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "一時停止プラン"
-          }
-        }
-      }
-    },
-    "Pause Plan keeps one streaming service on, pauses the rest, and rotates every month, so you still see everything.": {
-      "localizations": {
-        "ar": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "تُبقي خطة الإيقاف خدمة بث واحدة نشطة، وتوقف البقية مؤقتًا، وتبدّل كل شهر، فتشاهد كل شيء."
-          }
-        },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Der Pausenplan lässt einen Streamingdienst aktiv, pausiert die anderen und wechselt jeden Monat, sodass Sie trotzdem alles sehen."
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "El Plan de Pausa mantiene activo un servicio de streaming, pausa el resto y rota cada mes, para que no te pierdas nada."
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Le plan de pause garde un service de streaming actif, met les autres en pause et alterne chaque mois, pour tout voir quand même."
-          }
-        },
-        "ja": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "一時停止プランはストリーミングを1つだけ有効にして残りを止め、毎月入れ替えるので、すべての作品を楽しめます。"
           }
         }
       }
@@ -31764,40 +31730,6 @@
         }
       }
     },
-    "There's room for some of the %lld you kept for later": {
-      "localizations": {
-        "ar": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "هناك مكان لبعض ما احتفظت به لوقت لاحق (%lld)"
-          }
-        },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Jetzt ist Platz für einige der %lld, die Sie für später aufgehoben haben"
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Hay sitio para algunas de las %lld que guardaste para después"
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Il y a de la place pour certains des %lld que vous avez gardés pour plus tard"
-          }
-        },
-        "ja": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "保留中の%lld件の一部を追加できる空きがあります"
-          }
-        }
-      }
-    },
     "These are typical prices. Tap a line to put in what you really pay.": {
       "localizations": {
         "ar": {
@@ -34189,7 +34121,7 @@
         "ar": {
           "stringUnit": {
             "state": "translated",
-            "value": "عادةً ما يكون الإلغاء سريعًا (%1$@ من خمسة بناءً على %2$@ تقييمات)."
+            "value": "عادةً ما يكون الإلغاء سريعًا (%1$@ من خمسة، عدد التقييمات: %2$@)."
           }
         },
         "de": {
@@ -38967,6 +38899,244 @@
           "stringUnit": {
             "state": "translated",
             "value": "無料プランは1枚ずつ読み込みます。Pausely Proは最大%lld枚をまとめて読み取れます。"
+          }
+        }
+      }
+    },
+    "A bill rather than a subscription: tick it to track it": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "فاتورة وليست اشتراكًا: حدّدها لتتابعها"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Eher eine Rechnung als ein Abo: zum Erfassen ankreuzen"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Una factura más que una suscripción: márcala para seguirla"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Une facture plutôt qu’un abonnement : cochez-la pour la suivre"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "サブスクではなく請求書です。管理するにはチェックしてください"
+          }
+        }
+      }
+    },
+    "Cancelled without a renewal day, so no charges could be counted: %@.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "أُلغي دون يوم تجديد، لذلك لم يُحسب أي خصم: %@."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ohne Verlängerungstag gekündigt, daher konnten keine Abbuchungen gezählt werden: %@."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cancelada sin día de renovación, así que no se pudo contar ningún cargo: %@."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Résilié sans jour de renouvellement, aucun prélèvement n’a donc pu être compté : %@."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "更新日がないまま解約されたため、請求を数えられませんでした：%@。"
+          }
+        }
+      }
+    },
+    "Charged every 2 months, counted as half each month": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "يُخصم كل شهرين، ويُحسب نصفه كل شهر"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Alle 2 Monate abgebucht, als Hälfte pro Monat gezählt"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Se cobra cada 2 meses, contado como la mitad cada mes"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Prélevé tous les 2 mois, compté pour moitié chaque mois"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "2か月ごとの請求・毎月半額として計算"
+          }
+        }
+      }
+    },
+    "Kept for later": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "محفوظ لوقت لاحق"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Für später aufgehoben"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Guardada para después"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Gardé pour plus tard"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "保留中"
+          }
+        }
+      }
+    },
+    "Nothing counted yet": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "لم يُحسب شيء بعد"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Noch nichts gezählt"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aún no se ha contado nada"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Rien n’est encore compté"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "まだ何も数えられていません"
+          }
+        }
+      }
+    },
+    "Pause Plan keeps one streaming service on at a time: you cancel the rest, and it tells you when to switch each month, so you still see everything.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "تُبقي خطة الإيقاف خدمة بث واحدة نشطة في كل مرة: تُلغي أنت البقية، وتخبرك متى تبدّل كل شهر، فتشاهد كل شيء."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Der Pausenplan lässt immer nur einen Streamingdienst aktiv: Sie kündigen die anderen, und er sagt Ihnen jeden Monat, wann Sie wechseln, sodass Sie trotzdem alles sehen."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "El Plan de Pausa mantiene activo un servicio de streaming a la vez: tú cancelas el resto y te avisa cada mes de cuándo cambiar, para que no te pierdas nada."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Le Plan de pause garde un seul service de streaming actif à la fois : vous résiliez les autres, et il vous dit chaque mois quand changer, pour tout voir quand même."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "一時停止プランでは動画配信サービスを1つずつ使います。ほかは自分で解約し、毎月の切り替え時期を知らせるので、すべて見られます。"
+          }
+        }
+      }
+    },
+    "There's room for %lld of the %lld you kept for later": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "هناك مكان لـ %1$lld من أصل %2$lld احتفظت بها لوقت لاحق"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Platz für %1$lld der %2$lld, die Sie für später aufgehoben haben"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hay sitio para %1$lld de las %2$lld que guardaste para después"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Il y a de la place pour %1$lld des %2$lld que vous avez gardés pour plus tard"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "保留中の%2$lld件のうち%1$lld件を追加できます"
           }
         }
       }

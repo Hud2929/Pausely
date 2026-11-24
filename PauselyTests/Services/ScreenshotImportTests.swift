@@ -229,4 +229,78 @@ final class ScreenshotImportTests: XCTestCase {
         XCTAssertEqual(items.first?.name, "Corner Gym")
         XCTAssertNil(items.first?.doubt)
     }
+
+    // MARK: - Laid out as banks lay them out (the rating of 2026-11-23)
+
+    /// Lines at the heights a screenshot gives them: a row's lines sit close, rows are farther apart.
+    private func page(_ rows: [[String]], top: CGFloat = 0.9, line: CGFloat = 0.03, gap: CGFloat = 0.05) -> [ScreenshotParser.TextObservation] {
+        var y = top, out: [ScreenshotParser.TextObservation] = []
+        for row in rows {
+            for text in row {
+                out.append(ScreenshotParser.TextObservation(text: text, boundingBox: CGRect(x: 0.05, y: y, width: 0.9, height: 0.02)))
+                y -= line
+            }
+            y -= gap
+        }
+        return out
+    }
+
+    /// A bank's recurring payments put how often and when above each name: each row takes its own, not the one
+    /// above's. Labels are not names; rent and insurance are bills, shown unticked; every 2 months is half each month.
+    func testARecurringListReadsEachRowsOwnPeriodAndDay() {
+        let now = day(2026, 11, 23)
+        let rows: [[String]] = [
+            ["Recurring payments"],
+            ["Monthly · next 19 Dec 2026", "Netflix   €13.99", "Card subscription"],
+            ["Monthly · next 1 Dec 2026", "J MURPHY RENT   €1,450.00", "Standing order"],
+            ["Every 2 months · next 9 Jan 2027", "ELECTRIC IRELAND   €96.20", "Direct debit · amount varies"],
+            ["Yearly · next 4 Mar 2027", "Microsoft 365 Family   €99.00", "Card subscription"]
+        ]
+        let items = ScreenshotParser.parse(pages: [page(rows)], defaultCurrency: "EUR", now: now, calendar: calendar)
+        let by = Dictionary(items.map { ($0.name.lowercased(), $0) }, uniquingKeysWith: { a, _ in a })
+        XCTAssertNil(items.first { ["card subscription", "standing order", "direct debit"].contains($0.name.lowercased()) }, "labels are not names")
+        XCTAssertEqual(by["netflix"]?.renewalDate, day(2026, 12, 19))
+        XCTAssertEqual(by["netflix"]?.frequency, .monthly)
+        let microsoft = items.first { $0.name.lowercased().hasPrefix("microsoft 365") }
+        XCTAssertEqual(microsoft?.frequency, .yearly, "its own row's period, not the row above's")
+        XCTAssertEqual(microsoft?.amount, Decimal(string: "99.00"))
+        XCTAssertEqual(microsoft?.renewalDate, day(2027, 3, 4))
+        let rent = items.first { $0.name.lowercased().contains("rent") }
+        XCTAssertEqual(rent?.doubt, .aBill, "rent is a bill: shown, not ticked")
+        let electric = items.first { $0.name.lowercased().contains("electric") }
+        XCTAssertEqual(electric?.doubt, .aBill)
+        XCTAssertEqual(electric?.amount, Decimal(string: "48.10"), "every 2 months: half each month")
+    }
+
+    /// A bank's transactions: the balance, labels and store numbers are not subscriptions or names; the same
+    /// charge twice repeats; a reference code is not part of a name.
+    func testATransactionListKeepsNamesClean() {
+        let now = day(2026, 11, 23)
+        let rows: [[String]] = [
+            ["Current Account", "Available balance €3,412.08"],
+            ["21 Nov 2026", "ACME SOFTWARE LTD SALARY   +€2,850.00", "Credit transfer"],
+            ["19 Nov 2026", "NETFLIX.COM   -€13.99", "Card payment"],
+            ["18 Nov 2026", "TESCO STORES 3321   -€84.17", "Card payment"],
+            ["17 Nov 2026", "COSMIC CANDLE P2A91C   -€11.99", "Card payment"],
+            ["17 Oct 2026", "COSMIC CANDLE P2A91C   -€11.99", "Card payment"]
+        ]
+        let items = ScreenshotParser.parse(pages: [page(rows)], defaultCurrency: "EUR", now: now, calendar: calendar)
+        let names = items.map { $0.name.lowercased() }
+        XCTAssertFalse(names.contains { $0.contains("balance") || $0.contains("salary") || $0.contains("card payment") }, "\(names)")
+        XCTAssertTrue(names.contains("tesco stores"), "the store number is not part of the name: \(names)")
+        let candle = items.first { $0.name.lowercased() == "cosmic candle" }
+        XCTAssertNotNil(candle, "the reference is not part of the name: \(names)")
+        XCTAssertNil(candle?.doubt, "the same charge twice repeats")
+        XCTAssertEqual(items.first { $0.name.lowercased() == "tesco stores" }?.doubt, .mayNotRepeat)
+    }
+
+    /// A trial's page: "Then $13.99 per month" is the price after the trial, not a service called "Then".
+    func testATrialsThenLineIsItsPrice() {
+        let lines = ["Edit Subscription", "YouTube Premium", "Individual (Monthly)", "Free trial ends December 9, 2026", "Then $13.99 per month"]
+        let items = ScreenshotParser.parse(lines: lines, defaultCurrency: "USD", now: day(2026, 11, 23), calendar: calendar)
+        XCTAssertNil(items.first { $0.name.lowercased() == "then" })
+        let youtube = items.first { $0.name.lowercased().contains("youtube") }
+        XCTAssertEqual(youtube?.amount, Decimal(string: "13.99"))
+        XCTAssertEqual(youtube?.trialEndsAt, day(2026, 12, 9))
+    }
 }

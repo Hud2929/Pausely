@@ -168,7 +168,9 @@ struct PausePlanView: View {
                 .foregroundStyle(Color.inkText)
                 .fixedSize(horizontal: false, vertical: true)
                 .accessibilityAddTraits(.isHeader)
-            Text("Pause Plan keeps one streaming service on, pauses the rest, and rotates every month, so you still see everything.")
+            // What the person does, said first: "pauses the rest" read as Pausely pausing them, and the page later
+            // said Pausely can't cancel for you (the rating of 2026-11-23).
+            Text("Pause Plan keeps one streaming service on at a time: you cancel the rest, and it tells you when to switch each month, so you still see everything.")
                 .font(.body)
                 .foregroundStyle(Color.inkTextMuted)
                 .fixedSize(horizontal: false, vertical: true)

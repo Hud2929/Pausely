@@ -224,7 +224,8 @@ extension StoreKitManager {
     nonisolated static func annualSavingsPercent(monthly: Decimal, annual: Decimal) -> Int? {
         guard monthly > 0 else { return nil }
         let twelveMonths = monthly * 12
-        let percent = NSDecimalNumber(decimal: (twelveMonths - annual) / twelveMonths * 100).doubleValue.rounded()
+        // Rounded down: a saving is never overstated ($29.99 against 12 × $4.99 is 49.9%, not "Save 50%", 2026-11-23).
+        let percent = NSDecimalNumber(decimal: (twelveMonths - annual) / twelveMonths * 100).doubleValue.rounded(.down)
         return percent > 0 ? Int(percent) : nil
     }
 

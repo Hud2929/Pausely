@@ -425,21 +425,33 @@ struct ScreenshotImportView: View {
         store.subscriptions.first { ServiceName.same($0.name, item.name) }
     }
 
+    /// Kept for later from an earlier add: known already, so not chosen again (its price was overwritten by each
+    /// import, the rating of 2026-11-23).
+    private func isKeptForLater(_ item: ScreenshotParser.DetectedItem) -> Bool {
+        TallyImporter.waitingLines().contains { ServiceName.same($0.name, item.name) }
+    }
+
     private func detailLine(for item: ScreenshotParser.DetectedItem, onList: Bool, fillsDate: Bool) -> String? {
         var parts: [String] = []
         if item.isTrial, let trial = item.trialEndsAt {
             parts.append(L10n.string("Trial ends \(L10n.day(trial))"))
         } else if let renewal = item.renewalDate {
-            parts.append(L10n.string("Renews \(L10n.day(renewal))"))
+            // A day already past is when it was charged (a bank's transactions), not when it renews.
+            parts.append(renewal < Calendar.billing.startOfDay(for: Date())
+                         ? L10n.string("Last charged \(L10n.day(renewal))") : L10n.string("Renews \(L10n.day(renewal))"))
         }
         if fillsDate {
             parts.append(L10n.string("Adds renewal date"))
         } else if onList {
             parts.append(L10n.string("Already on your list"))
+        } else if isKeptForLater(item) {
+            parts.append(L10n.string("Kept for later"))
         }
         switch item.doubt {
         case .mayNotRepeat: parts.append(L10n.string("Nothing here says it repeats"))
         case .everyFourWeeks: parts.append(L10n.string("Charged every 4 weeks, counted as monthly"))
+        case .everyTwoMonths: parts.append(L10n.string("Charged every 2 months, counted as half each month"))
+        case .aBill: parts.append(L10n.string("A bill rather than a subscription: tick it to track it"))
         case nil: break
         }
         return parts.isEmpty ? nil : L10n.breakingAfterDots(parts.joined(separator: " · "))
@@ -534,7 +546,8 @@ struct ScreenshotImportView: View {
         detected = combined
         for item in combined where addedIDs.contains(item.id) {
             // A row that may not repeat is shown, not chosen for the person (the rating of 2026-11-23).
-            guard !item.isCancelled, item.amount != nil, item.doubt != .mayNotRepeat else { continue }
+            guard !item.isCancelled, item.amount != nil, item.doubt != .mayNotRepeat, item.doubt != .aBill,
+                  !isKeptForLater(item) else { continue }
             if onPickForTally == nil, let existing = existingSubscription(for: item) {
                 if existing.nextBillingDate == nil && item.renewalDate != nil {
                     selectedIDs.insert(item.id)

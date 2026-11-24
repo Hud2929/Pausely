@@ -153,9 +153,10 @@ struct SubscriptionEditDraft: Equatable {
             : amount
     }
 
-    /// Yearly cost for the live "that's X a year" hint (reflecting the user's share if split).
+    /// Yearly cost for the live "that's X a year" hint: the exact share times the charges in a year, as on the
+    /// subscription's page (rounded first, a split year was $72.00 here and $71.96 there, 2026-11-23).
     var yearlyCost: Decimal? {
-        guard let share = perPeriodShare else { return nil }
-        return share * ProvenSubscription.periodsPerYear(frequency)
+        guard let amount = parsedAmount else { return nil }
+        return amount / Decimal(max(1, splitCount)) * ProvenSubscription.periodsPerYear(frequency)
     }
 }

@@ -7,13 +7,13 @@ final class StoreKitPricingTests: XCTestCase {
 
     private func d(_ s: String) -> Decimal { Decimal(string: s)! }
 
-    func testLaunchPricesSaveFiftyPercent() {
+    func testLaunchPricesSaveFortyNinePercent() {
         // 12 x 4.99 = 59.88; 29.99 is about 49.9% less.
-        XCTAssertEqual(StoreKitManager.annualSavingsPercent(monthly: d("4.99"), annual: d("29.99")), 50)
+        XCTAssertEqual(StoreKitManager.annualSavingsPercent(monthly: d("4.99"), annual: d("29.99")), 49, "49.9% is never called 50%")
     }
 
     func testOtherPriceCombinations() {
-        XCTAssertEqual(StoreKitManager.annualSavingsPercent(monthly: d("9.99"), annual: d("39.99")), 67)
+        XCTAssertEqual(StoreKitManager.annualSavingsPercent(monthly: d("9.99"), annual: d("39.99")), 66)
         XCTAssertEqual(StoreKitManager.annualSavingsPercent(monthly: d("9.99"), annual: d("79.99")), 33)
     }
 

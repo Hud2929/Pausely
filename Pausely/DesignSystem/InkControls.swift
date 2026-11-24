@@ -56,6 +56,10 @@ struct InkTextField: View {
             RoundedRectangle(cornerRadius: Layout.tileRadius, style: .continuous)
                 .stroke(isFocused ? Color.inkText : Color.fieldEdge, lineWidth: isFocused ? 1.5 : 1)
         )
+        // The whole drawn box takes the tap, not only its line of text: a tap 8 points under a note's line did
+        // nothing (the reach rating of 2026-11-23).
+        .contentShape(RoundedRectangle(cornerRadius: Layout.tileRadius, style: .continuous))
+        .onTapGesture { isFocused = true }
         .focused($isFocused)
         .keyboardType(keyboardType)
         .textInputAutocapitalization(autocapitalization)
@@ -84,13 +88,52 @@ struct OptionalDatePicker: View {
     @Binding var date: Date?
     /// The earliest day that can be chosen, if there is one.
     var earliest: Date?
+    @Environment(\.dynamicTypeSize) private var typeSize
+    @State private var choosing = false
 
     var body: some View {
         if let chosen = date {
-            DatePicker(title, selection: Binding(get: { chosen }, set: { date = $0 }),
-                       in: (earliest ?? .distantPast)..., displayedComponents: .date)
-                .labelsHidden()
-                .tint(Color.inkText)
+            let selection = Binding(get: { chosen }, set: { date = $0 })
+            if typeSize.isAccessibilitySize {
+                // The system's date chip can't wrap: at the accessibility sizes a Hijri date was wider than the
+                // iPhone and pushed the whole form off the screen (the reach rating of 2026-11-23). Here the date
+                // is words that wrap, and the calendar opens on its own page.
+                Button { choosing = true } label: {
+                    Text(verbatim: chosen.formatted(.dateTime.day().month(.wide).year().locale(L10n.locale)))
+                        .font(.body.weight(.semibold))
+                        .foregroundStyle(Color.inkText)
+                        .multilineTextAlignment(.leading)
+                        .fixedSize(horizontal: false, vertical: true)
+                        .tapArea(.leading)
+                }
+                .buttonStyle(.plain)
+                .accessibilityLabel(Text(verbatim: "\(title), \(chosen.formatted(.dateTime.day().month(.wide).year().locale(L10n.locale)))"))
+                .sheet(isPresented: $choosing) {
+                    NavigationStack {
+                        ScrollView {
+                            DatePicker(title, selection: selection, in: (earliest ?? .distantPast)..., displayedComponents: .date)
+                                .datePickerStyle(.graphical)
+                                .tint(Color.inkText)
+                                .environment(\.locale, L10n.locale)
+                                .padding(Layout.margin)
+                        }
+                        .background(Color.ink.ignoresSafeArea())
+                        .navigationTitle(Text(verbatim: title))
+                        .navigationBarTitleDisplayMode(.inline)
+                        .toolbar {
+                            ToolbarItem(placement: .topBarTrailing) {
+                                Button("Done") { choosing = false }.foregroundStyle(Color.inkText)
+                            }
+                        }
+                    }
+                }
+            } else {
+                DatePicker(title, selection: selection, in: (earliest ?? .distantPast)..., displayedComponents: .date)
+                    .labelsHidden()
+                    .tint(Color.inkText)
+                    // Written in the app's language, not the phone's ("2026-12-02" beside Arabic dates, 2026-11-23).
+                    .environment(\.locale, L10n.locale)
+            }
         } else {
             Button {
                 date = max(Date(), earliest ?? .distantPast)

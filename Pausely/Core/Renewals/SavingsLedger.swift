@@ -90,6 +90,17 @@ enum SavingsLedger {
         )
     }
 
+    /// Subscriptions cancelled with no renewal day to count from, and still cancelled: they have no line, and the
+    /// receipt names them instead of saying it starts with a first cancellation (the rating of 2026-11-23).
+    static func uncounted(from events: [LifecycleEvent]) -> [String] {
+        Dictionary(grouping: events, by: \.subscriptionId).values.compactMap { history in
+            guard let last = history.filter({ $0.kind == .cancelled || $0.kind == .reactivated }).max(by: { $0.date < $1.date }),
+                  last.kind == .cancelled, last.anchorDate == nil, last.renewalDate == nil else { return nil }
+            return last.subscriptionName
+        }
+        .sorted()
+    }
+
     /// Totals per currency; the caller converts them for display.
     static func totals(_ lines: [Line]) -> (savedSoFar: [String: Decimal], onTrack: [String: Decimal]) {
         var saved: [String: Decimal] = [:]

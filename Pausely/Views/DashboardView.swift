@@ -91,7 +91,8 @@ struct DashboardView: View {
     private var spokenTotal: String {
         let currency = currencyManager.selectedCurrency
         if showsYear {
-            return L10n.string("Your subscriptions cost about \(MoneyFormat.total(store.totalAnnualSpend, currency, converted: store.totalIsConverted)) a year.")
+            // "about" says it once: "about ≈$1,019.75" said it twice (2026-11-23).
+            return L10n.string("Your subscriptions cost about \(MoneyFormat.string(store.totalAnnualSpend, currency)) a year.")
         }
         return L10n.string("Your subscriptions cost \(MoneyFormat.total(store.totalMonthlySpend, currency, converted: store.totalIsConverted)) a month.")
     }
@@ -262,7 +263,7 @@ struct DashboardView: View {
                 let one = waiting.count == 1 ? waiting[0].name : nil
                 AttentionRow(state: nil, symbol: room > 0 ? "plus.circle" : "checklist",
                              title: room > 0 ? one.map { L10n.string("There's room for \($0)") }
-                                                ?? L10n.string("There's room for some of the \(waiting.count) you kept for later")
+                                                ?? L10n.string("There's room for \(min(room, waiting.count)) of the \(waiting.count) you kept for later")
                                              : one.map { L10n.string("\($0) isn't tracked") }
                                                 ?? L10n.string("\(waiting.count) of your subscriptions aren't tracked"),
                              detail: room > 0 ? L10n.string("The free plan tracks \(FreeTier.subscriptionLimit). Choose which ones to track.")
@@ -302,8 +303,9 @@ struct DashboardView: View {
                         Text("Savings Receipt")
                             .font(.headline)
                             .foregroundStyle(Color.inkText)
-                        Text("Your Savings Receipt starts with your first cancellation")
-                            .font(.subheadline)
+                        let uncounted = SavingsLedger.uncounted(from: eventLog.events)
+                        (uncounted.isEmpty ? Text("Your Savings Receipt starts with your first cancellation")
+                                           : Text("Cancelled without a renewal day, so no charges could be counted: \(uncounted.formatted(.list(type: .and).locale(L10n.locale))).")).font(.subheadline)
                             .foregroundStyle(Color.inkTextMuted)
                             .multilineTextAlignment(.leading)
                     }

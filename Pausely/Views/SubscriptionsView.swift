@@ -413,6 +413,8 @@ private struct WaitingSection: View {
                 Text("Waiting for room")
                     .font(.headline)
                     .foregroundStyle(Color.inkText)
+                    // Wraps, never cut: "Waiting for ro…" at the largest text (2026-11-23).
+                    .fixedSize(horizontal: false, vertical: true)
                     .accessibilityAddTraits(.isHeader)
                 Text("Kept for later: the free plan tracks \(FreeTier.subscriptionLimit). These aren't in your totals or reminders.")
                     .font(.subheadline)

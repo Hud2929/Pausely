@@ -469,6 +469,10 @@ class AuthManager: ObservableObject {
     /// the person chooses to create an account or sign in.
     func enterGuestMode(persist: Bool = true) {
         if persist { UserDefaults.standard.set(true, forKey: Self.guestModeKey) }
+        #if DEBUG
+        // A guest is a guest on the next launch too, not the built-in test user (a rater met the age gate there).
+        UserDefaults.standard.removeObject(forKey: "debug_auth_bypass")
+        #endif
         let guest = User(id: Self.guestUserID, email: nil, createdAt: Date())
         currentUser = guest
         isAuthenticated = true

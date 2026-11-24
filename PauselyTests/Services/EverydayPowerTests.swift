@@ -38,7 +38,7 @@ final class EverydayPowerTests: XCTestCase {
         XCTAssertEqual(charges.first?.amount, Decimal(string: "5.00"))
 
         let event = LifecycleEvent(kind: .cancelled, subscription: family, date: day(2026, 12, 1))
-        XCTAssertEqual(event.amount, Decimal(string: "5.00"))
+        XCTAssertEqual(event.amount, Decimal(string: "4.9975"), "the exact share, so the receipt's year is the page's")
     }
 
     func testSplitCountClampsToValidRangeAndBackwardsDecodesLegacyJSON() throws {
@@ -76,8 +76,8 @@ final class EverydayPowerTests: XCTestCase {
         draft.paymentMethod = "  Apple  "
         draft.notes = "  Family plan with Sam  "
         XCTAssertTrue(draft.isDirty(comparedTo: original))
-        // Half of 22.99 = 11.495 -> 11.50 * 12 = 138.00
-        XCTAssertEqual(draft.yearlyCost, Decimal(string: "138.00"))
+        // Half of 22.99 a month for a year: 137.94, the exact share as on the subscription's page (2026-11-23).
+        XCTAssertEqual(draft.yearlyCost, Decimal(string: "137.94"))
 
         let updated = draft.applied(to: original)
         XCTAssertEqual(updated?.splitCount, 2)

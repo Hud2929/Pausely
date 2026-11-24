@@ -23,6 +23,7 @@ final class LocalDataGuardTests: XCTestCase {
         "review_requests_this_year": "how often this iPhone was asked for a review",
         "review_last_request_date": "how often this iPhone was asked for a review",
         "review_current_year": "how often this iPhone was asked for a review",
+        "review_first_chance": "when this iPhone could first have been asked for a review",
         "review_receipt_milestone_last": "how often this iPhone was asked for a review",
         "current_subscription_tier": "the plan the App Store confirmed for the Apple Account on this iPhone",
         "pending_first_run_tally": "made before any account exists; joins the list of whoever signs in next, then cleared",

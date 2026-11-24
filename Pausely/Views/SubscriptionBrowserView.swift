@@ -388,7 +388,13 @@ struct SubscriptionBrowserView: View {
             do {
                 _ = try await store.addSubscription(subscription)
             } catch {
-                // Only a refusal throws (the free plan's limit): never show it as added.
+                // Only a refusal throws (the free plan's limit): never show it as added. It is kept for when there's
+                // room, as an import keeps what doesn't fit, instead of being dropped (the rating of 2026-11-23).
+                let line = TallyLine(name: entry.name, category: entry.category.rawValue, amount: amount,
+                                     currency: currencyManager.selectedCurrency, isConfirmed: true, frequency: billingFrequency,
+                                     anchor: nextBillingDate, trialEndsAt: trialEndDate, paymentMethod: extras.paymentMethod,
+                                     notes: extras.notes, splitCount: extras.splitCount, notifyBeforeDays: extras.reminderDays)
+                await TallyImporter.add([line], into: store)
                 try? await Task.sleep(nanoseconds: 400_000_000)   // let the plan sheet close first
                 showingPaywall = true
                 return

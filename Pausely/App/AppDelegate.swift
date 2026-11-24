@@ -5,17 +5,15 @@ import UserNotifications
 /// Sets the layout direction only when a language was chosen in the app.
 struct ChosenDirection: ViewModifier {
     let direction: LayoutDirection?
+    @Environment(\.layoutDirection) private var inherited
 
     func body(content: Content) -> some View {
-        Group {
-            if let direction {
-                content.environment(\.layoutDirection, direction)
-            } else {
-                content
-            }
-        }
-        .onAppear { SceneDirection.apply(direction) }
-        .onChange(of: direction) { _, now in SceneDirection.apply(now) }
+        // One branch, so the app keeps its place when the language changes: an if/else here rebuilt every screen,
+        // and choosing a language in Profile landed on Home (the reach rating of 2026-11-23).
+        content
+            .environment(\.layoutDirection, direction ?? inherited)
+            .onAppear { SceneDirection.apply(direction) }
+            .onChange(of: direction) { _, now in SceneDirection.apply(now) }
     }
 }
 
