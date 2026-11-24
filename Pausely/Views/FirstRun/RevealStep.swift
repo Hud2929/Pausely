@@ -48,7 +48,7 @@ struct RevealStep: View {
                 if FreeTier.isExceeded(by: tally.subscriptions()) {
                     VStack(alignment: .leading, spacing: 4) {
                         Text(tally.preferredNames.isEmpty
-                             ? L10n.string("Free tracks \(FreeTier.subscriptionLimit), the most expensive first. The rest wait until you make room or go Pro.")
+                             ? L10n.string("The free plan tracks \(FreeTier.subscriptionLimit), the most expensive first. The rest wait until you make room or go Pro.")
                              : L10n.string("You chose \(tally.preferredNames.count) to track. The rest wait until you make room or go Pro."))
                             .font(.footnote)
                             .foregroundStyle(Color.inkTextMuted)

@@ -13437,40 +13437,6 @@
         }
       }
     },
-    "Free imports one screenshot at a time. Pausely Pro reads up to 10 screenshots in one batch.": {
-      "localizations": {
-        "ar": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "الخطة المجانية تستورد لقطة شاشة واحدة في كل مرة. Pausely Pro يقرأ حتى ١٠ لقطات دفعة واحدة."
-          }
-        },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Der kostenlose Plan importiert einen Screenshot auf einmal. Pausely Pro liest bis zu 10 Screenshots auf einmal."
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "El plan gratuito importa una captura a la vez. Pausely Pro lee hasta 10 capturas a la vez."
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Le forfait gratuit importe une capture à la fois. Pausely Pro lit jusqu’à 10 captures d’un coup."
-          }
-        },
-        "ja": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "無料プランは1枚ずつ読み込みます。Pausely Proは最大10枚をまとめて読み取れます。"
-          }
-        }
-      }
-    },
     "Free plan: Pausely tracks up to %lld subscriptions.": {
       "localizations": {
         "ar": {
@@ -13501,108 +13467,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "無料プラン：Pauselyで管理できるサブスクは%lld件までです。"
-          }
-        }
-      }
-    },
-    "Free tracks %lld, the most expensive first. The rest wait until you make room or go Pro.": {
-      "localizations": {
-        "ar": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "النسخة المجانية تتابع %lld اشتراكات، الأغلى أولًا. والباقي ينتظر حتى تفسح مكانًا أو تشترك في Pro."
-          }
-        },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Kostenlos werden %lld erfasst, die teuersten zuerst. Der Rest wartet, bis Sie Platz schaffen oder Pro nutzen."
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "La versión gratuita sigue %lld, las más caras primero. El resto espera hasta que hagas sitio o pases a Pro."
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "La version gratuite en suit %lld, les plus chers d’abord. Les autres attendent que vous fassiez de la place ou passiez à Pro."
-          }
-        },
-        "ja": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "無料版で管理できるのは%lld件まで（高い順）です。残りは、空きを作るかProにするまで待機します。"
-          }
-        }
-      }
-    },
-    "Free tracks %lld.": {
-      "localizations": {
-        "ar": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "النسخة المجانية تتابع %lld."
-          }
-        },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Kostenlos werden %lld erfasst."
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "La versión gratuita sigue %lld."
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "La version gratuite en suit %lld."
-          }
-        },
-        "ja": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "無料版は%lld件までです。"
-          }
-        }
-      }
-    },
-    "Free tracks %lld. Pausely Pro tracks all of them.": {
-      "localizations": {
-        "ar": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "النسخة المجانية تتابع %lld. Pausely Pro يتابعها كلها."
-          }
-        },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Kostenlos werden %lld erfasst. Pausely Pro erfasst alle."
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "La versión gratuita sigue %lld. Pausely Pro las sigue todas."
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "La version gratuite en suit %lld. Pausely Pro les suit tous."
-          }
-        },
-        "ja": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "無料版は%lld件まで。Pausely Proならすべて管理できます。"
           }
         }
       }
@@ -38311,6 +38175,210 @@
           "stringUnit": {
             "state": "translated",
             "value": "≈ %@に換算"
+          }
+        }
+      }
+    },
+    "The free plan tracks %lld.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "الخطة المجانية تتابع %lld."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Der kostenlose Plan erfasst %lld."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "El plan gratuito sigue %lld."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Le forfait gratuit en suit %lld."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "無料プランは%lld件までです。"
+          }
+        }
+      }
+    },
+    "The free plan tracks %lld, the most expensive first. The rest wait until you make room or go Pro.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "الخطة المجانية تتابع %lld اشتراكات، الأغلى أولًا. والباقي ينتظر حتى تفسح مكانًا أو تشترك في Pro."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Der kostenlose Plan erfasst %lld, die teuersten zuerst. Der Rest wartet, bis Sie Platz schaffen oder Pro nutzen."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "El plan gratuito sigue %lld, las más caras primero. El resto espera hasta que hagas sitio o pases a Pro."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Le forfait gratuit en suit %lld, les plus chers d’abord. Les autres attendent que vous fassiez de la place ou passiez à Pro."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "無料プランで管理できるのは%lld件まで（高い順）です。残りは、空きを作るかProにするまで待機します。"
+          }
+        }
+      }
+    },
+    "The free plan imports one screenshot at a time. Pausely Pro reads up to 10 screenshots in one batch.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "الخطة المجانية تستورد لقطة شاشة واحدة في كل مرة. Pausely Pro يقرأ حتى ١٠ لقطات دفعة واحدة."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Der kostenlose Plan importiert einen Screenshot auf einmal. Pausely Pro liest bis zu 10 Screenshots auf einmal."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "El plan gratuito importa una captura a la vez. Pausely Pro lee hasta 10 capturas a la vez."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Le forfait gratuit importe une capture à la fois. Pausely Pro lit jusqu’à 10 captures d’un coup."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "無料プランは1枚ずつ読み込みます。Pausely Proは最大10枚をまとめて読み取れます。"
+          }
+        }
+      }
+    },
+    "No price found": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "لم يُعثر على سعر"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kein Preis gefunden"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No se encontró precio"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aucun prix trouvé"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "料金が見つかりません"
+          }
+        }
+      }
+    },
+    "Edit price": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "تعديل السعر"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Preis bearbeiten"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Editar precio"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Modifier le prix"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "料金を編集"
+          }
+        }
+      }
+    },
+    "The free plan tracks %lld. Pausely Pro tracks all of them.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "الخطة المجانية تتابع %lld، أما Pausely Pro فيتابعها كلها."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Der kostenlose Plan erfasst %lld. Pausely Pro erfasst alle."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "El plan gratuito sigue %lld. Pausely Pro las sigue todas."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Le forfait gratuit en suit %lld. Pausely Pro les suit tous."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "無料プランは%lld件まで。Pausely Proならすべて管理できます。"
           }
         }
       }

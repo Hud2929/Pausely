@@ -160,7 +160,7 @@ final class TallyTests: XCTestCase {
         // person sees it before keeping their list and can pick which 5 to track, without clipping slip lines.
         let beforeAccount = String(source[..<button.lowerBound])
         XCTAssertTrue(beforeAccount.contains("if FreeTier.isExceeded(by: tally.subscriptions()) {"))
-        XCTAssertTrue(beforeAccount.contains("L10n.string(\"Free tracks \\(FreeTier.subscriptionLimit), the most expensive first. The rest wait until you make room or go Pro.\")"))
+        XCTAssertTrue(beforeAccount.contains("L10n.string(\"The free plan tracks \\(FreeTier.subscriptionLimit), the most expensive first. The rest wait until you make room or go Pro.\")"))
     }
 
     func testImportPlanFillsFreeSlotsWithTheMostExpensiveAndSkipsWhatIsAlreadyListed() {

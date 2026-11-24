@@ -154,9 +154,9 @@ struct StoreKitUpgradeView: View {
         }
         if waitingCount > 0 {
             return L10n.sentences([L10n.string("You pay for \(activeSubscriptions.count + waitingCount) subscriptions."),
-                                   L10n.string("Free tracks \(FreeTier.subscriptionLimit).")])
+                                   L10n.string("The free plan tracks \(FreeTier.subscriptionLimit).")])
         }
-        if atFreeLimit { return L10n.string("Free tracks \(FreeTier.subscriptionLimit). Pausely Pro tracks all of them.") }
+        if atFreeLimit { return L10n.string("The free plan tracks \(FreeTier.subscriptionLimit). Pausely Pro tracks all of them.") }
         guard !activeSubscriptions.isEmpty else { return L10n.string("Pausely Pro tracks every subscription you have.") }
         let yearly = MoneyFormat.string(activeSubscriptions.annualTotal(), currencyManager.selectedCurrency,
                                         locale: L10n.locale, wholeUnits: true)

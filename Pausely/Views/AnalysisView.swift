@@ -150,7 +150,7 @@ struct AnalysisView: View {
                                                     .foregroundStyle(Color.inkText)
                                                     .multilineTextAlignment(.leading)
                                                     .fixedSize(horizontal: false, vertical: true)
-                                                Text(verbatim: group.subscriptions.map(\.name).joined(separator: ", "))
+                                                Text(verbatim: group.subscriptions.map(\.name).formatted(.list(type: .and).locale(L10n.locale)))
                                                     .font(.subheadline)
                                                     .foregroundStyle(Color.inkTextMuted)
                                                     .multilineTextAlignment(.leading)

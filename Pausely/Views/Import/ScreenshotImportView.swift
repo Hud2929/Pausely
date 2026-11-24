@@ -262,6 +262,8 @@ struct ScreenshotImportView: View {
                                 .underline()
                         }
                     }
+                    // A fingertip's target: the price alone was 18 points tall (the rating of 2026-11-23).
+                    .tapArea(.trailing)
                     .buttonStyle(.plain)
                     .accessibilityLabel(item.amount != nil
                                         ? L10n.string("Edit price for \(item.name)")
@@ -278,7 +280,28 @@ struct ScreenshotImportView: View {
             .frame(maxWidth: .infinity, alignment: .leading)
         }
         .padding(.vertical, 6)
+        // One sentence for VoiceOver, chosen or not as its trait, with the price as an action: the row was four
+        // stops (the box, the name, "Edit price for…", the date), as the rating of 2026-11-23 found.
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel(Text(verbatim: rowSummary(item, onList: onList, fillsDate: fillsDate)))
+        .accessibilityAddTraits(isOn ? [.isButton, .isSelected] : .isButton)
+        .accessibilityAction {
+            if item.amount == nil { editingPrice = item } else { toggle(item.id) }
+        }
+        .accessibilityAction(named: item.amount != nil ? Text("Edit price") : Text("Add price")) { editingPrice = item }
         .accessibilityIdentifier("screenshotRow_\(item.name)")
+    }
+
+    /// What VoiceOver reads for a row: its name, price and what the screenshot said about it.
+    private func rowSummary(_ item: ScreenshotParser.DetectedItem, onList: Bool, fillsDate: Bool) -> String {
+        var parts = [item.name]
+        if let amount = item.amount {
+            parts.append(item.frequency.priced(MoneyFormat.string(amount, item.currency, locale: L10n.locale)))
+        } else {
+            parts.append(L10n.string("No price found"))
+        }
+        if let detail = detailLine(for: item, onList: onList, fillsDate: fillsDate) { parts.append(detail) }
+        return parts.joined(separator: ", ")
     }
 
     private func inactiveRow(_ item: ScreenshotParser.DetectedItem) -> some View {
