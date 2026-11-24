@@ -21,6 +21,10 @@ struct CancelSubscriptionFlow: View {
     @State private var showingReceipt = false
     @State private var showingPaywall = false
     @State private var previewDraft: PresentedDraft?
+    /// Asked when "I cancelled it" is tapped for a subscription with no renewal day: the receipt counts the
+    /// charges avoided from that day, and without it a $14.95 cancellation was "$0.00" (2026-11-23).
+    @State private var askingNextCharge = false
+    @State private var nextCharge = Date()
     @Environment(\.openURL) private var openURL
 
     private struct PresentedDraft: Identifiable {
@@ -55,6 +59,12 @@ struct CancelSubscriptionFlow: View {
             if let url = help.link { SafariView(url: url).ignoresSafeArea() }
         }
         .sheet(isPresented: $showingReceipt) { SavingsReceiptView() }
+        .sheet(isPresented: $askingNextCharge) {
+            NextChargeQuestion(name: subscription.name, day: $nextCharge,
+                               onSave: { askingNextCharge = false; Task { await markCancelled(nextCharge: nextCharge) } },
+                               onUnknown: { askingNextCharge = false; Task { await markCancelled() } })
+                .presentationDetents([.large])
+        }
         .sheet(isPresented: $showingPaywall) { StoreKitUpgradeView(trigger: .cancelConcierge) }
         .sheet(item: $previewDraft) { item in
             EmailDraftSheet(draft: item.draft)
@@ -150,7 +160,9 @@ struct CancelSubscriptionFlow: View {
                     .accessibilityIdentifier("openCancellationPageButton")
 
                 // Once the person is back from the service's page, this becomes the main action.
-                Button { Task { await markCancelled() } } label: {
+                Button {
+                    if subscription.nextBillingDate == nil { askingNextCharge = true } else { Task { await markCancelled() } }
+                } label: {
                     Text(isSaving ? "Saving…" : "I cancelled it")
                 }
                 .buttonStyle(.ink(didOpenPage ? .main : .quiet))
@@ -284,10 +296,15 @@ struct CancelSubscriptionFlow: View {
         }
     }
 
-    private func markCancelled() async {
+    private func markCancelled(nextCharge: Date? = nil) async {
         isSaving = true
         defer { isSaving = false }
-        await SubscriptionStore.shared.updateSubscriptionStatus(id: subscription.id, status: .cancelled)
+        let store = SubscriptionStore.shared
+        if let nextCharge, var dated = store.subscriptions.first(where: { $0.id == subscription.id }) {
+            dated.nextBillingDate = nextCharge
+            await store.updateSubscription(dated)
+        }
+        await store.updateSubscriptionStatus(id: subscription.id, status: .cancelled)
         if showsOutcome {
             withAnimation(Motion.unlessReduced(Motion.arrive)) { cancelled = true }
         } else {
@@ -339,5 +356,44 @@ struct CancelDifficultyPrompt: View {
             }
         }
         .frame(maxWidth: .infinity, alignment: .leading)
+    }
+}
+
+/// "When would it have charged next?", asked once on cancelling a subscription that has no renewal day.
+private struct NextChargeQuestion: View {
+    let name: String
+    @Binding var day: Date
+    let onSave: () -> Void
+    let onUnknown: () -> Void
+
+    var body: some View {
+        ScrollView {
+            VStack(alignment: .leading, spacing: 16) {
+                Text("When would \(name) have charged next?")
+                    .font(.question(.title2))
+                    .foregroundStyle(Color.inkText)
+                    .fixedSize(horizontal: false, vertical: true)
+                    .accessibilityAddTraits(.isHeader)
+                Text("Your Savings Receipt counts the charges you avoid from that day. It's on your bank statement or in the service's account.")
+                    .font(.subheadline)
+                    .foregroundStyle(Color.inkTextMuted)
+                    .fixedSize(horizontal: false, vertical: true)
+                DatePicker("Next charge", selection: $day,
+                           in: Calendar.billing.date(byAdding: .month, value: -1, to: Date())!...Calendar.billing.date(byAdding: .year, value: 1, to: Date())!,
+                           displayedComponents: .date)
+                    .datePickerStyle(.graphical)
+                    .tint(Color.inkText)
+                    .accessibilityIdentifier("nextChargePicker")
+                Button(action: onSave) { Text("Save and mark cancelled") }
+                    .buttonStyle(.ink)
+                    .accessibilityIdentifier("saveNextChargeButton")
+                Button(action: onUnknown) { Text("I don't know") }
+                    .buttonStyle(.ink(.quiet))
+                    .accessibilityIdentifier("unknownNextChargeButton")
+            }
+            .padding(Layout.margin)
+        }
+        .readableScroll()
+        .inkScreen()
     }
 }

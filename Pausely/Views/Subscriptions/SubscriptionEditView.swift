@@ -307,6 +307,7 @@ struct SubscriptionEditView: View {
                 Text("Billed to")
                     .font(.subheadline.weight(.medium))
                     .foregroundStyle(Color.inkTextMuted)
+                    .accessibilityHidden(true)
                 InkTextField(placeholder: "", text: $draft.paymentMethod, autocapitalization: .words)
                     .accessibilityLabel("Billed to")
                     .accessibilityIdentifier("editPaymentMethodField")
@@ -325,7 +326,9 @@ struct SubscriptionEditView: View {
                 Text("Notes")
                     .font(.subheadline.weight(.medium))
                     .foregroundStyle(Color.inkTextMuted)
-                InkTextField(placeholder: "", text: $draft.notes, autocapitalization: .sentences)
+                    .accessibilityHidden(true)
+                // Several lines as it is written: one line clipped a note (the rating of 2026-11-23).
+                InkTextField(placeholder: "", text: $draft.notes, autocapitalization: .sentences, multiline: true)
                     .accessibilityLabel("Notes")
                     .accessibilityIdentifier("editNotesField")
                 Text("For example: Shared with Sarah, or promo rate ends in October.")
@@ -377,9 +380,12 @@ struct SubscriptionEditView: View {
 
     private func row<Content: View>(_ title: LocalizedStringKey, @ViewBuilder content: () -> Content) -> some View {
         AdaptiveRow(alignment: .center) {
+            // Read once, by the control beside it, whose label starts with it: VoiceOver said "Billing cycle",
+            // then "Billing cycle, Monthly" (the reach rating of 2026-11-23).
             Text(title)
                 .font(.body)
                 .foregroundStyle(Color.inkText)
+                .accessibilityHidden(true)
         } value: {
             content()
         }
@@ -395,6 +401,8 @@ struct SubscriptionEditView: View {
                 .font(.caption2.weight(.semibold))
                 .foregroundStyle(Color.inkTextFaint)
         }
+        // A fingertip's target: the menus were 20 points tall (the rating of 2026-11-23).
+        .tapArea(.trailing)
     }
 
     private var divider: some View { Hairline() }

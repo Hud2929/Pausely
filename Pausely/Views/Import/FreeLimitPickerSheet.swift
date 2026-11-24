@@ -21,6 +21,9 @@ struct FreeLimitPickerSheet: View {
 
     @Environment(\.dismiss) private var dismiss
     @State private var selected: Set<String>
+    /// Set when a pick past the limit was refused, so the page says what to do.
+    @State private var refusedNote = false
+    @Environment(\.dynamicTypeSize) private var typeSize
 
     init(candidates: [Candidate], initialSelection: Set<String>, maxSelection: Int,
          onSave: @escaping (Set<String>) -> Void, onSeePro: (() -> Void)? = nil) {
@@ -101,10 +104,17 @@ struct FreeLimitPickerSheet: View {
 
                 Text(L10n.string("\(selected.count) of \(maxSelection) selected. The rest wait safely until you swap or go Pro."))
                     .font(.subheadline)
-                    .foregroundStyle(Color.inkTextMuted)
+                    .foregroundStyle(refusedNote && selected.count >= maxSelection ? Color.decide : Color.inkTextMuted)
                     .fixedSize(horizontal: false, vertical: true)
                     .padding(.top, 8)
-                    .padding(.bottom, 20)
+                    .padding(.bottom, refusedNote && selected.count >= maxSelection ? 4 : 20)
+                if refusedNote && selected.count >= maxSelection {
+                    Text("Untick one to choose another.")
+                        .font(.subheadline.weight(.semibold))
+                        .foregroundStyle(Color.decide)
+                        .fixedSize(horizontal: false, vertical: true)
+                        .padding(.bottom, 20)
+                }
 
                 VStack(spacing: 0) {
                     ForEach(Array(sortedCandidates.enumerated()), id: \.element.id) { index, item in
@@ -162,9 +172,13 @@ struct FreeLimitPickerSheet: View {
                     .foregroundStyle(isOn ? Color.paper : (atCap ? Color.inkTextFaint : Color.inkTextMuted))
                     .accessibilityHidden(true)
 
-                ServiceLogoView(name: item.name, category: item.category, size: 36)
+                // At the accessibility sizes the words take the row and the price goes under the name, whole:
+                // beside them it broke as "US$239." over "88/yr" (the reach rating of 2026-11-23).
+                if !typeSize.isAccessibilitySize {
+                    ServiceLogoView(name: item.name, category: item.category, size: 36)
+                }
 
-                LineOrStack(spacing: 8, lineSpacing: 2, spread: true, besideShare: 0.45) {
+                LineOrStack(spacing: 8, lineSpacing: 2, spread: true, besideShare: typeSize.isAccessibilitySize ? 0 : 0.45) {
                     Text(verbatim: item.name)
                         .font(.body.weight(.medium))
                         .foregroundStyle(atCap ? Color.inkTextMuted : Color.inkText)
@@ -179,8 +193,12 @@ struct FreeLimitPickerSheet: View {
             .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
-        .accessibilityElement(children: .combine)
-        .accessibilityAddTraits(isOn ? [.isSelected] : [])
+        // Read as words ("$17.99 a month", not "/mo"), chosen as a trait, and why a sixth can't be chosen
+        // (the rating of 2026-11-23).
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel(Text(verbatim: "\(item.name), \(item.frequency.priced(MoneyFormat.string(item.amount, item.currency, locale: L10n.locale)))"))
+        .accessibilityAddTraits(isOn ? [.isButton, .isSelected] : .isButton)
+        .accessibilityHint(atCap ? Text("Untick one to choose this instead") : Text(verbatim: ""))
         .accessibilityIdentifier("freePickerRow_\(item.name)")
     }
 
@@ -192,7 +210,10 @@ struct FreeLimitPickerSheet: View {
             selected.insert(name)
             Feel.tick()
         } else {
+            // A sixth is refused out loud, not silently (the rating of 2026-11-23).
             Feel.selection()
+            refusedNote = true
+            AccessibilityNotification.Announcement(L10n.string("Untick one to choose this instead")).post()
         }
     }
 }

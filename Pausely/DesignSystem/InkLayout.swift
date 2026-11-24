@@ -30,10 +30,14 @@ enum WordFit {
     }
 
     /// The face a text style is drawn in at a text size, for measuring.
-    static func font(_ style: UIFont.TextStyle, weight: UIFont.Weight, monospaced: Bool, at size: DynamicTypeSize) -> UIFont {
+    static func font(_ style: UIFont.TextStyle, weight: UIFont.Weight, monospaced: Bool, serif: Bool = false,
+                     at size: DynamicTypeSize) -> UIFont {
         let traits = UITraitCollection(preferredContentSizeCategory: UIContentSizeCategory(size))
         let points = UIFont.preferredFont(forTextStyle: style, compatibleWith: traits).pointSize
-        return monospaced ? .monospacedSystemFont(ofSize: points, weight: weight) : .systemFont(ofSize: points, weight: weight)
+        if monospaced { return .monospacedSystemFont(ofSize: points, weight: weight) }
+        let system = UIFont.systemFont(ofSize: points, weight: weight)
+        guard serif, let descriptor = system.fontDescriptor.withDesign(.serif) else { return system }
+        return UIFont(descriptor: descriptor, size: points)
     }
 }
 
@@ -43,11 +47,12 @@ private struct WholeWords: ViewModifier {
     let style: UIFont.TextStyle
     let weight: UIFont.Weight
     let monospaced: Bool
+    var serif = false
     @State private var width: CGFloat = 0
     @Environment(\.dynamicTypeSize) private var typeSize
 
     func body(content: Content) -> some View {
-        let measured = WordFit.font(style, weight: weight, monospaced: monospaced, at: typeSize)
+        let measured = WordFit.font(style, weight: weight, monospaced: monospaced, serif: serif, at: typeSize)
         let scale = WordFit.scale(for: text, in: measured, width: width)
         content
             .font(scale < 1 ? Font(measured.withSize((measured.pointSize * scale).rounded(.down))) : font)
@@ -61,8 +66,8 @@ extension View {
     /// part of `text` would not fit the line (`WordFit`). `style`, `weight` and `monospaced`
     /// describe the same face to UIKit, which is what can measure it. Takes the whole width.
     func wholeWords(_ text: String, font: Font, measuredIn style: UIFont.TextStyle,
-                    weight: UIFont.Weight = .regular, monospaced: Bool = false) -> some View {
-        modifier(WholeWords(text: text, font: font, style: style, weight: weight, monospaced: monospaced))
+                    weight: UIFont.Weight = .regular, monospaced: Bool = false, serif: Bool = false) -> some View {
+        modifier(WholeWords(text: text, font: font, style: style, weight: weight, monospaced: monospaced, serif: serif))
     }
 }
 

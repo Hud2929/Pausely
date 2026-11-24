@@ -163,6 +163,10 @@ struct AnalysisView: View {
                                                                       converted: group.isConverted, locale: L10n.locale)))
                                                     .font(.body.monospacedDigit())
                                                     .foregroundStyle(Color.inkText)
+                                                    // Read as "a month", not "/mo" (the reach rating of 2026-11-23).
+                                                    .accessibilityLabel(Text(verbatim: BillingFrequency.monthly.priced(
+                                                        MoneyFormat.total(group.monthlyTotal, currencyManager.selectedCurrency,
+                                                                          converted: group.isConverted, locale: L10n.locale))))
                                                 Text(L10n.string("\(MoneyFormat.total(group.annualTotal, currencyManager.selectedCurrency, converted: group.isConverted, locale: L10n.locale)) a year"))
                                                     .font(.footnote.monospacedDigit())
                                                     .foregroundStyle(Color.inkTextFaint)
@@ -411,7 +415,8 @@ private struct OverlapDetailSheet: View {
                                         .font(.body.weight(.medium))
                                         .foregroundStyle(Color.inkText)
                                         .multilineTextAlignment(.leading)
-                                    Text(verbatim: sub.chargeText)
+                                    // With how often: "$159.99" beside "$13.99" read as two monthly prices (2026-11-23).
+                                    Text(verbatim: sub.billingFrequency.priced(sub.chargeText))
                                         .font(.body.monospacedDigit())
                                         .foregroundStyle(Color.inkTextMuted)
                                 }

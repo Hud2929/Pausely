@@ -24,6 +24,8 @@ struct InkTextField: View {
     /// showed nothing while it was edited: "1148" typed into the port was invisible (the reach rating of
     /// 2026-11-23, iPhone with Arabic as its language). Set at the left edge, it shows.
     var leftToRight = false
+    /// Grows to as many lines as the text needs (a note), instead of scrolling one line sideways.
+    var multiline = false
 
     @FocusState private var isFocused: Bool
 
@@ -31,6 +33,11 @@ struct InkTextField: View {
         Group {
             if isSecure {
                 SecureField(text: $text, prompt: placeholder.isEmpty ? nil : Hint.text(placeholder)) { EmptyView() }
+            } else if multiline {
+                TextField(text: $text, prompt: placeholder.isEmpty ? nil : Hint.text(placeholder), axis: .vertical) { EmptyView() }
+                    .lineLimit(1...8)
+                    // Return ends the note, as in every other field, and the field is measured again at each size.
+                    .returnMovesOn(from: $text) { isFocused = false }
             } else {
                 TextField(text: $text, prompt: placeholder.isEmpty ? nil : Hint.text(placeholder)) { EmptyView() }
             }
@@ -93,6 +100,8 @@ struct OptionalDatePicker: View {
                     .foregroundStyle(Color.inkText)
                     .tapArea(.leading)
             }
+            // Says what the date is for: the row's caption beside it is not read separately.
+            .accessibilityLabel(Text(verbatim: "\(title), \(L10n.string("Set date"))"))
         }
     }
 }

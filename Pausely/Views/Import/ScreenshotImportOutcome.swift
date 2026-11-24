@@ -3,6 +3,8 @@ import SwiftUI
 /// Intro instructions and outcome slip for `ScreenshotImportView`.
 struct ScreenshotImportReadyView: View {
     let canBatchImport: Bool
+    /// How many screenshots Pausely Pro reads at once.
+    static let proBatch = 10
 
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
@@ -47,7 +49,9 @@ struct ScreenshotImportReadyView: View {
             .padding(.top, 24)
 
             if !canBatchImport {
-                Text("The free plan imports one screenshot at a time. Pausely Pro reads up to 10 screenshots in one batch.")
+                // The number is formatted, so it has the digits of the rest of the screen (a typed "١٠" stood beside
+                // steps numbered 1, 2, 3, the reach rating of 2026-11-23).
+                Text("The free plan imports one screenshot at a time. Pausely Pro reads up to \(Self.proBatch) screenshots in one batch.")
                     .font(.footnote)
                     .foregroundStyle(Color.inkTextFaint)
                     .fixedSize(horizontal: false, vertical: true)

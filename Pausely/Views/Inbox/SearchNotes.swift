@@ -203,7 +203,9 @@ struct InboxPrivacyNote: View {
                     .font(.subheadline)
                     .foregroundStyle(Color.inkTextMuted)
                     .fixedSize(horizontal: false, vertical: true)
-                Text("Subscriptions you add go to your account, like any you type in.")
+                // Said as it is for someone without an account: theirs stay on the phone (the rating of 2026-11-23).
+                (AuthManager.shared.isGuest ? Text("Subscriptions you add stay on this iPhone, like any you type in.")
+                                            : Text("Subscriptions you add go to your account, like any you type in."))
                     .font(.subheadline)
                     .foregroundStyle(Color.inkTextMuted)
                     .fixedSize(horizontal: false, vertical: true)
@@ -302,6 +304,8 @@ struct DollarNote: View {
                 .foregroundStyle(Color.inkTextMuted)
                 .fixedSize(horizontal: false, vertical: true)
                 .frame(maxWidth: .infinity, alignment: .leading)
+                // Read once, as the control's label (it was read twice, 2026-11-23).
+                .accessibilityHidden(true)
         } value: {
             Menu {
                 ForEach(Self.choices, id: \.self) { choice in

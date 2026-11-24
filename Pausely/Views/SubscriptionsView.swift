@@ -9,6 +9,9 @@ struct SubscriptionsView: View {
     @State private var searchText = ""
     @State private var activeSheet: ActiveSheet?
     @State private var pendingRemoval: UUID?
+    @ObservedObject private var payments = PaymentManager.shared
+    /// Read so the list is drawn again when what waits for room changes.
+    @AppStorage(TallyImporter.waitingVersionKey) private var waitingVersion = 0
     @ScaledMetric(relativeTo: .title3) private var addButtonSize: CGFloat = Layout.tapTarget
     @Environment(\.dynamicTypeSize) private var typeSize
     @Binding var deepLinkedSubscription: Subscription?
@@ -20,11 +23,15 @@ struct SubscriptionsView: View {
     enum ActiveSheet: Identifiable {
         case browser
         case detail(Subscription)
+        case choose
+        case paywall
 
         var id: String {
             switch self {
             case .browser: return "browser"
             case .detail(let sub): return "detail-\(sub.id)"
+            case .choose: return "choose"
+            case .paywall: return "paywall"
             }
         }
     }
@@ -83,7 +90,15 @@ struct SubscriptionsView: View {
             case .browser:
                 SubscriptionBrowserView()
             case .detail(let subscription):
+                // A page on iPad: a 540-point card cut the page mid-row (the reach rating of 2026-11-23).
                 SubscriptionManagementView(subscription: subscription)
+                    .presentationSizing(.page)
+            case .choose:
+                FreeLimitPickerSheet(store: store, currencyManager: currencyManager,
+                                     onSeePro: { Task { try? await Task.sleep(for: .milliseconds(450)); activeSheet = .paywall } })
+                    .presentationSizing(.page)
+            case .paywall:
+                StoreKitUpgradeView()
             }
         }
         // A widget, a search result or a link asked for one subscription. The request can be set before
@@ -203,6 +218,18 @@ struct SubscriptionsView: View {
                     }
                 }
             }
+
+            // What was kept for later has a place on the list: it was listed nowhere, and Home's row about
+            // it came and went (the rating of 2026-11-23).
+            let waiting = waitingVersion >= 0 ? TallyImporter.waitingLines() : []
+            if !waiting.isEmpty, !payments.isUnlocked(.unlimitedSubscriptions), searchText.isEmpty {
+                Section {
+                    WaitingSection(lines: waiting) { activeSheet = .choose }
+                        .listRowInsets(EdgeInsets(top: 20, leading: Layout.margin, bottom: 8, trailing: Layout.margin))
+                        .listRowBackground(Color.clear)
+                        .listRowSeparator(.hidden)
+                }
+            }
         }
         .listStyle(.plain)
         .scrollContentBackground(.hidden)
@@ -246,8 +273,9 @@ struct SubscriptionsView: View {
     static func title(for group: SubscriptionGroups.Group) -> String {
         switch group {
         case .decide: return L10n.string("Needs a decision")
-        case .thisWeek: return L10n.string("This week")
-        case .thisMonth: return L10n.string("This month")
+        // What the groups are: renewals within 7 and 30 days. "This month" headed December's on Nov 23 (2026-11-23).
+        case .thisWeek: return L10n.string("In the next 7 days")
+        case .thisMonth: return L10n.string("In the next 30 days")
         case .later: return L10n.string("Later")
         case .undated: return L10n.string("No renewal date")
         case .cancelled: return L10n.string("Cancelled")
@@ -372,4 +400,48 @@ private struct SubscriptionRow: View {
 
 #Preview {
     SubscriptionsView()
+}
+
+/// Subscriptions kept for when there's room on the free plan, with the way to choose which are tracked.
+private struct WaitingSection: View {
+    let lines: [TallyLine]
+    let onChoose: () -> Void
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            VStack(alignment: .leading, spacing: 2) {
+                Text("Waiting for room")
+                    .font(.headline)
+                    .foregroundStyle(Color.inkText)
+                    .accessibilityAddTraits(.isHeader)
+                Text("Kept for later: the free plan tracks \(FreeTier.subscriptionLimit). These aren't in your totals or reminders.")
+                    .font(.subheadline)
+                    .foregroundStyle(Color.inkTextMuted)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+            VStack(spacing: 0) {
+                ForEach(lines) { line in
+                    LineOrStack(spacing: 8, lineSpacing: 2, spread: true, alignment: .firstTextBaseline) {
+                        Text(verbatim: line.name)
+                            .font(.body)
+                            .foregroundStyle(Color.inkTextMuted)
+                        Text(verbatim: (line.frequency ?? .monthly).priced(MoneyFormat.string(line.amount, line.currency)))
+                            .font(.subheadline)
+                            .foregroundStyle(Color.inkTextFaint)
+                    }
+                    .padding(.vertical, 10)
+                    .accessibilityElement(children: .combine)
+                    Hairline()
+                }
+            }
+            Button(action: onChoose) {
+                Text("Choose which to track")
+                    .font(.subheadline.weight(.semibold))
+                    .foregroundStyle(Color.inkText)
+                    .tapArea(.leading)
+            }
+            .buttonStyle(.plain)
+            .accessibilityIdentifier("chooseWaitingButton")
+        }
+    }
 }

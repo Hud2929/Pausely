@@ -26,10 +26,11 @@ final class EverydayPowerTests: XCTestCase {
             splitCount: 4
         )
 
-        // 19.99 / 4 = 4.9975 -> 5.00 in USD (2 decimals)
+        // 19.99 / 4 = 4.9975: one charge's share is shown as 5.00, and totals use the exact share, so a year is
+        // 59.97 (a quarter of 239.88), not 12 × 5.00 (the rating of 2026-11-23).
         XCTAssertEqual(family.effectiveAmount, Decimal(string: "5.00"))
-        XCTAssertEqual(family.monthlyCost, Decimal(string: "5.00"))
-        XCTAssertEqual(family.annualCost, Decimal(string: "60.00"))
+        XCTAssertEqual(family.monthlyCost, Decimal(string: "4.9975"))
+        XCTAssertEqual(family.annualCost, Decimal(string: "59.97"))
         XCTAssertEqual(family.splitCount, 4)
 
         let charges = Horizon.charges(for: [family], now: day(2026, 12, 1))

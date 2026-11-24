@@ -40,7 +40,7 @@ struct ScreenshotImportView: View {
     }
 
     private var canBatchImport: Bool { payments.isUnlocked(.batchScreenshotImport) }
-    private var maxPhotos: Int { canBatchImport ? 10 : 1 }
+    private var maxPhotos: Int { canBatchImport ? ScreenshotImportReadyView.proBatch : 1 }
 
     private var activeDetected: [ScreenshotParser.DetectedItem] {
         detected.filter { !$0.isCancelled }
@@ -87,6 +87,9 @@ struct ScreenshotImportView: View {
                 .padding(.top, 12)
                 .padding(.bottom, 12)
         }
+        // The outcome is a new page that starts at its title: at the largest text it opened scrolled to its
+        // end, its heading out of sight (the reach rating of 2026-11-23).
+        .id(outcome == nil ? "choosing" : "outcome")
         .inkScreen()
         .presentationSizing(.page)
         .preferredColorScheme(.dark)
@@ -314,6 +317,7 @@ struct ScreenshotImportView: View {
                 Text(verbatim: item.frequency.pricedShort(MoneyFormat.string(amount, item.currency, locale: L10n.locale)))
                     .font(.footnote)
                     .foregroundStyle(Color.inkTextFaint)
+                    .accessibilityLabel(Text(verbatim: item.frequency.priced(MoneyFormat.string(amount, item.currency, locale: L10n.locale))))
             }
         }
         .padding(.vertical, 10)
@@ -344,18 +348,20 @@ struct ScreenshotImportView: View {
     @ViewBuilder
     private var actionButtons: some View {
         if let outcome {
+            // Done is the main button, Pro the second: the end of an import pushed "Track all with Pro" as
+            // the main action, where Find in Email makes Done the main one (the rating of 2026-11-23).
             VStack(spacing: 10) {
-                if !outcome.waiting.isEmpty, !payments.isUnlocked(.unlimitedSubscriptions) {
-                    Button { showingPaywall = true } label: { Text("Track all with Pro") }
-                        .buttonStyle(.ink)
-                }
                 Button {
                     if let onFinished { onFinished() } else { dismiss() }
                 } label: {
                     Text("Done")
                 }
-                .buttonStyle(.ink(outcome.waiting.isEmpty ? .main : .quiet))
+                .buttonStyle(.ink)
                 .accessibilityIdentifier("screenshotDoneButton")
+                if !outcome.waiting.isEmpty, !payments.isUnlocked(.unlimitedSubscriptions) {
+                    Button { showingPaywall = true } label: { Text("Track all with Pro") }
+                        .buttonStyle(.ink(.quiet))
+                }
             }
         } else {
             switch phase {
@@ -430,6 +436,11 @@ struct ScreenshotImportView: View {
             parts.append(L10n.string("Adds renewal date"))
         } else if onList {
             parts.append(L10n.string("Already on your list"))
+        }
+        switch item.doubt {
+        case .mayNotRepeat: parts.append(L10n.string("Nothing here says it repeats"))
+        case .everyFourWeeks: parts.append(L10n.string("Charged every 4 weeks, counted as monthly"))
+        case nil: break
         }
         return parts.isEmpty ? nil : L10n.breakingAfterDots(parts.joined(separator: " · "))
     }
@@ -522,7 +533,8 @@ struct ScreenshotImportView: View {
         }
         detected = combined
         for item in combined where addedIDs.contains(item.id) {
-            guard !item.isCancelled, item.amount != nil else { continue }
+            // A row that may not repeat is shown, not chosen for the person (the rating of 2026-11-23).
+            guard !item.isCancelled, item.amount != nil, item.doubt != .mayNotRepeat else { continue }
             if onPickForTally == nil, let existing = existingSubscription(for: item) {
                 if existing.nextBillingDate == nil && item.renewalDate != nil {
                     selectedIDs.insert(item.id)

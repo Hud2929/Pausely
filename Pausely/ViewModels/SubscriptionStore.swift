@@ -412,6 +412,15 @@ class SubscriptionStore: ObservableObject {
     func startAgain(id: UUID, on date: Date = Date(), calendar: Calendar = .billing) async -> Bool {
         guard var updated = subscriptions.first(where: { $0.id == id }), !updated.renewsAutomatically else { return true }
         guard PaymentManager.shared.hasRoom(in: subscriptions) else { return false }
+        // Cancelled by mistake: back on before any charge it avoided came due. It keeps the day it renewed on
+        // (or none), instead of restarting today with a day it never had (the rating of 2026-11-23).
+        if let cancel = LifecycleEventLog.shared.events.last(where: { $0.subscriptionId == id && $0.kind == .cancelled }),
+           Self.isUndo(of: cancel, on: date, calendar: calendar) {
+            updated.nextBillingDate = cancel.anchorDate
+            await updateSubscription(updated)
+            await updateSubscriptionStatus(id: id, status: .active)
+            return true
+        }
         let restart = PausePlanSchedule.restartAnchor(startedOn: date, frequency: updated.billingFrequency, calendar: calendar)
         updated.nextBillingDate = restart.anchor
         await updateSubscription(updated)
@@ -422,6 +431,17 @@ class SubscriptionStore: ObservableObject {
             await ReminderScheduler.shared.reschedule(subscriptions)
         }
         return true
+    }
+
+    /// Whether starting again on `date` takes back the cancellation: no charge it would have avoided has
+    /// come due since (or it had no renewal day to count from, and it is the same day).
+    nonisolated static func isUndo(of cancel: LifecycleEvent, on date: Date, calendar: Calendar = .billing) -> Bool {
+        guard let anchor = cancel.anchorDate ?? cancel.renewalDate else {
+            return calendar.isDate(cancel.date, inSameDayAs: date)
+        }
+        let due = RenewalSchedule.renewals(anchor: anchor, frequency: cancel.frequency, after: cancel.date,
+                                           through: date, calendar: calendar)
+        return due.isEmpty
     }
 
     // MARK: - A change of time zone

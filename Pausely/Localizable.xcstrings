@@ -16092,40 +16092,6 @@
         }
       }
     },
-    "It's on your Savings Receipt.": {
-      "localizations": {
-        "ar": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "تمت إضافته إلى إيصال التوفير."
-          }
-        },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Es steht auf Ihrem Sparbeleg."
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Está en tu recibo de ahorro."
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "C'est sur votre reçu d'économies."
-          }
-        },
-        "ja": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "節約レシートに記録しました。"
-          }
-        }
-      }
-    },
     "Its month starts today. Start it again whenever you're ready to watch.": {
       "localizations": {
         "ar": {
@@ -16544,13 +16510,13 @@
               "ipad": {
                 "stringUnit": {
                   "state": "translated",
-                  "value": "يحفظ «احتفظ بقائمتي» نسخة احتياطية في حساب مجاني. ودون حساب تبقى على جهاز iPad هذا."
+                  "value": "يحفظ «احتفظ بقائمتي» نسخة احتياطية في حساب مجاني. ودون حساب تبقى على هذا الـ iPad."
                 }
               },
               "other": {
                 "stringUnit": {
                   "state": "translated",
-                  "value": "يحفظ «احتفظ بقائمتي» نسخة احتياطية في حساب مجاني. ودون حساب تبقى على جهاز iPhone هذا."
+                  "value": "يحفظ «احتفظ بقائمتي» نسخة احتياطية في حساب مجاني. ودون حساب تبقى على هذا الـ iPhone."
                 }
               }
             }
@@ -16758,13 +16724,13 @@
               "ipad": {
                 "stringUnit": {
                   "state": "translated",
-                  "value": "محفوظة على جهاز iPad هذا فقط بحماية بيانات iOS حتى تختار إنشاء حساب."
+                  "value": "محفوظة على هذا الـ iPad فقط بحماية بيانات iOS حتى تختار إنشاء حساب."
                 }
               },
               "other": {
                 "stringUnit": {
                   "state": "translated",
-                  "value": "محفوظة على جهاز iPhone هذا فقط بحماية بيانات iOS حتى تختار إنشاء حساب."
+                  "value": "محفوظة على هذا الـ iPhone فقط بحماية بيانات iOS حتى تختار إنشاء حساب."
                 }
               }
             }
@@ -23285,13 +23251,13 @@
               "ipad": {
                 "stringUnit": {
                   "state": "translated",
-                  "value": "اختر لقطة شاشة لاشتراكات Apple أو خصوماتك المتكررة واقرأها على جهاز iPad هذا."
+                  "value": "اختر لقطة شاشة لاشتراكات Apple أو خصوماتك المتكررة واقرأها على هذا الـ iPad."
                 }
               },
               "other": {
                 "stringUnit": {
                   "state": "translated",
-                  "value": "اختر لقطة شاشة لاشتراكات Apple أو خصوماتك المتكررة واقرأها على جهاز iPhone هذا."
+                  "value": "اختر لقطة شاشة لاشتراكات Apple أو خصوماتك المتكررة واقرأها على هذا الـ iPhone."
                 }
               }
             }
@@ -29756,13 +29722,13 @@
               "ipad": {
                 "stringUnit": {
                   "state": "translated",
-                  "value": "انقر على + في الرئيسية للاختيار من الدليل، أو الاستيراد من لقطات الشاشة على جهاز iPad هذا، أو النقر على إضافة اشتراكك."
+                  "value": "انقر على + في الرئيسية للاختيار من الدليل، أو الاستيراد من لقطات الشاشة على هذا الـ iPad، أو النقر على إضافة اشتراكك."
                 }
               },
               "other": {
                 "stringUnit": {
                   "state": "translated",
-                  "value": "انقر على + في الرئيسية للاختيار من الدليل، أو الاستيراد من لقطات الشاشة على جهاز iPhone هذا، أو النقر على إضافة اشتراكك."
+                  "value": "انقر على + في الرئيسية للاختيار من الدليل، أو الاستيراد من لقطات الشاشة على هذا الـ iPhone، أو النقر على إضافة اشتراكك."
                 }
               }
             }
@@ -32576,40 +32542,6 @@
         }
       }
     },
-    "This week": {
-      "localizations": {
-        "ar": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "هذا الأسبوع"
-          }
-        },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Diese Woche"
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Esta semana"
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Cette semaine"
-          }
-        },
-        "ja": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "今週"
-          }
-        }
-      }
-    },
     "Timed out connecting.": {
       "localizations": {
         "ar": {
@@ -34427,7 +34359,7 @@
         "ar": {
           "stringUnit": {
             "state": "translated",
-            "value": "بانتظار مساحة"
+            "value": "بانتظار مكان"
           }
         },
         "de": {
@@ -35759,13 +35691,13 @@
               "ipad": {
                 "stringUnit": {
                   "state": "translated",
-                  "value": "دون حساب، يبقى كل شيء على جهاز iPad هذا بحماية بيانات iOS. وعند تسجيل الدخول، تتزامن قائمتك وسجلك وخطة الإيقاف عبر اتصالات مشفّرة وتُحفظ مشفّرة. لا نبيع بياناتك أبدًا. راجع سياسة الخصوصية للتفاصيل."
+                  "value": "دون حساب، يبقى كل شيء على هذا الـ iPad بحماية بيانات iOS. وعند تسجيل الدخول، تتزامن قائمتك وسجلك وخطة الإيقاف عبر اتصالات مشفّرة وتُحفظ مشفّرة. لا نبيع بياناتك أبدًا. راجع سياسة الخصوصية للتفاصيل."
                 }
               },
               "other": {
                 "stringUnit": {
                   "state": "translated",
-                  "value": "دون حساب، يبقى كل شيء على جهاز iPhone هذا بحماية بيانات iOS. وعند تسجيل الدخول، تتزامن قائمتك وسجلك وخطة الإيقاف عبر اتصالات مشفّرة وتُحفظ مشفّرة. لا نبيع بياناتك أبدًا. راجع سياسة الخصوصية للتفاصيل."
+                  "value": "دون حساب، يبقى كل شيء على هذا الـ iPhone بحماية بيانات iOS. وعند تسجيل الدخول، تتزامن قائمتك وسجلك وخطة الإيقاف عبر اتصالات مشفّرة وتُحفظ مشفّرة. لا نبيع بياناتك أبدًا. راجع سياسة الخصوصية للتفاصيل."
                 }
               }
             }
@@ -38247,40 +38179,6 @@
         }
       }
     },
-    "The free plan imports one screenshot at a time. Pausely Pro reads up to 10 screenshots in one batch.": {
-      "localizations": {
-        "ar": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "الخطة المجانية تستورد لقطة شاشة واحدة في كل مرة. Pausely Pro يقرأ حتى ١٠ لقطات دفعة واحدة."
-          }
-        },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Der kostenlose Plan importiert einen Screenshot auf einmal. Pausely Pro liest bis zu 10 Screenshots auf einmal."
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "El plan gratuito importa una captura a la vez. Pausely Pro lee hasta 10 capturas a la vez."
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Le forfait gratuit importe une capture à la fois. Pausely Pro lit jusqu’à 10 captures d’un coup."
-          }
-        },
-        "ja": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "無料プランは1枚ずつ読み込みます。Pausely Proは最大10枚をまとめて読み取れます。"
-          }
-        }
-      }
-    },
     "No price found": {
       "localizations": {
         "ar": {
@@ -38379,6 +38277,696 @@
           "stringUnit": {
             "state": "translated",
             "value": "無料プランは%lld件まで。Pausely Proならすべて管理できます。"
+          }
+        }
+      }
+    },
+    "%@ (not billed monthly)": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ (لا يُدفع شهريًا)"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ (nicht monatlich abgerechnet)"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ (no se cobra cada mes)"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ (pas facturé chaque mois)"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@（月額ではありません）"
+          }
+        }
+      }
+    },
+    "Charged every 4 weeks, counted as monthly": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "يُخصم كل ٤ أسابيع، ويُحسب شهريًا"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Alle 4 Wochen abgebucht, als monatlich gezählt"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Se cobra cada 4 semanas, contado como mensual"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Prélevé toutes les 4 semaines, compté comme mensuel"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "4週間ごとの請求・月額として計算"
+          }
+        }
+      }
+    },
+    "Choose which to track": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "اختر ما تتابعه"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Auswählen, was erfasst wird"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Elegir cuáles seguir"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Choisir ceux à suivre"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "管理するものを選ぶ"
+          }
+        }
+      }
+    },
+    "I don't know": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "لا أعرف"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Weiß ich nicht"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No lo sé"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Je ne sais pas"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "わからない"
+          }
+        }
+      }
+    },
+    "In the next 30 days": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "خلال الثلاثين يومًا القادمة"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "In den nächsten 30 Tagen"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "En los próximos 30 días"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dans les 30 prochains jours"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "今後30日以内"
+          }
+        }
+      }
+    },
+    "In the next 7 days": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "خلال الأيام السبعة القادمة"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "In den nächsten 7 Tagen"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "En los próximos 7 días"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dans les 7 prochains jours"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "今後7日以内"
+          }
+        }
+      }
+    },
+    "Kept for later: the free plan tracks %lld. These aren't in your totals or reminders.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "محفوظة لوقت لاحق: الخطة المجانية تتابع %lld. هذه ليست ضمن مجاميعك أو تذكيراتك."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Für später aufgehoben: Der kostenlose Plan erfasst %lld. Diese sind nicht in Ihren Summen oder Erinnerungen."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Guardadas para después: el plan gratuito sigue %lld. No están en tus totales ni en tus recordatorios."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Gardés pour plus tard : le forfait gratuit en suit %lld. Ils ne sont ni dans vos totaux ni dans vos rappels."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "保留中：無料プランは%lld件まで。これらは合計やリマインダーに含まれません。"
+          }
+        }
+      }
+    },
+    "Next charge": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "الخصم التالي"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nächste Abbuchung"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Próximo cargo"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Prochain prélèvement"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "次回の請求"
+          }
+        }
+      }
+    },
+    "Not in the plan: %@.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "خارج الخطة: %@."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nicht im Plan: %@."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fuera del plan: %@."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hors du plan : %@."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "プラン対象外：%@。"
+          }
+        }
+      }
+    },
+    "Nothing here says it repeats": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "لا شيء هنا يدل على أنه يتكرر"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nichts hier sagt, dass es sich wiederholt"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nada aquí indica que se repita"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Rien ici n’indique que cela se répète"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "繰り返しの請求とは書かれていません"
+          }
+        }
+      }
+    },
+    "Pausely counts what you avoid from its renewal day, which it didn't have, so nothing is counted for it.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "يحسب Pausely ما تتجنبه من يوم التجديد، ولم يكن معروفًا، لذلك لا يُحسب له شيء."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pausely zählt, was Sie vermeiden, ab dem Verlängerungstag. Den kannte es nicht, also wird dafür nichts gezählt."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pausely cuenta lo que evitas desde el día de renovación, que no tenía, así que no se cuenta nada."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pausely compte ce que vous évitez à partir du jour de renouvellement, qu’il n’avait pas : rien n’est donc compté."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pauselyは更新日から避けた請求を数えますが、更新日が不明だったため、何も数えられません。"
+          }
+        }
+      }
+    },
+    "Save and mark cancelled": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "حفظ وتعليمه كمُلغى"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Speichern und als gekündigt markieren"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Guardar y marcar como cancelada"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Enregistrer et marquer comme résilié"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "保存して解約済みにする"
+          }
+        }
+      }
+    },
+    "Subscriptions you add stay on this iPhone, like any you type in.": {
+      "localizations": {
+        "en": {
+          "variations": {
+            "device": {
+              "ipad": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Subscriptions you add stay on this iPad, like any you type in."
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Subscriptions you add stay on this iPhone, like any you type in."
+                }
+              }
+            }
+          }
+        },
+        "ar": {
+          "variations": {
+            "device": {
+              "ipad": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "تبقى الاشتراكات التي تضيفها على هذا الـ iPad، مثل أي اشتراك تكتبه بنفسك."
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "تبقى الاشتراكات التي تضيفها على هذا الـ iPhone، مثل أي اشتراك تكتبه بنفسك."
+                }
+              }
+            }
+          }
+        },
+        "de": {
+          "variations": {
+            "device": {
+              "ipad": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Abos, die Sie hinzufügen, bleiben auf diesem iPad, wie alle, die Sie selbst eingeben."
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Abos, die Sie hinzufügen, bleiben auf diesem iPhone, wie alle, die Sie selbst eingeben."
+                }
+              }
+            }
+          }
+        },
+        "es": {
+          "variations": {
+            "device": {
+              "ipad": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Las suscripciones que añadas se quedan en este iPad, como las que escribes tú."
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Las suscripciones que añadas se quedan en este iPhone, como las que escribes tú."
+                }
+              }
+            }
+          }
+        },
+        "fr": {
+          "variations": {
+            "device": {
+              "ipad": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Les abonnements que vous ajoutez restent sur cet iPad, comme ceux que vous saisissez."
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Les abonnements que vous ajoutez restent sur cet iPhone, comme ceux que vous saisissez."
+                }
+              }
+            }
+          }
+        },
+        "ja": {
+          "variations": {
+            "device": {
+              "ipad": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "追加したサブスクは、手入力したものと同じくこのiPadに保存されます。"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "追加したサブスクは、手入力したものと同じくこのiPhoneに保存されます。"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "Untick one to choose another.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ألغِ تحديد واحد لتختار غيره."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Heben Sie eine Auswahl auf, um eine andere zu wählen."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Desmarca una para elegir otra."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Décochez-en un pour en choisir un autre."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "別のものを選ぶには、1つ選択を外してください。"
+          }
+        }
+      }
+    },
+    "Untick one to choose this instead": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ألغِ تحديد واحد لتختار هذا بدلًا منه"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Heben Sie eine Auswahl auf, um stattdessen diese zu wählen"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Desmarca una para elegir esta en su lugar"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Décochez-en un pour choisir celui-ci à la place"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "代わりにこれを選ぶには、1つ選択を外してください"
+          }
+        }
+      }
+    },
+    "When would %@ have charged next?": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "متى كان %@ سيخصم في المرة القادمة؟"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Wann hätte %@ als Nächstes abgebucht?"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "¿Cuándo habría cobrado %@ la próxima vez?"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Quand %@ aurait-il prélevé la prochaine fois ?"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@の次回の請求日はいつでしたか？"
+          }
+        }
+      }
+    },
+    "Your Savings Receipt counts the charges you avoid from that day. It's on your bank statement or in the service's account.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "يحسب إيصال التوفير الخصومات التي تتجنبها بدءًا من ذلك اليوم. تجد التاريخ في كشف حسابك البنكي أو في حسابك لدى الخدمة."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ihr Sparbeleg zählt die vermiedenen Abbuchungen ab diesem Tag. Das Datum steht auf Ihrem Kontoauszug oder im Konto beim Dienst."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tu Recibo de ahorro cuenta los cargos que evitas desde ese día. La fecha está en tu extracto bancario o en tu cuenta del servicio."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Votre Reçu d'économies compte les prélèvements évités à partir de ce jour. La date figure sur votre relevé bancaire ou dans votre compte chez le service."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "節約レシートは、その日から避けた請求を数えます。日付は銀行の明細やサービスのアカウントで確認できます。"
+          }
+        }
+      }
+    },
+    "The free plan imports one screenshot at a time. Pausely Pro reads up to %lld screenshots in one batch.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "الخطة المجانية تستورد لقطة شاشة واحدة في كل مرة. Pausely Pro يقرأ حتى %lld لقطات دفعة واحدة."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Der kostenlose Plan importiert einen Screenshot auf einmal. Pausely Pro liest bis zu %lld Screenshots auf einmal."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "El plan gratuito importa una captura a la vez. Pausely Pro lee hasta %lld capturas a la vez."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Le forfait gratuit importe une capture à la fois. Pausely Pro lit jusqu’à %lld captures d’un coup."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "無料プランは1枚ずつ読み込みます。Pausely Proは最大%lld枚をまとめて読み取れます。"
           }
         }
       }

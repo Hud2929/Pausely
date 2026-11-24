@@ -30,6 +30,8 @@ enum ScreenshotParser {
         var trialEndsAt: Date?
         var isCancelled: Bool
         var paymentMethod: String? = nil
+        /// Why the row may not be what it seems; such a row is shown but not ticked.
+        var doubt: Doubt? = nil
         /// True when the subscription is explicitly listed in a free trial.
         var isTrial: Bool { trialEndsAt != nil }
 
@@ -47,6 +49,15 @@ enum ScreenshotParser {
                 paymentMethod: paymentMethod
             )
         }
+    }
+
+    /// Why a row read from a screenshot is not taken as a subscription without the person's tick.
+    enum Doubt: Equatable, Sendable {
+        /// Outside a list of subscriptions or recurring payments, a charge with nothing saying it repeats
+        /// (a bank's transactions listed Shell, REWE and Amazon as subscriptions, the rating of 2026-11-23).
+        case mayNotRepeat
+        /// "Every 4 weeks" is thirteen charges a year, which no billing period here holds: kept as monthly.
+        case everyFourWeeks
     }
 
     /// One horizontal visual line formed by clustering spatially aligned OCR boxes.
@@ -165,6 +176,8 @@ enum ScreenshotParser {
             return appleScreenMarkers.contains(l) || isActiveHeader(l) || isInactiveHeader(l)
         }
         let detectedPaymentMethod: String? = isAppleSubscriptionsScreen ? "Apple" : nil
+        // Every row of such a list repeats; elsewhere (a bank's transactions) only what says so does.
+        let listRepeats = isAppleSubscriptionsScreen || lines.contains { recurringListHeaders.contains($0.text.lowercased().trimmingCharacters(in: .whitespaces)) }
         var items: [DetectedItem] = []
 
         // Accumulator for multi-line Apple Settings subscription cards.
@@ -178,6 +191,9 @@ enum ScreenshotParser {
             var trialEndsAt: Date?
             var isCancelled: Bool
             var lastMinY: CGFloat
+            /// Known to repeat: a subscription service, a list of them, or a line saying how often.
+            var repeats: Bool
+            var everyFourWeeks = false
         }
 
         var current: PendingCard?
@@ -198,7 +214,8 @@ enum ScreenshotParser {
                 renewalDate: card.renewalDate,
                 trialEndsAt: card.trialEndsAt,
                 isCancelled: card.isCancelled,
-                paymentMethod: detectedPaymentMethod
+                paymentMethod: detectedPaymentMethod,
+                doubt: card.everyFourWeeks ? .everyFourWeeks : (card.repeats || card.trialEndsAt != nil ? nil : .mayNotRepeat)
             )
             merge(item, into: &items)
         }
@@ -225,6 +242,14 @@ enum ScreenshotParser {
             let dateInfo = extractDateInfo(in: text, now: now, calendar: calendar)
             let isExpiredLine = containsExpiryWord(lower)
             let isTrialLine = containsTrialWord(lower)
+            let fourWeeks = isEveryFourWeeks(lower)
+
+            // Money coming in is never a subscription: a bank list showed "Salary +€3,200.00" as one,
+            // ticked (the rating of 2026-11-23).
+            if price != nil, isIncomeOrTransfer(lower) {
+                flushCurrent()
+                continue
+            }
 
             // 1. Single-line bank/card or compact row containing BOTH a name AND a price (e.g. "Netflix  $19.99/mo").
             // Kept open in `current` and emitted by `flushCurrent()` so a tight following subline
@@ -242,19 +267,23 @@ enum ScreenshotParser {
                     renewalDate: dateInfo.date,
                     trialEndsAt: isTrialLine ? dateInfo.date : nil,
                     isCancelled: cancelled,
-                    lastMinY: line.minY
+                    lastMinY: line.minY,
+                    repeats: listRepeats || resolved.isSubscription || freq != nil || fourWeeks || dateInfo.hasKeyword,
+                    everyFourWeeks: fourWeeks
                 )
                 continue
             }
 
             // 2. Detail line (price-only, renewal-date-only, trial-only, or expiry-only) attaches to open card.
-            let isDetailOnly = price != nil || dateInfo.hasKeyword || isExpiredLine || isTrialLine || freq != nil
+            let isDetailOnly = price != nil || dateInfo.hasKeyword || isExpiredLine || isTrialLine || freq != nil || fourWeeks
             if isDetailOnly, var card = current, (card.lastMinY - line.maxY) <= 0.085 {
                 if let price, card.amount == nil {
                     card.amount = price.amount
                     card.currency = price.currency
                 }
-                if let freq { card.frequency = freq }
+                if let freq { card.frequency = freq; card.repeats = true }
+                if fourWeeks { card.everyFourWeeks = true; card.repeats = true }
+                if dateInfo.hasKeyword { card.repeats = true }
                 if let date = dateInfo.date {
                     if isTrialLine {
                         card.trialEndsAt = date
@@ -295,7 +324,9 @@ enum ScreenshotParser {
                         renewalDate: dateInfo.date,
                         trialEndsAt: isTrialLine ? dateInfo.date : nil,
                         isCancelled: section == .inactive || isExpiredLine,
-                        lastMinY: line.minY
+                        lastMinY: line.minY,
+                        repeats: listRepeats || resolved.isSubscription || freq != nil || fourWeeks || dateInfo.hasKeyword,
+                        everyFourWeeks: fourWeeks
                     )
                 }
             }
@@ -341,6 +372,8 @@ enum ScreenshotParser {
             if existing.paymentMethod == nil, let method = incoming.paymentMethod {
                 existing.paymentMethod = method
             }
+            // Seen once where it plainly repeats, it repeats.
+            if existing.doubt == .mayNotRepeat, incoming.doubt != .mayNotRepeat { existing.doubt = incoming.doubt }
             if existing.category == SubscriptionCategory.other.rawValue,
                incoming.category != SubscriptionCategory.other.rawValue {
                 existing.category = incoming.category
@@ -521,19 +554,46 @@ enum ScreenshotParser {
 
     // MARK: - Service Name Cleaning & Classification
 
-    private static func resolveService(_ raw: String, catalog: MerchantCatalog) -> (name: String, category: String, isKnown: Bool) {
+    /// The service a name stands for. `isSubscription` is false for a known shop that also sells one-off
+    /// things (Amazon): its name alone doesn't say a charge repeats.
+    private static func resolveService(_ raw: String, catalog: MerchantCatalog)
+        -> (name: String, category: String, isKnown: Bool, isSubscription: Bool) {
         if let match = catalog.resolve(hint: raw, senderName: raw, senderDomain: ""), match.isKnown {
-            return (match.displayName, match.category ?? SubscriptionCategory.other.rawValue, true)
+            return (match.displayName, match.category ?? SubscriptionCategory.other.rawValue, true, match.kind != .mixedCommerce)
         }
         if let service = CancelHelp.service(named: raw) {
             let cat = CatalogData.entries.first { $0.name.caseInsensitiveCompare(service.name) == .orderedSame }?.category.rawValue
                 ?? SubscriptionCategory.other.rawValue
-            return (service.name, cat, true)
+            return (service.name, cat, true, true)
         }
         if let entry = CatalogData.entries.first(where: { ServiceName.same($0.name, raw) }) {
-            return (entry.name, entry.category.rawValue, true)
+            return (entry.name, entry.category.rawValue, true, true)
         }
-        return (raw, SubscriptionCategory.other.rawValue, false)
+        return (raw, SubscriptionCategory.other.rawValue, false, false)
+    }
+
+    /// Headers of a list whose every row repeats: a bank's or card's recurring payments, standing orders.
+    private static let recurringListHeaders: Set<String> = [
+        "recurring", "recurring payments", "recurring charges", "upcoming bills", "bills & subscriptions",
+        "subscriptions & bills", "standing orders", "direct debits", "scheduled payments",
+        "daueraufträge", "lastschriften", "abonnements", "prélèvements", "pagos recurrentes", "suscripciones",
+        "定期支払い", "サブスクリプション", "المدفوعات المتكررة", "الاشتراكات"
+    ]
+
+    /// Money coming in, never a subscription: a "+" before the amount, or a word that says so.
+    static func isIncomeOrTransfer(_ lower: String) -> Bool {
+        // The "+" stands on its own: in "Disney+ $159.99" it is part of a name.
+        if lower.range(of: #"(?<![\p{L}\p{N}])\+\s*(?:[€$£¥]|[a-z]{3}\s)?\s*\d"#, options: .regularExpression) != nil { return true }
+        let words = ["salary", "payroll", "paycheck", "deposit", "refund", "transfer", "interest", "cashback", "reimbursement",
+                     "gehalt", "lohn", "überweisung", "erstattung", "salaire", "virement", "remboursement",
+                     "nómina", "salario", "transferencia", "reembolso", "給与", "振込", "返金", "راتب", "تحويل", "استرداد"]
+        return words.contains { lower.contains($0) }
+    }
+
+    /// "Every 4 weeks" and its translations.
+    static func isEveryFourWeeks(_ lower: String) -> Bool {
+        ["every 4 weeks", "every four weeks", "4-weekly", "four-weekly", "/4wk", "alle 4 wochen", "toutes les 4 semaines",
+         "cada 4 semanas", "4週間ごと", "كل 4 أسابيع"].contains { lower.contains($0) }
     }
 
     private static func cleanCandidateServiceName(_ raw: String) -> String? {
@@ -614,6 +674,11 @@ enum ScreenshotParser {
     private static func isPlausibleTitle(_ name: String) -> Bool {
         let lower = name.lowercased()
         if startsWithDateOrBillingKeyword(lower) { return false }
+        // A transaction's own line ("1 Nov 2026 • Transfer") is not a name (the rating of 2026-11-23).
+        if name.contains("•") || name.contains(" · ") { return false }
+        let months = "jan|feb|mar|apr|may|jun|jul|aug|sep|sept|oct|nov|dec"
+        if lower.range(of: "^\\d{1,2}\\.?\\s*(\(months))\\b", options: .regularExpression) != nil { return false }
+        if lower.range(of: "^(\(months))[a-z]*\\.?\\s+\\d{1,2}\\b", options: .regularExpression) != nil { return false }
         let words = name.split(whereSeparator: \.isWhitespace)
         guard (1...5).contains(words.count) else { return false }
         // Reject full sentences (ending with period or containing 6+ words).

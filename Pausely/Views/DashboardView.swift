@@ -79,7 +79,7 @@ struct DashboardView: View {
             guard pendingPaywallFromPicker else { return }
             pendingPaywallFromPicker = false
             showingPaywall = true
-        }) { FreeLimitPickerSheet(store: store, currencyManager: currencyManager, onSeePro: { pendingPaywallFromPicker = true }) }
+        }) { FreeLimitPickerSheet(store: store, currencyManager: currencyManager, onSeePro: { pendingPaywallFromPicker = true }).presentationSizing(.page) }
         .onAppear {
             ReviewPromptManager.shared.askAfterMoneyKept()
         }
@@ -218,7 +218,9 @@ struct DashboardView: View {
 
     @ViewBuilder private var attention: some View {
         let pending = VerdictCenter.shared.pendingDecisions(rotating: pausePlanStore.activePlan)
-        let waiting = TallyImporter.waitingLines()
+        // Read here so Home is drawn again when what waits changes: declared and never read, it redrew
+        // nothing, and the "Choose" row appeared only after a relaunch (the ratings of 2026-11-23).
+        let waiting = waitingVersion >= 0 ? TallyImporter.waitingLines() : []
         let undated = Horizon.undated(store.subscriptions)
         let showReminderAsk = !NotificationManager.shared.isAuthorized && !DemoSavings.isScreenshotRun
 

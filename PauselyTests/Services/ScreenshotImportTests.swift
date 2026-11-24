@@ -183,4 +183,50 @@ final class ScreenshotImportTests: XCTestCase {
         XCTAssertEqual(items[0].name, "Netflix")
         XCTAssertEqual(items[0].isCancelled, true, "following Expired subline must mark the single-line card cancelled")
     }
+
+    // MARK: - A bank's transactions (the rating of 2026-11-23)
+
+    /// A bank list mixes income, one-off purchases and subscriptions. Income and a transaction's own line are
+    /// never rows; a purchase with nothing saying it repeats is shown but not taken as a subscription; a known
+    /// subscription service is; "every 4 weeks" says how it is counted. A "+" in a name is not income.
+    func testABankListKeepsOnlyWhatRepeats() {
+        let now = day(2026, 11, 23)
+        let lines = [
+            "Transactions",
+            "Salary  +€3,200.00",
+            "1 Nov 2026 • Transfer",
+            "Netflix  €13.99",
+            "Shell  €45.20",
+            "REWE  €62.18",
+            "Amazon.de  €23.99",
+            "Disney+  €109.90",
+            "The New York Times  €4.00",
+            "Every 4 weeks"
+        ]
+        let items = ScreenshotParser.parse(lines: lines, defaultCurrency: "EUR", now: now, calendar: calendar)
+        let byName = Dictionary(items.map { ($0.name.lowercased(), $0) }, uniquingKeysWith: { a, _ in a })
+
+        XCTAssertNil(items.first { $0.name.lowercased().contains("salary") }, "income is never a subscription")
+        XCTAssertNil(items.first { $0.name.contains("Nov") || $0.name.lowercased().contains("transfer") }, "a transaction line is not a name")
+        XCTAssertNil(byName["netflix"]?.doubt, "a known subscription service repeats")
+        XCTAssertNotNil(byName["disney+"], "the plus in Disney+ is part of its name")
+        XCTAssertNil(byName["disney+"]?.doubt)
+        XCTAssertEqual(byName["shell"]?.doubt, .mayNotRepeat)
+        XCTAssertEqual(byName["rewe"]?.doubt, .mayNotRepeat)
+        XCTAssertEqual(items.first { $0.name.lowercased().hasPrefix("amazon") }?.doubt, .mayNotRepeat, "a shop's name doesn't say it repeats")
+        XCTAssertEqual(items.first { $0.name.lowercased().contains("new york times") }?.doubt, .everyFourWeeks)
+
+        XCTAssertTrue(ScreenshotParser.isIncomeOrTransfer("salary  +€3,200.00"))
+        XCTAssertTrue(ScreenshotParser.isIncomeOrTransfer("refund from shop  €12.00"))
+        XCTAssertFalse(ScreenshotParser.isIncomeOrTransfer("disney+  $159.99"))
+        XCTAssertFalse(ScreenshotParser.isIncomeOrTransfer("apple tv+  $9.99"))
+    }
+
+    /// Under a header that says every row repeats ("Recurring payments"), an unknown name is still a subscription.
+    func testARecurringListTrustsItsRows() {
+        let items = ScreenshotParser.parse(lines: ["Recurring payments", "Corner Gym  $40.00", "Next payment Dec 1"],
+                                           defaultCurrency: "USD", now: day(2026, 11, 23), calendar: calendar)
+        XCTAssertEqual(items.first?.name, "Corner Gym")
+        XCTAssertNil(items.first?.doubt)
+    }
 }

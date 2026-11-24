@@ -244,4 +244,41 @@ final class VerdictAndSavingsTests: XCTestCase {
         XCTAssertEqual(lines[0].savedSoFar, 40)
         XCTAssertEqual(lines[0].endedOn.map(ymd), "2026-12-31")
     }
+
+    // MARK: - Nothing counted is nothing shown (the rating of 2026-11-23)
+
+    /// A cancellation with no renewal day has nothing to count: no line, not "0 of 0" and "$0.00 you won't pay".
+    func testACancellationWithNoRenewalDayHasNoLine() {
+        let audible = sub("Audible", amount: Decimal(string: "14.95")!, anchor: nil)
+        XCTAssertTrue(SavingsLedger.lines(from: [event(.cancelled, audible, on: day(2026, 11, 23))], now: day(2026, 12, 30), calendar: cal).isEmpty)
+    }
+
+    /// Cancelled by mistake and taken back before any charge it avoided came due: no line is left behind, and
+    /// starting again keeps the day it renewed on instead of restarting today.
+    func testACancellationTakenBackBeforeAnyChargeLeavesNothing() {
+        let netflix = sub(anchor: day(2026, 12, 5))
+        let cancel = event(.cancelled, netflix, on: day(2026, 11, 23, hour: 10))
+        let back = event(.reactivated, netflix, on: day(2026, 11, 23, hour: 11))
+        XCTAssertTrue(SavingsLedger.lines(from: [cancel, back], now: day(2026, 11, 24), calendar: cal).isEmpty)
+        XCTAssertTrue(SubscriptionStore.isUndo(of: cancel, on: day(2026, 11, 30), calendar: cal), "before Dec 5: an undo")
+        XCTAssertFalse(SubscriptionStore.isUndo(of: cancel, on: day(2026, 12, 6), calendar: cal), "after Dec 5 it charged: a restart")
+        XCTAssertEqual(cancel.anchorDate.map(ymd), ymd(day(2026, 12, 5)), "the day it goes back to")
+
+        // Back after a charge it avoided: that charge was kept, and the line stays.
+        let later = event(.reactivated, netflix, on: day(2026, 12, 20))
+        XCTAssertEqual(SavingsLedger.lines(from: [cancel, later], now: day(2026, 12, 21), calendar: cal).first?.avoidedCharges.count, 1)
+
+        let undated = event(.cancelled, sub(anchor: nil), on: day(2026, 11, 23, hour: 9))
+        XCTAssertTrue(SubscriptionStore.isUndo(of: undated, on: day(2026, 11, 23, hour: 18), calendar: cal), "the same day")
+        XCTAssertFalse(SubscriptionStore.isUndo(of: undated, on: day(2026, 11, 24), calendar: cal))
+    }
+
+    /// A shared plan's totals come from the exact share: $17.99 between two is $107.94 a year, not 12 × $9.00.
+    func testASharedPlansTotalsUseTheExactShare() {
+        var netflix = TestFactories.makeSubscription(name: "Netflix", amount: Decimal(string: "17.99")!, billingFrequency: .monthly)
+        netflix.splitCount = 2
+        XCTAssertEqual(netflix.annualCost, Decimal(string: "107.94"))
+        XCTAssertEqual(netflix.effectiveAmount, Decimal(string: "9.00"), "one charge's share is shown rounded")
+        XCTAssertEqual(MoneyFormat.string(netflix.monthlyCost, "USD", locale: Locale(identifier: "en_US")), "$9.00")
+    }
 }

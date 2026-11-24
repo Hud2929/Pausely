@@ -101,6 +101,16 @@ struct PausePlanView: View {
                     .font(.subheadline)
                     .foregroundStyle(Color.inkTextMuted)
                     .fixedSize(horizontal: false, vertical: true)
+                // Which of theirs can't rotate, and so why this asks for more: Insights showed three video
+                // services side by side while this asked for two (the rating of 2026-11-23).
+                let video = store.subscriptions.charging.filter { OverlapDetector.cluster(for: $0) == .videoStreaming && !PausePlanSchedule.isEligible($0) }
+                if !video.isEmpty {
+                    let named = video.map { $0.billingFrequency == .monthly ? $0.name : L10n.string("\($0.name) (not billed monthly)") }
+                    Text("Not in the plan: \(named.formatted(.list(type: .and).locale(L10n.locale))).")
+                        .font(.subheadline)
+                        .foregroundStyle(Color.inkTextMuted)
+                        .fixedSize(horizontal: false, vertical: true)
+                }
             }
             .frame(maxWidth: .infinity, alignment: .leading)
         } else {

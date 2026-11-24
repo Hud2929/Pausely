@@ -200,7 +200,7 @@ final class ScreenRulesTests: XCTestCase {
             XCTAssertEqual(fields, guarded, "\(file.lastPathComponent): every wrapping field uses returnMovesOn")
             wrapping += fields
         }
-        XCTAssertEqual(wrapping, 2, "The two forms that take a name")
+        XCTAssertEqual(wrapping, 3, "The two forms that take a name, and a note")
 
         let controls = try String(contentsOf: sources.appendingPathComponent("DesignSystem/InkControls.swift"), encoding: .utf8)
         let function = try XCTUnwrap(controls.range(of: "func returnMovesOn"))

@@ -109,29 +109,35 @@ struct Subscription: Identifiable, Codable, Equatable {
         return formatCurrency(effectiveAmount)
     }
 
+    /// The person's exact share of one charge, unrounded: what totals are worked out from. Rounded first, a
+    /// $17.99 plan split two ways came to $108.00 a year instead of $107.94 (the rating of 2026-11-23).
+    var exactShare: Decimal {
+        amount / Decimal(max(1, splitCount))
+    }
+
     /// What it costs over a year: the person's share times the number of charges in a year (a monthly plan
     /// charges 12 times). One definition, so every screen shows the same yearly number.
     var annualCost: Decimal {
-        effectiveAmount * ProvenSubscription.periodsPerYear(billingFrequency)
+        exactShare * ProvenSubscription.periodsPerYear(billingFrequency)
     }
-    
+
     var monthlyCost: Decimal {
         switch billingFrequency {
         case .weekly:
-            return effectiveAmount * Decimal(52) / 12
+            return exactShare * Decimal(52) / 12
         case .biweekly:
-            return effectiveAmount * Decimal(26) / 12
+            return exactShare * Decimal(26) / 12
         case .monthly:
-            return effectiveAmount
+            return exactShare
         case .quarterly:
-            return effectiveAmount / 3
+            return exactShare / 3
         case .semiannual:
-            return effectiveAmount / 6
+            return exactShare / 6
         case .yearly:
-            return effectiveAmount / 12
+            return exactShare / 12
         }
     }
-    
+
     /// Whether this subscription keeps charging on its own. Only these roll forward to the next cycle.
     var renewsAutomatically: Bool {
         status == .active || status == .trial

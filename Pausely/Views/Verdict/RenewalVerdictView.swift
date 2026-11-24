@@ -158,8 +158,11 @@ struct RenewalVerdictView: View {
                         .fixedSize(horizontal: false, vertical: true)
                 }
             }
+            // Drawn smaller before a name is broken: at the largest size Arabic split "Paramoun" from "t+؟"
+            // and English hyphenated "Para-mount+?" (the reach rating of 2026-11-23).
             Text("Keep \(sub.name)?")
-                .font(.question(.largeTitle, weight: .bold))
+                .wholeWords(L10n.string("Keep \(sub.name)?"), font: .question(.largeTitle, weight: .bold),
+                            measuredIn: .largeTitle, weight: .bold, serif: true)
                 .fixedSize(horizontal: false, vertical: true)
                 .accessibilityAddTraits(.isHeader)
             PricePerPeriod(amount: MoneyFormat.string(sub.effectiveAmount, sub.currency), frequency: sub.billingFrequency,
@@ -478,7 +481,9 @@ struct CancelledSlip: View {
     let subscription: Subscription
 
     var body: some View {
-        let line = SavingsSummary.current().lines.last { $0.subscriptionId == subscription.id }
+        // A line with no charges to count (no renewal day was known) says so: "$0.00 you won't pay" was
+        // celebrated for a $14.95 subscription (the rating of 2026-11-23).
+        let line = SavingsSummary.current().lines.last { $0.subscriptionId == subscription.id && !$0.avoidedCharges.isEmpty }
         OutcomeSlip(name: subscription.name, category: subscription.category, stamp: L10n.string("Cancelled"), torn: true) {
             VStack(alignment: .leading, spacing: 10) {
                 if let line {
@@ -487,7 +492,7 @@ struct CancelledSlip: View {
                         .foregroundStyle(Color.paperKept)
                 }
                 Text(line.map { L10n.string("That's \(MoneyFormat.string($0.onTrack, $0.currency)) you won't pay over the next 12 months. It's on your Savings Receipt.") }
-                     ?? L10n.string("It's on your Savings Receipt."))
+                     ?? L10n.string("Pausely counts what you avoid from its renewal day, which it didn't have, so nothing is counted for it."))
                     .font(.proof(.footnote))
                     .fixedSize(horizontal: false, vertical: true)
             }

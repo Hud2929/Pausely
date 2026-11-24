@@ -21,7 +21,11 @@ enum DayText {
     /// `weekday` puts the day of the week in front ("Thu, Nov 28").
     static func date(_ day: Date, locale: Locale, now: Date = Date(), calendar: Calendar = .billing,
                      weekday: Bool = false) -> String {
-        var style = Date.FormatStyle.dateTime.month(.abbreviated).day()
+        // Arabic months, and those of a calendar other than the Gregorian, are written in full: their short forms
+        // read "جما٢" and "ذو. ق." for Hijri months on iOS 18 (the reach rating of 2026-11-23). In Arabic the
+        // Gregorian ones are the same either way.
+        let wide = locale.language.languageCode?.identifier == "ar" || locale.calendar.identifier != .gregorian
+        var style = Date.FormatStyle.dateTime.month(wide ? .wide : .abbreviated).day()
         if weekday { style = style.weekday(.abbreviated) }
         if calendar.component(.year, from: day) != calendar.component(.year, from: now) { style = style.year() }
         return day.formatted(style.locale(locale))
