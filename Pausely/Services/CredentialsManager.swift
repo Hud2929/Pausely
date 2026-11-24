@@ -4,10 +4,10 @@ import Foundation
 enum CredentialKey: String {
     case supabaseURL = "SUPABASE_URL"
     case supabaseAnonKey = "SUPABASE_ANON_KEY"
-    case privacyAPIKey = "PRIVACY_API_KEY"
 }
 
-final class CredentialsManager {
+/// Stateless: it only reads the app's Info.plist and the environment.
+final class CredentialsManager: Sendable {
     static let shared = CredentialsManager()
     private init() {}
 

@@ -1,169 +1,83 @@
 import Foundation
-import os.log
+import WidgetKit
 
-/// Shares subscription summary data to App Group UserDefaults for widget and Live Activity consumption.
+/// Publishes what the widgets show (`WidgetFeed`) to the settings the app shares with them, and asks
+/// them to draw again, so a change in the app is on the Home Screen at once.
 @MainActor
 final class WidgetDataStore {
     static let shared = WidgetDataStore()
 
-    private let suiteName = "group.com.pausely.app.shared"
     private let injectedDefaults: UserDefaults?
+    private let reloadWidgets: () -> Void
 
     private var defaults: UserDefaults? {
-        injectedDefaults ?? UserDefaults(suiteName: suiteName)
+        injectedDefaults ?? UserDefaults(suiteName: WidgetFeed.suiteName)
     }
 
-    private init(defaults: UserDefaults? = nil) {
+    /// The app uses `shared`; a test passes its own settings and its own reload.
+    init(defaults: UserDefaults? = nil,
+         reloadWidgets: @escaping () -> Void = { WidgetCenter.shared.reloadAllTimelines() }) {
         self.injectedDefaults = defaults
+        self.reloadWidgets = reloadWidgets
     }
 
-    /// Creates a testable instance with injected UserDefaults.
-    static func forTesting(defaults: UserDefaults) -> WidgetDataStore {
-        WidgetDataStore(defaults: defaults)
+    func publish(subscriptions: [Subscription], now: Date = Date()) {
+        Self.feed(for: subscriptions, now: now).write(to: defaults)
+        reloadWidgets()
     }
 
-    // MARK: - Publish
+    // MARK: - The feed
 
-    func publish(subscriptions: [Subscription]) {
-        guard let defaults else {
-            os_log("WidgetDataStore: App Group UserDefaults not available", log: .default, type: .error)
-            return
-        }
+    /// The feed for a list: every charging subscription that has a date, with the days it charges on
+    /// for about a year ahead, and the totals as text in the display currency.
+    static func feed(for subscriptions: [Subscription], now: Date, calendar: Calendar = .billing,
+                     currency: String = CurrencyManager.shared.selectedCurrency,
+                     rates: CurrencyRates = CurrencyManager.shared.rates,
+                     language: String? = L10n.chosenLanguage) -> WidgetFeed {
+        let charging = subscriptions.charging
+        let today = calendar.startOfDay(for: now)
 
-        let active = subscriptions.filter { $0.status == .active }
-        // Totals in the display currency, every subscription converted from its own currency.
-        let displayCurrency = CurrencyManager.shared.selectedCurrency
-        let monthlyTotal = active.monthlyTotal(in: displayCurrency)
-        let monthlySpend = NSDecimalNumber(decimal: monthlyTotal).doubleValue
-        let upcoming = active.filter { sub in
-            guard let next = sub.calculatedNextBillingDate else { return false }
-            return next <= Calendar.current.date(byAdding: .day, value: 7, to: Date())!
-        }
-
-        defaults.set(monthlySpend, forKey: "widget_monthlySpend")
-        defaults.set(active.count, forKey: "widget_activeCount")
-        defaults.set(upcoming.count, forKey: "widget_upcomingCount")
-        defaults.set(displayCurrency, forKey: "widget_currencyCode")
-        // The widget shows these exactly as written; it never formats money itself.
-        defaults.set(MoneyFormat.string(monthlyTotal, displayCurrency), forKey: "widget_monthlySpendText")
-        defaults.set(MoneyFormat.string(monthlyTotal, displayCurrency, wholeUnits: true), forKey: "widget_monthlySpendWholeText")
-        defaults.set(MoneyFormat.string(monthlyTotal * 12, displayCurrency, wholeUnits: true), forKey: "widget_yearlySpendWholeText")
-
-        let insight = generateInsight(for: active, monthlyTotal: monthlyTotal, currency: displayCurrency)
-        defaults.set(insight, forKey: "widget_topInsight")
-
-        // Publish upcoming renewal details for Live Activities
-        if let firstUpcoming = upcoming.first {
-            defaults.set(firstUpcoming.name, forKey: "liveActivity_subscriptionName")
-            defaults.set(firstUpcoming.nextBillingDate?.timeIntervalSince1970 ?? 0, forKey: "liveActivity_renewalDate")
-            defaults.set(NSDecimalNumber(decimal: firstUpcoming.amount).doubleValue, forKey: "liveActivity_amount")
-            defaults.set(firstUpcoming.chargeText, forKey: "liveActivity_amountText")
-            defaults.set(firstUpcoming.billingFrequency.displayName, forKey: "liveActivity_frequency")
-        } else if let firstActive = active.first {
-            defaults.set(firstActive.name, forKey: "liveActivity_subscriptionName")
-            defaults.set(firstActive.nextBillingDate?.timeIntervalSince1970 ?? 0, forKey: "liveActivity_renewalDate")
-            defaults.set(NSDecimalNumber(decimal: firstActive.amount).doubleValue, forKey: "liveActivity_amount")
-            defaults.set(firstActive.chargeText, forKey: "liveActivity_amountText")
-            defaults.set(firstActive.billingFrequency.displayName, forKey: "liveActivity_frequency")
-        }
-
-        // Publish trial subscriptions sorted by urgency
-        let trialInfos = subscriptions
-            .filter { $0.status == .trial }
-            .compactMap { sub -> WidgetTrialInfo? in
-                guard let trialEnd = sub.trialEndsAt else { return nil }
-                return WidgetTrialInfo(
-                    id: sub.id.uuidString,
-                    name: sub.name,
-                    trialEndsAt: trialEnd,
-                    monthlyAmount: Double(truncating: sub.monthlyCost as NSNumber),
-                    currencyCode: sub.currency,
-                    billingFrequency: sub.billingFrequency.displayName,
-                    amountText: sub.chargeText
-                )
+        let charges: [WidgetFeed.Charge] = charging.compactMap { sub in
+            // A free trial's end comes first: that is the day the first charge is taken.
+            let trialEnd = sub.status == .trial
+                ? sub.trialEndsAt.flatMap { calendar.startOfDay(for: $0) >= today ? $0 : nil }
+                : nil
+            var days = trialEnd.map { [calendar.dayStamp($0)] } ?? []
+            if let anchor = sub.nextBillingDate {
+                // After a trial, the renewals from the day after it ends (its end is the first charge).
+                let from = trialEnd.flatMap { calendar.date(byAdding: .day, value: 1, to: $0) } ?? now
+                days += RenewalSchedule.upcomingRenewals(anchor: anchor, frequency: sub.billingFrequency, onOrAfter: from,
+                                                         count: cyclesAhead(sub.billingFrequency), calendar: calendar)
+                    .map(calendar.dayStamp)
             }
-            .sorted { $0.trialEndsAt < $1.trialEndsAt }
-        if let data = try? JSONEncoder().encode(trialInfos) {
-            defaults.set(data, forKey: "widget_trials")
+            guard !days.isEmpty else { return nil }
+            return WidgetFeed.Charge(id: sub.id, name: sub.name, amountText: sub.chargeText, days: days,
+                                     startsWithTrialEnd: trialEnd != nil)
         }
 
-        defaults.synchronize()
+        var feed = WidgetFeed()
+        feed.charges = charges
+        feed.hasSubscriptions = !subscriptions.isEmpty
+        feed.language = language
+        if !charging.isEmpty {
+            let monthly = charging.monthlyTotal(in: currency, rates: rates)
+            let converted = charging.isConverted(to: currency)
+            feed.monthlyText = MoneyFormat.total(monthly, currency, converted: converted)
+            feed.yearlyText = MoneyFormat.total(monthly * 12, currency, converted: converted, wholeUnits: true)
+        }
+        return feed
     }
 
-    // MARK: - Read (used by widget extension)
-
-    func readSummary() -> WidgetSummary {
-        guard let defaults else {
-            return WidgetSummary()
+    /// How many charges ahead a widget is given: about a year's worth, so it stays right for months
+    /// without the app being opened.
+    private static func cyclesAhead(_ frequency: BillingFrequency) -> Int {
+        switch frequency {
+        case .weekly: return 52
+        case .biweekly: return 26
+        case .monthly: return 12
+        case .quarterly: return 4
+        case .semiannual: return 2
+        case .yearly: return 2
         }
-        return WidgetSummary(
-            monthlySpend: defaults.double(forKey: "widget_monthlySpend"),
-            activeCount: defaults.integer(forKey: "widget_activeCount"),
-            upcomingCount: defaults.integer(forKey: "widget_upcomingCount"),
-            currencyCode: defaults.string(forKey: "widget_currencyCode") ?? "USD",
-            topInsight: defaults.string(forKey: "widget_topInsight") ?? "Track your subscriptions",
-            monthlySpendText: defaults.string(forKey: "widget_monthlySpendText") ?? "",
-            yearlySpendWholeText: defaults.string(forKey: "widget_yearlySpendWholeText") ?? ""
-        )
-    }
-
-
-    // MARK: - Insights
-
-    private func generateInsight(for subscriptions: [Subscription], monthlyTotal: Decimal, currency: String) -> String {
-        if subscriptions.isEmpty {
-            return "Add your first subscription to start tracking"
-        }
-        if subscriptions.monthlyTotal(in: "USD") > 200 {
-            return "You're spending \(MoneyFormat.string(monthlyTotal, currency, wholeUnits: true))/month — review for savings"
-        }
-        let paused = subscriptions.filter { $0.isPaused }.count
-        if paused > 0 {
-            return "\(paused) subscription\(paused == 1 ? "" : "s") paused — great job saving"
-        }
-        return "Tracking \(subscriptions.count) active subscription\(subscriptions.count == 1 ? "" : "s")"
     }
 }
-
-// MARK: - Data Models
-
-struct WidgetSummary {
-    let monthlySpend: Double
-    let activeCount: Int
-    let upcomingCount: Int
-    let currencyCode: String
-    let topInsight: String
-    /// Formatted by the app with MoneyFormat; the widget shows them as they are.
-    let monthlySpendText: String
-    let yearlySpendWholeText: String
-
-    init(monthlySpend: Double = 0, activeCount: Int = 0, upcomingCount: Int = 0, currencyCode: String = "USD",
-         topInsight: String = "Loading...", monthlySpendText: String = "", yearlySpendWholeText: String = "") {
-        self.monthlySpend = monthlySpend
-        self.activeCount = activeCount
-        self.upcomingCount = upcomingCount
-        self.currencyCode = currencyCode
-        self.topInsight = topInsight
-        self.monthlySpendText = monthlySpendText
-        self.yearlySpendWholeText = yearlySpendWholeText
-    }
-}
-
-// MARK: - Trial Info (shared with widget extension)
-
-/// Must match `WidgetTrialInfo` in the widget extension field for field.
-struct WidgetTrialInfo: Codable, Identifiable {
-    let id: String
-    let name: String
-    let trialEndsAt: Date
-    let monthlyAmount: Double
-    let currencyCode: String
-    let billingFrequency: String
-    /// What the first charge will be, in the subscription's own currency ("$15.49").
-    let amountText: String?
-
-    var daysRemaining: Int {
-        max(0, Calendar.current.dateComponents([.day], from: Date(), to: trialEndsAt).day ?? 0)
-    }
-}
-

@@ -4,6 +4,8 @@ build/
 *.xcuserstate
 *.xcworkspace/xcuserdata/
 xcuserdata/
+*.pbxproj.backup
+*.pbxproj.widget_backup
 *.moved-aside
 *.hmap
 *.ipa
@@ -18,19 +20,16 @@ Packages/
 # Build products
 *.plist
 !Info.plist
+!Configuration/PauselyWidgetInfo.plist
 
 # Environment / Secrets
 .env
 .env.*
 *.env
-!.env.example
 backend/.dev.vars
 
 # Xcode Config — may contain secrets
 Configuration/*.xcconfig
-!Configuration/Development.xcconfig
-!Configuration/Production.xcconfig
-!Configuration/Staging.xcconfig
 
 # Credentials - NEVER commit these
 *.p8
@@ -89,3 +88,6 @@ logs/
 .codex/
 .sourcekit-lsp/
 .mcp.json
+
+# The founder's own marketing and business notes: on this Mac only, never in the public repository
+private/

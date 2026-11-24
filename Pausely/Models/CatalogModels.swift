@@ -2,55 +2,10 @@
 //  CatalogModels.swift
 //  Pausely
 //
-//  Multi-tier, multi-region subscription database models
+//  The categories a subscription is filed under, and one row of the catalog.
 //
 
 import Foundation
-
-// MARK: - Region
-
-enum Region: String, Codable, CaseIterable {
-    case us = "US"
-    case uk = "UK"
-    case ca = "CA"
-    case eu = "EU"
-    case au = "AU"
-    case global = "Global"
-
-    var currencyCode: String {
-        switch self {
-        case .us, .global: return "USD"
-        case .ca: return "CAD"
-        case .uk: return "GBP"
-        case .eu: return "EUR"
-        case .au: return "AUD"
-        }
-    }
-
-    /// The catalog region whose prices are in `currency`, or `.us` when the catalog has none.
-    static func forCurrency(_ currency: String) -> Region {
-        switch MoneyFormat.normalizedCode(currency) {
-        case "CAD": return .ca
-        case "GBP": return .uk
-        case "EUR": return .eu
-        case "AUD": return .au
-        default:    return .us
-        }
-    }
-
-    var displayName: String {
-        switch self {
-        case .us: return "United States"
-        case .uk: return "United Kingdom"
-        case .ca: return "Canada"
-        case .eu: return "Europe"
-        case .au: return "Australia"
-        case .global: return "Global"
-        }
-    }
-}
-
-// MARK: - Subscription Category
 
 enum SubscriptionCategory: String, Codable, CaseIterable, Identifiable {
 
@@ -63,6 +18,29 @@ enum SubscriptionCategory: String, Codable, CaseIterable, Identifiable {
         }
         return match?.displayName ?? stored
     }
+    /// The category for a name from somewhere else (the receipt engine's merchant list, the catalog):
+    /// a raw value, a display name, or one of a few names that differ. "Other" when nothing fits.
+    static func matching(_ text: String?) -> SubscriptionCategory {
+        guard let text = text?.trimmingCharacters(in: .whitespaces), !text.isEmpty else { return .other }
+        return known(text) ?? .other
+    }
+
+    /// The category a name stands for, or nil when it is none of them: a raw value, a display name,
+    /// or one of the few names other lists use for the same thing.
+    private static func known(_ text: String) -> SubscriptionCategory? {
+        if let match = allCases.first(where: {
+            $0.rawValue.caseInsensitiveCompare(text) == .orderedSame || $0.displayName.caseInsensitiveCompare(text) == .orderedSame
+        }) { return match }
+        switch text.lowercased() {
+        case "ai tools": return .aiTools
+        case "utilities": return .utilities
+        case "food & delivery": return .food
+        case "transportation": return .travel
+        case "design": return .productivity
+        default: return nil
+        }
+    }
+
     case entertainment
     case music
     case productivity
@@ -129,208 +107,70 @@ enum SubscriptionCategory: String, Codable, CaseIterable, Identifiable {
         }
     }
 
-    var icon: String {
+    /// The name in the reader's language. `displayName` stays English: it is what gets stored.
+    var localizedName: String {
         switch self {
-        case .entertainment: return "tv"
-        case .music: return "music.note"
-        case .productivity: return "briefcase"
-        case .healthFitness: return "heart.circle"
-        case .cloudStorage: return "cloud"
-        case .education: return "book"
-        case .news: return "newspaper"
-        case .utilities: return "wifi"
-        case .social: return "person.2"
-        case .shopping: return "cart"
-        case .food: return "fork.knife"
-        case .sports: return "sportscourt"
-        case .finance: return "dollarsign.circle"
-        case .phone: return "iphone"
-        case .insurance: return "shield.checkered"
-        case .gym: return "dumbbell"
-        case .automotive: return "car"
-        case .home: return "house"
-        case .pet: return "pawprint"
-        case .personalCare: return "sparkles"
-        case .aiTools: return "sparkles.square.fill.on.square"
-        case .gaming: return "gamecontroller"
-        case .developerTools: return "chevron.left.forwardslash.chevron.right"
-        case .creator: return "pencil.circle"
-        case .travel: return "airplane"
-        case .dating: return "heart"
-        case .kids: return "figure.and.child.holdinghands"
-        case .security: return "lock.shield"
-        case .other: return "square.grid.2x2"
+        case .entertainment: return L10n.string("Entertainment")
+        case .music: return L10n.string("Music")
+        case .productivity: return L10n.string("Productivity")
+        case .healthFitness: return L10n.string("Health & fitness")
+        case .cloudStorage: return L10n.string("Cloud storage")
+        case .education: return L10n.string("Education")
+        case .news: return L10n.string("News")
+        case .utilities: return L10n.string("Utilities & internet")
+        case .social: return L10n.string("Social")
+        case .shopping: return L10n.string("Shopping")
+        case .food: return L10n.string("Food")
+        case .sports: return L10n.string("Sports")
+        case .finance: return L10n.string("Finance")
+        case .phone: return L10n.string("Phone & mobile")
+        case .insurance: return L10n.string("Insurance")
+        case .gym: return L10n.string("Gym & fitness")
+        case .automotive: return L10n.string("Automotive")
+        case .home: return L10n.string("Home & security")
+        case .pet: return L10n.string("Pet")
+        case .personalCare: return L10n.string("Personal care")
+        case .aiTools: return L10n.string("AI & creativity")
+        case .gaming: return L10n.string("Gaming")
+        case .developerTools: return L10n.string("Developer tools")
+        case .creator: return L10n.string("Creator economy")
+        case .travel: return L10n.string("Travel")
+        case .dating: return L10n.string("Dating")
+        case .kids: return L10n.string("Kids & family")
+        case .security: return L10n.string("Security")
+        case .other: return L10n.string("Other")
         }
+    }
+
+    /// The name to show for a stored category, in the reader's language. A category the person
+    /// typed themselves is shown as typed.
+    static func localizedLabel(for stored: String?) -> String {
+        guard let stored, !stored.isEmpty else { return SubscriptionCategory.other.localizedName }
+        // A category Pausely knows is shown in the reader's language, whichever of its names was
+        // saved; one a person typed themselves is shown as they typed it.
+        return known(stored.trimmingCharacters(in: .whitespaces))?.localizedName ?? stored
     }
 }
 
 // MARK: - Pricing Tier
 
-enum PricingTier: String, Codable, CaseIterable, Identifiable {
-    case individual
-    case family
-    case student
-    case duo
-    case team
-    case enterprise
-
-    var id: String { rawValue }
-
-    var displayName: String {
-        switch self {
-        case .individual: return "Individual"
-        case .family: return "Family"
-        case .student: return "Student"
-        case .duo: return "Duo"
-        case .team: return "Team"
-        case .enterprise: return "Enterprise"
-        }
-    }
-
-    var maxUsers: Int? {
-        switch self {
-        case .family: return 6
-        case .duo: return 2
-        case .team: return nil
-        default: return 1
-        }
-    }
-
-    var icon: String {
-        switch self {
-        case .individual: return "person"
-        case .family: return "person.3"
-        case .student: return "graduationcap"
-        case .duo: return "person.2"
-        case .team: return "person.3.fill"
-        case .enterprise: return "building.2"
-        }
-    }
-}
-
-// MARK: - Tier Pricing
-
-struct TierPricing: Codable, Equatable, Identifiable {
-    var id: String { "\(tier.rawValue)-\(region.rawValue)" }
-
-    let tier: PricingTier
-    let region: Region
-    let monthlyPriceUSD: Double
-    let annualPriceUSD: Double?
-    let isBestValue: Bool
-    let currencyCode: String
-
-    // MARK: - Coding Keys
-    enum CodingKeys: String, CodingKey {
-        case tier, region, monthlyPriceUSD, annualPriceUSD, isBestValue, currencyCode
-    }
-
-    // MARK: - Memberwise Initializer
-    init(
-        tier: PricingTier,
-        region: Region,
-        monthlyPriceUSD: Double,
-        annualPriceUSD: Double? = nil,
-        isBestValue: Bool = false,
-        currencyCode: String? = nil
-    ) {
-        self.tier = tier
-        self.region = region
-        self.monthlyPriceUSD = monthlyPriceUSD
-        self.annualPriceUSD = annualPriceUSD
-        self.isBestValue = isBestValue
-        self.currencyCode = currencyCode ?? region.currencyCode
-    }
-
-    var monthlyPricePerUser: Double? {
-        guard tier == .family, let max = tier.maxUsers, max > 0 else { return nil }
-        return monthlyPriceUSD / Double(max)
-    }
-
-
-}
-
-// MARK: - Catalog Entry
-
-struct CatalogEntry: Identifiable, Codable, Equatable {
-    let id: UUID
-    let bundleId: String
+/// One service in the catalog: what it is called, where it is filed, and the link to its own site
+/// where it is cancelled, when Pausely has one that was requested and answered.
+struct CatalogEntry: Identifiable, Equatable {
     let name: String
     let category: SubscriptionCategory
-    let description: String
-    let iconName: String
-    let appStoreProductId: String?
-    let websiteURL: String
     let cancellationURL: String?
-    let trialDays: Int
-    let canPause: Bool
-    let supportedTiers: [TierPricing]
-    let lastUpdated: Date
 
-    // MARK: - Memberwise Initializer
-    init(
-        id: UUID = UUID(),
-        bundleId: String,
-        name: String,
-        category: SubscriptionCategory,
-        description: String,
-        iconName: String,
-        appStoreProductId: String? = nil,
-        websiteURL: String,
-        cancellationURL: String? = nil,
-        trialDays: Int = 0,
-        canPause: Bool = true,
-        supportedTiers: [TierPricing] = [],
-        lastUpdated: Date = Date()
-    ) {
-        self.id = id
-        self.bundleId = bundleId
+    var id: String { name }
+
+    /// What the row under "Popular" is called. The same service is listed again under "All
+    /// services", and two rows with one name in a lazy list leave the second blank: on iPad, where
+    /// both sections are on screen, "All services" had holes where Netflix and Disney+ belong.
+    var popularRowID: String { "popular:" + name }
+
+    init(_ name: String, _ category: SubscriptionCategory, _ cancellationURL: String?) {
         self.name = name
         self.category = category
-        self.description = description
-        self.iconName = iconName
-        self.appStoreProductId = appStoreProductId
-        self.websiteURL = websiteURL
         self.cancellationURL = cancellationURL
-        self.trialDays = trialDays
-        self.canPause = canPause
-        self.supportedTiers = supportedTiers
-        self.lastUpdated = lastUpdated
-    }
-
-    /// The price the add flow shows and saves for `tier` and someone paying in `currency`:
-    /// their region's price, else the global one, else the US one, else any.
-    func pricing(for tier: PricingTier, payingIn currency: String) -> TierPricing? {
-        let region = Region.forCurrency(currency)
-        return supportedTiers.first { $0.tier == tier && $0.region == region }
-            ?? supportedTiers.first { $0.tier == tier && $0.region == .global }
-            ?? supportedTiers.first { $0.tier == tier && $0.region == .us }
-            ?? supportedTiers.first { $0.tier == tier }
-    }
-
-    func pricing(for tier: PricingTier, in region: Region = .us) -> TierPricing? {
-        // Try exact region match first
-        supportedTiers.first { $0.tier == tier && $0.region == region }
-            // Fall back to global
-            ?? supportedTiers.first { $0.tier == tier && $0.region == .global }
-            // Fall back to any region
-            ?? supportedTiers.first { $0.tier == tier }
-    }
-
-    var defaultIndividualPricing: TierPricing? { pricing(for: .individual) }
-    var bestValueTier: TierPricing? { supportedTiers.first { $0.isBestValue } }
-
-    /// Default price as a Double for compatibility with existing code
-    var defaultPrice: Double { defaultIndividualPricing?.monthlyPriceUSD ?? 0 }
-
-    var availableTiers: [PricingTier] {
-        Array(Set(supportedTiers.map { $0.tier })).sorted { $0.rawValue < $1.rawValue }
-    }
-
-    var familyPlanAvailable: Bool {
-        supportedTiers.contains { $0.tier == .family }
     }
 }
-
-// MARK: - Subscription Info
-

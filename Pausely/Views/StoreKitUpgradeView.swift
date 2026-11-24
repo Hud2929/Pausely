@@ -5,31 +5,36 @@ import StoreKit
 /// Trial-first paywall optimized for conversion.
 /// Leads with the free trial, states the Pausely Promise, and makes annual savings prominent.
 struct StoreKitUpgradeView: View {
+    /// Optional feature that opened this paywall, used to tailor the headline cleanly.
+    var trigger: ProFeature? = nil
+
     @Environment(\.dismiss) private var dismiss
+    @Environment(\.dynamicTypeSize) private var typeSize
     @ObservedObject private var storeManager = StoreKitManager.shared
     @ObservedObject private var paymentManager = PaymentManager.shared
-    @ObservedObject private var authManager = RevolutionaryAuthManager.shared
-    @ObservedObject private var referralManager = ReferralManager.shared
     @ObservedObject private var currencyManager = CurrencyManager.shared
 
     @State private var selectedPlan: PlanOption = .annual
     /// True only when StoreKit offers THIS customer a 7-day free trial on the selected plan. It is never
     /// assumed: the offer must exist in App Store Connect and the Apple Account must still be eligible
     /// (Apple allows one trial per subscription group).
-    @State private var trialAvailable = false
-    private var isTrialEnabled: Bool { trialAvailable }
-    @State private var appearAnimation = false
-    @State private var showConfetti = false
-    @State private var showErrorAlert = false
-    @State private var errorMessage = ""
+    /// Whether the selected plan starts with a free trial for this Apple Account. Nil until the App
+    /// Store has said: the slip and the button wait for it, so nobody eligible for a trial is shown
+    /// "Subscribe" and today's price for a moment first.
+    @State private var trialAvailable: Bool?
+    private var isTrialEnabled: Bool { trialAvailable == true }
+    /// The plan has loaded and whether it starts free is not known yet.
+    private var isCheckingOffer: Bool { selectedProduct != nil && trialAvailable == nil }
+    @State private var notice: PaywallNotice?
+    /// What "Try again" on a notice repeats.
+    @State private var lastAttempt: Attempt = .purchase
     @State private var showSuccessAlert = false
     @AccessibilityFocusState private var focusedElement: FocusElement?
 
-    let currentSubscriptionCount: Int
+    private enum Attempt { case purchase, restore }
 
     enum FocusElement {
         case title
-        case success
     }
 
     enum PlanOption {
@@ -37,8 +42,8 @@ struct StoreKitUpgradeView: View {
 
         var tier: SubscriptionTier {
             switch self {
-            case .monthly: return .premium
-            case .annual: return .premiumAnnual
+            case .monthly: return .pro
+            case .annual: return .proAnnual
             }
         }
 
@@ -51,16 +56,21 @@ struct StoreKitUpgradeView: View {
 
         var title: String {
             switch self {
-            case .monthly: return "Monthly"
-            case .annual: return "Annual"
+            case .monthly: return L10n.string("Monthly")
+            case .annual: return L10n.string("Annual")
             }
         }
 
         var period: String {
             switch self {
-            case .monthly: return "/month"
-            case .annual: return "/year"
+            case .monthly: return L10n.string("/month")
+            case .annual: return L10n.string("/year")
             }
+        }
+
+        /// The store's price with its period ("$4.99/month"), the one place the two meet.
+        func priced(_ amount: String) -> String {
+            "\(amount)\(period)"
         }
 
         /// "Save N%" computed from the real App Store prices; nil until StoreKit has loaded them.
@@ -69,7 +79,7 @@ struct StoreKitUpgradeView: View {
             case .monthly: return nil
             case .annual:
                 guard let percent = StoreKitManager.shared.annualSavingsPercent else { return nil }
-                return "Save \(percent)%"
+                return L10n.string("Save \(percent)%")
             }
         }
 
@@ -85,7 +95,15 @@ struct StoreKitUpgradeView: View {
     /// Decides whether to advertise the free trial: the selected plan must carry a 7-day free-trial
     /// introductory offer in App Store Connect and this Apple Account must still be eligible for it.
     private func refreshTrialEligibility() async {
-        guard let subscription = storeManager.products.first(where: { $0.id == selectedPlan.productID })?.subscription,
+        // Another plan was picked, or the plans have just loaded: what was known is for the other one.
+        trialAvailable = nil
+        guard let product = storeManager.products.first(where: { $0.id == selectedPlan.productID }) else { return }
+        // `--demo-no-trial` (DEBUG): the paywall as someone who has used their free trial sees it.
+        if LaunchFlag.isSet("--demo-no-trial") {
+            trialAvailable = false
+            return
+        }
+        guard let subscription = product.subscription,
               let offer = subscription.introductoryOffer,
               offer.paymentMode == .freeTrial else {
             trialAvailable = false
@@ -102,499 +120,426 @@ struct StoreKitUpgradeView: View {
         storeManager.product(for: tier)?.displayPrice ?? "…"
     }
 
-    var body: some View {
-        ZStack {
-            // Background
-            AnimatedGradientBackground()
+    // MARK: - The person's own numbers
 
-            ScrollView(showsIndicators: false) {
-                VStack(spacing: 0) {
-                    // Header with close button
-                    headerSection
+    private var store: SubscriptionStore { SubscriptionStore.shared }
+    private var waitingCount: Int { TallyImporter.waitingLines().count }
 
-                    // Trial-first hero
-                    trialHeroSection
-                        .padding(.top, 16)
+    private var activeSubscriptions: [Subscription] { store.activeSubscriptions }
 
-                    // Plan selection
-                    planSelectionSection
-                        .padding(.top, 24)
+    private var selectedProduct: Product? { storeManager.product(for: selectedPlan.tier) }
 
-                    // Feature checklist
-                    featureChecklistSection
-                        .padding(.top, 28)
+    /// What the selected plan costs over a year, in the App Store's currency for this customer.
+    private var proYearly: (amount: Decimal, currency: String)? {
+        guard let product = selectedProduct else { return nil }
+        let currency = product.priceFormatStyle.currencyCode
+        return (selectedPlan == .annual ? product.price : product.price * 12, currency)
+    }
 
-                    // Social proof & guarantee
-                    socialProofSection
-                        .padding(.top, 24)
+    /// True when the person got here by trying to add one more than the free plan watches.
+    private var atFreeLimit: Bool {
+        !paymentManager.hasRoom(in: store.subscriptions)
+    }
 
-                    // CTA Buttons
-                    ctaSection
-                        .padding(.top, 32)
-
-                    // Legal disclosure — required by Apple and GDPR
-                    legalDisclosureSection
-                        .padding(.top, 12)
-                        .padding(.bottom, 32)
-                }
-                .padding(.horizontal, 24)
-            }
-
-            // Confetti overlay
-            if showConfetti {
-                ConfettiView()
-                    .allowsHitTesting(false)
-            }
+    private var headline: String {
+        switch trigger {
+        case .pausePlan:
+            return L10n.string("Rotate streaming with Pause Plan.")
+        case .batchScreenshotImport:
+            return L10n.string("Import up to 10 screenshots at once.")
+        case .cancelConcierge:
+            return L10n.string("Draft cancellation and refund emails in seconds.")
+        case .unlimitedSubscriptions, .none:
+            break
         }
-        .statusBarBackdrop()
-        .onAppear {
-            withAnimation(.easeOut(duration: 0.6)) {
-                appearAnimation = true
-            }
-            focusedElement = .title
+        if waitingCount > 0 {
+            return L10n.sentences([L10n.string("You pay for \(activeSubscriptions.count + waitingCount) subscriptions."),
+                                   L10n.string("The free plan tracks \(FreeTier.subscriptionLimit).")])
+        }
+        if atFreeLimit { return L10n.string("The free plan tracks \(FreeTier.subscriptionLimit). Pausely Pro tracks all of them.") }
+        guard !activeSubscriptions.isEmpty else { return L10n.string("Pausely Pro tracks every subscription you have.") }
+        let yearly = MoneyFormat.string(activeSubscriptions.annualTotal(), currencyManager.selectedCurrency,
+                                        locale: L10n.locale, wholeUnits: true)
+        return L10n.string("Your subscriptions cost about \(yearly) a year.")
+    }
 
-            // Load StoreKit products
-            Task {
+    private var valueLine: String {
+        let price = selectedPlan == .annual
+            ? L10n.string("Pausely Pro is \(priceText(.proAnnual)) a year.")
+            : L10n.string("Pausely Pro is \(priceText(.pro)) a month.")
+        guard let pro = proYearly,
+              let comparison = PaywallCase.comparison(proYearly: pro.amount, proCurrency: pro.currency,
+                                                      subscriptions: activeSubscriptions, rates: currencyManager.rates)
+        else { return price }
+        let against = comparison.months == 1
+            ? L10n.string("A year of it costs less than one month of \(comparison.name).")
+            : L10n.string("A year of it costs less than \(comparison.months) months of \(comparison.name).")
+        return L10n.sentences([price, against])
+    }
+
+    private var firstChargeDate: String { shortDate(daysFromToday: 7) }
+
+    /// The last day a cancellation is certain to be in time: Apple needs it at least 24 hours before
+    /// the trial ends, so the day before the first charge, not the day of it.
+    private var lastDayToCancel: String { shortDate(daysFromToday: 6) }
+
+    private func shortDate(daysFromToday days: Int) -> String {
+        let date = Calendar.billing.date(byAdding: .day, value: days, to: Date()) ?? Date()
+        return DayText.date(date, locale: L10n.locale)
+    }
+
+    private var chargeText: String {
+        selectedPlan.priced(priceText(selectedPlan.tier))
+    }
+
+    var body: some View {
+        ActionScreen {
+            VStack(alignment: .leading, spacing: 0) {
+                closeRow
+
+                Text(verbatim: headline)
+                    .font(.question(.title))
+                    .foregroundStyle(Color.inkText)
+                    .fixedSize(horizontal: false, vertical: true)
+                    .padding(.top, 4)
+                    .accessibilityAddTraits(.isHeader)
+                    .accessibilityFocused($focusedElement, equals: .title)
+                    .accessibilityIdentifier(atFreeLimit ? "freeLimitNotice" : "paywallHeadline")
+
+                if prices == .known {
+                    Text(verbatim: valueLine)
+                        .font(.body)
+                        .foregroundStyle(Color.inkTextMuted)
+                        .fixedSize(horizontal: false, vertical: true)
+                        .padding(.top, 8)
+
+                    planPicker.padding(.top, 12)
+
+                    slip.padding(.top, 14)
+                } else {
+                    // No price, so no sentence about one, no plans to pick between and no slip.
+                    pricesMissing.padding(.top, 16)
+                }
+
+                promise.padding(.top, 18).padding(.bottom, linksEndThePage ? 12 : 20)
+
+                if linksEndThePage {
+                    LineOrStack(spacing: 16, lineSpacing: 0) { footerLinks(alignment: .leading) }
+                        .font(.footnote.weight(.medium))
+                        .foregroundStyle(Color.inkTextMuted)
+                        .padding(.bottom, 12)
+                }
+            }
+            .padding(.horizontal, Layout.margin)
+        } actions: {
+            actionBar
+        }
+        .inkScreen()
+        .onAppear { focusedElement = .title }
+        .task {
+            // Prices are the App Store's. If they can't be fetched, keep asking while this screen is open.
+            var wait: UInt64 = 2
+            while !Task.isCancelled {
                 await storeManager.loadProducts()
+                if !storeManager.products.isEmpty { break }
+                try? await Task.sleep(nanoseconds: wait * 1_000_000_000)
+                wait = min(wait * 2, 16)
             }
         }
         .task(id: trialCheckID) { await refreshTrialEligibility() }
-        .alert("Purchase Successful!", isPresented: $showSuccessAlert) {
-            Button("Continue", role: .cancel) {
-                dismiss()
-            }
+        .alert(Text("You have Pausely Pro"), isPresented: $showSuccessAlert) {
+            Button("Continue", role: .cancel) { dismiss() }
         } message: {
-            Text("Welcome to Pausely Pro! You now have unlimited subscriptions and all premium features.")
+            Text("Unlimited tracking, Pause Plan, batch screenshot import, and email drafts are now unlocked.")
         }
-        .alert("Purchase Error", isPresented: $showErrorAlert) {
+        .alert(Text(verbatim: notice?.title ?? ""), isPresented: Binding(get: { notice != nil }, set: { if !$0 { notice = nil } }),
+               presenting: notice) { shown in
             Button("OK", role: .cancel) {}
-            if storeManager.errorMessage != nil {
-                Button("Try Again") {
-                    Task { await attemptPurchase() }
+            if shown.offersRetry {
+                Button("Try again") {
+                    Task { lastAttempt == .purchase ? await attemptPurchase() : await restorePurchases() }
                 }
             }
-            Button("Contact Support") {
-                if let url = URL(string: "mailto:\(AppConfig.supportEmail)") {
-                    UIApplication.shared.open(url)
-                }
-            }
-        } message: {
-            Text(errorMessage)
+        } message: { shown in
+            Text(verbatim: shown.message)
         }
     }
 
-    // MARK: - Header Section
-    private var headerSection: some View {
+    /// Always visible, never delayed.
+    private var closeRow: some View {
         HStack {
+            LeaveButton("Close") { dismiss() }
+                .accessibilityIdentifier("paywallClose")
             Spacer()
-
-            Button(action: {
-                HapticStyle.light.trigger()
-                dismiss()
-            }) {
-                Image(systemName: "xmark.circle.fill")
-                    .font(AppTypography.headlineLarge)
-                    .foregroundStyle(.white.opacity(0.6))
-            }
-            .accessibilityLabel("Close")
         }
-        .padding(.top, 16)
+        .padding(.top, 8)
     }
 
-    // MARK: - Trial Hero Section
-    private var trialHeroSection: some View {
-        VStack(spacing: 12) {
-            // Opened by adding one too many: say why before selling anything.
-            if currentSubscriptionCount >= FreeTier.subscriptionLimit {
-                Text("Free covers \(FreeTier.subscriptionLimit) subscriptions. Pro tracks all of them.")
-                    .font(AppTypography.bodySmall)
-                    .foregroundStyle(.white.opacity(0.85))
-                    .multilineTextAlignment(.center)
-                    .accessibilityIdentifier("freeLimitNotice")
-            }
+    // MARK: - Pausely on its own slip
 
-            // Trial badge (only when a real trial is on offer)
-            if isTrialEnabled {
-                HStack(spacing: 6) {
-                    Image(systemName: "gift.fill")
-                        .font(.system(.caption, design: .rounded).weight(.semibold))
-                    Text(LocalizedStringKey("7-DAY FREE TRIAL"))
-                        .font(.system(.caption, design: .rounded).weight(.bold))
-                }
-                .foregroundColor(.black)
-                .padding(.horizontal, 14)
-                .padding(.vertical, 6)
-                .background(
-                    Capsule()
-                        .fill(Color.accentMint)
-                )
-                .scaleEffect(appearAnimation ? 1 : 0.8)
-                .animation(.spring(response: 0.4, dampingFraction: 0.6), value: appearAnimation)
-            }
+    /// Pausely's own subscription, printed the way it prints everyone else's: what is charged, and when.
+    private var slip: some View {
+        PaperSlip(tornTop: true, tornBottom: true) {
+            VStack(alignment: .leading, spacing: 12) {
+                Text(verbatim: "Pausely Pro")
+                    .font(.question(.title3))
 
-            // Main headline
-            Text(LocalizedStringKey(isTrialEnabled ? "Start Your 7-Day Free Trial" : "Unlock Pausely Pro"))
-                .font(.largeTitle.bold())
-                .foregroundStyle(.white)
-                .multilineTextAlignment(.center)
-                .accessibilityFocused($focusedElement, equals: .title)
-
-            // Subtitle with pricing (always uses our pricing — StoreKit sandbox prices differ from production)
-            VStack(spacing: 4) {
-                if isTrialEnabled {
-                    Text("Then \(priceText(.pro))/month or \(priceText(.proAnnual))/year")
-                        .font(AppTypography.bodyLarge)
-                        .foregroundStyle(.white.opacity(0.8))
-                        .multilineTextAlignment(.center)
-
-                    Text(LocalizedStringKey("Cancel anytime. No charge for 7 days."))
-                        .font(AppTypography.bodySmall)
-                        .foregroundColor(.accentMint)
+                if isCheckingOffer {
+                    ProofLine(label: L10n.string("Today"), value: "…", emphasised: true)
+                } else if isTrialEnabled {
+                    ProofLine(label: L10n.string("Today"), value: L10n.string("Free"))
+                    ProofLine(label: firstChargeDate, value: chargeText, emphasised: true)
+                    Text(L10n.string("Cancel by \(lastDayToCancel) in Settings and you pay nothing."))
+                        .font(.footnote)
+                        .foregroundStyle(Color.paperMuted)
+                        .fixedSize(horizontal: false, vertical: true)
                 } else {
-                    Text("\(priceText(.pro))/month or \(priceText(.proAnnual))/year")
-                        .font(AppTypography.bodyLarge)
-                        .foregroundStyle(.white.opacity(0.8))
-                        .multilineTextAlignment(.center)
-
-                    Text(LocalizedStringKey("Cancel anytime."))
-                        .font(AppTypography.bodySmall)
-                        .foregroundColor(.accentMint)
-                }
-            }
-        }
-        .opacity(appearAnimation ? 1 : 0)
-        .offset(y: appearAnimation ? 0 : 20)
-    }
-
-    // MARK: - Usage Section
-
-    // MARK: - Plan Selection Section
-    private var planSelectionSection: some View {
-        VStack(spacing: 12) {
-            // Segmented control style toggle
-            HStack(spacing: 0) {
-                ForEach([PlanOption.monthly, PlanOption.annual], id: \.self) { plan in
-                    Button(action: {
-                        withAnimation(.spring(response: 0.3)) {
-                            selectedPlan = plan
-                            HapticStyle.medium.trigger()
-                        }
-                    }) {
-                        HStack(spacing: 6) {
-                            Text(plan.title)
-                                .font(.system(.subheadline, design: .rounded).weight(.semibold))
-
-                            if let badge = plan.badge {
-                                Text(badge)
-                                    .font(.system(.caption2, design: .rounded).weight(.bold))
-                                    .foregroundColor(.black)
-                                    .padding(.horizontal, 6)
-                                    .padding(.vertical, 2)
-                                    .background(Color.accentMint)
-                                    .cornerRadius(4)
-                            }
-                        }
-                        .foregroundColor(selectedPlan == plan ? .white : Color.obsidianTextSecondary)
-                        .frame(maxWidth: .infinity)
-                        .frame(height: 44)
-                        .background(
-                            ZStack {
-                                if selectedPlan == plan {
-                                    RoundedRectangle(cornerRadius: 12, style: .continuous)
-                                        .fill(Color.accentMint.opacity(0.5))
-                                        .overlay(
-                                            RoundedRectangle(cornerRadius: 12, style: .continuous)
-                                                .stroke(Color.accentMint.opacity(0.6), lineWidth: 1)
-                                        )
-                                }
-                            }
-                        )
-                    }
-                    .buttonStyle(PlainButtonStyle())
-                    .accessibilityValue(selectedPlan == plan ? "Selected" : "Not selected")
-                    .accessibilityAddTraits(selectedPlan == plan ? .isSelected : [])
-                }
-            }
-            .padding(4)
-            .background(
-                RoundedRectangle(cornerRadius: 16, style: .continuous)
-                    .fill(Color.white.opacity(0.06))
-            )
-            .accessibilityElement(children: .contain)
-
-            // Selected plan details (uses our pricing, not StoreKit sandbox prices)
-            HStack {
-                VStack(alignment: .leading, spacing: 4) {
-                    if isTrialEnabled {
-                        Text("Free")
-                            .font(.title2.bold())
-                            .foregroundStyle(.white)
-
-                        Text("for 7 days")
-                            .font(AppTypography.bodySmall)
-                            .foregroundStyle(Color.accentMint)
-                    } else {
-                        Text(selectedPlan == .monthly ? priceText(.pro) : priceText(.proAnnual))
-                            .font(.title2.bold())
-                            .foregroundStyle(.white)
-
-                        Text(selectedPlan.period)
-                            .font(AppTypography.bodySmall)
-                            .foregroundStyle(Color.obsidianTextSecondary)
-                    }
-                }
-
-                Spacer()
-
-                VStack(alignment: .trailing, spacing: 4) {
-                    // The discount is already on the Annual toggle; here, what happens after the trial.
-                    if isTrialEnabled {
-                        Text("then \(selectedPlan == .monthly ? priceText(.pro) : priceText(.proAnnual))\(selectedPlan.period)")
-                            .font(.subheadline.bold())
-                            .foregroundColor(.white)
-                    }
-
+                    ProofLine(label: L10n.string("Today"), value: chargeText, emphasised: true)
                     if selectedPlan == .annual, let perMonth = storeManager.annualPricePerMonth {
-                        Text("\(perMonth)/mo equivalent")
-                            .font(AppTypography.labelMedium)
-                            .foregroundStyle(Color.obsidianTextTertiary)
+                        Text("That's \(perMonth) a month.")
+                            .font(.footnote)
+                            .foregroundStyle(Color.paperMuted)
+                    }
+                }
+
+                Perforation().padding(.vertical, 2)
+
+                ForEach(ProFeature.allCases) { feature in
+                    HStack(alignment: .firstTextBaseline, spacing: 10) {
+                        Image(systemName: "plus")
+                            .font(.footnote.weight(.bold))
+                            .accessibilityHidden(true)
+                        Text(verbatim: feature.title)
+                            .font(.subheadline)
+                            .fixedSize(horizontal: false, vertical: true)
                     }
                 }
             }
-            .padding(16)
-            .background(
-                RoundedRectangle(cornerRadius: 16, style: .continuous)
-                    .fill(isTrialEnabled ? Color.accentMint.opacity(0.06) : Color.white.opacity(0.04))
-                    .overlay(
-                        RoundedRectangle(cornerRadius: 16, style: .continuous)
-                            .stroke(isTrialEnabled ? Color.accentMint.opacity(0.2) : Color.white.opacity(0.08), lineWidth: 1)
-                    )
-            )
         }
-        .opacity(appearAnimation ? 1 : 0)
-        .offset(y: appearAnimation ? 0 : 20)
     }
 
-    // MARK: - Feature Checklist Section
-    private var featureChecklistSection: some View {
-        VStack(spacing: 16) {
-            Text(LocalizedStringKey("What you get with Pro"))
-                .font(AppTypography.headlineLarge)
-                .foregroundStyle(.white)
-                .frame(maxWidth: .infinity, alignment: .leading)
+    // MARK: - Plans
 
-            VStack(spacing: 12) {
-                ForEach(ProFeature.allCases) { feature in
-                    TrialFeatureRow(icon: feature.icon, text: feature.title)
+    private var planPicker: some View {
+        VStack(spacing: 0) {
+            planRow(.annual)
+            Hairline()
+            planRow(.monthly)
+        }
+    }
+
+    private func planRow(_ plan: PlanOption) -> some View {
+        let isOn = selectedPlan == plan
+        return Button {
+            Feel.selection()
+            withAnimation(Motion.unlessReduced(Motion.touch)) { selectedPlan = plan }
+        } label: {
+            HStack(alignment: .center, spacing: 14) {
+                Image(systemName: isOn ? "largecircle.fill.circle" : "circle")
+                    .font(.title3)
+                    .foregroundStyle(isOn ? Color.paper : Color.inkTextFaint)
+                    .accessibilityHidden(true)
+
+                VStack(alignment: .leading, spacing: 2) {
+                    Text(verbatim: plan.title)
+                        .font(.subheadline)
+                        .foregroundStyle(Color.inkTextMuted)
+                    // A price is never split across lines: it shrinks first, and at the largest
+                    // text sizes the period and the saving move to their own lines.
+                    if typeSize.isAccessibilitySize {
+                        Text(verbatim: priceText(plan.tier))
+                            .font(.title3.weight(.semibold))
+                            .foregroundStyle(Color.inkText)
+                            .lineLimit(1)
+                            .minimumScaleFactor(0.6)
+                        Text(verbatim: plan.period)
+                            .font(.subheadline)
+                            .foregroundStyle(Color.inkTextMuted)
+                        if let badge = plan.badge { badgeView(badge) }
+                    } else {
+                        Text(verbatim: plan.priced(priceText(plan.tier)))
+                            .font(.title3.weight(.semibold))
+                            .foregroundStyle(Color.inkText)
+                            .monospacedDigit()
+                            .lineLimit(1)
+                            .minimumScaleFactor(0.7)
+                    }
                 }
+
+                Spacer(minLength: 8)
+
+                if !typeSize.isAccessibilitySize, let badge = plan.badge { badgeView(badge) }
             }
+            .padding(.vertical, 14)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .contentShape(Rectangle())
         }
-        .padding(20)
-        .glass(intensity: 0.1, tint: .white)
-        .opacity(appearAnimation ? 1 : 0)
-        .offset(y: appearAnimation ? 0 : 20)
+        .buttonStyle(.plain)
+        .accessibilityElement(children: .combine)
+        .accessibilityAddTraits(isOn ? [.isSelected] : [])
+        .accessibilityIdentifier(plan == .annual ? "planAnnual" : "planMonthly")
     }
 
-    // MARK: - Social Proof Section
-    private var socialProofSection: some View {
-        // No invented social proof: the promise Pausely holds itself to.
-        HStack(alignment: .top, spacing: 12) {
-            Image(systemName: "seal.fill")
-                .font(.system(size: 20, weight: .semibold))
-                .foregroundColor(.accentMint)
-                .accessibilityHidden(true)
-            VStack(alignment: .leading, spacing: 4) {
-                Text(LocalizedStringKey("The Pausely Promise"))
-                    .font(AppTypography.labelMedium)
-                    .foregroundStyle(.white)
-                Text(LocalizedStringKey("Pausely keeps a receipt of what it saves you. If it doesn't save you more than it costs, it will tell you to cancel it."))
-                    .font(AppTypography.bodySmall)
-                    .foregroundStyle(.white.opacity(0.7))
+    private func badgeView(_ text: String) -> some View {
+        Text(verbatim: text)
+            .font(.footnote.weight(.semibold))
+            .foregroundStyle(Color.inkText)
+            .padding(.horizontal, 10)
+            .padding(.vertical, 4)
+            .overlay(Capsule().stroke(Color.outline, lineWidth: 1))
+    }
+
+    // MARK: - The Promise
+
+    private var promise: some View {
+        VStack(alignment: .leading, spacing: 6) {
+            Text(LocalizedStringKey("The Pausely Promise"))
+                .font(.subheadline.weight(.semibold))
+                .foregroundStyle(Color.inkText)
+            Text(LocalizedStringKey("Pausely keeps a receipt of what it saves you. If it doesn't save you more than it costs, it will tell you to cancel it."))
+                .font(.subheadline)
+                .foregroundStyle(Color.inkTextMuted)
+                .fixedSize(horizontal: false, vertical: true)
+        }
+        .accessibilityElement(children: .combine)
+    }
+
+    // MARK: - Before the App Store has answered
+
+    private var prices: PaywallCase.Prices {
+        PaywallCase.prices(loaded: storeManager.product(for: .pro) != nil && storeManager.product(for: .proAnnual) != nil,
+                           isLoading: storeManager.isLoading)
+    }
+
+    @ViewBuilder private var pricesMissing: some View {
+        if prices == .loading {
+            HStack(spacing: 10) {
+                ProgressView().tint(Color.inkTextMuted)
+                Text("Getting the prices from the App Store…")
+                    .font(.body)
+                    .foregroundStyle(Color.inkTextMuted)
                     .fixedSize(horizontal: false, vertical: true)
             }
-            Spacer(minLength: 0)
+            .accessibilityElement(children: .combine)
+        } else {
+            ProblemLine(message: L10n.string("Couldn't reach the App Store, so there are no prices to show. Check your connection."),
+                        identifier: "paywallNoPrices")
         }
-        .padding(16)
-        .background(
-            RoundedRectangle(cornerRadius: 16, style: .continuous)
-                .fill(Color.accentMint.opacity(0.08))
-                .overlay(RoundedRectangle(cornerRadius: 16, style: .continuous).stroke(Color.accentMint.opacity(0.2), lineWidth: 1))
-        )
-        .opacity(appearAnimation ? 1 : 0)
-        .offset(y: appearAnimation ? 0 : 20)
     }
 
-    // MARK: - CTA Section
-    private var ctaSection: some View {
-        VStack(spacing: 16) {
-            // Main CTA button
-            Button(action: {
-                Task {
-                    await attemptPurchase()
-                }
-            }) {
-                HStack(spacing: 10) {
-                    if storeManager.isLoading {
-                        ProgressView()
-                            .tint(.white)
-                            .scaleEffect(1.2)
-                    } else {
-                        Image(systemName: "sparkles")
-                            .font(.system(.title3, design: .rounded).weight(.semibold))
+    // MARK: - The action, and the terms beside it
 
-                        Text(isTrialEnabled ? "Start Free Trial" : "Subscribe")
-                            .font(.system(.body, design: .rounded).weight(.bold))
+    private var actionBar: some View {
+        VStack(spacing: 10) {
+            if prices == .known {
+                Button {
+                    Task { await attemptPurchase() }
+                } label: {
+                    if (storeManager.isLoading && selectedProduct != nil) || isCheckingOffer {
+                        ProgressView().tint(Color.paperInk)
+                    } else {
+                        Text(isTrialEnabled ? L10n.string("Start free trial") : L10n.string("Subscribe"))
                     }
                 }
-                .foregroundStyle(Color.black)
-                .frame(maxWidth: .infinity)
-                .frame(height: 60)
-                .background(
-                    RoundedRectangle(cornerRadius: 20, style: .continuous)
-                        .fill(Color.accentMint)
-                        .shadow(color: Color.accentMint.opacity(0.35), radius: 20, x: 0, y: 10)
-                )
-            }
-            .disabled(storeManager.isLoading || storeManager.products.isEmpty)
-            .accessibilityHint(storeManager.isLoading ? "Please wait, purchase in progress" : storeManager.products.isEmpty ? "Products are loading, please wait" : "")
-            .pressEffect(scale: 0.97)
+                .buttonStyle(.ink)
+                .disabled(selectedProduct == nil || storeManager.isLoading || isCheckingOffer)
+                .accessibilityIdentifier("paywallPurchase")
 
-            // Restore purchases button
-            Button(action: {
-                Task {
-                    await restorePurchases()
+                Group {
+                    if isCheckingOffer {
+                        Text(verbatim: " ")
+                    } else if isTrialEnabled {
+                        Text("After your free trial, you'll be charged \(chargeText) unless you cancel at least 24 hours before the trial ends.")
+                    } else {
+                        Text("Renews automatically. To cancel, open Settings, tap your name, then Subscriptions.")
+                    }
                 }
-            }) {
-                Text("Restore Purchases")
-                    .font(AppTypography.bodySmall)
-                    .foregroundStyle(.white.opacity(0.7))
-                    .underline()
-            }
-            .disabled(storeManager.isLoading)
-            .accessibilityHint(storeManager.isLoading ? "Please wait, purchase in progress" : "")
-
-            // Terms
-            Text(isTrialEnabled
-                ? "Free for 7 days, then auto-renews. Cancel anytime in App Store Settings."
-                : "Auto-renews. Cancel anytime in App Store Settings.")
-                .font(AppTypography.labelMedium)
-                .foregroundStyle(.white.opacity(0.4))
+                .font(.caption)
+                .foregroundStyle(Color.inkTextMuted)
                 .multilineTextAlignment(.center)
-                .padding(.top, 8)
+                .fixedSize(horizontal: false, vertical: true)
+            } else {
+                // Nothing can be bought without a price. The one thing to do is ask again (it was a
+                // greyed-out "Subscribe" above a caption-size underlined line).
+                Button {
+                    Task { await storeManager.loadProducts() }
+                } label: {
+                    if prices == .loading { ProgressView().tint(Color.paperInk) } else { Text("Try again") }
+                }
+                .buttonStyle(.ink)
+                .disabled(prices == .loading)
+                .accessibilityIdentifier("paywallTryAgain")
+            }
+
+
+            if !linksEndThePage {
+                LineOrStack(spacing: 16, lineSpacing: 0, centred: true) { footerLinks(alignment: .center) }
+                    .font(.caption.weight(.medium))
+                    .foregroundStyle(Color.inkTextMuted)
+            }
         }
-        .opacity(appearAnimation ? 1 : 0)
-        .offset(y: appearAnimation ? 0 : 20)
+        .padding(.horizontal, Layout.margin)
+        .padding(.top, 12)
+        .padding(.bottom, linksEndThePage ? 12 : 8)
+        .background(Color.ink)
+        .overlay(alignment: .top) { Hairline() }
     }
 
-    // MARK: - Legal Disclosure
-    private var legalDisclosureSection: some View {
-        VStack(spacing: 8) {
-            if isTrialEnabled {
-                Text("After your free trial, you'll be charged \(selectedPlan == .monthly ? priceText(.pro) + "/month" : priceText(.proAnnual) + "/year") unless you cancel at least 24 hours before the trial ends.")
-                    .font(.system(.caption2, design: .rounded))
-                    .foregroundStyle(Color.obsidianTextTertiary)
-                    .multilineTextAlignment(.center)
-            }
-            Text("Subscription auto-renews. Cancel anytime in Settings → Apple ID → Subscriptions.")
-                .font(.system(.caption2, design: .rounded))
-                .foregroundStyle(Color.obsidianTextTertiary)
-                .multilineTextAlignment(.center)
-            HStack(spacing: 12) {
-                Button("Terms of Service") {
-                    if let url = URL(string: AppConfig.termsOfServiceURL) { UIApplication.shared.open(url) }
-                }
-                Text("·").foregroundStyle(Color.obsidianTextTertiary)
-                Button("Privacy Policy") {
-                    if let url = URL(string: AppConfig.privacyPolicyURL) { UIApplication.shared.open(url) }
-                }
-                Text("·").foregroundStyle(Color.obsidianTextTertiary)
-                Button("Refund Policy") {
-                    if let url = URL(string: AppConfig.refundPolicyURL) { UIApplication.shared.open(url) }
-                }
-            }
-            .font(.system(.caption2, design: .rounded))
-            .foregroundStyle(Color.accentMint.opacity(0.7))
+    /// Where the button stays at the bottom edge, the three links end the page instead of sitting
+    /// under it: there they held three more rows at the edge whenever they did not fit on one line
+    /// (German at any text size, English one size up), and the bar covered half the screen. Where
+    /// the button follows the content (accessibility sizes, iPad) they come after it, as before.
+    private var linksEndThePage: Bool {
+        ActionScreen<EmptyView, EmptyView>.pinsActions(at: typeSize, onPad: UIDevice.current.userInterfaceIdiom == .pad)
+    }
+
+    /// Small words, full-size places to tap.
+    @ViewBuilder private func footerLinks(alignment: Alignment) -> some View {
+        Group {
+            Button("Restore purchases") { Task { await restorePurchases() } }
+                .disabled(storeManager.isLoading)
+            Button("Terms of Service") { open(AppConfig.termsOfServiceURL) }
+            Button("Privacy Policy") { open(AppConfig.privacyPolicyURL) }
         }
-        .padding(.horizontal, 24)
+        .frame(minWidth: Layout.tapTarget, minHeight: Layout.tapTarget, alignment: alignment)
+        .contentShape(Rectangle())
+    }
+
+    private func open(_ address: String) {
+        if let url = URL(string: address) { UIApplication.shared.open(url) }
     }
 
     // MARK: - Actions
     private func attemptPurchase() async {
-        HapticStyle.medium.trigger()
-
-        guard let product = storeManager.product(for: selectedPlan.tier) else {
-            HapticStyle.warning.trigger()
-            errorMessage = "Subscription not available. Please try again."
-            showErrorAlert = true
-            return
-        }
-
-        let success = await storeManager.purchase(product)
-
-        if success {
-            showConfetti = true
-            showSuccessAlert = true
-            UIAccessibility.post(notification: .announcement, argument: "Purchase successful. Welcome to Pausely Pro!")
-
-            // Dismiss after delay
-            DispatchQueue.main.asyncAfter(deadline: .now() + 2) {
-                dismiss()
-            }
-        } else if let errorMsg = storeManager.errorMessage {
-            errorMessage = mapStoreKitError(errorMsg)
-            showErrorAlert = true
+        guard let product = storeManager.product(for: selectedPlan.tier) else { return }
+        lastAttempt = .purchase
+        let outcome = await storeManager.purchase(product)
+        if outcome == .purchased {
+            await welcomeToPro()
+        } else {
+            notice = PaywallNotice.after(outcome)
         }
     }
 
     private func restorePurchases() async {
-        HapticStyle.medium.trigger()
-
-        let success = await storeManager.restorePurchases()
-
-        if success {
-            showConfetti = true
-            showSuccessAlert = true
-
-            DispatchQueue.main.asyncAfter(deadline: .now() + 2) {
-                dismiss()
-            }
-        } else if let errorMsg = storeManager.errorMessage {
-            errorMessage = mapStoreKitError(errorMsg)
-            showErrorAlert = true
+        lastAttempt = .restore
+        let outcome = await storeManager.restorePurchases()
+        if outcome == .restored {
+            await welcomeToPro()
+        } else {
+            notice = PaywallNotice.after(outcome)
         }
     }
 
-    private func mapStoreKitError(_ raw: String) -> String {
-        let lower = raw.lowercased()
-        if lower.contains("cancel") { return "Purchase cancelled." }
-        if lower.contains("network") || lower.contains("internet") { return "No internet connection. Try again." }
-        if lower.contains("not allowed") || lower.contains("restricted") { return "Purchases are restricted on this device." }
-        return "Purchase failed. Please try again."
+    private func welcomeToPro() async {
+        Feel.landed()
+        // Pro tracks everything: the lines that didn't fit under the free limit join the list.
+        await TallyImporter.importWaiting(into: SubscriptionStore.shared)
+        showSuccessAlert = true
     }
 }
-
-// MARK: - Trial Feature Row
-struct TrialFeatureRow: View {
-    let icon: String
-    let text: String
-
-    var body: some View {
-        HStack(spacing: 12) {
-            Image(systemName: "checkmark.circle.fill")
-                .font(.system(.title3, design: .rounded).weight(.semibold))
-                .foregroundColor(Color.accentMint)
-
-            Text(text)
-                .font(.system(.subheadline, design: .rounded).weight(.medium))
-                .foregroundStyle(.white)
-
-            Spacer()
-        }
-    }
-}
-
 
 // MARK: - Preview
 #Preview {
-    StoreKitUpgradeView(currentSubscriptionCount: 3)
+    StoreKitUpgradeView()
 }

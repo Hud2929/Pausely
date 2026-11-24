@@ -112,6 +112,10 @@ final class FakeMailAPI: URLProtocol {
         var historyExpired = false
         var deltaExpired = false
         var throttleNext = 0
+        /// The next this-many Gmail header reads are refused the way Gmail refuses a busy person:
+        /// 403 userRateLimitExceeded. `gmailHeadersForbidden` refuses them all as a real permission error.
+        var gmailRateLimitBurst = 0
+        var gmailHeadersForbidden = false
         var revokeNextTokenAfter: Int?
         var pageSize = 7
         var foreignNextLink = false
@@ -198,6 +202,23 @@ final class FakeMailAPI: URLProtocol {
             if s.throttleNext > 0 {
                 s.throttleNext -= 1
                 return (429, ["Retry-After": "1"], Data())
+            }
+            if url.host == "gmail.googleapis.com", url.path.contains("/messages/"), query["format"] == "metadata" {
+                if s.gmailHeadersForbidden {
+                    return json(["error": ["code": 403, "message": "Request had insufficient authentication scopes.",
+                                           "errors": [["message": "Insufficient Permission", "domain": "global",
+                                                       "reason": "insufficientPermissions"]],
+                                           "status": "PERMISSION_DENIED"]], status: 403)
+                }
+                if s.gmailRateLimitBurst > 0 {
+                    s.gmailRateLimitBurst -= 1
+                    var refusal = json(["error": ["code": 403, "message": "User-rate limit exceeded.",
+                                                  "errors": [["message": "User-rate limit exceeded.", "domain": "usageLimits",
+                                                              "reason": "userRateLimitExceeded"]],
+                                                  "status": "PERMISSION_DENIED"]], status: 403)
+                    refusal.1["Retry-After"] = "0"
+                    return refusal
+                }
             }
 
             if url.host == "gmail.googleapis.com" { return gmail(url: url, query: query, state: &s) }
@@ -313,18 +334,53 @@ final class ProviderWorkflowTests: XCTestCase {
     private var fixture: (messages: [FixtureMessage], isReal: Bool) = ([], false)
 
     override func setUp() async throws {
-        // Never touch inboxes someone connected for real on this simulator.
-        try XCTSkipIf(InboxScanner.shared.accounts.contains { !$0.address.hasSuffix(".test") },
+        // Never touch inboxes someone connected for real on this simulator. Asked of what is saved, not of
+        // the scanner's copy: that copy can be empty in a test run while real inboxes are saved, and
+        // `disconnectAll` then wiped two real inboxes (2026-11-18). The stand-in is in place before
+        // anything is disconnected, so no revoke can reach a real server.
+        try XCTSkipIf(MailboxAccountStore.all().contains { !$0.address.hasSuffix(".test") }
+                      || InboxScanner.shared.accounts.contains { !$0.address.hasSuffix(".test") },
                       "real inboxes are connected on this simulator")
-        await InboxScanner.shared.disconnectAll()
         fixture = FixtureMailbox.load()
         FakeMailAPI.with { $0 = FakeMailAPI.State(); $0.messages = fixture.messages }
         URLProtocol.registerClass(FakeMailAPI.self)
+        tookOver = true
+        await InboxScanner.shared.disconnectAll()
     }
 
+    /// Whether this test's setUp took the inboxes over. XCTest calls tearDown even when setUp skipped,
+    /// and an unconditional disconnect there erased real inboxes and revoked a real Gmail sign-in at
+    /// Google, with no stand-in registered (found 2026-11-22, after three lost connections).
+    private var tookOver = false
+
     override func tearDown() async throws {
+        guard tookOver else { return }
         await InboxScanner.shared.disconnectAll()
         URLProtocol.unregisterClass(FakeMailAPI.self)
+        tookOver = false
+    }
+
+    /// `--demo-gmail-results` puts a made-up inbox and its findings on screen. Connecting an inbox
+    /// starts a search, and the search of that made-up inbox wiped the findings: the screen tour's
+    /// "results" capture was the first page for weeks. The demo's inbox is never searched (it would
+    /// also have dialled a real mail server), and disconnecting ends the demo.
+    func testTheDemosInboxIsNeverSearched() async throws {
+        scanner.loadDemoResults()
+        XCTAssertTrue(scanner.isShowingDemo)
+        XCTAssertEqual(scanner.accounts.map(\.address), ["demo@pausely.app"])
+        XCTAssertGreaterThan(scanner.foundSubscriptions.count, 5)
+
+        // Read from the source, not by running it: a search that did start would open a connection.
+        let root = URL(fileURLWithPath: #filePath).deletingLastPathComponent().deletingLastPathComponent()
+            .deletingLastPathComponent().deletingLastPathComponent()
+        let source = try String(contentsOf: root.appendingPathComponent("Pausely/Services/Mailbox/InboxScanner.swift"), encoding: .utf8)
+        let start = try XCTUnwrap(source.range(of: "func scanAll() async {"))
+        let run = try XCTUnwrap(source.range(of: "await runScan()", range: start.upperBound..<source.endIndex))
+        XCTAssertTrue(source[start.upperBound..<run.lowerBound].contains("if isShowingDemo { return }"))
+
+        await scanner.disconnectAll()
+        XCTAssertFalse(scanner.isShowingDemo)
+        XCTAssertEqual(scanner.foundSubscriptions.count, 0)
     }
 
     /// Tokens as sign-in leaves them: a fresh access token and a refresh token.
@@ -420,6 +476,90 @@ final class ProviderWorkflowTests: XCTestCase {
         XCTAssertFalse(scanner.hasAccounts)
     }
 
+    /// Gmail turns a busy person away with 403 userRateLimitExceeded. On a real inbox (2026-11-18) that was
+    /// read as "sign in again" and 966 of 1,500 emails were dropped without a word. Every email is checked.
+    func testGmailRateLimit_isWaitedOutAndNothingIsDropped() async throws {
+        await scanner.connect { try await GmailMailboxProvider.finishConnect(signedInTokens()) }
+        let account = try XCTUnwrap(scanner.accounts.first { $0.kind == .gmail })
+        let searchable = fixture.messages.filter { !$0.labels.contains("SPAM") }.count
+        // Enough refusals to be met on the first reads; each halves the pace, so more only add waiting.
+        FakeMailAPI.with { $0.gmailRateLimitBurst = 6 }
+        await scanner.scanAll()
+        XCTAssertTrue(scanner.accountErrors.isEmpty, "\(scanner.accountErrors)")
+        let stats = try XCTUnwrap(scanner.stats.perAccount[account.id])
+        XCTAssertEqual(stats.candidates, searchable)
+        XCTAssertEqual(stats.checked, searchable, "every email's headers were read in the end")
+        XCTAssertEqual(FakeMailAPI.with { $0.gmailRateLimitBurst }, 0, "the refusals were really met")
+        assertFindsTheRightSubscriptions("Gmail through rate limits")
+        XCTAssertEqual(GmailMailboxProvider.parallelHeaderReads, 10)
+        XCTAssertEqual(GmailMailboxProvider.minimumGap, 0.18, "about 330 a minute: inside the 370 a minute the quota admits")
+    }
+
+    /// An inbox whose access ended is reconnected in its own place: the new sign-in's tokens go to the same
+    /// inbox, nothing is duplicated, the failure clears and a search follows. "Your sign-in expired.
+    /// Reconnect this inbox." had no way to do it (both ratings of 2026-11-22).
+    func testAnExpiredInboxIsReconnectedInItsOwnPlace() async throws {
+        await scanner.connect { try await GmailMailboxProvider.finishConnect(signedInTokens()) }
+        let old = try XCTUnwrap(scanner.accounts.first { $0.kind == .gmail })
+        // Access withdrawn: every token refused and the refresh token no longer accepted.
+        FakeMailAPI.with { s in s.validTokens = []; s.refreshToken = "withdrawn" }
+        await scanner.scanAll()
+        XCTAssertNotNil(scanner.accountErrors[old.id], "the expired sign-in is shown")
+
+        FakeMailAPI.with { $0.refreshToken = "refresh-2" }
+        let tokens = signedInTokens()
+        await scanner.reconnect(old) { try await GmailMailboxProvider.finishConnect(tokens) }
+        XCTAssertEqual(scanner.accounts.map(\.id), [old.id], "the same inbox, not a second one")
+        XCTAssertNil(scanner.accountErrors[old.id])
+        XCTAssertGreaterThan(scanner.stats.perAccount[old.id]?.candidates ?? 0, 0, "a search ran with the new sign-in")
+    }
+
+    /// What an earlier search found is shown again when the page opens, from the facts kept on the phone and
+    /// with no request to the inbox: after a relaunch the page offered only "Search again" (2026-11-22).
+    func testWhatWasFoundComesBackWithoutSearchingAgain() async throws {
+        await scanner.connect { try await GmailMailboxProvider.finishConnect(signedInTokens()) }
+        await scanner.scanAll()
+        let found = scanner.foundSubscriptions.map(\.id)
+        XCTAssertFalse(found.isEmpty)
+
+        // As after a relaunch: the inbox and its facts are saved, nothing has been worked out yet.
+        scanner.foundSubscriptions = []
+        scanner.report = nil
+        let asked = FakeMailAPI.with { $0.log.count }
+        scanner.showSaved()
+        XCTAssertEqual(scanner.foundSubscriptions.map(\.id), found)
+        XCTAssertEqual(FakeMailAPI.with { $0.log.count }, asked, "nothing is asked of the inbox")
+    }
+
+    /// A 403 that is a real refusal (a permission taken away) says so instead of ending as "nothing found".
+    func testGmailHeadersRefused_saysToReconnect() async throws {
+        await scanner.connect { try await GmailMailboxProvider.finishConnect(signedInTokens()) }
+        let account = try XCTUnwrap(scanner.accounts.first { $0.kind == .gmail })
+        FakeMailAPI.with { $0.gmailHeadersForbidden = true }
+        await scanner.scanAll()
+        XCTAssertNotNil(scanner.accountErrors[account.id], "the refusal is shown, not hidden as an empty inbox")
+    }
+
+    func testRateLimitBodies_areToldApartFromRefusals() {
+        func body(_ object: Any) -> Data { try! JSONSerialization.data(withJSONObject: object) }
+        let gmailBusy = body(["error": ["code": 403, "errors": [["domain": "usageLimits", "reason": "userRateLimitExceeded"]],
+                                        "status": "PERMISSION_DENIED"]])
+        let googleTooMany = body(["error": ["code": 429, "status": "RESOURCE_EXHAUSTED"]])
+        let concurrent = body(["error": ["code": 403, "message": "Too many concurrent requests for user"]])
+        let noScope = body(["error": ["code": 403, "errors": [["domain": "global", "reason": "insufficientPermissions"]],
+                                      "status": "PERMISSION_DENIED"]])
+        XCTAssertTrue(MailboxHTTP.isRateLimit(gmailBusy))
+        XCTAssertTrue(MailboxHTTP.isRateLimit(googleTooMany))
+        XCTAssertTrue(MailboxHTTP.isRateLimit(concurrent))
+        XCTAssertFalse(MailboxHTTP.isRateLimit(noScope), "a missing permission still means signing in again")
+        XCTAssertFalse(MailboxHTTP.isRateLimit(Data()))
+        XCTAssertFalse(MailboxHTTP.isRateLimit(Data("<html>Forbidden</html>".utf8)))
+        XCTAssertEqual(MailboxHTTP.rateLimitDelay(retryAfter: nil, attempt: 1), 1)
+        XCTAssertEqual(MailboxHTTP.rateLimitDelay(retryAfter: nil, attempt: 3), 4)
+        XCTAssertEqual(MailboxHTTP.rateLimitDelay(retryAfter: "2", attempt: 1), 2)
+        XCTAssertEqual(MailboxHTTP.rateLimitDelay(retryAfter: "-5", attempt: 1), 0)
+    }
+
     func testGmailSignInThatCantBeRefreshed_asksToReconnect() async throws {
         await scanner.connect { try await GmailMailboxProvider.finishConnect(signedInTokens()) }
         let account = try XCTUnwrap(scanner.accounts.first)
@@ -431,13 +571,16 @@ final class ProviderWorkflowTests: XCTestCase {
 
     /// Waits until the scan is reading messages (or gives up after a few seconds).
     private func waitUntilReading() async throws {
-        for _ in 0..<300 where !(scanner.isScanning && scanner.progress > 0.35) {
+        // The status line, not a share of the bar: the bar follows requests and passes any fixed mark while
+        // headers are still being checked.
+        for _ in 0..<300 where !(scanner.isScanning && scanner.statusLine.hasPrefix("Read")) {
             try await Task.sleep(nanoseconds: 10_000_000)
         }
     }
 
     func testDisconnectDuringScan_forgetsTheInboxForGood() async throws {
-        FakeMailAPI.with { $0.responseDelay = 0.03 }
+        // Slow enough to be caught mid-read: bodies are read several at a time now.
+        FakeMailAPI.with { $0.responseDelay = 0.15 }
         await scanner.connect { try await GmailMailboxProvider.finishConnect(signedInTokens()) }
         let account = try XCTUnwrap(scanner.accounts.first)
         let scan = Task { await scanner.scanAll() }

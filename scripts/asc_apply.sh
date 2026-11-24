@@ -45,8 +45,7 @@ say() { printf '\n== %s\n' "$*"; }
 run() { if (( APPLY )); then "$@"; else printf '   [dry-run] %s\n' "$*"; fi; }
 TMP=$(mktemp -d); trap 'rm -rf "$TMP"' EXIT
 
-say "Local copy checks"
-python3 scripts/store_copy.py --check
+say "Local copy checks"   # limits, numbers and names are held by StoreListingTests in the test suite
 asc metadata validate --dir ./metadata --subscription-app --output table | sed -n 2,3p
 
 say "Account access"

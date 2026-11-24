@@ -1,5 +1,6 @@
 import Foundation
 import os.log
+import UIKit
 
 /// Finds subscriptions in every connected inbox, on the iPhone. For each inbox: search (or only new mail),
 /// read headers, open only the messages that look financial, parse them with the same MIME parser, and
@@ -13,21 +14,54 @@ final class InboxScanner: ObservableObject {
     @Published private(set) var isScanning = false
     @Published private(set) var progress: Double = 0
     @Published private(set) var statusLine = ""
-    @Published var foundSubscriptions: [SmartImportManager.ImportSubscription] = []
+    /// Minutes the running search still needs, from its own pace so far; nil until that is known. A
+    /// first Gmail search is about six minutes on Google's quota for one person, and nothing said so.
+    @Published private(set) var minutesLeft: Int?
+    @Published var foundSubscriptions: [FoundSubscription] = []
+    /// What was ticked on the results, kept on this iPhone: closing the page lost every tick (the rating of
+    /// 2026-11-22), and a relaunch ticked eleven the person had unticked (11-23). Nil until the person has
+    /// chosen; a new search starts over.
+    static let selectionKey = "inbox_ticked"
+    var savedSelection: Set<String>? {
+        get { (UserDefaults.standard.array(forKey: Self.selectionKey) as? [String]).map(Set.init) }
+        set {
+            if let newValue { UserDefaults.standard.set(newValue.sorted(), forKey: Self.selectionKey) }
+            else { UserDefaults.standard.removeObject(forKey: Self.selectionKey) }
+        }
+    }
+    /// The dollar a receipt that says only "$" is taken as, when the person chose one.
+    static let assumedDollarKey = "inbox_assumed_dollar"
+    var assumedDollar: String {
+        UserDefaults.standard.string(forKey: Self.assumedDollarKey)
+            ?? DollarHint.assumed(readerCurrency: CurrencyManager.shared.selectedCurrency)
+    }
+
+    func setAssumedDollar(_ code: String) {
+        UserDefaults.standard.set(code, forKey: Self.assumedDollarKey)
+        reanalyze()
+    }
+
+    /// What the person said isn't a subscription, from the same facts, so it can be shown again later.
+    @Published private(set) var hiddenFindings: [FoundSubscription] = []
+    /// The latest receipt read for each sender during the running search, in the order the senders were first
+    /// read: a line never moves once it is on the slip.
+    @Published private(set) var receiptsSeen: [ReceiptSeen] = []
     @Published var report: IntelligenceReport?
     @Published var error: String?
     @Published private(set) var accountErrors: [String: String] = [:]
     @Published private(set) var stats = ScanStats()
 
-    struct AccountStats: Equatable {
+    struct AccountStats: Equatable, Codable {
         var candidates = 0
         var checked = 0
         var read = 0
         var receipts = 0
         var incremental = false
+        /// The search found as many possible receipts as one search reads; older ones were left.
+        var capped = false
     }
 
-    struct ScanStats: Equatable {
+    struct ScanStats: Equatable, Codable {
         var emailsChecked = 0
         var bodiesRead = 0
         var receipts = 0
@@ -35,10 +69,31 @@ final class InboxScanner: ObservableObject {
         var purchasesIgnored = 0
         var confirmed = 0
         var perAccount: [String: AccountStats] = [:]
+        /// The person stopped the search: what is shown is from what was read before that.
+        var stopped = false
+        var capped: Bool { perAccount.values.contains(where: \.capped) }
+        /// Every inbox searched only mail newer than its last search.
+        var onlyNewMail: Bool { !perAccount.isEmpty && perAccount.values.allSatisfy(\.incremental) }
+    }
+
+    /// What the last search read, kept with the facts it found: after a relaunch the slip lost its "Emails
+    /// checked: 112 · read in full: 111" while the findings came back (the rating of 2026-11-23).
+    static let lastSearchKey = "inbox_last_search"
+
+    static func savedStats(defaults: UserDefaults = .standard) -> ScanStats? {
+        defaults.data(forKey: lastSearchKey).flatMap { try? JSONDecoder().decode(ScanStats.self, from: $0) }
+    }
+
+    static func saveStats(_ stats: ScanStats?, defaults: UserDefaults = .standard) {
+        if let stats, let data = try? JSONEncoder().encode(stats) {
+            defaults.set(data, forKey: lastSearchKey)
+        } else {
+            defaults.removeObject(forKey: lastSearchKey)
+        }
     }
 
     /// Full messages read per inbox per scan, the most likely receipts first.
-    static let bodyBudget = 400
+    nonisolated static let bodyBudget = 400
     /// How far back a first scan looks.
     static let lookback: TimeInterval = 2 * 365 * 86_400
 
@@ -62,6 +117,39 @@ final class InboxScanner: ObservableObject {
         await connect { try await MicrosoftGraphProvider.connect() }
     }
 
+    /// Signs in again to an inbox whose access ended, in its own place: the new sign-in's tokens go to the
+    /// same inbox, so its receipt facts stay with it, and a search follows. "Your sign-in expired.
+    /// Reconnect this inbox." had nothing to reconnect with (both ratings of 2026-11-22). A sign-in to
+    /// another address is simply another inbox.
+    func reconnect(_ old: MailboxAccount, signIn: (() async throws -> MailboxAccount)? = nil) async {
+        error = nil
+        do {
+            let fresh: MailboxAccount
+            if let signIn {
+                fresh = try await signIn()
+            } else {
+                switch old.kind {
+                case .gmail: fresh = try await GmailMailboxProvider.connect()
+                case .microsoft: fresh = try await MicrosoftGraphProvider.connect()
+                case .imap: return  // an app password is given on its own page (`connectIMAP` reconnects in place)
+                }
+            }
+            if fresh.id != old.id, fresh.kind == old.kind,
+               fresh.address.caseInsensitiveCompare(old.address) == .orderedSame,
+               let tokens = OAuthSession.load(for: fresh.id) {
+                OAuthSession.store(tokens, for: old.id)
+                MailboxAccountStore.remove(fresh.id)
+            }
+            accounts = MailboxAccountStore.all()
+            accountErrors[old.id] = nil
+            await scanAll()
+        } catch MailboxError.cancelled {
+            return
+        } catch {
+            self.error = error.localizedDescription
+        }
+    }
+
     /// Signs in to an IMAP server and keeps the account only if the sign-in and folder listing work.
     func connectIMAP(address: String, password: String, preset: IMAPPreset?, host customHost: String? = nil,
                      port customPort: Int? = nil) async throws -> MailboxAccount {
@@ -75,7 +163,19 @@ final class InboxScanner: ObservableObject {
             throw MailboxError.notConfigured(L10n.string("Choose your email provider or enter its IMAP server."))
         }
         if let existing = accounts.first(where: { $0.address == trimmed && $0.kind == .imap }) {
-            throw MailboxError.notConfigured(L10n.string("\(existing.address) is already connected."))
+            // An inbox whose sign-in stopped working takes the new password in its own place.
+            guard accountErrors[existing.id] != nil else {
+                throw MailboxError.notConfigured(L10n.string("\(existing.address) is already connected."))
+            }
+            let provider = makeProvider(existing, password: cleanPassword)
+            try await provider.open()
+            await provider.close()
+            guard MailboxAccountStore.setSecret(cleanPassword, .password, for: existing.id) else {
+                throw MailboxError.server(L10n.string("Couldn't save the password securely on this iPhone."))
+            }
+            accountErrors[existing.id] = nil
+            Task { await scanAll() }
+            return existing
         }
 
         let account = MailboxAccount(id: UUID().uuidString, kind: .imap, address: trimmed, presetID: preset?.id,
@@ -119,9 +219,13 @@ final class InboxScanner: ObservableObject {
         _ = ReceiptLedger.removeSource(account.id, remainingAccounts: accounts.count)
         if accounts.isEmpty {
             ReceiptLedger.clear()
+            UserCorrections.clear()
+            hiddenFindings = []
             foundSubscriptions = []
             report = nil
             stats = ScanStats()
+            Self.saveStats(nil)
+            savedSelection = nil
         } else {
             reanalyze()
         }
@@ -134,20 +238,46 @@ final class InboxScanner: ObservableObject {
         MailboxAccountStore.removeAll()
         ReceiptLedger.clear()
         accounts = []
+        UserCorrections.clear()
+        hiddenFindings = []
         foundSubscriptions = []
         report = nil
         stats = ScanStats()
+        Self.saveStats(nil)
+        savedSelection = nil
         accountErrors = [:]
+        #if DEBUG
+        isShowingDemo = false
+        #endif
     }
 
     // MARK: - Scanning
 
     func scanAll() async {
         guard !isScanning else { return }
+        #if DEBUG
+        // The demo's inbox is made up, so there is nothing to search: connecting it used to start
+        // a search that wiped the demo's results, and the screen fell back to its first page.
+        if isShowingDemo { return }
+        #endif
         let task = Task { await runScan() }
         scanTask = task
         await task.value
         scanTask = nil
+    }
+
+    /// How many messages a search will open, projected from the share of the headers checked so far that
+    /// looked like receipts, within the most one search reads.
+    nonisolated static func projectedReads(wanted: Int, checked: Int, of total: Int) -> Int {
+        guard checked > 0 else { return min(bodyBudget, max(1, total / 4)) }
+        return min(bodyBudget, max(1, Int((Double(wanted) / Double(checked) * Double(total)).rounded())))
+    }
+
+    /// Whole minutes still needed at the pace so far, rounded up; nil under a minute.
+    nonisolated static func minutesLeft(done: Int, total: Int, elapsed: TimeInterval) -> Int? {
+        guard done > 0, total > done, elapsed > 0 else { return nil }
+        let seconds = elapsed / Double(done) * Double(total - done)
+        return seconds < 60 ? nil : Int((seconds / 60).rounded(.up))
     }
 
     func cancelScan() {
@@ -167,7 +297,12 @@ final class InboxScanner: ObservableObject {
         error = nil
         accountErrors = [:]
         stats = ScanStats()
-        defer { isScanning = false; statusLine = "" }
+        receiptsSeen = []
+        minutesLeft = nil
+        savedSelection = nil
+        // The usual half minute more when the app is left: without it, the requests in flight were cut.
+        let background = BackgroundTime()
+        defer { isScanning = false; statusLine = ""; minutesLeft = nil; background.end() }
 
         let catalog = Self.buildCatalog()
         var newSignals: [ReceiptSignal] = []
@@ -176,7 +311,7 @@ final class InboxScanner: ObservableObject {
 
         for (index, account) in accounts.enumerated() {
             if Task.isCancelled { break }
-            statusLine = L10n.string("Searching \(account.providerName)…")
+            statusLine = L10n.string("Searching \(account.searchName)…")
             do {
                 let (signals, accountStats) = try await scan(account, catalog: catalog, aiBudget: &aiBudget) { [weak self] fraction, line in
                     self?.progress = (Double(index) + fraction) / Double(total)
@@ -190,8 +325,10 @@ final class InboxScanner: ObservableObject {
                 updated.lastScan = Date()
                 MailboxAccountStore.update(updated)
             } catch MailboxError.cancelled {
+                stats.stopped = true
                 break
             } catch is CancellationError {
+                stats.stopped = true
                 break
             } catch {
                 accountErrors[account.id] = error.localizedDescription
@@ -203,20 +340,30 @@ final class InboxScanner: ObservableObject {
         let connected = Set(accounts.map(\.id))
         newSignals.removeAll { !($0.sources ?? []).contains(where: connected.contains) }
 
-        let ledger = ReceiptLedger.merge(newSignals, into: ReceiptLedger.load())
-        ReceiptLedger.save(ledger)
+        let ledger = ReceiptLedger.add(newSignals)
         progress = 1
         analyze(ledger, catalog: catalog)
         stats.receipts = newSignals.count
-        if foundSubscriptions.isEmpty && accountErrors.count < accounts.count {
-            error = L10n.string("No recurring subscriptions found in your email yet.")
+        if Task.isCancelled { stats.stopped = true }
+        Self.saveStats(stats)
+        if foundSubscriptions.isEmpty && stats.stopped {
+            error = L10n.string("The search was stopped before it found anything")
+        } else if foundSubscriptions.isEmpty && accountErrors.count < accounts.count {
+            error = L10n.string("No subscriptions found")
+        } else if foundSubscriptions.isEmpty, !accounts.isEmpty {
+            error = L10n.string("The search couldn't be finished")
         }
     }
 
     /// One inbox. Returns the receipt facts found and what was read.
     private func scan(_ account: MailboxAccount, catalog: MerchantCatalog, aiBudget: inout Int,
                       progress report: (Double, String) -> Void) async throws -> ([ReceiptSignal], AccountStats) {
-        let provider = makeProvider(account)
+        try await scan(account, provider: makeProvider(account), catalog: catalog, aiBudget: &aiBudget, progress: report)
+    }
+
+    /// Runs a scan against `provider`. Exposed internally so unit tests can prove two-phase Gmail quick pass ordering.
+    func scan(_ account: MailboxAccount, provider: MailboxProvider, catalog: MerchantCatalog, aiBudget: inout Int,
+              progress report: (Double, String) -> Void) async throws -> ([ReceiptSignal], AccountStats) {
         try await provider.open()
         var accountStats = AccountStats()
         do {
@@ -224,39 +371,110 @@ final class InboxScanner: ObservableObject {
             let plan = InboxSearchPlan.standard(catalog: catalog, since: since)
             let cursor = MailboxAccountStore.cursor(for: account.id)
             accountStats.incremental = cursor != nil
-            let (refs, nextCursor) = try await provider.candidates(plan: plan, cursor: cursor)
-            accountStats.candidates = refs.count
-            report(0.2, L10n.string("Checking \(L10n.string("\(refs.count) emails")) in \(account.providerName)…"))
-
-            let summaries = try await provider.summaries(refs)
-            accountStats.checked = summaries.count
-            let wanted = Self.triage(summaries, catalog: catalog).prefix(Self.bodyBudget)
-            report(0.35, L10n.string("Reading \(L10n.string("\(wanted.count) receipts")) from \(account.providerName)…"))
 
             var signals: [ReceiptSignal] = []
-            for (offset, summary) in wanted.enumerated() {
-                try Task.checkCancellation()
-                guard let raw = try? await provider.rawMessage(summary.ref) else { continue }
-                accountStats.read += 1
-                let id = summary.messageID ?? "\(account.id):\(summary.ref.folder ?? ""):\(summary.ref.id)"
-                guard let email = MIMEParser.parse(raw, id: id, receivedDate: summary.receivedDate, labelIds: summary.labelIds),
-                      let result = EmailSignalExtractor.extract(email, catalog: catalog) else { continue }
-                var signal = result.signal
-                if let excerpt = result.ambiguousExcerpt, let classifier, aiBudget > 0 {
-                    aiBudget -= 1
-                    let verdict = await classifier.classify(merchantGuess: result.merchantGuess, subject: result.subject, excerpt: excerpt)
-                    if verdict != .unsure { stats.aiAssisted += 1 }
-                    signal = signal.applying(verdict)
-                }
-                signal.sources = [account.id]
-                signals.append(signal)
-                if offset % 10 == 0 {
-                    report(0.35 + 0.6 * Double(offset + 1) / Double(max(wanted.count, 1)),
-                           L10n.string("Read \(offset + 1) of \(wanted.count) in \(account.providerName)"))
+            var stopped = false
+            var seenRefs = Set<MessageRef>()
+            var nextCursor: String?
+            let started = Date()
+
+            func estimate(done: Int, of total: Int) {
+                let elapsed = Date().timeIntervalSince(started)
+                guard done >= 30, elapsed >= 10 else { return }
+                minutesLeft = Self.minutesLeft(done: done, total: total, elapsed: elapsed)
+            }
+
+            func readWanted(_ wanted: [MessageSummary], startProgress: Double, endProgress: Double, doneBase: Int, totalEst: Int) async {
+                var offset = -1
+                for batch in InboxSearchPlan.batches(wanted, size: max(1, provider.parallelReads)) {
+                    if Task.isCancelled { stopped = true; break }
+                    let raws = await provider.rawMessages(batch.map(\.ref))
+                    for summary in batch {
+                        offset += 1
+                        guard let raw = raws[summary.ref] else { continue }
+                        accountStats.read += 1
+                        let id = summary.messageID ?? "\(account.id):\(summary.ref.folder ?? ""):\(summary.ref.id)"
+                        guard let email = MIMEParser.parse(raw, id: id, receivedDate: summary.receivedDate, labelIds: summary.labelIds) else { continue }
+                        for result in EmailSignalExtractor.extractAll(email, catalog: catalog) {
+                            var signal = result.signal
+                            if let excerpt = result.ambiguousExcerpt, let classifier, aiBudget > 0 {
+                                aiBudget -= 1
+                                let verdict = await classifier.classify(merchantGuess: result.merchantGuess, subject: result.subject, excerpt: excerpt)
+                                if verdict != .unsure { stats.aiAssisted += 1 }
+                                signal = signal.applying(verdict)
+                            }
+                            signal.sources = [account.id]
+                            signals.append(signal)
+                            noteReceipt(signal, catalog: catalog)
+                        }
+                        if offset % 10 == 0 {
+                            estimate(done: doneBase + offset + 1, of: totalEst)
+                            report(startProgress + (endProgress - startProgress) * Double(offset + 1) / Double(max(wanted.count, 1)),
+                                   L10n.string("Read \(offset + 1) of \(wanted.count) in \(account.searchName)"))
+                        }
+                    }
                 }
             }
+
+            // Phase 1 (Gmail first-time quick pass): fetch, triage, and read the last 90 days FIRST so the
+            // live receipt slip surfaces active subscriptions in seconds before scanning older 2-year history.
+            if account.kind == .gmail, cursor == nil {
+                let quickPlan = InboxSearchPlan.standard(catalog: catalog, since: Date().addingTimeInterval(-90 * 86_400))
+                report(0.02, L10n.string("Checking recent receipts in \(account.searchName)…"))
+                let (recentRefs, recentCursor) = try await provider.candidates(plan: quickPlan, cursor: nil)
+                nextCursor = recentCursor
+                let uniqueRecent = recentRefs.filter { seenRefs.insert($0).inserted }
+                var recentSummaries: [MessageSummary] = []
+                for chunk in InboxSearchPlan.batches(uniqueRecent, size: 100) {
+                    if Task.isCancelled { stopped = true; break }
+                    recentSummaries += try await provider.summaries(chunk)
+                }
+                accountStats.checked += recentSummaries.count
+                if !stopped {
+                    let recentWanted = Array(Self.triage(recentSummaries, catalog: catalog).prefix(Self.bodyBudget))
+                    await readWanted(recentWanted, startProgress: 0.05, endProgress: 0.25, doneBase: recentSummaries.count, totalEst: max(recentSummaries.count + recentWanted.count, 1))
+                }
+            }
+
+            // Phase 2 (or standard pass for incremental / Outlook / IMAP): remaining history up to plan cap.
+            if !stopped {
+                let found = try await provider.candidates(plan: plan, cursor: cursor)
+                nextCursor = found.cursor ?? nextCursor
+                let remainingBudget = max(0, plan.maxCandidates - seenRefs.count)
+                let refs = Array(found.refs.filter { seenRefs.insert($0).inserted }.prefix(remainingBudget))
+                accountStats.candidates = seenRefs.count
+                accountStats.capped = seenRefs.count >= plan.maxCandidates
+
+                let baseProgress = accountStats.read > 0 ? 0.25 : 0.05
+                if !refs.isEmpty {
+                    report(baseProgress, L10n.string("Checking \(L10n.string("\(refs.count) emails")) in \(account.searchName)…"))
+                }
+                var expectedBodies = min(Self.bodyBudget, max(1, refs.count / 4))
+                var wantedSoFar = 0
+                var headerEnd = baseProgress
+                var summaries: [MessageSummary] = []
+                for chunk in InboxSearchPlan.batches(refs, size: 100) {
+                    if Task.isCancelled { stopped = true; break }
+                    let checked = try await provider.summaries(chunk)
+                    summaries += checked
+                    wantedSoFar += Self.triage(checked, catalog: catalog).count
+                    expectedBodies = Self.projectedReads(wanted: wantedSoFar, checked: summaries.count, of: refs.count)
+                    headerEnd = max(headerEnd, baseProgress + (0.95 - baseProgress) * Double(summaries.count) / Double(max(refs.count + expectedBodies, 1)))
+                    estimate(done: summaries.count, of: refs.count + expectedBodies)
+                    report(headerEnd, L10n.string("Checked \(summaries.count) of \(refs.count) in \(account.searchName)"))
+                }
+                accountStats.checked += summaries.count
+                let bodyRoom = max(0, Self.bodyBudget - accountStats.read)
+                let wanted = Array(Self.triage(summaries, catalog: catalog).prefix(bodyRoom))
+                if !stopped, !wanted.isEmpty {
+                    report(headerEnd, L10n.string("Reading \(L10n.string("\(wanted.count) emails")) from \(account.searchName)…"))
+                    await readWanted(wanted, startProgress: headerEnd, endProgress: 0.95, doneBase: refs.count, totalEst: refs.count + wanted.count)
+                }
+            }
+
             accountStats.receipts = signals.count
-            if MailboxAccountStore.all().contains(where: { $0.id == account.id }) {
+            if stopped { stats.stopped = true }
+            if !stopped, MailboxAccountStore.all().contains(where: { $0.id == account.id }) {
                 MailboxAccountStore.setCursor(nextCursor, for: account.id)
             }
             await provider.close()
@@ -265,6 +483,28 @@ final class InboxScanner: ObservableObject {
             await provider.close()
             throw error
         }
+    }
+
+    /// Shows a charge as soon as its receipt is read. One line per sender, its latest receipt; promotions
+    /// and anything without an amount or a usable name are left out. These are receipts, not yet
+    /// subscriptions: the list of subscriptions comes when the search has weighed them all.
+    private func noteReceipt(_ signal: ReceiptSignal, catalog: MerchantCatalog) {
+        // Only receipts that read as recurring: "DoorDash $22.90" and "Skip The Dishes $26.39" on the slip
+        // made a person think the app took their dinner for a subscription (the rating of 2026-11-22).
+        let recurring = (signal.renewalLanguage || signal.cadenceHint != nil) && !signal.oneTimeLanguage
+        guard signal.kind == .charge, recurring, !signal.promotional, signal.spoofSuspected != true, let amount = signal.amount,
+              let merchant = catalog.resolve(hint: signal.merchantHint, senderName: signal.senderName, senderDomain: signal.senderDomain)
+        else { return }
+        let seen = ReceiptSeen(name: merchant.displayName, amount: amount,
+                               currency: signal.currency ?? assumedDollar, date: signal.date)
+        // A sender's newer receipt changes its line where it is, and a new sender goes at the end. Put at the
+        // top, every line moved down with each receipt, and while receipts came faster than the move the lines
+        // were drawn over each other (both ratings of 2026-11-22 and the one of 11-23).
+        if let index = receiptsSeen.firstIndex(where: { $0.id == seen.id }) {
+            if receiptsSeen[index].date < seen.date { receiptsSeen[index] = seen }
+            return
+        }
+        receiptsSeen.append(seen)
     }
 
     /// Which messages are worth reading in full, most promising first: known billers and platforms, then
@@ -310,13 +550,37 @@ final class InboxScanner: ObservableObject {
 
     func analyze(_ ledger: [ReceiptSignal], catalog: MerchantCatalog) {
         let engine = SubscriptionIntelligenceEngine(catalog: catalog)
-        let analysis = engine.analyze(signals: ledger, now: Date(),
-                                      defaultCurrency: CurrencyManager.shared.selectedCurrency,
-                                      corrections: UserCorrections.load())
+        let corrections = UserCorrections.load()
+        let currency = assumedDollar
+        let analysis = engine.analyze(signals: ledger, now: Date(), defaultCurrency: currency,
+                                      corrections: corrections, rates: CurrencyManager.shared.rates)
         report = analysis
         foundSubscriptions = analysis.subscriptions.map(Self.makeImport)
+        // Hidden ones are kept in view at the end of the page: once the page was closed, "This isn't a
+        // subscription" could not be taken back (the rating of 2026-11-22).
+        let hiddenKeys = Set(corrections.filter { $0.value == .notSubscription }.map(\.key))
+        if hiddenKeys.isEmpty {
+            hiddenFindings = []
+        } else {
+            let unhidden = engine.analyze(signals: ledger, now: Date(), defaultCurrency: currency,
+                                          corrections: corrections.filter { $0.value != .notSubscription },
+                                          rates: CurrencyManager.shared.rates)
+            hiddenFindings = unhidden.subscriptions.filter { hiddenKeys.contains($0.merchantKey) }.map(Self.makeImport)
+        }
         stats.confirmed = analysis.subscriptions.filter { $0.tier == .confirmed }.count
         stats.purchasesIgnored = analysis.ignoredPurchaseGroups
+    }
+
+    /// Shows what earlier searches found, from the facts kept on this iPhone, when the page opens. After a
+    /// relaunch the page offered only "Search again" over 139 saved facts, and a first Gmail search is
+    /// about six minutes (2026-11-22). Nothing is read from the inbox.
+    func showSaved() {
+        guard hasAccounts, !isScanning, foundSubscriptions.isEmpty, report == nil else { return }
+        #if DEBUG
+        if isShowingDemo { return }
+        #endif
+        if stats == ScanStats(), let saved = Self.savedStats() { stats = saved }
+        reanalyze()
     }
 
     /// Re-runs detection on the on-device facts only. Instant, offline, no email access.
@@ -324,40 +588,58 @@ final class InboxScanner: ObservableObject {
         analyze(ReceiptLedger.load(), catalog: Self.buildCatalog())
     }
 
-    func markNotSubscription(_ subscription: SmartImportManager.ImportSubscription) {
-        guard let key = subscription.proven?.merchantKey else { return }
-        UserCorrections.set(key, .notSubscription)
+    /// Hides a finding for good. Returns what the person had said about it before, so Undo can put it back.
+    @discardableResult
+    func markNotSubscription(_ subscription: FoundSubscription, defaults: UserDefaults = .standard) -> UserVerdict? {
+        let previous = UserCorrections.load(defaults: defaults)[subscription.proven.merchantKey]
+        UserCorrections.set(subscription.proven.merchantKey, .notSubscription, defaults: defaults)
+        reanalyze()
+        return previous
+    }
+
+    /// Undo for "This isn't a subscription": a tap meant for the row's box could hide a real one, with
+    /// no way back (the rating of 2026-11-22).
+    func undoNotSubscription(_ subscription: FoundSubscription, previous: UserVerdict?, defaults: UserDefaults = .standard) {
+        UserCorrections.set(subscription.proven.merchantKey, previous, defaults: defaults)
         reanalyze()
     }
 
-    func importSubscriptions(_ selected: [SmartImportManager.ImportSubscription]) async -> (added: Int, duplicates: Int) {
-        for sub in selected { if let key = sub.proven?.merchantKey { UserCorrections.set(key, .trusted) } }
-        let result = SmartImportManager.ImportResult(subscriptions: selected, errors: [])
-        await SmartImportManager.shared.processImports(from: [result])
-        return (SmartImportManager.shared.importedCount, SmartImportManager.shared.duplicatesFound)
+    /// Adds what the person chose to their list. Under the free limit, the ones that cost most are added
+    /// and the rest wait (see `TallyImporter`); the outcome says which, so the screen can too.
+    func importSubscriptions(_ selected: [FoundSubscription]) async -> TallyImporter.Outcome {
+        for found in selected where !found.isCancelled { UserCorrections.set(found.proven.merchantKey, .trusted) }
+        return await TallyImporter.add(selected.filter { !$0.isCancelled }.map(\.line), into: SubscriptionStore.shared)
     }
 
-    static func makeImport(from sub: ProvenSubscription) -> SmartImportManager.ImportSubscription {
-        let confidence: SmartImportManager.ImportSubscription.Confidence
-        switch sub.tier {
-        case .confirmed: confidence = .high
-        case .likely: confidence = .medium
-        default: confidence = .low
-        }
-        return SmartImportManager.ImportSubscription(
-            name: sub.name, amount: sub.amount, currency: sub.currency, billingFrequency: sub.frequency,
-            nextBillingDate: sub.nextBillingDate, confidence: confidence, source: "Email", proven: sub)
+    static func makeImport(from sub: ProvenSubscription) -> FoundSubscription {
+        FoundSubscription(proven: sub)
     }
 
     #if DEBUG
+    /// True once `presentDemo` has put a made-up inbox and its findings on screen.
+    private(set) var isShowingDemo = false
+
     /// DEBUG only: shows a synthetic result for screenshots and reviews (`--demo-gmail-results`).
     func presentDemo(_ analysis: IntelligenceReport, account: MailboxAccount, checked: Int, read: Int) {
+        isShowingDemo = true
         accounts = [account]
         report = analysis
         foundSubscriptions = analysis.subscriptions.map(Self.makeImport)
         stats = ScanStats(emailsChecked: checked, bodiesRead: read, receipts: 0, aiAssisted: 0,
                           purchasesIgnored: analysis.ignoredPurchaseGroups,
                           confirmed: analysis.subscriptions.filter { $0.tier == .confirmed }.count)
+    }
+
+    /// DEBUG only: made-up inboxes with nothing found in them, as the page stands before a search,
+    /// after one that found nothing, or after one that an inbox refused (`--demo-inbox=…`).
+    func presentDemo(connected: [MailboxAccount], outcome: String?, refused: [String: String], checked: Int) {
+        isShowingDemo = true
+        accounts = connected
+        report = nil
+        foundSubscriptions = []
+        error = outcome
+        accountErrors = refused
+        stats = ScanStats(emailsChecked: checked, bodiesRead: 0, receipts: 0, aiAssisted: 0, purchasesIgnored: 0, confirmed: 0)
     }
     #endif
 
@@ -380,5 +662,23 @@ final class InboxScanner: ObservableObject {
                                                refreshToken: refresh, expiresAt: .distantPast), for: account.id)
         MailboxAccountStore.upsert(account)
         if let history = defaults.string(forKey: "gmail_last_history_id") { MailboxAccountStore.setCursor(history, for: account.id) }
+    }
+}
+
+/// Asks iOS for the usual extra time while a search runs and the app is left, and gives it back after.
+@MainActor
+private final class BackgroundTime {
+    private var id = UIBackgroundTaskIdentifier.invalid
+
+    init() {
+        id = UIApplication.shared.beginBackgroundTask(withName: "Inbox search") { [weak self] in
+            MainActor.assumeIsolated { self?.end() }
+        }
+    }
+
+    func end() {
+        guard id != .invalid else { return }
+        UIApplication.shared.endBackgroundTask(id)
+        id = .invalid
     }
 }

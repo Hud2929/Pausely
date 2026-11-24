@@ -2,295 +2,76 @@
 //  PriceHistoryView.swift
 //  Pausely
 //
-//  View subscription price changes over time
+//  What a subscription has cost over time: each price the person recorded, newest first.
+//  Read from the event log (`PriceHistory`), the same record the Renewal Verdict and Insights use.
 //
 
 import SwiftUI
 
 struct PriceHistoryView: View {
     let subscription: Subscription
-    @ObservedObject private var tracker = PriceHistoryTracker.shared
-    @ObservedObject private var currencyManager = CurrencyManager.shared
-    @Environment(\.dismiss) private var dismiss
+    @ObservedObject private var eventLog = LifecycleEventLog.shared
 
-    var history: [PriceHistoryEntry] {
-        tracker.history(for: subscription.id)
+    /// Oldest first, as recorded.
+    private var history: [PriceHistory.Point] {
+        PriceHistory.points(for: subscription.id, events: eventLog.events)
     }
 
-    var trend: PriceTrend {
-        tracker.priceTrend(for: subscription.id)
-    }
-
-    var percentageChange: Double {
-        tracker.percentageIncrease(for: subscription.id)
+    /// The day a price was recorded; "Earlier" for one from before Pausely kept its date.
+    private func day(_ point: PriceHistory.Point, _ style: Date.FormatStyle) -> String {
+        point.date.map { $0.formatted(style.locale(L10n.locale)) } ?? L10n.string("Earlier")
     }
 
     var body: some View {
-        NavigationStack {
-            ScrollView {
-                VStack(spacing: 24) {
-                    if history.count >= 2 {
-                        trendCard
-                        historyList
-                        projectionCard
-                    } else {
-                        emptyState
+        SettingsPage(title: "Price history") {
+            if history.count >= 2, let first = history.first, let last = history.last {
+                summary(first: first, last: last)
+                SettingsSection(title: "Each price") {
+                    ForEach(Array(history.enumerated().reversed()), id: \.element.id) { index, entry in
+                        row(entry, previous: index > 0 ? history[index - 1] : nil)
                     }
                 }
-                .padding()
-            }
-            .navigationTitle("Price History")
-            .navigationBarTitleDisplayMode(.large)
-            .toolbar {
-                ToolbarItem(placement: .topBarLeading) {
-                    Button("Done") { dismiss() }
-                }
-            }
-        }
-    }
-
-    private var trendCard: some View {
-        VStack(spacing: 16) {
-            HStack {
-                VStack(alignment: .leading, spacing: 4) {
-                    Text("Price Trend")
-                        .font(.system(.caption, design: .rounded).weight(.semibold))
-                        .foregroundStyle(.secondary)
-                        .textCase(.uppercase)
-
-                    HStack(spacing: 6) {
-                        Text(subscription.chargeText)
-                            .font(.system(.largeTitle, design: .rounded).weight(.black))
-                            .foregroundStyle(.primary)
-
-                        if percentageChange != 0 {
-                            HStack(spacing: 4) {
-                                Image(systemName: trend == .increasing ? "arrow.up" : "arrow.down")
-                                Text("\(String(format: "%.1f", abs(percentageChange)))%")
-                            }
-                            .font(.system(.subheadline, design: .rounded).weight(.bold))
-                            .foregroundStyle(trend == .increasing ? Color.semanticDestructive : Color.semanticSuccess)
-                            .padding(.horizontal, 10)
-                            .padding(.vertical, 4)
-                            .background(
-                                (trend == .increasing ? Color.semanticDestructive : Color.semanticSuccess).opacity(0.12)
-                            )
-                            .clipShape(Capsule())
-                        }
-                    }
-                }
-
-                Spacer()
-
-                ZStack {
-                    Circle()
-                        .fill(trendColor.opacity(0.15))
-                        .frame(width: 56, height: 56)
-                    Image(systemName: trendIcon)
-                        .font(.title2)
-                        .foregroundStyle(trendColor)
-                }
-            }
-
-            if history.count >= 2, let first = history.first {
-                Divider()
-
-                HStack {
-                    VStack(alignment: .leading, spacing: 2) {
-                        Text("Originally")
-                            .font(.system(.caption, design: .rounded))
-                            .foregroundStyle(.secondary)
-                        Text(MoneyFormat.string(first.amount, first.currency))
-                            .font(.system(.subheadline, design: .rounded).weight(.semibold))
-                            .foregroundStyle(.secondary)
-                            .strikethrough(trend == .increasing)
-                    }
-
-                    Spacer()
-
-                    VStack(alignment: .trailing, spacing: 2) {
-                        Text("Since Tracked")
-                            .font(.system(.caption, design: .rounded))
-                            .foregroundStyle(.secondary)
-                        let totalIncrease = tracker.totalPriceIncrease(for: subscription.id)
-                        Text(MoneyFormat.string(totalIncrease, subscription.currency))
-                            .font(.system(.subheadline, design: .rounded).weight(.bold))
-                            .foregroundStyle(trend == .increasing ? Color.semanticDestructive : Color.semanticSuccess)
-                    }
-                }
-            }
-        }
-        .padding(20)
-        .background(
-            RoundedRectangle(cornerRadius: 24, style: .continuous)
-                .fill(Color.obsidianSurface)
-                .overlay(
-                    RoundedRectangle(cornerRadius: 24, style: .continuous)
-                        .stroke(Color.obsidianBorder, lineWidth: 1)
-                )
-        )
-    }
-
-    private var historyList: some View {
-        VStack(alignment: .leading, spacing: 12) {
-            Text("Changes")
-                .font(.system(.headline, design: .rounded).weight(.bold))
-
-            VStack(spacing: 8) {
-                ForEach(Array(history.enumerated()), id: \.element.id) { index, entry in
-                    HistoryEntryRow(
-                        entry: entry,
-                        previousEntry: index > 0 ? history[index - 1] : nil,
-                        currencyManager: currencyManager
-                    )
-                }
-            }
-        }
-    }
-
-    private var projectionCard: some View {
-        let projected = tracker.projectedAnnualCost(for: subscription)
-        let currentAnnual = subscription.annualCost
-        let diff = projected - currentAnnual
-
-        return VStack(alignment: .leading, spacing: 12) {
-            HStack(spacing: 12) {
-                ZStack {
-                    Circle()
-                        .fill(Color.accentMint.opacity(0.15))
-                        .frame(width: 44, height: 44)
-                    Image(systemName: "chart.line.uptrend.xyaxis")
-                        .font(.title3)
-                        .foregroundStyle(Color.accentMint)
-                }
-
-                VStack(alignment: .leading, spacing: 2) {
-                    Text("Next Year Projection")
-                        .font(.system(.subheadline, design: .rounded).weight(.semibold))
-                    Text("Based on historical price changes")
-                        .font(.system(.caption, design: .rounded))
-                        .foregroundStyle(.secondary)
-                }
-
-                Spacer()
-            }
-
-            Text(MoneyFormat.string(projected, subscription.currency))
-                .font(.system(.title2, design: .rounded).weight(.bold))
-
-            if diff > 0 {
-                Text("+\(MoneyFormat.string(diff, subscription.currency)) more than current annual cost")
-                    .font(.system(.caption, design: .rounded).weight(.medium))
-                    .foregroundStyle(Color.semanticDestructive)
-            }
-        }
-        .padding(16)
-        .background(Color.accentMint.opacity(0.06))
-        .overlay(
-            RoundedRectangle(cornerRadius: 20, style: .continuous)
-                .stroke(Color.accentMint.opacity(0.2), lineWidth: 1)
-        )
-        .clipShape(RoundedRectangle(cornerRadius: 20, style: .continuous))
-    }
-
-    private var emptyState: some View {
-        VStack(spacing: 20) {
-            Spacer().frame(height: 60)
-
-            ZStack {
-                Circle()
-                    .fill(Color.accentMint.opacity(0.15))
-                    .frame(width: 80, height: 80)
-                Image(systemName: "chart.line.uptrend.xyaxis")
-                    .font(.largeTitle)
-                    .foregroundStyle(Color.accentMint)
-            }
-
-            VStack(spacing: 8) {
-                Text("No Price History")
-                    .font(.system(.title3, design: .rounded).weight(.bold))
-                Text("Price changes will be tracked automatically when you edit a subscription's cost.")
-                    .font(.system(.subheadline, design: .rounded))
-                    .foregroundStyle(.secondary)
-                    .multilineTextAlignment(.center)
-                    .padding(.horizontal)
-            }
-
-            Spacer()
-        }
-    }
-
-    private var trendColor: Color {
-        switch trend {
-        case .increasing: return .semanticDestructive
-        case .decreasing: return .semanticSuccess
-        case .stable: return .secondary
-        }
-    }
-
-    private var trendIcon: String {
-        switch trend {
-        case .increasing: return "arrow.up.forward"
-        case .decreasing: return "arrow.down.forward"
-        case .stable: return "minus"
-        }
-    }
-}
-
-// MARK: - History Entry Row
-
-struct HistoryEntryRow: View {
-    let entry: PriceHistoryEntry
-    let previousEntry: PriceHistoryEntry?
-    let currencyManager: CurrencyManager
-
-    var changePercentage: Double? {
-        guard let prev = previousEntry else { return nil }
-        let oldAmount = Double(truncating: prev.amount as NSDecimalNumber)
-        let newAmount = Double(truncating: entry.amount as NSDecimalNumber)
-        guard oldAmount > 0 else { return nil }
-        return ((newAmount - oldAmount) / oldAmount) * 100
-    }
-
-    var body: some View {
-        HStack(spacing: 12) {
-            VStack(alignment: .leading, spacing: 4) {
-                Text(MoneyFormat.string(entry.amount, entry.currency))
-                    .font(.system(.subheadline, design: .rounded).weight(.semibold))
-
-                Text(entry.date, style: .date)
-                    .font(.system(.caption, design: .rounded))
-                    .foregroundStyle(.secondary)
-            }
-
-            Spacer()
-
-            if let change = changePercentage {
-                HStack(spacing: 4) {
-                    Image(systemName: change > 0 ? "arrow.up" : "arrow.down")
-                        .font(.caption2)
-                    Text("\(String(format: "%.1f", abs(change)))%")
-                }
-                .font(.system(.caption, design: .rounded).weight(.bold))
-                .foregroundStyle(change > 0 ? Color.semanticDestructive : Color.semanticSuccess)
-                .padding(.horizontal, 8)
-                .padding(.vertical, 4)
-                .background(
-                    (change > 0 ? Color.semanticDestructive : Color.semanticSuccess).opacity(0.12)
-                )
-                .clipShape(Capsule())
             } else {
-                Text("First Record")
-                    .font(.system(.caption, design: .rounded).weight(.medium))
-                    .foregroundStyle(.secondary)
-                    .padding(.horizontal, 8)
-                    .padding(.vertical, 4)
-                    .background(Color.obsidianElevated)
-                    .clipShape(Capsule())
+                Text("No price changes yet. When you change what \(subscription.name) costs, the old price and the new one are kept here.")
+                    .font(.body)
+                    .foregroundStyle(Color.inkTextMuted)
+                    .fixedSize(horizontal: false, vertical: true)
+                    .accessibilityIdentifier("priceHistoryEmpty")
             }
         }
-        .padding(14)
-        .background(Color.obsidianElevated)
-        .clipShape(RoundedRectangle(cornerRadius: 14))
+    }
+
+    /// From what to what, since when: the one sentence the list adds up to.
+    private func summary(first: PriceHistory.Point, last: PriceHistory.Point) -> some View {
+        let from = MoneyFormat.string(first.amount, first.currency)
+        let to = MoneyFormat.string(last.amount, last.currency)
+        let rose = last.amount > first.amount && last.currency == first.currency && last.frequency == first.frequency
+        let sentence = first.date.map {
+            L10n.string("\(from) in \($0.formatted(.dateTime.month(.abbreviated).year().locale(L10n.locale))), \(to) now.")
+        } ?? L10n.string("\(from) before, \(to) now.")
+        return MarkedWords {
+            if rose { StateMark(state: .due).accessibilityHidden(true) }
+        } words: {
+            Text(verbatim: sentence)
+                .font(.question(.title3))
+                .foregroundStyle(Color.inkText)
+                .fixedSize(horizontal: false, vertical: true)
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+    }
+
+    private func row(_ entry: PriceHistory.Point, previous: PriceHistory.Point?) -> some View {
+        let date = day(entry, .dateTime.month(.abbreviated).day().year())
+        var detail: String?
+        if let previous, previous.currency == entry.currency, previous.frequency == entry.frequency, previous.amount != entry.amount {
+            let difference = MoneyFormat.string(abs(entry.amount - previous.amount), entry.currency)
+            detail = entry.amount > previous.amount ? L10n.string("\(difference) more than before") : L10n.string("\(difference) less than before")
+        }
+        return SettingsRow(title: date, detail: detail) {
+            Text(verbatim: entry.frequency.priced(MoneyFormat.string(entry.amount, entry.currency)))
+                .font(.proof(.body))
+                .foregroundStyle(Color.inkText)
+        }
+        .accessibilityElement(children: .combine)
     }
 }

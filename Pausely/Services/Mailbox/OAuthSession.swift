@@ -200,9 +200,82 @@ enum OAuthSession {
 // MARK: - HTTP with retries
 
 enum MailboxHTTP {
+    #if DEBUG
+    /// DEBUG: what the servers answered during a scan, for the real-inbox test reports: how many
+    /// requests, how many were refused for going too fast, and the seconds spent waiting them out.
+    struct Diagnostics {
+        var requests = 0, rateLimited = 0, throttled = 0, waited: TimeInterval = 0
+        /// What the refusals said (Google names the limit it applies), and how many each.
+        var refusals: [String: Int] = [:]
+        /// Requests sent and refused in each half minute from the first, to see where a scan's time goes.
+        var started: Date?
+        var sentPerHalfMinute: [Int: Int] = [:]
+        var refusedPerHalfMinute: [Int: Int] = [:]
+
+        mutating func noteSent() {
+            requests += 1
+            let first = started ?? Date()
+            started = first
+            sentPerHalfMinute[Int(Date().timeIntervalSince(first) / 30), default: 0] += 1
+        }
+
+        mutating func noteRefused(_ body: Data) {
+            if let first = started { refusedPerHalfMinute[Int(Date().timeIntervalSince(first) / 30), default: 0] += 1 }
+            struct Envelope: Decodable { struct Failure: Decodable { let message: String? }; let error: Failure? }
+            let message = (try? JSONDecoder().decode(Envelope.self, from: body))?.error?.message ?? "no message"
+            refusals[String(message.prefix(160)), default: 0] += 1
+        }
+    }
+    @MainActor static var diagnostics = Diagnostics()
+    #endif
+
+    /// How long to wait before retrying a throttled request: what the server asked for, kept between
+    /// zero and 30 seconds. With no usable `Retry-After`, 4 then 8 then 16 seconds.
+    /// A negative or non-numeric header must never reach the sleep, where it would crash.
+    static func retryDelay(retryAfter header: String?, attempt: Int) -> TimeInterval {
+        let fallback = min(30, TimeInterval(2 << max(0, min(attempt, 4))))
+        guard let header, let asked = TimeInterval(header.trimmingCharacters(in: .whitespaces)), asked.isFinite else {
+            return fallback
+        }
+        return min(30, max(0, asked))
+    }
+
+    /// Whether an error body is a rate limit rather than a refusal: Google's `usageLimits` reasons
+    /// (`userRateLimitExceeded`, `rateLimitExceeded`, "too many concurrent requests") or `RESOURCE_EXHAUSTED`.
+    /// A 403 that is anything else (access removed, scope missing) still means signing in again.
+    static func isRateLimit(_ body: Data) -> Bool {
+        struct Envelope: Decodable {
+            struct Failure: Decodable {
+                struct Detail: Decodable { let reason: String?; let domain: String? }
+                let status: String?
+                let message: String?
+                let errors: [Detail]?
+            }
+            let error: Failure?
+        }
+        guard let failure = (try? JSONDecoder().decode(Envelope.self, from: body))?.error else { return false }
+        if failure.status == "RESOURCE_EXHAUSTED" { return true }
+        if let details = failure.errors, details.contains(where: {
+            $0.domain == "usageLimits" || ($0.reason ?? "").localizedCaseInsensitiveContains("ratelimit")
+        }) { return true }
+        return (failure.message ?? "").localizedCaseInsensitiveContains("too many concurrent requests")
+    }
+
+    /// Backing off a rate limit: what the server asked for, else 1, 2, then 4 seconds. Shorter than
+    /// `retryDelay`, because a busy inbox answers many requests this way and the scan waits for each.
+    static func rateLimitDelay(retryAfter header: String?, attempt: Int) -> TimeInterval {
+        if let header, let asked = TimeInterval(header.trimmingCharacters(in: .whitespaces)), asked.isFinite {
+            return min(30, max(0, asked))
+        }
+        return TimeInterval(1 << max(0, min(attempt - 1, 3)))
+    }
+
     /// Sends a request with a bearer token. Retries once after refreshing on 401, and waits out 429/503
-    /// (Retry-After, at most 30 seconds, up to three times).
-    static func data(_ request: URLRequest, token: () async throws -> String, refresh: () async throws -> String) async throws -> Data {
+    /// and rate-limit 403s (Retry-After, at most 30 seconds, up to three times).
+    /// Called by the providers, on the main actor like them; the waiting is on the network.
+    @MainActor
+    static func data(_ request: URLRequest, token: () async throws -> String, refresh: () async throws -> String,
+                     onRateLimit: (() -> Void)? = nil) async throws -> Data {
         var current = try await token()
         var refreshed = false
         var throttles = 0
@@ -212,19 +285,38 @@ enum MailboxHTTP {
             authorized.setValue("Bearer \(current)", forHTTPHeaderField: "Authorization")
             let (data, response) = try await URLSession.shared.data(for: authorized)
             let http = response as? HTTPURLResponse
+            #if DEBUG
+            diagnostics.noteSent()
+            #endif
             switch http?.statusCode ?? 0 {
             case 200...299:
                 return data
             case 401 where !refreshed:
                 refreshed = true
                 current = try await refresh()
+            // Gmail says "too many requests" with a 403 (userRateLimitExceeded). Read as "sign in again", it
+            // cost a real inbox two thirds of its emails: 966 of 1,500 dropped on 2026-11-18.
+            case 403 where isRateLimit(data) && throttles < 3:
+                onRateLimit?()
+                throttles += 1
+                let wait = rateLimitDelay(retryAfter: http?.value(forHTTPHeaderField: "Retry-After"), attempt: throttles)
+                #if DEBUG
+                diagnostics.rateLimited += 1; diagnostics.waited += wait; diagnostics.noteRefused(data)
+                #endif
+                try await Task.sleep(nanoseconds: UInt64(wait * 1_000_000_000))
+            case 403 where isRateLimit(data):
+                throw MailboxError.throttled(retryAfter: 60)
             case 401, 403:
                 throw MailboxError.authExpired
             case 404, 410:
                 throw MailboxError.notFound
             case 429 where throttles < 3, 503 where throttles < 3:  // `where` binds per pattern in Swift
+                onRateLimit?()
                 throttles += 1
-                let wait = min(30, Double(http?.value(forHTTPHeaderField: "Retry-After") ?? "") ?? Double(2 << throttles))
+                let wait = retryDelay(retryAfter: http?.value(forHTTPHeaderField: "Retry-After"), attempt: throttles)
+                #if DEBUG
+                diagnostics.throttled += 1; diagnostics.waited += wait; diagnostics.noteRefused(data)
+                #endif
                 try await Task.sleep(nanoseconds: UInt64(wait * 1_000_000_000))
             case 429, 503:
                 throw MailboxError.throttled(retryAfter: 60)

@@ -1,5 +1,4 @@
 import Foundation
-import LocalAuthentication
 import SwiftUI
 import Supabase
 import Auth
@@ -69,110 +68,89 @@ class SupabaseManager: ObservableObject {
 
 // MARK: - Subscription Record
 
+/// A subscription as the `subscriptions` table holds it: the fields the app has, nothing more. The
+/// table still has columns from earlier versions; they are neither sent nor read.
 struct SubscriptionRecord: Codable {
     var id: UUID?
     var user_id: UUID?
     var name: String
-    var description: String?
-    var logo_url: String?
     var category: String?
     var amount: Decimal
     var currency: String
     var billing_frequency: String
     var next_billing_date: String?
-    var monthly_usage_minutes: Int
-    var cost_per_hour: Decimal?
-    var roi_score: Decimal?
-    var waste_score: Decimal?
     var notify_before_days: Int?
     var trial_ends_at: String?
     var status: String
-    var is_detected: Bool
-    var can_pause: Bool
-    var pause_url: String?
-    var paused_until: String?
     var created_at: String?
-    var updated_at: String?
-    
+    var notes: String?
+    var payment_method: String?
+    var split_count: Int?
+
     init(from subscription: Subscription) {
         self.id = subscription.id
         self.name = subscription.name
-        self.description = subscription.description
-        self.logo_url = subscription.logoUrl
         self.category = subscription.category
         self.amount = subscription.amount
         self.currency = subscription.currency
         self.billing_frequency = subscription.billingFrequency.rawValue
-        self.monthly_usage_minutes = subscription.monthlyUsageMinutes
-        self.cost_per_hour = subscription.costPerHour
-        self.roi_score = subscription.roiScore
-        self.waste_score = subscription.wasteScore
         self.notify_before_days = subscription.notifyBeforeDays
-        self.trial_ends_at = subscription.trialEndsAt?.iso8601String
-        self.next_billing_date = subscription.nextBillingDate?.iso8601String
-        self.paused_until = subscription.pausedUntil?.iso8601String
+        // Days go up in their saved form: noon UTC on the day, the same day wherever it is read.
+        self.trial_ends_at = subscription.trialEndsAt.map { BillingDay.stored($0).iso8601String }
+        self.next_billing_date = subscription.nextBillingDate.map { BillingDay.stored($0).iso8601String }
         self.status = subscription.status.rawValue
-        self.is_detected = subscription.isDetected
-        self.can_pause = subscription.canPause
-        self.pause_url = subscription.pauseUrl
+        self.notes = subscription.notes
+        self.payment_method = subscription.paymentMethod
+        self.split_count = max(1, min(20, subscription.splitCount))
     }
 
-    /// Dates that can be cleared are always sent, as null when empty, so clearing one on this iPhone
-    /// clears it on the server. Ids and timestamps the server owns are left out when empty.
+    /// Dates and optional user fields that can be cleared are always sent, as null when empty, so
+    /// clearing one on this iPhone clears it on the server. Ids and timestamps the server owns are left out when empty.
     func encode(to encoder: Encoder) throws {
         var c = encoder.container(keyedBy: CodingKeys.self)
         try c.encodeIfPresent(id, forKey: .id)
         try c.encodeIfPresent(user_id, forKey: .user_id)
         try c.encode(name, forKey: .name)
-        try c.encodeIfPresent(description, forKey: .description)
-        try c.encodeIfPresent(logo_url, forKey: .logo_url)
         try c.encodeIfPresent(category, forKey: .category)
         try c.encode(amount, forKey: .amount)
         try c.encode(currency, forKey: .currency)
         try c.encode(billing_frequency, forKey: .billing_frequency)
         try c.encode(next_billing_date, forKey: .next_billing_date)
-        try c.encode(monthly_usage_minutes, forKey: .monthly_usage_minutes)
-        try c.encodeIfPresent(cost_per_hour, forKey: .cost_per_hour)
-        try c.encodeIfPresent(roi_score, forKey: .roi_score)
-        try c.encodeIfPresent(waste_score, forKey: .waste_score)
         try c.encodeIfPresent(notify_before_days, forKey: .notify_before_days)
         try c.encode(trial_ends_at, forKey: .trial_ends_at)
         try c.encode(status, forKey: .status)
-        try c.encode(is_detected, forKey: .is_detected)
-        try c.encode(can_pause, forKey: .can_pause)
-        try c.encodeIfPresent(pause_url, forKey: .pause_url)
-        try c.encode(paused_until, forKey: .paused_until)
         try c.encodeIfPresent(created_at, forKey: .created_at)
-        try c.encodeIfPresent(updated_at, forKey: .updated_at)
+        try c.encode(notes, forKey: .notes)
+        try c.encode(payment_method, forKey: .payment_method)
+        try c.encode(split_count ?? 1, forKey: .split_count)
     }
-    
+
+    /// True when a day in this row was saved by an earlier version (as noon where it was typed). Read on
+    /// the phone it was typed on it is right; sent back once in the saved form, it is right everywhere.
+    var hasADayInTheOldForm: Bool {
+        [next_billing_date, trial_ends_at].contains { text in
+            guard let date = text?.iso8601Date else { return false }
+            return !BillingDay.isStoredForm(date)
+        }
+    }
+
     func toSubscription() -> Subscription {
-        var sub = Subscription(
+        Subscription(
+            id: id ?? UUID(),
             name: name,
-            price: Double(truncating: amount as NSNumber),
             category: category ?? "Other",
-            billingFrequency: BillingFrequency(rawValue: billing_frequency) ?? .monthly
+            amount: amount,
+            currency: currency,
+            billingFrequency: BillingFrequency(rawValue: billing_frequency) ?? .monthly,
+            nextBillingDate: next_billing_date?.iso8601Date.map { BillingDay.local(fromStored: $0) },
+            notifyBeforeDays: notify_before_days ?? 3,
+            trialEndsAt: trial_ends_at?.iso8601Date.map { BillingDay.local(fromStored: $0) },
+            status: SubscriptionStatus(saved: status),
+            createdAt: created_at?.iso8601Date ?? Date(),
+            notes: notes,
+            paymentMethod: payment_method,
+            splitCount: split_count ?? 1
         )
-        sub.id = id ?? UUID()
-        sub.description = description
-        sub.logoUrl = logo_url
-        sub.amount = amount
-        sub.currency = currency
-        sub.monthlyUsageMinutes = monthly_usage_minutes
-        sub.costPerHour = cost_per_hour
-        sub.roiScore = roi_score
-        sub.wasteScore = waste_score
-        sub.notifyBeforeDays = notify_before_days ?? 3
-        sub.trialEndsAt = trial_ends_at?.iso8601Date
-        sub.nextBillingDate = next_billing_date?.iso8601Date
-        sub.pausedUntil = paused_until?.iso8601Date
-        sub.status = SubscriptionStatus(rawValue: status) ?? .active
-        sub.isDetected = is_detected
-        sub.canPause = can_pause
-        sub.pauseUrl = pause_url
-        sub.createdAt = created_at?.iso8601Date ?? Date()
-        sub.updatedAt = updated_at?.iso8601Date ?? Date()
-        return sub
     }
 }
 
@@ -197,48 +175,15 @@ extension String {
     }
 }
 
-/// `{"paused_until": null}`: resuming must send the null, which a plain optional would leave out.
-struct ClearPausePayload: Encodable {
-    private enum CodingKeys: String, CodingKey { case paused_until }
-    func encode(to encoder: Encoder) throws {
-        var c = encoder.container(keyedBy: CodingKeys.self)
-        try c.encodeNil(forKey: .paused_until)
-    }
-}
-
 // MARK: - Auth Errors
-/// Pausely-specific authentication errors
-/// Renamed from AuthError to avoid conflict with Supabase library
-enum PauselyAuthError: LocalizedError {
-    case emailNotConfirmed
-    case invalidCredentials
-    case sessionExpired
-    case networkError
-    case biometricFailed
-    case invalidResponse
+
+/// What can stop a sign-up or sign-in. The words a person reads are chosen by the screen
+/// (`AccountProblem`, `CodeProblem`), in their language; this only says which kind it was.
+enum PauselyAuthError: Error {
+    /// The age check hasn't been passed on this iPhone.
     case ageConsentRequired
+    /// Anything the account service or the network said.
     case unknown(Error)
-    
-    var errorDescription: String? {
-        switch self {
-        case .emailNotConfirmed:
-            return "Please verify your email before signing in. Check your inbox for the confirmation link."
-        case .invalidCredentials:
-            return "Invalid email or password. Please try again."
-        case .sessionExpired:
-            return "Your session has expired. Please sign in again."
-        case .networkError:
-            return "Network error. Please check your connection and try again."
-        case .biometricFailed:
-            return "Biometric authentication failed. Please use your password."
-        case .invalidResponse:
-            return "Invalid response from server. Please try again."
-        case .ageConsentRequired:
-            return "Please confirm your age before creating an account."
-        case .unknown(let error):
-            return error.localizedDescription
-        }
-    }
 }
 
 // MARK: - Auth State
@@ -251,382 +196,6 @@ enum PauselyAuthState {
     case emailConfirmationRequired(String)
     case unauthenticated
     case error(PauselyAuthError)
-}
-
-
-// MARK: - Currency Error
-enum CurrencyError: Error {
-    case fetchFailed(Error?)
-    case rateNotAvailable
-    case parseError
-}
-
-// MARK: - Currency Manager
-class CurrencyManager: ObservableObject {
-    static let shared = CurrencyManager()
-
-    @Published var selectedCurrency: String
-    /// Live rates per USD as loaded from the API. Conversions use `rates`, which fills any gaps
-    /// from `CurrencyRates.fallback` so every currency in the picker always converts.
-    @Published var exchangeRates: [String: Double] = [:] {
-        didSet { ratesTable = CurrencyRates(apiRates: exchangeRates).fillingGaps() }
-    }
-    private(set) var ratesTable: CurrencyRates = .fallback
-    @Published var lastUpdated: Date?
-    @Published var isLoadingRates = false
-    @Published var error: Error?
-
-    /// Built-in rates (see `CurrencyRates.fallback`) as the API's `Double`s.
-    private var fallbackRates: [String: Double] {
-        CurrencyRates.fallback.perUSD.mapValues { NSDecimalNumber(decimal: $0).doubleValue }
-    }
-
-    private let session: URLSession = {
-        let config = URLSessionConfiguration.default
-        config.timeoutIntervalForRequest = 10
-        config.timeoutIntervalForResource = 30
-        config.waitsForConnectivity = true
-        return URLSession(configuration: config)
-    }()
-    
-    // MARK: - Compatibility Properties
-    
-    
-    let currencies: [Currency] = [
-        // Major Global Currencies
-        Currency(code: "USD", name: "US Dollar", flag: "🇺🇸", locale: "en_US"),
-        Currency(code: "EUR", name: "Euro", flag: "🇪🇺", locale: "de_DE"),
-        Currency(code: "GBP", name: "British Pound", flag: "🇬🇧", locale: "en_GB"),
-        Currency(code: "JPY", name: "Japanese Yen", flag: "🇯🇵", locale: "ja_JP"),
-        Currency(code: "CNY", name: "Chinese Yuan", flag: "🇨🇳", locale: "zh_CN"),
-        
-        // Americas
-        Currency(code: "CAD", name: "Canadian Dollar", flag: "🇨🇦", locale: "en_CA"),
-        Currency(code: "MXN", name: "Mexican Peso", flag: "🇲🇽", locale: "es_MX"),
-        Currency(code: "BRL", name: "Brazilian Real", flag: "🇧🇷", locale: "pt_BR"),
-        Currency(code: "ARS", name: "Argentine Peso", flag: "🇦🇷", locale: "es_AR"),
-        Currency(code: "CLP", name: "Chilean Peso", flag: "🇨🇱", locale: "es_CL"),
-        Currency(code: "COP", name: "Colombian Peso", flag: "🇨🇴", locale: "es_CO"),
-        Currency(code: "PEN", name: "Peruvian Sol", flag: "🇵🇪", locale: "es_PE"),
-        Currency(code: "UYU", name: "Uruguayan Peso", flag: "🇺🇾", locale: "es_UY"),
-        Currency(code: "DOP", name: "Dominican Peso", flag: "🇩🇴", locale: "es_DO"),
-        Currency(code: "CRC", name: "Costa Rican Colón", flag: "🇨🇷", locale: "es_CR"),
-        Currency(code: "GTQ", name: "Guatemalan Quetzal", flag: "🇬🇹", locale: "es_GT"),
-        Currency(code: "HNL", name: "Honduran Lempira", flag: "🇭🇳", locale: "es_HN"),
-        Currency(code: "NIO", name: "Nicaraguan Córdoba", flag: "🇳🇮", locale: "es_NI"),
-        Currency(code: "PAB", name: "Panamanian Balboa", flag: "🇵🇦", locale: "es_PA"),
-        Currency(code: "BOB", name: "Bolivian Boliviano", flag: "🇧🇴", locale: "es_BO"),
-        Currency(code: "PYG", name: "Paraguayan Guaraní", flag: "🇵🇾", locale: "es_PY"),
-        Currency(code: "VES", name: "Venezuelan Bolívar", flag: "🇻🇪", locale: "es_VE"),
-        Currency(code: "XCD", name: "Eastern Caribbean Dollar", flag: "🇦🇬", locale: "en_AG"),
-        Currency(code: "TTD", name: "Trinidad & Tobago Dollar", flag: "🇹🇹", locale: "en_TT"),
-        Currency(code: "JMD", name: "Jamaican Dollar", flag: "🇯🇲", locale: "en_JM"),
-        Currency(code: "BBD", name: "Barbadian Dollar", flag: "🇧🇧", locale: "en_BB"),
-        Currency(code: "BSD", name: "Bahamian Dollar", flag: "🇧🇸", locale: "en_BS"),
-        Currency(code: "BZD", name: "Belize Dollar", flag: "🇧🇿", locale: "en_BZ"),
-        Currency(code: "KYD", name: "Cayman Islands Dollar", flag: "🇰🇾", locale: "en_KY"),
-        Currency(code: "BMD", name: "Bermudian Dollar", flag: "🇧🇲", locale: "en_BM"),
-        Currency(code: "GYD", name: "Guyanese Dollar", flag: "🇬🇾", locale: "en_GY"),
-        Currency(code: "SRD", name: "Surinamese Dollar", flag: "🇸🇷", locale: "nl_SR"),
-        
-        // Europe
-        Currency(code: "CHF", name: "Swiss Franc", flag: "🇨🇭", locale: "de_CH"),
-        Currency(code: "SEK", name: "Swedish Krona", flag: "🇸🇪", locale: "sv_SE"),
-        Currency(code: "NOK", name: "Norwegian Krone", flag: "🇳🇴", locale: "nb_NO"),
-        Currency(code: "DKK", name: "Danish Krone", flag: "🇩🇰", locale: "da_DK"),
-        Currency(code: "PLN", name: "Polish Złoty", flag: "🇵🇱", locale: "pl_PL"),
-        Currency(code: "CZK", name: "Czech Koruna", flag: "🇨🇿", locale: "cs_CZ"),
-        Currency(code: "HUF", name: "Hungarian Forint", flag: "🇭🇺", locale: "hu_HU"),
-        Currency(code: "RON", name: "Romanian Leu", flag: "🇷🇴", locale: "ro_RO"),
-        Currency(code: "BGN", name: "Bulgarian Lev", flag: "🇧🇬", locale: "bg_BG"),
-        Currency(code: "RSD", name: "Serbian Dinar", flag: "🇷🇸", locale: "sr_RS"),
-        Currency(code: "ISK", name: "Icelandic Króna", flag: "🇮🇸", locale: "is_IS"),
-        Currency(code: "UAH", name: "Ukrainian Hryvnia", flag: "🇺🇦", locale: "uk_UA"),
-        Currency(code: "RUB", name: "Russian Ruble", flag: "🇷🇺", locale: "ru_RU"),
-        Currency(code: "BYN", name: "Belarusian Ruble", flag: "🇧🇾", locale: "be_BY"),
-        Currency(code: "MDL", name: "Moldovan Leu", flag: "🇲🇩", locale: "ro_MD"),
-        Currency(code: "GIP", name: "Gibraltar Pound", flag: "🇬🇮", locale: "en_GI"),
-        Currency(code: "ALL", name: "Albanian Lek", flag: "🇦🇱", locale: "sq_AL"),
-        Currency(code: "BAM", name: "Bosnia Mark", flag: "🇧🇦", locale: "bs_BA"),
-        Currency(code: "MKD", name: "Macedonian Denar", flag: "🇲🇰", locale: "mk_MK"),
-        Currency(code: "GEL", name: "Georgian Lari", flag: "🇬🇪", locale: "ka_GE"),
-        Currency(code: "AZN", name: "Azerbaijani Manat", flag: "🇦🇿", locale: "az_AZ"),
-        Currency(code: "AMD", name: "Armenian Dram", flag: "🇦🇲", locale: "hy_AM"),
-        
-        // Asia Pacific
-        Currency(code: "AUD", name: "Australian Dollar", flag: "🇦🇺", locale: "en_AU"),
-        Currency(code: "NZD", name: "New Zealand Dollar", flag: "🇳🇿", locale: "en_NZ"),
-        Currency(code: "SGD", name: "Singapore Dollar", flag: "🇸🇬", locale: "en_SG"),
-        Currency(code: "HKD", name: "Hong Kong Dollar", flag: "🇭🇰", locale: "zh_HK"),
-        Currency(code: "KRW", name: "South Korean Won", flag: "🇰🇷", locale: "ko_KR"),
-        Currency(code: "INR", name: "Indian Rupee", flag: "🇮🇳", locale: "hi_IN"),
-        Currency(code: "IDR", name: "Indonesian Rupiah", flag: "🇮🇩", locale: "id_ID"),
-        Currency(code: "MYR", name: "Malaysian Ringgit", flag: "🇲🇾", locale: "ms_MY"),
-        Currency(code: "THB", name: "Thai Baht", flag: "🇹🇭", locale: "th_TH"),
-        Currency(code: "PHP", name: "Philippine Peso", flag: "🇵🇭", locale: "fil_PH"),
-        Currency(code: "VND", name: "Vietnamese Dong", flag: "🇻🇳", locale: "vi_VN"),
-        Currency(code: "TWD", name: "Taiwan Dollar", flag: "🇹🇼", locale: "zh_TW"),
-        Currency(code: "PKR", name: "Pakistani Rupee", flag: "🇵🇰", locale: "ur_PK"),
-        Currency(code: "BDT", name: "Bangladeshi Taka", flag: "🇧🇩", locale: "bn_BD"),
-        Currency(code: "LKR", name: "Sri Lankan Rupee", flag: "🇱🇰", locale: "si_LK"),
-        Currency(code: "NPR", name: "Nepalese Rupee", flag: "🇳🇵", locale: "ne_NP"),
-        Currency(code: "MMK", name: "Myanmar Kyat", flag: "🇲🇲", locale: "my_MM"),
-        Currency(code: "KHR", name: "Cambodian Riel", flag: "🇰🇭", locale: "km_KH"),
-        Currency(code: "LAK", name: "Lao Kip", flag: "🇱🇦", locale: "lo_LA"),
-        Currency(code: "MOP", name: "Macanese Pataca", flag: "🇲🇴", locale: "zh_MO"),
-        Currency(code: "BND", name: "Brunei Dollar", flag: "🇧🇳", locale: "ms_BN"),
-        Currency(code: "PGK", name: "Papua New Guinean Kina", flag: "🇵🇬", locale: "en_PG"),
-        Currency(code: "FJD", name: "Fijian Dollar", flag: "🇫🇯", locale: "en_FJ"),
-        Currency(code: "WST", name: "Samoan Tala", flag: "🇼🇸", locale: "en_WS"),
-        Currency(code: "TOP", name: "Tongan Paʻanga", flag: "🇹🇴", locale: "to_TO"),
-        Currency(code: "VUV", name: "Vanuatu Vatu", flag: "🇻🇺", locale: "bi_VU"),
-        Currency(code: "SBD", name: "Solomon Islands Dollar", flag: "🇸🇧", locale: "en_SB"),
-        Currency(code: "MVR", name: "Maldivian Rufiyaa", flag: "🇲🇻", locale: "dv_MV"),
-        Currency(code: "BTN", name: "Bhutanese Ngultrum", flag: "🇧🇹", locale: "dz_BT"),
-        Currency(code: "MNT", name: "Mongolian Tugrik", flag: "🇲🇳", locale: "mn_MN"),
-        Currency(code: "KZT", name: "Kazakhstani Tenge", flag: "🇰🇿", locale: "kk_KZ"),
-        Currency(code: "KGS", name: "Kyrgyzstani Som", flag: "🇰🇬", locale: "ky_KG"),
-        Currency(code: "TJS", name: "Tajikistani Somoni", flag: "🇹🇯", locale: "tg_TJ"),
-        Currency(code: "UZS", name: "Uzbekistani Som", flag: "🇺🇿", locale: "uz_UZ"),
-        Currency(code: "AFN", name: "Afghan Afghani", flag: "🇦🇫", locale: "ps_AF"),
-        
-        // Middle East & Africa
-        Currency(code: "AED", name: "UAE Dirham", flag: "🇦🇪", locale: "ar_AE"),
-        Currency(code: "SAR", name: "Saudi Riyal", flag: "🇸🇦", locale: "ar_SA"),
-        Currency(code: "QAR", name: "Qatari Riyal", flag: "🇶🇦", locale: "ar_QA"),
-        Currency(code: "KWD", name: "Kuwaiti Dinar", flag: "🇰🇼", locale: "ar_KW"),
-        Currency(code: "BHD", name: "Bahraini Dinar", flag: "🇧🇭", locale: "ar_BH"),
-        Currency(code: "OMR", name: "Omani Rial", flag: "🇴🇲", locale: "ar_OM"),
-        Currency(code: "ILS", name: "Israeli Shekel", flag: "🇮🇱", locale: "he_IL"),
-        Currency(code: "JOD", name: "Jordanian Dinar", flag: "🇯🇴", locale: "ar_JO"),
-        Currency(code: "LBP", name: "Lebanese Pound", flag: "🇱🇧", locale: "ar_LB"),
-        Currency(code: "EGP", name: "Egyptian Pound", flag: "🇪🇬", locale: "ar_EG"),
-        Currency(code: "ZAR", name: "South African Rand", flag: "🇿🇦", locale: "en_ZA"),
-        Currency(code: "NGN", name: "Nigerian Naira", flag: "🇳🇬", locale: "en_NG"),
-        Currency(code: "KES", name: "Kenyan Shilling", flag: "🇰🇪", locale: "en_KE"),
-        Currency(code: "GHS", name: "Ghanaian Cedi", flag: "🇬🇭", locale: "en_GH"),
-        Currency(code: "MAD", name: "Moroccan Dirham", flag: "🇲🇦", locale: "ar_MA"),
-        Currency(code: "TND", name: "Tunisian Dinar", flag: "🇹🇳", locale: "ar_TN"),
-        Currency(code: "DZD", name: "Algerian Dinar", flag: "🇩🇿", locale: "ar_DZ"),
-        Currency(code: "ETB", name: "Ethiopian Birr", flag: "🇪🇹", locale: "am_ET"),
-        Currency(code: "TZS", name: "Tanzanian Shilling", flag: "🇹🇿", locale: "sw_TZ"),
-        Currency(code: "UGX", name: "Ugandan Shilling", flag: "🇺🇬", locale: "en_UG"),
-        Currency(code: "ZMW", name: "Zambian Kwacha", flag: "🇿🇲", locale: "en_ZM"),
-        Currency(code: "BWP", name: "Botswana Pula", flag: "🇧🇼", locale: "en_BW"),
-        Currency(code: "MUR", name: "Mauritian Rupee", flag: "🇲🇺", locale: "en_MU"),
-        Currency(code: "SCR", name: "Seychellois Rupee", flag: "🇸🇨", locale: "en_SC"),
-        Currency(code: "XOF", name: "West African CFA Franc", flag: "🇸🇳", locale: "fr_SN"),
-        Currency(code: "XAF", name: "Central African CFA Franc", flag: "🇨🇲", locale: "fr_CM"),
-        Currency(code: "ERN", name: "Eritrean Nakfa", flag: "🇪🇷", locale: "ti_ER"),
-        Currency(code: "SZL", name: "Eswatini Lilangeni", flag: "🇸🇿", locale: "en_SZ"),
-        Currency(code: "LSL", name: "Lesotho Loti", flag: "🇱🇸", locale: "en_LS"),
-        Currency(code: "NAD", name: "Namibian Dollar", flag: "🇳🇦", locale: "en_NA"),
-        Currency(code: "MZN", name: "Mozambican Metical", flag: "🇲🇿", locale: "pt_MZ"),
-        Currency(code: "MWK", name: "Malawian Kwacha", flag: "🇲🇼", locale: "en_MW"),
-        Currency(code: "RWF", name: "Rwandan Franc", flag: "🇷🇼", locale: "rw_RW"),
-        Currency(code: "SLL", name: "Sierra Leonean Leone", flag: "🇸🇱", locale: "en_SL"),
-        Currency(code: "SOS", name: "Somali Shilling", flag: "🇸🇴", locale: "so_SO"),
-        Currency(code: "SDG", name: "Sudanese Pound", flag: "🇸🇩", locale: "ar_SD"),
-        Currency(code: "TMT", name: "Turkmenistani Manat", flag: "🇹🇲", locale: "tk_TM"),
-        Currency(code: "IRR", name: "Iranian Rial", flag: "🇮🇷", locale: "fa_IR"),
-        Currency(code: "IQD", name: "Iraqi Dinar", flag: "🇮🇶", locale: "ar_IQ"),
-        Currency(code: "YER", name: "Yemeni Rial", flag: "🇾🇪", locale: "ar_YE"),
-        Currency(code: "SYP", name: "Syrian Pound", flag: "🇸🇾", locale: "ar_SY"),
-        Currency(code: "TRY", name: "Turkish Lira", flag: "🇹🇷", locale: "tr_TR"),
-    ]
-    
-    private let userDefaultsKey = "selected_currency"
-    private let ratesCacheKey = "cached_exchange_rates"
-    private let ratesDateKey = "exchange_rates_date"
-    
-    var currentCurrency: Currency {
-        currencies.first { $0.code == selectedCurrency } ?? Currency(code: "USD", name: "US Dollar", flag: "🇺🇸", locale: "en_US")
-    }
-    
-    private init() {
-        let deviceCurrency = Locale.current.currency?.identifier ?? "USD"
-        let offered = Set(currencies.map(\.code))
-        if let saved = UserDefaults.standard.string(forKey: userDefaultsKey), offered.contains(saved) {
-            selectedCurrency = saved
-        } else {
-            selectedCurrency = offered.contains(deviceCurrency) ? deviceCurrency : "USD"
-        }
-
-        self.exchangeRates = loadCachedRates() ?? fallbackRates
-        self.ratesTable = CurrencyRates(apiRates: exchangeRates).fillingGaps()
-
-        Task {
-            try? await fetchExchangeRates()
-        }
-    }
-    
-    func fetchExchangeRates() async throws -> [String: Double] {
-        if let lastUpdated = lastUpdated,
-           Date().timeIntervalSince(lastUpdated) < 3600 {
-            return exchangeRates
-        }
-
-        isLoadingRates = true
-        defer { isLoadingRates = false }
-
-        var lastError: Error?
-        for attempt in 0..<3 {
-            do {
-                let rates = try await performFetch()
-                exchangeRates = rates
-                lastUpdated = Date()
-                error = nil
-                cacheRates()
-                return rates
-            } catch {
-                lastError = error
-                if attempt < 2 {
-                    let delay = pow(2.0, Double(attempt)) * 1_000_000_000
-                    try? await Task.sleep(nanoseconds: UInt64(delay))
-                }
-            }
-        }
-
-        if let cached = loadCachedRates() {
-            return cached
-        }
-        // Use hardcoded fallback rates so prices are never wrong
-        exchangeRates = fallbackRates
-        lastUpdated = Date(timeIntervalSince1970: 0) // Mark as fallback
-        return fallbackRates
-    }
-
-    private func performFetch() async throws -> [String: Double] {
-        let urlString = "https://api.exchangerate-api.com/v4/latest/USD"
-
-        guard let url = URL(string: urlString) else {
-            throw CurrencyError.fetchFailed(nil)
-        }
-
-        let (data, _) = try await session.data(from: url)
-        let response = try JSONDecoder().decode(ExchangeRateResponse.self, from: data)
-        return response.rates
-    }
-
-    private func loadCachedRates() -> [String: Double]? {
-        var result = fallbackRates
-        if let cached = UserDefaults.standard.dictionary(forKey: ratesCacheKey) as? [String: Double] {
-            lastUpdated = UserDefaults.standard.object(forKey: ratesDateKey) as? Date
-            for (code, rate) in cached {
-                result[code] = rate
-            }
-        }
-        return result
-    }
-    
-    private func cacheRates() {
-        UserDefaults.standard.set(exchangeRates, forKey: ratesCacheKey)
-        UserDefaults.standard.set(lastUpdated, forKey: ratesDateKey)
-    }
-
-    func convert(_ amount: Decimal, from sourceCurrency: String, to targetCurrency: String) throws -> Decimal {
-        guard let converted = rates.convert(amount, from: sourceCurrency, to: targetCurrency) else {
-            throw CurrencyError.rateNotAvailable
-        }
-        return converted
-    }
-
-    /// `amount` in the user's display currency. A currency Pausely can't convert (not an ISO code it
-    /// knows) comes back unchanged and is logged; every currency in the picker always converts.
-    func convertToSelected(_ amount: Decimal, from sourceCurrency: String) -> Decimal {
-        if let converted = rates.convert(amount, from: sourceCurrency, to: selectedCurrency) { return converted }
-        os_log("CurrencyManager: no rate for %{public}@", log: .default, type: .error, sourceCurrency)
-        return amount
-    }
-
-    // MARK: - Catalog Price Helpers
-
-
-    /// A catalog price in the user's display currency, converted when it is in another currency.
-    func formatCatalogPrice(_ price: Double, sourceCurrency: String = "USD") -> String {
-        let converted = convertCrossCurrency(price, from: sourceCurrency, to: selectedCurrency)
-        return MoneyFormat.string(converted, selectedCurrency)
-    }
-
-    /// Converts between two currencies; an amount Pausely can't convert comes back unchanged.
-    func convertCrossCurrency(_ amount: Double, from sourceCurrency: String, to targetCurrency: String) -> Double {
-        guard let converted = rates.convert(MoneyFormat.decimal(amount), from: sourceCurrency, to: targetCurrency) else {
-            return amount
-        }
-        return NSDecimalNumber(decimal: converted).doubleValue
-    }
-
-    /// "≈" in front of catalog prices shown in a currency other than the catalog's US dollars.
-    var priceIndicator: String {
-        selectedCurrency == "USD" ? "" : "≈"
-    }
-
-    /// `amount` in `currencyCode` (the display currency when nil). Goes through `MoneyFormat`.
-    func format(_ amount: Decimal, currencyCode: String? = nil) -> String {
-        MoneyFormat.string(amount, currencyCode ?? selectedCurrency)
-    }
-    
-    /// The symbol the user's locale shows for `code` ("$", "US$", "€"). Unknown codes show as the code.
-    func currencySymbol(for code: String) -> String {
-        MoneyFormat.symbol(for: code)
-    }
-    
-    func currencyFlag(for code: String) -> String {
-        currencies.first { $0.code == code }?.flag ?? "🏳️"
-    }
-    
-    func setCurrency(_ code: String) {
-        selectedCurrency = code
-        UserDefaults.standard.set(code, forKey: userDefaultsKey)
-        NotificationCenter.default.post(name: .currencyChanged, object: code)
-    }
-    
-    
-    /// Get currency by code
-    func currency(for code: String) -> Currency? {
-        currencies.first { $0.code == code }
-    }
-    
-    /// All available currencies
-    var allCurrencies: [Currency] {
-        currencies
-    }
-    
-    /// Convert Double amount (overload for convenience)
-    func convert(_ amount: Double, from sourceCurrency: String, to targetCurrency: String) throws -> Double {
-        let converted = try convert(MoneyFormat.decimal(amount), from: sourceCurrency, to: targetCurrency)
-        return NSDecimalNumber(decimal: converted).doubleValue
-    }
-
-}
-
-// MARK: - Supporting Types
-/// A currency someone can choose. Its symbol isn't stored: it depends on who reads it, so it comes
-/// from `MoneyFormat.symbol(for:)`.
-struct Currency: Identifiable, Codable, Hashable {
-    var id = UUID()
-    let code: String
-    let name: String
-    let flag: String
-    let locale: String
-    
-    var displayName: String {
-        "\(flag) \(code) - \(name)"
-    }
-    
-    func format(_ amount: Double) -> String {
-        MoneyFormat.string(amount, code)
-    }
-}
-
-struct ExchangeRateResponse: Codable {
-    let rates: [String: Double]
-    let base: String
-    let date: String
-}
-
-extension Notification.Name {
-    static let currencyChanged = Notification.Name("currencyChanged")
 }
 
 

@@ -42,6 +42,7 @@ final class CurrencyGuardTests: XCTestCase {
     private static let rawFormat = regex(#"\.format\(\s*[\w.]*\.(amount|monthlyCost|annualCost|lifetimeSpend)\s*\)"#)
     private static let silentFallback = regex(#"try\?[^\n]*\.convert\([^\n]*\?\?"#)
     private static let usdDefault = regex(#":\s*String\s*=\s*"USD""#)
+    private static let unmarkedSavingsTotal = regex(#"\.formatted\(\s*\w+\.(savedSoFar|onTrack)\s*\)"#)
     private static let amountWithCurrency = regex(
         #"(?:MoneyFormat\.string|\.format)\(\s*(\w+)\.(amount|monthlyCost|annualCost|lifetimeSpend|savedSoFar|amountPerCharge)\s*,\s*(?:currencyCode:\s*)?([\w.]+)"#)
 
@@ -63,18 +64,17 @@ final class CurrencyGuardTests: XCTestCase {
              fix: "Use MoneyFormat.string(...) for amounts, or MoneyFormat.symbol(for:) for an input prefix.",
              matches: { CurrencyGuardTests.has(CurrencyGuardTests.symbolIdentifier, $0) },
              allowedPaths: [
-                "Pausely/Services/SupabaseManager.swift",          // CurrencyManager.currencySymbol(for:) itself
-                "Pausely/Views/TierSelectionSheet.swift",           // prefix of the price input field
+                "Pausely/Views/CatalogAddSheet.swift",              // prefix of the price input field
                 "Pausely/Views/Subscriptions/AmountStepView.swift", // prefix of the amount input field
-                "Pausely/Views/AddSubscription/LuxuryAddSubscriptionView.swift" // prefix of the amount input field
+                "Pausely/Views/AddSubscription/AddSubscriptionView.swift" // prefix of the amount input field
              ]),
         Rule(name: "currency symbol written into text",
              fix: "Format the amount with MoneyFormat and interpolate it; sample amounts use OnboardingSample.money.",
              matches: { line in CurrencyGuardTests.literalTexts(line).contains { CurrencyGuardTests.has(CurrencyGuardTests.symbolNextToAmount, $0) } },
              allowedPaths: [
-                "Pausely/Services/AlternativeDatabase.swift", // US offers quoted as published ("$300 credit")
+                "Pausely/Services/ServiceDatabaseMore.swift", // US offers quoted as published ("$300 credit")
                 "Pausely/Services/CatalogData.swift",         // US plan names and descriptions ("ChatGPT Pro ($200)")
-                "Pausely/Services/Intelligence/ReceiptTextAnalyzer.swift",   // reads symbols out of receipts
+                "Pausely/Services/Intelligence/ReceiptAmounts.swift",        // reads symbols out of receipts
                 "Pausely/Services/Intelligence/EmailSignalExtractor.swift"   // decodes &euro; and friends in emails
              ]),
         Rule(name: "sum over subscription money without converting",
@@ -86,6 +86,9 @@ final class CurrencyGuardTests: XCTestCase {
         Rule(name: "amount labelled with another currency",
              fix: "Format x.amount with x.currency; convert first to show it in another currency.",
              matches: { CurrencyGuardTests.formatsWithAnotherCurrency($0) }),
+        Rule(name: "savings total shown without saying whether it was converted",
+             fix: "Use summary.total(amount): it marks the total \"≈\" when a line in another currency went into it.",
+             matches: { CurrencyGuardTests.has(CurrencyGuardTests.unmarkedSavingsTotal, $0) }),
         Rule(name: "conversion that silently falls back",
              fix: "Use CurrencyManager.shared.rates.convert(...) and handle nil explicitly.",
              matches: { CurrencyGuardTests.has(CurrencyGuardTests.silentFallback, $0) }),
@@ -93,8 +96,7 @@ final class CurrencyGuardTests: XCTestCase {
              fix: "Default to CurrencyManager.shared.selectedCurrency, or require the currency.",
              matches: { CurrencyGuardTests.has(CurrencyGuardTests.usdDefault, $0) },
              allowedPaths: [
-                "Pausely/Services/SupabaseManager.swift",       // formatCatalogPrice: the catalog's prices are in USD
-                "Pausely/Services/AlternativeDatabase.swift",   // parsed catalog patterns carry US list prices
+                "Pausely/Services/ServiceDatabaseMore.swift",   // parsed catalog patterns carry US list prices
                 "Pausely/Services/WidgetDataStore.swift",       // empty widget summary before the first publish
                 "Pausely/Services/Intelligence/SubscriptionIntelligenceEngine.swift", // mailbox fallback, tested in USD
                 "PauselyWidget/"                                 // sample data for widget previews
@@ -111,7 +113,7 @@ final class CurrencyGuardTests: XCTestCase {
                           "Sources aren't readable from this test run")
 
         var violations: [String] = []
-        for folder in ["Pausely", "PauselyWidget"] {
+        for folder in ["Pausely", "PauselyWidget", "Shared"] {
             let base = root.appendingPathComponent(folder)
             guard let files = FileManager.default.enumerator(at: base, includingPropertiesForKeys: nil) else { continue }
             for case let file as URL in files where file.pathExtension == "swift" {
@@ -196,6 +198,10 @@ final class CurrencyGuardTests: XCTestCase {
         XCTAssertFalse(caught(#"Text("12,99 €")"#).isEmpty)
         XCTAssertFalse(caught(#"let total = subs.reduce(0) { $0 + $1.monthlyCost }"#).isEmpty)
         XCTAssertFalse(caught(#"Text(manager.format(sub.amount))"#).isEmpty)
+        XCTAssertFalse(caught(#"ProofLine(label: kept, value: summary.formatted(summary.onTrack))"#).isEmpty)
+        XCTAssertFalse(caught(#"Text(kept.formatted(kept.savedSoFar))"#).isEmpty)
+        XCTAssertTrue(caught(#"Text(summary.total(summary.onTrack))"#).isEmpty)
+        XCTAssertTrue(caught(#"Text(summary.formatted(line.savedSoFar, from: line.currency))"#).isEmpty)
         XCTAssertFalse(caught(#"let x = (try? m.convert(a, from: c, to: d)) ?? a"#).isEmpty)
         XCTAssertFalse(caught(#"init(currency: String = "USD")"#).isEmpty)
         XCTAssertFalse(caught(#"let a = MoneyFormat.string(sub.monthlyCost, currencyCode)"#).isEmpty)

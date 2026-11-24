@@ -1,242 +1,124 @@
 import SwiftUI
 
+/// Where a person's data lives, the two documents that govern it, and the way to delete all of it.
+/// Every statement here describes what the build does; a row for a feature that is switched off is not shown.
 struct PrivacySecurityView: View {
     @Environment(\.dismiss) private var dismiss
+    @ObservedObject private var authManager = AuthManager.shared
     @State private var showingDeleteAccountConfirmation = false
+    @State private var showingEraseLocalConfirmation = false
     @State private var isDeleting = false
     @State private var deleteError: String?
     @State private var showingPrivacyPolicy = false
     @State private var showingTermsOfService = false
 
     var body: some View {
-        ZStack {
-            PremiumBackground()
+        SettingsPage(title: "Privacy & security") {
+            SettingsSection(title: "Your data") {
+                SettingsRow(title: L10n.string("Your subscription list"),
+                            detail: authManager.isGuest
+                                ? L10n.string("Kept only on this iPhone under iOS data protection until you choose to create an account.")
+                                : L10n.string("Synced to Pausely's servers over an encrypted connection and encrypted at rest. Other accounts can't read it."))
+                SettingsRow(title: L10n.string("History, receipt and Pause Plan"),
+                            detail: L10n.string("Protected on this iPhone by iOS data protection, and synced to your account when you sign in so reinstalling never loses them."))
+                SettingsRow(title: L10n.string("Import from screenshots"),
+                            detail: L10n.string("Screenshots are read on this iPhone using on-device text recognition and are never saved or sent anywhere."))
+                SettingsRow(title: L10n.string("Cancellation difficulty ratings"),
+                            detail: authManager.isGuest
+                                ? L10n.string("Available once you sign in. In local-only mode, nothing is sent to Pausely's servers.")
+                                : L10n.string("Optional 1–5 ratings you submit after cancelling are combined into anonymous averages per service."))
+                if FeatureFlags.inboxImportEnabled {
+                    SettingsRow(title: L10n.string("Find in Email"),
+                                detail: L10n.string("Receipts are read on this iPhone. A few facts of each charge are kept (who charged, how much, when, how often), never the email itself."))
+                }
+                SettingsRow(title: L10n.string("No ads, no selling data"),
+                            detail: L10n.string("Pausely has no ad or tracking SDKs and never sells your data."))
+            }
 
-            ScrollView(showsIndicators: false) {
-                VStack(spacing: 28) {
-                    // Header
-                    HStack {
-                        Button(action: { dismiss() }) {
-                            HStack(spacing: 6) {
-                                Image(systemName: "chevron.left")
-                                Text("Back")
+            SettingsSection(title: "Terms and privacy") {
+                Button { showingPrivacyPolicy = true } label: {
+                    SettingsRow(title: L10n.string("Privacy Policy")) { RowChevron() }
+                }
+                .buttonStyle(.plain)
+                .accessibilityIdentifier("privacyPolicyRow")
+                Button { showingTermsOfService = true } label: {
+                    SettingsRow(title: L10n.string("Terms of Service")) { RowChevron() }
+                }
+                .buttonStyle(.plain)
+                .accessibilityIdentifier("termsRow")
+            }
+
+            SettingsSection(title: authManager.isGuest ? "This iPhone" : "Your account") {
+                if authManager.isGuest {
+                    Button { showingEraseLocalConfirmation = true } label: {
+                        SettingsRow(title: L10n.string("Erase local data"),
+                                    detail: L10n.string("Remove your list, history, and Pause Plan from this iPhone"), titleColor: .due)
+                    }
+                    .buttonStyle(.plain)
+                    .accessibilityIdentifier("eraseLocalDataButton")
+                    .alert("Erase local data?", isPresented: $showingEraseLocalConfirmation) {
+                        Button("Cancel", role: .cancel) {}
+                        Button("Erase", role: .destructive) {
+                            Task {
+                                await authManager.eraseLocalGuestData()
+                                Feel.landed()
+                                dismiss()
                             }
-                            .font(.body.weight(.medium))
-                            .foregroundColor(Color.obsidianTextSecondary)
                         }
-
-                        Spacer()
-
-                        Text("Privacy & Security")
-                            .font(.headline.weight(.bold))
-                            .foregroundColor(.white)
-
-                        Spacer()
-
-                        Color.clear.frame(width: 60)
+                    } message: {
+                        Text("This removes your subscription list, Savings Receipt history, and Pause Plan from this iPhone. It does not cancel any subscriptions.")
                     }
-                    .padding(.horizontal, 20)
-                    .padding(.top, 16)
-
-                    // Icon
-                    ZStack {
-                        Circle()
-                            .fill(Color.accentMint.opacity(0.12))
-                            .frame(width: 80, height: 80)
-
-                        Image(systemName: "lock.shield.fill")
-                            .font(.title)
-                            .foregroundColor(Color.accentMint)
-                    }
-
-                    // How data is kept: facts, not switches.
-                    settingsGroup(title: "YOUR DATA") {
-                        SettingsInfoRow(icon: "lock.icloud.fill", title: "Your subscription list",
-                                        detail: "Synced to Pausely's servers over an encrypted connection and encrypted at rest. Other accounts can't read it.")
-                        settingsDivider()
-                        SettingsInfoRow(icon: "iphone", title: "History, receipt and Pause Plan",
-                                        detail: "Stay on this iPhone, protected by iOS data protection.")
-                        settingsDivider()
-                        SettingsInfoRow(icon: "envelope.fill", title: "Gmail import",
-                                        detail: "Emails are read on this iPhone. Only the subscriptions you choose are saved.")
-                        settingsDivider()
-                        SettingsInfoRow(icon: "hand.raised.fill", title: "No ads, no selling data",
-                                        detail: "Pausely has no ad or tracking SDKs and never sells your data.")
-                    }
-                    .padding(.horizontal, 20)
-
-                    // Privacy Section
-                    settingsGroup(title: "PRIVACY") {
-                        SettingsNavRow(icon: "doc.text.fill", title: "Privacy Policy") { showingPrivacyPolicy = true }
-                        settingsDivider()
-                        SettingsNavRow(icon: "doc.fill", title: "Terms of Service") { showingTermsOfService = true }
-                    }
-                    .padding(.horizontal, 20)
-
-                    // Account Section
-                    settingsGroup(title: "DANGER ZONE") {
-                        Button(action: { showingDeleteAccountConfirmation = true }) {
-                            HStack(spacing: 14) {
-                                ZStack {
-                                    RoundedRectangle(cornerRadius: 10)
-                                        .fill(Color.semanticDestructive.opacity(0.12))
-                                        .frame(width: 38, height: 38)
-                                    Image(systemName: "trash.fill")
-                                        .font(.callout)
-                                        .foregroundColor(Color.semanticDestructive)
-                                }
-                                VStack(alignment: .leading, spacing: 2) {
-                                    Text(isDeleting ? "Deleting…" : "Delete Account")
-                                        .font(.callout.weight(.semibold))
-                                        .foregroundColor(Color.semanticDestructive)
-                                    Text("Permanently remove your account and all its data")
-                                        .font(.footnote)
-                                        .foregroundColor(Color.obsidianTextSecondary)
-                                }
-                                Spacer()
-                                if isDeleting { ProgressView().tint(Color.semanticDestructive) }
-                            }
-                            .padding(.horizontal, 16)
-                            .padding(.vertical, 12)
-                        }
-                        .buttonStyle(PlainButtonStyle())
-                        .disabled(isDeleting)
-                        .accessibilityIdentifier("deleteAccountButton")
-                        .alert("Delete Account?", isPresented: $showingDeleteAccountConfirmation) {
-                            Button("Cancel", role: .cancel) {}
-                            Button("Delete", role: .destructive) { Task { await deleteAccount() } }
-                        } message: {
-                            Text("This permanently deletes your account, your subscription list and your history from Pausely's servers and this iPhone. It doesn't cancel any subscriptions, including Pausely Pro; Apple manages those in Settings → Apple ID → Subscriptions.")
-                        }
-                        .alert("Couldn't delete your account", isPresented: Binding(get: { deleteError != nil }, set: { if !$0 { deleteError = nil } })) {
-                            Button("OK", role: .cancel) {}
-                        } message: {
-                            Text(deleteError ?? "")
+                } else {
+                    Button { showingDeleteAccountConfirmation = true } label: {
+                        SettingsRow(title: L10n.string("Delete account"),
+                                    detail: L10n.string("Permanently remove your account and all its data"), titleColor: .due) {
+                            if isDeleting { ProgressView().tint(Color.inkText) }
                         }
                     }
-                    .padding(.horizontal, 20)
-
-                    Spacer(minLength: 60)
+                    .buttonStyle(.plain)
+                    .disabled(isDeleting)
+                    .accessibilityIdentifier("deleteAccountButton")
+                    .alert("Delete account?", isPresented: $showingDeleteAccountConfirmation) {
+                        Button("Cancel", role: .cancel) {}
+                        Button("Delete", role: .destructive) { Task { await deleteAccount() } }
+                    } message: {
+                        Text(deleteWarning)
+                    }
+                    .alert("Couldn't delete your account", isPresented: Binding(get: { deleteError != nil }, set: { if !$0 { deleteError = nil } })) {
+                        Button("OK", role: .cancel) {}
+                    } message: {
+                        Text(deleteError ?? "")
+                    }
                 }
             }
         }
-        .sheet(isPresented: $showingPrivacyPolicy) {
-            PrivacyPolicyView()
-        }
-        .sheet(isPresented: $showingTermsOfService) {
-            TermsOfServiceView()
-        }
+        // The policies have one copy, on the website. It opens here, without leaving the app.
+        .sheet(isPresented: $showingPrivacyPolicy) { LegalPage.privacy.view }
+        .sheet(isPresented: $showingTermsOfService) { LegalPage.terms.view }
+    }
+
+    /// What deleting does and does not do. An account that signs in with Apple is told Apple's sheet
+    /// comes next, so it isn't a surprise.
+    private var deleteWarning: String {
+        let warning = L10n.string("This permanently deletes your account, your subscription list and your history from Pausely's servers and this iPhone. It doesn't cancel any subscriptions, including Pausely Pro. To cancel those, open Settings, tap your name, then Subscriptions.")
+        guard AuthManager.shared.signsInWithApple else { return warning }
+        return warning + "\n\n" + L10n.string("Apple will ask you to confirm first.")
     }
 
     private func deleteAccount() async {
         isDeleting = true
         defer { isDeleting = false }
         do {
-            try await RevolutionaryAuthManager.shared.deleteAccount()
-            HapticStyle.success.trigger()
+            try await AuthManager.shared.deleteAccount()
+            Feel.landed()
             dismiss()
+        } catch is CancellationError {
+            // The person closed Apple's sheet: nothing was deleted and there is nothing to report.
         } catch {
-            HapticStyle.error.trigger()
-            deleteError = "Check your connection and try again. If it keeps failing, email \(AppConfig.supportEmail) and we'll delete it within 30 days. (\(error.localizedDescription))"
+            // The address is one the person may have to type: in the system's narrow alert it is
+            // not hyphenated either.
+            deleteError = AddressText.inSentence(L10n.string("Check your connection and try again. If it keeps failing, email \(AppConfig.supportEmail) and we'll delete it within 30 days."))
         }
     }
 
-    @ViewBuilder
-    private func settingsGroup<Content: View>(title: String, @ViewBuilder content: () -> Content) -> some View {
-        VStack(alignment: .leading, spacing: 8) {
-            Text(title)
-                .font(.caption.weight(.bold))
-                .foregroundColor(Color.obsidianTextTertiary)
-                .tracking(1.5)
-                .padding(.leading, 4)
-
-            VStack(spacing: 0) {
-                content()
-            }
-            .background(
-                RoundedRectangle(cornerRadius: 16)
-                    .fill(Color.obsidianSurface)
-                    .overlay(
-                        RoundedRectangle(cornerRadius: 16)
-                            .stroke(Color.white.opacity(0.06), lineWidth: 1)
-                    )
-            )
-        }
-    }
-
-    private func settingsDivider() -> some View {
-        Divider()
-            .background(Color.white.opacity(0.06))
-            .padding(.leading, 68)
-    }
-}
-
-/// A fact about how data is handled (no switch, because nothing here is optional).
-struct SettingsInfoRow: View {
-    let icon: String
-    let title: String
-    let detail: String
-
-    var body: some View {
-        HStack(alignment: .top, spacing: 14) {
-            ZStack {
-                RoundedRectangle(cornerRadius: 10)
-                    .fill(Color.accentMint.opacity(0.12))
-                    .frame(width: 38, height: 38)
-                Image(systemName: icon)
-                    .font(.callout)
-                    .foregroundColor(Color.accentMint)
-            }
-            .accessibilityHidden(true)
-            VStack(alignment: .leading, spacing: 2) {
-                Text(title)
-                    .font(.callout.weight(.semibold))
-                    .foregroundColor(.white)
-                Text(detail)
-                    .font(.footnote)
-                    .foregroundColor(Color.obsidianTextSecondary)
-                    .fixedSize(horizontal: false, vertical: true)
-            }
-            Spacer(minLength: 0)
-        }
-        .padding(.horizontal, 16)
-        .padding(.vertical, 12)
-        .accessibilityElement(children: .combine)
-    }
-}
-
-struct SettingsNavRow: View {
-    let icon: String
-    let title: String
-    let action: () -> Void
-
-    var body: some View {
-        Button(action: action) {
-            HStack(spacing: 14) {
-                ZStack {
-                    RoundedRectangle(cornerRadius: 10)
-                        .fill(Color.accentMint.opacity(0.12))
-                        .frame(width: 38, height: 38)
-                    Image(systemName: icon)
-                        .font(.callout)
-                        .foregroundColor(Color.accentMint)
-                }
-                Text(title)
-                    .font(.callout.weight(.semibold))
-                    .foregroundColor(.white)
-                Spacer()
-                Image(systemName: "chevron.right")
-                    .font(.caption.weight(.semibold))
-                    .foregroundColor(Color.obsidianTextTertiary)
-            }
-            .padding(.horizontal, 16)
-            .padding(.vertical, 12)
-        }
-        .buttonStyle(PlainButtonStyle())
-    }
-}
-
-
-#Preview {
-    PrivacySecurityView()
 }

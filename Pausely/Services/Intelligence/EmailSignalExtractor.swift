@@ -23,6 +23,7 @@ enum ReceiptVerdict: Equatable {
 }
 
 /// Optional on-device classifier for receipts the rules cannot decide (e.g. Apple's on-device language model).
+@MainActor
 protocol AmbiguousReceiptClassifier {
     func classify(merchantGuess: String?, subject: String, excerpt: String) async -> ReceiptVerdict
 }
@@ -178,6 +179,8 @@ enum PlatformHints {
     static func merchantFromSubject(_ subject: String) -> String? {
         let patterns = [
             #"(?:receipt|invoice|statement)\s+from\s+([A-Za-z0-9][A-Za-z0-9\s\-\.&']*?)(?:\s+#|\s+\(|\.\s|\.$|,|$)"#,
+            // Stripe's own wording: "Your Acme receipt [#1217-3050]".
+            #"^your\s+([A-Za-z0-9][A-Za-z0-9\s\-\.&']{1,40}?)\s+(?:receipt|invoice)\b"#,
             #"(?:payment|automatic payment|payment sent)\s+to\s+([A-Za-z0-9][A-Za-z0-9\s\-\.&']*?)(?:\s+#|\s+\(|\.\s|\.$|,|$)"#,
             #"^([A-Za-z0-9][A-Za-z0-9\s]{1,30}?)[\s\-–:]+(?:subscription|invoice|receipt|billing|renewal)"#,
         ]
@@ -222,7 +225,10 @@ enum EmailTriage {
     static func shouldReadBody(from: String, subject: String, snippet: String, labelIds: [String],
                                catalog: MerchantCatalog = .builtin) -> Bool {
         let text = (subject + " " + snippet).lowercased()
+        // The words the search asks for, in every language it asks in: with English words only, an Arabic
+        // receipt from a sender not in the catalog was found and then never opened (Shahid, 2026-11-22).
         let hasBillingWords = billingWords.contains { text.contains($0) }
+            || InboxSearchPlan.subjectWords.contains { text.contains($0.lowercased()) }
         if hasBillingWords { return true }
         if labelIds.contains("CATEGORY_PURCHASES") { return true }
         let sender = EmailSignalExtractor.parseSender(from)
@@ -281,6 +287,33 @@ enum HTMLText {
 /// which is what makes the whole detection pipeline testable without touching a real mailbox.
 enum EmailSignalExtractor {
 
+    /// Every fact an email holds. Almost always one; an App Store receipt lists each subscription with
+    /// its own price and renewal line, and yields one per subscription (and none for one-off purchases).
+    static func extractAll(_ email: RawEmail, catalog: MerchantCatalog = .builtin) -> [ExtractionResult] {
+        let sender = parseSender(email.from)
+        let text = email.bodyText.isEmpty ? HTMLText.plain(email.bodyHTML ?? "") : email.bodyText
+        // A family member's copy says what was bought with their account; the organiser's copy is the bill.
+        if AppleReceipt.isApple(sender.domain), AppleReceipt.isFamilyNotice(text) { return [] }
+        guard AppleReceipt.isAppleBilling(fromDomain: sender.domain, subject: email.subject) else {
+            return [extract(email, catalog: catalog)].compactMap { $0 }
+        }
+        guard let items = AppleReceipt.items(in: text) else {
+            // Not a layout this reader knows: fall back to reading it as one receipt.
+            return [extract(email, catalog: catalog)].compactMap { $0 }
+        }
+        let intel = HeaderIntel.analyze(headers: email.headers)
+        let spoofed = intel.isSpoofed(fromDomain: sender.domain)
+        return items.filter(\.renews).enumerated().map { index, item in
+            let signal = ReceiptSignal(
+                id: index == 0 ? email.id : "\(email.id)#\(index)", date: email.date, senderDomain: sender.domain,
+                senderName: sender.name, merchantHint: item.title, platform: "apple", kind: .charge, amount: item.amount,
+                currency: item.currency, cadenceHint: item.frequency, trialDays: nil, renewalLanguage: true,
+                oneTimeLanguage: false, promotional: false, markup: nil, hasUnsubscribe: intel.hasUnsubscribe,
+                bulkMail: intel.bulk, spoofSuspected: spoofed ? true : nil)
+            return ExtractionResult(signal: signal, ambiguousExcerpt: nil, merchantGuess: item.title, subject: email.subject)
+        }
+    }
+
     static func extract(_ email: RawEmail, catalog: MerchantCatalog = .builtin) -> ExtractionResult? {
         let sender = parseSender(email.from)
         let intel = HeaderIntel.analyze(headers: email.headers)
@@ -295,7 +328,9 @@ enum EmailSignalExtractor {
         // Merge evidence. Product names (Amazon *Prime*, *DashPass*) beat generic seller names.
         let hint = analysis.productHint ?? markup?.merchant ?? platform?.merchant
         let amount = markup?.amount ?? analysis.money?.amount
+        // A bare "$" takes the dollar the email names elsewhere, or its sender's country (DollarHint).
         let currency = markup?.currency ?? analysis.money?.currency
+            ?? (amount != nil ? DollarHint.currency(text: email.subject + "\n" + text, senderDomain: sender.domain) : nil)
         let cadence = markup?.cadence ?? analysis.frequency
 
         var flags = analysis.flags
@@ -311,7 +346,12 @@ enum EmailSignalExtractor {
 
         // A receipt wrongly filed under Promotions must not be discarded when the markup proves it is a receipt.
         let markupProvesReceipt = markup != nil && markup?.kind != .parcel
-        let promotional = (labelPromo && !markupProvesReceipt) || (flags.marketing && !markupProvesReceipt)
+        // Most inboxes have no "Promotions" label. Mail with an unsubscribe header that neither calls itself a
+        // receipt nor says an amount was charged is an offer, whatever prices it quotes. (In a measured real
+        // mailbox, most mail carried that header and no billing mail did.)
+        let bulkOffer = intel.hasUnsubscribe && !analysis.chargeEvidence
+            && !ReceiptTextAnalyzer.subjectSaysReceipt(email.subject)
+        let promotional = (labelPromo || flags.marketing || bulkOffer) && !markupProvesReceipt
 
         var kind = ReceiptTextAnalyzer.classify(flags: flags, hasAmount: amount != nil)
         if markupProvesReceipt, amount != nil, !flags.cancelled, !flags.refund { kind = .charge }
@@ -330,7 +370,7 @@ enum EmailSignalExtractor {
             cadenceHint: cadence, trialDays: analysis.trialDays, renewalLanguage: flags.renewal,
             oneTimeLanguage: flags.oneTime, promotional: promotional,
             markup: markup?.kind, hasUnsubscribe: intel.hasUnsubscribe, bulkMail: intel.bulk,
-            spoofSuspected: spoofed ? true : nil, nextAmount: analysis.nextAmount)
+            spoofSuspected: spoofed ? true : nil, nextAmount: analysis.nextAmount, introAmount: analysis.introAmount)
 
         // Ambiguous: a charge from a merchant we do not know, with no recurring or one-time language at all.
         var excerpt: String?
@@ -354,5 +394,37 @@ enum EmailSignalExtractor {
         }
         let domain = address.split(separator: "@").last.map { String($0).lowercased().trimmingCharacters(in: .whitespaces) } ?? ""
         return (name, domain)
+    }
+}
+
+/// Which dollar a receipt means when its amount says only "$". Taken as the reader's own currency, US
+/// receipts showed as Canadian dollars in Canada and as riyals in Saudi Arabia (the rating of 2026-11-22).
+enum DollarHint {
+    private static let codes = ["USD", "CAD", "AUD", "NZD", "SGD", "HKD"]
+    private static let marks: [(String, String)] = [("US$", "USD"), ("CA$", "CAD"), ("C$", "CAD"), ("A$", "AUD"),
+                                                    ("AU$", "AUD"), ("NZ$", "NZD"), ("S$", "SGD"), ("HK$", "HKD")]
+    private static let countries: [(String, String)] = [(".ca", "CAD"), (".au", "AUD"), (".nz", "NZD"),
+                                                         (".sg", "SGD"), (".hk", "HKD")]
+
+    /// The one dollar currency the email names anywhere ("USD", "US$", "CAD"), else the one its sender's
+    /// country domain implies; nil when neither says.
+    static func currency(text: String, senderDomain: String) -> String? {
+        var named = Set<String>()
+        for code in codes where text.range(of: "\\b\(code)\\b", options: .regularExpression) != nil { named.insert(code) }
+        // "US$" holds "S$" (Singapore): a mark counts only where no other capital comes before it.
+        for (mark, code) in marks
+        where text.range(of: "(?<![A-Z])" + NSRegularExpression.escapedPattern(for: mark), options: .regularExpression) != nil {
+            named.insert(code)
+        }
+        if named.count == 1 { return named.first }
+        let domain = senderDomain.lowercased()
+        return countries.first { domain.hasSuffix($0.0) }?.1
+    }
+
+    /// The dollar a receipt that never says which is taken as: the reader's, when it is a dollar; US
+    /// dollars otherwise, so "$" never becomes riyals or euros.
+    static func assumed(readerCurrency: String) -> String {
+        let code = MoneyFormat.normalizedCode(readerCurrency)
+        return codes.contains(code) ? code : "USD"
     }
 }

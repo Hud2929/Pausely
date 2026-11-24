@@ -1,108 +1,90 @@
 import Foundation
-import SwiftUI
 
 struct Subscription: Identifiable, Codable, Equatable {
     var id: UUID
-    var userId: UUID?
     var name: String
-    var bundleIdentifier: String?  // Bundle ID for Screen Time tracking
-    var description: String?
-    var logoUrl: String?
     var category: String?
     var amount: Decimal
     var currency: String
     var billingFrequency: BillingFrequency
-    var nextBillingDate: Date?
-    var monthlyUsageMinutes: Int
-    var costPerHour: Decimal?
-    var roiScore: Decimal?
-    var wasteScore: Decimal?  // NEW: 0.0 = total waste, 1.0 = great value
-    var notifyBeforeDays: Int  // NEW: Days before renewal to notify
-    var trialEndsAt: Date?     // NEW: Trial expiration date
+    /// The renewal anchor: a day, not a moment (`BillingDay`).
+    @SavedDay var nextBillingDate: Date?
+    /// Days before a renewal to remind. 0 means no reminder.
+    var notifyBeforeDays: Int
+    /// The last day of a free trial: a day, not a moment.
+    @SavedDay var trialEndsAt: Date?
     var status: SubscriptionStatus
-    var isDetected: Bool
-    var canPause: Bool
-    var pauseUrl: String?
-    var pausedUntil: Date?
-    var startDate: Date?       // Actual subscription start date (defaults to createdAt if nil)
     var createdAt: Date
-    var updatedAt: Date
-
-    // MARK: - Tier & Price Override (Revolutionary Database)
-    var selectedTier: PricingTier = .individual
-    var userPriceUSD: Decimal?
-    var isPriceOverridden: Bool = false
-
-
-    // MARK: - Coding Keys
-    enum CodingKeys: String, CodingKey {
-        case id, userId, name, bundleIdentifier, description, logoUrl, category, amount, currency
-        case billingFrequency, nextBillingDate, monthlyUsageMinutes, costPerHour
-        case roiScore, wasteScore, notifyBeforeDays, trialEndsAt, status, isDetected, canPause, pauseUrl, pausedUntil
-        case createdAt, updatedAt
-        case selectedTier, userPriceUSD, isPriceOverridden
+    /// Optional user note (e.g. "Shared with Sarah", "Promo ends Oct").
+    var notes: String?
+    /// Card, bank, or store that bills this subscription (e.g. "Apple", "Visa ···4242").
+    var paymentMethod: String?
+    /// Number of people splitting this subscription (1 = just me, 2...20 = shared plan).
+    var splitCount: Int {
+        didSet {
+            let clamped = max(1, min(20, splitCount))
+            if splitCount != clamped { splitCount = clamped }
+        }
     }
-    
+
+    // Every field here is read by a screen, the renewal engine or the export
+    // (`SubscriptionFieldTests`). A copy saved by an earlier version holds more; the rest is ignored.
+    enum CodingKeys: String, CodingKey {
+        case id, name, category, amount, currency, billingFrequency, nextBillingDate
+        case notifyBeforeDays, trialEndsAt, status, createdAt
+        case notes, paymentMethod, splitCount
+    }
+
     // MARK: - Initializers
 
     init(
         id: UUID = UUID(),
-        userId: UUID? = nil,
         name: String,
-        bundleIdentifier: String? = nil,
-        description: String? = nil,
-        logoUrl: String? = nil,
         category: String? = nil,
         amount: Decimal,
         currency: String = CurrencyManager.shared.selectedCurrency,  // what the user pays in, unless told otherwise
         billingFrequency: BillingFrequency = .monthly,
         nextBillingDate: Date? = nil,
-        monthlyUsageMinutes: Int = 0,
-        costPerHour: Decimal? = nil,
-        roiScore: Decimal? = nil,
-        wasteScore: Decimal? = nil,
         notifyBeforeDays: Int = 3,
         trialEndsAt: Date? = nil,
         status: SubscriptionStatus = .active,
-        isDetected: Bool = false,
-        canPause: Bool = true,
-        pauseUrl: String? = nil,
-        pausedUntil: Date? = nil,
-        startDate: Date? = nil,
         createdAt: Date = Date(),
-        updatedAt: Date = Date(),
-        selectedTier: PricingTier = .individual,
-        userPriceUSD: Decimal? = nil,
-        isPriceOverridden: Bool = false
+        notes: String? = nil,
+        paymentMethod: String? = nil,
+        splitCount: Int = 1
     ) {
         self.id = id
-        self.userId = userId
         self.name = name
-        self.bundleIdentifier = bundleIdentifier
-        self.description = description
-        self.logoUrl = logoUrl
         self.category = category
         self.amount = amount
         self.currency = currency
         self.billingFrequency = billingFrequency
         self.nextBillingDate = nextBillingDate
-        self.monthlyUsageMinutes = monthlyUsageMinutes
-        self.costPerHour = costPerHour
-        self.roiScore = roiScore
-        self.wasteScore = wasteScore
         self.notifyBeforeDays = notifyBeforeDays
         self.trialEndsAt = trialEndsAt
         self.status = status
-        self.isDetected = isDetected
-        self.canPause = canPause
-        self.pauseUrl = pauseUrl
-        self.pausedUntil = pausedUntil
-        self.startDate = startDate
         self.createdAt = createdAt
-        self.updatedAt = updatedAt
-        self.selectedTier = selectedTier
-        self.userPriceUSD = userPriceUSD
-        self.isPriceOverridden = isPriceOverridden
+        self.notes = notes
+        self.paymentMethod = paymentMethod
+        self.splitCount = max(1, min(20, splitCount))
+    }
+
+    init(from decoder: Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        id = try c.decode(UUID.self, forKey: .id)
+        name = try c.decode(String.self, forKey: .name)
+        category = try c.decodeIfPresent(String.self, forKey: .category)
+        amount = try c.decode(Decimal.self, forKey: .amount)
+        currency = try c.decode(String.self, forKey: .currency)
+        billingFrequency = try c.decode(BillingFrequency.self, forKey: .billingFrequency)
+        _nextBillingDate = try c.decodeIfPresent(SavedDay.self, forKey: .nextBillingDate) ?? SavedDay(wrappedValue: nil)
+        notifyBeforeDays = try c.decodeIfPresent(Int.self, forKey: .notifyBeforeDays) ?? 3
+        _trialEndsAt = try c.decodeIfPresent(SavedDay.self, forKey: .trialEndsAt) ?? SavedDay(wrappedValue: nil)
+        status = try c.decode(SubscriptionStatus.self, forKey: .status)
+        createdAt = try c.decode(Date.self, forKey: .createdAt)
+        notes = try c.decodeIfPresent(String.self, forKey: .notes)
+        paymentMethod = try c.decodeIfPresent(String.self, forKey: .paymentMethod)
+        splitCount = max(1, min(20, try c.decodeIfPresent(Int.self, forKey: .splitCount) ?? 1))
     }
 
     init(name: String, price: Double, category: String, billingFrequency: BillingFrequency = .monthly) {
@@ -115,84 +97,50 @@ struct Subscription: Identifiable, Codable, Equatable {
     }
     
     // MARK: - Display Properties
-    
-    var displayCostPerHour: String {
-        guard let cost = costPerHour else { return "N/A" }
-        return formatCurrency(cost)
+
+    /// The person's own share of one charge (`amount` when not shared, or `amount / splitCount` rounded
+    /// to the currency's precision so displayed share and totals always agree).
+    var effectiveAmount: Decimal {
+        let people = max(1, splitCount)
+        return people > 1 ? AmountText.rounded(amount / Decimal(people), currency: currency) : amount
     }
     
     var displayAmount: String {
-        return formatCurrency(amount)
+        return formatCurrency(effectiveAmount)
     }
 
-    /// Amount formatted in the user's currently selected currency
-    var displayAmountInUserCurrency: String {
-        let manager = CurrencyManager.shared
-        guard currency != manager.selectedCurrency,
-              let converted = manager.rates.convert(amount, from: currency, to: manager.selectedCurrency) else {
-            // Same currency, or one Pausely can't convert: show what is really charged.
-            return displayAmount
-        }
-        return manager.format(converted)
+    /// The person's exact share of one charge, unrounded: what totals are worked out from. Rounded first, a
+    /// $17.99 plan split two ways came to $108.00 a year instead of $107.94 (the rating of 2026-11-23).
+    var exactShare: Decimal {
+        amount / Decimal(max(1, splitCount))
     }
 
-    /// Monthly cost formatted in the user's currently selected currency
-    var displayMonthlyCostInUserCurrency: String {
-        let manager = CurrencyManager.shared
-        guard currency != manager.selectedCurrency else {
-            return formatCurrency(monthlyCost)
-        }
-        guard let converted = manager.rates.convert(monthlyCost, from: currency, to: manager.selectedCurrency) else {
-            return formatCurrency(monthlyCost)
-        }
-        return manager.format(converted)
-    }
-
-    var displayAnnualCost: String {
-        return formatCurrency(annualCost)
-    }
-    
-    /// What it costs over a year: the price times the number of charges in a year (a monthly plan
+    /// What it costs over a year: the person's share times the number of charges in a year (a monthly plan
     /// charges 12 times). One definition, so every screen shows the same yearly number.
     var annualCost: Decimal {
-        amount * ProvenSubscription.periodsPerYear(billingFrequency)
-    }
-    
-    var lifetimeSpend: Decimal {
-        let referenceDate = startDate ?? createdAt
-        let monthsSinceStart = Date().timeIntervalSince(referenceDate) / (30.44 * 24 * 60 * 60)
-        return monthlyCost * Decimal(monthsSinceStart)
+        exactShare * ProvenSubscription.periodsPerYear(billingFrequency)
     }
 
     var monthlyCost: Decimal {
         switch billingFrequency {
         case .weekly:
-            return amount * Decimal(52) / 12
+            return exactShare * Decimal(52) / 12
         case .biweekly:
-            return amount * Decimal(26) / 12
+            return exactShare * Decimal(26) / 12
         case .monthly:
-            return amount
+            return exactShare
         case .quarterly:
-            return amount / 3
+            return exactShare / 3
         case .semiannual:
-            return amount / 6
+            return exactShare / 6
         case .yearly:
-            return amount / 12
+            return exactShare / 12
         }
-    }
-    
-    var isActive: Bool {
-        status == .active
-    }
-    
-    var isPaused: Bool {
-        guard let pausedUntil = pausedUntil else { return false }
-        return pausedUntil > Date()
     }
 
     /// Whether this subscription keeps charging on its own. Only these roll forward to the next cycle.
     var renewsAutomatically: Bool {
-        (status == .active || status == .trial) && !isPaused
+        status == .active || status == .trial
     }
 
     /// The next renewal. `nextBillingDate` is the anchor the user entered and is never overwritten;
@@ -203,7 +151,7 @@ struct Subscription: Identifiable, Codable, Equatable {
         nextRenewal(onOrAfter: Date())
     }
 
-    func nextRenewal(onOrAfter day: Date, calendar: Calendar = .current) -> Date? {
+    func nextRenewal(onOrAfter day: Date, calendar: Calendar = .billing) -> Date? {
         guard let anchor = nextBillingDate else { return nil }
         guard renewsAutomatically else { return anchor }
         return RenewalSchedule.nextRenewal(anchor: anchor, frequency: billingFrequency, onOrAfter: day, calendar: calendar)
@@ -211,7 +159,7 @@ struct Subscription: Identifiable, Codable, Equatable {
 
     var daysUntilRenewal: Int? {
         guard let nextDate = calculatedNextBillingDate else { return nil }
-        let calendar = Calendar.current
+        let calendar = Calendar.billing
         // Compare calendar days, not elapsed hours: 9 days away at 3pm must not read as "in 8 days".
         return calendar.calendarDays(from: Date(), to: nextDate)
     }
@@ -226,34 +174,6 @@ struct Subscription: Identifiable, Codable, Equatable {
 
     // MARK: - StoreKit Integration
 
-    /// Known StoreKit product IDs for this app's premium subscriptions
-    private static let storeKitProductIds: Set<String> = [
-        "com.pausely.premium.monthly",
-        "com.pausely.premium.annual",
-        "com.pausely.premium.lifetime"
-    ]
-
-    /// Whether this subscription is managed by StoreKit (in-app purchase)
-    /// Falls back to checking if we have a product ID match
-    var isStoreKitManaged: Bool {
-        // Check if this subscription's name matches our StoreKit products
-        // In a full implementation, you'd store the product ID on the subscription
-        if let description = description {
-            return Self.storeKitProductIds.contains(description)
-        }
-        return false
-    }
-
-    /// Checks if this subscription can be managed through StoreKit APIs
-    var canManageViaStoreKit: Bool {
-        return isStoreKitManaged
-    }
-
-    // MARK: - Equatable
-    
-    static func == (lhs: Subscription, rhs: Subscription) -> Bool {
-        lhs.id == rhs.id
-    }
 }
 
 // MARK: - Billing Frequency
@@ -270,10 +190,10 @@ enum BillingFrequency: String, Codable, CaseIterable, Identifiable {
     var displayName: String {
         switch self {
         case .weekly: return L10n.string("Weekly")
-        case .biweekly: return L10n.string("Every 2 Weeks")
+        case .biweekly: return L10n.string("Every 2 weeks")
         case .monthly: return L10n.string("Monthly")
-        case .quarterly: return L10n.string("Every 3 Months")
-        case .semiannual: return L10n.string("Every 6 Months")
+        case .quarterly: return L10n.string("Every 3 months")
+        case .semiannual: return L10n.string("Every 6 months")
         case .yearly: return L10n.string("Yearly")
         }
     }
@@ -300,59 +220,56 @@ enum BillingFrequency: String, Codable, CaseIterable, Identifiable {
         case .yearly:     return L10n.string("per year")
         }
     }
-    
-    
+
+    /// A price with its period as one phrase ("$4.99 a month", "月¥500"). The words and their order
+    /// come from the reader's language; a price and a period are never joined by hand.
+    func priced(_ amount: String) -> String {
+        switch self {
+        case .weekly:     return L10n.string("\(amount) a week")
+        case .biweekly:   return L10n.string("\(amount) every 2 weeks")
+        case .monthly:    return L10n.string("\(amount) a month")
+        case .quarterly:  return L10n.string("\(amount) every 3 months")
+        case .semiannual: return L10n.string("\(amount) every 6 months")
+        case .yearly:     return L10n.string("\(amount) a year")
+        }
+    }
+
+    /// The compact form for a receipt line ("$4.99/mo"): price, slash, period reads the same way
+    /// round in all six languages, so this is the one place the two are put side by side.
+    func pricedShort(_ amount: String) -> String {
+        "\(amount)\(shortDisplay)"
+    }
 }
 
 // MARK: - Subscription Status
+/// Where a subscription stands: charging, in a free trial that will turn into a charge, or cancelled.
 enum SubscriptionStatus: String, Codable, CaseIterable {
     case active = "active"
-    case paused = "paused"
     case cancelled = "cancelled"
     case trial = "trial"
-    case expired = "expired"
-    
+
+    /// A status as it was saved, by this version or an earlier one. Earlier versions had two more.
+    /// "Paused" paused nothing at the service, so that subscription is still charging; "expired" had
+    /// stopped. Anything unknown counts as charging: better a reminder too many than a charge unseen.
+    init(saved raw: String) {
+        switch raw {
+        case "cancelled", "expired": self = .cancelled
+        case "trial": self = .trial
+        default: self = .active
+        }
+    }
+
+    init(from decoder: Decoder) throws {
+        self.init(saved: try decoder.singleValueContainer().decode(String.self))
+    }
+
     var displayName: String {
         switch self {
-        case .active: return "Active"
-        case .paused: return "Paused"
-        case .cancelled: return "Cancelled"
-        case .trial: return "Trial"
-        case .expired: return "Expired"
+        case .active: return L10n.string("Active")
+        case .cancelled: return L10n.string("Cancelled")
+        case .trial: return L10n.string("Free trial")
         }
     }
-    
-    var icon: String {
-        switch self {
-        case .active: return "checkmark.circle.fill"
-        case .paused: return "pause.circle.fill"
-        case .cancelled: return "xmark.circle.fill"
-        case .trial: return "clock.fill"
-        case .expired: return "exclamationmark.circle.fill"
-        }
-    }
-    
-    var color: String {
-        switch self {
-        case .active: return "green"
-        case .paused: return "orange"
-        case .cancelled: return "red"
-        case .trial: return "blue"
-        case .expired: return "gray"
-        }
-    }
-}
-
-// MARK: - Subscription Extensions
-extension Subscription {
-    
-    
-    
-    
-
-    
-    // MARK: - Waste Level
-    
 }
 
 

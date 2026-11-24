@@ -39,7 +39,7 @@ paywall price Pausely made up. All money goes through one engine in `Pausely/Cor
 | `Core/Money/MoneyFormat.swift` | `string(_:_:locale:wholeUnits:)`, `symbol(for:)` (input-field prefixes), `fractionDigits(for:)`, `plainNumber` (CSV), `decimal(Double)` (no binary noise), `normalizedCode`, `isKnown` |
 | `Core/Money/CurrencyRates.swift` | Rates per USD in `Decimal`; `convert(_:from:to:) -> Decimal?`; `fillingGaps()`; `fallback` table + `fallbackDate` |
 | `Core/Money/MoneyMath.swift` | `MoneyMath.total`, `[Subscription].monthlyTotal(in:)` / `annualTotal(in:)`, `Subscription.monthlyCost(in:)` / `annualCost(in:)`, `Subscription.chargeText` |
-| `Services/SupabaseManager.swift` → `CurrencyManager` | The user's display currency (`selectedCurrency`, the only source of truth), live rates (`exchangeRates` → `rates`), the picker list (`allCurrencies`), thin wrappers (`format`, `convertToSelected`, `formatCatalogPrice`) that call the engine |
+| `Core/Money/CurrencyManager.swift` | The user's display currency (`selectedCurrency`, the only source of truth), live rates (`exchangeRates` → `rates`; loaded by `refreshRates()` on the main thread, at most hourly, and used only when the answer is a full list priced in USD), the picker list (`allCurrencies`), thin wrappers (`format`, `convertToSelected`) that call the engine |
 
 ## Recipes
 

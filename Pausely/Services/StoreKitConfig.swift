@@ -22,7 +22,7 @@ final class ReviewPromptManager: ObservableObject {
         case moneyKept(receiptLines: Int)
     }
 
-    static let receiptMilestones = [1, 3, 10]
+    nonisolated static let receiptMilestones = [1, 3, 10]
 
     /// The highest milestone a receipt with this many cancellations has reached (0 when none).
     nonisolated static func milestone(forReceiptLines lines: Int) -> Int {
@@ -37,7 +37,7 @@ final class ReviewPromptManager: ObservableObject {
     }
 
     func requestReviewIfAppropriate(after trigger: ReviewTrigger) {
-        guard !ProcessInfo.processInfo.arguments.contains("--uitesting"), !DemoSavings.isScreenshotRun,
+        guard !LaunchFlag.uiTesting.isSet, !LaunchFlag.isDemoLaunch, !DemoSavings.isScreenshotRun,
               canRequestReview() else { return }
 
         // A trigger only counts as "used" once the system prompt has really been shown, so a request that
@@ -53,7 +53,7 @@ final class ReviewPromptManager: ObservableObject {
 
 
     private func canRequestReview() -> Bool {
-        let calendar = Calendar.current
+        let calendar = Calendar.billing
         let now = Date()
         let currentYear = calendar.component(.year, from: now)
         let storedYear = UserDefaults.standard.integer(forKey: currentYearKey)
@@ -86,7 +86,7 @@ final class ReviewPromptManager: ObservableObject {
                   root.presentedViewController == nil else { return }
 
             markUsed()
-            let currentYear = Calendar.current.component(.year, from: Date())
+            let currentYear = Calendar.billing.component(.year, from: Date())
             let storedYear = UserDefaults.standard.integer(forKey: self.currentYearKey)
             let requestsThisYear = (storedYear == currentYear)
                 ? UserDefaults.standard.integer(forKey: self.requestsThisYearKey)

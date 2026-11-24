@@ -2,7 +2,6 @@ import Foundation
 import Auth
 import PostgREST
 import os.log
-import ActivityKit
 import Combine
 
 @MainActor
@@ -10,39 +9,86 @@ class SubscriptionStore: ObservableObject {
     @Published var subscriptions: [Subscription] = []
     @Published var totalMonthlySpend: Decimal = 0
     @Published var totalAnnualSpend: Decimal = 0
-    @Published var totalLifetimeSpend: Decimal = 0
+    /// Some of what is being paid for is charged in another currency, so the totals are estimates ("≈").
+    @Published private(set) var totalIsConverted = false
     @Published var isLoading = false
+    /// The last fetch failed while nothing was on this iPhone (see `ListState.couldNotLoad`).
+    @Published private(set) var lastFetchFailed = false
     @Published var lastErrorMessage: String?
     @Published var lastFetchDate: Date?
     static let shared = SubscriptionStore()
 
     private let client = SupabaseManager.shared.client
-    private var fetchTask: Task<Void, Never>?
 
     /// Tests switch this off: every change still lands on the device and is queued for sync, exactly as
     /// when offline, nothing is fetched, and the live database is never touched.
     static var cloudSyncEnabled = true
 
-    private func requireCloud() throws {
-        guard Self.cloudSyncEnabled else { throw DatabaseError.offlineMode }
+    /// The way to the account. Every change is noted here; tests put a stand-in for the server behind it.
+    var sync: SyncQueue = .shared {
+        didSet {
+            sync.currentCopy = copyForSync
+            sync.onNetworkRestored = recoverFirstSyncOnNetwork
+        }
+    }
+
+    /// What the sync queue sends is always the subscription as it is here at that moment.
+    private var copyForSync: (UUID) -> Subscription? {
+        { [weak self] id in self?.subscriptions.first { $0.id == id } }
+    }
+
+    /// Retries first-sync reconciliation when connectivity returns if the initial post-sign-in fetch failed.
+    private var recoverFirstSyncOnNetwork: () async -> Void {
+        { [weak self] in
+            guard let self, Self.cloudSyncEnabled else { return }
+            let auth = AuthManager.shared
+            guard auth.isSignedIntoCloud, Self.isFirstSync(for: auth.currentUser?.id) else { return }
+            await self.fetchSubscriptions(force: true)
+        }
     }
 
     private var currencyCancellables: Set<AnyCancellable> = []
 
     private init() {
+        #if DEBUG
+        // A demo list saved by an earlier demo launch is shown offline in another demo launch, and
+        // thrown away by an ordinary one, before anything can load it as the person's own.
+        switch Self.savedDemoList(isDemo: UserDefaults.standard.bool(forKey: Self.savedListIsDemoKey),
+                                  isDemoLaunch: LaunchFlag.isDemoLaunch) {
+        case .none: break
+        case .shownOffline: Self.cloudSyncEnabled = false
+        case .discarded:
+            AppSettings.shared.cachedSubscriptions = Data()
+            UserDefaults.standard.removeObject(forKey: Self.savedListIsDemoKey)
+        }
+        #endif
         loadFromCache()
+        sync.currentCopy = copyForSync
+        sync.onNetworkRestored = recoverFirstSyncOnNetwork
         #if DEBUG
         // UI tests: start from the demo list on every launch and never write to the cloud.
-        if ProcessInfo.processInfo.arguments.contains("--fresh-demo-data") {
-            Self.cloudSyncEnabled = false
-            subscriptions = Self.makeDemoSubscriptions()
-            calculateTotals()
-            saveToCache()
-        } else if ProcessInfo.processInfo.arguments.contains("--empty-demo-data") {
-            // A new person's empty list (an empty array, so the demo data isn't loaded in its place)
-            // and no history from earlier runs.
-            Self.cloudSyncEnabled = false
+        // Every demo list starts with no history and no hours typed in, then puts in its own: one
+        // list's cancellation and its two hours of Netflix showed on the lists opened after it.
+        let demoLists = ["--varied-demo-data", "--large-demo-data", "--quiet-demo-data", "--fresh-demo-data", "--empty-demo-data"]
+        if demoLists.contains(where: LaunchFlag.isSet) {
             LifecycleEventLog.shared.removeAll()
+            UsageLog.shared.forgetAll()
+        }
+        if LaunchFlag.isSet("--varied-demo-data") {
+            // One of everything a list can hold, with its history (see `DemoSubscriptions.varied`).
+            let varied = DemoSubscriptions.varied()
+            useDemoList(varied)
+            DemoSubscriptions.seedVariedHistory(for: varied)
+        } else if LaunchFlag.isSet("--large-demo-data") {
+            useDemoList(DemoSubscriptions.large())
+        } else if LaunchFlag.isSet("--quiet-demo-data") {
+            useDemoList(DemoSubscriptions.quiet())
+        } else if LaunchFlag.isSet("--fresh-demo-data") {
+            // The demo list as it is first seen. `--demo-savings` puts its own history in afterwards.
+            useDemoList()
+        } else if LaunchFlag.isSet("--empty-demo-data") {
+            // A new person's empty list (an empty array, so the demo data isn't loaded in its place).
+            Self.cloudSyncEnabled = false
             subscriptions = []
             calculateTotals()
             saveToCache()
@@ -61,423 +107,286 @@ class SubscriptionStore: ObservableObject {
             .receive(on: DispatchQueue.main)
             .sink { [weak self] _ in self?.calculateTotals() }
             .store(in: &currencyCancellables)
+        NotificationCenter.default.publisher(for: .NSSystemTimeZoneDidChange)
+            .receive(on: DispatchQueue.main)
+            .sink { [weak self] _ in self?.timeZoneChanged() }
+            .store(in: &currencyCancellables)
     }
     
     // MARK: - Data Fetching
     
     /// The account whose list was last fetched on this iPhone (see SubscriptionSyncMerge).
-    static let syncedUserKey = "subscriptions_synced_user"
+    nonisolated static let syncedUserKey = "subscriptions_synced_user"
 
-    private func enqueue(_ type: SyncOperationType, _ subscription: Subscription, userId: UUID?) {
-        var record = SubscriptionRecord(from: subscription)
-        record.user_id = userId
-        if let payload = try? JSONEncoder().encode(record) {
-            SyncQueue.shared.enqueue(SyncOperation(type: type, subscriptionId: subscription.id, payload: payload))
-        }
+    /// What a tab shows where the list would be.
+    enum ListState: Equatable {
+        /// There is a list, and it is on screen.
+        case shown
+        /// Being fetched for the first time, with nothing on this iPhone yet.
+        case loading
+        /// The fetch failed and nothing is on this iPhone. The person may well have a list.
+        case couldNotLoad
+        /// Nothing on the list, and nothing went wrong finding that out.
+        case empty
+
+        /// Whether "what you pay each month" can be said. Before the list has arrived it cannot:
+        /// Home said "$0.00" until it did.
+        var totalIsKnown: Bool { self == .shown || self == .empty }
+    }
+
+    /// Whether a failed fetch is a failure to tell. The built-in test user (DEBUG) and local-only guest
+    /// mode have no cloud account to fetch from, so an empty list is empty, not a load failure.
+    nonisolated static func fetchReallyFailed(_ error: Error, userID: String?) -> Bool {
+        if case SyncFailure.signedOut = error,
+           userID == AuthManager.localTestUserID || userID == AuthManager.guestUserID { return false }
+        return true
+    }
+
+    nonisolated static func listState(isEmpty: Bool, isLoading: Bool, lastFetchFailed: Bool) -> ListState {
+        guard isEmpty else { return .shown }
+        if isLoading { return .loading }
+        return lastFetchFailed ? .couldNotLoad : .empty
+    }
+
+    var listState: ListState {
+        // `--demo-loading` and `--demo-load-failed` (DEBUG) hold the two states that otherwise last
+        // as long as a request does, so they can be looked at.
+        Self.listState(isEmpty: subscriptions.isEmpty,
+                       isLoading: isLoading || LaunchFlag.isSet("--demo-loading"),
+                       lastFetchFailed: lastFetchFailed || LaunchFlag.isSet("--demo-load-failed"))
     }
 
     func fetchSubscriptions(force: Bool = false) async {
         guard Self.cloudSyncEnabled else { return }
-        fetchTask?.cancel()
+        if AuthManager.shared.isGuest {
+            if subscriptions.isEmpty { loadFromCache() }
+            await SubscriptionLifecycle.shared.run()
+            return
+        }
 
         if !force, let lastFetch = lastFetchDate,
            Date().timeIntervalSince(lastFetch) < 60 {
             return
         }
 
-        await MainActor.run { isLoading = true }
-        defer { Task { @MainActor in isLoading = false } }
+        isLoading = true
+        defer { isLoading = false }
 
         // Always load from local cache first for responsiveness
         if subscriptions.isEmpty {
             loadFromCache()
         }
 
-        // Attempt to fetch from Supabase and process any pending sync operations
         do {
-            guard let session = client.auth.currentSession else {
-                throw DatabaseError.notAuthenticated
-            }
+            guard let session = client.auth.currentSession else { throw SyncFailure.signedOut }
             let userId = session.user.id
+            // A list left here by a different account is removed by `LocalUserData.claim` before
+            // anything is fetched into it or sent from it.
+            guard LocalUserData.belongs(to: userId.uuidString) else { return }
 
-            // This iPhone's queued changes go up first, so the server copy below already has them.
-            await SyncQueue.shared.processQueue()
-
-            let response: [SubscriptionRecord] = try await client
-                .from("subscriptions")
-                .select()
-                .eq("user_id", value: userId)
-                .order("created_at", ascending: false)
-                .execute()
-                .value
-
-            let firstSync = UserDefaults.standard.string(forKey: Self.syncedUserKey) != userId.uuidString
-            let merge = SubscriptionSyncMerge.merge(server: response.map { $0.toSubscription() },
-                                                    local: self.subscriptions,
-                                                    pending: SyncQueue.shared.pendingOperations,
-                                                    firstSyncForUser: firstSync)
-
-            await MainActor.run {
-                self.subscriptions = merge.subscriptions
-                self.calculateTotals()
-                self.lastFetchDate = Date()
-                self.lastErrorMessage = nil
-                self.saveToCache()
-                WidgetDataStore.shared.publish(subscriptions: self.subscriptions)
-                SpotlightManager.shared.index(subscriptions: self.subscriptions)
-                self.startLiveActivityIfNeeded()
-                PriceIncreaseMonitor.shared.checkForPriceChanges(subscriptions: self.subscriptions)
+            try await reconcileWithServer(userId: userId.uuidString) {
+                let response: [SubscriptionRecord] = try await client
+                    .from("subscriptions")
+                    .select()
+                    .eq("user_id", value: userId)
+                    .order("created_at", ascending: false)
+                    .execute()
+                    .value
+                let oldForm = response.filter(\.hasADayInTheOldForm).compactMap(\.id)
+                return (response.map { $0.toSubscription() }, oldForm)
             }
-
-            UserDefaults.standard.set(userId.uuidString, forKey: Self.syncedUserKey)
-
-            // Send up what only this iPhone had, and renewal dates the server was missing.
-            let queuedCreates = Set(SyncQueue.shared.pendingOperations.filter { $0.type == .create }.map(\.subscriptionId))
-            for sub in merge.upload where !queuedCreates.contains(sub.id) {
-                enqueue(.create, sub, userId: userId)
-            }
-            for sub in merge.backfill {
-                enqueue(.update, sub, userId: nil)
-            }
-            if !merge.upload.isEmpty || !merge.backfill.isEmpty {
-                await SyncQueue.shared.processQueue()
-            }
-            await SubscriptionLifecycle.shared.run()
 
         } catch {
             os_log("Error fetching subscriptions: %{public}@", log: .default, type: .error, error.localizedDescription)
-            await MainActor.run {
-                if self.subscriptions.isEmpty {
-                    self.loadFromCache()
-                    if self.subscriptions.isEmpty {
-                        self.lastErrorMessage = L10n.string("Couldn't load subscriptions. Pull to refresh.")
-                    }
+            if subscriptions.isEmpty {
+                loadFromCache()
+                if subscriptions.isEmpty, Self.fetchReallyFailed(error, userID: AuthManager.shared.currentUser?.id) {
+                    lastFetchFailed = true
+                    lastErrorMessage = L10n.string("Couldn't load subscriptions. Pull to refresh.")
                 }
             }
             // Offline: reminders still come from the cached subscriptions.
             await SubscriptionLifecycle.shared.run()
         }
     }
-    
-    
+
+    /// True until this account has reconciled its first server fetch on this device. While true,
+    /// queued guest `.create`s wait for `SubscriptionSyncMerge` dedup before any upload can fire.
+    nonisolated static func isFirstSync(for userId: String?, defaults: UserDefaults = .standard) -> Bool {
+        guard let userId, !userId.isEmpty else { return true }
+        return defaults.string(forKey: Self.syncedUserKey)?.caseInsensitiveCompare(userId) != .orderedSame
+    }
+
+    /// Runs the fetch-and-merge step cleanly, skipping pre-fetch drain on `firstSync` so local guest
+    /// rows deduplicate against existing server rows before anything uploads.
+    func reconcileWithServer(userId: String,
+                             defaults: UserDefaults = .standard,
+                             fetchRemote: () async throws -> (subscriptions: [Subscription], oldFormIDs: [UUID])) async throws {
+        let firstSync = Self.isFirstSync(for: userId, defaults: defaults)
+        if !firstSync {
+            await sync.drain(force: true)
+        }
+        let mark = sync.sequence
+
+        let remote = try await fetchRemote()
+
+        let waiting = sync.changes(since: mark)
+            .merging(sync.pendingKinds) { _, queued in queued }
+        let merge = SubscriptionSyncMerge.merge(server: remote.subscriptions,
+                                                local: subscriptions,
+                                                pending: waiting,
+                                                firstSyncForUser: firstSync)
+        subscriptions = merge.subscriptions
+        listChanged()
+        lastFetchDate = Date()
+        lastErrorMessage = nil
+        lastFetchFailed = false
+        defaults.set(userId, forKey: Self.syncedUserKey)
+
+        // Drop superseded guest creates BEFORE queuing surviving uploads & backfills and draining.
+        for id in merge.supersededLocalIDs { sync.dropPendingCreate(id) }
+        for sub in merge.upload { sync.noteAdded(sub.id) }
+        for sub in merge.backfill { sync.noteChanged(sub.id) }
+        let listed = Set(subscriptions.map(\.id))
+        let oldForm = remote.oldFormIDs.filter(listed.contains)
+        for id in oldForm { sync.noteChanged(id) }
+        if !merge.upload.isEmpty || !merge.backfill.isEmpty || !oldForm.isEmpty {
+            await sync.drain(force: true)
+        }
+        await SubscriptionLifecycle.shared.run()
+    }
+
+    /// Everything that follows from the list changing: totals, the saved copy, the widget and Spotlight.
+    private func listChanged() {
+        calculateTotals()
+        saveToCache()
+        WidgetDataStore.shared.publish(subscriptions: subscriptions)
+        SpotlightManager.shared.index(subscriptions: subscriptions)
+    }
+
+    /// Sends what is waiting. If this change is still on this iPhone only, says so, and says why.
+    @discardableResult
+    private func send(_ id: UUID, removed: Bool = false) async -> Bool {
+        if AuthManager.shared.isGuest { return true }
+        await sync.drain()
+        guard let waiting = sync.intent(for: id) else { return true }
+        lastErrorMessage = Self.waitingNotice(removed: removed, refused: waiting.refused)
+        return false
+    }
+
+    /// Marks all local subscriptions for upload when a guest upgrades to a cloud account.
+    func queueLocalSubscriptionsForUpload() {
+        for subscription in subscriptions where sync.intent(for: subscription.id) == nil {
+            sync.noteAdded(subscription.id)
+        }
+    }
+
+    /// "When you're back online" is only said when being offline is the reason.
+    static func waitingNotice(removed: Bool, refused: Bool) -> String {
+        switch (removed, refused) {
+        case (false, false): return L10n.string("Saved on this iPhone. It will sync when you're back online.")
+        case (true, false): return L10n.string("Removed from this iPhone. It will sync when you're back online.")
+        case (false, true): return L10n.string("Saved on this iPhone. It hasn't reached your account yet. Pausely will keep trying.")
+        case (true, true): return L10n.string("Removed from this iPhone. Your account still has it. Pausely will keep trying.")
+        }
+    }
+
     // MARK: - CRUD Operations
     
-    enum SubscriptionLimitError: Error, LocalizedError {
+    /// The free plan is full. Screens open the upgrade page; a Shortcut says it in a sentence.
+    enum SubscriptionLimitError: Error, CustomLocalizedStringResourceConvertible {
         case freeTierLimitReached
-        
-        var errorDescription: String? {
-            switch self {
-            case .freeTierLimitReached:
-                return "You've reached the free tier limit of \(FreeTier.subscriptionLimit) subscriptions. Upgrade to Pro for unlimited subscriptions."
-            }
+
+        var localizedStringResource: LocalizedStringResource {
+            "The free plan tracks \(FreeTier.subscriptionLimit). Pausely Pro tracks all of them."
         }
     }
-    
-    enum DatabaseError: Error, LocalizedError {
-        case tableNotFound
-        case notAuthenticated
-        case networkError
-        case offlineMode
-        case unknown(Error)
-        
-        var errorDescription: String? {
-            switch self {
-            case .tableNotFound:
-                return "Database Connection Issue"
-            case .notAuthenticated:
-                return "Please sign in to save subscriptions."
-            case .networkError:
-                return "Network error. Please check your connection and try again."
-            case .offlineMode:
-                return "Working in offline mode"
-            case .unknown(let error):
-                return error.localizedDescription
-            }
-        }
-        
-        var recoverySuggestion: String? {
-            switch self {
-            case .tableNotFound:
-                return "You can continue using the app with local storage, or try connecting to the cloud later."
-            case .notAuthenticated:
-                return "Sign in to your account to continue."
-            case .networkError:
-                return "Check your internet connection and try again."
-            case .offlineMode:
-                return "Your subscriptions are saved locally. Tap 'Enable Cloud Sync' to sync when ready."
-            case .unknown:
-                return "Please try again or contact support if the problem persists."
-            }
-        }
-        
-        var detailedMessage: String {
-            switch self {
-            case .tableNotFound:
-                return """
-                Database Connection Issue
-                
-                We're having trouble connecting to the cloud database. This can happen when:
-                • The database is being set up
-                • There are temporary connection issues
-                • Your account needs verification
-                
-                You have two options:
-                
-                1️⃣ CONTINUE OFFLINE
-                Use local storage - your subscriptions will be saved on this device
-                
-                2️⃣ TRY AGAIN
-                Attempt to connect to the cloud again
-                """
-            case .notAuthenticated:
-                return "Please sign in to add subscriptions."
-            case .networkError:
-                return "Network error. Please check your internet connection and try again."
-            case .offlineMode:
-                return "Working in offline mode. Your subscriptions are saved locally."
-            case .unknown(let error):
-                return "An error occurred: \(error.localizedDescription)"
-            }
-        }
-        
-        
-    }
-    
-    /// Adds a subscription. Always updates local state first, then attempts cloud sync. A cloud failure
-    /// isn't an error for the caller: the change is kept on the device and queued for sync (returns
-    /// false). Only a refusal, like the free tier's limit, throws.
+
+    /// Adds a subscription. It is on this iPhone, and waiting to be sent, before this returns; whether
+    /// it has reached the account yet is the result (false: still waiting). The only thing that can
+    /// stop an add is a refusal, like the free tier's limit.
     @discardableResult
-    func addSubscription(_ subscription: Subscription) async throws -> Bool {
-        let paymentManager = PaymentManager.shared
-        if paymentManager.hasReachedSubscriptionLimit(currentCount: subscriptions.count) {
+    func addSubscription(_ subscription: Subscription, recordEvent: Bool = true) async throws -> Bool {
+        // Signed out, the list is out of memory and its copy on the iPhone waits for its owner. An add
+        // now (a Shortcut can try) would save a list of one over that copy.
+        guard !isHidden else { throw SyncFailure.signedOut }
+        // The free plan's places are for what charges. Something already cancelled takes none.
+        if subscription.renewsAutomatically, !PaymentManager.shared.hasRoom(in: subscriptions) {
             throw SubscriptionLimitError.freeTierLimitReached
         }
 
-        var localSub = subscription
-        localSub.id = subscription.id ?? UUID()
-        // A renewal date is a calendar day, not a moment: store it at local noon (see RenewalSchedule).
-        localSub.nextBillingDate = localSub.nextBillingDate.map { Calendar.current.noon(of: $0) }
-
-        // 1. Update local state immediately (offline-first)
-        await MainActor.run {
-            self.subscriptions.insert(localSub, at: 0)
-            self.calculateTotals()
-            self.saveToCache()
-            WidgetDataStore.shared.publish(subscriptions: self.subscriptions)
-            SpotlightManager.shared.index(subscriptions: self.subscriptions)
+        let added = Self.withDaysAtNoon(subscription)
+        subscriptions.insert(added, at: 0)
+        listChanged()
+        sync.noteAdded(added.id)
+        if recordEvent {
+            LifecycleEventLog.shared.record(.added, for: added)
         }
-
-        LifecycleEventLog.shared.record(.added, for: localSub)
         // Rebuild every reminder from the current list (heads-up, day before, day of, trial ending).
-        await ReminderScheduler.shared.reschedule(self.subscriptions)
-
-        // 2. Attempt Supabase write
-        do {
-            try requireCloud()
-            guard let session = client.auth.currentSession else {
-                throw DatabaseError.notAuthenticated
-            }
-            var record = SubscriptionRecord(from: localSub)
-            record.user_id = session.user.id
-
-            let inserted: [SubscriptionRecord] = try await client
-                .from("subscriptions")
-                .insert(record)
-                .select()
-                .execute()
-                .value
-
-            if let newRecord = inserted.first {
-                await MainActor.run {
-                    if let idx = self.subscriptions.firstIndex(where: { $0.id == localSub.id }) {
-                        self.subscriptions[idx] = newRecord.toSubscription()
-                        self.saveToCache()
-                    }
-                }
-            }
-            return true
-        } catch {
-            os_log("Error adding subscription to cloud: %{public}@", log: .default, type: .error, error.localizedDescription)
-            // 3. Enqueue for retry, under the signed-in person when there is one (else whoever signs in).
-            enqueue(.create, localSub, userId: client.auth.currentSession?.user.id)
-            self.lastErrorMessage = L10n.string("Saved on this iPhone. It will sync when you're back online.")
-            return false
-        }
-    }
-    
-    func updateSubscription(_ subscription: Subscription) async throws {
-        // 1. Update local state immediately (offline-first)
-        await MainActor.run {
-            if let index = self.subscriptions.firstIndex(where: { $0.id == subscription.id }) {
-                let oldAmount = self.subscriptions[index].amount
-                self.subscriptions[index] = subscription
-                self.calculateTotals()
-                self.saveToCache()
-                WidgetDataStore.shared.publish(subscriptions: self.subscriptions)
-                SpotlightManager.shared.index(subscriptions: self.subscriptions)
-                PriceHistoryTracker.shared.recordPriceIfChanged(subscription)
-                if subscription.amount != oldAmount {
-                    LifecycleEventLog.shared.record(.priceChanged, for: subscription, previousAmount: oldAmount)
-                }
-            }
-        }
-
-        await ReminderScheduler.shared.reschedule(self.subscriptions)
-
-        // 2. Attempt Supabase write
-        do {
-            try requireCloud()
-            let record = SubscriptionRecord(from: subscription)
-            _ = try await client
-                .from("subscriptions")
-                .update(record)
-                .eq("id", value: subscription.id)
-                .execute()
-        } catch {
-            os_log("Error updating subscription in cloud: %{public}@", log: .default, type: .error, error.localizedDescription)
-            // 3. Enqueue for retry
-            if let payload = try? JSONEncoder().encode(SubscriptionRecord(from: subscription)) {
-                let op = SyncOperation(type: .update, subscriptionId: subscription.id, payload: payload)
-                SyncQueue.shared.enqueue(op)
-            }
-            self.lastErrorMessage = L10n.string("Saved on this iPhone. It will sync when you're back online.")
-        }
+        await ReminderScheduler.shared.reschedule(subscriptions)
+        return await send(added.id)
     }
 
-    func deleteSubscription(id: UUID) async throws {
-        // 1. Update local state immediately (offline-first)
-        await MainActor.run {
-            if let removed = self.subscriptions.first(where: { $0.id == id }) {
-                LifecycleEventLog.shared.record(.deleted, for: removed)
-            }
-            self.subscriptions.removeAll { $0.id == id }
-            self.calculateTotals()
-            self.saveToCache()
-            WidgetDataStore.shared.publish(subscriptions: self.subscriptions)
-            SpotlightManager.shared.index(subscriptions: self.subscriptions)
-        }
-        await ReminderScheduler.shared.reschedule(self.subscriptions)
-
-        // 2. Attempt Supabase write
-        do {
-            try requireCloud()
-            try await client
-                .from("subscriptions")
-                .delete()
-                .eq("id", value: id)
-                .execute()
-        } catch {
-            os_log("Error deleting subscription from cloud: %{public}@", log: .default, type: .error, error.localizedDescription)
-            // 3. Enqueue for retry
-            let op = SyncOperation(type: .delete, subscriptionId: id, payload: Data())
-            SyncQueue.shared.enqueue(op)
-            self.lastErrorMessage = L10n.string("Removed from this iPhone. It will sync when you're back online.")
-        }
+    /// A renewal day and the last day of a trial are calendar days, not moments. Whoever hands one in,
+    /// it is kept at local noon, so a change of time zone can't move it to another day (see RenewalSchedule).
+    static func withDaysAtNoon(_ subscription: Subscription, calendar: Calendar = .billing) -> Subscription {
+        var fixed = subscription
+        fixed.nextBillingDate = subscription.nextBillingDate.map { calendar.noon(of: $0) }
+        fixed.trialEndsAt = subscription.trialEndsAt.map { calendar.noon(of: $0) }
+        return fixed
     }
 
-    func updateSubscriptionStatus(id: UUID, status: SubscriptionStatus) async throws {
-        // 1. Update local state immediately (offline-first)
-        await MainActor.run {
-            if let index = self.subscriptions.firstIndex(where: { $0.id == id }) {
-                let before = self.subscriptions[index]
-                // The charge this cancellation avoids, worked out while it still renews.
-                let avoided = RenewalDecisions.upcomingCharge(for: before, now: Date())?.date
-                self.subscriptions[index].status = status
-                self.calculateTotals()
-                self.saveToCache()
-                WidgetDataStore.shared.publish(subscriptions: self.subscriptions)
-                SpotlightManager.shared.index(subscriptions: self.subscriptions)
-                if status == .cancelled, before.status != .cancelled {
-                    LifecycleEventLog.shared.record(.cancelled, for: before, renewalDate: avoided)
-                } else if before.status == .cancelled, status == .active || status == .trial {
-                    LifecycleEventLog.shared.record(.reactivated, for: self.subscriptions[index])
-                }
-            }
+    /// Every change below lands on this iPhone and in the sync queue in one step, with nothing able to
+    /// come between, and cannot fail: if the account can't be reached the change waits and a notice says so.
+
+    func updateSubscription(_ changed: Subscription) async {
+        let subscription = Self.withDaysAtNoon(changed)
+        guard let index = subscriptions.firstIndex(where: { $0.id == subscription.id }) else { return }
+        let before = subscriptions[index]
+        subscriptions[index] = subscription
+        listChanged()
+        sync.noteChanged(subscription.id)
+        // What it costs is the amount, its currency and how often it is charged: a change to any of
+        // them goes in the history (`PriceHistory` reads it from there). Record previousAmount on the
+        // same personal-share basis (`effectiveAmount`) as `LifecycleEvent.amount`.
+        if subscription.amount != before.amount || subscription.currency != before.currency
+            || subscription.billingFrequency != before.billingFrequency {
+            LifecycleEventLog.shared.record(.priceChanged, for: subscription, previousAmount: before.effectiveAmount)
         }
-        await ReminderScheduler.shared.reschedule(self.subscriptions)
+        await ReminderScheduler.shared.reschedule(subscriptions)
+        await send(subscription.id)
+    }
+
+    func deleteSubscription(id: UUID, recordEvent: Bool = true) async {
+        guard let removed = subscriptions.first(where: { $0.id == id }) else { return }
+        if recordEvent {
+            LifecycleEventLog.shared.record(.deleted, for: removed)
+        }
+        subscriptions.removeAll { $0.id == id }
+        listChanged()
+        sync.noteDeleted(id)
+        await ReminderScheduler.shared.reschedule(subscriptions)
+        await send(id, removed: true)
+    }
+
+    func updateSubscriptionStatus(id: UUID, status: SubscriptionStatus) async {
+        guard let index = subscriptions.firstIndex(where: { $0.id == id }) else { return }
+        let before = subscriptions[index]
+        // The charge this cancellation avoids, worked out while it still renews.
+        let avoided = RenewalDecisions.upcomingCharge(for: before, now: Date())?.date
+        subscriptions[index].status = status
+        listChanged()
+        sync.noteChanged(id)
+        if status == .cancelled, before.status != .cancelled {
+            LifecycleEventLog.shared.record(.cancelled, for: before, renewalDate: avoided)
+        } else if before.status == .cancelled, status == .active || status == .trial {
+            LifecycleEventLog.shared.record(.reactivated, for: subscriptions[index])
+        }
+        await ReminderScheduler.shared.reschedule(subscriptions)
         if status == .cancelled {
-            await MainActor.run { ReviewPromptManager.shared.askAfterMoneyKept() }
+            ReviewPromptManager.shared.askAfterMoneyKept()
         }
-
-        // 2. Attempt Supabase write
-        do {
-            try requireCloud()
-            try await client
-                .from("subscriptions")
-                .update(["status": status.rawValue])
-                .eq("id", value: id)
-                .execute()
-        } catch {
-            os_log("Error updating subscription status in cloud: %{public}@", log: .default, type: .error, error.localizedDescription)
-            self.lastErrorMessage = L10n.string("Saved on this iPhone. It will sync when you're back online.")
-            // 3. Enqueue for retry
-            if let payload = try? JSONEncoder().encode(["status": status.rawValue]) {
-                let op = SyncOperation(type: .updateStatus, subscriptionId: id, payload: payload)
-                SyncQueue.shared.enqueue(op)
-            }
-        }
-    }
-
-    func pauseSubscription(id: UUID, until date: Date) async throws {
-        // 1. Update local state immediately (offline-first)
-        await MainActor.run {
-            if let index = self.subscriptions.firstIndex(where: { $0.id == id }) {
-                self.subscriptions[index].pausedUntil = date
-                self.calculateTotals()
-                self.saveToCache()
-                WidgetDataStore.shared.publish(subscriptions: self.subscriptions)
-                SpotlightManager.shared.index(subscriptions: self.subscriptions)
-            }
-        }
-        await ReminderScheduler.shared.reschedule(self.subscriptions)
-
-        // 2. Attempt Supabase write
-        do {
-            try requireCloud()
-            let dateFormatter = ISO8601DateFormatter()
-            try await client
-                .from("subscriptions")
-                .update(["paused_until": dateFormatter.string(from: date)])
-                .eq("id", value: id)
-                .execute()
-        } catch {
-            os_log("Error pausing subscription in cloud: %{public}@", log: .default, type: .error, error.localizedDescription)
-            self.lastErrorMessage = L10n.string("Saved on this iPhone. It will sync when you're back online.")
-            // 3. Enqueue for retry
-            let dateFormatter = ISO8601DateFormatter()
-            if let payload = try? JSONEncoder().encode(["paused_until": dateFormatter.string(from: date)]) {
-                let op = SyncOperation(type: .pause, subscriptionId: id, payload: payload)
-                SyncQueue.shared.enqueue(op)
-            }
-        }
-    }
-
-    func resumeSubscription(id: UUID) async throws {
-        // 1. Update local state immediately (offline-first)
-        await MainActor.run {
-            if let index = self.subscriptions.firstIndex(where: { $0.id == id }) {
-                self.subscriptions[index].pausedUntil = nil
-                self.calculateTotals()
-                self.saveToCache()
-                WidgetDataStore.shared.publish(subscriptions: self.subscriptions)
-                SpotlightManager.shared.index(subscriptions: self.subscriptions)
-            }
-        }
-        await ReminderScheduler.shared.reschedule(self.subscriptions)
-
-        // 2. Attempt Supabase write
-        do {
-            try requireCloud()
-            try await client
-                .from("subscriptions")
-                .update(ClearPausePayload())
-                .eq("id", value: id)
-                .execute()
-        } catch {
-            os_log("Error resuming subscription in cloud: %{public}@", log: .default, type: .error, error.localizedDescription)
-            self.lastErrorMessage = L10n.string("Saved on this iPhone. It will sync when you're back online.")
-            SyncQueue.shared.enqueue(SyncOperation(type: .resume, subscriptionId: id, payload: Data()))
-        }
+        await send(id)
     }
 
     /// Removes every subscription from this device (account deletion, or a different person signing in).
@@ -486,11 +395,100 @@ class SubscriptionStore: ObservableObject {
         subscriptions = []
         calculateTotals()
         AppSettings.shared.cachedSubscriptions = Data()
-        SyncQueue.shared.removeAll()
+        sync.removeAll()
         UserDefaults.standard.removeObject(forKey: Self.syncedUserKey)
         WidgetDataStore.shared.publish(subscriptions: [])
         SpotlightManager.shared.index(subscriptions: [])
         lastFetchDate = nil
+    }
+
+    // MARK: - Paying for it again
+
+    /// A cancelled subscription is on again from `date`, and renews on that day of the month from now
+    /// on (see `PausePlanSchedule.restartAnchor`). The status change records a reactivation, which
+    /// closes its Savings Receipt line. One that is already charging keeps the date it has.
+    /// - Returns: false when the free plan has no place left for it (the caller shows the upgrade page).
+    @discardableResult
+    func startAgain(id: UUID, on date: Date = Date(), calendar: Calendar = .billing) async -> Bool {
+        guard var updated = subscriptions.first(where: { $0.id == id }), !updated.renewsAutomatically else { return true }
+        guard PaymentManager.shared.hasRoom(in: subscriptions) else { return false }
+        // Cancelled by mistake: back on before any charge it avoided came due. It keeps the day it renewed on
+        // (or none), instead of restarting today with a day it never had (the rating of 2026-11-23).
+        if let cancel = LifecycleEventLog.shared.events.last(where: { $0.subscriptionId == id && $0.kind == .cancelled }),
+           Self.isUndo(of: cancel, on: date, calendar: calendar) {
+            updated.nextBillingDate = cancel.anchorDate
+            await updateSubscription(updated)
+            await updateSubscriptionStatus(id: id, status: .active)
+            return true
+        }
+        let restart = PausePlanSchedule.restartAnchor(startedOn: date, frequency: updated.billingFrequency, calendar: calendar)
+        updated.nextBillingDate = restart.anchor
+        await updateSubscription(updated)
+        await updateSubscriptionStatus(id: id, status: .active)
+        if restart.isStartDay {
+            // Today's charge is the one just paid: nothing to decide and nothing to be reminded of.
+            LifecycleEventLog.shared.record(.kept, for: updated, date: date, renewalDate: restart.anchor)
+            await ReminderScheduler.shared.reschedule(subscriptions)
+        }
+        return true
+    }
+
+    /// Whether starting again on `date` takes back the cancellation: no charge it would have avoided has
+    /// come due since (or it had no renewal day to count from, and it is the same day).
+    nonisolated static func isUndo(of cancel: LifecycleEvent, on date: Date, calendar: Calendar = .billing) -> Bool {
+        guard let anchor = cancel.anchorDate ?? cancel.renewalDate else {
+            return calendar.isDate(cancel.date, inSameDayAs: date)
+        }
+        let due = RenewalSchedule.renewals(anchor: anchor, frequency: cancel.frequency, after: cancel.date,
+                                           through: date, calendar: calendar)
+        return due.isEmpty
+    }
+
+    // MARK: - A change of time zone
+
+    /// The time zone the days in memory were read in. A renewal day is held as noon in the phone's
+    /// zone (`BillingDay`); after a flight that moment is another day, so the days are read again from
+    /// their saved form, which names the same day everywhere.
+    private var zoneOfDays = TimeZone.current.identifier
+
+    /// Called when the app comes to the foreground.
+    func noticeTimeZone() {
+        if TimeZone.current.identifier != zoneOfDays { timeZoneChanged() }
+    }
+
+    func timeZoneChanged() {
+        zoneOfDays = TimeZone.current.identifier
+        LifecycleEventLog.shared.reload()
+        guard !isHidden, !subscriptions.isEmpty else { return }
+        loadFromCache()
+        WidgetDataStore.shared.publish(subscriptions: subscriptions)
+        Task { await ReminderScheduler.shared.reschedule(subscriptions) }
+    }
+
+    /// True while nobody is signed in: from signing out, or from a launch signed out, until someone
+    /// signs in. (Tests set it back through `StoreSandbox`.)
+    var isHidden = false
+
+    /// Signed out: the list leaves memory, the widgets and Spotlight. The copy kept on the iPhone and
+    /// the changes still waiting to be sent stay, for when the same person signs back in.
+    func hideList() {
+        isHidden = true
+        subscriptions = []
+        calculateTotals()
+        WidgetDataStore.shared.publish(subscriptions: [])
+        SpotlightManager.shared.index(subscriptions: [])
+        lastFetchDate = nil
+    }
+
+    /// The main screen is up for a signed-in person: the copy kept on the iPhone comes back if it was
+    /// hidden, and the widgets and Spotlight are given the list as it stands today. The widgets hold
+    /// about a year of charge days from the day they were last told, so they are told at every start,
+    /// not only when the list changes.
+    func showList() {
+        isHidden = false
+        if subscriptions.isEmpty { loadFromCache() }
+        WidgetDataStore.shared.publish(subscriptions: subscriptions)
+        SpotlightManager.shared.index(subscriptions: subscriptions)
     }
 
     // MARK: - Caching
@@ -508,13 +506,9 @@ class SubscriptionStore: ObservableObject {
     private func loadFromCache() {
         let data = AppSettings.shared.cachedSubscriptions
         guard !data.isEmpty else {
-            // Demo data for screenshots / simulator
             #if DEBUG
-            if subscriptions.isEmpty {
-                let demoSubs = Self.makeDemoSubscriptions()
-                self.subscriptions = demoSubs
-                self.calculateTotals()
-                self.saveToCache()
+            if Self.fillsWithDemoList(listIsEmpty: subscriptions.isEmpty, isDemoLaunch: LaunchFlag.isDemoLaunch) {
+                useDemoList()
             }
             #endif
             return
@@ -531,44 +525,68 @@ class SubscriptionStore: ObservableObject {
     }
 
     #if DEBUG
+    /// Set while the saved list is the demo set.
+    static let savedListIsDemoKey = "saved_list_is_demo"
+
+    /// An empty list is filled with the demo set only in a demo launch (captures, UI tests, demos).
+    /// Any debug build with an empty list used to get it, and when that build was signed in to a real
+    /// account the next sync uploaded twelve made-up subscriptions to it.
+    nonisolated static func fillsWithDemoList(listIsEmpty: Bool, isDemoLaunch: Bool) -> Bool {
+        listIsEmpty && isDemoLaunch
+    }
+
+    enum SavedDemoList { case none, shownOffline, discarded }
+
+    /// What a launch does with a saved list that is the demo set.
+    nonisolated static func savedDemoList(isDemo: Bool, isDemoLaunch: Bool) -> SavedDemoList {
+        guard isDemo else { return .none }
+        return isDemoLaunch ? .shownOffline : .discarded
+    }
+
+    /// The demo set becomes the list: marked as such, and never sent anywhere.
+    private func useDemoList(_ list: [Subscription] = SubscriptionStore.makeDemoSubscriptions()) {
+        Self.cloudSyncEnabled = false
+        UserDefaults.standard.set(true, forKey: Self.savedListIsDemoKey)
+        subscriptions = list
+        calculateTotals()
+        saveToCache()
+    }
+
+    /// Recomputes totals after demo helpers mutate `subscriptions` directly.
+    func recalculateDemoTotals() {
+        calculateTotals()
+    }
+
     static func makeDemoSubscriptions() -> [Subscription] {
-        let calendar = Calendar.current
+        let calendar = Calendar.billing
         let now = Date()
         return [
             Subscription(
                 id: UUID(),
                 name: "Netflix",
-                bundleIdentifier: "com.netflix.Netflix",
                 category: "Entertainment",
                 amount: 15.99,
                 billingFrequency: .monthly,
                 nextBillingDate: calendar.date(byAdding: .day, value: 5, to: now),
-                status: .active,
-                canPause: true,
-                startDate: calendar.date(byAdding: .year, value: -2, to: now)
+                status: .active
             ),
             Subscription(
                 id: UUID(),
                 name: "Spotify",
-                bundleIdentifier: "com.spotify.client",
                 category: "Music",
                 amount: 10.99,
                 billingFrequency: .monthly,
                 nextBillingDate: calendar.date(byAdding: .day, value: 12, to: now),
-                status: .active,
-                canPause: true,
-                startDate: calendar.date(byAdding: .year, value: -1, to: now)
+                status: .active
             ),
             Subscription(
                 id: UUID(),
                 name: "ChatGPT Plus",
-                category: "AI Tools",
+                category: "AI & Creativity",
                 amount: 20.00,
                 billingFrequency: .monthly,
                 nextBillingDate: calendar.date(byAdding: .day, value: 18, to: now),
-                status: .active,
-                canPause: false,
-                startDate: calendar.date(byAdding: .month, value: -8, to: now)
+                status: .active
             ),
             Subscription(
                 id: UUID(),
@@ -577,9 +595,7 @@ class SubscriptionStore: ObservableObject {
                 amount: 32.95,
                 billingFrequency: .monthly,
                 nextBillingDate: calendar.date(byAdding: .day, value: 2, to: now),
-                status: .active,
-                canPause: true,
-                startDate: calendar.date(byAdding: .month, value: -6, to: now)
+                status: .active
             ),
             Subscription(
                 id: UUID(),
@@ -588,9 +604,7 @@ class SubscriptionStore: ObservableObject {
                 amount: 13.99,
                 billingFrequency: .monthly,
                 nextBillingDate: calendar.date(byAdding: .day, value: 24, to: now),
-                status: .active,
-                canPause: true,
-                startDate: calendar.date(byAdding: .year, value: -3, to: now)
+                status: .active
             ),
             Subscription(
                 id: UUID(),
@@ -599,9 +613,7 @@ class SubscriptionStore: ObservableObject {
                 amount: 10.00,
                 billingFrequency: .monthly,
                 nextBillingDate: calendar.date(byAdding: .day, value: 8, to: now),
-                status: .active,
-                canPause: true,
-                startDate: calendar.date(byAdding: .month, value: -4, to: now)
+                status: .active
             ),
             Subscription(
                 id: UUID(),
@@ -610,9 +622,7 @@ class SubscriptionStore: ObservableObject {
                 amount: 44.00,
                 billingFrequency: .monthly,
                 nextBillingDate: calendar.date(byAdding: .day, value: 15, to: now),
-                status: .active,
-                canPause: true,
-                startDate: calendar.date(byAdding: .month, value: -3, to: now)
+                status: .active
             )
         ]
     }
@@ -622,83 +632,25 @@ class SubscriptionStore: ObservableObject {
     // MARK: - Batch Operations for Scale
     
     
-    /// Memory-efficient filtering for large subscription lists
-    func filteredSubscriptions(
-        matching predicate: (Subscription) -> Bool,
-        limit: Int? = nil
-    ) -> [Subscription] {
-        var result: [Subscription] = []
-        result.reserveCapacity(limit ?? subscriptions.count / 2)
-        
-        for sub in subscriptions {
-            if predicate(sub) {
-                result.append(sub)
-                if let limit = limit, result.count >= limit {
-                    break
-                }
-            }
-        }
-        
-        return result
-    }
-    
     // MARK: - Totals
 
-    /// Monthly, yearly and lifetime totals of active subscriptions in the display currency. Every
+    /// Monthly and yearly totals of active subscriptions in the display currency. Every
     /// subscription is converted from its own currency first (see MoneyMath); cheap enough to redo
     /// on every change, so there's no cache to go stale.
     private func calculateTotals(in currency: String = CurrencyManager.shared.selectedCurrency) {
-        let active = subscriptions.filter { $0.status == .active }
-        let rates = CurrencyManager.shared.rates
-        let monthly = active.monthlyTotal(in: currency, rates: rates)
+        let charging = subscriptions.charging
+        let monthly = charging.monthlyTotal(in: currency, rates: CurrencyManager.shared.rates)
+        totalIsConverted = charging.isConverted(to: currency)
         totalMonthlySpend = monthly
         totalAnnualSpend = monthly * 12
-        totalLifetimeSpend = MoneyMath.total(active, in: currency, rates: rates,
-                                             amount: \.lifetimeSpend, currencyOf: \.currency)
     }
 
     // MARK: - Computed Properties
     
-    var activeSubscriptions: [Subscription] {
-        subscriptions.filter { $0.status == .active && !$0.isPaused }
-    }
+    /// What is being paid for (see `charging`): the list behind the totals above.
+    var activeSubscriptions: [Subscription] { subscriptions.charging }
 
-    var pausedSubscriptions: [Subscription] {
-        subscriptions.filter { $0.isPaused }
-    }
 
-    
-    var upcomingRenewals: [Subscription] {
-        let calendar = Calendar.current
-        let now = Date()
-        let thirtyDaysFromNow = calendar.date(byAdding: .day, value: 30, to: now) ?? now
-
-        return activeSubscriptions
-            .filter { sub in
-                guard sub.calculatedNextBillingDate != nil, let days = sub.daysUntilRenewal else { return false }
-                return days >= 0 && days <= calendar.calendarDays(from: now, to: thirtyDaysFromNow)
-            }
-            .sorted { ($0.calculatedNextBillingDate ?? now) < ($1.calculatedNextBillingDate ?? now) }
-    }
-    
-    
-
-    // MARK: - Live Activity
-
-    private func startLiveActivityIfNeeded() {
-        guard AppSettings.shared.liveActivitiesEnabled else { return }
-
-        // Find the most urgent upcoming renewal
-        let upcoming = activeSubscriptions
-            .filter { ($0.daysUntilRenewal ?? 999) <= 14 }
-            .sorted { ($0.daysUntilRenewal ?? 999) < ($1.daysUntilRenewal ?? 999) }
-
-        if let first = upcoming.first {
-            LiveActivityManager.shared.startLiveActivity(for: first)
-        } else {
-            LiveActivityManager.shared.endCurrentActivity()
-        }
-    }
 }
 
 // MARK: - Notification Names

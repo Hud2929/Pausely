@@ -1,233 +1,39 @@
 import SwiftUI
 
+/// The currency totals are shown in. Each subscription keeps the currency it is charged in.
 struct CurrencySettingsView: View {
-    @Environment(\.dismiss) private var dismiss
     @ObservedObject private var currencyManager = CurrencyManager.shared
     @State private var searchText = ""
 
-    // Use currencyManager.selectedCurrency directly to avoid state sync issues
-    private var selectedCurrency: String {
-        currencyManager.selectedCurrency
+    /// Every currency Pausely can convert (the same list the exchange rates cover).
+    private var currencies: [Currency] {
+        currencyManager.allCurrencies.filter { $0.matches(searchText) }
     }
 
-    /// Every currency Pausely can convert (the same list the exchange rates cover), with the symbol
-    /// this person's locale shows for it.
-    private var allCurrencies: [(code: String, symbol: String, name: String)] {
-        currencyManager.allCurrencies.map { ($0.code, MoneyFormat.symbol(for: $0.code), $0.name) }
-    }
-
-    // Filtered currencies based on search
-    var filteredCurrencies: [(code: String, symbol: String, name: String)] {
-        if searchText.isEmpty {
-            return allCurrencies
-        }
-        let query = searchText.lowercased()
-        return allCurrencies.filter { currency in
-            currency.code.lowercased().contains(query) ||
-            currency.name.lowercased().contains(query) ||
-            currency.symbol.lowercased().contains(query)
-        }
+    private var ratesDay: String {
+        currencyManager.ratesDate.formatted(.dateTime.month(.abbreviated).day().year().locale(L10n.locale))
     }
 
     var body: some View {
-        ZStack {
-            Color.black.ignoresSafeArea()
+        // The age of the rates is said before the long list rather than under it.
+        SettingsPage(title: "Currency", detail: "Totals are shown in this currency. Each subscription keeps the currency it's charged in.",
+                     note: L10n.string("Totals that mix currencies are converted at rates from \(ratesDay) and marked ≈.")) {
+            SearchField(text: $searchText, identifier: "currencySearch")
 
-            VStack(spacing: 0) {
-                // Header
-                HStack {
-                    Button(action: { dismiss() }) {
-                        Image(systemName: "xmark")
-                            .font(.callout.weight(.semibold))
-                            .foregroundColor(.white)
-                            .frame(width: 36, height: 36)
-                            .background(Color.white.opacity(0.1))
-                            .clipShape(Circle())
-                            .accessibilityLabel("Close")
-                    }
-
-                    Spacer()
-
-                    Text("Currency")
-                        .font(.callout.weight(.semibold))
-                        .foregroundColor(.white)
-
-                    Spacer()
-
-                    Color.clear.frame(width: 36)
+            SettingsSection {
+                if currencies.isEmpty {
+                    Text("No currency matches that.")
+                        .font(.body)
+                        .foregroundStyle(Color.inkTextMuted)
+                        .padding(.vertical, 12)
                 }
-                .padding(.horizontal, 20)
-                .padding(.top, 16)
-                .padding(.bottom, 12)
-
-                // Current Selection Display
-                VStack(spacing: 12) {
-                    ZStack {
-                        Circle()
-                            .fill(Color.accentMint.opacity(0.2))
-                            .frame(width: 80, height: 80)
-
-                        Text(currentSymbol)
-                            .font(.largeTitle.weight(.bold))
-                            .foregroundColor(.accentMint)
+                ForEach(currencies) { currency in
+                    ChoiceRow(title: currency.localizedName(), detail: currency.code, isChosen: currencyManager.selectedCurrency == currency.code) {
+                        currencyManager.setCurrency(currency.code)
                     }
-
-                    Text(currentName)
-                        .font(.title3.weight(.bold))
-                        .foregroundColor(.white)
-
-                    Text(currentCode)
-                        .font(.footnote.weight(.medium))
-                        .foregroundColor(.gray)
-                }
-                .padding(.vertical, 20)
-
-                // Search Bar
-                HStack(spacing: 12) {
-                    Image(systemName: "magnifyingglass")
-                        .foregroundColor(.gray)
-                        .font(.callout)
-
-                    TextField("Search currencies...", text: $searchText)
-                        .foregroundColor(.white)
-                        .font(.callout)
-                        .keyboardType(.default)
-                        .submitLabel(.search)
-
-                    if !searchText.isEmpty {
-                        Button(action: { searchText = "" }) {
-                            Image(systemName: "xmark.circle.fill")
-                                .foregroundColor(.gray)
-                        }
-                        .accessibilityLabel("Clear search")
-                    }
-                }
-                .padding(.horizontal, 16)
-                .padding(.vertical, 12)
-                .background(Color.white.opacity(0.1))
-                .cornerRadius(12)
-                .padding(.horizontal, 20)
-                .padding(.bottom, 12)
-
-                // Results count
-                HStack {
-                    Text("\(filteredCurrencies.count) currencies")
-                        .font(.caption)
-                        .foregroundColor(.gray)
-
-                    Spacer()
-                }
-                .padding(.horizontal, 20)
-                .padding(.bottom, 8)
-
-                // Currency List
-                ScrollView {
-                    LazyVStack(spacing: 8) {
-                        ForEach(filteredCurrencies, id: \.code) { currency in
-                            CurrencyRow(
-                                code: currency.code,
-                                symbol: currency.symbol,
-                                name: currency.name,
-                                isSelected: selectedCurrency == currency.code,
-                                isFiltered: !searchText.isEmpty
-                            ) {
-                                withAnimation(.spring(response: 0.3)) {
-                                    currencyManager.setCurrency(currency.code)
-                                }
-                            }
-                            .padding(.horizontal, 20)
-                        }
-                    }
-                    .padding(.bottom, 40)
+                    .accessibilityIdentifier("currency-\(currency.code)")
                 }
             }
         }
     }
-
-    var currentSymbol: String {
-        MoneyFormat.symbol(for: selectedCurrency)
-    }
-
-    var currentName: String {
-        allCurrencies.first { $0.code == selectedCurrency }?.name ?? "US Dollar"
-    }
-
-    var currentCode: String {
-        selectedCurrency
-    }
-}
-
-struct CurrencyRow: View {
-    let code: String
-    let symbol: String
-    let name: String
-    let isSelected: Bool
-    var isFiltered: Bool = false
-    let action: () -> Void
-
-    @State private var isPressed = false
-
-    var body: some View {
-        Button(action: {
-            HapticStyle.light.trigger()
-            action()
-        }) {
-            HStack(spacing: 16) {
-                // Symbol circle
-                ZStack {
-                    Circle()
-                        .fill(isSelected ? Color.accentMint.opacity(0.3) : Color.white.opacity(0.08))
-                        .frame(width: 48, height: 48)
-
-                    Text(symbol)
-                        .font(.callout.weight(.bold))
-                        .foregroundColor(isSelected ? .accentMint : .white)
-                }
-
-                VStack(alignment: .leading, spacing: 4) {
-                    Text(name)
-                        .font(.callout.weight(.medium))
-                        .foregroundColor(.white)
-
-                    Text(code)
-                        .font(.footnote.weight(.medium))
-                        .foregroundColor(.gray)
-                }
-
-                Spacer()
-
-                if isSelected {
-                    Image(systemName: "checkmark.circle.fill")
-                        .font(.title3)
-                        .foregroundColor(.accentMint)
-                        .shadow(color: .accentMint.opacity(0.5), radius: 8)
-                }
-            }
-            .padding(14)
-            .background(
-                RoundedRectangle(cornerRadius: 14)
-                    .fill(isSelected ? Color.accentMint.opacity(0.12) : Color.white.opacity(0.05))
-                    .overlay(
-                        RoundedRectangle(cornerRadius: 14)
-                            .stroke(isSelected ? Color.accentMint : Color.clear, lineWidth: 1.5)
-                    )
-            )
-            .scaleEffect(isPressed ? 0.98 : 1)
-        }
-        .buttonStyle(PlainButtonStyle())
-        .simultaneousGesture(
-            DragGesture(minimumDistance: 0)
-                .onChanged { _ in
-                    withAnimation(.easeOut(duration: 0.1)) { isPressed = true }
-                }
-                .onEnded { _ in
-                    withAnimation(.easeOut(duration: 0.1)) { isPressed = false }
-                }
-        )
-        .accessibilityValue(isSelected ? "Selected" : "Not selected")
-    }
-}
-
-#Preview {
-    CurrencySettingsView()
 }

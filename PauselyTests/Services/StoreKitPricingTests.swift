@@ -30,10 +30,8 @@ final class StoreKitPricingTests: XCTestCase {
     }
 
     func testLaunchConstantsAreExactDecimals() {
-        XCTAssertEqual(ProPricing.monthlyUSD, d("4.99"))
         XCTAssertEqual(ProPricing.annualUSD, d("29.99"))
         XCTAssertEqual(FreeTier.subscriptionLimit, 5)
-        XCTAssertEqual(SubscriptionTier.free.subscriptionLimit, FreeTier.subscriptionLimit)
         // The free tier tracks five; the sixth needs Pro, which has no limit.
         XCTAssertTrue(ProFeature.canAddSubscription(currentCount: 4, isPro: false))
         XCTAssertFalse(ProFeature.canAddSubscription(currentCount: 5, isPro: false))

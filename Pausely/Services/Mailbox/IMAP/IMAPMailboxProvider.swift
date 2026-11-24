@@ -1,6 +1,7 @@
 import Foundation
 
 /// iCloud, Yahoo, AOL, Gmail (app password), GMX, WEB.DE, Zoho, Fastmail and any IMAP server, read-only.
+@MainActor
 final class IMAPMailboxProvider: MailboxProvider {
     let account: MailboxAccount
     private let client: IMAPClient
@@ -23,8 +24,27 @@ final class IMAPMailboxProvider: MailboxProvider {
             throw MailboxError.authExpired
         }
         try await client.connect()
-        try await client.login(user: account.address, password: password)
+        var refusal: Error?
+        for name in Self.loginNames(for: account) {
+            do {
+                try await client.login(user: name, password: password)
+                refusal = nil
+                break
+            } catch MailboxError.authFailed(let detail) {
+                refusal = MailboxError.authFailed(detail)
+            }
+        }
+        if let refusal { throw refusal }
         folders = Self.searchFolders(try await client.listFolders())
+    }
+
+    /// The user names to sign in with, in order. Apple documents iCloud Mail's as the part before the @,
+    /// with the full address as the fallback (it is the only one that works for a custom domain); every
+    /// other provider uses the full address.
+    static func loginNames(for account: MailboxAccount) -> [String] {
+        guard account.presetID == "icloud", let name = account.address.split(separator: "@").first.map(String.init),
+              !name.isEmpty, name != account.address else { return [account.address] }
+        return [name, account.address]
     }
 
     /// Where receipts live: Gmail's "All Mail" covers everything; elsewhere the inbox, the archive and any

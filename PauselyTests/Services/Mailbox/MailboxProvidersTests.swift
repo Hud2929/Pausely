@@ -3,6 +3,7 @@ import XCTest
 
 /// Microsoft Graph and Gmail requests and responses, sign-in security, forged senders, and how receipts
 /// from several inboxes are kept.
+@MainActor
 final class MailboxProvidersTests: XCTestCase {
 
     private let since = Date(timeIntervalSince1970: 1_767_225_600)  // 2026-01-01
@@ -92,6 +93,21 @@ final class MailboxProvidersTests: XCTestCase {
         XCTAssertFalse(OAuthSession.Tokens(accessToken: "a", refreshToken: nil, expiresAt: Date().addingTimeInterval(30)).isFresh)
     }
 
+    /// The wait before retrying a throttled request goes straight into a sleep that crashes on a
+    /// negative number, so whatever the server sends has to come out between 0 and 30 seconds.
+    func testRetryDelayStaysBetweenZeroAndThirtySeconds() {
+        XCTAssertEqual(MailboxHTTP.retryDelay(retryAfter: "12", attempt: 1), 12)
+        XCTAssertEqual(MailboxHTTP.retryDelay(retryAfter: " 2.5 ", attempt: 1), 2.5)
+        XCTAssertEqual(MailboxHTTP.retryDelay(retryAfter: "-1", attempt: 1), 0)
+        XCTAssertEqual(MailboxHTTP.retryDelay(retryAfter: "86400", attempt: 1), 30)
+        XCTAssertEqual(MailboxHTTP.retryDelay(retryAfter: "inf", attempt: 2), 8, "not a usable number: the usual back-off")
+        XCTAssertEqual(MailboxHTTP.retryDelay(retryAfter: "nan", attempt: 2), 8)
+        XCTAssertEqual(MailboxHTTP.retryDelay(retryAfter: "Wed, 21 Oct 2026 07:28:00 GMT", attempt: 3), 16, "a date is not seconds")
+        XCTAssertEqual(MailboxHTTP.retryDelay(retryAfter: nil, attempt: 1), 4)
+        XCTAssertEqual(MailboxHTTP.retryDelay(retryAfter: nil, attempt: 2), 8)
+        XCTAssertEqual(MailboxHTTP.retryDelay(retryAfter: nil, attempt: 3), 16)
+    }
+
     // MARK: Forged senders
 
     private func email(from: String, authentication: String?) -> RawEmail {
@@ -146,14 +162,43 @@ final class MailboxProvidersTests: XCTestCase {
         XCTAssertEqual(merged.first?.sources, ["A", "B"])
     }
 
+    /// The file of facts is readable only while the iPhone is unlocked. A scan that finished after it
+    /// locked used to read "nothing", add its few facts to that, and save: up to three years of
+    /// history replaced by one scan's worth.
+    func testFactsThatCannotBeReadAreNotWrittenOver() throws {
+        let folder = FileManager.default.temporaryDirectory.appendingPathComponent("ledger-\(UUID().uuidString)")
+        try FileManager.default.createDirectory(at: folder, withIntermediateDirectories: true)
+        defer { try? FileManager.default.removeItem(at: folder) }
+        let file = folder.appendingPathComponent("receipt_ledger.json")
+
+        XCTAssertEqual(ReceiptLedger.read(from: file), .nothingYet)
+        XCTAssertEqual(ReceiptLedger.add([signal("first@x.com", sources: ["A"])], to: file).map(\.id), ["first@x.com"])
+        XCTAssertEqual(ReceiptLedger.add([signal("second@x.com", sources: ["A"])], to: file).map(\.id).sorted(),
+                       ["first@x.com", "second@x.com"])
+
+        // Stand-in for a locked iPhone: the file is there and reading it is refused.
+        try FileManager.default.setAttributes([.posixPermissions: 0o000], ofItemAtPath: file.path)
+        XCTAssertEqual(ReceiptLedger.read(from: file), .unreadable)
+        let thisScan = ReceiptLedger.add([signal("third@x.com", sources: ["A"])], to: file)
+        XCTAssertEqual(thisScan.map(\.id), ["third@x.com"], "the scan still has what it found")
+        XCTAssertTrue(ReceiptLedger.load(from: file).isEmpty, "and shows nothing rather than guessing")
+
+        try FileManager.default.setAttributes([.posixPermissions: 0o600], ofItemAtPath: file.path)
+        XCTAssertEqual(ReceiptLedger.load(from: file).map(\.id).sorted(), ["first@x.com", "second@x.com"],
+                       "what couldn't be read was not written over")
+    }
+
     func testDisconnectingKeepsReceiptsAnotherInboxStillHas() {
+        // A file of its own: on the app's ledger this test erased the receipts of a real inbox
+        // connected on the simulator (2026-11-22).
+        let file = FileManager.default.temporaryDirectory.appendingPathComponent("ledger-\(UUID().uuidString).json")
         ReceiptLedger.save([signal("shared@x.com", sources: ["A", "B"]), signal("onlyA@x.com", sources: ["A"]),
-                            signal("legacy@x.com", sources: nil)])
-        defer { ReceiptLedger.clear() }
-        let kept = ReceiptLedger.removeSource("A", remainingAccounts: 1)
+                            signal("legacy@x.com", sources: nil)], to: file)
+        defer { ReceiptLedger.clear(at: file) }
+        let kept = ReceiptLedger.removeSource("A", remainingAccounts: 1, at: file)
         XCTAssertEqual(Set(kept.map(\.id)), ["shared@x.com", "legacy@x.com"])
         XCTAssertEqual(kept.first { $0.id == "shared@x.com" }?.sources, ["B"])
-        XCTAssertTrue(ReceiptLedger.removeSource("B", remainingAccounts: 0).isEmpty, "the last inbox takes everything")
+        XCTAssertTrue(ReceiptLedger.removeSource("B", remainingAccounts: 0, at: file).isEmpty, "the last inbox takes everything")
     }
 
     func testTriageReadsKnownBillersFirstAndEachReceiptOnce() {
@@ -166,5 +211,16 @@ final class MailboxProvidersTests: XCTestCase {
         ]
         let wanted = InboxScanner.triage(summaries, catalog: .builtin)
         XCTAssertEqual(wanted.map(\.ref.id), ["2", "1"])
+    }
+
+    // MARK: Signing in
+
+    func testICloudSignsInWithTheNamePartFirst_asAppleDocuments() {
+        func account(_ address: String, preset: String?) -> MailboxAccount {
+            MailboxAccount(id: "t", kind: .imap, address: address, presetID: preset, host: "imap.example.com", port: 993, addedAt: Date())
+        }
+        XCTAssertEqual(IMAPMailboxProvider.loginNames(for: account("jordan@icloud.com", preset: "icloud")), ["jordan", "jordan@icloud.com"])
+        XCTAssertEqual(IMAPMailboxProvider.loginNames(for: account("jordan@yahoo.com", preset: "yahoo")), ["jordan@yahoo.com"])
+        XCTAssertEqual(IMAPMailboxProvider.loginNames(for: account("jordan@example.org", preset: nil)), ["jordan@example.org"])
     }
 }

@@ -11,22 +11,105 @@ final class SubscriptionEditDraftTests: XCTestCase {
         return s
     }
 
-    // MARK: Amount parsing
+    // MARK: Amount parsing (every amount field reads through `AmountText`)
+
+    private let english = Locale(identifier: "en_US")
+    private let french = Locale(identifier: "fr_FR")
+    private let german = Locale(identifier: "de_DE")
+    private let arabic = Locale(identifier: "ar_SA")
+    private let japanese = Locale(identifier: "ja_JP")
 
     func testParsesCommonFormats() {
-        XCTAssertEqual(SubscriptionEditDraft.parseAmount("9.99"), Decimal(string: "9.99"))
-        XCTAssertEqual(SubscriptionEditDraft.parseAmount("9,99"), Decimal(string: "9.99"))
-        XCTAssertEqual(SubscriptionEditDraft.parseAmount("$9.99"), Decimal(string: "9.99"))
-        XCTAssertEqual(SubscriptionEditDraft.parseAmount("C$ 1,299.00"), 1299)
-        XCTAssertEqual(SubscriptionEditDraft.parseAmount("1.299,00"), 1299)
-        XCTAssertEqual(SubscriptionEditDraft.parseAmount("1,299"), 1299)
-        XCTAssertEqual(SubscriptionEditDraft.parseAmount("  12  "), 12)
+        func parse(_ text: String) -> Decimal? { AmountText.parse(text, currency: "USD", locale: english) }
+        XCTAssertEqual(parse("9.99"), Decimal(string: "9.99"))
+        XCTAssertEqual(parse("9,99"), Decimal(string: "9.99"))
+        XCTAssertEqual(parse("$9.99"), Decimal(string: "9.99"))
+        XCTAssertEqual(parse("C$ 1,299.00"), 1299)
+        XCTAssertEqual(parse("1.299,00"), 1299)
+        XCTAssertEqual(parse("1,299"), 1299)
+        XCTAssertEqual(parse("12,990.50"), Decimal(string: "12990.5"))
+        XCTAssertEqual(parse("  12  "), 12)
     }
 
     func testRejectsNonsense() {
-        for bad in ["", "   ", "abc", "0", "0.00", "-5", "-5.00", "999999"] {
-            XCTAssertNil(SubscriptionEditDraft.parseAmount(bad), "\(bad) should be invalid")
+        for bad in ["", "   ", "abc", "0", "0.00", "-5", "-5.00", "999999", "−5", "1,29,9", "."] {
+            XCTAssertNil(AmountText.parse(bad, currency: "USD", locale: english), "\(bad) should be invalid")
         }
+    }
+
+    /// The Arabic keyboard types Arabic-Indic digits and its own decimal mark (U+066B). Before, the
+    /// mark was dropped and the amount refused.
+    func testAnAmountTypedOnAnArabicKeyboardIsRead() {
+        XCTAssertEqual(AmountText.parse("٩٫٩٩", currency: "SAR", locale: arabic), Decimal(string: "9.99"))
+        XCTAssertEqual(AmountText.parse("١٬٢٩٩٫٥٠", currency: "SAR", locale: arabic), Decimal(string: "1299.5"))
+        XCTAssertEqual(AmountText.parse("۱۵٫۴۹", currency: "USD", locale: english), Decimal(string: "15.49"), "Persian digits")
+        XCTAssertEqual(AmountText.parse("１５００", currency: "JPY", locale: japanese), 1500, "Full-width digits from a Japanese keyboard")
+    }
+
+    /// A single mark is read the way the reader's language writes numbers.
+    func testALoneMarkFollowsTheReadersLanguage() {
+        XCTAssertEqual(AmountText.parse("1.299", currency: "EUR", locale: german), 1299, "German groups thousands with a point")
+        XCTAssertEqual(AmountText.parse("1.299", currency: "USD", locale: english), Decimal(string: "1.3"), "In English a point is the decimal mark")
+        XCTAssertEqual(AmountText.parse("9.99", currency: "EUR", locale: german), Decimal(string: "9.99"), "Not a group of three: a decimal")
+        XCTAssertEqual(AmountText.parse("1,299", currency: "EUR", locale: french), Decimal(string: "1.3"), "French writes decimals with a comma")
+        XCTAssertEqual(AmountText.parse("1 299,00", currency: "EUR", locale: french), 1299)
+        XCTAssertEqual(AmountText.parse("1'299.00", currency: "CHF", locale: Locale(identifier: "de_CH")), 1299)
+    }
+
+    /// Each currency has its own decimals: none for yen, three for dinars.
+    func testAmountsKeepTheirCurrencysDecimals() {
+        XCTAssertEqual(AmountText.parse("1,500", currency: "JPY", locale: french), 1500, "Yen has no decimals, so this is fifteen hundred in every language")
+        XCTAssertEqual(AmountText.parse("1500.4", currency: "JPY", locale: english), 1500)
+        XCTAssertEqual(AmountText.parse("1.255", currency: "KWD", locale: english), Decimal(string: "1.255"))
+        XCTAssertEqual(AmountText.parse("15.499", currency: "USD", locale: english), Decimal(string: "15.5"))
+        XCTAssertNil(AmountText.parse("0.001", currency: "USD", locale: english), "Rounds to nothing")
+    }
+
+    /// The ceiling is there to catch a slip, and it is the same sum in every currency. Before, rupiah,
+    /// dong and rial prices above 100,000 were refused, and those are ordinary prices.
+    func testOrdinaryPricesInLargeDenominationCurrenciesAreAccepted() {
+        XCTAssertEqual(AmountText.parse("186000", currency: "IDR", locale: english), 186_000)
+        XCTAssertEqual(AmountText.parse("260.000", currency: "VND", locale: Locale(identifier: "vi_VN")), 260_000)
+        XCTAssertEqual(AmountText.parse("2,500,000", currency: "KRW", locale: english), 2_500_000)
+        XCTAssertNil(AmountText.parse("100001", currency: "USD", locale: english))
+        XCTAssertTrue(AmountText.isTooLarge("100001", currency: "USD", locale: english))
+        XCTAssertFalse(AmountText.isTooLarge("abc", currency: "USD", locale: english))
+        XCTAssertEqual(AmountText.ceiling(for: "USD"), 100_000)
+        XCTAssertGreaterThan(AmountText.ceiling(for: "IDR"), 1_000_000_000)
+        XCTAssertEqual(AmountText.ceiling(for: "KWD"), 100_000, "Never less than 100,000, whatever the rate")
+    }
+
+    /// What a field shows can always be typed back: in every language the app speaks and for
+    /// currencies with no, two and three decimals.
+    func testWhatAFieldShowsReadsBackAsTheSameAmount() {
+        let amounts: [(String, String)] = [("USD", "15.49"), ("EUR", "1299.99"), ("JPY", "1500"), ("KWD", "1.255"),
+                                           ("IDR", "186000"), ("SAR", "0.5")]
+        for locale in [english, french, german, arabic, japanese, Locale(identifier: "es_ES"), Locale(identifier: "en_CA")] {
+            for (currency, text) in amounts {
+                let amount = Decimal(string: text)!
+                let shown = AmountText.text(for: amount, currency: currency, locale: locale)
+                XCTAssertEqual(AmountText.parse(shown, currency: currency, locale: locale), amount,
+                               "\(currency) \(text) shown as \"\(shown)\" in \(locale.identifier)")
+            }
+        }
+    }
+
+    func testAFieldShowsTheCurrencysOwnDecimals() {
+        XCTAssertEqual(AmountText.text(for: 1500, currency: "JPY", locale: english), "1500")
+        XCTAssertEqual(AmountText.text(for: Decimal(string: "1.255")!, currency: "KWD", locale: english), "1.255")
+        XCTAssertEqual(AmountText.text(for: Decimal(string: "16.49")!, currency: "CAD", locale: english), "16.49")
+        XCTAssertEqual(AmountText.text(for: Decimal(string: "16.49")!, currency: "EUR", locale: french), "16,49")
+    }
+
+    /// Opening the edit screen for a price in dinars and saving something else must not round the price.
+    func testEditingADinarPriceDoesNotChangeIt() {
+        var subscription = sub()
+        subscription.currency = "KWD"
+        subscription.amount = Decimal(string: "1.255")!
+        var draft = SubscriptionEditDraft(from: subscription)
+        XCTAssertFalse(draft.isDirty(comparedTo: subscription))
+        draft.name = "Netflix Premium"
+        XCTAssertEqual(draft.applied(to: subscription)?.amount, Decimal(string: "1.255"))
     }
 
     // MARK: Validation
@@ -42,6 +125,8 @@ final class SubscriptionEditDraftTests: XCTestCase {
         draft.amountText = "abc"
         XCTAssertEqual(draft.amountError, "Enter a valid amount")
         XCTAssertFalse(draft.isValid)
+        draft.amountText = "250000"
+        XCTAssertEqual(draft.amountError, "That is more than Pausely can track.")
     }
 
     // MARK: Dirty tracking: Save must stay off until something really changed
@@ -90,9 +175,8 @@ final class SubscriptionEditDraftTests: XCTestCase {
 
     func testAppliedKeepsEverythingElse() {
         var original = sub()
-        original.status = .paused
-        original.isDetected = true
-        original.monthlyUsageMinutes = 420
+        original.status = .trial
+        original.trialEndsAt = Calendar.billing.date(from: DateComponents(year: 2027, month: 1, day: 15, hour: 12))
         let created = original.createdAt
         var draft = SubscriptionEditDraft(from: original)
         draft.name = "  Netflix Premium "
@@ -101,18 +185,15 @@ final class SubscriptionEditDraftTests: XCTestCase {
         draft.category = "Music"
         draft.reminderDays = 7
 
-        let now = Date(timeIntervalSince1970: 1_800_000_000)
-        let updated = draft.applied(to: original, now: now)
+        let updated = draft.applied(to: original)
         XCTAssertEqual(updated?.name, "Netflix Premium")
         XCTAssertEqual(updated?.amount, Decimal(string: "22.99"))
         XCTAssertEqual(updated?.billingFrequency, .yearly)
         XCTAssertEqual(updated?.category, "Music")
         XCTAssertEqual(updated?.notifyBeforeDays, 7)
-        XCTAssertEqual(updated?.updatedAt, now)
         XCTAssertEqual(updated?.id, original.id)
-        XCTAssertEqual(updated?.status, .paused)
-        XCTAssertEqual(updated?.isDetected, true)
-        XCTAssertEqual(updated?.monthlyUsageMinutes, 420)
+        XCTAssertEqual(updated?.status, .trial)
+        XCTAssertEqual(updated?.trialEndsAt, original.trialEndsAt)
         XCTAssertEqual(updated?.createdAt, created)
     }
 
@@ -133,10 +214,24 @@ final class SubscriptionEditDraftTests: XCTestCase {
         XCTAssertNil(draft.yearlyCost)
     }
 
+    /// The reminder choices, in the language chosen in the app. They were bare English in every one.
     func testReminderLabels() {
+        let saved = UserDefaults.standard.object(forKey: L10n.languageKey)
+        defer { UserDefaults.standard.set(saved, forKey: L10n.languageKey) }
+
+        UserDefaults.standard.set("en", forKey: L10n.languageKey)
         XCTAssertEqual(SubscriptionEditDraft.reminderLabel(0), "Off")
         XCTAssertEqual(SubscriptionEditDraft.reminderLabel(1), "1 day before")
         XCTAssertEqual(SubscriptionEditDraft.reminderLabel(7), "7 days before")
+
+        UserDefaults.standard.set("de", forKey: L10n.languageKey)
+        XCTAssertEqual(SubscriptionEditDraft.reminderLabel(0), "Aus")
+        XCTAssertEqual(SubscriptionEditDraft.reminderLabel(1), "1 Tag vorher")
+        XCTAssertEqual(SubscriptionEditDraft.reminderLabel(3), "3 Tage vorher")
+
+        UserDefaults.standard.set("ar", forKey: L10n.languageKey)
+        XCTAssertEqual(SubscriptionEditDraft.reminderLabel(1), "قبل يوم واحد")
+        XCTAssertEqual(SubscriptionEditDraft.reminderLabel(3), "قبل \(L10n.number(3)) أيام")
     }
 }
 
@@ -166,31 +261,5 @@ final class RenewalDayCountTests: XCTestCase {
             s.nextBillingDate = date(daysFromToday: 9, hour: hour)
             XCTAssertEqual(s.daysUntilRenewal, 9, "hour \(hour)")
         }
-    }
-}
-
-// MARK: - Support links
-
-final class SupportLinkTests: XCTestCase {
-
-    func testPhoneBecomesTelURL() {
-        let url = SubscriptionManagementView.url(for: SupportContact(type: .phone, value: "1-800-555-0100", label: "Support", hours: nil))
-        XCTAssertEqual(url?.absoluteString, "tel:18005550100")
-    }
-
-    func testEmailBecomesMailto() {
-        let url = SubscriptionManagementView.url(for: SupportContact(type: .email, value: "help@example.com", label: "Email", hours: nil))
-        XCTAssertEqual(url?.absoluteString, "mailto:help@example.com")
-    }
-
-    func testChatLinkGetsAScheme() {
-        let url = SubscriptionManagementView.url(for: SupportContact(type: .chat, value: "help.example.com/chat", label: "Chat", hours: nil))
-        XCTAssertEqual(url?.absoluteString, "https://help.example.com/chat")
-        let full = SubscriptionManagementView.url(for: SupportContact(type: .chat, value: "https://help.example.com", label: "Chat", hours: nil))
-        XCTAssertEqual(full?.absoluteString, "https://help.example.com")
-    }
-
-    func testEmptyPhoneIsNotALink() {
-        XCTAssertNil(SubscriptionManagementView.url(for: SupportContact(type: .phone, value: "   ", label: "Support", hours: nil)))
     }
 }

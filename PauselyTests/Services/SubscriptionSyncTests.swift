@@ -1,7 +1,7 @@
 import XCTest
 @testable import Pausely
 
-/// What reaches the database and what comes back: renewal and pause dates survive the round trip,
+/// What reaches the database and what comes back: renewal dates survive the round trip,
 /// cleared dates clear on the server, and merging never loses this iPhone's work.
 @MainActor
 final class SubscriptionSyncTests: XCTestCase {
@@ -14,28 +14,20 @@ final class SubscriptionSyncTests: XCTestCase {
 
     // MARK: The record sent to the database
 
-    func testRenewalAndPauseDatesAreSent() throws {
-        var sub = TestFactories.makeSubscription(name: "Netflix", nextBillingDate: day("2026-11-20T12:00:00Z"))
-        sub.pausedUntil = day("2026-12-01T12:00:00Z")
+    func testTheRenewalDateIsSent() throws {
+        let sub = TestFactories.makeSubscription(name: "Netflix", nextBillingDate: day("2026-11-20T12:00:00Z"))
         let sent = try json(SubscriptionRecord(from: sub))
         XCTAssertEqual(sent["next_billing_date"] as? String, "2026-11-20T12:00:00Z")
-        XCTAssertEqual(sent["paused_until"] as? String, "2026-12-01T12:00:00Z")
+        XCTAssertNil(sent["paused_until"], "the removed pause is never written, so an older row's value is left alone")
     }
 
     func testClearedDatesAreSentAsNullAndServerOwnedFieldsAreLeftOut() throws {
         let sub = TestFactories.makeSubscription(name: "Hulu", nextBillingDate: nil)
         let sent = try json(SubscriptionRecord(from: sub))
         XCTAssertTrue(sent["next_billing_date"] is NSNull, "a cleared renewal date must clear on the server")
-        XCTAssertTrue(sent["paused_until"] is NSNull, "resuming must clear the pause on the server")
         XCTAssertTrue(sent["trial_ends_at"] is NSNull)
         XCTAssertNil(sent["user_id"], "an update must never null the owner")
         XCTAssertNil(sent["created_at"])
-    }
-
-    func testResumeSendsAnExplicitNull() throws {
-        let sent = try XCTUnwrap(JSONSerialization.jsonObject(with: JSONEncoder().encode(ClearPausePayload())) as? [String: Any])
-        XCTAssertEqual(sent.count, 1)
-        XCTAssertTrue(sent["paused_until"] is NSNull)
     }
 
     // MARK: What comes back
@@ -51,17 +43,20 @@ final class SubscriptionSyncTests: XCTestCase {
         """
         let record = try JSONDecoder().decode(SubscriptionRecord.self, from: Data(row.utf8))
         let sub = record.toSubscription()
-        XCTAssertEqual(sub.nextBillingDate, day("2026-11-20T12:00:00Z"))
-        XCTAssertEqual(sub.pausedUntil, day("2026-12-01T12:00:00Z"))
+        // A renewal day comes back as that day, at noon on this phone (`BillingDay`), wherever it is read.
+        XCTAssertEqual(sub.nextBillingDate, Calendar.billing.date(from: DateComponents(year: 2026, month: 11, day: 20, hour: 12)))
         XCTAssertEqual(sub.createdAt.timeIntervalSince1970, day("2026-03-04T17:30:00Z").timeIntervalSince1970 + 0.123, accuracy: 0.001,
                        "the creation date must not reset to now on every fetch")
-        XCTAssertEqual(sub.updatedAt.timeIntervalSince1970, day("2026-10-01T09:15:42Z").timeIntervalSince1970 + 0.5, accuracy: 0.001)
     }
 
     func testARoundTripKeepsEverythingTheServerStores() throws {
+        let fifteenth = Calendar.billing.date(from: DateComponents(year: 2027, month: 1, day: 15, hour: 12))
         var sub = TestFactories.makeSubscription(name: "Crave", amount: 22.6, currency: "CAD", billingFrequency: .yearly,
-                                                 status: .trial, nextBillingDate: day("2027-01-15T12:00:00Z"))
-        sub.trialEndsAt = day("2027-01-15T12:00:00Z")
+                                                 status: .trial, nextBillingDate: fifteenth)
+        sub.trialEndsAt = fifteenth
+        sub.notes = "Shared with family"
+        sub.paymentMethod = "Apple"
+        sub.splitCount = 3
         let back = try JSONDecoder().decode(SubscriptionRecord.self, from: JSONEncoder().encode(SubscriptionRecord(from: sub))).toSubscription()
         XCTAssertEqual(back.id, sub.id)
         XCTAssertEqual(back.amount, sub.amount)
@@ -70,47 +65,55 @@ final class SubscriptionSyncTests: XCTestCase {
         XCTAssertEqual(back.status, .trial)
         XCTAssertEqual(back.nextBillingDate, sub.nextBillingDate)
         XCTAssertEqual(back.trialEndsAt, sub.trialEndsAt)
+        XCTAssertEqual(back.notes, "Shared with family")
+        XCTAssertEqual(back.paymentMethod, "Apple")
+        XCTAssertEqual(back.splitCount, 3)
     }
 
     // MARK: Merging the server's list with this iPhone's
-
-    private func op(_ type: SyncOperationType, _ sub: Subscription) -> SyncOperation {
-        SyncOperation(type: type, subscriptionId: sub.id, payload: Data())
-    }
 
     func testAChangeStillQueuedWinsOverTheServer() {
         var mine = TestFactories.makeSubscription(name: "Netflix", amount: 15.49)
         mine.amount = 17.99
         var theirs = mine
         theirs.amount = 15.49
-        let merge = SubscriptionSyncMerge.merge(server: [theirs], local: [mine], pending: [op(.update, mine)], firstSyncForUser: false)
+        let merge = SubscriptionSyncMerge.merge(server: [theirs], local: [mine], pending: [mine.id: .update], firstSyncForUser: false)
         XCTAssertEqual(merge.subscriptions.map(\.amount), [17.99])
     }
 
     func testADeleteStillQueuedStaysDeleted() {
         let gone = TestFactories.makeSubscription(name: "Hulu")
-        let merge = SubscriptionSyncMerge.merge(server: [gone], local: [], pending: [op(.delete, gone)], firstSyncForUser: false)
+        let merge = SubscriptionSyncMerge.merge(server: [gone], local: [], pending: [gone.id: .delete], firstSyncForUser: false)
         XCTAssertTrue(merge.subscriptions.isEmpty)
     }
 
     func testAnOfflineAddIsKeptAndUploaded() {
         let added = TestFactories.makeSubscription(name: "Added offline")
         let onServer = TestFactories.makeSubscription(name: "Netflix")
-        let merge = SubscriptionSyncMerge.merge(server: [onServer], local: [added, onServer], pending: [op(.create, added)], firstSyncForUser: false)
+        let merge = SubscriptionSyncMerge.merge(server: [onServer], local: [added, onServer], pending: [added.id: .create], firstSyncForUser: false)
         XCTAssertEqual(merge.subscriptions.map(\.name), ["Added offline", "Netflix"])
         XCTAssertEqual(merge.upload.map(\.id), [added.id])
     }
 
     func testTheFirstSyncUploadsWhatOnlyThisIPhoneHad() {
         let local = [TestFactories.makeSubscription(name: "Spotify"), TestFactories.makeSubscription(name: "Max")]
-        let merge = SubscriptionSyncMerge.merge(server: [], local: local, pending: [], firstSyncForUser: true)
+        let merge = SubscriptionSyncMerge.merge(server: [], local: local, pending: [:], firstSyncForUser: true)
         XCTAssertEqual(merge.subscriptions.map(\.name), ["Spotify", "Max"], "nothing is wiped when the server is empty")
         XCTAssertEqual(merge.upload.count, 2)
     }
 
     func testLaterARowMissingFromTheServerWasDeletedElsewhere() {
         let stale = TestFactories.makeSubscription(name: "Deleted on iPad")
-        let merge = SubscriptionSyncMerge.merge(server: [], local: [stale], pending: [], firstSyncForUser: false)
+        let merge = SubscriptionSyncMerge.merge(server: [], local: [stale], pending: [:], firstSyncForUser: false)
+        XCTAssertTrue(merge.subscriptions.isEmpty)
+        XCTAssertTrue(merge.upload.isEmpty)
+    }
+
+    /// An edit is not an add. Without this, a trial ending by itself on this iPhone (the app changes
+    /// its status) would bring back a subscription the person had just deleted on their iPad.
+    func testAnEditDoesNotBringBackWhatAnotherDeviceDeleted() {
+        let mine = TestFactories.makeSubscription(name: "Deleted on iPad, edited here")
+        let merge = SubscriptionSyncMerge.merge(server: [], local: [mine], pending: [mine.id: .update], firstSyncForUser: false)
         XCTAssertTrue(merge.subscriptions.isEmpty)
         XCTAssertTrue(merge.upload.isEmpty)
     }
@@ -119,24 +122,34 @@ final class SubscriptionSyncTests: XCTestCase {
         let mine = TestFactories.makeSubscription(name: "Netflix", nextBillingDate: day("2026-11-20T12:00:00Z"))
         var theirs = mine
         theirs.nextBillingDate = nil   // saved by an app version that never sent dates
-        let merge = SubscriptionSyncMerge.merge(server: [theirs], local: [mine], pending: [], firstSyncForUser: false)
+        let merge = SubscriptionSyncMerge.merge(server: [theirs], local: [mine], pending: [:], firstSyncForUser: false)
         XCTAssertEqual(merge.subscriptions.first?.nextBillingDate, day("2026-11-20T12:00:00Z"))
         XCTAssertEqual(merge.backfill.map(\.id), [mine.id])
     }
 
-    func testFieldsOnlyThisIPhoneStoresSurviveAFetch() {
-        var mine = TestFactories.makeSubscription(name: "Spotify", userPriceUSD: 5.99, isPriceOverridden: true)
-        mine.bundleIdentifier = "com.spotify.client"
+    /// Pausely's own line used to be known by a mark only the phone that added it held, so on a second
+    /// device it was an ordinary row and its price was never brought in step with the App Store. It is
+    /// known by its name now, which every device has.
+    func testPauselysOwnLineIsStillKnownAfterAFetch() throws {
+        let mine = TestFactories.makeSubscription(name: "Pausely Pro")
         var theirs = mine
-        theirs.bundleIdentifier = nil
-        theirs.userPriceUSD = nil
-        theirs.isPriceOverridden = false
         theirs.amount = 12.99   // changed on another device
-        let merged = SubscriptionSyncMerge.merge(server: [theirs], local: [mine], pending: [], firstSyncForUser: false).subscriptions
+        let merged = SubscriptionSyncMerge.merge(server: [theirs], local: [mine], pending: [:], firstSyncForUser: false).subscriptions
         XCTAssertEqual(merged.first?.amount, 12.99, "the server's change comes through")
-        XCTAssertEqual(merged.first?.bundleIdentifier, "com.spotify.client")
-        XCTAssertEqual(merged.first?.userPriceUSD, 5.99)
-        XCTAssertEqual(merged.first?.isPriceOverridden, true)
+        XCTAssertEqual(merged.first?.isPausely, true)
+
+        // As it arrives on a device that never added it: straight from a row of the table.
+        let arrived = try JSONDecoder().decode(SubscriptionRecord.self, from: JSONEncoder().encode(SubscriptionRecord(from: mine))).toSubscription()
+        XCTAssertTrue(arrived.isPausely)
+        XCTAssertFalse(TestFactories.makeSubscription(name: "Pausely Pro Max").isPausely)
+    }
+
+    /// The app has fourteen fields and sends those. Columns earlier versions filled are left as they are.
+    func testOnlyTheFieldsTheAppHasAreSent() throws {
+        let sent = try json(SubscriptionRecord(from: TestFactories.makeSubscription(name: "Netflix")))
+        XCTAssertEqual(sent.keys.sorted(), ["amount", "billing_frequency", "category", "currency", "id", "name",
+                                            "next_billing_date", "notes", "notify_before_days", "payment_method",
+                                            "split_count", "status", "trial_ends_at"])
     }
 
     // MARK: Pro

@@ -38,6 +38,19 @@ final class PausePlanTests: XCTestCase {
         XCTAssertTrue(PausePlanSchedule.isEligible(sub("ESPN+", anchor: nil, category: "Sports")))
     }
 
+    /// Eligibility used to include anything filed under "Entertainment", so Audible, PlayStation Plus
+    /// and Kindle Unlimited were listed as streaming services and counted in the yearly saving.
+    func testOnlyVideoStreamingByNameIsEligibleWhateverItsCategory() {
+        for name in ["Audible", "PlayStation Plus", "Kindle Unlimited", "Twitch", "Patreon", "Scribd", "AMC Stubs A-List",
+                     "Acorns", "Maximus Gym", "YouTube Music", "Apple Music", "Discovery Education"] {
+            XCTAssertFalse(PausePlanSchedule.isEligible(sub(name, anchor: nil, category: "Entertainment")), name)
+        }
+        for name in ["Netflix", "HBO Max", "Max", "Disney+", "Hulu", "Amazon Prime Video", "Apple TV+", "Paramount+ with Showtime",
+                     "Peacock Premium", "ESPN+", "FuboTV", "AMC+", "Acorn TV", "Discovery+", "MGM+", "Crave", "Shahid", "U-NEXT"] {
+            XCTAssertTrue(PausePlanSchedule.isEligible(sub(name, anchor: nil, category: "Other")), name)
+        }
+    }
+
     func testRotatingThreeServicesSavesTwoThirds() {
         // 20 + 15 + 10 = 45 a month today; one at a time averages 15; 30 a month back = 360 a year.
         XCTAssertEqual(PausePlanSchedule.yearlySavings(monthlyCosts: [20, 15, 10]), 360)
@@ -129,5 +142,113 @@ final class PausePlanTests: XCTestCase {
         XCTAssertFalse(reminders.contains { rotating.contains($0.subscriptionId) && [.renewalHeadsUp, .renewalTomorrow, .renewalToday].contains($0.kind) })
         XCTAssertTrue(reminders.contains { $0.subscriptionId == spotify.id && $0.kind == .renewalTomorrow }, "others are unaffected")
         XCTAssertTrue(reminders.contains { $0.kind == .planCancel })
+    }
+
+    // MARK: - Starting a service again
+
+    private func renewals(from anchor: Date, after day: Date, count: Int = 4) -> [String] {
+        RenewalSchedule.upcomingRenewals(anchor: anchor, frequency: .monthly, onOrAfter: day, count: count, calendar: cal).map(ymd)
+    }
+
+    /// Restarted on the 31st, it renews on the last day of short months and on the 31st again after
+    /// them. Storing "a month after today" (28 February) made it renew on the 28th forever.
+    func testAServiceStartedOnThe31stKeepsRenewingOnThe31st() {
+        let restart = PausePlanSchedule.restartAnchor(startedOn: day(2027, 1, 31, hour: 20), frequency: .monthly, calendar: cal)
+        XCTAssertTrue(restart.isStartDay)
+        XCTAssertEqual(restart.anchor, day(2027, 1, 31))
+        XCTAssertEqual(renewals(from: restart.anchor, after: day(2027, 2, 1)),
+                       ["2027-02-28", "2027-03-31", "2027-04-30", "2027-05-31"])
+    }
+
+    /// On most days a month later is the same schedule, and it never shows the day just paid for as
+    /// a charge still to come.
+    func testOnMostDaysTheDateStoredIsTheFirstRenewal() {
+        let started = day(2026, 11, 11, hour: 8)
+        let restart = PausePlanSchedule.restartAnchor(startedOn: started, frequency: .monthly, calendar: cal)
+        XCTAssertFalse(restart.isStartDay)
+        XCTAssertEqual(restart.anchor, day(2026, 12, 11))
+        XCTAssertEqual(renewals(from: restart.anchor, after: started, count: 24),
+                       renewals(from: day(2026, 11, 11), after: day(2026, 11, 12), count: 24),
+                       "the same renewals as counting from the start day itself")
+    }
+
+    func testOtherBillingPeriodsFollowTheSameRule() {
+        let weekly = PausePlanSchedule.restartAnchor(startedOn: day(2026, 11, 11), frequency: .weekly, calendar: cal)
+        XCTAssertEqual(weekly.anchor, day(2026, 11, 18))
+        XCTAssertFalse(weekly.isStartDay)
+
+        let leapDay = PausePlanSchedule.restartAnchor(startedOn: day(2028, 2, 29), frequency: .yearly, calendar: cal)
+        XCTAssertEqual(leapDay.anchor, day(2028, 2, 29), "a year later would be 28 February every year, leap years too")
+        XCTAssertTrue(leapDay.isStartDay)
+
+        let yearly = PausePlanSchedule.restartAnchor(startedOn: day(2026, 11, 11), frequency: .yearly, calendar: cal)
+        XCTAssertEqual(yearly.anchor, day(2027, 11, 11))
+    }
+}
+
+/// "I started it" on the Pause Plan, through the real subscription list.
+@MainActor
+final class PausePlanStartTests: XCTestCase {
+
+    private let store = SubscriptionStore.shared
+    private var sandbox: StoreSandbox!
+    private var plans: PausePlanStore!
+    private var folder: URL!
+    private let cal = Calendar.current
+
+    override func setUp() async throws {
+        sandbox = StoreSandbox()
+        UserDefaults.standard.set(true, forKey: "debug_premium_override")
+        folder = FileManager.default.temporaryDirectory.appendingPathComponent("PausePlanStartTests-\(UUID().uuidString)")
+        try FileManager.default.createDirectory(at: folder, withIntermediateDirectories: true)
+        plans = PausePlanStore(fileURL: folder.appendingPathComponent("pause_plan.json"))
+    }
+
+    override func tearDown() async throws {
+        await sandbox.restore()
+        try? FileManager.default.removeItem(at: folder)
+    }
+
+    private func day(_ y: Int, _ m: Int, _ d: Int, hour: Int = 12) -> Date {
+        cal.date(from: DateComponents(year: y, month: m, day: d, hour: hour))!
+    }
+
+    private func cancelled(_ name: String, anchor: Date) async throws -> Subscription {
+        let sub = TestFactories.makeSubscription(name: name, status: .cancelled, nextBillingDate: anchor, category: "Entertainment")
+        _ = try await store.addSubscription(sub)
+        return sub
+    }
+
+    func testStartingACancelledServiceTurnsItOnWithItsFirstRenewalAMonthOn() async throws {
+        let sub = try await cancelled("Netflix", anchor: day(2026, 9, 3))
+        await plans.markStarted(sub, on: day(2026, 11, 11, hour: 9))
+        let now = try XCTUnwrap(store.subscriptions.first)
+        XCTAssertEqual(now.status, .active)
+        XCTAssertEqual(now.nextBillingDate, day(2026, 12, 11))
+        let kinds = LifecycleEventLog.shared.events.filter { $0.subscriptionId == sub.id }.map(\.kind)
+        XCTAssertEqual(kinds, [.added, .reactivated])
+    }
+
+    /// Started on the 31st, the date stored is that day, and that day is already decided: no
+    /// "keep it or cancel it?" and no reminder for a charge the person has just paid.
+    func testStartedOnThe31stTodayIsNotAskedAbout() async throws {
+        let sub = try await cancelled("Hulu", anchor: day(2026, 9, 3))
+        let startedAt = day(2027, 1, 31, hour: 9)
+        await plans.markStarted(sub, on: startedAt)
+        let now = try XCTUnwrap(store.subscriptions.first)
+        XCTAssertEqual(now.status, .active)
+        XCTAssertEqual(now.nextBillingDate, day(2027, 1, 31))
+        XCTAssertEqual(RenewalDecisions.pending(in: store.subscriptions, events: LifecycleEventLog.shared.events, now: startedAt), [])
+        let next = try XCTUnwrap(RenewalDecisions.pending(in: store.subscriptions, events: LifecycleEventLog.shared.events,
+                                                          now: day(2027, 2, 27)).first)
+        XCTAssertEqual(next.date, day(2027, 2, 28), "the next one is asked about as usual")
+    }
+
+    func testAServiceThatIsAlreadyOnKeepsItsDate() async throws {
+        let sub = TestFactories.makeSubscription(name: "Max", status: .active, nextBillingDate: day(2026, 11, 20), category: "Entertainment")
+        _ = try await store.addSubscription(sub)
+        await plans.markStarted(sub, on: day(2026, 11, 11))
+        XCTAssertEqual(store.subscriptions.first?.nextBillingDate, day(2026, 11, 20))
+        XCTAssertEqual(LifecycleEventLog.shared.events.filter { $0.subscriptionId == sub.id }.map(\.kind), [.added])
     }
 }

@@ -3,6 +3,7 @@ import XCTest
 
 /// Tests against real servers. Each is skipped unless its environment variable is set, so the regular
 /// suite stays offline. Run with TEST_RUNNER_<NAME>=… on the xcodebuild command line.
+@MainActor
 final class LiveMailboxTests: XCTestCase {
 
     private func environment(_ name: String) -> String? {
@@ -60,7 +61,11 @@ final class LiveMailboxTests: XCTestCase {
         XCTAssertNotNil(report.subscriptions.first { $0.name.contains("iCloud") }, "App Store receipts in HTML only")
         XCTAssertEqual(found["Disney+"]?.currency, "JPY", "Japanese ISO-2022-JP receipt")
         XCTAssertNil(found["Uber"])
-        XCTAssertFalse(report.subscriptions.contains { $0.name.lowercased().contains("amazon") }, "one-time order")
+        // The mailbox holds Amazon's one-time orders and, since the rig grew, an Amazon Prime
+        // membership beside them: the orders are nobody's subscription, the membership is one.
+        XCTAssertNil(found["Amazon"], "one-time orders")
+        XCTAssertFalse(report.subscriptions.contains { $0.name.lowercased().contains("amazon") && $0.name != "Amazon Prime" }, "one-time orders")
+        XCTAssertEqual(found["Amazon Prime"]?.amount, Decimal(string: "14.99"))
         XCTAssertFalse(report.subscriptions.contains { $0.name.lowercased().contains("promo") || $0.name.contains("Best Deals") })
 
         // A second scan only looks at mail that arrived since: here, nothing.
@@ -80,7 +85,8 @@ final class LiveMailboxTests: XCTestCase {
         }
         let scanner = InboxScanner.shared
         // Never touch inboxes someone connected for real; clear what earlier test runs left behind.
-        try XCTSkipIf(scanner.accounts.contains { !$0.address.hasSuffix(".test") }, "real inboxes are connected on this simulator")
+        try XCTSkipIf((scanner.accounts + MailboxAccountStore.all()).contains { !$0.address.hasSuffix(".test") },
+                      "real inboxes are connected on this simulator")
         await scanner.disconnectAll()
         let account = try await scanner.connectIMAP(address: spec[2], password: spec[3], preset: nil, host: spec[0], port: Int(spec[1]))
         defer { Task { @MainActor in await scanner.disconnect(account) } }
@@ -99,6 +105,16 @@ final class LiveMailboxTests: XCTestCase {
         print(text)
         if let path = environment("PAUSELY_REPORT_PATH") { try text.write(toFile: path, atomically: true, encoding: .utf8) }
         XCTAssertTrue(scanner.accountErrors.isEmpty, "\(scanner.accountErrors)")
+        // The rig's mailbox, through the app's own search and triage: the truth test reads every message
+        // directly and could not see Shahid's Arabic receipts dropped unread (2026-11-22). Nothing may be
+        // missed or invented; amounts and currencies are held by MailTruthTests.
+        if let dir = environment("PAUSELY_MAIL_TRUTH_DIR"), let report = scanner.report {
+            let truth = try MailTruth.load(URL(fileURLWithPath: dir).appendingPathComponent("truth.json"))
+            let score = truth.score(report)
+            print("APP SCAN vs truth: " + score.summary)
+            XCTAssertEqual(score.found, score.expected, score.summary)
+            XCTAssertEqual(score.falsePositives, [], score.summary)
+        }
         // PAUSELY_REAL_MAIL_EXPECT / _REJECT="Name A,Name B": what this mailbox must and must not show.
         let names = Set(scanner.report?.subscriptions.map(\.name) ?? [])
         func list(_ key: String) -> [String] { (environment(key) ?? "").split(separator: ",").map(String.init) }
@@ -119,6 +135,7 @@ final class LiveMailboxTests: XCTestCase {
 
     /// PAUSELY_REAL_MAIL_DIR=<folder of .eml files>. Prints what each message became and the final list,
     /// and writes it to PAUSELY_REPORT_PATH when set. Real mail stays outside the repository.
+    @MainActor
     func testRealMailDirectory() throws {
         guard let directory = environment("PAUSELY_REAL_MAIL_DIR").map({ URL(fileURLWithPath: $0) }) else {
             throw XCTSkip("set PAUSELY_REAL_MAIL_DIR")
@@ -128,7 +145,7 @@ final class LiveMailboxTests: XCTestCase {
             .sorted { $0.lastPathComponent < $1.lastPathComponent }
         try XCTSkipIf(files.isEmpty, "no .eml files")
 
-        let catalog = MerchantCatalog.builtin
+        let catalog = InboxScanner.buildCatalog()   // the app's own: built-in names plus the catalog's
         var lines: [String] = []
         var signals: [ReceiptSignal] = []
         for file in files {
@@ -138,14 +155,16 @@ final class LiveMailboxTests: XCTestCase {
                 lines.append("UNPARSED \(name)")
                 continue
             }
-            if let result = EmailSignalExtractor.extract(email, catalog: catalog) {
+            let results = EmailSignalExtractor.extractAll(email, catalog: catalog)
+            for result in results {
                 let s = result.signal
                 signals.append(s)
                 lines.append("SIGNAL \(name) \(s.senderDomain) | \(email.subject.prefix(50)) | hint=\(s.merchantHint ?? "-") kind=\(s.kind) "
                              + "amount=\(s.amount.map { "\($0)" } ?? "-") \(s.currency ?? "-") cadence=\(s.cadenceHint.map { "\($0)" } ?? "-") "
                              + "platform=\(s.platform) renewal=\(s.renewalLanguage) oneTime=\(s.oneTimeLanguage) promo=\(s.promotional) "
                              + "spoof=\(s.spoofSuspected ?? false)")
-            } else {
+            }
+            if results.isEmpty {
                 lines.append("DROPPED \(name) \(email.from.prefix(40)) | \(email.subject.prefix(50)) | text=\(email.bodyText.count) html=\(email.bodyHTML?.count ?? 0)")
             }
         }
@@ -224,6 +243,33 @@ final class LiveMailboxTests: XCTestCase {
         }
     }
 
+    // MARK: 2b. The facts a real scan saved, weighed again
+
+    /// PAUSELY_REAL_LEDGER=1. Runs the engine again on the receipt facts a real scan saved on this
+    /// simulator (no mail is read, nothing leaves the Mac) and prints each finding with its tier,
+    /// dates and reasons. Seconds instead of an eight-minute scan, so a fix is checked on real mail.
+    @MainActor
+    func testRealLedgerReport() throws {
+        try XCTSkipUnless(environment("PAUSELY_REAL_LEDGER") == "1", "set PAUSELY_REAL_LEDGER=1")
+        // PAUSELY_LEDGER_FILE reads a copy saved outside the app, which no test run can erase.
+        let ledger = environment("PAUSELY_LEDGER_FILE").map { ReceiptLedger.load(from: URL(fileURLWithPath: $0)) }
+            ?? ReceiptLedger.load()
+        try XCTSkipIf(ledger.isEmpty, "no saved receipt facts on this simulator")
+        let report = SubscriptionIntelligenceEngine(catalog: InboxScanner.buildCatalog())
+            .analyze(signals: ledger, now: Date(), defaultCurrency: CurrencyManager.shared.selectedCurrency)
+        let day: (Date?) -> String = { $0.map { $0.formatted(.iso8601.year().month().day()) } ?? "-" }
+        var lines = ["REAL LEDGER: \(ledger.count) facts, \(report.subscriptions.count) found"]
+        for sub in report.subscriptions {
+            lines.append("\(sub.name) | \(sub.amount) \(sub.currency) \(sub.frequency.rawValue) | \(sub.tier) \(sub.status) \(sub.score)"
+                         + " | last \(day(sub.lastChargeDate)) next \(day(sub.nextBillingDate))")
+            lines += sub.reasons.map { "    · \($0)" }
+        }
+        for insight in report.insights { lines.append("INSIGHT \(insight.title) — \(insight.detail ?? "")") }
+        let text = lines.joined(separator: "\n")
+        print(text)
+        if let path = environment("PAUSELY_REPORT_PATH") { try text.write(toFile: path, atomically: true, encoding: .utf8) }
+    }
+
     // MARK: 3. Real inboxes connected in the app on this simulator
 
     /// PAUSELY_REAL_ACCOUNTS=1. Scans every inbox connected in the app (Find in Email) and writes a report.
@@ -234,9 +280,14 @@ final class LiveMailboxTests: XCTestCase {
         try XCTSkipIf(scanner.accounts.isEmpty, "Connect inboxes in the app first")
         // Full scans: forget sync positions so every pass runs.
         for account in scanner.accounts { MailboxAccountStore.setCursor(nil, for: account.id) }
+        MailboxHTTP.diagnostics = .init()
+        let started = Date()
         await scanner.scanAll()
+        let took = Date().timeIntervalSince(started)
+        let http = MailboxHTTP.diagnostics
 
-        var lines = ["REAL INBOX SCAN \(Date())"]
+        var lines = ["REAL INBOX SCAN \(Date()): \(Int(took)) s; web requests \(http.requests), refused for speed \(http.rateLimited),"
+                     + " throttled \(http.throttled), waited \(Int(http.waited)) s"]
         for account in scanner.accounts {
             let stats = scanner.stats.perAccount[account.id]
             lines.append("\(account.providerName) \(account.address): candidates \(stats?.candidates ?? 0), checked \(stats?.checked ?? 0), read \(stats?.read ?? 0), receipts \(stats?.receipts ?? 0)"
@@ -244,6 +295,13 @@ final class LiveMailboxTests: XCTestCase {
         }
         for sub in scanner.report?.subscriptions ?? [] {
             lines.append("  \(sub.name) · \(sub.amount) \(sub.currency) · \(sub.frequency.rawValue) · \(sub.tier) · \(sub.status) · \(sub.evidence.count) receipts")
+        }
+        for (message, count) in http.refusals.sorted(by: { $0.value > $1.value }) { lines.append("  refused \(count)×: \(message)") }
+        let halves = (http.sentPerHalfMinute.keys.max() ?? -1)
+        if halves >= 0 {
+            lines.append("  per half minute (sent/refused): " + (0...halves).map {
+                "\(http.sentPerHalfMinute[$0] ?? 0)/\(http.refusedPerHalfMinute[$0] ?? 0)"
+            }.joined(separator: " "))
         }
         let text = lines.joined(separator: "\n")
         print(text)

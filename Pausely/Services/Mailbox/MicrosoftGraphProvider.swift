@@ -3,12 +3,27 @@ import Foundation
 /// Outlook.com, Hotmail, Live, MSN and Microsoft 365 through Microsoft Graph, read-only (`Mail.Read`).
 /// Search results come with sender, subject and date; whole messages are read as raw MIME (`$value`),
 /// so every provider goes through the same parser.
+@MainActor
 final class MicrosoftGraphProvider: MailboxProvider {
     let account: MailboxAccount
     private var cachedSummaries: [String: MessageSummary] = [:]
     private var excludedFolderIDs: Set<String> = []
 
     static let graph = URL(string: "https://graph.microsoft.com/v1.0")!
+
+    /// Graph throttles with 429 and Retry-After, which `MailboxHTTP` waits out; four reads at once
+    /// stays well inside its per-mailbox limit.
+    var parallelReads: Int { 4 }
+
+    /// Several whole messages at once (Graph's 429s are waited out).
+    func rawMessages(_ refs: [MessageRef]) async -> [MessageRef: Data] {
+        var out: [MessageRef: Data] = [:]
+        await withTaskGroup(of: (MessageRef, Data?).self) { group in
+            for ref in refs { group.addTask { (ref, try? await self.rawMessage(ref)) } }
+            for await (ref, raw) in group { if let raw { out[ref] = raw } }
+        }
+        return out
+    }
 
     init(account: MailboxAccount) {
         self.account = account

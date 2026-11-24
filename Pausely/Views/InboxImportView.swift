@@ -2,794 +2,670 @@
 //  InboxImportView.swift
 //  Pausely
 //
-//  Connect email inboxes (Gmail, Outlook, iCloud, Yahoo, AOL and any IMAP inbox), find subscriptions in
-//  their receipts on this iPhone, and import them.
+//  Find subscriptions in email: connect an inbox (Gmail, Outlook, iCloud, Yahoo, AOL or any IMAP inbox),
+//  watch the receipts being read on this iPhone, choose what to keep, and see exactly what was added.
 //
 
 import SwiftUI
 
 struct InboxImportView: View {
     @ObservedObject private var scanner = InboxScanner.shared
+    @ObservedObject private var store = SubscriptionStore.shared
+    @ObservedObject private var payments = PaymentManager.shared
     @Environment(\.dismiss) private var dismiss
-    @State private var selectedSubscriptions: Set<UUID> = []
-    @State private var importing = false
-    @State private var importResult: (added: Int, duplicates: Int)?
-    @State private var expandedIds: Set<UUID> = []
+    @Environment(\.dynamicTypeSize) private var typeSize
+    @State private var selected: Set<String> = []
+    @State private var expanded: Set<String> = []
     @State private var didPreselect = false
+    @State private var importing = false
+    @State private var outcome: TallyImporter.Outcome?
     @State private var imapPreset: IMAPPreset?
+    @State private var imapAddress = ""
     @State private var showingIMAP = false
     @State private var showingProviders = false
+    @State private var showingPaywall = false
+    /// The finding last hidden with "This isn't a subscription", until it is undone or another is hidden.
+    @State private var hidden: Hidden?
+    /// Where the page should scroll next ("top", or a row's "why").
+    @State private var scrollTarget: String?
+    /// A listed subscription as it was before the receipts' price or date was put on it, until undone.
+    @State private var listingBefore: Subscription?
+    /// The inbox just disconnected, said at the top until something else happens: the page went back to its
+    /// first state with nothing to confirm it (the rating of 2026-11-23).
+    @State private var disconnected: String?
+    /// A sender to add by hand, from the other senders or from a search that found nothing.
+    @State private var addingByHand: ByHand?
+    /// What "Done" after adding does when the page was opened from another sheet: the outcome names Home,
+    /// and "Done" from the catalog landed on the catalog (the rating of 2026-11-23).
+    private let onFinished: (() -> Void)?
+
+    init(onFinished: (() -> Void)? = nil) {
+        self.onFinished = onFinished
+    }
+
+    private struct ByHand: Identifiable {
+        let name: String
+        var id: String { name }
+    }
+
+    private struct Hidden {
+        let found: FoundSubscription
+        let previous: UserVerdict?
+        let wasSelected: Bool
+    }
 
     var body: some View {
         NavigationStack {
-            ZStack {
-                PremiumBackground()
-
-                ScrollView(showsIndicators: false) {
-                    VStack(spacing: 20) {
-                        if !scanner.hasAccounts {
-                            connectSection
-                        } else if scanner.isScanning {
-                            scanningSection
-                        } else if !scanner.foundSubscriptions.isEmpty {
-                            resultsSection
-                        } else if let result = importResult {
-                            importCompleteSection(result)
-                        } else {
-                            connectedSection
-                        }
+            ScrollViewReader { page in
+            ScrollView(showsIndicators: false) {
+                VStack(spacing: 24) {
+                    Color.clear.frame(height: 0).id("top")
+                    if let disconnected, outcome == nil, !scanner.isScanning {
+                        Label {
+                            Text(verbatim: L10n.string("\(AddressText.breakable(disconnected)) is disconnected."))
+                                .fixedSize(horizontal: false, vertical: true)
+                        } icon: { Image(systemName: "checkmark.circle") }
+                            .font(.subheadline)
+                            .foregroundStyle(Color.inkTextMuted)
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                            .accessibilityElement(children: .ignore)
+                            .accessibilityLabel(Text(verbatim: L10n.string("\(disconnected) is disconnected.")))
+                            .accessibilityIdentifier("disconnectedNote")
                     }
-                    .padding(.horizontal, 20)
-                    .padding(.top, 20)
-                    .padding(.bottom, 100)
+                    if let outcome {
+                        InboxOutcome(outcome: outcome, list: store.subscriptions,
+                                     onDone: { if let onFinished { onFinished() } else { dismiss() } },
+                                     onSeePro: { showingPaywall = true })
+                    } else if !scanner.hasAccounts {
+                        connectSection
+                    } else if scanner.isScanning {
+                        SearchingSection(scanner: scanner)
+                    } else if !scanner.foundSubscriptions.isEmpty {
+                        resultsSection
+                    } else {
+                        connectedSection
+                    }
                 }
+                .padding(.horizontal, Layout.margin)
+                .padding(.top, 12)
+                .padding(.bottom, 24)
             }
+            // The phone's reading width on iPad, its margins still scrolling the page (ReadableScroll).
+            .readableScroll()
+            // An opened "why" is brought into view (its last line was under the bar), and the page is back at
+            // its top when the last inbox goes (it opened scrolled, its heading cut off) (2026-11-22). At the
+            // largest text a "why" is taller than the screen: its row goes to the top instead, or the reader
+            // landed on its last charges (the reach rating of 2026-11-23).
+            .onChange(of: scrollTarget) { _, target in
+                guard let target else { return }
+                // An opened "why" moves only as far as it must to be seen: aligned to the bottom, a row that fitted
+                // jumped 203 points under the finger (the rating of 2026-11-23).
+                let top = target == "top" || target.hasPrefix("row-")
+                withAnimation(Motion.unlessReduced(Motion.arrive)) { page.scrollTo(target, anchor: top ? .top : nil) }
+                scrollTarget = nil
+            }
+            }
+            .background(Color.ink.ignoresSafeArea())
+            .safeAreaInset(edge: .bottom) { addBar }
             .navigationTitle("Find in Email")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .topBarLeading) {
                     Button("Close") { dismiss() }
-                        .foregroundStyle(Color.accentMint)
-                }
-                if scanner.hasAccounts && !scanner.isScanning {
-                    ToolbarItem(placement: .topBarTrailing) {
-                        Button { showingProviders = true } label: {
-                            Image(systemName: "plus.circle")
-                                .foregroundStyle(Color.obsidianTextSecondary)
-                        }
-                        .accessibilityLabel("Add another inbox")
-                    }
+                        .foregroundStyle(Color.inkText)
                 }
             }
             .sheet(isPresented: $showingIMAP) {
-                IMAPConnectView(preset: imapPreset)
+                IMAPConnectView(preset: imapPreset, startAddress: imapAddress)
+                    // On iPad a form sheet squeezed the steps and fields into a small box (B1).
+                    .presentationSizing(.page)
             }
             .sheet(isPresented: $showingProviders) {
-                NavigationStack {
-                    ScrollView {
-                        providerButtons
-                            .padding(20)
-                    }
-                    .background(PremiumBackground())
-                    .navigationTitle("Add an inbox")
-                    .navigationBarTitleDisplayMode(.inline)
-                    .toolbar {
-                        ToolbarItem(placement: .topBarLeading) {
-                            Button("Cancel") { showingProviders = false }.foregroundStyle(Color.accentMint)
-                        }
-                    }
-                }
-                .presentationDetents([.large])
+                ProviderSheet(onChoose: { showingProviders = false }, onAppPassword: openIMAP, onCancel: { showingProviders = false })
+            }
+            .sheet(isPresented: $showingPaywall) {
+                StoreKitUpgradeView()
+            }
+            .sheet(item: $addingByHand) { AddSubscriptionView(startName: $0.name) }
+        }
+        .onAppear { scanner.showSaved() }
+        // Only the person's own ticks are kept: the clearing a new search does is not a choice.
+        .onChange(of: selected) { _, now in if didPreselect, !scanner.isScanning { scanner.savedSelection = now } }
+        // On iPad a page, with the reading column inside it: from Home, the catalog and Profile it was a
+        // 580 by 640 box, and opened by itself it ran edge to edge (the reach rating of 2026-11-22).
+        .presentationSizing(.page)
+        // Connecting is the request to search: a new inbox is searched at once, without a second tap.
+        .onChange(of: scanner.accounts.count) { before, after in
+            // An Undo from before stays with what it was about: it sat over the next search and the first page.
+            hidden = nil
+            listingBefore = nil
+            if after == 0, before > 0 { scrollTarget = "top" }
+            if after > before { disconnected = nil }
+            guard after > before else { return }
+            outcome = nil
+            Task { await scanner.scanAll() }
+        }
+        .onChange(of: scanner.isScanning) { _, scanning in
+            if scanning { didPreselect = false; selected = []; expanded = []; hidden = nil; listingBefore = nil; disconnected = nil }
+            // A search that couldn't reach an inbox is said aloud as well as shown (VoiceOver users heard nothing).
+            if !scanning, let problem = scanner.accounts.lazy.compactMap({ scanner.accountErrors[$0.id] }).first {
+                AccessibilityNotification.Announcement(problem).post()
             }
         }
     }
 
-    // MARK: - Connect Section
+    // MARK: - Before any inbox is connected
 
+    /// What this does, what it never does, and which inbox.
     private var connectSection: some View {
-        VStack(spacing: 24) {
-            ZStack {
-                Circle()
-                    .fill(Color.accentMint.opacity(0.12))
-                    .frame(width: 100, height: 100)
-                Image(systemName: "envelope.open.fill")
-                    .font(.system(size: 40, weight: .semibold))
-                    .foregroundStyle(Color.accentMint)
-            }
-            .padding(.top, 24)
+        VStack(alignment: .leading, spacing: 0) {
+            Text("Find subscriptions in your email")
+                .font(.question(.title))
+                .foregroundStyle(Color.inkText)
+                .fixedSize(horizontal: false, vertical: true)
+                .accessibilityAddTraits(.isHeader)
+            Text("Pausely reads the receipts in your inbox and finds what you pay for, including trials and price changes.")
+                .font(.body)
+                .foregroundStyle(Color.inkTextMuted)
+                .fixedSize(horizontal: false, vertical: true)
+                .padding(.top, 10)
 
-            VStack(spacing: 8) {
-                Text("Find subscriptions in your email")
-                    .font(.system(.title3, design: .rounded).weight(.bold))
-                    .foregroundStyle(.white)
-                    .multilineTextAlignment(.center)
-                Text("Pausely reads the receipts in your inbox and finds what you pay for, including trials and price changes.")
-                    .font(.system(.subheadline, design: .rounded))
-                    .foregroundStyle(Color.obsidianTextSecondary)
-                    .multilineTextAlignment(.center)
-                    .lineSpacing(3)
+            // At the accessibility text sizes the inboxes come first: after the promise, the first one was
+            // five screens down (the reach rating of 2026-11-23). The promise follows them, before any sign-in.
+            if Self.inboxesFirst(largeText: typeSize.isAccessibilitySize) {
+                providerButtons.padding(.top, 16)
+                InboxPrivacyNote().padding(.top, 24)
+            } else {
+                InboxPrivacyNote().padding(.top, 24)
+                providerButtons.padding(.top, 16)
             }
-
-            privacyNotice
-            providerButtons
 
             if let error = scanner.error {
-                Text(error)
-                    .font(.system(.caption, design: .rounded))
-                    .foregroundStyle(Color.semanticDestructive)
-                    .multilineTextAlignment(.center)
+                ProblemLine(message: error, identifier: "inboxProblem")
+                    .padding(.top, 12)
             }
         }
-        .padding(24)
-        .surfaceCard(cornerRadius: 24)
+        .frame(maxWidth: .infinity, alignment: .leading)
     }
 
-    private var privacyNotice: some View {
-        VStack(alignment: .leading, spacing: 8) {
-            HStack(spacing: 10) {
-                Image(systemName: "lock.shield.fill")
-                    .font(.system(.caption, design: .rounded))
-                    .foregroundStyle(Color.accentMint)
-                Text("Your email never leaves your iPhone.")
-                    .font(.system(.caption, design: .rounded).weight(.semibold))
-                    .foregroundStyle(Color.accentMint)
-            }
-            Text("Pausely connects straight to your email provider with read-only access, reads receipts on this iPhone and keeps only the name, amount and date of each charge. It can't send, change or delete email.")
-                .font(.system(.caption, design: .rounded))
-                .foregroundStyle(Color.obsidianTextSecondary)
-                .lineSpacing(2)
-        }
-        .padding(12)
-        .background(
-            RoundedRectangle(cornerRadius: 12, style: .continuous)
-                .fill(Color.accentMint.opacity(0.06))
-                .overlay(RoundedRectangle(cornerRadius: 12, style: .continuous).stroke(Color.accentMint.opacity(0.15), lineWidth: 1))
-        )
-    }
-
+    /// The promise: it is the reason someone would let an app near their inbox. Each sentence is held
+    /// by a test (`InboxPrivacyTests`). It is set on ink between two hairlines, not on paper: paper
+    /// is for money decided or proven, and a promise is neither.
+    /// Which inbox: the same list here and in "Add an inbox".
     private var providerButtons: some View {
-        VStack(spacing: 10) {
-            if FeatureFlags.gmailImportEnabled && GmailMailboxProvider.isConfigured {
-                providerButton(Text(verbatim: "Gmail"), detail: Text("Sign in with Google"), icon: "envelope.fill", id: "connectGmail") {
-                    showingProviders = false
-                    Task { await scanner.connectGmail() }
-                }
-            }
-            if FeatureFlags.microsoftImportEnabled && MicrosoftGraphProvider.isConfigured {
-                providerButton(Text(verbatim: "Outlook, Hotmail, Live, MSN"), detail: Text("Sign in with Microsoft"), icon: "envelope.badge.fill", id: "connectMicrosoft") {
-                    showingProviders = false
-                    Task { await scanner.connectMicrosoft() }
-                }
-            }
-            if FeatureFlags.imapImportEnabled {
-                ForEach(["icloud", "yahoo", "aol", "gmail-imap"], id: \.self) { id in
-                    if let preset = IMAPPreset.find(id) {
-                        providerButton(Text(verbatim: preset.name), detail: Text("With an app password"), icon: "envelope", id: "connect-\(id)") {
-                            openIMAP(preset)
-                        }
-                    }
-                }
-                providerButton(Text("Other email"), detail: Text("GMX, WEB.DE, Zoho, Fastmail and more"), icon: "tray.full", id: "connect-other") {
-                    openIMAP(nil)
-                }
-            }
-        }
+        InboxProviderList(onChoose: { showingProviders = false }, onAppPassword: openIMAP)
     }
 
     private func openIMAP(_ preset: IMAPPreset?) {
         imapPreset = preset
+        imapAddress = ""
         showingProviders = false
         showingIMAP = true
     }
 
-    private func providerButton(_ title: Text, detail: Text, icon: String, id: String, action: @escaping () -> Void) -> some View {
-        Button {
-            HapticStyle.light.trigger()
-            action()
-        } label: {
-            HStack(spacing: 12) {
-                Image(systemName: icon)
-                    .font(.system(size: 16, weight: .semibold))
-                    .foregroundStyle(Color.accentMint)
-                    .frame(width: 28)
-                VStack(alignment: .leading, spacing: 2) {
-                    title
-                        .font(.system(.body, design: .rounded).weight(.semibold))
-                        .foregroundStyle(.white)
-                    detail
-                        .font(.system(.caption, design: .rounded))
-                        .foregroundStyle(Color.obsidianTextSecondary)
-                }
-                Spacer()
-                Image(systemName: "chevron.right")
-                    .font(.system(.caption).weight(.semibold))
-                    .foregroundStyle(Color.obsidianTextTertiary)
-            }
-            .padding(14)
-            .background(RoundedRectangle(cornerRadius: 14, style: .continuous).fill(Color.obsidianSurface))
-        }
-        .buttonStyle(PlainButtonStyle())
-        .accessibilityIdentifier(id)
-    }
-
-    // MARK: - Scanning Section
-
-    private var scanningSection: some View {
-        VStack(spacing: 20) {
-            ZStack {
-                Circle()
-                    .fill(Color.accentMint.opacity(0.12))
-                    .frame(width: 80, height: 80)
-                Image(systemName: "magnifyingglass")
-                    .font(.system(size: 30, weight: .semibold))
-                    .foregroundStyle(Color.accentMint)
-                    .symbolEffect(.pulse)
-            }
-
-            (scanner.statusLine.isEmpty ? Text("Scanning your email…") : Text(verbatim: scanner.statusLine))
-                .font(.system(.headline, design: .rounded))
-                .foregroundStyle(.white)
-                .multilineTextAlignment(.center)
-
-            ProgressView(value: scanner.progress)
-                .tint(Color.accentMint)
-                .padding(.horizontal, 40)
-
-            Text(scanner.progress, format: .percent.precision(.fractionLength(0)))
-                .font(.system(.caption, design: .rounded).monospacedDigit())
-                .foregroundStyle(Color.obsidianTextSecondary)
-
-            Button("Stop") { scanner.cancelScan() }
-                .font(.system(.subheadline, design: .rounded).weight(.semibold))
-                .foregroundStyle(Color.obsidianTextSecondary)
-        }
-        .padding(32)
-        .surfaceCard(cornerRadius: 24)
-    }
-
-    // MARK: - Connected Section (ready to scan)
+    // MARK: - Connected, nothing to show
 
     private var connectedSection: some View {
-        VStack(spacing: 16) {
-            ForEach(scanner.accounts) { account in
-                accountRow(account)
+        VStack(alignment: .leading, spacing: 20) {
+            // A heading of its own when no outcome is said: the page had none for VoiceOver to find.
+            if scanner.error == nil {
+                Text("Your inboxes")
+                    .font(.question(.title2))
+                    .foregroundStyle(Color.inkText)
+                    .accessibilityAddTraits(.isHeader)
+            }
+            if let message = scanner.error {
+                SearchOutcome(message: message, stats: scanner.stats, explains: scanner.accountErrors.isEmpty)
             }
 
-            Button {
-                HapticStyle.medium.trigger()
-                Task { await scanner.scanAll() }
-            } label: {
-                HStack(spacing: 10) {
-                    Image(systemName: "magnifyingglass")
-                        .font(.system(size: 16, weight: .semibold))
-                    (scanner.accounts.count == 1 ? Text("Find subscriptions") : Text("Search \(scanner.accounts.count) inboxes"))
-                        .font(.system(.body, design: .rounded).weight(.semibold))
-                }
-                .foregroundStyle(Color.black)
-                .frame(maxWidth: .infinity)
-                .frame(height: 52)
-                .background(RoundedRectangle(cornerRadius: 16, style: .continuous).fill(Color.accentMint))
+            // At the accessibility text sizes what to do comes before the inboxes: after them it was a screen
+            // and a half down (the reach rating of 2026-11-23).
+            if !typeSize.isAccessibilitySize { inboxRows(showsAdd: !offersAnotherInbox) }
+            connectedActions
+            if typeSize.isAccessibilitySize { inboxRows(showsAdd: !offersAnotherInbox) }
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+    }
+
+    /// What to do next with the inboxes connected and nothing on screen to add.
+    @ViewBuilder
+    private var connectedActions: some View {
+        // An inbox that lost its access is reconnected first: searching again repeats the failure.
+        if let failed = scanner.accounts.first(where: { scanner.accountErrors[$0.id] != nil }) {
+            // The address breaks only after "@", "." and "-": at the largest size it broke mid-word,
+            // with a hyphen that isn't in it (the reach rating of 2026-11-22).
+            Button { reconnect(failed) } label: { Text(verbatim: L10n.string("Reconnect \(AddressText.breakable(failed.address))")) }
+                .buttonStyle(.ink)
+                // Read with the plain address: the break marks between its letters went to VoiceOver too.
+                .accessibilityLabel(Text(verbatim: L10n.string("Reconnect \(failed.address)")))
+                .accessibilityIdentifier("reconnectButton")
+            Button(action: { Task { await scanner.scanAll() } }) { Text("Search again") }
+                .buttonStyle(.ink(.quiet))
+                .accessibilityIdentifier("scanInboxesButton")
+        } else if offersAnotherInbox {
+            // Nothing found in what was searched: the way forward is another inbox, or the list by hand,
+            // which the words above say; searching the same mail again finds the same nothing (the
+            // ratings of 2026-11-22 and 11-23).
+            Button(action: { showingProviders = true }) { Text("Add another inbox") }
+                .buttonStyle(.ink)
+                .accessibilityIdentifier("addInboxMainButton")
+            Button(action: { Task { await scanner.scanAll() } }) { Text("Search again") }
+                .buttonStyle(.ink(.quiet))
+                .accessibilityIdentifier("scanInboxesButton")
+            Button(action: { addingByHand = ByHand(name: "") }) {
+                Text("Add a subscription by hand")
+                    .font(.subheadline.weight(.semibold))
+                    .foregroundStyle(Color.inkText)
+                    .tapArea(.leading)
             }
-            .buttonStyle(PlainButtonStyle())
+            .buttonStyle(.plain)
+            .accessibilityIdentifier("addByHandButton")
+        } else {
+            Button(action: { Task { await scanner.scanAll() } }) {
+                scanner.accounts.contains { $0.lastScan != nil } ? Text("Search again") : Text("Find subscriptions")
+            }
+            .buttonStyle(.ink)
             .accessibilityIdentifier("scanInboxesButton")
-
-            if let error = scanner.error {
-                Text(error)
-                    .font(.system(.caption, design: .rounded))
-                    .foregroundStyle(Color.obsidianTextSecondary)
-                    .multilineTextAlignment(.center)
-            }
-            privacyNotice
         }
     }
 
-    private func accountRow(_ account: MailboxAccount) -> some View {
-        HStack(spacing: 12) {
-            Image(systemName: scanner.accountErrors[account.id] == nil ? "checkmark.circle.fill" : "exclamationmark.triangle.fill")
-                .font(.system(.title3))
-                .foregroundStyle(scanner.accountErrors[account.id] == nil ? Color.green : Color.semanticWarning)
-            VStack(alignment: .leading, spacing: 2) {
-                Text(account.address)
-                    .font(.system(.subheadline, design: .rounded).weight(.semibold))
-                    .foregroundStyle(.white)
-                    .lineLimit(1)
-                Text(accountDetail(account))
-                    .font(.system(.caption, design: .rounded))
-                    .foregroundStyle(Color.obsidianTextSecondary)
-                    .lineLimit(2)
-            }
-            Spacer()
-            Menu {
-                Button(role: .destructive) {
-                    Task { await scanner.disconnect(account) }
-                } label: {
-                    Label("Disconnect", systemImage: "xmark.circle")
-                }
-                .accessibilityIdentifier("disconnectInbox")
-            } label: {
-                Image(systemName: "ellipsis.circle")
-                    .font(.system(.title3))
-                    .foregroundStyle(Color.obsidianTextSecondary)
-                    .frame(minWidth: 44, minHeight: 44)
-                    .contentShape(Rectangle())
-            }
-            .accessibilityLabel("Options for \(account.address)")
-            .accessibilityIdentifier("inboxOptions")
+    /// Whether the kinds of inbox come before the privacy promise on the first page: at the accessibility
+    /// text sizes, where the promise alone is several screens.
+    nonisolated static func inboxesFirst(largeText: Bool) -> Bool { largeText }
+
+    /// Signs in again where it can; an app-password inbox gets its page with the address filled in.
+    private func reconnect(_ account: MailboxAccount) {
+        if account.kind == .imap {
+            imapPreset = account.presetID.flatMap(IMAPPreset.find)
+            imapAddress = account.address
+            showingIMAP = true
+        } else {
+            Task { await scanner.reconnect(account) }
         }
-        .padding(16)
-        .surfaceCard(cornerRadius: 16)
     }
 
-    private func accountDetail(_ account: MailboxAccount) -> String {
-        if let error = scanner.accountErrors[account.id] { return error }
-        if let stats = scanner.stats.perAccount[account.id] {
-            return L10n.string("\(account.providerName) · checked \(stats.checked), read \(stats.read)")
-        }
-        if let last = account.lastScan {
-            return L10n.string("\(account.providerName) · searched \(last.formatted(.relative(presentation: .named).locale(L10n.locale)))")
-        }
-        return account.providerName
+    /// Each connected inbox with its menu, then the way to add another (left out where the page's main button
+    /// is that: "Add another inbox" was there twice, one above the other, the ratings of 2026-11-23).
+    private func inboxRows(showsAdd: Bool = true) -> some View {
+        InboxRows(scanner: scanner, showsAdd: showsAdd, onReconnect: reconnect, onAdd: { showingProviders = true },
+                  onDisconnected: { address in
+                      disconnected = address
+                      AccessibilityNotification.Announcement(L10n.string("\(address) is disconnected.")).post()
+                  })
     }
 
-    // MARK: - Results Section
+    /// The search found nothing in the inboxes it read: the way forward is another inbox.
+    private var offersAnotherInbox: Bool {
+        !scanner.accounts.contains { scanner.accountErrors[$0.id] != nil }
+            && scanner.accounts.contains { $0.lastScan != nil } && !scanner.stats.stopped
+    }
 
-    private func isLive(_ sub: SmartImportManager.ImportSubscription) -> Bool {
-        guard let status = sub.proven?.status else { return true }
-        return status != .likelyEnded && status != .cancelled
+    // MARK: - Results
+
+    private var live: [FoundSubscription] { scanner.foundSubscriptions.filter(\.isLive) }
+    private var chosen: [FoundSubscription] {
+        scanner.foundSubscriptions.filter { selected.contains($0.id) && !$0.isCancelled && !isOnList($0) && !isWaiting($0) }
     }
 
     private var resultsSection: some View {
-        let subs = scanner.foundSubscriptions
-        let confirmed = subs.filter { $0.proven?.tier == .confirmed && isLive($0) }
-        let worthALook = subs.filter { $0.proven?.tier != .confirmed && isLive($0) }
-        let ended = subs.filter { !isLive($0) }
+        let confirmed = live.filter { $0.proven.tier == .confirmed }
+        let worthALook = live.filter { $0.proven.tier != .confirmed }
+        let ended = scanner.foundSubscriptions.filter { $0.proven.status == .likelyEnded }
+        let cancelled = scanner.foundSubscriptions.filter(\.isCancelled)
 
-        return VStack(spacing: 20) {
-            summaryCard(count: confirmed.count + worthALook.count)
-            insightsCard
+        return VStack(spacing: 28) {
+            // A search that couldn't read an inbox says so above what is shown: it returned to "We found 20"
+            // with the failure only in the inbox's row, 3,900 points down (the reach rating of 2026-11-23).
+            if let failed = scanner.accounts.first(where: { scanner.accountErrors[$0.id] != nil }),
+               let problem = scanner.accountErrors[failed.id] {
+                VStack(alignment: .leading, spacing: 4) {
+                    ProblemLine(message: L10n.string("\(failed.address) couldn't be searched: \(problem) What's below is from earlier searches."),
+                                identifier: "searchFailedNote")
+                    Button { reconnect(failed) } label: {
+                        Text("Reconnect")
+                            .font(.subheadline.weight(.semibold))
+                            .foregroundStyle(Color.inkText)
+                            .tapArea(.leading)
+                    }
+                    .buttonStyle(.plain)
+                    .accessibilityLabel(Text(verbatim: L10n.string("Reconnect \(failed.address)")))
+                }
+            }
+            summary(count: live.count)
+            // At the accessibility text sizes what was found comes first: under the insights, the first row
+            // was 4,900 points down (the reach rating of 2026-11-23).
+            if !typeSize.isAccessibilitySize { insights }
             if !confirmed.isEmpty {
-                listSection(title: "Confirmed", subtitle: "Proven by repeat charges", items: confirmed)
+                listSection(title: "Confirmed", subtitle: "Your receipts show these renew", items: confirmed)
             }
             if !worthALook.isEmpty {
-                listSection(title: "Worth a look", subtitle: "Check these before importing", items: worthALook)
+                listSection(title: "Worth a look", subtitle: "Check these before adding them", items: worthALook)
             }
             if !ended.isEmpty {
-                listSection(title: "May have ended", subtitle: "No recent charges found", items: ended)
+                listSection(title: "May have ended", subtitle: "No recent charge in this inbox", items: ended)
             }
-            importButton
+            if !cancelled.isEmpty {
+                listSection(title: "Cancelled", subtitle: "A cancellation email followed the last charge", items: cancelled)
+            }
+            if typeSize.isAccessibilitySize { insights }
+            if !scanner.hiddenFindings.isEmpty {
+                HiddenList(findings: scanner.hiddenFindings) { found in
+                    withAnimation(Motion.unlessReduced(Motion.arrive)) {
+                        scanner.undoNotSubscription(found, previous: nil)
+                        if hidden?.found.id == found.id { hidden = nil }
+                        // Shown again, it is a subscription after all: it came back unticked (2026-11-23).
+                        if found.isLive, !isOnList(found), !isWaiting(found) { selected.insert(found.id) }
+                    }
+                }
+            }
+            // The inboxes stay in reach under what they found: the results page had no way to disconnect,
+            // add another inbox or search again (2026-11-22).
+            VStack(alignment: .leading, spacing: 6) {
+                Text("Your inboxes")
+                    .font(.headline)
+                    .foregroundStyle(Color.inkText)
+                    .accessibilityAddTraits(.isHeader)
+                inboxRows()
+                if !scanner.stats.stopped { searchAgainButton.padding(.top, 8) }
+            }
         }
         .onAppear(perform: preselectConfirmed)
+    }
+
+    private var searchAgainButton: some View {
+        Button(action: { Task { await scanner.scanAll() } }) { Text("Search again") }
+            .buttonStyle(.ink(.quiet))
+            .accessibilityIdentifier("scanInboxesButton")
     }
 
     private func preselectConfirmed() {
         guard !didPreselect else { return }
         didPreselect = true
-        selectedSubscriptions = Set(scanner.foundSubscriptions
-            .filter { $0.proven?.tier == .confirmed && isLive($0) }
-            .map(\.id))
+        if let saved = scanner.savedSelection { selected = saved; return }
+        selected = Set(live.filter { $0.proven.tier == .confirmed && !isOnList($0) && !isWaiting($0) }.map(\.id))
     }
 
-    private func summaryCard(count: Int) -> some View {
-        let report = scanner.report
-        // In the display currency: a mailbox can have receipts in several currencies.
+    /// Already in the person's list, by the importer's own rule (the same name, any case).
+    private func isOnList(_ found: FoundSubscription) -> Bool {
+        store.subscriptions.contains { ServiceName.same($0.name, found.name) }
+    }
+
+    private var insights: some View {
+        FoundInsights(insights: Array((scanner.report?.insights ?? []).prefix(4)))
+    }
+
+    /// What the search found: the total first, then how it was worked out.
+    private func summary(count: Int) -> some View {
         let currency = CurrencyManager.shared.selectedCurrency
-        let monthly = report?.monthlyTotal(in: currency) ?? 0
-        let annual = monthly * 12
+        // The total follows the ticks and says so: it counted rows nobody ticked and changed after adding
+        // (the ratings of 2026-11-22). With nothing ticked it is everything found that isn't listed yet.
+        let picked = chosen
+        let base = picked.isEmpty ? live.filter { !isOnList($0) } : picked
+        let (monthly, converted) = Self.slipTotal(base, in: currency, rates: CurrencyManager.shared.rates)
         let ignored = scanner.stats.purchasesIgnored
+        let stats = scanner.stats
 
-        return VStack(alignment: .leading, spacing: 10) {
-            Text("We found \(count) subscriptions")
-                .font(.system(.headline, design: .rounded))
-                .foregroundStyle(.white)
-            HStack(alignment: .firstTextBaseline, spacing: 8) {
-                Text(InboxImportView.money(monthly, currency))
-                    .font(.system(.largeTitle, design: .rounded).weight(.black))
-                    .foregroundStyle(Color.accentMint)
-                Text("per month")
-                    .font(.system(.subheadline, design: .rounded))
-                    .foregroundStyle(Color.obsidianTextSecondary)
-            }
-            Text("\(InboxImportView.money(annual, currency)) a year")
-                .font(.system(.footnote, design: .rounded))
-                .foregroundStyle(Color.obsidianTextSecondary)
-            if ignored > 0 {
-                Label("Ignored \(ignored) one-time purchases so your list stays clean", systemImage: "line.3.horizontal.decrease.circle")
-                    .font(.system(.caption, design: .rounded))
-                    .foregroundStyle(Color.obsidianTextTertiary)
-            }
-            if scanner.stats.emailsChecked > 0 {
-                let stats = scanner.stats
-                Label("Emails checked: \(stats.emailsChecked) · read in full: \(stats.bodiesRead) · all on your phone", systemImage: "lock.shield")
-                    .font(.system(.caption, design: .rounded))
-                    .foregroundStyle(Color.obsidianTextTertiary)
-                if stats.aiAssisted > 0 {
-                    Label("On-device AI helped with \(stats.aiAssisted) tricky receipts", systemImage: "sparkles")
-                        .font(.system(.caption, design: .rounded))
-                        .foregroundStyle(Color.obsidianTextTertiary)
-                }
-            }
-        }
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .padding(18)
-        .background(RoundedRectangle(cornerRadius: 16, style: .continuous).fill(Color.obsidianSurface))
-        .accessibilityElement(children: .combine)
-    }
-
-    @ViewBuilder
-    private var insightsCard: some View {
-        let insights = Array((scanner.report?.insights ?? []).prefix(4))
-        if !insights.isEmpty {
-            VStack(alignment: .leading, spacing: 12) {
-                Text("Worth knowing")
-                    .font(.system(.subheadline, design: .rounded).weight(.semibold))
-                    .foregroundStyle(.white)
-                ForEach(insights) { insight in
-                    HStack(alignment: .top, spacing: 12) {
-                        Image(systemName: icon(for: insight.kind))
-                            .font(.system(size: 15, weight: .semibold))
-                            .foregroundStyle(color(for: insight.kind))
-                            .frame(width: 22)
-                            .accessibilityHidden(true)
-                        VStack(alignment: .leading, spacing: 2) {
-                            Text(insight.title)
-                                .font(.system(.footnote, design: .rounded).weight(.semibold))
-                                .foregroundStyle(.white)
-                            Text(insight.detail)
-                                .font(.system(.caption, design: .rounded))
-                                .foregroundStyle(Color.obsidianTextSecondary)
-                                .fixedSize(horizontal: false, vertical: true)
-                        }
-                    }
-                    .accessibilityElement(children: .combine)
-                }
-            }
-            .frame(maxWidth: .infinity, alignment: .leading)
-            .padding(18)
-            .background(RoundedRectangle(cornerRadius: 16, style: .continuous).fill(Color.obsidianSurface))
-        }
-    }
-
-    private func icon(for kind: IntelligenceInsight.Kind) -> String {
-        switch kind {
-        case .priceIncrease, .priceChangeNotice: return "arrow.up.right.circle.fill"
-        case .trialEnding: return "hourglass"
-        case .renewalSoon: return "calendar.badge.clock"
-        case .likelyEnded: return "questionmark.circle.fill"
-        case .chargedAfterCancel: return "exclamationmark.triangle.fill"
-        case .paymentFailed: return "creditcard.trianglebadge.exclamationmark"
-        }
-    }
-
-    private func color(for kind: IntelligenceInsight.Kind) -> Color {
-        switch kind {
-        case .chargedAfterCancel, .paymentFailed: return .red
-        case .priceIncrease, .priceChangeNotice, .trialEnding, .renewalSoon: return .orange
-        case .likelyEnded: return Color.obsidianTextSecondary
-        }
-    }
-
-    private func listSection(title: LocalizedStringKey, subtitle: LocalizedStringKey, items: [SmartImportManager.ImportSubscription]) -> some View {
-        VStack(alignment: .leading, spacing: 10) {
-            HStack(alignment: .firstTextBaseline) {
-                VStack(alignment: .leading, spacing: 2) {
-                    Text(title)
-                        .font(.system(.headline, design: .rounded))
-                        .foregroundStyle(.white)
-                    Text(subtitle)
-                        .font(.system(.caption, design: .rounded))
-                        .foregroundStyle(Color.obsidianTextSecondary)
-                }
-                Spacer()
-                let allSelected = items.allSatisfy { selectedSubscriptions.contains($0.id) }
-                Button {
-                    if allSelected {
-                        items.forEach { selectedSubscriptions.remove($0.id) }
-                    } else {
-                        items.forEach { selectedSubscriptions.insert($0.id) }
-                    }
-                } label: {
-                    allSelected ? Text("Deselect all") : Text("Select all")
-                }
-                .font(.system(.caption, design: .rounded).weight(.semibold))
-                .foregroundStyle(Color.accentMint)
-            }
-
-            VStack(spacing: 1) {
-                ForEach(items) { sub in
-                    GmailSubscriptionRow(
-                        subscription: sub,
-                        isSelected: selectedSubscriptions.contains(sub.id),
-                        isExpanded: expandedIds.contains(sub.id),
-                        onToggle: {
-                            if selectedSubscriptions.contains(sub.id) {
-                                selectedSubscriptions.remove(sub.id)
-                            } else {
-                                selectedSubscriptions.insert(sub.id)
-                            }
-                        },
-                        onExpand: {
-                            withAnimation(.easeInOut(duration: 0.2)) {
-                                if expandedIds.contains(sub.id) { expandedIds.remove(sub.id) } else { expandedIds.insert(sub.id) }
-                            }
-                        },
-                        onReject: {
-                            HapticStyle.medium.trigger()
-                            selectedSubscriptions.remove(sub.id)
-                            withAnimation(.easeInOut(duration: 0.25)) { scanner.markNotSubscription(sub) }
-                        }
-                    )
-                }
-            }
-            .background(RoundedRectangle(cornerRadius: 16, style: .continuous).fill(Color.obsidianSurface))
-        }
-    }
-
-    @ViewBuilder
-    private var importButton: some View {
-        if !selectedSubscriptions.isEmpty {
-            Button {
-                HapticStyle.medium.trigger()
-                Task { await importSelected() }
-            } label: {
-                HStack(spacing: 8) {
-                    if importing {
-                        ProgressView().tint(.black)
-                    } else {
-                        Image(systemName: "square.and.arrow.down")
-                            .font(.system(size: 15, weight: .semibold))
-                    }
-                    Text("Import \(selectedSubscriptions.count) subscriptions")
-                        .font(.system(.body, design: .rounded).weight(.semibold))
-                }
-                .foregroundStyle(Color.black)
-                .frame(maxWidth: .infinity)
-                .frame(height: 52)
-                .background(RoundedRectangle(cornerRadius: 16, style: .continuous).fill(Color.accentMint))
-            }
-            .buttonStyle(PlainButtonStyle())
-            .disabled(importing)
-            .accessibilityIdentifier("importSelectedButton")
-        }
-    }
-
-    static func money(_ amount: Decimal, _ currency: String) -> String {
-        MoneyFormat.string(amount, currency)
-    }
-
-    // MARK: - Import Complete
-
-    private func importCompleteSection(_ result: (added: Int, duplicates: Int)) -> some View {
-        VStack(spacing: 20) {
-            ZStack {
-                Circle()
-                    .fill(Color.green.opacity(0.12))
-                    .frame(width: 80, height: 80)
-                Image(systemName: "checkmark.circle.fill")
-                    .font(.system(size: 36))
-                    .foregroundStyle(.green)
-            }
-
-            Text("Import complete")
-                .font(.system(.title3, design: .rounded).weight(.bold))
-                .foregroundStyle(.white)
-
-            VStack(spacing: 6) {
-                if result.added > 0 {
-                    Text("\(result.added) subscriptions added")
-                        .font(.system(.subheadline, design: .rounded))
-                        .foregroundStyle(Color.accentMint)
-                }
-                if result.duplicates > 0 {
-                    Text("\(result.duplicates) already tracked (skipped)")
-                        .font(.system(.caption, design: .rounded))
-                        .foregroundStyle(Color.obsidianTextSecondary)
-                }
-            }
-
-            Button {
-                dismiss()
-            } label: {
-                Text("Done")
-                    .font(.system(.body, design: .rounded).weight(.semibold))
-                    .foregroundStyle(Color.black)
-                    .frame(maxWidth: .infinity)
-                    .frame(height: 48)
-                    .background(
-                        RoundedRectangle(cornerRadius: 14, style: .continuous)
-                            .fill(Color.accentMint)
-                    )
-            }
-            .buttonStyle(PlainButtonStyle())
-            .accessibilityIdentifier("importDoneButton")
-        }
-        .padding(24)
-        .surfaceCard(cornerRadius: 24)
-    }
-
-    // MARK: - Actions
-
-    private func importSelected() async {
-        importing = true
-        let selected = scanner.foundSubscriptions.filter { selectedSubscriptions.contains($0.id) }
-        let result = await scanner.importSubscriptions(selected)
-        importResult = result
-        scanner.foundSubscriptions = []
-        didPreselect = false
-        expandedIds = []
-        importing = false
-        HapticStyle.success.trigger()
-    }
-}
-
-// MARK: - Subscription Row
-
-private struct GmailSubscriptionRow: View {
-    let subscription: SmartImportManager.ImportSubscription
-    let isSelected: Bool
-    let isExpanded: Bool
-    let onToggle: () -> Void
-    let onExpand: () -> Void
-    let onReject: () -> Void
-
-    private var proven: ProvenSubscription? { subscription.proven }
-
-    private var frequencySuffix: String { subscription.billingFrequency.shortDisplay }
-
-    private var statusBadge: (text: String, color: Color)? {
-        switch proven?.status {
-        case .priceIncreased: return (L10n.string("Price went up"), .orange)
-        case .trial: return (L10n.string("Free trial"), Color.accentMint)
-        case .likelyEnded: return (L10n.string("May have ended"), Color.obsidianTextSecondary)
-        case .cancelled: return (L10n.string("Cancelled"), Color.obsidianTextSecondary)
-        default:
-            return proven?.chargedAfterCancel == true ? (L10n.string("Charged after cancelling"), .red) : nil
-        }
-    }
-
-    private var evidenceLine: String {
-        guard let proven else { return subscription.source }
-        let day: (Date) -> String = { $0.formatted(.dateTime.month(.abbreviated).day().locale(L10n.locale)) }
-        if proven.status == .trial, let ends = proven.trialEndsOn { return L10n.string("Trial ends \(day(ends))") }
-        let count = proven.evidence.count
-        if let last = proven.lastChargeDate.map(day) {
-            return count > 1 ? L10n.string("Charged \(count)× · last \(last)") : L10n.string("Charged once · \(last)")
-        }
-        return L10n.string("Detected from your emails")
-    }
-
-    private var accessibilitySummary: String {
-        var parts = [subscription.name, InboxImportView.money(subscription.amount, subscription.currency) + " " + subscription.billingFrequency.billingPeriodLabel, evidenceLine]
-        if let badge = statusBadge { parts.append(badge.text) }
-        parts.append(isSelected ? L10n.string("selected") : L10n.string("not selected"))
-        return parts.joined(separator: ", ")
-    }
-
-    var body: some View {
-        VStack(spacing: 0) {
-            HStack(spacing: 12) {
-                Button(action: onToggle) {
-                    HStack(spacing: 14) {
-                        checkbox
-                        ServiceLogoView(name: subscription.name, category: nil, size: 36)
-
-                        VStack(alignment: .leading, spacing: 3) {
-                            Text(subscription.name)
-                                .font(.system(.subheadline, design: .rounded).weight(.semibold))
-                                .foregroundStyle(.white)
-                                .lineLimit(1)
-                            Text(evidenceLine)
-                                .font(.system(.caption2, design: .rounded))
-                                .foregroundStyle(Color.obsidianTextTertiary)
-                                .lineLimit(2)
-                                .fixedSize(horizontal: false, vertical: true)
-                            if let badge = statusBadge {
-                                Text(badge.text)
-                                    .font(.system(.caption2, design: .rounded).weight(.semibold))
-                                    .foregroundStyle(badge.color)
-                            }
-                        }
-
-                        Spacer(minLength: 8)
-
-                        VStack(alignment: .trailing, spacing: 1) {
-                            Text(InboxImportView.money(subscription.amount, subscription.currency))
-                                .font(.system(.subheadline, design: .rounded).weight(.bold))
-                                .foregroundStyle(Color.accentMint)
-                            Text(frequencySuffix)
-                                .font(.system(.caption2, design: .rounded))
-                                .foregroundStyle(Color.obsidianTextTertiary)
-                        }
-                    }
-                }
-                .buttonStyle(PlainButtonStyle())
-                .accessibilityElement(children: .ignore)
-                .accessibilityLabel(accessibilitySummary)
-                .accessibilityHint("Double tap to select or deselect for import")
-                .accessibilityAddTraits(isSelected ? [.isButton, .isSelected] : .isButton)
-
-                if proven != nil {
-                    Button(action: onExpand) {
-                        Image(systemName: isExpanded ? "chevron.up" : "chevron.down")
-                            .font(.system(size: 12, weight: .semibold))
-                            .foregroundStyle(Color.obsidianTextTertiary)
-                            .frame(width: 32, height: 44)
-                    }
-                    .buttonStyle(PlainButtonStyle())
-                    .accessibilityLabel(isExpanded ? Text("Hide why") : Text("Show why we think this is a subscription"))
-                }
-            }
-            .padding(.leading, 14)
-            .padding(.trailing, 6)
-            .padding(.vertical, 12)
-
-            if isExpanded, let proven {
-                evidenceDetail(proven)
-            }
-        }
-    }
-
-    private var checkbox: some View {
-        ZStack {
-            RoundedRectangle(cornerRadius: 6, style: .continuous)
-                .fill(isSelected ? Color.accentMint : Color.clear)
-                .overlay(
-                    RoundedRectangle(cornerRadius: 6, style: .continuous)
-                        .stroke(isSelected ? Color.clear : Color.obsidianTextTertiary, lineWidth: 1.5)
-                )
-                .frame(width: 22, height: 22)
-            if isSelected {
-                Image(systemName: "checkmark")
-                    .font(.system(size: 11, weight: .bold))
-                    .foregroundStyle(.black)
-            }
-        }
-    }
-
-    private func evidenceDetail(_ proven: ProvenSubscription) -> some View {
-        VStack(alignment: .leading, spacing: 10) {
-            Text("Why we think so")
-                .font(.system(.caption, design: .rounded).weight(.semibold))
-                .foregroundStyle(.white)
-            ForEach(Array(proven.reasons.enumerated()), id: \.offset) { _, reason in
-                HStack(alignment: .top, spacing: 8) {
-                    Image(systemName: "checkmark.circle.fill")
-                        .font(.system(size: 11))
-                        .foregroundStyle(Color.accentMint)
-                        .padding(.top, 2)
-                        .accessibilityHidden(true)
-                    Text(reason)
-                        .font(.system(.caption, design: .rounded))
-                        .foregroundStyle(Color.obsidianTextSecondary)
+        return VStack(alignment: .leading, spacing: 16) {
+            VStack(alignment: .leading, spacing: 6) {
+                Text("We found \(count) subscriptions")
+                    .font(.question(.title))
+                    .foregroundStyle(Color.inkText)
+                    .fixedSize(horizontal: false, vertical: true)
+                    .accessibilityAddTraits(.isHeader)
+                // The count is what still charges; the rest are said, not left to be counted against it ("We
+                // found 20" stood over 22 rows, the rating of 2026-11-23).
+                let over = scanner.foundSubscriptions.count - count
+                if over > 0 {
+                    Text("And \(over) that ended or were cancelled, at the end of the list.")
+                        .font(.subheadline)
+                        .foregroundStyle(Color.inkTextMuted)
                         .fixedSize(horizontal: false, vertical: true)
                 }
             }
-            if !proven.evidence.isEmpty {
-                Divider().overlay(Color.obsidianTextTertiary.opacity(0.3))
-                ForEach(proven.evidence.suffix(5).reversed()) { charge in
-                    HStack {
-                        Text(charge.date, format: .dateTime.month(.abbreviated).day().year())
-                            .font(.system(.caption2, design: .rounded))
-                            .foregroundStyle(Color.obsidianTextTertiary)
-                        Spacer()
-                        Text(InboxImportView.money(charge.amount, charge.currency))
-                            .font(.system(.caption2, design: .rounded).weight(.semibold))
-                            .foregroundStyle(Color.obsidianTextSecondary)
+
+            // Still said before the tap: under the heading, where it is read on arrival.
+            if Self.barHoldsOnlyTheButton(largeText: typeSize.isAccessibilitySize) { freeLimitNote }
+
+            PaperSlip(tornTop: true, tornBottom: true) {
+                VStack(alignment: .leading, spacing: 10) {
+                    // Says what it sums: "For everything found" stood over only the rows not yet listed (2026-11-22).
+                    Text(verbatim: !picked.isEmpty ? L10n.string("For the \(picked.count) you've ticked")
+                                   : base.count < live.count ? L10n.string("For the \(base.count) not on your list yet")
+                                   : L10n.string("For everything found"))
+                        .font(.proof(.caption))
+                        .foregroundStyle(Color.paperMuted)
+                    ProofLine(label: L10n.string("Each month"), value: MoneyFormat.total(monthly, currency, converted: converted), emphasised: true)
+                    ProofLine(label: L10n.string("Each year"), value: MoneyFormat.total(monthly * 12, currency, converted: converted))
+                    // Which currency a converted total is in: a bare "$" stood beside "US$" rows (2026-11-23).
+                    if converted {
+                        Text("≈ converted to \(MoneyFormat.normalizedCode(currency))")
+                            .font(.proof(.caption))
+                            .foregroundStyle(Color.paperMuted)
+                    }
+                    SearchFacts(stats: stats)
+                }
+            }
+            .accessibilityElement(children: .combine)
+
+            // Beside the note that asks for it: at the bottom of the page it was 3,000 points away (2026-11-23).
+            if stats.stopped { searchAgainButton }
+
+            if live.contains(where: { $0.proven.currencyAssumed }) {
+                DollarNote(code: scanner.assumedDollar, onChoose: scanner.setAssumedDollar)
+            }
+            if ignored > 0 {
+                OtherSenders(count: ignored, names: scanner.report?.ignoredSenders ?? []) { addingByHand = ByHand(name: $0) }
+            }
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+    }
+
+    /// The widest price among everything found, in every section: one price column for the page.
+    private var widestPrice: FoundRow.Price? {
+        FoundRow.widestPrice(among: scanner.foundSubscriptions.filter { !$0.priceUnknown }.map {
+            FoundRow.Price(amount: Self.money($0.amount, $0.currency), period: $0.billingFrequency.billingPeriodLabel)
+        })
+    }
+
+    private func listSection(title: LocalizedStringKey, subtitle: LocalizedStringKey, items: [FoundSubscription]) -> some View {
+        let selectable = items.filter { !$0.isCancelled && !isOnList($0) && !isWaiting($0) }
+        return VStack(alignment: .leading, spacing: 6) {
+            AdaptiveRow {
+                VStack(alignment: .leading, spacing: 2) {
+                    Text(title)
+                        .font(.headline)
+                        .foregroundStyle(Color.inkText)
+                        .accessibilityAddTraits(.isHeader)
+                    Text(subtitle)
+                        .font(.subheadline)
+                        .foregroundStyle(Color.inkTextMuted)
+                        .fixedSize(horizontal: false, vertical: true)
+                }
+                // The heading and its line are read together, then "Select all": in Arabic the button came
+                // between them (the reach rating of 2026-11-23).
+                .accessibilityElement(children: .contain)
+            } value: {
+                // Over a single row its own box says it all.
+                if selectable.count > 1 {
+                    let allSelected = selectable.allSatisfy { selected.contains($0.id) }
+                    Button {
+                        if allSelected { selectable.forEach { selected.remove($0.id) } } else { selectable.forEach { selected.insert($0.id) } }
+                    } label: {
+                        (allSelected ? Text("Deselect all") : Text("Select all"))
+                            .font(.subheadline.weight(.semibold))
+                            .foregroundStyle(Color.inkText)
+                            .tapArea(.trailing)
                     }
                 }
             }
-            Button(action: onReject) {
-                Label("This isn't a subscription", systemImage: "hand.thumbsdown")
-                    .font(.system(.caption, design: .rounded).weight(.semibold))
-                    .foregroundStyle(Color.obsidianTextSecondary)
-                    .padding(.vertical, 8)
-                    .padding(.horizontal, 12)
-                    .background(Capsule().fill(Color.obsidianTextTertiary.opacity(0.18)))
+
+            VStack(spacing: 0) {
+                ForEach(Array(items.enumerated()), id: \.element.id) { index, found in
+                    if index > 0 { Hairline() }
+                    FoundRow(
+                        found: found,
+                        widestPrice: widestPrice,
+                        // A row waiting for room is not a choice: ticking it again did nothing (2026-11-22).
+                        isOnList: isOnList(found) || isWaiting(found),
+                        isWaiting: isWaiting(found),
+                        keptForLater: keptForLater(found),
+                        listed: store.subscriptions.first { ServiceName.same($0.name, found.name) },
+                        onUseReceipts: { Task { await useReceipts(found) } },
+                        isSelected: selected.contains(found.id),
+                        isExpanded: expanded.contains(found.id),
+                        onToggle: { if selected.contains(found.id) { selected.remove(found.id) } else { selected.insert(found.id) } },
+                        onExpand: {
+                            withAnimation(Motion.unlessReduced(Motion.touch)) {
+                                if expanded.contains(found.id) { expanded.remove(found.id) } else { expanded.insert(found.id) }
+                            }
+                            if expanded.contains(found.id) {
+                                let target = typeSize.isAccessibilitySize ? "row-\(found.id)" : "why-\(found.id)"
+                                Task { try? await Task.sleep(for: .milliseconds(250)); scrollTarget = target }
+                            }
+                        },
+                        onReject: {
+                            let wasSelected = selected.remove(found.id) != nil
+                            withAnimation(Motion.unlessReduced(Motion.leave)) {
+                                listingBefore = nil
+                                hidden = Hidden(found: found, previous: scanner.markNotSubscription(found), wasSelected: wasSelected)
+                            }
+                            AccessibilityNotification.Announcement(L10n.string("\(found.name) hidden")).post()
+                        }
+                    )
+                }
             }
-            .buttonStyle(PlainButtonStyle())
-            .accessibilityHint("Removes it and Pausely will remember, so it won't appear again")
         }
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .padding(.horizontal, 16)
-        .padding(.bottom, 14)
     }
+
+    // MARK: - The bar that adds
+
+    /// How many of the chosen subscriptions fit under the free limit. Nil when there is no limit.
+    private var freeSlots: Int? {
+        payments.isUnlocked(.unlimitedSubscriptions) ? nil : FreeTier.room(in: store.subscriptions)
+    }
+
+    /// The chosen ones that aren't on the list already: the ones the free limit applies to.
+    private var newlyChosen: Int {
+        chosen.filter { found in !store.subscriptions.contains { ServiceName.same($0.name, found.name) } }.count
+    }
+
+    /// Whether the bar at the bottom edge holds only "Add to my list", with the free-limit note
+    /// under the heading instead. At the accessibility text sizes, yes: the note (six lines) and
+    /// a button of two lines took most of the screen and left one line of what was found.
+    nonisolated static func barHoldsOnlyTheButton(largeText: Bool) -> Bool { largeText }
+
+    /// Kept for later from an earlier add while the free list has no room: shown, not offered. With room it
+    /// is a choice again: two waited while the freed place went to the next add (the rating of 2026-11-23).
+    private func isWaiting(_ found: FoundSubscription) -> Bool {
+        freeSlots == 0 && keptForLater(found)
+    }
+
+    /// Kept for when there's room, from an earlier add.
+    private func keptForLater(_ found: FoundSubscription) -> Bool {
+        TallyImporter.waitingLines().contains { ServiceName.same($0.name, found.name) }
+    }
+
+    /// What the free limit will do with this choice. Said before the tap, not discovered after it.
+    @ViewBuilder
+    private var freeLimitNote: some View {
+        if !chosen.isEmpty, let slots = freeSlots, newlyChosen > slots {
+            // By name, in the importer's own order: a count left the person to guess which (2026-11-22).
+            let split = Self.freeLimitSplit(chosen, existing: store.subscriptions.map(\.name), slots: slots,
+                                            in: CurrencyManager.shared.selectedCurrency, rates: CurrencyManager.shared.rates)
+            Text(slots == 0
+                 // What happens to what waits, as it happens: Home offers it when a place is free (2026-11-23).
+                 ? L10n.string("The free plan tracks \(FreeTier.subscriptionLimit) and your list is full. What you add now waits, and Home offers it when there's room.")
+                 : L10n.string("The free plan tracks \(FreeTier.subscriptionLimit). Added now, most expensive first: \(Self.names(split.add))."))
+                .font(.footnote)
+                .foregroundStyle(Color.inkTextMuted)
+                .fixedSize(horizontal: false, vertical: true)
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .accessibilityIdentifier("freeLimitNote")
+        }
+    }
+
+    @ViewBuilder
+    private var addBar: some View {
+        let canAdd = outcome == nil && !scanner.isScanning && !scanner.foundSubscriptions.isEmpty && scanner.hasAccounts && !chosen.isEmpty
+        if canAdd || (outcome == nil && (hidden != nil || listingBefore != nil)) {
+            VStack(spacing: 8) {
+                // Undo where the eye is: at the top of the page it was 2,200 points from the row that was
+                // hidden (the rating of 2026-11-22). A listing changed from the receipts can be put back too:
+                // the price changed with no way back (the rating of 2026-11-23).
+                if let hidden {
+                    HiddenNote(name: hidden.found.name, onUndo: undoHide)
+                } else if let listingBefore {
+                    UndoNote(message: Text("\(listingBefore.name) on your list was updated from your receipts."),
+                             undoLabel: Text("Undo the change to \(listingBefore.name)"), identifier: "undoListingUpdate") {
+                        Task { await undoListingUpdate() }
+                    }
+                }
+                if canAdd {
+                    if !Self.barHoldsOnlyTheButton(largeText: typeSize.isAccessibilitySize) { freeLimitNote }
+                    Button(action: { Task { await addChosen() } }) {
+                        if importing { Busy(Text("Adding…")) }
+                        // Short, so at the largest text it is two lines, not three: the note says what "later" is.
+                        else if freeSlots == 0 { Text("Keep \(chosen.count) for later") }
+                        else if let slots = freeSlots, newlyChosen > slots { Text("Add \(slots), keep \(newlyChosen - slots) waiting") }
+                        else { Text("Add \(chosen.count) to my list") }
+                    }
+                    .buttonStyle(.ink)
+                    .disabled(importing)
+                    .accessibilityIdentifier("importSelectedButton")
+                }
+            }
+            .padding(.horizontal, Layout.margin)
+            .padding(.top, 10)
+            .padding(.bottom, 8)
+            // In the page's column on iPad, as the page is (ReadableScroll).
+            .frame(maxWidth: ReadableWidth.maxWidth)
+            .frame(maxWidth: .infinity)
+            .background(Color.ink)
+            .overlay(alignment: .top) { Hairline() }
+        }
+    }
+
+    /// The receipts' price, and their renewal day where the list has none, on the listed subscription: only
+    /// when the person asks, and with the way back.
+    private func useReceipts(_ found: FoundSubscription) async {
+        guard let listed = store.subscriptions.first(where: { ServiceName.same($0.name, found.name) }) else { return }
+        let updated = FoundRow.updatedFromReceipts(listed, by: found)
+        guard updated != listed else { return }
+        await store.updateSubscription(updated)
+        withAnimation(Motion.unlessReduced(Motion.arrive)) { hidden = nil; listingBefore = listed }
+        Feel.landed()
+    }
+
+    private func undoListingUpdate() async {
+        guard let before = listingBefore else { return }
+        await store.updateSubscription(before)
+        withAnimation(Motion.unlessReduced(Motion.leave)) { listingBefore = nil }
+    }
+
+    private func undoHide() {
+        guard let hidden else { return }
+        withAnimation(Motion.unlessReduced(Motion.arrive)) {
+            scanner.undoNotSubscription(hidden.found, previous: hidden.previous)
+            if hidden.wasSelected { selected.insert(hidden.found.id) }
+            self.hidden = nil
+        }
+    }
+
+    private func addChosen() async {
+        importing = true
+        let result = await scanner.importSubscriptions(chosen)
+        // The findings stay: reopened after Done, the page showed only the inbox, with no sign of what was
+        // added or of the ones waiting for room (the rating of 2026-11-22).
+        selected = []
+        expanded = []
+        didPreselect = false
+        importing = false
+        outcome = result
+        // The outcome starts at its title: at the largest text it opened at its end (the reach rating of 2026-11-23).
+        scrollTarget = "top"
+        // The landing is felt when something landed: nothing is, when every one was already listed
+        // or is waiting for room.
+        if !result.added.isEmpty || !result.datesFilled.isEmpty { Feel.landed() }
+    }
+
 }

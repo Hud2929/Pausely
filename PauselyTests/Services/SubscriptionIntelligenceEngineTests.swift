@@ -61,6 +61,22 @@ final class SubscriptionIntelligenceEngineTests: XCTestCase {
         XCTAssertFalse(sub?.reasons.isEmpty ?? true)
     }
 
+    /// Four monthly receipts and one other charge from the same sender in the middle of a month (a
+    /// gift card, an add-on). It used to be read as a fortnightly plan with two receipts missing,
+    /// which made a year of it $415.74 instead of $191.88.
+    func testAMonthlyPlanWithOneOtherChargeMidMonth_isStillMonthly() throws {
+        var signals = monthly("netflix.com", name: "Netflix", amount: 15.99, months: [(6, 5), (7, 5), (8, 5), (9, 5)])
+        signals.append(signal("netflix.com", name: "Netflix", on: date(2026, 7, 20), amount: 24))
+
+        let sub = try XCTUnwrap(analyze(signals).subscriptions.first { $0.name == "Netflix" })
+
+        XCTAssertEqual(sub.frequency, .monthly)
+        XCTAssertEqual(sub.amount, Decimal(string: "15.99"))
+        XCTAssertEqual(sub.annualCost, Decimal(string: "191.88"))
+        XCTAssertEqual(sub.evidence.count, 4, "the other charge is not one of the plan's")
+        XCTAssertEqual(sub.tier, .confirmed)
+    }
+
     func testUnknownMerchantWithThreeSteadyCharges_isDetected() {
         let report = analyze(monthly("brightgym.ca", name: "Bright Gym", amount: 29.99, months: [(7, 3), (8, 3), (9, 3)]))
         let sub = report.subscriptions.first { $0.name == "Bright Gym" }
@@ -183,27 +199,31 @@ final class SubscriptionIntelligenceEngineTests: XCTestCase {
         XCTAssertEqual(report.subscriptions.first { $0.name == "Netflix" }?.evidence.count, 1)
     }
 
-    func testTotalsOnlyCountLikelyOrBetter() {
+    /// A one-off charge never becomes something to add up: the slip totals findings, and a single
+    /// parking payment is not one.
+    func testAOneOffIsNotAFindingToAddUp() {
         var signals = monthly("netflix.com", name: "Netflix", amount: 14.99, months: [(6, 12), (7, 12), (8, 12), (9, 12)])
         signals.append(signal("honk.com", name: "Honkmobile", on: date(2026, 9, 14), amount: 500))
-        XCTAssertEqual(analyze(signals).monthlyTotal(in: "CAD", rates: .fallback), 14.99)  // signals are in CAD
+        let found = analyze(signals).subscriptions
+        XCTAssertEqual(found.map(\.name), ["Netflix"])
+        XCTAssertEqual(found.first?.tier, .confirmed, "ticked from the start")
     }
 
     // MARK: Text analyzer
 
     func testAmountExtraction_prefersChargedAmountOverMarketingFigures() {
         let body = "Order summary\nSubtotal $394.99\nSave $20 with code\nStarting at $4.99 for Plus\nTotal charged: $14.99 per month"
-        let money = ReceiptTextAnalyzer.extractChargeAmount(subject: "Your receipt", body: body)
+        let money = ReceiptTextAnalyzer.chargeCandidate(subject: "Your receipt", body: body)?.money
         XCTAssertEqual(money?.amount, 14.99)
     }
 
     func testAmountExtraction_readsCurrencyCodes() {
-        XCTAssertEqual(ReceiptTextAnalyzer.extractChargeAmount(subject: "", body: "You were charged C$12.50")?.currency, "CAD")
-        XCTAssertEqual(ReceiptTextAnalyzer.extractChargeAmount(subject: "", body: "Amount paid 9.99 EUR")?.currency, "EUR")
+        XCTAssertEqual(ReceiptTextAnalyzer.chargeCandidate(subject: "", body: "You were charged C$12.50")?.money.currency, "CAD")
+        XCTAssertEqual(ReceiptTextAnalyzer.chargeCandidate(subject: "", body: "Amount paid 9.99 EUR")?.money.currency, "EUR")
     }
 
     func testAmountExtraction_ignoresPurePromotions() {
-        XCTAssertNil(ReceiptTextAnalyzer.extractChargeAmount(subject: "Sale", body: "Save $5 on your first order. Up to $20 off"))
+        XCTAssertNil(ReceiptTextAnalyzer.chargeCandidate(subject: "Sale", body: "Save $5 on your first order. Up to $20 off")?.money)
     }
 
     func testOneTimeLanguage_isRecognized() {

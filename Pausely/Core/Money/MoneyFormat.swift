@@ -2,7 +2,7 @@ import Foundation
 
 /// The only place Pausely turns an amount and an ISO 4217 currency code into text.
 ///
-/// - The reader's locale picks the symbol and separators, so nobody sees a bare "$" for a currency
+/// - The reader's locale (`L10n.locale`: the app's language with the iPhone's region) picks the symbol and separators, so nobody sees a bare "$" for a currency
 ///   that isn't theirs: in Canada CAD is "$12.99" and USD is "US$12.99"; in the US, USD is "$12.99"
 ///   and CAD is "CA$12.99"; in Germany EUR is "12,99 €".
 /// - Decimals follow the currency: ¥1,500, $12.99, KWD 1.250.
@@ -14,18 +14,34 @@ enum MoneyFormat {
     /// `amount` in `currency`, for example "$12.99", "US$12.99" or "12,99 €".
     /// - Parameter wholeUnits: drop the decimals, for large headline numbers ("$1,480").
     static func string(_ amount: Decimal, _ currency: String,
-                       locale: Locale = .autoupdatingCurrent, wholeUnits: Bool = false) -> String {
+                       locale: Locale = L10n.locale, wholeUnits: Bool = false) -> String {
         let code = normalizedCode(currency)
         guard isWellFormed(code) else {
             return "\(currency) \(NSDecimalNumber(decimal: amount).stringValue)"
         }
         let formatter = cachedFormatter(code: code, locale: locale, wholeUnits: wholeUnits)
-        return formatter.string(from: amount as NSDecimalNumber) ?? "\(code) \(amount)"
+        guard let text = formatter.string(from: amount as NSDecimalNumber) else { return "\(code) \(amount)" }
+        return keepingSymbolWhole(text, symbol: formatter.currencySymbol, locale: locale)
     }
 
-    static func string(_ amount: Double, _ currency: String,
-                       locale: Locale = .autoupdatingCurrent, wholeUnits: Bool = false) -> String {
-        string(decimal(amount), currency, locale: locale, wholeUnits: wholeUnits)
+    /// In right-to-left text a symbol made of Latin letters and a sign is held left to right, as one
+    /// piece. Arabic drew "CA$" as "$CA" on every price: the "$" took the paragraph's direction and
+    /// moved to the other side of the letters (the reach rating of 2026-11-22). A left-to-right
+    /// isolate around the symbol keeps it whole; symbols with no Latin letter are left as they are.
+    static func keepingSymbolWhole(_ text: String, symbol: String?, locale: Locale) -> String {
+        guard locale.language.characterDirection == .rightToLeft, let symbol,
+              symbol.unicodeScalars.contains(where: { $0.isASCII && CharacterSet.letters.contains($0) }),
+              symbol.unicodeScalars.contains(where: { !CharacterSet.letters.contains($0) }),
+              !text.contains("\u{2066}" + symbol),
+              let range = text.range(of: symbol) else { return text }
+        return text.replacingCharacters(in: range, with: "\u{2066}" + symbol + "\u{2069}")
+    }
+
+    /// A total across several things: exact when all of them are charged in `currency`, and "≈" in
+    /// front when some had to be converted, because a converted total moves with the exchange rate.
+    static func total(_ amount: Decimal, _ currency: String, converted: Bool,
+                      locale: Locale = L10n.locale, wholeUnits: Bool = false) -> String {
+        (converted ? "≈" : "") + string(amount, currency, locale: locale, wholeUnits: wholeUnits)
     }
 
     /// A plain number for files such as CSV: no symbol, no grouping, "." as the decimal point, and the
@@ -44,7 +60,7 @@ enum MoneyFormat {
     }
 
     /// The symbol a reader in `locale` sees for `currency`: "$", "US$", "CA$", "€", "¥".
-    static func symbol(for currency: String, locale: Locale = .autoupdatingCurrent) -> String {
+    static func symbol(for currency: String, locale: Locale = L10n.locale) -> String {
         let code = normalizedCode(currency)
         guard isWellFormed(code) else { return code }
         return cachedFormatter(code: code, locale: locale, wholeUnits: false).currencySymbol ?? code
@@ -63,11 +79,6 @@ enum MoneyFormat {
         code.trimmingCharacters(in: .whitespacesAndNewlines).uppercased()
     }
 
-    /// True for ISO 4217 codes Foundation knows.
-    static func isKnown(_ code: String) -> Bool {
-        knownCodes.contains(normalizedCode(code))
-    }
-
     /// A `Double` amount as a `Decimal` without binary noise (12.99, not 12.9900000000000002).
     static func decimal(_ amount: Double) -> Decimal {
         guard amount.isFinite else { return 0 }
@@ -75,8 +86,6 @@ enum MoneyFormat {
     }
 
     // MARK: - Private
-
-    private static let knownCodes = Set(Locale.Currency.isoCurrencies.map(\.identifier))
 
     private static func isWellFormed(_ code: String) -> Bool {
         code.count == 3 && code.allSatisfy { $0.isASCII && $0.isLetter }

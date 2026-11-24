@@ -2,6 +2,7 @@ import XCTest
 @testable import Pausely
 
 /// The IMAP client's pure half: framing, parsing and query building, byte for byte.
+@MainActor
 final class IMAPProtocolTests: XCTestCase {
 
     private func bytes(_ text: String) -> [UInt8] { Array(text.utf8) }
@@ -103,6 +104,23 @@ final class IMAPProtocolTests: XCTestCase {
         XCTAssertThrowsError(try parse("* LIST (\\HasNoChildren \"/\" \"INBOX\"\r\n"))
         XCTAssertThrowsError(try parse("* 1 FETCH (BODY[] {10}\r\nshort)\r\n"))
         XCTAssertThrowsError(try parse("* LIST () \"/\" \"unterminated\r\n"))
+    }
+
+    /// A server that announces a negative length must get an error back, not take the app down.
+    func testNegativeLiteralLengthIsMalformed() {
+        XCTAssertThrowsError(try parse("* 1 FETCH (BODY[] {-5}\r\n)\r\n")) { error in
+            guard case IMAPProtocolError.malformed(let reason) = error else { return XCTFail("\(error)") }
+            XCTAssertEqual(reason, "bad literal")
+        }
+    }
+
+    /// A message size beyond what an Int holds is dropped; the rest of the item is still read.
+    func testImpossibleMessageSizeIsDropped() throws {
+        let item = try XCTUnwrap(IMAPParser.fetchItem(try parse("* 7 FETCH (UID 42 RFC822.SIZE 18446744073709551615)\r\n")))
+        XCTAssertEqual(item.uid, 42)
+        XCTAssertNil(item.size)
+        let ordinary = try XCTUnwrap(IMAPParser.fetchItem(try parse("* 8 FETCH (UID 43 RFC822.SIZE 2048)\r\n")))
+        XCTAssertEqual(ordinary.size, 2048)
     }
 
     func testInternalDate() {

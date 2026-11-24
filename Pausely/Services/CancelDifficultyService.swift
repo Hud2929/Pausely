@@ -1,85 +1,122 @@
-//
-//  CancelDifficultyService.swift
-//  Pausely
-//
-//  Submits and fetches crowd-sourced cancel difficulty ratings from Supabase.
-//
-
 import Foundation
+import Supabase
+import os.log
 
+/// Anonymous community cancellation difficulty averages (`public.service_difficulty_scores`) and
+/// optional 1–5 post-cancellation feedback (`public.cancel_difficulty_ratings`).
 @MainActor
 final class CancelDifficultyService: ObservableObject {
     static let shared = CancelDifficultyService()
 
-    // Local cache: serviceName -> (avgScore, ratingCount, fetchedAt)
-    private var cache: [String: (score: Double, count: Int, date: Date)] = [:]
-    private let cacheTTL: TimeInterval = 86400 // 24 hours
+    struct Score: Codable, Equatable, Sendable {
+        let serviceName: String
+        let ratingCount: Int
+        let avgDifficulty: Double
+
+        enum CodingKeys: String, CodingKey {
+            case serviceName = "service_name"
+            case ratingCount = "rating_count"
+            case avgDifficulty = "avg_difficulty"
+        }
+    }
+
+    struct RatingInsert: Encodable, Equatable {
+        let user_id: UUID
+        let service_name: String
+        let difficulty_rating: Int
+    }
+
+    @Published private(set) var scores: [String: Score] = [:]
+    private var loaded = false
 
     private init() {}
 
-    // MARK: - Submit Rating
+    /// Canonical service key matching `ServiceDatabase.services` or normalized lowercased slug.
+    nonisolated static func serviceKey(for name: String) -> String {
+        if let known = CancelHelp.service(named: name) { return known.id }
+        return ServiceMatcher.words(name).joined(separator: "-")
+    }
 
-    func submitRating(serviceName: String, rating: Int) async {
-        guard (1...5).contains(rating) else { return }
-        guard !SupabaseManager.shared.isUsingDemoMode else { return }
-
-        struct RatingInsert: Encodable {
-            let service_name: String
-            let difficulty_rating: Int
-            let user_id: String?
+    /// Plain factual heads-up only when at least 3 people have rated cancelling this service.
+    nonisolated static func summaryLine(for score: Score, locale: Locale = L10n.locale) -> String? {
+        guard score.ratingCount >= 3 else { return nil }
+        let formatted = score.avgDifficulty.formatted(.number.precision(.fractionLength(1)).locale(locale))
+        let count = L10n.number(score.ratingCount, locale: locale)
+        if score.avgDifficulty >= 3.5 {
+            return L10n.string("Often hard to cancel (\(formatted)/5 from \(count) ratings) — leave extra time.")
         }
+        if score.avgDifficulty <= 2.2 {
+            return L10n.string("Usually quick to cancel (\(formatted)/5 from \(count) ratings).")
+        }
+        return L10n.string("Moderate to cancel (\(formatted)/5 from \(count) ratings).")
+    }
 
-        let userId = try? await SupabaseManager.shared.client.auth.session.user.id.uuidString
-        let payload = RatingInsert(
-            service_name: serviceName,
-            difficulty_rating: rating,
-            user_id: userId
-        )
+    /// Returns cached community score for a subscription name, if at least 3 ratings exist.
+    func score(for serviceName: String) -> Score? {
+        let key = Self.serviceKey(for: serviceName)
+        guard let found = scores[key], found.ratingCount >= 3 else { return nil }
+        return found
+    }
 
+    /// Loads aggregate scores once per launch when signed into a cloud account (never in guest mode).
+    func loadIfNeeded() async {
+        guard !loaded, SubscriptionStore.cloudSyncEnabled, !AuthManager.shared.isGuest else { return }
+        loaded = true
         do {
-            try await SupabaseManager.shared.client
+            let rows: [Score] = try await SupabaseManager.shared.client
+                .from("service_difficulty_scores")
+                .select()
+                .execute()
+                .value
+            scores = Dictionary(
+                rows.map { (Self.serviceKey(for: $0.serviceName), $0) },
+                uniquingKeysWith: { a, b in a.ratingCount >= b.ratingCount ? a : b }
+            )
+        } catch {
+            loaded = false
+            os_log("CancelDifficultyService load failed: %{public}@", log: .default, type: .error, String(describing: type(of: error)))
+        }
+    }
+
+    /// Clears cached community scores on sign-out or wipe so signed-in data never leaks into guest mode.
+    func reset() {
+        scores = [:]
+        loaded = false
+    }
+
+    /// Submits an anonymous 1 (easy) to 5 (hard) cancellation difficulty rating.
+    /// Gracefully no-ops in guest mode, offline, or tests.
+    func submit(serviceName: String, difficulty: Int) async {
+        let clamped = max(1, min(5, difficulty))
+        guard SubscriptionStore.cloudSyncEnabled, !AuthManager.shared.isGuest else { return }
+        let client = SupabaseManager.shared.client
+        guard let userId = client.auth.currentSession?.user.id else { return }
+
+        let payload = RatingInsert(
+            user_id: userId,
+            service_name: Self.serviceKey(for: serviceName),
+            difficulty_rating: clamped
+        )
+        do {
+            _ = try await client
                 .from("cancel_difficulty_ratings")
                 .insert(payload)
                 .execute()
-            // Invalidate cache so next fetch gets updated score
-            cache.removeValue(forKey: serviceName)
         } catch {
-            // Non-critical — silently discard
+            os_log("CancelDifficultyService submit failed: %{public}@", log: .default, type: .error, String(describing: type(of: error)))
         }
     }
 
-    // MARK: - Fetch Score
-
-    struct DifficultyScore: Decodable {
-        let avg_difficulty: Double
-        let rating_count: Int
+    #if DEBUG
+    func seedDemoScores() {
+        let samples = [
+            Score(serviceName: "netflix", ratingCount: 18, avgDifficulty: 4.2),
+            Score(serviceName: "apple-one", ratingCount: 14, avgDifficulty: 1.8),
+            Score(serviceName: "peloton", ratingCount: 11, avgDifficulty: 3.9),
+            Score(serviceName: "adobe-creative-cloud", ratingCount: 27, avgDifficulty: 4.6),
+        ]
+        scores = Dictionary(samples.map { (Self.serviceKey(for: $0.serviceName), $0) }, uniquingKeysWith: { a, _ in a })
+        loaded = true
     }
-
-    /// Returns (averageScore, ratingCount) or nil if no ratings exist.
-    func fetchScore(for serviceName: String) async -> (score: Double, count: Int)? {
-        // Serve from cache if fresh
-        if let cached = cache[serviceName],
-           Date().timeIntervalSince(cached.date) < cacheTTL {
-            return (cached.score, cached.count)
-        }
-
-        guard !SupabaseManager.shared.isUsingDemoMode else { return nil }
-
-        do {
-            let results: [DifficultyScore] = try await SupabaseManager.shared.client
-                .from("service_difficulty_scores")
-                .select("avg_difficulty, rating_count")
-                .eq("service_name", value: serviceName)
-                .execute()
-                .value
-
-            if let first = results.first {
-                cache[serviceName] = (first.avg_difficulty, first.rating_count, Date())
-                return (first.avg_difficulty, first.rating_count)
-            }
-        } catch {
-            // Not found or network error — return nil
-        }
-        return nil
-    }
+    #endif
 }

@@ -34,6 +34,10 @@ enum ReceiptTextAnalyzer {
         var kind: EmailKind
         /// The price after an introductory one ("$134.99 for 1 year, then $269.99/year").
         var nextAmount: Decimal? = nil
+        /// The words around the amount say it was charged ("amount paid", "total"), not just what a plan costs.
+        var chargeEvidence = false
+        /// The introductory price as the email states it, before tax, when it also states what follows.
+        var introAmount: Decimal? = nil
     }
 
     // MARK: Entry point
@@ -42,17 +46,20 @@ enum ReceiptTextAnalyzer {
         let cappedBody = String(body.prefix(24_000))
         let period = servicePeriod(in: cappedBody)
         let flags = languageFlags(subject: subject, body: cappedBody, promotional: promotional, servicePeriod: period != nil)
-        let money = extractChargeAmount(subject: subject, body: cappedBody)
+        let candidate = chargeCandidate(subject: subject, body: cappedBody)
+        let money = candidate?.money
         let frequency = explicitFrequency(subject: subject, body: cappedBody) ?? period
         let trialDays = extractTrialDays(subject + " " + cappedBody)
         var product = productHint(subject: subject, body: cappedBody)
         // A brand mentioned only in passing (e.g. "DashPass savings" on an order) must not rename that order.
         if product != nil, productHint(subject: subject, body: "") == nil, flags.oneTime || !flags.renewal { product = nil }
         let kind = classify(flags: flags, hasAmount: money != nil)
-        var next = introductoryPriceEnd(in: subject + "\n" + cappedBody)
-        if let current = money?.amount, let later = next, later <= current { next = nil }
+        let stated = introductoryPrices(in: subject + "\n" + cappedBody)
+        var next = stated?.next
+        if let current = stated?.intro ?? money?.amount, let later = next, later <= current { next = nil }
         return Analysis(money: money, flags: flags, frequency: frequency,
-                        trialDays: trialDays, productHint: product, kind: kind, nextAmount: next)
+                        trialDays: trialDays, productHint: product, kind: kind, nextAmount: next,
+                        chargeEvidence: candidate?.evidence ?? false, introAmount: next == nil ? nil : stated?.intro)
     }
 
     // MARK: Classification
@@ -152,13 +159,32 @@ enum ReceiptTextAnalyzer {
             "無料体験は", "無料期間が終了", "無料体験の終了", "トライアル終了", "تنتهي الفترة التجريبية", "무료 체험이 종료"
         ])
 
-        flags.trialStart = flags.trialEnding || containsAny(text, [
+        let mentionsTrial = containsAny(text, [
             "free trial", "trial has started", "your trial", "trial begins", "start your trial", "trial period",
             "welcome to your trial", "trial started", "days free",
             "essai gratuit", "prueba gratuita", "kostenlose testphase", "kostenloser test",
             "prova gratuita", "teste grátis", "avaliação gratuita", "無料体験", "無料トライアル", "お試し期間",
             "الفترة التجريبية", "تجربة مجانية", "무료 체험"
         ])
+        // An invitation to start a trial is not a trial. "You're eligible for 90 days free. Subscribe now"
+        // is an offer; "Welcome to Prime. Plan type: 30-day free trial. Renewal date: June 10" has begun.
+        let invites = containsAny(text, [
+            "you're eligible", "you are eligible", "to activate", "activate your", "activate now", "claim your", "redeem",
+            "subscribe now", "sign up now", "join now", "start your free trial", "start your trial", "start free trial",
+            "try it free", "try free", "try now", "new subscribers only", "new members only", "limited time", "limited-time",
+            "offer ends", "offer expires", "terms apply", "get started today", "don't miss",
+            "profitez", "inscrivez-vous", "offre limitée", "aprovecha", "suscríbete ahora", "oferta limitada",
+            "jetzt testen", "jetzt abonnieren", "nur für kurze zeit", "今すぐ登録", "今すぐ始め", "期間限定", "اشترك الآن", "عرض لفترة محدودة"
+        ])
+        let begun = containsAny(text, [
+            "you subscribed", "you've subscribed", "you have subscribed", "successfully subscribed", "has started", "have started",
+            "trial started", "started on", "welcome to", "thanks for starting", "thank you for starting", "renewal date",
+            "after your trial", "trial ends on", "trial will end", "order number", "order date",
+            "a commencé", "bienvenue", "ha comenzado", "te damos la bienvenida", "hat begonnen", "willkommen",
+            "開始されました", "ようこそ", "بدأت", "مرحبًا بك في"
+        ])
+        let isInvitation = invites && !begun
+        flags.trialStart = (flags.trialEnding || mentionsTrial) && !isInvitation
 
         flags.priceChange = containsAny(text, [
             "price change", "price increase", "price is changing", "price will change", "new price", "increase in price",
@@ -167,7 +193,8 @@ enum ReceiptTextAnalyzer {
             "changement de prix", "augmentation de prix", "nouveau prix", "cambio de precio", "aumento de precio",
             "preisänderung", "preiserhöhung", "aumento di prezzo", "aumento de preço", "料金改定", "価格改定",
             "料金の変更", "値上げ", "تغيير السعر", "زيادة السعر", "가격 인상", "요금 변경"
-        ])
+        ]) || text.range(of: #"\bprice\b[^.\n]{0,60}\b(?:will|is going to|is set to)\s+(?:change|increase|go up|rise)"#,
+                         options: .regularExpression) != nil
 
         // Specific phrases only: every subscription email has a "cancellation policy" or "cancel anytime" line.
         flags.cancelled = containsAny(text, [
@@ -206,146 +233,12 @@ enum ReceiptTextAnalyzer {
             "pagamento recusado", "o pagamento falhou", "お支払いに失敗", "決済に失敗", "فشل الدفع", "결제 실패", "결제에 실패"
         ])
 
-        flags.marketing = promotional || containsAny(subjectLower, [
+        flags.marketing = promotional || (isInvitation && mentionsTrial) || containsAny(subjectLower, [
             "% off", "sale", "limited time", "special offer", "exclusive offer", "newsletter", "deal of", "save up to",
             "shop now", "last chance", "don't miss", "flash sale", "black friday", "cyber monday", "new arrivals"
         ])
 
         return flags
-    }
-
-    // MARK: Amount extraction
-
-    private static let currencyTokens: [(String, String?)] = [
-        ("c$", "CAD"), ("ca$", "CAD"), ("cad", "CAD"), ("us$", "USD"), ("usd", "USD"), ("au$", "AUD"), ("aud", "AUD"),
-        ("nz$", "NZD"), ("nzd", "NZD"), ("£", "GBP"), ("gbp", "GBP"), ("€", "EUR"), ("eur", "EUR"), ("¥", "JPY"),
-        ("jpy", "JPY"), ("₹", "INR"), ("inr", "INR"), ("chf", "CHF"), ("mxn", "MXN"), ("brl", "BRL"), ("sek", "SEK"),
-        ("nok", "NOK"), ("dkk", "DKK"), ("$", nil)
-    ]
-
-    private static let amountRegex: NSRegularExpression? = {
-        let symbols = "(?:C\\$|CA\\$|US\\$|AU\\$|NZ\\$|CAD|USD|AUD|NZD|GBP|EUR|JPY|INR|CHF|MXN|BRL|SEK|NOK|DKK|£|€|¥|₹|\\$)"
-        let number = "(\\d{1,3}(?:,\\d{3})+(?:\\.\\d{2})|\\d+(?:\\.\\d{2}))"
-        let pattern = "(?i)(?:(\(symbols))\\s?\(number)|\(number)\\s?(CAD|USD|AUD|NZD|GBP|EUR|CHF)\\b)"
-        return try? NSRegularExpression(pattern: pattern)
-    }()
-
-    /// Currencies written without decimals: "¥990", "￥1,200", "990円", "₩9,900", "9,900원".
-    private static let wholeUnitRegex: NSRegularExpression? = try? NSRegularExpression(
-        pattern: "(?:(¥|￥|JPY|₩|KRW)\\s?(\\d{1,3}(?:,\\d{3})+|\\d+)(?![.,]\\d)|(\\d{1,3}(?:,\\d{3})+|\\d+)\\s?(円|원))",
-        options: [.caseInsensitive])
-
-    private static let euroCommaRegex: NSRegularExpression? =
-        try? NSRegularExpression(pattern: "(\\d{1,3}(?:[. \\x{00A0}]\\d{3})*,\\d{2})\\s?(€|EUR|\\$|CAD|USD)", options: [.caseInsensitive])
-
-    private static let positiveContext: [(String, Int)] = [
-        ("amount charged", 4), ("amount paid", 4), ("amount due", 3), ("you paid", 4), ("you were charged", 4),
-        ("you've been charged", 4), ("we charged", 4), ("charged", 3), ("billed", 3), ("payment of", 3), ("your payment", 2),
-        ("total", 2), ("price", 1), ("per month", 2), ("/month", 2), ("/mo", 2), ("per year", 2), ("/year", 2),
-        ("monthly", 1), ("annual", 1), ("subscription", 1), ("plan", 1), ("renew", 1), ("membership", 1),
-        ("montant", 3), ("facturé", 3), ("payé", 3), ("abonnement", 1), ("importe", 3), ("cobrado", 3), ("pagado", 3),
-        ("suscripción", 1), ("betrag", 3), ("gesamt", 2), ("abgerechnet", 3), ("abonnement", 1),
-        ("請求額", 4), ("ご請求", 4), ("お支払い", 3), ("支払金額", 4), ("合計", 2), ("月額", 2), ("年額", 2),
-        ("결제 금액", 4), ("결제금액", 4), ("합계", 2)
-    ]
-
-    private static let negativeContext: [(String, Int)] = [
-        ("subtotal", 3), ("save", 4), (" off", 3), ("discount", 3), ("coupon", 3), ("was ", 3), ("regularly", 3),
-        ("list price", 3), ("gift card", 3), ("credit", 2), ("points", 3), ("tax", 3), ("shipping", 3), ("refund", 5),
-        ("up to", 3), ("starting at", 3), ("starts at", 3), ("from $", 3), ("limit", 2), ("delivery fee", 2), ("service fee", 2), ("booking fee", 2), ("processing fee", 2), ("tip", 2),
-        ("balance", 2), ("rewards", 3), ("cashback", 3), ("minimum", 2), ("spend $", 4), ("spend", 2), ("over $", 3),
-        ("rabais", 3), ("économ", 3), ("livraison", 2), ("descuento", 3), ("ahorra", 3), ("rabatt", 3), ("sparen", 3),
-        ("割引", 3), ("ポイント", 3), ("送料", 2), ("値引", 3), ("할인", 3), ("포인트", 3)
-    ]
-
-    /// Picks the amount that was actually charged, not the first dollar figure in the email.
-    static func extractChargeAmount(subject: String, body: String) -> Money? {
-        let text = subject + "\n" + body
-        let ns = text as NSString
-        var candidates: [(money: Money, score: Int, position: Int)] = []
-
-        func consider(amountString: String, currency: String?, range: NSRange, decimalComma: Bool = false) {
-            var cleaned = amountString
-            if decimalComma {
-                cleaned = cleaned.replacingOccurrences(of: ".", with: "").replacingOccurrences(of: " ", with: "")
-                    .replacingOccurrences(of: "\u{00A0}", with: "").replacingOccurrences(of: ",", with: ".")
-            } else {
-                cleaned = cleaned.replacingOccurrences(of: ",", with: "")
-            }
-            // Yen and won amounts run into the tens of thousands for ordinary yearly plans.
-            let ceiling: Decimal = (currency == "JPY" || currency == "KRW") ? 2_000_000 : 10_000
-            guard let value = Decimal(string: cleaned), value > 0, value < ceiling else { return }
-
-            let beforeStart = max(0, range.location - 70)
-            let before = ns.substring(with: NSRange(location: beforeStart, length: range.location - beforeStart)).lowercased()
-            let afterEnd = min(ns.length, range.location + range.length + 40)
-            let after = ns.substring(with: NSRange(location: range.location + range.length, length: afterEnd - (range.location + range.length))).lowercased()
-            let context = before + "|" + after
-
-            var score = 0
-            for (word, weight) in positiveContext where context.contains(word) { score += weight }
-            for (word, weight) in negativeContext where context.contains(word) { score -= weight }
-            // "total" inside "subtotal" must not count as positive
-            if context.contains("subtotal") { score -= 2 }
-            // "$134.99 for 1 year, then $269.99/year": the price after "then" is a later one, not today's charge.
-            if before.range(of: #"(then|after that|thereafter|afterwards)\W{0,3}[a-z$€£¥]{0,3}\s?$"#, options: .regularExpression) != nil {
-                score -= 6
-            }
-
-            var resolvedCurrency = currency
-            if resolvedCurrency == nil {
-                let trailing = after.trimmingCharacters(in: .whitespaces).prefix(4).uppercased()
-                for code in ["USD", "CAD", "AUD", "GBP", "EUR", "NZD", "CHF"] where trailing.hasPrefix(code) { resolvedCurrency = code }
-            }
-            candidates.append((Money(amount: value, currency: resolvedCurrency), score, range.location))
-        }
-
-        let full = NSRange(location: 0, length: ns.length)
-
-        amountRegex?.enumerateMatches(in: text, range: full) { match, _, _ in
-            guard let match else { return }
-            if match.range(at: 1).location != NSNotFound, match.range(at: 2).location != NSNotFound {
-                let symbol = ns.substring(with: match.range(at: 1))
-                let number = ns.substring(with: match.range(at: 2))
-                consider(amountString: number, currency: currencyCode(forToken: symbol), range: match.range)
-            } else if match.range(at: 3).location != NSNotFound, match.range(at: 4).location != NSNotFound {
-                let number = ns.substring(with: match.range(at: 3))
-                let code = ns.substring(with: match.range(at: 4)).uppercased()
-                consider(amountString: number, currency: code, range: match.range)
-            }
-        }
-
-        wholeUnitRegex?.enumerateMatches(in: text, range: full) { match, _, _ in
-            guard let match else { return }
-            if match.range(at: 1).location != NSNotFound, match.range(at: 2).location != NSNotFound {
-                let symbol = ns.substring(with: match.range(at: 1)).uppercased()
-                let code = (symbol == "₩" || symbol == "KRW") ? "KRW" : "JPY"
-                consider(amountString: ns.substring(with: match.range(at: 2)), currency: code, range: match.range)
-            } else if match.range(at: 3).location != NSNotFound, match.range(at: 4).location != NSNotFound {
-                let code = ns.substring(with: match.range(at: 4)) == "원" ? "KRW" : "JPY"
-                consider(amountString: ns.substring(with: match.range(at: 3)), currency: code, range: match.range)
-            }
-        }
-
-        euroCommaRegex?.enumerateMatches(in: text, range: full) { match, _, _ in
-            guard let match, match.range(at: 1).location != NSNotFound else { return }
-            let symbol = ns.substring(with: match.range(at: 2)).uppercased()
-            let code: String? = (symbol == "€" || symbol == "EUR") ? "EUR" : (symbol == "$" ? nil : symbol)
-            consider(amountString: ns.substring(with: match.range(at: 1)), currency: code, range: match.range, decimalComma: true)
-        }
-
-        guard !candidates.isEmpty else { return nil }
-        // Highest score wins; on ties prefer the later one ("Total" sits at the bottom of receipts).
-        let best = candidates.max { lhs, rhs in
-            lhs.score == rhs.score ? lhs.position < rhs.position : lhs.score < rhs.score
-        }
-        guard let best, best.score >= 0 else { return nil }
-        return best.money
-    }
-
-    static func currencyCode(forToken token: String) -> String? {
-        let lower = token.lowercased()
-        return currencyTokens.first { $0.0 == lower }?.1 ?? nil
     }
 
     // MARK: Frequency
@@ -354,12 +247,35 @@ enum ReceiptTextAnalyzer {
     static func explicitFrequency(subject: String, body: String) -> BillingFrequency? {
         let text = (subject + " " + body.prefix(8_000)).lowercased()
         var found: [BillingFrequency] = []
-        if containsAny(text, ["billed monthly", "per month", "/month", "/mo ", "every month", "monthly plan", "monthly subscription", "monthly membership"]) { found.append(.monthly) }
-        if containsAny(text, ["billed annually", "billed yearly", "per year", "/year", "every year", "annual plan", "yearly plan", "annual subscription", "annual membership", "yearly subscription"]) { found.append(.yearly) }
-        if containsAny(text, ["per week", "/week", "every week", "weekly subscription", "billed weekly"]) { found.append(.weekly) }
-        if containsAny(text, ["quarterly", "every 3 months", "every three months"]) { found.append(.quarterly) }
-        if containsAny(text, ["every 6 months", "every six months", "semi-annual", "semiannual"]) { found.append(.semiannual) }
+        if containsAny(text, [
+            "billed monthly", "per month", "/month", "/mo ", "every month", "each month", "monthly plan", "monthly subscription",
+            "monthly membership", "renews monthly", "(monthly)",
+            "par mois", "/mois", "chaque mois", "mensuel", "pro monat", "jeden monat", "monatlich", "/monat",
+            "al mes", "por mes", "cada mes", "mensual", "al mese", "ogni mese", "mensile", "por mês", "mensal",
+            "月額", "毎月", "كل شهر", "شهريًا", "شهريا", "매월"
+        ]) { found.append(.monthly) }
+        if containsAny(text, [
+            "billed annually", "billed yearly", "per year", "/year", "every year", "each year", "annual plan", "yearly plan",
+            "annual subscription", "annual membership", "yearly subscription", "renews annually", "renews yearly", "(annual)",
+            "(yearly)", "par an", "/an ", "chaque année", "annuel", "pro jahr", "jedes jahr", "jährlich", "/jahr",
+            "al año", "por año", "cada año", "anual", "all'anno", "ogni anno", "annuale", "por ano",
+            "年額", "毎年", "كل سنة", "سنويًا", "سنويا", "매년"
+        ]) { found.append(.yearly) }
+        if containsAny(text, ["per week", "/week", "every week", "weekly subscription", "billed weekly", "par semaine", "pro woche", "por semana", "毎週", "كل أسبوع"]) { found.append(.weekly) }
+        if containsAny(text, ["quarterly", "every 3 months", "every three months", "tous les 3 mois", "trimestriel", "alle 3 monate", "vierteljährlich", "cada 3 meses", "trimestral", "3か月ごと", "كل 3 أشهر"]) { found.append(.quarterly) }
+        if containsAny(text, ["every 6 months", "every six months", "semi-annual", "semiannual", "tous les 6 mois", "alle 6 monate", "halbjährlich", "cada 6 meses", "semestral", "6か月ごと"]) { found.append(.semiannual) }
         return found.count == 1 ? found.first : nil
+    }
+
+    /// The subject line itself says money moved: a receipt, an invoice, a payment, a renewal.
+    static func subjectSaysReceipt(_ subject: String) -> Bool {
+        containsAny(subject.lowercased(), [
+            "receipt", "invoice", "payment", "paid", "billed", "billing", "charged", "renewal", "renewed", "statement",
+            "order", "purchase", "reçu", "facture", "paiement", "renouvellement", "recibo", "factura", "pago", "renovación",
+            "quittung", "rechnung", "zahlung", "verlängerung", "beleg", "ricevuta", "fattura", "pagamento", "rinnovo",
+            "fatura", "renovação", "領収", "請求", "お支払い", "ご利用料金", "更新", "إيصال", "فاتورة", "دفع", "تجديد",
+            "영수증", "결제"
+        ])
     }
 
     /// The billing period printed on invoices ("Oct 20–Nov 20, 2026", "Sep 26, 2025 – Sep 26, 2026",
@@ -436,13 +352,26 @@ enum ReceiptTextAnalyzer {
         return names.firstIndex(of: prefix).map { $0 + 1 }
     }
 
-    /// "…, then $269.99/year" → 269.99: what an introductory price turns into.
-    static func introductoryPriceEnd(in text: String) -> Decimal? {
-        let pattern = #"(?i)\bthen\s+(?:C\$|CA\$|US\$|A\$|AU\$|\$|€|£)\s?(\d{1,3}(?:,\d{3})*\.\d{2}|\d+\.\d{2})"#
-        guard let regex = try? NSRegularExpression(pattern: pattern) else { return nil }
+    /// "charged $134.99 for 1 year, then $269.99/year": the introductory price and what follows it, as the
+    /// email states them. Both are the plan's own prices, so their difference is the real rise even when
+    /// the amount charged has tax on top.
+    static func introductoryPrices(in text: String) -> (intro: Decimal?, next: Decimal)? {
+        let amount = #"(?:C\$|CA\$|US\$|A\$|AU\$|\$|€|£)\s?(\d{1,3}(?:,\d{3})*\.\d{2}|\d+\.\d{2})"#
         let ns = text as NSString
-        guard let match = regex.firstMatch(in: text, range: NSRange(location: 0, length: min(ns.length, 12_000))) else { return nil }
-        return Decimal(string: ns.substring(with: match.range(at: 1)).replacingOccurrences(of: ",", with: ""))
+        let range = NSRange(location: 0, length: min(ns.length, 12_000))
+        func value(_ match: NSTextCheckingResult, _ group: Int) -> Decimal? {
+            guard match.range(at: group).location != NSNotFound else { return nil }
+            return Decimal(string: ns.substring(with: match.range(at: group)).replacingOccurrences(of: ",", with: ""))
+        }
+        if let both = try? NSRegularExpression(pattern: "(?i)\(amount)[^.\\n]{0,40}?\\bthen\\s+\(amount)"),
+           let match = both.firstMatch(in: text, range: range), let next = value(match, 2) {
+            return (value(match, 1), next)
+        }
+        if let only = try? NSRegularExpression(pattern: "(?i)\\bthen\\s+\(amount)"),
+           let match = only.firstMatch(in: text, range: range), let next = value(match, 1) {
+            return (nil, next)
+        }
+        return nil
     }
 
     // MARK: Trial

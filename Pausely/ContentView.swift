@@ -1,153 +1,99 @@
 import SwiftUI
-import AuthenticationServices
-import os.log
-import TipKit
-import UserNotifications
+import CoreSpotlight
 
 @main
 struct PauselyApp: App {
     @UIApplicationDelegateAdaptor(AppDelegate.self) var appDelegate
     @AppStorage("app_language") private var appLanguage = "system"
 
+    /// The language chosen in the app, with the iPhone's region (`L10n.locale`). Read through
+    /// `appLanguage` so the whole app redraws when it changes.
     private var resolvedLocale: Locale {
-        if appLanguage == "system" { return .current }
-        return Locale(identifier: appLanguage)
+        appLanguage == "system" ? .current : L10n.locale(language: appLanguage, onDevice: .current)
+    }
+
+    /// Right to left for Arabic chosen in the app, left to right for the others. Nil when the app
+    /// follows the iPhone: iOS then sets the direction of the language the app is actually shown in.
+    private var chosenDirection: LayoutDirection? {
+        guard appLanguage != "system" else { return nil }
+        return Locale.Language(identifier: appLanguage).characterDirection == .rightToLeft ? .rightToLeft : .leftToRight
     }
 
     init() {
+        // Started in the background before the phone's first unlock, nothing saved can be read, and
+        // anything saved now could replace it (see `SavedData`). The app does not start: a person can't
+        // be looking at it, because opening it takes an unlocked phone. Only a "Keep it" press is
+        // written down, on its own, and the launch ends (`LockedLaunchDelegate`).
+        if SavedData.lockedAtLaunch, UIApplication.shared.applicationState == .background {
+            LockedLaunchDelegate.isActive = true
+            return
+        }
+        // Has to be read before anything is saved in this launch (see `InstallState`).
+        _ = InstallState.firstLaunch
+        // Two earlier price trackers wrote different things under this one key and overwrote each
+        // other. The event log is the price history now, and what they left is removed.
+        UserDefaults.standard.removeObject(forKey: "subscription_price_history")
         #if DEBUG
         // UI tests pass --reset-state to start from a first launch, whatever an earlier run left behind.
-        if ProcessInfo.processInfo.arguments.contains("--reset-state") {
+        if LaunchFlag.isSet("--reset-state") {
             UserDefaults.standard.removeObject(forKey: "hasCompletedOnboarding")
+            PendingTally.clear()
+            TallyImporter.clearWaiting()
+        }
+        // A launch that starts from a set list (the demo one, or none) takes in nothing an earlier
+        // run left waiting: an "empty" capture once opened on a Netflix from a first-run test.
+        if LaunchFlag.isSet("--fresh-demo-data") || LaunchFlag.isSet("--empty-demo-data") || LaunchFlag.isSet("--varied-demo-data")
+            || LaunchFlag.isSet("--quiet-demo-data") || LaunchFlag.isSet("--large-demo-data") {
+            PendingTally.clear()
+            TallyImporter.clearWaiting()
         }
         #endif
     }
 
     var body: some Scene {
         WindowGroup {
-            RootView()
-                .environment(\.locale, resolvedLocale)
-                .readableWidth()
+            if LockedLaunchDelegate.isActive {
+                // Never on screen: this launch ends while the phone is still locked.
+                Color.clear
+            } else {
+                RootView()
+                    .environment(\.locale, resolvedLocale)
+                    .modifier(ChosenDirection(direction: chosenDirection))
+            }
         }
-    }
-}
-
-class AppDelegate: NSObject, UIApplicationDelegate {
-    func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]? = nil) -> Bool {
-        // Configure navigation bar appearance
-        let appearance = UINavigationBarAppearance()
-        appearance.configureWithTransparentBackground()
-        appearance.backgroundColor = .clear
-        appearance.titleTextAttributes = [
-            .font: UIFont.systemFont(ofSize: 17, weight: .semibold),
-            .foregroundColor: UIColor.label
-        ]
-
-        // Once content scrolls under the bar it gets a solid background, so text never runs
-        // under the buttons; at the top it stays transparent.
-        let scrolledAppearance = UINavigationBarAppearance()
-        scrolledAppearance.configureWithDefaultBackground()
-        scrolledAppearance.backgroundColor = UIColor(Color.obsidianBlack).withAlphaComponent(0.92)
-        scrolledAppearance.shadowColor = .clear
-        scrolledAppearance.titleTextAttributes = appearance.titleTextAttributes
-
-        UINavigationBar.appearance().standardAppearance = scrolledAppearance
-        UINavigationBar.appearance().compactAppearance = scrolledAppearance
-        UINavigationBar.appearance().scrollEdgeAppearance = appearance
-
-        // Configure tab bar appearance
-        let tabBarAppearance = UITabBarAppearance()
-        tabBarAppearance.configureWithTransparentBackground()
-        tabBarAppearance.backgroundColor = UIColor(Color.backgroundPrimary).withAlphaComponent(0.95)
-
-        UITabBar.appearance().standardAppearance = tabBarAppearance
-        UITabBar.appearance().scrollEdgeAppearance = tabBarAppearance
-
-        // Configure TipKit for contextual tips
-        TipKitConfiguration.configure()
-
-        // Reminder taps and their Keep / Review buttons. Set before launch finishes so a tap that
-        // launched the app is delivered.
-        UNUserNotificationCenter.current().delegate = NotificationDelegate.shared
-        ReminderActions.registerCategories()
-
-        // Handle URL if app was launched via deep link
-        if let url = launchOptions?[.url] as? URL {
-            handleDeepLink(url)
-        }
-
-        return true
-    }
-
-    func application(_ app: UIApplication, open url: URL, options: [UIApplication.OpenURLOptionsKey: Any] = [:]) -> Bool {
-        handleDeepLink(url)
-        return true
-    }
-
-    private func handleDeepLink(_ url: URL) {
-        #if DEBUG
-        os_log("🔗 AppDelegate handling URL: %{public}@", log: .default, type: .info, url.absoluteString)
-        #endif
-        DeepLinkManager.shared.process(url)
     }
 }
 
 // MARK: - Root View
 struct RootView: View {
-    @ObservedObject private var authManager = RevolutionaryAuthManager.shared
+    @ObservedObject private var authManager = AuthManager.shared
     @ObservedObject private var ageConsent = AgeConsentManager.shared
     @State private var supabaseManager = SupabaseManager.shared
     @State private var showSplash = true
-    @State private var splashAnimation = false
     @State private var showAuth = false
     @State private var splashWorkItem: DispatchWorkItem?
     @AppStorage("hasCompletedOnboarding") private var hasCompletedOnboarding = false
-    @State private var authStart: PremiumWelcomeFlow.Start = .welcome
+    /// "Create your account" and "Sign in", when the first run asks for them.
+    @State private var signingUp = false
+    @State private var signingIn = false
     @Environment(\.scenePhase) private var scenePhase
 
-    /// Detects if app was launched for UI testing
-    private var isUITesting: Bool {
-        ProcessInfo.processInfo.arguments.contains("--uitesting")
-    }
+    // DEBUG only: a release build never reads a launch argument (see `LaunchFlag`).
+    private var isUITesting: Bool { LaunchFlag.uiTesting.isSet }
+    private var isDemoMode: Bool { LaunchFlag.demoMode.isSet }
 
-    /// Detects if app should run in demo mode (no auth required)
-    private var isDemoMode: Bool {
-        ProcessInfo.processInfo.arguments.contains("--demo-mode")
-    }
-
-    /// DEBUG only: open a single screen directly via launch argument.
-    private func isDemoScreen(_ argument: String) -> Bool {
+    private var hasDebugDestination: Bool {
         #if DEBUG
-        return ProcessInfo.processInfo.arguments.contains(argument)
+        return DebugLaunchRouter.hasDestination
         #else
         return false
         #endif
     }
-
-    /// DEBUG only: `--demo-imap-connect` (iCloud) or `--demo-imap-connect=<preset id>`; `=other` for any server.
-    private var demoIMAPPreset: String? {
-        #if DEBUG
-        for argument in ProcessInfo.processInfo.arguments {
-            if argument == "--demo-imap-connect" { return "icloud" }
-            if argument.hasPrefix("--demo-imap-connect=") { return String(argument.dropFirst("--demo-imap-connect=".count)) }
-        }
-        #endif
-        return nil
-    }
-
-    /// DEBUG only: open the Gmail results screen with a synthetic mailbox (no Google sign-in needed).
-    private var isDemoGmailResults: Bool {
-        #if DEBUG
-        return ProcessInfo.processInfo.arguments.contains("--demo-gmail-results")
-        #else
-        return false
-        #endif
-    }
-
 
     /// Signed-in users (existing accounts, Apple sign-ins) who haven't confirmed their age yet.
+    /// Local-only guest mode skips this gate; creating a cloud account runs it via `SignUpDoor`.
     private var needsAgeGate: Bool {
-        guard !isDemoMode, !isUITesting, authManager.isAuthenticated,
+        guard !isDemoMode, !isUITesting, authManager.isAuthenticated, !authManager.isGuest,
               let uid = authManager.currentUser?.id else { return false }
         return ageConsent.needsConsent(userId: uid) && !ageConsent.hasPassedDeviceGate
     }
@@ -155,123 +101,101 @@ struct RootView: View {
     var body: some View {
         ZStack {
             Group {
-                if isDemoGmailResults {
+                if hasDebugDestination {
                     #if DEBUG
-                    InboxImportView()
-                        .onAppear { InboxScanner.shared.loadDemoResults() }
-                    #endif
-                } else if isDemoScreen("--demo-inbox") {
-                    #if DEBUG
-                    InboxImportView()
-                        .task { if isDemoScreen("--reset-inbox") { await InboxScanner.shared.disconnectAll() } }
-                    #endif
-                } else if let presetID = demoIMAPPreset {
-                    #if DEBUG
-                    IMAPConnectView(preset: IMAPPreset.find(presetID))
-                    #endif
-                } else if isDemoScreen("--demo-subscription") {
-                    #if DEBUG
-                    SubscriptionManagementView(subscription: SubscriptionStore.shared.subscriptions.first { $0.name == "Netflix" } ?? DemoSubscriptions.netflix)
-                    #endif
-                } else if isDemoScreen("--demo-subscription-edit") {
-                    #if DEBUG
-                    SubscriptionEditView(subscription: DemoSubscriptions.netflix)
-                    #endif
-                } else if isDemoScreen("--demo-paywall") {
-                    #if DEBUG
-                    StoreKitUpgradeView(currentSubscriptionCount: 3)
-                    #endif
-                } else if isDemoScreen("--demo-wrapped") {
-                    #if DEBUG
-                    SubscriptionWrappedView(subscriptions: SubscriptionStore.makeDemoSubscriptions())
-                    #endif
-                } else if isDemoScreen("--demo-verdict") {
-                    #if DEBUG
-                    RenewalVerdictView(subscriptionId: SubscriptionStore.shared.subscriptions.first?.id ?? UUID())
-                    #endif
-                } else if isDemoScreen("--demo-pause-plan") {
-                    #if DEBUG
-                    PausePlanView()
-                        .task {
-                            guard isDemoScreen("--demo-plan-active"), PausePlanStore.shared.activePlan == nil else { return }
-                            let eligible = SubscriptionStore.shared.subscriptions.filter(PausePlanSchedule.isEligible)
-                            await PausePlanStore.shared.start(order: PausePlanSchedule.suggestedOrder(eligible, now: Date()))
-                        }
-                    #endif
-                } else if isDemoScreen("--demo-receipt") {
-                    #if DEBUG
-                    SavingsReceiptView()
-                    #endif
-                } else if isDemoScreen("--demo-browser") {
-                    #if DEBUG
-                    SubscriptionBrowserView()
+                    DebugLaunchRouter.screen()
                     #endif
                 } else if needsAgeGate, let uid = authManager.currentUser?.id {
                     AgeGateView(
                         onPassed: { Task { await ageConsent.recordConsent(userId: uid) } },
                         onCancel: { Task { await authManager.signOut() } },
-                        cancelTitle: "Sign Out"
+                        cancelTitle: "Sign out"
                     )
+                    .readableWidth()
                     .transition(.opacity)
                 } else if isDemoMode || authManager.isAuthenticated {
                     // Authenticated: show main app
                     VStack(spacing: 0) {
-                        if supabaseManager.isUsingDemoMode {
+                        if supabaseManager.isUsingDemoMode || LaunchFlag.isSet("--demo-banner") {
                             DemoModeBanner()
                         }
-                        PremiumMainTabView()
+                        MainTabView()
                     }
-                    .transition(.opacity.combined(with: .scale(0.98)))
-                } else if !showAuth && !hasCompletedOnboarding {
-                    // New user: show value-first onboarding BEFORE auth wall
-                    OnboardingCarouselView(
-                        onGetStarted: {
-                            authStart = .signUp
-                            withAnimation(.easeInOut(duration: 0.4)) {
+                    .transition(.arriving(.scale(scale: 0.98)))
+                } else if !showAuth && (!hasCompletedOnboarding || PendingTally.load() != nil) {
+                    // New person: the guess, the tally and the reveal come before the account.
+                    // Someone who made a list and then backed out of creating an account (or closed the
+                    // app there) comes back to their own reveal, not to a welcome screen that starts over.
+                    FirstRunView(
+                        startAt: PendingTally.load() == nil ? .guess : .reveal,
+                        tally: PendingTally.load(),
+                        onKeepList: {
+                            // The account form rises over the total, which stays where it is:
+                            // closing the form leaves the person on their own list. (With nothing
+                            // on the list there is no total to keep, and the welcome screen is
+                            // what is underneath.)
+                            withAnimation(Motion.unlessReduced(Motion.arrive)) { hasCompletedOnboarding = true }
+                            signingUp = true
+                        },
+                        onSignIn: {
+                            withAnimation(Motion.unlessReduced(Motion.arrive)) {
                                 showAuth = true
                                 hasCompletedOnboarding = true
                             }
+                            signingIn = true
                         },
-                        onSignIn: {
-                            authStart = .signIn
-                            withAnimation(.easeInOut(duration: 0.4)) {
-                                showAuth = true
+                        onContinueWithoutAccount: {
+                            withAnimation(Motion.unlessReduced(Motion.arrive)) {
                                 hasCompletedOnboarding = true
+                                authManager.enterGuestMode()
                             }
                         }
                     )
-                    .transition(.opacity.combined(with: .move(edge: .bottom)))
+                    .transition(.opacity)
                 } else {
                     // Onboarding completed but not authenticated: show auth
-                    PremiumWelcomeFlow(start: authStart)
-                        .transition(.opacity.combined(with: .move(edge: .bottom)))
+                    WelcomeFlow()
+                        .transition(.arriving(.move(edge: .bottom)))
                 }
             }
             .opacity(showSplash ? 0 : 1)
+            // Opened from here, by the screen that is always on: a form opened by a screen as it
+            // arrived (the welcome screen sliding in) was a second thing happening at once, and on
+            // iPad "Keep my list" ended back on the total with no form.
+            .signUpDoor(isOpen: $signingUp)
+            .sheet(isPresented: $signingIn) { SignInView() }
+            .onReceive(NotificationCenter.default.publisher(for: .openSignUpDoor)) { _ in signingUp = true }
+            .onReceive(NotificationCenter.default.publisher(for: .openSignInSheet)) { _ in signingIn = true }
 
             if showSplash {
-                PremiumSplashScreen(animation: $splashAnimation)
+                SplashScreen()
                     .transition(.opacity)
             }
         }
-        .animation(.easeInOut(duration: 0.5), value: authManager.isAuthenticated)
-        .animation(.easeInOut(duration: 0.5), value: showAuth)
+        .animation(Motion.unlessReduced(Motion.arrive), value: authManager.isAuthenticated)
+        .animation(Motion.unlessReduced(Motion.arrive), value: showAuth)
         .onAppear {
+            #if DEBUG
+            // `--demo-splash` holds the launch mark so the tour can capture it (it is gone in 0.6 s).
+            if LaunchFlag.isSet("--demo-splash") { return }
+            #endif
             let workItem = DispatchWorkItem {
-                withAnimation(.easeOut(duration: 0.4)) {
+                withAnimation(Motion.fade) {
                     showSplash = false
                 }
             }
             splashWorkItem = workItem
-            DispatchQueue.main.asyncAfter(deadline: .now() + 2.5, execute: workItem)
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.6, execute: workItem)
         }
         .onDisappear {
             splashWorkItem?.cancel()
         }
         .task(id: authManager.currentUser?.id) {
             // Users who passed the age gate before sign-up get their consent recorded automatically;
-            // anyone with an unsynced record retries the upload.
-            guard let uid = authManager.currentUser?.id else { return }
+            // anyone with an unsynced record retries the upload. Local-only guest mode never writes to cloud.
+            guard !authManager.isGuest,
+                  let uid = authManager.currentUser?.id,
+                  uid != AuthManager.localTestUserID else { return }
             if ageConsent.needsConsent(userId: uid) && ageConsent.hasPassedDeviceGate {
                 await ageConsent.recordConsent(userId: uid)
             } else {
@@ -279,138 +203,70 @@ struct RootView: View {
             }
         }
         .task {
-            // Initialize StoreKit: starts the transaction listener and checks
-            // existing entitlements so returning subscribers are recognized immediately.
-            await StoreKitManager.shared.loadProductsIfNeeded()
+            // Starts listening for App Store transactions and fetches the plans' prices.
+            await StoreKitManager.shared.loadProducts()
         }
         .onAppear {
             #if DEBUG
-            if isDemoScreen("--demo-savings") || isDemoScreen("--demo-receipt") { DemoSavings.seed() }
+            DebugLaunchRouter.applyDemoModifiers(authManager: authManager)
             #endif
         }
         .onChange(of: scenePhase) { _, phase in
             // Time-driven changes (renewals passing, trials ending) and a fresh set of reminders
             // every time the app comes back to the foreground.
             if phase == .active {
+                // The phone is unlocked now: anything a locked-screen action couldn't read can be.
+                LifecycleEventLog.shared.loadIfNeeded()
+                PausePlanStore.shared.loadIfNeeded()
+                // "Keep it" pressed before the first unlock after a restart, written down then.
+                Task { await VerdictCenter.shared.keepPressedWhileLocked() }
+                // Landed somewhere else: every renewal is still on its day.
+                SubscriptionStore.shared.noticeTimeZone()
                 Task {
                     await NotificationManager.shared.refreshStatus()
                     await SubscriptionLifecycle.shared.run()
+                    // Changes that couldn't be sent earlier go now. If first-sync dedup hasn't succeeded yet
+                    // (e.g. initial sign-in fetch failed offline), retry reconciliation instead of stalling.
+                    if authManager.isSignedIntoCloud {
+                        if SubscriptionStore.isFirstSync(for: authManager.currentUser?.id) {
+                            await SubscriptionStore.shared.fetchSubscriptions(force: true)
+                        } else {
+                            await SubscriptionStore.shared.sync.drain(force: true)
+                        }
+                    }
+                    await LifecycleSync.shared.sync()
+                    await PausePlanSync.shared.sync()
+                    // An app left open for days still converts at today's rates (asks at most hourly).
+                    await CurrencyManager.shared.refreshRatesWhenDue()
+                    // A subscription that ended or was refunded while the app was in the background stops
+                    // unlocking Pro now, not at the next cold launch.
+                    await PaymentManager.shared.updateCurrentEntitlements()
                 }
             }
         }
+        // A reset code or link was accepted: nothing else until the new password is chosen.
+        .fullScreenCover(isPresented: $authManager.needsNewPassword) {
+            NewPasswordView()
+                .readableWidth()
+                .preferredColorScheme(.dark)
+        }
+        .errorBanner($authManager.linkProblem)
         .onOpenURL { url in
-            // Handle deep links (referral codes, auth callbacks, subscription management, etc.)
-            #if DEBUG
-            os_log("🔗 RootView received URL: %{public}@", log: .default, type: .info, url.absoluteString)
-            #endif
+            // Account links and links to a subscription. Never logged: an account link carries a code.
             DeepLinkManager.shared.process(url)
+        }
+        // A subscription found in the iPhone's search opens that subscription.
+        .onContinueUserActivity(CSSearchableItemActionType) { activity in
+            if let id = SpotlightManager.subscriptionId(in: activity) { VerdictCenter.shared.showSubscription(id) }
         }
         .preferredColorScheme(.dark)
     }
 }
 
-// MARK: - Premium Splash Screen
-struct PremiumSplashScreen: View {
-    @Binding var animation: Bool
-    @State private var rotation = 0.0
-    @State private var opacity = 0.0
-    
-    var body: some View {
-        ZStack {
-            PremiumBackground()
-            
-            VStack(spacing: 32) {
-                Spacer()
-                
-                // Animated Logo
-                ZStack {
-                    // Outer rotating ring
-                    Circle()
-                        .stroke(
-                            AngularGradient(
-                                colors: [BrandColors.primary, BrandColors.secondary, BrandColors.accent, BrandColors.primary],
-                                center: .center
-                            ),
-                            lineWidth: 3
-                        )
-                        .frame(width: 140, height: 140)
-                        .rotationEffect(.degrees(rotation))
-                    
-                    // Middle glow
-                    Circle()
-                        .fill(
-                            RadialGradient(
-                                colors: [
-                                    BrandColors.primary.opacity(0.3),
-                                    .clear
-                                ],
-                                center: .center,
-                                startRadius: 20,
-                                endRadius: 60
-                            )
-                        )
-                        .frame(width: 120, height: 120)
-                        .scaleEffect(animation ? 1.1 : 0.9)
-                    
-                    // Icon container
-                    Circle()
-                        .fill(
-                            LinearGradient(
-                                colors: [BrandColors.primary, BrandColors.secondary],
-                                startPoint: .topLeading,
-                                endPoint: .bottomTrailing
-                            )
-                        )
-                        .frame(width: 90, height: 90)
-                        .shadow(color: .brandPrimary.opacity(0.5), radius: 30, x: 0, y: 15)
-                    
-                    Image(systemName: "pause.circle.fill")
-                        .font(.system(.largeTitle, design: .rounded).weight(.medium))
-                        .foregroundColor(.white)
-                }
-                
-                // Text
-                VStack(spacing: 12) {
-                    Text("Pausely")
-                        .font(.system(.largeTitle, design: .rounded).weight(.bold))
-                        .foregroundColor(.white)
-
-                    Text("Smart Subscription Manager")
-                        .font(.system(.body, design: .rounded).weight(.medium))
-                        .foregroundColor(Color.obsidianTextSecondary)
-                }
-                .opacity(opacity)
-                
-                Spacer()
-                
-                // Loading indicator
-                PremiumLoadingIndicator()
-                    .opacity(opacity)
-                
-                Spacer()
-            }
-        }
-        .onAppear {
-            if !UIAccessibility.isReduceMotionEnabled {
-                withAnimation(.linear(duration: 3).repeatForever(autoreverses: false)) {
-                    rotation = 360
-                }
-                withAnimation(.easeInOut(duration: 1.5).repeatForever(autoreverses: true)) {
-                    animation = true
-                }
-            }
-            withAnimation(.easeOut(duration: 0.6).delay(0.3)) {
-                opacity = 1
-            }
-        }
-    }
-}
-
-
-// MARK: - Premium Welcome Flow
-/// The sign-up / sign-in screen. The carousel before it already explained the app, so this goes
+// MARK: - Welcome Flow
+/// The sign-up / sign-in screen. The first-run tally already explained the app, so this goes
 /// straight to the account step; `start` opens the form the customer asked for.
-struct PremiumWelcomeFlow: View {
+struct WelcomeFlow: View {
     enum Start { case welcome, signUp, signIn }
     var start: Start = .welcome
 
@@ -420,17 +276,14 @@ struct PremiumWelcomeFlow: View {
 
     var body: some View {
         NavigationStack {
-            ZStack {
-                PremiumBackground()
-                authWallContent
-            }
+            WelcomeWallBody(
+                onSignUp: { showSignUp = true },
+                onSignIn: { showSignIn = true },
+                onGuest: { AuthManager.shared.enterGuestMode() }
+            )
             .navigationBarHidden(true)
-            .sheet(isPresented: $showSignUp) {
-                PremiumSignUpView()
-            }
-            .sheet(isPresented: $showSignIn) {
-                PremiumSignInView()
-            }
+            .signUpDoor(isOpen: $showSignUp)
+            .sheet(isPresented: $showSignIn) { SignInView() }
         }
         .onAppear {
             guard !didApplyStart else { return }
@@ -442,603 +295,4 @@ struct PremiumWelcomeFlow: View {
             }
         }
     }
-
-    // MARK: - Auth Wall Content
-    private var authWallContent: some View {
-        VStack(spacing: 0) {
-            Spacer()
-
-            // Hero
-            VStack(spacing: 24) {
-                ZStack {
-                    Circle()
-                        .fill(
-                            LinearGradient(
-                                colors: [BrandColors.primary, BrandColors.secondary],
-                                startPoint: .topLeading,
-                                endPoint: .bottomTrailing
-                            )
-                        )
-                        .frame(width: 100, height: 100)
-                        .shadow(color: BrandColors.primary.opacity(0.4), radius: 30, x: 0, y: 15)
-
-                    Image(systemName: "pause.circle.fill")
-                        .font(.system(.largeTitle, design: .rounded))
-                        .foregroundColor(.white)
-                }
-
-                VStack(spacing: 8) {
-                    Text("Welcome to Pausely")
-                        .font(.system(.title, design: .rounded).weight(.bold))
-                        .foregroundColor(.white)
-                        .multilineTextAlignment(.center)
-
-                    Text("Take control of your subscriptions")
-                        .font(.system(.body, design: .rounded).weight(.medium))
-                        .foregroundColor(Color.obsidianTextSecondary)
-                }
-            }
-            .padding(.bottom, 48)
-
-            // Features
-            VStack(spacing: 16) {
-                PremiumFeatureRow(
-                    icon: "calendar.badge.clock",
-                    title: "Every renewal, before it hits",
-                    description: "What each subscription costs and the day it charges you"
-                )
-
-                PremiumFeatureRow(
-                    icon: "hand.tap.fill",
-                    title: "Keep it or cancel it",
-                    description: "A reminder before each charge, with the facts to decide"
-                )
-
-                PremiumFeatureRow(
-                    icon: "doc.text.fill",
-                    title: "Your Savings Receipt",
-                    description: "Exactly what your cancellations saved you"
-                )
-            }
-            .padding(.horizontal, 24)
-            .padding(.bottom, 48)
-
-            Spacer()
-
-            // Actions
-            VStack(spacing: 16) {
-                Button(action: { showSignUp = true }) {
-                    Text("Get Started")
-                }
-                .buttonStyle(PrimaryButtonStyle())
-                .padding(.horizontal, 24)
-                .accessibilityIdentifier("getStartedButton")
-
-                Button(action: { showSignIn = true }) {
-                    Text("I already have an account")
-                }
-                .buttonStyle(GhostButtonStyle())
-                .accessibilityIdentifier("signInButton")
-            }
-            .padding(.bottom, 48)
-        }
-    }
-}
-
-// MARK: - Premium Feature Row
-struct PremiumFeatureRow: View {
-    let icon: String
-    let title: String
-    let description: String
-    
-    var body: some View {
-        HStack(spacing: 16) {
-            // Icon
-            ZStack {
-                RoundedRectangle(cornerRadius: 12)
-                    .fill(BrandColors.primary.opacity(0.15))
-                    .frame(width: 52, height: 52)
-                
-                Image(systemName: icon)
-                    .font(.system(.title2, design: .rounded).weight(.semibold))
-                    .foregroundColor(BrandColors.primary)
-            }
-
-            VStack(alignment: .leading, spacing: 4) {
-                Text(title)
-                    .font(.system(.body, design: .rounded).weight(.semibold))
-                    .foregroundColor(.white)
-
-                Text(description)
-                    .font(.system(.subheadline, design: .rounded))
-                    .foregroundColor(.textSecondary)
-            }
-            
-            Spacer()
-        }
-        .padding(16)
-        .background(
-            RoundedRectangle(cornerRadius: 16)
-                .fill(BackgroundColors.secondary)
-                .overlay(
-                    RoundedRectangle(cornerRadius: 16)
-                        .stroke(.white.opacity(0.06), lineWidth: 1)
-                )
-        )
-    }
-}
-
-// MARK: - Premium Sign Up View
-struct PremiumSignUpView: View {
-    @Environment(\.dismiss) private var dismiss
-    @ObservedObject private var authManager = RevolutionaryAuthManager.shared
-    @ObservedObject private var ageConsent = AgeConsentManager.shared
-    @State private var showAgeGate = false
-    @State private var firstName = ""
-    @State private var lastName = ""
-    @State private var email = ""
-    @State private var password = ""
-    @State private var isLoading = false
-    @State private var showError = false
-    @State private var errorMessage = ""
-    @State private var appleNonce: String?
-    @State private var showEmailConfirmation = false
-    @State private var pendingEmail = ""
-
-    var isPasswordValid: Bool {
-        PasswordStrength.rulesMet(password) == 4
-    }
-
-    var isValid: Bool {
-        !firstName.isEmpty && !email.isEmpty && email.contains("@") && isPasswordValid
-    }
-
-    var body: some View {
-        NavigationStack {
-            ZStack {
-                PremiumBackground()
-
-                ScrollView(showsIndicators: false) {
-                    VStack(spacing: 20) {
-                        // Header
-                        VStack(spacing: 8) {
-                            Text("Create Account")
-                                .font(.system(.title, design: .rounded).weight(.bold))
-                                .foregroundColor(.white)
-
-                            Text("Start your subscription journey")
-                                .font(.system(.body, design: .rounded))
-                                .foregroundColor(Color.obsidianTextSecondary)
-                        }
-                        .padding(.top, 20)
-
-                        // Form
-                        VStack(spacing: 20) {
-                            // Name row
-                            HStack(spacing: 12) {
-                                VStack(alignment: .leading, spacing: 8) {
-                                    Text("First Name")
-                                        .font(.system(.subheadline, design: .rounded).weight(.medium))
-                                        .foregroundColor(Color.obsidianTextSecondary)
-                                    PremiumTextField(placeholder: "Jane", text: $firstName)
-                                        .accessibilityIdentifier("firstNameTextField")
-                                }
-                                VStack(alignment: .leading, spacing: 8) {
-                                    Text("Last Name")
-                                        .font(.system(.subheadline, design: .rounded).weight(.medium))
-                                        .foregroundColor(Color.obsidianTextSecondary)
-                                    PremiumTextField(placeholder: "Smith", text: $lastName)
-                                        .accessibilityIdentifier("lastNameTextField")
-                                }
-                            }
-
-                            // Email
-                            VStack(alignment: .leading, spacing: 8) {
-                                Text("Email")
-                                    .font(.system(.subheadline, design: .rounded).weight(.medium))
-                                    .foregroundColor(Color.obsidianTextSecondary)
-
-                                PremiumTextField(
-                                    placeholder: "your@email.com",
-                                    text: $email,
-                                    keyboardType: .emailAddress,
-                                    autocapitalization: .never
-                                )
-                                .accessibilityIdentifier("emailTextField")
-                            }
-
-                            // Password
-                            VStack(alignment: .leading, spacing: 8) {
-                                Text("Password")
-                                    .font(.system(.subheadline, design: .rounded).weight(.medium))
-                                    .foregroundColor(Color.obsidianTextSecondary)
-
-                                PremiumTextField(
-                                    placeholder: "Min. 8 characters",
-                                    text: $password,
-                                    isSecure: true
-                                )
-                                .accessibilityIdentifier("passwordTextField")
-
-                                if !password.isEmpty {
-                                    PasswordStrengthMeter(password: password)
-                                }
-                            }
-                        }
-                        .padding(.horizontal, 24)
-
-                        // Error
-                        if showError {
-                            HStack(spacing: 8) {
-                                Image(systemName: "exclamationmark.triangle.fill")
-                                    .foregroundColor(.error)
-                                Text(errorMessage)
-                                    .font(.system(.subheadline, design: .rounded))
-                                    .foregroundColor(.error)
-                            }
-                            .padding(.horizontal, 24)
-                        }
-
-                        // Spacer removed — meter pushes button, keep it reachable on small screens
-                        // Button
-                        Button(action: performSignUp) {
-                            HStack {
-                                if isLoading {
-                                    ProgressView()
-                                        .tint(.white)
-                                } else {
-                                    Text("Create Account")
-                                        .font(.system(.body, design: .rounded).weight(.semibold))
-                                }
-                            }
-                        }
-                        .buttonStyle(PrimaryButtonStyle(isLoading: isLoading, isDisabled: !isValid))
-                        .padding(.horizontal, 24)
-                        .disabled(!isValid || isLoading)
-                        .accessibilityIdentifier("createAccountButton")
-                        .accessibilityHint(!isValid ? "Please fill in all required fields correctly" : isLoading ? "Please wait, creating account" : "")
-
-                        // Divider
-                        HStack {
-                            Rectangle().fill(Color.white.opacity(0.1)).frame(height: 1)
-                            Text("or").font(.system(.footnote, design: .rounded)).foregroundColor(.textTertiary).padding(.horizontal, 8)
-                            Rectangle().fill(Color.white.opacity(0.1)).frame(height: 1)
-                        }
-                        .padding(.horizontal, 24)
-
-                        // Sign in with Apple
-                        SignInWithAppleButton(.signUp, onRequest: { request in
-                            let nonce = AppleSignInCoordinator.generateNonce()
-                            appleNonce = nonce
-                            request.requestedScopes = [.fullName, .email]
-                            request.nonce = AppleSignInCoordinator.sha256(nonce)
-                        }, onCompletion: { result in
-                            handleAppleResult(result)
-                        })
-                        .signInWithAppleButtonStyle(.white)
-                        .frame(height: 50)
-                        .cornerRadius(14)
-                        .padding(.horizontal, 24)
-                        .accessibilityIdentifier("appleSignUpButton")
-
-                        // Terms
-                        Text("By creating an account, you agree to our Terms of Service and Privacy Policy")
-                            .font(.system(.footnote, design: .rounded))
-                            .foregroundColor(.textTertiary)
-                            .multilineTextAlignment(.center)
-                            .padding(.horizontal, 40)
-                            .padding(.bottom, 24)
-                    }
-                }
-            }
-            .navigationBarTitleDisplayMode(.inline)
-            .toolbar {
-                ToolbarItem(placement: .navigationBarLeading) {
-                    Button("Cancel") { dismiss() }
-                        .foregroundColor(Color.obsidianTextSecondary)
-                        .accessibilityIdentifier("cancelButton")
-                }
-            }
-            .sheet(isPresented: $showEmailConfirmation) {
-                EmailConfirmationView(email: pendingEmail)
-            }
-            .fullScreenCover(isPresented: $showAgeGate) {
-                AgeGateView(
-                    onPassed: { showAgeGate = false },
-                    onCancel: {
-                        showAgeGate = false
-                        dismiss()
-                    }
-                )
-                .readableWidth()
-            }
-            .onAppear {
-                // Age is confirmed BEFORE any account can be created.
-                if !ageConsent.hasPassedDeviceGate { showAgeGate = true }
-            }
-        }
-    }
-
-    private func handleAppleResult(_ result: Result<ASAuthorization, Error>) {
-        switch result {
-        case .success(let auth):
-            guard
-                let credential = auth.credential as? ASAuthorizationAppleIDCredential,
-                let tokenData = credential.identityToken,
-                let idToken = String(data: tokenData, encoding: .utf8),
-                let nonce = appleNonce
-            else { return }
-            isLoading = true
-            Task {
-                do {
-                    try await authManager.signInWithApple(
-                        idToken: idToken,
-                        rawNonce: nonce,
-                        fullName: credential.fullName
-                    )
-                    await MainActor.run {
-                        isLoading = false
-                        if authManager.isAuthenticated { dismiss() }
-                    }
-                } catch {
-                    await MainActor.run {
-                        isLoading = false
-                        showError = true
-                        errorMessage = error.localizedDescription
-                    }
-                }
-            }
-        case .failure(let error):
-            let nsError = error as NSError
-            if nsError.code != ASAuthorizationError.canceled.rawValue {
-                showError = true
-                errorMessage = error.localizedDescription
-            }
-        }
-    }
-
-    private func performSignUp() {
-        guard isValid else { return }
-        isLoading = true
-        showError = false
-        Task {
-            do {
-                try await authManager.signUpWithOTP(
-                    email: email,
-                    password: password,
-                    firstName: firstName.isEmpty ? nil : firstName,
-                    lastName: lastName.isEmpty ? nil : lastName
-                )
-                await MainActor.run {
-                    isLoading = false
-                    if authManager.isAuthenticated {
-                        dismiss()
-                    } else {
-                        // OTP sent — show code entry view
-                        pendingEmail = email
-                        showEmailConfirmation = true
-                    }
-                }
-            } catch {
-                await MainActor.run {
-                    isLoading = false
-                    showError = true
-                    errorMessage = error.localizedDescription
-                }
-            }
-        }
-    }
-}
-
-// MARK: - Premium Sign In View
-struct PremiumSignInView: View {
-    @Environment(\.dismiss) private var dismiss
-    @ObservedObject private var authManager = RevolutionaryAuthManager.shared
-    @State private var email = ""
-    @State private var password = ""
-    @State private var isLoading = false
-    @State private var showError = false
-    @State private var errorMessage = ""
-    @State private var appleNonce: String?
-    @State private var showPasswordReset = false
-
-    var isValid: Bool {
-        !email.isEmpty && !password.isEmpty
-    }
-
-    var body: some View {
-        NavigationStack {
-            ZStack {
-                PremiumBackground()
-
-                ScrollView(showsIndicators: false) {
-                    VStack(spacing: 20) {
-                        // Header
-                        VStack(spacing: 8) {
-                            Text("Welcome Back")
-                                .font(.system(.title, design: .rounded).weight(.bold))
-                                .foregroundColor(.white)
-
-                            Text("Sign in to continue")
-                                .font(.system(.body, design: .rounded))
-                                .foregroundColor(Color.obsidianTextSecondary)
-                        }
-                        .padding(.top, 20)
-
-                        // Form
-                        VStack(spacing: 20) {
-                            VStack(alignment: .leading, spacing: 8) {
-                                Text("Email")
-                                    .font(.system(.subheadline, design: .rounded).weight(.medium))
-                                    .foregroundColor(Color.obsidianTextSecondary)
-
-                                PremiumTextField(
-                                    placeholder: "your@email.com",
-                                    text: $email,
-                                    keyboardType: .emailAddress,
-                                    autocapitalization: .never
-                                )
-                                .accessibilityIdentifier("signInEmailTextField")
-                            }
-
-                            VStack(alignment: .leading, spacing: 8) {
-                                Text("Password")
-                                    .font(.system(.subheadline, design: .rounded).weight(.medium))
-                                    .foregroundColor(Color.obsidianTextSecondary)
-
-                                PremiumTextField(
-                                    placeholder: "••••••••",
-                                    text: $password,
-                                    isSecure: true
-                                )
-                                .accessibilityIdentifier("signInPasswordTextField")
-                            }
-                        }
-                        .padding(.horizontal, 24)
-
-                        if showError {
-                            HStack(spacing: 8) {
-                                Image(systemName: "exclamationmark.triangle.fill")
-                                    .foregroundColor(.error)
-                                Text(errorMessage)
-                                    .font(.system(.subheadline, design: .rounded))
-                                    .foregroundColor(.error)
-                            }
-                            .padding(.horizontal, 24)
-                        }
-
-                        Spacer(minLength: 40)
-
-                        Button(action: performSignIn) {
-                            HStack {
-                                if isLoading {
-                                    ProgressView()
-                                        .tint(.white)
-                                } else {
-                                    Text("Sign In")
-                                        .font(.system(.body, design: .rounded).weight(.semibold))
-                                }
-                            }
-                        }
-                        .buttonStyle(PrimaryButtonStyle(isLoading: isLoading, isDisabled: !isValid))
-                        .padding(.horizontal, 24)
-                        .disabled(!isValid || isLoading)
-                        .accessibilityIdentifier("signInButton")
-                        .accessibilityHint(!isValid ? "Please enter your email and password" : isLoading ? "Please wait, signing in" : "")
-
-                        Button("Forgot Password?") {
-                            showPasswordReset = true
-                        }
-                        .font(.system(.subheadline, design: .rounded))
-                        .foregroundColor(Color.obsidianTextSecondary)
-                        .accessibilityIdentifier("forgotPasswordButton")
-
-                        // Divider
-                        HStack {
-                            Rectangle().fill(Color.white.opacity(0.1)).frame(height: 1)
-                            Text("or").font(.system(.footnote, design: .rounded)).foregroundColor(.textTertiary).padding(.horizontal, 8)
-                            Rectangle().fill(Color.white.opacity(0.1)).frame(height: 1)
-                        }
-                        .padding(.horizontal, 24)
-
-                        // Sign in with Apple
-                        SignInWithAppleButton(.signIn, onRequest: { request in
-                            let nonce = AppleSignInCoordinator.generateNonce()
-                            appleNonce = nonce
-                            request.requestedScopes = [.fullName, .email]
-                            request.nonce = AppleSignInCoordinator.sha256(nonce)
-                        }, onCompletion: { result in
-                            handleAppleResult(result)
-                        })
-                        .signInWithAppleButtonStyle(.white)
-                        .frame(height: 50)
-                        .cornerRadius(14)
-                        .padding(.horizontal, 24)
-                        .padding(.bottom, 24)
-                        .accessibilityIdentifier("appleSignInButton")
-                    }
-                }
-            }
-            .navigationBarTitleDisplayMode(.inline)
-            .toolbar {
-                ToolbarItem(placement: .navigationBarLeading) {
-                    Button("Cancel") { dismiss() }
-                        .foregroundColor(Color.obsidianTextSecondary)
-                        .accessibilityIdentifier("signInCancelButton")
-                }
-            }
-            .sheet(isPresented: $showPasswordReset) {
-                PasswordResetView(email: email)
-            }
-        }
-    }
-
-    private func handleAppleResult(_ result: Result<ASAuthorization, Error>) {
-        switch result {
-        case .success(let auth):
-            guard
-                let credential = auth.credential as? ASAuthorizationAppleIDCredential,
-                let tokenData = credential.identityToken,
-                let idToken = String(data: tokenData, encoding: .utf8),
-                let nonce = appleNonce
-            else { return }
-            isLoading = true
-            Task {
-                do {
-                    try await authManager.signInWithApple(
-                        idToken: idToken,
-                        rawNonce: nonce,
-                        fullName: credential.fullName
-                    )
-                    await MainActor.run {
-                        isLoading = false
-                        if authManager.isAuthenticated { dismiss() }
-                    }
-                } catch {
-                    await MainActor.run {
-                        isLoading = false
-                        showError = true
-                        errorMessage = error.localizedDescription
-                    }
-                }
-            }
-        case .failure(let error):
-            let nsError = error as NSError
-            if nsError.code != ASAuthorizationError.canceled.rawValue {
-                showError = true
-                errorMessage = error.localizedDescription
-            }
-        }
-    }
-
-    private func performSignIn() {
-        guard isValid else { return }
-
-        isLoading = true
-        showError = false
-
-        Task {
-            do {
-                try await authManager.signIn(email: email, password: password)
-
-                await MainActor.run {
-                    isLoading = false
-                    if authManager.isAuthenticated {
-                        dismiss()
-                    }
-                }
-            } catch {
-                await MainActor.run {
-                    isLoading = false
-                    showError = true
-                    // Show the actual error message from the auth system
-                    errorMessage = error.localizedDescription
-                }
-            }
-        }
-    }
-}
-
-#Preview {
-    RootView()
 }

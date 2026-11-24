@@ -26,6 +26,12 @@ struct MailboxAccount: Codable, Identifiable, Hashable {
         case .imap: return IMAPPreset.find(presetID)?.name ?? host ?? L10n.string("Email")
         }
     }
+
+    /// What a running search calls this inbox: its provider, or its address where the provider would only be
+    /// a server's name ("Read 41 of 111 in 127.0.0.1", the rating of 2026-11-23).
+    var searchName: String {
+        kind == .imap && IMAPPreset.find(presetID) == nil ? address : providerName
+    }
 }
 
 // MARK: - IMAP presets
@@ -40,6 +46,10 @@ struct IMAPPreset: Identifiable, Hashable {
     let passwordPage: URL?
     /// Short, ordered steps shown while connecting.
     let steps: [String]
+
+    /// GMX and WEB.DE take the account's own password (an app password only with two-factor sign-in),
+    /// so the form must not tell their users they need an app password (the rating of 2026-11-22).
+    var takesMainPassword: Bool { ["gmx", "gmx-de", "webde"].contains(id) }
 
     /// Computed each time so the steps follow the app's language.
     static var all: [IMAPPreset] { [
@@ -69,18 +79,15 @@ struct IMAPPreset: Identifiable, Hashable {
         IMAPPreset(id: "gmx", name: "GMX", host: "imap.gmx.com",
                    domains: ["gmx.com", "gmx.us", "gmx.co.uk"],
                    passwordPage: URL(string: "https://www.gmx.com"),
-                   steps: [L10n.string("In GMX settings, allow access through POP3 and IMAP."),
-                           L10n.string("Use your GMX password, or an app password if you use two-factor sign-in.")]),
+                   steps: [L10n.string("In GMX settings, allow access through POP3 and IMAP.")]),
         IMAPPreset(id: "gmx-de", name: "GMX (gmx.net)", host: "imap.gmx.net",
                    domains: ["gmx.net", "gmx.de", "gmx.at", "gmx.ch"],
                    passwordPage: URL(string: "https://www.gmx.net"),
-                   steps: [L10n.string("In GMX settings, allow access through POP3 and IMAP."),
-                           L10n.string("Use your GMX password, or an app password if you use two-factor sign-in.")]),
+                   steps: [L10n.string("In GMX settings, allow access through POP3 and IMAP.")]),
         IMAPPreset(id: "webde", name: "WEB.DE", host: "imap.web.de",
                    domains: ["web.de"],
                    passwordPage: URL(string: "https://web.de"),
-                   steps: [L10n.string("In WEB.DE settings, allow access through POP3 and IMAP."),
-                           L10n.string("Use your WEB.DE password, or an app password if you use two-factor sign-in.")]),
+                   steps: [L10n.string("In WEB.DE settings, allow access through POP3 and IMAP.")]),
         IMAPPreset(id: "zoho", name: "Zoho Mail", host: "imap.zoho.com",
                    domains: ["zoho.com", "zohomail.com"],
                    passwordPage: URL(string: "https://accounts.zoho.com/home#security/app_password"),
@@ -91,10 +98,8 @@ struct IMAPPreset: Identifiable, Hashable {
                    passwordPage: URL(string: "https://app.fastmail.com/settings/security/integrations"),
                    steps: [L10n.string("In Fastmail, open Settings, Privacy & Security, Integrations."),
                            L10n.string("Create a new app password with IMAP access and paste it here.")]),
-        IMAPPreset(id: "xfinity", name: "Xfinity (Comcast)", host: "imap.comcast.net",
-                   domains: ["comcast.net"],
-                   passwordPage: URL(string: "https://www.xfinity.com"),
-                   steps: [L10n.string("In Xfinity Connect settings, allow third-party access."), L10n.string("Use your Xfinity password.")])
+        // No Xfinity preset: nobody could test one (INBOX_PLAN, the matrix). "Other email" still reaches
+        // imap.comcast.net with the server typed in.
     ] }
 
     /// App passwords from these providers never contain spaces, but they're shown in groups of four
@@ -163,6 +168,16 @@ enum MailboxAccountStore {
     static func removeAll() {
         for account in all() { remove(account.id) }
         UserDefaults.standard.removeObject(forKey: accountsKey)
+    }
+
+    /// Removes every mail password and token, including ones whose inbox is no longer listed. After a
+    /// reinstall the list of inboxes is gone but the Keychain still holds their secrets.
+    static func deleteAllSecrets() {
+        let query: [String: Any] = [
+            kSecClass as String: kSecClassGenericPassword,
+            kSecAttrService as String: service
+        ]
+        SecItemDelete(query as CFDictionary)
     }
 
     // MARK: Sync position (Gmail history id, Graph delta link, IMAP uidvalidity:uid)

@@ -1,0 +1,96 @@
+import XCTest
+@testable import Pausely
+
+/// "Where it goes" on Insights: what each category costs a month.
+final class CategoryTotalsTests: XCTestCase {
+
+    private let rates = CurrencyRates(perUSD: ["USD": 1, "EUR": 0.5])
+
+    private func sub(_ name: String, _ amount: Decimal, _ category: String?, currency: String = "USD",
+                     frequency: BillingFrequency = .monthly, status: SubscriptionStatus = .active) -> Subscription {
+        Subscription(name: name, category: category, amount: amount, currency: currency, billingFrequency: frequency, status: status)
+    }
+
+    func testCategoriesAddUpLargestFirst_withCatalogAndTypedNamesMerged() {
+        let totals = [
+            sub("Netflix", 15, "entertainment"),          // the catalog's raw value
+            sub("Disney+", 10, "Entertainment"),          // the edit screen's display name
+            sub("Spotify", 12, "Music"),
+            sub("Gym", 240, "Health & Fitness", frequency: .yearly)   // 20 a month
+        ].categoryTotals(in: "USD", rates: rates)
+
+        XCTAssertEqual(totals.map(\.category), ["Entertainment", "Health & Fitness", "Music"])
+        XCTAssertEqual(totals.map(\.amount), [25, 20, 12])
+        XCTAssertEqual(totals.map(\.count), [2, 1, 1])
+    }
+
+    /// The rows on Insights add up to what is paid, however many categories there are. It showed the
+    /// first five and dropped the rest without saying; the rest is one last row now.
+    func testTheRowsAlwaysAddUpToTheWhole() {
+        let list = [sub("A", 50, "Productivity"), sub("B", 40, "Entertainment"), sub("C", 30, "Music"),
+                    sub("D", 20, "Education"), sub("E", 10, "News"), sub("F", 6, "Travel", currency: "EUR"), sub("G", 4, "Gaming")]
+        let totals = list.categoryTotals(in: "USD", rates: rates)
+        XCTAssertEqual(totals.count, 7)
+
+        let rows = totals.fitted(to: 5)
+        XCTAssertEqual(rows.map(\.category), ["Productivity", "Entertainment", "Music", "Education", CategoryTotal.everythingElse])
+        XCTAssertEqual(rows.last?.amount, 10 + 12 + 4, "News, Travel (6 euros is 12 dollars here) and Gaming")
+        XCTAssertEqual(rows.last?.count, 3)
+        XCTAssertEqual(rows.last?.isConverted, true, "part of it is in another currency, so it is marked as about")
+        XCTAssertEqual(rows.reduce(0) { $0 + $1.amount }, totals.reduce(0) { $0 + $1.amount })
+
+        XCTAssertEqual(Array(totals.prefix(5)).fitted(to: 5), Array(totals.prefix(5)), "five fit in five rows as they are")
+        XCTAssertEqual(totals.fitted(to: 7), totals)
+    }
+
+    func testEachSubscriptionIsConvertedFromItsOwnCurrency() {
+        // 10 euros is 20 dollars at these rates; adding the raw numbers would give 20, not 30.
+        let totals = [sub("Deezer", 10, "Music", currency: "EUR"), sub("Spotify", 10, "Music")].categoryTotals(in: "USD", rates: rates)
+        XCTAssertEqual(totals, [CategoryTotal(category: "Music", amount: 30, count: 2, isConverted: true)])
+        XCTAssertEqual(MoneyFormat.total(totals[0].amount, "USD", converted: totals[0].isConverted), "≈" + MoneyFormat.string(Decimal(30), "USD"))
+    }
+
+    func testOnlyActiveSubscriptionsCount_andNoCategoryIsOther() {
+        let totals = [
+            sub("Cancelled", 50, "Music", status: .cancelled),
+            sub("Mystery", 5, nil)
+        ].categoryTotals(in: "USD", rates: rates)
+        XCTAssertEqual(totals, [CategoryTotal(category: "Other", amount: 5, count: 1)])
+    }
+}
+
+/// The hours someone types for a subscription: accepted only when they make sense.
+final class UsageInputTests: XCTestCase {
+    func testHoursAndMinutesBecomeMinutes() {
+        XCTAssertEqual(UsageInputSheet.totalMinutes(hours: "2", minutes: "30"), 150)
+        XCTAssertEqual(UsageInputSheet.totalMinutes(hours: "", minutes: "45"), 45)
+        XCTAssertEqual(UsageInputSheet.totalMinutes(hours: "3", minutes: ""), 180)
+        XCTAssertEqual(UsageInputSheet.totalMinutes(hours: "0", minutes: "0"), 0, "none at all is an answer")
+    }
+
+    func testNonsenseIsNotSaved() {
+        XCTAssertNil(UsageInputSheet.totalMinutes(hours: "", minutes: ""), "nothing typed is not zero")
+        XCTAssertNil(UsageInputSheet.totalMinutes(hours: "2", minutes: "75"), "minutes run to 59")
+        XCTAssertNil(UsageInputSheet.totalMinutes(hours: "900", minutes: "0"), "a month has 744 hours at most")
+        XCTAssertNil(UsageInputSheet.totalMinutes(hours: "two", minutes: ""))
+        XCTAssertNil(UsageInputSheet.totalMinutes(hours: "-1", minutes: "10"))
+    }
+
+    /// A known category reads in the reader's language whichever of its names was saved. Insights
+    /// showed "AI Tools" beside "Health & fitness", because only two of a category's names were known
+    /// to the label and five to everything else.
+    func testAKnownCategoryIsNamedInTheReadersLanguageWhateverWasSaved() {
+        let saved = UserDefaults.standard.object(forKey: L10n.languageKey)
+        defer { UserDefaults.standard.set(saved, forKey: L10n.languageKey) }
+        UserDefaults.standard.set("en", forKey: L10n.languageKey)
+        XCTAssertEqual(SubscriptionCategory.localizedLabel(for: "AI Tools"), "AI & creativity")
+        XCTAssertEqual(SubscriptionCategory.localizedLabel(for: "AI & Creativity"), "AI & creativity")
+        XCTAssertEqual(SubscriptionCategory.localizedLabel(for: "aiTools"), "AI & creativity")
+        XCTAssertEqual(SubscriptionCategory.localizedLabel(for: "Utilities"), "Utilities & internet")
+        XCTAssertEqual(SubscriptionCategory.localizedLabel(for: "Dog walking"), "Dog walking", "what a person typed stays as typed")
+        XCTAssertEqual(SubscriptionCategory.localizedLabel(for: nil), "Other")
+
+        UserDefaults.standard.set("de", forKey: L10n.languageKey)
+        XCTAssertEqual(SubscriptionCategory.localizedLabel(for: "AI Tools"), "KI & Kreativität")
+    }
+}

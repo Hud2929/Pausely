@@ -33,7 +33,7 @@ enum SavingsLedger {
 
     /// Lines in the order the cancellations happened.
     /// - Parameter excluding: subscriptions that never count, such as Pausely's own subscription.
-    static func lines(from events: [LifecycleEvent], now: Date, calendar: Calendar = .current,
+    static func lines(from events: [LifecycleEvent], now: Date, calendar: Calendar = .billing,
                       excluding: Set<UUID> = []) -> [Line] {
         let bySubscription = Dictionary(grouping: events.filter { !excluding.contains($0.subscriptionId) },
                                         by: \.subscriptionId)
@@ -46,15 +46,21 @@ enum SavingsLedger {
                     open = event
                 case .reactivated:
                     if let cancel = open {
-                        lines.append(line(for: cancel, endedOn: event.date, now: now, calendar: calendar))
+                        // On again before any charge it avoided came due: nothing was kept, so there is no
+                        // line ("$0.00 … Started again" stayed on the receipt, the rating of 2026-11-23).
+                        let closed = line(for: cancel, endedOn: event.date, now: now, calendar: calendar)
+                        if !closed.avoidedCharges.isEmpty { lines.append(closed) }
                         open = nil
                     }
                 default:
                     break
                 }
             }
+            // A cancellation with no renewal day to count from avoids nothing the ledger can show: no line,
+            // rather than "0 of 0" and "Kept $0.00" (the rating of 2026-11-23).
             if let cancel = open {
-                lines.append(line(for: cancel, endedOn: nil, now: now, calendar: calendar))
+                let current = line(for: cancel, endedOn: nil, now: now, calendar: calendar)
+                if !current.avoidedCharges.isEmpty { lines.append(current) }
             }
         }
         return lines.sorted { ($0.cancelledOn, $0.id.uuidString) < ($1.cancelledOn, $1.id.uuidString) }

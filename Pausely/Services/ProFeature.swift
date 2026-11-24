@@ -3,35 +3,26 @@ import Foundation
 /// Everything Pro unlocks, in one list. The paywall shows these rows, gated screens ask
 /// `PaymentManager.isUnlocked(_:)`, and the App Store listing should promise exactly these.
 /// Adding a Pro feature means adding a case here, not another `isPremium` check.
-/// Reminders, Renewal Verdicts, cancel help and the Savings Receipt are free on purpose: the core
-/// promise is never behind the paywall.
+/// Reminders, Renewal Verdicts, cancel help, the Savings Receipt and Insights are free on purpose:
+/// the core promise is never behind the paywall.
 enum ProFeature: String, CaseIterable, Identifiable {
     /// Tracking more than `FreeTier.subscriptionLimit` subscriptions.
     case unlimitedSubscriptions
     /// Rotating streaming services one month at a time (Pause Plan).
     case pausePlan
-    /// The full savings analysis on the Analysis tab.
-    case deepAnalysis
-    /// Cheaper alternatives to a subscription.
-    case cheaperAlternatives
+    /// Reading up to 10 screenshots at once on-device (Free reads 1 at a time).
+    case batchScreenshotImport
+    /// Pre-drafted cancellation and refund request emails.
+    case cancelConcierge
 
     var id: String { rawValue }
 
     var title: String {
         switch self {
-        case .unlimitedSubscriptions: return NSLocalizedString("Unlimited subscriptions", comment: "Pro feature")
-        case .pausePlan: return NSLocalizedString("Pause Plan: rotate your streaming", comment: "Pro feature")
-        case .deepAnalysis: return NSLocalizedString("Deep savings analysis", comment: "Pro feature")
-        case .cheaperAlternatives: return NSLocalizedString("Cheaper Alternatives", comment: "Pro feature")
-        }
-    }
-
-    var icon: String {
-        switch self {
-        case .unlimitedSubscriptions: return "infinity"
-        case .pausePlan: return "arrow.triangle.2.circlepath"
-        case .deepAnalysis: return "chart.line.uptrend.xyaxis"
-        case .cheaperAlternatives: return "arrow.triangle.swap"
+        case .unlimitedSubscriptions: return L10n.string("Unlimited subscriptions")
+        case .pausePlan: return L10n.string("Pause Plan: rotate your streaming")
+        case .batchScreenshotImport: return L10n.string("Batch screenshot import (up to 10 at once)")
+        case .cancelConcierge: return L10n.string("Cancel & refund email drafts")
         }
     }
 }
@@ -41,7 +32,7 @@ extension ProFeature {
     /// moving a single feature between free and Pro a one-line change.
     func isUnlocked(isPro: Bool) -> Bool {
         switch self {
-        case .unlimitedSubscriptions, .pausePlan, .deepAnalysis, .cheaperAlternatives:
+        case .unlimitedSubscriptions, .pausePlan, .batchScreenshotImport, .cancelConcierge:
             return isPro
         }
     }

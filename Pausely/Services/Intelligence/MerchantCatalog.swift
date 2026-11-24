@@ -79,12 +79,15 @@ struct MerchantCatalog {
         let registrable = MerchantCatalog.registrableDomain(senderDomain)
 
         // 1. Product/merchant hint from a parser (Stripe merchant, Apple app, "Amazon Prime", …)
-        if let hint, let profile = profile(forName: hint) { return known(profile) }
+        // A store sells known services under their own names with a plan after them ("Crunchyroll Fan" on
+        // Prime Video is Crunchyroll); a payment processor bills for anyone ("Linear Orbit" is not Linear).
+        let inStore = MerchantCatalog.storeDomains.contains(registrable)
+        if let hint, let profile = profile(forName: hint, inStore: inStore) { return known(profile) }
 
         // A store selling someone else's subscription (an App Store app, a Prime Video channel): the product named
         // in the email is the merchant, not the store whose domain sent it.
         if let hint, MerchantCatalog.marketplaceDomains.contains(registrable) {
-            let cleaned = MerchantCatalog.cleanDisplayName(hint)
+            let cleaned = MerchantCatalog.withoutTagline(MerchantCatalog.cleanDisplayName(hint))
             let key = MerchantCatalog.normalize(cleaned)
             if MerchantCatalog.isPlausibleMerchantName(cleaned), !key.isEmpty {
                 return ResolvedMerchant(key: key, displayName: MerchantCatalog.prettify(cleaned), category: nil,
@@ -129,18 +132,64 @@ struct MerchantCatalog {
                          kind: profile.kind, isKnown: true, cancelURL: profile.cancelURL, nameQuality: 100)
     }
 
-    private func profile(forName raw: String) -> MerchantProfile? {
+    /// Words that can follow a brand without making it a different business: plan names, legal forms, regions.
+    /// "Netflix International" is Netflix; "Linear Orbit" is not Linear.
+    private static let brandDescriptors: Set<String> = [
+        "premium", "plus", "pro", "basic", "standard", "family", "duo", "individual", "student", "personal", "business",
+        "teams", "annual", "yearly", "monthly", "plan", "subscription", "membership", "member", "with", "without", "ads",
+        "ad", "hd", "uhd", "4k", "gb", "tb", "storage", "international", "global", "usa", "us", "uk", "canada", "ca",
+        "europe", "eu", "ireland", "limited", "pty", "bv", "sarl", "ab", "ag", "sa", "se", "plc", "systems", "software",
+        "essential", "essentials", "starter", "unlimited", "and", "for", "of"
+    ]
+
+    private static let taglineSeparators = [" - ", " – ", " — ", ": ", " | ", " ("]
+
+    /// "Duolingo - Language Lessons" → "Duolingo": store listings add a tagline after the name.
+    static func withoutTagline(_ name: String) -> String {
+        var result = name
+        for separator in taglineSeparators {
+            if let range = result.range(of: separator) { result = String(result[..<range.lowerBound]) }
+        }
+        return result.trimmingCharacters(in: .whitespaces)
+    }
+
+    private func profile(forName raw: String, inStore: Bool = false) -> MerchantProfile? {
+        if let profile = exactOrDescribed(raw, anyPlanName: inStore) { return profile }
+        // App and store listings add a tagline: "Duolingo - Language Lessons", "Calm: Sleep & Meditation".
+        for separator in MerchantCatalog.taglineSeparators {
+            if let range = raw.range(of: separator),
+               let profile = exactOrDescribed(String(raw[..<range.lowerBound]), anyPlanName: inStore) {
+                return profile
+            }
+        }
+        return nil
+    }
+
+    /// The profile whose name is this name, or starts it with nothing but plan words, legal forms and sizes
+    /// after it. The longest such brand wins, so "Amazon Prime Membership" is Amazon Prime, not Amazon.
+    /// - Parameter anyPlanName: inside a store, whatever follows the brand is its plan ("Crunchyroll Fan").
+    private func exactOrDescribed(_ raw: String, anyPlanName: Bool = false) -> MerchantProfile? {
         let normalized = MerchantCatalog.normalize(raw)
         guard !normalized.isEmpty else { return nil }
         if let i = nameIndex[normalized] { return profiles[i] }
-        // Whole-word containment, longest profile name first so "amazon prime" beats "amazon".
-        let padded = " \(normalized) "
-        var best: (index: Int, length: Int)?
-        for (name, index) in nameIndex where name.count >= 4 {
-            if padded.contains(" \(name) "), name.count > (best?.length ?? 0) { best = (index, name.count) }
+        let tokens = normalized.split(separator: " ").map(String.init)
+        guard tokens.count >= 2 else { return nil }
+        // A product named with its owner in front: "Amazon Prime Video" is Prime Video, "Google YouTube
+        // Premium" is YouTube Premium. Both parts have to be names the catalog knows.
+        for length in stride(from: tokens.count - 1, through: 1, by: -1) {
+            let tail = tokens[(tokens.count - length)...].joined(separator: " ")
+            let owner = tokens[..<(tokens.count - length)].joined(separator: " ")
+            if tail.count >= 4, let index = nameIndex[tail], nameIndex[owner] != nil { return profiles[index] }
         }
-        if let best { return profiles[best.index] }
-        // Short brand names (hbo, max, wsj, nyt, ea) only on exact match
+        // Short brand names (hbo, max, wsj) only on an exact match.
+        for length in stride(from: tokens.count - 1, through: 1, by: -1) {
+            let head = tokens[..<length].joined(separator: " ")
+            guard head.count >= 4, let index = nameIndex[head] else { continue }
+            let rest = tokens[length...]
+            if anyPlanName || rest.allSatisfy({ MerchantCatalog.brandDescriptors.contains($0) || $0.first?.isNumber == true }) {
+                return profiles[index]
+            }
+        }
         return nil
     }
 
@@ -187,7 +236,9 @@ struct MerchantCatalog {
         "system", "store", "shop", "member", "members", "membership", "messages", "message", "update", "updates",
         "security", "confirm", "confirmation", "verify", "reply", "donotreply", "no reply", "do not reply", "sales",
         "accounting", "finance", "subscription", "subscriptions", "renewal", "renewals", "contact", "service team",
-        "customer service", "customer support", "account services", "online"
+        "customer service", "customer support", "account services", "online",
+        // Words a subject starts with, never a business: "Your" was listed among the other senders (2026-11-23).
+        "your", "you", "my", "our", "the", "thank", "thanks", "dear", "welcome", "new"
     ]
 
     private static let monthPattern = try? NSRegularExpression(
@@ -230,6 +281,18 @@ struct MerchantCatalog {
         "brevo.com", "mktomail.com", "marketo.com", "e2ma.net", "stripe.com", "paddle.com", "paypal.com", "paypal.ca",
         "shopify.com", "squarespace.com", "substack.com", "typeform.com", "fastspring.com", "chargebee.com", "recurly.com",
         "zuora.com", "gumroad.com", "lemonsqueezy.com", "bounces.google.com", "google.com", "apple.com", "amazon.com"
+    ]
+
+    /// Stores that sell other companies' subscriptions under those companies' own names.
+    static let storeDomains: Set<String> = [
+        "apple.com", "itunes.com", "google.com", "googleplay.com", "primevideo.com", "roku.com", "amazon.com", "amazon.ca",
+        "amazon.co.uk", "amazon.de", "amazon.fr", "amazon.es", "amazon.co.jp"
+    ]
+
+    /// Stores that email when a subscription starts and when it is cancelled, but not for each renewal.
+    /// A sign-up notice from one of them, with no cancellation since, is a plan that is probably still running.
+    static let silentRenewalDomains: Set<String> = [
+        "primevideo.com", "amazon.com", "amazon.ca", "amazon.co.uk", "amazon.de", "amazon.fr", "amazon.es", "amazon.co.jp"
     ]
 
     /// Stores and billing platforms that send receipts for other companies' subscriptions.

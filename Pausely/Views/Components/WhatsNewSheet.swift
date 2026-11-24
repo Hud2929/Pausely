@@ -9,139 +9,57 @@ struct WhatsNewSheet: View {
     private let displayVersion = Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? ""
 
     var body: some View {
-        ZStack {
-            PremiumBackground()
-
-            VStack(spacing: 0) {
-                // Header
-                VStack(spacing: 12) {
-                    ZStack {
-                        Circle()
-                            .fill(
-                                LinearGradient(
-                                    colors: [Color.accentMint.opacity(0.3), Color.accentMint.opacity(0.2)],
-                                    startPoint: .topLeading,
-                                    endPoint: .bottomTrailing
-                                )
-                            )
-                            .frame(width: 80, height: 80)
-
-                        Image(systemName: "sparkles")
-                            .font(.system(.title, design: .rounded).weight(.semibold))
-                            .foregroundStyle(Color.accentMint)
-                    }
-
-                    Text(displayVersion.isEmpty ? "What's New" : "What's New in \(displayVersion)")
-                        .font(.system(.title2, design: .rounded).weight(.bold))
-                        .foregroundColor(.white)
-                        .multilineTextAlignment(.center)
-
-                    Text("Check out the latest improvements")
-                        .font(.system(.body, design: .rounded))
-                        .foregroundColor(Color.obsidianTextSecondary)
-                        .multilineTextAlignment(.center)
-                }
-                .padding(.top, 32)
-                .padding(.horizontal, 24)
-
-                // Feature list
-                VStack(spacing: 16) {
-                    WhatsNewFeatureRow(
-                        icon: "arrow.down.circle.fill",
-                        iconColor: Color.accentMint,
-                        title: "Pull to Refresh",
-                        description: "Swipe down on your Dashboard to instantly refresh your subscription data."
-                    )
-
-                    WhatsNewFeatureRow(
-                        icon: "gift.fill",
-                        iconColor: Color.accentMint,
-                        title: "First-Subscription Celebration",
-                        description: "Enjoy a fun confetti animation when you add your very first subscription."
-                    )
-
-                    WhatsNewFeatureRow(
-                        icon: "star.fill",
-                        iconColor: Color.accentMint,
-                        title: "What's New Updates",
-                        description: "Stay in the loop with a quick summary of new features after every update."
-                    )
-                }
-                .padding(.horizontal, 20)
-                .padding(.top, 32)
-
-                Spacer()
-
-                // Continue button
-                Button(action: {
-                    HapticStyle.medium.trigger()
-                    dismiss()
-                }) {
-                    Text("Continue")
-                        .font(.system(.body, design: .rounded).weight(.semibold))
-                        .foregroundColor(.white)
-                        .frame(maxWidth: .infinity)
-                        .frame(height: 56)
-                        .background(
-                            RoundedRectangle(cornerRadius: 16, style: .continuous)
-                                .fill(
-                                    LinearGradient(
-                                        colors: [Color.accentMint, Color.accentMint],
-                                        startPoint: .topLeading,
-                                        endPoint: .bottomTrailing
-                                    )
-                                )
-                        )
-                        .shadow(color: Color.accentMint.opacity(0.4), radius: 15, x: 0, y: 8)
-                }
-                .padding(.horizontal, 24)
-                .padding(.bottom, 40)
-            }
-        }
-    }
-}
-
-// MARK: - Feature Row
-struct WhatsNewFeatureRow: View {
-    let icon: String
-    let iconColor: Color
-    let title: String
-    let description: String
-
-    var body: some View {
-        HStack(spacing: 16) {
-            ZStack {
-                RoundedRectangle(cornerRadius: 14)
-                    .fill(iconColor.opacity(0.15))
-                    .frame(width: 52, height: 52)
-
-                Image(systemName: icon)
-                    .font(.system(.title2, design: .rounded))
-                    .foregroundStyle(iconColor)
-            }
-
-            VStack(alignment: .leading, spacing: 4) {
-                Text(title)
-                    .font(.system(.headline, design: .rounded).weight(.semibold))
-                    .foregroundColor(.white)
-
-                Text(description)
-                    .font(.system(.subheadline, design: .rounded))
-                    .foregroundColor(Color.obsidianTextSecondary)
+        // The words scroll and the button stays put (at the accessibility sizes it follows them).
+        ActionScreen {
+            VStack(alignment: .leading, spacing: 0) {
+                Text(displayVersion.isEmpty ? "What's new" : "What's new in \(displayVersion)")
+                    .font(.question(.title))
+                    .foregroundStyle(Color.inkText)
                     .fixedSize(horizontal: false, vertical: true)
-            }
+                    .padding(.top, 32)
+                    .accessibilityAddTraits(.isHeader)
 
-            Spacer()
+                // Only what this build really does.
+                VStack(alignment: .leading, spacing: 0) {
+                    item("Import from screenshots", "Pick a screenshot of Apple Subscriptions or your recurring charges and read it on this iPhone.")
+                    Hairline()
+                    item("Try without an account", "Start locally on your device and sign in later if you want backup across devices.")
+                    Hairline()
+                    item("Shared plans, billing notes, and overlaps", "Split shared subscriptions, note which card or store bills them, and spot overlapping services in Insights.")
+                    Hairline()
+                    item("Cancel and refund email drafts", "Preview and send ready-to-go cancellation or refund emails, plus Savings Receipt and Pause Plan sync.")
+                }
+                .padding(.top, 20)
+            }
+            .frame(maxWidth: .infinity, alignment: .leading)
+            // The margin is inside the scroll view, which is as wide as the sheet: around it, the
+            // words were cut at the margin as they scrolled.
+            .padding(.horizontal, Layout.margin)
+        } actions: {
+            Button { dismiss() } label: { Text("Continue") }
+                .buttonStyle(.ink)
+                .padding(.horizontal, Layout.margin)
+                .padding(.top, 12)
+                .padding(.bottom, 12)
         }
-        .padding(16)
-        .background(
-            RoundedRectangle(cornerRadius: 20, style: .continuous)
-                .fill(Color.obsidianSurface)
-                .overlay(
-                    RoundedRectangle(cornerRadius: 20, style: .continuous)
-                        .stroke(Color.white.opacity(0.06), lineWidth: 1)
-                )
-        )
+        .scrollBounceBehavior(.basedOnSize)
+        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
+        .inkScreen()
+        .preferredColorScheme(.dark)
+    }
+
+    private func item(_ title: LocalizedStringKey, _ detail: LocalizedStringKey) -> some View {
+        VStack(alignment: .leading, spacing: 4) {
+            Text(title)
+                .font(.body.weight(.semibold))
+                .foregroundStyle(Color.inkText)
+            Text(detail)
+                .font(.subheadline)
+                .foregroundStyle(Color.inkTextMuted)
+                .fixedSize(horizontal: false, vertical: true)
+        }
+        .padding(.vertical, 14)
+        .accessibilityElement(children: .combine)
     }
 }
 
@@ -158,11 +76,13 @@ struct WhatsNewSheetModifier: ViewModifier {
     @State private var showSheet = false
 
     /// Identifies the current What's New content. Bump it only when the sheet's content changes.
-    private let currentVersion = "1.05"
+    private let currentVersion = "1.11"
 
     func body(content: Content) -> some View {
         content
             .onAppear {
+                // UI tests drive the app; release notes over the first screen would block them.
+                if LaunchFlag.uiTesting.isSet { return }
                 if lastSeenVersion.isEmpty {
                     // Brand-new install: nothing is "new" yet, so do not greet a first-time
                     // customer with release notes before they have seen any value.

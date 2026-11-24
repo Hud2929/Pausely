@@ -386,3 +386,16 @@ s3_region = "env(S3_REGION)"
 s3_access_key = "env(S3_ACCESS_KEY)"
 # Configures AWS_SECRET_ACCESS_KEY for S3 bucket
 s3_secret_key = "env(S3_SECRET_KEY)"
+
+[functions.auth-email]
+# Called by Supabase Auth, which signs each request instead of sending a login.
+verify_jwt = false
+
+[functions.apple-revoke]
+# Called by the app for a signed-in person. The gateway checks the token, and the function then asks
+# the account service who the caller is before Apple is asked anything.
+verify_jwt = true
+
+[functions.appstore-notifications]
+# Called directly by Apple's App Store Server Notifications v2 with a signed JWS payload.
+verify_jwt = false

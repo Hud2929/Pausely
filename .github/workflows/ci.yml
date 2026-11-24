@@ -1,0 +1,62 @@
+name: CI
+
+on:
+  push:
+    branches: [redesign, main]
+  pull_request:
+    branches: [redesign, main]
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  checks-and-db:
+    name: Gold Checks, Postgres & Edge Functions
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Fetch website branches for site parity check
+        run: git fetch origin gh-pages:gh-pages site-next:site-next || true
+
+      - name: Run static website parity check
+        run: test -z "$(bash scripts/site_check.sh)"
+
+      - name: Run database rules across all 6 starting states
+        run: bash scripts/dbtest/run.sh
+
+      - name: Run Edge Function test rigs
+        run: |
+          bash scripts/dbtest/waitlist_function.sh
+          bash scripts/dbtest/auth_email_function.sh
+          bash scripts/dbtest/apple_revoke_function.sh
+          bash scripts/dbtest/appstore_notifications_function.sh
+
+  ios-proof:
+    name: iOS Unit, Mail Rig, UI & Release Build
+    runs-on: macos-15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Select Xcode 26 (matching project objectVersion 77 & Swift 6)
+        run: |
+          if [ -d "/Applications/Xcode_26.app/Contents/Developer" ]; then
+            sudo xcode-select -s /Applications/Xcode_26.app/Contents/Developer
+          elif [ -d "/Applications/Xcode_26.0.app/Contents/Developer" ]; then
+            sudo xcode-select -s /Applications/Xcode_26.0.app/Contents/Developer
+          else
+            LATEST_XCODE=$(ls -d /Applications/Xcode_26*.app /Applications/Xcode.app 2>/dev/null | head -n 1)
+            [ -n "$LATEST_XCODE" ] && sudo xcode-select -s "$LATEST_XCODE/Contents/Developer"
+          fi
+          xcodebuild -version
+
+      - name: Fetch website branches for gold checks
+        run: git fetch origin gh-pages:gh-pages site-next:site-next || true
+
+      - name: Run full iOS proof (unit, checks, mail, ui, release)
+        run: bash scripts/proof.sh unit checks mail ui release

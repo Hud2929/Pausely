@@ -20,7 +20,7 @@ final class SubscriptionLifecycle {
 
     /// Pure: what changed between `lastRun` and `now`. On the very first run nothing is back-filled.
     static func changes(for subscriptions: [Subscription], since lastRun: Date?, now: Date,
-                        calendar: Calendar = .current) -> Changes {
+                        calendar: Calendar = .billing) -> Changes {
         var changes = Changes()
         let today = calendar.startOfDay(for: now)
         for sub in subscriptions {
@@ -36,6 +36,15 @@ final class SubscriptionLifecycle {
         return changes
     }
 
+    /// A trial that has ended is charging now. The day it ended was its first charge, so when no
+    /// renewal date was ever set, that day (which the person entered) becomes it.
+    static func afterTrial(_ trial: Subscription, endedOn end: Date) -> Subscription {
+        var active = trial
+        active.status = .active
+        if active.nextBillingDate == nil { active.nextBillingDate = end }
+        return active
+    }
+
     func run(now: Date = Date()) async {
         guard !isRunning else { return }
         isRunning = true
@@ -46,11 +55,9 @@ final class SubscriptionLifecycle {
         let changes = Self.changes(for: store.subscriptions, since: lastRun, now: now)
 
         for (id, endDate) in changes.endedTrials {
-            guard var sub = store.subscriptions.first(where: { $0.id == id }) else { continue }
-            sub.status = .active
-            sub.updatedAt = now
-            // Offline-first: the store keeps the change locally and retries the upload if this throws.
-            try? await store.updateSubscription(sub)
+            guard let trial = store.subscriptions.first(where: { $0.id == id }) else { continue }
+            let sub = Self.afterTrial(trial, endedOn: endDate)
+            await store.updateSubscription(sub)
             LifecycleEventLog.shared.record(.trialEnded, for: sub, date: endDate)
         }
         for renewal in changes.renewals {

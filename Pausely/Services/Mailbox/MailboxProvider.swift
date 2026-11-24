@@ -1,13 +1,13 @@
 import Foundation
 
 /// A message in a provider's own terms (Gmail id, Graph id, or IMAP folder + UID).
-struct MessageRef: Hashable, Codable {
+struct MessageRef: Hashable, Codable, Sendable {
     let id: String
     var folder: String? = nil
 }
 
 /// What triage needs to decide whether a message is worth reading in full.
-struct MessageSummary {
+struct MessageSummary: Sendable {
     let ref: MessageRef
     var from: String
     var subject: String
@@ -19,6 +19,9 @@ struct MessageSummary {
 
 /// One inbox, reached one way (Gmail API, Microsoft Graph or IMAP). Every provider is read-only.
 /// The scanner drives it: open → candidates → summaries → rawMessage for the few worth reading → close.
+/// Providers live on the main actor, like the scanner that drives them: their work is waiting on the
+/// network, and it means a provider's own state is only ever touched from one place.
+@MainActor
 protocol MailboxProvider: AnyObject {
     var account: MailboxAccount { get }
     /// Signs in or refreshes tokens, and for IMAP opens a TLS connection.
@@ -32,6 +35,25 @@ protocol MailboxProvider: AnyObject {
     func close() async
     /// Signs out at the provider where possible (revokes tokens).
     func revoke() async
+    /// How many whole messages may be read at once. One for IMAP, whose single connection answers in
+    /// turn; more for the web APIs, which pace themselves.
+    var parallelReads: Int { get }
+    func rawMessages(_ refs: [MessageRef]) async -> [MessageRef: Data]
+}
+
+extension MailboxProvider {
+    var parallelReads: Int { 1 }
+
+    /// Several whole messages; any that couldn't be read are left out. One after another here; the
+    /// web APIs read theirs at once.
+    func rawMessages(_ refs: [MessageRef]) async -> [MessageRef: Data] {
+        var out: [MessageRef: Data] = [:]
+        for ref in refs {
+            if Task.isCancelled { break }
+            if let raw = try? await rawMessage(ref) { out[ref] = raw }
+        }
+        return out
+    }
 }
 
 enum MailboxError: LocalizedError, Equatable {
@@ -75,7 +97,9 @@ struct InboxSearchPlan {
     /// Receipt, renewal, trial, price-change, cancellation and failed-payment wording (pass 5).
     var subjectTerms: [String]
     /// Upper bound on messages considered per inbox, newest first.
-    var maxCandidates = 1_500
+    var maxCandidates = InboxSearchPlan.standardLimit
+    /// How many possible receipts one search looks at in each inbox, newest first.
+    static let standardLimit = 1_500
 
     static let platforms = [
         "apple.com", "email.apple.com", "google.com", "googleplay.com", "paypal.com", "stripe.com", "paddle.com",

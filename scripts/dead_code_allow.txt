@@ -1,0 +1,2 @@
+placeSubviews  # SwiftUI calls it on a Layout (LineOrStack)
+mailComposeController  # UIKit MFMailComposeViewControllerDelegate callback (MailComposeSheet)

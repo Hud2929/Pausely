@@ -1,0 +1,82 @@
+import Foundation
+
+/// The coming month of charges, for Home: one dot per charge on a line, and "what leaves by then".
+/// Pure: takes `now` and a calendar. Renewal days come from `RenewalSchedule`, never recomputed here.
+enum Horizon {
+    /// Today plus the 31 days after it. A charge one month from today is 28 to 31 days away, and
+    /// it must be on the line: someone who adds a subscription today with "next month" as its date
+    /// has to see it on Home.
+    static let days = 32
+
+    struct Charge: Identifiable, Equatable {
+        let subscriptionId: UUID
+        let name: String
+        let category: String?
+        /// The charge day, at local noon.
+        let date: Date
+        /// 0 = today … 31.
+        let dayOffset: Int
+        /// The amount in the subscription's own currency.
+        let amount: Decimal
+        let currency: String
+        let isTrialEnd: Bool
+
+        var id: String { "\(subscriptionId.uuidString)|\(dayOffset)" }
+    }
+
+    /// Every charge from today through the next `days - 1` days, soonest first. A trial is charged
+    /// when it ends; paused and cancelled subscriptions, and ones without a renewal date, have none.
+    static func charges(for subscriptions: [Subscription], now: Date, calendar: Calendar = .billing) -> [Charge] {
+        let today = calendar.startOfDay(for: now)
+        var result: [Charge] = []
+        for sub in subscriptions where sub.renewsAutomatically {
+            var dates: [(Date, Bool)] = []
+            if sub.status == .trial, let end = sub.trialEndsAt, calendar.startOfDay(for: end) >= today {
+                dates = [(calendar.noon(of: end), true)]
+            } else if let anchor = sub.nextBillingDate {
+                dates = RenewalSchedule
+                    .upcomingRenewals(anchor: anchor, frequency: sub.billingFrequency, onOrAfter: now,
+                                      count: days, calendar: calendar)
+                    .map { ($0, false) }
+            }
+            for (date, isTrialEnd) in dates {
+                let offset = calendar.calendarDays(from: today, to: date)
+                guard offset >= 0 else { continue }
+                guard offset < days else { break }
+                result.append(Charge(subscriptionId: sub.id, name: sub.name, category: sub.category, date: date,
+                                     dayOffset: offset, amount: sub.effectiveAmount, currency: sub.currency, isTrialEnd: isTrialEnd))
+            }
+        }
+        return result.sorted { ($0.dayOffset, $0.name) < ($1.dayOffset, $1.name) }
+    }
+
+    /// What leaves through day `dayOffset`, in `currency`. Charges that can't be converted are left
+    /// out rather than added at the wrong value.
+    /// Whether that total includes a charge in another currency (it is then shown as "≈").
+    static func isConverted(_ charges: [Charge], through dayOffset: Int, to currency: String) -> Bool {
+        let display = MoneyFormat.normalizedCode(currency)
+        return charges.contains { $0.dayOffset <= dayOffset && MoneyFormat.normalizedCode($0.currency) != display }
+    }
+
+    static func total(of charges: [Charge], through dayOffset: Int, in currency: String, rates: CurrencyRates) -> Decimal {
+        charges.filter { $0.dayOffset <= dayOffset }
+            .compactMap { rates.convert($0.amount, from: $0.currency, to: currency) }
+            .reduce(0, +)
+    }
+
+    /// Active subscriptions Pausely can't remind about yet, because it doesn't know when they renew.
+    /// The next day along the line that has a charge, for stepping with VoiceOver (a finger drags;
+    /// VoiceOver swipes up and down). Forward past the last charge is the end of the line, which is
+    /// the whole month; back before the first charge stays on the first.
+    static func stepDay(from day: Int, forward: Bool, charges: [Charge]) -> Int {
+        let chargeDays = Set(charges.map(\.dayOffset)).sorted()
+        if forward {
+            return chargeDays.first { $0 > day } ?? days - 1
+        }
+        return chargeDays.last { $0 < day } ?? chargeDays.first ?? day
+    }
+
+    static func undated(_ subscriptions: [Subscription]) -> [Subscription] {
+        subscriptions.filter { $0.status == .active && $0.nextBillingDate == nil }
+    }
+}

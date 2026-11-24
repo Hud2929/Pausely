@@ -26,21 +26,29 @@ enum PausePlanSchedule {
 
     // MARK: - Eligibility and savings
 
+    /// Video streaming services, by name. Short names ("hbo", "stan") must be a whole word; longer
+    /// ones and phrases can be part of the name ("Paramount+ with Showtime"). Names that are also
+    /// common words ("max") match only when they are the entire service name.
+    private static let exactStreamingNames: Set<String> = ["max"]
     private static let streamingNames = [
-        "netflix", "hbo", "max", "disney", "hulu", "prime video", "apple tv", "paramount", "peacock",
-        "crunchyroll", "espn", "discovery", "starz", "showtime", "mubi", "fubo", "sling", "youtube tv",
-        "britbox", "acorn", "shudder", "curiositystream", "crave", "stan", "binge", "now tv", "dazn", "mgm"
+        "netflix", "hbo", "hbo max", "hbomax", "disney", "hulu", "prime video", "apple tv", "paramount", "peacock",
+        "crunchyroll", "espn", "discovery+", "discovery plus", "starz", "showtime", "mubi", "fubo", "fubotv",
+        "sling", "youtube tv", "britbox", "acorn tv", "shudder", "curiositystream", "crave", "stan", "binge",
+        "now tv", "dazn", "mgm", "amc+", "criterion", "philo", "hidive", "viki", "bet+", "hallmark",
+        "directv", "frndly", "sundance now", "funimation", "dropout", "nebula", "fandor", "indieflix",
+        "eros now", "vix", "zee5", "hotstar", "viaplay", "canal+", "videoland", "rtl+", "joyn", "u-next",
+        "abema", "shahid", "osn+", "movistar plus", "filmin", "atresplayer", "molotov", "kayo", "foxtel",
+        "tving", "wavve", "iqiyi", "globoplay", "claro video"
     ]
 
-    /// Monthly video and entertainment services can rotate; the rest (music, storage, software)
-    /// people use every day.
+    /// Monthly video streaming services can rotate, and nothing else. Being filed under
+    /// "Entertainment" is not enough: audiobooks, games and reading are there too, and telling someone
+    /// to "watch one streaming service at a time" with Audible in the plan promised a saving that
+    /// meant dropping something they use every day.
     static func isEligible(_ sub: Subscription) -> Bool {
-        guard sub.billingFrequency == .monthly, sub.status != .expired, !sub.isPausely else { return false }
-        let category = (sub.category ?? "").lowercased()
-        let name = sub.name.lowercased()
-        if category.contains("music") || name.contains("music") || name.contains("spotify") { return false }
-        if category.contains("entertain") || category.contains("stream") || category.contains("video") { return true }
-        // Short names ("max", "stan") must be a whole word, so "Constant Contact" isn't streaming.
+        guard sub.billingFrequency == .monthly, !sub.isPausely else { return false }
+        let name = sub.name.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
+        if exactStreamingNames.contains(name) { return true }
         let words = name.split { !$0.isLetter && !$0.isNumber && $0 != "+" }.map(String.init)
         return streamingNames.contains { known in
             if known.contains(" ") || known.count >= 6 { return name.contains(known) }
@@ -63,7 +71,7 @@ enum PausePlanSchedule {
 
     /// A sensible first service: the one whose next renewal is furthest away, so the others run out
     /// their paid time while it plays.
-    static func suggestedOrder(_ subs: [Subscription], now: Date, calendar: Calendar = .current) -> [UUID] {
+    static func suggestedOrder(_ subs: [Subscription], now: Date, calendar: Calendar = .billing) -> [UUID] {
         func next(_ s: Subscription) -> Date {
             s.renewsAutomatically ? (s.nextRenewal(onOrAfter: now, calendar: calendar) ?? .distantPast) : .distantPast
         }
@@ -72,10 +80,31 @@ enum PausePlanSchedule {
         return [first.id] + sorted.dropFirst().sorted { (next($0), $0.name) < (next($1), $1.name) }.map(\.id)
     }
 
+    // MARK: - Starting a service again
+
+    /// The renewal date to store for a service started again on `day`.
+    ///
+    /// Every renewal has to fall on the day of the month it was started: a restart on the 31st renews
+    /// on the last day of shorter months and on the 31st again after them. One period later says
+    /// exactly the same for most start days, and is what's stored when it does, so the start day
+    /// itself (already paid) never shows as a charge to come. When it would not (the 29th to 31st, a
+    /// 29 February), the start day is stored, `isStartDay` is true, and the caller records that day
+    /// as decided.
+    static func restartAnchor(startedOn day: Date, frequency: BillingFrequency,
+                              calendar: Calendar = .billing) -> (anchor: Date, isStartDay: Bool) {
+        let start = calendar.startOfDay(for: day)
+        let first = RenewalSchedule.occurrence(1, anchorDay: start, frequency: frequency, calendar: calendar)
+        let sameSchedule = (1...48).allSatisfy { cycle in
+            RenewalSchedule.occurrence(cycle + 1, anchorDay: start, frequency: frequency, calendar: calendar)
+                == RenewalSchedule.occurrence(cycle, anchorDay: first, frequency: frequency, calendar: calendar)
+        }
+        return sameSchedule ? (calendar.noon(of: first), false) : (calendar.noon(of: start), true)
+    }
+
     // MARK: - Turns
 
     /// When the first service hands over: its next renewal on or after the plan's start.
-    static func firstHandoff(_ plan: PausePlan, subscriptions: [UUID: Subscription], calendar: Calendar = .current) -> Date {
+    static func firstHandoff(_ plan: PausePlan, subscriptions: [UUID: Subscription], calendar: Calendar = .billing) -> Date {
         if let firstId = plan.subscriptionIds.first, let first = subscriptions[firstId], let anchor = first.nextBillingDate {
             return RenewalSchedule.nextRenewal(anchor: anchor, frequency: .monthly, onOrAfter: plan.startedOn, calendar: calendar)
         }
@@ -86,7 +115,7 @@ enum PausePlanSchedule {
     /// The first `count` turns. Handoffs are whole months after the first one (anchor-based, so the
     /// 31st stays the 31st where the month has one).
     static func turns(_ plan: PausePlan, subscriptions: [UUID: Subscription], count: Int,
-                      calendar: Calendar = .current) -> [Turn] {
+                      calendar: Calendar = .billing) -> [Turn] {
         let ids = plan.subscriptionIds
         guard ids.count >= 2, count > 0 else { return [] }
         let first = firstHandoff(plan, subscriptions: subscriptions, calendar: calendar)
@@ -100,7 +129,7 @@ enum PausePlanSchedule {
 
     /// The turn running on `now`.
     static func currentTurn(_ plan: PausePlan, subscriptions: [UUID: Subscription], now: Date,
-                            calendar: Calendar = .current) -> Turn? {
+                            calendar: Calendar = .billing) -> Turn? {
         let today = calendar.startOfDay(for: now)
         let first = calendar.startOfDay(for: firstHandoff(plan, subscriptions: subscriptions, calendar: calendar))
         var months = 0
@@ -119,7 +148,7 @@ enum PausePlanSchedule {
     /// A service that isn't on should be cancelled before it renews, unless it's the next one on and
     /// that renewal falls in its own turn (then the charge pays for the month it's on anyway).
     static func shouldPause(_ subscriptionId: UUID, renewingOn renewal: Date, plan: PausePlan, current: Turn,
-                            calendar: Calendar = .current) -> Bool {
+                            calendar: Calendar = .billing) -> Bool {
         guard subscriptionId != current.subscriptionId else { return false }
         let comingNext = plan.subscriptionIds[(current.index + 1) % plan.subscriptionIds.count]
         if subscriptionId == comingNext, calendar.startOfDay(for: renewal) >= calendar.startOfDay(for: current.end) {
@@ -131,7 +160,7 @@ enum PausePlanSchedule {
     /// Reminders that keep the rotation going: cancel the services that should be paused before they
     /// renew, and start the next one on its day. Rebuilt with the rest whenever anything changes.
     static func reminders(_ plan: PausePlan, subscriptions: [Subscription], now: Date,
-                          calendar: Calendar = .current, handoffsAhead: Int = 2) -> [ReminderPlanner.Reminder] {
+                          calendar: Calendar = .billing, handoffsAhead: Int = 2) -> [ReminderPlanner.Reminder] {
         let byId = Dictionary(subscriptions.map { ($0.id, $0) }, uniquingKeysWith: { a, _ in a })
         guard plan.subscriptionIds.count >= 2,
               let current = currentTurn(plan, subscriptions: byId, now: now, calendar: calendar) else { return [] }

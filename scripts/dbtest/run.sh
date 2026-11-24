@@ -1,0 +1,444 @@
+#!/bin/bash
+# Proves Pausely's database rules against a throwaway local Postgres that stands in for Supabase.
+# Nothing here touches the real project.
+#
+#   bash scripts/dbtest/run.sh            every starting state, then the checks
+#   KEEP=1 bash scripts/dbtest/run.sh     leave the container running afterwards, to look around
+#
+# It builds four starting states a real database could be in, applies supabase/APPLY_*.sql twice to
+# each (a second run must change nothing and must not fail), and then acts as a signed-out visitor,
+# as two signed-in people and as the service role to check what each can and cannot do.
+#   minimal  only the first migration
+#   old      migrations up to 2026-05-20 (a database that never got the October and November files)
+#   oct22    migrations up to 20261022b (ratings exist, but one person could still rate a service twice)
+#   nov6     every migration up to 20261106
+#   live     the shape of the real project on 2026-11-11: only the migrations that were ever run
+#            there, plus an earlier payment system that is in no migration (live_extras.sql)
+#   fresh    every migration in filename order, without the APPLY file
+# Needs Docker (Colima is fine). Exits 1 if any check fails.
+set -uo pipefail
+
+ROOT="$(cd "$(dirname "$0")/../.." && pwd)"
+MIGRATIONS="$ROOT/supabase/migrations"
+APPLY="$(ls "$ROOT"/supabase/APPLY_*.sql | sort | tail -1)"
+STUB="$ROOT/scripts/dbtest/supabase_stub.sql"
+CONTAINER=pausely-dbtest
+IMAGE=postgres:17-alpine
+
+if [ -z "${DOCKER_HOST:-}" ] && [ -S "$HOME/.colima/default/docker.sock" ]; then
+  export DOCKER_HOST="unix://$HOME/.colima/default/docker.sock"
+fi
+
+A=aaaaaaaa-0000-4000-8000-000000000001   # an ordinary signed-in person
+B=bbbbbbbb-0000-4000-8000-000000000002   # a person Pausely granted Pro
+C=cccccccc-0000-4000-8000-000000000003   # signed in, no profile row yet
+D=dddddddd-0000-4000-8000-000000000004   # deletes their account
+
+PASS=0
+FAIL=0
+pass() { PASS=$((PASS + 1)); printf '    pass  %s\n' "$1"; }
+fail() { FAIL=$((FAIL + 1)); printf '    FAIL  %s\n          %s\n' "$1" "$2"; }
+
+# ---- plumbing --------------------------------------------------------------------------------
+
+admin() {  # admin <db>   (SQL on stdin, run as the database owner)
+  docker exec -i "$CONTAINER" psql -U postgres -X -v ON_ERROR_STOP=1 -qAt -d "$1" 2>&1
+}
+
+apply_file() {  # apply_file <db> <file> [single-transaction flag]
+  docker exec -i "$CONTAINER" psql -U postgres -X -v ON_ERROR_STOP=1 -q ${3:-} -d "$1" < "$2" 2>&1
+}
+
+sql_stream() {  # sql_stream <db>   (SQL on stdin, output as a person would see it)
+  docker exec -i "$CONTAINER" psql -U postgres -X -v ON_ERROR_STOP=1 -q -d "$1" 2>&1
+}
+
+# Everything a rehearsal could leave behind if it were not fully undone.
+FINGERPRINT="select md5(coalesce(string_agg(item, ',' order by item), '')) from (
+  select 'trigger ' || c.relname || '.' || t.tgname as item from pg_trigger t join pg_class c on c.oid = t.tgrelid where not t.tgisinternal
+  union all select 'policy ' || tablename || '.' || policyname from pg_policies
+  union all select 'function ' || p.proname || ' ' || md5(p.prosrc) from pg_proc p join pg_namespace n on n.oid = p.pronamespace where n.nspname = 'public'
+  union all select 'column ' || table_name || '.' || column_name from information_schema.columns where table_schema = 'public'
+  union all select 'index ' || indexname from pg_indexes where schemaname = 'public'
+  union all select 'grant ' || table_name || ' ' || grantee || ' ' || privilege_type from information_schema.role_table_grants where table_schema = 'public'
+  union all select 'realtime ' || tablename from pg_publication_tables where pubname = 'supabase_realtime'
+  union all select 'rows ' || c.relname || ' ' || (xpath('/row/n/text()', query_to_xml(format('select count(*) as n from public.%I', c.relname), false, true, '')))[1]::text
+            from pg_class c join pg_namespace n on n.oid = c.relnamespace where n.nspname = 'public' and c.relkind = 'r'
+) everything"
+
+# as <db> <role> <user id or -> <sql>: runs the SQL the way the API would for that caller.
+# END=rollback leaves no trace.
+as() {
+  local db=$1 role=$2 uid=$3 sql=$4 claims email
+  case "$uid" in
+    "$A") email=a@example.test ;; "$B") email=b@example.test ;;
+    "$C") email=c@example.test ;; "$D") email=d@example.test ;; *) email= ;;
+  esac
+  if [ "$uid" = "-" ]; then claims="{\"role\":\"$role\"}"
+  else claims="{\"sub\":\"$uid\",\"role\":\"$role\",\"email\":\"$email\"}"; fi
+  printf "begin;\nset local request.jwt.claims = '%s';\nset local role %s;\n%s;\n%s;\n" \
+    "$claims" "$role" "$sql" "${END:-commit}" | admin "$db"
+}
+
+works()  { local label=$1; shift; local out; if out=$(as "$@"); then pass "$label"; else fail "$label" "$(printf '%s' "$out" | tail -1)"; fi; }
+refused() { local label=$1; shift; local out; if out=$(as "$@"); then fail "$label" "it was allowed"; else pass "$label"; fi; }
+gives()  { local label=$1 want=$2; shift 2; local out; out=$(as "$@" | tail -1)
+           if [ "$out" = "$want" ]; then pass "$label"; else fail "$label" "wanted '$want', got '$out'"; fi; }
+# hidden: the caller either is refused or sees no rows.
+hidden() { local label=$1; shift; local out; if out=$(as "$@"); then
+             if [ "$(printf '%s' "$out" | tail -1)" = "0" ]; then pass "$label"; else fail "$label" "rows were visible: $(printf '%s' "$out" | tail -1)"; fi
+           else pass "$label"; fi; }
+owner_sees() { local label=$1 want=$2 db=$3 sql=$4 out; out=$(printf '%s;\n' "$sql" | admin "$db" | tail -1)
+               if [ "$out" = "$want" ]; then pass "$label"; else fail "$label" "wanted '$want', got '$out'"; fi; }
+has() { [ "$(printf "select to_regclass('public.%s') is not null;\n" "$2" | admin "$1")" = "t" ]; }
+
+# ---- starting states -------------------------------------------------------------------------
+
+build() {  # build <db> <newest migration to include, by filename prefix>
+  local db=$1 upto=$2 file name out
+  printf 'drop database if exists %s;\ncreate database %s;\n' "$db" "$db" | docker exec -i "$CONTAINER" psql -U postgres -X -q -d postgres >/dev/null 2>&1
+  apply_file "$db" "$STUB" >/dev/null
+  for file in $(ls "$MIGRATIONS"/*.sql | sort); do
+    name=$(basename "$file")
+    [[ "${name%%_*}" > "$upto" ]] && continue
+    if ! out=$(apply_file "$db" "$file" -1); then
+      fail "$db: migration $name applies" "$(printf '%s' "$out" | grep -m1 ERROR)"
+    fi
+  done
+}
+
+build_live() {  # what python3 scripts/db_apply.py state showed on the real project
+  local db=$1 name out
+  printf 'drop database if exists %s;\ncreate database %s;\n' "$db" "$db" | docker exec -i "$CONTAINER" psql -U postgres -X -q -d postgres >/dev/null 2>&1
+  apply_file "$db" "$STUB" >/dev/null
+  for name in 20260304173000_fix_and_create_all_tables.sql 20260305000000_add_usage_ai_tables.sql \
+              20260507000000_add_waitlist_and_affiliates.sql 20261005_age_consent.sql \
+              20261007_restore_subscriptions_amount_column.sql 20261008_add_missing_subscription_columns.sql; do
+    if ! out=$(apply_file "$db" "$MIGRATIONS/$name" -1); then
+      fail "$db: migration $name applies" "$(printf '%s' "$out" | grep -m1 ERROR)"
+    fi
+  done
+  if ! out=$(apply_file "$db" "$ROOT/scripts/dbtest/live_extras.sql" -1); then
+    fail "$db: the earlier payment system's objects are created" "$(printf '%s' "$out" | grep -m1 ERROR)"
+  fi
+}
+
+seed() {  # rows that exist before the fix is applied, wherever the table exists
+  admin "$1" >/dev/null <<SQL
+insert into auth.users (id, email) values
+  ('$A', 'a@example.test'), ('$B', 'b@example.test'), ('$C', 'c@example.test'), ('$D', 'd@example.test');
+insert into public.profiles (id, display_name, is_pro) values ('$A', 'A', false), ('$B', 'B', true), ('$D', 'D', false)
+  on conflict (id) do update set display_name = excluded.display_name, is_pro = excluded.is_pro;
+delete from public.profiles where id = '$C';
+do \$\$
+declare amount_column text := (select column_name from information_schema.columns
+    where table_schema = 'public' and table_name = 'subscriptions' and column_name in ('amount', 'cost') limit 1);
+begin
+  execute format('insert into public.subscriptions (user_id, name, %I) values (\$1, ''Netflix'', 15.49), (\$2, ''Spotify'', 9.99), (\$3, ''Hulu'', 7.99)', amount_column)
+    using '$A'::uuid, '$B'::uuid, '$D'::uuid;
+  if to_regclass('public.referral_codes') is not null then
+    insert into public.referral_codes (code, referrer_user_id, conversions) values ('BCODE', '$B', 2);
+    insert into public.referral_conversions (referrer_code, referred_user_id, referred_user_email) values ('BCODE', '$A', 'a@example.test');
+  end if;
+  if to_regclass('public.affiliates') is not null then
+    insert into public.affiliates (name, code, payment_method, payment_details) values ('An affiliate', 'AFF1', 'bank', 'account 000-111');
+  end if;
+  if to_regclass('public.waitlist') is not null then
+    insert into public.waitlist (email) values ('waiting@example.test');
+  end if;
+  if to_regclass('public.user_profiles') is not null then
+    insert into public.user_profiles (id) values ('$A');
+  end if;
+  if to_regclass('public.user_subscriptions') is not null then
+    -- One paying account in the earlier payment system, with a failed payment.
+    insert into public.user_subscriptions (user_id, tier, status, payment_failed, payment_failed_at)
+      values ('$B', 'pro', 'active', true, now() - interval '2 days');
+  end if;
+  if to_regclass('public.cancel_difficulty_ratings') is not null then
+    -- The same person rated one service twice before the one-per-person rule existed.
+    if not exists (select 1 from pg_indexes where indexname = 'cancel_difficulty_one_per_user') then
+      insert into public.cancel_difficulty_ratings (service_name, difficulty_rating, user_id, created_at)
+        values ('Netflix', 2, '$B', now() - interval '2 days');
+    end if;
+    insert into public.cancel_difficulty_ratings (service_name, difficulty_rating, user_id) values ('Netflix', 4, '$B');
+  end if;
+end \$\$;
+SQL
+}
+
+seed_after() {  # states that had no ratings table before the fix get the same single rating now
+  admin "$1" >/dev/null <<SQL
+insert into public.cancel_difficulty_ratings (service_name, difficulty_rating, user_id)
+select 'Netflix', 4, '$B'
+where not exists (select 1 from public.cancel_difficulty_ratings where user_id = '$B' and service_name = 'Netflix');
+SQL
+}
+
+# ---- what an unfixed database allows (run on "old"; each line passing means the hole is real) ----
+
+holes() {
+  local db=$1
+  printf '  %s before the fix: these must succeed, or the checks below prove nothing\n' "$db"
+  END=rollback works  "a person can mark themselves Pro"            "$db" authenticated "$A" "update public.profiles set is_pro = true where id = '$A' returning 1"
+  END=rollback gives  "a signed-out visitor can read affiliate payment details" "account 000-111" "$db" anon - "select payment_details from public.affiliates"
+  END=rollback gives  "a signed-out visitor can list referral codes" 1 "$db" anon - "select count(*) from public.referral_codes"
+  END=rollback works  "a signed-out visitor can read anyone's monthly spend" "$db" anon - "select public.calculate_monthly_spend('$B')"
+  END=rollback works  "a signed-out visitor can write to the waitlist" "$db" anon - "insert into public.waitlist (email) values ('x@example.test')"
+  END=rollback gives  "a person can give their referral code free-Pro status" t "$db" authenticated "$A" "insert into public.referral_codes (code, referrer_user_id, is_eligible_for_free_pro) values ('ACODE', '$A', true) returning is_eligible_for_free_pro"
+}
+
+holes_live() {
+  local db=$1
+  printf '  %s before the fix: the earlier payment views, which no migration knows about\n' "$db"
+  END=rollback gives  "a signed-out visitor can read a payer's email through an old view" "b@example.test" "$db" anon - "select user_email from public.payment_failures"
+  END=rollback gives  "and can list every active payer" 1 "$db" anon - "select count(*) from public.active_subscriptions"
+  END=rollback works  "a person can mark themselves Pro"            "$db" authenticated "$A" "update public.profiles set is_pro = true where id = '$A' returning 1"
+  END=rollback gives  "a signed-out visitor can read affiliate payment details" "account 000-111" "$db" anon - "select payment_details from public.affiliates"
+}
+
+# ---- what a fixed database allows -------------------------------------------------------------
+
+checks() {
+  local db=$1
+  printf '  %s after the fix\n' "$db"
+
+  # Pro
+  refused "a person cannot mark themselves Pro"                 "$db" authenticated "$A" "update public.profiles set is_pro = true where id = '$A'"
+  refused "a person cannot change their Pro tier"               "$db" authenticated "$A" "update public.profiles set pro_tier = 'lifetime' where id = '$A'"
+  works   "a person can still edit their own profile"           "$db" authenticated "$A" "update public.profiles set display_name = 'New name' where id = '$A'"
+  works   "a granted-Pro person can edit their profile"         "$db" authenticated "$B" "update public.profiles set display_name = 'B again' where id = '$B'"
+  owner_sees "and keeps Pro afterwards" t "$db" "select is_pro from public.profiles where id = '$B'"
+  works   "the app's age-consent upsert works"                  "$db" authenticated "$A" "insert into public.profiles (id, age_confirmed_at, age_minimum_met, age_minimum_required, consent_policy_version, consent_app_version) values ('$A', now(), true, 16, '2026-10', '1.0.3') on conflict (id) do update set age_confirmed_at = excluded.age_confirmed_at, age_minimum_met = excluded.age_minimum_met, age_minimum_required = excluded.age_minimum_required, consent_policy_version = excluded.consent_policy_version, consent_app_version = excluded.consent_app_version"
+  works   "a new person can create their profile, asking for Pro" "$db" authenticated "$C" "insert into public.profiles (id, display_name, is_pro, pro_tier) values ('$C', 'C', true, 'lifetime')"
+  owner_sees "and the row is saved without Pro" "f|" "$db" "select is_pro, pro_tier from public.profiles where id = '$C'"
+  gives   "a person cannot edit someone else's profile" 0       "$db" authenticated "$A" "with changed as (update public.profiles set display_name = 'hacked' where id = '$B' returning 1) select count(*) from changed"
+  gives   "a person cannot read someone else's profile" 0       "$db" authenticated "$A" "select count(*) from public.profiles where id = '$B'"
+  gives   "a signed-out visitor sees no profiles" 0             "$db" anon - "select count(*) from public.profiles"
+  works   "the service role can grant Pro"                      "$db" service_role - "update public.profiles set is_pro = true, pro_tier = 'lifetime' where id = '$C'"
+  owner_sees "and the grant is saved" "t|lifetime" "$db" "select is_pro, pro_tier from public.profiles where id = '$C'"
+  works   "the service role can take Pro away again"            "$db" service_role - "update public.profiles set is_pro = false, pro_tier = null where id = '$C'"
+
+  # Other server-kept profile fields
+  works   "an update that tries to change server-kept fields goes through" "$db" authenticated "$A" "update public.profiles set subscription_count_limit = 999, affiliate_code = 'SELF', attributed_at = now(), email = 'someone-else@example.test', display_name = 'A2' where id = '$A'"
+  owner_sees "but those fields are unchanged and the email is the account's" "5|||a@example.test|A2" "$db" "select subscription_count_limit, affiliate_code, attributed_at, email, display_name from public.profiles where id = '$A'"
+
+  # Subscriptions: the table the app lives on
+  works   "a person can add a subscription"                     "$db" authenticated "$A" "insert into public.subscriptions (user_id, name, amount) values ('$A', 'Disney+', 7.99)"
+  gives   "a person sees only their own subscriptions" 2        "$db" authenticated "$A" "select count(*) from public.subscriptions"
+  works   "a person can edit their own subscription"            "$db" authenticated "$A" "update public.subscriptions set amount = 8.99 where user_id = '$A' and name = 'Disney+'"
+  works   "a person can delete their own subscription"          "$db" authenticated "$A" "delete from public.subscriptions where user_id = '$A' and name = 'Disney+'"
+  refused "a person cannot add a subscription to someone else's account" "$db" authenticated "$A" "insert into public.subscriptions (user_id, name, amount) values ('$B', 'Planted', 1)"
+  refused "a person cannot hand their subscription to someone else" "$db" authenticated "$A" "update public.subscriptions set user_id = '$B' where user_id = '$A'"
+  gives   "a person cannot edit someone else's subscription" 0  "$db" authenticated "$A" "with changed as (update public.subscriptions set amount = 0 where user_id = '$B' returning 1) select count(*) from changed"
+  gives   "a person cannot delete someone else's subscription" 0 "$db" authenticated "$A" "with gone as (delete from public.subscriptions where user_id = '$B' returning 1) select count(*) from gone"
+  gives   "a signed-out visitor sees no subscriptions" 0        "$db" anon - "select count(*) from public.subscriptions"
+  refused "a signed-out visitor cannot add a subscription"      "$db" anon - "insert into public.subscriptions (user_id, name, amount) values ('$A', 'Planted', 1)"
+
+  # The three requests the app's sync queue makes (SyncQueue.swift), as the API runs them. An add is an
+  # upsert so that sending it twice, when the first answer was lost, is harmless.
+  local synced=5eed0000-0000-4000-8000-000000000001 theirs
+  local upsert="insert into public.subscriptions (id, user_id, name, amount) values ('%s', '$A', 'Synced', %s) on conflict (id) do update set user_id = excluded.user_id, name = excluded.name, amount = excluded.amount"
+  works   "the app's add creates the subscription"              "$db" authenticated "$A" "$(printf "$upsert" "$synced" 5)"
+  works   "the same add sent again is accepted"                 "$db" authenticated "$A" "$(printf "$upsert" "$synced" 6)"
+  owner_sees "and is still one subscription, with the later copy" "1|6" "$db" "select count(*), max(amount)::int from public.subscriptions where id = '$synced'"
+  theirs=$(printf "select id from public.subscriptions where user_id = '$B' limit 1;\n" | admin "$db")
+  refused "the app's add cannot take over someone else's subscription" "$db" authenticated "$A" "$(printf "$upsert" "$theirs" 1)"
+  owner_sees "which still belongs to them, unchanged" "$B|Spotify" "$db" "select user_id, name from public.subscriptions where id = '$theirs'"
+  gives   "the app's edit of a subscription another device deleted changes nothing, without an error" 0 "$db" authenticated "$A" "with changed as (update public.subscriptions set amount = 9 where id = '5eed0000-0000-4000-8000-00000000dead' returning 1) select count(*) from changed"
+  works   "the app's delete removes it"                         "$db" authenticated "$A" "delete from public.subscriptions where id = '$synced'"
+  works   "the same delete sent again is not an error"          "$db" authenticated "$A" "delete from public.subscriptions where id = '$synced'"
+  owner_sees "and it is gone" 0 "$db" "select count(*) from public.subscriptions where id = '$synced'"
+
+  # Cancel-difficulty ratings
+  owner_sees "an earlier double rating was reduced to the latest one" "1|4" "$db" "select count(*), max(difficulty_rating) from public.cancel_difficulty_ratings where user_id = '$B' and service_name = 'Netflix'"
+  works   "a person can rate a service"                         "$db" authenticated "$A" "insert into public.cancel_difficulty_ratings (service_name, difficulty_rating, user_id) values ('Netflix', 5, '$A')"
+  refused "but not twice"                                       "$db" authenticated "$A" "insert into public.cancel_difficulty_ratings (service_name, difficulty_rating, user_id) values ('Netflix', 1, '$A')"
+  refused "a person cannot rate under someone else's id"        "$db" authenticated "$A" "insert into public.cancel_difficulty_ratings (service_name, difficulty_rating, user_id) values ('Hulu', 1, '$B')"
+  refused "a signed-out visitor cannot rate"                    "$db" anon - "insert into public.cancel_difficulty_ratings (service_name, difficulty_rating) values ('Hulu', 1)"
+  hidden  "nobody can read individual ratings"                  "$db" authenticated "$A" "select count(*) from public.cancel_difficulty_ratings"
+  gives   "anyone can read the per-service average" "Netflix|4.5|2" "$db" anon - "select service_name, avg_difficulty, rating_count from public.service_difficulty_scores"
+
+  # Settings (build 11 reads and writes them)
+  works   "a person can save their settings row"                "$db" authenticated "$A" "insert into public.user_settings (user_id, referral_discount_used) values ('$A', true) on conflict (user_id) do update set referral_discount_used = excluded.referral_discount_used"
+  gives   "a person cannot read someone else's settings" 0      "$db" authenticated "$B" "select count(*) from public.user_settings where user_id = '$A'"
+  refused "a person cannot write someone else's settings"       "$db" authenticated "$B" "insert into public.user_settings (user_id) values ('$C')"
+
+  # The deletion log
+  hidden  "nobody can read the deletion log"                    "$db" authenticated "$A" "select count(*) from public.deletion_requests"
+  refused "nobody can write to the deletion log"                "$db" authenticated "$A" "insert into public.deletion_requests (user_id) values ('$A')"
+
+  # Referral codes (older builds and build 11)
+  if has "$db" referral_codes; then
+    hidden  "a signed-out visitor cannot list referral codes"   "$db" anon - "select count(*) from public.referral_codes"
+    gives   "a person does not see someone else's referral code" 0 "$db" authenticated "$A" "select count(*) from public.referral_codes"
+    gives   "a person sees their own referral code" 1           "$db" authenticated "$B" "select count(*) from public.referral_codes"
+    gives   "anyone can ask whether a code exists" t            "$db" anon - "select public.referral_code_exists('bcode')"
+    gives   "and gets no for one that does not" f               "$db" anon - "select public.referral_code_exists('NOPE')"
+    works   "a person can create their own code, asking for free Pro and earnings" "$db" authenticated "$A" "insert into public.referral_codes (code, referrer_user_id, conversions, total_earnings, is_eligible_for_free_pro) values ('ACODE', '$A', 99, 500, true)"
+    owner_sees "and the code is saved with zeroed statistics" "0|0|0.00|f" "$db" "select conversions, pending_conversions, total_earnings, is_eligible_for_free_pro from public.referral_codes where code = 'ACODE'"
+    refused "a person cannot create a code for someone else"    "$db" authenticated "$A" "insert into public.referral_codes (code, referrer_user_id) values ('FORB', '$B')"
+    gives   "a person cannot raise someone else's referral count" 0 "$db" authenticated "$A" "with changed as (update public.referral_codes set pending_conversions = 50 where code = 'BCODE' returning 1) select count(*) from changed"
+    gives   "a person cannot change their own referral statistics" 0 "$db" authenticated "$A" "with changed as (update public.referral_codes set is_eligible_for_free_pro = true where code = 'ACODE' returning 1) select count(*) from changed"
+    works   "a person can hold a few codes"                     "$db" authenticated "$A" "insert into public.referral_codes (code, referrer_user_id) values ('A2', '$A'), ('A3', '$A'), ('A4', '$A'), ('A5', '$A')"
+    refused "but not more than the limit"                       "$db" authenticated "$A" "insert into public.referral_codes (code, referrer_user_id) values ('A6', '$A')"
+    refused "a person cannot record a referral conversion"      "$db" authenticated "$A" "insert into public.referral_conversions (referrer_code, referred_user_id) values ('BCODE', '$C')"
+    gives   "a person cannot mark a conversion as converted" 0  "$db" authenticated "$B" "with changed as (update public.referral_conversions set status = 'converted' returning 1) select count(*) from changed"
+    # "fresh" is seeded after its migrations ran, so there was nothing for them to clear.
+    [ "$db" = "fresh" ] || owner_sees "stored referral emails were cleared" 0 "$db" "select count(*) from public.referral_conversions where referred_user_email is not null"
+  fi
+
+  # Tables no build uses
+  local table
+  for table in affiliates affiliate_conversions waitlist user_profiles usage_snapshots user_devices ai_insights_log alternatives; do
+    if has "$db" "$table"; then
+      hidden "a signed-in person cannot read $table"            "$db" authenticated "$A" "select count(*) from public.$table"
+      hidden "a signed-out visitor cannot read $table"          "$db" anon - "select count(*) from public.$table"
+      owner_sees "$table is not broadcast in realtime" 0 "$db" "select count(*) from pg_publication_tables where pubname = 'supabase_realtime' and tablename = '$table'"
+    fi
+  done
+
+  # New multi-device sync tables (lifecycle_events, pause_plans) and server-only app_store_entitlements
+  local ev_id=6eed0000-0000-4000-8000-000000000001
+  works   "a person can save their own lifecycle event"         "$db" authenticated "$A" "insert into public.lifecycle_events (id, user_id, subscription_id, subscription_name, kind, occurred_at, amount, currency, frequency) values ('$ev_id', '$A', '$synced', 'Netflix', 'cancelled', now(), 15.99, 'USD', 'monthly')"
+  gives   "a person sees their own lifecycle events" 1          "$db" authenticated "$A" "select count(*) from public.lifecycle_events"
+  gives   "a person cannot read someone else's lifecycle events" 0 "$db" authenticated "$B" "select count(*) from public.lifecycle_events"
+  refused "a person cannot insert a lifecycle event for someone else" "$db" authenticated "$A" "insert into public.lifecycle_events (id, user_id, subscription_id, subscription_name, kind, occurred_at, amount, currency, frequency) values ('6eed0000-0000-4000-8000-000000000002', '$B', '$synced', 'Netflix', 'cancelled', now(), 15.99, 'USD', 'monthly')"
+  works   "a person can save their own pause plan"              "$db" authenticated "$A" "insert into public.pause_plans (user_id, subscription_ids, started_on) values ('$A', array['$synced'::uuid], now()) on conflict (user_id) do update set subscription_ids = excluded.subscription_ids"
+  works   "a pause plan update can carry a client LWW timestamp" "$db" authenticated "$A" "update public.pause_plans set ended_at = '2026-01-02T03:04:05Z', updated_at = '2026-01-02T03:04:05Z' where user_id = '$A'"
+  gives   "pause_plans preserves the client updated_at timestamp on update" "2026-01-02T03:04:05Z" "$db" authenticated "$A" "select to_char(updated_at at time zone 'UTC', 'YYYY-MM-DD\"T\"HH24:MI:SS\"Z\"') from public.pause_plans where user_id = '$A'"
+  gives   "a person cannot read someone else's pause plan" 0    "$db" authenticated "$B" "select count(*) from public.pause_plans"
+  refused "a person cannot write someone else's pause plan"     "$db" authenticated "$B" "insert into public.pause_plans (user_id, subscription_ids, started_on) values ('$A', array['$synced'::uuid], now())"
+  refused "a signed-in person cannot read app_store_entitlements" "$db" authenticated "$A" "select count(*) from public.app_store_entitlements"
+  refused "a visitor cannot read app_store_entitlements"        "$db" anon - "select count(*) from public.app_store_entitlements"
+  works   "the service role can record an App Store entitlement" "$db" service_role - "insert into public.app_store_entitlements (original_transaction_id, user_id, product_id, status) values ('tx-1', '$A', 'com.pausely.premium.annual', 'trial')"
+  works   "a person can save notes, payment method and split count on a subscription" "$db" authenticated "$A" "insert into public.subscriptions (user_id, name, amount, notes, payment_method, split_count) values ('$A', 'Shared Max', 16.99, 'Split with roommate', 'Apple Card', 2)"
+  works   "and delete it cleanly afterwards" "$db" authenticated "$A" "delete from public.subscriptions where user_id = '$A' and name = 'Shared Max'"
+  refused "split count must be between 1 and 20"                "$db" authenticated "$A" "insert into public.subscriptions (user_id, name, amount, split_count) values ('$A', 'Bad Split', 10, 0)"
+  owner_sees "unused realtime broadcasts are removed" 0 "$db" "select count(*) from pg_publication_tables where pubname = 'supabase_realtime' and tablename in ('subscriptions', 'referral_codes', 'referral_conversions')"
+  if has "$db" waitlist; then
+    refused "a signed-out visitor cannot write to the waitlist" "$db" anon - "insert into public.waitlist (email) values ('x@example.test')"
+    works   "the waitlist function (service role) can"          "$db" service_role - "insert into public.waitlist (email) values ('via-function@example.test')"
+    owner_sees "waitlist rows were kept" 2 "$db" "select count(*) from public.waitlist"
+  fi
+  if has "$db" affiliates; then
+    owner_sees "affiliate rows were kept" 1 "$db" "select count(*) from public.affiliates"
+  fi
+  if has "$db" user_profiles; then
+    refused "a person cannot mark themselves premium in the old profile table" "$db" authenticated "$A" "update public.user_profiles set is_premium = true where id = '$A'"
+  fi
+  if has "$db" usage_snapshots; then
+    refused "a person cannot fill usage_snapshots"              "$db" authenticated "$A" "insert into public.usage_snapshots (subscription_id, user_id, date) select id, user_id, current_date from public.subscriptions where user_id = '$A' limit 1"
+    refused "a person cannot fill ai_insights_log"              "$db" authenticated "$A" "insert into public.ai_insights_log (user_id, insight_type, insight_text) values ('$A', 'unused', 'x')"
+  fi
+
+  # The earlier payment system (on the live project only)
+  if has "$db" user_subscriptions; then
+    local object
+    for object in orders user_subscriptions active_subscriptions expiring_subscriptions payment_failures; do
+      refused "a signed-out visitor cannot read $object"        "$db" anon - "select count(*) from public.$object"
+      refused "a signed-in person cannot read $object"          "$db" authenticated "$A" "select count(*) from public.$object"
+    done
+    gives   "the service role still reads the old payment views" 1 "$db" service_role - "select count(*) from public.payment_failures"
+    works   "a payment recorded by the service role still marks the account Pro" "$db" service_role - "insert into public.user_subscriptions (user_id, tier, status) values ('$A', 'pro', 'active')"
+    owner_sees "and the account is Pro" "t|pro" "$db" "select is_pro, pro_tier from public.profiles where id = '$A'"
+    works   "an ended payment takes Pro away again"             "$db" service_role - "update public.user_subscriptions set status = 'ended' where user_id = '$A'"
+    owner_sees "and the account is no longer Pro" "f|" "$db" "select is_pro, pro_tier from public.profiles where id = '$A'"
+  fi
+
+  # The function that summed anyone's spending
+  if [ "$(printf "select count(*) from pg_proc where proname = 'calculate_monthly_spend';\n" | admin "$db")" != "0" ]; then
+    refused "a signed-out visitor cannot read anyone's monthly spend" "$db" anon - "select public.calculate_monthly_spend('$B')"
+    refused "nor can a signed-in person"                        "$db" authenticated "$A" "select public.calculate_monthly_spend('$B')"
+  fi
+
+  # Automatic auth.users -> profiles trigger (GoTrue/owner inserts into auth.users)
+  local E=eeeeeeee-0000-4000-8000-000000000005 out_e
+  if out_e=$(printf "insert into auth.users (id, email) values ('%s', 'e@example.test');\n" "$E" | admin "$db"); then
+    pass "a new auth user triggers profile creation"
+  else
+    fail "a new auth user triggers profile creation" "$(printf '%s' "$out_e" | tail -1)"
+  fi
+  owner_sees "their profile exists and is not Pro" "1|f|e@example.test" "$db" "select count(*), bool_or(is_pro), max(email) from public.profiles where id = '$E'"
+  if out_e=$(printf "delete from auth.users where id = '%s';\n" "$E" | admin "$db"); then
+    pass "cleanup test user E"
+  else
+    fail "cleanup test user E" "$(printf '%s' "$out_e" | tail -1)"
+  fi
+
+  # Account deletion (including lifecycle_events and pause_plans cleanup)
+  works   "user D has lifecycle history and pause plan before deleting" "$db" authenticated "$D" "insert into public.lifecycle_events (id, user_id, subscription_id, subscription_name, kind, occurred_at, amount, currency, frequency) values ('6eed0000-0000-4000-8000-000000000009', '$D', '6eed0000-0000-4000-8000-000000000010', 'Hulu', 'cancelled', now(), 7.99, 'USD', 'monthly'); insert into public.pause_plans (user_id, subscription_ids, started_on, ended_at) values ('$D', array['6eed0000-0000-4000-8000-000000000010'::uuid], now(), null)"
+  refused "a signed-out visitor cannot call account deletion"   "$db" anon - "select public.delete_my_account()"
+  works   "a person can delete their own account"               "$db" authenticated "$D" "select public.delete_my_account()"
+  owner_sees "their account, profile, subscriptions, lifecycle events and pause plan are gone" "0|0|0|0|0" "$db" "select (select count(*) from auth.users where id = '$D'), (select count(*) from public.profiles where id = '$D'), (select count(*) from public.subscriptions where user_id = '$D'), (select count(*) from public.lifecycle_events where user_id = '$D'), (select count(*) from public.pause_plans where user_id = '$D')"
+  owner_sees "the deletion was logged" 1 "$db" "select count(*) from public.deletion_requests where notes = 'Deleted from the app'"
+  owner_sees "nobody else's rows were touched" "3|2" "$db" "select (select count(*) from auth.users), (select count(*) from public.subscriptions)"
+}
+
+row_cap_check() {  # the subscription ceiling, proved with a low ceiling so it runs fast
+  local db=$1
+  printf "drop trigger enforce_row_cap on public.subscriptions;\ncreate trigger enforce_row_cap before insert on public.subscriptions for each row execute function public.enforce_row_cap('user_id', '3');\n" | admin "$db" >/dev/null
+  works   "a person can add subscriptions up to the ceiling"    "$db" authenticated "$A" "insert into public.subscriptions (user_id, name, amount) values ('$A', 'Two', 1), ('$A', 'Three', 1)"
+  refused "and is stopped at it"                                "$db" authenticated "$A" "insert into public.subscriptions (user_id, name, amount) values ('$A', 'Four', 1)"
+  works   "the service role is not held to the ceiling"         "$db" service_role - "insert into public.subscriptions (user_id, name, amount) values ('$A', 'Imported', 1)"
+}
+
+# ---- run --------------------------------------------------------------------------------------
+
+if ! docker ps --format '{{.Names}}' 2>/dev/null | grep -qx "$CONTAINER"; then
+  docker rm -f "$CONTAINER" >/dev/null 2>&1
+  docker run -d --name "$CONTAINER" -e POSTGRES_PASSWORD=localonly "$IMAGE" >/dev/null || { echo "Could not start Postgres. Is Docker running?"; exit 1; }
+fi
+for _ in $(seq 1 30); do docker exec "$CONTAINER" pg_isready -U postgres >/dev/null 2>&1 && break; sleep 1; done
+
+printf 'Applying %s\n\n' "$(basename "$APPLY")"
+
+for state in "minimal 20260304173000" "old 20260520000001" "oct22 20261022b" "nov6 20261106" "live -" "fresh 99999999"; do
+  set -- $state
+  db=$1
+  if [ "$db" = "live" ]; then build_live "$db"; else build "$db" "$2"; fi
+  seed "$db"
+  [ "$db" = "old" ] && holes "$db"
+  [ "$db" = "live" ] && holes_live "$db"
+  if [ "$db" = "oct22" ]; then
+    owner_sees "oct22 starts with one person's double rating" 2 "$db" "select count(*) from public.cancel_difficulty_ratings where user_id = '$B' and service_name = 'Netflix'"
+  fi
+  if [ "$db" != "fresh" ]; then
+    # The rehearsal scripts/db_apply.py sends to the live project: the whole file, then all of it undone.
+    before=$(printf '%s;\n' "$FINGERPRINT" | admin "$db")
+    out=$(python3 "$ROOT/scripts/db_apply.py" wrap rehearse | sql_stream "$db")
+    if printf '%s' "$out" | grep -q 'REHEARSAL_ROLLED_BACK' && ! printf '%s' "$out" | grep -q 'NOT OK'; then
+      pass "$db: a rehearsal runs to its end and reports an all-ok checklist"
+    else
+      fail "$db: a rehearsal runs to its end and reports an all-ok checklist" "$(printf '%s' "$out" | grep -m1 -E 'ERROR|NOT OK')"
+    fi
+    if [ "$before" = "$(printf '%s;\n' "$FINGERPRINT" | admin "$db")" ]; then
+      pass "$db: the rehearsal left nothing behind"
+    else
+      fail "$db: the rehearsal left nothing behind" "the schema or the rows it touches differ from before"
+    fi
+
+    # First the way db_apply.py applies it (one statement), then the way a person pastes it.
+    for run in "as one statement" "pasted, on top"; do
+      if [ "$run" = "as one statement" ]; then
+        out=$(python3 "$ROOT/scripts/db_apply.py" wrap | sql_stream "$db"); status=$?
+      else
+        out=$(apply_file "$db" "$APPLY"); status=$?
+      fi
+      if [ "$status" -ne 0 ]; then
+        fail "$db: the APPLY file runs ($run)" "$(printf '%s' "$out" | grep -m1 ERROR)"
+      elif printf '%s' "$out" | grep -q 'NOT OK'; then
+        fail "$db: the APPLY file's checklist is all ok ($run)" "$(printf '%s' "$out" | grep 'NOT OK' | head -1)"
+      else
+        pass "$db: the APPLY file runs and its checklist is all ok ($run)"
+      fi
+    done
+  fi
+  seed_after "$db"
+  checks "$db"
+  row_cap_check "$db"
+  echo
+done
+
+[ "${KEEP:-0}" = "1" ] || docker rm -f "$CONTAINER" >/dev/null 2>&1
+printf '%d passed, %d failed\n' "$PASS" "$FAIL"
+[ "$FAIL" -eq 0 ]

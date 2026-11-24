@@ -45,12 +45,9 @@ final class VerdictAndSavingsTests: XCTestCase {
         XCTAssertNil(RenewalDecisions.pending(for: netflix, kept: [], now: day(2026, 10, 30), calendar: cal))
     }
 
-    func testCancelledAndPausedNeverAsk() {
+    func testACancelledSubscriptionNeverAsks() {
         let cancelled = sub(anchor: day(2026, 10, 31), status: .cancelled)
         XCTAssertNil(RenewalDecisions.pending(for: cancelled, kept: [], now: day(2026, 10, 30), calendar: cal))
-        var paused = sub(anchor: day(2026, 10, 31))
-        paused.pausedUntil = day(2026, 12, 1)
-        XCTAssertNil(RenewalDecisions.pending(for: paused, kept: [], now: day(2026, 10, 30), calendar: cal))
     }
 
     func testKeptRenewalStopsAskingUntilTheNextOne() {
@@ -148,6 +145,48 @@ final class VerdictAndSavingsTests: XCTestCase {
         XCTAssertEqual(lines[1].avoidedSoFar.map(ymd), ["2027-01-31", "2027-02-28"])
     }
 
+    /// A delivered reminder can be tapped after its subscription lost its date or was cancelled. The
+    /// verdict then has no charge to keep: with no date it asks for the date, and a cancelled one
+    /// opens on its cancelled slip. A dated one that still renews has a charge and neither applies.
+    func testAVerdictWithNoChargeSaysWhy() {
+        let now = day(2026, 11, 12)
+        XCTAssertNil(VerdictFacts.noCharge(for: sub(anchor: day(2026, 11, 20)), now: now, calendar: cal))
+        XCTAssertEqual(VerdictFacts.noCharge(for: sub(anchor: nil), now: now, calendar: cal), .noDate)
+
+        var cancelled = sub(anchor: day(2026, 11, 20))
+        cancelled.status = .cancelled
+        XCTAssertEqual(VerdictFacts.noCharge(for: cancelled, now: now, calendar: cal), .notRenewing)
+
+        var cancelledUndated = sub(anchor: nil)
+        cancelledUndated.status = .cancelled
+        XCTAssertEqual(VerdictFacts.noCharge(for: cancelledUndated, now: now, calendar: cal), .notRenewing,
+                       "cancelled comes first: asking for a date would restart nothing")
+
+        // A trial with an end date has a charge even when no renewal date was entered.
+        var trial = sub(anchor: nil)
+        trial.status = .trial
+        trial.trialEndsAt = day(2026, 11, 15)
+        XCTAssertNil(VerdictFacts.noCharge(for: trial, now: now, calendar: cal))
+    }
+
+    /// Under the price, the slip says what a year of it comes to. For a yearly price that is the price
+    /// again ("€59.99 /yr … That's €59.99 a year"), so it says only what the person doesn't know yet.
+    func testTheSlipDoesNotSayAYearlyPriceTwice() {
+        let rates = CurrencyRates(perUSD: ["EUR": Decimal(string: "0.5")!])
+        func plan(_ amount: Decimal, _ currency: String, _ frequency: BillingFrequency) -> Subscription {
+            Subscription(name: "Plan", amount: amount, currency: currency, billingFrequency: frequency)
+        }
+        XCTAssertEqual(VerdictFacts.yearLine(for: plan(10, "USD", .monthly), displayCurrency: "USD", rates: rates), .yearly(120))
+        XCTAssertEqual(VerdictFacts.yearLine(for: plan(10, "EUR", .monthly), displayCurrency: "USD", rates: rates),
+                       .yearlyAndConverted(120, inDisplay: 240))
+        XCTAssertNil(VerdictFacts.yearLine(for: plan(60, "USD", .yearly), displayCurrency: "USD", rates: rates))
+        XCTAssertEqual(VerdictFacts.yearLine(for: plan(60, "EUR", .yearly), displayCurrency: "USD", rates: rates),
+                       .convertedOnly(inDisplay: 120))
+        XCTAssertNil(VerdictFacts.yearLine(for: plan(60, "XXX", .yearly), displayCurrency: "USD", rates: rates),
+                     "no rate, no guess")
+        XCTAssertEqual(VerdictFacts.yearLine(for: plan(10, "XXX", .monthly), displayCurrency: "USD", rates: rates), .yearly(120))
+    }
+
     func testYearlyPlanCountsOneCharge() {
         let adobe = sub("Adobe", amount: 240, anchor: day(2026, 11, 11), frequency: .yearly)
         let lines = SavingsLedger.lines(from: [event(.cancelled, adobe, on: day(2026, 11, 1))], now: day(2026, 11, 12), calendar: cal)
@@ -177,18 +216,6 @@ final class VerdictAndSavingsTests: XCTestCase {
 
     // MARK: - Verdict facts
 
-    func testPriceChangeComparesWithTheFirstRecordedPrice() {
-        let spotify = sub("Spotify", amount: 13, anchor: day(2026, 11, 1))
-        let events = [
-            LifecycleEvent(kind: .priceChanged, subscription: spotify, date: day(2026, 3, 1), previousAmount: 11),
-            LifecycleEvent(kind: .priceChanged, subscription: spotify, date: day(2026, 6, 1), previousAmount: 12)
-        ]
-        let change = VerdictFacts.priceChange(for: spotify.id, currentAmount: 13, events: events)
-        XCTAssertEqual(change?.from, 11)
-        XCTAssertEqual(change.map { ymd($0.since) }, "2026-03-01")
-        XCTAssertNil(VerdictFacts.priceChange(for: spotify.id, currentAmount: 11, events: events), "back to the original price")
-    }
-
     func testRenewalAfterAChargeForAskAgainText() {
         let netflix = sub(anchor: day(2026, 1, 31))
         XCTAssertEqual(VerdictFacts.renewal(after: day(2026, 10, 31), for: netflix, calendar: cal).map(ymd), "2026-11-30")
@@ -216,5 +243,42 @@ final class VerdictAndSavingsTests: XCTestCase {
                        "the Dec 31 charge happened because it started again that day")
         XCTAssertEqual(lines[0].savedSoFar, 40)
         XCTAssertEqual(lines[0].endedOn.map(ymd), "2026-12-31")
+    }
+
+    // MARK: - Nothing counted is nothing shown (the rating of 2026-11-23)
+
+    /// A cancellation with no renewal day has nothing to count: no line, not "0 of 0" and "$0.00 you won't pay".
+    func testACancellationWithNoRenewalDayHasNoLine() {
+        let audible = sub("Audible", amount: Decimal(string: "14.95")!, anchor: nil)
+        XCTAssertTrue(SavingsLedger.lines(from: [event(.cancelled, audible, on: day(2026, 11, 23))], now: day(2026, 12, 30), calendar: cal).isEmpty)
+    }
+
+    /// Cancelled by mistake and taken back before any charge it avoided came due: no line is left behind, and
+    /// starting again keeps the day it renewed on instead of restarting today.
+    func testACancellationTakenBackBeforeAnyChargeLeavesNothing() {
+        let netflix = sub(anchor: day(2026, 12, 5))
+        let cancel = event(.cancelled, netflix, on: day(2026, 11, 23, hour: 10))
+        let back = event(.reactivated, netflix, on: day(2026, 11, 23, hour: 11))
+        XCTAssertTrue(SavingsLedger.lines(from: [cancel, back], now: day(2026, 11, 24), calendar: cal).isEmpty)
+        XCTAssertTrue(SubscriptionStore.isUndo(of: cancel, on: day(2026, 11, 30), calendar: cal), "before Dec 5: an undo")
+        XCTAssertFalse(SubscriptionStore.isUndo(of: cancel, on: day(2026, 12, 6), calendar: cal), "after Dec 5 it charged: a restart")
+        XCTAssertEqual(cancel.anchorDate.map(ymd), ymd(day(2026, 12, 5)), "the day it goes back to")
+
+        // Back after a charge it avoided: that charge was kept, and the line stays.
+        let later = event(.reactivated, netflix, on: day(2026, 12, 20))
+        XCTAssertEqual(SavingsLedger.lines(from: [cancel, later], now: day(2026, 12, 21), calendar: cal).first?.avoidedCharges.count, 1)
+
+        let undated = event(.cancelled, sub(anchor: nil), on: day(2026, 11, 23, hour: 9))
+        XCTAssertTrue(SubscriptionStore.isUndo(of: undated, on: day(2026, 11, 23, hour: 18), calendar: cal), "the same day")
+        XCTAssertFalse(SubscriptionStore.isUndo(of: undated, on: day(2026, 11, 24), calendar: cal))
+    }
+
+    /// A shared plan's totals come from the exact share: $17.99 between two is $107.94 a year, not 12 × $9.00.
+    func testASharedPlansTotalsUseTheExactShare() {
+        var netflix = TestFactories.makeSubscription(name: "Netflix", amount: Decimal(string: "17.99")!, billingFrequency: .monthly)
+        netflix.splitCount = 2
+        XCTAssertEqual(netflix.annualCost, Decimal(string: "107.94"))
+        XCTAssertEqual(netflix.effectiveAmount, Decimal(string: "9.00"), "one charge's share is shown rounded")
+        XCTAssertEqual(MoneyFormat.string(netflix.monthlyCost, "USD", locale: Locale(identifier: "en_US")), "$9.00")
     }
 }

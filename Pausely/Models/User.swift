@@ -24,20 +24,6 @@ extension User {
         let parts = [firstName, lastName].compactMap { $0?.trimmed }
         return parts.isEmpty ? nil : parts.joined(separator: " ")
     }
-
-    var displayName: String {
-        fullName ?? email?.components(separatedBy: "@").first?.capitalized ?? "User"
-    }
-
-    var initials: String {
-        let firstInitial = firstName?.first.map(String.init)
-        let lastInitial  = lastName?.first.map(String.init)
-        switch (firstInitial, lastInitial) {
-        case let (f?, l?): return (f + l).uppercased()
-        case let (f?, _):  return f.uppercased()
-        default:           return String(email?.prefix(1).uppercased() ?? "U")
-        }
-    }
 }
 
 private extension String {

@@ -1,6 +1,6 @@
 import XCTest
 
-/// The custom floating tab bar: every tab exists and switching works.
+/// The tab bar: every tab exists and switching works.
 @MainActor
 final class TabNavigationTests: XCTestCase {
 
@@ -13,7 +13,7 @@ final class TabNavigationTests: XCTestCase {
         app.launch()
     }
 
-    private func tab(_ id: String) -> XCUIElement { app.buttons[id].firstMatch }
+    private func tab(_ id: String) -> XCUIElement { app.tab(id) }
 
     func testAllTabsExist() throws {
         for id in ["tabHome", "tabSubscriptions", "tabAnalysis", "tabProfile"] {
@@ -24,10 +24,9 @@ final class TabNavigationTests: XCTestCase {
     func testNavigateBetweenTabs() throws {
         XCTAssertTrue(tab("tabHome").waitForExistence(timeout: 10))
         for id in ["tabSubscriptions", "tabAnalysis", "tabProfile", "tabHome"] {
-            tab(id).tap()
-            let selected = NSPredicate(format: "isSelected == true")
-            let wait = expectation(for: selected, evaluatedWith: tab(id))
-            XCTAssertEqual(XCTWaiter.wait(for: [wait], timeout: 3), .completed, "\(id) should be selected after tapping it")
+            XCTAssertTrue(tab(id).tap(until: tab(id).isSelected), "\(id) should be selected after tapping it")
+            let selectedCount = app.tabBars.buttons.allElementsBoundByIndex.filter(\.isSelected).count
+            XCTAssertEqual(selectedCount, 1, "exactly one tab is selected")
         }
     }
 }

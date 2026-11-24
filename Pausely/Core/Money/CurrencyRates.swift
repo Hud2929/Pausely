@@ -14,16 +14,36 @@ struct CurrencyRates: Equatable {
             normalized[MoneyFormat.normalizedCode(code)] = rate
         }
         normalized["USD"] = 1
+        // A retired currency is worth a fixed number of its successor, whatever a feed says or omits.
+        for old in Self.retired {
+            if let successor = normalized[old.replacedBy] { normalized[old.code] = successor * old.unitsPerNew }
+        }
         self.perUSD = normalized
     }
+
+    /// A currency nobody is charged in any more: what took its place, at what fixed rate, and since when.
+    struct Retired: Equatable {
+        let code: String
+        let replacedBy: String
+        /// How many of the old currency make one of the new.
+        let unitsPerNew: Decimal
+        /// The day the new currency took over (year-month-day).
+        let since: String
+    }
+
+    /// Kept convertible, so a list made before the change still adds up; not offered for anything new.
+    /// - BGN: Bulgaria adopted the euro on 2026-01-01 at 1 EUR = 1.95583 BGN (Council Regulation (EU)
+    ///   2025/1409 of 8 July 2025); the lev stopped being legal tender on 2026-02-01.
+    /// - SLL: Sierra Leone redenominated the leone on 2022-07-01, 1000 old (SLL) to 1 new (SLE);
+    ///   ISO 4217 amendments 171 and 172 moved SLL to the historic list.
+    static let retired: [Retired] = [
+        Retired(code: "BGN", replacedBy: "EUR", unitsPerNew: Decimal(string: "1.95583")!, since: "2026-01-01"),
+        Retired(code: "SLL", replacedBy: "SLE", unitsPerNew: 1000, since: "2022-07-01"),
+    ]
 
     /// Rates from an API (`Double` per USD). Goes through text so 1.38 stays 1.38, not 1.3799999.
     init(apiRates: [String: Double]) {
         self.init(perUSD: apiRates.compactMapValues { Decimal(string: String($0)) })
-    }
-
-    func rate(_ code: String) -> Decimal? {
-        perUSD[MoneyFormat.normalizedCode(code)]
     }
 
     /// `amount` in `from`, expressed in `to`, or `nil` when either rate is unknown.
@@ -52,7 +72,7 @@ struct CurrencyRates: Equatable {
         "PAB": "1", "BOB": "11.79", "PYG": "5765.48", "VES": "887.3", "XCD": "2.7", "TTD": "6.79",
         "JMD": "158.84", "BBD": "2", "BSD": "1", "BZD": "2", "KYD": "0.833", "BMD": "1",
         "GYD": "209.52", "SRD": "37.6", "CHF": "0.825", "SEK": "9.93", "NOK": "9.32", "DKK": "6.68",
-        "PLN": "3.93", "CZK": "21.71", "HUF": "326.99", "RON": "4.78", "BGN": "1.74", "RSD": "104.95",
+        "PLN": "3.93", "CZK": "21.71", "HUF": "326.99", "RON": "4.78", "RSD": "104.95",
         "ISK": "121.71", "UAH": "45.27", "RUB": "80.67", "BYN": "2.94", "MDL": "17.95", "GIP": "0.748",
         "ALL": "81.04", "BAM": "1.74", "MKD": "54.98", "GEL": "2.6", "AZN": "1.7", "AMD": "361.13",
         "AUD": "1.42", "NZD": "1.75", "SGD": "1.28", "HKD": "7.84", "KRW": "1323.9", "INR": "95.16",
@@ -66,7 +86,7 @@ struct CurrencyRates: Equatable {
         "GHS": "11.62", "MAD": "9.82", "TND": "3", "DZD": "134.92", "ETB": "161.78", "TZS": "2649.57",
         "UGX": "4336.26", "ZMW": "20.27", "BWP": "13.76", "MUR": "47.16", "SCR": "14.44", "XOF": "585.24",
         "XAF": "585.24", "ERN": "15", "SZL": "16.6", "LSL": "16.6", "NAD": "16.6", "MZN": "63.65",
-        "MWK": "1733.69", "RWF": "1475.49", "SLL": "22971.44", "SOS": "571.48", "SDG": "458.56", "TMT": "3.5",
+        "MWK": "1733.69", "RWF": "1475.49", "SLE": "22.97", "SOS": "571.48", "SDG": "458.56", "TMT": "3.5",
         "IRR": "1667724.81", "IQD": "1517.28", "YER": "236.23", "SYP": "121.75", "TRY": "49.79",
     ]
 }

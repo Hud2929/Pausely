@@ -1,0 +1,147 @@
+import Foundation
+
+// MARK: - Receipt Signal
+/// Compact, privacy-preserving facts extracted from ONE email on-device.
+/// It deliberately contains no subject line and no body text — only what the engine needs.
+struct ReceiptSignal: Codable, Equatable, Identifiable {
+    var id: String                       // Message-ID header when known (same receipt in two inboxes = one), else provider id
+    var date: Date
+    var senderDomain: String
+    var senderName: String
+    var merchantHint: String?            // from a platform parser or product detection
+    var platform: String                 // direct | apple | googleplay | stripe | paypal | paddle
+    var kind: EmailKind
+    var amount: Decimal?
+    var currency: String?
+    var cadenceHint: BillingFrequency?
+    var trialDays: Int?
+    var renewalLanguage: Bool
+    var oneTimeLanguage: Bool
+    var promotional: Bool
+    /// Structured (schema.org) receipt data found in the email, when present.
+    var markup: StructuredReceiptParser.Kind? = nil
+    var hasUnsubscribe: Bool? = nil
+    var bulkMail: Bool? = nil
+    /// Inboxes (account ids) this receipt was found in. Empty for receipts saved before multiple inboxes.
+    var sources: [String]? = nil
+    /// The sender claims to be a known merchant, but the receiving server's checks say the message isn't
+    /// signed by it: never trusted as proof of a subscription.
+    var spoofSuspected: Bool? = nil
+    /// What the plan costs once an introductory price ends ("$134.99 for 1 year, then $269.99/year").
+    var nextAmount: Decimal? = nil
+    /// The introductory price as stated, before tax, so the rise is measured like with like.
+    var introAmount: Decimal? = nil
+}
+
+// MARK: - Output Models
+
+struct ChargeEvidence: Codable, Equatable, Identifiable {
+    var id: String
+    var date: Date
+    var amount: Decimal
+    var currency: String
+}
+
+struct ProvenSubscription: Identifiable, Equatable {
+    enum Status: Equatable {
+        case active
+        case trial
+        case priceIncreased
+        case likelyEnded
+        case cancelled
+    }
+
+    enum Tier: Int, Comparable {
+        case hidden = 0
+        case review = 1      // shown under "Worth a look", never pre-selected
+        case likely = 2      // shown, not pre-selected
+        case confirmed = 3   // pre-selected
+        static func < (lhs: Tier, rhs: Tier) -> Bool { lhs.rawValue < rhs.rawValue }
+    }
+
+    let id: String
+    var name: String
+    var merchantKey: String
+    var category: String?
+    var cancelURL: String?
+    var amount: Decimal
+    var currency: String
+    var frequency: BillingFrequency
+    var lastChargeDate: Date?
+    var nextBillingDate: Date?
+    var status: Status
+    var score: Int
+    var tier: Tier
+    var evidence: [ChargeEvidence]
+    var reasons: [String]
+    var previousAmount: Decimal?
+    var trialEndsOn: Date?
+    var chargedAfterCancel: Bool = false
+    /// When it started, for a subscription known from its sign-up rather than a charge: a store that
+    /// emails no receipt per renewal (a Prime Video channel), a trial that turned paid. `lastChargeDate`
+    /// is then nil: a sign-up is not a charge, and "Last charged May 20" was the day someone subscribed.
+    var subscribedOn: Date? = nil
+    /// A later charge at a higher amount that hasn't happened twice: a new plan or a one-off, said as a
+    /// dated note and never made the price on its own.
+    var unusualCharge: ChargeEvidence? = nil
+    /// `subscribedOn` was the day a free trial started (a trial that turned paid), said as such.
+    var startedWithTrial: Bool = false
+    /// The main reason it isn't certain, said on a "Worth a look" row: the heading's "Check these before
+    /// adding them" didn't say what to check (the rating of 2026-11-22).
+    var doubt: String? = nil
+    /// What the next renewal charges when an email states it differs from the last charge (Google One's
+    /// introductory year ending). The line added to the list carries it, so the reminder before that renewal
+    /// says what will be charged; added at the old price, it said $134.99 before a $305 charge (T12).
+    var comingAmount: Decimal? = nil
+    /// No receipt said which dollar: the currency is `DollarHint.assumed`, and the row says so.
+    var currencyAssumed: Bool = false
+    /// When billed through a store ("Apple", "Amazon", "Google Play") rather than directly by the
+    /// merchant, so importing preserves the store's cancellation path (T11).
+    var billedThrough: String? = nil
+
+    /// A rise this steep (more than half again) is a new plan or an unexpected charge, not a price rise:
+    /// after twelve months at $31.64, a $148.41 charge is "now costs more", never "raised its price".
+    static func isPlanChange(from old: Decimal, to new: Decimal) -> Bool {
+        old > 0 && new > old * Decimal(string: "1.5")!
+    }
+
+    var annualCost: Decimal { amount * ProvenSubscription.periodsPerYear(frequency) }
+    var monthlyCost: Decimal { annualCost / 12 }
+
+    static func periodsPerYear(_ f: BillingFrequency) -> Decimal {
+        switch f {
+        case .weekly: return 52
+        case .biweekly: return 26
+        case .monthly: return 12
+        case .quarterly: return 4
+        case .semiannual: return 2
+        case .yearly: return 1
+        }
+    }
+}
+
+struct IntelligenceInsight: Identifiable, Equatable {
+    enum Kind: Equatable { case priceIncrease, trialEnding, renewalSoon, likelyEnded, chargedAfterCancel, priceChangeNotice, paymentFailed }
+    let id: String
+    var kind: Kind
+    var title: String
+    var detail: String
+    var subscriptionId: String?
+    /// Positive = money the user could lose (or save) per year.
+    var annualImpact: Decimal?
+    /// The price the next renewal charges, when an email states it (an introductory price ending).
+    var newAmount: Decimal? = nil
+}
+
+struct IntelligenceReport: Equatable {
+    var subscriptions: [ProvenSubscription]
+    var ignoredPurchaseGroups: Int
+    var insights: [IntelligenceInsight]
+    /// Who those charges came from, so the count can be opened and checked (it was a number nothing
+    /// explained, the rating of 2026-11-22).
+    var ignoredSenders: [String] = []
+
+    var active: [ProvenSubscription] {
+        subscriptions.filter { $0.status != .likelyEnded && $0.status != .cancelled }
+    }
+}

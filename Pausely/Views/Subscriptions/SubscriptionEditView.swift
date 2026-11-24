@@ -8,9 +8,12 @@ struct SubscriptionEditView: View {
     @Environment(\.dismiss) private var dismiss
     @ObservedObject private var currencyManager = CurrencyManager.shared
     @State private var draft: SubscriptionEditDraft
+    /// The amount is the one big thing on this screen; it grows with the reader's text size.
+    @ScaledMetric(relativeTo: .largeTitle) private var amountSize: CGFloat = 52
     @State private var isSaving = false
-    @State private var saveError: String?
     @State private var showDiscardConfirm = false
+    /// The reader's text size, read on the screen: inside the navigation bar it is capped.
+    @Environment(\.dynamicTypeSize) private var typeSize
     @State private var showValidation = false
     @FocusState private var focus: Field?
 
@@ -38,19 +41,21 @@ struct SubscriptionEditView: View {
     var body: some View {
         NavigationStack {
             ZStack {
-                Color.obsidianBlack.ignoresSafeArea()
+                Color.ink.ignoresSafeArea()
 
                 ScrollView {
-                    VStack(spacing: 28) {
+                    VStack(alignment: .leading, spacing: 28) {
                         header
                         amountField
                         detailsCard
+                        extraFields
                         footnote
                     }
                     .padding(.horizontal, 20)
                     .padding(.top, 8)
                     .padding(.bottom, 40)
                 }
+                .readableScroll()
                 .scrollDismissesKeyboard(.interactively)
             }
             .navigationTitle("Edit")
@@ -60,119 +65,112 @@ struct SubscriptionEditView: View {
                     Button("Cancel") {
                         if isDirty { showDiscardConfirm = true } else { dismiss() }
                     }
-                    .foregroundStyle(Color.obsidianTextSecondary)
+                    .foregroundStyle(Color.inkTextMuted)
                     .accessibilityIdentifier("editCancelButton")
+                    .asksFirst(Text("Discard your changes?"), isPresented: $showDiscardConfirm,
+                               largeText: typeSize.isAccessibilitySize) {
+                        Button("Discard changes", role: .destructive) { dismiss() }
+                        Button("Keep editing", role: .cancel) {}
+                    }
                 }
                 ToolbarItem(placement: .topBarTrailing) {
                     Button {
                         Task { await save() }
                     } label: {
                         if isSaving {
-                            ProgressView().tint(Color.accentMint)
+                            ProgressView().tint(Color.inkText)
                         } else {
                             Text("Save").fontWeight(.semibold)
                         }
                     }
-                    .foregroundStyle(isDirty ? Color.accentMint : Color.obsidianTextTertiary)
+                    .foregroundStyle(isDirty ? Color.inkText : Color.inkTextFaint)
                     .disabled(!isDirty || isSaving)
                     .accessibilityIdentifier("editSaveButton")
                 }
                 ToolbarItemGroup(placement: .keyboard) {
                     Spacer()
                     Button("Done") { focus = nil }
-                        .foregroundStyle(Color.accentMint)
+                        .foregroundStyle(Color.inkText)
                 }
             }
         }
         .preferredColorScheme(.dark)
         .interactiveDismissDisabled(isDirty)
-        .confirmationDialog("Discard your changes?", isPresented: $showDiscardConfirm, titleVisibility: .visible) {
-            Button("Discard Changes", role: .destructive) { dismiss() }
-            Button("Keep Editing", role: .cancel) {}
-        }
-        .alert("Couldn't save", isPresented: Binding(get: { saveError != nil }, set: { if !$0 { saveError = nil } })) {
-            Button("OK", role: .cancel) {}
-        } message: {
-            Text(saveError ?? "")
-        }
     }
 
     // MARK: - Header
 
     private var header: some View {
-        VStack(spacing: 12) {
-            ServiceLogoView(name: draft.trimmedName.isEmpty ? original.name : draft.trimmedName,
-                            category: draft.category, size: 64)
-                .accessibilityHidden(true)
-
-            TextField("Name", text: $draft.name)
-                .font(.system(.title2, design: .rounded).weight(.bold))
-                .foregroundStyle(.white)
-                .multilineTextAlignment(.center)
-                .textInputAutocapitalization(.words)
-                .submitLabel(.next)
-                .focused($focus, equals: .name)
-                .onSubmit { focus = .amount }
-                .accessibilityLabel("Name")
-                .accessibilityIdentifier("editNameField")
-
+        VStack(alignment: .leading, spacing: 8) {
+            HStack(spacing: 12) {
+                ServiceLogoView(name: draft.trimmedName.isEmpty ? original.name : draft.trimmedName,
+                                category: draft.category, size: 48)
+                TextField(text: $draft.name, prompt: Hint.text(L10n.string("Name")), axis: .vertical) { Text("Name") }
+                    .lineLimit(1...3)
+                    .font(.question(.title))
+                    .foregroundStyle(Color.inkText)
+                    .multilineTextAlignment(.leading)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .textInputAutocapitalization(.words)
+                    .submitLabel(.next)
+                    .focused($focus, equals: .name)
+                    .onSubmit { focus = .amount }
+                    .returnMovesOn(from: $draft.name) { focus = .amount }
+                    .accessibilityLabel("Name")
+                    .accessibilityIdentifier("editNameField")
+            }
             if showValidation, let error = draft.nameError {
-                Text(error)
-                    .font(.system(.caption, design: .rounded))
-                    .foregroundStyle(.red)
+                ProblemLine(message: error, identifier: "editNameProblem")
             }
         }
+        .frame(maxWidth: .infinity, alignment: .leading)
     }
 
-    // MARK: - Amount
 
     private var amountField: some View {
-        VStack(spacing: 10) {
+        VStack(alignment: .leading, spacing: 6) {
             HStack(alignment: .firstTextBaseline, spacing: 6) {
-                Spacer(minLength: 0)
                 Menu {
                     ForEach(currencyManager.currencies, id: \.code) { currency in
                         Button {
                             draft.currency = currency.code
                         } label: {
                             if currency.code == draft.currency {
-                                Label("\(currency.code) · \(currency.name)", systemImage: "checkmark")
+                                Label("\(currency.code) · \(currency.localizedName())", systemImage: "checkmark")
                             } else {
-                                Text("\(currency.code) · \(currency.name)")
+                                Text("\(currency.code) · \(currency.localizedName())")
                             }
                         }
                     }
                 } label: {
-                    HStack(spacing: 3) {
+                    HStack(spacing: 4) {
                         Text(amountPrefix)
-                            .font(.system(size: 30, weight: .bold, design: .rounded))
+                            .font(.question(.title))
                         Image(systemName: "chevron.up.chevron.down")
-                            .font(.system(size: 10, weight: .bold))
+                            .font(.caption2.weight(.bold))
                     }
-                    .foregroundStyle(Color.accentMint.opacity(0.7))
+                    .foregroundStyle(Color.inkTextMuted)
                 }
                 .accessibilityLabel("Currency, \(draft.currency)")
 
-                TextField("0.00", text: $draft.amountText)
-                    .font(.system(size: 52, weight: .black, design: .rounded))
-                    .foregroundStyle(Color.accentMint)
+                TextField(text: $draft.amountText, prompt: Hint.text(AmountText.text(for: 0, currency: draft.currency))) { EmptyView() }
+                    // As wide as the row, like the amount on the two forms that add a subscription, and
+                    // drawn smaller when it is too long for the row: a field cuts off what does not fit.
+                    .amountFont(for: draft.amountText.isEmpty ? AmountText.text(for: 0, currency: draft.currency) : draft.amountText,
+                                base: amountSize)
+                    .foregroundStyle(Color.inkText)
                     .keyboardType(.decimalPad)
-                    .fixedSize(horizontal: true, vertical: false)
-                    .frame(minWidth: 90)
                     .focused($focus, equals: .amount)
                     .accessibilityLabel("Amount")
                     .accessibilityIdentifier("editAmountField")
-                Spacer(minLength: 0)
             }
 
             if showValidation, let error = draft.amountError {
-                Text(error)
-                    .font(.system(.caption, design: .rounded))
-                    .foregroundStyle(.red)
+                ProblemLine(message: error, identifier: "editAmountProblem")
             } else {
                 Text(draft.frequency.billingPeriodLabel)
-                    .font(.system(.subheadline, design: .rounded))
-                    .foregroundStyle(Color.obsidianTextSecondary)
+                    .font(.subheadline)
+                    .foregroundStyle(Color.inkTextMuted)
             }
         }
         .contentShape(Rectangle())
@@ -202,24 +200,29 @@ struct SubscriptionEditView: View {
                 .accessibilityLabel("Billing cycle, \(draft.frequency.displayName)")
             }
 
-            divider
+            if !draft.isTrial {
+                divider
 
-            row("Next payment") {
-                if draft.nextBillingDate != nil {
-                    DatePicker("Next payment", selection: Binding(
-                        get: { draft.nextBillingDate ?? Date() },
-                        set: { draft.nextBillingDate = $0 }
-                    ), displayedComponents: .date)
-                    .labelsHidden()
-                    .tint(Color.accentMint)
-                } else {
-                    Button {
-                        HapticStyle.light.trigger()
-                        draft.nextBillingDate = Date()
-                    } label: {
-                        Text("Set date")
-                            .font(.system(.body, design: .rounded).weight(.semibold))
-                            .foregroundStyle(Color.accentMint)
+                row("Next renewal") {
+                    OptionalDatePicker(title: L10n.string("Next renewal"), date: $draft.nextBillingDate)
+                }
+            }
+
+            if original.status != .cancelled {
+                divider
+                Toggle(isOn: $draft.isTrial.animation(Motion.unlessReduced(Motion.touch))) {
+                    Text("Free trial")
+                        .font(.body)
+                        .foregroundStyle(Color.inkText)
+                }
+                .tint(Color.inkTextMuted)
+                .frame(minHeight: 54)
+                .accessibilityIdentifier("editTrialToggle")
+
+                if draft.isTrial {
+                    divider
+                    row("Trial ends") {
+                        OptionalDatePicker(title: L10n.string("Trial ends"), date: $draft.trialEndsAt)
                     }
                 }
             }
@@ -233,16 +236,16 @@ struct SubscriptionEditView: View {
                             draft.category = option
                         } label: {
                             if option == SubscriptionCategory.label(for: draft.category) {
-                                Label(option, systemImage: "checkmark")
+                                Label(SubscriptionCategory.localizedLabel(for: option), systemImage: "checkmark")
                             } else {
-                                Text(option)
+                                Text(verbatim: SubscriptionCategory.localizedLabel(for: option))
                             }
                         }
                     }
                 } label: {
-                    valueLabel(SubscriptionCategory.label(for: draft.category))
+                    valueLabel(SubscriptionCategory.localizedLabel(for: draft.category))
                 }
-                .accessibilityLabel("Category, \(SubscriptionCategory.label(for: draft.category))")
+                .accessibilityLabel("Category, \(SubscriptionCategory.localizedLabel(for: draft.category))")
             }
 
             divider
@@ -265,61 +268,148 @@ struct SubscriptionEditView: View {
                 }
                 .accessibilityLabel("Remind me, \(SubscriptionEditDraft.reminderLabel(draft.reminderDays))")
             }
+
+            divider
+
+            row("Split between") {
+                Menu {
+                    ForEach(SubscriptionEditDraft.splitOptions, id: \.self) { count in
+                        Button {
+                            draft.splitCount = count
+                        } label: {
+                            if count == draft.splitCount {
+                                Label(SubscriptionEditDraft.splitLabel(count), systemImage: "checkmark")
+                            } else {
+                                Text(SubscriptionEditDraft.splitLabel(count))
+                            }
+                        }
+                    }
+                } label: {
+                    valueLabel(SubscriptionEditDraft.splitLabel(draft.splitCount))
+                }
+                .accessibilityLabel("Split between, \(SubscriptionEditDraft.splitLabel(draft.splitCount))")
+                .accessibilityIdentifier("editSplitPicker")
+            }
+
+            if draft.splitCount > 1, let share = draft.perPeriodShare {
+                Text(L10n.string("Your share: \(draft.frequency.priced(MoneyFormat.string(share, draft.currency)))"))
+                    .font(.footnote)
+                    .foregroundStyle(Color.inkTextMuted)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .padding(.bottom, 8)
+            }
         }
-        .background(RoundedRectangle(cornerRadius: 16, style: .continuous).fill(Color.obsidianSurface))
+    }
+
+    private var extraFields: some View {
+        VStack(alignment: .leading, spacing: 20) {
+            VStack(alignment: .leading, spacing: 8) {
+                Text("Billed to")
+                    .font(.subheadline.weight(.medium))
+                    .foregroundStyle(Color.inkTextMuted)
+                    .accessibilityHidden(true)
+                InkTextField(placeholder: "", text: $draft.paymentMethod, autocapitalization: .words)
+                    .accessibilityLabel("Billed to")
+                    .accessibilityIdentifier("editPaymentMethodField")
+                Text("For example: Apple, Visa ending in 4242, or PayPal.")
+                    .font(.footnote)
+                    .foregroundStyle(Color.inkTextFaint)
+                    .fixedSize(horizontal: false, vertical: true)
+                LineOrStack(spacing: 8, lineSpacing: 8) {
+                    billingPreset("Apple")
+                    billingPreset("Google Play")
+                    billingPreset("Amazon")
+                }
+            }
+
+            VStack(alignment: .leading, spacing: 8) {
+                Text("Notes")
+                    .font(.subheadline.weight(.medium))
+                    .foregroundStyle(Color.inkTextMuted)
+                    .accessibilityHidden(true)
+                // Several lines as it is written: one line clipped a note (the rating of 2026-11-23).
+                InkTextField(placeholder: "", text: $draft.notes, autocapitalization: .sentences, multiline: true)
+                    .accessibilityLabel("Notes")
+                    .accessibilityIdentifier("editNotesField")
+                Text("For example: Shared with Sarah, or promo rate ends in October.")
+                    .font(.footnote)
+                    .foregroundStyle(Color.inkTextFaint)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+        }
+    }
+
+    private func billingPreset(_ label: String) -> some View {
+        let selected = draft.paymentMethod.trimmingCharacters(in: .whitespacesAndNewlines).caseInsensitiveCompare(label) == .orderedSame
+        return Button {
+            Feel.selection()
+            draft.paymentMethod = selected ? "" : label
+        } label: {
+            Text(verbatim: label)
+                .font(.footnote.weight(.semibold))
+                .foregroundStyle(selected ? Color.paperInk : Color.inkTextMuted)
+                .padding(.horizontal, 12)
+                .padding(.vertical, 8)
+                .background(selected ? Color.paper : Color.clear, in: Capsule())
+                .overlay(Capsule().stroke(selected ? Color.paper : Color.outline, lineWidth: 1))
+                .tapArea(.leading)
+        }
+        .buttonStyle(.plain)
+        .accessibilityAddTraits(selected ? [.isSelected] : [])
     }
 
     @ViewBuilder
     private var footnote: some View {
-        VStack(spacing: 6) {
+        VStack(alignment: .leading, spacing: 6) {
             if let yearly = draft.yearlyCost {
-                Text("That's \(MoneyFormat.string(yearly, draft.currency)) a year")
-                    .font(.system(.footnote, design: .rounded))
-                    .foregroundStyle(Color.obsidianTextTertiary)
+                Text(draft.splitCount > 1
+                     ? L10n.string("Your share is \(MoneyFormat.string(yearly, draft.currency)) a year")
+                     : L10n.string("That's \(MoneyFormat.string(yearly, draft.currency)) a year"))
+                    .font(.footnote)
+                    .foregroundStyle(Color.inkTextFaint)
             }
-            if draft.reminderDays > 0 && draft.nextBillingDate == nil {
-                Text("Set a payment date to get reminders.")
-                    .font(.system(.footnote, design: .rounded))
-                    .foregroundStyle(.orange)
+            if draft.reminderDays > 0 && draft.nextBillingDate == nil && !(draft.isTrial && draft.trialEndsAt != nil) {
+                Text("Add its renewal date to get reminders.")
+                    .font(.footnote)
+                    .foregroundStyle(Color.decide)
             }
         }
     }
 
     // MARK: - Pieces
 
-    private func row<Content: View>(_ title: String, @ViewBuilder content: () -> Content) -> some View {
-        HStack(spacing: 12) {
+    private func row<Content: View>(_ title: LocalizedStringKey, @ViewBuilder content: () -> Content) -> some View {
+        AdaptiveRow(alignment: .center) {
+            // Read once, by the control beside it, whose label starts with it: VoiceOver said "Billing cycle",
+            // then "Billing cycle, Monthly" (the reach rating of 2026-11-23).
             Text(title)
-                .font(.system(.body, design: .rounded))
-                .foregroundStyle(.white)
-            Spacer(minLength: 12)
+                .font(.body)
+                .foregroundStyle(Color.inkText)
+                .accessibilityHidden(true)
+        } value: {
             content()
         }
-        .padding(.horizontal, 16)
         .frame(minHeight: 54)
     }
 
     private func valueLabel(_ text: String) -> some View {
         HStack(spacing: 6) {
             Text(text)
-                .font(.system(.body, design: .rounded))
-                .foregroundStyle(Color.obsidianTextSecondary)
+                .font(.body)
+                .foregroundStyle(Color.inkTextMuted)
             Image(systemName: "chevron.up.chevron.down")
-                .font(.system(size: 11, weight: .semibold))
-                .foregroundStyle(Color.obsidianTextTertiary)
+                .font(.caption2.weight(.semibold))
+                .foregroundStyle(Color.inkTextFaint)
         }
+        // A fingertip's target: the menus were 20 points tall (the rating of 2026-11-23).
+        .tapArea(.trailing)
     }
 
-    private var divider: some View {
-        Divider()
-            .overlay(Color.white.opacity(0.06))
-            .padding(.leading, 16)
-    }
+    private var divider: some View { Hairline() }
 
-    // MARK: - Save
 
     private func finishSaving(_ updated: Subscription) {
-        HapticStyle.success.trigger()
+        Feel.landed()
         onSaved?(updated)
         dismiss()
     }
@@ -328,25 +418,13 @@ struct SubscriptionEditView: View {
         focus = nil
         guard let updated = draft.applied(to: original) else {
             showValidation = true
-            HapticStyle.error.trigger()
             focus = draft.nameError != nil ? .name : .amount
             return
         }
         isSaving = true
         defer { isSaving = false }
-        do {
-            try await SubscriptionStore.shared.updateSubscription(updated)
-            finishSaving(updated)
-        } catch {
-            // The store is offline-first: it applies the edit locally, queues the cloud write for retry,
-            // then reports the network error. If the edit is in the local store, it IS saved.
-            if SubscriptionStore.shared.subscriptions.contains(where: { $0.id == updated.id && $0.updatedAt == updated.updatedAt }) {
-                finishSaving(updated)
-            } else {
-                HapticStyle.error.trigger()
-                saveError = "Your changes weren't saved. \(error.localizedDescription)"
-            }
-        }
+        await SubscriptionStore.shared.updateSubscription(updated)
+        finishSaving(updated)
     }
 }
 

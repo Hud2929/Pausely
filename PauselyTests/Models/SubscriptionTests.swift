@@ -72,17 +72,14 @@ final class SubscriptionTests: XCTestCase {
 
     // MARK: - Status
 
-    func testIsActive() {
-        let active = TestFactories.makeSubscription(status: .active)
-        XCTAssertTrue(active.isActive)
-        XCTAssertFalse(active.isPaused)
-    }
-
-    func testIsPaused() {
-        var paused = TestFactories.makeSubscription(status: .active)
-        paused.pausedUntil = Calendar.current.date(byAdding: .day, value: 7, to: Date())
-        XCTAssertTrue(paused.isPaused)
-        XCTAssertTrue(paused.isActive)
+    /// What is being paid for: on, or a trial that will turn into a charge.
+    func testWhatIsCharging() {
+        let list = [
+            TestFactories.makeSubscription(name: "On", status: .active),
+            TestFactories.makeSubscription(name: "Trial", status: .trial),
+            TestFactories.makeSubscription(name: "Cancelled", status: .cancelled)
+        ]
+        XCTAssertEqual(list.charging.map(\.name), ["On", "Trial"])
     }
 
     // MARK: - Days Until Renewal
@@ -117,11 +114,24 @@ final class SubscriptionTests: XCTestCase {
 
     // MARK: - Equatable
 
-    func testEquatable_sameId() {
-        let id = UUID()
-        let a = TestFactories.makeSubscription(id: id, name: "A")
-        let b = TestFactories.makeSubscription(id: id, name: "B")
-        XCTAssertEqual(a, b)
+    /// Two subscriptions are equal when everything about them is. With "same id means equal", a test
+    /// comparing lists could not tell a wrong price or date from a right one, and nothing that watches
+    /// for a change would see an edit.
+    func testAnEditedSubscriptionIsNotEqualToWhatItWas() {
+        let original = TestFactories.makeSubscription(id: UUID(), name: "Netflix", amount: 15.49)
+        XCTAssertEqual(original, original)
+
+        var repriced = original
+        repriced.amount = 17.99
+        XCTAssertNotEqual(repriced, original)
+
+        var renamed = original
+        renamed.name = "Netflix Premium"
+        XCTAssertNotEqual(renamed, original)
+
+        var redated = original
+        redated.nextBillingDate = Calendar.billing.date(from: DateComponents(year: 2027, month: 1, day: 15, hour: 12))
+        XCTAssertNotEqual(redated, original)
     }
 
     func testEquatable_differentId() {
@@ -144,16 +154,6 @@ final class SubscriptionTests: XCTestCase {
 
     // MARK: - ROI / Waste Score Edge Cases
 
-
-    func testIsPaused_pausedUntilExactlyNow_isNotPaused() {
-        // pausedUntil <= Date() → isPaused must return false (boundary: > not >=)
-        var sub = TestFactories.makeSubscription()
-        sub.pausedUntil = Date()    // right now — the condition is `pausedUntil > Date()`
-        // Allow a tiny tolerance: if the system processes instantly, Date() might be equal
-        // The important thing is it never crashes and returns a Bool
-        let result = sub.isPaused
-        XCTAssertTrue(result == true || result == false, "isPaused must return a valid Bool at boundary")
-    }
 
     // MARK: - Date Math for Billing
 

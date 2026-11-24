@@ -1,285 +1,222 @@
 import Foundation
 import StoreKit
-import SwiftUI
-import Supabase
 
-// MARK: - StoreKit Manager
-/// Handles in-app purchases using Apple's StoreKit 2
+/// The only code that talks to StoreKit: the two Pausely Pro plans and their App Store prices, buying
+/// and restoring, and what the App Store says this person is paying for right now. `PaymentManager`
+/// turns that into the tier the rest of the app reads.
 @MainActor
 final class StoreKitManager: ObservableObject {
     static let shared = StoreKitManager()
-    
-    // MARK: - Published State
-    @Published var products: [Product] = []
-    @Published var purchasedProductIDs: Set<String> = []
-    @Published var isLoading = false
-    @Published var errorMessage: String?
-    @Published var pendingPurchase: Product?
-    
-    // MARK: - Product IDs (must match App Store Connect)
+
+    /// The plans as the App Store sells them in this storefront. Empty until they have loaded.
+    @Published private(set) var products: [Product] = []
+    /// Prices are being fetched, or a purchase or restore is under way.
+    @Published private(set) var isLoading = false
+
+    /// Must match App Store Connect.
     enum ProductID: String, CaseIterable {
         case monthly = "com.pausely.premium.monthly"
         case annual = "com.pausely.premium.annual"
-        
+
+        var tier: SubscriptionTier { self == .annual ? .proAnnual : .pro }
     }
-    
-    // MARK: - Private
-    private var updates: Task<Void, Never>?
-    private var hasLoadedProducts = false
-    
-    private init() {
-        // Start listening for transaction updates
-        updates = observeTransactionUpdates()
-        
-        // Load purchased products on init
-        Task {
-            await updatePurchasedProducts()
+
+    enum PurchaseOutcome: Equatable {
+        case purchased
+        /// The person closed Apple's sheet themselves.
+        case cancelled
+        /// Waiting for someone else's approval (Ask to Buy). Pro arrives through `Transaction.updates`.
+        case pending
+        /// The App Store reported a purchase Pausely couldn't verify.
+        case unverified
+        case failed
+    }
+
+    enum RestoreOutcome: Equatable {
+        case restored
+        case nothingToRestore
+        /// The person dismissed the App Store's sign-in.
+        case cancelled
+        case failed
+    }
+
+    /// What Pausely itself costs this customer, exactly as the App Store states it.
+    struct OwnSubscription: Equatable {
+        let tier: SubscriptionTier
+        let price: Decimal
+        let currency: String
+        /// When the current period (or free trial) ends and the next charge happens.
+        let renews: Date?
+        let isTrial: Bool
+        /// The purchase itself, for Apple's refund sheet.
+        var transactionId: UInt64?
+        /// False once the person has turned renewal off: the plan ends on `renews`. Nil when unknown.
+        var willRenew: Bool?
+        /// Apple tried to charge and couldn't (billing retry, or the grace period it gives meanwhile).
+        var hasBillingProblem = false
+
+        /// One line under the plan's name: "Free trial ends Nov 24, 2026", "Renews…", or "Ends…" once
+        /// renewal is off. Nil when the App Store gave no date.
+        func statusLine(locale: Locale = L10n.locale) -> String? {
+            guard let renews else { return nil }
+            let day = renews.formatted(.dateTime.month(.abbreviated).day().year().locale(locale))
+            if willRenew == false { return L10n.string("Ends \(day)") }
+            return isTrial ? L10n.string("Free trial ends \(day)") : L10n.string("Renews \(day)")
         }
     }
-    
+
+    /// One thing the App Store says is paid for.
+    struct Entitlement: Equatable {
+        let productID: String
+        var isRevoked = false
+    }
+
+    // Where the answers come from. The app asks StoreKit; tests put their own answers here, because
+    // Apple's local test store can't complete a purchase inside a unit-test host.
+    var fetchProducts: ([String]) async throws -> [Product] = { try await Product.products(for: $0) }
+    var currentEntitlements: () async -> [Entitlement] = {
+        var found: [Entitlement] = []
+        for await result in Transaction.currentEntitlements {
+            guard case .verified(let transaction) = result else { continue }
+            found.append(Entitlement(productID: transaction.productID, isRevoked: transaction.revocationDate != nil))
+        }
+        return found
+    }
+    var syncWithAppStore: () async throws -> Void = { try await AppStore.sync() }
+
+    private var updates: Task<Void, Never>?
+    private var isLoadingProducts = false
+
+    /// The app uses `shared`. Tests make their own to start from no prices.
+    init() {
+        updates = observeTransactionUpdates()
+    }
+
     deinit {
         updates?.cancel()
     }
-    
-    // MARK: - Product Loading
 
-    /// Loads products only if they haven't been loaded yet this session.
-    func loadProductsIfNeeded() async {
-        guard !hasLoadedProducts else { return }
-        await loadProducts()
-    }
+    // MARK: - Prices
 
-    /// Fetches available products from App Store
+    /// Asks the App Store for the plans unless they are already here. A failure leaves them missing,
+    /// so the next call asks again (it used to count a failure as loaded, and the paywall then had
+    /// no prices until the app was restarted).
     func loadProducts() async {
-        guard !hasLoadedProducts else { return }
+        guard products.count < ProductID.allCases.count, !isLoadingProducts else { return }
+        // `--demo-store-offline` (DEBUG): the App Store never answers, so the paywall without prices
+        // can be looked at.
+        if LaunchFlag.isSet("--demo-store-offline") { return }
+        isLoadingProducts = true
         isLoading = true
-        errorMessage = nil
-
+        defer {
+            isLoadingProducts = false
+            isLoading = false
+        }
         do {
-            let productIDs = ProductID.allCases.map { $0.rawValue }
-            products = try await Product.products(for: productIDs)
-            PauselyLogger.info("Loaded \(products.count) products from App Store", category: "StoreKit")
-
-            for product in products {
-                PauselyLogger.debug("   - \(product.displayName): \(product.displayPrice) (ID: \(product.id))", category: "StoreKit")
-            }
+            let loaded = try await fetchProducts(ProductID.allCases.map(\.rawValue))
+            guard !loaded.isEmpty else { return }
+            products = loaded
+            // Pausely's own line in the list waits for the App Store's price; it may be able to go in now.
+            await PaymentManager.shared.autoAddPauselyProIfNeeded()
         } catch {
             PauselyLogger.error("Failed to load StoreKit products: \(error.localizedDescription)", category: "StoreKit")
-            // Don't show error message - products will load when app is run on device with proper StoreKit config
-            errorMessage = nil
         }
-
-        hasLoadedProducts = true
-        isLoading = false
     }
 
-    // MARK: - Purchasing
-    
-    /// Initiates a purchase for the given product
-    func purchase(_ product: Product) async -> Bool {
+    func product(for tier: SubscriptionTier) -> Product? {
+        guard let id = ProductID.allCases.first(where: { $0.tier == tier }) else { return nil }
+        return products.first { $0.id == id.rawValue }
+    }
+
+    // MARK: - Buying and restoring
+
+    func purchase(_ product: Product) async -> PurchaseOutcome {
         isLoading = true
-        errorMessage = nil
-        pendingPurchase = product
-        
+        defer { isLoading = false }
         do {
-            let result = try await product.purchase()
-            
-            switch result {
-            case .success(let verification):
-                // Verify the transaction
-                let transaction = try checkVerified(verification)
-                
-                // Update entitlements
-                await updatePurchasedProducts()
-
-                // Finish the transaction with retry
-                do {
-                    try await finishTransactionWithRetry(transaction)
-                } catch {
-                    PauselyLogger.error("Failed to finish transaction after retries: \(error)", category: "StoreKit")
-                }
-
-                // Notify PaymentManager so tier updates immediately
-                await PaymentManager.shared.updateCurrentEntitlements()
-
-                PauselyLogger.info("Purchase successful: \(product.displayName)", category: "StoreKit")
-                isLoading = false
-                pendingPurchase = nil
-                return true
-                
-            case .userCancelled:
-                PauselyLogger.debug("User cancelled purchase", category: "StoreKit")
-                errorMessage = "Purchase cancelled"
-                isLoading = false
-                pendingPurchase = nil
-                return false
-
-            case .pending:
-                PauselyLogger.info("Purchase pending approval (family sharing)", category: "StoreKit")
-                errorMessage = "Purchase pending approval"
-                isLoading = false
-                pendingPurchase = nil
-                return false
-
-            @unknown default:
-                PauselyLogger.error("Unknown purchase result", category: "StoreKit")
-                errorMessage = "Purchase failed. Please try again."
-                isLoading = false
-                pendingPurchase = nil
-                return false
+            var options: Set<Product.PurchaseOption> = []
+            if let uidString = AuthManager.shared.currentUser?.id,
+               let accountToken = UUID(uuidString: uidString) {
+                options.insert(.appAccountToken(accountToken))
             }
-        } catch StoreKitError.invalidOfferIdentifier {
-            PauselyLogger.error("Invalid product ID", category: "StoreKit")
-            errorMessage = "This subscription is not available."
-        } catch StoreKitError.invalidOfferPrice {
-            PauselyLogger.error("Invalid price", category: "StoreKit")
-            errorMessage = "Price information is incorrect."
+            switch try await product.purchase(options: options) {
+            case .success(let verification):
+                guard case .verified(let transaction) = verification else { return .unverified }
+                await PaymentManager.shared.updateCurrentEntitlements()
+                await transaction.finish()
+                return .purchased
+            case .userCancelled:
+                return .cancelled
+            case .pending:
+                return .pending
+            @unknown default:
+                return .failed
+            }
         } catch {
             PauselyLogger.error("Purchase failed: \(error)", category: "StoreKit")
-            errorMessage = "Purchase failed: \(error.localizedDescription)"
+            return .failed
         }
-
-        isLoading = false
-        pendingPurchase = nil
-        return false
     }
 
-    // MARK: - Restore Purchases
-
-    /// Restores previous purchases
-    func restorePurchases() async -> Bool {
+    func restorePurchases() async -> RestoreOutcome {
         isLoading = true
-        errorMessage = nil
-
+        defer { isLoading = false }
         do {
-            try await AppStore.sync()
-            await updatePurchasedProducts()
-
-            if purchasedProductIDs.isEmpty {
-                errorMessage = "No previous purchases found."
-                isLoading = false
-                return false
-            } else {
-                PauselyLogger.info("Restored \(purchasedProductIDs.count) purchases", category: "StoreKit")
-                isLoading = false
-                return true
-            }
+            try await syncWithAppStore()
+        } catch StoreKit.StoreKitError.userCancelled {
+            return .cancelled
         } catch {
             PauselyLogger.error("Restore failed: \(error)", category: "StoreKit")
-            errorMessage = "Could not restore purchases."
-            isLoading = false
-            return false
+            return .failed
         }
+        await PaymentManager.shared.updateCurrentEntitlements()
+        return await entitledTier() == nil ? .nothingToRestore : .restored
     }
 
-    // MARK: - Transaction Handling
+    // MARK: - What the App Store says is paid for
 
-    /// Observes transaction updates (renewals, cancellations, etc.)
+    /// The plan this person is paying for right now, or nil. A free trial and a billing grace period
+    /// count (StoreKit keeps both in `currentEntitlements`); a refunded or revoked purchase does not.
+    func entitledTier() async -> SubscriptionTier? {
+        await currentEntitlements()
+            .filter { !$0.isRevoked }
+            .compactMap { ProductID(rawValue: $0.productID)?.tier }
+            .max()
+    }
+
+    /// Pausely's own subscription for this plan, or nil until both the App Store's price and a
+    /// verified purchase are known. Nothing here is ever estimated.
+    func ownSubscription(for tier: SubscriptionTier) async -> OwnSubscription? {
+        guard let product = product(for: tier), let latest = await Transaction.latest(for: product.id),
+              case .verified(let transaction) = latest, transaction.revocationDate == nil else { return nil }
+        var own = OwnSubscription(tier: tier, price: product.price, currency: product.priceFormatStyle.currencyCode,
+                                  renews: transaction.expirationDate, isTrial: transaction.offer?.type == .introductory)
+        own.transactionId = transaction.id
+        // Whether it will renew, and whether Apple is having trouble charging for it.
+        if let statuses = try? await product.subscription?.status {
+            let status = statuses.first { status in
+                if case .verified(let latest) = status.transaction { return latest.productID == product.id }
+                return false
+            } ?? statuses.first
+            if let status {
+                own.hasBillingProblem = status.state == .inBillingRetryPeriod || status.state == .inGracePeriod
+                if case .verified(let renewal) = status.renewalInfo { own.willRenew = renewal.willAutoRenew }
+            }
+        }
+        return own
+    }
+
+    /// Renewals, refunds, revocations and approved Ask to Buy purchases arrive here while the app
+    /// runs. Whatever the update is, the entitlements are read again, so Pro is taken away as well as given.
     private func observeTransactionUpdates() -> Task<Void, Never> {
-        Task(priority: .background) { [weak self] in
-            guard let self else { return }
-            for await verificationResult in Transaction.updates {
-                do {
-                    let transaction = try self.checkVerified(verificationResult)
-
-                    // Handle the transaction update
-                    await self.updatePurchasedProducts()
-
-                    // Finish the transaction
-                    do {
-                        try await self.finishTransactionWithRetry(transaction)
-                    } catch {
-                        PauselyLogger.error("Failed to finish transaction update: \(error)", category: "StoreKit")
-                    }
-
-                    PauselyLogger.info("Transaction updated: \(transaction.productID)", category: "StoreKit")
-                } catch {
-                    PauselyLogger.error("Transaction verification failed: \(error)", category: "StoreKit")
-                }
+        Task {
+            for await update in Transaction.updates {
+                await PaymentManager.shared.updateCurrentEntitlements()
+                if case .verified(let transaction) = update { await transaction.finish() }
             }
         }
     }
-
-    /// Updates the list of purchased products
-    func updatePurchasedProducts() async {
-        var purchasedIDs: Set<String> = []
-
-        for await verificationResult in Transaction.currentEntitlements {
-            do {
-                let transaction = try checkVerified(verificationResult)
-
-                if transaction.revocationDate == nil {
-                    // Active entitlement
-                    purchasedIDs.insert(transaction.productID)
-
-                    // Activate premium in app
-                    if transaction.productID == ProductID.monthly.rawValue {
-                        PaymentManager.shared.activatePremium(source: .storeKitMonthly)
-                    } else if transaction.productID == ProductID.annual.rawValue {
-                        PaymentManager.shared.activatePremium(source: .storeKitAnnual)
-                    }
-                }
-            } catch {
-                PauselyLogger.error("Failed to verify transaction: \(error)", category: "StoreKit")
-            }
-        }
-
-        purchasedProductIDs = purchasedIDs
-    }
-    
-    // MARK: - Helpers
-
-    /// Finishes a transaction with exponential backoff retry
-    private func finishTransactionWithRetry(_ transaction: StoreKit.Transaction, maxRetries: Int = 3) async throws {
-        var attempt = 0
-        while attempt < maxRetries {
-            do {
-                try await transaction.finish()
-                return
-            } catch {
-                attempt += 1
-                if attempt >= maxRetries { throw error }
-                let delay = UInt64(pow(2.0, Double(attempt)) * 100_000_000) // 200ms, 400ms, 800ms
-                try? await Task.sleep(nanoseconds: delay)
-            }
-        }
-    }
-
-    /// Verifies a StoreKit transaction
-    private func checkVerified<T>(_ result: VerificationResult<T>) throws -> T {
-        switch result {
-        case .unverified:
-            throw StoreKitError.failedVerification
-        case .verified(let safe):
-            return safe
-        }
-    }
-    
-    /// Gets the product for a specific tier
-    func product(for tier: SubscriptionTier) -> Product? {
-        switch tier {
-        case .free:
-            return nil
-        case .pro:
-            return products.first { $0.id == ProductID.monthly.rawValue }
-        case .proAnnual:
-            return products.first { $0.id == ProductID.annual.rawValue }
-        }
-    }
-    
-    
 }
-
-
-// MARK: - Errors
-enum StoreKitError: Error {
-    case failedVerification
-    case invalidOfferIdentifier
-    case invalidOfferPrice
-}
-
-// MARK: - Payment Source Extension
-// Add StoreKit cases to the existing PaymentSource enum in PaymentManager.swift
 
 // MARK: - Derived pricing (always from the real App Store prices)
 extension StoreKitManager {
@@ -311,3 +248,19 @@ extension StoreKitManager {
         return Self.perMonth(annual: annual.price).formatted(annual.priceFormatStyle)
     }
 }
+
+#if DEBUG
+extension StoreKitManager.OwnSubscription {
+    /// The yearly plan as Profile shows it: renewing, in its free trial (`trial`), with renewal
+    /// turned off (`ending`), or with a payment Apple could not take (`problem`).
+    static func demo(_ state: String, now: Date = Date()) -> StoreKitManager.OwnSubscription {
+        var plan = StoreKitManager.OwnSubscription(
+            tier: .proAnnual, price: ProPricing.annualUSD, currency: "USD",
+            renews: Calendar.billing.date(byAdding: .month, value: state == "trial" ? 0 : 9, to: now)
+                .flatMap { Calendar.billing.date(byAdding: .day, value: state == "trial" ? 5 : 0, to: $0) },
+            isTrial: state == "trial", transactionId: 1, willRenew: state != "ending")
+        plan.hasBillingProblem = state == "problem"
+        return plan
+    }
+}
+#endif
